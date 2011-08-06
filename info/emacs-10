@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -77,7 +76,7 @@ Multiple Displays
    A single Emacs can talk to more than one X Windows display.
 Initially, Emacs uses just one display--the one specified with the
 `DISPLAY' environment variable or with the `--display' option (*note
-Initial Options::.).  To connect to another display, use the command
+Initial Options::).  To connect to another display, use the command
 `make-frame-on-display':
 
 `M-x make-frame-on-display <RET> DISPLAY <RET>'
@@ -209,7 +208,7 @@ window management behavior of the selected frame.
 `M-x set-frame-font <RET> FONT <RET>'
      Specify font FONT as the principal font for the selected frame.
      The principal font is used for all text displayed in the frame,
-     except when a face (*note Faces::.) specifies a different font to
+     except when a face (*note Faces::) specifies a different font to
      use for certain text.  *Note Font X::, for ways to list the
      available fonts on your system.
 
@@ -219,7 +218,7 @@ window management behavior of the selected frame.
    In Emacs versions that use an X toolkit, the color-setting and
 font-setting functions don't affect menus and the menu bar, since they
 are displayed by their own widget classes.  To change the appearance of
-the menus and menu bar, you must use X resources (*note Resources X::.).
+the menus and menu bar, you must use X resources (*note Resources X::).
 *Note Colors X::, regarding colors.  *Note Font X::, regarding choice of
 font.
 
@@ -294,7 +293,7 @@ characters.  The aspects of style that you can control are the type
 font, the foreground color, the background color, and whether to
 underline.  Emacs on MS-DOS supports faces partially by letting you
 control the foreground and background colors of each face (*note
-MS-DOS::.).
+MS-DOS::).
 
    The way you control display style is by defining named "faces".
 Each face can specify a type font, a foreground color, a background
@@ -314,7 +313,7 @@ how to specify the foreground and background color.
 
    To alter the appearance of a face, use the customization buffer.
 *Note Face Customization::.  You can also use X resources to specify
-attributes of particular faces (*note Resources X::.).
+attributes of particular faces (*note Resources X::).
 
    To see what faces are currently defined, and what they look like,
 type `M-x list-faces-display'.  It's possible for a given face to look
@@ -340,7 +339,7 @@ faces:
 
 `secondary-selection'
      This face is used for displaying a secondary selection (*note
-     Secondary Selection::.).
+     Secondary Selection::).
 
 `bold'
      This face uses a bold variant of the default font, if it has one.
@@ -359,7 +358,7 @@ faces:
    When Transient Mark mode is enabled, the text of the region is
 highlighted when the mark is active.  This uses the face named
 `region'; you can control the style of highlighting by changing the
-style of this face (*note Face Customization::.).  *Note Transient
+style of this face (*note Face Customization::).  *Note Transient
 Mark::, for more information about Transient Mark mode and activation
 and deactivation of the mark.
 
@@ -716,7 +715,7 @@ represents each non-ASCII character as a sequence of bytes in the range
 0200 through 0377.  Emacs translates between the multibyte character
 encoding and various other coding systems when reading and writing
 files, when exchanging data with subprocesses, and (in some cases) in
-the `C-q' command (*note Multibyte Conversion::.).
+the `C-q' command (*note Multibyte Conversion::).
 
    The command `C-h h' (`view-hello-file') displays the file
 `etc/HELLO', which shows how to say "hello" in many languages.  This
@@ -761,7 +760,7 @@ format conversion, uncompression and auto mode selection as
 `find-file-literally' does.
 
    To turn off multibyte character support by default, start Emacs with
-the `--unibyte' option (*note Initial Options::.), or set the
+the `--unibyte' option (*note Initial Options::), or set the
 environment variable `EMACS_UNIBYTE'.  You can also customize
 `enable-multibyte-characters' or, equivalently, directly set the
 variable `default-enable-multibyte-characters' in your init file to
@@ -796,7 +795,7 @@ represents a choice of preferred script (more or less) rather than a
 choice of language.
 
    The language environment controls which coding systems to recognize
-when reading text (*note Recognize Coding::.).  This applies to files,
+when reading text (*note Recognize Coding::).  This applies to files,
 incoming mail, netnews, and any other text you read into Emacs.  It may
 also specify the default coding system to use when you create a file.
 Each language environment also specifies a default input method.
@@ -983,9 +982,9 @@ non-ASCII printing characters have codes that start from 0400.
    If you type a self-inserting character in the invalid range 0240
 through 0377, Emacs assumes you intended to use one of the ISO Latin-N
 character sets, and converts it to the Emacs code representing that
-Latin-N character.  You select *which* ISO Latin character set to use
+Latin-N character.  You select _which_ ISO Latin character set to use
 through your choice of language environment (*note Language
-Environments::.).  If you do not specify a choice, the default is
+Environments::).  If you do not specify a choice, the default is
 Latin-1.
 
    The same thing happens when you use `C-q' to enter an octal code in
@@ -1031,12 +1030,12 @@ about particular coding systems.  You can specify a coding system name
 as argument; alternatively, with an empty argument, it describes the
 coding systems currently selected for various purposes, both in the
 current buffer and as the defaults, and the priority list for
-recognizing coding systems (*note Recognize Coding::.).
+recognizing coding systems (*note Recognize Coding::).
 
    To display a list of all the supported coding systems, type `M-x
 list-coding-systems'.  The list gives information about each coding
 system, including the letter that stands for it in the mode line (*note
-Mode Line::.).
+Mode Line::).
 
    Each of the coding systems that appear in this list--except for
 `no-conversion', which means no conversion of any kind--specifies how

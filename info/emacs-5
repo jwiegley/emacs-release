@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -82,7 +81,7 @@ the beginning of the text.  *Note Mark::.
    `C-u C-y' leaves the cursor in front of the text, and sets the mark
 after it.  This happens only if the argument is specified with just a
 `C-u', precisely.  Any other sort of argument, including `C-u' and
-digits, specifies an earlier kill to yank (*note Earlier Kills::.).
+digits, specifies an earlier kill to yank (*note Earlier Kills::).
 
    To copy a block of text, you can use `M-w' (`kill-ring-save'), which
 copies the region into the kill ring without removing it from the
@@ -204,7 +203,7 @@ Accumulating Text
 are other methods convenient for copying one block of text in many
 places, or for copying many scattered blocks of text into one place.  To
 copy one block to many places, store it in a register (*note
-Registers::.).  Here we describe the commands to accumulate scattered
+Registers::).  Here we describe the commands to accumulate scattered
 pieces of text into a buffer or into a file.
 
 `M-x append-to-buffer'
@@ -257,7 +256,7 @@ append text directly into a file with `M-x append-to-file', which takes
 FILENAME as an argument.  It adds the text of the region to the end of
 the specified file.  The file is changed immediately on disk.
 
-   You should use `append-to-file' only with files that are *not* being
+   You should use `append-to-file' only with files that are _not_ being
 visited in Emacs.  Using it on a file that you are editing in Emacs
 would change the file behind Emacs's back, which can lead to losing
 some of your editing.
@@ -510,7 +509,7 @@ Keeping Numbers in Registers
 
    There are commands to store a number in a register, to insert the
 number in the buffer in decimal, and to increment it.  These commands
-can be useful in keyboard macros (*note Keyboard Macros::.).
+can be useful in keyboard macros (*note Keyboard Macros::).
 
 `C-u NUMBER C-x r n REG'
      Store NUMBER into register REG (`number-to-register').
@@ -625,7 +624,7 @@ position.
      points to.
 
 `M-x bookmark-insert <RET> BOOKMARK <RET>'
-     Insert in the buffer the *contents* of the file that bookmark
+     Insert in the buffer the _contents_ of the file that bookmark
      BOOKMARK points to.
 
 
@@ -773,9 +772,9 @@ displayed at all.
      Scroll to the right (`scroll-right').
 
    When a window has been scrolled horizontally, text lines are
-truncated rather than continued (*note Continuation Lines::.), with a
-`$' appearing in the first column when there is text truncated to the
-left, and in the last column when there is text truncated to the right.
+truncated rather than continued (*note Continuation Lines::), with a `$'
+appearing in the first column when there is text truncated to the left,
+and in the last column when there is text truncated to the right.
 
    The command `C-x <' (`scroll-left') scrolls the selected window to
 the left by N columns with argument N.  This moves part of the
@@ -861,7 +860,7 @@ about how to use this command.
 `line-number-display-limit'), then the line number doesn't appear.
 Emacs doesn't compute the line number when the buffer is large, because
 that would be too slow.  If you have narrowed the buffer (*note
-Narrowing::.), the displayed line number is relative to the accessible
+Narrowing::), the displayed line number is relative to the accessible
 portion of the buffer.
 
    You can also display the current column number by turning on Column

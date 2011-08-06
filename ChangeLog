@@ -1,3 +1,19 @@
+1999-12-04  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.5 released.
+	
+1999-11-28  Dave Love  <fx@gnu.org>
+
+	* configure.in: Recognize sparc64-*-linux-gnu*.
+
+1999-11-11  Erik Naggum  <erik@naggum.no>
+
+	* configure.in (bitmapdir): Allow for both "bitmaps" directories.
+
+1999-08-04  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Make --no-debug work again by removing -gcoff.
+
 1999-07-12  Richard Stallman  <rms@gnu.org>
 
 	* Version 20.4 released.

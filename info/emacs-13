@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -78,7 +77,7 @@ commands.
 These correspond to codes used in the text/enriched file format.
 
    The `excerpt' face is intended for quotations.  This face is the
-same as `italic' unless you customize it (*note Face Customization::.).
+same as `italic' unless you customize it (*note Face Customization::).
 
    The `fixed' face is meant to say, "Use a fixed-width font for this
 part of the text."  Emacs currently supports only fixed-width fonts;
@@ -118,7 +117,7 @@ applies to the region.
 this item to specify a color that is not listed in the menu; it reads
 the color name with the minibuffer.  To display list of available colors
 and their names, use the `Display Colors' menu item in the Text
-Properties menu (*note Editing Format Info::.).
+Properties menu (*note Editing Format Info::).
 
    Any color that you specify in this way, or that is mentioned in a
 formatted text file that you read in, is added to both color menus for
@@ -138,7 +137,7 @@ Indentation in Formatted Text
    When editing formatted text, you can specify different amounts of
 indentation for the right or left margin of an entire paragraph or a
 part of a paragraph.  The margins you specify automatically affect the
-Emacs fill commands (*note Filling::.) and line-breaking commands.
+Emacs fill commands (*note Filling::) and line-breaking commands.
 
    The Indentation submenu provides a convenient interface for
 specifying these properties.  The submenu contains four items:
@@ -232,7 +231,7 @@ specifying the style.  The submenu contains five items:
      wrote it; the fill and auto-fill functions will have no effect on
      text which has this setting.  You can, however, still indent the
      left margin.  In unfilled regions, all newlines are treated as
-     hard newlines (*note Hard and Soft Newlines::.) .
+     hard newlines (*note Hard and Soft Newlines::) .
 
    In Enriched mode, you can also specify justification from the
 keyboard using the `M-j' prefix character:
@@ -278,7 +277,7 @@ property disallows alteration of the text.
 region.  The last menu item, `Remove Special', removes all of these
 special properties from the text in the region.
 
-   Currently, the `invisible' and `intangible' properties are *not*
+   Currently, the `invisible' and `intangible' properties are _not_
 saved in the text/enriched format.  The `read-only' property is saved,
 but it is not a standard part of the text/enriched format, so other
 editors may not respect it.
@@ -300,7 +299,7 @@ convert file contents or turn on Enriched mode:
      formatting commands rather than the formatted text.  Type `M-x
      format-decode-buffer' to translate it.
 
-   * When you *insert* a file into a buffer, rather than visiting it.
+   * When you _insert_ a file into a buffer, rather than visiting it.
      Emacs does the necessary conversions on the text which you insert,
      but it does not enable Enriched mode.  If you wish to do that,
      type `M-x enriched-mode'.
@@ -314,8 +313,8 @@ tells Emacs to guess the format.
 sequence of characters rather than as formatted text, use the `M-x
 find-file-literally' command.  This visits a file, like `find-file',
 but does not do format conversion.  It also inhibits character code
-conversion (*note Coding Systems::.) and automatic uncompression (*note
-Compressed Files::.).  To disable format conversion but allow character
+conversion (*note Coding Systems::) and automatic uncompression (*note
+Compressed Files::).  To disable format conversion but allow character
 code conversion and/or automatic uncompression if appropriate, use
 `format-find-file' with suitable arguments.
 
@@ -328,30 +327,30 @@ Editing Programs
    Emacs has many commands designed to understand the syntax of
 programming languages such as Lisp and C.  These commands can
 
-   * Move over or kill balanced expressions or "sexps" (*note Lists::.).
+   * Move over or kill balanced expressions or "sexps" (*note Lists::).
 
    * Move over or mark top-level expressions--"defuns", in Lisp;
-     functions, in C (*note Defuns::.).
+     functions, in C (*note Defuns::).
 
-   * Show how parentheses balance (*note Matching::.).
+   * Show how parentheses balance (*note Matching::).
 
-   * Insert, kill or align comments (*note Comments::.).
+   * Insert, kill or align comments (*note Comments::).
 
    * Follow the usual indentation conventions of the language (*note
-     Program Indent::.).
+     Program Indent::).
 
    The commands for words, sentences and paragraphs are very useful in
 editing code even though their canonical application is for editing
-human language text.  Most symbols contain words (*note Words::.);
-sentences can be found in strings and comments (*note Sentences::.).
+human language text.  Most symbols contain words (*note Words::);
+sentences can be found in strings and comments (*note Sentences::).
 Paragraphs per se don't exist in code, but the paragraph commands are
 useful anyway, because programming language major modes define
-paragraphs to begin and end at blank lines (*note Paragraphs::.).
+paragraphs to begin and end at blank lines (*note Paragraphs::).
 Judicious use of blank lines to make the program clearer will also
 provide useful chunks of text for the paragraph commands to work on.
 
    The selective display feature is useful for looking at the overall
-structure of a function (*note Selective Display::.).  This feature
+structure of a function (*note Selective Display::).  This feature
 causes only the lines that are indented less than a specified amount to
 appear on the screen.
 
@@ -456,7 +455,7 @@ well as anything contained in parentheses, brackets or braces.
 
    In languages that use prefix and infix operators, such as C, it is
 not possible for all expressions to be sexps.  For example, C mode does
-not recognize `foo + bar' as a sexp, even though it *is* a C expression;
+not recognize `foo + bar' as a sexp, even though it _is_ a C expression;
 it recognizes `foo' as one sexp and `bar' as another, with the `+' as
 punctuation between them.  This is a fundamental ambiguity: both `foo +
 bar' and `foo' are legitimate choices for the sexp to move over if
@@ -532,13 +531,13 @@ usually ignore comments (since the comments usually do not contain any
 lists).
 
    `C-M-n' and `C-M-p' stay at the same level in parentheses, when
-that's possible.  To move *up* one (or N) levels, use `C-M-u'
+that's possible.  To move _up_ one (or N) levels, use `C-M-u'
 (`backward-up-list').  `C-M-u' moves backward up past one unmatched
 opening delimiter.  A positive argument serves as a repeat count; a
 negative argument reverses direction of motion and also requests
 repetition, so it moves forward and up one or more levels.
 
-   To move *down* in list structure, use `C-M-d' (`down-list').  In
+   To move _down_ in list structure, use `C-M-d' (`down-list').  In
 Lisp mode, where `(' is the only opening delimiter, this is nearly the
 same as searching for a `('.  An argument specifies the number of
 levels of parentheses to go down.
@@ -771,7 +770,7 @@ a number, NUMBER
      part of the body, the line is indented `lisp-body-indent' more
      columns than the open-parenthesis starting the containing
      expression.  If the argument is distinguished and is either the
-     first or second argument, it is indented *twice* that many extra
+     first or second argument, it is indented _twice_ that many extra
      columns.  If the argument is distinguished and not the first or
      second argument, the standard pattern is followed for that line.
 
@@ -924,7 +923,7 @@ Typing `C-c C-s' on line 4 displays this:
 
      ((substatement-open . 43))
 
-   This says that the brace *opens* a substatement block.  By the way,
+   This says that the brace _opens_ a substatement block.  By the way,
 a "substatement" indicates the line after an `if', `else', `while',
 `do', `switch', `for', `try', `catch', `finally', or `synchronized'
 statement.
@@ -969,7 +968,7 @@ mechanism:
      6: }
 
    Suppose that point is on line 3 and you type <TAB> to reindent the
-line.  As explained above (*note Syntactic Analysis::.), the syntactic
+line.  As explained above (*note Syntactic Analysis::), the syntactic
 component list for that line is:
 
      ((defun-block-intro . 28))

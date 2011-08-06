@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -56,7 +55,7 @@ finds a coding system that fits the data.  Then it converts the file
 contents assuming that they are represented in this coding system.
 
    The priority list of coding systems depends on the selected language
-environment (*note Language Environments::.).  For example, if you use
+environment (*note Language Environments::).  For example, if you use
 French, you probably want Emacs to prefer Latin-1 to Latin-2; if you use
 Czech, you probably want Latin-2 to be preferred.  This is one of the
 reasons to specify a language environment.
@@ -95,7 +94,7 @@ to non-`nil'.
 
    You can specify the coding system for a particular file using the
 `-*-...-*-' construct at the beginning of a file, or a local variables
-list at the end (*note File Variables::.).  You do this by defining a
+list at the end (*note File Variables::).  You do this by defining a
 value for the "variable" named `coding'.  Emacs does not really have a
 variable `coding'; instead of setting a variable, it uses the specified
 coding system for the file.  For example, `-*-mode: C; coding:
@@ -116,10 +115,10 @@ system, by default, for operations that write from this buffer into a
 file.  This includes the commands `save-buffer' and `write-region'.  If
 you want to write files from this buffer using a different coding
 system, you can specify a different coding system for the buffer using
-`set-buffer-file-coding-system' (*note Specify Coding::.).
+`set-buffer-file-coding-system' (*note Specify Coding::).
 
-   When you send a message with Mail mode (*note Sending Mail::.),
-Emacs has four different ways to determine the coding system to use for
+   When you send a message with Mail mode (*note Sending Mail::), Emacs
+has four different ways to determine the coding system to use for
 encoding the message text.  It tries the buffer's own value of
 `buffer-file-coding-system', if that is non-`nil'.  Otherwise, it uses
 the value of `sendmail-coding-system', if that is non-`nil'.  The third
@@ -170,7 +169,7 @@ system, you can use these commands to specify one:
      other programs through the window system.
 
 `C-x <RET> X CODING <RET>'
-     Use coding system CODING for transferring *one* selection--the
+     Use coding system CODING for transferring _one_ selection--the
      next one--to or from the window system.
 
    The command `C-x <RET> f' (`set-buffer-file-coding-system')
@@ -184,7 +183,7 @@ way the file is saved.
 the file.  First use the command `C-x <RET> c'
 (`universal-coding-system-argument'); this command uses the minibuffer
 to read a coding system name.  After you exit the minibuffer, the
-specified coding system is used for *the immediately following command*.
+specified coding system is used for _the immediately following command_.
 
    So if the immediately following command is `C-x C-f', for example,
 it reads the file using that coding system (and records the coding
@@ -194,7 +193,7 @@ Other file commands affected by a specified coding system include `C-x
 C-i' and `C-x C-v', as well as the other-window variants of `C-x C-f'.
 
    `C-x <RET> c' also affects commands that start subprocesses,
-including `M-x shell' (*note Shell::.).
+including `M-x shell' (*note Shell::).
 
    However, if the immediately following command does not use the coding
 system, then `C-x <RET> c' ultimately has no effect.
@@ -305,7 +304,7 @@ fonts for a wide variety of non-ASCII characters; however, this is not
 the default for Emacs to use.  (By default, Emacs tries to find a font
 which has bold and italic variants.)  You can specify use of the
 standard fontset with the `-fn' option, or with the `Font' X resource
-(*note Font X::.).  For example,
+(*note Font X::).  For example,
 
      emacs -fn fontset-standard
 
@@ -430,8 +429,8 @@ Single-byte European Character Support
    The ISO 8859 Latin-N character sets define character codes in the
 range 160 to 255 to handle the accented letters and punctuation needed
 by various European languages.  If you disable multibyte characters,
-Emacs can still handle *one* of these character codes at a time.  To
-specify *which* of these codes to use, invoke `M-x
+Emacs can still handle _one_ of these character codes at a time.  To
+specify _which_ of these codes to use, invoke `M-x
 set-language-environment' and specify a suitable language environment
 such as `Latin-N'.
 
@@ -499,7 +498,7 @@ Major Modes
 customizes Emacs for editing text of a particular sort.  The major modes
 are mutually exclusive, and each buffer has one major mode at any time.
 The mode line normally shows the name of the current major mode, in
-parentheses (*note Mode Line::.).
+parentheses (*note Mode Line::).
 
    The least specialized major mode is called "Fundamental mode".  This
 mode has no mode-specific redefinitions or variable settings, so that
@@ -522,9 +521,9 @@ programming languages.  Text mode, Nroff mode, TeX mode and Outline
 mode are for editing English text.  The remaining major modes are not
 intended for use on users' files; they are used in buffers created for
 specific purposes by Emacs, such as Dired mode for buffers made by Dired
-(*note Dired::.), Mail mode for buffers made by `C-x m' (*note Sending
-Mail::.), and Shell mode for buffers used for communicating with an
-inferior shell process (*note Interactive Shell::.).
+(*note Dired::), Mail mode for buffers made by `C-x m' (*note Sending
+Mail::), and Shell mode for buffers used for communicating with an
+inferior shell process (*note Interactive Shell::).
 
    Most programming-language major modes specify that only blank lines
 separate paragraphs.  This is to make the paragraph commands useful.
@@ -626,7 +625,7 @@ calls to choose the major mode.  It also processes the file's local
 variables list if any.
 
    The commands `C-x C-w' and `set-visited-file-name' change to a new
-major mode if the new file name implies a mode (*note Saving::.).
+major mode if the new file name implies a mode (*note Saving::).
 However, this does not happen if the buffer contents specify a major
 mode, and certain "special" major modes do not allow the mode to
 change.  You can turn off this mode-changing feature by setting
@@ -752,7 +751,7 @@ whitespace or the end of the line.  If point is farther right than any
 indentation point in the previous line, the whitespace before point is
 deleted and the first indentation point then applicable is used.  If no
 indentation point is applicable even then, `indent-relative' runs
-`tab-to-tab-stop' (*note Tab Stops::.).
+`tab-to-tab-stop' (*note Tab Stops::).
 
    `indent-relative' is the definition of <TAB> in Indented Text mode.
 *Note Text::.
@@ -991,7 +990,7 @@ your mind in the middle of composing text.
 
    The sentence commands assume that you follow the American typist's
 convention of putting two spaces at the end of a sentence; they consider
-a sentence to end wherever there is a `.', `?' or `!'  followed by the
+a sentence to end wherever there is a `.', `?' or `!' followed by the
 end of a line or two spaces, with any number of `)', `]', `'', or `"'
 characters allowed in between.  A sentence also begins or ends wherever
 a paragraph begins or ends.

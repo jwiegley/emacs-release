@@ -148,7 +148,7 @@ work with Supercite.  For those systems without version numbers,
 Supercite probably works with any recently released version.  Note that
 only some of these systems will work with Supercite ``out of the box.''
 All others must overload interfacing routines to supply the necessary
-glue.  @xref{Getting Connected} for more details.@refill
+glue.  @xref{Getting Connected}, for more details.@refill
 
 
 @node Usage Overview, What Supercite Does Not Do, Introduction, Introduction
@@ -202,7 +202,7 @@ But by previously agreed upon convention, any text above the
 @code{mail-header-separator} which separates mail headers from message
 bodies cannot be modified by Supercite.  Supercite, in fact, doesn't
 know anything about the meaning of these headers, and never ventures
-outside the designated region. @xref{Hints to MUA Authors} for more
+outside the designated region. @xref{Hints to MUA Authors}, for more
 details.@refill
 
 @node  What Supercite Does, Citations, What Supercite Does Not Do, Introduction
@@ -258,7 +258,7 @@ Supercited text and will fill them appropriately.  Emacs' built-in
 filling routines, e.g@. @code{fill-paragraph}, do not recognize cited
 text and will not re-fill them properly because it cannot guess the
 @code{fill-prefix} being used.
-@xref{Post-yank Formatting Commands} for details.@refill
+@xref{Post-yank Formatting Commands}, for details.@refill
 
 As mentioned above, Supercite provides commands to recite or uncite
 regions of text in the reply buffer, and commands to perform other
@@ -266,7 +266,7 @@ beautifications on the cited original text, maintaining consistent and
 informative citations throughout.  Supercite tries to be as configurable
 as possible to allow for a wide range of personalized citation styles,
 but it is also immediately useful with the default configuration, once
-it has been properly connected to your MUA.  @xref{Getting Connected}
+it has been properly connected to your MUA.  @xref{Getting Connected},
 for more details.@refill
 
 @node  Citations, Citation Elements, What Supercite Does, Top
@@ -364,7 +364,7 @@ string containing four spaces.
 The @dfn{attribution string}.  This element is supplied automatically by
 Supercite, based on your preferences and the original message's mail
 headers, though you may be asked to confirm Supercite's choice.
-@xref{Selecting an Attribution} for more details.@refill
+@xref{Selecting an Attribution}, for more details.@refill
 
 @cindex citation delimiter
 @vindex sc-citation-delimiter
@@ -628,7 +628,7 @@ Below are examples of the various built-in header rewrite functions.
 Please note the following:@: first, the text which appears in the
 examples below as @var{infokey} indicates that the corresponding value
 of the info key from the info alist will be inserted there.
-(@xref{Information Keys and the Info Alist}).  For example, in @code{sc-header-on-said}
+(@pxref{Information Keys and the Info Alist}).  For example, in @code{sc-header-on-said}
 below, @var{date} and @var{from} correspond to the values of the
 @samp{Date:@:} and @samp{From:@:} mail headers respectively.@refill
 
@@ -983,7 +983,7 @@ connect Supercite and MH-E 4.x:
 @end example
 
 Note that if you are using Emacs 18 or Epoch 4, you will not have the
-@code{add-hook} function.  @xref{Emacs 18 MUAs} for details on how to
+@code{add-hook} function.  @xref{Emacs 18 MUAs}, for details on how to
 proceed without @code{add-hook}.
 
 MH-E version 3.x uses a slightly different interface than other MUAs.
@@ -1037,7 +1037,7 @@ following to your @file{.emacs} to connect Supercite with VM:
 @end example
 
 Note that if you are using Emacs 18 or Epoch 4, you will not have the
-@code{add-hook} function.  @xref{Emacs 18 MUAs} for details on how to
+@code{add-hook} function.  @xref{Emacs 18 MUAs}, for details on how to
 proceed without @code{add-hook}.
 
 Since version 5.34, VM has supported the newer @code{mail-citation-hook}
@@ -1072,7 +1072,7 @@ the following lisp code to your @file{.emacs} file:
 @end example
 
 Note that if you are using Emacs 18 or Epoch 4, you will not have the
-@code{add-hook} function.  @xref{Emacs 18 MUAs} for details on how to
+@code{add-hook} function.  @xref{Emacs 18 MUAs}, for details on how to
 proceed without @code{add-hook}.
 
 @node  Overloading for Non-conforming MUAs, Replying and Yanking, GNEWS with any Emacsen, Getting Connected
@@ -1286,7 +1286,7 @@ headers are nuked.  By default, only one blank line is left in the buffer.
 @emph{Selects the attribution and citation strings.}
 Once the mail headers have been processed, Supercite selects a
 attribution string and a citation string which it will use to cite the
-original message.  @xref{Selecting an Attribution} for details.
+original message.  @xref{Selecting an Attribution}, for details.
 
 @item 
 @emph{Cites the message body.}
@@ -1327,7 +1327,7 @@ there as people on the net, or just about!  It would be impossible for
 Supercite to anticipate every style in existence, and you probably
 wouldn't encounter them all anyway.  But you can configure Supercite to
 recognize those styles you see often.
-@xref{Configuring the Citation Engine} for details.@refill
+@xref{Configuring the Citation Engine}, for details.@refill
 
 @item 
 @emph{Runs @code{sc-post-hook}.}

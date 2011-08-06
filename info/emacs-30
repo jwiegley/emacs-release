@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -118,8 +117,8 @@ Command and Function Index
 * c-indent-exp:                          C Indent.
 * c-indent-line:                         Basic Indent.
 * c-macro-expand:                        Other C Commands.
-* c-mark-function <1>:                   Other C Commands.
-* c-mark-function:                       Defuns.
+* c-mark-function <1>:                   Defuns.
+* c-mark-function:                       Other C Commands.
 * c-scope-operator:                      Electric C.
 * c-set-offset:                          Changing Indent Style.
 * c-set-style:                           C Indent Styles.
@@ -939,8 +938,8 @@ Command and Function Index
 * transpose-lines:                       Transpose.
 * transpose-sexps <1>:                   List Commands.
 * transpose-sexps:                       Transpose.
-* transpose-words <1>:                   Words.
-* transpose-words:                       Transpose.
+* transpose-words <1>:                   Transpose.
+* transpose-words:                       Words.
 * turn-on-font-lock:                     Font Lock.
 * undigestify-rmail-message:             Rmail Digest.
 * undo:                                  Undo.
@@ -968,8 +967,8 @@ Command and Function Index
 * vc-rename-file:                        Renaming and VC.
 * vc-retrieve-snapshot:                  Making Snapshots.
 * vc-revert-buffer:                      VC Undo.
-* vc-toggle-read-only <1>:               Misc Buffer.
-* vc-toggle-read-only:                   Basic VC Editing.
+* vc-toggle-read-only <1>:               Basic VC Editing.
+* vc-toggle-read-only:                   Misc Buffer.
 * vc-update-change-log:                  Change Logs and VC.
 * vc-version-other-window:               Old Versions.
 * vi-mode:                               Emulation.

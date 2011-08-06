@@ -810,7 +810,9 @@ extern int string_to_non_ascii_char P_ ((const unsigned char *, int, int *,
 					 int));
 extern int non_ascii_char_to_string P_ ((int, unsigned char *, unsigned char **));
 extern int multibyte_form_length P_ ((const unsigned char *, int));
-extern int str_cmpchar_id P_ ((const unsigned char *, int));
+extern int str_cmpchar_id P_ ((const unsigned char *, int, int));
+extern void register_composite_chars_region P_ ((int, int, int, int));
+extern void register_composite_chars_string P_ ((Lisp_Object));
 extern int get_charset_id P_ ((Lisp_Object));
 extern int cmpchar_component P_ ((int, int, int));
 extern int find_charset_in_str P_ ((unsigned char *, int, int *,
@@ -835,7 +837,7 @@ extern Lisp_Object Vauto_fill_chars;
 #define BCOPY_SHORT(from, to, len)		\
   do {						\
     int i = len;				\
-    unsigined char *from_p = from, *to_p = to;	\
+    unsigned char *from_p = from, *to_p = to;	\
     while (i--) *from_p++ = *to_p++;		\
   } while (0)
 

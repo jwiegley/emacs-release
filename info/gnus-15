@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -41,8 +40,8 @@ Index
 * >:                                     Loose Threads.
 * activating groups <1>:                 Terminology.
 * activating groups:                     Scanning New Messages.
-* active file <1>:                       Terminology.
-* active file:                           The Active File.
+* active file <1>:                       The Active File.
+* active file:                           Terminology.
 * adapt file group parameter:            Group Parameters.
 * adaptive scoring:                      Adaptive Scoring.
 * adopting articles:                     Loose Threads.
@@ -85,14 +84,14 @@ Index
 * bbb-summary-rate-article:              Rating Articles.
 * binary groups:                         Binary Groups.
 * body:                                  Terminology.
-* bogus groups <1>:                      Terminology.
-* bogus groups:                          Group Maintenance.
+* bogus groups <1>:                      Group Maintenance.
+* bogus groups:                          Terminology.
 * bookmarks:                             Other Marks.
 * bouncing mail:                         Summary Mail Commands.
 * broken-reply-to:                       Group Parameters.
 * browsing servers:                      Browse Foreign Server.
-* bugs <1>:                              Troubleshooting.
-* bugs:                                  Compatibility.
+* bugs <1>:                              Compatibility.
+* bugs:                                  Troubleshooting.
 * buttons <1>:                           Buttons.
 * buttons:                               Article Buttons.
 * byte-compilation:                      Compilation.
@@ -125,8 +124,8 @@ Index
 * date:                                  Score File Format.
 * decays:                                Score Decays.
 * decoding articles:                     Decoding Articles.
-* DejaNews <1>:                          Web Searches.
-* DejaNews:                              Foreign Groups.
+* DejaNews <1>:                          Foreign Groups.
+* DejaNews:                              Web Searches.
 * delete-file:                           Mail Backend Variables.
 * deleting headers:                      Hiding Headers.
 * deleting incoming files:               Mail Backend Variables.
@@ -145,8 +144,8 @@ Index
 * duplicate mails:                       Duplicates.
 * elm:                                   Mail and Procmail.
 * Emacs:                                 Emacsen.
-* Emacsen <1>:                           Emacs/XEmacs Code.
-* Emacsen:                               Emacsen.
+* Emacsen <1>:                           Emacsen.
+* Emacsen:                               Emacs/XEmacs Code.
 * email spam:                            Thwarting Email Spam.
 * emphasis:                              Article Fontisizing.
 * ephemeral groups:                      Terminology.
@@ -240,17 +239,17 @@ Index
 * gnus-article-date-ut:                  Article Date.
 * gnus-article-de-quoted-unreadable:     Article Washing.
 * gnus-article-describe-briefly:         Article Keymap.
-* gnus-article-display-hook <1>:         Hard Picons.
-* gnus-article-display-hook <2>:         Misc Article.
-* gnus-article-display-hook <3>:         Customizing Articles.
-* gnus-article-display-hook:             Hiding Headers.
+* gnus-article-display-hook <1>:         Customizing Articles.
+* gnus-article-display-hook <2>:         Hiding Headers.
+* gnus-article-display-hook <3>:         Misc Article.
+* gnus-article-display-hook:             Hard Picons.
 * gnus-article-display-picons:           Hard Picons.
 * gnus-article-display-x-face:           Article Washing.
 * gnus-article-emphasize:                Article Fontisizing.
 * gnus-article-fill-cited-article:       Article Washing.
 * gnus-article-hide:                     Article Hiding.
-* gnus-article-hide-boring-headers <1>:  Hiding Headers.
-* gnus-article-hide-boring-headers:      Article Hiding.
+* gnus-article-hide-boring-headers <1>:  Article Hiding.
+* gnus-article-hide-boring-headers:      Hiding Headers.
 * gnus-article-hide-citation:            Article Hiding.
 * gnus-article-hide-citation-in-followups: Article Hiding.
 * gnus-article-hide-citation-maybe:      Article Hiding.
@@ -434,7 +433,6 @@ Index
 * gnus-fetch-old-headers:                Filling In Threads.
 * gnus-file-save-name:                   Saving Articles.
 * gnus-find-method-for-group:            Gnus Utility Functions.
-* gnus-folder-save-name:                 Saving Articles.
 * gnus-Folder-save-name:                 Saving Articles.
 * gnus-folder-save-name:                 Saving Articles.
 * gnus-gather-threads-by-references:     Loose Threads.
@@ -458,8 +456,8 @@ Index
 * gnus-group-catchup-group-hook:         Group Data.
 * gnus-group-check-bogus-groups:         Group Maintenance.
 * gnus-group-clear-data:                 Group Data.
-* gnus-group-clear-data-on-native-groups <1>: Group Data.
-* gnus-group-clear-data-on-native-groups: Changing Servers.
+* gnus-group-clear-data-on-native-groups <1>: Changing Servers.
+* gnus-group-clear-data-on-native-groups: Group Data.
 * gnus-group-customize:                  Foreign Groups.
 * gnus-group-default-list-level:         Group Levels.
 * gnus-group-delete-group:               Foreign Groups.
@@ -477,8 +475,8 @@ Index
 * gnus-group-exit:                       Exiting Gnus.
 * gnus-group-expire-all-groups:          Group Maintenance.
 * gnus-group-expire-articles:            Group Maintenance.
-* gnus-group-faq-directory <1>:          Summary Group Information.
-* gnus-group-faq-directory:              Group Information.
+* gnus-group-faq-directory <1>:          Group Information.
+* gnus-group-faq-directory:              Summary Group Information.
 * gnus-group-fetch-faq:                  Group Information.
 * gnus-group-find-new-groups:            Group Maintenance.
 * gnus-group-first-unread-group:         Group Maneuvering.
@@ -529,8 +527,8 @@ Index
 * gnus-group-post-news:                  Misc Group Stuff.
 * gnus-group-prefixed-name:              Gnus Utility Functions.
 * gnus-group-prepare-hook:               Misc Group Stuff.
-* gnus-group-prev-group <1>:             Browse Foreign Server.
-* gnus-group-prev-group:                 Group Maneuvering.
+* gnus-group-prev-group <1>:             Group Maneuvering.
+* gnus-group-prev-group:                 Browse Foreign Server.
 * gnus-group-prev-unread-group:          Group Maneuvering.
 * gnus-group-prev-unread-group-same-level: Group Maneuvering.
 * gnus-group-quick-select-group:         Selecting a Group.
@@ -613,8 +611,8 @@ Index
 * gnus-info-set-read:                    Group Info.
 * gnus-info-set-score:                   Group Info.
 * gnus-inhibit-startup-message:          Startup Variables.
-* gnus-init-file <1>:                    File Commands.
-* gnus-init-file:                        Startup Files.
+* gnus-init-file <1>:                    Startup Files.
+* gnus-init-file:                        File Commands.
 * gnus-insert-pseudo-articles:           Viewing Files.
 * gnus-interactive:                      Extended Interactive.
 * gnus-interactive-catchup:              Interactive.
@@ -642,8 +640,8 @@ Index
 * gnus-low-score-mark:                   Read Articles.
 * gnus-mail-save-name:                   Saving Articles.
 * gnus-mailing-list-groups:              Mail and Post.
-* gnus-mark-article-hook <1>:            Expiring Mail.
-* gnus-mark-article-hook:                Choosing Variables.
+* gnus-mark-article-hook <1>:            Choosing Variables.
+* gnus-mark-article-hook:                Expiring Mail.
 * gnus-mark-unpicked-articles-as-read:   Pick and Read.
 * gnus-message-archive-group:            Archived Messages.
 * gnus-message-archive-method:           Archived Messages.
@@ -668,14 +666,13 @@ Index
 * gnus-novice-user:                      Interactive.
 * gnus-numeric-save-name:                Saving Articles.
 * gnus-Numeric-save-name:                Saving Articles.
-* gnus-numeric-save-name:                Saving Articles.
 * gnus-options-not-subscribe:            Filtering New Groups.
 * gnus-options-subscribe:                Filtering New Groups.
 * gnus-other-frame:                      Starting Up.
 * gnus-outgoing-message-group:           Archived Messages.
 * gnus-page-delimiter:                   Misc Article.
-* gnus-parse-headers-hook <1>:           Various Various.
-* gnus-parse-headers-hook:               Low-Level Threading.
+* gnus-parse-headers-hook <1>:           Low-Level Threading.
+* gnus-parse-headers-hook:               Various Various.
 * gnus-permanently-visible-groups <1>:   Misc Group Stuff.
 * gnus-permanently-visible-groups:       Listing Groups.
 * gnus-pick-article-or-thread:           Pick and Read.
@@ -686,10 +683,10 @@ Index
 * gnus-pick-start-reading:               Pick and Read.
 * gnus-pick-unmark-article-or-thread.:   Pick and Read.
 * gnus-picons-clear-cache-on-shutdown:   Picon Useless Configuration.
-* gnus-picons-convert-x-face <1>:        Picon Useless Configuration.
-* gnus-picons-convert-x-face:            Picon Requirements.
-* gnus-picons-database <1>:              Hard Picons.
-* gnus-picons-database:                  Picon Basics.
+* gnus-picons-convert-x-face <1>:        Picon Requirements.
+* gnus-picons-convert-x-face:            Picon Useless Configuration.
+* gnus-picons-database <1>:              Picon Basics.
+* gnus-picons-database:                  Hard Picons.
 * gnus-picons-display-article-move-p:    Picon Useless Configuration.
 * gnus-picons-display-as-address:        Picon Useless Configuration.
 * gnus-picons-display-where:             Hard Picons.
@@ -703,7 +700,6 @@ Index
 * gnus-picons-refresh-before-display:    Picon Useless Configuration.
 * gnus-picons-user-directories:          Picon Useless Configuration.
 * gnus-picons-x-face-file-name:          Picon Useless Configuration.
-* gnus-plain-save-name:                  Saving Articles.
 * gnus-Plain-save-name:                  Saving Articles.
 * gnus-plain-save-name:                  Saving Articles.
 * gnus-play-startup-jingle:              Startup Variables.
@@ -748,8 +744,8 @@ Index
 * gnus-score-find-score-files-function:  Score Variables.
 * gnus-score-find-single:                Score Variables.
 * gnus-score-find-trace:                 Summary Score Commands.
-* gnus-score-flush-cache <1>:            Group Score Commands.
-* gnus-score-flush-cache:                Summary Score Commands.
+* gnus-score-flush-cache <1>:            Summary Score Commands.
+* gnus-score-flush-cache:                Group Score Commands.
 * gnus-score-followup-article:           Followups To Yourself.
 * gnus-score-followup-thread:            Followups To Yourself.
 * gnus-score-interactive-default-score:  Score Variables.
@@ -1103,8 +1099,8 @@ Index
 * gnus-undo:                             Undo.
 * gnus-undo-mode:                        Undo.
 * gnus-unload:                           Exiting Gnus.
-* gnus-unread-mark <1>:                  Unread Articles.
-* gnus-unread-mark:                      Choosing Variables.
+* gnus-unread-mark <1>:                  Choosing Variables.
+* gnus-unread-mark:                      Unread Articles.
 * gnus-update-format:                    Formatting Variables.
 * gnus-update-score-entry-dates:         Score Variables.
 * gnus-updated-mode-lines:               Mode Lines.
@@ -1160,8 +1156,8 @@ Index
 * gnus-uu-mark-region:                   Setting Process Marks.
 * gnus-uu-mark-series:                   Setting Process Marks.
 * gnus-uu-mark-sparse:                   Setting Process Marks.
-* gnus-uu-mark-thread <1>:               Thread Commands.
-* gnus-uu-mark-thread:                   Setting Process Marks.
+* gnus-uu-mark-thread <1>:               Setting Process Marks.
+* gnus-uu-mark-thread:                   Thread Commands.
 * gnus-uu-notify-files:                  Uuencoded Articles.
 * gnus-uu-post-include-before-composing: Uuencoding and Posting.
 * gnus-uu-post-length:                   Uuencoding and Posting.
@@ -1172,8 +1168,8 @@ Index
 * gnus-uu-save-in-digest:                Other Decode Variables.
 * gnus-uu-tmp-dir:                       Other Decode Variables.
 * gnus-uu-unmark-articles-not-decoded:   Other Decode Variables.
-* gnus-uu-unmark-thread <1>:             Thread Commands.
-* gnus-uu-unmark-thread:                 Setting Process Marks.
+* gnus-uu-unmark-thread <1>:             Setting Process Marks.
+* gnus-uu-unmark-thread:                 Thread Commands.
 * gnus-uu-user-archive-rules:            Rule Variables.
 * gnus-uu-user-view-rules:               Rule Variables.
 * gnus-uu-user-view-rules-end:           Rule Variables.
@@ -1225,14 +1221,14 @@ Index
 * help group <1>:                        Document Groups.
 * help group:                            Foreign Groups.
 * hiding headers:                        Hiding Headers.
-* highlighting <1>:                      Compatibility.
-* highlighting <2>:                      Highlighting and Menus.
-* highlighting <3>:                      Article Highlighting.
-* highlighting:                          Group Highlighting.
+* highlighting <1>:                      Highlighting and Menus.
+* highlighting <2>:                      Group Highlighting.
+* highlighting <3>:                      Compatibility.
+* highlighting:                          Article Highlighting.
 * highlights:                            Various Various.
 * hilit19:                               Compatibility.
-* history <1>:                           History.
-* history:                               Choosing Commands.
+* history <1>:                           Choosing Commands.
+* history:                               History.
 * ignored groups:                        The Active File.
 * incoming mail files:                   Mail Backend Variables.
 * incoming mail treatment:               Washing Mail.
@@ -1261,10 +1257,10 @@ Index
 * list server brain damage:              Washing Mail.
 * local variables:                       Score File Format.
 * loose threads:                         Loose Threads.
-* mail <1>:                              Terminology.
-* mail <2>:                              Getting Mail.
-* mail <3>:                              Composing Messages.
-* mail:                                  Summary Mail Commands.
+* mail <1>:                              Composing Messages.
+* mail <2>:                              Terminology.
+* mail <3>:                              Summary Mail Commands.
+* mail:                                  Getting Mail.
 * mail folders:                          Mail Folders.
 * mail group commands:                   Mail Group Commands.
 * mail message:                          Terminology.
@@ -1301,8 +1297,8 @@ Index
 * MIME:                                  Using MIME.
 * MIME digest:                           Document Groups.
 * MMDF mail box:                         Document Groups.
-* mode lines <1>:                        Various Various.
-* mode lines:                            Mode Lines.
+* mode lines <1>:                        Mode Lines.
+* mode lines:                            Various Various.
 * MODE READER:                           NNTP.
 * moderation:                            Moderation.
 * mouse:                                 Buttons.
@@ -1324,10 +1320,10 @@ Index
 * nnbabyl-get-new-mail:                  Not Reading Mail.
 * nnbabyl-mbox-file:                     Rmail Babyl.
 * nnchoke:                               Backend Interface.
-* nndir <1>:                             Directory Groups.
-* nndir:                                 Foreign Groups.
-* nndoc <1>:                             Document Groups.
-* nndoc:                                 Foreign Groups.
+* nndir <1>:                             Foreign Groups.
+* nndir:                                 Directory Groups.
+* nndoc <1>:                             Foreign Groups.
+* nndoc:                                 Document Groups.
 * nndoc-article-type:                    Document Groups.
 * nndoc-post-type:                       Document Groups.
 * nndraft:                               Drafts.
@@ -1366,8 +1362,8 @@ Index
 * nnmail-delete-file-function:           Mail Backend Variables.
 * nnmail-delete-incoming:                Mail Backend Variables.
 * nnmail-expiry-wait:                    Expiring Mail.
-* nnmail-expiry-wait-function <1>:       Expiring Mail.
-* nnmail-expiry-wait-function:           Group Parameters.
+* nnmail-expiry-wait-function <1>:       Group Parameters.
+* nnmail-expiry-wait-function:           Expiring Mail.
 * nnmail-keep-last-article <1>:          Expiring Mail.
 * nnmail-keep-last-article:              Mail and Procmail.
 * nnmail-message-id-cache-file:          Duplicates.
@@ -1382,8 +1378,8 @@ Index
 * nnmail-prepare-incoming-hook:          Mail Backend Variables.
 * nnmail-prepare-incoming-message-hook:  Washing Mail.
 * nnmail-procmail-directory:             Mail and Procmail.
-* nnmail-procmail-suffix <1>:            Mail and Procmail.
-* nnmail-procmail-suffix:                Mail Backend Variables.
+* nnmail-procmail-suffix <1>:            Mail Backend Variables.
+* nnmail-procmail-suffix:                Mail and Procmail.
 * nnmail-read-incoming-hook:             Mail Backend Variables.
 * nnmail-remove-leading-whitespace:      Washing Mail.
 * nnmail-remove-list-identifiers:        Washing Mail.
@@ -1398,24 +1394,24 @@ Index
 * nnmail-tmp-directory:                  Mail Backend Variables.
 * nnmail-treat-duplicates:               Duplicates.
 * nnmail-use-long-file-names:            Mail Backend Variables.
-* nnmail-use-procmail <1>:               Mail and Procmail.
-* nnmail-use-procmail:                   Mail Backend Variables.
+* nnmail-use-procmail <1>:               Mail Backend Variables.
+* nnmail-use-procmail:                   Mail and Procmail.
 * nnmbox:                                Unix Mail Box.
 * nnmbox-active-file:                    Unix Mail Box.
-* nnmbox-get-new-mail <1>:               Unix Mail Box.
-* nnmbox-get-new-mail:                   Not Reading Mail.
+* nnmbox-get-new-mail <1>:               Not Reading Mail.
+* nnmbox-get-new-mail:                   Unix Mail Box.
 * nnmbox-mbox-file:                      Unix Mail Box.
 * nnmh:                                  MH Spool.
 * nnmh-be-safe:                          MH Spool.
 * nnmh-directory:                        MH Spool.
-* nnmh-get-new-mail <1>:                 MH Spool.
-* nnmh-get-new-mail:                     Not Reading Mail.
+* nnmh-get-new-mail <1>:                 Not Reading Mail.
+* nnmh-get-new-mail:                     MH Spool.
 * nnml:                                  Mail Spool.
 * nnml-active-file:                      Mail Spool.
 * nnml-directory:                        Mail Spool.
 * nnml-generate-nov-databases:           Mail Spool.
-* nnml-get-new-mail <1>:                 Mail Spool.
-* nnml-get-new-mail:                     Not Reading Mail.
+* nnml-get-new-mail <1>:                 Not Reading Mail.
+* nnml-get-new-mail:                     Mail Spool.
 * nnml-newsgroups-file:                  Mail Spool.
 * nnml-nov-file-name:                    Mail Spool.
 * nnml-nov-is-evil:                      Mail Spool.
@@ -1486,18 +1482,18 @@ Index
 * NNTPSERVER:                            Finding the News.
 * nnvirtual:                             Virtual Groups.
 * nnvirtual-always-rescan:               Virtual Groups.
-* nnweb <1>:                             Web Searches.
-* nnweb:                                 Foreign Groups.
+* nnweb <1>:                             Foreign Groups.
+* nnweb:                                 Web Searches.
 * nnweb-max-hits:                        Web Searches.
 * nnweb-search:                          Web Searches.
 * nnweb-type:                            Web Searches.
 * nnweb-type-definition:                 Web Searches.
 * nocem:                                 NoCeM.
-* nov <1>:                               Terminology.
-* nov:                                   NNTP.
+* nov <1>:                               NNTP.
+* nov:                                   Terminology.
 * NOV:                                   Crosspost Handling.
-* offline <1>:                           Gnus Unplugged.
-* offline:                               SOUP.
+* offline <1>:                           SOUP.
+* offline:                               Gnus Unplugged.
 * overview.fmt:                          Crosspost Handling.
 * parameters:                            Topic Commands.
 * parent:                                Terminology.
@@ -1505,11 +1501,11 @@ Index
 * persistent articles:                   Persistent Articles.
 * pick and read:                         Pick and Read.
 * POP mail:                              Mail Backend Variables.
-* post <1>:                              Composing Messages.
-* post:                                  Summary Post Commands.
+* post <1>:                              Summary Post Commands.
+* post:                                  Composing Messages.
 * posting styles:                        Posting Styles.
-* PostScript <1>:                        Article Commands.
-* PostScript:                            PostScript Files.
+* PostScript <1>:                        PostScript Files.
+* PostScript:                            Article Commands.
 * pre-fetch:                             Asynchronous Fetching.
 * printing:                              Article Commands.
 * process mark:                          Other Marks.
@@ -1616,8 +1612,8 @@ Index
 * to-list:                               Group Parameters.
 * todo:                                  Newest Features.
 * topic commands:                        Topic Commands.
-* topic parameters <1>:                  Topic Parameters.
-* topic parameters:                      Topic Commands.
+* topic parameters <1>:                  Topic Commands.
+* topic parameters:                      Topic Parameters.
 * topic sorting:                         Topic Sorting.
 * topic topology:                        Topic Topology.
 * topic variables:                       Topic Variables.
@@ -1647,8 +1643,8 @@ Index
 * visible:                               Group Parameters.
 * visible group parameter:               Listing Groups.
 * visual:                                Highlighting and Menus.
-* washing <1>:                           Terminology.
-* washing:                               Article Washing.
+* washing <1>:                           Article Washing.
+* washing:                               Terminology.
 * window height:                         Windows Configuration.
 * window width:                          Windows Configuration.
 * windows configuration:                 Windows Configuration.

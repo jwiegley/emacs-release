@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -204,7 +203,7 @@ translations to turn `C-h' into <DEL> and <DEL> into `C-h', as follows:
      (keyboard-translate ?\C-? ?\C-h)
 
    Keyboard translations are not the same as key bindings in keymaps
-(*note Keymaps::.).  Emacs contains numerous keymaps that apply in
+(*note Keymaps::).  Emacs contains numerous keymaps that apply in
 different situations, but there is only one set of keyboard
 translations, and it applies to every character that Emacs reads from
 the terminal.  Keyboard translations take place at the lowest level of
@@ -258,7 +257,7 @@ The Init File, `~/.emacs'
 "init file" because it specifies how to initialize Emacs for you.  You
 can use the command line switch `-q' to prevent loading your init file,
 and `-u' (or `--user') to specify a different user's init file (*note
-Entering Emacs::.).
+Entering Emacs::).
 
    There can also be a "default init file", which is the library named
 `default.el', found via the standard search path for libraries.  The
@@ -299,7 +298,7 @@ Init File Syntax
 expressions.  Each of these consists of a function name followed by
 arguments, all surrounded by parentheses.  For example, `(setq
 fill-column 60)' calls the function `setq' to set the variable
-`fill-column' (*note Filling::.) to 60.
+`fill-column' (*note Filling::) to 60.
 
    The second argument to `setq' is an expression for the new value of
 the variable.  This can be a constant, a variable, or a function call
@@ -402,7 +401,7 @@ Lisp expressions:
             '(lambda () (auto-fill-mode 1)))
 
      This shows how to add a hook function to a normal hook variable
-     (*note Hooks::.).  The function we supply is a list starting with
+     (*note Hooks::).  The function we supply is a list starting with
      `lambda', with a single-quote in front of it to make it a list
      constant rather than an expression.
 
@@ -425,7 +424,7 @@ Lisp expressions:
 
      When the argument to `load' is a relative file name, not starting
      with `/' or `~', `load' searches the directories in `load-path'
-     (*note Lisp Libraries::.).
+     (*note Lisp Libraries::).
 
    * Load the compiled Lisp file `foo.elc' from your home directory.
 
@@ -566,15 +565,15 @@ command, or a numeric argument that you don't want.  It also stops a
 running command in the middle in a relatively safe way, so you can use
 it if you accidentally give a command which takes a long time.  In
 particular, it is safe to quit out of killing; either your text will
-*all* still be in the buffer, or it will *all* be in the kill ring (or
+_all_ still be in the buffer, or it will _all_ be in the kill ring (or
 maybe both).  Quitting an incremental search does special things
 documented under searching; in general, it may take two successive
-`C-g' characters to get out of a search (*note Incremental Search::.).
+`C-g' characters to get out of a search (*note Incremental Search::).
 
    On MS-DOS, the character `C-<BREAK>' serves as a quit character like
 `C-g'.  The reason is that it is not feasible, on MS-DOS, to recognize
 `C-g' while a command is running, between interactions with the user.
-By contrast, it *is* feasible to recognize `C-<BREAK>' at all times.
+By contrast, it _is_ feasible to recognize `C-<BREAK>' at all times.
 *Note MS-DOS Input::.
 
    `C-g' works by setting the variable `quit-flag' to `t' the instant
@@ -599,7 +598,7 @@ server is hung.
    Aborting with `C-]' (`abort-recursive-edit') is used to get out of a
 recursive editing level and cancel the command which invoked it.
 Quitting with `C-g' does not do this, and could not do this, because it
-is used to cancel a partially typed command *within* the recursive
+is used to cancel a partially typed command _within_ the recursive
 editing level.  Both operations are useful.  For example, if you are in
 a recursive edit and type `C-u 8' to enter a numeric argument, you can
 cancel that argument with `C-g' and remain in the recursive edit.
@@ -644,7 +643,7 @@ work normally, and how to recognize them and correct them.
 * Unasked-for Search::  Spontaneous entry to incremental search.
 * Memory Full::         How to cope when you run out of memory.
 * After a Crash::       Recovering editing in an Emacs session that crashed.
-* Emergency Escape::    Emergency escape--
+* Emergency Escape::    Emergency escape---
                           What to do if Emacs stops responding.
 * Total Frustration::   When you are at your wits' end.
 
@@ -657,7 +656,7 @@ If <DEL> Fails to Delete
    If you find that <DEL> enters Help like `Control-h' instead of
 deleting a character, your terminal is sending the wrong code for
 <DEL>.  You can work around this problem by changing the keyboard
-translation table (*note Keyboard Translations::.).
+translation table (*note Keyboard Translations::).
 
 
 File: emacs,  Node: Stuck Recursive,  Next: Screen Garbled,  Prev: DEL Gets Help,  Up: Lossage
@@ -905,7 +904,7 @@ to do the wrong thing but the problem corrects itself if you type
 certain that it was really Emacs's fault.  Some commands simply take a
 long time.  Type `C-g' (`C-<BREAK>' on MS-DOS) and then `C-h l' to see
 whether the input Emacs received was what you intended to type; if the
-input was such that you *know* it should have been processed quickly,
+input was such that you _know_ it should have been processed quickly,
 report a bug.  If you don't know whether the command should take a long
 time, find out by looking in the manual or by asking for assistance.
 
@@ -951,7 +950,7 @@ exact description of what commands you type, starting with the shell
 command to run Emacs, until the problem happens.
 
    The most important principle in reporting a bug is to report
-*facts*.  Hypotheses and verbal descriptions are no substitute for the
+_facts_.  Hypotheses and verbal descriptions are no substitute for the
 detailed raw data.  Reporting the facts is straightforward, but many
 people strain to posit explanations and report them instead of the
 facts.  If the explanations are based on guesses about how Emacs is
@@ -980,12 +979,12 @@ the `C-x C-a' command previously?  This is why we ask you to give the
 exact sequence of characters you typed since starting the Emacs session.
 
    You should not even say "visit a file" instead of `C-x C-f' unless
-you *know* that it makes no difference which visiting command is used.
+you _know_ that it makes no difference which visiting command is used.
 Similarly, rather than saying "if I have three characters on the line,"
 say "after I type `<RET> A B C <RET> C-p'," if that is the way you
 entered the text.
 
    So please don't guess any explanations when you report a bug.  If you
-want to actually *debug* the problem, and report explanations that are
+want to actually _debug_ the problem, and report explanations that are
 more than guesses, that is useful--but please include the facts as well.
 

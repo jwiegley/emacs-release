@@ -197,7 +197,10 @@
 
 ;;;###autoload
 (defun locate-with-filter (search-string filter)
-  "Run the locate command with a filter."
+  "Run the locate command with a filter.
+
+The filter is a regular expression. Only results matching the filter are
+shown; this is often useful to constrain a big search."
   (interactive
    (list (read-from-minibuffer "Locate: " nil nil
 			       nil 'locate-history-list)

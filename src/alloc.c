@@ -1320,6 +1320,8 @@ make_string (contents, nbytes)
   bcopy (contents, XSTRING (val)->data, nbytes);
   if (STRING_BYTES (XSTRING (val)) == XSTRING (val)->size)
     SET_STRING_BYTES (XSTRING (val), -1);
+  else
+    register_composite_chars_string (val);
   return val;
 }
 
@@ -1348,6 +1350,7 @@ make_multibyte_string (contents, nchars, nbytes)
   register Lisp_Object val;
   val = make_uninit_multibyte_string (nchars, nbytes);
   bcopy (contents, XSTRING (val)->data, nbytes);
+  register_composite_chars_string (val);
   return val;
 }
 
@@ -1365,6 +1368,8 @@ make_string_from_bytes (contents, nchars, nbytes)
   bcopy (contents, XSTRING (val)->data, nbytes);
   if (STRING_BYTES (XSTRING (val)) == XSTRING (val)->size)
     SET_STRING_BYTES (XSTRING (val), -1);
+  else
+    register_composite_chars_string (val);
   return val;
 }
 
@@ -1382,6 +1387,8 @@ make_specified_string (contents, nchars, nbytes, multibyte)
   bcopy (contents, XSTRING (val)->data, nbytes);
   if (!multibyte)
     SET_STRING_BYTES (XSTRING (val), -1);
+  else
+    register_composite_chars_string (val);
   return val;
 }
 

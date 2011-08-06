@@ -30,3 +30,6 @@ File: dir	Node: Top	This is the top of the INFO tree
 * Ediff: (ediff).	A comprehensive visual interface to diff & patch.
 * CC mode: (ccmode).	The GNU Emacs mode for editing C, C++, Objective-C
 			  and Java code.
+* RefTeX: (reftex).	Emacs support for LaTeX cross-references and citations.
+* Widget: (widget).     Documenting the "widget" package used by the
+                          Emacs Custom facility.

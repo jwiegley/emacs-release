@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -594,7 +593,7 @@ gains in productivity to translate into less work for us.
    ---------- Footnotes ----------
 
    (1) The wording here was careless.  The intention was that nobody
-would have to pay for *permission* to use the GNU system.  But the
+would have to pay for _permission_ to use the GNU system.  But the
 words don't make this clear, and people often interpret them as saying
 that copies of GNU should always be distributed at little or no charge.
 That was never the intent; later on, the manifesto mentions the
@@ -616,7 +615,7 @@ friends or over the net.  But it does suggest the wrong idea.
 
    (4) The Free Software Foundation raises most of its funds from a
 distribution service, although it is a charity rather than a company.
-If *no one* chooses to obtain copies by ordering from the FSF, it will
+If _no one_ chooses to obtain copies by ordering from the FSF, it will
 be unable to do its work.  But this does not mean that proprietary
 restrictions are justified to force every user to pay.  If a small
 fraction of all the users order copies from the FSF, that is sufficient

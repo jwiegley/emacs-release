@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -110,7 +109,7 @@ command operates on the selected buffer (most commands do).
 which is displayed there, but at any time only one of the windows is
 selected and its chosen buffer is the selected buffer.  Each window's
 mode line displays the name of the buffer that the window is displaying
-(*note Windows::.).
+(*note Windows::).
 
    Each buffer has a name, which can be of any length, and you can
 select any buffer by giving its name.  Most buffers are made by
@@ -122,7 +121,7 @@ and lower case matters in buffer names.
 
    Each buffer records individually what file it is visiting, whether
 it is modified, and what major mode and minor modes are in effect in it
-(*note Major Modes::.).  Any Emacs variable can be made "local to" a
+(*note Major Modes::).  Any Emacs variable can be made "local to" a
 particular buffer, meaning its value in that buffer can be different
 from the value in other buffers.  *Note Locals::.
 
@@ -156,7 +155,7 @@ Creating and Selecting Buffers
    To select the buffer named BUFNAME, type `C-x b BUFNAME <RET>'.
 This runs the command `switch-to-buffer' with argument BUFNAME.  You
 can use completion on an abbreviation for the buffer name you want
-(*note Completion::.).  An empty argument to `C-x b' specifies the most
+(*note Completion::).  An empty argument to `C-x b' specifies the most
 recently selected buffer that is not displayed in any window.
 
    Most buffers are created by visiting files, or by Emacs commands that
@@ -165,7 +164,7 @@ by typing `C-x b BUFNAME <RET>'.  This makes a new, empty buffer that
 is not visiting any file, and selects it for editing.  Such buffers are
 used for making notes to yourself.  If you try to save one, you are
 asked for the file name to use.  The new buffer's major mode is
-determined by the value of `default-major-mode' (*note Major Modes::.).
+determined by the value of `default-major-mode' (*note Major Modes::).
 
    Note that `C-x C-f', and any other command for visiting a file, can
 also be used to switch to an existing file-visiting buffer.  *Note
@@ -192,7 +191,7 @@ buffers that were current most recently come first.
 
    `*' at the beginning of a line indicates the buffer is "modified."
 If several buffers are modified, it may be time to save some with `C-x
-s' (*note Saving::.).  `%' indicates a read-only buffer.  `.' marks the
+s' (*note Saving::).  `%' indicates a read-only buffer.  `.' marks the
 selected buffer.  Here is an example of a buffer list:
 
       MR Buffer         Size  Mode           File
@@ -260,7 +259,7 @@ also good for mail buffers, compilation buffers, and most Emacs
 features that create special buffers with particular names.
 
    `M-x view-buffer' is much like `M-x view-file' (*note Misc File
-Ops::.) except that it examines an already existing Emacs buffer.  View
+Ops::) except that it examines an already existing Emacs buffer.  View
 mode provides commands for scrolling through the buffer conveniently
 but not for changing it.  When you exit View mode with `q', that
 switches back to the buffer (and the position) which was previously
@@ -303,12 +302,12 @@ one.  An answer of `y' means to kill the buffer.  Killing the current
 buffer or a buffer containing unsaved changes selects a new buffer or
 asks for confirmation just like `kill-buffer'.
 
-   The buffer menu feature (*note Several Buffers::.) is also convenient
+   The buffer menu feature (*note Several Buffers::) is also convenient
 for killing various buffers.
 
    If you want to do something special every time a buffer is killed,
 you can add hook functions to the hook `kill-buffer-hook' (*note
-Hooks::.).
+Hooks::).
 
    If you run one Emacs session for a period of days, as many people do,
 it can fill up with buffers that you used several days ago.  The command
@@ -323,7 +322,7 @@ for a mere hour.
 midnight, by enabling Midnight mode.  Midnight mode operates each day at
 midnight; at that time, it runs `clean-buffer-list', or whichever
 functions you have placed in the normal hook `midnight-hook' (*note
-Hooks::.).
+Hooks::).
 
    To enable Midnight mode, use the Customization buffer to set the
 variable `midnight-mode' to `t'.  *Note Easy Customization::.
@@ -635,7 +634,7 @@ minibuffer window to one of the other windows, and later switch back and
 finish supplying the minibuffer argument that is requested.  *Note
 Minibuffer Edit::.
 
-   The usual scrolling commands (*note Display::.) apply to the selected
+   The usual scrolling commands (*note Display::) apply to the selected
 window only, but there is one command to scroll the next window.
 `C-M-v' (`scroll-other-window') scrolls the window that `C-x o' would
 select.  It takes arguments, positive and negative, like `C-v'.  (In
@@ -677,12 +676,12 @@ buffer to select.
 `C-x 4 m'
      Start composing a mail message in another window.  This runs
      `mail-other-window'; its same-window analogue is `C-x m' (*note
-     Sending Mail::.).
+     Sending Mail::).
 
 `C-x 4 .'
      Find a tag in the current tags table, in another window.  This runs
      `find-tag-other-window', the multiple-window variant of `M-.'
-     (*note Tags::.).
+     (*note Tags::).
 
 `C-x 4 r FILENAME <RET>'
      Visit file FILENAME read-only, and select its buffer in another
@@ -1135,7 +1134,7 @@ Creating Frames
    The prefix key `C-x 5' is analogous to `C-x 4', with parallel
 subcommands.  The difference is that `C-x 5' commands create a new
 frame rather than just a new window in the selected frame (*note Pop Up
-Window::.).  If an existing visible or iconified frame already displays
+Window::).  If an existing visible or iconified frame already displays
 the requested material, these commands use the existing frame, after
 raising or deiconifying as necessary.
 
@@ -1179,8 +1178,8 @@ the initial frame.  *Note Initial Parameters: (elisp)Initial
 Parameters, for more information.
 
    The easiest way to specify the principal font for all your Emacs
-frames is with an X resource (*note Font X::.), but you can also do it
-by modifying `default-frame-alist' to specify the `font' parameter, as
+frames is with an X resource (*note Font X::), but you can also do it by
+modifying `default-frame-alist' to specify the `font' parameter, as
 shown here:
 
      (add-to-list 'default-frame-alist '(font . "10x20"))

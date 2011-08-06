@@ -58,6 +58,10 @@ Boston, MA 02111-1307, USA.  */
 extern int errno;
 #endif
 
+/* The directory for writing temporary files.  */
+
+Lisp_Object Vtemporary_file_directory;
+
 #ifdef CLASH_DETECTION
 
 #include <utmp.h>
@@ -192,7 +196,9 @@ get_boot_time ()
 	  if (! NILP (Ffile_exists_p (tempname)))
 	    {
 	      Lisp_Object args[6];
-	      tempname = Fmake_temp_name (build_string ("wtmp"));
+	      tempname = Fexpand_file_name (build_string ("wtmp"),
+					    Vtemporary_file_directory);
+	      tempname = Fmake_temp_name (tempname);
 	      args[0] = Vshell_file_name;
 	      args[1] = Qnil;
 	      args[2] = Qnil;
@@ -514,6 +520,8 @@ lock_if_free (clasher, lfname)
         }
       else if (locker == 1)
         return 1;  /* Someone else has it.  */
+      else if (locker == -1)
+        return -1;  /* Some kind of bug, avoid infinite loop.  */
 
       /* We deleted a stale lock; try again to lock the file.  */
     }
@@ -544,6 +552,7 @@ lock_file (fn)
   register Lisp_Object attack, orig_fn, encoded_fn;
   register char *lfname, *locker;
   lock_info_type lock_info;
+  struct gcpro gcpro1;
 
   /* Don't do locking while dumping Emacs.
      Uncompressing wtmp files uses call-process, which does not work
@@ -552,6 +561,7 @@ lock_file (fn)
     return;
 
   orig_fn = fn;
+  GCPRO1 (fn);
   fn = Fexpand_file_name (fn, Qnil);
   encoded_fn = ENCODE_FILE (fn);
 
@@ -562,18 +572,16 @@ lock_file (fn)
      visited.  */
   {
     register Lisp_Object subject_buf;
-    struct gcpro gcpro1;
 
     subject_buf = get_truename_buffer (orig_fn);
-    GCPRO1 (fn);
 
     if (!NILP (subject_buf)
 	&& NILP (Fverify_visited_file_modtime (subject_buf))
 	&& !NILP (Ffile_exists_p (fn)))
       call1 (intern ("ask-user-about-supersession-threat"), fn);
 
-    UNGCPRO;
   }
+  UNGCPRO;
 
   /* Try to lock the lock. */
   if (lock_if_free (&lock_info, lfname) <= 0)
@@ -715,6 +723,10 @@ init_filelock ()
 void
 syms_of_filelock ()
 {
+  DEFVAR_LISP ("temporary-file-directory", &Vtemporary_file_directory,
+    "The directory for writing temporary files.");
+  Vtemporary_file_directory = Qnil;
+
   defsubr (&Sunlock_buffer);
   defsubr (&Slock_buffer);
   defsubr (&Sfile_locked_p);

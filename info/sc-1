@@ -1,5 +1,4 @@
-This is Info file ../info/sc, produced by Makeinfo version 1.68 from
-the input file sc.texi.
+This is ../info/sc, produced by makeinfo version 4.0 from sc.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -95,7 +94,7 @@ work with Supercite.  For those systems without version numbers,
 Supercite probably works with any recently released version.  Note that
 only some of these systems will work with Supercite "out of the box."
 All others must overload interfacing routines to supply the necessary
-glue.  *Note Getting Connected:: for more details.
+glue.  *Note Getting Connected::, for more details.
 
 
 File: sc,  Node: Usage Overview,  Next: What Supercite Does Not Do,  Prev: Introduction,  Up: Introduction
@@ -139,7 +138,7 @@ But by previously agreed upon convention, any text above the
 `mail-header-separator' which separates mail headers from message
 bodies cannot be modified by Supercite.  Supercite, in fact, doesn't
 know anything about the meaning of these headers, and never ventures
-outside the designated region. *Note Hints to MUA Authors:: for more
+outside the designated region. *Note Hints to MUA Authors::, for more
 details.
 
 
@@ -184,7 +183,7 @@ as `filladapt' or `gin-mode'.  These packages can recognize Supercited
 text and will fill them appropriately.  Emacs' built-in filling
 routines, e.g. `fill-paragraph', do not recognize cited text and will
 not re-fill them properly because it cannot guess the `fill-prefix'
-being used.  *Note Post-yank Formatting Commands:: for details.
+being used.  *Note Post-yank Formatting Commands::, for details.
 
    As mentioned above, Supercite provides commands to recite or uncite
 regions of text in the reply buffer, and commands to perform other
@@ -192,7 +191,7 @@ beautifications on the cited original text, maintaining consistent and
 informative citations throughout.  Supercite tries to be as configurable
 as possible to allow for a wide range of personalized citation styles,
 but it is also immediately useful with the default configuration, once
-it has been properly connected to your MUA.  *Note Getting Connected::
+it has been properly connected to your MUA.  *Note Getting Connected::,
 for more details.
 
 
@@ -205,7 +204,7 @@ Citations
 message in the body of the reply.  There are two basic citation styles
 which Supercite supports.  The first, called "nested citations" is an
 anonymous form of citation; in other words, an indication is made that
-the cited line was written by someone *other* that the current message
+the cited line was written by someone _other_ that the current message
 author (i.e., other than you, the person composing the reply), but no
 reference is made as to the identity of the original author.  This
 style should look familiar since its use on the net is widespread.
@@ -268,7 +267,7 @@ user definable.  The elements are concatenated together, in this order:
   2. The "attribution string".  This element is supplied automatically
      by Supercite, based on your preferences and the original message's
      mail headers, though you may be asked to confirm Supercite's
-     choice.  *Note Selecting an Attribution:: for more details.
+     choice.  *Note Selecting an Attribution::, for more details.
 
   3. The "citation delimiter".  This string, contained in the variable
      `sc-citation-delimiter' visually separates the citation from the
@@ -459,7 +458,7 @@ The Built-in Header Rewrite Functions
    Below are examples of the various built-in header rewrite functions.
 Please note the following: first, the text which appears in the
 examples below as INFOKEY indicates that the corresponding value of the
-info key from the info alist will be inserted there.  (*Note
+info key from the info alist will be inserted there.  (*note
 Information Keys and the Info Alist::).  For example, in
 `sc-header-on-said' below, DATE and FROM correspond to the values of the
 `Date:' and `From:' mail headers respectively.
@@ -618,7 +617,7 @@ procedures you need to follow.
    To learn exactly how to connect Supercite to the software systems you
 are using, read the appropriate following sections.  For details on the
 interface specifications, or if you are writing or maintaining an MUA,
-*note Hints to MUA Authors::..
+*note Hints to MUA Authors::.
 
    The first thing that everyone should do, regardless of the MUA you
 are using is to set up Emacs so it will load Supercite at the
@@ -634,7 +633,7 @@ following in your `.emacs' file:
 designed to be run from the citation hook.  It expects `point' and
 `mark' to be set around the region to cite, and it expects the original
 article's mail headers to be present within this region.  Note that
-Supercite *never* touches any text outside this region.  Note further
+Supercite _never_ touches any text outside this region.  Note further
 that for Emacs 19, the region need not be active for `sc-cite-original'
 to do its job.  *Note Hints to MUA Authors::.
 
@@ -682,8 +681,8 @@ contained in the `sendmail.el' file.  `sendmail.el' for Emacs 18, and
 its derivative Epoch 4, do not know anything about the citation
 interface required by Supercite.  To connect Supercite to any of these
 MUAs under Emacs 18 or Epoch 4, you should first *note Overloading for
-Non-conforming MUAs::..  Then follow the directions for using these
-MUAs under Emacs 19.  *Note Emacs 19 MUAs::.
+Non-conforming MUAs::.  Then follow the directions for using these MUAs
+under Emacs 19.  *Note Emacs 19 MUAs::.
 
    Note that those instructions will tell you to use the function
 `add-hook'. This function is new with Emacs 19 and you will not have it
@@ -718,7 +717,7 @@ Supercite and MH-E 4.x:
      (add-hook 'mail-citation-hook 'sc-cite-original)
 
    Note that if you are using Emacs 18 or Epoch 4, you will not have the
-`add-hook' function.  *Note Emacs 18 MUAs:: for details on how to
+`add-hook' function.  *Note Emacs 18 MUAs::, for details on how to
 proceed without `add-hook'.
 
    MH-E version 3.x uses a slightly different interface than other MUAs.
@@ -762,7 +761,7 @@ following to your `.emacs' to connect Supercite with VM:
      (add-hook 'mail-yank-hooks 'sc-cite-original)
 
    Note that if you are using Emacs 18 or Epoch 4, you will not have the
-`add-hook' function.  *Note Emacs 18 MUAs:: for details on how to
+`add-hook' function.  *Note Emacs 18 MUAs::, for details on how to
 proceed without `add-hook'.
 
    Since version 5.34, VM has supported the newer `mail-citation-hook'
@@ -780,7 +779,7 @@ GNEWS with any Emacsen
 
    As far as I know, no version of GNEWS supports the citation interface
 required by Supercite.  To connect Supercite with GNEWS, please first
-*note Overloading for Non-conforming MUAs::..
+*note Overloading for Non-conforming MUAs::.
 
    After you have followed the directions in that section.  You should
 add the following lisp code to your `.emacs' file:
@@ -788,7 +787,7 @@ add the following lisp code to your `.emacs' file:
      (add-hook 'mail-citation-hook 'sc-cite-original)
 
    Note that if you are using Emacs 18 or Epoch 4, you will not have the
-`add-hook' function.  *Note Emacs 18 MUAs:: for details on how to
+`add-hook' function.  *Note Emacs 18 MUAs::, for details on how to
 proceed without `add-hook'.
 
 
@@ -811,7 +810,7 @@ Supercite to the Emacs 19 MUAs.  *Note Emacs 19 MUAs::.
    Users of Bob Weiner's Hyperbole package take note.  Hyperbole
 provides the necessary overloads (and a whole lot more!) and you can
 potentially clobber it if you were to load Supercite's overloading after
-Hyperbole's.  For this reason, Supercite will *not* perform any
+Hyperbole's.  For this reason, Supercite will _not_ perform any
 overloading if it finds the variable `hyperb:version' is `boundp' (i.e.
 it exists because Hyperbole has been loaded into your Emacs session).
 If this is the case, Supercite will display a warning message in the
@@ -857,8 +856,8 @@ gets run at the right time.  For GNUS, put this in your `.emacs' file:
      (setq gnews-ready-hook 'sc-perform-overloads)
 
    Now go back and follow the directions for getting the Emacs 19 MUAs
-connected to Supercite.  Be sure to *note Emacs 18 MUAs::. on
-substitutes for Emacs 19's `add-hook' function.
+connected to Supercite.  Be sure to *note Emacs 18 MUAs:: on substitutes
+for Emacs 19's `add-hook' function.
 
 
 File: sc,  Node: Replying and Yanking,  Next: Reply Buffer Initialization,  Prev: Overloading for Non-conforming MUAs,  Up: Top
@@ -883,13 +882,13 @@ Reply Buffer Initialization
    Executing `sc-cite-original' performs the following steps as it
 initializes the reply buffer:
 
-  1. *Runs `sc-pre-hook'.* This hook variable is run before
+  1. _Runs `sc-pre-hook'._ This hook variable is run before
      `sc-cite-original' does any other work.  You could conceivably use
      this hook to set certain Supercite variables based on the reply
      buffer's mode or name (i.e., to do something different based on
      whether you are replying or following up to an article).
 
-  2. *Inserts Supercite's keymap.* Supercite provides a number of
+  2. _Inserts Supercite's keymap._ Supercite provides a number of
      commands for performing post-yank modifications to the reply
      buffer.  These commands are installed on Supercite's top-level
      keymap.  Since Supercite has to interface with a wide variety of
@@ -906,16 +905,16 @@ initializes the reply buffer:
      unfortunately the best default due to the scarcity of available
      keybindings in many MUAs.
 
-  3. *Turns on Supercite minor mode.* The modeline of the reply buffer
+  3. _Turns on Supercite minor mode._ The modeline of the reply buffer
      should indicate that Supercite is active in that buffer by
      displaying the string `SC'.
 
-  4. *Sets the "Undo Boundary".* Supercite sets an undo boundary before
+  4. _Sets the "Undo Boundary"._ Supercite sets an undo boundary before
      it begins to modify the original yanked text.  This allows you to
      easily undo Supercite's changes to affect alternative citing
      styles.
 
-  5. *Processes the mail headers.* All previously retrieved info
+  5. _Processes the mail headers._ All previously retrieved info
      key-value pairs are deleted from the info alist, then the mail
      headers in the body of the yanked message are scanned. Info
      key-value pairs are created for each header found. Also, such
@@ -954,12 +953,12 @@ initializes the reply buffer:
      mail headers are nuked.  By default, only one blank line is left
      in the buffer.
 
-  6. *Selects the attribution and citation strings.* Once the mail
+  6. _Selects the attribution and citation strings._ Once the mail
      headers have been processed, Supercite selects a attribution
      string and a citation string which it will use to cite the
-     original message.  *Note Selecting an Attribution:: for details.
+     original message.  *Note Selecting an Attribution::, for details.
 
-  7. *Cites the message body.* After the selection of the attribution
+  7. _Cites the message body._ After the selection of the attribution
      and citation strings, Supercite cites the original message by
      inserting the citation string prefix in front of every uncited
      line.  You may not want Supercite to automatically cite very long
@@ -994,9 +993,9 @@ initializes the reply buffer:
      impossible for Supercite to anticipate every style in existence,
      and you probably wouldn't encounter them all anyway.  But you can
      configure Supercite to recognize those styles you see often.
-     *Note Configuring the Citation Engine:: for details.
+     *Note Configuring the Citation Engine::, for details.
 
-  8. *Runs `sc-post-hook'.* This variable is very similar to
+  8. _Runs `sc-post-hook'._ This variable is very similar to
      `sc-pre-hook', except that it runs after `sc-cite-original' is
      finished. This hook is provided mostly for completeness and
      backward compatibility. Perhaps it could be used to reset certain
@@ -1049,7 +1048,7 @@ for your tastes, you might consider one of these alternate approaches.
 Also, to make life easier, a shortcut function to toggle the state of
 both of these variables is provided on the key binding `C-c C-p C-p'
 (with the default value of `sc-mode-map-prefix'; *note Post-yank
-Formatting Commands::.).
+Formatting Commands::).
 
    You will noticed that the minor mode string will show the state of
 these variables as qualifier characters. When both variables are `nil',

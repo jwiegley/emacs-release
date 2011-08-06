@@ -5,7 +5,7 @@
 ;; Author:     Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: Andre Spiegel <spiegel@inf.fu-berlin.de>
 
-;; $Id: vc.el,v 1.250 1999/06/30 07:16:14 spiegel Exp $
+;; Id: vc.el,v 1.256 1999/10/02 10:53:18 *** with changes
 
 ;; This file is part of GNU Emacs.
 
@@ -2262,7 +2262,8 @@ default directory."
 	(changelog (find-change-log))
 	;; Presumably not portable to non-Unixy systems, along with rcs2log:
 	(tempfile (make-temp-name
-		   (expand-file-name "vc" temporary-file-directory)))
+		   (expand-file-name "vc"
+				     temporary-file-directory)))
 	(full-name (or add-log-full-name
 		       (user-full-name)
 		       (user-login-name)
@@ -2280,21 +2281,23 @@ default directory."
 	     (unwind-protect
 		 (progn
 		   (cd odefault)
-		   (if (eq 0 (apply 'call-process "rcs2log" nil
-				       (list t tempfile) nil
-				       "-c" changelog
-				       "-u" (concat (vc-user-login-name)
-						    "\t" full-name
-						    "\t" mailing-address)
-				       (mapcar
-					(function
-					 (lambda (f)
-					   (file-relative-name
-					    (if (file-name-absolute-p f)
-						f
-					      (concat odefault f)))))
-					args)))
-			  "done"
+		   (if (eq 0 (apply 'call-process
+				    (expand-file-name "rcs2log" exec-directory)
+				    nil
+				    (list t tempfile) nil
+				    "-c" changelog
+				    "-u" (concat (vc-user-login-name)
+						 "\t" full-name
+						 "\t" mailing-address)
+				    (mapcar
+				     (function
+				      (lambda (f)
+					(file-relative-name
+					 (if (file-name-absolute-p f)
+					     f
+					   (concat odefault f)))))
+				     args)))
+		       "done"
 		     (pop-to-buffer
 		      (set-buffer (get-buffer-create "*vc*")))
 		     (erase-buffer)
@@ -2472,7 +2475,12 @@ THRESHOLD, nil otherwise"
 	     (day (string-to-number (match-string 1)))
              (month (cdr (assoc (match-string 2) local-month-numbers)))
 	     (year-tmp (string-to-number (match-string 3)))
-	     (year (+ (if (> 100 year-tmp) 1900 0) year-tmp)) ; Possible millenium problem
+	     ;; Years 0..68 are 2000..2068.
+	     ;; Years 69..99 are 1969..1999.
+	     (year (+ (cond ((> 69 year-tmp) 2000)
+			    ((> 100 year-tmp) 1900)
+			    (t 0))
+		      year-tmp))
 	     (high (- (car (current-time))
 		      (car (encode-time 0 0 0 day month year))))
 	     (color (cond ((vc-annotate-compcar high (cond (color-map)
@@ -2588,25 +2596,22 @@ THRESHOLD, nil otherwise"
 			(failed t))
 		    (unwind-protect
 			(progn
-			  (apply 'vc-do-command
-				 nil 0 "/bin/sh" file 'MASTER "-c"
-				 ;; Some shells make the "" dummy argument into $0
-				 ;; while others use the shell's name as $0 and
-				 ;; use the "" as $1.  The if-statement
-				 ;; converts the latter case to the former.
-				 (format "if [ x\"$1\" = x ]; then shift; fi; \
-			       umask %o; exec >\"$1\" || exit; \
-			       shift; umask %o; exec get \"$@\""
-				       (logand 511 (lognot vc-modes))
-				       (logand 511 (lognot (default-file-modes))))
-				 ""		; dummy argument for shell's $0
-				 filename 
-				 (if writable "-e")
-				 "-p" 
-				 (and rev
-				      (concat "-r" (vc-lookup-triple file rev)))
-				 switches)
-			  (setq failed nil))
+                          (let ((coding-system-for-read 'no-conversion)
+                                (coding-system-for-write 'no-conversion))
+                            (with-temp-file filename
+                              (apply 'vc-do-command
+                                     (current-buffer) 0 "get" file 'MASTER
+                                     "-s" ;; suppress diagnostic output
+                                     (if writable "-e")
+                                     "-p" 
+                                     (and rev
+                                          (concat "-r" 
+                                                  (vc-lookup-triple file rev)))
+                                     switches)))
+                          (set-file-modes filename
+                                          (logior (file-modes (vc-name file))
+                                                  (if writable 128 0)))
+                          (setq failed nil))
 		      (and failed (file-exists-p filename) 
 			   (delete-file filename))))
 		(apply 'vc-do-command nil 0 "get" file 'MASTER   ;; SCCS
@@ -2622,21 +2627,19 @@ THRESHOLD, nil otherwise"
 		      (failed t))
 		  (unwind-protect
 		      (progn
-			(apply 'vc-do-command
-			       nil 0 "/bin/sh" file 'MASTER "-c"
-			       ;; See the SCCS case, above, regarding the
-			       ;; if-statement.
-			       (format "if [ x\"$1\" = x ]; then shift; fi; \
-			       umask %o; exec >\"$1\" || exit; \
-			       shift; umask %o; exec co \"$@\""
-				       (logand 511 (lognot vc-modes))
-				       (logand 511 (lognot (default-file-modes))))
-			       ""		; dummy argument for shell's $0
-			       filename
-			       (if writable "-l")
-			       (concat "-p" rev)
-			       switches)
-			(setq failed nil))
+                        (let ((coding-system-for-read 'no-conversion)
+                              (coding-system-for-write 'no-conversion))
+                          (with-temp-file filename
+                            (apply 'vc-do-command
+                                   (current-buffer) 0 "co" file 'MASTER
+                                   "-q" ;; suppress diagnostic output
+                                   (if writable "-l")
+                                   (concat "-p" rev)
+                                   switches)))
+                        (set-file-modes filename 
+                                        (logior (file-modes (vc-name file))
+                                                (if writable 128 0)))
+                        (setq failed nil))
 		    (and failed (file-exists-p filename) (delete-file filename))))
 	      (let (new-version)
 		;; if we should go to the head of the trunk, 
@@ -2677,14 +2680,16 @@ THRESHOLD, nil otherwise"
 		(let ((failed t))
 		  (unwind-protect
 		      (progn
-			(apply 'vc-do-command
-			       nil 0 "/bin/sh" file 'WORKFILE "-c"
-			       "exec >\"$1\" || exit; shift; exec cvs update \"$@\""
-			       ""		; dummy argument for shell's $0
-			       workfile
-			       (concat "-r" rev)
-			       "-p"
-			       switches)
+                        (let ((coding-system-for-read 'no-conversion)
+                              (coding-system-for-write 'no-conversion))
+                          (with-temp-file filename
+                            (apply 'vc-do-command
+                                   (current-buffer) 0 "cvs" file 'WORKFILE 
+                                   "-Q" ;; suppress diagnostic output
+                                   "update"
+                                   (concat "-r" rev)
+                                   "-p"
+                                   switches)))
 			(setq failed nil))
 		    (and failed (file-exists-p filename) (delete-file filename))))
 	      ;; default for verbose checkout: clear the sticky tag
@@ -2995,7 +3000,7 @@ THRESHOLD, nil otherwise"
              (vc-file-setprop file 'vc-workfile-version (match-string 1)))
          ;; get file status
 	 (if (re-search-forward 
-              (concat "^\\(\\([CMU]\\) \\)?" 
+              (concat "^\\(\\([CMUP]\\) \\)?" 
                       (regexp-quote (file-name-nondirectory file))
 		      "\\( already contains the differences between \\)?")
               nil t)

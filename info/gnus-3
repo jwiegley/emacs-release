@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -178,13 +177,13 @@ Summary Mail Commands
      Ordnung muﬂ sein!
 
      This command understands the process/prefix convention (*note
-     Process/Prefix::.).
+     Process/Prefix::).
 
 `S O m'
-     Digest the current series (*note Decoding Articles::.) and forward
+     Digest the current series (*note Decoding Articles::) and forward
      the result using mail (`gnus-uu-digest-mail-forward').  This
      command uses the process/prefix convention (*note
-     Process/Prefix::.).
+     Process/Prefix::).
 
 `S M-c'
      Send a complaint about excessive crossposting to the author of the
@@ -194,9 +193,9 @@ Summary Mail Commands
      crossposting pandemic that's sweeping Usenet.  It will compose a
      reply using the `gnus-crosspost-complaint' variable as a preamble.
      This command understands the process/prefix convention (*note
-     Process/Prefix::.) and will prompt you before sending each mail.
+     Process/Prefix::) and will prompt you before sending each mail.
 
-   Also *note (message)Header Commands::. for more information.
+   Also *note (message)Header Commands:: for more information.
 
 
 File: gnus,  Node: Summary Post Commands,  Prev: Summary Mail Commands,  Up: Reply Followup and Post
@@ -242,9 +241,9 @@ Summary Post Commands
 
 `S u'
      Uuencode a file, split it into parts, and post it as a series
-     (`gnus-uu-post-news'). (*note Uuencoding and Posting::.).
+     (`gnus-uu-post-news'). (*note Uuencoding and Posting::).
 
-   Also *note (message)Header Commands::. for more information.
+   Also *note (message)Header Commands:: for more information.
 
 
 File: gnus,  Node: Canceling and Superseding,  Next: Marking Articles,  Prev: Reply Followup and Post,  Up: The Summary Buffer
@@ -262,7 +261,7 @@ articles, so don't try any funny stuff).  Then press `C' or `S c'
 (`gnus-summary-cancel-article').  Your article will be
 canceled--machines all over the world will be deleting your article.
 This command uses the process/prefix convention (*note
-Process/Prefix::.).
+Process/Prefix::).
 
    Be aware, however, that not all sites honor cancels, so your article
 may live on here and there, while most sites will delete the article in
@@ -270,7 +269,7 @@ question.
 
    Gnus will use the "current" select method when canceling.  If you
 want to use the standard posting method, use the `a' symbolic prefix
-(*note Symbolic Prefixes::.).
+(*note Symbolic Prefixes::).
 
    If you discover that you have made some mistakes and want to do some
 corrections, you can post a "superseding" article that will replace
@@ -341,14 +340,14 @@ other.
      off reading it, or replying to it, until sometime later, you'd
      typically tick it.  However, articles can be expired, so if you
      want to keep an article forever, you'll have to make it persistent
-     (*note Persistent Articles::.).
+     (*note Persistent Articles::).
 
 `?'
      Marked as dormant (`gnus-dormant-mark').
 
      "Dormant articles" will only appear in the summary buffer if there
      are followups to it.  If you want to see them even if they don't
-     have followups, you can use the `/ D' command (*note Limiting::.).
+     have followups, you can use the `/ D' command (*note Limiting::).
 
 `SPACE'
      Marked as unread (`gnus-unread-mark').
@@ -450,6 +449,7 @@ article is read or not.
      instance, `X u' (`gnus-uu-decode-uu') will uudecode and view all
      articles that have been marked with the process mark.  Articles
      marked with the process mark have a `#' in the second column.
+
 
    You might have noticed that most of these "non-readedness" marks
 appear in the second column by default.  So if you have a cached, saved,
@@ -668,7 +668,7 @@ additional articles.
 `/ n'
      Limit the summary buffer to the current article
      (`gnus-summary-limit-to-articles').  Uses the process/prefix
-     convention (*note Process/Prefix::.).
+     convention (*note Process/Prefix::).
 
 `/ w'
      Pop the previous limit off the stack and restore it
@@ -724,7 +724,7 @@ trees, but unfortunately, the `References' header is often broken or
 simply missing.  Weird news propagation excarcerbates the problem, so
 one has to employ other heuristics to get pleasing results.  A plethora
 of approaches exists, as detailed in horrible detail in *note
-Customizing Threading::..
+Customizing Threading::.
 
    First, a quick overview of the concepts:
 
@@ -806,7 +806,7 @@ Loose Threads
           Gnus won't actually make any article the parent, but simply
           leave the subject field of all orphans except the first
           empty.  (Actually, it will use `gnus-summary-same-subject' as
-          the subject (*note Summary Buffer Format::.).)
+          the subject (*note Summary Buffer Format::).)
 
     `none'
           Don't make any article parent at all.  Just gather the
@@ -829,7 +829,7 @@ Loose Threads
 
      If you set this variable to the special value `fuzzy', Gnus will
      use a fuzzy string comparison algorithm on the subjects (*note
-     Fuzzy Matching::.).
+     Fuzzy Matching::).
 
 `gnus-simplify-subject-fuzzy-regexp'
      This can either be a regular expression or list of regular
@@ -934,7 +934,7 @@ Filling In Threads
 
      This variable can also be set to `invisible'.  This won't have any
      visible effects, but is useful if you use the `A T' command a lot
-     (*note Finding the Parent::.).
+     (*note Finding the Parent::).
 
 `gnus-build-sparse-threads'
      Fetching old headers can be slow.  A low-rent similar effect can be
@@ -996,7 +996,7 @@ Low-Level Threading
      Hook run before parsing any headers.  The default value is
      `(gnus-decode-rfc1522)', which means that QPized headers will be
      slightly decoded in a hackish way.  This is likely to change in the
-     future when Gnus becomes MIMEified.
+     future when Gnus becomes MIME'ified.
 
 `gnus-alter-header-function'
      If non-`nil', this function will be called to allow alteration of
@@ -1101,7 +1101,7 @@ non-`nil' (which it is by default), subjects will be ignored when doing
 thread commands.  If this variable is `nil', articles in the same
 thread with different subjects will not be included in the operation in
 question.  If this variable is `fuzzy', only articles that have
-subjects fuzzily equal will be included (*note Fuzzy Matching::.).
+subjects fuzzily equal will be included (*note Fuzzy Matching::).
 
 
 File: gnus,  Node: Sorting,  Next: Asynchronous Fetching,  Prev: Threading,  Up: The Summary Buffer
@@ -1256,10 +1256,10 @@ File: gnus,  Node: Article Caching,  Next: Persistent Articles,  Prev: Asynchron
 Article Caching
 ===============
 
-   If you have an *extremely* slow NNTP connection, you may consider
+   If you have an _extremely_ slow NNTP connection, you may consider
 turning article caching on.  Each article will then be stored locally
 under your home directory.  As you may surmise, this could potentially
-use *huge* amounts of disk space, as well as eat up all your inodes so
+use _huge_ amounts of disk space, as well as eat up all your inodes so
 fast it will make your head swim.  In vodka.
 
    Used carefully, though, it could be just an easier way to save
@@ -1369,7 +1369,7 @@ memory usage some.
 
    If you set `gnus-keep-backlog' to a number N, Gnus will store at
 most N old articles in a buffer for later re-fetching.  If this
-variable is non-`nil' and is not a number, Gnus will store *all* read
+variable is non-`nil' and is not a number, Gnus will store _all_ read
 articles, which means that your Emacs will grow without bound before
 exploding and taking your machine down with you.  I put that in there
 just to keep y'all on your toes.

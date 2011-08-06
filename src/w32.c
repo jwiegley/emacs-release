@@ -1131,6 +1131,13 @@ map_w32_filename (const char * name, const char ** pPath)
   char * path;
   const char * save_name = name;
 
+  if (strlen (name) >= MAX_PATH)
+    {
+      /* Return a filename which will cause callers to fail.  */
+      strcpy (shortname, "?");
+      return shortname;
+    }
+
   if (is_fat_volume (name, &path)) /* truncate to 8.3 */
     {
       register int left = 8;	/* maximum number of chars in part */
@@ -1244,7 +1251,7 @@ static WIN32_FIND_DATA dir_find_data;
 /* Support shares on a network resource as subdirectories of a read-only
    root directory. */
 static HANDLE wnet_enum_handle = INVALID_HANDLE_VALUE;
-HANDLE open_unc_volume (char *);
+HANDLE open_unc_volume (const char *);
 char  *read_unc_volume (HANDLE, char *, int);
 void   close_unc_volume (HANDLE);
 
@@ -1357,7 +1364,7 @@ readdir (DIR *dirp)
 }
 
 HANDLE
-open_unc_volume (char *path)
+open_unc_volume (const char *path)
 {
   NETRESOURCE nr; 
   HANDLE henum;
@@ -1368,7 +1375,7 @@ open_unc_volume (char *path)
   nr.dwDisplayType = RESOURCEDISPLAYTYPE_SERVER; 
   nr.dwUsage = RESOURCEUSAGE_CONTAINER; 
   nr.lpLocalName = NULL; 
-  nr.lpRemoteName = map_w32_filename (path, NULL);
+  nr.lpRemoteName = (LPSTR) map_w32_filename (path, NULL);
   nr.lpComment = NULL; 
   nr.lpProvider = NULL;   
 
@@ -1414,7 +1421,7 @@ close_unc_volume (HANDLE henum)
 }
 
 DWORD
-unc_volume_file_attributes (char *path)
+unc_volume_file_attributes (const char *path)
 {
   HANDLE henum;
   DWORD attrs;

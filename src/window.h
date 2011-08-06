@@ -139,7 +139,7 @@ struct window
        it yet, or if the frame doesn't have any scroll bars, this is nil.  */
     Lisp_Object vertical_scroll_bar;
 
-/* The rest are currently not used or only half used */
+    /* Some of these are currently not used or only half used */
     /* Frame coords of point at that time */
     Lisp_Object last_point_x;
     Lisp_Object last_point_y;
@@ -147,6 +147,7 @@ struct window
     /* May be nil if mark does not exist or was not on frame */
     Lisp_Object last_mark_x;
     Lisp_Object last_mark_y;
+
     /* Number of characters in buffer past bottom of window,
        as of last redisplay that finished. */
     Lisp_Object window_end_pos;
@@ -185,6 +186,8 @@ struct window
     /* If redisplay in this window goes beyond this buffer position,
        must run the redisplay-end-trigger-hook.  */
     Lisp_Object redisplay_end_trigger;
+    /* Non-nil means don't delete this window for becoming "too small".  */
+    Lisp_Object too_small_ok;
   };
 
 /* 1 if W is a minibuffer window.  */

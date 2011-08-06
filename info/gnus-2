@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -36,7 +35,7 @@ groups under point--`gnus-subscribe-newsgroup-method' is not consulted.
 `G m'
      Make a new group (`gnus-group-make-group').  Gnus will prompt you
      for a name, a method and possibly an "address".  For an easier way
-     to subscribe to NNTP groups, *note Browse Foreign Server::..
+     to subscribe to NNTP groups, *note Browse Foreign Server::.
 
 `G r'
      Rename the current group to something else
@@ -60,7 +59,7 @@ groups under point--`gnus-subscribe-newsgroup-method' is not consulted.
      (`gnus-group-edit-group').
 
 `G d'
-     Make a directory group (*note Directory Groups::.).  You will be
+     Make a directory group (*note Directory Groups::).  You will be
      prompted for a directory name (`gnus-group-make-directory-group').
 
 `G h'
@@ -131,7 +130,7 @@ methods.
    If `gnus-activate-foreign-newsgroups' is a positive number, Gnus
 will check all foreign groups with this level or lower at startup.
 This might take quite a while, especially if you subscribe to lots of
-groups from different NNTP servers.  Also *note Group Levels::.;
+groups from different NNTP servers.  Also *note Group Levels::;
 `gnus-activate-level' also affects activation of foreign newsgroups.
 
 
@@ -148,7 +147,7 @@ Here's an example group parameter list:
 
    We see that each element consists of a "dotted pair"--the thing
 before the dot is the key, while the thing after the dot is the value.
-All the parameters have this form *except* local variable specs, which
+All the parameters have this form _except_ local variable specs, which
 are not dotted pairs, but proper lists.
 
    The following group parameters can be used:
@@ -219,12 +218,12 @@ are not dotted pairs, but proper lists.
      generated, if `(gcc-self . "string")' is present, this string will
      be inserted literally as a `gcc' header.  This parameter takes
      precedence over any default `Gcc' rules as described later (*note
-     Archived Messages::.).
+     Archived Messages::).
 
 `auto-expire'
      If the group parameter has an element that looks like `(auto-expire
      . t)', all articles read will be marked as expirable.  For an
-     alternative approach, *note Expiring Mail::..
+     alternative approach, *note Expiring Mail::.
 
 `total-expire'
      If the group parameter has an element that looks like
@@ -289,7 +288,7 @@ are not dotted pairs, but proper lists.
 
    Use the `G p' command to edit group parameters of a group.  You
 might also be interested in reading about topic parameters (*note Topic
-Parameters::.).
+Parameters::).
 
 
 File: gnus,  Node: Listing Groups,  Next: Sorting Groups,  Prev: Group Parameters,  Up: The Group Buffer
@@ -544,7 +543,7 @@ Exiting Gnus
 
 `Q'
      Quit Gnus without saving the `.newsrc' files (`gnus-group-quit').
-     The dribble file will be saved, though (*note Auto Save::.).
+     The dribble file will be saved, though (*note Auto Save::).
 
    `gnus-suspend-gnus-hook' is called when you suspend Gnus and
 `gnus-exit-gnus-hook' is called when you quit Gnus, while
@@ -588,7 +587,7 @@ groups or the sex groups--or both!  Go wild!
           8: comp.binaries.fractals
          13: comp.sources.unix
 
-   To get this *fab* functionality you simply turn on (ooh!) the
+   To get this _fab_ functionality you simply turn on (ooh!) the
 `gnus-topic' minor mode--type `t' in the group buffer.  (This is a
 toggling command.)
 
@@ -620,7 +619,7 @@ Topic Variables
 really neat, I think.
 
    The topic lines themselves are created according to the
-`gnus-topic-line-format' variable (*note Formatting Variables::.).
+`gnus-topic-line-format' variable (*note Formatting Variables::).
 Valid elements are:
 
 `i'
@@ -670,12 +669,12 @@ definitions slightly.
 `T m'
      Move the current group to some other topic
      (`gnus-topic-move-group').  This command uses the process/prefix
-     convention (*note Process/Prefix::.).
+     convention (*note Process/Prefix::).
 
 `T c'
      Copy the current group to some other topic
      (`gnus-topic-copy-group').  This command uses the process/prefix
-     convention (*note Process/Prefix::.).
+     convention (*note Process/Prefix::).
 
 `T D'
      Remove a group from the current topic (`gnus-topic-remove-group').
@@ -687,7 +686,7 @@ definitions slightly.
      in the root topic.
 
      This command uses the process/prefix convention (*note
-     Process/Prefix::.).
+     Process/Prefix::).
 
 `T M'
      Move all groups that match some regular expression to a topic
@@ -834,7 +833,7 @@ Topic Parameters
 
    All groups in a topic will inherit group parameters from the parent
 (and ancestor) topic parameters.  All valid group parameters are valid
-topic parameters (*note Group Parameters::.).
+topic parameters (*note Group Parameters::).
 
    Group parameters (of course) override topic parameters, and topic
 parameters in sub-topics override topic parameters in super-topics.  You
@@ -1044,7 +1043,7 @@ The Summary Buffer
 move around, read articles, post articles and reply to articles.
 
    The most common way to a summary buffer is to select a group from the
-group buffer (*note Selecting a Group::.).
+group buffer (*note Selecting a Group::).
 
    You can have as many summary buffers open as you wish.
 
@@ -1055,7 +1054,7 @@ group buffer (*note Selecting a Group::.).
 * Choosing Articles::           Reading articles.
 * Paging the Article::          Scrolling the current article.
 * Reply Followup and Post::     Posting articles.
-* Canceling and Superseding::   "Whoops, I shouldn't have called him that."
+* Canceling and Superseding::   ``Whoops, I shouldn't have called him that.''
 * Marking Articles::            Marking articles as read, expirable, etc.
 * Limiting::                    You can limit the summary buffer.
 * Threading::                   How threads are made.
@@ -1112,7 +1111,7 @@ Summary Buffer Lines
    You can change the format of the lines in the summary buffer by
 changing the `gnus-summary-line-format' variable.  It works along the
 same lines as a normal `format' string, with some extensions (*note
-Formatting Variables::.).
+Formatting Variables::).
 
    The default string is `%U%R%z%I%(%[%4L: %-20,20n%]%) %s\n'.
 
@@ -1152,7 +1151,7 @@ Formatting Variables::.).
      Number of characters in the article.
 
 `I'
-     Indentation based on thread level (*note Customizing Threading::.).
+     Indentation based on thread level (*note Customizing Threading::).
 
 `T'
      Nothing if the article is a root and lots of spaces if it isn't (it
@@ -1160,7 +1159,7 @@ Formatting Variables::.).
 
 `['
      Opening bracket, which is normally `[', but can also be `<' for
-     adopted articles (*note Customizing Threading::.).
+     adopted articles (*note Customizing Threading::).
 
 `]'
      Closing bracket, which is normally `]', but can also be `>' for
@@ -1181,7 +1180,7 @@ Formatting Variables::.).
      cached, or has been saved.
 
 `i'
-     Score as a number (*note Scoring::.).
+     Score as a number (*note Scoring::).
 
 `z'
      Zcore, `+' if above the default level and `-' if below the default
@@ -1252,8 +1251,8 @@ Summary Buffer Mode Line
 ------------------------
 
    You can also change the format of the summary mode bar (*note Mode
-Line Formatting::.).  Set `gnus-summary-mode-line-format' to whatever
-you like.  The default is `Gnus: %%b [%A] %Z'.
+Line Formatting::).  Set `gnus-summary-mode-line-format' to whatever you
+like.  The default is `Gnus: %%b [%A] %Z'.
 
    Here are the elements you can play with:
 
@@ -1293,16 +1292,16 @@ you like.  The default is `Gnus: %%b [%A] %Z'.
      Subject of the current article.
 
 `u'
-     User-defined spec (*note User-Defined Specs::.).
+     User-defined spec (*note User-Defined Specs::).
 
 `s'
-     Name of the current score file (*note Scoring::.).
+     Name of the current score file (*note Scoring::).
 
 `d'
-     Number of dormant articles (*note Unread Articles::.).
+     Number of dormant articles (*note Unread Articles::).
 
 `t'
-     Number of ticked articles (*note Unread Articles::.).
+     Number of ticked articles (*note Unread Articles::).
 
 `r'
      Number of articles that have been marked as read in this session.
@@ -1331,8 +1330,8 @@ Summary Highlighting
 
 `gnus-summary-highlight'
      Summary lines are highlighted according to this variable, which is
-     a list where the elements are of the format (FORM . FACE).  If you
-     would, for instance, like ticked articles to be italic and
+     a list where the elements are of the format `(FORM . FACE)'.  If
+     you would, for instance, like ticked articles to be italic and
      high-scored articles to be bold, you could set this variable to
      something like
           (((eq mark gnus-ticked-mark) . italic)
@@ -1391,13 +1390,13 @@ group buffer.
      happen only if you are located on the last article in the group.
      Finally, if this variable is `slightly-quietly', the `Z n' command
      will go to the next group without confirmation.  Also *note Group
-     Levels::..
+     Levels::.
 
 `gnus-auto-select-same'
      If non-`nil', all the movement commands will try to go to the next
      article with the same subject as the current.  ("Same" here might
      mean "roughly equal".  See `gnus-summary-gather-subject-limit' for
-     details (*note Customizing Threading::.).)  If there are no more
+     details (*note Customizing Threading::).)  If there are no more
      articles with the same subject, go to the first unread article.
 
      This variable is not particularly useful if you use a threaded
@@ -1485,5 +1484,5 @@ prefix, and they all select and display an article.
      command above in that you can pop as many previous articles off the
      history as you like, while `l' toggles the two last read articles.
      For a somewhat related issue (if you use these commands a lot),
-     *note Article Backlog::..
+     *note Article Backlog::.
 

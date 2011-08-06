@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -28,7 +27,7 @@ File: gnus,  Node: Troubleshooting,  Next: A Programmers Guide to Gnus,  Prev: C
 Troubleshooting
 ===============
 
-   Gnus works *so* well straight out of the box--I can't imagine any
+   Gnus works _so_ well straight out of the box--I can't imagine any
 problems, really.
 
    Ahem.
@@ -86,7 +85,7 @@ to `ding-request@gnus.org' to subscribe.
 
 File: gnus,  Node: A Programmers Guide to Gnus,  Next: Emacs for Heathens,  Prev: Troubleshooting,  Up: Appendices
 
-A Programmer's Guide to Gnus
+A Programmers' Guide to Gnus
 ============================
 
    It is my hope that other people will figure out smart stuff that Gnus
@@ -325,7 +324,7 @@ Required Backend Functions
           field      = <text except TAB>
 
      For a closer look at what should be in those fields, *note
-     Headers::..
+     Headers::.
 
 `(nnchoke-open-server SERVER &optional DEFINITIONS)'
      SERVER is here the virtual server name.  DEFINITIONS is a list of
@@ -417,7 +416,7 @@ Required Backend Functions
 
 `(nnchoke-request-list &optional SERVER)'
      Return a list of all groups available on SERVER.  And that means
-     *all*.
+     _all_.
 
      Here's an example from a server that only carries two groups:
 
@@ -467,11 +466,11 @@ Optional Backend Functions
           group-buffer = *active-line / *group-status
 
 `(nnchoke-request-update-info GROUP INFO &optional SERVER)'
-     A Gnus group info (*note Group Info::.) is handed to the backend
-     for alterations.  This comes in handy if the backend really
-     carries all the information (as is the case with virtual and imap
-     groups).  This function should destructively alter the info to
-     suit its needs, and should return the (altered) group info.
+     A Gnus group info (*note Group Info::) is handed to the backend for
+     alterations.  This comes in handy if the backend really carries
+     all the information (as is the case with virtual and imap groups).
+     This function should destructively alter the info to suit its
+     needs, and should return the (altered) group info.
 
      There should be no result data from this function.
 
@@ -946,7 +945,7 @@ file is left up to the programmer--if it's simpler to just spew it all
 out on one looong line, then that's ok.
 
    The meaning of the various atoms are explained elsewhere in this
-manual (*note Score File Format::.).
+manual (*note Score File Format::).
 
 
 File: gnus,  Node: Headers,  Next: Ranges,  Prev: Score File Syntax,  Up: A Programmers Guide to Gnus
@@ -957,7 +956,7 @@ Headers
    Internally Gnus uses a format for storing article headers that
 corresponds to the NOV format in a mysterious fashion.  One could
 almost suspect that the author looked at the NOV specification and just
-shamelessly *stole* the entire thing, and one would be right.
+shamelessly _stole_ the entire thing, and one would be right.
 
    "Header" is a severely overloaded term.  "Header" is used in RFC1036
 to talk about lines in the head of an article (e.g., `From').  It is
@@ -985,7 +984,7 @@ Ranges
 using it a lot and have elaborated on it greatly.
 
    The question is simple: If you have a large amount of objects that
-are identified by numbers (say, articles, to take a *wild* example)
+are identified by numbers (say, articles, to take a _wild_ example)
 that you want to qualify as being "included", a normal sequence isn't
 very useful.  (A 200,000 length sequence is a bit long-winded.)
 
@@ -1102,7 +1101,7 @@ a series of macros for getting/setting these elements.
 
 `gnus-info-rank'
 `gnus-info-set-rank'
-     Get/set the group rank (*note Group Score::.).
+     Get/set the group rank (*note Group Score::).
 
 `gnus-info-level'
 `gnus-info-set-level'
@@ -1110,7 +1109,7 @@ a series of macros for getting/setting these elements.
 
 `gnus-info-score'
 `gnus-info-set-score'
-     Get/set the group score (*note Group Score::.).
+     Get/set the group score (*note Group Score::).
 
 `gnus-info-read'
 `gnus-info-set-read'
@@ -1143,7 +1142,7 @@ Extended Interactive
 --------------------
 
    Gnus extends the standard Emacs `interactive' specification slightly
-to allow easy use of the symbolic prefix (*note Symbolic Prefixes::.).
+to allow easy use of the symbolic prefix (*note Symbolic Prefixes::).
 Here's an example of how this is used:
 
      (defun gnus-summary-increase-score (&optional score symp)

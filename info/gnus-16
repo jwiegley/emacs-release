@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -44,15 +43,15 @@ Key Index
 * / * (Summary):                         Limiting.
 * / / (Summary):                         Limiting.
 * / a (Summary):                         Limiting.
-* / C (Summary):                         Limiting.
 * / c (Summary):                         Limiting.
+* / C (Summary):                         Limiting.
 * / d (Summary):                         Limiting.
 * / D (Summary):                         Limiting.
 * / E (Summary):                         Limiting.
 * / m (Summary):                         Limiting.
 * / n (Summary):                         Limiting.
-* / T (Summary):                         Limiting.
 * / t (Summary):                         Limiting.
+* / T (Summary):                         Limiting.
 * / u (Summary):                         Limiting.
 * / v (Summary):                         Limiting.
 * / w (Summary):                         Limiting.
@@ -72,14 +71,14 @@ Key Index
 * a (Summary):                           Summary Post Commands.
 * A < (Summary):                         Paging the Article.
 * A > (Summary):                         Paging the Article.
-* A a (Group):                           Listing Groups.
 * A A (Group):                           Listing Groups.
+* A a (Group):                           Listing Groups.
 * A d (Group):                           Listing Groups.
 * A g (Summary):                         Paging the Article.
 * A k (Group):                           Listing Groups.
 * A l (Group):                           Listing Groups.
-* A M (Group):                           Listing Groups.
 * A m (Group):                           Listing Groups.
+* A M (Group):                           Listing Groups.
 * A P (Summary):                         Article Commands.
 * A R (Summary):                         Finding the Parent.
 * A s (Group):                           Listing Groups.
@@ -88,9 +87,9 @@ Key Index
 * A T (Topic):                           Topic Commands.
 * A u (Group):                           Listing Groups.
 * A z (Group):                           Listing Groups.
-* B (Group):                             Browse Foreign Server.
 * b (Group):                             Group Maintenance.
-* B (Group):                             Finding the News.
+* B (Group) <1>:                         Finding the News.
+* B (Group):                             Browse Foreign Server.
 * B B (Summary):                         Mail Group Commands.
 * B c (Summary):                         Mail Group Commands.
 * B DEL (Summary):                       Mail Group Commands.
@@ -106,10 +105,10 @@ Key Index
 * c (Category):                          The Category Buffer.
 * C (Group):                             Group Data.
 * c (Group):                             Group Data.
-* C (Server):                            Unavailable Servers.
 * c (Server):                            Server Commands.
-* c (Summary):                           Exiting the Summary Buffer.
+* C (Server):                            Unavailable Servers.
 * C (Summary):                           Canceling and Superseding.
+* c (Summary):                           Exiting the Summary Buffer.
 * C-c ^ (Article):                       Article Keymap.
 * C-c C-c (Article):                     Mail Group Commands.
 * C-c C-c (Post):                        Composing Messages.
@@ -147,8 +146,8 @@ Key Index
 * DEL (Group):                           Group Maneuvering.
 * DEL (Summary):                         Paging the Article.
 * e (Server):                            Server Commands.
-* e (Summary):                           Mail Group Commands.
 * E (Summary):                           Setting Marks.
+* e (Summary):                           Mail Group Commands.
 * F (Group):                             Group Maintenance.
 * F (Summary):                           Summary Post Commands.
 * f (Summary):                           Summary Post Commands.
@@ -162,11 +161,11 @@ Key Index
 * G c (Group):                           Foreign Groups.
 * G C-n (Summary):                       Choosing Commands.
 * G C-p (Summary):                       Choosing Commands.
-* G D (Group):                           Foreign Groups.
 * G d (Group):                           Foreign Groups.
+* G D (Group):                           Foreign Groups.
 * G DEL (Group):                         Foreign Groups.
-* G E (Group):                           Foreign Groups.
 * G e (Group):                           Foreign Groups.
+* G E (Group):                           Foreign Groups.
 * G f  (Summary):                        Choosing Commands.
 * G f (Group):                           Foreign Groups.
 * G g (Summary):                         Summary Maneuvering.
@@ -223,8 +222,8 @@ Key Index
 * J c (Agent Summary):                   Summary Agent Commands.
 * J M-# (Agent Summary):                 Summary Agent Commands.
 * J r (Agent Server):                    Server Agent Commands.
-* J S (Agent Group):                     Group Agent Commands.
 * J s (Agent Group):                     Group Agent Commands.
+* J S (Agent Group):                     Group Agent Commands.
 * J u (Agent Group):                     Group Agent Commands.
 * k (Category):                          The Category Buffer.
 * k (GroupLens):                         Rating Articles.
@@ -240,16 +239,16 @@ Key Index
 * m (Summary):                           Summary Mail Commands.
 * M ? (Summary):                         Setting Marks.
 * M b (Group):                           Marking Groups.
-* M B (Summary):                         Setting Marks.
 * M b (Summary):                         Setting Marks.
+* M B (Summary):                         Setting Marks.
 * M C (Summary):                         Setting Marks.
 * M c (Summary):                         Setting Marks.
 * M C-c (Summary):                       Setting Marks.
 * M d (Summary):                         Setting Marks.
 * M e (Summary):                         Setting Marks.
 * M H (Summary):                         Setting Marks.
-* M K (Summary):                         Setting Marks.
 * M k (Summary):                         Setting Marks.
+* M K (Summary):                         Setting Marks.
 * M m (Group):                           Marking Groups.
 * M P a (Summary):                       Setting Process Marks.
 * M P b (Summary):                       Setting Process Marks.
@@ -293,8 +292,8 @@ Key Index
 * M-g (Group):                           Scanning New Messages.
 * M-g (Summary):                         Exiting the Summary Buffer.
 * M-i (Summary):                         Symbolic Prefixes.
-* M-K (Group):                           Kill Files.
 * M-k (Group):                           Kill Files.
+* M-K (Group):                           Kill Files.
 * M-K (Summary):                         Kill Files.
 * M-k (Summary):                         Kill Files.
 * M-n (Group):                           Group Maneuvering.
@@ -316,8 +315,8 @@ Key Index
 * M-x gnus-bug <1>:                      Troubleshooting.
 * M-x gnus-bug:                          Compatibility.
 * M-x gnus-change-server:                Changing Servers.
-* M-x gnus-group-clear-data-on-native-groups <1>: Group Data.
-* M-x gnus-group-clear-data-on-native-groups: Changing Servers.
+* M-x gnus-group-clear-data-on-native-groups <1>: Changing Servers.
+* M-x gnus-group-clear-data-on-native-groups: Group Data.
 * M-x gnus-group-move-group-to-server:   Changing Servers.
 * M-x gnus-no-server:                    The Server is Down.
 * M-x gnus-other-frame:                  Starting Up.
@@ -330,14 +329,14 @@ Key Index
 * N (Group):                             Group Maneuvering.
 * n (Group):                             Group Maneuvering.
 * n (GroupLens):                         Rating Articles.
-* N (Summary):                           Choosing Commands.
 * n (Summary):                           Choosing Commands.
+* N (Summary):                           Choosing Commands.
 * nnmail-split-history:                  Splitting Mail.
 * O (Server):                            Unavailable Servers.
 * o (Summary):                           Saving Articles.
 * O b (Summary):                         Saving Articles.
-* O F (Summary):                         Saving Articles.
 * O f (Summary):                         Saving Articles.
+* O F (Summary):                         Saving Articles.
 * O h (Summary):                         Saving Articles.
 * O m (Summary):                         Saving Articles.
 * O o (Summary):                         Saving Articles.
@@ -349,21 +348,21 @@ Key Index
 * p (Category):                          The Category Buffer.
 * P (Group):                             Group Maneuvering.
 * p (Group):                             Group Maneuvering.
-* P (Summary):                           Choosing Commands.
 * p (Summary):                           Choosing Commands.
+* P (Summary):                           Choosing Commands.
 * q (Browse):                            Browse Foreign Server.
 * q (Category):                          The Category Buffer.
 * Q (Group):                             Exiting Gnus.
 * q (Group):                             Exiting Gnus.
 * q (Server):                            Server Commands.
-* Q (Summary):                           Exiting the Summary Buffer.
 * q (Summary):                           Exiting the Summary Buffer.
+* Q (Summary):                           Exiting the Summary Buffer.
 * r (Group):                             File Commands.
 * R (Group):                             Scanning New Messages.
 * r (GroupLens):                         Rating Articles.
 * R (Server):                            Unavailable Servers.
-* R (Summary):                           Summary Mail Commands.
 * r (Summary):                           Summary Mail Commands.
+* R (Summary):                           Summary Mail Commands.
 * RET (Browse):                          Browse Foreign Server.
 * RET (Group):                           Selecting a Group.
 * RET (Pick):                            Pick and Read.
@@ -378,16 +377,16 @@ Key Index
 * S C-k (Group):                         Subscription Commands.
 * S D b (Summary):                       Summary Mail Commands.
 * S D r (Summary):                       Summary Mail Commands.
-* S F (Summary):                         Summary Post Commands.
 * S f (Summary):                         Summary Post Commands.
+* S F (Summary):                         Summary Post Commands.
 * S k (Group):                           Subscription Commands.
 * S l (Group):                           Group Levels.
 * S m (Summary):                         Summary Mail Commands.
 * S M-c (Summary):                       Summary Mail Commands.
 * S N (Summary):                         Summary Post Commands.
 * S n (Summary):                         Summary Post Commands.
-* S O m (Summary):                       Summary Mail Commands.
 * S o m (Summary):                       Summary Mail Commands.
+* S O m (Summary):                       Summary Mail Commands.
 * S O p (Summary):                       Summary Post Commands.
 * S o p (Summary):                       Summary Post Commands.
 * S p (Summary):                         Summary Post Commands.
@@ -397,8 +396,8 @@ Key Index
 * S t (Group):                           Subscription Commands.
 * S u (Summary):                         Summary Post Commands.
 * S w (Group):                           Subscription Commands.
-* S W (Summary):                         Summary Mail Commands.
 * S w (Summary):                         Summary Mail Commands.
+* S W (Summary):                         Summary Mail Commands.
 * S y (Group):                           Subscription Commands.
 * S z (Group):                           Subscription Commands.
 * SPACE (Article):                       Article Keymap.
@@ -406,19 +405,19 @@ Key Index
 * SPACE (Group):                         Selecting a Group.
 * SPACE (Pick):                          Pick and Read.
 * SPACE (Server):                        Server Commands.
-* SPACE (Summary) <1>:                   Paging the Article.
-* SPACE (Summary):                       Choosing Commands.
+* SPACE (Summary) <1>:                   Choosing Commands.
+* SPACE (Summary):                       Paging the Article.
 * T # (Summary):                         Thread Commands.
 * T # (Topic):                           Topic Commands.
 * t (Group):                             Group Topics.
 * T ^ (Summary):                         Thread Commands.
-* T C (Topic):                           Topic Commands.
 * T c (Topic):                           Topic Commands.
+* T C (Topic):                           Topic Commands.
 * T d (Summary):                         Thread Commands.
 * T D (Topic):                           Topic Commands.
 * T DEL (Topic):                         Topic Commands.
-* T H (Summary):                         Thread Commands.
 * T h (Summary):                         Thread Commands.
+* T H (Summary):                         Thread Commands.
 * T H (Topic):                           Topic Commands.
 * T i (Summary):                         Thread Commands.
 * T k (Summary):                         Thread Commands.
@@ -447,19 +446,19 @@ Key Index
 * TAB (Article):                         Article Keymap.
 * TAB (Topic):                           Topic Commands.
 * u (Browse):                            Browse Foreign Server.
-* U (Group):                             Subscription Commands.
 * u (Group):                             Subscription Commands.
+* U (Group):                             Subscription Commands.
 * u (Pick):                              Pick and Read.
 * V (Group):                             Group Information.
 * V C (Summary):                         Summary Score Commands.
 * V c (Summary):                         Summary Score Commands.
 * V e (Summary):                         Summary Score Commands.
-* V F (Summary):                         Summary Score Commands.
 * V f (Summary):                         Summary Score Commands.
+* V F (Summary):                         Summary Score Commands.
 * V m (Summary):                         Summary Score Commands.
 * V R (Summary):                         Summary Score Commands.
-* V S (Summary):                         Summary Score Commands.
 * V s (Summary):                         Summary Score Commands.
+* V S (Summary):                         Summary Score Commands.
 * V t (Summary):                         Summary Score Commands.
 * V x (Summary):                         Summary Score Commands.
 * W B (Summary):                         Article Washing.
@@ -467,8 +466,8 @@ Key Index
 * W c (Summary):                         Article Washing.
 * W d (Summary):                         Article Washing.
 * W e (Summary):                         Article Fontisizing.
-* W E A (Summary):                       Article Washing.
 * W E a (Summary):                       Article Washing.
+* W E A (Summary):                       Article Washing.
 * W E l (Summary):                       Article Washing.
 * W E m (Summary):                       Article Washing.
 * W E s (Summary):                       Article Washing.
@@ -505,10 +504,10 @@ Key Index
 * x (Summary):                           Limiting.
 * X b (Summary):                         Other Files.
 * X o (Summary):                         Other Files.
-* X P (Summary):                         PostScript Files.
 * X p (Summary):                         PostScript Files.
-* X S (Summary):                         Shell Archives.
+* X P (Summary):                         PostScript Files.
 * X s (Summary):                         Shell Archives.
+* X S (Summary):                         Shell Archives.
 * X U (Summary):                         Uuencoded Articles.
 * X u (Summary):                         Uuencoded Articles.
 * X v P (Summary):                       PostScript Files.

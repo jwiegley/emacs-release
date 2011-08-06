@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -84,7 +83,7 @@ my head:
      keep old articles for a long time.
 
    ... I wonder whether other newsreaders will support global score
-files in the future.  *Snicker*.  Yup, any day now, newsreaders like
+files in the future.  _Snicker_.  Yup, any day now, newsreaders like
 Blue Wave, xrn and 1stReader are bound to implement scoring.  Should we
 start holding our breath yet?
 
@@ -99,7 +98,7 @@ file entries can now be expiring, which is something I wrote before
 Daniel Quinlan thought of doing score files, so I've left the code in
 there.
 
-   In short, kill processing is a lot slower (and I do mean *a lot*)
+   In short, kill processing is a lot slower (and I do mean _a lot_)
 than score processing, so it might be a good idea to rewrite your kill
 files into score files.
 
@@ -334,7 +333,7 @@ GroupLens Variables
 `gnus-summary-grouplens-line-format'
      The summary line format used in GroupLens-enhanced summary
      buffers.  It accepts the same specs as the normal summary line
-     format (*note Summary Buffer Lines::.).  The default is
+     format (*note Summary Buffer Lines::).  The default is
      `%U%R%z%l%I%(%[%4L: %-20,20n%]%) %s\n'.
 
 `grouplens-bbb-host'
@@ -619,7 +618,7 @@ are avoided.
    Commands that react to the process mark will push the current list of
 process marked articles onto a stack and will then clear all process
 marked articles.  You can restore the previous configuration with the
-`M P y' command (*note Setting Process Marks::.).
+`M P y' command (*note Setting Process Marks::).
 
    One thing that seems to shock & horrify lots of people is that, for
 instance, `3 d' does exactly the same as `d' `d' `d'.  Since each `d'
@@ -686,7 +685,7 @@ doesn't hurt, but it doesn't do any good either.  Currently not many
 Gnus functions make use of the symbolic prefix.
 
    If you're interested in how Gnus implements this, *note Extended
-Interactive::..
+Interactive::.
 
 
 File: gnus,  Node: Formatting Variables,  Next: Windows Configuration,  Prev: Symbolic Prefixes,  Up: Various
@@ -757,8 +756,8 @@ Mode Line Formatting
 
    Mode line formatting variables (e.g.,
 `gnus-summary-mode-line-format') follow the same rules as other, buffer
-line oriented formatting variables (*note Formatting Basics::.)  with
-the following two differences:
+line oriented formatting variables (*note Formatting Basics::) with the
+following two differences:
 
   1. There must be no newline (`\n') at the end.
 
@@ -848,7 +847,7 @@ function should return a string, which will be inserted into the buffer
 just like information from any other specifier.  This function may also
 be called with dummy values, so it should protect against that.
 
-   You can also use tilde modifiers (*note Advanced Formatting::. to
+   You can also use tilde modifiers (*note Advanced Formatting:: to
 achieve much the same without defining new functions.  Here's an
 example: `%~(form (count-lines (point-min) (point)))@'.  The form given
 here will be evaluated to yield the current line number, and then
@@ -980,7 +979,7 @@ Inside each of these strips you may carry on all you like in the normal
 fashion.  The number following `horizontal' says what percentage of the
 screen is to be given to this strip.
 
-   For each split, there *must* be one element that has the 100% tag.
+   For each split, there _must_ be one element that has the 100% tag.
 The splitting is never accurate, and this buffer will eat any leftover
 lines from the splits.
 

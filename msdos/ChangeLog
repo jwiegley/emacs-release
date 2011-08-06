@@ -1,3 +1,11 @@
+1999-12-04  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.5 released.
+	
+1999-07-29  Eli Zaretskii  <eliz@gnu.org>
+
+	* sedleim.inp (SHELL, MAKESHELL): Use /xyzzy/command as the shell.
+
 1999-07-12  Richard Stallman  <rms@gnu.org>
 
 	* Version 20.4 released.

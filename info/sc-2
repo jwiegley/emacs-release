@@ -1,5 +1,4 @@
-This is Info file ../info/sc, produced by Makeinfo version 1.68 from
-the input file sc.texi.
+This is ../info/sc, produced by makeinfo version 4.0 from sc.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -238,7 +237,7 @@ Regi-frame (or just "frame"), which is a list of Regi-entries (or just
 expression, which is matched against a line of text in the current
 buffer.  If the predicate matches true, an associated expression is
 `eval'uated.  In this way, an entire region of text can be transformed
-in an *awk*-like manner.  Regi is used throughout Supercite, from mail
+in an _awk_-like manner.  Regi is used throughout Supercite, from mail
 header information extraction, to header nuking, to citing text.
 
 * Menu:
@@ -246,7 +245,7 @@ header information extraction, to header nuking, to citing text.
 * Using Regi::
 * Frames You Can Customize::
 
-   While the details of Regi are discussed below (*note Using Regi::.),
+   While the details of Regi are discussed below (*note Using Regi::),
 only those who wish to customize certain aspects of Supercite need
 concern themselves with it.  It is important to understand though, that
 any conceivable citation style that can be described by a regular
@@ -254,7 +253,7 @@ expression can be recognized by Supercite.  This leads to some
 interesting applications.  For example, if you regularly receive email
 from a co-worker that uses an uncommon citation style (say one that
 employs a `|' or `}' character at the front of the line), it is
-possible for Supercite to recognize this and *coerce* the citation to
+possible for Supercite to recognize this and _coerce_ the citation to
 your preferred style, for consistency.  In theory, it is possible for
 Supercite to recognize such things as uuencoded messages or C code and
 cite or fill those differently than normal text.  None of this is
@@ -381,7 +380,7 @@ preferred style.
 "reciting", contained in the variables `sc-default-uncite-frame' and
 `sc-default-recite-frame' respectively.
 
-   As mentioned earlier (*note Recognizing Citations::.), citations are
+   As mentioned earlier (*note Recognizing Citations::), citations are
 recognized through the values of the regular expressions
 `sc-citation-root-regexp', et al.  To recognize odd styles, you could
 modify these variables, or you could modify the default citing frame.
@@ -582,7 +581,7 @@ because you typically want to run Supercite with either variable as
 `nil' or non-`nil'.  The command to toggle these variables together is
 bound on `C-c C-p C-p'.
 
-   Finally, the command `C-c C-p C-t h' (also `C-c C-p C-t ?')  brings
+   Finally, the command `C-c C-p C-t h' (also `C-c C-p C-t ?') brings
 up a Help message on the toggling keymap.
 
 
@@ -850,7 +849,7 @@ you):
      supercite@python.org
 
    If you are sending bug reports, they should go to the following
-address, but *please*! use the command `sc-submit-bug-report' since it
+address, but _please_! use the command `sc-submit-bug-report' since it
 will be much easier for me to duplicate your problem if you do so.  It
 will set up a mail buffer automatically with this address on the `To:'
 line:
@@ -865,12 +864,12 @@ Concept Index
 
 * Menu:
 
-* .emacs file <1>:                       Overloading for Non-conforming MUAs.
-* .emacs file <2>:                       VM with any Emacsen.
-* .emacs file <3>:                       MH-E with any Emacsen.
+* .emacs file <1>:                       MH-E with any Emacsen.
+* .emacs file <2>:                       Getting Connected.
+* .emacs file <3>:                       Emacs 19 MUAs.
 * .emacs file <4>:                       Emacs 18 MUAs.
-* .emacs file <5>:                       Emacs 19 MUAs.
-* .emacs file:                           Getting Connected.
+* .emacs file <5>:                       Overloading for Non-conforming MUAs.
+* .emacs file:                           VM with any Emacsen.
 * add-hook substitute:                   Emacs 18 MUAs.
 * attribute, attributing:                Usage Overview.
 * attribution info field (sc-):          Information Keys and the Info Alist.
@@ -896,8 +895,8 @@ Concept Index
 * firstname info field (sc-):            Information Keys and the Info Alist.
 * frames (Regi):                         Configuring the Citation Engine.
 * from-address info field (sc-):         Information Keys and the Info Alist.
-* gin-mode <1>:                          Filling Cited Text.
-* gin-mode:                              What Supercite Does.
+* gin-mode <1>:                          What Supercite Does.
+* gin-mode:                              Filling Cited Text.
 * header rewrite functions:              Reference Headers.
 * header rewrite functions, built-in:    The Built-in Header Rewrite Functions.
 * Hyperbole:                             Overloading for Non-conforming MUAs.
@@ -912,8 +911,8 @@ Concept Index
 * mailing list address:                  The Supercite Mailing List.
 * mark:                                  Getting Connected.
 * middlename-1 info field (sc-):         Information Keys and the Info Alist.
-* modeline <1>:                          Reply Buffer Initialization.
-* modeline:                              What Supercite Does.
+* modeline <1>:                          What Supercite Does.
+* modeline:                              Reply Buffer Initialization.
 * MUA:                                   Introduction.
 * nested citations:                      Citations.
 * non-nested citations:                  Citations.
@@ -942,8 +941,8 @@ Concept Index
 * sc-oloads.el:                          Overloading for Non-conforming MUAs.
 * sc-reply-address info field:           Information Keys and the Info Alist.
 * sc-sender-address info field:          Information Keys and the Info Alist.
-* sc-unsupp.el file <1>:                 Version 3 Changes.
-* sc-unsupp.el file:                     Emacs 18 MUAs.
+* sc-unsupp.el file <1>:                 Emacs 18 MUAs.
+* sc-unsupp.el file:                     Version 3 Changes.
 * sc.el from version 2:                  Version 3 Changes.
 * sender-address info field (sc-):       Information Keys and the Info Alist.
 * sendmail.el:                           Hints to MUA Authors.
@@ -1004,8 +1003,8 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
 * perform-overloads (sc-):               GNEWS with any Emacsen.
 * recite-region (sc-):                   Citing Commands.
 * regi-interpret:                        Using Regi.
-* sc-cite-original <1>:                  Reply Buffer Initialization.
-* sc-cite-original <2>:                  Getting Connected.
+* sc-cite-original <1>:                  Getting Connected.
+* sc-cite-original <2>:                  Reply Buffer Initialization.
 * sc-cite-original:                      What Supercite Does.
 * sc-cite-region:                        Citing Commands.
 * sc-describe:                           Miscellaneous Commands.
@@ -1031,20 +1030,20 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
 * sc-no-blank-line-or-header:            The Built-in Header Rewrite Functions.
 * sc-no-header:                          The Built-in Header Rewrite Functions.
 * sc-open-line:                          Miscellaneous Commands.
-* sc-perform-overloads <1>:              Overloading for Non-conforming MUAs.
-* sc-perform-overloads:                  GNEWS with any Emacsen.
+* sc-perform-overloads <1>:              GNEWS with any Emacsen.
+* sc-perform-overloads:                  Overloading for Non-conforming MUAs.
 * sc-recite-region:                      Citing Commands.
 * sc-setup-filladapt:                    Filling Cited Text.
-* sc-submit-bug-report <1>:              Miscellaneous Commands.
-* sc-submit-bug-report:                  Getting Connected.
+* sc-submit-bug-report <1>:              Getting Connected.
+* sc-submit-bug-report:                  Miscellaneous Commands.
 * sc-uncite-region:                      Citing Commands.
 * sc-version:                            Miscellaneous Commands.
 * set-variable:                          Variable Toggling Shortcuts.
 * setq:                                  Emacs 18 MUAs.
 * setup-filladapt (sc-):                 Filling Cited Text.
 * string-match:                          Frames You Can Customize.
-* submit-bug-report (sc-) <1>:           Miscellaneous Commands.
-* submit-bug-report (sc-):               Getting Connected.
+* submit-bug-report (sc-) <1>:           Getting Connected.
+* submit-bug-report (sc-):               Miscellaneous Commands.
 * uncite-region (sc-):                   Citing Commands.
 * version (sc-):                         Miscellaneous Commands.
 

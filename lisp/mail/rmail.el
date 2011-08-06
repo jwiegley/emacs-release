@@ -3061,8 +3061,8 @@ specifying headers which should not be copied into the new message."
     (save-excursion
       ;; Narrow down to just the quoted original message
       (if pruned
-	  (rmail-toggle-header 0)
-	(rmail-beginning-of-message))
+	  (rmail-toggle-header 0))
+      (rmail-beginning-of-message)
       (let* ((case-fold-search t)
 	     (top (point))
 	     (content-type

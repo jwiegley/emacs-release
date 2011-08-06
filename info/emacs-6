@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -135,7 +134,7 @@ a second `C-g' will cancel the entire search.
    To search for a newline, type `C-j'.  To search for another control
 character, such as control-S or carriage return, you must quote it by
 typing `C-q' first.  This function of `C-q' is analogous to its use for
-insertion (*note Inserting Text::.): it causes the following character
+insertion (*note Inserting Text::): it causes the following character
 to be treated the way any "ordinary" character is treated in the same
 context.  You can also specify a character by its octal code: enter
 `C-q' followed by a sequence of octal digits.
@@ -168,7 +167,7 @@ string.  It uses the same text that `C-y' as a command would yank.
 *Note Yanking::.
 
    When you exit the incremental search, it sets the mark to where point
-*was*, before the search.  That is convenient for moving back there.
+_was_, before the search.  That is convenient for moving back there.
 In Transient Mark mode, incremental search sets the mark without
 activating it, and does so only if the mark is not already active.
 
@@ -336,7 +335,7 @@ expression is ordinary, unless a `\' precedes it.
 
    For example, `f' is not a special character, so it is ordinary, and
 therefore `f' is a regular expression that matches the string `f' and
-no other string.  (It does *not* match the string `ff'.)  Likewise, `o'
+no other string.  (It does _not_ match the string `ff'.)  Likewise, `o'
 is a regular expression that matches only `o'.  (When case distinctions
 are being ignored, these regexps also match `F' and `O', but we
 consider this a generalization of "the same string," rather than an
@@ -363,7 +362,7 @@ use one of the special characters.  Here is a list of them.
      times as possible.  Thus, `o*' matches any number of `o's
      (including no `o's).
 
-     `*' always applies to the *smallest* possible preceding
+     `*' always applies to the _smallest_ possible preceding
      expression.  Thus, `fo*' has a repeating `o', not a repeating
      `fo'.  It matches `f', `fo', `foo', and so on.
 
@@ -427,7 +426,7 @@ use one of the special characters.  Here is a list of them.
 `[^ ... ]'
      `[^' begins a "complemented character set", which matches any
      character except the ones specified.  Thus, `[^a-z0-9A-Z]' matches
-     all characters *except* letters and digits.
+     all characters _except_ letters and digits.
 
      `^' is not special in a character set unless it is the first
      character.  The character following the `^' is treated as if it
@@ -547,7 +546,7 @@ its own.  Here is a table of `\' constructs.
      what text appears next to it.
 
 `\B'
-     matches the empty string, but *not* at the beginning or end of a
+     matches the empty string, but _not_ at the beginning or end of a
      word.
 
 `\<'
@@ -578,7 +577,7 @@ its own.  Here is a table of `\' constructs.
      matches any character whose syntax is not C.
 
    The constructs that pertain to words and syntax are controlled by the
-setting of the syntax table (*note Syntax::.).
+setting of the syntax table (*note Syntax::).
 
    Here is a complicated regexp, used by Emacs to recognize the end of a
 sentence together with any whitespace that follows.  It is given in Lisp
@@ -624,8 +623,8 @@ letters must match exactly, including case.  This is a per-buffer
 variable; altering the variable affects only the current buffer, but
 there is a default value which you can change as well.  *Note Locals::.
 This variable applies to nonincremental searches also, including those
-performed by the replace commands (*note Replace::.) and the minibuffer
-history matching commands (*note Minibuffer History::.).
+performed by the replace commands (*note Replace::) and the minibuffer
+history matching commands (*note Minibuffer History::).
 
 
 File: emacs,  Node: Replace,  Next: Other Repeating Search,  Prev: Search Case,  Up: Search
@@ -644,7 +643,7 @@ end of the buffer; however, in Transient Mark mode, when the mark is
 active, they operate on the region.  The replace commands all replace
 one string (or regexp) with one replacement string.  It is possible to
 perform several replacements in parallel using the command
-`expand-region-abbrevs' (*note Expanding Abbrevs::.).
+`expand-region-abbrevs' (*note Expanding Abbrevs::).
 
 * Menu:
 
@@ -676,9 +675,9 @@ Replacement happens only in the text after point, so if you want to
 cover the whole buffer you must go to the beginning first.  All
 occurrences up to the end of the buffer are replaced; to limit
 replacement to part of the buffer, narrow to that part of the buffer
-before doing the replacement (*note Narrowing::.).  In Transient Mark
+before doing the replacement (*note Narrowing::).  In Transient Mark
 mode, when the region is active, replacement is limited to the region
-(*note Transient Mark::.).
+(*note Transient Mark::).
 
    When `replace-string' exits, it leaves point at the last occurrence
 replaced.  It sets the mark to the prior position of point (where the
@@ -791,7 +790,7 @@ or a match for REGEXP are:
      text.  You can also type `C-x u' to undo the replacement; this
      exits the `query-replace', so if you want to do further
      replacement you must use `C-x <ESC> <ESC> <RET>' to restart (*note
-     Repetition::.).
+     Repetition::).
 
 `<RET>'
      to exit without doing any more replacements.
@@ -860,7 +859,7 @@ letters and `case-fold-search' is non-`nil'.
      match for REGEXP.  A numeric argument specifies the number of
      context lines to print before and after each matching line; the
      default is none.  To limit the search to part of the buffer,
-     narrow to that part (*note Narrowing::.).
+     narrow to that part (*note Narrowing::).
 
      The buffer `*Occur*' containing the output serves as a menu for
      finding the occurrences in their original context.  Click `Mouse-2'
@@ -879,7 +878,7 @@ letters and `case-fold-search' is non-`nil'.
      REGEXP.
 
 `M-x keep-lines <RET> REGEXP <RET>'
-     Delete each line that follows point and *does not* contain a match
+     Delete each line that follows point and _does not_ contain a match
      for REGEXP.
 
    In addition, you can use `grep' from Emacs to search a collection of
@@ -984,7 +983,7 @@ characters between the words do not move.  For example, `FOO, BAR'
 transposes into `BAR, FOO' rather than `BAR FOO,'.
 
    `C-M-t' (`transpose-sexps') is a similar command for transposing two
-expressions (*note Lists::.), and `C-x C-t' (`transpose-lines')
+expressions (*note Lists::), and `C-x C-t' (`transpose-lines')
 exchanges lines.  They work like `M-t' except in determining the
 division of the text into syntactic units.
 

@@ -40,7 +40,7 @@ static void gap_left P_ ((int, int, int));
 static void gap_right P_ ((int, int));
 static void adjust_markers_gap_motion P_ ((int, int, int));
 static void adjust_markers_for_insert P_ ((int, int, int, int, int, int, int));
-static void adjust_markers_for_delete P_ ((int, int, int, int));
+void adjust_markers_for_delete P_ ((int, int, int, int));
 static void adjust_markers_for_record_delete P_ ((int, int, int, int));
 static void adjust_point P_ ((int, int));
 
@@ -366,7 +366,7 @@ adjust_markers_gap_motion (from, to, amount)
    This function assumes that the gap is adjacent to
    or inside of the range being deleted.  */
 
-static void
+void
 adjust_markers_for_delete (from, from_byte, to, to_byte)
      register int from, from_byte, to, to_byte;
 {
@@ -1174,6 +1174,8 @@ insert_1_both (string, nchars, nbytes, inherit, prepare, before_markers)
 
     if (combined_before_bytes)
       combine_bytes (pos, pos_byte, combined_before_bytes);
+
+    register_composite_chars_region (pos, pos_byte, PT, PT_BYTE);
   }
 
   CHECK_MARKERS ();
@@ -1250,7 +1252,7 @@ insert_from_string_1 (string, pos, pos_byte, nchars, nbytes,
 
   if (PT != GPT)
     move_gap_both (PT, PT_BYTE);
-  if (GAP_SIZE < nbytes)
+  if (GAP_SIZE < outgoing_nbytes)
     make_gap (outgoing_nbytes - GAP_SIZE);
   UNGCPRO;
 
@@ -1730,6 +1732,9 @@ adjust_after_replace (from, from_byte, prev_text, len, len_byte)
       }
     if (combined_before_bytes)
       combine_bytes (from, from_byte, combined_before_bytes);
+
+    register_composite_chars_region (from, from_byte,
+				     from + len, from_byte + len_byte);
   }
 
   /* As byte combining will decrease Z, we must check this again. */

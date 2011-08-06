@@ -1327,7 +1327,7 @@ specifies the value of ERROR-BUFFER."
 					     (list buffer error-file)
 					   buffer)
 					 nil shell-command-switch command)))
-	  (setq success (and exit-status (zerop exit-status)))
+	  (setq success (and exit-status (equal 0 exit-status)))
 	  ;; Report the amount of output.
 	  (let ((lines (save-excursion
 			 (set-buffer buffer)

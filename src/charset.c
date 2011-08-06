@@ -221,7 +221,7 @@ string_to_non_ascii_char (str, len, actual_len, exclude_tail_garbage)
 
       if (c == LEADING_CODE_COMPOSITION)
 	{
-	  int cmpchar_id = str_cmpchar_id (begp, bytes);
+	  int cmpchar_id = str_cmpchar_id (begp, bytes, 0);
 
 	  if (cmpchar_id >= 0)
 	    {
@@ -290,7 +290,7 @@ split_non_ascii_string (str, len, charset, c1, c2)
 
   if (cs == LEADING_CODE_COMPOSITION)
     {
-      int cmpchar_id = str_cmpchar_id (str - 1, len);
+      int cmpchar_id = str_cmpchar_id (str - 1, len, 0);
 
       if (cmpchar_id < 0)
 	return -1;
@@ -782,7 +782,7 @@ find_charset_in_str (str, len, charsets, table, cmpcharp, multibyte)
       
       if (c == LEADING_CODE_COMPOSITION)
 	{
-	  int cmpchar_id = str_cmpchar_id (str, len);
+	  int cmpchar_id = str_cmpchar_id (str, len, 0);
 	  GLYPH *glyph;
 
 	  if (cmpchar_id >= 0)
@@ -1244,7 +1244,7 @@ strwidth (str, len)
     {
       if (*str == LEADING_CODE_COMPOSITION)
 	{
-	  int id = str_cmpchar_id (str, endp - str);
+	  int id = str_cmpchar_id (str, endp - str, 0);
 
 	  if (id < 0)
 	    {
@@ -1469,12 +1469,14 @@ static int *cmpchar_hash_table[CMPCHAR_HASH_TABLE_SIZE];
 
 /* Return CMPCHAR-ID of the composite character in STR of the length
    LEN.  If the composite character has not yet been registered,
-   register it in `cmpchar_table' and assign new CMPCHAR-ID.  This
-   is the sole function for assigning CMPCHAR-ID.  */
+   register it in `cmpchar_table' and assign new CMPCHAR-ID (if
+   REGISTERP is nonzero), or return -1 (otherwise).  This is the sole
+   function for assigning CMPCHAR-ID.  */
 int
-str_cmpchar_id (str, len)
+str_cmpchar_id (str, len, registerp)
      const unsigned char *str;
      int len;
+     int registerp;
 {
   int hash_idx, *hashp;
   unsigned char *buf;
@@ -1531,10 +1533,20 @@ str_cmpchar_id (str, len)
 	  return CMPCHAR_HASH_CMPCHAR_ID (hashp, i);
       }
 
+  if (!registerp)
+    return -1;
+
   /* We have to register the composite character in cmpchar_table.  */
   if (n_cmpchars >= (CHAR_FIELD2_MASK | CHAR_FIELD3_MASK))
     /* No, we have no more room for a new composite character.  */
     return -1;
+
+  /* First we must copy data in STR to a safe area against memory
+     relocation because STR will be invalid after xmalloc if STR
+     points r_alloced memory, which is usually buffer memory.  From
+     now on, we must not trust STR.  */
+  buf = (unsigned char*) alloca (sizeof (unsigned char) * len);
+  bcopy (str, buf, len);
 
   /* Make the entry in hash table.  */
   if (hashp == NULL)
@@ -1577,7 +1589,7 @@ str_cmpchar_id (str, len)
 
   cmpcharp->len = len;
   cmpcharp->data = (unsigned char *) xmalloc (len + 1);
-  bcopy (str, cmpcharp->data, len);
+  bcopy (buf, cmpcharp->data, len);
   cmpcharp->data[len] = 0;
   cmpcharp->glyph_len = chars;
   cmpcharp->glyph = (GLYPH *) xmalloc (sizeof (GLYPH) * chars);
@@ -1683,6 +1695,85 @@ str_cmpchar_id (str, len)
   cmpchar_table[n_cmpchars] = cmpcharp;
 
   return n_cmpchars++;
+}
+
+/* Register composite characters in the region specified by
+   positions FROM/FROM_BYTE and TO/TO_BYTE.  */
+
+void
+register_composite_chars_region (from, from_byte, to, to_byte)
+     int from, from_byte, to, to_byte;
+{
+  int stop_byte;
+  unsigned char *p = BYTE_POS_ADDR (from_byte);
+  int id;
+  
+  if (to - from == to_byte - from_byte)
+    /*  There's no composite character in this range.  */
+    return;
+
+  if (to_byte < GPT_BYTE)
+    stop_byte = to_byte;
+  else
+    stop_byte = GPT_BYTE;
+
+  while (1)
+    {
+      if (from_byte >= stop_byte)
+	{
+	  if (stop_byte >= to_byte)
+	    break;
+	  stop_byte = to_byte;
+	  p = BYTE_POS_ADDR (from_byte);
+	}
+      if (*p == LEADING_CODE_COMPOSITION
+	  && (id = str_cmpchar_id (p, stop_byte - from_byte, 1)) >= 0)
+	{
+	  from_byte += cmpchar_table[id]->len;
+	  p = BYTE_POS_ADDR (from_byte);
+	}
+      else
+	{
+	  from_byte++;
+	  p++;
+	}
+    }
+}
+
+/* It is safe to call this when creating a string, because creating a
+   string can call xmalloc itself.  So anything that calls a string
+   creation function already needs to cope with the issue of
+   relocating buffers.  */
+
+void
+register_composite_chars_string (string)
+     Lisp_Object string;
+{
+  int i_byte;
+  int len = STRING_BYTES (XSTRING (string));
+  unsigned char *p = XSTRING (string)->data;
+  int id;
+  
+  if (!STRING_MULTIBYTE (string)
+      || STRING_BYTES (XSTRING (string)) == XSTRING (string)->size)
+    /*  There's no composite character in STRING.  */
+    return;
+
+  i_byte = 0;
+  while (i_byte < len)
+    {
+      if (*p == LEADING_CODE_COMPOSITION
+	  && (id = str_cmpchar_id (p, len - i_byte, 1)) >= 0)
+	{
+	  i_byte += cmpchar_table[id]->len;
+	  p = XSTRING (string)->data + i_byte;
+	}
+      else
+	{
+	  i_byte++;
+	  p++;
+	}
+    }
 }
 
 /* Return the Nth element of the composite character C.  If NOERROR is
@@ -1828,7 +1919,7 @@ DEFUN ("compose-string", Fcompose_string, Scompose_string,
 	    error ("Can't compose a rule-based composition character");
 	  ptemp = p;
 	  while (! CHAR_HEAD_P (*p)) p++;
-	  if (str_cmpchar_id (ptemp - 1, p - ptemp + 1) < 0)
+	  if (str_cmpchar_id (ptemp - 1, p - ptemp + 1, 0) < 0)
 	    error ("Can't compose an invalid composition character");
 	  if (i + (p - ptemp) >= MAX_LENGTH_OF_MULTI_BYTE_FORM)
 	    error ("Too long string to be composed: %s", XSTRING (str)->data);

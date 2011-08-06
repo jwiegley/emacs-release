@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -79,8 +78,8 @@ which avoids the need for confirmation when `C-x m' is next used.
 
    If you are composing a message in the `*mail*' buffer and want to
 send another message before finishing the first, rename the `*mail*'
-buffer using `M-x rename-uniquely' (*note Misc Buffer::.).  Then you
-can use `C-x m' or its variants described above to make a new `*mail*'
+buffer using `M-x rename-uniquely' (*note Misc Buffer::).  Then you can
+use `C-x m' or its variants described above to make a new `*mail*'
 buffer.  Once you've done that, you can work with each mail buffer
 independently.
 
@@ -210,7 +209,7 @@ of fields commonly used in outgoing messages.
      replying to.  Some mail systems can use this information to
      correlate related pieces of mail.  Normally this field is filled
      in by Rmail when you reply to a message in Rmail, and you never
-     need to think about it (*note Rmail::.).
+     need to think about it (*note Rmail::).
 
 `References'
      This field lists the message IDs of related previous messages.
@@ -304,8 +303,8 @@ this, use the command `M-x expand-mail-aliases'; it expands all mail
 aliases currently present in the mail headers that hold addresses.
 
    If you like, you can have mail aliases expand as abbrevs, as soon as
-you type them in (*note Abbrevs::.).  To enable this feature, execute
-the following:
+you type them in (*note Abbrevs::).  To enable this feature, execute the
+following:
 
      (add-hook 'mail-setup-hook 'mail-abbrevs-setup)
 
@@ -390,10 +389,10 @@ result, you don't get a warning if you try to send the same message
 twice.
 
    When you send a message that contains non-ASCII characters, they need
-to be encoded with a coding system (*note Coding Systems::.).  Usually
+to be encoded with a coding system (*note Coding Systems::).  Usually
 the coding system is specified automatically by your chosen language
-environment (*note Language Environments::.).  You can explicitly
-specify the coding system for outgoing mail by setting the variable
+environment (*note Language Environments::).  You can explicitly specify
+the coding system for outgoing mail by setting the variable
 `sendmail-coding-system'.
 
    If the coding system thus determined does not handle the characters
@@ -444,7 +443,7 @@ edit.
 `M-<TAB>' (`mail-complete').  It inserts the full name corresponding to
 the address, if it can determine the full name.  The variable
 `mail-complete-style' controls whether to insert the full name, and
-what style to use, as in `mail-from-style' (*note Mail Headers::.).
+what style to use, as in `mail-from-style' (*note Mail Headers::).
 
    For completion purposes, the valid mailing addresses are taken to be
 the local users' names plus your personal mail aliases.  You can specify
@@ -581,7 +580,7 @@ you are discussing something subversive.
    The idea behind this feature is the suspicion that the NSA snoops on
 all electronic mail messages that contain keywords suggesting they might
 find them interesting.  (The NSA says they don't, but that's what they
-*would* say.)  The idea is that if lots of people add suspicious words
+_would_ say.)  The idea is that if lots of people add suspicious words
 to their messages, the NSA will get so busy with spurious input that
 they will have to give up reading it all.
 
@@ -676,14 +675,14 @@ order of receipt; you can specify other ways to sort them.  Messages are
 assigned consecutive integers as their "message numbers".  The number
 of the current message is displayed in Rmail's mode line, followed by
 the total number of messages in the file.  You can move to a message by
-specifying its message number with the `j' key (*note Rmail Motion::.).
+specifying its message number with the `j' key (*note Rmail Motion::).
 
    Following the usual conventions of Emacs, changes in an Rmail file
 become permanent only when the file is saved.  You can save it with `s'
 (`rmail-save'), which also expunges deleted messages from the file
-first (*note Rmail Deletion::.).  To save the file without expunging,
+first (*note Rmail Deletion::).  To save the file without expunging,
 use `C-x C-s'.  Rmail also saves the Rmail file after merging new mail
-from an inbox file (*note Rmail Inbox::.).
+from an inbox file (*note Rmail Inbox::).
 
    You can exit Rmail with `q' (`rmail-quit'); this expunges and saves
 the Rmail file and then switches to another buffer.  But there is no
@@ -691,7 +690,7 @@ need to `exit' formally.  If you switch from Rmail to editing in other
 buffers, and never happen to switch back, you have exited.  (The Rmail
 command `b', `rmail-bury', does this for you.)  Just make sure to save
 the Rmail file eventually (like any other file you have changed).  `C-x
-s' is a good enough way to do this (*note Saving::.).
+s' is a good enough way to do this (*note Saving::).
 
 
 File: emacs,  Node: Rmail Scrolling,  Next: Rmail Motion,  Prev: Rmail Basics,  Up: Rmail
@@ -733,7 +732,7 @@ do this in Rmail is to make the message current.  The usual practice is
 to move sequentially through the file, since this is the order of
 receipt of messages.  When you enter Rmail, you are positioned at the
 first message that you have not yet made current (that is, the first one
-that has the `unseen' attribute; *note Rmail Attributes::.).  Move
+that has the `unseen' attribute; *note Rmail Attributes::).  Move
 forward to see the other new messages; move backward to reexamine old
 messages.
 
@@ -787,9 +786,9 @@ digits.  You don't need to type `C-u' first.
 The usual incremental search command `C-s' works in Rmail, but it
 searches only within the current message.  The purpose of `M-s' is to
 search for another message.  It reads a regular expression (*note
-Regexps::.) nonincrementally, then searches starting at the beginning
-of the following message for a match.  It then selects that message.
-If REGEXP is empty, `M-s' reuses the regexp used the previous time.
+Regexps::) nonincrementally, then searches starting at the beginning of
+the following message for a match.  It then selects that message.  If
+REGEXP is empty, `M-s' reuses the regexp used the previous time.
 
    To search backward in the file for another message, give `M-s' a
 negative argument.  In Rmail you can do this with `- M-s'.
@@ -817,7 +816,7 @@ message number.
    "Expunging" the Rmail file actually removes the deleted messages.
 The remaining messages are renumbered consecutively.  Expunging is the
 only action that changes the message number of any message, except for
-undigestifying (*note Rmail Digest::.).
+undigestifying (*note Rmail Digest::).
 
 `d'
      Delete the current message, and move to the next nondeleted message
@@ -931,7 +930,7 @@ named `~/RMAIL' and receives your incoming mail from your system inbox
 file.  But you can also have other Rmail files and edit them with
 Rmail.  These files can receive mail through their own inboxes, or you
 can move messages into them with explicit Rmail commands (*note Rmail
-Output::.).
+Output::).
 
 `i FILE <RET>'
      Read FILE into Emacs and run Rmail on it (`rmail-input').
@@ -964,7 +963,7 @@ specify which files to offer in the menu: the first variable says which
 directory to find them in; the second says which files in that
 directory to offer (all those that match the regular expression).
 These variables also apply to choosing a file for output (*note Rmail
-Output::.).
+Output::).
 
    Each Rmail file can contain a list of inbox file names; you can
 specify this list with `M-x set-rmail-inbox-list <RET> FILES <RET>'.
@@ -1149,11 +1148,11 @@ attributes:
 
 `deleted'
      Means the message is deleted.  Assigned by deletion commands and
-     removed by undeletion commands (*note Rmail Deletion::.).
+     removed by undeletion commands (*note Rmail Deletion::).
 
 `filed'
      Means the message has been copied to some other file.  Assigned by
-     the file output commands (*note Rmail Files::.).
+     the file output commands (*note Rmail Files::).
 
 `answered'
      Means you have mailed an answer to the message.  Assigned by the

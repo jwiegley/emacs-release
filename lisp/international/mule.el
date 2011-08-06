@@ -109,7 +109,7 @@ Return t if file exists."
 	      (< (aref vector 0) 160)))))
 
 (defsubst charsetp (object)
-  "T is OBJECT is a charset."
+  "T if OBJECT is a charset."
   (and (symbolp object) (vectorp (get object 'charset))))
 
 (defsubst charset-info (charset)
@@ -930,6 +930,9 @@ or nil if nothing specified.
 
 The variable `set-auto-coding-function' (which see) is set to this
 function by default."
+  (save-match-data (set-auto-coding-1 filename size)))
+
+(defun set-auto-coding-1 (filename size)
   (let ((coding-system (auto-coding-alist-lookup filename)))
 
     (or coding-system
@@ -989,16 +992,18 @@ function by default."
 		;; in its line.
 		(let* ((prefix (regexp-quote (match-string 1)))
 		       (suffix (regexp-quote (match-string 2)))
-		       (re-coding (concat
-				   "^" prefix
-				   "coding[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
-				   suffix "$"))
-		       (re-unibyte (concat
-				    "^" prefix
-				    "unibyte[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
-				    suffix "$"))
-		       (re-end (concat
-				"^" prefix "end *:[ \t]*" suffix "$"))
+		       (re-coding
+			(concat
+			 "^" prefix
+			 "[ \t]*coding[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
+			 suffix "$"))
+		       (re-unibyte
+			(concat
+			 "^" prefix
+			 "[ \t]*unibyte[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
+			 suffix "$"))
+		       (re-end
+			(concat "^" prefix "[ \t]*end *:[ \t]*" suffix "$"))
 		       (pos (point)))
 		  (re-search-forward re-end tail-end 'move)
 		  (setq tail-end (point))

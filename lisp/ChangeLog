@@ -1,3 +1,241 @@
+1999-12-04  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.5 released.
+	
+1999-12-03  Kenichi Handa  <handa@mule.m17n.org>
+
+	* international/mule-util.el (truncate-string-to-width): Docsting
+	fixed.
+
+1999-12-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* vc.el (vc-update-change-log): Look for rcs2log under
+	exec-directory.
+
+1999-12-02  Ken'ichi Handa  <handa@gnu.org>
+
+	* international/mule.el (charsetp): Fix typo in docstring.
+
+	* international/mule-diag.el (list-coding-categories): Fix typo;
+	automatic -> autoload.
+
+1999-12-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* calendar/appt.el (appt-convert-time): Handle "12:MMam", 
+	remove extraneous string-match.
+
+1999-12-01  Kenichi Handa  <handa@etl.go.jp>
+
+	* international/mule-cmds.el (select-safe-coding-system): Use
+	display-buffer to show the current buffer instead of showing
+	it in the selected window.   Check existence of "*Warning*" buffer
+	before deleting it.
+
+1999-12-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* finder.el (finder-commentary): Activate Finder mode.
+
+1999-11-30  Anders Lindgren  <andersl@andersl.com>
+
+	* autorevert.el (auto-revert-buffers): Auto-revert mode was turned
+	off when reverting buffers that contained mode specifiers.
+	`revert-buffer' is now called with non-nil PRESERVE-MODES
+	argument.
+
+1999-11-29  Dave Love  <fx@gnu.org>
+
+	* dired.el (dired-move-to-filename-regexp): Make it work
+	for LANG=de_DE.iso88591 on HPUX 11.0.
+
+1999-11-26  Gerd Moellmann  <gerd@gnu.org>
+
+	* progmodes/f90.el (f90-abbrev-start): Use `eq' instead of `='.
+
+1999-11-26  Kenichi Handa  <handa@etl.go.jp>
+
+	* international/mule.el (set-auto-coding): Call set-auto-coding-1
+	with save-match-data.
+	(set-auto-coding-1): New function.
+
+1999-11-24  Gerd Moellmann  <gerd@gnu.org>
+
+	* locate.el (locate-with-filter): Doc fix.
+
+1999-11-23  Andrew Innes  <andrewi@gnu.org>
+
+	* w32-win.el (w32-drag-n-drop): Load files in current window, if
+	drop coords aren't over a specific window.
+
+1999-11-23  Gerd Moellmann  <gerd@gnu.org>
+
+	* emacs-lisp/advice.el (ad-special-forms): Check whether track-mouse
+	is defined.
+
+1999-11-19  Ken'ichi Handa  <handa@gnu.org>
+
+	* ps-mule.el (ps-mule-font-info-database-bdf): BDF font for
+	chinese-sisheng charset is 7bit encoding, not 8bit.
+
+1999-11-18  Richard M. Stallman  <rms@caffeine.ai.mit.edu>
+
+	* mail/rmailedit.el (rmail-cease-edit): Run rmail-mode-hook.
+
+1999-11-12  Andrew Innes  <andrewi@gnu.org>
+
+	* select.el (x-set-selection): Call buffer-substring, not
+	substring.  Also fix docstring
+
+1999-11-11  Gerd Moellmann  <gerd@gnu.org>
+
+	* replace.el (perform-replace): Temporarily disable
+	case-fold-search if search argument contains uppercase
+	characters.
+
+1999-11-10  Gerd Moellmann  <gerd@gnu.org>
+
+	* mail/mh-comp.el (mh-smail-batch): If `to' is nil use an
+	empty string as to-address.
+
+1999-11-07  Andrew Innes  <andrewi@gnu.org>
+
+	* dos-w32.el (direct-print-region-helper): Quote arguments in case
+	they contain spaces.
+	
+1999-11-01  Edward M. Reingold  <reingold@emr.cs.uiuc.edu>
+
+	* calendar.el (redraw-calendar): Move to nearest date before
+	redrawing.
+
+	* diary-lib.el (simple-diary-display): Reset modeline even if
+	there are no diary entries since the diary buffer may be displayed.
+
+1999-10-26  Kenichi Handa  <handa@etl.go.jp>
+
+	* international/mule-cmds.el (read-input-method-name): Handle the
+	case that the arg DEFAULT is symbol.
+
+	* international/mule-diag.el (mule-diag): Handle the case that
+	default-input-method is symbol.
+
+1999-09-29  Kenichi Handa  <handa@etl.go.jp>
+
+	* language/cyrillic.el (cyrillic-koi8-r-decode-table): Map 8-bit
+	code not used by KOI8 to the same 8-bit code instead of mapping to
+	SPC.
+	(cyrillic-alternativnyj-decode-table): Likewise.
+
+	* ps-mule.el (ps-mule-begin-job): Fix malformed regexp.
+	(ps-mule-font-info-database-ps): Typo fixed (normat->normal).  Use
+	correct font names for Korean (Munhwa-Regular-KSC-EUC-H and
+	Munhwa-Bold-KSC-EUC-H).
+
+1999-09-25  Dave Love  <fx@gnu.org>
+
+	* paren.el (show-paren-mode): Add autoload cookie.
+
+1999-09-20  Kenichi Handa  <handa@etl.go.jp>
+
+	* language/european.el ("Turkish"): New language environment.
+
+1999-09-20  Richard M. Stallman  <rms@caffeine.ai.mit.edu>
+
+	* info.el (Info-directory-list): Don't test existence of ALTERNATIVE
+	if we know for some other reason it should not be used.
+
+1999-09-11  Andreas Schwab  <schwab@gnu.org>
+
+	* vc.el (vc-backend-merge-news): Fix regexp to also match P marker
+	from cvs update.
+
+1999-09-10  Richard Stallman  <rms@gnu.org>
+
+	* simple.el (shell-command-on-region): EXIT-STATUS can be a string.
+
+	* info.el (Info-search): Don't lose with empty regexp.
+
+1999-09-10  Dave Love  <fx@gnu.org>
+
+	* help.el (describe-variable): Fix test for customizability.
+
+1999-09-09  Dave Love  <fx@gnu.org>
+
+	* font-lock.el (global-font-lock-mode): Add autoload cookie and
+	:initialize method.
+
+1999-09-08  Richard Stallman  <rms@gnu.org>
+
+	* gud.el (gud-make-debug-menu): Make a child for the
+	local menu, for its menu bar, and the debug menu.
+
+1999-09-07  Edward M. Reingold  <reingold@emr.cs.uiuc.edu>
+
+	* diary-lib.el (list-diary-entries): Make sure two-digit years
+	have leading zeros.
+
+1999-09-06  Richard Stallman  <rms@gnu.org>
+
+	* vc.el (vc-annotate-display): Use < 69 not < 70
+	to distinguish 20YY from 19YY. 
+
+	* timezone.el (timezone-parse-date): Use < 69 not < 70
+	to distinguish 20YY from 19YY.
+
+	* mail/rmail.el (rmail-retry-failure): Unconditionally move
+	to beginning of message.
+
+1999-09-06  Eli Zaretskii  <eliz@gnu.org>
+
+	* dired.el (dired-re-dir, dired-re-sym): Don't match DOS drive
+	letters with a colon after d or l.
+
+1999-09-05  Richard Stallman  <rms@gnu.org>
+
+	* vc.el (vc-annotate-display): Treat 2-digit years under 70 as 20YY.
+
+1999-08-31  Dave Love  <fx@gnu.org>
+
+	* help.el (help-make-xrefs): Don't lose on non-empty blank line
+	after key table.
+
+1999-08-24  Dave Love  <fx@gnu.org>
+
+	* timezone.el (timezone-parse-date): Assume 2-digit dates <70 are
+	2000+.
+
+1999-08-23  Dave Love  <fx@gnu.org>
+
+	* auto-show.el (auto-show-mode): Fix :set.
+
+	* man.el (Man-softhyphen-to-minus): Fix for multibyte case; do
+	nothing in Latin-N environment.
+
+1999-08-01  Eli Zaretskii  <eliz@gnu.org>
+
+	* international/mule.el (set-auto-coding): Allow whitespace before
+	and after the "variable: value" pair.
+
+1999-07-25  Richard M. Stallman  <rms@gnu.org>
+
+	* cus-edit.el (custom-save-delete): Avoid error for empty .emacs.
+
+1999-07-23  Richard M. Stallman  <rms@caffeine.ai.mit.edu>
+
+	* emacs-lisp/edebug.el: Delete compatibility code.
+	(edebug-next-token-class): If . is followed by a digit,
+	return `symbol' for the token class.
+
+	* startup.el (command-line): If we don't find the user's init file,
+	set user-init-file to nil.
+
+1999-07-21  Kenichi Handa  <handa@etl.go.jp>
+
+	* international/encoded-kb.el
+	(encoded-kbd-self-insert-iso2022-7bit): Don't insert the character
+	but push it to unread-command-events.
+	(encoded-kbd-self-insert-iso2022-8bit): Likewise.
+	(encoded-kbd-self-insert-sjis): Likewise.
+	(encoded-kbd-self-insert-big5): Likewise.
+
 1999-07-14  Richard Stallman  <rms@gnu.org>
 
 	* Version 20.4 released.

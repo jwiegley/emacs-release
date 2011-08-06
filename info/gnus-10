@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -163,8 +162,8 @@ this will make spam disappear.
      NoCeM messages from the people you like.  Each NoCeM message has a
      "type" header that gives the message a (more or less, usually
      less) rigorous definition.  Common types are `spam', `spew', `mmf',
-     `binary', and `troll'.  To specify this, you have to use (ISSUER
-     CONDITIONS ...) elements in the list.  Each condition is either a
+     `binary', and `troll'.  To specify this, you have to use `(ISSUER
+     CONDITIONS ...)' elements in the list.  Each condition is either a
      string (which is a regexp that matches types you want to use) or a
      list on the form `(not STRING)', where STRING is a regexp that
      matches types you don't want to use.
@@ -215,7 +214,7 @@ this will make spam disappear.
    Using NoCeM could potentially be a memory hog.  If you have many
 living (i. e., subscribed or unsubscribed groups), your Emacs process
 will grow big.  If this is a problem, you should kill off all (or most)
-of your unsubscribed groups (*note Subscription Commands::.).
+of your unsubscribed groups (*note Subscription Commands::).
 
 
 File: gnus,  Node: Undo,  Next: Moderation,  Prev: NoCeM,  Up: Various
@@ -317,7 +316,7 @@ your shoulder as you read news.
 
 * Picon Basics::           What are picons and How do I get them.
 * Picon Requirements::     Don't go further if you aren't using XEmacs.
-* Easy Picons::            Displaying Picons--the easy way.
+* Easy Picons::            Displaying Picons---the easy way.
 * Hard Picons::            The way you should do it.  You'll learn something.
 * Picon Useless Configuration:: Other variables you can trash/tweak/munge/play with.
 
@@ -423,7 +422,7 @@ display them.
      valid places could be `article', `summary', or `*scratch*' for all
      I care.  Just make sure that you've made the buffer visible using
      the standard Gnus window configuration routines--*note Windows
-     Configuration::..
+     Configuration::.
 
 `gnus-picons-group-excluded-groups'
      Groups that are matched by this regexp won't have their group icons
@@ -658,7 +657,7 @@ mail asking me to repent and find some god.
    This is annoying.
 
    The way to deal with this is having Gnus split out all spam into a
-`spam' mail group (*note Splitting Mail::.).
+`spam' mail group (*note Splitting Mail::).
 
    First, pick one (1) valid mail address that you can be reached at,
 and put it in your `From' header of all your news articles.  (I've
@@ -671,7 +670,7 @@ of the mail address.)
            "From: Lars Magne Ingebrigtsen <larsi@trym.ifi.uio.no>\n")
 
    Then put the following split rule in `nnmail-split-fancy' (*note
-Fancy Mail Splitting::.):
+Fancy Mail Splitting::):
 
      (
       ...
@@ -813,12 +812,14 @@ him:
 
      *Te Deum*
 
+
      Not because of victories
      I sing,
      having none,
      but for the common sunshine,
      the breeze,
      the largess of the spring.
+
 
      Not for victory
      but for the day's work done
@@ -865,7 +866,7 @@ UMEDA intended, which makes it a more appropriate name, don't you
 think?)
 
    In any case, after spending all that energy on coming up with a new
-and spunky name, we decided that the name was *too* spunky, so we
+and spunky name, we decided that the name was _too_ spunky, so we
 renamed it back again to "Gnus".  But in mixed case.  "Gnus" vs.
 "GNUS".  New vs. old.
 
@@ -986,7 +987,7 @@ have to stop doing it the old way.
 GNUS internals should suffer no problems.  If problems occur, please
 let me know by issuing that magic command `M-x gnus-bug'.
 
-   If you are in the habit of sending bug reports *very* often, you may
+   If you are in the habit of sending bug reports _very_ often, you may
 find the helpful help buffer annoying after a while.  If so, set
 `gnus-bug-create-help-buffer' to `nil' to avoid having it pop up at you.
 
@@ -1009,12 +1010,12 @@ disagree with, of course.
 *Son-of-RFC 1036*
      We do have some breaches to this one.
 
-    *MIME*
+    _MIME_
           Gnus does no MIME handling, and this standard-to-be seems to
           think that MIME is the bees' knees, so we have major breakage
           here.
 
-    *X-Newsreader*
+    _X-Newsreader_
           This is considered to be a "vanity header", while I consider
           it to be consumer information.  After seeing so many badly
           formatted articles coming from `tin' and `Netscape' I know
@@ -1039,6 +1040,7 @@ Emacsen
 
    * Mule versions based on Emacs 19.32 and up.
 
+
    Gnus will absolutely not work on any Emacsen older than that.  Not
 reliably, at least.
 
@@ -1061,7 +1063,7 @@ tried beyond endurance, what with my "oh, that's a neat idea <type
 type>, yup, I'll release it right away <ship off> no wait, that doesn't
 work at all <type type>, yup, I'll ship that one off right away <ship
 off> no, wait, that absolutely does not work" policy for releases.
-Micro$oft--bah.  Amateurs.  I'm *much* worse.  (Or is that "worser"?
+Micro$oft--bah.  Amateurs.  I'm _much_ worse.  (Or is that "worser"?
 "much worser"?  "worsest"?)
 
    I would like to take this opportunity to thank the Academy for...
@@ -1077,12 +1079,12 @@ oops, wrong show.
    * Erik Naggum--help, ideas, support, code and stuff.
 
    * Wes Hardaker--`gnus-picon.el' and the manual section on "picons"
-     (*note Picons::.).
+     (*note Picons::).
 
    * Kim-Minh Kaplan--further work on the picon code.
 
    * Brad Miller--`gnus-gl.el' and the GroupLens manual section (*note
-     GroupLens::.).
+     GroupLens::).
 
    * Sudish Joseph--innumerable bug fixes.
 
@@ -1113,6 +1115,7 @@ oops, wrong show.
 
    * François Pinard--many, many interesting and thorough bug reports,
      as well as autoconf support.
+
 
    This manual was proof-read by Adrian Aichner, with Ricardo Nassif,
 Mark Borges, and Jost Krieger proof-reading parts of the manual.
@@ -1182,10 +1185,10 @@ New Features
 
 * ding Gnus::          New things in Gnus 5.0/5.1, the first new Gnus.
 * September Gnus::     The Thing Formally Known As Gnus 5.3/5.3.
-* Red Gnus::           Third time best--Gnus 5.4/5.5.
+* Red Gnus::           Third time best---Gnus 5.4/5.5.
 * Quassia Gnus::       Two times two is four, or Gnus 5.6/5.7.
 
-   These lists are, of course, just *short* overviews of the *most*
+   These lists are, of course, just _short_ overviews of the _most_
 important new features.  No, really.  There are tons more.  Yes, we
 have feeping creaturism in full effect.
 
@@ -1198,87 +1201,88 @@ File: gnus,  Node: ding Gnus,  Next: September Gnus,  Up: New Features
    New features in Gnus 5.0/5.1:
 
    * The look of all buffers can be changed by setting format-like
-     variables (*note Group Buffer Format::. and *note Summary Buffer
-     Format::.).
+     variables (*note Group Buffer Format:: and *note Summary Buffer
+     Format::).
 
    * Local spool and several NNTP servers can be used at once (*note
-     Select Methods::.).
+     Select Methods::).
 
    * You can combine groups into virtual groups (*note Virtual
-     Groups::.).
+     Groups::).
 
    * You can read a number of different mail formats (*note Getting
-     Mail::.).  All the mail backends implement a convenient mail
-     expiry scheme (*note Expiring Mail::.).
+     Mail::).  All the mail backends implement a convenient mail expiry
+     scheme (*note Expiring Mail::).
 
    * Gnus can use various strategies for gathering threads that have
      lost their roots (thereby gathering loose sub-threads into one
      thread) or it can go back and retrieve enough headers to build a
-     complete thread (*note Customizing Threading::.).
+     complete thread (*note Customizing Threading::).
 
    * Killed groups can be displayed in the group buffer, and you can
-     read them as well (*note Listing Groups::.).
+     read them as well (*note Listing Groups::).
 
    * Gnus can do partial group updates--you do not have to retrieve the
      entire active file just to check for new articles in a few groups
-     (*note The Active File::.).
+     (*note The Active File::).
 
    * Gnus implements a sliding scale of subscribedness to groups (*note
-     Group Levels::.).
+     Group Levels::).
 
    * You can score articles according to any number of criteria (*note
-     Scoring::.).  You can even get Gnus to find out how to score
-     articles for you (*note Adaptive Scoring::.).
+     Scoring::).  You can even get Gnus to find out how to score
+     articles for you (*note Adaptive Scoring::).
 
    * Gnus maintains a dribble buffer that is auto-saved the normal Emacs
      manner, so it should be difficult to lose much data on what you
-     have read if your machine should go down (*note Auto Save::.).
+     have read if your machine should go down (*note Auto Save::).
 
    * Gnus now has its own startup file (`.gnus') to avoid cluttering up
      the `.emacs' file.
 
    * You can set the process mark on both groups and articles and
      perform operations on all the marked items (*note
-     Process/Prefix::.).
+     Process/Prefix::).
 
    * You can grep through a subset of groups and create a group from the
-     results (*note Kibozed Groups::.).
+     results (*note Kibozed Groups::).
 
    * You can list subsets of groups according to, well, anything (*note
-     Listing Groups::.).
+     Listing Groups::).
 
    * You can browse foreign servers and subscribe to groups from those
-     servers (*note Browse Foreign Server::.).
+     servers (*note Browse Foreign Server::).
 
    * Gnus can fetch articles, asynchronously, on a second connection to
-     the server (*note Asynchronous Fetching::.).
+     the server (*note Asynchronous Fetching::).
 
-   * You can cache articles locally (*note Article Caching::.).
+   * You can cache articles locally (*note Article Caching::).
 
    * The uudecode functions have been expanded and generalized (*note
-     Decoding Articles::.).
+     Decoding Articles::).
 
    * You can still post uuencoded articles, which was a little-known
-     feature of GNUS' past (*note Uuencoding and Posting::.).
+     feature of GNUS' past (*note Uuencoding and Posting::).
 
    * Fetching parents (and other articles) now actually works without
-     glitches (*note Finding the Parent::.).
+     glitches (*note Finding the Parent::).
 
    * Gnus can fetch FAQs and group descriptions (*note Group
-     Information::.).
+     Information::).
 
    * Digests (and other files) can be used as the basis for groups
-     (*note Document Groups::.).
+     (*note Document Groups::).
 
    * Articles can be highlighted and customized (*note Customizing
-     Articles::.).
+     Articles::).
 
    * URLs and other external references can be buttonized (*note
-     Article Buttons::.).
+     Article Buttons::).
 
    * You can do lots of strange stuff with the Gnus window & frame
-     configuration (*note Windows Configuration::.).
+     configuration (*note Windows Configuration::).
 
    * You can click on buttons instead of using the keyboard (*note
-     Buttons::.).
+     Buttons::).
+
 

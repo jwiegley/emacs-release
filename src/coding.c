@@ -224,10 +224,10 @@ encode_coding_XXX (coding, source, destination, src_bytes, dst_bytes)
       }						\
     else					\
       {						\
-	*dst++ = (c);				\
+	/* If ASCII charset is invoked to GR,	\
+	   we must reset MSB now.  */		\
+	*dst++ = (c) & 0x7F;			\
 	coding->produced_char++;		\
-	if ((c) >= 0x80)			\
-	  coding->fake_multibyte = 1;		\
       }						\
   } while (0)
 
@@ -4472,7 +4472,7 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
       inserted_byte += coding->produced;
       len_byte -= coding->consumed;
       src += coding->consumed;
-      dst += inserted_byte;
+      dst += coding->produced;
 
       if (result == CODING_FINISH_NORMAL)
 	{

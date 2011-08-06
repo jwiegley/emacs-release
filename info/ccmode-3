@@ -1,5 +1,5 @@
-This is Info file ../info/ccmode, produced by Makeinfo version 1.68
-from the input file cc-mode.texi.
+This is ../info/ccmode, produced by makeinfo version 4.0 from
+cc-mode.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -79,6 +79,7 @@ Limitations and Known Bugs
      invariable causes inaccuracies in analysis in some bizarre
      situations.
 
+
 
 File: ccmode,  Node: Mailing Lists and Submitting Bug Reports,  Next: Concept Index,  Prev: Limitations and Known Bugs,  Up: Top
 
@@ -90,7 +91,7 @@ This provides vital information I need to reproduce your problem.  Make
 sure you include a concise, but complete code example.  Please try to
 boil your example down to just the essential code needed to reproduce
 the problem, and include an exact recipe of steps needed to expose the
-bug.  Be especially sure to include any code that appears *before* your
+bug.  Be especially sure to include any code that appears _before_ your
 bug example, if you think it might affect my ability to reproduce it.
 
    Bug reports are now sent to the following email addresses:
@@ -101,7 +102,7 @@ questions and suggestions (kudos? `;-)' to `cc-mode-help@python.org', or
 `gnu.emacs.help'.
 
    If you want to get announcements of new CC Mode releases, send the
-word *subscribe* in the body of a message to
+word _subscribe_ in the body of a message to
 `cc-mode-announce-request@python.org'.  Announcements will also be
 posted to the Usenet newsgroup `gnu.emacs.sources'.  Note that the
 `cc-mode-victims@python.org' mailing list was recently decommissioned.
@@ -132,16 +133,16 @@ Concept Index
 * Auto-newline insertion:                Auto-newline insertion.
 * basic-offset (c-):                     Customizing Indentation.
 * beta testers mailing list:             Mailing Lists and Submitting Bug Reports.
-* block-close syntactic symbol <1>:      Syntactic Symbols.
-* block-close syntactic symbol:          Hanging Braces.
-* block-open syntactic symbol <1>:       Syntactic Symbols.
-* block-open syntactic symbol:           Hanging Braces.
+* block-close syntactic symbol <1>:      Hanging Braces.
+* block-close syntactic symbol:          Syntactic Symbols.
+* block-open syntactic symbol <1>:       Hanging Braces.
+* block-open syntactic symbol:           Syntactic Symbols.
 * BOCM:                                  Introduction.
 * brace lists:                           Syntactic Symbols.
 * brace-list-close syntactic symbol <1>: Syntactic Symbols.
 * brace-list-close syntactic symbol:     Hanging Braces.
-* brace-list-entry syntactic symbol <1>: Syntactic Symbols.
-* brace-list-entry syntactic symbol:     Hanging Braces.
+* brace-list-entry syntactic symbol <1>: Hanging Braces.
+* brace-list-entry syntactic symbol:     Syntactic Symbols.
 * brace-list-intro syntactic symbol <1>: Syntactic Symbols.
 * brace-list-intro syntactic symbol:     Hanging Braces.
 * brace-list-open syntactic symbol <1>:  Syntactic Symbols.
@@ -165,8 +166,8 @@ Concept Index
 * Clean-ups:                             Hanging Colons.
 * Commands:                              Commands.
 * comment-intro syntactic symbol:        Syntactic Symbols.
-* comment-only line <1>:                 Other electric commands.
-* comment-only line:                     Syntactic Analysis.
+* comment-only line <1>:                 Syntactic Analysis.
+* comment-only line:                     Other electric commands.
 * cpp-macro syntactic symbol:            Syntactic Symbols.
 * cpp-macro-cont syntactic symbol:       Syntactic Symbols.
 * Custom Brace and Colon Hanging:        Custom Brace and Colon Hanging.
@@ -178,8 +179,8 @@ Concept Index
 * Customizing Semi-colons and Commas <1>: Other Special Indentations.
 * Customizing Semi-colons and Commas:    Customizing Semi-colons and Commas.
 * defun-block-intro syntactic symbol:    Syntactic Symbols.
-* defun-close syntactic symbol <1>:      Syntactic Symbols.
-* defun-close syntactic symbol:          Hanging Braces.
+* defun-close syntactic symbol <1>:      Hanging Braces.
+* defun-close syntactic symbol:          Syntactic Symbols.
 * defun-open syntactic symbol <1>:       Syntactic Symbols.
 * defun-open syntactic symbol:           Hanging Braces.
 * do-while-closure syntactic symbol:     Syntactic Symbols.
@@ -187,8 +188,8 @@ Concept Index
 * electric commands:                     Auto-newline insertion.
 * Ellemtel style:                        Built-in Styles.
 * else-clause syntactic symbol:          Syntactic Symbols.
-* extern-lang-close syntactic symbol <1>: Syntactic Symbols.
-* extern-lang-close syntactic symbol:    Hanging Braces.
+* extern-lang-close syntactic symbol <1>: Hanging Braces.
+* extern-lang-close syntactic symbol:    Syntactic Symbols.
 * extern-lang-open syntactic symbol <1>: Syntactic Symbols.
 * extern-lang-open syntactic symbol:     Hanging Braces.
 * File Styles:                           File Styles.
@@ -226,10 +227,10 @@ Concept Index
 * label syntactic symbol:                Syntactic Symbols.
 * Limitations and Known Bugs:            Limitations and Known Bugs.
 * Linux style:                           Built-in Styles.
-* literal <1>:                           Indentation Commands.
-* literal <2>:                           Hungry-deletion of whitespace.
-* literal <3>:                           Clean-ups.
-* literal:                               Auto-newline insertion.
+* literal <1>:                           Hungry-deletion of whitespace.
+* literal <2>:                           Auto-newline insertion.
+* literal <3>:                           Indentation Commands.
+* literal:                               Clean-ups.
 * local variables:                       File Styles.
 * Mailing Lists and Submitting Bug Reports: Mailing Lists and Submitting Bug Reports.
 * member-init-cont syntactic symbol:     Syntactic Symbols.
@@ -255,19 +256,19 @@ Concept Index
 * set-offset (c-):                       Customizing Indentation.
 * statement syntactic symbol:            Syntactic Symbols.
 * statement-case-intro syntactic symbol: Syntactic Symbols.
-* statement-case-open syntactic symbol <1>: Syntactic Symbols.
-* statement-case-open syntactic symbol:  Hanging Braces.
+* statement-case-open syntactic symbol <1>: Hanging Braces.
+* statement-case-open syntactic symbol:  Syntactic Symbols.
 * statement-cont syntactic symbol:       Syntactic Symbols.
-* stream-op syntactic symbol <1>:        Syntactic Symbols.
-* stream-op syntactic symbol:            Custom Indentation Functions.
+* stream-op syntactic symbol <1>:        Custom Indentation Functions.
+* stream-op syntactic symbol:            Syntactic Symbols.
 * string syntactic symbol:               Syntactic Symbols.
 * Stroustrup style:                      Built-in Styles.
 * Styles:                                Styles.
 * substatement:                          Syntactic Analysis.
 * substatement syntactic symbol:         Syntactic Symbols.
 * substatement-block-intro syntactic symbol: Syntactic Symbols.
-* substatement-open syntactic symbol <1>: Syntactic Symbols.
-* substatement-open syntactic symbol:    Hanging Braces.
+* substatement-open syntactic symbol <1>: Hanging Braces.
+* substatement-open syntactic symbol:    Syntactic Symbols.
 * substatment block:                     Syntactic Analysis.
 * Syntactic Analysis:                    Syntactic Analysis.
 * syntactic component:                   Syntactic Analysis.
@@ -275,7 +276,8 @@ Concept Index
 * syntactic symbol:                      Syntactic Analysis.
 * Syntactic Symbols:                     Syntactic Symbols.
 * syntactic whitespace <1>:              Syntactic Symbols.
-* syntactic whitespace:                  Auto-newline insertion.
+* syntactic whitespace <2>:              Auto-newline insertion.
+* syntactic whitespace:                  Syntactic Symbols.
 * TAB:                                   Indentation Calculation.
 * topmost-intro syntactic symbol:        Syntactic Symbols.
 * topmost-intro-cont syntactic symbol:   Syntactic Symbols.
@@ -344,8 +346,8 @@ appears under its `c-<THING>' name and its `<THING> (c-)' name.
 * c-semi&comma-inside-parenlist:         Customizing Semi-colons and Commas.
 * c-semi&comma-no-newlines-before-nonblanks: Customizing Semi-colons and Commas.
 * c-semi&comma-no-newlines-for-oneline-inliners: Customizing Semi-colons and Commas.
-* c-set-offset <1>:                      File Styles.
-* c-set-offset:                          Interactive Customization.
+* c-set-offset <1>:                      Interactive Customization.
+* c-set-offset:                          File Styles.
 * c-set-style:                           Built-in Styles.
 * c-show-syntactic-information:          Syntactic Analysis.
 * c-snug-do-while:                       Custom Brace and Colon Hanging.
@@ -434,12 +436,12 @@ Key Index
 * C-c C-n:                               Other Commands.
 * C-c C-o:                               Interactive Customization.
 * C-c C-p:                               Other Commands.
-* C-c C-q <1>:                           Frequently Asked Questions.
+* C-c C-q <1>:                           Indentation Commands.
 * C-c C-q <2>:                           Custom Indentation Functions.
 * C-c C-q <3>:                           Interactive Customization.
-* C-c C-q:                               Indentation Commands.
-* C-c C-s <1>:                           Syntactic Symbols.
-* C-c C-s:                               Syntactic Analysis.
+* C-c C-q:                               Frequently Asked Questions.
+* C-c C-s <1>:                           Syntactic Analysis.
+* C-c C-s:                               Syntactic Symbols.
 * C-c C-t:                               Minor Modes.
 * C-c C-u:                               Other Commands.
 * C-j:                                   Frequently Asked Questions.
@@ -486,8 +488,8 @@ appears under its `c-<THING>' name and its `<THING> (c-)' name.
 * c-electric-pound-behavior:             Other electric commands.
 * c-file-offsets:                        File Styles.
 * c-file-style:                          File Styles.
-* c-hanging-braces-alist <1>:            Custom Brace and Colon Hanging.
-* c-hanging-braces-alist:                Hanging Braces.
+* c-hanging-braces-alist <1>:            Hanging Braces.
+* c-hanging-braces-alist:                Custom Brace and Colon Hanging.
 * c-hanging-colon-alist:                 Custom Brace and Colon Hanging.
 * c-hanging-colons-alist:                Hanging Colons.
 * c-hanging-comment-ender-p:             Other Commands.
@@ -501,22 +503,22 @@ appears under its `c-<THING>' name and its `<THING> (c-)' name.
 * c-label-minimum-indentation:           Other Special Indentations.
 * c-mode-common-hook:                    Permanent Customization.
 * c-mode-hook:                           Permanent Customization.
-* c-offsets-alist <1>:                   Syntactic Symbols.
-* c-offsets-alist <2>:                   Custom Indentation Functions.
-* c-offsets-alist <3>:                   File Styles.
-* c-offsets-alist <4>:                   Customizing Indentation.
-* c-offsets-alist <5>:                   Other electric commands.
-* c-offsets-alist <6>:                   Hanging Braces.
-* c-offsets-alist <7>:                   Indentation Calculation.
-* c-offsets-alist:                       Syntactic Analysis.
+* c-offsets-alist <1>:                   Syntactic Analysis.
+* c-offsets-alist <2>:                   Hanging Braces.
+* c-offsets-alist <3>:                   Customizing Indentation.
+* c-offsets-alist <4>:                   Custom Indentation Functions.
+* c-offsets-alist <5>:                   Syntactic Symbols.
+* c-offsets-alist <6>:                   Other electric commands.
+* c-offsets-alist <7>:                   File Styles.
+* c-offsets-alist:                       Indentation Calculation.
 * c-progress-interval:                   Indentation Commands.
 * c-recognize-knr-p:                     Performance Issues.
 * c-special-indent-hook:                 Other Special Indentations.
 * c-style-alist <1>:                     Advanced Customizations.
 * c-style-alist:                         Adding Styles.
-* c-style-variables-are-local-p <1>:     Advanced Customizations.
+* c-style-variables-are-local-p <1>:     Customizing Indentation.
 * c-style-variables-are-local-p <2>:     Permanent Customization.
-* c-style-variables-are-local-p:         Customizing Indentation.
+* c-style-variables-are-local-p:         Advanced Customizations.
 * c-syntactic-context:                   Custom Brace and Colon Hanging.
 * c-tab-always-indent:                   Indentation Commands.
 * cc-lobotomy-pith-list:                 Performance Issues.
@@ -532,8 +534,8 @@ appears under its `c-<THING>' name and its `<THING> (c-)' name.
 * electric-pound-behavior (c-):          Other electric commands.
 * file-offsets (c-):                     File Styles.
 * file-style (c-):                       File Styles.
-* hanging-braces-alist (c-) <1>:         Custom Brace and Colon Hanging.
-* hanging-braces-alist (c-):             Hanging Braces.
+* hanging-braces-alist (c-) <1>:         Hanging Braces.
+* hanging-braces-alist (c-):             Custom Brace and Colon Hanging.
 * hanging-colon-alist (c-):              Custom Brace and Colon Hanging.
 * hanging-colons-alist (c-):             Hanging Colons.
 * hanging-comment-ender-p (c-):          Other Commands.
@@ -550,12 +552,12 @@ appears under its `c-<THING>' name and its `<THING> (c-)' name.
 * label-minimum-indentation (c-):        Other Special Indentations.
 * mode-common-hook (c-):                 Permanent Customization.
 * objc-mode-hook:                        Permanent Customization.
-* offsets-alist (c-) <1>:                Syntactic Symbols.
-* offsets-alist (c-) <2>:                Custom Indentation Functions.
+* offsets-alist (c-) <1>:                Other electric commands.
+* offsets-alist (c-) <2>:                Customizing Indentation.
 * offsets-alist (c-) <3>:                File Styles.
-* offsets-alist (c-) <4>:                Customizing Indentation.
-* offsets-alist (c-) <5>:                Other electric commands.
-* offsets-alist (c-) <6>:                Hanging Braces.
+* offsets-alist (c-) <4>:                Custom Indentation Functions.
+* offsets-alist (c-) <5>:                Hanging Braces.
+* offsets-alist (c-) <6>:                Syntactic Symbols.
 * offsets-alist (c-) <7>:                Indentation Calculation.
 * offsets-alist (c-):                    Syntactic Analysis.
 * progress-interval (c-):                Indentation Commands.
@@ -564,8 +566,8 @@ appears under its `c-<THING>' name and its `<THING> (c-)' name.
 * style-alist (c-) <1>:                  Advanced Customizations.
 * style-alist (c-):                      Adding Styles.
 * style-variables-are-local-p:           Advanced Customizations.
-* style-variables-are-local-p (c-) <1>:  Permanent Customization.
-* style-variables-are-local-p (c-):      Customizing Indentation.
+* style-variables-are-local-p (c-) <1>:  Customizing Indentation.
+* style-variables-are-local-p (c-):      Permanent Customization.
 * syntactic-context (c-):                Custom Brace and Colon Hanging.
 * tab-always-indent (c-):                Indentation Commands.
 

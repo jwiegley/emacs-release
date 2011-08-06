@@ -509,8 +509,9 @@ and TO is ignored."
 	      (save-window-excursion
 		(when show-position
 		  ;; At first, be sure to show the current buffer.
-		  (set-window-buffer (selected-window) (current-buffer))
-		  (set-window-start (selected-window) show-position))
+		  (let ((win (or (get-buffer-window (current-buffer))
+				 (display-buffer (current-buffer)))))
+		    (set-window-start win show-position)))
 		;; Then, show a helpful message.
 		(with-output-to-temp-buffer "*Warning*"
 		  (save-excursion
@@ -559,7 +560,8 @@ Please select one from the following safe coding systems:\n"
 			     last-coding-system-specified
 			     (coding-system-eol-type default-coding-system))))
 		  last-coding-system-specified))
-	    (kill-buffer "*Warning*")
+	    (if (get-buffer "*Warning*")
+		(kill-buffer "*Warning*"))
 	    (while overlays
 	      (delete-overlay (car overlays))
 	      (setq overlays (cdr overlays)))))))))
@@ -889,6 +891,8 @@ The return value is a string."
 	 (input-method (completing-read prompt input-method-alist
 					nil t nil 'input-method-history
 					default)))
+    (if (and input-method (symbolp input-method))
+ 	(setq input-method (symbol-name input-method)))
     (if (> (length input-method) 0)
 	input-method
       (if inhibit-null

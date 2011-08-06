@@ -2365,12 +2365,11 @@ Obeying it means displaying in another window the specified file and line."
   "Make sure the current local map has a [menu-bar debug] submap.
 If it doesn't, replace it with a new map that inherits it,
 and create such a submap in that new map."
-  (if (and (current-local-map)
-	   (lookup-key (current-local-map) [menu-bar debug]))
-      nil
-    (use-local-map (gud-new-keymap (current-local-map)))
-    (define-key (current-local-map) [menu-bar debug]
-      (cons "Gud" (gud-new-keymap gud-menu-map)))))
+  (use-local-map (gud-new-keymap (current-local-map)))
+  (define-key (current-local-map) [menu-bar]
+    (gud-new-keymap (lookup-key (current-local-map) [menu-bar])))
+  (define-key (current-local-map) [menu-bar debug]
+    (cons "Gud" (gud-new-keymap gud-menu-map))))
 
 ;;; Code for parsing expressions out of C code.  The single entry point is
 ;;; find-c-expr, which tries to return an lvalue expression from around point.

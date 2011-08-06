@@ -1,3 +1,14 @@
+1999-12-04  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.5 released.
+	
+1999-11-03  Gerd Moellmann  <gerd@gnu.org>
+
+	* gnus.texi: Add coding tag.  Fixes for makeinfo 4.0.
+
+	* dired-x.texi, sc.texii, cc-mode.texi, mh-e.texi: Fixes for 
+	makeinfo 4.0.
+
 1999-07-12  Richard Stallman  <rms@gnu.org>
 
 	* Version 20.4 released.

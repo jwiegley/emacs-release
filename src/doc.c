@@ -372,13 +372,7 @@ string is passed through `substitute-command-keys'.")
     }
 
   if (NILP (raw))
-    {
-      struct gcpro gcpro1;
-
-      GCPRO1 (doc);
-      doc = Fsubstitute_command_keys (doc);
-      UNGCPRO;
-    }
+    doc = Fsubstitute_command_keys (doc);
   return doc;
 }
 
@@ -391,7 +385,7 @@ translation.")
   (symbol, prop, raw)
      Lisp_Object symbol, prop, raw;
 {
-  register Lisp_Object tem;
+  Lisp_Object tem;
 
   tem = Fget (symbol, prop);
   if (INTEGERP (tem))
@@ -399,7 +393,8 @@ translation.")
   else if (CONSP (tem))
     tem = get_doc_string (tem, 0, 0);
   if (NILP (raw) && STRINGP (tem))
-    return Fsubstitute_command_keys (tem);
+    tem = Fsubstitute_command_keys (tem);
+
   return tem;
 }
 

@@ -2097,6 +2097,7 @@ It returns the number of characters changed.")
   int cnt;			/* Number of changes made. */
   int size;			/* Size of translate table. */
   int pos;
+  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
 
   validate_region (&start, &end);
   CHECK_STRING (table, 2);
@@ -2117,7 +2118,10 @@ It returns the number of characters changed.")
       int oc;
       int pos_byte_next;
 
-      oc = STRING_CHAR_AND_LENGTH (p, stop - pos_byte, len);
+      if (multibyte)
+	oc = STRING_CHAR_AND_LENGTH (p, stop - pos_byte, len);
+      else
+	oc = *p, len = 1;
       pos_byte_next = pos_byte + len;
       if (oc < size && len == 1)
 	{
@@ -2126,7 +2130,8 @@ It returns the number of characters changed.")
 	    {
 	      /* Take care of the case where the new character
 		 combines with neighboring bytes.  */ 
-	      if (!ASCII_BYTE_P (nc)
+	      if (multibyte
+		  && !ASCII_BYTE_P (nc)
 		  && (CHAR_HEAD_P (nc)
 		      ? ! CHAR_HEAD_P (FETCH_BYTE (pos_byte + 1))
 		      : (pos_byte > BEG_BYTE

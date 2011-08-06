@@ -2341,6 +2341,8 @@ x_set_name (f, name, explicit)
 
   if (FRAME_W32_WINDOW (f))
     {
+      if (STRING_MULTIBYTE (name))
+	name = string_make_unibyte (name);
       BLOCK_INPUT;
       SetWindowText(FRAME_W32_WINDOW (f), XSTRING (name)->data);
       UNBLOCK_INPUT;
@@ -2398,6 +2400,8 @@ x_set_title (f, name)
 
   if (FRAME_W32_WINDOW (f))
     {
+      if (STRING_MULTIBYTE (name))
+	name = string_make_unibyte (name);
       BLOCK_INPUT;
       SetWindowText(FRAME_W32_WINDOW (f), XSTRING (name)->data);
       UNBLOCK_INPUT;
@@ -5635,7 +5639,7 @@ x_to_w32_font (lpxstr, lplogfont)
       fields--;
       if (fields > 0 && resy[0] != '*')
         {
-          tem = atoi (pixels);
+          tem = atoi (resy);
           if (tem > 0) dpi = tem;
         }
 
@@ -7047,15 +7051,16 @@ DEFUN ("w32-shell-execute", Fw32_shell_execute, Sw32_shell_execute, 2, 4, 0,
   "Get Windows to perform OPERATION on DOCUMENT.\n\
 This is a wrapper around the ShellExecute system function, which\n\
 invokes the application registered to handle OPERATION for DOCUMENT.\n\
-OPERATION is typically \"open\", \"print\" or \"explore\", and DOCUMENT\n\
-is typically the name of a document file or URL, but can also be a\n\
-program executable to run or a directory to open in the Windows Explorer.\n\
+OPERATION is typically \"open\", \"print\" or \"explore\" (but can be\n\
+nil for the default action), and DOCUMENT is typically the name of a\n\
+document file or URL, but can also be a program executable to run or\n\
+a directory to open in the Windows Explorer.\n\
 \n\
-If DOCUMENT is a program executable, PARAMETERS can be a list of command\n\
-line parameters, but otherwise should be nil.\n\
+If DOCUMENT is a program executable, PARAMETERS can be a string\n\
+containing command line parameters, but otherwise should be nil.\n\
 \n\
 SHOW-FLAG can be used to control whether the invoked application is hidden\n\
-or minimized.  If SHOw-FLAG is nil, the application is displayed normally,\n\
+or minimized.  If SHOW-FLAG is nil, the application is displayed normally,\n\
 otherwise it is an integer representing a ShowWindow flag:\n\
 \n\
   0 - start hidden\n\
@@ -7067,14 +7072,14 @@ otherwise it is an integer representing a ShowWindow flag:\n\
 {
   Lisp_Object current_dir;
 
-  CHECK_STRING (operation, 0);
   CHECK_STRING (document, 0);
 
   /* Encode filename and current directory.  */
   current_dir = ENCODE_FILE (current_buffer->directory);
   document = ENCODE_FILE (document);
   if ((int) ShellExecute (NULL,
-			  XSTRING (operation)->data,
+			  (STRINGP (operation) ?
+			   XSTRING (operation)->data : NULL),
 			  XSTRING (document)->data,
 			  (STRINGP (parameters) ?
 			   XSTRING (parameters)->data : NULL),

@@ -284,7 +284,7 @@ skip_invisible (pos, next_boundary_p, to, window)
     									\
     if (c == LEADING_CODE_COMPOSITION)					\
       {									\
-	int id = str_cmpchar_id (p, pend - p);				\
+	int id = str_cmpchar_id (p, pend - p, 0);			\
 	int ch = MAKE_COMPOSITE_CHAR (id);				\
 									\
 	if (id >= 0)							\

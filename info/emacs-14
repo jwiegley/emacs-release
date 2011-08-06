@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -72,7 +71,7 @@ VALUE to specify each and every syntactic symbol--only those for which
 the style differs from the default.
 
    The indentation of lines containing only comments is also affected by
-the variable `c-comment-only-line-offset' (*note Comments in C::.).
+the variable `c-comment-only-line-offset' (*note Comments in C::).
 
 
 File: emacs,  Node: C Indent Styles,  Prev: Variables for C Indent,  Up: Custom C Indent
@@ -386,7 +385,7 @@ all possible completions is displayed in another window.
 
    In most programming language major modes, `M-<TAB>' runs the command
 `complete-symbol', which provides two kinds of completion.  Normally it
-does completion based on a tags table (*note Tags::.); with a numeric
+does completion based on a tags table (*note Tags::); with a numeric
 argument (regardless of the value), it does completion based on the
 names listed in the Info file indexes for your language.  Thus, to
 complete the name of a symbol defined in your own program, use
@@ -657,7 +656,7 @@ Source File Tag Syntax
    * In Prolog code, a tag name appears at the left margin.
 
    You can also generate tags based on regexp matching (*note Create
-Tags Table::.) to handle other formats and languages.
+Tags Table::) to handle other formats and languages.
 
 
 File: emacs,  Node: Create Tags Table,  Next: Select Tags Table,  Prev: Tag Syntax,  Up: Tags
@@ -816,8 +815,8 @@ that they must ask for a tags table file name to use.
 you a choice: you can add the new tags table to the current list of
 tags tables, or start a new list.  The tags commands use all the tags
 tables in the current list.  If you start a new list, the new tags table
-is used *instead* of others.  If you add the new table to the current
-list, it is used *as well as* the others.  When the tags commands scan
+is used _instead_ of others.  If you add the new table to the current
+list, it is used _as well as_ the others.  When the tags commands scan
 the list of tags tables, they don't always start at the beginning of
 the list; they start with the first tags table (if any) that describes
 the current file, proceed from there to the end of the list, and then
@@ -905,7 +904,7 @@ can take you to another buffer.  `C-x 4 .' with a negative argument
 finds the previous tag location in another window.
 
    As well as going back to places you've found tags recently, you can
-go back to places *from where* you found them.  Use `M-*', which
+go back to places _from where_ you found them.  Use `M-*', which
 invokes the command `pop-tag-mark', for this.  Typically you would find
 and study the definition of something with `M-.' and then return to
 where you were with `M-*'.
@@ -1003,8 +1002,8 @@ way it appears in the tags table.  Do not include a directory as part of
 the file name unless the file name recorded in the tags table includes a
 directory.
 
-   `M-x tags-apropos' is like `apropos' for tags (*note Apropos::.).
-It reads a regexp, then finds all the tags in the selected tags table
+   `M-x tags-apropos' is like `apropos' for tags (*note Apropos::).  It
+reads a regexp, then finds all the tags in the selected tags table
 whose entries match that regexp, and displays the tag names found.
 
    You can also perform completion in the buffer on the name space of
@@ -1065,7 +1064,7 @@ one of them to include in the merge buffer.
 
    The Emerge commands that take input from existing buffers use only
 the accessible portions of those buffers, if they are narrowed (*note
-Narrowing::.).
+Narrowing::).
 
    If a common ancestor version is available, from which the two texts
 to be merged were both derived, Emerge can use it to guess which
@@ -1140,7 +1139,7 @@ mode line indicates Auto Advance mode with `A'.
 
    If Skip Prefers mode is in effect, the `n' and `p' commands skip
 over differences in states prefer-A and prefer-B (*note State of
-Difference::.).  Thus you see only differences for which neither version
+Difference::).  Thus you see only differences for which neither version
 is presumed "correct."  The mode line indicates Skip Prefers mode with
 `S'.
 

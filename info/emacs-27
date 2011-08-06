@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -89,7 +88,7 @@ Backup File
 Balance Parentheses
      Emacs can balance parentheses manually or automatically.  Manual
      balancing is done by the commands to move over balanced expressions
-     (*note Lists::.).  Automatic balancing is done by blinking or
+     (*note Lists::).  Automatic balancing is done by blinking or
      highlighting the parenthesis that matches one just inserted (*note
      Matching Parens: Matching.).
 
@@ -166,8 +165,8 @@ Command
 
 Command Name
      A command name is the name of a Lisp symbol which is a command
-     (*note Commands::.).  You can invoke any command by its name using
-     `M-x' (*note M-x::.).
+     (*note Commands::).  You can invoke any command by its name using
+     `M-x' (*note M-x::).
 
 Comment
      A comment is text in a program which is intended only for humans
@@ -180,7 +179,7 @@ Compilation
      Compilation is the process of creating an executable program from
      source code.  Emacs has commands for compiling files of Emacs Lisp
      code (*note Byte Compilation: (elisp)Byte Compilation.) and
-     programs in C and other languages (*note Compilation::.).
+     programs in C and other languages (*note Compilation::).
 
 Complete Key
      A complete key is a key sequence which fully specifies one action
@@ -228,7 +227,7 @@ Current Buffer
      current one.  *Note Buffers::.
 
 Current Line
-     The line point is on (*note Point::.).
+     The line point is on (*note Point::).
 
 Current Paragraph
      The paragraph that point is in.  If point is between paragraphs,
@@ -248,8 +247,8 @@ Cursor
 
 Customization
      Customization is making minor changes in the way Emacs works.  It
-     is often done by setting variables (*note Variables::.) or by
-     rebinding key sequences (*note Keymaps::.).
+     is often done by setting variables (*note Variables::) or by
+     rebinding key sequences (*note Keymaps::).
 
 Default Argument
      The default for an argument is the value that will be assumed if
@@ -557,7 +556,7 @@ Language Environment
      Your choice of language environment specifies defaults for the
      input method (q.v.) and coding system (q.v.).  *Note Language
      Environments::.  These defaults are relevant if you edit non-ASCII
-     text (*note International::.).
+     text (*note International::).
 
 List
      A list is, approximately, a text string beginning with an open
@@ -777,10 +776,10 @@ Prompt
      A prompt is text printed to ask the user for input.  Displaying a
      prompt is called prompting.  Emacs prompts always appear in the
      echo area (q.v.).  One kind of prompting happens when the
-     minibuffer is used to read an argument (*note Minibuffer::.); the
+     minibuffer is used to read an argument (*note Minibuffer::); the
      echoing which happens when you pause in the middle of typing a
      multi-character key sequence is also a kind of prompting (*note
-     Echo Area::.).
+     Echo Area::).
 
 Quitting
      Quitting means canceling a partially typed command or a running
@@ -976,7 +975,7 @@ Termscript File
      it to.  *Note Bugs::.
 
 Text
-     Two meanings (*note Text::.):
+     Two meanings (*note Text::):
 
         * Data consisting of a sequence of characters, as opposed to
           binary numbers, images, graphics commands, executable
@@ -999,7 +998,7 @@ Transposition
      Transposing two units of text means putting each one into the place
      formerly occupied by the other.  There are Emacs commands to
      transpose two adjacent characters, words, sexps (q.v.) or lines
-     (*note Transpose::.).
+     (*note Transpose::).
 
 Truncation
      Truncating text lines in the display means leaving out any text on
@@ -1058,7 +1057,7 @@ Word Search
 WYSIWYG
      WYSIWYG stands for `What you see is what you get.'  Emacs generally
      provides WYSIWYG editing for files of characters; in Enriched mode
-     (*note Formatted Text::.), it provides WYSIWYG editing for files
+     (*note Formatted Text::), it provides WYSIWYG editing for files
      that include text formatting information.
 
 Yanking

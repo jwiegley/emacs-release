@@ -889,7 +889,7 @@ Status of Emacs
 
 24:  What is the latest version of Emacs?
 
-  Emacs 20.4 is the current version as of this writing.
+  Emacs 20.5 is the current version as of this writing.
 
 25:  What is different about Emacs 20?
 
@@ -2158,13 +2158,12 @@ Difficulties Building/Installing/Porting Emacs
     available.  On ftp.gnu.org, the main GNU distribution site, sources are
     available at
 
-      ftp://ftp.gnu.org/pub/gnu/emacs/emacs-20.4.tar.gz
+      ftp://ftp.gnu.org/pub/gnu/emacs/emacs-20.5.tar.gz
 
     The above will obviously change as new versions of Emacs come out.  For
-    instance, when Emacs 20.5 is released, it will most probably be
-    available at
+    instance, Emacs 20.6 would most probably be available at
 
-      ftp://ftp.gnu.org/pub/gnu/emacs/emacs-20.5.tar.gz
+      ftp://ftp.gnu.org/pub/gnu/emacs/emacs-20.6.tar.gz
 
     Again, you should use one of the mirror sites in question 92 (and
     adjust the URL accordingly) so as to reduce load on ftp.gnu.org.
@@ -2174,10 +2173,10 @@ Difficulties Building/Installing/Porting Emacs
     much trouble on most systems.  Once you have retrieved the Emacs
     sources, you will probably be able to uncompress them with the command
 
-      gunzip --verbose emacs-20.4.tar.gz
+      gunzip --verbose emacs-20.5.tar.gz
 
-    changing the Emacs version (20.4), as necessary.  Once gunzip has
-    finished doing its job, a file by the name of "emacs-20.4.tar" should
+    changing the Emacs version (20.5), as necessary.  Once gunzip has
+    finished doing its job, a file by the name of "emacs-20.5.tar" should
     be in your build directory.
 
   * Tar, the "tape archiving" program, which moves multiple files into and
@@ -2186,7 +2185,7 @@ Difficulties Building/Installing/Porting Emacs
     before you can build Emacs.  Typically, the extraction command would
     look like
 
-      tar -xvvf emacs-20.4.tar
+      tar -xvvf emacs-20.5.tar
 
     The `x' indicates that we want to extract files from this tarfile, the
     two `v's force verbose output, and the `f' tells tar to use a disk
@@ -2195,18 +2194,18 @@ Difficulties Building/Installing/Porting Emacs
     If you're using GNU tar (available at mirrors of ftp.gnu.org), you can
     combine this step and the previous one by using the command
 
-      tar -zxvvf emacs-20.4.tar.gz
+      tar -zxvvf emacs-20.5.tar.gz
 
     The additional `z' at the beginning of the options list tells GNU tar
     to uncompress the file with gunzip before extracting the tarfile's
     components.
 
   At this point, the Emacs sources (all 25+ megabytes of them) should be
-  sitting in a directory called "emacs-20.4".  On most common Unix and
+  sitting in a directory called "emacs-20.5".  On most common Unix and
   Unix-like systems, you should be able to compile Emacs (with X Windows
   support) with the following commands:
 
-    cd emacs-20.4       [ change directory to emacs-20.4 ]
+    cd emacs-20.5       [ change directory to emacs-20.5 ]
     ./configure         [ configure Emacs for your particular system ]
     make                [ use Makefile to build components, then Emacs ]
 
@@ -2232,7 +2231,7 @@ Difficulties Building/Installing/Porting Emacs
   Follow the instructions in question 84.
 
   Emacs places nearly everything in version-specific directories (e.g.,
-  /usr/local/share/emacs/20.4), so the only files that can be overwritten
+  /usr/local/share/emacs/20.5), so the only files that can be overwritten
   when installing a new release are /usr/local/bin/emacs and the Emacs Info
   documentation in /usr/local/info.  Back up these files before you install
   a new release, and you shouldn't have too much trouble.
@@ -2422,7 +2421,7 @@ Finding/Getting Emacs and Related Packages
   base and now always contains the MULE multilingual facilities.  XEmacs
   can do some clever tricks with X Windows, such as putting arbitrary
   graphics in a buffer; similar facilities have been implemented for Emacs,
-  which will be integrated after version 20.4.  Emacs and XEmacs each come
+  which will be integrated after version 20.5.  Emacs and XEmacs each come
   with some Lisp packages that are lacking or more up-to-date in the other;
   RMS says that the FSF would include more packages that come with XEmacs,
   but that the XEmacs maintainers don't always keep track of the authors of

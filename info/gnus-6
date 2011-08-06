@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -41,7 +40,7 @@ may be additional elements in the select method, where the value may
 have special meaning for the backend in question.
 
    One could say that a select method defines a "virtual server"--so we
-do just that (*note The Server Buffer::.).
+do just that (*note The Server Buffer::).
 
    The "name" of the group is the name the backend will recognize the
 group as.
@@ -127,8 +126,8 @@ with some simple extensions:
      The opened/closed/denied status of the server.
 
    The mode line can also be customized by using the
-`gnus-server-mode-line-format' variable (*note Mode Line
-Formatting::.).  The following specs are understood:
+`gnus-server-mode-line-format' variable (*note Mode Line Formatting::).
+The following specs are understood:
 
 `S'
      Server name.
@@ -136,7 +135,7 @@ Formatting::.).  The following specs are understood:
 `M'
      Server method.
 
-   Also *note Formatting Variables::..
+   Also *note Formatting Variables::.
 
 
 File: gnus,  Node: Server Commands,  Next: Example Methods,  Prev: Server Buffer Format,  Up: The Server Buffer
@@ -196,7 +195,7 @@ Example Methods
 the backend, and the second is the "address", or "name", if you will.
 
    After these two elements, there may be an arbitrary number of
-(VARIABLE FORM) pairs.
+`(VARIABLE FORM)' pairs.
 
    To go back to the first example--imagine that you want to read from
 port 15 on that machine.  This is what the select method should look
@@ -302,7 +301,7 @@ you won't change the "derived" variables.
 `nnml-directory' is `~/Mail/' by default, and all `nnml' directory
 variables are initialized from that variable, so `nnml-active-file'
 will be `~/Mail/active'.  If you define a new virtual `nnml' server, it
-will *not* suffice to set just `nnml-directory'--you have to explicitly
+will _not_ suffice to set just `nnml-directory'--you have to explicitly
 set all the file variables to be what you want them to be.  For a
 complete list of variables for each backend, see each backend's section
 later in this manual, but here's an example `nnml' definition:
@@ -347,8 +346,8 @@ it will regard that server as "down".
    So, what happens if the machine was only feeling unwell temporarily?
 How do you test to see whether the machine has come up again?
 
-   You jump to the server buffer (*note The Server Buffer::.) and poke
-it with the following commands:
+   You jump to the server buffer (*note The Server Buffer::) and poke it
+with the following commands:
 
 `O'
      Try to establish connection to the server on the current line
@@ -401,7 +400,7 @@ the, uhm, address.
    If the NNTP server is located at a non-standard port, setting the
 third element of the select method to this port number should allow you
 to connect to the right port.  You'll have to edit the group info for
-that (*note Foreign Groups::.).
+that (*note Foreign Groups::).
 
    The name of the foreign group can be the same as a native group.  In
 fact, you can subscribe to the same group from as many different servers
@@ -646,7 +645,7 @@ instance.
 anything else) as the address.
 
    If you have access to a local spool, you should probably use that as
-the native select method (*note Finding the News::.).  It is normally
+the native select method (*note Finding the News::).  It is normally
 faster than using an `nntp' select method, but might not be.  It
 depends.  You just have to try to find out what's best at your site.
 
@@ -746,8 +745,8 @@ fit into the first two groups will be placed in the last group.
 
    This should be sufficient for reading mail with Gnus.  You might
 want to give the other sections in this part of the manual a perusal,
-though.  Especially *note Choosing a Mail Backend::. and *note Expiring
-Mail::..
+though.  Especially *note Choosing a Mail Backend:: and *note Expiring
+Mail::.
 
 
 File: gnus,  Node: Splitting Mail,  Next: Mail Backend Variables,  Prev: Getting Started Reading Mail,  Up: Getting Mail
@@ -779,7 +778,7 @@ argument.  It should return a non-`nil' value if it thinks that the
 mail belongs in that group.
 
    The last of these groups should always be a general one, and the
-regular expression should *always* be `' so that it matches any mails
+regular expression should _always_ be `' so that it matches any mails
 that haven't been matched by any of the other regexps.  (These rules are
 processed from the beginning of the alist toward the end.  The first
 rule to make a match will "win", unless you have crossposting enabled.
@@ -985,23 +984,23 @@ the five possible split syntaxes:
      name.  Normal regexp match expansion will be done.  See below for
      examples.
 
-  2. (FIELD VALUE SPLIT): If the split is a list, the first element of
-     which is a string, then store the message as specified by SPLIT, if
-     header FIELD (a regexp) contains VALUE (also a regexp).
+  2. `(FIELD VALUE SPLIT)': If the split is a list, the first element
+     of which is a string, then store the message as specified by
+     SPLIT, if header FIELD (a regexp) contains VALUE (also a regexp).
 
-  3. (| SPLIT...): If the split is a list, and the first element is `|'
-     (vertical bar), then process each SPLIT until one of them matches.
-     A SPLIT is said to match if it will cause the mail message to be
-     stored in one or more groups.
+  3. `(|SPLIT...)': If the split is a list, and the first element is
+     `|' (vertical bar), then process each SPLIT until one of them
+     matches.  A SPLIT is said to match if it will cause the mail
+     message to be stored in one or more groups.
 
-  4. (& SPLIT...): If the split is a list, and the first element is
+  4. `(&SPLIT...)': If the split is a list, and the first element is
      `&', then process all SPLITs in the list.
 
   5. `junk': If the split is the symbol `junk', then don't save this
      message. Use with extreme caution.
 
-  6. (: FUNCTION ARG1 ARG2 ...):  If the split is a list, and the first
-     element is `:', then the second element will be called as a
+  6. `(: FUNCTION ARG1 ARG2 ...)':  If the split is a list, and the
+     first element is `:', then the second element will be called as a
      function with ARGS given as arguments.  The function should return
      a SPLIT.
 
@@ -1120,8 +1119,8 @@ your mail groups.
    Doing so can be quite easy.
 
    To take an example: You're reading mail using `nnml' (*note Mail
-Spool::.), and have set `nnmail-split-methods' to a satisfactory value
-(*note Splitting Mail::.).  You have an old Unix mbox file filled with
+Spool::), and have set `nnmail-split-methods' to a satisfactory value
+(*note Splitting Mail::).  You have an old Unix mbox file filled with
 important, but old, mail.  You want to move it into your `nnml' groups.
 
    Here's how:
@@ -1130,15 +1129,15 @@ important, but old, mail.  You want to move it into your `nnml' groups.
 
   2. Type `G f' and give the path to the mbox file when prompted to
      create an `nndoc' group from the mbox file (*note Foreign
-     Groups::.).
+     Groups::).
 
   3. Type `SPACE' to enter the newly created group.
 
   4. Type `M P b' to process-mark all articles in this group's buffer
-     (*note Setting Process Marks::.).
+     (*note Setting Process Marks::).
 
   5. Type `B r' to respool all the process-marked articles, and answer
-     `nnml' when prompted (*note Mail Group Commands::.).
+     `nnml' when prompted (*note Mail Group Commands::).
 
    All the mail messages in the mbox file will now also be spread out
 over all your `nnml' groups.  Try entering them and check whether things
@@ -1208,13 +1207,13 @@ the articles you have read to disappear after a while:
    Another way to have auto-expiry happen is to have the element
 `auto-expire' in the group parameters of the group.
 
-   If you use adaptive scoring (*note Adaptive Scoring::.) and
+   If you use adaptive scoring (*note Adaptive Scoring::) and
 auto-expiring, you'll have problems.  Auto-expiring and adaptive scoring
 don't really mix very well.
 
    The `nnmail-expiry-wait' variable supplies the default time an
 expirable article has to live.  Gnus starts counting days from when the
-message *arrived*, not from when it was sent.  The default is seven
+message _arrived_, not from when it was sent.  The default is seven
 days.
 
    Gnus also supplies a function that lets you fine-tune how long
@@ -1242,7 +1241,7 @@ function can either be a number (not necessarily an integer) or one of
 the symbols `immediate' or `never'.
 
    You can also use the `expiry-wait' group parameter to selectively
-change the expiry period (*note Group Parameters::.).
+change the expiry period (*note Group Parameters::).
 
    If `nnmail-keep-last-article' is non-`nil', Gnus will never expire
 the final article in a mail newsgroup.  This is to make life easier for
@@ -1254,11 +1253,11 @@ group parameters, articles will not be marked as expirable, but all read
 articles will be put through the expiry process.  Use with extreme
 caution.  Even more dangerous is the `gnus-total-expirable-newsgroups'
 variable.  All groups that match this regexp will have all read
-articles put through the expiry process, which means that *all* old
+articles put through the expiry process, which means that _all_ old
 mail articles in the groups in question will be deleted after a while.
 Use with extreme caution, and don't come crying to me when you discover
 that the regexp you used matched the wrong group and all your important
-mail has disappeared.  Be a *man*!  Or a *woman*!  Whatever you feel
+mail has disappeared.  Be a _man_!  Or a _woman_!  Whatever you feel
 more comfortable with!  So there!
 
    Most people make most of their mail groups total-expirable, though.

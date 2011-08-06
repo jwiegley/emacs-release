@@ -1,3 +1,16 @@
+1999-12-04  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.5 released.
+	
+1999-11-13  Gerd Moellmann  <gerd@gnu.org>
+
+	* Makefile.in (b2m): Add dependency on GETOPTDEPS.
+
+1999-11-03  Gerd Moellmann  <gerd@gnu.org>
+
+	* emacsclient.c, etags.c: Change email address to send bugs
+	to.
+
 1999-07-12  Richard Stallman  <rms@gnu.org>
 
 	* Version 20.4 released.

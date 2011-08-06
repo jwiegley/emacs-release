@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -213,8 +212,8 @@ Key (Character) Index
 * C-h:                                   Help.
 * C-h a:                                 Apropos.
 * C-h b:                                 Misc Help.
-* C-h C:                                 Coding Systems.
 * C-h c:                                 Key Help.
+* C-h C:                                 Coding Systems.
 * C-h C-\:                               Select Input Method.
 * C-h C-c:                               Misc Help.
 * C-h C-d:                               Misc Help.
@@ -227,8 +226,8 @@ Key (Character) Index
 * C-h F:                                 Misc Help.
 * C-h f:                                 Name Help.
 * C-h h:                                 International Intro.
-* C-h I:                                 Select Input Method.
 * C-h i:                                 Misc Help.
+* C-h I:                                 Select Input Method.
 * C-h k:                                 Key Help.
 * C-h L:                                 Language Environments.
 * C-h l:                                 Misc Help.
@@ -436,8 +435,8 @@ Key (Character) Index
 * C-x RET k:                             Specify Coding.
 * C-x RET p:                             Specify Coding.
 * C-x RET t:                             Specify Coding.
-* C-x RET X:                             Specify Coding.
 * C-x RET x:                             Specify Coding.
+* C-x RET X:                             Specify Coding.
 * C-x s:                                 Saving.
 * C-x SPC:                               Commands of GUD.
 * C-x TAB:                               Indentation Commands.
@@ -463,8 +462,8 @@ Key (Character) Index
 * C-z:                                   Exiting.
 * C-z (X windows):                       Misc X.
 * d (Calendar mode):                     Diary Commands.
-* D (Dired):                             Operating on Files.
 * d (Dired):                             Dired Deletion.
+* D (Dired):                             Operating on Files.
 * d (Rmail):                             Rmail Deletion.
 * DEL:                                   Deletion.
 * DEL (and major modes):                 Major Modes.
@@ -513,12 +512,12 @@ Key (Character) Index
 * k (Rmail):                             Rmail Labels.
 * l (Dired):                             Dired Updating.
 * L (Dired):                             Operating on Files.
-* l (Gnus Group mode):                   Summary of Gnus.
 * L (Gnus Group mode):                   Summary of Gnus.
+* l (Gnus Group mode):                   Summary of Gnus.
 * l (Rmail):                             Rmail Make Summary.
 * LEFT:                                  Moving Point.
-* m (Calendar mode):                     Diary Commands.
 * M (Calendar mode):                     Lunar Phases.
+* m (Calendar mode):                     Diary Commands.
 * M (Dired):                             Operating on Files.
 * m (Dired):                             Marks vs Flags.
 * m (Rmail):                             Rmail Reply.
@@ -605,8 +604,8 @@ Key (Character) Index
 * M-s (Shell mode):                      Shell Ring.
 * M-s (Text mode):                       Fill Commands.
 * M-SPC:                                 Deletion.
-* M-t <1>:                               Words.
-* M-t:                                   Transpose.
+* M-t <1>:                               Transpose.
+* M-t:                                   Words.
 * M-TAB:                                 Symbol Completion.
 * M-TAB (customization buffer):          Changing an Option.
 * M-TAB (Mail mode):                     Header Editing.
@@ -633,8 +632,8 @@ Key (Character) Index
 * n (Rmail):                             Rmail Motion.
 * NEXT:                                  Scrolling.
 * o (Calendar mode):                     Specified Dates.
-* O (Dired):                             Operating on Files.
 * o (Dired):                             Dired Visiting.
+* O (Dired):                             Operating on Files.
 * o (Rmail):                             Rmail Output.
 * p (Calendar mode):                     To Other Calendar.
 * P (Dired):                             Operating on Files.
@@ -655,8 +654,8 @@ Key (Character) Index
 * RET (Occur mode):                      Other Repeating Search.
 * RET (Shell mode):                      Shell Mode.
 * RIGHT:                                 Moving Point.
-* s (Calendar mode):                     Diary Commands.
 * S (Calendar mode):                     Sunrise/Sunset.
+* s (Calendar mode):                     Diary Commands.
 * s (Dired):                             Dired Updating.
 * S (Dired):                             Operating on Files.
 * s (Gnus Summary mode):                 Summary of Gnus.

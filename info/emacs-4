@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -45,7 +44,7 @@ of strings; a file whose name ends in any of those strings is ignored
 as a possible completion.  The standard value of this variable has
 several elements including `".o"', `".elc"', `".dvi"' and `"~"'.  The
 effect is that, for example, `foo' can complete to `foo.c' even though
-`foo.o' exists as well.  However, if *all* the possible completions end
+`foo.o' exists as well.  However, if _all_ the possible completions end
 in "ignored" strings, then they are not ignored.  Ignored extensions do
 not apply to lists of completions--those always mention all possible
 completions.
@@ -60,7 +59,7 @@ that can complete multiple words at a time.  For example, it can
 complete the command name abbreviation `p-b' into `print-buffer',
 because no other command starts with two words whose initials are `p'
 and `b'.  To use this library, put `(load "complete")' in your
-`~/.emacs' file (*note Init File::.).
+`~/.emacs' file (*note Init File::).
 
    Icomplete mode presents a constantly-updated display that tells you
 what completions are available for the text you've entered so far.  The
@@ -124,7 +123,7 @@ elements.  By special dispensation, these commands can use the
 minibuffer to read their arguments even though you are already in the
 minibuffer when you issue them.  As with incremental searching, an
 uppercase letter in the regular expression makes the search
-case-sensitive (*note Search Case::.).
+case-sensitive (*note Search Case::).
 
    All uses of the minibuffer record your input on a history list, but
 there are separate history lists for different kinds of arguments.  For
@@ -184,7 +183,7 @@ text, it will repeat exactly as before.
 
    Once inside the minibuffer for `C-x <ESC> <ESC>', you can use the
 minibuffer history commands (`M-p', `M-n', `M-r', `M-s'; *note
-Minibuffer History::.) to move through the history list of saved entire
+Minibuffer History::) to move through the history list of saved entire
 commands.  After finding the desired previous command, you can edit its
 expression as usual and then resubmit it by typing <RET> as usual.
 
@@ -446,7 +445,7 @@ be unique when other function names are allowed.
    The function name for `C-h f' to describe has a default which is
 used if you type <RET> leaving the minibuffer empty.  The default is
 the function called by the innermost Lisp expression in the buffer
-around point, *provided* that is a valid, defined Lisp function name.
+around point, _provided_ that is a valid, defined Lisp function name.
 For example, if point is located following the text `(make-vector (car
 x)', the innermost list containing point is the one that starts with
 `(make-vector', so the default is to describe the function
@@ -492,7 +491,7 @@ you are looking for commands for killing backwards and `C-h a
 kill-backwards <RET>' doesn't reveal any, don't give up.  Try just
 `kill', or just `backwards', or just `back'.  Be persistent.  Also note
 that you can use a regular expression as the argument, for more
-flexibility (*note Regexps::.).
+flexibility (*note Regexps::).
 
    Here is a set of arguments to give to `C-h a' that covers many
 classes of Emacs commands, since there are strong conventions for naming
@@ -552,7 +551,7 @@ use:
      docs --- support for Emacs documentation.
      emulations --- emulations of other editors.
      extensions --- Emacs Lisp language extensions.
-     faces --- support for using faces (fonts and colors; *note Faces::.).
+     faces --- support for using faces (fonts and colors; *note Faces::).
      frames --- support for Emacs frames and window systems.
      games --- games, jokes and amusements.
      hardware --- support for interfacing with exotic hardware.
@@ -609,7 +608,7 @@ Help Mode Commands
 ==================
 
    Help buffers provide the commands of View mode (*note Misc File
-Ops::.), plus a few special commands of their own.
+Ops::), plus a few special commands of their own.
 
 `<SPC>'
      Scroll forward.
@@ -630,7 +629,7 @@ Ops::.), plus a few special commands of their own.
      Follow a cross reference that you click on.
 
    When a command name (*note Running Commands by Name: M-x.) or
-variable name (*note Variables::.) appears in the documentation, it
+variable name (*note Variables::) appears in the documentation, it
 normally appears inside paired single-quotes.  You can click on the name
 with `Mouse-2', or move point there and type <RET>, to view the
 documentation of that command or variable.  Use `C-c C-b' to retrace
@@ -686,9 +685,9 @@ present other information about the current Emacs mode.  `C-h b'
 displays a list of all the key bindings now in effect; the local
 bindings defined by the current minor modes first, then the local
 bindings defined by the current major mode, and finally the global
-bindings (*note Key Bindings::.).  `C-h s' displays the contents of the
+bindings (*note Key Bindings::).  `C-h s' displays the contents of the
 syntax table, with explanations of each character's syntax (*note
-Syntax::.).
+Syntax::).
 
    You can get a similar list for a particular prefix key by typing
 `C-h' after the prefix key.  (There are a few prefix keys for which
@@ -721,7 +720,7 @@ current buffer.  To specify the text for such a command to operate on,
 you set "the mark" at one end of it, and move point to the other end.
 The text between point and the mark is called "the region".  Emacs
 highlights the region whenever there is one, if you enable Transient
-Mark mode (*note Transient Mark::.).
+Mark mode (*note Transient Mark::).
 
    You can move point or the mark to adjust the boundaries of the
 region.  It doesn't matter which one is set first chronologically, or
@@ -742,7 +741,7 @@ mark in the "mark ring".
 * Menu:
 
 * Setting Mark::	Commands to set the mark.
-* Transient Mark::	How to make Emacs highlight the region-
+* Transient Mark::	How to make Emacs highlight the region--
 			  when there is one.
 * Using Region::	Summary of ways to operate on contents of the region.
 * Marking Objects::	Commands to put region around textual units.
@@ -829,7 +828,7 @@ Transient Mark Mode
 normally it does not.  Why not?
 
    Highlighting the region doesn't work well ordinarily in Emacs,
-because once you have set a mark, there is *always* a region (in that
+because once you have set a mark, there is _always_ a region (in that
 buffer).  And highlighting the region all the time would be a nuisance.
 
    You can turn on region highlighting by enabling Transient Mark mode.
@@ -876,7 +875,7 @@ Customization::.
    When multiple windows show the same buffer, they can have different
 regions, because they can have different values of point (though they
 all share one common mark position).  Ordinarily, only the selected
-window highlights its region (*note Windows::.).  However, if the
+window highlights its region (*note Windows::).  However, if the
 variable `highlight-nonselected-windows' is non-`nil', then each window
 highlights its own region (provided that Transient Mark mode is enabled
 and the window's buffer's mark is active).
@@ -903,22 +902,22 @@ Operating on the Region
    Once you have a region and the mark is active, here are some of the
 ways you can operate on the region:
 
-   * Kill it with `C-w' (*note Killing::.).
+   * Kill it with `C-w' (*note Killing::).
 
-   * Save it in a register with `C-x r s' (*note Registers::.).
+   * Save it in a register with `C-x r s' (*note Registers::).
 
-   * Save it in a buffer or a file (*note Accumulating Text::.).
+   * Save it in a buffer or a file (*note Accumulating Text::).
 
-   * Convert case with `C-x C-l' or `C-x C-u' (*note Case::.).
+   * Convert case with `C-x C-l' or `C-x C-u' (*note Case::).
 
-   * Indent it with `C-x <TAB>' or `C-M-\' (*note Indentation::.).
+   * Indent it with `C-x <TAB>' or `C-M-\' (*note Indentation::).
 
-   * Fill it as text with `M-x fill-region' (*note Filling::.).
+   * Fill it as text with `M-x fill-region' (*note Filling::).
 
-   * Print hardcopy with `M-x print-region' (*note Hardcopy::.).
+   * Print hardcopy with `M-x print-region' (*note Hardcopy::).
 
    * Evaluate it as Lisp code with `M-x eval-region' (*note Lisp
-     Eval::.).
+     Eval::).
 
    Most commands that operate on the text in the region have the word
 `region' in their names.
@@ -958,14 +957,13 @@ These commands handle arguments just like `M-f' and `C-M-f'.
    Other commands set both point and mark, to delimit an object in the
 buffer.  For example, `M-h' (`mark-paragraph') moves point to the
 beginning of the paragraph that surrounds or follows point, and puts
-the mark at the end of that paragraph (*note Paragraphs::.).  It
-prepares the region so you can indent, case-convert, or kill a whole
-paragraph.
+the mark at the end of that paragraph (*note Paragraphs::).  It prepares
+the region so you can indent, case-convert, or kill a whole paragraph.
 
    `C-M-h' (`mark-defun') similarly puts point before and the mark
-after the current or following defun (*note Defuns::.).  `C-x C-p'
+after the current or following defun (*note Defuns::).  `C-x C-p'
 (`mark-page') puts point before the current page, and mark at the end
-(*note Pages::.).  The mark goes after the terminating page delimiter
+(*note Pages::).  The mark goes after the terminating page delimiter
 (to include it), while point goes after the preceding page delimiter
 (to exclude it).  A numeric argument specifies a later page (if
 positive) or an earlier page (if negative) instead of the current page.
@@ -1005,7 +1003,7 @@ command sets the mark because it displays `Mark Set' in the echo area.
 
    If you want to move back to the same place over and over, the mark
 ring may not be convenient enough.  If so, you can record the position
-in a register for later retrieval (*note RegPos::.).
+in a register for later retrieval (*note RegPos::).
 
    The variable `mark-ring-max' specifies the maximum number of entries
 to keep in the mark ring.  If that many entries exist and another one
@@ -1050,7 +1048,7 @@ These commands are known as "kill" commands.  The rest of the commands
 that erase text do not save it in the kill ring; they are known as
 "delete" commands.  (This distinction is made only for erasure of text
 in the buffer.)  If you do a kill or delete command by mistake, you can
-use the `C-x u' (`undo') command to undo it (*note Undo::.).
+use the `C-x u' (`undo') command to undo it (*note Undo::).
 
    The delete commands include `C-d' (`delete-char') and <DEL>
 (`delete-backward-char'), which delete only one character at a time,
@@ -1193,8 +1191,8 @@ numeric argument acts as a repeat count.  A negative argument means to
 search backward and kill text before point.
 
    Other syntactic units can be killed: words, with `M-<DEL>' and `M-d'
-(*note Words::.); sexps, with `C-M-k' (*note Lists::.); and sentences,
-with `C-x <DEL>' and `M-k' (*note Sentences::.).
+(*note Words::); sexps, with `C-M-k' (*note Lists::); and sentences,
+with `C-x <DEL>' and `M-k' (*note Sentences::).
 
    You can use kill commands in read-only buffers.  They don't actually
 change the buffer, and they beep to warn you of that, but they do copy

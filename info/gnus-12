@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -641,12 +640,6 @@ sounds interesting.)
      closest to your site.
 
      In any case, there is a list of general news group archives at
-
-
-
-
-
-
      ftp://ftp.neosoft.com/pub/users/claird/news.lists/newsgroup_archives.html
 
    *      From: Jason L Tibbitts III <tibbs@hpc.uh.edu>
@@ -1108,6 +1101,7 @@ sounds interesting.)
 
    * Solve the halting problem.
 
+
 
 File: gnus,  Node: Terminology,  Next: Customization,  Prev: History,  Up: Appendices
 
@@ -1203,7 +1197,7 @@ Terminology
 
 "bogus groups"
      A group that exists in the `.newsrc' file, but isn't known to the
-     server (i.e.,  it isn't in the active file), is a *bogus group*.
+     server (i.e.,  it isn't in the active file), is a _bogus group_.
      This means that the group probably doesn't exist (any more).
 
 "activating"

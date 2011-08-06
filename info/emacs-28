@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -132,7 +131,7 @@ portions.
      `iswitchb.el', a feature for incremental reading and completion of
      buffer names.
 
-   * Torbj"orn Einarsson contributed F90 mode (`f90.el').
+   * Torbjo"rn Einarsson contributed F90 mode (`f90.el').
 
    * Tsugutomo Enami co-wrote the support for international character
      sets.
@@ -306,7 +305,7 @@ portions.
    * Geoff Kuenning wrote Emacs 19's `ispell.el', based on work by Ken
      Stevens and others.
 
-   * David K*agedal wrote `tempo.el', providing support for easy
+   * David Ka*gedal wrote `tempo.el', providing support for easy
      insertion of boilerplate text and other common constructions.
 
    * Daniel LaLiberte wrote:

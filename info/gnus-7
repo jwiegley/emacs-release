@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -281,7 +280,7 @@ can do a complete update by typing `M-x nnml-generate-nov-databases'.
 This command will trawl through the entire `nnml' hierarchy, looking at
 each and every article, so it might take a while to complete.  A better
 interface to this functionality can be found in the server buffer
-(*note Server Commands::.).
+(*note Server Commands::).
 
 
 File: gnus,  Node: MH Spool,  Next: Mail Folders,  Prev: Mail Spool,  Up: Choosing a Mail Backend
@@ -291,7 +290,7 @@ MH Spool
 
    `nnmh' is just like `nnml', except that is doesn't generate NOV
 databases and it doesn't keep an active file.  This makes `nnmh' a
-*much* slower backend than `nnml', but it also makes it easier to write
+_much_ slower backend than `nnml', but it also makes it easier to write
 procmail scripts for.
 
    Virtual server settings:
@@ -365,7 +364,7 @@ newsgroups.
 * Directory Groups::      You can read a directory as if it was a newsgroup.
 * Anything Groups::       Dired?  Who needs dired?
 * Document Groups::       Single files can be the basis of a group.
-* SOUP::                  Reading SOUP packets "offline".
+* SOUP::                  Reading SOUP packets ``offline''.
 * Web Searches::          Creating groups from articles that match a string.
 * Mail-To-News Gateways:: Posting articles via mail-to-news gateways.
 
@@ -502,12 +501,12 @@ group.  And that's it.
 your new & spiffy Gnus mail backend, `nndoc' can probably help you with
 that.  Say you have an old `RMAIL' file with mail that you now want to
 split into your new `nnml' groups.  You look at that file using `nndoc'
-(using the `G f' command in the group buffer (*note Foreign
-Groups::.)), set the process mark on all the articles in the buffer (`M
-P b', for instance), and then re-spool (`B r') using `nnml'.  If all
-goes well, all the mail in the `RMAIL' file is now also stored in lots
-of `nnml' directories, and you can delete that pesky `RMAIL' file.  If
-you have the guts!
+(using the `G f' command in the group buffer (*note Foreign Groups::)),
+set the process mark on all the articles in the buffer (`M P b', for
+instance), and then re-spool (`B r') using `nnml'.  If all goes well,
+all the mail in the `RMAIL' file is now also stored in lots of `nnml'
+directories, and you can delete that pesky `RMAIL' file.  If you have
+the guts!
 
    Virtual server variables:
 
@@ -693,7 +692,7 @@ fiddly.
   1. You log in on the server and create a SOUP packet.  You can either
      use a dedicated SOUP thingie (like the `awk' program), or you can
      use Gnus to create the packet with its SOUP commands (`O s' and/or
-     `G s b'; and then `G s p') (*note SOUP Commands::.).
+     `G s b'; and then `G s p') (*note SOUP Commands::).
 
   2. You transfer the packet home.  Rail, boat, car or modem will do
      fine.
@@ -704,7 +703,7 @@ fiddly.
      the native or secondary server.
 
   5. You read articles and mail and answer and followup to the things
-     you want (*note SOUP Replies::.).
+     you want (*note SOUP Replies::).
 
   6. You do the `G s r' command to pack these replies into a SOUP
      packet.
@@ -754,7 +753,7 @@ SOUP Commands
 `O s'
      This summary-mode command adds the current article to a SOUP packet
      (`gnus-soup-add-article').  It understands the process/prefix
-     convention (*note Process/Prefix::.).
+     convention (*note Process/Prefix::).
 
    There are a few variables to customize where Gnus will put all these
 thingies:
@@ -874,15 +873,15 @@ Web Searches
 ------------
 
    It's, like, too neat to search the Usenet for articles that match a
-string, but it, like, totally *sucks*, like, totally, to use one of
+string, but it, like, totally _sucks_, like, totally, to use one of
 those, like, Web browsers, and you, like, have to, rilly, like, look at
-the commercials, so, like, with Gnus you can do *rad*, rilly, searches
+the commercials, so, like, with Gnus you can do _rad_, rilly, searches
 without having to use a browser.
 
    The `nnweb' backend allows an easy interface to the mighty search
 engine.  You create an `nnweb' group, enter a search pattern, and then
 enter the group and read the articles like you would any normal group.
-The `G w' command in the group buffer (*note Foreign Groups::.) will do
+The `G w' command in the group buffer (*note Foreign Groups::) will do
 this in an easy-to-use fashion.
 
    `nnweb' groups don't really lend themselves to being solid
@@ -890,7 +889,7 @@ groups--they have a very fleeting idea of article numbers.  In fact,
 each time you enter an `nnweb' group (not even changing the search
 pattern), you are likely to get the articles ordered in a different
 manner.  Not even using duplicate suppression (*note Duplicate
-Suppression::.) will help, since `nnweb' doesn't even know the
+Suppression::) will help, since `nnweb' doesn't even know the
 `Message-ID' of the articles before reading them using some search
 engines (DejaNews, for instance).  The only possible way to keep track
 of which articles you've read is by scoring on the `Date' header--mark
@@ -898,7 +897,7 @@ all articles posted before the last date you read the group as read.
 
    If the search engine changes its output substantially, `nnweb' won't
 be able to parse it and will fail.  One could hardly fault the Web
-providers if they were to do this--their *raison d'être* is to make
+providers if they were to do this--their _raison d'être_ is to make
 money off of advertisements, not to provide services to the community.
 Since `nnweb' washes the ads off all the articles, one might think that
 the providers might be somewhat miffed.  We'll see.
@@ -1058,7 +1057,7 @@ characters at the beginning and the end of the string.)
 end up in this one, and there should be no duplicates.  Threading (and
 the rest) will still work as usual, but there might be problems with the
 sequence of articles.  Sorting on date might be an option here (*note
-Selecting a Group::.).
+Selecting a Group::).
 
    One limitation, however--all groups included in a virtual group have
 to be alive (i.e., subscribed or unsubscribed).  Killed or zombie
@@ -1105,7 +1104,7 @@ That's where most similarities between `nnkiboze' and `nnvirtual' end.
 
    In addition to this regexp detailing component groups, an `nnkiboze'
 group must have a score file to say what articles are to be included in
-the group (*note Scoring::.).
+the group (*note Scoring::).
 
    You must run `M-x nnkiboze-generate-groups' after creating the
 `nnkiboze' groups you want to have.  This command will take time.  Lots
@@ -1213,7 +1212,7 @@ machine.  "Uploading" is doing the opposite.
      the news onto your local machine.  If you want to do the latter,
      you press `J s' to fetch all the eligible articles in all the
      groups.  (To let Gnus know which articles you want to download,
-     *note Agent Categories::..)
+     *note Agent Categories::.)
 
    * After fetching the articles, you press `J j' to make Gnus become
      unplugged again, and you shut down the PPP thing (or whatever).
@@ -1228,7 +1227,7 @@ use the Agent.
      a mail backend, it would probably be nonsensical to have it
      covered by the Agent.  Go to the server buffer (`^' in the group
      buffer) and press `J a' the server (or servers) that you wish to
-     have covered by the Agent (*note Server Agent Commands::.).  This
+     have covered by the Agent (*note Server Agent Commands::).  This
      will typically be only the primary select method, which is listed
      on the bottom in the buffer.
 

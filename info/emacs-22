@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -88,7 +87,7 @@ can show their contents in the usual way, by invoking `[Show]'.
 customize-apropos'.  You specify a regular expression as argument; then
 all options, faces and groups whose names match this regular expression
 are set up in the customization buffer.  If you specify an empty regular
-expression, this includes *all* groups, options and faces in the
+expression, this includes _all_ groups, options and faces in the
 customization buffer (but that takes a long time).
 
    When you upgrade to a new Emacs version, you might want to customize
@@ -124,8 +123,7 @@ hook.
 makes it easy for a user to customize the behavior of the mode, by
 overriding the local variable assignments already made by the mode.  But
 hooks may also be used in other contexts.  For example, the hook
-`suspend-hook' runs just before Emacs suspends itself (*note
-Exiting::.).
+`suspend-hook' runs just before Emacs suspends itself (*note Exiting::).
 
    The recommended way to add a hook function to a normal hook is by
 calling `add-hook'.  You can use any valid Lisp function as the hook
@@ -190,13 +188,12 @@ marked in this way, the usual ways of setting the variable automatically
 do `make-local-variable' first.  We call such variables "per-buffer"
 variables.
 
-   Major modes (*note Major Modes::.) always make variables local to the
+   Major modes (*note Major Modes::) always make variables local to the
 buffer before setting the variables.  This is why changing major modes
 in one buffer has no effect on other buffers.  Minor modes also work by
 setting variables--normally, each minor mode has one controlling
 variable which is non-`nil' when the mode is enabled (*note Minor
-Modes::.).  For most minor modes, the controlling variable is per
-buffer.
+Modes::).  For most minor modes, the controlling variable is per buffer.
 
    Emacs contains a number of variables that are always per-buffer.
 These include `abbrev-mode', `auto-fill-function', `case-fold-search',
@@ -207,7 +204,7 @@ These include `abbrev-mode', `auto-fill-function', `case-fold-search',
 buffer, but they are used for internal purposes.
 
    A few variables cannot be local to a buffer because they are always
-local to each display instead (*note Multiple Displays::.).  If you try
+local to each display instead (*note Multiple Displays::).  If you try
 to make one of these variables buffer-local, you'll get an error
 message.
 
@@ -274,7 +271,7 @@ Variables:', and ends with a line containing the string `End:'.  In
 between come the variable names and values, one set per line, as
 `VARIABLE: VALUE'.  The VALUEs are not evaluated; they are used
 literally.  If a file has both a local variables list and a `-*-' line,
-Emacs processes *everything* in the `-*-' line first, and *everything*
+Emacs processes _everything_ in the `-*-' line first, and _everything_
 in the local variables list afterward.
 
    Here is an example of a local variables list:
@@ -319,7 +316,7 @@ a local variable list.  That is a mistake.  The choice of Auto Fill mode
 or not is a matter of individual taste, not a matter of the contents of
 particular files.  If you want to use Auto Fill, set up major mode hooks
 with your `.emacs' file to turn it on (when appropriate) for you alone
-(*note Init File::.).  Don't use a local variable list to impose your
+(*note Init File::).  Don't use a local variable list to impose your
 taste on everyone.
 
    The start of the local variables list must be no more than 3000
@@ -496,7 +493,7 @@ name-last-kbd-macro'.  This reads a name as an argument using the
 minibuffer and defines that name to execute the macro.  The macro name
 is a Lisp symbol, and defining it in this way makes it a valid command
 name for calling with `M-x' or for binding a key to with
-`global-set-key' (*note Keymaps::.).  If you specify a name that has a
+`global-set-key' (*note Keymaps::).  If you specify a name that has a
 prior definition other than another keyboard macro, an error message is
 printed and nothing is changed.
 
@@ -510,8 +507,8 @@ This inserts some Lisp code that, when executed later, will define the
 same macro with the same definition it has now.  (You need not
 understand Lisp code to do this, because `insert-kbd-macro' writes the
 Lisp code for you.)  Then save the file.  You can load the file later
-with `load-file' (*note Lisp Libraries::.).  If the file you save in is
-your init file `~/.emacs' (*note Init File::.) then the macro will be
+with `load-file' (*note Lisp Libraries::).  If the file you save in is
+your init file `~/.emacs' (*note Init File::) then the macro will be
 defined each time you run Emacs.
 
    If you give `insert-kbd-macro' a numeric argument, it makes
@@ -582,7 +579,7 @@ name which usually consists of lower-case letters and hyphens.
 * Rebinding::           How to redefine one key's meaning conveniently.
 * Init Rebinding::      Rebinding keys with your init file, `.emacs'.
 * Function Keys::       Rebinding terminal function keys.
-* Named ASCII Chars::   Distinguishing <TAB> from `C-i', and so on.
+* Named ASCII Chars::   Distinguishing <TAB> from C-i, and so on.
 * Non-ASCII Rebinding:: Rebinding non-ASCII characters such as Latin-1.
 * Mouse Buttons::       Rebinding mouse buttons in Emacs.
 * Disabling::           Disabling a command means confirmation is required
@@ -1023,7 +1020,7 @@ the <CTRL> key.
 Window System.  It treats the "special" keys as function keys named
 `tab', `return', `backspace', `linefeed', `escape', and `delete'.
 These function keys translate automatically into the corresponding
-ASCII characters *if* they have no bindings of their own.  As a result,
+ASCII characters _if_ they have no bindings of their own.  As a result,
 neither users nor Lisp programs need to pay attention to the
 distinction unless they care to.
 
@@ -1045,7 +1042,7 @@ Non-ASCII Characters on the Keyboard
    If your keyboard has keys that send non-ASCII characters, such as
 accented letters, rebinding these keys is a bit tricky.  There are two
 solutions you can use.  One is to specify a keyboard coding system,
-using `set-keyboard-coding-system' (*note Specify Coding::.).  Then you
+using `set-keyboard-coding-system' (*note Specify Coding::).  Then you
 can bind these keys in the usual way, but writing
 
      (global-set-key [?CHAR] 'some-function)

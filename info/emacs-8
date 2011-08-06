@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -49,7 +48,7 @@ file.
 
    * If some other user has checked in changes into the master file,
      Emacs asks you whether you want to merge those changes into your
-     own work file (*note Merging::.).  You must do this before you can
+     own work file (*note Merging::).  You must do this before you can
      check in your own changes.
 
    * If there are no new changes in the master file, but you have made
@@ -145,7 +144,7 @@ files in that directory and its subdirectories.
    You can specify a checked-in version by its number; an empty input
 specifies the current contents of the work file (which may be different
 from all the checked-in versions).  You can also specify a snapshot name
-(*note Snapshots::.) instead of one or both version numbers.
+(*note Snapshots::) instead of one or both version numbers.
 
    This command works by running the `diff' utility, getting the
 options from the variable `diff-switches'.  It displays the output in a
@@ -212,7 +211,7 @@ file using the minibuffer.
 
    If `vc-initial-comment' is non-`nil', `C-x v i' reads an initial
 comment to describe the purpose of this source file.  Reading the
-initial comment works like reading a log entry (*note Log Buffer::.).
+initial comment works like reading a log entry (*note Log Buffer::).
 
 
 File: emacs,  Node: VC Status,  Next: VC Undo,  Prev: Registering,  Up: Secondary VC Commands
@@ -263,7 +262,7 @@ change and then discover a trivial error in it; you can cancel the
 erroneous check-in, fix the error, and check the file in again.
 
    When `C-x v c' does not revert the buffer, it unexpands all version
-control headers in the buffer instead (*note Version Headers::.).  This
+control headers in the buffer instead (*note Version Headers::).  This
 is because the buffer no longer corresponds to any existing version.
 If you check it in again, the check-in process will expand the headers
 properly for the new version number.
@@ -292,13 +291,13 @@ command `C-x v d' (`vc-directory') to make a directory listing that
 includes only files relevant for version control.
 
    `C-x v d' creates a buffer which uses VC Dired Mode.  This looks
-much like an ordinary Dired buffer (*note Dired::.); however, normally
-it shows only the noteworthy files (those locked or not up-to-date).
-This is called "terse display".  If you set the variable
+much like an ordinary Dired buffer (*note Dired::); however, normally it
+shows only the noteworthy files (those locked or not up-to-date).  This
+is called "terse display".  If you set the variable
 `vc-dired-terse-display' to `nil', then VC Dired shows all relevant
 files--those managed under version control, plus all subdirectories
 ("full display").  The command `v t' in a VC Dired buffer toggles
-between terse display and full display (*note VC Dired Commands::.).
+between terse display and full display (*note VC Dired Commands::).
 
    By default, VC Dired produces a recursive listing of noteworthy or
 relevant files at or below the given directory.  You can change this by
@@ -313,7 +312,7 @@ parentheses.  Under RCS and SCCS, the name of the user locking the file
 is shown; under CVS, an abbreviated version of the `cvs status' output
 is used.  Here is an example using RCS:
 
-     /home/jim/project:
+       /home/jim/project:
      
        -rw-r--r-- (jim)      Apr  2 23:39 file1
        -r--r--r--            Apr  5 20:21 file2
@@ -323,7 +322,7 @@ locked by user jim, and `file2' is unlocked.
 
    Here is an example using CVS:
 
-     /home/joe/develop:
+       /home/joe/develop:
      
        -rw-r--r-- (modified) Aug  2  1997 file1.c
        -rw-r--r--            Apr  4 20:09 file2.c
@@ -419,7 +418,7 @@ Switching between Branches
 
    To switch between branches, type `C-u C-x C-q' and specify the
 version number you want to select.  This version is then visited
-*unlocked* (write-protected), so you can examine it before locking it.
+_unlocked_ (write-protected), so you can examine it before locking it.
 Switching branches in this way is allowed only when the file is not
 locked.
 
@@ -449,7 +448,7 @@ that point.
 
    To create a new branch at an older version (one that is no longer the
 head of a branch), first select that version (*note Switching
-Branches::.), then lock it with `C-x C-q'.  You'll be asked to confirm,
+Branches::), then lock it with `C-x C-q'.  You'll be asked to confirm,
 when you lock the old version, that you really mean to create a new
 branch--if you say no, you'll be offered a chance to lock the latest
 version instead.
@@ -543,9 +542,9 @@ own choice of selected versions, but all share the same common RCS
 records.
 
    This technique works reliably and automatically, provided that the
-source files contain RCS version headers (*note Version Headers::.).
-The headers enable Emacs to be sure, at all times, which version number
-is present in the work file.
+source files contain RCS version headers (*note Version Headers::).  The
+headers enable Emacs to be sure, at all times, which version number is
+present in the work file.
 
    If the files do not have version headers, you must instead tell Emacs
 explicitly in each session which branch you are working on.  To do this,
@@ -598,7 +597,7 @@ snapshot.  Thus, you need not hesitate to create snapshots whenever
 they are useful.
 
    You can give a snapshot name as an argument to `C-x v =' or `C-x v
-~' (*note Old Versions::.).  Thus, you can use it to compare a snapshot
+~' (*note Old Versions::).  Thus, you can use it to compare a snapshot
 against the current files, or two snapshots against each other, or a
 snapshot against a named version.
 
@@ -662,7 +661,7 @@ Change Logs and VC
 ..................
 
    If you use RCS or CVS for a program and also maintain a change log
-file for it (*note Change Log::.), you can generate change log entries
+file for it (*note Change Log::), you can generate change log entries
 automatically from the version control log entries:
 
 `C-x v a'
@@ -758,10 +757,10 @@ Renaming VC Work Files and Master Files
    When you rename a registered file, you must also rename its master
 file correspondingly to get proper results.  Use `vc-rename-file' to
 rename the source file as you specify, and rename its master file
-accordingly.  It also updates any snapshots (*note Snapshots::.) that
+accordingly.  It also updates any snapshots (*note Snapshots::) that
 mention the file, so that they use the new name; despite this, the
 snapshot thus modified may not completely work (*note Snapshot
-Caveats::.).
+Caveats::).
 
    You cannot use `vc-rename-file' on a file that is locked by someone
 else.
@@ -782,7 +781,7 @@ files, Emacs can use them to determine the current version and the
 locking state of the files.  This is more reliable than referring to the
 master files, which is done when there are no version headers.  Note
 that in a multi-branch environment, version headers are necessary to
-make VC behave correctly (*note Multi-User Branching::.).
+make VC behave correctly (*note Multi-User Branching::).
 
    Searching for version headers is controlled by the variable
 `vc-consult-headers'.  If it is non-`nil', Emacs searches for headers
@@ -868,7 +867,7 @@ Options for VC Backends
 .......................
 
    You can tell RCS and CVS whether to use locking for a file or not
-(*note VC Concepts::., for a description of locking).  VC automatically
+(*note VC Concepts::, for a description of locking).  VC automatically
 recognizes what you have chosen, and behaves accordingly.
 
    For RCS, the default is to use locking, but there is a mode called
@@ -940,12 +939,12 @@ VC Status Retrieval
 ...................
 
    When deducing the locked/unlocked state of a file, VC first looks for
-an RCS version header string in the file (*note Version Headers::.).  If
+an RCS version header string in the file (*note Version Headers::).  If
 there is no header string, or if you are using SCCS, VC normally looks
 at the file permissions of the work file; this is fast.  But there might
 be situations when the file permissions cannot be trusted.  In this case
 the master file has to be consulted, which is rather expensive.  Also
-the master file can only tell you *if* there's any lock on the file,
+the master file can only tell you _if_ there's any lock on the file,
 but not whether your work file really contains that locked version.
 
    You can tell VC not to use version headers to determine lock status
@@ -1086,7 +1085,7 @@ screenfuls.  It reads a file name argument using the minibuffer.  After
 reading the file into an Emacs buffer, `view-file' displays the
 beginning.  You can then type <SPC> to scroll forward one windowful, or
 <DEL> to scroll backward.  Various other commands are provided for
-moving around in the file, but none for changing it; type `?'  while
+moving around in the file, but none for changing it; type `?' while
 viewing for a list of them.  They are mostly the same as normal Emacs
 cursor motion commands.  To exit from viewing, type `q'.  The commands
 for viewing are defined by a special major mode called View mode.
@@ -1105,7 +1104,7 @@ file.  *Note Accumulating Text::.
 
    `M-x delete-file' deletes the specified file, like the `rm' command
 in the shell.  If you are deleting many files in one directory, it may
-be more convenient to use Dired (*note Dired::.).
+be more convenient to use Dired (*note Dired::).
 
    `M-x rename-file' reads two file names OLD and NEW using the
 minibuffer, then renames file OLD as NEW.  If a file named NEW already

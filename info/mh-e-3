@@ -1,5 +1,4 @@
-This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
-the input file mh-e.texi.
+This is ../info/mh-e, produced by makeinfo version 4.0 from mh-e.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -296,7 +295,7 @@ Bug Reports
    The current maintainer of mh-e is Stephen Gildea
 <gildea@lcs.mit.edu>.  Please mail bug reports directly to him, as well
 as any praise or suggestions.  Please include the output of `M-x
-mh-version' (*note Miscellaneous::.) in any bug report you send.
+mh-version' (*note Miscellaneous::) in any bug report you send.
 
 
 File: mh-e,  Node: Mailing List,  Next: MH FAQ,  Prev: Bug Reports,  Up: Odds and Ends
@@ -307,7 +306,7 @@ mh-e Mailing List
    There is a mailing list, mh-e@x.org, for discussion of mh-e and
 announcements of new versions.  Send a "subscribe" message to
 mh-e-request@x.org to be added.  Do not report bugs on this list; mail
-them directly to the maintainer (*note Bug Reports::.).
+them directly to the maintainer (*note Bug Reports::).
 
 
 File: mh-e,  Node: MH FAQ,  Next: Getting mh-e,  Prev: Mailing List,  Up: Odds and Ends
@@ -969,8 +968,8 @@ Command Index
 * mh-edit-again:                         Old Drafts.
 * mh-edit-mhn:                           Sending MIME.
 * mh-execute-commands <1>:               Customizing Finishing Up.
-* mh-execute-commands <2>:               Customizing Incorporating.
-* mh-execute-commands:                   Finishing Up.
+* mh-execute-commands <2>:               Finishing Up.
+* mh-execute-commands:                   Customizing Incorporating.
 * mh-extract-rejected-mail:              Old Drafts.
 * mh-first-msg:                          Moving Around.
 * mh-forward:                            Forwarding.
@@ -1017,12 +1016,12 @@ Command Index
 * mh-send-letter:                        Sending Message.
 * mh-show:                               Viewing.
 * mh-show, example:                      Customizing Incorporating.
-* mh-smail <1>:                          Sending Mail.
-* mh-smail <2>:                          Processing Mail Tour.
-* mh-smail:                              Sending Mail Tour.
+* mh-smail <1>:                          Sending Mail Tour.
+* mh-smail <2>:                          Sending Mail.
+* mh-smail:                              Processing Mail Tour.
 * mh-smail-other-window:                 Sending Mail.
-* mh-sort-folder <1>:                    Customizing Organizing.
-* mh-sort-folder:                        Organizing.
+* mh-sort-folder <1>:                    Organizing.
+* mh-sort-folder:                        Customizing Organizing.
 * mh-store-buffer:                       Customizing Files and Pipes.
 * mh-store-msg <1>:                      Customizing Files and Pipes.
 * mh-store-msg:                          Files and Pipes.

@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -83,7 +82,7 @@ line option:
 `-T TITLE'
      Specify TITLE as the title for the initial Emacs frame.
 
-   The `--name' option (*note Resources X::.) also specifies the title
+   The `--name' option (*note Resources X::) also specifies the title
 for the initial Emacs frame.
 
 
@@ -218,7 +217,7 @@ for Emacs, each with the class that it belongs to:
      Color name for text cursor (point).
 
 `font' (class `Font')
-     Font name for text (or fontset name, *note Fontsets::.).
+     Font name for text (or fontset name, *note Fontsets::).
 
 `foreground' (class `Foreground')
      Color name for text.
@@ -268,7 +267,7 @@ for Emacs, each with the class that it belongs to:
      Name to display in the title bar of the initial Emacs frame.
 
    Here are resources for controlling the appearance of particular faces
-(*note Faces::.):
+(*note Faces::):
 
 `FACE.attributeFont'
      Font for face FACE.
@@ -301,7 +300,7 @@ this:
 
      Emacs.pane.menubar.font:  8x16
 
-Resources for *non-menubar* toolkit pop-up menus have `menu*', in like
+Resources for _non-menubar_ toolkit pop-up menus have `menu*', in like
 fashion.  For example, to specify the font `8x16' for the pop-up menu
 items, write this:
 
@@ -458,7 +457,7 @@ simplicity that results from the absence of certain Emacs 20 features.
      This clearly separates them from the text in the window.
 
    * The `M-x customize' feature has been replaced with a very simple
-     feature, `M-x edit-options'.  This shows you *all* the user
+     feature, `M-x edit-options'.  This shows you _all_ the user
      options right from the start, so you don't have to hunt for the
      ones you want.  It also provides a few commands, such as `s' and
      `x', to set a user option.
@@ -481,7 +480,7 @@ simplicity that results from the absence of certain Emacs 20 features.
 
    * There is now a clever way you can activate the minibuffer
      recursively even if `enable-recursive-minibuffers' is `nil'.  All
-     you have to do is *switch windows* to a non-minibuffer window, and
+     you have to do is _switch windows_ to a non-minibuffer window, and
      then use a minibuffer command.  You can pile up any number of
      minibuffer levels this way, but `M-x top-level' will get you out
      of all of them.
@@ -611,7 +610,7 @@ variables `dos-hyper-key' and `dos-super-key' to 1 or 2 respectively.
 If neither `dos-super-key' nor `dos-hyper-key' is 1, then by default
 the right <ALT> key is also mapped to the <META> key.  However, if the
 MS-DOS international keyboard support program `KEYB.COM' is installed,
-Emacs will *not* map the right <ALT> to <META>, since it is used for
+Emacs will _not_ map the right <ALT> to <META>, since it is used for
 accessing characters like `~' and `@' on non-US keyboard layouts; in
 this case, you may only use the left <ALT> as <META> key.
 
@@ -632,14 +631,14 @@ reasons.
    Emacs built for MS-DOS recognizes `C-<BREAK>' as a quit character,
 just like `C-g'.  This is because Emacs cannot detect that you have
 typed `C-g' until it is ready for more input.  As a consequence, you
-cannot use `C-g' to stop a running command (*note Quitting::.).  By
-contrast, `C-<BREAK>' *is* detected as soon as you type it (as `C-g' is
+cannot use `C-g' to stop a running command (*note Quitting::).  By
+contrast, `C-<BREAK>' _is_ detected as soon as you type it (as `C-g' is
 on other systems), so it can be used to stop a running command and for
-emergency escape (*note Emergency Escape::.).
+emergency escape (*note Emergency Escape::).
 
    Emacs on MS-DOS supports a mouse (on the default terminal only).
 The mouse commands work as documented, including those that use menus
-and the menu bar (*note Menu Bar::.).  Scroll bars don't work in MS-DOS
+and the menu bar (*note Menu Bar::).  Scroll bars don't work in MS-DOS
 Emacs.  PC mice usually have only two buttons; these act as `Mouse-1'
 and `Mouse-2', but if you press both of them together, that has the
 effect of `Mouse-3'.
@@ -647,9 +646,9 @@ effect of `Mouse-3'.
    Emacs built for MS-DOS supports clipboard operations when it runs on
 Windows.  Commands that put text on the kill ring, or yank text from the
 ring, check the Windows clipboard first, just as Emacs does on X Windows
-(*note Mouse Commands::.).  Only the primary selection and the cut
-buffer are supported by MS-DOS Emacs on Windows; the secondary
-selection always appears as empty.
+(*note Mouse Commands::).  Only the primary selection and the cut buffer
+are supported by MS-DOS Emacs on Windows; the secondary selection always
+appears as empty.
 
    Due to the way clipboard access is implemented by Windows, the
 length of text you can put into the clipboard is limited by the amount
@@ -681,14 +680,14 @@ and a background color.  Therefore, you can get the full functionality
 of Emacs packages that use fonts (such as `font-lock', Enriched Text
 mode, and others) by defining the relevant faces to use different
 colors.  Use the `list-colors-display' command (*note Frame
-Parameters::.) and the `list-faces-display' command (*note Faces::.) to
+Parameters::) and the `list-faces-display' command (*note Faces::) to
 see what colors and faces are available and what they look like.
 
    The section *Note MS-DOS and MULE::, later in this chapter, describes
 how Emacs displays glyphs and characters which aren't supported by the
 native font built into the DOS display.
 
-   Multiple frames (*note Frames::.) are supported on MS-DOS, but they
+   Multiple frames (*note Frames::) are supported on MS-DOS, but they
 all overlap, so you only see a single frame at any given moment.  That
 single visible frame occupies the entire screen.  When you run Emacs
 from MS-Windows DOS box, you can make the visible frame smaller than
@@ -747,9 +746,9 @@ drive letters in file names.
    On MS-DOS, file names are case-insensitive and limited to eight
 characters, plus optionally a period and three more characters.  Emacs
 knows enough about these limitations to handle file names that were
-meant for other operating systems.  For instance, leading dots `.'  in
+meant for other operating systems.  For instance, leading dots `.' in
 file names are invalid in MS-DOS, so Emacs transparently converts them
-to underscores `_'; thus your default init file (*note Init File::.) is
+to underscores `_'; thus your default init file (*note Init File::) is
 called `_emacs' on MS-DOS.  Excess characters before or after the
 period are generally ignored by MS-DOS itself; thus, if you visit the
 file `LongFileName.EvenLongerExtension', you will silently get
@@ -760,7 +759,7 @@ only works on file names built into Emacs.
 
    The above restrictions on the file names on MS-DOS make it almost
 impossible to construct the name of a backup file (*note Backup
-Names::.) without losing some of the original file name characters.  For
+Names::) without losing some of the original file name characters.  For
 example, the name of a backup file for `docs.txt' is `docs.tx~' even if
 single backup is used.
 
@@ -806,12 +805,11 @@ And that is what Emacs normally does: it converts carriage-return
 linefeed into newline when reading files, and converts newline into
 carriage-return linefeed when writing files.  The same mechanism that
 handles conversion of international character codes does this conversion
-also (*note Coding Systems::.).
+also (*note Coding Systems::).
 
    One consequence of this special format-conversion of most files is
-that character positions as reported by Emacs (*note Position Info::.)
-do not agree with the file size information known to the operating
-system.
+that character positions as reported by Emacs (*note Position Info::) do
+not agree with the file size information known to the operating system.
 
    Some kinds of files should not be converted, because their contents
 are not really text.  Therefore, Emacs on MS-DOS distinguishes certain
@@ -822,8 +820,8 @@ file name to decide whether to treat a file as binary: the variable
 `file-name-buffer-file-type-alist' defines the file-name patterns that
 indicate binary files.  Note that if a file name matches one of the
 patterns for binary files in `file-name-buffer-file-type-alist', Emacs
-uses the `no-conversion' coding system (*note Coding Systems::.) which
-turns off *all* coding-system conversions, not only the EOL conversion.
+uses the `no-conversion' coding system (*note Coding Systems::) which
+turns off _all_ coding-system conversions, not only the EOL conversion.
 
    In addition, if Emacs recognizes from a file's contents that it uses
 newline rather than carriage-return linefeed as its line separator, it
@@ -836,7 +834,7 @@ binary using the commands `find-file-text' and `find-file-binary'.
 End-of-line conversion is part of the general coding system conversion
 mechanism, so another way to control whether to treat a file as text or
 binary is with the commands for specifying a coding system (*note
-Specify Coding::.).  For example, `C-x <RET> c undecided-unix <RET> C-x
+Specify Coding::).  For example, `C-x <RET> c undecided-unix <RET> C-x
 C-f foobar.txt' visits the file `foobar.txt' without converting the
 EOLs.
 
@@ -877,12 +875,12 @@ File: emacs,  Node: MS-DOS Printing,  Next: MS-DOS and MULE,  Prev: Text and Bin
 Printing and MS-DOS
 ===================
 
-   Printing commands, such as `lpr-buffer' (*note Hardcopy::.) and
-`ps-print-buffer' (*note Postscript::.) can work in MS-DOS and
+   Printing commands, such as `lpr-buffer' (*note Hardcopy::) and
+`ps-print-buffer' (*note Postscript::) can work in MS-DOS and
 MS-Windows by sending the output to one of the printer ports, if a
 Unix-style `lpr' program is unavailable.  This behaviour is controlled
 by the same variables that control printing with `lpr' on Unix (*note
-Hardcopy::., *note Postscript Variables::.), but the defaults for these
+Hardcopy::, *note Postscript Variables::), but the defaults for these
 variables on MS-DOS and MS-Windows are not the same as the defaults on
 Unix.
 
@@ -932,7 +930,7 @@ If the variable `printer-name' has a string value, it is used as the
 value for the `-P' option to `lpr', as on Unix.
 
    A parallel set of variables, `ps-lpr-command', `ps-lpr-switches',
-and `ps-printer-name' (*note Postscript Variables::.), defines how
+and `ps-printer-name' (*note Postscript Variables::), defines how
 PostScript files should be printed.  These variables are used in the
 same way as the corresponding variables described above for
 non-PostScript printing.  Thus, the value of `ps-printer-name' is used
@@ -978,7 +976,7 @@ International Support on MS-DOS
 ===============================
 
    Emacs on MS-DOS supports the same international character sets as it
-does on Unix and other platforms (*note International::.), including
+does on Unix and other platforms (*note International::), including
 coding systems for converting between the different character sets.
 However, due to incompatibilities between MS-DOS/MS-Windows and Unix,
 there are several DOS-specific aspects of this support that users should
@@ -1007,7 +1005,7 @@ applies when you run DOS executables on other systems such as
 MS-Windows.
 
    If you invoke Emacs on MS-DOS with the `--unibyte' option (*note
-Initial Options::.), Emacs does not perform any conversion of non-ASCII
+Initial Options::), Emacs does not perform any conversion of non-ASCII
 characters.  Instead, it reads and writes any non-ASCII characters
 verbatim, and sends their 8-bit codes to the display verbatim.  Thus,
 unibyte Emacs on MS-DOS supports the current codepage, whatever it may
@@ -1050,12 +1048,12 @@ looks like on Unix.
 
    Since the codepage number also indicates which script you are using,
 Emacs automatically runs `set-language-environment' to select the
-language environment for that script (*note Language Environments::.).
+language environment for that script (*note Language Environments::).
 
    If a buffer contains a character belonging to some other ISO 8859
 character set, not the one that the chosen DOS codepage supports, Emacs
 displays it using a sequence of ASCII characters.  For example, if the
-current codepage doesn't have a glyph for the letter ``o' (small `o'
+current codepage doesn't have a glyph for the letter `o`' (small `o'
 with a grave accent), it is displayed as `{`o}', where the braces serve
 as a visual indication that this is a single character.  (This may look
 awkward for some non-Latin characters, such as those from Greek or
@@ -1085,7 +1083,7 @@ codepage-setup' command.  It prompts for the 3-digit code of the
 codepage, with completion, then creates the coding system for the
 specified codepage.  You can then use the new coding system to read and
 write files, but you must specify it explicitly for the file command
-when you want to use it (*note Specify Coding::.).
+when you want to use it (*note Specify Coding::).
 
    These coding systems are also useful for visiting a file encoded
 using a DOS codepage, using Emacs running on some other operating
@@ -1124,8 +1122,8 @@ cannot do any more editing until the inferior process finishes.
    By contrast, Emacs compiled as native Windows application *does*
 support asynchronous subprocesses.  *Note Windows Processes::.
 
-   Printing commands, such as `lpr-buffer' (*note Hardcopy::.) and
-`ps-print-buffer' (*note Postscript::.), work in MS-DOS by sending the
+   Printing commands, such as `lpr-buffer' (*note Hardcopy::) and
+`ps-print-buffer' (*note Postscript::), work in MS-DOS by sending the
 output to one of the printer ports.  *Note MS-DOS Printing::.
 
    When you run a subprocess synchronously on MS-DOS, make sure the

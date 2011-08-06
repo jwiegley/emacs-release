@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -50,7 +49,7 @@ part of the Dired buffer.
      Update the specified files (`dired-do-redisplay').
 
 `k'
-     Delete the specified *file lines*--not the files, just the lines
+     Delete the specified _file lines_--not the files, just the lines
      (`dired-do-kill-lines').
 
 `s'
@@ -75,7 +74,7 @@ properly.
    If you use `l' on a subdirectory header line, it updates the
 contents of the corresponding subdirectory.
 
-   To delete the specified *file lines*--not the files, just the
+   To delete the specified _file lines_--not the files, just the
 lines--type `k' (`dired-do-kill-lines').  With a numeric argument N,
 this command applies to the next N files; otherwise, it applies to the
 marked files.
@@ -313,7 +312,7 @@ the year in its entirety; that is, type `1990', not `90'.
    `o' (`calendar-other-month') prompts for a month and year, then
 centers the three-month calendar around that month.
 
-   You can return to today's date with `.'  (`calendar-goto-today').
+   You can return to today's date with `.' (`calendar-goto-today').
 
 
 File: emacs,  Node: Scroll Calendar,  Next: Counting Days,  Prev: Calendar Motion,  Up: Calendar/Diary
@@ -373,7 +372,7 @@ Counting Days
 
    To determine the number of days in the region, type `M-='
 (`calendar-count-days-region').  The numbers of days printed is
-*inclusive*; that is, it includes the days specified by mark and point.
+_inclusive_; that is, it includes the days specified by mark and point.
 
 
 File: emacs,  Node: General Calendar,  Next: LaTeX Calendar,  Prev: Counting Days,  Up: Calendar/Diary
@@ -522,7 +521,7 @@ holidays in a different face (or places a `*' after these dates, if
 display with multiple faces is not available).  The command applies both
 to the currently visible months and to other months that subsequently
 become visible by scrolling.  To turn marking off and erase the current
-marks, type `u', which also erases any diary marks (*note Diary::.).
+marks, type `u', which also erases any diary marks (*note Diary::).
 
    To get even more detailed information, use the `a' command, which
 displays a separate buffer containing a list of all holidays in the
@@ -545,8 +544,8 @@ years, and allows you to choose all the holidays or one of several
 categories of holidays.  You can use this command even if you don't have
 a calendar window.
 
-   The dates used by Emacs for holidays are based on *current
-practice*, not historical fact.  Historically, for instance, the start
+   The dates used by Emacs for holidays are based on _current
+practice_, not historical fact.  Historically, for instance, the start
 of daylight savings time and even its existence have varied from year to
 year, but present United States law mandates that daylight savings time
 begins on the first Sunday in April.  When the daylight savings rules
@@ -575,7 +574,7 @@ the times of sunrise and sunset for any date.
 `C-u M-x sunrise-sunset'
      Display times of sunrise and sunset for a specified date.
 
-   Within the calendar, to display the *local times* of sunrise and
+   Within the calendar, to display the _local times_ of sunrise and
 sunset in the echo area, move point to the date you want, and type `S'.
 Alternatively, click `Mouse-2' on the date, then choose
 `Sunrise/Sunset' from the menu that appears.  The command `M-x
@@ -614,8 +613,8 @@ The value of `calendar-time-zone' is the number of minutes difference
 between your local standard time and Coordinated Universal Time
 (Greenwich time).  The values of `calendar-standard-time-zone-name' and
 `calendar-daylight-time-zone-name' are the abbreviations used in your
-time zone.  Emacs displays the times of sunrise and sunset *corrected
-for daylight savings time*.  *Note Daylight Savings::, for how daylight
+time zone.  Emacs displays the times of sunrise and sunset _corrected
+for daylight savings time_.  *Note Daylight Savings::, for how daylight
 savings time is determined.
 
    As a user, you might find it convenient to set the calendar location
@@ -664,7 +663,7 @@ File: emacs,  Node: Other Calendars,  Next: Diary,  Prev: Lunar Phases,  Up: Cal
 Conversion To and From Other Calendars
 ======================================
 
-   The Emacs calendar displayed is *always* the Gregorian calendar,
+   The Emacs calendar displayed is _always_ the Gregorian calendar,
 sometimes called the "new style" calendar, which is used in most of the
 world today.  However, this calendar did not exist before the sixteenth
 century and was not widely used before the eighteenth century; it did
@@ -699,7 +698,7 @@ nineteenth century.
 
    Astronomers use a simple counting of days elapsed since noon, Monday,
 January 1, 4713 B.C. on the Julian calendar.  The number of days elapsed
-is called the *Julian day number* or the *Astronomical day number*.
+is called the _Julian day number_ or the _Astronomical day number_.
 
    The Hebrew calendar is used by tradition in the Jewish religion.  The
 Emacs calendar program uses the Hebrew calendar to determine the dates
@@ -721,7 +720,7 @@ measure similar to the metric system.  The French government officially
 abandoned this calendar at the end of 1805.
 
    The Maya of Central America used three separate, overlapping calendar
-systems, the *long count*, the *tzolkin*, and the *haab*.  Emacs knows
+systems, the _long count_, the _tzolkin_, and the _haab_.  Emacs knows
 about all three of these calendars.  Experts dispute the exact
 correlation between the Mayan calendar and our calendar; Emacs uses the
 Goodman-Martinez-Thompson correlation in its calculations.
@@ -866,7 +865,7 @@ other than Mayan; for the Mayan calendar, see the following section.
    These commands ask you for a date on the other calendar, move point
 to the Gregorian calendar date equivalent to that date, and display the
 other calendar's date in the echo area.  Emacs uses strict completion
-(*note Completion::.) whenever it asks you to type a month name, so you
+(*note Completion::) whenever it asks you to type a month name, so you
 don't have to worry about the spelling of Hebrew, Islamic, or French
 names.
 
@@ -944,14 +943,14 @@ date and moves point to the previous occurrence of that date.
 Similarly, type `g m n h' to go to the next occurrence of a haab date.
 
    The Maya also used the combination of the tzolkin date and the haab
-date.  This combination is a cycle of about 52 years called a *calendar
-round*.  If you type `g m p c', Emacs asks you for both a haab and a
+date.  This combination is a cycle of about 52 years called a _calendar
+round_.  If you type `g m p c', Emacs asks you for both a haab and a
 tzolkin date and then moves point to the previous occurrence of that
 combination.  Use `g m n c' to move point to the next occurrence of a
 combination.  These commands signal an error if the haab/tzolkin date
 combination you have typed is impossible.
 
-   Emacs uses strict completion (*note Strict Completion::.) whenever it
+   Emacs uses strict completion (*note Strict Completion::) whenever it
 asks you to type a Mayan name, so you don't have to worry about
 spelling.
 
@@ -1051,7 +1050,7 @@ different face (or places a `+' after these dates, if display with
 multiple faces is not available).  The command applies both to the
 currently visible months and to other months that subsequently become
 visible by scrolling.  To turn marking off and erase the current marks,
-type `u', which also turns off holiday marks (*note Holidays::.).
+type `u', which also turns off holiday marks (*note Holidays::).
 
    To see the full diary file, rather than just some of the entries, use
 the `s' command.
@@ -1061,10 +1060,9 @@ to hide entries that don't apply.
 
    The diary buffer as you see it is an illusion, so simply printing the
 buffer does not print what you see on your screen.  There is a special
-command to print hard copy of the diary buffer *as it appears*; this
+command to print hard copy of the diary buffer _as it appears_; this
 command is `M-x print-diary-entries'.  It sends the data directly to
-the printer.  You can customize it like `lpr-region' (*note
-Hardcopy::.).
+the printer.  You can customize it like `lpr-region' (*note Hardcopy::).
 
    The command `M-x diary' displays the diary entries for the current
 date, independently of the calendar display, and optionally for the next
@@ -1130,13 +1128,13 @@ entries, but can cause confusion if you ask for more than one day's
 entries.
 
    You can edit the diary entries as they appear in the window, but it
-is important to remember that the buffer displayed contains the *entire*
+is important to remember that the buffer displayed contains the _entire_
 diary file, with portions of it concealed from view.  This means, for
 instance, that the `C-f' (`forward-char') command can put point at what
 appears to be the end of the line, but what is in reality the middle of
 some concealed line.
 
-   *Be careful when editing the diary entries!*  Inserting additional
+   _Be careful when editing the diary entries!_  Inserting additional
 lines or adding/deleting characters in the middle of a visible line
 cannot cause problems, but editing at the end of a line may not do what
 you expect.  Deleting a line may delete other invisible entries that
@@ -1184,7 +1182,7 @@ any day in March of any year; so does `march *'.
 
    If you prefer the European style of writing dates--in which the day
 comes before the month--type `M-x european-calendar' while in the
-calendar, or set the variable `european-calendar-style' to `t' *before*
+calendar, or set the variable `european-calendar-style' to `t' _before_
 using any calendar or diary command.  This mode interprets all dates in
 the diary in the European manner, and also uses European style for
 displaying diary dates.  (Note that there is no comma after the

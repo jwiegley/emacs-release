@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -32,7 +31,7 @@ Saving Articles
 documentation for saving articles in a fairly straight-forward fashion
 (i.e., little processing of the article is done before it is saved).
 For a different approach (uudecoding, unsharing) you should use
-`gnus-uu' (*note Decoding Articles::.).
+`gnus-uu' (*note Decoding Articles::).
 
    If `gnus-save-all-headers' is non-`nil', Gnus will not delete
 unwanted headers before saving the article.
@@ -80,7 +79,7 @@ deleted before saving.
      (`gnus-summary-pipe-output').
 
    All these commands use the process/prefix convention (*note
-Process/Prefix::.).  If you save bunches of articles using these
+Process/Prefix::).  If you save bunches of articles using these
 functions, you might get tired of being prompted for files to save each
 and every article in.  The prompting action is controlled by the
 `gnus-prompt-before-saving' variable, which is `always' by default,
@@ -235,7 +234,7 @@ encoded in some way or other.  Gnus can decode them for you.
 * Viewing Files::         You want to look at the result of the decoding?
 
    All these functions use the process/prefix convention (*note
-Process/Prefix::.) for finding out what articles to work on, with the
+Process/Prefix::) for finding out what articles to work on, with the
 extension that a "single article" means "a single series".  Gnus can
 find out by itself what articles belong to a series, decode all the
 articles and unpack/view/save the resulting file(s).
@@ -281,7 +280,7 @@ then `X U' (`gnus-uu-decode-uu-and-save').
    All this is very much different from how `gnus-uu' worked with GNUS
 4.1, where you had explicit keystrokes for everything under the sun.
 This version of `gnus-uu' generally assumes that you mark articles in
-some way (*note Setting Process Marks::.) and then press `X u'.
+some way (*note Setting Process Marks::) and then press `X u'.
 
    Note: When trying to decode articles that have names matching
 `gnus-uu-notify-files', which is hard-coded to
@@ -453,7 +452,7 @@ Other Decode Variables
      articles as unread.
 
 `gnus-uu-correct-stripped-uucode'
-     Non-`nil' means that `gnus-uu' will *try* to fix uuencoded files
+     Non-`nil' means that `gnus-uu' will _try_ to fix uuencoded files
      that have had trailing spaces deleted.
 
 `gnus-uu-pre-uudecode-hook'
@@ -538,8 +537,8 @@ that command.
    If `gnus-insert-pseudo-articles' is non-`nil', insert
 pseudo-articles when decoding.  It is `t' by default.
 
-   So; there you are, reading your *pseudo-articles* in your *virtual
-newsgroup* from the *virtual server*; and you think: Why isn't anything
+   So; there you are, reading your _pseudo-articles_ in your _virtual
+newsgroup_ from the _virtual server_; and you think: Why isn't anything
 real anymore? How did we get here?
 
 
@@ -579,17 +578,17 @@ but you want it to look like technicolor fruit salad.
      text, the signature, and adds buttons to the body and the head.
 
      Most users would prefer using `gnus-article-maybe-highlight' in
-     `gnus-article-display-hook' (*note Customizing Articles::.)
-     instead.  This is a bit less agressive--it highlights only the
-     headers, the signature and adds buttons.
+     `gnus-article-display-hook' (*note Customizing Articles::) instead.
+     This is a bit less agressive--it highlights only the headers, the
+     signature and adds buttons.
 
 `W H h'
      Highlight the headers (`gnus-article-highlight-headers').  The
      highlighting will be done according to the `gnus-header-face-alist'
-     variable, which is a list where each element has the form (REGEXP
-     NAME CONTENT).  REGEXP is a regular expression for matching the
+     variable, which is a list where each element has the form `(REGEXP
+     NAME CONTENT)'.  REGEXP is a regular expression for matching the
      header, NAME is the face used for highlighting the header name
-     (*note Faces and Fonts::.) and CONTENT is the face for highlighting
+     (*note Faces and Fonts::) and CONTENT is the face for highlighting
      the header value.  The first match made will be used.  Note that
      REGEXP shouldn't have `^' prepended--Gnus will add one.
 
@@ -611,7 +610,7 @@ but you want it to look like technicolor fruit salad.
 
     `gnus-cite-face-list'
           List of faces used for highlighting citations (*note Faces
-          and Fonts::.).  When there are citations from multiple
+          and Fonts::).  When there are citations from multiple
           articles in the same message, Gnus will try to give each
           citation from each article its own face.  This should make it
           easier to see who wrote what.
@@ -639,9 +638,9 @@ but you want it to look like technicolor fruit salad.
 `W H s'
      Highlight the signature (`gnus-article-highlight-signature').
      Everything after `gnus-signature-separator' (*note Article
-     Signature::.) in an article will be considered a signature and
-     will be highlighted with `gnus-signature-face', which is `italic'
-     by default.
+     Signature::) in an article will be considered a signature and will
+     be highlighted with `gnus-signature-face', which is `italic' by
+     default.
 
    *Note Customizing Articles::, for how to highlight articles
 automatically.
@@ -730,7 +729,7 @@ much too much cruft in most articles.
           Gnus adds buttons to show where the cited text has been
           hidden, and to allow toggle hiding the text.  The format of
           the variable is specified by these format-like variable
-          (*note Formatting Variables::.).  These specs are valid:
+          (*note Formatting Variables::).  These specs are valid:
 
          `b'
                Starting point of the hidden text.
@@ -765,14 +764,14 @@ much too much cruft in most articles.
      (`gnus-article-hide-citation-in-followups').  This isn't very
      useful as an interactive command, but might be a handy function to
      stick in `gnus-article-display-hook' (*note Customizing
-     Articles::.).
+     Articles::).
 
    All these "hiding" commands are toggles, but if you give a negative
 prefix to these commands, they will show what they have previously
 hidden.  If you give a positive prefix, they will always hide.
 
-   Also *note Article Highlighting::. for further variables for
-citation customization.
+   Also *note Article Highlighting:: for further variables for citation
+customization.
 
    *Note Customizing Articles::, for how to hide article elements
 automatically.
@@ -1009,7 +1008,7 @@ was when the article was sent.
      be useful if you normally use some other conversion function and
      are worried that it might be doing something totally wrong.  Say,
      claiming that the article was posted in 1854.  Although something
-     like that is *totally* impossible.  Don't you trust me? *titter*
+     like that is _totally_ impossible.  Don't you trust me? *titter*
 
    *Note Customizing Articles::, for how to display the date in your
 preferred format automatically.
@@ -1110,7 +1109,7 @@ can't really see why you'd want that.
 don't use threading.  In the latter case, all summary lines will be
 sorted, line by line.  In the former case, sorting will be done on a
 root-by-root basis, which might not be what you were looking for.  To
-toggle whether to use threading, type `T T' (*note Thread Commands::.).
+toggle whether to use threading, type `T T' (*note Thread Commands::).
 
 
 File: gnus,  Node: Finding the Parent,  Next: Alternative Approaches,  Prev: Summary Sorting,  Up: The Summary Buffer
@@ -1145,7 +1144,7 @@ Finding the Parent
      headers in the current group to work, so it usually takes a while.
      If you do it often, you may consider setting
      `gnus-fetch-old-headers' to `invisible' (*note Filling In
-     Threads::.).  This won't have any visible effects normally, but
+     Threads::).  This won't have any visible effects normally, but
      it'll make this command work a whole lot faster.  Of course, it'll
      make group entry somewhat slow.
 
@@ -1258,8 +1257,8 @@ unpicked articles as read.  The default is `nil'.
 standard format.  At the beginning of each line the line number is
 displayed.  The pick mode line format is controlled by the
 `gnus-summary-pick-line-format' variable (*note Formatting
-Variables::.).  It accepts the same format specs that
-`gnus-summary-line-format' does (*note Summary Buffer Lines::.).
+Variables::).  It accepts the same format specs that
+`gnus-summary-line-format' does (*note Summary Buffer Lines::).
 
 
 File: gnus,  Node: Binary Groups,  Prev: Pick and Read,  Up: Alternative Approaches

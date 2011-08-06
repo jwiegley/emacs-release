@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -72,7 +71,7 @@ Category Variables
 
 `gnus-category-line-format'
      Format of the lines in the category buffer (*note Formatting
-     Variables::.).  Valid elements are:
+     Variables::).  Valid elements are:
 
     `c'
           The name of the category.
@@ -81,7 +80,7 @@ Category Variables
           The number of groups in the category.
 
 `gnus-category-mode-line-format'
-     Format of the category mode line (*note Mode Line Formatting::.).
+     Format of the category mode line (*note Mode Line Formatting::).
 
 `gnus-agent-short-article'
      Articles that have fewer lines than this are short.  Default 100.
@@ -201,7 +200,7 @@ Outgoing Messages
 -----------------
 
    When Gnus is unplugged, all outgoing messages (both mail and news)
-are stored in the draft groups (*note Drafts::.).  You can view them
+are stored in the draft groups (*note Drafts::).  You can view them
 there after posting, and edit them at will.
 
    When Gnus is plugged again, you can send the messages either from the
@@ -220,7 +219,7 @@ Agent Variables
      `~/News/agent/'.
 
 `gnus-agent-handle-level'
-     Groups on levels (*note Group Levels::.) higher than this variable
+     Groups on levels (*note Group Levels::) higher than this variable
      will be ignored by the Agent.  The default is
      `gnus-level-subscribed', which means that only subscribed group
      will be considered by the Agent by default.
@@ -380,7 +379,7 @@ score file the current one.
 `V e'
      Edit the current score file (`gnus-score-edit-current-scores').
      You will be popped into a `gnus-score-mode' buffer (*note Score
-     File Editing::.).
+     File Editing::).
 
 `V f'
      Edit a score file and make this score file the current one
@@ -459,7 +458,7 @@ regular pattern, so there's no need to list all the commands.
                Substring matching.
 
          `f'
-               Fuzzy matching (*note Fuzzy Matching::.).
+               Fuzzy matching (*note Fuzzy Matching::).
 
          `r'
                Regexp matching
@@ -512,7 +511,7 @@ defaults for the remaining one or two keystrokes.  The defaults are
 a R' is the same as `I a r t'.
 
    These functions take both the numerical prefix and the symbolic
-prefix (*note Symbolic Prefixes::.).  A numerical prefix says how much
+prefix (*note Symbolic Prefixes::).  A numerical prefix says how much
 to lower (or increase) the score of the article.  A symbolic prefix of
 `a' says to use the `all.SCORE' file for the command instead of the
 current score file.
@@ -702,7 +701,7 @@ everything can be changed from the summary buffer.
       (eval (ding)))
 
    This example demonstrates most score file elements.  For a different
-approach, see *note Advanced Scoring::..
+approach, see *note Advanced Scoring::.
 
    Even though this looks much like lisp code, nothing here is actually
 `eval'ed.  The lisp reader is used to read this form, though, so it has
@@ -720,7 +719,7 @@ to be valid syntactically, if not semantically.
      the body of the article, `Head' will perform the match on the head
      of the article, and `All' will perform the match on the entire
      article.  Note that using any of these last three keys will slow
-     down group entry *considerably*.  The final "header" you can score
+     down group entry _considerably_.  The final "header" you can score
      on is `Followup'.  These score entries will result in new score
      entries being added for all follow-ups to articles that matches
      these score entries.
@@ -771,7 +770,7 @@ to be valid syntactically, if not semantically.
                     (PREDICATE HEADER MATCH)
 
                evaluates to non-`nil'.  For instance, the advanced match
-               `("lines" 4 <)' (*note Advanced Scoring::.) will result
+               `("lines" 4 <)' (*note Advanced Scoring::) will result
                in the following form:
 
                     (< header-value 4)
@@ -879,7 +878,7 @@ to be valid syntactically, if not semantically.
 
 `read-only'
      Read-only score files will not be updated or saved.  Global score
-     files should feature this atom (*note Global Score Files::.).
+     files should feature this atom (*note Global Score Files::).
      (Note: "Global" here really means "global"; not your personal
      apply-to-all-groups score files.)
 
@@ -1023,9 +1022,9 @@ lowered by `Subject' by -1.  Change this to fit your prejudices.
 That means that that subject will get a score of ten times -1, which
 should be, unless I'm much mistaken, -10.
 
-   If you have auto-expirable (mail) groups (*note Expiring Mail::.),
-all the read articles will be marked with the `E' mark.  This'll
-probably make adaptive scoring slightly impossible, so auto-expiring and
+   If you have auto-expirable (mail) groups (*note Expiring Mail::), all
+the read articles will be marked with the `E' mark.  This'll probably
+make adaptive scoring slightly impossible, so auto-expiring and
 adaptive scoring doesn't really mix very well.
 
    The headers you can score on are `from', `subject', `message-id',
@@ -1049,8 +1048,8 @@ become properly trained and enhance the authors you like best, and kill
 the authors you like least, without you having to say so explicitly.
 
    You can control what groups the adaptive scoring is to be performed
-on by using the score files (*note Score File Format::.).  This will
-also let you use different rules in different groups.
+on by using the score files (*note Score File Format::).  This will also
+let you use different rules in different groups.
 
    The adaptive score entries will be put into a file where the name is
 the group name with `gnus-adaptive-file-suffix' appended.  The default
@@ -1128,7 +1127,7 @@ be:
 
   3. A list.  The elements in this list can be:
 
-       1. (REGEXP FILE-NAME).  If the REGEXP matches the group name,
+       1. `(REGEXP FILE-NAME)'.  If the REGEXP matches the group name,
           the FILE-NAME will will be used as the home score file.
 
        2. A function. If the function returns non-nil, the result will
@@ -1175,7 +1174,7 @@ by this variable, and the same syntax is allowed.
 
    In addition to using `gnus-home-score-file' and
 `gnus-home-adapt-file', you can also use group parameters (*note Group
-Parameters::.) and topic parameters (*note Topic Parameters::.) to
+Parameters::) and topic parameters (*note Topic Parameters::) to
 achieve much the same.  Group and topic parameters take precedence over
 this variable.
 
@@ -1241,7 +1240,7 @@ Scoring Tips
      server.  But you might want to anyway, I guess.  Even though there
      are three match keys (`Head', `Body' and `All'), you should choose
      one and stick with it in each score file.  If you use any two,
-     each article will be fetched *twice*.  If you want to match a bit
+     each article will be fetched _twice_.  If you want to match a bit
      on the `Head' and a bit on the `Body', just use `All' for all the
      matches.
 

@@ -1,5 +1,5 @@
-This is Info file ../info/dired-x, produced by Makeinfo version 1.68
-from the input file dired-x.texi.
+This is ../info/dired-x, produced by makeinfo version 4.0 from
+dired-x.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -44,11 +44,12 @@ that are provided by the file `dired-x.el'.
 
    * Revision of this manual: 2.52 (1994/08/09 16:51:31)
 
-   * Bugs to Lawrence R. Dodd <dodd@roebling.poly.edu>.  *Please* type
-     `M-x dired-x-submit-report' to submit a bug report (*Note Bugs::).
+   * Bugs to Lawrence R. Dodd <dodd@roebling.poly.edu>.  _Please_ type
+     `M-x dired-x-submit-report' to submit a bug report (*note Bugs::).
 
    * You can obtain a copy of this package via anonymous ftp in
      /roebling.poly.edu:/pub/packages/dired-x.tar.gz
+
 
 * Menu:
 
@@ -75,7 +76,7 @@ File: dired-x,  Node: Introduction,  Next: Features,  Prev: Top,  Up: Top
 Introduction
 ************
 
-   This documents the *extra* features for Dired Mode for GNU Emacs 19.
+   This documents the _extra_ features for Dired Mode for GNU Emacs 19.
 It is derived from version 1.191 of Sebastian Kremer's `dired-x.el'
 and is GNU Emacs v19 compatible.
 
@@ -105,28 +106,28 @@ Features
    Some features provided by Dired Extra
 
   1. Omitting of uninteresting files from dired listing.
-          *Note Omitting Files in Dired::
+          *Note Omitting Files in Dired::.
 
   2. Local variables for dired directories.
-          *Note Local Variables::
+          *Note Local Variables::.
 
   3. Guessing shell commands in dired buffers.
-          *Note Shell Command Guessing::
+          *Note Shell Command Guessing::.
 
   4. Running dired command in non-dired buffers.
-          *Note Virtual Dired::
+          *Note Virtual Dired::.
 
   5. Finding a file mentioned in a buffer
-          *Note Find File At Point::
+          *Note Find File At Point::.
 
   6. Commands using file marking.
-          *Note Advanced Mark Commands::
+          *Note Advanced Mark Commands::.
 
-`dired-x.el' binds some functions to keys in Dired Mode (*Note Key
-Index::) and also binds `C-x C-j' and `C-x 4 C-j' *globally* to
-`dired-jump' (*Note Miscellaneous Commands::).  It may also bind `C-x
+`dired-x.el' binds some functions to keys in Dired Mode (*note Key
+Index::) and also binds `C-x C-j' and `C-x 4 C-j' _globally_ to
+`dired-jump' (*note Miscellaneous Commands::).  It may also bind `C-x
 C-f' and `C-x 4 C-f' to `dired-x-find-file' and
-`dired-x-find-file-other-window', respectively (*Note Find File At
+`dired-x-find-file-other-window', respectively (*note Find File At
 Point::).
 
 
@@ -135,7 +136,7 @@ File: dired-x,  Node: Technical Details,  Next: Installation,  Prev: Features,  
 Technical Details
 =================
 
-   When loaded this code *redefines* the following functions of GNU
+   When loaded this code _redefines_ the following functions of GNU
 Emacs from `dired.el'
 
    * `dired-clean-up-after-deletion'
@@ -198,8 +199,8 @@ File: dired-x,  Node: Optional Installation Dired Jump,  Next: Optional Installa
 Optional Installation Dired Jump
 ================================
 
-   In order to have `dired-jump' and `dired-jump-other-window' (*Note
-Miscellaneous Commands::) work *before* `dired' and `dired-x' have been
+   In order to have `dired-jump' and `dired-jump-other-window' (*note
+Miscellaneous Commands::) work _before_ `dired' and `dired-x' have been
 properly loaded the user should set-up an autoload for these functions.
 In your `.emacs' file put
 
@@ -235,7 +236,7 @@ Optional Installation File At Point
 ===================================
 
    If you choose to have `dired-x.el' bind `dired-x-find-file' over
-`find-file' (*Note Find File At Point::), then you will need to set
+`find-file' (*note Find File At Point::), then you will need to set
 `dired-x-hands-off-my-keys' and make a call to the function
 `dired-x-bind-find-file' in the `dired-load-hook':
 
@@ -248,7 +249,7 @@ Optional Installation File At Point
                            (dired-x-bind-find-file)
                            )))
 
-   Alternatively, you can set the variable *before* `dired-x.el' is
+   Alternatively, you can set the variable _before_ `dired-x.el' is
 loaded
 
      (add-hook 'dired-load-hook
@@ -264,7 +265,7 @@ File: dired-x,  Node: Special Notes,  Next: Omitting Files in Dired,  Prev: Opti
 Special Notes
 =============
 
-   If `dired-x.el' was *not* bundled with the version of GNU Emacs
+   If `dired-x.el' was _not_ bundled with the version of GNU Emacs
 installed at your site (i.e., not in the default `../lisp' directory)
 then you must put the file `dired-x.el' in a directory known to GNU
 Emacs.  Examine the variable `load-path' for a list of these
@@ -295,14 +296,14 @@ should be ignored.
 CAUTION: If you are using a version of GNU Emacs earlier than 19.20
 than you may have to edit `dired.el'.  The copy of `dired.el' in GNU
 Emacs versions earlier than 19.20 incorrectly had the call to
-`run-hooks' *before* the call to `provide'.  In such a case, it is
+`run-hooks' _before_ the call to `provide'.  In such a case, it is
 possible that byte-compiling and/or loading dired can cause an infinite
 loop.  To prevent this, make sure the line of code
 
              (run-hooks 'dired-load-hook)
 
-is the *last* executable line in the file `dired.el'.  That is, make
-sure it comes *after* the line
+is the _last_ executable line in the file `dired.el'.  That is, make
+sure it comes _after_ the line
 
              (provide 'dired)
 
@@ -337,8 +338,8 @@ from hiding in several respects:
      just mark the files, but don't actually omit them.
 
 In order to make Dired Omit work you first need to load `dired-x.el'
-inside `dired-load-hook' (*Note Installation::) and then set
-`dired-omit-files-p' in some way (*Note Omitting Variables::).
+inside `dired-load-hook' (*note Installation::) and then set
+`dired-omit-files-p' in some way (*note Omitting Variables::).
 
 * Menu:
 
@@ -366,7 +367,7 @@ Omitting Variables
           (setq dired-omit-files-p t)
 
      inside your `dired-mode-hook' to have omitting initially turned on
-     in *every* Dired buffer (*Note Installation::).  You can then use
+     in _every_ Dired buffer (*note Installation::).  You can then use
      `M-o' to unomit in that buffer.
 
      To enable omitting automatically only in certain directories one
@@ -377,7 +378,7 @@ Omitting Variables
           End:
 
      into a file `.dired' (the default value of
-     `dired-local-variables-file') in that directory (*Note Local
+     `dired-local-variables-file') in that directory (*note Local
      Variables::).
 
     `dired-omit-here-always'
@@ -385,7 +386,7 @@ Omitting Variables
           variables file exactly like the example above (if it does not
           already exist) in the file `dired-local-variables-file' in
           the current directory and then refreshes the directory
-          listing (*Note Local Variables::).
+          listing (*note Local Variables::).
 
 `dired-omit-files'
      Default: `"^#\\|\\.$"'
@@ -394,7 +395,7 @@ Omitting Variables
      This only has effect when `dired-omit-files-p' is t.
 
      The default value omits the special directories `.' and `..'  and
-     autosave files (plus other files ending in ".") (*Note Omitting
+     autosave files (plus other files ending in ".") (*note Omitting
      Examples::).
 
 `dired-omit-extensions'
@@ -446,7 +447,7 @@ Examples of Omitting Various File Types
           (setq dired-omit-files
                 (concat dired-omit-files "\\|^RCS$\\|,v$"))
 
-     in the `dired-load-hook' (*Note Installation::).  This assumes
+     in the `dired-load-hook' (*note Installation::).  This assumes
      `dired-omit-localp' has its default value of `'no-dir' to make the
      `^'-anchored matches work.  As a slower alternative, with
      `dired-omit-localp' set to `nil', you can use `/' instead of `^'
@@ -459,7 +460,7 @@ Examples of Omitting Various File Types
           (setq dired-omit-files
                 (concat dired-omit-files "\\|^INDEX$\\|-t\\.tex$"))
 
-     in the `dired-load-hook' (*Note Installation::).
+     in the `dired-load-hook' (*note Installation::).
 
    * If you do not wish to see `dot' files (files starting with a `.'),
      then put
@@ -467,7 +468,8 @@ Examples of Omitting Various File Types
           (setq dired-omit-files
                 (concat dired-omit-files "\\|^\\..+$"))
 
-     in the `dired-load-hook' (*Note Installation::).
+     in the `dired-load-hook' (*note Installation::).
+
 
 
 File: dired-x,  Node: Omitting Technical,  Next: Local Variables,  Prev: Omitting Examples,  Up: Omitting Files in Dired
@@ -666,14 +668,14 @@ Advanced Mark Commands
 
 `dired-mark-extension'
      Mark all files with a certain extension for use in later commands.
-     A `.'  is not automatically prepended to the string entered.
+     A `.' is not automatically prepended to the string entered.
 
      When called from lisp, EXTENSION may also be a list of extensions
      and an optional argument MARKER-CHAR specifies the marker used.
 
 `dired-flag-extension'
      Flag all files with a certain extension for deletion.  A `.' is
-     *not* automatically prepended to the string entered.
+     _not_ automatically prepended to the string entered.
 
 * Menu:
 
@@ -693,8 +695,8 @@ Advanced Cleaning Functions
 
 `dired-clean-tex'
      Flag dispensable files created by TeX, LaTeX, and `texinfo' for
-     deletion.  See the following variables (*Note Advanced Cleaning
-     Variables::)
+     deletion.  See the following variables (*note Advanced Cleaning
+     Variables::):
 
         * `dired-tex-unclean-extensions'
 
@@ -715,7 +717,7 @@ Advanced Cleaning Variables
 ===========================
 
 Variables used by the above cleaning commands (and in the default value
-for variable `dired-omit-extensions', *Note Omitting Variables::)
+for variable `dired-omit-extensions', *note Omitting Variables::)
 
 `dired-patch-unclean-extensions'
      Default: `'(".rej" ".orig")'
@@ -844,7 +846,7 @@ this in the minibuffer after snatching the filename.
 bound to `C-x 4 C-f').
 
    In order to use this feature, you will need to set
-`dired-x-hands-off-my-keys' to `nil' inside `dired-load-hook' (*Note
+`dired-x-hands-off-my-keys' to `nil' inside `dired-load-hook' (*note
 Optional Installation File At Point::).
 
 `dired-x-find-file'
@@ -876,7 +878,7 @@ Optional Installation File At Point::).
      information.
 
 `dired-x-hands-off-my-keys'
-     If set to `t', then it means that `dired-x' should *not* bind
+     If set to `t', then it means that `dired-x' should _not_ bind
      `dired-x-find-file' over `find-file' on keyboard.  Similarly, it
      should not bind `dired-x-find-file-other-window' over
      `find-file-other-window'.  If you change this variable after
@@ -968,7 +970,7 @@ Miscellaneous Commands
      Bound to `C-x 4 C-j'. Like `dired-jump', but to other window.
 
      These functions can be autoloaded so they work even though
-     `dired-x.el' has not been loaded yet (*Note Optional Installation
+     `dired-x.el' has not been loaded yet (*note Optional Installation
      Dired Jump::).
 
      If the variable `dired-bind-jump' is `nil', `dired-jump' will not
@@ -1196,33 +1198,33 @@ Variable Index
 
 
 Tag Table:
-Node: Copyright216
-Node: Top1296
-Node: Introduction2237
-Node: Features3193
-Node: Technical Details4187
-Node: Installation4900
-Node: Optional Installation Dired Jump6158
-Node: Optional Installation File At Point7769
-Node: Special Notes8960
-Node: Omitting Files in Dired10878
-Node: Omitting Variables12400
-Node: Omitting Examples15709
-Node: Omitting Technical16928
-Node: Local Variables17344
-Node: Shell Command Guessing19211
-Node: Virtual Dired22202
-Node: Advanced Mark Commands23729
-Node: Advanced Cleaning Functions25087
-Node: Advanced Cleaning Variables25914
-Node: Special Marking Function27034
-Node: Multiple Dired Directories28627
-Node: Find File At Point29796
-Node: Miscellaneous Commands32557
-Node: Bugs37562
-Node: Concept Index38158
-Node: Command Index40632
-Node: Key Index42738
-Node: Variable Index44015
+Node: Copyright190
+Node: Top1270
+Node: Introduction2212
+Node: Features3168
+Node: Technical Details4168
+Node: Installation4881
+Node: Optional Installation Dired Jump6139
+Node: Optional Installation File At Point7750
+Node: Special Notes8941
+Node: Omitting Files in Dired10859
+Node: Omitting Variables12381
+Node: Omitting Examples15690
+Node: Omitting Technical16910
+Node: Local Variables17326
+Node: Shell Command Guessing19193
+Node: Virtual Dired22184
+Node: Advanced Mark Commands23711
+Node: Advanced Cleaning Functions25068
+Node: Advanced Cleaning Variables25896
+Node: Special Marking Function27016
+Node: Multiple Dired Directories28609
+Node: Find File At Point29778
+Node: Miscellaneous Commands32539
+Node: Bugs37544
+Node: Concept Index38140
+Node: Command Index40614
+Node: Key Index42720
+Node: Variable Index43997
 
 End Tag Table

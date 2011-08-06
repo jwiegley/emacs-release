@@ -654,7 +654,7 @@ echo_char (c)
 
       if (INTEGERP (c))
 	{
-	  if (ptr - current_kboard->echobuf > ECHOBUFSIZE - 6)
+	  if (ptr - current_kboard->echobuf > ECHOBUFSIZE - 30)
 	    return;
 
 	  ptr = push_key_description (XINT (c), ptr);

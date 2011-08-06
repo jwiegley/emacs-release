@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -87,9 +86,9 @@ using them for large mailing lists to broadcast announcements.)
 reply command with a numeric argument: `C-u r' or `1 r'.
 
    Once the `*mail*' buffer has been initialized, editing and sending
-the mail goes as usual (*note Sending Mail::.).  You can edit the
+the mail goes as usual (*note Sending Mail::).  You can edit the
 presupplied header fields if they are not right for you.  You can also
-use the commands of Mail mode (*note Mail Mode::.), including `C-c C-y'
+use the commands of Mail mode (*note Mail Mode::), including `C-c C-y'
 which yanks in the message that you are replying to.  You can switch to
 the Rmail buffer, select a different message there, switch back, and
 yank the new current message.
@@ -102,9 +101,9 @@ text and header fields as before.  If you type `C-c C-c' right away,
 you send the message again exactly the same as the first time.
 Alternatively, you can edit the text or headers and then send it.  The
 variable `rmail-retry-ignored-headers', in the same format as
-`rmail-ignored-headers' (*note Rmail Display::.), controls which
-headers are stripped from the failed message when retrying it; it
-defaults to `nil'.
+`rmail-ignored-headers' (*note Rmail Display::), controls which headers
+are stripped from the failed message when retrying it; it defaults to
+`nil'.
 
    Another frequent reason to send mail in Rmail is to "forward" the
 current message to other users.  `f' (`rmail-forward') makes this easy
@@ -147,7 +146,7 @@ frame to edit it in.  This frame is deleted when you send the message,
 or when you use the `Don't Send' item in the `Mail' menu.
 
    All the Rmail commands to send a message use the mail-composition
-method that you have chosen (*note Mail Methods::.).
+method that you have chosen (*note Mail Methods::).
 
 
 File: emacs,  Node: Rmail Summary,  Next: Rmail Sorting,  Prev: Rmail Reply,  Up: Rmail
@@ -325,7 +324,7 @@ Sorting the Rmail File
      second, and so on.  Messages which have none of these labels come
      last.
 
-   The Rmail sort commands perform a *stable sort*: if there is no
+   The Rmail sort commands perform a _stable sort_: if there is no
 reason to prefer either one of two messages, their order remains
 unchanged.  You can use this to sort by more than one criterion.  For
 example, if you use `rmail-sort-by-date' and then
@@ -363,7 +362,7 @@ original header.  Repeating `t' reformats the message again.  Selecting
 the message again also reformats.
 
    One consequence of this is that if you edit the reformatted header
-(using `e'; *note Rmail Editing::.), subsequent use of `t' will discard
+(using `e'; *note Rmail Editing::), subsequent use of `t' will discard
 your edits.  On the other hand, if you use `e' after `t', to edit the
 original (unreformatted) header, those changes are permanent.
 
@@ -413,7 +412,7 @@ to Rmail mode.  Alternatively, you can return to Rmail mode but cancel
 all the editing that you have done, by typing `C-c C-]'.
 
    Entering Rmail Edit mode runs the hook `text-mode-hook'; then it
-runs the hook `rmail-edit-mode-hook' (*note Hooks::.).  It adds the
+runs the hook `rmail-edit-mode-hook' (*note Hooks::).  It adds the
 attribute `edited' to the message.  It also displays the full headers
 of the message, so that you can edit the headers as well as the body of
 the message, and your changes in the the headers will be permanent.
@@ -579,7 +578,7 @@ to specify which files to list.  Where `dired' differs from
 special commands of Dired are available.
 
    The variable `dired-listing-switches' specifies the options to give
-to `ls' for listing directory; this string *must* contain `-l'.  If you
+to `ls' for listing directory; this string _must_ contain `-l'.  If you
 use a numeric prefix argument with the `dired' command, you can specify
 the `ls' switches with the minibuffer before you enter the directory
 specification.
@@ -666,11 +665,11 @@ Flagging Many Files at Once
 
 `#'
      Flag all auto-save files (files whose names start and end with `#')
-     for deletion (*note Auto Save::.).
+     for deletion (*note Auto Save::).
 
 `~'
      Flag all backup files (files whose names end with `~') for deletion
-     (*note Backup::.).
+     (*note Backup::).
 
 `&'
      Flag for deletion all files with certain kinds of names, names that
@@ -696,11 +695,11 @@ regular expression specified by the variable
 produced by TeX, and the `.orig' and `.rej' files produced by `patch'.
 
    `#' (`dired-flag-auto-save-files') flags for deletion all files
-whose names look like auto-save files (*note Auto Save::.)--that is,
+whose names look like auto-save files (*note Auto Save::)--that is,
 files whose names begin and end with `#'.  `~'
 (`dired-flag-backup-files') flags for deletion all files whose names
-say they are backup files (*note Backup::.)--that is, whose names end
-in `~'.
+say they are backup files (*note Backup::)--that is, whose names end in
+`~'.
 
    `.' (period, `dired-clean-directory') flags just some of the backup
 files for deletion: all but the oldest few and newest few backups of
@@ -719,7 +718,7 @@ the number of oldest versions of each file to keep.
 regular expression (`dired-flag-files-regexp').  Only the non-directory
 part of the file name is used in matching.  You can use `^' and `$' to
 anchor matches.  You can exclude subdirectories by hiding them (*note
-Hiding Subdirectories::.).
+Hiding Subdirectories::).
 
 
 File: emacs,  Node: Dired Visiting,  Next: Marks vs Flags,  Prev: Flagging Many Files,  Up: Dired
@@ -798,8 +797,8 @@ unflag files.)
      unmark all those files.
 
 `* s'
-     Mark all the files in the current subdirectory, aside from `.'
-     and `..' (`dired-mark-subdir-files').
+     Mark all the files in the current subdirectory, aside from `.' and
+     `..' (`dired-mark-subdir-files').
 
 `u'
 `* u'
@@ -865,10 +864,10 @@ unflag files.)
 
      Only the non-directory part of the file name is used in matching.
      Use `^' and `$' to anchor matches.  Exclude subdirectories by
-     hiding them (*note Hiding Subdirectories::.).
+     hiding them (*note Hiding Subdirectories::).
 
 `% g REGEXP <RET>'
-     Mark (with `*') all files whose *contents* contain a match for the
+     Mark (with `*') all files whose _contents_ contain a match for the
      regular expression REGEXP (`dired-mark-files-containing-regexp').
      This command is like `% m', except that it searches the file
      contents instead of the file name.
@@ -914,7 +913,7 @@ also use these conventions to decide which files to work on.)
 
 `D'
      Delete the specified files (`dired-do-delete').  Like the other
-     commands in this section, this command operates on the *marked*
+     commands in this section, this command operates on the _marked_
      files, or the next N files.  By contrast, `x' (`dired-expunge')
      deletes all "flagged" files.
 
@@ -959,7 +958,7 @@ also use these conventions to decide which files to work on.)
      command to print them with, but the minibuffer starts out with a
      suitable guess made using the variables `lpr-command' and
      `lpr-switches' (the same variables that `lpr-buffer' uses; *note
-     Hardcopy::.).
+     Hardcopy::).
 
 `Z'
      Compress the specified files (`dired-do-compress').  If the file
@@ -1005,7 +1004,7 @@ Shell Commands in Dired
    The dired command `!' (`dired-do-shell-command') reads a shell
 command string in the minibuffer and runs that shell command on all the
 specified files.  You can specify the files to operate on in the usual
-ways for Dired commands (*note Operating on Files::.).  There are two
+ways for Dired commands (*note Operating on Files::).  There are two
 ways of applying a shell command to multiple files:
 
    * If you use `*' in the shell command, then it runs just once, with
@@ -1015,8 +1014,8 @@ ways of applying a shell command to multiple files:
      Thus, `! tar cf foo.tar * <RET>' runs `tar' on the entire list of
      file names, putting them into one tar file `foo.tar'.
 
-   * If the command string doesn't contain `*', then it runs once *for
-     each file*, with the file name added at the end.
+   * If the command string doesn't contain `*', then it runs once _for
+     each file_, with the file name added at the end.
 
      For example, `! uudecode <RET>' runs `uudecode' on each file.
 
@@ -1034,7 +1033,7 @@ directory of the Dired buffer.
    The `!' command does not attempt to update the Dired buffer to show
 new or modified files, because it doesn't really understand shell
 commands, and does not know what files the shell command changed.  Use
-the `g' command to update the Dired buffer (*note Dired Updating::.).
+the `g' command to update the Dired buffer (*note Dired Updating::).
 
 
 File: emacs,  Node: Transforming File Names,  Next: Comparison in Dired,  Prev: Shell Commands in Dired,  Up: Dired
@@ -1071,8 +1070,8 @@ pattern TO.
 expression FROM, and then replace the matching part with TO.  You can
 use `\&' and `\DIGIT' in TO to refer to all or part of what the pattern
 matched in the old file name, as in `replace-regexp' (*note Regexp
-Replace::.).  If the regular expression matches more than once in a
-file name, only the first match is replaced.
+Replace::).  If the regular expression matches more than once in a file
+name, only the first match is replaced.
 
    For example, `% R ^.*$ <RET> x-\& <RET>' renames each selected file
 by prepending `x-' to its name.  The inverse of this, removing `x-'
@@ -1198,7 +1197,7 @@ Hiding Subdirectories
 =====================
 
    "Hiding" a subdirectory means to make it invisible, except for its
-header line, via selective display (*note Selective Display::.).
+header line, via selective display (*note Selective Display::).
 
 `$'
      Hide or reveal the subdirectory that point is in, and move point

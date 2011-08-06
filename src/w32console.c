@@ -31,6 +31,7 @@ Boston, MA 02111-1307, USA.
 
 #include "lisp.h"
 #include "charset.h"
+#include "coding.h"
 #include "frame.h"
 #include "disptab.h"
 #include "termhooks.h"
@@ -338,72 +339,79 @@ insert_glyphs (register GLYPH *start, register int len)
 void
 write_glyphs (register GLYPH *string, register int len)
 {
-  register unsigned int glyph_len = GLYPH_TABLE_LENGTH;
-  Lisp_Object *glyph_table = GLYPH_TABLE_BASE;
+  int produced, consumed, i;
   FRAME_PTR f = PICK_FRAME ();
-  register char *ptr;
-  GLYPH glyph;
-  char *chars;
-  int i;
   
   if (len <= 0)
     return;
 
-  chars = alloca (len * sizeof (*chars));
-  if (chars == NULL)
-    {
-      printf ("alloca failed in write_glyphs\n");
-      return;
-    }
-  
-  /* We have to deal with the glyph indirection...go over the glyph
-     buffer and extract the characters.  */
-  ptr = chars;
-  while (--len >= 0)
-    {
-      glyph = *string++;
+  /* The mode bit CODING_MODE_LAST_BLOCK should be set to 1 only at
+     the tail.  */
+  terminal_coding.mode &= ~CODING_MODE_LAST_BLOCK;
 
-      if (glyph > glyph_len)
-        {
-	  *ptr++ = glyph & 0xFF;
-	  continue;
-	}
-      GLYPH_FOLLOW_ALIASES (glyph_table, glyph_len, glyph);
-#ifndef HAVE_NTGUI
-      if (GLYPH_FACE (fixfix, glyph) != 0)
-	printf ("Glyph face is %d\n", GLYPH_FACE (fixfix, glyph));
-#endif /* !HAVE_NTGUI */
-      if (GLYPH_SIMPLE_P (glyph_table, glyph_len, glyph))
-        {
-	  *ptr++ = glyph & 0xFF;
-	  continue;
-	}
-      for (i = 0; i < GLYPH_LENGTH (glyph_table, glyph); i++)
-        {
-	  *ptr++ = (GLYPH_STRING (glyph_table, glyph))[i];
-	}
-    }
-  
-  /* Number of characters we have in the buffer.  */
-  len = ptr-chars;
-  
-  /* Set the attribute for these characters.  */
-  if (!FillConsoleOutputAttribute (cur_screen, char_attr, len, cursor_coords, &i))
+  while (len > 0)
     {
-      printf ("Failed writing console attributes: %d\n", GetLastError ());
-      fflush (stdout);
+      /* We use shared conversion buffer of the current size (1024
+	 bytes at least).  Usually it is sufficient, but if not, we
+	 just repeat the loop.  */
+      produced = encode_terminal_code (string, conversion_buffer,
+				       len, conversion_buffer_size, &consumed);
+      if (produced > 0)
+	{
+          /* Set the attribute for these characters.  */
+          if (!FillConsoleOutputAttribute
+              (cur_screen, char_attr, produced, cursor_coords, &i))
+            {
+              printf ("Failed writing console attributes: %d\n",
+                      GetLastError ());
+              fflush (stdout);
+            }
+
+          /* Write the characters.  */
+          if (!WriteConsoleOutputCharacter
+              (cur_screen, conversion_buffer, produced, cursor_coords, &i))
+            {
+              printf ("Failed writing console characters: %d\n",
+                      GetLastError ());
+              fflush (stdout);
+            }
+
+          cursor_coords.X += produced;
+          move_cursor (cursor_coords.Y, cursor_coords.X);
+        }
+      len -= consumed;
+      string += consumed;
     }
 
-  /* Write the characters.  */
-  if (!WriteConsoleOutputCharacter (cur_screen, chars, len, cursor_coords, &i))
+  /* We may have to output some codes to terminate the writing.  */
+  if (CODING_REQUIRE_FLUSHING (&terminal_coding))
     {
-      printf ("Failed writing console characters: %d\n", GetLastError ());
-      fflush (stdout);
+      terminal_coding.mode |= CODING_MODE_LAST_BLOCK;
+      encode_coding (&terminal_coding, "", conversion_buffer,
+		     0, conversion_buffer_size);
+      if (terminal_coding.produced > 0)
+        {
+          if (!FillConsoleOutputAttribute (cur_screen, char_attr,
+                                           terminal_coding.produced,
+                                           cursor_coords, &i)) 
+            {
+              printf ("Failed writing console attributes: %d\n",
+                      GetLastError ());
+              fflush (stdout);
+            }
+
+          /* Write the characters.  */
+          if (!WriteConsoleOutputCharacter (cur_screen, conversion_buffer,
+                                            produced, cursor_coords, &i))
+            {
+              printf ("Failed writing console characters: %d\n",
+                      GetLastError ());
+              fflush (stdout);
+            }
+        }
     }
-  
-  cursor_coords.X += len;
-  move_cursor (cursor_coords.Y, cursor_coords.X);
 }
+
 
 void
 delete_glyphs (int n)

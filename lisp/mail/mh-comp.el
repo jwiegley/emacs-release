@@ -233,7 +233,7 @@ that want to create a mail buffer.
 Users should use `\\[mh-smail]' to compose mail."
   (mh-find-path)
   (let ((mh-error-if-no-draft t))
-    (mh-send to "" subject)))
+    (mh-send (or to "") "" subject)))
 
 
 (defun mh-edit-again (msg)

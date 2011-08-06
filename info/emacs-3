@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -133,7 +132,7 @@ job control properly, but that is a matter of taste.)
 dedicated X windows, `C-z' has a different meaning.  Suspending an
 applications that uses its own X windows is not meaningful or useful.
 Instead, `C-z' runs the command `iconify-or-deiconify-frame', which
-temporarily closes up the selected Emacs frame (*note Frames::.).  The
+temporarily closes up the selected Emacs frame (*note Frames::).  The
 way to get back to a shell window is with the window manager.
 
    To kill Emacs, type `C-x C-c' (`save-buffers-kill-emacs').  A
@@ -157,7 +156,7 @@ meanings of `C-z' and `C-x C-c' as keys in Emacs were inspired by the
 use of `C-z' and `C-c' on several operating systems as the characters
 for stopping or killing a program, but that is their only relationship
 with the operating system.  You can customize these keys to run any
-commands of your choice (*note Keymaps::.).
+commands of your choice (*note Keymaps::).
 
 
 File: emacs,  Node: Basic,  Next: Minibuffer,  Prev: Exiting,  Up: Top
@@ -197,13 +196,13 @@ Inserting Text
 
    To insert printing characters into the text you are editing, just
 type them.  This inserts the characters you type into the buffer at the
-cursor (that is, at "point"; *note Point::.).  The cursor moves
-forward, and any text after the cursor moves forward too.  If the text
-in the buffer is `FOOBAR', with the cursor before the `B', then if you
-type `XX', you get `FOOXXBAR', with the cursor still before the `B'.
+cursor (that is, at "point"; *note Point::).  The cursor moves forward,
+and any text after the cursor moves forward too.  If the text in the
+buffer is `FOOBAR', with the cursor before the `B', then if you type
+`XX', you get `FOOXXBAR', with the cursor still before the `B'.
 
    To "delete" text you have just inserted, use <DEL>.  <DEL> deletes
-the character *before* the cursor (not the one that the cursor is on
+the character _before_ the cursor (not the one that the cursor is on
 top of or under; that is the character AFTER the cursor).  The cursor
 and all characters after it move backwards.  Therefore, if you type a
 printing character and then type <DEL>, they cancel out.
@@ -245,9 +244,9 @@ When multibyte characters are enabled, octal codes 0200 through 0377 are
 not valid as characters; if you specify a code in this range, `C-q'
 assumes that you intend to use some ISO Latin-N character set, and
 converts the specified code to the corresponding Emacs character code.
-*Note Enabling Multibyte::.  You select *which* ISO Latin character set
+*Note Enabling Multibyte::.  You select _which_ ISO Latin character set
 though your choice of language environment (*note Language
-Environments::.).
+Environments::).
 
    To use decimal or hexadecimal instead of octal, set the variable
 `read-quoted-char-radix' to 10 or 16.  If the radix is greater than 10,
@@ -255,7 +254,7 @@ some letters starting with `a' serve as part of a character code, just
 like digits.
 
    A numeric argument to `C-q' specifies how many copies of the quoted
-character should be inserted (*note Arguments::.).
+character should be inserted (*note Arguments::).
 
    Customization information: <DEL> in most modes runs the command
 `delete-backward-char'; <RET> runs the command `newline', and
@@ -270,7 +269,7 @@ Changing the Location of Point
 ==============================
 
    To do more than insert characters, you have to know how to move point
-(*note Point::.).  The simplest way to do this is with arrow keys, or by
+(*note Point::).  The simplest way to do this is with arrow keys, or by
 clicking the left mouse button where you want to move to.
 
    There are also control and meta characters for cursor motion.  Some
@@ -457,7 +456,7 @@ extensions to hold text that users don't normally look at or edit.
 contents save undo information.  However, some cursor motion commands
 set the mark, so if you use these commands from time to time, you can
 move back to the neighborhoods you have moved through by popping the
-mark ring (*note Mark Ring::.).
+mark ring (*note Mark Ring::).
 
    When the undo information for a buffer becomes too large, Emacs
 discards the oldest undo information from time to time (during garbage
@@ -504,7 +503,7 @@ this file, type
 Here the file name is given as an "argument" to the command `C-x C-f'
 (`find-file').  That command uses the "minibuffer" to read the
 argument, and you type <RET> to terminate the argument (*note
-Minibuffer::.).
+Minibuffer::).
 
    Emacs obeys the command by "visiting" the file: creating a buffer,
 copying the contents of the file into the buffer, and then displaying
@@ -588,7 +587,7 @@ the screen.  Continuation is also called "line wrapping".
 
    Sometimes it is nice to have Emacs insert newlines automatically when
 a line gets too long.  Continuation on the screen does not do that.  Use
-Auto Fill mode (*note Filling::.) if that's what you want.
+Auto Fill mode (*note Filling::) if that's what you want.
 
    As an alternative to continuation, Emacs can display long lines by
 "truncation".  This means that all the characters that do not fit in
@@ -598,7 +597,7 @@ instead of `\' to inform you that truncation is in effect.
 
    Truncation instead of continuation happens whenever horizontal
 scrolling is in use, and optionally in all side-by-side windows (*note
-Windows::.).  You can enable truncation for a particular buffer by
+Windows::).  You can enable truncation for a particular buffer by
 setting the variable `truncate-lines' to non-`nil' in that buffer.
 (*Note Variables::.)  Altering the value of `truncate-lines' makes it
 local to the current buffer; until that time, the default value is in
@@ -641,7 +640,7 @@ of the buffer.
 
    You can also see the current line number in the mode line; *Note
 Mode Line::.  If you narrow the buffer, then the line number in the
-mode line is relative to the accessible portion (*note Narrowing::.).
+mode line is relative to the accessible portion (*note Narrowing::).
 By contrast, `what-line' shows both the line number relative to the
 narrowed region and the line number relative to the whole buffer.
 
@@ -651,7 +650,7 @@ Pages::.
 
    While on this subject, we might as well mention `M-='
 (`count-lines-region'), which prints the number of lines in the region
-(*note Mark::.).  *Note Pages::, for the command `C-x l' which counts
+(*note Mark::).  *Note Pages::, for the command `C-x l' which counts
 the lines in the current page.
 
    The command `C-x =' (`what-cursor-position') can be used to find out
@@ -668,7 +667,7 @@ point, first by showing it and then by giving its character code in
 octal, decimal and hex.  For a non-ASCII multibyte character, these are
 followed by `ext' and the character's representation, in hex, in the
 buffer's coding system, if that coding system encodes the character
-safely and with a single byte (*note Coding Systems::.).  If the
+safely and with a single byte (*note Coding Systems::).  If the
 character's encoding is longer than one byte, Emacs shows `ext ...'.
 
    `point=' is followed by the position of point expressed as a
@@ -706,7 +705,7 @@ single byte, is shown after `ext'.  Here's an example for a Latin-1
 character A with a grave accent in a buffer whose coding system is
 iso-2022-7bit(1):
 
-     Char: `A (04300, 2240, 0x8c0, ext ESC , A @) (latin-iso8859-1 64)
+     Char: A` (04300, 2240, 0x8c0, ext ESC , A @) (latin-iso8859-1 64)
 
    ---------- Footnotes ----------
 
@@ -890,7 +889,7 @@ where `Find File: ' is the prompt.  Typing `buffer.c' specifies the
 file `/u2/emacs/src/buffer.c'.  To find files in nearby directories,
 use `..'; thus, if you type `../lisp/simple.el', you will get the file
 named `/u2/emacs/lisp/simple.el'.  Alternatively, you can kill with
-`M-<DEL>' the directory names you don't want (*note Words::.).
+`M-<DEL>' the directory names you don't want (*note Words::).
 
    If you don't want any of the default, you can kill it with `C-a
 C-k'.  But you don't need to kill the default; you can simply ignore it.
@@ -941,7 +940,7 @@ minibuffer window.  But you can make it taller in the normal fashion
 with `C-x ^'.  If you enable Resize-Minibuffer mode, then the
 minibuffer window expands vertically as necessary to hold the text that
 you put in the minibuffer.  Use `M-x resize-minibuffer-mode' to enable
-or disable this minor mode (*note Minor Modes::.).
+or disable this minor mode (*note Minor Modes::).
 
    Scrolling works specially in the minibuffer window.  When the
 minibuffer is just one line high, and it contains a long line of text
@@ -1080,17 +1079,17 @@ window that displays a list of completions:
      same effect, but this way is more convenient.)
 
 `<RET>'
-     Typing <RET> *in the completion list buffer* chooses the
+     Typing <RET> _in the completion list buffer_ chooses the
      completion that point is in or next to (`choose-completion').  To
      use this command, you must first switch windows to the window that
      shows the list of completions.
 
 `<RIGHT>'
-     Typing the right-arrow key <RIGHT> *in the completion list buffer*
+     Typing the right-arrow key <RIGHT> _in the completion list buffer_
      moves point to the following completion (`next-completion').
 
 `<LEFT>'
-     Typing the left-arrow key <LEFT> *in the completion list buffer*
+     Typing the left-arrow key <LEFT> _in the completion list buffer_
      moves point toward the beginning of the buffer, to the previous
      completion (`previous-completion').
 
@@ -1130,5 +1129,5 @@ minibuffers, depending on how the argument will be used.
 a window whenever there is more than one possibility for the very next
 character.  Also, typing `?' explicitly requests such a list.  If the
 list of completions is long, you can scroll it with `C-M-v' (*note
-Other Window::.).
+Other Window::).
 

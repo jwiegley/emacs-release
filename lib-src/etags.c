@@ -617,7 +617,7 @@ are.  Relative ones are stored relative to the output file's directory.");
   print_language_names ();
 
   puts ("");
-  puts ("Report bugs to bug-gnu-emacs@prep.ai.mit.edu");
+  puts ("Report bugs to bug-gnu-emacs@gnu.org");
 
   exit (GOOD);
 }

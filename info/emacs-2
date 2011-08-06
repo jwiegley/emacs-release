@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -432,7 +431,7 @@ commands that pertain to a topic.  *Note Help::.
 commands in little ways.  For example, if you use a programming
 language in which comments start with `<**' and end with `**>', you can
 tell the Emacs comment manipulation commands to use those strings
-(*note Comments::.).  Another sort of customization is rearrangement of
+(*note Comments::).  Another sort of customization is rearrangement of
 the command set.  For example, if you prefer the four basic cursor
 motion commands (up, down, left and right) on keys in a diamond pattern
 on the keyboard, you can rebind the keys that way.  *Note
@@ -480,7 +479,7 @@ these special lines.
 
    You can subdivide the large text window horizontally or vertically
 into multiple text windows, each of which can be used for a different
-file (*note Windows::.).  In this manual, the word "window" always
+file (*note Windows::).  In this manual, the word "window" always
 refers to the subdivisions of a frame within Emacs.
 
    The window that the cursor is in is the "selected window", in which
@@ -517,8 +516,8 @@ Many Emacs commands move point through the text, so that you can edit at
 different places in it.  You can also place point by clicking mouse
 button 1.
 
-   While the cursor appears to point *at* a character, you should think
-of point as *between* two characters; it points *before* the character
+   While the cursor appears to point _at_ a character, you should think
+of point as _between_ two characters; it points _before_ the character
 that appears under the cursor.  For example, if your text looks like
 `frob' with the cursor over the `b', then point is between the `o' and
 the `b'.  If you insert the character `!' at that position, the result
@@ -574,7 +573,7 @@ of the command.  Once echoing has started, the rest of the command
 echoes immediately as you type it.  This behavior is designed to give
 confident users fast response, while giving hesitant users maximum
 feedback.  You can change this behavior by setting a variable (*note
-Display Vars::.).
+Display Vars::).
 
    If a command cannot be executed, it may print an "error message" in
 the echo area.  Error messages are accompanied by a beep or by flashing
@@ -689,8 +688,8 @@ appear in every window's mode line or not in any of them.  *Note
 Recursive Edit::.
 
    Non-windowing terminals can only show a single Emacs frame at a time
-(*note Frames::.).  On such terminals, the mode line displays the name
-of the selected frame, after CH.  The initial frame's name is `F1'.
+(*note Frames::).  On such terminals, the mode line displays the name of
+the selected frame, after CH.  The initial frame's name is `F1'.
 
    CS states the coding system used for the file you are editing.  A
 dash indicates the default state of affairs: no code conversion, except
@@ -749,7 +748,7 @@ it actually does anything.
 
    To view the full command name and documentation for a menu item, type
 `C-h k', and then select the menu bar with the mouse in the usual way
-(*note Key Help::.).
+(*note Key Help::).
 
    On text-only terminals with no mouse, you can use the menu bar by
 typing `M-`' or <F10> (these run the command `tmm-menubar').  This
@@ -792,8 +791,8 @@ graphic happens to be blank.  Some keyboards have a key labeled
 "linefeed" which is an alias for `C-j'.
 
    Emacs extends the ASCII character set with thousands more printing
-characters (*note International::.), additional control characters, and
-a few more modifiers that can be combined with any character.
+characters (*note International::), additional control characters, and a
+few more modifiers that can be combined with any character.
 
    On ASCII terminals, there are only 32 possible control characters.
 These are the control variants of letters and `@[]\^_'.  In addition,
@@ -941,7 +940,7 @@ called "keymaps".  *Note Keymaps::.
 glossing over a distinction that is irrelevant in ordinary use but is
 vital in understanding how to customize Emacs.  It is the command
 `next-line' that is programmed to move down vertically.  `C-n' has this
-effect *because* it is bound to that command.  If you rebind `C-n' to
+effect _because_ it is bound to that command.  If you rebind `C-n' to
 the command `forward-word' then `C-n' will move forward by words
 instead.  Rebinding keys is a common method of customization.
 

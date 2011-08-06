@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -68,7 +67,7 @@ ugly, or easy to fix, chances are we will want to.
 
    A convenient way to send a bug report for Emacs is to use the command
 `M-x report-emacs-bug'.  This sets up a mail buffer (*note Sending
-Mail::.) and automatically inserts *some* of the essential information.
+Mail::) and automatically inserts _some_ of the essential information.
 However, it cannot supply all the necessary information; you should
 still read and follow the guidelines below, so you can enter the other
 crucial information by hand before you send the message.
@@ -163,7 +162,7 @@ include all these things:
      such as, your copy of the source is out of sync, or you have
      encountered a bug in the C library on your system.  (This has
      happened!)  Your copy might crash and the copy here might not.  If
-     you *said* to expect a crash, then when Emacs here fails to crash,
+     you _said_ to expect a crash, then when Emacs here fails to crash,
      we would know that the bug was not happening.  If you don't say to
      expect a crash, then we would not know whether the bug was
      happening--we would not be able to draw any conclusion from our
@@ -194,7 +193,7 @@ include all these things:
      functioning of Emacs.  Also, see whether the problem happens in a
      freshly started Emacs without loading your `.emacs' file (start
      Emacs with the `-q' switch to prevent loading the init file).  If
-     the problem does *not* occur then, you must report the precise
+     the problem does _not_ occur then, you must report the precise
      contents of any programs that you must load into the Lisp world in
      order to cause the problem to occur.
 
@@ -299,7 +298,7 @@ include all these things:
      which you just tried to finish.
 
      Stop Emacs again, and use `finish' repeatedly again until you get
-     *back to* that frame.  Then use `next' to step through that frame.
+     _back to_ that frame.  Then use `next' to step through that frame.
      By stepping, you will see where the loop starts and ends.  Also
      please examine the data being used in the loop and try to
      determine why the loop does not exit when it should.  Include all
@@ -320,7 +319,7 @@ include all these things:
      examples.  You might as well save time by not searching for
      additional examples.
 
-     Of course, if you can find a simpler example to report *instead* of
+     Of course, if you can find a simpler example to report _instead_ of
      the original one, that is a convenience.  Errors in the output
      will be easier to spot, running under the debugger will take less
      time, etc.
@@ -333,7 +332,7 @@ include all these things:
 
      System-call traces are very useful for certain special kinds of
      debugging, but in most cases they give little useful information.
-     It is therefore strange that many people seem to think that *the*
+     It is therefore strange that many people seem to think that _the_
      way to report information about a crash is to send a system-call
      trace.  Perhaps this is a habit formed from experience debugging
      programs that don't have source code or debugging symbols.
@@ -397,7 +396,7 @@ your best to help.
      needed.
 
    * Don't mix together changes made for different reasons.  Send them
-     *individually*.
+     _individually_.
 
      If you make two changes for separate reasons, then we might not
      want to install them both.  We might want to install just one.  If
@@ -462,7 +461,7 @@ your best to help.
      change that would break other systems.  Please think about what
      effect your change will have if compiled on another type of system.
 
-     Sometimes people send fixes that *might* be an improvement in
+     Sometimes people send fixes that _might_ be an improvement in
      general--but it is hard to be sure of this.  It's hard to install
      such changes because we have to study them very carefully.  Of
      course, a good explanation of the reasoning by which you concluded
@@ -596,7 +595,7 @@ Action Arguments
      Load a Lisp library named FILE with the function `load'.  *Note
      Lisp Libraries::.  The library can be found either in the current
      directory, or in the Emacs library search path as specified with
-     `EMACSLOADPATH' (*note General Variables::.).
+     `EMACSLOADPATH' (*note General Variables::).
 
 `-f FUNCTION'
 `--funcall=FUNCTION'
@@ -721,7 +720,7 @@ Resuming Emacs with Arguments
 
    You can specify action arguments for Emacs when you resume it after
 a suspension.  To prepare for this, put the following code in your
-`.emacs' file (*note Hooks::.):
+`.emacs' file (*note Hooks::):
 
      (add-hook 'suspend-hook 'resume-suspend-hook)
      (add-hook 'suspend-resume-hook 'resume-process-args)
@@ -741,7 +740,7 @@ from within the shell that is the parent of the Emacs job.  This is why
 possible to implement a resumption command that could be run from other
 subjobs of the shell; no way to define a command that could be made the
 value of `EDITOR', for example.  Therefore, this feature does not take
-the place of the Emacs Server feature (*note Emacs Server::.).
+the place of the Emacs Server feature (*note Emacs Server::).
 
    The aliases use the Emacs Server feature if you appear to have a
 server Emacs running.  However, they cannot determine this with complete
@@ -931,7 +930,7 @@ General Variables
 
 `VERSION_CONTROL'
      Used to initialize the `version-control' variable (*note Backup
-     Names::.).
+     Names::).
 
 
 File: emacs,  Node: Misc Variables,  Prev: General Variables,  Up: Environment
@@ -1131,8 +1130,8 @@ example:
 displays the entire font `6x13'.
 
    While running Emacs, you can set the font of the current frame
-(*note Frame Parameters::.) or for a specific kind of text (*note
-Faces::.).
+(*note Frame Parameters::) or for a specific kind of text (*note
+Faces::).
 
 
 File: emacs,  Node: Colors X,  Next: Window Size X,  Prev: Font X,  Up: Command Arguments

@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -40,8 +39,8 @@ the tree buffer.
 
 `gnus-tree-mode-line-format'
      A format string for the mode bar in the tree mode buffers (*note
-     Mode Line Formatting::.).  The default is `Gnus: %%b %S %Z'.  For
-     a list of valid specs, *note Summary Buffer Mode Line::..
+     Mode Line Formatting::).  The default is `Gnus: %%b %S %Z'.  For a
+     list of valid specs, *note Summary Buffer Mode Line::.
 
 `gnus-selected-tree-face'
      Face used for highlighting the selected article in the tree
@@ -52,7 +51,7 @@ the tree buffer.
      misnomer, though--it doesn't define a line, but just the node.
      The default value is `%(%[%3,3n%]%)', which displays the first
      three characters of the name of the poster.  It is vital that all
-     nodes are of the same length, so you *must* use `%4,4n'-like
+     nodes are of the same length, so you _must_ use `%4,4n'-like
      specifiers.
 
      Valid specs are:
@@ -81,9 +80,10 @@ the tree buffer.
 
     `gnus-tree-brackets'
           This is used for differentiating between "real" articles and
-          "sparse" articles.  The format is ((REAL-OPEN . REAL-CLOSE)
-          (SPARSE-OPEN . SPARSE-CLOSE) (DUMMY-OPEN . DUMMY-CLOSE)), and
-          the default is `((?[ . ?]) (?( . ?)) (?{ . ?}) (?< . ?>))'.
+          "sparse" articles.  The format is `((REAL-OPEN . REAL-CLOSE)
+          (SPARSE-OPEN . SPARSE-CLOSE) (DUMMY-OPEN . DUMMY-CLOSE))',
+          and the default is `((?[ . ?]) (?( . ?)) (?{ . ?}) (?< .
+          ?>))'.
 
     `gnus-tree-parent-child-edges'
           This is a list that contains the characters used for
@@ -155,7 +155,7 @@ Mail Group Commands
 invalid in the current group, they will raise a hell and let you know.
 
    All these commands (except the expiry and edit commands) use the
-process/prefix convention (*note Process/Prefix::.).
+process/prefix convention (*note Process/Prefix::).
 
 `B e'
      Expire all expirable articles in the group
@@ -230,7 +230,7 @@ process/prefix convention (*note Process/Prefix::.).
    If you move (or copy) articles regularly, you might wish to have Gnus
 suggest where to put the articles.  `gnus-move-split-methods' is a
 variable that uses the same syntax as `gnus-split-methods' (*note
-Saving Articles::.).  You may customize that variable to create
+Saving Articles::).  You may customize that variable to create
 suggestions you find reasonable.
 
      (setq gnus-move-split-methods
@@ -362,7 +362,7 @@ Really Various Summary Commands
      (`gnus-summary-read-document').  It does this by opening several
      `nndoc' groups for each document, and then opening an `nnvirtual'
      group on top of these `nndoc' groups.  This command understands
-     the process/prefix convention (*note Process/Prefix::.).
+     the process/prefix convention (*note Process/Prefix::).
 
 `C-t'
      Toggle truncation of summary lines
@@ -375,8 +375,8 @@ Really Various Summary Commands
      If given a prefix, force an `article' window configuration.
 
 `M-C-e'
-     Edit the group parameters (*note Group Parameters::.) of the
-     current group (`gnus-summary-edit-parameters').
+     Edit the group parameters (*note Group Parameters::) of the current
+     group (`gnus-summary-edit-parameters').
 
 
 File: gnus,  Node: Exiting the Summary Buffer,  Next: Crosspost Handling,  Prev: Various Summary Stuff,  Up: The Summary Buffer
@@ -463,7 +463,7 @@ summary buffer.  If the `gnus-use-cross-reference' variable is `t'
 group and are marked as read, will also be marked as read in the other
 subscribed groups they were cross-posted to.  If this variable is
 neither `nil' nor `t', the article will be marked as read in both
-subscribed and unsubscribed groups (*note Crosspost Handling::.).
+subscribed and unsubscribed groups (*note Crosspost Handling::).
 
 
 File: gnus,  Node: Crosspost Handling,  Next: Duplicate Suppression,  Prev: Exiting the Summary Buffer,  Up: The Summary Buffer
@@ -477,13 +477,13 @@ has posted it to several groups separately.  Posting the same article to
 several groups (not cross-posting) is called "spamming", and you are by
 law required to send nasty-grams to anyone who perpetrates such a
 heinous crime.  You may want to try NoCeM handling to filter out spam
-(*note NoCeM::.).
+(*note NoCeM::).
 
    Remember: Cross-posting is kinda ok, but posting the same article
 separately to several groups is not.  Massive cross-posting (aka.
 "velveeta") is to be avoided at all costs, and you can even use the
 `gnus-summary-mail-crosspost-complaint' command to complain about
-excessive crossposting (*note Summary Mail Commands::.).
+excessive crossposting (*note Summary Mail Commands::).
 
    One thing that may cause Gnus to not do the cross-posting thing
 correctly is if you use an NNTP server that supports XOVER (which is
@@ -507,7 +507,7 @@ set `gnus-nov-is-evil' to `t', which slows things down considerably.
 
    C'est la vie.
 
-   For an alternative approach, *note Duplicate Suppression::..
+   For an alternative approach, *note Duplicate Suppression::.
 
 
 File: gnus,  Node: Duplicate Suppression,  Prev: Crosspost Handling,  Up: The Summary Buffer
@@ -517,7 +517,7 @@ Duplicate Suppression
 
    By default, Gnus tries to make sure that you don't have to read the
 same article more than once by utilizing the crossposting mechanism
-(*note Crosspost Handling::.).  However, that simple and efficient
+(*note Crosspost Handling::).  However, that simple and efficient
 approach may not work satisfactory for some users for various reasons.
 
   1. The NNTP server may fail to generate the `Xref' header.  This is
@@ -538,7 +538,7 @@ well, but these four are the most common situations.
 consider switching on "duplicate suppression".  If you do so, Gnus will
 remember the `Message-ID's of all articles you have read or otherwise
 marked as read, and then, as if by magic, mark them as read all
-subsequent times you see them--in *all* groups.  Using this mechanism
+subsequent times you see them--in _all_ groups.  Using this mechanism
 is quite likely to be somewhat inefficient, but not overly so.  It's
 certainly preferable to reading the same articles more than once.
 
@@ -759,10 +759,10 @@ of the article before it is displayed.
 `gnus-article-maybe-highlight' (and under XEmacs,
 `gnus-article-display-x-face'), but there are thousands, nay millions,
 of functions you can put in this hook.  For an overview of functions
-*note Article Highlighting::., *note Article Hiding::., *note Article
-Washing::., *note Article Buttons::. and *note Article Date::..  Note
-that the order of functions in this hook might affect things, so you
-may have to fiddle a bit to get the desired results.
+*note Article Highlighting::, *note Article Hiding::, *note Article
+Washing::, *note Article Buttons:: and *note Article Date::.  Note that
+the order of functions in this hook might affect things, so you may
+have to fiddle a bit to get the desired results.
 
    You can, of course, write your own functions.  The functions are
 called from the article buffer, and you can do anything you like,
@@ -845,9 +845,9 @@ Misc Article
 
 `gnus-article-mode-line-format'
      This variable is a format string along the same lines as
-     `gnus-summary-mode-line-format' (*note Mode Line Formatting::.).
-     It accepts the same format specifications as that variable, with
-     one extension:
+     `gnus-summary-mode-line-format' (*note Mode Line Formatting::).  It
+     accepts the same format specifications as that variable, with one
+     extension:
 
     `w'
           The "wash status" of the article.  This is a short string
@@ -888,7 +888,7 @@ using the foreign server.
 * Drafts::               Postponing messages and rejected messages.
 * Rejected Articles::    What happens if the server doesn't like your article?
 
-   Also see *note Canceling and Superseding::. for information on how to
+   Also see *note Canceling and Superseding:: for information on how to
 remove articles you shouldn't have posted.
 
 
@@ -978,7 +978,7 @@ Mail and Post
      gatewayed to the NNTP server, you can read those groups without
      problems, but you can't post/followup to them without some
      difficulty.  One solution is to add a `to-address' to the group
-     parameters (*note Group Parameters::.).  An easier thing to do is
+     parameters (*note Group Parameters::).  An easier thing to do is
      set the `gnus-mailing-list-groups' to a regexp that matches the
      groups that really are mailing lists.  Then, at least, followups
      to the mailing lists will work most of the time.  Posting to these
@@ -1143,11 +1143,11 @@ case, if this returns a non-`nil' value, then the style is said to
 "match".
 
    Each style may contain a arbitrary amount of "attributes".  Each
-attribute consists of a (NAME . VALUE) pair.  The attribute name can be
-one of `signature', `signature-file', `organization', `address', `name'
-or `body'.  The attribute name can also be a string.  In that case,
-this will be used as a header name, and the value will be inserted in
-the headers of the article.
+attribute consists of a `(NAME . VALUE)' pair.  The attribute name can
+be one of `signature', `signature-file', `organization', `address',
+`name' or `body'.  The attribute name can also be a string.  In that
+case, this will be used as a header name, and the value will be
+inserted in the headers of the article.
 
    The attribute value can be a string (used verbatim), a function (the
 return value will be used), a variable (its value will be used) or a
@@ -1215,12 +1215,12 @@ draft group and push `D e' (`gnus-draft-edit-message') to do that.  You
 will be placed in a buffer where you left off.
 
    Rejected articles will also be put in this draft group (*note
-Rejected Articles::.).
+Rejected Articles::).
 
    If you have lots of rejected messages you want to post (or mail)
 without doing further editing, you can use the `D s' command
 (`gnus-draft-send-message').  This command understands the
-process/prefix convention (*note Process/Prefix::.).  The `D S' command
+process/prefix convention (*note Process/Prefix::).  The `D S' command
 (`gnus-draft-send-all-messages') will ship off all messages in the
 buffer.
 
@@ -1236,7 +1236,7 @@ Rejected Articles
 
    Sometimes a news server will reject an article.  Perhaps the server
 doesn't like your face.  Perhaps it just feels miserable.  Perhaps
-*there be demons*.  Perhaps you have included too much cited text.
+_there be demons_.  Perhaps you have included too much cited text.
 Perhaps the disk is full.  Perhaps the server is down.
 
    These situations are, of course, totally beyond the control of Gnus.
@@ -1246,6 +1246,6 @@ you include, never runs full and never goes down.)  So Gnus saves these
 articles until some later time when the server feels better.
 
    The rejected articles will automatically be put in a special draft
-group (*note Drafts::.).  When the server comes back up again, you'd
-then typically enter that group and send all the articles off.
+group (*note Drafts::).  When the server comes back up again, you'd then
+typically enter that group and send all the articles off.
 

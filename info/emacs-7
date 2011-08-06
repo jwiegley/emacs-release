@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -78,8 +77,8 @@ File Names
    Most Emacs commands that operate on a file require you to specify the
 file name.  (Saving and reverting are exceptions; the buffer knows which
 file name to use for them.)  You enter the file name using the
-minibuffer (*note Minibuffer::.).  "Completion" is available, to make
-it easier to specify long file names.  *Note Completion::.
+minibuffer (*note Minibuffer::).  "Completion" is available, to make it
+easier to specify long file names.  *Note Completion::.
 
    For most operations, there is a "default file name" which is used if
 you type just <RET> to enter an empty argument.  Normally the default
@@ -111,9 +110,9 @@ of the buffer that was current at the time.
 
    The default directory actually appears in the minibuffer when the
 minibuffer becomes active to read a file name.  This serves two
-purposes: it *shows* you what the default is, so that you can type a
+purposes: it _shows_ you what the default is, so that you can type a
 relative file name and know with certainty what it will mean, and it
-allows you to *edit* the default to specify a different directory.
+allows you to _edit_ the default to specify a different directory.
 This insertion of the default directory is inhibited if the variable
 `insert-default-directory' is set to `nil'.
 
@@ -138,7 +137,7 @@ environment variables affect Emacs only if done before Emacs is started.
    To access a file with `$' in its name, type `$$'.  This pair is
 converted to a single `$' at the same time as variable substitution is
 performed for single `$'.  Alternatively, quote the whole file name
-with `/:' (*note Quoted File Names::.).
+with `/:' (*note Quoted File Names::).
 
    The Lisp function that performs the substitution is called
 `substitute-in-file-name'.  The substitution is performed only on file
@@ -206,10 +205,9 @@ modified.
 the command with the name of the file you wish to visit, terminated by a
 <RET>.
 
-   The file name is read using the minibuffer (*note Minibuffer::.),
-with defaulting and completion in the standard manner (*note File
-Names::.).  While in the minibuffer, you can abort `C-x C-f' by typing
-`C-g'.
+   The file name is read using the minibuffer (*note Minibuffer::), with
+defaulting and completion in the standard manner (*note File Names::).
+While in the minibuffer, you can abort `C-x C-f' by typing `C-g'.
 
    Your confirmation that `C-x C-f' has completed successfully is the
 appearance of new text on the screen and a new buffer name in the mode
@@ -234,15 +232,15 @@ carriage-return linefeed (used on Microsoft systems), or just
 carriage-return (used on the Macintosh)--and automatically converts the
 contents to the normal Emacs convention, which is that the newline
 character separates lines.  This is a part of the general feature of
-coding system conversion (*note Coding Systems::.), and makes it
-possible to edit files imported from various different operating
-systems with equal convenience.  If you change the text and save the
-file, Emacs performs the inverse conversion, changing newlines back into
+coding system conversion (*note Coding Systems::), and makes it possible
+to edit files imported from various different operating systems with
+equal convenience.  If you change the text and save the file, Emacs
+performs the inverse conversion, changing newlines back into
 carriage-return linefeed or just carriage-return if appropriate.
 
    If the file you specify is actually a directory, `C-x C-f' invokes
 Dired, the Emacs directory browser, so that you can "edit" the contents
-of the directory (*note Dired::.).  Dired is a convenient way to delete,
+of the directory (*note Dired::).  Dired is a convenient way to delete,
 look at, or operate on the files in the directory.  However, if the
 variable `find-file-run-dired' is `nil', then it is an error to try to
 visit a directory.
@@ -289,9 +287,9 @@ This feature is available only when you are using a window system.
    If you wish to edit a file as a sequence of characters with no
 special encoding or conversion, use the `M-x find-file-literally'
 command.  It visits a file, like `C-x C-f', but does not do format
-conversion (*note Formatted Text::.), character code conversion (*note
-Coding Systems::.), or automatic uncompression (*note Compressed
-Files::.).  If you already have visited the same file in the usual
+conversion (*note Formatted Text::), character code conversion (*note
+Coding Systems::), or automatic uncompression (*note Compressed
+Files::).  If you already have visited the same file in the usual
 (non-literal) manner, this command asks you whether to visit it
 literally instead.
 
@@ -303,13 +301,13 @@ of them returns non-`nil'.  Any visiting of a file, whether extant or
 not, expects `find-file-hooks' to contain a list of functions and calls
 them all, one by one.  In both cases the functions receive no
 arguments.  Of these two variables, `find-file-not-found-hooks' takes
-effect first.  These variables are *not* normal hooks, and their names
+effect first.  These variables are _not_ normal hooks, and their names
 end in `-hooks' rather than `-hook' to indicate that fact.  *Note
 Hooks::.
 
    There are several ways to specify automatically the major mode for
-editing the file (*note Choosing Modes::.), and to specify local
-variables defined for that file (*note File Variables::.).
+editing the file (*note Choosing Modes::), and to specify local
+variables defined for that file (*note File Variables::).
 
 
 File: emacs,  Node: Saving,  Next: Reverting,  Prev: Visiting,  Up: Files
@@ -402,7 +400,7 @@ buffer name correspondingly (as long as the new name is not in use).
 `set-visited-file-name' does not save the buffer in the newly visited
 file; it just alters the records inside Emacs in case you do save
 later.  It also marks the buffer as "modified" so that `C-x C-s' in
-that buffer *will* save.
+that buffer _will_ save.
 
    If you wish to mark the buffer as visiting a different file and save
 it right away, use `C-x C-w' (`write-file').  It is precisely
@@ -450,7 +448,7 @@ to make backup files.  On most operating systems, its default value is
 `t', so that Emacs does write backup files.
 
    For files managed by a version control system (*note Version
-Control::.), the variable `vc-make-backup-files' determines whether to
+Control::), the variable `vc-make-backup-files' determines whether to
 make backup files.  By default, it is `nil', since backup files are
 redundant when you store all the previous versions in a version control
 system.  *Note VC Workfile Handling::.
@@ -584,7 +582,7 @@ owner always shows who last edited the file.  Also, the owners of the
 backups show who produced those versions.  Occasionally there is a file
 whose owner should not change; it is a good idea for such files to
 contain local variable lists to set `backup-by-copying-when-mismatch'
-locally (*note File Variables::.).
+locally (*note File Variables::).
 
    The choice of renaming or copying is controlled by three variables.
 Renaming is the default choice.  If the variable `backup-by-copying' is
@@ -598,7 +596,7 @@ renaming would cause the file's owner or group to change.
 as the superuser.
 
    When a file is managed with a version control system (*note Version
-Control::.), Emacs does not normally make backups in the usual way for
+Control::), Emacs does not normally make backups in the usual way for
 that file.  But check-in and check-out are similar in some ways to
 making backups.  One unfortunate similarity is that these operations
 typically break hard links, disconnecting the file name you visited from
@@ -680,7 +678,7 @@ and investigate the situation.
 
    The first thing you should do when notified that simultaneous editing
 has already taken place is to list the directory with `C-u C-x C-d'
-(*note Directories::.).  This shows the file's current author.  You
+(*note Directories::).  This shows the file's current author.  You
 should attempt to contact him to warn him not to continue editing.
 Often the next step is to save the contents of your Emacs buffer under a
 different name, and use `diff' to compare the two files.
@@ -802,7 +800,7 @@ Controlling Auto-Saving
 
    Each time you visit a file, auto-saving is turned on for that file's
 buffer if the variable `auto-save-default' is non-`nil' (but not in
-batch mode; *note Entering Emacs::.).  The default for this variable is
+batch mode; *note Entering Emacs::).  The default for this variable is
 `t', so auto-saving is the usual practice for file-visiting buffers.
 Auto-saving can be turned on or off for any existing buffer with the
 command `M-x auto-save-mode'.  Like other minor mode commands, `M-x
@@ -1033,7 +1031,7 @@ permitted; check-in is still the way to record a new version.
    CVS normally allows each user to modify his own copy of the work file
 at any time, but requires merging with changes from other users at
 check-in time.  However, CVS can also be set up to require locking.
-(*note Backend Options::.).
+(*note Backend Options::).
 
 
 File: emacs,  Node: VC Mode Line,  Next: Basic VC Editing,  Prev: Introduction to VC,  Up: Version Control

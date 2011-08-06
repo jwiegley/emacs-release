@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -41,7 +40,7 @@ The Emacs Editor
 
    Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
-some of how to customize it; it corresponds to GNU Emacs version 20.4.
+some of how to customize it; it corresponds to GNU Emacs version 20.5.
 For information on extending Emacs, see *Note Emacs Lisp: (elisp).
 
 * Menu:
@@ -83,7 +82,7 @@ Fundamental Editing Commands
 * Help::	        Commands for asking Emacs about its commands.
 
 Important Text-Changing Commands
-* Mark::	        The mark: how to delimit a "region" of text.
+* Mark::	        The mark: how to delimit a ``region'' of text.
 * Killing::	        Killing text.
 * Yanking::	        Recovering killed text.  Moving text.
 * Accumulating Text::   Other ways of copying text.
@@ -112,7 +111,7 @@ Advanced Features
 			  using the quarter-plane screen model.
 * Sending Mail::        Sending mail in Emacs.
 * Rmail::	        Reading mail in Emacs.
-* Dired::	        You can "edit" a directory to manage files in it.
+* Dired::	        You can ``edit'' a directory to manage files in it.
 * Calendar/Diary::      The calendar and diary facilities.
 * Gnus::	        How to read netnews with Emacs.
 * Shell::	        Executing shell commands from Emacs.
@@ -148,7 +147,7 @@ Recovery from Problems
 Here are some other nodes which are really inferiors of the ones
 already listed, mentioned here so you can get to them in one step:
 
- -- The Detailed Node Listing --
+ --- The Detailed Node Listing ---
 
 The Organization of the Screen
 
@@ -192,7 +191,7 @@ Help
 The Mark and the Region
 
 * Setting Mark::	Commands to set the mark.
-* Transient Mark::	How to make Emacs highlight the region-
+* Transient Mark::	How to make Emacs highlight the region--
 			  when there is one.
 * Using Region::	Summary of ways to operate on contents of the region.
 * Marking Objects::	Commands to put region around textual units.
@@ -624,7 +623,7 @@ Customizing Key Bindings
 * Rebinding::           How to redefine one key's meaning conveniently.
 * Init Rebinding::      Rebinding keys with your init file, `.emacs'.
 * Function Keys::       Rebinding terminal function keys.
-* Named ASCII Chars::   Distinguishing <TAB> from `C-i', and so on.
+* Named ASCII Chars::   Distinguishing <TAB> from C-i, and so on.
 * Mouse Buttons::       Rebinding mouse buttons in Emacs.
 * Disabling::           Disabling a command means confirmation is required
                           before it can be executed.  This is done to protect
@@ -645,7 +644,7 @@ Dealing with Emacs Trouble
 * Text Garbled::        Garbage in the text.
 * Unasked-for Search::  Spontaneous entry to incremental search.
 * Memory Full::         How to cope when you run out of memory.
-* Emergency Escape::    Emergency escape--
+* Emergency Escape::    Emergency escape---
                           What to do if Emacs stops responding.
 * Total Frustration::   When you are at your wits' end.
 
@@ -727,7 +726,7 @@ Foundation on CD-ROM.  This is a convenient and reliable way to get a
 copy; it is also a good way to help fund our work.  (The Foundation has
 always received most of its funds in this way.)  An order form is
 included in the file `etc/ORDERS' in the Emacs distribution, and on our
-web site in `http://www.gnu.org/order/order.html'.  For further
+web site in <http://www.gnu.org/order/order.html>.  For further
 information, write to
 
      Free Software Foundation

@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -186,7 +185,7 @@ with `C-c C-c':
 
 `x c'
      Combine the two versions of this difference (*note Combining in
-     Emerge::.).
+     Emerge::).
 
 `x f'
      Show the names of the files/buffers Emerge is operating on, in a
@@ -232,7 +231,7 @@ File: emacs,  Node: Combining in Emerge,  Next: Fine Points of Emerge,  Prev: Ex
 Combining the Two Versions
 --------------------------
 
-   Sometimes you want to keep *both* alternatives for a particular
+   Sometimes you want to keep _both_ alternatives for a particular
 difference.  To do this, use `x c', which edits the merge buffer like
 this:
 
@@ -272,7 +271,7 @@ the background when the input files are large--then you could keep on
 doing other things with Emacs until Emerge is ready to accept commands.
 
    After setting up the merge, Emerge runs the hook
-`emerge-startup-hook' (*note Hooks::.).
+`emerge-startup-hook' (*note Hooks::).
 
 
 File: emacs,  Node: C Modes,  Next: Fortran,  Prev: Emerge,  Up: Programs
@@ -418,7 +417,7 @@ auto-newline feature is enabled.  This feature makes auto-newline more
 acceptable, by deleting the newlines in the most common cases where you
 do not want them.  Emacs can recognize several cases in which deleting a
 newline might be desirable; by setting the variable `c-cleanup-list',
-you can specify *which* of these cases that should happen.  The
+you can specify _which_ of these cases that should happen.  The
 variable's value is a list of symbols, each describing one case for
 possible deletion of a newline.  Here are the meaningful symbols, and
 their meanings:
@@ -586,7 +585,7 @@ are unlike those of other languages.  Built-in abbrevs optionally save
 typing when you insert Fortran keywords.
 
    Use `M-x fortran-mode' to switch to this major mode.  This command
-runs the hook `fortran-mode-hook' (*note Hooks::.).
+runs the hook `fortran-mode-hook' (*note Hooks::).
 
 * Menu:
 
@@ -849,7 +848,7 @@ standard Emacs comment commands and defines some new variables.
 comments start with `!' and can follow other text.  Because only some
 Fortran compilers accept this syntax, Fortran mode will not insert such
 comments unless you have said in advance to do so.  To do this, set the
-variable `comment-start' to `"!"' (*note Variables::.).
+variable `comment-start' to `"!"' (*note Variables::).
 
 `M-;'
      Align comment or insert new comment (`fortran-comment-indent').
@@ -931,13 +930,13 @@ Fortran Auto Fill Mode
    Fortran Auto Fill mode is a minor mode which automatically splits
 Fortran statements as you insert them when they become too wide.
 Splitting a statement involves making continuation lines using
-`fortran-continuation-string' (*note ForIndent Cont::.).  This
-splitting happens when you type <SPC>, <RET>, or <TAB>, and also in the
-Fortran indentation commands.
+`fortran-continuation-string' (*note ForIndent Cont::).  This splitting
+happens when you type <SPC>, <RET>, or <TAB>, and also in the Fortran
+indentation commands.
 
    `M-x fortran-auto-fill-mode' turns Fortran Auto Fill mode on if it
 was off, or off if it was on.  This command works the same as `M-x
-auto-fill-mode' does for normal Auto Fill mode (*note Filling::.).  A
+auto-fill-mode' does for normal Auto Fill mode (*note Filling::).  A
 positive numeric argument turns Fortran Auto Fill mode on, and a
 negative argument turns it off.  You can see when Fortran Auto Fill mode
 is in effect by the presence of the word `Fill' in the mode line,
@@ -1126,7 +1125,7 @@ command line is used again.  For the first `M-x compile', the default is
 `make -k'.  The default compilation command comes from the variable
 `compile-command'; if the appropriate compilation command for a file is
 something other than `make -k', it can be useful for the file to
-specify a local value for `compile-command' (*note File Variables::.).
+specify a local value for `compile-command' (*note File Variables::).
 
    Starting a compilation displays the buffer `*compilation*' in
 another window but does not select it.  The buffer's mode line tells you
@@ -1174,7 +1173,7 @@ names, which may use wildcards.  The output from `grep' goes in the
 files using `C-x `' and <RET>, as with compilation errors.
 
    If you specify a prefix argument for `M-x grep', it figures out the
-tag (*note Tags::.) around point, and puts that into the default `grep'
+tag (*note Tags::) around point, and puts that into the default `grep'
 command.
 
    The command `M-x grep-find' is similar to `M-x grep', but it
@@ -1237,8 +1236,8 @@ compilation-minor-mode' to enable the minor mode.  This defines the keys
 
    Compilation minor mode works in any buffer, as long as the contents
 are in a format that it understands.  In an Rlogin buffer (*note Remote
-Host::.), Compilation minor mode automatically accesses remote source
-files by FTP (*note File Names::.).
+Host::), Compilation minor mode automatically accesses remote source
+files by FTP (*note File Names::).
 
 
 File: emacs,  Node: Compilation Shell,  Next: Debuggers,  Prev: Compilation Mode,  Up: Building

@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -79,7 +78,7 @@ corresponding to a particular debugger program.
 
      Some versions of SDB do not mention source file names in their
      messages.  When you use them, you need to have a valid tags table
-     (*note Tags::.) in order for GUD to find functions in the source
+     (*note Tags::) in order for GUD to find functions in the source
      code.  If you have not visited a tags table or the tags table
      doesn't list one of the functions, you get a message saying `The
      sdb support requires a valid tags table to work'.  If this
@@ -139,7 +138,7 @@ Commands of GUD
 ---------------
 
    The GUD interaction buffer uses a variant of Shell mode, so the
-commands of Shell mode are available (*note Shell Mode::.).  GUD mode
+commands of Shell mode are available (*note Shell Mode::).  GUD mode
 also provides commands for setting and clearing breakpoints, for
 selecting stack frames, and for stepping through the program.  These
 commands are available both in the GUD buffer and globally, but with
@@ -311,7 +310,7 @@ Lisp mode
 Inferior Lisp mode
      The mode for an interactive session with an inferior Lisp process.
      This mode combines the special features of Lisp mode and Shell mode
-     (*note Shell Mode::.).
+     (*note Shell Mode::).
 
 Scheme mode
      Like Lisp mode but for Scheme programs.
@@ -331,7 +330,7 @@ Libraries of Lisp Code for Emacs
 
    Lisp code for Emacs editing commands is stored in files whose names
 conventionally end in `.el'.  This ending tells Emacs to edit them in
-Emacs-Lisp mode (*note Executing Lisp::.).
+Emacs-Lisp mode (*note Executing Lisp::).
 
    To execute a file of Emacs Lisp code, use `M-x load-file'.  This
 command reads a file name using the minibuffer and then executes the
@@ -485,7 +484,7 @@ buffer in Lisp Interaction mode.
 
    An alternative way of evaluating Emacs Lisp expressions interactively
 is to use Inferior Emacs-Lisp mode, which provides an interface rather
-like Shell mode (*note Shell Mode::.) for evaluating Emacs Lisp
+like Shell mode (*note Shell Mode::) for evaluating Emacs Lisp
 expressions.  Type `M-x ielm' to create an `*ielm*' buffer which uses
 this mode.
 
@@ -512,7 +511,7 @@ Lisp executable file by setting the variable `inferior-lisp-program'.)
    To give input to Lisp, go to the end of the buffer and type the
 input, terminated by <RET>.  The `*lisp*' buffer is in Inferior Lisp
 mode, which combines the special characteristics of Lisp mode with most
-of the features of Shell mode (*note Shell Mode::.).  The definition of
+of the features of Shell mode (*note Shell Mode::).  The definition of
 <RET> to send a line to a subprocess is one of the features of Shell
 mode.
 
@@ -710,7 +709,7 @@ than its expansion, you can accomplish this by inserting the following
 punctuation with `C-q'.  Thus, `foo C-q ,' leaves `foo,' in the buffer.
 
    If you expand an abbrev by mistake, you can undo the expansion and
-bring back the abbrev itself by typing `C-_' to undo (*note Undo::.).
+bring back the abbrev itself by typing `C-_' to undo (*note Undo::).
 This also undoes the insertion of the non-word character that expanded
 the abbrev.  If the result you want is the terminating non-word
 character plus the unexpanded abbrev, you must reinsert the terminating
@@ -727,7 +726,7 @@ replacements at once.  This command is effective even if Abbrev mode is
 not enabled.
 
    Expanding an abbrev runs the hook `pre-abbrev-expand-hook' (*note
-Hooks::.).
+Hooks::).
 
 
 File: emacs,  Node: Editing Abbrevs,  Next: Saving Abbrevs,  Prev: Expanding Abbrevs,  Up: Abbrevs
@@ -897,8 +896,8 @@ the value of `dabbrev-case-fold-search' is `case-fold-search', which is
 true by default, then the variable `case-fold-search' controls whether
 to ignore case while searching for expansions.
 
-   Normally, dynamic abbrev expansion preserves the case pattern *of
-the abbrev you have typed*, by converting the expansion to that case
+   Normally, dynamic abbrev expansion preserves the case pattern _of
+the abbrev you have typed_, by converting the expansion to that case
 pattern.
 
    The variable `dabbrev-case-replace' controls whether to preserve the
@@ -971,7 +970,7 @@ column" and so on, but all the picture mode commands handle numeric
 arguments as their normal equivalents do.
 
    Turning on Picture mode runs the hook `picture-mode-hook' (*note
-Hooks::.).
+Hooks::).
 
 * Menu:
 
@@ -1002,7 +1001,7 @@ on the line.  There is no need to change `C-a', as the choice of screen
 model does not affect beginnings of lines.
 
    Insertion of text is adapted to the quarter-plane screen model
-through the use of Overwrite mode (*note Minor Modes::.).
+through the use of Overwrite mode (*note Minor Modes::).
 Self-inserting characters replace existing text, column by column,
 rather than pushing existing text to the right.  <RET> runs
 `picture-newline', which just moves to the beginning of the following
@@ -1025,7 +1024,7 @@ below the current line another line with the same contents.
 
    To do actual deletion in Picture mode, use `C-w', `C-c C-d' (which
 is defined as `delete-char', as `C-d' is in other modes), or one of the
-picture rectangle commands (*note Rectangles in Picture::.).
+picture rectangle commands (*note Rectangles in Picture::).
 
 
 File: emacs,  Node: Insert in Picture,  Next: Tabs in Picture,  Prev: Basic Picture,  Up: Picture
@@ -1117,7 +1116,7 @@ Picture Mode Rectangle Commands
 
    Picture mode defines commands for working on rectangular pieces of
 the text in ways that fit with the quarter-plane model.  The standard
-rectangle commands may also be useful (*note Rectangles::.).
+rectangle commands may also be useful (*note Rectangles::).
 
 `C-c C-k'
      Clear out the region-rectangle with spaces

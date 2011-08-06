@@ -1,6 +1,6 @@
 ;;; timezone.el --- time zone package for GNU Emacs
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1990, 1991, 1992, 1993, 1996, 1999 Free Software Foundation, Inc.
 
 ;; Author: Masanobu Umeda
 ;; Maintainer: umerin@mse.kyutech.ac.jp
@@ -200,12 +200,15 @@ Understands the following styles:
 	(progn
 	  (setq year
 		(substring date (match-beginning year) (match-end year)))
-	  ;; It is now Dec 1992.  8 years before the end of the World.
-	  (if (= (length year) 1)
-	      (setq year (concat "190" (substring year -1 nil)))
-	    (if (< (length year) 4)
-		(setq year (concat "19" (substring year -2 nil)))))
-          (setq month
+	  ;; Guess ambiguous years.  Assume years < 69 don't predate the
+	  ;; Unix Epoch, so are 2000+.  Three-digit years -- do they ever
+	  ;; occur? -- are (arbitrarily) assumed to be 21st century.
+	  (if (< (length year) 4)
+	      (let ((y (string-to-int year)))
+		(if (< y 69)
+		    (setq y (+ y 100)))
+		(setq year (int-to-string (+ 1900 y)))))
+      (setq month
 		(if (= (aref date (+ (match-beginning month) 2)) ?-)
 		    ;; Handle numeric months, spanning exactly two digits.
 		    (substring date

@@ -1,5 +1,5 @@
-This is Info file ../info/ccmode, produced by Makeinfo version 1.68
-from the input file cc-mode.texi.
+This is ../info/ccmode, produced by makeinfo version 4.0 from
+cc-mode.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -48,17 +48,18 @@ you're looking for.  These include:
      by doing `setq''s at the top level of your `.emacs' file, these
      settings will be captured in the `user' style.  Also, all other
      styles implicitly inherit their settings from `user' style.  This
-     means that for any styles you add via `c-add-style' (*Note Adding
+     means that for any styles you add via `c-add-style' (*note Adding
      Styles::) you need only define the differences between your new
      style and `user' style.
 
-     Note however that `user' style is *not* the default style.  `gnu'
+     Note however that `user' style is _not_ the default style.  `gnu'
      is the default style for all newly created buffers, but you can
      change this by setting variable `c-default-style'.  Be careful if
      you customize CC Mode as described above; since your changes will
      be captured in the `user' style, you will also have to change
      `c-default-style' to "user" to see the effect of your
      customizations.
+
 
    If you'd like to experiment with these built-in styles you can simply
 type the following in a CC Mode buffer:
@@ -68,7 +69,7 @@ type the following in a CC Mode buffer:
 `C-c .' runs the command `c-set-style'.  Note that all style names are
 case insensitive, even the ones you define.
 
-   Setting a style in this way does *not* automatically re-indent your
+   Setting a style in this way does _not_ automatically re-indent your
 file.  For commands that you can use to view the effect of your changes,
 see *Note Commands::.
 
@@ -314,6 +315,7 @@ used by the default styles.
      indentation of the current line.  Think of it as an identity
      function for lineups; it is used for `cpp-macro-cont' lines.
 
+
    ---------- Footnotes ----------
 
    (1) It probably makes more sense to add this to `c++-mode-hook' than
@@ -416,6 +418,7 @@ zero arguments, and is expected to return one of the following values:
 
    * `nil' -- No determination is made, and the next function in the
      list is called.
+
 
    If every function in the list is called without a determination being
 made, then no newline is added. The default value for this variable is a
@@ -713,7 +716,7 @@ line 6 is given both `inclass' and `topmost-intro' syntax:
      `((inclass . 58) (topmost-intro . 60))'
 
    Line 7 introduces a C++ member initialization list and as such is
-given `member-init-intro' syntax.  Note that in this case it is *not*
+given `member-init-intro' syntax.  Note that in this case it is _not_
 assigned `inclass' since this is not considered a top-level construct.
 Lines 8 through 10 are all assigned `member-init-cont' since they
 continue the member initialization list started on line 7.
@@ -918,7 +921,7 @@ closes the argument list.
 syntactic symbols.  For example, Lines 2 and 17 are assigned
 `arglist-cont-nonempty' syntax.  What this means is that they continue
 an argument list, but that the line containing the parenthesis that
-opens the list is *not empty* following the open parenthesis.  Contrast
+opens the list is _not empty_ following the open parenthesis.  Contrast
 this against lines 6 and 13 which are assigned `arglist-cont' syntax.
 This is because the parenthesis that opens their argument lists is the
 last character on that line.
@@ -954,7 +957,7 @@ covered are illustrated by this C++ example:
 
    * line 2, assigned the `func-decl-cont' syntax;
 
-   * line 4, assigned both `defun-block-intro' *and* `comment-intro'
+   * line 4, assigned both `defun-block-intro' _and_ `comment-intro'
      syntax;
 
    * line 5, assigned `c' syntax;
@@ -974,6 +977,7 @@ covered are illustrated by this C++ example:
    * lines 12 and 14, assigned `cpp-macro' syntax.
 
    * line 17, assigned `stream-op' syntax.
+
 
    Multi-line C preprocessor macros are now (somewhat) supported.  At
 least CC Mode now recognizes the fact that it is inside a multi-line
@@ -1122,24 +1126,27 @@ File: ccmode,  Node: Frequently Asked Questions,  Next: Getting the latest CC Mo
 Frequently Asked Questions
 **************************
 
-     *Q.* *How do I re-indent the whole file?*
+     *Q.* _How do I re-indent the whole file?_
 
      *A.* Visit the file and hit `C-x h' to mark the whole buffer. Then
      hit `ESC C-\'.
 
-     *Q.* *How do I re-indent the entire function?  `ESC C-x' doesn't
-     work.*
+
+     *Q.* _How do I re-indent the entire function?  `ESC C-x' doesn't
+     work._
 
      *A.* `ESC C-x' is reserved for future Emacs use.  To re-indent the
      entire function hit `C-c C-q'.
 
-     *Q.* *How do I re-indent the current block?*
+
+     *Q.* _How do I re-indent the current block?_
 
      *A.* First move to the brace which opens the block with `ESC C-u',
      then re-indent that expression with `ESC C-q'.
 
-     *Q.* *Why doesn't the `RET' key indent the line to where the new
-     text should go after inserting the newline?*
+
+     *Q.* _Why doesn't the `RET' key indent the line to where the new
+     text should go after inserting the newline?_
 
      *A.* Emacs' convention is that `RET' just adds a newline, and that
      `C-j' adds a newline and indents it.  You can make `RET' do this
@@ -1151,9 +1158,10 @@ Frequently Asked Questions
      This is a very common question.  If you want this to be the default
      behavior, don't lobby me, lobby RMS!  `:-)'
 
-     *Q.* *I put `(c-set-offset 'substatement-open 0)' in my `.emacs'
+
+     *Q.* _I put `(c-set-offset 'substatement-open 0)' in my `.emacs'
      file but I get an error saying that `c-set-offset''s function
-     definition is void.*
+     definition is void._
 
      *A.* This means that CC Mode wasn't loaded into your Emacs session
      by the time the `c-set-offset' call was reached, mostly likely
@@ -1167,15 +1175,17 @@ Frequently Asked Questions
      See the sample `.emacs' file *Note Sample .emacs File:: for
      details.
 
-     *Q.* *How do I make strings, comments, keywords, and other
-     constructs appear in different colors, or in bold face, etc.?*
+
+     *Q.* _How do I make strings, comments, keywords, and other
+     constructs appear in different colors, or in bold face, etc.?_
 
      *A.* "Syntax Colorization" is a standard Emacs feature, controlled
      by `font-lock-mode'.  It is not part of CC Mode.
 
-     *Q.* *`M-a' and `M-e' used to move over entire balanced brace
+
+     *Q.* _`M-a' and `M-e' used to move over entire balanced brace
      lists, but now they move into blocks.  How do I get the old
-     behavior back?*
+     behavior back?_
 
      *A.* Use `C-M-f' and `C-M-b' to move over balanced brace blocks.
      Use `M-a' and `M-e' to move by statements, which will move into

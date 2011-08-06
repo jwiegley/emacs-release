@@ -1,5 +1,5 @@
-This is Info file ../info/ccmode, produced by Makeinfo version 1.68
-from the input file cc-mode.texi.
+This is ../info/ccmode, produced by makeinfo version 4.0 from
+cc-mode.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -51,7 +51,7 @@ controlling indentation has been developed.
 Objective-C, Java and CORBA's Interface Definition Language files.  In
 this way, you can easily set up consistent coding styles for use in
 editing all C, C++, Objective-C, Java and IDL programs. CC Mode does
-*not* handle font-locking (a.k.a. syntax coloring, keyword
+_not_ handle font-locking (a.k.a. syntax coloring, keyword
 highlighting) or anything of that nature, for any of these modes.
 Font-locking is handled by other Emacs packages.
 
@@ -62,6 +62,7 @@ Font-locking is handled by other Emacs packages.
    * How the new indentation engine works.
 
    * How to customize the new indentation engine.
+
 
    Note that the name of this package is "CC Mode", but there is no top
 level `cc-mode' entry point.  All of the variables, commands, and
@@ -103,7 +104,7 @@ older versions of Emacs or XEmacs.  See the CC Mode release notes Web
 pages for the latest information on Emacs version and package
 compatibility (see *Note Getting the latest CC Mode release::).
 
-   *Note that CC Mode no longer works with Emacs 18!*  The
+   _Note that CC Mode no longer works with Emacs 18!_  The
 `cc-mode-18.el' file is no longer distributed with CC Mode.  If you
 haven't upgraded from Emacs 18 by now, you are out of luck.
 
@@ -147,7 +148,7 @@ Syntactic Analysis
    The first thing CC Mode does when indenting a line of code, is to
 analyze the line, determining the "syntactic component list" of the
 construct on that line.  A syntactic component consists of a pair of
-information (in lisp parlance, a *cons cell*), where the first part is
+information (in lisp parlance, a _cons cell_), where the first part is
 a "syntactic symbol", and the second part is a "relative buffer
 position".  Syntactic symbols describe elements of C code (1), e.g.
 `statement', `substatement', `class-open', `class-close', etc.  *Note
@@ -202,7 +203,7 @@ Hitting `C-c C-s' on line 4 gives us:
 
      ((substatement-open . 46))
 
-which tells us that this is a brace that *opens* a substatement block.
+which tells us that this is a brace that _opens_ a substatement block.
 (4)
 
    Syntactic component lists can contain more than one component, and
@@ -398,6 +399,7 @@ the following conditions apply:
    * No numeric argument was supplied to the command (i.e. it was typed
      as normal, with no `C-u' prefix).
 
+
 * Menu:
 
 * Hanging Braces::
@@ -436,13 +438,13 @@ are: `class-open', `class-close', `defun-open', `defun-close',
 `brace-list-intro', `brace-list-entry', `block-open', `block-close',
 `substatement-open', `statement-case-open', `extern-lang-open',
 `extern-lang-close', `namespace-open', and `namespace-close'.  *Note
-Syntactic Symbols:: for a more detailed description of these syntactic
+Syntactic Symbols::, for a more detailed description of these syntactic
 symbols.
 
    The value associated with each syntactic symbol in this association
 list is called an ACTION which can be either a function or a list.
-*Note Custom Brace and Colon Hanging:: for a more detailed discussion of
-using a function as a brace hanging ACTION.
+*Note Custom Brace and Colon Hanging::, for a more detailed discussion
+of using a function as a brace hanging ACTION.
 
    When the ACTION is a list, it can contain any combination of the
 symbols `before' and `after', directing CC Mode where to put newlines
@@ -480,7 +482,7 @@ using a function as an ACTION.
 introducing braces, such as `class-open' or `defun-open'.  Emacs makes
 an assumption that such braces will always appear in column zero,
 hanging such braces can introduce performance problems.  *Note
-Performance Issues:: for more information.
+Performance Issues::, for more information.
 
 
 File: ccmode,  Node: Hanging Colons,  Next: Hanging Semi-colons and commas,  Prev: Hanging Braces,  Up: Auto-newline insertion
@@ -499,7 +501,7 @@ also *Note Custom Brace and Colon Hanging:: for details.
    In C++, double-colons are used as a scope operator but because these
 colons always appear right next to each other, newlines before and after
 them are controlled by a different mechanism, called "clean-ups" in CC
-Mode.  *Note Clean-ups:: for details.
+Mode.  *Note Clean-ups::, for details.
 
 
 File: ccmode,  Node: Hanging Semi-colons and commas,  Next: Other electric commands,  Prev: Hanging Colons,  Up: Auto-newline insertion
@@ -511,7 +513,7 @@ Hanging Semi-colons and commas
 characters do not correspond directly to syntactic symbols, a different
 mechanism is used to determine whether newlines should be automatically
 inserted after these characters.  *Note Customizing Semi-colons and
-Commas:: for details.
+Commas::, for details.
 
 
 File: ccmode,  Node: Other electric commands,  Next: Clean-ups,  Prev: Hanging Semi-colons and commas,  Up: Auto-newline insertion
@@ -658,6 +660,7 @@ clean up, as indicated by these symbols:
      `scope-operator' in the `c-cleanup-list' when you are editing C++
      code.
 
+
    ---------- Footnotes ----------
 
    (1) Certain C++ constructs introduce ambiguous situations, so
@@ -765,7 +768,7 @@ Indentation Commands
    Various commands are provided which allow you to conveniently
 re-indent C constructs.  There are several things to note about these
 indentation commands.  First, when you change your programming style,
-either interactively or through some other means, your file does *not*
+either interactively or through some other means, your file does _not_
 automatically get re-indented.  When you change style parameters, you
 will typically need to reformat the line, expression, or buffer to see
 the effects of your changes.
@@ -788,14 +791,14 @@ completed.
 
    Also, except as noted below, re-indentation is always driven by the
 same mechanisms that control on-the-fly indentation of code.  *Note New
-Indentation Engine:: for details.
+Indentation Engine::, for details.
 
    To indent a single line of code, use `TAB' (`c-indent-command').
 The behavior of this command is controlled by the variable
 `c-tab-always-indent'.  When this variable is `t', `TAB' always just
 indents the current line.  When `nil', the line is indented only if
 point is at the left margin, or on or before the first non-whitespace
-character on the line, otherwise *something else happens*(2).  If the
+character on the line, otherwise _something else happens_(2).  If the
 value of `c-tab-always-indent' is something other than `t' or `nil'
 (e.g. `'other'), then a real tab character(3)  is inserted only when
 point is inside a literal (see *Note Auto-newline insertion::),
@@ -824,7 +827,7 @@ function or class definition as the current region.
    (1) In particular, I have had people complain about the speed with
 which `lex(1)' output is re-indented.  Lex, yacc, and other code
 generators usually output some pretty perversely formatted code.
-*Don't* try to indent this stuff!
+_Don't_ try to indent this stuff!
 
    (2) Actually what happens is that the function stored in
 `c-insert-tab-function' is called.  Normally this just inserts a real
@@ -988,10 +991,10 @@ should never modify this variable directly though.  Use the function
 indentations.  You simply need to decide what additional offset you want
 to add for every syntactic symbol.  You can use the command `C-c C-o'
 (`c-set-offset') as the way to set offsets, both interactively and from
-your mode hook.  Also, you can set up *styles* of indentatio.  Most
+your mode hook.  Also, you can set up _styles_ of indentatio.  Most
 likely, you'll find one of the pre-defined styles will suit your needs,
 but if not, this section will describe how to set up basic editing
-configurations.  *Note Styles:: for an explanation of how to set up
+configurations.  *Note Styles::, for an explanation of how to set up
 named styles.
 
    As mentioned previously, the variable `c-offsets-alist' is an
@@ -1186,9 +1189,10 @@ one general hook and one package initialization hook:
    * `c-initialization-hook' -- hook run only once per Emacs session,
      when CC Mode is initialized.
 
+
    The language hooks get run as the last thing when you enter that
 language mode.  The `c-mode-common-hook' is run by all supported modes
-*before* the language specific hook, and thus can contain
+_before_ the language specific hook, and thus can contain
 customizations that are common across all languages.  Most of the
 examples in this section will assume you are using the common hook(1).
 
@@ -1196,7 +1200,7 @@ examples in this section will assume you are using the common hook(1).
 file to make the changes described in the previous section (*Note
 Interactive Customization::) more permanent.  See the Emacs manuals for
 more information on customizing Emacs via hooks.  *Note Sample .emacs
-File:: for a more complete sample `.emacs' file.
+File::, for a more complete sample `.emacs' file.
 
      (defun my-c-mode-common-hook ()
        ;; my customizations for all of c-mode and related modes
@@ -1206,13 +1210,13 @@ File:: for a more complete sample `.emacs' file.
      (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
 
    For complex customizations, you will probably want to set up a
-*style* that groups all your customizations under a single name.
+_style_ that groups all your customizations under a single name.
 
    ---------- Footnotes ----------
 
    (1) The interaction between `java-mode' and the hook variables is
 slightly different than for the other modes.  `java-mode' sets the
-style (see *Note Styles::) of the buffer to `java' *before* running the
+style (see *Note Styles::) of the buffer to `java' _before_ running the
 `c-mode-common-hook' or `java-mode-hook'.  You need to be aware of this
 so that style settings in `c-mode-common-hook' don't clobber your Java
 style.

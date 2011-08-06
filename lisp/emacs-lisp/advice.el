@@ -2473,12 +2473,13 @@ will clear the cache."
 ;; hence we need this list (which is probably out of date):
 (defvar ad-special-forms
   (mapcar 'symbol-function
-	  '(and catch cond condition-case defconst defmacro
-		defun defvar function if interactive let let*
-		or prog1 prog2 progn quote save-current-buffer
-		save-excursion save-restriction save-window-excursion
-		setq setq-default track-mouse unwind-protect while
-		with-output-to-temp-buffer)))
+	  (append '(and catch cond condition-case defconst defmacro
+			defun defvar function if interactive let let*
+			or prog1 prog2 progn quote save-current-buffer
+			save-excursion save-restriction save-window-excursion
+			setq setq-default unwind-protect while
+			with-output-to-temp-buffer)
+		  (if (fboundp 'track-mouse) '(track-mouse)))))
 
 (defmacro ad-special-form-p (definition)
   ;;"non-nil if DEFINITION is a special form."

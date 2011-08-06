@@ -186,7 +186,7 @@ ADDPM		= ..\nt\$(BLD)\addpm.exe
 
 !if "$(ARCH)" == "i386"
 !if "$(BUILD_TYPE)" == "spd"
-ARCH_CFLAGS     = -nologo -D_X86_=1 -c -Zel -W2 -H63 -Oxsb2 -G6dF -Zi -Zp8
+ARCH_CFLAGS     = -nologo -D_X86_=1 -c -Zel -W2 -H63 -Oxsb2 -Oy- -G6dF -Zi -Zp8
 !else
 ARCH_CFLAGS     = -nologo -D_X86_=1 -c -Zel -W2 -H63 -Od -G3d -Zi -Zp8
 !endif

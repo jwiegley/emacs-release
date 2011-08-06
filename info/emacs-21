@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -194,7 +193,7 @@ region is inaccessible.  Point and mark do not change.
    Alternatively, use `C-x n p' (`narrow-to-page') to narrow down to
 the current page.  *Note Pages::, for the definition of a page.  `C-x n
 d' (`narrow-to-defun') narrows down to the defun containing point
-(*note Defuns::.).
+(*note Defuns::).
 
    The way to cancel narrowing is to widen with `C-x n w' (`widen').
 This makes all text in the buffer accessible again.
@@ -335,7 +334,7 @@ the same set of buffers, major modes, buffer positions, and so on that
 the previous Emacs session had.
 
    To use Desktop, you should use the Customization buffer (*note Easy
-Customization::.) to set `desktop-enable' to a non-`nil' value, or add
+Customization::) to set `desktop-enable' to a non-`nil' value, or add
 these lines at the end of your `.emacs' file:
 
      (desktop-load-default)
@@ -680,7 +679,7 @@ binary files; it treats newlines and tabs like other characters, so that
 they overwrite other characters and can be overwritten by them.
 
    The following minor modes normally apply to all buffers at once.
-Since each is enabled or disabled by the value of a variable, you *can*
+Since each is enabled or disabled by the value of a variable, you _can_
 set them differently for particular buffers, by explicitly making the
 corresponding variables local in those buffers.  *Note Locals::.
 
@@ -694,10 +693,9 @@ line number of point.  *Note Mode Line::.
    Resize-Minibuffer mode makes the minibuffer expand as necessary to
 hold the text that you put in it.  *Note Minibuffer Edit::.
 
-   Scroll Bar mode gives each window a scroll bar (*note Scroll
-Bars::.).  Menu Bar mode gives each frame a menu bar (*note Menu
-Bars::.).  Both of these modes are enabled by default when you use the
-X Window System.
+   Scroll Bar mode gives each window a scroll bar (*note Scroll Bars::).
+Menu Bar mode gives each frame a menu bar (*note Menu Bars::).  Both of
+these modes are enabled by default when you use the X Window System.
 
    In Transient Mark mode, every change in the buffer contents
 "deactivates" the mark, so that commands that operate on the region
@@ -740,7 +738,7 @@ variables that Emacs uses require a value of a certain type.  Often the
 value should always be a string, or should always be a number.
 Sometimes we say that a certain feature is turned on if a variable is
 "non-`nil'," meaning that if the variable's value is `nil', the feature
-is off, but the feature is on for *any* other value.  The conventional
+is off, but the feature is on for _any_ other value.  The conventional
 value to use to turn on the feature--since you have to pick one
 particular value when you set the variable--is `t'.
 
@@ -751,12 +749,12 @@ change the values of these variables; instead, you set the values, and
 thereby alter and control the behavior of certain Emacs commands.  These
 variables are called "user options".  Most user options are documented
 in this manual, and appear in the Variable Index (*note Variable
-Index::.).
+Index::).
 
    One example of a variable which is a user option is `fill-column',
 which specifies the position of the right margin (as a number of
 characters from the left margin) to be used by the fill commands (*note
-Filling::.).
+Filling::).
 
 * Menu:
 
@@ -876,7 +874,7 @@ it.  It looks like this, in part:
 
 This says that the buffer displays the contents of the `Emacs' group.
 The other groups are listed because they are its contents.  But they
-are listed differently, without indentation and dashes, because *their*
+are listed differently, without indentation and dashes, because _their_
 contents are not included.  Each group has a single-line documentation
 string; the `Emacs' group also has a `[State]' line.
 
@@ -1087,7 +1085,7 @@ supports these shades of gray by using background stipple patterns
 instead of a color.
 
    Setting, saving and resetting a face work like the same operations
-for options (*note Changing an Option::.).
+for options (*note Changing an Option::).
 
    A face can specify different appearances for different types of
 display.  For example, a face can make text red on a color display, but

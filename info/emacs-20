@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -106,7 +105,7 @@ calendar style, the month and day are interchanged.)
 nonmarking entry, give a numeric argument to the command.  For example,
 `C-u i a' makes a nonmarking anniversary diary entry.
 
-   Marking sexp diary entries in the calendar is *extremely*
+   Marking sexp diary entries in the calendar is _extremely_
 time-consuming, since every date visible in the calendar window must be
 individually checked.  So it's a good idea to make sexp diary entries
 nonmarking (with `&') when possible.
@@ -144,7 +143,7 @@ minutes beforehand, that that appointment is pending.  Emacs alerts you
 to the appointment by displaying a message in the mode line.
 
    To enable appointment notification, you must enable the time display
-feature of Emacs, `M-x display-time' (*note Mode Line::.).  You must
+feature of Emacs, `M-x display-time' (*note Mode Line::).  You must
 also add the function `appt-make-list' to the `diary-hook', like this:
 
      (add-hook 'diary-hook 'appt-make-list)
@@ -559,7 +558,7 @@ of a shell command line.
 
    If Emacs gets an error while trying to handle what it believes is a
 `cd', `pushd' or `popd' command, it runs the hook
-`shell-set-directory-error-hook' (*note Hooks::.).
+`shell-set-directory-error-hook' (*note Hooks::).
 
    If Emacs does not properly track changes in the current directory of
 the subshell, use the command `M-x dirs' to ask the shell what its
@@ -597,7 +596,7 @@ of the special key bindings of Shell mode:
 `<TAB>'
      Complete the command name or file name before point in the shell
      buffer (`comint-dynamic-complete').  <TAB> also completes history
-     references (*note History References::.) and environment variable
+     references (*note History References::) and environment variable
      names.
 
      The variable `shell-completion-fignore' specifies a list of file
@@ -734,7 +733,7 @@ particular include the choice of regular expression for detecting
 prompts, the directory tracking feature, and a few user commands.
 
    Other Emacs features that use variants of Comint mode include GUD
-(*note Debuggers::.) and `M-x run-lisp' (*note External Lisp::.).
+(*note Debuggers::) and `M-x run-lisp' (*note External Lisp::).
 
    You can use `M-x comint-run' to execute any program of your choice
 in a subprocess using unmodified Comint mode--without the
@@ -973,7 +972,7 @@ you frequently use, and that you can make an 8-bit-clean connection.
 run Rlogin.)
 
    `M-x rlogin' sets up the default file directory of the Emacs buffer
-to access the remote host via FTP (*note File Names::.), and it tracks
+to access the remote host via FTP (*note File Names::), and it tracks
 the shell commands that change the current directory, just like Shell
 mode.
 
@@ -1067,8 +1066,8 @@ Hardcopy Output
 
    The Emacs commands for making hardcopy let you print either an entire
 buffer or just part of one, either with or without page headers.  See
-also the hardcopy commands of Dired (*note Misc File Ops::.)  and the
-diary (*note Diary Commands::.).
+also the hardcopy commands of Dired (*note Misc File Ops::) and the
+diary (*note Diary Commands::).
 
 `M-x print-buffer'
      Print hardcopy of current buffer with page headings containing the

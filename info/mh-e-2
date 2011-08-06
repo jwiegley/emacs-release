@@ -1,5 +1,4 @@
-This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
-the input file mh-e.texi.
+This is ../info/mh-e, produced by makeinfo version 4.0 from mh-e.texi.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -93,7 +92,7 @@ first one, `C-o' (`mh-write-msg-to-file'), writes a message to a file
 If the file already exists, the message is appended to it.  You can
 also write the message to the file without the header by specifying a
 prefix argument (such as `C-u C-o /tmp/foobar RET').  Subsequent writes
-to the same file can be made with the `!'  command.
+to the same file can be made with the `!' command.
 
    You can also pipe the message through a Unix shell command with the
 `|' (`mh-pipe-msg') command.  You are prompted for the Unix command
@@ -179,7 +178,7 @@ about how to enter the criteria.
 simply treated as strings.  Case is ignored when all lowercase is used,
 and regular expressions (a la `ed') are available.  It is all right to
 specify several search criteria.  What happens then is that a logical
-*and* of the various fields is performed.  If you prefer a logical *or*
+_and_ of the various fields is performed.  If you prefer a logical _or_
 operation, run `M-s' multiple times.
 
    As an example, let's say that we want to find messages from Ginnean
@@ -225,11 +224,11 @@ to help you fill in the blanks.
 
    To perform the search, type `C-c C-c' (`mh-do-pick-search').  The
 selected messages are placed in the search sequence, which you can use
-later in forwarding (*note Forwarding::.), printing (*note
-Printing::.), or narrowing your field of view (*note Sequences::.).
-Subsequent searches are appended to the search sequence.  If, however,
-you wish to start with a clean slate, first delete the search sequence
-(how to do this is discussed in *Note Sequences::).
+later in forwarding (*note Forwarding::), printing (*note Printing::),
+or narrowing your field of view (*note Sequences::).  Subsequent
+searches are appended to the search sequence.  If, however, you wish to
+start with a clean slate, first delete the search sequence (how to do
+this is discussed in *Note Sequences::).
 
    If you're searching in a folder that is already displayed in a
 MH-Folder buffer, only those messages contained in the buffer are used
@@ -320,10 +319,10 @@ Miscellaneous Commands
 were a few changes in command letters between Versions 3 and 4, use
 this command to see which version you are running.  This command didn't
 exist before Version 4, so the message `[No match]' indicates that it's
-time to upgrade (*note Getting mh-e::.).  In the meantime, use the
-older commands that are listed in *Note Changes to mh-e::.  The output
-of `M-x mh-version' should also be included with any bug report you
-send (*note Bug Reports::.).
+time to upgrade (*note Getting mh-e::).  In the meantime, use the older
+commands that are listed in *Note Changes to mh-e::.  The output of
+`M-x mh-version' should also be included with any bug report you send
+(*note Bug Reports::).
 
 
 File: mh-e,  Node: Customizing mh-e,  Next: Odds and Ends,  Prev: Using mh-e,  Up: Top
@@ -367,7 +366,7 @@ turn a variable on, you use
 
    which places the MH-Show buffer at the bottom of the buffer stack.
 However, the text says to turn on a variable by setting it to a
-*non-`nil'* value, because sometimes values other than `t' are
+_non-`nil'_ value, because sometimes values other than `t' are
 meaningful (for example, see `mhl-formfile', described in *Note
 Customizing Viewing::).  Other variables, such as hooks, involve a
 little more Emacs Lisp programming expertise.
@@ -842,7 +841,7 @@ variable.  For example,
 
    This appends the regular expression `\\|^Some-Field:' to the
 variable (*note Syntax of Regular Expressions: (emacs)Regexps.).  The
-`\\|' means *or*, and the `^' (caret) matches the beginning of the
+`\\|' means _or_, and the `^' (caret) matches the beginning of the
 line.  This is done to be very specific about which fields match.  The
 literal `:' is appended for the same reason.
 
@@ -940,7 +939,7 @@ your screen for your reply.
 
    ---------- Footnotes ----------
 
-   (1) *Supercite* is an example of a full-bodied, full-featured
+   (1) _Supercite_ is an example of a full-bodied, full-featured
 citation package.  It is in Emacs versions 19.15 and later, and can be
 found via anonymous `ftp' on `archive.cis.ohio-state.edu' in
 `/pub/gnu/emacs/elisp-archive/packages/sc3.1.tar.Z'
@@ -998,10 +997,10 @@ the `<bold>' directive.
            (insert "</" type ">"))))    ; insert terminating directive
 
    To use the function `add-enriched-text', first create keybindings
-for it (*note Customizing Sending::.).  Then, set the mark with `C-@'
-or `C-SPC', type in the text to be highlighted, and type `C-c t b'.
-This adds `<bold>' where you set the mark and adds `</bold>' at the
-location of your cursor, giving you something like: `You should be
+for it (*note Customizing Sending::).  Then, set the mark with `C-@' or
+`C-SPC', type in the text to be highlighted, and type `C-c t b'.  This
+adds `<bold>' where you set the mark and adds `</bold>' at the location
+of your cursor, giving you something like: `You should be
 <bold>very</bold>'.  You may also be interested in investigating
 `sgml-mode'.
 

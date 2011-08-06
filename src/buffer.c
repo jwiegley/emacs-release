@@ -1828,6 +1828,9 @@ but the contents viewed as characters do change.")
 	TEMP_SET_PT_BOTH (pt, pt_byte);
       }
 
+      /* Register all composite characters.  */
+      register_composite_chars_region (BEG, BEG_BYTE, Z, Z_BYTE);
+
       tail = markers = BUF_MARKERS (current_buffer);
 
       /* This prevents BYTE_TO_CHAR (that is, buf_bytepos_to_charpos) from
@@ -4169,6 +4172,7 @@ A string is printed verbatim in the mode line except for %-constructs:\n\
   %b -- print buffer name.      %f -- print visited file name.\n\
   %F -- print frame name.\n\
   %* -- print %, * or hyphen.   %+ -- print *, % or hyphen.\n\
+	%& is like %*, but ignore read-only-ness.\n\
 	% means buffer is read-only and * means it is modified.\n\
 	For a modified read-only buffer, %* gives % and %+ gives *.\n\
   %s -- print process status.   %l -- print the current line number.\n\
@@ -4178,8 +4182,10 @@ A string is printed verbatim in the mode line except for %-constructs:\n\
   %p -- print percent of buffer above top of window, or Top, Bot or All.\n\
   %P -- print percent of buffer above bottom of window, perhaps plus Top,\n\
         or print Bottom or All.\n\
+  %m -- print the mode name.\n\
   %n -- print Narrow if appropriate.\n\
-  %t -- print T if file is text, B if binary.\n\
+  %z -- print mnemonics of buffer, terminal, and keyboard coding systems.\n\
+  %Z -- like %z, but including the end-of-line format.\n\
   %[ -- print one [ for each recursive editing level.  %] similar.\n\
   %% -- print %.   %- -- print infinitely many dashes.\n\
 Decimal digits after the % specify field width to which to pad.");

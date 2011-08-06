@@ -1227,9 +1227,9 @@ Microport
 
 MSDOS
 
-  For installation on MSDOS, see the file etc/INSTALL and search for
-  `MSDOG'.  See the file etc/MSDOS for information about using Emacs
-  on MSDOS.
+  For installation on MSDOS, see the file INSTALL (search for `MSDOG',
+  near the end of the file).  See the "MS-DOS" chapter of the manual
+  for information about using Emacs on MSDOS.
 
 SCO Unix
   If you have TCP but not X, you need to edit src/s/sco4.h

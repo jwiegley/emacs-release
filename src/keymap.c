@@ -418,7 +418,23 @@ fix_submap_inheritance (map, event, submap)
     parent_entry = Qnil;
 
   if (! EQ (parent_entry, submap))
-    Fset_keymap_parent (submap, parent_entry);
+    {
+      Lisp_Object submap_parent;
+      submap_parent = submap;
+      while (1)
+	{
+	  Lisp_Object tem;
+	  tem = Fkeymap_parent (submap_parent);
+	  if (EQ (tem, parent_entry))
+	    return;
+          if (CONSP (tem)
+	      && EQ (XCONS (tem)->car, Qkeymap))
+	    submap_parent = tem;
+	  else
+	    break;
+	}
+      Fset_keymap_parent (submap_parent, parent_entry);
+    }
 }
 
 /* Look up IDX in MAP.  IDX may be any sort of event.
@@ -1922,7 +1938,7 @@ Control characters turn into C-whatever, etc.")
 	}
       else
 	{
-	  char tem[20];
+	  char tem[30];
 
 	  *push_key_description (XUINT (key), tem) = 0;
 	  return build_string (tem);
@@ -2393,7 +2409,7 @@ You type        Translation\n\
       for (c = 0; c < translate_len; c++)
 	if (translate[c] != c)
 	  {
-	    char buf[20];
+	    char buf[30];
 	    char *bufend;
 
 	    if (alternate_heading)

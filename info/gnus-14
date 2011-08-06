@@ -1,5 +1,4 @@
-This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
-the input file gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
 
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
@@ -146,7 +145,7 @@ Installation
    * Q1.1  What is the latest version of Gnus?
 
      The latest (and greatest) version is 5.0.10.  You might also run
-     across something called *September Gnus*.  September Gnus is the
+     across something called _September Gnus_.  September Gnus is the
      alpha version of the next major release of Gnus.  It is currently
      not stable enough to run unless you are prepared to debug lisp.
 
@@ -164,11 +163,12 @@ Installation
 
         - `ftp://ftp.solace.mh.se:/pub/gnu/elisp/'
 
+
    * Q1.3  Which version of Emacs do I need?
 
      At least GNU Emacs 19.28, or XEmacs 19.12 is recommended.  GNU
      Emacs 19.25 has been reported to work under certain circumstances,
-     but it doesn't *officially* work on it.  19.27 has also been
+     but it doesn't _officially_ work on it.  19.27 has also been
      reported to work.  Gnus has been reported to work under OS/2 as
      well as Unix.
 
@@ -185,11 +185,11 @@ Installation
    * Q1.6  How do I unsubscribe from the Mailing List?
 
      Send an e-mail message to `ding-request@ifi.uio.no' with the magic
-     word *unsubscribe* somewhere in it, and you will be removed.
+     word _unsubscribe_ somewhere in it, and you will be removed.
 
      If you are reading the digest version of the list, send an e-mail
      message to
-     `ding-rn-digests-d-request@moe.shore.net' with *unsubscribe* as
+     `ding-rn-digests-d-request@moe.shore.net' with _unsubscribe_ as
      the subject and you will be removed.
 
    * Q1.7  How do I run Gnus on both Emacs and XEmacs?
@@ -220,10 +220,10 @@ Installation
 
      There is the newsgroup Gnu.emacs.gnus. Discussion of Gnus 5.x is
      now taking place there. There is also a mailing list, send mail to
-     `ding-request@ifi.uio.no' with the magic word *subscribe*
+     `ding-request@ifi.uio.no' with the magic word _subscribe_
      somewhere in it.
 
-     *NOTE:* the traffic on this list is heavy so you may not want to be
+     _NOTE:_ the traffic on this list is heavy so you may not want to be
      on it (unless you use Gnus as your mailer reader, that is). The
      mailing list is mainly for developers and testers.
 
@@ -241,8 +241,6 @@ Installation
        1. `http://www.miranova.com/gnus-man/'
 
        2.
-
-
           `http://www.pilgrim.umass.edu/pub/misc/ding/manual/gnus_toc.html'
 
        3. `http://www.rtd.com/~woo/gnus/'
@@ -266,7 +264,7 @@ Installation
      Connecting to NNTP server and then just hangs.
 
      Ben Wing <wing@netcom.com> writes :
-     I wonder if you're hitting the infamous *libresolv* problem.  The
+     I wonder if you're hitting the infamous _libresolv_ problem.  The
      basic problem is that under SunOS you can compile either with DNS
      or NIS name lookup libraries but not both.  Try substituting the
      IP address and see if that works; if so, you need to download the
@@ -313,8 +311,10 @@ Installation
                  (load "gnus")
                  (load "mime-compose")
 
-          *NOTE:* Loading the package disables citation highlighting by
+          _NOTE:_ Loading the package disables citation highlighting by
           default.  To get the old behavior back, use the `M-t' command.
+
+
 
 
 File: gnus,  Node: Customization FAQ,  Next: Reading News FAQ,  Prev: Installation FAQ,  Up: Frequently Asked Questions
@@ -503,6 +503,7 @@ Customization
 
      in your `.gnus' instead.
 
+
 
 File: gnus,  Node: Reading News FAQ,  Next: Reading Mail FAQ,  Prev: Customization FAQ,  Up: Frequently Asked Questions
 
@@ -513,7 +514,6 @@ Reading News
 
      A kill-to-score translator was written by Ethan Bradford
      <ethanb@ptolemy.astro.washington.edu>.  It is available from
-
      `http://baugi.ifi.uio.no/~larsi/ding-various/gnus-kill-to-score.el'.
 
    * Q3.2 My news server has a lot of groups, and killing groups is
@@ -582,10 +582,11 @@ Reading News
      BBDB.  Extensive instructions are included as comments in the file.
 
      Send mail to `majordomo@edmonds.home.cs.ubc.ca' with the following
-     line in the body of the message: *get misc gnus-bbdb.el*.
+     line in the body of the message: _get misc gnus-bbdb.el_.
 
      Or get it from the World Wide Web:
      `http://www.cs.ubc.ca/spider/edmonds/gnus-bbdb.el'.
+
 
 
 File: gnus,  Node: Reading Mail FAQ,  Prev: Reading News FAQ,  Up: Frequently Asked Questions
@@ -639,7 +640,7 @@ Reading Mail
 
    * Q4.5  Not scoring mail groups
 
-     How do you *totally* turn off scoring in mail groups?
+     How do you _totally_ turn off scoring in mail groups?
 
      Use an nnbabyl:all.SCORE (or nnmh, or nnml, or whatever) file
      containing:
@@ -647,4 +648,5 @@ Reading Mail
           ((adapt ignore)
            (local (gnus-use-scoring nil))
            (exclude-files "all.SCORE"))
+
 

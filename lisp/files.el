@@ -893,6 +893,7 @@ If there is no such live buffer, return nil."
 For example, if you specify `*.c', that would visit all the files
 whose names match the pattern."
   :group 'files
+  :version "20.4"
   :type 'boolean)
 
 (defun find-file-noselect (filename &optional nowarn rawfile wildcards)

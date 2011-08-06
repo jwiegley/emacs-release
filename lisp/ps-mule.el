@@ -208,14 +208,14 @@ See also the variable `ps-font-info-database'.")
      (bold builtin "GothicBBB-Medium.Katakana" ps-mule-encode-7bit 1)
      (bold-italic builtin "GothicBBB-Medium.Katakana" ps-mule-encode-7bit 1))
     (latin-jisx0201
-     (normat builtin "Ryumin-Light.Hankaku" ps-mule-encode-7bit 1)
+     (normal builtin "Ryumin-Light.Hankaku" ps-mule-encode-7bit 1)
      (bold builtin "GothicBBB-Medium.Hankaku" ps-mule-encode-7bit 1))
     (japanese-jisx0208
      (normal builtin "Ryumin-Light-H" ps-mule-encode-7bit 2)
      (bold builtin "GothicBBB-Medium-H" ps-mule-encode-7bit 2))
     (korean-ksc5601
-     (normal builtin "Batang-Medium-KSC-H" ps-mule-encode-7bit 2)
-     (bold builtin " Gulim-Medium-KSC-H" ps-mule-encode-7bit 2))
+     (normal builtin "Munhwa-Regular-KSC-EUC-H" ps-mule-encode-7bit 2)
+     (bold builtin " Munhwa-Bold-KSC-EUC-H" ps-mule-encode-7bit 2))
     )
   "Sample setting of the `ps-mule-font-info-database' to use builtin PS font.
 
@@ -272,7 +272,7 @@ Currently, data for Japanese and Korean PostScript printers are listed.")
     (chinese-big5-2
      (normal bdf "taipei24.bdf" chinese-big5 2))
     (chinese-sisheng
-     (normal bdf ("sish24-etl.bdf" "etl24-sisheng.bdf") ps-mule-encode-8bit 1))
+     (normal bdf ("sish24-etl.bdf" "etl24-sisheng.bdf") ps-mule-encode-7bit 1))
     (ipa
      (normal bdf ("ipa24-etl.bdf" "etl24-ipa.bdf") ps-mule-encode-8bit 1))
     (vietnamese-viscii-lower
@@ -1190,7 +1190,7 @@ This checks if all multi-byte characters in the region are printable or not."
 		   (string-as-multibyte "[^\040-\176\240-\377]"))
 		  ((eq ps-print-control-characters 'control)
 		   (string-as-multibyte "[^\040-\176\200-\377]"))
-		  (t (string-as-multibyte "[^\000-\011\013\015-\377"))))))
+		  (t (string-as-multibyte "[^\000-\011\013\015-\377]"))))))
 
 ;;;###autoload
 (defun ps-mule-begin-page ()

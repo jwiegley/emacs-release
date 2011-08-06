@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -172,8 +171,8 @@ Variable Index
 * emacs-lisp-mode-hook:                  Program Modes.
 * emerge-combine-versions-template:      Combining in Emerge.
 * emerge-startup-hook:                   Fine Points of Emerge.
-* enable-multibyte-characters <1>:       Single-Byte European Support.
-* enable-multibyte-characters:           Enabling Multibyte.
+* enable-multibyte-characters <1>:       Enabling Multibyte.
+* enable-multibyte-characters:           Single-Byte European Support.
 * enable-recursive-minibuffers:          Minibuffer Edit.
 * enriched-fill-after-visiting:          Requesting Formatted Text.
 * enriched-translations:                 Requesting Formatted Text.
@@ -377,8 +376,8 @@ Variable Index
 * search-slow-speed:                     Incremental Search.
 * search-slow-window-lines:              Incremental Search.
 * selective-display-ellipses:            Selective Display.
-* sendmail-coding-system <1>:            Mail Sending.
-* sendmail-coding-system:                Recognize Coding.
+* sendmail-coding-system <1>:            Recognize Coding.
+* sendmail-coding-system:                Mail Sending.
 * sentence-end:                          Sentences.
 * sentence-end-double-space:             Fill Commands.
 * server-temp-file-regexp:               Emacs Server.
@@ -444,8 +443,8 @@ Variable Index
 * vc-initial-comment:                    Registering.
 * vc-keep-workfiles:                     VC Workfile Handling.
 * vc-log-mode-hook:                      Log Buffer.
-* vc-make-backup-files <1>:              VC Workfile Handling.
-* vc-make-backup-files:                  Backup.
+* vc-make-backup-files <1>:              Backup.
+* vc-make-backup-files:                  VC Workfile Handling.
 * vc-mistrust-permissions:               VC Status Retrieval.
 * vc-path:                               VC Command Execution.
 * vc-static-header-alist:                Version Headers.

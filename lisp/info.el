@@ -90,7 +90,6 @@ The Lisp code is executed when the node is selected.")
 	  (setq alternative sibling)	; uninstalled, Emacs builddir != srcdir
 	(setq alternative source))	; uninstalled, builddir != srcdir
       (if (or (member alternative Info-default-directory-list)
-	      (not (file-exists-p alternative))
 	      ;; On DOS/NT, we use movable executables always,
 	      ;; and we must always find the Info dir at run time.
 	      (if (or (eq system-type 'ms-dos) (eq system-type 'windows-nt))
@@ -99,7 +98,8 @@ The Lisp code is executed when the node is selected.")
 		;; exec-directory also.
 		(not (string= exec-directory
 			      (expand-file-name "lib-src/"
-						installation-directory)))))
+						installation-directory))))
+	      (not (file-exists-p alternative)))
 	  Info-default-directory-list
 	;; `alternative' contains the Info files that came with this
 	;; version, so we should look there first.  `Info-insert-dir'
@@ -958,60 +958,61 @@ In standalone mode, \\<Info-mode-map>\\[Info-exit] exits Emacs itself."
   (if (equal regexp "")
       (setq regexp Info-last-search)
     (setq Info-last-search regexp))
-  (let ((found ()) current
-	(onode Info-current-node)
-	(ofile Info-current-file)
-	(opoint (point))
-	(ostart (window-start))
-	(osubfile Info-current-subfile))
-    (save-excursion
-      (save-restriction
-	(widen)
-	(if (null Info-current-subfile)
-	    (progn (re-search-forward regexp) (setq found (point)))
-	  (condition-case err
+  (when regexp
+    (let ((found ()) current
+	  (onode Info-current-node)
+	  (ofile Info-current-file)
+	  (opoint (point))
+	  (ostart (window-start))
+	  (osubfile Info-current-subfile))
+      (save-excursion
+	(save-restriction
+	  (widen)
+	  (if (null Info-current-subfile)
 	      (progn (re-search-forward regexp) (setq found (point)))
-	    (search-failed nil)))))
-    (if (not found) ;can only happen in subfile case -- else would have erred
-	(unwind-protect
-	    (let ((list ()))
-	      (save-excursion
-		(set-buffer (marker-buffer Info-tag-table-marker))
-		(goto-char (point-min))
-		(search-forward "\n\^_\nIndirect:")
-		(save-restriction
-		  (narrow-to-region (point)
-				    (progn (search-forward "\n\^_")
-					   (1- (point))))
+	    (condition-case err
+		(progn (re-search-forward regexp) (setq found (point)))
+	      (search-failed nil)))))
+      (if (not found) ;can only happen in subfile case -- else would have erred
+	  (unwind-protect
+	      (let ((list ()))
+		(save-excursion
+		  (set-buffer (marker-buffer Info-tag-table-marker))
 		  (goto-char (point-min))
-		  (search-forward (concat "\n" osubfile ": "))
-		  (beginning-of-line)
-		  (while (not (eobp))
-		    (re-search-forward "\\(^.*\\): [0-9]+$")
-		    (goto-char (+ (match-end 1) 2))
-		    (setq list (cons (cons (read (current-buffer))
-					   (buffer-substring
-					    (match-beginning 1) (match-end 1)))
-				     list))
-		    (goto-char (1+ (match-end 0))))
-		  (setq list (nreverse list)
-			current (car (car list))
-			list (cdr list))))
-	      (while list
-		(message "Searching subfile %s..." (cdr (car list)))
-		(Info-read-subfile (car (car list)))
-		(setq list (cdr list))
-;;		(goto-char (point-min))
-		(if (re-search-forward regexp nil t)
-		    (setq found (point) list ())))
-	      (if found
-		  (message "")
-		(signal 'search-failed (list regexp))))
-	  (if (not found)
-	      (progn (Info-read-subfile osubfile)
-		     (goto-char opoint)
-		     (Info-select-node)
-		     (set-window-start (selected-window) ostart)))))
+		  (search-forward "\n\^_\nIndirect:")
+		  (save-restriction
+		    (narrow-to-region (point)
+				      (progn (search-forward "\n\^_")
+					     (1- (point))))
+		    (goto-char (point-min))
+		    (search-forward (concat "\n" osubfile ": "))
+		    (beginning-of-line)
+		    (while (not (eobp))
+		      (re-search-forward "\\(^.*\\): [0-9]+$")
+		      (goto-char (+ (match-end 1) 2))
+		      (setq list (cons (cons (read (current-buffer))
+					     (buffer-substring
+					      (match-beginning 1) (match-end 1)))
+				       list))
+		      (goto-char (1+ (match-end 0))))
+		    (setq list (nreverse list)
+			  current (car (car list))
+			  list (cdr list))))
+		(while list
+		  (message "Searching subfile %s..." (cdr (car list)))
+		  (Info-read-subfile (car (car list)))
+		  (setq list (cdr list))
+;;;		(goto-char (point-min))
+		  (if (re-search-forward regexp nil t)
+		      (setq found (point) list ())))
+		(if found
+		    (message "")
+		  (signal 'search-failed (list regexp))))
+	    (if (not found)
+		(progn (Info-read-subfile osubfile)
+		       (goto-char opoint)
+		       (Info-select-node)
+		       (set-window-start (selected-window) ostart)))))
     (widen)
     (goto-char found)
     (Info-select-node)
@@ -1019,7 +1020,7 @@ In standalone mode, \\<Info-mode-map>\\[Info-exit] exits Emacs itself."
     (or (and (string-equal onode Info-current-node)
 	     (equal ofile Info-current-file))
 	(setq Info-history (cons (list ofile onode opoint)
-				 Info-history)))))
+				 Info-history))))))
 
 ;; Extract the value of the node-pointer named NAME.
 ;; If there is none, use ERRORNAME in the error message; 

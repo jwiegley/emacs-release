@@ -338,7 +338,9 @@ filesystem mounted on drive Z:, FILESYSTEM could be \"Z:\"."
 	  (write-region start end tempfile nil 0)
 	  (let ((w32-quote-process-args nil))
 	    (call-process "command.com" nil errbuf nil "/c"
-			  (format "copy /b %s %s" tempfile printer))))
+			  (format "copy /b %s %s"
+				  (shell-quote-argument tempfile)
+				  (shell-quote-argument printer)))))
 	 ;; write directly to the printer port
 	 (t
 	  (write-region start end printer t 0)))

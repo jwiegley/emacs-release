@@ -1,8 +1,7 @@
-This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
-the input file emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.4
+for Emacs version 20.5.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -44,7 +43,7 @@ width.  Emacs does filling in two ways.  In Auto Fill mode, inserting
 text with self-inserting characters also automatically fills it.  There
 are also explicit fill commands that you can use when editing text
 leaves it unfilled.  When you edit formatted text, you can specify a
-style of filling for each portion of the text (*note Formatted Text::.).
+style of filling for each portion of the text (*note Formatted Text::).
 
 * Menu:
 
@@ -92,7 +91,7 @@ long, the text of the comment is split into two comment lines.
 Optionally, new comment delimiters are inserted at the end of the first
 line and the beginning of the second so that each line is a separate
 comment; the variable `comment-multi-line' controls the choice (*note
-Comments::.).
+Comments::).
 
    Adaptive filling (see the following section) works for Auto Filling
 as well as for explicit fill commands.  It takes a fill prefix
@@ -138,7 +137,7 @@ the line-breaks, then inserting new ones where necessary.
 region into paragraphs and fills each of them.
 
    `M-q' and `fill-region' use the same criteria as `M-h' for finding
-paragraph boundaries (*note Paragraphs::.).  For more control, you can
+paragraph boundaries (*note Paragraphs::).  For more control, you can
 use `M-x fill-region-as-paragraph', which refills everything between
 point and mark.  This command deletes any blank lines within the
 region, so separate blocks of text end up combined into one block.
@@ -191,7 +190,7 @@ The Fill Prefix
 the "fill prefix" feature.  The fill prefix is a string that Emacs
 expects every line to start with, and which is not included in filling.
 You can specify a fill prefix explicitly; Emacs can also deduce the
-fill prefix automatically (*note Adaptive Fill::.).
+fill prefix automatically (*note Adaptive Fill::).
 
 `C-x .'
      Set the fill prefix (`set-fill-prefix').
@@ -218,8 +217,8 @@ prefix from each line before filling and insert it on each line after
 filling.  Auto Fill mode also inserts the fill prefix automatically when
 it makes a new line.  The `C-o' command inserts the fill prefix on new
 lines it creates, when you use it at the beginning of a line (*note
-Blank Lines::.).  Conversely, the command `M-^' deletes the prefix (if
-it occurs) after the newline that it deletes (*note Indentation::.).
+Blank Lines::).  Conversely, the command `M-^' deletes the prefix (if
+it occurs) after the newline that it deletes (*note Indentation::).
 
    For example, if `fill-column' is 40 and you set the fill prefix to
 `;; ', then `M-q' in the following text
@@ -281,7 +280,7 @@ paragraph.
 the paragraph's second line, but only if it appears on the first line as
 well.
 
-   If a paragraph has just one line, fill commands *may* take a prefix
+   If a paragraph has just one line, fill commands _may_ take a prefix
 from that line.  The decision is complicated because there are three
 reasonable things to do in such a case:
 
@@ -397,10 +396,10 @@ filling determines what indentation to use when filling a paragraph.
 *Note Adaptive Fill::.
 
    Text mode defines <TAB> to run `indent-relative' (*note
-Indentation::.), so that you can conveniently indent a line like the
+Indentation::), so that you can conveniently indent a line like the
 previous line.  When the previous line is not indented,
 `indent-relative' runs `tab-to-tab-stop', which uses Emacs tab stops
-that you can set (*note Tab Stops::.).
+that you can set (*note Tab Stops::).
 
    Text mode turns off the features concerned with comments except when
 you explicitly invoke them.  It changes the syntax table so that periods
@@ -465,7 +464,7 @@ Outline mode, but you can use it in conjunction with other major modes.
 Type `M-x outline-minor-mode' to enable the Outline minor mode in the
 current buffer.  You can also specify this in the text of a file, with
 a file local variable of the form `mode: outline-minor' (*note File
-Variables::.).
+Variables::).
 
    The major mode, Outline mode, provides special key bindings on the
 `C-c' prefix.  Outline minor mode provides similar bindings with `C-c
@@ -474,7 +473,7 @@ special commands.  (The variable `outline-minor-mode-prefix' controls
 the prefix used.)
 
    Entering Outline mode runs the hook `text-mode-hook' followed by the
-hook `outline-mode-hook' (*note Hooks::.).
+hook `outline-mode-hook' (*note Hooks::).
 
 * Menu:
 
@@ -779,7 +778,7 @@ other character.
 to insert it.  Also, `"' with a numeric argument always inserts that
 number of `"' characters.  You can turn off the feature of `"'
 expansion by eliminating that binding in the local map (*note Key
-Bindings::.).
+Bindings::).
 
    In TeX mode, `$' has a special syntax code which attempts to
 understand the way TeX math mode delimiters match.  When you insert a
@@ -901,14 +900,14 @@ with `C-c C-v' (`tex-view').
 variable `tex-directory'.  `"."' is the default value.  If your
 environment variable `TEXINPUTS' contains relative directory names, or
 if your files contains `\input' commands with relative file names, then
-`tex-directory' *must* be `"."' or you will get the wrong results.
+`tex-directory' _must_ be `"."' or you will get the wrong results.
 Otherwise, it is safe to specify some other directory, such as `"/tmp"'.
 
    If you want to specify which shell commands are used in the inferior
 TeX, you can do so by setting the values of the variables
 `tex-run-command', `latex-run-command', `slitex-run-command',
 `tex-dvi-print-command', `tex-dvi-view-command', and
-`tex-show-queue-command'.  You *must* set the value of
+`tex-show-queue-command'.  You _must_ set the value of
 `tex-dvi-view-command' for your particular terminal; this variable has
 no default value.  The other variables have default values that may (or
 may not) be appropriate for your system.
@@ -925,7 +924,7 @@ file name with `*' in the command string.  For example,
    The terminal output from TeX, including any error messages, appears
 in a buffer called `*tex-shell*'.  If TeX gets an error, you can switch
 to this buffer and feed it input (this works as in Shell mode; *note
-Interactive Shell::.).  Without switching to this buffer you can scroll
+Interactive Shell::).  Without switching to this buffer you can scroll
 it so that its last line is visible by typing `C-c C-l'.
 
    Type `C-c C-k' (`tex-kill-job') to kill the TeX process if you see
@@ -1022,19 +1021,19 @@ commands are provided that are not in Text mode:
 
    The other feature of Nroff mode is that you can turn on Electric
 Nroff mode.  This is a minor mode that you can turn on or off with `M-x
-electric-nroff-mode' (*note Minor Modes::.).  When the mode is on, each
+electric-nroff-mode' (*note Minor Modes::).  When the mode is on, each
 time you use <RET> to end a line that contains an nroff command that
 opens a kind of grouping, the matching nroff command to close that
 grouping is automatically inserted on the following line.  For example,
 if you are at the beginning of a line and type `. ( b <RET>', this
 inserts the matching command `.)b' on a new line following point.
 
-   If you use Outline minor mode with Nroff mode (*note Outline
-Mode::.), heading lines are lines of the form `.H' followed by a number
-(the header level).
+   If you use Outline minor mode with Nroff mode (*note Outline Mode::),
+heading lines are lines of the form `.H' followed by a number (the
+header level).
 
    Entering Nroff mode runs the hook `text-mode-hook', followed by the
-hook `nroff-mode-hook' (*note Hooks::.).
+hook `nroff-mode-hook' (*note Hooks::).
 
 
 File: emacs,  Node: Formatted Text,  Prev: Nroff Mode,  Up: Text
@@ -1048,9 +1047,9 @@ formatted text in Enriched mode can specify fonts, colors, underlining,
 margins, and types of filling and justification.  In the future, we plan
 to implement other formatting features as well.
 
-   Enriched mode is a minor mode (*note Minor Modes::.).  Typically it
-is used in conjunction with Text mode (*note Text Mode::.).  However,
-you can also use it with other major modes such as Outline mode and
+   Enriched mode is a minor mode (*note Minor Modes::).  Typically it is
+used in conjunction with Text mode (*note Text Mode::).  However, you
+can also use it with other major modes such as Outline mode and
 Paragraph-Indent Text mode.
 
    Potentially, Emacs can store formatted text files in various file
@@ -1174,7 +1173,7 @@ commands directly:
      Properties menu works with (`facemenu-remove-props').
 
 `Remove All'
-     Delete *all* text properties from the region
+     Delete _all_ text properties from the region
      (`facemenu-remove-all').
 
 `List Properties'
