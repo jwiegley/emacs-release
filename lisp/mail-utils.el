@@ -1,11 +1,15 @@
-;; Utility functions used both by rmail and rnews
+;;; mail-utils.el --- utility functions used both by rmail and rnews
+
 ;; Copyright (C) 1985 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: mail, news
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,17 +18,37 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
 
-(provide 'mail-utils)
+;; Utility functions for mail and netnews handling.  These handle fine
+;; points of header parsing.
+
+;;; Code:
+
+;;; We require lisp-mode to make sure that lisp-mode-syntax-table has
+;;; been initialized.
+(require 'lisp-mode)
 		     
-;; should be in loaddefs
-(defvar mail-use-rfc822 nil
-  "*If non-nil, use a full, hairy RFC822 parser on mail addresses.
-Otherwise, (the default) use a smaller, somewhat faster and
-often-correct parser.")
+;;;###autoload
+(defvar mail-use-rfc822 nil "\
+*If non-nil, use a full, hairy RFC822 parser on mail addresses.
+Otherwise, (the default) use a smaller, somewhat faster, and
+often correct parser.")
+
+;; Returns t if file FILE is an Rmail file.
+;;;###autoload
+(defun mail-file-babyl-p (file)
+  (let ((buf (generate-new-buffer " *rmail-file-p*")))
+    (unwind-protect
+	(save-excursion
+	  (set-buffer buf)
+	  (insert-file-contents file nil 0 100)
+	  (looking-at "BABYL OPTIONS:"))
+      (kill-buffer buf))))
 
 (defun mail-string-delete (string start end)
   "Returns a string containing all of STRING except the part
@@ -43,48 +67,42 @@ Return a modified address list."
 	(progn (require 'rfc822)
 	       (mapconcat 'identity (rfc822-addresses address) ", "))
       (let (pos)
-       ;; Strip rfc822 comments (within parens).
-       ;; Understand properly the effect of backslashes and string quotes.
-       (let (instring (depth 0) start)
-	 (setq pos -1)
-	 (while pos
-	   (cond ((< pos 0))
-		 ((= (aref address pos) ?\\)
-		  (setq pos (1+ pos)))
-		 ((= (aref address pos) ?\")
-		  (setq instring (not instring)))
-		 (instring nil)
-		 ((= (aref address pos) ?\()
-		  (if (= depth 0) (setq start pos))
-		  (setq depth (1+ depth)))
-		 ((= (aref address pos) ?\))
-		  (setq depth (1- depth))
-		  (if (= depth 0)
-		      (setq address (mail-string-delete address start (1+ pos))
-			    pos (1- start)))))
-	   (setq pos (string-match "[\"\\()]" address (1+ pos)))))
-
-       ;; strip surrounding whitespace
        (string-match "\\`[ \t\n]*" address)
+       ;; strip surrounding whitespace
        (setq address (substring address
 				(match-end 0)
 				(string-match "[ \t\n]*\\'" address
 					      (match-end 0))))
 
-       ;; Strip whitespace before commas.
-       (let (instring)
-	 (setq pos -1)
-	 (while pos
-	   (cond ((< pos 0))
-		 ((= (aref address pos) ?\\)
-		  (setq pos (1+ pos)))
-		 ((= (aref address pos) ?\")
-		  (setq instring (not instring)))
-		 (instring nil)
-		 ((eq (string-match "[ \t]*," address pos) pos)
-		  (setq address (mail-string-delete address pos
-						    (1- (match-end 0))))))
-	   (setq pos (string-match "[ \t,\"\\]" address (1+ pos)))))
+       ;; Detect nested comments.
+       (if (string-match "[ \t]*(\\([^)\\]\\|\\\\.\\|\\\\\n\\)*(" address)
+	   ;; Strip nested comments.
+	   (save-excursion
+	     (set-buffer (get-buffer-create " *temp*"))
+	     (erase-buffer)
+	     (insert address)
+	     (set-syntax-table lisp-mode-syntax-table)
+	     (goto-char 1)
+	     (while (search-forward "(" nil t)
+	       (forward-char -1)
+	       (skip-chars-backward " \t")
+	       (delete-region (point)
+			      (save-excursion
+				(condition-case ()
+				    (forward-sexp 1)
+				  (error (goto-char (point-max))))
+				  (point))))
+	     (setq address (buffer-string))
+	     (erase-buffer))
+	 ;; Strip non-nested comments an easier way.
+	 (while (setq pos (string-match 
+			    ;; This doesn't hack rfc822 nested comments
+			    ;;  `(xyzzy (foo) whinge)' properly.  Big deal.
+			    "[ \t]*(\\([^)\\]\\|\\\\.\\|\\\\\n\\)*)"
+			    address))
+	   (setq address
+		 (mail-string-delete address
+				     pos (match-end 0)))))
 
        ;; strip `quoted' names (This is supposed to hack `"Foo Bar" <bar@host>')
        (setq pos 0)
@@ -99,7 +117,7 @@ Return a modified address list."
 		 (mail-string-delete address
 				     pos (match-end 0)))))
        ;; Retain only part of address in <> delims, if there is such a thing.
-       (while (setq pos (string-match "\\(,\\|\\`\\)[^,]*<\\([^>,]*>\\)"
+       (while (setq pos (string-match "\\(,\\s-*\\|\\`\\)[^,]*<\\([^>,]*>\\)"
 				      address))
 	 (let ((junk-beg (match-end 1))
 	       (junk-end (match-beginning 2))
@@ -115,16 +133,14 @@ Return a modified address list."
 ; rmail-dont-reply-to-names is defined in loaddefs
 (defun rmail-dont-reply-to (userids)
   "Returns string of mail addresses USERIDS sans any recipients
-that start with matches for  rmail-dont-reply-to-names.
+that start with matches for `rmail-dont-reply-to-names'.
 Usenet paths ending in an element that matches are removed also."
   (if (null rmail-dont-reply-to-names)
       (setq rmail-dont-reply-to-names
 	    (concat (if rmail-default-dont-reply-to-names
 			(concat rmail-default-dont-reply-to-names "\\|")
 		        "")
-		    (concat (regexp-quote
-			      (or (getenv "USER") (getenv "LOGNAME")
-				  (user-login-name)))
+		    (concat (regexp-quote (user-login-name))
 			    "\\>"))))
   (let ((match (concat "\\(^\\|,\\)[ \t\n]*\\([^,\n]*!\\|\\)\\("
 		       rmail-dont-reply-to-names
@@ -132,9 +148,10 @@ Usenet paths ending in an element that matches are removed also."
 	(case-fold-search t)
 	pos epos)
     (while (setq pos (string-match match userids))
-      (if (> pos 0) (setq pos (1+ pos)))
+      (if (> pos 0) (setq pos (match-beginning 2)))
       (setq epos
-	    (if (string-match "[ \t\n,]+" userids (match-end 0))
+	    ;; Delete thru the next comma, plus whitespace after.
+	    (if (string-match ",[ \t\n]+" userids (match-end 0))
 		(match-end 0)
 	      (length userids)))
       (setq userids
@@ -148,25 +165,29 @@ Usenet paths ending in an element that matches are removed also."
 	(substring userids (match-end 0))
       userids)))
 
+;;;###autoload
 (defun mail-fetch-field (field-name &optional last all)
-  "Return the value of the header field FIELD.
+  "Return the value of the header field FIELD-NAME.
 The buffer is expected to be narrowed to just the headers of the message.
-If 2nd arg LAST is non-nil, use the last such field if there are several.
-If 3rd arg ALL is non-nil, concatenate all such fields, with commas between."
+If second arg LAST is non-nil, use the last such field if there are several.
+If third arg ALL is non-nil, concatenate all such fields with commas between."
   (save-excursion
     (goto-char (point-min))
     (let ((case-fold-search t)
 	  (name (concat "^" (regexp-quote field-name) "[ \t]*:[ \t]*")))
-      (goto-char (point-min))
       (if all
 	  (let ((value ""))
 	    (while (re-search-forward name nil t)
 	      (let ((opoint (point)))
 		(while (progn (forward-line 1)
 			      (looking-at "[ \t]")))
+		;; Back up over newline, then trailing spaces or tabs
+		(forward-char -1)
+		(skip-chars-backward " \t" opoint)
 		(setq value (concat value
 				    (if (string= value "") "" ", ")
-				    (buffer-substring opoint (1- (point)))))))
+				    (buffer-substring-no-properties
+				     opoint (point))))))
 	    (and (not (string= value "")) value))
 	(if (re-search-forward name nil t)
 	    (progn
@@ -174,7 +195,10 @@ If 3rd arg ALL is non-nil, concatenate all such fields, with commas between."
 	      (let ((opoint (point)))
 		(while (progn (forward-line 1)
 			      (looking-at "[ \t]")))
-		(buffer-substring opoint (1- (point))))))))))
+		;; Back up over newline, then trailing spaces or tabs
+		(forward-char -1)
+		(skip-chars-backward " \t" opoint)
+		(buffer-substring-no-properties opoint (point)))))))))
 
 ;; Parse a list of tokens separated by commas.
 ;; It runs from point to the end of the visible part of the buffer.
@@ -207,3 +231,22 @@ If 3rd arg ALL is non-nil, concatenate all such fields, with commas between."
 		    "\\|"
 		    (substring labels (match-end 0))))))
   labels)
+
+(defun mail-rfc822-time-zone (time)
+  (let* ((sec (or (car (current-time-zone time)) 0))
+	 (absmin (/ (abs sec) 60)))
+    (format "%c%02d%02d" (if (< sec 0) ?- ?+) (/ absmin 60) (% absmin 60))))
+
+(defun mail-rfc822-date ()
+  (let* ((time (current-time))
+	 (s (current-time-string time)))
+    (string-match "[^ ]+ +\\([^ ]+\\) +\\([^ ]+\\) \\([^ ]+\\) \\([^ ]+\\)" s)
+    (concat (substring s (match-beginning 2) (match-end 2)) " "
+	    (substring s (match-beginning 1) (match-end 1)) " "
+	    (substring s (match-beginning 4) (match-end 4)) " "
+	    (substring s (match-beginning 3) (match-end 3)) " "
+	    (mail-rfc822-time-zone time))))
+
+(provide 'mail-utils)
+
+;;; mail-utils.el ends here

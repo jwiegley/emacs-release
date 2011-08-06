@@ -1,8 +1,18 @@
-; Evi: Major mode for emulating "vi" editor under GNU Emacs.
+;;; vi.el --- major mode for emulating "vi" editor under GNU Emacs.
+
+; This file is in the public domain because the authors distributed it
+; without a copyright notice before the US signed the Bern Convention.
+
+;; Author: Neal Ziring <nz@rsch.wisc.edu>
+;;	Felix S. T. Wu <wu@crys.wisc.edu>
+;; Keywords: emulations
+
+;;; Commentary: 
+
 ; Originally written by : seismo!wucs!nz@rsch.wisc.edu (Neal Ziring)
 ; Extensively redesigned and rewritten by wu@crys.wisc.edu (Felix S.T. Wu)
 ; Last revision: 01/07/87 Wed (for GNU Emacs 18.33)
-;
+
 ; INSTALLATION PROCEDURE:
 ; 1) Add a global key binding for command "vi-mode" (I use ESC ESC instead of
 ;    the single ESC used in real "vi", so I can access other ESC prefixed emacs
@@ -25,6 +35,7 @@
 ; 2). In operator handling, should allow other point moving Emacs commands
 ;     (such as ESC <, ESC >) to be used as arguments.
 ;
+;;; Code:
 
 (defun vi-switch-mode (arg mode-char)
   "Switch the major mode of current buffer as specified by the following char \\{vi-tilde-map}"
@@ -32,10 +43,13 @@
   (let ((mode-cmd (lookup-key vi-tilde-map (char-to-string mode-char))))
     (if (null mode-cmd)
 	(with-output-to-temp-buffer "*Help*"
-	  (princ (substitute-command-keys "Possible major modes to switch to: \\{vi-tilde-map}")))
+	  (princ (substitute-command-keys "Possible major modes to switch to: \\{vi-tilde-map}"))
+	  (save-excursion
+	    (set-buffer standard-output)
+	    (help-mode)))
       (setq prefix-arg arg)		; prefix arg will be passed down
       (command-execute mode-cmd nil)	; may need to save mode-line-format etc
-      (set-buffer-modified-p (buffer-modified-p))))) ; just in case
+      (force-mode-line-update))))	; just in case
 
 
 (if (null (where-is-internal 'vi-switch-mode (current-local-map)))
@@ -85,7 +99,7 @@
 	(use-local-map vi-mode-old-local-map)
 	(setq major-mode vi-mode-old-major-mode)
 	(setq case-fold-search vi-mode-old-case-fold)
-	(set-buffer-modified-p (buffer-modified-p)))))
+	(force-mode-line-update))))
 
 (defun vi-readonly-mode ()
   "Toggle current buffer's readonly flag."
@@ -103,11 +117,11 @@ command extensions.")
 ;;(fillarray vi-com-map 'vi-undefined)
   (define-key vi-com-map "\C-@" 'vi-mark-region) ; extension
   (define-key vi-com-map "\C-a" 'vi-ask-for-info)  ; extension
-  (define-key vi-com-map "\C-b" 'vi-backward-windowfull)
+  (define-key vi-com-map "\C-b" 'vi-backward-windowful)
   (define-key vi-com-map "\C-c" 'vi-do-old-mode-C-c-command) ; extension
   (define-key vi-com-map "\C-d" 'vi-scroll-down-window)
   (define-key vi-com-map "\C-e" 'vi-expose-line-below)
-  (define-key vi-com-map "\C-f" 'vi-forward-windowfull)
+  (define-key vi-com-map "\C-f" 'vi-forward-windowful)
   (define-key vi-com-map "\C-g" 'keyboard-quit)
   (define-key vi-com-map "\C-i" 'indent-relative-maybe) ; TAB
   (define-key vi-com-map "\C-j" 'vi-next-line) ; LFD
@@ -300,13 +314,13 @@ command extensions.")
   "Alist of (NAME . MARK), marks are local to each buffer.")
 
 (defvar vi-scroll-amount (/ (window-height) 2)
-  "Default amount of lines for scrolling (used by "^D"/"^U").")
+  "Default amount of lines for scrolling (used by \"^D\"/\"^U\").")
 
 (defvar vi-shift-width 4
-  "Shift amount for "<"/">" operators.")
+  "Shift amount for \"<\"/\">\" operators.")
 
 (defvar vi-ins-point nil		; integer
-  "Last insertion point.  Should use 'mark' instead.")
+  "Last insertion point.  Should use `mark' instead.")
 
 (defvar vi-ins-length nil		; integer
   "Length of last insertion.")
@@ -324,14 +338,14 @@ command extensions.")
   "Save last direction, char and upto-flag used for char finding.")
 
 (defvar vi-last-change-command nil	; cons cell
-  "Save commmands for redoing last changes.  Each command is in (FUNC . ARGS)
-form that is ready to be 'apply'ed.")
+  "Save commands for redoing last changes.  Each command is in (FUNC . ARGS)
+form that is ready to be `apply'ed.")
 
 (defvar vi-last-shell-command nil	; last shell op command line
   "Save last shell command given for \"!\" operator.")
 
 (defvar vi-insert-state nil             ; boolean
-  "T if it is in insert state.")
+  "Non-nil if it is in insert state.")
 
 ; in "loaddefs.el"
 ;(defvar search-last-string "" 
@@ -384,6 +398,7 @@ form that is ready to be 'apply'ed.")
   (make-local-variable 'vi-mode-old-case-fold)
   (run-hooks 'vi-mode-hook))
       
+;;;###autoload
 (defun vi-mode ()
   "Major mode that acts like the `vi' editor.
 The purpose of this mode is to provide you the combined power of vi (namely,
@@ -442,7 +457,7 @@ Syntax table and abbrevs while in vi mode remain as they were in Emacs."
      (use-local-map vi-com-map)
      (setq major-mode 'vi-mode)
      (setq mode-name "VI")
-     (set-buffer-modified-p (buffer-modified-p))  ; force mode line update
+     (force-mode-line-update)		; force mode line update
      (if vi-insert-state	        ; this is a return from insertion
          (vi-end-of-insert-state))))
 
@@ -476,7 +491,10 @@ set sw=n     M-x set-variable vi-shift-width n "
 ;; (let ((cmd (read-string ":")) (lines 1))
 ;;  (cond ((string-match "s"))))
   (with-output-to-temp-buffer "*Help*"
-    (princ (documentation 'vi-ex-cmd))))
+    (princ (documentation 'vi-ex-cmd))
+    (save-excursion
+      (set-buffer standard-output)
+      (help-mode))))
 
 (defun vi-undefined ()
   (interactive)
@@ -504,7 +522,7 @@ This function expects 'overwrite-mode' being set properly beforehand."
   (setq case-fold-search vi-mode-old-case-fold)
   (use-local-map vi-mode-old-local-map)
   (setq major-mode vi-mode-old-major-mode)
-  (set-buffer-modified-p (buffer-modified-p))  ; force mode line update
+  (force-mode-line-update)
   (setq vi-insert-state t))
 
 (defun vi-end-of-insert-state ()
@@ -556,9 +574,9 @@ insert state."
    (kill-line arg)
    (vi-set-last-change-command 'kill-line arg))
 
-(defun vi-kill-region ()
-  (interactive)
-  (kill-region)
+(defun vi-kill-region (start end)
+  (interactive "*r")
+  (kill-region start end)
   (vi-set-last-change-command 'kill-region))
   
 (defun vi-append-at-end-of-line (arg)
@@ -715,8 +733,8 @@ are given, use those instead of the ones saved."
 	   (kill-region vi-ins-point (point)))
     (vi-goto-command-state t)))
 
-(defun vi-backward-windowfull (count)
-  "Backward COUNT windowfulls. Default is one."
+(defun vi-backward-windowful (count)
+  "Backward COUNT windowfuls. Default is one."
   (interactive "p")
 ; (set-mark-command nil)
   (while (> count 0)
@@ -724,8 +742,9 @@ are given, use those instead of the ones saved."
     (setq count (1- count))))
 
 (defun vi-scroll-down-window (count)
-  "Scrolls down window COUNT lines.  If COUNT is nil (actually, non-integer),
-scrolls default amount.  The given COUNT is remembered for future scrollings."
+  "Scrolls down window COUNT lines.
+If COUNT is nil (actually, non-integer), scrolls default amount.
+The given COUNT is remembered for future scrollings."
   (interactive "P")
   (if (integerp count)
       (setq vi-scroll-amount count))
@@ -736,8 +755,8 @@ scrolls default amount.  The given COUNT is remembered for future scrollings."
   (interactive "p")
   (scroll-up count))
 
-(defun vi-forward-windowfull (count)
-  "Forward COUNT windowfulls. Default is one."
+(defun vi-forward-windowful (count)
+  "Forward COUNT windowfuls. Default is one."
   (interactive "p")
 ; (set-mark-command nil)
   (while (> count 0)
@@ -748,7 +767,7 @@ scrolls default amount.  The given COUNT is remembered for future scrollings."
   "Go down count lines, try to keep at the same column."
   (interactive "p")
   (setq this-command 'next-line)	; this is a needed trick
-  (if (= (point) (or (next-line-internal count) (point)))
+  (if (= (point) (or (line-move count) (point)))
       (ding)				; no moving, already at end of buffer
     (setq last-command 'next-line)))
 
@@ -765,8 +784,9 @@ scrolls default amount.  The given COUNT is remembered for future scrollings."
   (back-to-indentation))
 
 (defun vi-scroll-up-window (count)
-  "Scrolls up window COUNT lines.  If COUNT is nil (actually, non-integer),
-scrolls default amount.  The given COUNT is remembered for future scrollings."
+  "Scrolls up window COUNT lines.
+If COUNT is nil (actually, non-integer), scrolls default amount.
+The given COUNT is remembered for future scrollings."
   (interactive "P")
   (if (integerp count)
       (setq vi-scroll-amount count))
@@ -779,7 +799,7 @@ scrolls default amount.  The given COUNT is remembered for future scrollings."
 
 (defun vi-char-argument (arg)
   "Get following character (could be any CHAR) as part of the prefix argument.
-Possible perfix-arg cases are NIL, INTEGER, (NIL . CHAR) or (INTEGER . CHAR)."
+Possible prefix-arg cases are NIL, INTEGER, (NIL . CHAR) or (INTEGER . CHAR)."
   (interactive "P")
   (let ((char (read-char)))
     (cond ((null arg) (setq prefix-arg (cons nil char)))
@@ -789,8 +809,8 @@ Possible perfix-arg cases are NIL, INTEGER, (NIL . CHAR) or (INTEGER . CHAR)."
 	  (t (setq prefix-arg (cons (car arg) char))))))
 
 (defun vi-goto-mark (mark-char &optional line-flag)
-  "Go to marked position or line (if line-flag is given). Goto mark '@' means
-jump into and pop the top mark on the mark ring."
+  "Go to marked position or line (if line-flag is given).
+Goto mark '@' means jump into and pop the top mark on the mark ring."
   (cond ((char-equal mark-char last-command-char)	; `` or ''
 	 (exchange-point-and-mark) (if line-flag (back-to-indentation)))
 	((char-equal mark-char ?@)	; jump and pop mark
@@ -1061,29 +1081,26 @@ MOTION-COMMAND with ARG.
       (vi-set-last-change-command 'vi-yank-op 'next-line arg)))
 
 (defun vi-string-end-with-nl-p (string)
-  "See if STRING ends with a newline char.  Used in checking whether the yanked
-text should be put back as lines or not."
+  "See if STRING ends with a newline char.
+Used in checking whether the yanked text should be put back as lines or not."
   (= (aref string (1- (length string))) ?\n))
 
 (defun vi-put-before (arg &optional after-p)
-  "Put yanked (in vi sense) text back before/above cursor.  If a numeric prefix
-value (currently it should be >1) is given, put back text as lines.
-If the optional after-p is given, put after/below the cursor."
+  "Put yanked (in vi sense) text back before/above cursor.  
+If a numeric prefix value (currently it should be >1) is given, put back
+text as lines.  If the optional after-p is given, put after/below the cursor."
   (interactive "P")
   (let ((reg (vi-prefix-char-value arg)) put-text)
     (if (and reg (or (< reg ?1) (> reg ?9)) (null (get-register reg)))
 	(error "Nothing in register %c" reg)
       (if (null reg) (setq reg ?1))	; the default is the last text killed
       (setq put-text
-	    (if (and (>= reg ?1) (<= reg ?9))
-		(let ((ring-length (length kill-ring)))
-		  (setq this-command 'yank) ; So we may yank-pop !!
-		  (nth (% (+ (- reg ?0 1) (- ring-length
-					     (length kill-ring-yank-pointer)))
-			  ring-length) kill-ring))
-	      (if (stringp (get-register reg))
-		  (get-register reg)
-		(error "Register %c is not containing text string" reg))))
+	    (cond
+	     ((and (>= reg ?1) (<= reg ?9))
+	      (setq this-command 'yank) ; So we may yank-pop !!
+	      (current-kill (- reg ?0 1) 'do-not-rotate))
+	     ((stringp (get-register reg)) (get-register reg))
+	     (t (error "Register %c is not containing text string" reg))))
       (if (vi-string-end-with-nl-p put-text) ; put back text as lines
 	  (if after-p
 	      (progn (next-line 1) (beginning-of-line))
@@ -1101,7 +1118,8 @@ If the optional after-p is given, put after/below the cursor."
   (vi-put-before arg t))
 
 (defun vi-shell-op (motion-command arg &optional shell-command)
-  "Perform shell command (as filter) on range specified by MOTION-COMMAND
+  "Perform shell command (as filter).
+Performs command on range specified by MOTION-COMMAND
 with ARG. If SHELL-COMMAND is not given, ask for one from minibuffer.
 If char argument is given, it directs the output to a *temp* buffer."
   (let* ((range (vi-effective-range motion-command arg))
@@ -1151,8 +1169,8 @@ SPECIAL FEATURE: char argument can be used to specify shift amount(1-9)."
   (cdr (assq char vi-mark-alist)))
 
 (defun vi-set-mark (char)
-  "Set contents of vi mark register named CHAR to current point. '@' is the
-special anonymous mark register."
+  "Set contents of vi mark register named CHAR to current point.
+'@' is the special anonymous mark register."
   (interactive "c")
   (if (char-equal char ?@)
       (set-mark-command nil)
@@ -1213,12 +1231,12 @@ special anonymous mark register."
     (vi-ding)))
 
 (defun vi-set-last-change-command (fun &rest args)
-  "Set (FUN . ARGS) as the last-change-command."
+  "Set (FUN . ARGS) as the `last-change-command'."
   (setq vi-last-change-command (cons fun args)))
 
 (defun vi-redo-last-change-command (count &optional command)
   "Redo last change command COUNT times.  If the optional COMMAND is given,
-it is used instead of the current last-change-command."
+it is used instead of the current `last-change-command'."
   (interactive "p")
   (if (null command)
       (setq command vi-last-change-command))
@@ -1235,7 +1253,8 @@ it is used instead of the current last-change-command."
   (vi-set-last-change-command 'delete-char count t))
 
 (defun vi-transpose-objects (arg unit)
-  "Transpose objects, the following char specifies unit of objects to be
+  "Transpose objects.
+The following char specifies unit of objects to be
 transposed -- \"c\" for chars, \"l\" for lines, \"w\" for words, \"s\" for
  sexp, \"p\" for paragraph.
 For the use of the prefix-arg, refer to individual functions called."
@@ -1290,9 +1309,9 @@ For the use of the prefix-arg, refer to individual functions called."
       (ding))))
 
 (defun vi-name-last-change-or-macro (arg char)
-  "Give name to the last change command or just defined kbd macro.  If prefix
-ARG is given, name last macro, otherwise name last change command.  The
-following CHAR will be the name for the command or macro."
+  "Give name to the last change command or just defined kbd macro.  
+If prefix ARG is given, name last macro, otherwise name last change command.
+The following CHAR will be the name for the command or macro."
   (interactive "P\nc")
   (if arg
       (name-last-kbd-macro (intern (char-to-string char)))
@@ -1336,16 +1355,16 @@ following CHAR will be the name for the command or macro."
 	   (vi-ask-for-info char))))
 
 (defun vi-mark-region (arg region)
-  "Mark region approriately.  The next char REGION is d(efun),s(-exp),b(uffer),
+  "Mark region appropriately.  The next char REGION is d(efun),s(-exp),b(uffer),
 p(aragraph), P(age), f(unction in C/Pascal etc.), w(ord), e(nd of sentence),
 l(ines)."
   (interactive "p\nc")
-  (cond ((char-equal region ?d) (mark-defun arg))
+  (cond ((char-equal region ?d) (mark-defun))
 	((char-equal region ?s) (mark-sexp arg))
 	((char-equal region ?b) (mark-whole-buffer))
-	((char-equal region ?p) (mark-paragraph arg))
+	((char-equal region ?p) (mark-paragraph))
 	((char-equal region ?P) (mark-page arg))
-	((char-equal region ?f) (mark-c-function arg))
+	((char-equal region ?f) (mark-c-function))
 	((char-equal region ?w) (mark-word arg))
 	((char-equal region ?e) (mark-end-of-sentence arg))
 	((char-equal region ?l) (vi-mark-lines arg))
@@ -1391,8 +1410,8 @@ r(egion), s(tring), w(ord) ]."
 	  (command-execute cmd nil)))))
 
 (defun vi-quote-words (arg char)
-  "Quote ARG words from the word point is on with the pattern specified by the
-CHAR. Currently, CHAR could be [,{,(,\",',`,<,*, etc."
+  "Quote ARG words from the word point is on with pattern specified by CHAR.
+Currently, CHAR could be [,{,(,\",',`,<,*, etc."
   (interactive "*p\nc")
   (while (not (string-match "[[({<\"'`*]" (char-to-string char)))
     (message "Enter any of [,{,(,<,\",',`,* as quoting character.")
@@ -1410,8 +1429,8 @@ CHAR. Currently, CHAR could be [,{,(,\",',`,<,*, etc."
   (insert char))
 
 (defun vi-locate-def ()
-  "Locate definition in current file for the name before the point. It assumes
-a `(def..' always starts at the beginning of a line."
+  "Locate definition in current file for the name before the point.
+It assumes a `(def..' always starts at the beginning of a line."
   (interactive)
   (let (name)
     (save-excursion
@@ -1431,7 +1450,7 @@ a `(def..' always starts at the beginning of a line."
 
 (defun vi-split-open-line (arg)
   "Insert a newline and leave point before it.
-With arg, inserts that many newlines."
+With ARG, inserts that many newlines."
   (interactive "*p")
   (vi-goto-insert-state 1
     (list (function (lambda (arg)
@@ -1444,3 +1463,5 @@ With arg, inserts that many newlines."
 			  (setq arg (1- arg)))
 			(if flag (forward-char 1))))) arg)
     t))
+
+;;; vi.el ends here

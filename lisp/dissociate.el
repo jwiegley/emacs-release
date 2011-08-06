@@ -1,11 +1,15 @@
-;; Scramble text amusingly for Emacs.
+;;; dissociate.el --- scramble text amusingly for Emacs.
+
 ;; Copyright (C) 1985 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: games
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,10 +18,18 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
 
+;; The single entry point, `dissociated-press', applies a travesty
+;; generator to the current buffer.  The results can be quite amusing.
+
+;;; Code:
+
+;;;###autoload
 (defun dissociated-press (&optional arg)
   "Dissociate the text of the current buffer.
 Output goes in buffer named *Dissociation*,
@@ -34,6 +46,8 @@ Default is 2."
 	 (move-amount (if (> arg 0) arg (- arg)))
 	 (search-function (if (> arg 0) 'search-forward 'word-search-forward))
 	 (last-query-point 0))
+    (if (= (point-max) (point-min))
+	(error "The buffer contains no text to start from"))
     (switch-to-buffer outbuf)
     (erase-buffer)
     (while
@@ -54,12 +68,12 @@ Default is 2."
 	 (setq start (point))
 	 (if (eq move-function 'forward-char)
 	     (progn
-	       (setq end (+ start (+ move-amount (logand 15 (random)))))
+	       (setq end (+ start (+ move-amount (random 16))))
 	       (if (> end (point-max))
-		   (setq end (+ 1 move-amount (logand 15 (random)))))
+		   (setq end (+ 1 move-amount (random 16))))
 	       (goto-char end))
 	   (funcall move-function
-		    (+ move-amount (logand 15 (random)))))
+		    (+ move-amount (random 16))))
 	 (setq end (point)))
 	(let ((opoint (point)))
 	  (insert-buffer-substring inbuf start end)
@@ -77,11 +91,11 @@ Default is 2."
 					 (funcall move-function
 						  (- move-amount)))
 				  (point))))
-	   (let (ranval)
-	     (while (< (setq ranval (random)) 0))
-	     (goto-char (1+ (% ranval (1- (point-max))))))
+	   (goto-char (1+ (random (1- (point-max)))))
 	   (or (funcall search-function overlap nil t)
 	       (let ((opoint (point)))
 		 (goto-char 1)
 		 (funcall search-function overlap opoint t))))))
       (sit-for 0))))
+
+;;; dissociate.el ends here

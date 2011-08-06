@@ -13,7 +13,9 @@ suitability of this software for any purpose.  It is provided "as is"
 without express or implied warranty.
 */
 
-#include "X11/Xlib.h"
+#include <config.h>
+#include <X11/Xlib.h>
+#include <X11/Xresource.h>
 #include "X10.h"
 #include <errno.h>
 
@@ -23,9 +25,7 @@ without express or implied warranty.
 
 extern int errno;
 
-extern int (*_XIOErrorFunction)();	/* X system error reporting routine. */
-
-void insque();
+void emacs_insque();
 struct qelem {
 	struct    qelem *q_forw;
 	struct    qelem *q_back;
@@ -91,17 +91,12 @@ XMakeAssoc(dpy, table, x_id, data)
 	/* If we are here then the new entry should be inserted just */
 	/* before the current value of "Entry". */
 	/* Create a new XAssoc and load it with new provided data. */
-	new_entry = (XAssoc *) malloc(sizeof(XAssoc));
-	if (new_entry == NULL) {
-		/* Malloc failed! */
-		errno = ENOMEM;
-		(*_XIOErrorFunction)(dpy);
-	}
+	new_entry = (XAssoc *) xmalloc(sizeof(XAssoc));
 	new_entry->display = dpy;
 	new_entry->x_id = x_id;
 	new_entry->data = data;
 
 	/* Insert the new entry. */
-	insque((struct qelem *)new_entry, (struct qelem *)Entry->prev);
+	emacs_insque((struct qelem *)new_entry, (struct qelem *)Entry->prev);
 }
 

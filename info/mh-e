@@ -1,0 +1,120 @@
+This is Info file ../info/mh-e, produced by Makeinfo-1.63 from the
+input file mh-e.texi.
+
+   This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
+Emacs Interface to MH', for mh-e, Version 5.0.2.
+
+   Copyright 1995 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the section entitled "Copying" is included exactly as in the
+original, and provided that the entire resulting derived work is
+distributed under the terms of a permission notice identical to this
+one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Free Software Foundation.
+
+
+Indirect:
+mh-e-1: 1025
+mh-e-2: 49213
+mh-e-3: 94930
+mh-e-4: 142743
+
+Tag Table:
+(Indirect)
+Node: Top1025
+Node: Preface1843
+Node: Tour Through mh-e3882
+Node: Conventions5046
+Node: Getting Started8611
+Node: Sending Mail Tour11508
+Node: Reading Mail Tour13290
+Node: Processing Mail Tour14824
+Node: Leaving mh-e18041
+Node: More About mh-e18653
+Node: Using mh-e19932
+Node: Reading Mail21337
+Node: Viewing23216
+Node: Reading Digests23976
+Node: Reading MIME25354
+Node: Moving Around25948
+Node: Sending Mail27337
+Node: Replying29227
+Node: Forwarding30706
+Node: Redistributing31614
+Node: Old Drafts32212
+Node: Draft Editing33284
+Node: Editing Textual35146
+Node: Inserting Letter35543
+Node: Inserting Messages37052
+Node: Header37577
+Node: Recipients38451
+Node: Signature38746
+Node: Editing MIME39054
+Node: Forwarding MIME40965
+Node: FTP41352
+Node: Tar41759
+Node: Other MIME Objects42335
+Node: Sending MIME42738
+Node: Sending Message45237
+Node: Killing Draft45574
+Node: Moving Mail45878
+Node: Incorporating47673
+Node: Deleting48412
+Node: Organizing49213
+Node: Printing51312
+Node: Files and Pipes51768
+Node: Finishing Up53106
+Node: Searching54436
+Node: Sequences57835
+Node: Miscellaneous60716
+Node: Customizing mh-e61350
+Node: Customizing Reading65117
+Node: Customizing Viewing71855
+Node: Customizing Moving Around75964
+Node: Customizing Sending76506
+Node: Customizing Replying80532
+Node: Customizing Forwarding81036
+Node: Customizing Redistributing81803
+Node: Customizing Old Drafts82495
+Node: Customizing Draft Editing83468
+Node: Customizing Editing Textual84976
+Node: Customizing Inserting Letter85404
+Node: Customizing Signature87356
+Node: Customizing Editing MIME87676
+Node: Customizing Sending MIME90185
+Node: Customizing Sending Message90842
+Node: Customizing Moving Mail91338
+Node: Customizing Incorporating93117
+Node: Customizing Deleting94567
+Node: Customizing Organizing94930
+Node: Customizing Scan Line Formats99389
+Node: Customizing Printing102743
+Node: Customizing Files and Pipes103464
+Node: Customizing Finishing Up104355
+Node: Customizing Searching104874
+Node: Odds and Ends105731
+Node: Bug Reports106117
+Node: Mailing List106494
+Node: MH FAQ106878
+Node: Getting mh-e107673
+Node: History108974
+Node: From Brian Reid109459
+Node: From Jim Larus111102
+Node: From Stephen Gildea113359
+Node: Changes to mh-e115495
+Node: Copying118952
+Node: Command Index138115
+Node: Variable Index142743
+Node: Concept Index148192
+
+End Tag Table

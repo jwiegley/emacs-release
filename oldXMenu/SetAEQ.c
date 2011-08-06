@@ -1,12 +1,12 @@
 #include "copyright.h"
 
-/* $Header: SetAEQ.c,v 1.2 87/12/20 12:05:51 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/SetAEQ.c,v 1.1 1992/04/11 22:10:20 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
  * XMenu:	MIT Project Athena, X Window system menu package
  *
- *	XMenuSetAEQ - Set Asynchronous event queueing mode.
+ *	XMenuSetAEQ - Set Asynchronous event queuing mode.
  *		      When enabled asynchronous events will be queue while
  *		      a menu is being displayed and restored to the X
  *		      event queue when the menu is taken down.

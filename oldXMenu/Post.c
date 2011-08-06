@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: Post.c,v 1.3 87/12/20 12:05:40 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/Post.c,v 1.1 1992/04/11 22:10:20 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
@@ -10,7 +10,7 @@
  *			the menu for user selection.  The user is allowed to
  *			specify the mouse button event mask that will be used
  *			to identify a selection request.  When a selection 
- *			request is recieved (i.e., when the specified mouse
+ *			request is received (i.e., when the specified mouse
  *			event occurs) the data  returned will be either the
  *			data associated with the particular selection active
  *			at the time of the selection request or NULL if no
@@ -20,7 +20,7 @@
  *			region.  Inactive selections will not be highlighted.
  *			As the mouse cursor moved from one menu pane
  *			to another menu pane the pane being entered is raised
- *			and activated and the pane being left is inactivated.
+ *			and activated and the pane being left is deactivated.
  *			If an error occurs NULL will be returned with the
  *			p_num set to POST_ERROR, s_num set to
  *			NO_SELECTION and _XMErrorCode set to an

@@ -1,4 +1,4 @@
-/* $Header: Activate.c,v 1.16 88/02/02 19:08:46 jim Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/Activate.c,v 1.1 1992/04/11 22:10:17 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 #include "copyright.h"
@@ -16,7 +16,7 @@
  *			A menu selection is shown to be current by placing
  *			a highlight box around the selection as the mouse
  *			cursor enters its active region.  Inactive selections
- *			will not be highlited.	As the mouse cursor moved
+ *			will not be highlighted.  As the mouse cursor moved
  *			from one menu pane to another menu pane the pane being
  *			entered is raised and made current and the pane being
  *			left is lowered.
@@ -30,7 +30,7 @@
  *				pointer is left untouched and XM_FAILURE
  *				is returned.  
  *
- *			2)	When a selection request is recieved (i.e.,
+ *			2)	When a selection request is received (i.e.,
  *				when the specified mouse event occurs) the
  *				data pointer will be set to the data
  *				associated with the particular selection
@@ -62,7 +62,7 @@
  *				AEQ mode disables this mode temporarily.
  *
  *			3)	The application has enabled asynchronous event
- *				queueing mode.  In this mode all foreign events
+ *				queuing mode.  In this mode all foreign events
  *				will be	queued up untill XMenuActivate
  *				terminates; at which time they will be
  *				returned to the	X event queue.  As long as
@@ -80,6 +80,7 @@
  *
  */
 
+#include <config.h>
 #include "XMenuInt.h"
 
 int
@@ -313,7 +314,7 @@ XMenuActivate(display, menu, p_num, s_num, x_pos, y_pos, event_mask, data)
 		 * selection entered is active then activate
 		 * the selection.
 		 */
-		if (cur_p->active && cur_s->active) {
+		if (cur_p->active && cur_s->active > 0) {
 		    cur_s->activated = 1;
 		    _XMRefreshSelection(display, menu, cur_s);
 		}
@@ -354,6 +355,20 @@ XMenuActivate(display, menu, p_num, s_num, x_pos, y_pos, event_mask, data)
 		    _XMRefreshPane(display, menu, cur_p);
 		}
 		if (event_xmp->active) event_xmp->activated = True;
+#if 1
+		/*
+		 * i suspect the we don't get an EXPOSE event when backing
+		 * store is enabled; the menu windows content is probably
+		 * not drawn in when it should be in that case.
+		 * in that case, this is probably an ugly fix!
+		 * i hope someone more familiar with this code would
+		 * take it from here.  -- caveh@eng.sun.com.
+		 */
+		XSetWindowBackground(display,
+				     event_xmp->window, 
+				     menu->bkgnd_color);
+		_XMRefreshPane(display, menu, event_xmp);
+#endif
 		cur_p = event_xmp;
 	    }
 	    break;
@@ -381,7 +396,7 @@ XMenuActivate(display, menu, p_num, s_num, x_pos, y_pos, event_mask, data)
     case ButtonRelease:
 		*p_num = cur_p->serial;
 		/*
-		 * Check to see if there is a current selecion.
+		 * Check to see if there is a current selection.
 		 */
 		if (cur_s != NULL) {
 		    /*

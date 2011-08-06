@@ -1,11 +1,15 @@
-;; scribe mode, and its ideosyncratic commands.
+;;; scribe.el --- scribe mode, and its idiosyncratic commands.
+
 ;; Copyright (C) 1985 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: wp
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,9 +18,17 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
+
+;; A major mode for editing source in written for the Scribe text formatter.
+;; Knows about Scribe syntax and standard layout rules.  The command to
+;; run Scribe on a buffer is bogus; someone interested should fix it.
+
+;;; Code:
 
 (defvar scribe-mode-syntax-table nil
   "Syntax table used while in scribe mode.")
@@ -38,8 +50,8 @@ if typed after an @Command form.")
   "Open parenthesis characters for Scribe.")
 
 (defconst scribe-close-parentheses "])}>"
-  "Close parenthesis characters for Scribe.  These should match up with
-scribe-open-parenthesis.")
+  "Close parenthesis characters for Scribe.
+These should match up with `scribe-open-parenthesis'.")
 
 (if (null scribe-mode-syntax-table)
     (let ((st (syntax-table)))
@@ -75,17 +87,18 @@ scribe-open-parenthesis.")
   (define-key scribe-mode-map "[" 'scribe-parenthesis)
   (define-key scribe-mode-map "{" 'scribe-parenthesis)
   (define-key scribe-mode-map "<" 'scribe-parenthesis)
-  (define-key scribe-mode-map "\^cc" 'scribe-chapter)
-  (define-key scribe-mode-map "\^cS" 'scribe-section)
-  (define-key scribe-mode-map "\^cs" 'scribe-subsection)
-  (define-key scribe-mode-map "\^ce" 'scribe-insert-environment)
-  (define-key scribe-mode-map "\^c\^e" 'scribe-bracket-region-be)
-  (define-key scribe-mode-map "\^c[" 'scribe-begin)
-  (define-key scribe-mode-map "\^c]" 'scribe-end)
-  (define-key scribe-mode-map "\^ci" 'scribe-italicize-word)
-  (define-key scribe-mode-map "\^cb" 'scribe-bold-word)
-  (define-key scribe-mode-map "\^cu" 'scribe-underline-word))
+  (define-key scribe-mode-map "\C-c\C-c" 'scribe-chapter)
+  (define-key scribe-mode-map "\C-c\C-t" 'scribe-section)
+  (define-key scribe-mode-map "\C-c\C-s" 'scribe-subsection)
+  (define-key scribe-mode-map "\C-c\C-v" 'scribe-insert-environment)
+  (define-key scribe-mode-map "\C-c\C-e" 'scribe-bracket-region-be)
+  (define-key scribe-mode-map "\C-c[" 'scribe-begin)
+  (define-key scribe-mode-map "\C-c]" 'scribe-end)
+  (define-key scribe-mode-map "\C-c\C-i" 'scribe-italicize-word)
+  (define-key scribe-mode-map "\C-c\C-b" 'scribe-bold-word)
+  (define-key scribe-mode-map "\C-c\C-u" 'scribe-underline-word))
 
+;;;###autoload
 (defun scribe-mode ()
   "Major mode for editing files of Scribe (a text formatter) source.
 Scribe-mode is similar text-mode, with a few extra commands added.
@@ -118,14 +131,16 @@ scribe-electric-parenthesis
   (make-local-variable 'comment-end)
   (setq comment-end "]")
   (make-local-variable 'paragraph-start)
-  (setq paragraph-start (concat "\\(^[\n\f]\\)\\|\\(^@\\w+["
+  (setq paragraph-start (concat "\\([\n\f]\\)\\|\\(@\\w+["
 				 scribe-open-parentheses
 				"].*["
 				 scribe-close-parentheses
 				"]$\\)"))
   (make-local-variable 'paragraph-separate)
   (setq paragraph-separate (if scribe-fancy-paragraphs
-			       paragraph-start "^$"))
+			       paragraph-start "$"))
+  (make-local-variable 'sentence-end)
+  (setq sentence-end "\\([.?!]\\|@:\\)[]\"')}]*\\($\\| $\\|\t\\|  \\)[ \t\n]*")
   (make-local-variable 'compile-command)
   (setq compile-command (concat "scribe " (buffer-file-name)))
   (set-syntax-table scribe-mode-syntax-table)
@@ -144,9 +159,9 @@ scribe-electric-parenthesis
   (call-interactively 'compile))
 
 (defun scribe-envelop-word (string count)
-  "Surround current word with Scribe construct @STRING[...].  COUNT
-specifies how many words to surround.  A negative count means to skip 
-backward."
+  "Surround current word with Scribe construct @STRING[...].
+COUNT specifies how many words to surround.  A negative count means
+to skip backward."
   (let ((spos (point)) (epos (point)) (ccoun 0) noparens)
     (if (not (zerop count))
 	(progn (if (= (char-syntax (preceding-char)) ?w)
@@ -248,7 +263,8 @@ backward."
   (forward-char -1))
 
 (defun scribe-insert-quote (count)
-  "If scribe-electric-quote is non-NIL, insert ``, '' or \" according
+  "Insert ``, '' or \" according to preceding character.
+If `scribe-electric-quote' is non-NIL, insert ``, '' or \" according
 to preceding character.  With numeric arg N, always insert N \" characters.
 Else just insert \"."
   (interactive "P")
@@ -305,3 +321,5 @@ preceding text is of the form @Command."
 				   scribe-open-parentheses)))
 	  (save-excursion
 	    (insert (aref scribe-close-parentheses paren-char)))))))
+
+;;; scribe.el ends here

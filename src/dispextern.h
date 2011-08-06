@@ -1,11 +1,11 @@
 /* Interface definitions for display code.
-   Copyright (C) 1985, 1990 Free Software Foundation, Inc.
+   Copyright (C) 1985, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -15,77 +15,169 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
 
+#ifndef _DISPEXTERN_H_
+#define _DISPEXTERN_H_
 
-/* Nonzero means do not assume anything about current
- contents of actual terminal screen */
-
-extern int screen_garbaged;
-
-/* Desired terminal cursor position (to show position of point),
- origin zero.  */
-
-extern int cursor_hpos, cursor_vpos;
-
-/* Nonzero means last display completed
-   and cursor is really at cursor_hpos, cursor_vpos.
-   Zero means it was preempted. */
-
+/* Nonzero means last display completed and cursor is really at
+   cursX, cursY.  Zero means it was preempted. */
 extern int display_completed;
 
-/* Nonzero while trying to read keyboard input at main program level.  */
+#ifdef HAVE_X_WINDOWS
+#include <X11/Xlib.h>
+#endif
 
-extern int waiting_for_input;
+#ifdef MSDOS
+#include "msdos.h"
+#endif
 
-struct matrix
-{
-  /* Height of this matrix.  */
-  int height;
-  /* Width of this matrix.  */
-  int width;
-  /* Vector of used widths of lines, indexed by vertical position.  */
-  int *used;
-  /* Vector of line contents.
-     m->contents[V][H] is the character at position V, H.
-     Note that ->contents[...][screen_width] is always 0
-     and so is ->contents[...][-1].  */
-  unsigned char **contents;
-  /* Long vector from which the line contents are taken.  */
-  unsigned char *total_contents;
-  /* Vector indicating, for each line, whether it is highlighted.  */
-  char *highlight;
-  /* Vector indicating, for each line, whether its contents mean anything.  */
-  char *enable;
-};
+#ifdef HAVE_NTGUI
+#include "win32.h"
+#endif
 
-/* Current screen contents.  */
-extern struct matrix *current_screen;
-/* Screen contents to be displayed.  */
-extern struct matrix *new_screen;
-/* Temporary buffer for screen contents.  */
-extern struct matrix *temp_screen;
+#ifdef HAVE_FACES
+struct face
+  {
+    /* If this is non-zero, it is a GC we can use without modification
+       to represent this face.  */
+    GC gc;
+  
+    /* Pixel value for foreground color.  */
+    EMACS_UINT foreground;
+  
+    /* Pixel value for background color.  */
+    EMACS_UINT background;
+  
+    /* Font used for this face.  */
+    XFontStruct *font;
+  
+    /* Background stipple or bitmap used for this face.  */
+    Pixmap stipple;
 
-/* Get ready to display on screen line VPOS at column HPOS
-   and return the string where the text of that line is stored.  */
+    /* Pixmap_depth.  */
+    unsigned int pixmap_w, pixmap_h;
+  
+    /* Whether or not to underline text in this face.  */
+    char underline;
+  };
 
-unsigned char *get_display_line ();
+/* Let's stop using this and get rid of it.  */
+typedef struct face *FACE;
 
-/* Buffer used by `message' for formatting a message, and by print.c.  */
-extern char *message_buf;
+#define NORMAL_FACE ((struct face *) 0)
 
-/* Nonzero means message_buf is being used by print.  */
-extern int message_buf_print;
+#define FACE_HAS_GC(f) ((f)->gc)
+#define FACE_GC(f) ((f)->gc)
+#define FACE_FOREGROUND(f) ((f)->foreground)
+#define FACE_BACKGROUND(f) ((f)->background)
+#define FACE_FONT(f) ((f)->font)
+#define FACE_STIPPLE(f) ((f)->stipple)
+#define FACE_UNDERLINE_P(f) ((f)->underline)
 
-/* Message to display instead of minibuffer contents
-   This is what the functions error and message make,
-   and command echoing uses it as well.
-   It overrides the minibuf_prompt as well as the buffer.  */
-extern char *echo_area_contents;
+#else /* not HAVE_FACES */
 
-/* All costs measured in characters.
-   So no cost can exceed the area of a screen, measured in characters.
-   This should not be more than million.
-   Meanwhile, we can add lots of millions together without overflow.  */
+typedef int FACE;
 
-#define INFINITY 1000000
+#define NORMAL_FACE 0x0
+#define HIGHLIGHT_FACE 0x1
+#define UNDERLINE_FACE 0x2
+#define HIGHLIGHT_UNDERLINE_FACE 0x3
+
+#define FACE_HIGHLIGHT(f) ((f) & 0x1)
+#define FACE_UNDERLINE(f) ((f) & 0x2)
+
+#endif /* not HAVE_FACES */
+
+
+/* This structure is used for the actual display of text on a frame.
+
+   There are two instantiations of it:  the glyphs currently displayed,
+   and the glyphs we desire to display.  The latter object is generated
+   from buffers being displayed.  */
+
+struct frame_glyphs
+  {
+#ifdef MULTI_FRAME
+    struct  frame *frame;	/* Frame these glyphs belong to.  */
+#endif /* MULTI_FRAME */
+    int height;
+    int width;
+
+    /* Contents of the frame.
+       glyphs[V][H] is the glyph at position V, H.
+       Note that glyphs[V][-1],
+                 glyphs[V][used[V]],
+	     and glyphs[V][frame_width] are always '\0'.  */
+    GLYPH **glyphs;
+    /* long vector from which the strings in `glyphs' are taken.  */
+    GLYPH *total_contents;
+
+    /* When representing a desired frame,
+         enable[n] == 0 means that line n is same as current frame.
+	 Between updates, all lines should be disabled.
+       When representing current frame contents,
+         enable[n] == 0 means that line n is blank.  */
+    char *enable;
+
+    /* Everything on line n after column used[n] is considered blank.  */
+    int *used;
+
+    /* highlight[n] != 0 iff line n is highlighted.  */
+    char *highlight;
+
+    /* Buffer offset of this line's first char.
+       This is not really implemented, and cannot be,
+       and should be deleted.  */
+    int   *bufp;
+
+#ifdef HAVE_WINDOW_SYSTEM
+    /* Pixel position of top left corner of line.  */
+    short *top_left_x;
+    short *top_left_y;
+
+    /* Pixel width of line.  */
+    short *pix_width;
+
+    /* Pixel height of line.  */
+    short *pix_height;
+
+    /* Largest font ascent on this line.  */
+    short *max_ascent;
+#endif	/* HAVE_WINDOW_SYSTEM */
+
+    /* Mapping of coordinate pairs to buffer positions.
+       This field holds a vector indexed by row number.
+       Its elements are vectors indexed by column number.
+       Each element of these vectors is a buffer position, 0, or -1.
+
+       For a column where the image of a text character starts,
+       the element value is the buffer position of that character.
+       When a window's screen line starts in mid character,
+       the element for the line's first column (at the window's left margin)
+       is that character's position.
+       For successive columns within a multicolumn character,
+       the element is -1.
+       For the column just beyond the last glyph on a line,
+       the element is the buffer position of the end of the line.
+       For following columns within the same window, the element is 0.
+       For rows past the end of the accessible buffer text,
+       the window's first column has ZV and other columns have 0.
+
+       Mode lines and vertical separator lines have 0.
+
+       The column of a window's left margin
+       always has a positive value (a buffer position), not 0 or -1,
+       for each line in that window's interior.  */
+
+    int **charstarts;
+
+    /* This holds all the space in the subvectors of the charstarts field.  */
+    int *total_charstarts;
+  };
+
+extern void get_display_line ();
+extern Lisp_Object sit_for ();
+
+#endif /* not _DISPEXTERN_H_ */

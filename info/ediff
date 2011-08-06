@@ -1,0 +1,42 @@
+This is Info file ../info/ediff, produced by Makeinfo-1.63 from the
+input file ediff.texi.
+
+   This file documents Ediff, a comprehensive visual interface to Unix
+diff and patch utilities.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+
+Indirect:
+ediff-1: 356
+ediff-2: 48394
+
+Tag Table:
+(Indirect)
+Node: Top356
+Node: Introduction933
+Node: Major Entry Points3235
+Node: Commands9224
+Node: Registry of Ediff Sessions16254
+Node: Session Groups17799
+Node: Remote and Compressed Files21355
+Node: Customization22584
+Node: Hooks24531
+Node: Quick Help28702
+Node: Window and Frame Configuration29664
+Node: Selective Browsing35840
+Node: Highlighting Difference Regions39896
+Node: Narrowing44168
+Node: Refinement of Difference Regions45455
+Node: Patch and Diff Programs48394
+Node: Merging and diff350570
+Node: Support for Version Control58262
+Node: Customizing the Mode Line59929
+Node: Miscellaneous60774
+Node: Notes on Heavy-duty Customization65608
+Node: Credits68175
+Node: Index71455
+
+End Tag Table

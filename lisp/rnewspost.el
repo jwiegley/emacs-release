@@ -1,11 +1,15 @@
-;;; USENET news poster/mailer for GNU Emacs
-;; Copyright (C) 1985, 1986, 1987 Free Software Foundation, Inc.
+;;; rnewspost.el --- USENET news poster/mailer for GNU Emacs
+
+;; Copyright (C) 1985, 1986, 1987, 1995 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: mail, news
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,8 +18,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
+;;; Change Log:
 
 ;; moved posting and mail code from rnews.el
 ;;	tower@prep.ai.mit.edu Wed Oct 29 1986
@@ -31,8 +38,6 @@
 ;;	tower@prep 28 Apr 87
 ;; commented out Posting-Front-End to save USENET bytes tower@prep Jul 31 87
 ;; commented out -n and -t args in news-inews     tower@prep 15 Oct 87
-(require 'sendmail)
-(require 'rnews)
 
 ;Now in paths.el.
 ;(defvar news-inews-program "inews"
@@ -42,29 +47,61 @@
 ;; imported from rmail and modified to work with rnews ...
 ;; Mon Mar 25,1985 at 03:07:04 ads@mit-hermes.
 ;; this is done so that rnews can operate independently from rmail.el and
-;; sendmail and dosen't have to autoload these functions.
+;; sendmail and doesn't have to autoload these functions.
 ;;
 ;;; >> Nuked by Mly to autoload those functions again, as the duplication of
 ;;; >>  code was making maintenance too difficult.
+
+;;; Code:
+
+(require 'sendmail)
+(require 'rnews)
 
 (defvar news-reply-mode-map () "Mode map used by news-reply.")
 
 (or news-reply-mode-map
     (progn
       (setq news-reply-mode-map (make-keymap))
-      (define-key news-reply-mode-map "\C-c?" 'describe-mode)
       (define-key news-reply-mode-map "\C-c\C-f\C-d" 'news-reply-distribution)
       (define-key news-reply-mode-map "\C-c\C-f\C-k" 'news-reply-keywords)
       (define-key news-reply-mode-map "\C-c\C-f\C-n" 'news-reply-newsgroups)
       (define-key news-reply-mode-map "\C-c\C-f\C-f" 'news-reply-followup-to)
       (define-key news-reply-mode-map "\C-c\C-f\C-s" 'mail-subject)
       (define-key news-reply-mode-map "\C-c\C-f\C-a" 'news-reply-summary)
+      (define-key news-reply-mode-map "\C-c\C-t" 'mail-text)
       (define-key news-reply-mode-map "\C-c\C-r" 'news-caesar-buffer-body)
       (define-key news-reply-mode-map "\C-c\C-w" 'news-reply-signature)
       (define-key news-reply-mode-map "\C-c\C-y" 'news-reply-yank-original)
       (define-key news-reply-mode-map "\C-c\C-q" 'mail-fill-yanked-message)
       (define-key news-reply-mode-map "\C-c\C-c" 'news-inews)
-      (define-key news-reply-mode-map "\C-c\C-s" 'news-inews)))
+      (define-key news-reply-mode-map "\C-c\C-s" 'news-inews)
+      (define-key news-reply-mode-map [menu-bar] (make-sparse-keymap))
+      (define-key news-reply-mode-map [menu-bar fields]
+	(cons "Fields" (make-sparse-keymap "Fields")))
+      (define-key news-reply-mode-map [menu-bar fields news-reply-distribution]
+	'("Distribution" . news-reply-distribution))
+      (define-key news-reply-mode-map [menu-bar fields news-reply-keywords]
+	'("Keywords" . news-reply-keywords))
+      (define-key news-reply-mode-map [menu-bar fields news-reply-newsgroups]
+	'("Newsgroups" . news-reply-newsgroups))
+      (define-key news-reply-mode-map [menu-bar fields news-reply-followup-to]
+	'("Followup-to" . news-reply-followup-to))
+      (define-key news-reply-mode-map [menu-bar fields mail-subject]
+	'("Subject" . mail-subject))
+      (define-key news-reply-mode-map [menu-bar fields news-reply-summary]
+	'("Summary" . news-reply-summary))
+      (define-key news-reply-mode-map [menu-bar fields mail-text]
+	'("Text" . mail-text))
+      (define-key news-reply-mode-map [menu-bar news]
+	(cons "News" (make-sparse-keymap "News")))
+      (define-key news-reply-mode-map [menu-bar news news-caesar-buffer-body]
+	'("Rot13" . news-caesar-buffer-body))
+      (define-key news-reply-mode-map [menu-bar news news-reply-yank-original]
+	'("Yank Original" . news-reply-yank-original))
+      (define-key news-reply-mode-map [menu-bar news mail-fill-yanked-message]
+	'("Fill Yanked Messages" . mail-fill-yanked-message))
+      (define-key news-reply-mode-map [menu-bar news news-inews]
+	'("Send" . news-inews))))
 
 (defun news-reply-mode ()
   "Major mode for editing news to be posted on USENET.
@@ -90,25 +127,25 @@ C-c C-r  caesar rotate all letters by 13 places in the article's body (rot13)."
   (use-local-map news-reply-mode-map)
   (setq local-abbrev-table text-mode-abbrev-table)
   (setq major-mode 'news-reply-mode)
-  (setq mode-name "News")
+  (setq mode-name "News Reply")
   (make-local-variable 'paragraph-separate)
   (make-local-variable 'paragraph-start)
-  (setq paragraph-start (concat "^" mail-header-separator "$\\|"
-				paragraph-start))
-  (setq paragraph-separate (concat "^" mail-header-separator "$\\|"
-				   paragraph-separate))
+  (setq paragraph-start
+	(concat "^" (regexp-quote mail-header-separator) "$\\|"
+		paragraph-start))
+  (setq paragraph-separate
+	(concat "^" (regexp-quote mail-header-separator) "$\\|"
+		paragraph-separate))
   (run-hooks 'text-mode-hook 'news-reply-mode-hook))
 
-(defvar news-reply-yank-from
-  "Save From: field for news-reply-yank-original."
-  "")
+(defvar news-reply-yank-from ""
+  "Save `From:' field for `news-reply-yank-original'.")
 
-(defvar news-reply-yank-message-id
-  "Save Message-Id: field for news-reply-yank-original."
-  "")
+(defvar news-reply-yank-message-id ""
+  "Save `Message-Id:' field for `news-reply-yank-original'.")
 
 (defun news-reply-yank-original (arg)
-  "Insert the message being replied to, if any (in rmail).
+  "Insert the message being replied to, if any (in Mail mode).
 Puts point before the text and mark after.
 Indents each nonblank line ARG spaces (default 3).
 Just \\[universal-argument] as argument means don't indent
@@ -116,26 +153,32 @@ and don't delete any header fields."
   (interactive "P")
   (mail-yank-original arg)
   (exchange-point-and-mark)
-  (insert "In article " news-reply-yank-message-id
-	  " " news-reply-yank-from " writes:\n\n"))
+  (run-hooks 'news-reply-header-hook))
+
+(defvar news-reply-header-hook
+  '(lambda ()
+	 (insert "In article " news-reply-yank-message-id
+			 " " news-reply-yank-from " writes:\n\n"))
+  "Hook for inserting a header at the top of a yanked message.")
 
 (defun news-reply-newsgroups ()
-  "Move point to end of Newsgroups: field.
-RFC 850 constrains the Newsgroups: field to be a comma separated list of valid
-newsgroups names at your site:
-Newsgroups: news.misc,comp.misc,rec.misc"
+  "Move point to end of `Newsgroups:' field.
+RFC 850 constrains the `Newsgroups:' field to be a comma-separated list
+of valid newsgroup names at your site.  For example,
+   Newsgroups: news.misc,comp.misc,rec.misc"
   (interactive)
   (expand-abbrev)
   (goto-char (point-min))
   (mail-position-on-field "Newsgroups"))
 
 (defun news-reply-followup-to ()
-  "Move point to end of Followup-To: field.  Create the field if none.
+  "Move point to end of `Followup-To:' field.  Create the field if none.
 One usually requests followups to only one newsgroup.
-RFC 850 constrains the Followup-To: field to be a comma separated list of valid
-newsgroups names at your site, that are also in the Newsgroups: field:
-Newsgroups: news.misc,comp.misc,rec.misc,misc.misc,soc.misc
-Followup-To: news.misc,comp.misc,rec.misc"
+RFC 850 constrains the `Followup-To:' field to be a comma-separated list
+of valid newsgroups names at your site, and it must be a subset of the
+`Newsgroups:' field.  For example:
+   Newsgroups: news.misc,comp.misc,rec.misc,misc.misc,soc.misc
+   Followup-To: news.misc,comp.misc,rec.misc"
   (interactive)
   (expand-abbrev)
   (or (mail-position-on-field "Followup-To" t)
@@ -146,7 +189,7 @@ Followup-To: news.misc,comp.misc,rec.misc"
 )
 
 (defun news-reply-distribution ()
-  "Move point to end of Distribution: optional field.
+  "Move point to end of `Distribution:' optional field.
 Create the field if none.  Without this field the posting goes to all of
 USENET.  The field is used to restrict the posting to parts of USENET."
   (interactive)
@@ -157,7 +200,7 @@ USENET.  The field is used to restrict the posting to parts of USENET."
   )
 
 (defun news-reply-keywords ()
-  "Move point to end of Keywords: optional field.  Create the field if none.
+  "Move point to end of `Keywords:' optional field.  Create the field if none.
 Used as an aid to the news reader, it can contain a few, well selected keywords
 identifying the message."
   (interactive)
@@ -165,7 +208,7 @@ identifying the message."
   (mail-position-on-field "Keywords"))
 
 (defun news-reply-summary ()
-  "Move point to end of Summary: optional field.  Create the field if none.
+  "Move point to end of `Summary:' optional field.  Create the field if none.
 Used as an aid to the news reader, it can contain a succinct
 summary (abstract) of the message."
   (interactive)
@@ -173,25 +216,26 @@ summary (abstract) of the message."
   (mail-position-on-field "Summary"))
 
 (defun news-reply-signature ()
-  "The inews program appends ~/.signature automatically."
+  "The inews program appends `~/.signature' automatically."
   (interactive)
-  (message "~/.signature will be appended automatically."))
+  (message "Posting news will append your signature automatically."))
 
 (defun news-setup (to subject in-reply-to newsgroups replybuffer)
-  "Setup the news reply or posting buffer with the proper headers and in
-news-reply-mode."
+  "Set up the news reply or posting buffer with the proper headers and mode."
   (setq mail-reply-buffer replybuffer)
-  (let ((mail-setup-hook nil))
+  (let ((mail-setup-hook nil)
+	;; Avoid inserting a signature.
+       	(mail-signature))
     (if (null to)
 	;; this hack is needed so that inews wont be confused by 
 	;; the fcc: and bcc: fields
 	(let ((mail-self-blind nil)
 	      (mail-archive-file-name nil))
-	  (mail-setup to subject in-reply-to nil replybuffer)
+	  (mail-setup to subject in-reply-to nil replybuffer nil)
 	  (beginning-of-line)
 	  (delete-region (point) (progn (forward-line 1) (point)))
 	  (goto-char (point-max)))
-      (mail-setup to subject in-reply-to nil replybuffer))
+      (mail-setup to subject in-reply-to nil replybuffer nil))
     ;;;(mail-position-on-field "Posting-Front-End")
     ;;;(insert (emacs-version))
     (goto-char (point-max))
@@ -255,18 +299,18 @@ original message into it."
       (setq from (mail-fetch-field "from")
 	    subject (mail-fetch-field "subject")
 	    reply-to (mail-fetch-field "reply-to")
-	    date (mail-fetch-field "date"))
-      (setq to from)
-      (pop-to-buffer "*mail*")
-      (mail nil
-	    (if reply-to reply-to to)
-	    subject
-	    (let ((stop-pos (string-match "  *at \\|  *@ \\| *(\\| *<" from)))
-	      (concat (if stop-pos (substring from 0 stop-pos) from)
-		      "'s message of "
-		      date))
-	    nil
-	   buffer))))
+	    date (mail-fetch-field "date")))
+    (setq to from)
+    (pop-to-buffer "*mail*")
+    (mail nil
+	  (if reply-to reply-to to)
+	  subject
+	  (let ((stop-pos (string-match "  *at \\|  *@ \\| *(\\| *<" from)))
+	    (concat (if stop-pos (substring from 0 stop-pos) from)
+		    "'s message of "
+		    date))
+	  nil
+	 buffer)))
 
 ;@@ the guts of news-reply and news-post-news should be combined. -tower
 (defun news-reply ()
@@ -348,6 +392,7 @@ original message into it."
     (message "")))
 
 ;@@ the guts of news-reply and news-post-news should be combined. -tower
+;;;###autoload
 (defun news-post-news ()
   "Begin editing a new USENET news article to be posted.
 Type \\[describe-mode] once editing the article to get a list of commands."
@@ -383,3 +428,5 @@ While composing the message, use \\[news-reply-yank-original] to yank the
 original message into it."
   (interactive)
   (mail-other-window nil nil nil nil nil (current-buffer)))
+
+;;; rnewspost.el ends here

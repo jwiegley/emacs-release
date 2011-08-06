@@ -1,12 +1,16 @@
-;; electric -- Window maker and Command loop for `electric' modes.
-;; Copyright (C) 1985, 1986 Free Software Foundation, Inc.
-;; Principal author K. Shane Hartman
+;;; electric.el --- window maker and Command loop for `electric' modes.
+
+;; Copyright (C) 1985, 1986, 1995 Free Software Foundation, Inc.
+
+;; Author: K. Shane Hartman
+;; Maintainer: FSF
+;; Keywords: extensions
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -15,51 +19,33 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
 
-(provide 'electric)                           ; zaaaaaaap
+; zaaaaaaap
 
-;; perhaps this should be in subr.el...
-(defun shrink-window-if-larger-than-buffer (window)
-  (save-excursion
-    (set-buffer (window-buffer window))
-    (let ((w (selected-window)) ;save-window-excursion can't win
-	  (buffer-file-name buffer-file-name)
-	  (p (point))
-	  (n 0)
-	  (window-min-height 0)
-	  (buffer-read-only nil)
-	  (modified (buffer-modified-p)))
-      (unwind-protect
-	  (progn
-	    (select-window window)
-	    (goto-char (point-min))
-	    (while (pos-visible-in-window-p (point-max))
-	      ;; defeat file locking... don't try this at home, kids!
-	      (setq buffer-file-name nil)
-	      (insert ?\n) (setq n (1+ n)))
-	    (if (> n 0) (shrink-window (1- n))))
-	(delete-region (point-min) (point))
-	(set-buffer-modified-p modified)
-	(goto-char p)
-	(select-window w)))))
-      
-      
+;;; Code:
+
 ;; This loop is the guts for non-standard modes which retain control
-;; until some event occurs.  It is a `do-forever', the only way out is to
-;; throw.  It assumes that you have set up the keymap, window, and
+;; until some event occurs.  It is a `do-forever', the only way out is
+;; to throw.  It assumes that you have set up the keymap, window, and
 ;; everything else: all it does is read commands and execute them -
 ;; providing error messages should one occur (if there is no loop
 ;; function - which see).  The required argument is a tag which should
-;; expect a value of nil if the user decides to punt. The
-;; second argument is a prompt string (defaults to "->").  Given third
-;; argument non-nil, it INHIBITS quitting unless the user types C-g at
-;; toplevel.  This is so user can do things like C-u C-g and not get
-;; thrown out.  Fourth argument, if non-nil, should be a function of two
-;; arguments which is called after every command is executed.  The fifth
-;; argument, if provided, is the state variable for the function.  If the
+;; expect a value of nil if the user decides to punt. The second
+;; argument is the prompt to be used: if nil, use "->", if 'noprompt,
+;; don't use a prompt, if a string, use that string as prompt, and if
+;; a function of no variable, it will be evaluated in every iteration
+;; of the loop and its return value, which can be nil, 'noprompt or a
+;; string, will be used as prompt.  Given third argument non-nil, it
+;; INHIBITS quitting unless the user types C-g at toplevel.  This is
+;; so user can do things like C-u C-g and not get thrown out.  Fourth
+;; argument, if non-nil, should be a function of two arguments which
+;; is called after every command is executed.  The fifth argument, if
+;; provided, is the state variable for the function.  If the
 ;; loop-function gets an error, the loop will abort WITHOUT throwing
 ;; (moral: use unwind-protect around call to this function for any
 ;; critical stuff).  The second argument for the loop function is the
@@ -68,17 +54,26 @@
 (defun Electric-command-loop (return-tag
 			      &optional prompt inhibit-quit
 					loop-function loop-state)
-  (if (not prompt) (setq prompt "->"))
-  (let (cmd (err nil))
+
+  (let (cmd 
+        (err nil) 
+        (prompt-string prompt))
     (while t
-      (setq cmd (read-key-sequence (if (stringp prompt)
-				       prompt (funcall prompt))))
+      (if (not (or (stringp prompt) (eq prompt nil) (eq prompt 'noprompt)))
+          (setq prompt-string (funcall prompt)))
+      (if (not (stringp prompt-string))
+          (if (eq prompt-string 'noprompt)
+              (setq prompt-string nil)
+            (setq prompt-string "->")))
+      (setq cmd (read-key-sequence prompt-string))
       (setq last-command-char (aref cmd (1- (length cmd)))
-	    this-command (key-binding cmd)
+	    this-command (key-binding cmd t)
 	    cmd this-command)
+      ;; This makes universal-argument-other-key work.
+      (setq universal-argument-num-events 0)
       (if (or (prog1 quit-flag (setq quit-flag nil))
-	      (= last-input-char ?\C-g))
-	  (progn (setq unread-command-char -1
+	      (eq last-input-char ?\C-g))
+	  (progn (setq unread-command-events nil
 		       prefix-arg nil)
 		 ;; If it wasn't cancelling a prefix character, then quit.
 		 (if (or (= (length (this-command-keys)) 1)
@@ -91,9 +86,10 @@
       (if cmd
 	  (condition-case conditions
 	      (progn (command-execute cmd)
+		     (setq last-command this-command)
 		     (if (or (prog1 quit-flag (setq quit-flag nil))
-			     (= last-input-char ?\C-g))
-			 (progn (setq unread-command-char -1)
+			     (eq last-input-char ?\C-g))
+			 (progn (setq unread-command-events nil)
 				(if (not inhibit-quit)
 				    (progn (ding)
 					   (message "Quit")
@@ -139,7 +135,7 @@
 ;; 	Switch to buffer in the current window.
 ;;
 ;; Then if max-height is nil, and not all of the lines in the buffer
-;; are displayed, grab the whole screen.
+;; are displayed, grab the whole frame.
 ;;
 ;; Returns selected window on buffer positioned at point-min.
 
@@ -176,3 +172,7 @@
 		 (enlarge-window (- target-height (window-height win)))))
       (goto-char (point-min))
       win)))
+
+(provide 'electric)
+
+;;; electric.el ends here

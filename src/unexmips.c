@@ -1,6 +1,4 @@
 /* Unexec for MIPS (including IRIS4D).
-   Copyright (C) 1988 Free Software Foundation, Inc.
-
    Note that the GNU project considers support for MIPS operation
    a peripheral activity which should not be allowed to divert effort
    from development of the GNU system.  Changes in this code will be
@@ -8,34 +6,77 @@
    we don't plan to think about it, or about whether other Emacs
    maintenance might break it.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+   Copyright (C) 1988, 1994 Free Software Foundation, Inc.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This file is part of GNU Emacs.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+GNU Emacs is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
-In other words, you are welcome to use, share and improve this program.
-You are forbidden to forbid anyone else to use, share and improve
-what you give them.   Help stamp out software-hoarding!  */
+GNU Emacs is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU Emacs; see the file COPYING.  If not, write to
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
+
 
-#include "config.h"
+#include <config.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <varargs.h>
+
+#ifdef MACH
+
+#include <a.out.h>
+
+/* I don't know why this isn't defined.  */
+#ifndef STYP_INIT
+#define STYP_INIT  0x80000000
+#endif
+
+/* I don't know why this isn't defined.  */
+#ifndef _RDATA
+#define	_RDATA	".rdata"
+#define STYP_RDATA 0x00000100
+#endif
+
+/* Small ("near") data section.  */
+#ifndef _SDATA
+#define	_SDATA	".sdata"
+#define STYP_SDATA 0x00000200
+#endif
+
+/* Small ("near") bss section.  */
+#ifndef _SBSS
+#define _SBSS ".sbss"
+#define STYP_SBSS 0x00000400
+#endif
+
+/* We don't seem to have a sym.h or syms.h anywhere, so we'll do it the
+   hard way.  This stinks.  */
+typedef struct {
+  short   magic;
+  short   vstamp;
+  long    ilineMax;
+  struct { long foo, offset; } offsets[11];
+} HDRR, *pHDRR;
+
+#else /* not MACH */
+
 #include <filehdr.h>
 #include <aouthdr.h>
 #include <scnhdr.h>
 #include <sym.h>
+
+#endif /* not MACH */
 
 #if defined (IRIS_4D) || defined (sony)
 #include "getpagesize.h"
@@ -43,7 +84,7 @@ what you give them.   Help stamp out software-hoarding!  */
 #endif
 
 static void fatal_unexec ();
-static int mark_x ();
+static void mark_x ();
 
 #define READ(_fd, _buffer, _size, _error_message, _error_arg) \
 	errno = EEOF; \
@@ -60,8 +101,7 @@ static int mark_x ();
 	  fatal_unexec (_error_message, _error_arg);
 
 extern int errno;
-extern int sys_nerr;
-extern char *sys_errlist[];
+extern char *strerror ();
 #define EEOF -1
 
 static struct scnhdr *text_section;
@@ -119,9 +159,9 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
 	       hdr.fhdr.f_magic,
 	       MIPSELMAGIC, MIPSEBMAGIC,
 	       MIPSELMAGIC | 1, MIPSEBMAGIC | 1);
-      exit (1);
+      exit(1);
     }
-#else  /* not MIPS2 */
+#else /* not MIPS2 */
   if (hdr.fhdr.f_magic != MIPSELMAGIC
       && hdr.fhdr.f_magic != MIPSEBMAGIC)
     {
@@ -143,16 +183,16 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
       exit (1);
     }
 
-#define CHECK_SCNHDR(ptr, name, flags) \
-  ptr = NULL; \
-  for (i = 0; i < hdr.fhdr.f_nscns && !ptr; i++) \
-    if (strcmp (hdr.section[i].s_name, name) == 0) { \
-      if (hdr.section[i].s_flags != flags) { \
-	fprintf (stderr, "unexec: %x flags where %x expected in %s section.\n", \
-		 hdr.section[i].s_flags, flags, name); \
-	} \
-      ptr = hdr.section + i; \
-    }
+#define CHECK_SCNHDR(ptr, name, flags)					\
+  ptr = NULL;								\
+  for (i = 0; i < hdr.fhdr.f_nscns && !ptr; i++)			\
+    if (strcmp (hdr.section[i].s_name, name) == 0)			\
+      {									\
+	if (hdr.section[i].s_flags != flags)				\
+	  fprintf (stderr, "unexec: %x flags (%x expected) in %s section.\n", \
+		   hdr.section[i].s_flags, flags, name);		\
+	ptr = hdr.section + i;						\
+      }									\
 
   CHECK_SCNHDR (text_section,  _TEXT,  STYP_TEXT);
   CHECK_SCNHDR (init_section,  _INIT,  STYP_INIT);
@@ -175,7 +215,8 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
   text_section->s_scnptr = 0;
 
   pagesize = getpagesize ();
-  brk = (sbrk (0) + pagesize - 1) & (-pagesize);
+  /* Casting to int avoids compiler error on NEWS-OS 5.0.2.  */
+  brk = (((int) (sbrk (0))) + pagesize - 1) & (-pagesize);
   hdr.aout.dsize = brk - DATA_START;
   hdr.aout.bsize = 0;
   if (entry_address == 0)
@@ -236,19 +277,23 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
       bss_section->s_scnptr = scnptr;
     }
 
-  WRITE (new, TEXT_START, hdr.aout.tsize,
+  WRITE (new, (char *)TEXT_START, hdr.aout.tsize,
 	 "writing text section to %s", new_name);
-  WRITE (new, DATA_START, hdr.aout.dsize,
-	 "writing text section to %s", new_name);
+  WRITE (new, (char *)DATA_START, hdr.aout.dsize,
+	 "writing data section to %s", new_name);
 
   SEEK (old, hdr.fhdr.f_symptr, "seeking to start of symbols in %s", a_name);
   errno = EEOF;
   nread = read (old, buffer, BUFSIZE);
   if (nread < sizeof (HDRR)) fatal_unexec ("reading symbols from %s", a_name);
-#define symhdr ((pHDRR)buffer)
   newsyms = hdr.aout.tsize + hdr.aout.dsize;
   symrel = newsyms - hdr.fhdr.f_symptr;
   hdr.fhdr.f_symptr = newsyms;
+#define symhdr ((pHDRR)buffer)
+#ifdef MACH
+  for (i = 0; i < 11; i++)
+    symhdr->offsets[i].offset += symrel;
+#else
   symhdr->cbLineOffset += symrel;
   symhdr->cbDnOffset += symrel;
   symhdr->cbPdOffset += symrel;
@@ -260,6 +305,7 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
   symhdr->cbFdOffset += symrel;
   symhdr->cbRfdOffset += symrel;
   symhdr->cbExtOffset += symrel;
+#endif
 #undef symhdr
   do
     {
@@ -282,10 +328,10 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
 /*
  * mark_x
  *
- * After succesfully building the new a.out, mark it executable
+ * After successfully building the new a.out, mark it executable
  */
 
-static int
+static void
 mark_x (name)
      char *name;
 {
@@ -301,15 +347,13 @@ mark_x (name)
 
 static void
 fatal_unexec (s, va_alist)
-     va_dcl
+    va_dcl
 {
   va_list ap;
   if (errno == EEOF)
     fputs ("unexec: unexpected end of file, ", stderr);
-  else if (errno < sys_nerr)
-    fprintf (stderr, "unexec: %s, ", sys_errlist[errno]);
   else
-    fprintf (stderr, "unexec: error code %d, ", errno);
+    fprintf (stderr, "unexec: %s, ", strerror (errno));
   va_start (ap);
   _doprnt (s, ap, stderr);
   fputs (".\n", stderr);

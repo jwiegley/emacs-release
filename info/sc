@@ -1,0 +1,66 @@
+This is Info file ../info/sc, produced by Makeinfo-1.64 from the input
+file sc.texi.
+
+   This document describes the Supercite Version 3.1 package for citing
+and attributing the replies for various GNU Emacs mail and news reading
+subsystems.
+
+   Copyright (C) 1993 Barry A® Warsaw
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+
+Indirect:
+sc-1: 448
+sc-2: 47946
+sc-3: 97470
+
+Tag Table:
+(Indirect)
+Node: Top448
+Node: Introduction1148
+Node: Usage Overview3113
+Node: What Supercite Does Not Do4270
+Node: What Supercite Does5398
+Node: Citations8223
+Node: Citation Elements10512
+Node: Recognizing Citations12389
+Node: Information Keys and the Info Alist14434
+Node: Reference Headers17025
+Node: The Built-in Header Rewrite Functions18590
+Node: Electric References21035
+Node: Getting Connected23904
+Node: Emacs 19 MUAs27422
+Node: Emacs 18 MUAs28253
+Node: MH-E with any Emacsen29609
+Node: VM with any Emacsen31368
+Node: GNEWS with any Emacsen32430
+Node: Overloading for Non-conforming MUAs33152
+Node: Replying and Yanking36402
+Node: Reply Buffer Initialization36737
+Node: Filling Cited Text43620
+Node: Selecting an Attribution47089
+Node: Attribution Preferences47946
+Node: Anonymous Attributions51857
+Node: Author Names54893
+Node: Configuring the Citation Engine57376
+Node: Using Regi59101
+Node: Frames You Can Customize62971
+Node: Post-yank Formatting Commands65496
+Node: Citing Commands66641
+Node: Insertion Commands69353
+Node: Variable Toggling Shortcuts70288
+Node: Mail Field Commands72642
+Node: Miscellaneous Commands75007
+Node: Hints to MUA Authors76271
+Node: Version 3 Changes80310
+Node: Thanks and History83006
+Node: The Supercite Mailing List84602
+Node: Concept Index85930
+Node: Command Index91999
+Node: Key Index97470
+Node: Variable Index99431
+
+End Tag Table

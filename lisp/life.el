@@ -1,12 +1,15 @@
-;; Conway's `Life' for GNU Emacs
+;;; life.el --- John Horton Conway's `Life' game for GNU Emacs
+
 ;; Copyright (C) 1988 Free Software Foundation, Inc.
-;; Contributed by Kyle Jones, talos!kjones@uunet.uu.net
+
+;; Author: Kyle Jones <talos!kjones@uunet.uu.net>
+;; Keywords: games
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -15,10 +18,17 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
-(provide 'life)
+;;; Commentary:
+
+;; A demonstrator for John Horton Conway's "Life" cellular automaton
+;; in Emacs Lisp.  Picks a random one of a set of interesting Life
+;; patterns and evolves it according to the familiar rules.
+
+;;; Code:
 
 (defconst life-patterns
   [("@@@" " @@" "@@@")
@@ -51,34 +61,22 @@
 ;; because the compiler will convert them to constants, which should
 ;; eval faster than symbols.
 ;;
-;; The (require) wrapping forces the compiler to eval these macros at
-;; compile time.  This would not be necessary if we did not use macros
-;; inside of macros, which the compiler doesn't seem to check for.
-;;
 ;; Don't change any of the life-* macro constants unless you thoroughly
 ;; understand the `life-grim-reaper' function.
-(require
- (progn
-   (defmacro life-life-char () ?@)
-   (defmacro life-death-char () (1+ (life-life-char)))
-   (defmacro life-birth-char () 3)
-   (defmacro life-void-char () ?\ )
 
-   (defmacro life-life-string () (char-to-string (life-life-char)))
-   (defmacro life-death-string () (char-to-string (life-death-char)))
-   (defmacro life-birth-string () (char-to-string (life-birth-char)))
-   (defmacro life-void-string () (char-to-string (life-void-char)))
-   (defmacro life-not-void-regexp () (concat "[^" (life-void-string) "\n]"))
+(defmacro life-life-char () ?@)
+(defmacro life-death-char () (1+ (life-life-char)))
+(defmacro life-birth-char () 3)
+(defmacro life-void-char () ?\ )
 
-   ;; try to optimize the (goto-char (point-min)) & (goto-char (point-max))
-   ;; idioms.  This depends on goto-char's not griping if we underrshoot
-   ;; or overshoot beginning or end of buffer.
-   (defmacro goto-beginning-of-buffer () '(goto-char 1))
-   (defmacro maxint () (lsh (lsh (lognot 0) 1) -1))
-   (defmacro goto-end-of-buffer () '(goto-char (maxint)))
+(defmacro life-life-string () (char-to-string (life-life-char)))
+(defmacro life-death-string () (char-to-string (life-death-char)))
+(defmacro life-birth-string () (char-to-string (life-birth-char)))
+(defmacro life-void-string () (char-to-string (life-void-char)))
+(defmacro life-not-void-regexp () (concat "[^" (life-void-string) "\n]"))
 
-   (defmacro increment (variable) (list 'setq variable (list '1+ variable)))
-   'life))
+(defmacro life-increment (variable) (list 'setq variable (list '1+ variable)))
+
 
 ;; list of numbers that tell how many characters to move to get to
 ;; each of a cell's eight neighbors.
@@ -93,28 +91,32 @@
 ;; Sadly, mode-line-format won't display numbers.
 (defconst life-generation-string nil)
 
-(defun abs (n) (if (< n 0) (- n) n))
+(defvar life-initialized nil
+  "Non-nil if `life' has been run at least once.")
 
+;;;###autoload
 (defun life (&optional sleeptime)
   "Run Conway's Life simulation.
-The starting pattern is randomly selected.  Prefix arg (optional first arg
-non-nil from a program) is the number of seconds to sleep between
+The starting pattern is randomly selected.  Prefix arg (optional first
+arg non-nil from a program) is the number of seconds to sleep between
 generations (this defaults to 1)."
   (interactive "p")
+  (or life-initialized
+      (random t))
+  (setq life-initialized t)
   (or sleeptime (setq sleeptime 1))
   (life-setup)
   (life-display-generation sleeptime)
-  (while t
-    (let ((inhibit-quit t))
-      (life-grim-reaper)
-      (life-expand-plane-if-needed)
-      (life-increment-generation)
-      (life-display-generation sleeptime))))
+  (catch 'life-exit
+    (while t
+      (let ((inhibit-quit t))
+	(life-grim-reaper)
+	(life-expand-plane-if-needed)
+	(life-increment-generation)
+	(life-display-generation sleeptime)))))
 
-(fset 'life-mode 'life)
+(defalias 'life-mode 'life)
 (put 'life-mode 'mode-class 'special)
-
-(random t)
 
 (defun life-setup ()
   (let (n)
@@ -131,15 +133,15 @@ generations (this defaults to 1)."
 					    life-generation-string)
 	  fill-column (1- (window-width))
 	  life-window-start 1)
-    (buffer-flush-undo (current-buffer))
+    (buffer-disable-undo (current-buffer))
     ;; stuff in the random pattern
     (life-insert-random-pattern)
     ;; make sure (life-life-char) is used throughout
-    (goto-beginning-of-buffer)
+    (goto-char (point-min))
     (while (re-search-forward (life-not-void-regexp) nil t)
       (replace-match (life-life-string) t t))
     ;; center the pattern horizontally
-    (goto-beginning-of-buffer)
+    (goto-char (point-min))
     (setq n (/ (- fill-column (save-excursion (end-of-line) (point))) 2))
     (while (not (eobp))
       (indent-to n)
@@ -148,12 +150,12 @@ generations (this defaults to 1)."
     (setq n (/ (- (1- (window-height))
 		  (count-lines (point-min) (point-max)))
 	       2))
-    (goto-beginning-of-buffer)
+    (goto-char (point-min))
     (newline n)
-    (goto-end-of-buffer)
+    (goto-char (point-max))
     (newline n)
     ;; pad lines out to fill-column
-    (goto-beginning-of-buffer)
+    (goto-char (point-min))
     (while (not (eobp))
       (end-of-line)
       (indent-to fill-column)
@@ -176,18 +178,18 @@ generations (this defaults to 1)."
 
 (defun life-insert-random-pattern ()
   (insert-rectangle
-   (elt life-patterns (% (abs (random)) (length life-patterns))))
+   (elt life-patterns (random (length life-patterns))))
   (insert ?\n))
 
 (defun life-increment-generation ()
-  (increment life-current-generation)
+  (life-increment life-current-generation)
   (setq life-generation-string (int-to-string life-current-generation)))
 
 (defun life-grim-reaper ()
   ;; Clear the match information.  Later we check to see if it
   ;; is still clear, if so then all the cells have died.
   (store-match-data nil)
-  (goto-beginning-of-buffer)
+  (goto-char (point-min))
   ;; For speed declare all local variable outside the loop.
   (let (point char pivot living-neighbors list)
     (while (search-forward (life-life-string) nil t)
@@ -205,7 +207,7 @@ generations (this defaults to 1)."
 	      ((< char 9)
 	       (subst-char-in-region point (1+ point) char 9 t))
 	      ((>= char (life-life-char))
-	       (increment living-neighbors)))
+	       (life-increment living-neighbors)))
 	(setq list (cdr list)))
       (if (memq living-neighbors '(2 3))
 	  ()
@@ -221,13 +223,13 @@ generations (this defaults to 1)."
 
 (defun life-expand-plane-if-needed ()
   (catch 'done
-    (goto-beginning-of-buffer)
+    (goto-char (point-min))
     (while (not (eobp))
       ;; check for life at beginning or end of line.  If found at
       ;; either end, expand at both ends,
       (cond ((or (eq (following-char) (life-life-char))
 		 (eq (progn (end-of-line) (preceding-char)) (life-life-char)))
-	     (goto-beginning-of-buffer)
+	     (goto-char (point-min))
 	     (while (not (eobp))
 	       (insert (life-void-char))
 	       (end-of-line)
@@ -238,23 +240,23 @@ generations (this defaults to 1)."
 	   (life-compute-neighbor-deltas)
 	   (throw 'done t)))
       (forward-line)))
-  (goto-beginning-of-buffer)
+  (goto-char (point-min))
   ;; check for life within the first two lines of the buffer.
   ;; If present insert two lifeless lines at the beginning..
   (cond ((search-forward (life-life-string)
 			 (+ (point) fill-column fill-column 2) t)
-	 (goto-beginning-of-buffer)
+	 (goto-char (point-min))
 	 (insert-char (life-void-char) fill-column)
 	 (insert ?\n)
 	 (insert-char (life-void-char) fill-column)
 	 (insert ?\n)
 	 (setq life-window-start (+ life-window-start fill-column 1))))
-  (goto-end-of-buffer)
+  (goto-char (point-max))
   ;; check for life within the last two lines of the buffer.
   ;; If present insert two lifeless lines at the end.
   (cond ((search-backward (life-life-string)
 			  (- (point) fill-column fill-column 2) t)
-	 (goto-end-of-buffer)
+	 (goto-char (point-max))
 	 (insert-char (life-void-char) fill-column)
 	 (insert ?\n)
 	 (insert-char (life-void-char) fill-column)
@@ -264,7 +266,10 @@ generations (this defaults to 1)."
 (defun life-display-generation (sleeptime)
   (goto-char life-window-start)
   (recenter 0)
-  (sit-for sleeptime))
+  
+  ;; Redisplay; if the user has hit a key, exit the loop.
+  (or (eq t (sit-for sleeptime))
+      (throw 'life-exit nil)))
 
 (defun life-extinct-quit ()
   (life-display-generation 0)
@@ -273,4 +278,6 @@ generations (this defaults to 1)."
 (put 'life-extinct 'error-conditions '(life-extinct quit))
 (put 'life-extinct 'error-message "All life has perished")
 
+(provide 'life)
 
+;;; life.el ends here

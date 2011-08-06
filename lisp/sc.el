@@ -1,0 +1,2 @@
+(require 'supercite)
+(provide 'sc)

@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: ChgSel.c,v 1.4 88/02/02 19:08:57 jim Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/ChgSel.c,v 1.1 1992/04/11 22:10:17 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
@@ -29,7 +29,7 @@ XMenuChangeSelection(display, menu, p_num, s_num, data, data_sw, label, label_sw
     register XMPane *p_ptr;	/* XMPane pointer. */
     register XMSelect *s_ptr;	/* XMSelect pointer. */
     
-    int label_length;		/* Label lenght in characters. */
+    int label_length;		/* Label length in characters. */
     int label_width;		/* Label width in pixels. */
 
     /*

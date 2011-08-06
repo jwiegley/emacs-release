@@ -1,1136 +1,1167 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.49 from the
+This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
 input file emacs.texi.
 
-   This file documents the GNU Emacs editor.
+
+File: emacs,  Node: Change Window,  Prev: Force Same Window,  Up: Windows
 
-   Copyright (C) 1985, 1986, 1988, 1992 Richard M. Stallman.
+Deleting and Rearranging Windows
+================================
 
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
+`C-x 0'
+     Delete the selected window (`delete-window').  That is a zero.
 
-   Permission is granted to copy and distribute modified versions of
-this manual under the conditions for verbatim copying, provided also
-that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
-General Public License" are included exactly as in the original, and
-provided that the entire resulting derived work is distributed under the
-terms of a permission notice identical to this one.
+`C-x 1'
+     Delete all windows in the selected frame except the selected window
+     (`delete-other-windows').
 
-   Permission is granted to copy and distribute translations of this
-manual into another language, under the above conditions for modified
-versions, except that the sections entitled "The GNU Manifesto",
-"Distribution" and "GNU General Public License" may be included in a
-translation approved by the author instead of in the original English.
+`C-x ^'
+     Make selected window taller (`enlarge-window').
+
+`C-x }'
+     Make selected window wider (`enlarge-window-horizontally').
+
+`Drag-Mouse-1'
+     Dragging a window's mode line up or down with `Mouse-1' changes
+     window heights.
+
+`Mouse-2'
+     `Mouse-2' in a window's mode line deletes all other windows in the
+     frame (`mouse-delete-other-windows').
+
+`Mouse-3'
+     `Mouse-3' in a window's mode line deletes that window
+     (`mouse-delete-window').
+
+   To delete a window, type `C-x 0' (`delete-window').  (That is a
+zero.)  The space occupied by the deleted window is given to an
+adjacent window (but not the minibuffer window, even if that is active
+at the time).  Once a window is deleted, its attributes are forgotten;
+only restoring a window configuration can bring it back.  Deleting the
+window has no effect on the buffer it used to display; the buffer
+continues to exist, and you can select it in any window with `C-x b'.
+
+   `C-x 1' (`delete-other-windows') is more powerful than `C-x 0'; it
+deletes all the windows except the selected one (and the minibuffer);
+the selected window expands to use the whole frame except for the echo
+area.
+
+   You can also delete a window by clicking on its mode line with
+`Mouse-2', and expand a window to fill its frame by clicking on its
+mode line with `Mouse-3'.
+
+   The easiest way to adjust window heights is with a mouse.  If you
+press `Mouse-1' on a mode line, you can drag that mode line up or down,
+changing the heights of the windows above and below it.
+
+   To readjust the division of space among vertically adjacent windows,
+use `C-x ^' (`enlarge-window').  It makes the currently selected window
+get one line bigger, or as many lines as is specified with a numeric
+argument.  With a negative argument, it makes the selected window
+smaller.  `C-x }' (`enlarge-window-horizontally') makes the selected
+window wider by the specified number of columns.  The extra screen
+space given to a window comes from one of its neighbors, if that is
+possible.  If this makes any window too small, it is deleted and its
+space is given to an adjacent window.  The minimum size is specified by
+the variables `window-min-height' and `window-min-width'.
+
+   *Note Minibuffer Edit::, for information about the Resize-Minibuffer
+mode, which automatically changes the size of the minibuffer window to
+fit the text in the minibuffer.
 
 
-File: emacs,  Node: Lisp Eval,  Next: Lisp Debug,  Prev: Lisp Libraries,  Up: Compiling/Testing
+File: emacs,  Node: Frames,  Next: Major Modes,  Prev: Windows,  Up: Top
 
-Evaluating Emacs-Lisp Expressions
-=================================
+Frames and X Windows
+********************
 
-   Lisp programs intended to be run in Emacs should be edited in
-Emacs-Lisp mode; this will happen automatically for file names ending
-in `.el'. By contrast, Lisp mode itself is used for editing Lisp
-programs intended for other Lisp systems.  Emacs-Lisp mode can be
-selected with the command `M-x emacs-lisp-mode'.
+   When using the X Window System, you can create multiple windows at
+the X level in a single Emacs session.  Each X window that belongs to
+Emacs displays a "frame" which can contain one or several Emacs windows.
+A frame initially contains a single general-purpose Emacs window which
+you can subdivide vertically or horizontally into smaller windows.  A
+frame normally contains its own echo area and minibuffer, but you can
+make frames that don't have these--they use the echo area and
+minibuffer of another frame.
 
-   For testing of Lisp programs to run in Emacs, it is useful to be
-able to evaluate part of the program as it is found in the Emacs
-buffer.  For example, after changing the text of a Lisp function
-definition, evaluating the definition installs the change for future
-calls to the function. Evaluation of Lisp expressions is also useful in
-any kind of editing task for invoking noninteractive functions
-(functions that are not commands).
+   Editing you do in one frame also affects the other frames.  For
+instance, if you put text in the kill ring in one frame, you can yank it
+in another frame.  If you exit Emacs through `C-x C-c' in one frame, it
+terminates all the frames.  To delete just one frame, use `C-x 5 0'.
 
-`M-ESC'
-     Read a Lisp expression in the minibuffer, evaluate it, and print
-     the value in the minibuffer (`eval-expression').
-
-`C-x C-e'
-     Evaluate the Lisp expression before point, and print the value in
-     the minibuffer (`eval-last-sexp').
-
-`C-M-x'
-     Evaluate the defun containing or after point, and print the value
-     in the minibuffer (`eval-defun').
-
-`M-x eval-region'
-     Evaluate all the Lisp expressions in the region.
-
-`M-x eval-current-buffer'
-     Evaluate all the Lisp expressions in the buffer.
-
-   `M-ESC' (`eval-expression') is the most basic command for evaluating
-a Lisp expression interactively.  It reads the expression using the
-minibuffer, so you can execute any expression on a buffer regardless of
-what the buffer contains.  When the expression is evaluated, the current
-buffer is once again the buffer that was current when `M-ESC' was typed.
-
-   `M-ESC' can easily confuse users who do not understand it,
-especially on keyboards with autorepeat where it can result from holding
-down the ESC key for too long.  Therefore, `eval-expression' is
-normally a disabled command.  Attempting to use this command asks for
-confirmation and gives you the option of enabling it; once you enable
-the command, confirmation will no longer be required for it. *Note
-Disabling::.
-
-   In Emacs-Lisp mode, the key `C-M-x' is bound to the function
-`eval-defun', which parses the defun containing or following point as a
-Lisp expression and evaluates it.  The value is printed in the echo
-area.  This command is convenient for installing in the Lisp
-environment changes that you have just made in the text of a function
-definition.
-
-   The command `C-x C-e' (`eval-last-sexp') performs a similar job but
-is available in all major modes, not just Emacs-Lisp mode.  It finds
-the sexp before point, reads it as a Lisp expression, evaluates it, and
-prints the value in the echo area.  It is sometimes useful to type in an
-expression and then, with point still after it, type `C-x C-e'.
-
-   If `C-M-x' or `C-x C-e' is given a numeric argument, it prints the
-value by insertion into the current buffer at point, rather than in the
-echo area.  The argument value does not matter.
-
-   The most general command for evaluating Lisp expressions from a
-buffer is `eval-region'.  `M-x eval-region' parses the text of the
-region as one or more Lisp expressions, evaluating them one by one. 
-`M-x eval-current-buffer' is similar but evaluates the entire buffer. 
-This is a reasonable way to install the contents of a file of Lisp code
-that you are just ready to test.  After finding and fixing a bug, use
-`C-M-x' on each function that you change, to keep the Lisp world in
-step with the source file.
-
-
-File: emacs,  Node: Lisp Debug,  Next: Lisp Interaction,  Prev: Lisp Eval,  Up: Compiling/Testing
-
-The Emacs-Lisp Debugger
-=======================
-
-   GNU Emacs contains a debugger for Lisp programs executing inside it.
-This debugger is normally not used; many commands frequently get Lisp
-errors when invoked in inappropriate contexts (such as `C-f' at the end
-of the buffer) and it would be very unpleasant for that to enter a
-special debugging mode.  When you want to make Lisp errors invoke the
-debugger, you must set the variable `debug-on-error' to non-`nil'. 
-Quitting with `C-g' is not considered an error, and `debug-on-error'
-has no effect on the handling of `C-g'.  However, if you set
-`debug-on-quit' non-`nil', `C-g' will invoke the debugger. This can be
-useful for debugging an infinite loop; type `C-g' once the loop has had
-time to reach its steady state.  `debug-on-quit' has no effect on
-errors.
-
-   You can also cause the debugger to be entered when a specified
-function is called, or at a particular place in Lisp code.  Use `M-x
-debug-on-entry' with argument FUN-NAME to cause function FUN-NAME to
-enter the debugger as soon as it is called.  Use `M-x
-cancel-debug-on-entry' to make the function stop entering the debugger
-when called.  (Redefining the function also does this.)  To enter the
-debugger from some other place in Lisp code, you must insert the
-expression `(debug)' there and install the changed code with `C-M-x'. 
-*Note Lisp Eval::.
-
-   When the debugger is entered, it displays the previously selected
-buffer in one window and a buffer named `*Backtrace*' in another
-window.  The backtrace buffer contains one line for each level of Lisp
-function execution currently going on.  At the beginning of this buffer
-is a message describing the reason that the debugger was invoked (such
-as, what error message if it was invoked due to an error).
-
-   The backtrace buffer is read-only, and is in a special major mode,
-Backtrace mode, in which letters are defined as debugger commands.  The
-usual Emacs editing commands are available; you can switch windows to
-examine the buffer that was being edited at the time of the error, and
-you can also switch buffers, visit files, and do any other sort of
-editing. However, the debugger is a recursive editing level (*note
-Recursive Edit::.) and it is wise to go back to the backtrace buffer
-and exit the debugger officially when you don't want to use it any
-more.  Exiting the debugger kills the backtrace buffer.
-
-   The contents of the backtrace buffer show you the functions that are
-executing and the arguments that were given to them.  It has the
-additional purpose of allowing you to specify a stack frame by moving
-point to the line describing that frame.  The frame whose line point is
-on is considered the "current frame".  Some of the debugger commands
-operate on the current frame.  Debugger commands are mainly used for
-stepping through code an expression at a time.  Here is a list of them.
-
-`c'
-     Exit the debugger and continue execution.  In most cases,
-     execution of the program continues as if the debugger had never
-     been entered (aside from the effect of any variables or data
-     structures you may have changed while inside the debugger).  This
-     includes entry to the debugger due to function entry or exit,
-     explicit invocation, quitting or certain errors.  Most errors
-     cannot be continued; trying to continue one of them causes the
-     same error to occur again.
-
-`d'
-     Continue execution, but enter the debugger the next time a Lisp
-     function is called.  This allows you to step through the
-     subexpressions of an expression, seeing what values the
-     subexpressions compute and what else they do.
-
-     The stack frame made for the function call which enters the
-     debugger in this way will be flagged automatically for the
-     debugger to be called when the frame is exited.  You can use the
-     `u' command to cancel this flag.
-
-`b'
-     Set up to enter the debugger when the current frame is exited. 
-     Frames that will invoke the debugger on exit are flagged with
-     stars.
-
-`u'
-     Don't enter the debugger when the current frame is exited.  This
-     cancels a `b' command on that frame.
-
-`e'
-     Read a Lisp expression in the minibuffer, evaluate it, and print
-     the value in the echo area.  This is the same as the command
-     `M-ESC', except that `e' is not normally disabled like `M-ESC'.
-
-`q'
-     Terminate the program being debugged; return to top-level Emacs
-     command execution.
-
-     If the debugger was entered due to a `C-g' but you really want to
-     quit, not to debug, use the `q' command.
-
-`r'
-     Return a value from the debugger.  The value is computed by
-     reading an expression with the minibuffer and evaluating it.
-
-     The value returned by the debugger makes a difference when the
-     debugger was invoked due to exit from a Lisp call frame (as
-     requested with `b'); then the value specified in the `r' command
-     is used as the value of that frame.
-
-     The debugger's return value also matters with many errors.  For
-     example, `wrong-type-argument' errors will use the debugger's
-     return value instead of the invalid argument; `no-catch' errors
-     will use the debugger value as a throw tag instead of the tag that
-     was not found. If an error was signaled by calling the Lisp
-     function `signal', the debugger's return value is returned as the
-     value of `signal'.
-
-
-File: emacs,  Node: Lisp Interaction,  Next: External Lisp,  Prev: Lisp Debug,  Up: Compiling/Testing
-
-Lisp Interaction Buffers
-========================
-
-   The buffer `*scratch*' which is selected when Emacs starts up is
-provided for evaluating Lisp expressions interactively inside Emacs. 
-Both the expressions you evaluate and their output goes in the buffer.
-
-   The `*scratch*' buffer's major mode is Lisp Interaction mode, which
-is the same as Emacs-Lisp mode except for one command, LFD.  In
-Emacs-Lisp mode, LFD is an indentation command, as usual.  In Lisp
-Interaction mode, LFD is bound to `eval-print-last-sexp'.  This
-function reads the Lisp expression before point, evaluates it, and
-inserts the value in printed representation before point.
-
-   Thus, the way to use the `*scratch*' buffer is to insert Lisp
-expressions at the end, ending each one with LFD so that it will be
-evaluated. The result is a complete typescript of the expressions you
-have evaluated and their values.
-
-   The rationale for this feature is that Emacs must have a buffer when
-it starts up, but that buffer is not useful for editing files since a
-new buffer is made for every file that you visit.  The Lisp interpreter
-typescript is the most useful thing I can think of for the initial
-buffer to do.  `M-x lisp-interaction-mode' will put any buffer in Lisp
-Interaction mode.
-
-
-File: emacs,  Node: External Lisp,  Prev: Lisp Interaction,  Up: Compiling/Testing
-
-Running an External Lisp
-========================
-
-   Emacs has facilities for running programs in other Lisp systems. 
-You can run a Lisp process as an inferior of Emacs, and pass
-expressions to it to be evaluated.  You can also pass changed function
-definitions directly from the Emacs buffers in which you edit the Lisp
-programs to the inferior Lisp process.
-
-   To run an inferior Lisp process, type `M-x run-lisp'.  This runs the
-program named `lisp', the same program you would run by typing `lisp'
-as a shell command, with both input and output going through an Emacs
-buffer named `*lisp*'.  That is to say, any "terminal output" from Lisp
-will go into the buffer, advancing point, and any "terminal input" for
-Lisp comes from text in the buffer.  To give input to Lisp, go to the
-end of the buffer and type the input, terminated by RET.  The `*lisp*'
-buffer is in Inferior Lisp mode, a mode which has all the special
-characteristics of Lisp mode and Shell mode (*note Shell Mode::.).
-
-   For the source files of programs to run in external Lisps, use Lisp
-mode. This mode can be selected with `M-x lisp-mode', and is used
-automatically for files whose names end in `.l' or `.lisp', as most Lisp
-systems usually expect.
-
-   When you edit a function in a Lisp program you are running, the
-easiest way to send the changed definition to the inferior Lisp process
-is the key `C-M-x'.  In Lisp mode, this runs the function
-`lisp-send-defun', which finds the defun around or following point and
-sends it as input to the Lisp process.  (Emacs can send input to any
-inferior process regardless of what buffer is current.)
-
-   Contrast the meanings of `C-M-x' in Lisp mode (for editing programs
-to be run in another Lisp system) and Emacs-Lisp mode (for editing Lisp
-programs to be run in Emacs): in both modes it has the effect of
-installing the function definition that point is in, but the way of
-doing so is different according to where the relevant Lisp environment
-is found. *Note Lisp Modes::.
-
-
-File: emacs,  Node: Abbrevs,  Next: Picture,  Prev: Compiling/Testing,  Up: Top
-
-Abbrevs
-*******
-
-   An "abbrev" is a word which "expands", if you insert it, into some
-different text.  Abbrevs are defined by the user to expand in specific
-ways.  For example, you might define `foo' as an abbrev expanding to
-`find outer otter'.  With this abbrev defined, you would be able to get
-`find outer otter ' into the buffer by typing `f o o SPC'.
-
-   Abbrevs expand only when Abbrev mode (a minor mode) is enabled.
-Disabling Abbrev mode does not cause abbrev definitions to be forgotten,
-but they do not expand until Abbrev mode is enabled again.  The command
-`M-x abbrev-mode' toggles Abbrev mode; with a numeric argument, it
-turns Abbrev mode on if the argument is positive, off otherwise. *Note
-Minor Modes::.  `abbrev-mode' is also a variable; Abbrev mode is on
-when the variable is non-`nil'.  The variable `abbrev-mode'
-automatically becomes local to the current buffer when it is set.
-
-   Abbrev definitions can be "mode-specific"--active only in one major
-mode.  Abbrevs can also have "global" definitions that are active in
-all major modes.  The same abbrev can have a global definition and
-various mode-specific definitions for different major modes.  A mode
-specific definition for the current major mode overrides a global
-definition.
-
-   Abbrevs can be defined interactively during the editing session. 
-Lists of abbrev definitions can also be saved in files and reloaded in
-later sessions.  Some users keep extensive lists of abbrevs that they
-load in every session.
-
-   A second kind of abbreviation facility is called the "dynamic
-expansion".  Dynamic abbrev expansion happens only when you give an
-explicit command and the result of the expansion depends only on the
-current contents of the buffer.  *Note Dynamic Abbrevs::.
+   To avoid confusion, we reserve the word "window" for the
+subdivisions that Emacs implements, and never use it to refer to a
+frame.
 
 * Menu:
 
-* Defining Abbrevs::  Defining an abbrev, so it will expand when typed.
-* Expanding Abbrevs:: Controlling expansion: prefixes, canceling expansion.
-* Editing Abbrevs::   Viewing or editing the entire list of defined abbrevs.
-* Saving Abbrevs::    Saving the entire list of abbrevs for another session.
-* Dynamic Abbrevs::   Abbreviations for words already in the buffer.
+* Mouse Commands::     Moving, cutting, and pasting, with the mouse.
+* Secondary Selection::Cutting without altering point and mark.
+* Mouse References::   Using the mouse to select an item from a list.
+* Menu Mouse Clicks::  Mouse clicks that bring up menus.
+* Mode Line Mouse::    Mouse clicks on the mode line.
+* Creating Frames::    Creating additional Emacs frames with various contents.
+* Multiple Displays::  How one Emacs job can talk to several displays.
+* Special Buffer Frames::  You can make certain buffers have their own frames.
+* Frame Parameters::   Changing the colors and other modes of frames.
+* Scroll Bars::	       How to enable and disable scroll bars; how to use them.
+* Menu Bars::	       Enabling and disabling the menu bar.
+* Faces::	       How to change the display style using faces.
+* Modifying Faces::    How to change what a particular face looks like.
+* Font Lock::          Minor mode for syntactic highlighting using faces.
+* Support Modes::      Font Lock support modes make Font Lock faster.
+* Misc X::	       Iconifying and deleting frames.	Region highlighting.
+* Non-Window Terminals::  Multiple frames on terminals that only show one.
 
 
-File: emacs,  Node: Defining Abbrevs,  Next: Expanding Abbrevs,  Prev: Abbrevs,  Up: Abbrevs
+File: emacs,  Node: Mouse Commands,  Next: Secondary Selection,  Up: Frames
 
-Defining Abbrevs
-================
-
-`C-x +'
-     Define an abbrev to expand into some text before point
-     (`add-global-abbrev').
-
-`C-x C-a'
-     Similar, but define an abbrev available only in the current major
-     mode (`add-mode-abbrev').
-
-`C-x -'
-     Define a word in the buffer as an abbrev
-     (`inverse-add-global-abbrev').
-
-`C-x C-h'
-     Define a word in the buffer as a mode-specific abbrev
-     (`inverse-add-mode-abbrev').
-
-`M-x kill-all-abbrevs'
-     After this command, there are no abbrev definitions in effect.
-
-   The usual way to define an abbrev is to enter the text you want the
-abbrev to expand to, position point after it, and type `C-x +'
-(`add-global-abbrev').  This reads the abbrev itself using the
-minibuffer, and then defines it as an abbrev for one or more words
-before point.  Use a numeric argument to say how many words before
-point should be taken as the expansion.  For example, to define the
-abbrev `foo' as mentioned above, insert the text `find outer otter' and
-then type `C-u 3 C-x + f o o RET'.
-
-   An argument of zero to `C-x +' means to use the contents of the
-region as the expansion of the abbrev being defined.
-
-   The command `C-x C-a' (`add-mode-abbrev') is similar, but defines a
-mode-specific abbrev.  Mode specific abbrevs are active only in a
-particular major mode.  `C-x C-a' defines an abbrev for the major mode
-in effect at the time `C-x C-a' is typed.  The arguments work the same
-as for `C-x +'.
-
-   If the text of the abbrev you want is already in the buffer instead
-of the expansion, use command `C-x -' (`inverse-add-global-abbrev')
-instead of `C-x +', or use `C-x C-h' (`inverse-add-mode-abbrev')
-instead of `C-x C-a'.  These commands are called "inverse" because they
-invert the meaning of the argument found in the buffer and the argument
-read using the minibuffer.
-
-   To change the definition of an abbrev, just add the new definition. 
-You will be asked to confirm if the abbrev has a prior definition.  To
-remove an abbrev definition, give a negative argument to `C-x +' or `C-x
-C-a'.  You must choose the command to specify whether to kill a global
-definition or a mode-specific definition for the current mode, since
-those two definitions are independent for one abbrev.
-
-   `M-x kill-all-abbrevs' removes all the abbrev definitions there are.
-
-
-File: emacs,  Node: Expanding Abbrevs,  Next: Editing Abbrevs,  Prev: Defining Abbrevs,  Up: Abbrevs
-
-Controlling Abbrev Expansion
-============================
-
-   An abbrev expands whenever it is present in the buffer just before
-point and a self-inserting punctuation character (SPC, comma, etc.) is
-typed.  Most often the way an abbrev is used is to insert the abbrev
-followed by punctuation.
-
-   Abbrev expansion preserves case; thus, `foo' expands into `find
-outer otter'; `Foo' into `Find outer otter', and `FOO' into `FIND OUTER
-OTTER' or `Find Outer Otter' according to the variable
-`abbrev-all-caps' (a non-`nil' value chooses the first of the two
-expansions).
-
-   These two commands are used to control abbrev expansion:
-
-`M-''
-     Separate a prefix from a following abbrev to be expanded
-     (`abbrev-prefix-mark').
-
-`C-x ''
-     Expand the abbrev before point (`expand-abbrev'). This is
-     effective even when Abbrev mode is not enabled.
-
-`M-x unexpand-abbrev'
-     Undo last abbrev expansion.
-
-`M-x expand-region-abbrevs'
-     Expand some or all abbrevs found in the region.
-
-   You may wish to expand an abbrev with a prefix attached; for
-example, if `cnst' expands into `construction', you might want to use
-it to enter `reconstruction'.  It does not work to type `recnst',
-because that is not necessarily a defined abbrev.  What does work is to
-use the command `M-'' (`abbrev-prefix-mark') in between the prefix `re'
-and the abbrev `cnst'.  First, insert `re'.  Then type `M-''; this
-inserts a minus sign in the buffer to indicate that it has done its
-work.  Then insert the abbrev `cnst'; the buffer now contains
-`re-cnst'.  Now insert a punctuation character to expand the abbrev
-`cnst' into `construction'.  The minus sign is deleted at this point,
-because `M-'' left word for this to be done.  The resulting text is the
-desired `reconstruction'.
-
-   If you actually want the text of the abbrev in the buffer, rather
-than its expansion, you can accomplish this by inserting the following
-punctuation with `C-q'.  Thus, `foo C-q -' leaves `foo-' in the buffer.
-
-   If you expand an abbrev by mistake, you can undo the expansion
-(replace the expansion by the original abbrev text) with `M-x
-unexpand-abbrev'. `C-_' (`undo') can also be used to undo the
-expansion; but first it will undo the insertion of the following
-punctuation character!
-
-   `M-x expand-region-abbrevs' searches through the region for defined
-abbrevs, and for each one found offers to replace it with its expansion.
-This command is useful if you have typed in text using abbrevs but
-forgot to turn on Abbrev mode first.  It may also be useful together
-with a special set of abbrev definitions for making several global
-replacements at once.  This command is effective even if Abbrev mode is
-not enabled.
-
-
-File: emacs,  Node: Editing Abbrevs,  Next: Saving Abbrevs,  Prev: Expanding Abbrevs,  Up: Abbrevs
-
-Examining and Editing Abbrevs
-=============================
-
-`M-x list-abbrevs'
-     Print a list of all abbrev definitions.
-
-`M-x edit-abbrevs'
-     Edit a list of abbrevs; you can add, alter or remove definitions.
-
-   The output from `M-x list-abbrevs' looks like this:
-
-     (lisp-mode-abbrev-table)
-     "dk"	       0    "define-key"
-     (global-abbrev-table)
-     "dfn"	       0    "definition"
-
-(Some blank lines of no semantic significance, and some other abbrev
-tables, have been omitted.)
-
-   A line containing a name in parentheses is the header for abbrevs in
-a particular abbrev table; `global-abbrev-table' contains all the global
-abbrevs, and the other abbrev tables that are named after major modes
-contain the mode-specific abbrevs.
-
-   Within each abbrev table, each nonblank line defines one abbrev.  The
-word at the beginning is the abbrev.  The number that appears is the
-number of times the abbrev has been expanded.  Emacs keeps track of
-this to help you see which abbrevs you actually use, in case you decide
-to eliminate those that you don't use often.  The string at the end of
-the line is the expansion.
-
-   `M-x edit-abbrevs' allows you to add, change or kill abbrev
-definitions by editing a list of them in an Emacs buffer.  The list has
-the same format described above.  The buffer of abbrevs is called
-`*Abbrevs*', and is in Edit-Abbrevs mode.  This mode redefines the key
-`C-c C-c' to install the abbrev definitions as specified in the buffer.
- The command that does this is `edit-abbrevs-redefine'.  Any abbrevs
-not described in the buffer are eliminated when this is done.
-
-   `edit-abbrevs' is actually the same as `list-abbrevs' except that it
-selects the buffer `*Abbrevs*' whereas `list-abbrevs' merely displays
-it in another window.
-
-
-File: emacs,  Node: Saving Abbrevs,  Next: Dynamic Abbrevs,  Prev: Editing Abbrevs,  Up: Abbrevs
-
-Saving Abbrevs
-==============
-
-   These commands allow you to keep abbrev definitions between editing
-sessions.
-
-`M-x write-abbrev-file'
-     Write a file describing all defined abbrevs.
-
-`M-x read-abbrev-file'
-     Read such a file and define abbrevs as specified there.
-
-`M-x quietly-read-abbrev-file'
-     Similar but do not display a message about what is going on.
-
-`M-x define-abbrevs'
-     Define abbrevs from buffer.
-
-`M-x insert-abbrevs'
-     Insert all abbrevs and their expansions into the buffer.
-
-   `M-x write-abbrev-file' reads a file name using the minibuffer and
-writes a description of all current abbrev definitions into that file. 
-The text stored in the file looks like the output of `M-x list-abbrevs'.
-This is used to save abbrev definitions for use in a later session.
-
-   `M-x read-abbrev-file' reads a file name using the minibuffer and
-reads the file, defining abbrevs according to the contents of the file.
-`M-x quietly-read-abbrev-file' is the same except that it does not
-display a message in the echo area saying that it is doing its work; it
-is actually useful primarily in the `.emacs' file.  If an empty
-argument is given to either of these functions, the file name used is
-the value of the variable `abbrev-file-name', which is by default
-`"~/.abbrev_defs"'.
-
-   Emacs will offer to save abbrevs automatically if you have changed
-any of them, whenever it offers to save all files (for `C-x s' or `C-x
-C-c').  This feature can be inhibited by setting the variable
-`save-abbrevs' to `nil'.
-
-   The commands `M-x insert-abbrevs' and `M-x define-abbrevs' are
-similar to the previous commands but work on text in an Emacs buffer.
-`M-x insert-abbrevs' inserts text into the current buffer before point,
-describing all current abbrev definitions; `M-x define-abbrevs' parses
-the entire current buffer and defines abbrevs accordingly.
-
-
-File: emacs,  Node: Dynamic Abbrevs,  Prev: Saving Abbrevs,  Up: Abbrevs
-
-Dynamic Abbrev Expansion
-========================
-
-   The abbrev facility described above operates automatically as you
-insert text, but all abbrevs must be defined explicitly.  By contrast,
-"dynamic abbrevs" allow the meanings of abbrevs to be determined
-automatically from the contents of the buffer, but dynamic abbrev
-expansion happens only when you request it explicitly.
-
-`M-/'
-     Expand the word in the buffer before point as a "dynamic abbrev",
-     by searching in the buffer for words starting with that
-     abbreviation (`dabbrev-expand').
-
-   For example, if the buffer contains `does this follow ' and you type
-`f o M-/', the effect is to insert `follow' because that is the last
-word in the buffer that starts with `fo'.  A numeric argument to `M-/'
-says to take the second, third, etc. distinct expansion found looking
-backward from point.  Repeating `M-/' searches for an alternative
-expansion by looking farther back.  After the part of the buffer
-preceding point has been considered, the part of the buffer after point
-is searched.
-
-   Dynamic abbrev expansion is completely independent of Abbrev mode;
-the expansion of a word with `M-/' is completely independent of whether
-it has a definition as an ordinary abbrev.
-
-
-File: emacs,  Node: Picture,  Next: Sending Mail,  Prev: Abbrevs,  Up: Top
-
-Editing Pictures
-****************
-
-   If you want to create a picture made out of text characters (for
-example, a picture of the division of a register into fields, as a
-comment in a program), use the command `edit-picture' to enter Picture
-mode.
-
-   In Picture mode, editing is based on the "quarter-plane" model of
-text, according to which the text characters lie studded on an area that
-stretches infinitely far to the right and downward.  The concept of the
-end of a line does not exist in this model; the most you can say is
-where the last nonblank character on the line is found.
-
-   Of course, Emacs really always considers text as a sequence of
-characters, and lines really do have ends.  But in Picture mode most
-frequently-used keys are rebound to commands that simulate the
-quarter-plane model of text.  They do this by inserting spaces or by
-converting tabs to spaces.
-
-   Most of the basic editing commands of Emacs are redefined by Picture
-mode to do essentially the same thing but in a quarter-plane way.  In
-addition, Picture mode defines various keys starting with the `C-c'
-prefix to run special picture editing commands.
-
-   One of these keys, `C-c C-c', is pretty important.  Often a picture
-is part of a larger file that is usually edited in some other major
-mode. `M-x edit-picture' records the name of the previous major mode,
-and then you can use the `C-c C-c' command (`picture-mode-exit') to
-restore that mode.  `C-c C-c' also deletes spaces from the ends of
-lines, unless given a numeric argument.
-
-   The commands used in Picture mode all work in other modes (provided
-the `picture' library is loaded), but are not bound to keys except in
-Picture mode.  Note that the descriptions below talk of moving "one
-column" and so on, but all the picture mode commands handle numeric
-arguments as their normal equivalents do.
-
-   Turning on Picture mode calls the value of the variable
-`picture-mode-hook' as a function, with no arguments, if that value
-exists and is non-`nil'.
-
-* Menu:
-
-* Basic Picture::         Basic concepts and simple commands of Picture Mode.
-* Insert in Picture::     Controlling direction of cursor motion
-                           after "self-inserting" characters.
-* Tabs in Picture::       Various features for tab stops and indentation.
-* Rectangles in Picture:: Clearing and superimposing rectangles.
-
-
-File: emacs,  Node: Basic Picture,  Next: Insert in Picture,  Prev: Picture,  Up: Picture
-
-Basic Editing in Picture Mode
-=============================
-
-   Most keys do the same thing in Picture mode that they usually do,
-but do it in a quarter-plane style.  For example, `C-f' is rebound to
-run `picture-forward-column', which is defined to move point one column
-to the right, by inserting a space if necessary, so that the actual end
-of the line makes no difference.  `C-b' is rebound to run
-`picture-backward-column', which always moves point left one column,
-converting a tab to multiple spaces if necessary.  `C-n' and `C-p' are
-rebound to run `picture-move-down' and `picture-move-up', which can
-either insert spaces or convert tabs as necessary to make sure that
-point stays in exactly the same column.  `C-e' runs
-`picture-end-of-line', which moves to after the last nonblank character
-on the line.  There is no need to change `C-a', as the choice of screen
-model does not affect beginnings of lines.
-
-   Insertion of text is adapted to the quarter-plane screen model
-through the use of Overwrite mode (*note Minor Modes::.). 
-Self-inserting characters replace existing text, column by column,
-rather than pushing existing text to the right.  RET runs
-`picture-newline', which just moves to the beginning of the following
-line so that new text will replace that line.
-
-   Deletion and killing of text are replaced with erasure.  DEL
-(`picture-backward-clear-column') replaces the preceding character with
-a space rather than removing it.  `C-d' (`picture-clear-column') does
-the same thing in a forward direction. `C-k' (`picture-clear-line')
-really kills the contents of lines, but does not ever remove the
-newlines from the buffer.
-
-   To do actual insertion, you must use special commands.  `C-o'
-(`picture-open-line') still creates a blank line, but does so after the
-current line; it never splits a line.  `C-M-o', `split-line', makes
-sense in Picture mode, so it is not changed.  LFD
-(`picture-duplicate-line') inserts below the current line another line
-with the same contents.
-
-   Real deletion can be done with `C-w', or with `C-c C-d' (which is
-defined as `delete-char', as `C-d' is in other modes), or with one of
-the picture rectangle commands (*note Rectangles in Picture::.).
-
-
-File: emacs,  Node: Insert in Picture,  Next: Tabs in Picture,  Prev: Basic Picture,  Up: Picture
-
-Controlling Motion after Insert
-===============================
-
-   Since "self-inserting" characters in Picture mode just overwrite and
-move point, there is no essential restriction on how point should be
-moved. Normally point moves right, but you can specify any of the eight
-orthogonal or diagonal directions for motion after a "self-inserting"
-character. This is useful for drawing lines in the buffer.
-
-`C-c <'
-     Move left after insertion (`picture-movement-left').
-
-`C-c >'
-     Move right after insertion (`picture-movement-right').
-
-`C-c ^'
-     Move up after insertion (`picture-movement-up').
-
-`C-c .'
-     Move down after insertion (`picture-movement-down').
-
-`C-c `'
-     Move up and left ("northwest") after insertion
-     (`picture-movement-nw').
-
-`C-c ''
-     Move up and right ("northeast") after insertion
-     (`picture-movement-ne').
-
-`C-c /'
-     Move down and left ("southwest") after insertion
-     (`picture-movement-sw').
-
-`C-c \'
-     Move down and right ("southeast") after insertion
-     (`picture-movement-se').
-
-   Two motion commands move based on the current Picture insertion
-direction.  The command `C-c C-f' (`picture-motion') moves in the same
-direction as motion after "insertion" currently does, while `C-c C-b'
-(`picture-motion-reverse') moves in the opposite direction.
-
-
-File: emacs,  Node: Tabs in Picture,  Next: Rectangles in Picture,  Prev: Insert in Picture,  Up: Picture
-
-Picture Mode Tabs
-=================
-
-   Two kinds of tab-like action are provided in Picture mode.
-Context-based tabbing is done with `M-TAB' (`picture-tab-search'). 
-With no argument, it moves to a point underneath the next "interesting"
-character that follows whitespace in the previous nonblank line. 
-"Next" here means "appearing at a horizontal position greater than the
-one point starts out at".  With an argument, as in `C-u M-TAB', this
-command moves to the next such interesting character in the current
-line.  `M-TAB' does not change the text; it only moves point. 
-"Interesting" characters are defined by the variable
-`picture-tab-chars', which contains a string whose characters are all
-considered interesting.  Its default value is `"!-~"'.
-
-   TAB itself runs `picture-tab', which operates based on the current
-tab stop settings; it is the Picture mode equivalent of
-`tab-to-tab-stop'.  Normally it just moves point, but with a numeric
-argument it clears the text that it moves over.
-
-   The context-based and tab-stop-based forms of tabbing are brought
-together by the command `C-c TAB', `picture-set-tab-stops'. This
-command sets the tab stops to the positions which `M-TAB' would
-consider significant in the current line.  The use of this command,
-together with TAB, can get the effect of context-based tabbing.  But
-`M-TAB' is more convenient in the cases where it is sufficient.
-
-
-File: emacs,  Node: Rectangles in Picture,  Prev: Tabs in Picture,  Up: Picture
-
-Picture Mode Rectangle Commands
-===============================
-
-   Picture mode defines commands for working on rectangular pieces of
-the text in ways that fit with the quarter-plane model.  The standard
-rectangle commands may also be useful (*note Rectangles::.).
-
-`C-c C-k'
-     Clear out the region-rectangle (`picture-clear-rectangle').  With
-     argument, kill it.
-
-`C-c C-w R'
-     Similar but save rectangle contents in register R first
-     (`picture-clear-rectangle-to-register').
-
-`C-c C-y'
-     Copy last killed rectangle into the buffer by overwriting, with
-     upper left corner at point (`picture-yank-rectangle').  With
-     argument, insert instead.
-
-`C-c C-x R'
-     Similar, but use the rectangle in register R
-     (`picture-yank-rectangle-from-register').
-
-   The picture rectangle commands `C-c C-k' (`picture-clear-rectangle')
-and `C-c C-w' (`picture-clear-rectangle-to-register') differ from the
-standard rectangle commands in that they normally clear the rectangle
-instead of deleting it; this is analogous with the way `C-d' is changed
-in Picture mode.
-
-   However, deletion of rectangles can be useful in Picture mode, so
-these commands delete the rectangle if given a numeric argument.
-
-   The Picture mode commands for yanking rectangles differ from the
-standard ones in overwriting instead of inserting.  This is the same
-way that Picture mode insertion of other text is different from other
-modes. `C-c C-y' (`picture-yank-rectangle') inserts (by overwriting) the
-rectangle that was most recently killed, while `C-c C-x'
-(`picture-yank-rectangle-from-register') does likewise for the
-rectangle found in a specified register.
-
-
-File: emacs,  Node: Sending Mail,  Next: Rmail,  Prev: Picture,  Up: Top
-
-Sending Mail
-************
-
-   To send a message in Emacs, you start by typing a command (`C-x m')
-to select and initialize the `*mail*' buffer.  Then you edit the text
-and headers of the message in this buffer, and type another command
-(`C-c C-c') to send the message.
-
-`C-x m'
-     Begin composing a message to send (`mail').
-
-`C-x 4 m'
-     Likewise, but display the message in another window
-     (`mail-other-window').
-
-`C-c C-c'
-     In Mail mode, send the message and switch to another buffer
-     (`mail-send-and-exit').
-
-   The command `C-x m' (`mail') selects a buffer named `*mail*' and
-initializes it with the skeleton of an outgoing message. `C-x 4 m'
-(`mail-other-window') selects the `*mail*' buffer in a different
-window, leaving the previous current buffer visible.
-
-   Because the mail composition buffer is an ordinary Emacs buffer, you
-can switch to other buffers while in the middle of composing mail, and
-switch back later (or never).  If you use the `C-x m' command again
-when you have been composing another message but have not sent it, you
-are asked to confirm before the old message is erased.  If you answer
-`n', the `*mail*' buffer is left selected with its old contents, so you
-can finish the old message and send it.  `C-u C-x m' is another way to
-do this.  Sending the message marks the `*mail*' buffer "unmodified",
-which avoids the need for confirmation when `C-x m' is next used.
-
-   If you are composing a message in the `*mail*' buffer and want to
-send another message before finishing the first, rename the `*mail*'
-buffer using `M-x rename-buffer' (*note Misc Buffer::.).
-
-* Menu:
-
-* Format: Mail Format.    Format of the mail being composed.
-* Headers: Mail Headers.  Details of allowed mail header fields.
-* Mode: Mail Mode.        Special commands for editing mail being composed.
-
-
-File: emacs,  Node: Mail Format,  Next: Mail Headers,  Prev: Sending Mail,  Up: Sending Mail
-
-The Format of the Mail Buffer
-=============================
-
-   In addition to the "text" or contents, a message has "header fields"
-which say who sent it, when, to whom, why, and so on.  Some header
-fields such as the date and sender are created automatically after the
-message is sent.  Others, such as the recipient names, must be
-specified by you in order to send the message properly.
-
-   Mail mode provides a few commands to help you edit some header
-fields, and some are preinitialized in the buffer automatically at
-times.  You can insert or edit any header fields using ordinary editing
-commands.
-
-   The line in the buffer that says
-
-     --text follows this line--
-
-is a special delimiter that separates the headers you have specified
-from the text.  Whatever follows this line is the text of the message;
-the headers precede it.  The delimiter line itself does not appear in
-the message actually sent.  The text used for the delimiter line is
-controlled by the variable `mail-header-separator'.
-
-   Here is an example of what the headers and text in the `*mail*'
-buffer might look like.
-
-     To: rms@mc
-     CC: mly@mc, rg@oz
-     Subject: The Emacs Manual
-     --Text follows this line--
-     Please ignore this message.
-
-
-File: emacs,  Node: Mail Headers,  Next: Mail Mode,  Prev: Mail Format,  Up: Sending Mail
-
-Mail Header Fields
-==================
-
-   There are several header fields you can use in the `*mail*' buffer.
-Each header field starts with a field name at the beginning of a line,
-terminated by a colon.  It does not matter whether you use upper or
-lower case in the field name.  After the colon and optional whitespace
-comes the contents of the field.
-
-`To'
-     This field contains the mailing addresses to which the message is
-     addressed.
-
-`Subject'
-     The contents of the `Subject' field should be a piece of text that
-     says what the message is about.  The reason `Subject' fields are
-     useful is that most mail-reading programs can provide a summary of
-     messages, listing the subject of each message but not its text.
-
-`CC'
-     This field contains additional mailing addresses to send the
-     message to, but whose readers should not regard the message as
-     addressed to them.
-
-`BCC'
-     This field contains additional mailing addresses to send the
-     message to, but which should not appear in the header of the
-     message actually sent.
-
-`FCC'
-     This field contains the name of one file (in Unix mail file
-     format) to which a copy of the message should be appended when the
-     message is sent.
-
-`From'
-     Use the `From' field to say who you are, when the account you are
-     using to send the mail is not your own.  The contents of the
-     `From' field should be a valid mailing address, since replies will
-     normally go there.
-
-`Reply-To'
-     Use the `Reply-to' field to direct replies to a different address,
-     not your own.  There is no difference between `From' and
-     `Reply-to' in their effect on where replies go, but they convey a
-     different meaning to the human who reads the message.
-
-     If you set the variable `mail-default-reply-to' to a non-`nil'
-     value, then every message you begin to edit will have a `Reply-to'
-     field whose contents are the value of the variable.
-
-`In-Reply-To'
-     This field contains a piece of text describing a message you are
-     replying to.  Some mail systems can use this information to
-     correlate related pieces of mail.  Normally this field is filled
-     in by Rmail when you are replying to a message in Rmail, and you
-     never need to think about it (*note Rmail::.).
-
-   The `To', `CC', `BCC' and `FCC' fields can appear any number of
-times, to specify many places to send the message.
-
-   The `To', `CC', and `BCC' fields can have continuation lines.  All
-the lines starting with whitespace, following the line on which the
-field starts, are considered part of the field.  For example,
-
-     To: foo@here, this@there,
-       me@gnu.cambridge.mass.usa.earth.spiral3281
-
-   If you have a `~/.mailrc' file, Emacs will scan it for mail aliases
-the first time you try to send mail in an Emacs session.  Aliases found
-in the `To', `CC', and `BCC' fields will be expanded where appropriate.
-
-   If the variable `mail-archive-file-name' is non-`nil', it should be a
-string naming a file; every time you start to edit a message to send,
-an `FCC' field will be put in for that file.  Unless you remove the
-`FCC' field, every message will be written into that file when it is
-sent.
-
-
-File: emacs,  Node: Mail Mode,  Prev: Mail Headers,  Up: Sending Mail
-
-Mail Mode
-=========
-
-   The major mode used in the `*mail*' buffer is Mail mode, which is
-much like Text mode except that various special commands are provided on
-the `C-c' prefix.  These commands all have to do specifically with
-editing or sending the message.
-
-`C-c C-s'
-     Send the message, and leave the `*mail*' buffer selected
-     (`mail-send').
-
-`C-c C-c'
-     Send the message, and select some other buffer
-     (`mail-send-and-exit').
-
-`C-c C-f C-t'
-     Move to the `To' header field, creating one if there is none
-     (`mail-to').
-
-`C-c C-f C-s'
-     Move to the `Subject' header field, creating one if there is none
-     (`mail-subject').
-
-`C-c C-f C-c'
-     Move to the `CC' header field, creating one if there is none
-     (`mail-cc').
-
-`C-c C-w'
-     Insert the file `~/.signature' at the end of the message text
-     (`mail-signature').
-
-`C-c C-y'
-     Yank the selected message from Rmail (`mail-yank-original'). This
-     command does nothing unless your command to start sending a
-     message was issued with Rmail.
-
-`C-c C-q'
-     Fill all paragraphs of yanked old messages, each individually
-     (`mail-fill-yanked-message').
-
-   There are two ways to send the message.  `C-c C-s' (`mail-send')
-sends the message and marks the `*mail*' buffer unmodified, but leaves
-that buffer selected so that you can modify the message (perhaps with
-new recipients) and send it again.  `C-c C-c' (`mail-send-and-exit')
-sends and then deletes the window (if there is another window) or
-switches to another buffer.  It puts the `*mail*' buffer at the lowest
-priority for automatic reselection, since you are finished with using
-it.  This is the usual way to send the message.
-
-   Mail mode provides some other special commands that are useful for
-editing the headers and text of the message before you send it.  There
-are three commands defined to move point to particular header fields,
-all based on the prefix `C-c C-f' (`C-f' is for "field").  They are
-`C-c C-f C-t' (`mail-to') to move to the `To' field, `C-c C-f C-s'
-(`mail-subject') for the `Subject' field, and `C-c C-f C-c' (`mail-cc')
-for the `CC' field.  These fields have special motion commands because
-they are the most common fields for the user to want to edit.
-
-   `C-c C-w' (`mail-signature') adds a standard piece text at the end
-of the message to say more about who you are.  The text comes from the
-file `.signature' in your home directory.
-
-   When mail sending is invoked from the Rmail mail reader using an
-Rmail command, `C-c C-y' can be used inside the `*mail*' buffer to
-insert the text of the message you are replying to.  Normally it
-indents each line of that message four spaces and eliminates most
-header fields.  A numeric argument specifies the number of spaces to
-indent.  An argument of just `C-u' says not to indent at all and not to
-eliminate anything. `C-c C-y' always uses the current message from the
-`RMAIL' buffer, so you can insert several old messages by selecting one
-in `RMAIL', switching to `*mail*' and yanking it, then switching back to
-`RMAIL' to select another.
-
-   After using `C-c C-y', you can type the command `C-c C-q'
-(`mail-fill-yanked-message') to fill the paragraphs of the yanked old
-message or messages.  One use of `C-c C-q' fills all such paragraphs,
-each one separately.
-
-   Turning on Mail mode (which `C-x m' does automatically) calls the
-value of `text-mode-hook', if it is not void or `nil', and then calls
-the value of `mail-mode-hook' if that is not void or `nil'.  Aside from
-these, the `mail' command runs `mail-setup-hook' whenever it
-initializes the `*mail*' buffer for editing a message.
-
-
-File: emacs,  Node: Rmail,  Next: Recursive Edit,  Prev: Sending Mail,  Up: Top
-
-Reading Mail with Rmail
-***********************
-
-   Rmail is an Emacs subsystem for reading and disposing of mail that
-you receive.  Rmail stores mail messages in files called "Rmail files".
- Reading the message in an Rmail file is done in a special major mode,
-Rmail mode, which redefines most letters to run commands for managing
-mail.  To enter Rmail, type `M-x rmail'.  This reads your primary mail
-file, merges new mail in from your inboxes, displays the first new
-message, and lets you begin reading.
-
-   Using Rmail in the simplest fashion, you have one Rmail file,
-`~/RMAIL', in which all of your mail is saved.  It is called your
-"primary mail file".  In more sophisticated usage, you can copy
-messages into other Rmail files and then edit those files with Rmail.
-
-   Rmail displays only one message at a time.  It is called the "current
-message".  Rmail mode's special commands can do such things as move to
-another message, delete the message, copy the message into another
-file, or send a reply.
-
-   Within the Rmail file, messages are arranged sequentially in order
-of receipt.  They are also assigned consecutive integers as their
-"message numbers".  The number of the current message is displayed in
-Rmail's mode line, followed by the total number of messages in the
-file.  You can move to a message by specifying its message number using
-the `j' key (*note Rmail Motion::.).
-
-   Following the usual conventions of Emacs, changes in an Rmail file
-become permanent only when the file is saved.  You can do this with `s'
-(`rmail-save'), which also expunges deleted messages from the file
-first (*note Rmail Deletion::.).  To save the file without expunging,
-use `C-x C-s'.  Rmail saves the Rmail file spontaneously when moving new
-mail from an inbox file (*note Rmail Inbox::.).
-
-   You can exit Rmail with `q' (`rmail-quit'); this expunges and saves
-the Rmail file and then switches to another buffer.  But there is no
-need to `exit' formally.  If you switch from Rmail to editing in other
-buffers, and never happen to switch back, you have exited.  Just make
-sure to save the Rmail file eventually (like any other file you have
-changed).  `C-x s' is a good enough way to do this (*note Saving::.).
-
-* Menu:
-
-* Scroll: Rmail Scrolling.   Scrolling through a message.
-* Motion: Rmail Motion.      Moving to another message.
-* Deletion: Rmail Deletion.  Deleting and expunging messages.
-* Inbox: Rmail Inbox.        How mail gets into the Rmail file.
-* Files: Rmail Files.        Using multiple Rmail files.
-* Output: Rmail Output.	     Copying message out to files.
-* Labels: Rmail Labels.      Classifying messages by labeling them.
-* Summary: Rmail Summary.    Summaries show brief info on many messages.
-* Reply: Rmail Reply.        Sending replies to messages you are viewing.
-* Editing: Rmail Editing.    Editing message text and headers in Rmail.
-* Digest: Rmail Digest.      Extracting the messages from a digest message.
-
-
-File: emacs,  Node: Rmail Scrolling,  Next: Rmail Motion,  Prev: Rmail,  Up: Rmail
-
-Scrolling Within a Message
+Mouse Commands for Editing
 ==========================
 
-   When Rmail displays a message that does not fit on the screen, it is
-necessary to scroll through it.  This could be done with `C-v', `M-v'
-and `M-<', but in Rmail scrolling is so frequent that it deserves to be
-easier to type.
+   The mouse commands for selecting and copying a region are mostly
+compatible with the `xterm' program.  You can use the same mouse
+commands for copying between Emacs and other X client programs.
 
-`SPC'
-     Scroll forward (`scroll-up').
+`Mouse-1'
+     Move point to where you click (`mouse-set-point').  This is
+     normally the left button.
 
-`DEL'
-     Scroll backward (`scroll-down').
+`Drag-Mouse-1'
+     Set the region to the text you select by dragging, and copy it to
+     the kill ring (`mouse-set-region').  You can specify both ends of
+     the region with this single command.
 
-`.'
-     Scroll to start of message (`rmail-beginning-of-message').
+     If you move the mouse off the top or bottom of the window while
+     dragging, the window scrolls at a steady rate until you move the
+     mouse back into the window.  This way, you can select regions that
+     don't fit entirely on the screen.  The number of lines scrolled
+     per step depends on how far away from the window edge the mouse
+     has gone; the variable `mouse-scroll-min-lines' specifies a
+     minimum step size.
 
-   Since the most common thing to do while reading a message is to
-scroll through it by screenfuls, Rmail makes SPC and DEL synonyms of
-`C-v' (`scroll-up') and `M-v' (`scroll-down').
+`Mouse-2'
+     Yank the last killed text, where you click (`mouse-yank-at-click').
+     This is normally the middle button.
 
-   The command `.' (`rmail-beginning-of-message') scrolls back to the
-beginning of the selected message.  This is not quite the same as `M-<':
-for one thing, it does not set the mark; for another, it resets the
-buffer boundaries to the current message if you have changed them.
+`Mouse-3'
+     This command, `mouse-save-then-kill', has several functions
+     depending on where you click and the status of the region.
+
+     The most basic case is when you click `Mouse-1' in one place and
+     then `Mouse-3' in another.  This selects the text between those two
+     positions as the region.  It also copies the new region to the kill
+     ring, so that you can copy it to someplace else.
+
+     If you click `Mouse-1', scroll with the scroll bar, and then click
+     `Mouse-3', it remembers where point was before scrolling (where you
+     put it with `Mouse-1'), and uses that position as the other end of
+     the region.  This is so that you can select a region that doesn't
+     fit entirely on the screen.
+
+     More generally, if you do not have a highlighted region, `Mouse-3'
+     selects the text between point and the click position as the
+     region.  It does this by setting the mark where point was, and
+     moving point to where you click.
+
+     If you have a highlighted region, or if the region was set just
+     before by dragging button 1, `Mouse-3' adjusts the nearer end of
+     the region by moving it to where you click.  The adjusted region's
+     text also replaces the old region's text in the kill ring.
+
+     If you originally specified the region using a double or triple
+     `Mouse-1', so that the region is defined to consist of entire words
+     or lines, then adjusting the region with `Mouse-3' also proceeds by
+     entire words or lines.
+
+     If you use `Mouse-3' a second time consecutively, at the same
+     place, that kills the region already selected.
+
+`Double-Mouse-1'
+     This key sets the region around the word which you click on.  If
+     you click on a character with "symbol" syntax (such as underscore,
+     in C mode), it sets the region around the symbol surrounding that
+     character.
+
+     If you click on a character with open-parenthesis or
+     close-parenthesis syntax, it sets the region around the
+     parenthetical grouping (sexp) which that character starts or ends.
+     If you click on a character with string-delimiter syntax (such as
+     a singlequote or doublequote in C), it sets the region around the
+     string constant (using heuristics to figure out whether that
+     character is the beginning or the end of it).
+
+`Double-Drag-Mouse-1'
+     This key selects a region made up of the words that you drag
+     across.
+
+`Triple-Mouse-1'
+     This key sets the region around the line which you click on.
+
+`Triple-Drag-Mouse-1'
+     This key selects a region made up of the lines that you drag
+     across.
+
+   The simplest way to kill text with the mouse is to press `Mouse-1'
+at one end, then press `Mouse-3' twice at the other end.  *Note
+Killing::.  To copy the text into the kill ring without deleting it
+from the buffer, press `Mouse-3' just once--or just drag across the
+text with `Mouse-1'.  Then you can copy it elsewhere by yanking it.
+
+   To yank the killed or copied text somewhere else, move the mouse
+there and press `Mouse-2'.  *Note Yanking::.  However, if
+`mouse-yank-at-point' is non-`nil', `Mouse-2' yanks at point.  Then it
+does not matter precisely where you click; all that matters is which
+window you click on.  The default value is `nil'.  This variable also
+effects yanking the secondary selection.
+
+   To copy text to another X window, kill it or save it in the kill
+ring.  Under X, this also sets the "primary selection".  Then use the
+"paste" or "yank" command of the program operating the other window to
+insert the text from the selection.
+
+   To copy text from another X window, use the "cut" or "copy" command
+of the program operating the other window, to select the text you want.
+Then yank it in Emacs with `C-y' or `Mouse-2'.
+
+   When Emacs puts text into the kill ring, or rotates text to the front
+of the kill ring, it sets the "primary selection" in the X server.
+This is how other X clients can access the text.  Emacs also stores the
+text in the cut buffer, but only if the text is short enough
+(`x-cut-buffer-max' specifies the maximum number of characters);
+putting long strings in the cut buffer can be slow.
+
+   The commands to yank the first entry in the kill ring actually check
+first for a primary selection in another program; after that, they check
+for text in the cut buffer.  If neither of those sources provides text
+to yank, the kill ring contents are used.
 
 
+File: emacs,  Node: Secondary Selection,  Next: Mouse References,  Prev: Mouse Commands,  Up: Frames
+
+Secondary Selection
+===================
+
+   The "secondary selection" is another way of selecting text using X.
+It does not use point or the mark, so you can use it to kill text
+without setting point or the mark.
+
+`M-Drag-Mouse-1'
+     Set the secondary selection, with one end at the place where you
+     press down the button, and the other end at the place where you
+     release it (`mouse-set-secondary').  The highlighting appears and
+     changes as you drag.
+
+     If you move the mouse off the top or bottom of the window while
+     dragging, the window scrolls at a steady rate until you move the
+     mouse back into the window.  This way, you can mark regions that
+     don't fit entirely on the screen.
+
+`M-Mouse-1'
+     Set one endpoint for the "secondary selection"
+     (`mouse-start-secondary').
+
+`M-Mouse-3'
+     Make a secondary selection, using the place specified with
+     `M-Mouse-1' as the other end (`mouse-secondary-save-then-kill').
+     A second click at the same place kills the secondary selection
+     just made.
+
+`M-Mouse-2'
+     Insert the secondary selection where you click
+     (`mouse-kill-secondary').  This places point at the end of the
+     yanked text.
+
+   Double or triple clicking of `M-Mouse-1' operates on words and
+lines, much like `Mouse-1'.
+
+   If `mouse-yank-at-point' is non-`nil', `M-Mouse-2' yanks at point.
+Then it does not matter precisely where you click; all that matters is
+which window you click on.  *Note Mouse Commands::.
+
+
+File: emacs,  Node: Mouse References,  Next: Menu Mouse Clicks,  Prev: Secondary Selection,  Up: Frames
+
+Following References with the Mouse
+===================================
+
+   Some Emacs buffers display lists of various sorts.  These include
+lists of files, of buffers, of possible completions, of matches for a
+pattern, and so on.
+
+   Since yanking text into these buffers is not very useful, most of
+them define `Mouse-2' specially, as a command to use or view the item
+you click on.
+
+   For example, if you click `Mouse-2' on a file name in a Dired
+buffer, you visit the that file.  If you click `Mouse-2' on an error
+message in the `*Compilation*' buffer, you go to the source code for
+that error message.  If you click `Mouse-2' on a completion in the
+`*Completions*' buffer, you choose that completion.
+
+   You can usually tell when `Mouse-2' has this special sort of meaning
+because the sensitive text highlights when you move the mouse over it.
+
+
+File: emacs,  Node: Menu Mouse Clicks,  Next: Mode Line Mouse,  Prev: Mouse References,  Up: Frames
+
+Mouse Clicks for Menus
+======================
+
+   Mouse clicks modified with the CONTROL and SHIFT keys bring up menus.
+
+`C-Mouse-1'
+     This menu is for selecting a buffer.
+
+`C-Mouse-2'
+     This menu is for specifying faces and other text properties for
+     editing formatted text.  *Note Formatted Text::.
+
+`C-Mouse-3'
+     This menu is mode-specific.  For most modes, this menu has the same
+     items as all the mode-specific menu bar menus put together.  Some
+     modes may specify a different menu for this button.(1)
+
+`S-mouse-1'
+     This menu is for specifying the frame's default font.
+
+   ---------- Footnotes ----------
+
+   (1)  Some systems use `Mouse-3' for a mode-specific menu.  We took a
+survey of users, and found they preferred to keep `Mouse-3' for
+selecting and killing regions.  Hence the decision to use `C-Mouse-3'
+for this menu.
+
+
+File: emacs,  Node: Mode Line Mouse,  Next: Creating Frames,  Prev: Menu Mouse Clicks,  Up: Frames
+
+Mode Line Mouse Commands
+========================
+
+   You can use mouse clicks on window mode lines to select and
+manipulate windows.
+
+`Mouse-1'
+     `Mouse-1' on a mode line selects the window above.  By dragging
+     `Mouse-1' on the mode line, you can move it, thus changing the
+     height of the windows above and below.
+
+`Mouse-2'
+     `Mouse-2' on a mode line expands that window to fill its frame.
+
+`Mouse-3'
+     `Mouse-3' on a mode line deletes the window above.
+
+`C-Mouse-2'
+     `C-Mouse-2' on a mode line splits the window above horizontally,
+     above the place in the mode line where you click.
+
+   `C-Mouse-2' on a scroll bar splits the corresponding window
+vertically.  *Note Split Window::.
+
+
+File: emacs,  Node: Creating Frames,  Next: Multiple Displays,  Prev: Mode Line Mouse,  Up: Frames
+
+Creating Frames
+===============
+
+   The prefix key `C-x 5' is analogous to `C-x 4', with parallel
+subcommands.  The difference is that `C-x 5' commands create a new
+frame rather than just a new window in the selected frame  (*Note Pop
+Up Window::).  If an existing visible or iconified frame already
+displays the requested material, these commands use the existing frame,
+after raising or deiconifying as necessary.
+
+   The various `C-x 5' commands differ in how they find or create the
+buffer to select:
+
+`C-x 5 2'
+     Create a new frame (`make-frame').
+
+`C-x 5 b BUFNAME RET'
+     Select buffer BUFNAME in another window.  This runs
+     `switch-to-buffer-other-frame'.
+
+`C-x 5 f FILENAME RET'
+     Visit file FILENAME and select its buffer in another frame.  This
+     runs `find-file-other-frame'.  *Note Visiting::.
+
+`C-x 5 d DIRECTORY RET'
+     Select a Dired buffer for directory DIRECTORY in another frame.
+     This runs `dired-other-frame'.  *Note Dired::.
+
+`C-x 5 m'
+     Start composing a mail message in another frame.  This runs
+     `mail-other-frame'.  It is the other-frame variant of `C-x m'.
+     *Note Sending Mail::.
+
+`C-x 5 .'
+     Find a tag in the current tag table in another frame.  This runs
+     `find-tag-other-frame', the multiple-frame variant of `M-.'.
+     *Note Tags::.
+
+`C-x 5 r FILENAME RET'
+     Visit file FILENAME read-only, and select its buffer in another
+     frame.  This runs `find-file-read-only-other-frame'.  *Note
+     Visiting::.
+
+   You can control the appearance of new frames you create by setting
+the frame parameters in `default-frame-alist'.  You can use the
+variable `initial-frame-alist' to specify parameters that affect only
+the initial frame.  *Note Initial Parameters: (elisp)Initial
+Parameters, for more information.
+
+
+File: emacs,  Node: Multiple Displays,  Next: Special Buffer Frames,  Prev: Creating Frames,  Up: Frames
+
+Multiple Displays
+=================
+
+   A single Emacs can talk to more than one X Windows display.
+Initially, Emacs uses just one display--the one specified with the
+`DISPLAY' environment variable or with the `--display' option (*note
+Initial Options::.).  To connect to another display, use the command
+`make-frame-on-display':
+
+`M-x make-frame-on-display RET DISPLAY RET'
+     Create a new frame on display DISPLAY.
+
+   A single X server can handle more than one screen.  When you open
+frames on two screens belonging to one server, Emacs knows they share a
+single keyboard, and it treats all the commands arriving from these
+screens as a single stream of input.
+
+   When you open frames on different X servers, Emacs makes a separate
+input stream for each server.  This way, two users can type
+simultaneously on the two displays, and Emacs will not garble their
+input.  Each server also has its own selected frame.  The commands you
+enter with a particular X server apply to that server's selected frame.
+
+   Despite these features, people using the same Emacs job from
+different displays can still interfere with each other if they are not
+careful.  For example, if any one types `C-x C-c', that exits the Emacs
+job for all of them!
+
+
+File: emacs,  Node: Special Buffer Frames,  Next: Frame Parameters,  Prev: Multiple Displays,  Up: Frames
+
+Special Buffer Frames
+=====================
+
+   You can make certain chosen buffers, for which Emacs normally creates
+a second window when you have just one window, appear in special frames
+of their own.  To do this, set the variable
+`special-display-buffer-names' to a list of buffer names; any buffer
+whose name is in that list automatically gets a special frame, when an
+Emacs command wants to display it "in another window."
+
+   For example, if you set the variable this way,
+
+     (setq special-display-buffer-names
+           '("*Completions*" "*grep*" "*tex-shell*"))
+
+then completion lists, `grep' output and the TeX mode shell buffer get
+individual frames of their own.  These frames, and the windows in them,
+are never automatically split or reused for any other buffers.  They
+continue to show the buffers they were created for, unless you alter
+them by hand.  Killing the special buffer deletes its frame
+automatically.
+
+   More generally, you can set `special-display-regexps' to a list of
+regular expressions; then a buffer gets its own frame if its name
+matches any of those regular expressions.  (Once again, this applies
+only to buffers that normally get displayed for you in a separate
+window.)
+
+   The variable `special-display-frame-alist' specifies the frame
+parameters for these frames.  It has a default value, so you don't need
+to set it.
+
+   For those who know Lisp, an element of
+`special-display-buffer-names' or `special-display-regexps' can also be
+a list.  Then the first element is the buffer name or regular
+expression; the rest of the list specifies how to create the frame.  It
+can be an association list specifying frame parameter values; these
+values take precedence over parameter values specified in
+`special-display-frame-alist'.  Alternatively, it can have this form:
+
+     (FUNCTION ARGS...)
+
+where FUNCTION is a symbol.  Then the frame is constructed by calling
+FUNCTION; its first argument is the buffer, and its remaining arguments
+are ARGS.
+
+
+File: emacs,  Node: Frame Parameters,  Next: Scroll Bars,  Prev: Special Buffer Frames,  Up: Frames
+
+Setting Frame Parameters
+========================
+
+   This section describes commands for altering the display style and
+window management behavior of the selected frame.
+
+`M-x set-foreground-color RET COLOR RET'
+     Specify color COLOR for the foreground of the selected frame.
+
+`M-x set-background-color RET COLOR RET'
+     Specify color COLOR for the background of the selected frame.
+     This changes the foreground color of the `modeline' face also, so
+     that it remains in inverse video compared with the default.
+
+`M-x set-cursor-color RET COLOR RET'
+     Specify color COLOR for the cursor of the selected frame.
+
+`M-x set-mouse-color RET COLOR RET'
+     Specify color COLOR for the mouse cursor when it is over the
+     selected frame.
+
+`M-x set-border-color RET COLOR RET'
+     Specify color COLOR for the border of the selected frame.
+
+`M-x list-colors-display'
+     Display the defined color names and show what the colors look like.
+     This command is somewhat slow.
+
+`M-x auto-raise-mode'
+     Toggle whether or not the selected frame should auto-raise.
+     Auto-raise means that every time you move the mouse onto the
+     frame, it raises the frame.
+
+     Note that this auto-raise feature is implemented by Emacs itself.
+     Some window managers also implement auto-raise.  If you enable
+     auto-raise for Emacs frames in your X window manager, it should
+     work, but it is beyond Emacs's control and therefore
+     `auto-raise-mode' has no effect on it.
+
+`M-x auto-lower-mode'
+     Toggle whether or not the selected frame should auto-lower.
+     Auto-lower means that every time you move the mouse off of the
+     frame, the frame moves to the bottom of the stack of X windows.
+
+     The command `auto-lower-mode' has no effect on auto-lower
+     implemented by the X window manager.  To control that, you must use
+     the appropriate window manager features.
+
+`M-x set-default-font RET FONT RET'
+     Specify font FONT as the default for the selected frame.  *Note
+     Font X::, for ways to list the available fonts on your system.
+
+     You can also set a frame's default font through a pop-up menu.
+     Press `S-Mouse-1' to activate this menu.
+
+   In Emacs versions that use an X toolkit, the color-setting and
+font-setting functions don't affect menus and the menu bar, since they
+are displayed by their own widget classes.  To change the appearance of
+the menus and menu bar, you must use X resources (*note Resources X::.).
+*Note Colors X::, regarding colors.  *Note Font X::, regarding choice of
+font.
+
+   For information on frame parameters and customization, see *Note
+Frame Parameters: (elisp)Frame Parameters.
+
+
+File: emacs,  Node: Scroll Bars,  Next: Menu Bars,  Prev: Frame Parameters,  Up: Frames
+
+Scroll Bars
+===========
+
+   When using X, Emacs normally makes a "scroll bar" at the right of
+each Emacs window.  The scroll bar runs the height of the window, and
+shows a moving rectangular inner box which represents the portion of the
+buffer currently displayed.  The entire height of the scroll bar
+represents the entire length of the buffer.
+
+   You can use `Mouse-2' (normally, the middle button) in the scroll
+bar to move or drag the inner box up and down.  If you move it to the
+top of the scroll bar, you see the top of the buffer.  If you move it to
+the bottom of the scroll bar, you see the bottom of the buffer.
+
+   The left and right buttons in the scroll bar scroll by controlled
+increments.  `Mouse-1' (normally, the left button) moves the line at
+the level where you click up to the top of the window.  `Mouse-3'
+(normally, the right button) moves the line at the top of the window
+down to the level where you click.  By clicking repeatedly in the same
+place, you can scroll by the same distance over and over.
+
+   Aside from scrolling, you can also click `C-Mouse-2' in the scroll
+bar to split a window vertically.  The split occurs on the line where
+you click.
+
+   You can enable or disable Scroll Bar mode with the command `M-x
+scroll-bar-mode'.  With no argument, it toggles the use of scroll bars.
+With an argument, it turns use of scroll bars on if and only if the
+argument is positive.  This command applies to all frames, including
+frames yet to be created.  You can use the X resource
+`verticalScrollBars' to control the initial setting of Scroll Bar mode.
+*Note Resources X::.
+
+   To enable or disable scroll bars for just the selected frame, use the
+`M-x toggle-scroll-bar' command.
+
+
+File: emacs,  Node: Menu Bars,  Next: Faces,  Prev: Scroll Bars,  Up: Frames
+
+Menu Bars
+=========
+
+   By default, each Emacs frame has a menu bar at the top which you can
+use to perform certain common operations.  There's no need to describe
+them in detail here, as you can more easily see for yourself; also, we
+may change them and add to them in subsequent Emacs versions.
+
+   When you are using a window system, you can use the mouse to choose a
+command from the menu bar.  On text-only terminals, you can use the menu
+bar by typing `M-`' (`tmm-menubar').  This enters a mode in which you
+can select a menu item from the keyboard.  Either type the initial of
+the item you want, or use the left and right arrow keys to choose an
+item and use RET to finalize the choice.
+
+   Each of the operations in the menu bar is bound to an ordinary Emacs
+command which you can invoke equally well with `M-x' or with its own
+key bindings.  The menu lists one equivalent key binding (if the command
+has any) at the right margin.  To see the command's name and
+documentation, type `C-h k' and then select the menu bar item you are
+interested in.
+
+   You can turn display of menu bars on or off with `M-x
+menu-bar-mode'.  With no argument, this command toggles Menu Bar mode, a
+minor mode.  With an argument, the command turns Menu Bar mode on if the
+argument is positive, off if the argument is not positive.  You can use
+the X resource `menuBarLines' to control the initial setting of Menu
+Bar mode.  *Note Resources X::.  Expert users often turn off the menu
+bar, especially on text-only terminals where this makes one additional
+line available for text.
+
+
+File: emacs,  Node: Faces,  Next: Modifying Faces,  Prev: Menu Bars,  Up: Frames
+
+Using Multiple Typefaces
+========================
+
+   When using Emacs with X, you can set up multiple styles of displaying
+characters.  The aspects of style that you can control are the type
+font, the foreground color, the background color, and whether to
+underline.  Emacs on MS-DOS supports faces partially by letting you
+control the foreground and background colors of each face (*note
+MS-DOS::.).
+
+   The way you control display style is by defining named "faces".
+Each face can specify a type font, a foreground color, a background
+color, and an underline flag; but it does not have to specify all of
+them.
+
+   The style of display used for a given character in the text is
+determined by combining several faces.  Any aspect of the display style
+that isn't specified by overlays or text properties comes from the frame
+itself.
+
+   Enriched mode, the mode for editing formatted text, includes several
+commands and menus for specifying faces.  *Note Format Faces::, for how
+to specify the font for text in the buffer.  *Note Format Colors::, for
+how to specify the foreground and background color.
+
+   To see what faces are currently defined, and what they look like,
+type `M-x list-faces-display'.  It's possible for a given face to look
+different in different frames; this command shows the appearance in the
+frame in which you type it.  Here's a list of the standardly defined
+faces:
+
+`default'
+     This face is used for ordinary text that doesn't specify any other
+     face.
+
+`modeline'
+     This face is used for mode lines.  By default, it's set up as the
+     inverse of the default face.  *Note Display Vars::.
+
+`highlight'
+     This face is used for highlighting portions of text, in various
+     modes.
+
+`region'
+     This face is used for displaying a selected region (when Transient
+     Mark mode is enabled--see below).
+
+`secondary-selection'
+     This face is used for displaying a secondary selection (*note
+     Secondary Selection::.).
+
+`bold'
+     This face uses a bold variant of the default font, if it has one.
+
+`italic'
+     This face uses an italic variant of the default font, if it has
+     one.
+
+`bold-italic'
+     This face uses a bold italic variant of the default font, if it
+     has one.
+
+`underline'
+     This face underlines text.
+
+   When Transient Mark mode is enabled, the text of the region is
+highlighted when the mark is active.  This uses the face named
+`region'; you can control the style of highlighting by changing the
+style of this face (*note Modifying Faces::.).  *Note Transient Mark::,
+for more information about Transient Mark mode and activation and
+deactivation of the mark.
+
+   One easy way to use faces is to turn on Font Lock mode.  This minor
+mode, which is always local to a particular buffer, arranges to choose
+faces according to the syntax of the text you are editing.  It can
+recognize comments and strings in most languages; in several languages,
+it can also recognize and properly highlight various other important
+constructs.  *Note Font Lock::, for more information about Font Lock
+mode and syntactic highlighting.
+
+   You can print out the buffer with the highlighting that appears on
+your screen using the command `ps-print-buffer-with-faces'.  *Note
+Postscript::.
+
+
+File: emacs,  Node: Modifying Faces,  Next: Font Lock,  Prev: Faces,  Up: Frames
+
+Modifying Faces
+===============
+
+   Here are the commands for changing the font of a face:
+
+`M-x set-face-font RET FACE RET FONT RET'
+     Change face FACE to use font FONT.  *Note Font X::, for more
+     information about font naming under X.
+
+`M-x make-face-bold RET FACE RET'
+     Convert face FACE to use a bold version of its current font.
+
+`M-x make-face-italic RET FACE RET'
+     Convert face FACE to use a italic version of its current font.
+
+`M-x make-face-bold-italic RET FACE RET'
+     Convert face FACE to use a bold-italic version of its current font.
+
+`M-x make-face-unbold RET FACE RET'
+     Convert face FACE to use a non-bold version of its current font.
+
+`M-x make-face-unitalic RET FACE RET'
+     Convert face FACE to use a non-italic version of its current font.
+
+   Here are the commands for setting the colors and underline flag of a
+face:
+
+`M-x set-face-foreground RET FACE RET COLOR RET'
+     Use color COLOR for the foreground of characters in face FACE.
+
+`M-x set-face-background RET FACE RET COLOR RET'
+     Use color COLOR for the background of characters in face FACE.
+
+     On a black-and-white display, the colors you can use for the
+     background are `black', `white', `gray', `gray1' and `gray3'.
+     Emacs supports the gray colors by using background stipple
+     patterns instead of a color.
+
+`M-x set-face-stipple RET FACE RET PATTERN RET'
+     Use stipple pattern PATTERN for the background of characters in
+     face FACE.
+
+`M-x list-colors-display'
+     Display the defined color names and show what the colors look like.
+
+`M-x set-face-underline-p RET FACE RET FLAG RET'
+     Specify whether to underline characters in face FACE.
+
+`M-x invert-face RET FACE RET'
+     Swap the foreground and background colors of face FACE.
+
+`M-x modify-face RET FACE RET ATTRIBUTES...'
+     Change various attributes of face FACE.  This command prompts for
+     all the attribute of the face, one attribute at a time.  For the
+     color and stipple attributes, the attribute's current value is the
+     default--type just RET if you don't want to change that attribute.
+     Type `none' if you want to clear out the attribute.
+
+   You can also use X resources to specify attributes of particular
+faces.  *Note Resources X::.
+
+
+File: emacs,  Node: Font Lock,  Next: Support Modes,  Prev: Modifying Faces,  Up: Frames
+
+Font Lock mode
+==============
+
+   Font Lock mode is a minor mode, always local to a particular buffer,
+which highlights (or "fontifies") using various faces according to the
+syntax of the text you are editing.  It can recognize comments and
+strings in most languages; in several languages, it can also recognize
+and properly highlight various other important constructs--for example,
+names of functions being defined or reserved keywords.
+
+   The command `M-x font-lock-mode' turns Font Lock mode on or off
+according to the argument, and toggles the mode when it has no argument.
+The function `turn-on-font-lock' unconditionally enables Font Lock
+mode.  This is useful in mode-hook functions.  For example, to enable
+Font Lock mode whenever you edit a C file, you can do this:
+
+     (add-hook 'c-mode-hook 'turn-on-font-lock)
+
+   To turn on Font Lock mode automatically in all modes which support
+it, use the function `global-font-lock-mode', like this:
+
+     (global-font-lock-mode t)
+
+   In Font Lock mode, when you edit the text, the highlighting updates
+automatically in the line that you changed.  Most changes don't affect
+the highlighting of subsequent lines, but occasionally they do.  To
+rehighlight a range of lines, use the command `C-M-g'
+(`font-lock-fontify-block').
+
+   In certain major modes, `C-M-g' refontifies the entire current
+function.  (The variable `font-lock-mark-block-function' controls how
+to find the current function.)  In other major modes, `C-M-g'
+refontifies 16 lines above and below point.
+
+   With a prefix argument N, `C-M-g' refontifies N lines above and
+below point, regardless of the mode.
+
+   To get the full benefit of Font Lock mode, you need to choose a
+default font which has bold, italic, and bold-italic variants; or else
+you need to have a color or grayscale screen.  The variable
+`font-lock-display-type' specifies whether Font Lock mode should use
+font styles, colors, or shades of gray to distinguish the various kinds
+of text.  Emacs chooses the default value according to the
+characteristics of your display.
+
+   The variable `font-lock-maximum-decoration' specifies the preferred
+level of fontification for modes that provide multiple levels.  The
+normal default is 1; larger numbers request more fontification, and
+some modes support levels as high as 3.  These variables can also
+specify different numbers for particular major modes; for example, to
+use level 3 for C/C++ modes, and the default level otherwise, use this:
+
+     (setq font-lock-maximum-decoration
+           '((c-mode . 3) (c++-mode . 3)))
+
+   Fontification can be too slow for large buffers, so you can suppress
+it.  The variable `font-lock-maximum-size' specifies a buffer size,
+beyond which buffer fontification is suppressed.
+
+
+File: emacs,  Node: Support Modes,  Next: Misc X,  Prev: Font Lock,  Up: Frames
+
+Font Lock Support Modes
+=======================
+
+   Font Lock support modes make Font Lock mode faster for large buffers.
+There are two support modes: Fast Lock mode and Lazy Lock mode.  They
+use two different methods of speeding up Font Lock mode.
+
+* Menu:
+
+* Fast Lock Mode::     Saving font information in files.
+* Lazy Lock Mode::     Fontifying only text that is actually displayed.
+* Fast or Lazy::       Which support mode is best for you?
+
+
+File: emacs,  Node: Fast Lock Mode,  Next: Lazy Lock Mode,  Up: Support Modes
+
+Fast Lock Mode
+--------------
+
+   To make Font Lock mode faster for buffers visiting large files, you
+can use Fast Lock mode.  Fast Lock mode saves the font information for
+each file in a separate cache file; each time you visit the file, it
+rereads the font information from the cache file instead of refontifying
+the text from scratch.
+
+   The command `M-x fast-lock-mode' turns Fast Lock mode on or off,
+according to the argument (with no argument, it toggles).  You can also
+arrange to enable Fast Lock mode whenever you use Font Lock mode, like
+this:
+
+     (setq font-lock-support-mode 'fast-lock-mode)
+
+   It is not worth writing a cache file for small buffers.  Therefore,
+the variable `fast-lock-minimum-size' specifies a minimum file size for
+caching font information.
+
+   The variable `fast-lock-cache-directories' specifies where to put
+the cache files.  Its value is a list of directories to try; `"."'
+means the same directory as the file being edited.  The default value is
+`("." "~/.emacs-flc")', which means to use the same directory if
+possible, and otherwise the directory `~/.emacs-flc'.
+
+   The variable `fast-lock-save-others' specifies whether Fast Lock
+mode should save cache files for files that you do not own.  A
+non-`nil' value means yes (and that is the default).
+
+
+File: emacs,  Node: Lazy Lock Mode,  Next: Fast or Lazy,  Prev: Fast Lock Mode,  Up: Support Modes
+
+Lazy Lock Mode
+--------------
+
+   To make Font Lock mode faster for large buffers, you can use Lazy
+Lock mode to reduce the amount of text that is fontified.  In Lazy Lock
+mode, buffer fontification is demand-driven; it happens to portions of
+the buffer that are about to be displayed.  And fontification of your
+changes is deferred; it happens only when Emacs has been idle for a
+certain short period of time.
+
+   The command `M-x lazy-lock-mode' turns Lazy Lock mode on or off,
+according to the argument (with no argument, it toggles).  You can also
+arrange to enable Lazy Lock mode whenever you use Font Lock mode, like
+this:
+
+     (setq font-lock-support-mode 'lazy-lock-mode)
+
+   It is not worth avoiding buffer fontification for small buffers.
+Therefore, the variable `lazy-lock-minimum-size' specifies a minimum
+buffer size for demand-driven buffer fontification.  Buffers smaller
+than that are fontified all at once, as in plain Font Lock mode.
+
+   When you alter the buffer, Lazy Lock mode defers fontification of the
+text you changed.  The variable `lazy-lock-defer-time' specifies how
+many seconds Emacs must be idle before it starts fontifying your
+changes.  If the value is `nil', then changes are fontified
+immediately, as in plain Font Lock mode.
+
+   Lazy Lock mode normally fontifies newly visible portions of the
+buffer before they are first displayed.  However, if the value of
+`lazy-lock-defer-driven' is non-`nil', newly visible text is fontified
+only when Emacs is idle for `lazy-lock-defer-time' seconds.
+
+   When Emacs is idle for a long time, Lazy Lock fontifies additional
+portions of the buffer, not yet displayed, in case you will display them
+later.  This is called "stealth fontification".
+
+   The variable `lazy-lock-stealth-time' specifies how many seconds
+Emacs has to be idle before stealth fontification starts.  A value of
+`nil' means no stealth fontification.  The variables
+`lazy-lock-stealth-lines' and `lazy-lock-stealth-verbose' specify the
+granularity and verbosity of stealth fontification.
+
+
+File: emacs,  Node: Fast or Lazy,  Prev: Lazy Lock Mode,  Up: Support Modes
+
+Fast Lock or Lazy Lock?
+-----------------------
+
+   Here is a simple guide to help you choose one of the Font Lock
+support modes.
+
+   * Fast Lock mode only intervenes during file visiting and buffer
+     killing (and related events); therefore buffer editing and window
+     scrolling are no faster or slower than plain Font Lock mode.
+
+   * Fast Lock mode is slower at reading a cache file than Lazy Lock
+     mode is at fontifying a window; therefore Fast Lock mode is slower
+     at visiting a file than Lazy Lock mode.
+
+   * Lazy Lock mode intervenes during window scrolling to fontify text
+     that scrolls onto the screen; therefore, scrolling is slower than
+     in plain Font Lock mode.
+
+   * Lazy Lock mode doesn't fontify during buffer editing (it defers
+     fontification of changes); therefore, editing is faster than in
+     plain Font Lock mode.
+
+   * Fast Lock mode can be fooled by a file that is kept under version
+     control software; therefore buffer fontification may occur even
+     when a cache file exists for the file.
+
+   * Fast Lock mode only works with a buffer visiting a file; Lazy Lock
+     mode works with any buffer.
+
+   * Fast Lock mode generates cache files; Lazy Lock mode does not.
+
+   The variable `font-lock-support-mode' specifies which of these
+support modes to use; for example, to specify that Fast Lock mode is
+used for C/C++ modes, and Lazy Lock mode otherwise, set the variable
+like this:
+
+     (setq font-lock-support-mode
+           '((c-mode . fast-lock-mode) (c++-mode . fast-lock-mode)
+             (t . lazy-lock-mode)))
+
+
+File: emacs,  Node: Misc X,  Next: Non-Window Terminals,  Prev: Support Modes,  Up: Frames
+
+Miscellaneous X Window Features
+===============================
+
+   The following commands let you create, delete and operate on frames:
+
+`C-z'
+     To iconify the selected Emacs frame, type `C-z'
+     (`iconify-or-deiconify-frame').  The normal meaning of `C-z', to
+     suspend Emacs, is not useful under a window system, so it has a
+     different binding in that case.
+
+     If you type this command on an Emacs frame's icon, it deiconifies
+     the frame.
+
+`C-x 5 0'
+     To delete the selected frame, type `C-x 5 0' (`delete-frame').
+     This is not allowed if there is only one frame.
+
+`C-x 5 o'
+     Select another frame, raise it, and warp the mouse to it so that it
+     stays selected.  If you repeat this command, it cycles through all
+     the frames on your terminal.
+
+`M-x transient-mark-mode'
+     Under X Windows, when Transient Mark mode is enabled, Emacs
+     highlights the region when the mark is active.  This feature is
+     the main motive for using Transient Mark mode.  To toggle the
+     state of this mode, use the command `M-x transient-mark-mode'.
+     *Note Mark::.
+
+
+File: emacs,  Node: Non-Window Terminals,  Prev: Misc X,  Up: Frames
+
+Non-Window Terminals
+====================
+
+   If your terminal does not have a window system that Emacs supports,
+then it can display only one Emacs frame at a time.  However, you can
+still create multiple Emacs frames, and switch between them.  Switching
+frames on these terminals is much like switching between different
+window configurations.
+
+   Use `C-x 5 2' to create a new frame and switch to it; use `C-x 5 o'
+to cycle through the existing frames; use `C-x 5 0' to delete the
+current frame.
+
+   Each frame has a number to distinguish it.  The selected frame's
+number appears in the mode line after `Emacs', except when frame 1 is
+selected.
+
+
+File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: Frames,  Up: Top
+
+Major Modes
+***********
+
+   Emacs provides many alternative "major modes", each of which
+customizes Emacs for editing text of a particular sort.  The major modes
+are mutually exclusive, and each buffer has one major mode at any time.
+The mode line normally shows the name of the current major mode, in
+parentheses (*note Mode Line::.).
+
+   The least specialized major mode is called "Fundamental mode".  This
+mode has no mode-specific redefinitions or variable settings, so that
+each Emacs command behaves in its most general manner, and each option
+is in its default state.  For editing text of a specific type that
+Emacs knows about, such as Lisp code or English text, you should switch
+to the appropriate major mode, such as Lisp mode or Text mode.
+
+   Selecting a major mode changes the meanings of a few keys to become
+more specifically adapted to the language being edited.  The ones which
+are changed frequently are TAB, DEL, and LFD.  The prefix key `C-c'
+normally contains mode-specific commands.  In addition, the commands
+which handle comments use the mode to determine how comments are to be
+delimited.  Many major modes redefine the syntactical properties of
+characters appearing in the buffer.  *Note Syntax::.
+
+   The major modes fall into three major groups.  Lisp mode (which has
+several variants), C mode, Fortran mode and others are for specific
+programming languages.  Text mode, Nroff mode, TeX mode and Outline
+mode are for editing English text.  The remaining major modes are not
+intended for use on users' files; they are used in buffers created for
+specific purposes by Emacs, such as Dired mode for buffers made by Dired
+(*note Dired::.), and Mail mode for buffers made by `C-x m' (*note
+Sending Mail::.), and Shell mode for buffers used for communicating
+with an inferior shell process (*note Interactive Shell::.).
+
+   Most programming language major modes specify that only blank lines
+separate paragraphs.  This is to make the paragraph commands useful.
+(*Note Paragraphs::.)  They also cause Auto Fill mode to use the
+definition of TAB to indent the new lines it creates.  This is because
+most lines in a program are usually indented.  (*Note Indentation::.)
+
+* Menu:
+
+* Choosing Modes::     How major modes are specified or chosen.
+
+
+File: emacs,  Node: Choosing Modes,  Prev: Major Modes,  Up: Major Modes
+
+How Major Modes are Chosen
+==========================
+
+   You can select a major mode explicitly for the current buffer, but
+most of the time Emacs determines which mode to use based on the file
+name or on special text in the file.
+
+   Explicit selection of a new major mode is done with a `M-x' command.
+From the name of a major mode, add `-mode' to get the name of a command
+to select that mode.  Thus, you can enter Lisp mode by executing `M-x
+lisp-mode'.
+
+   When you visit a file, Emacs usually chooses the right major mode
+based on the file's name.  For example, files whose names end in `.c'
+are edited in C mode.  The correspondence between file names and major
+modes is controlled by the variable `auto-mode-alist'.  Its value is a
+list in which each element has this form,
+
+     (REGEXP . MODE-FUNCTION)
+
+or this form,
+
+     (REGEXP MODE-FUNCTION FLAG)
+
+For example, one element normally found in the list has the form
+`("\\.c\\'" . c-mode)', and it is responsible for selecting C mode for
+files whose names end in `.c'.  (Note that `\\' is needed in Lisp
+syntax to include a `\' in the string, which is needed to suppress the
+special meaning of `.' in regexps.)  If the element has the form
+`(REGEXP MODE-FUNCTION FLAG)' and FLAG is non-nil, then after calling
+FUNCTION, the suffix that matched REGEXP is deleted and the list is
+searched again for another match.
+
+   You can specify which major mode should be used for editing a certain
+file by a special sort of text in the first nonblank line of the file.
+The mode name should appear in this line both preceded and followed by
+`-*-'.  Other text may appear on the line as well.  For example,
+
+     ;-*-Lisp-*-
+
+tells Emacs to use Lisp mode.  Such an explicit specification overrides
+any defaulting based on the file name.  Note how the semicolon is used
+to make Lisp treat this line as a comment.
+
+   Another format of mode specification is
+
+     -*-Mode: MODENAME;-*-
+
+which allows you to specify local variables as well, like this:
+
+     -*- mode: MODENAME; VAR: VALUE; ... -*-
+
+*Note File Variables::, for more information about this.
+
+   When a file's contents begin with `#!', it can serve as an
+executable shell command, which works by running an interpreter named on
+the file's first line.  The rest of the file is used as input to the
+interpreter.
+
+   When you visit such a file in Emacs, if the file's name does not
+specify a major mode, Emacs uses the interpreter name on the first line
+to choose a mode.  If the first line is the name of a recognized
+interpreter program, such as `perl' or `tcl', Emacs uses a mode
+appropriate for programs for that interpreter.  The variable
+`interpreter-mode-alist' specifies the correspondence between
+interpreter program names and major modes.
+
+   When you visit a file that does not specify a major mode to use, or
+when you create a new buffer with `C-x b', the variable
+`default-major-mode' specifies which major mode to use.  Normally its
+value is the symbol `fundamental-mode', which specifies Fundamental
+mode.  If `default-major-mode' is `nil', the major mode is taken from
+the previously selected buffer.
+
+   If you change the major mode of a buffer, you can go back to the
+major mode Emacs would choose automatically: use the command `M-x
+normal-mode' to do this.  This is the same function that `find-file'
+calls to choose the major mode.  It also processes the file's local
+variables list if any.
+

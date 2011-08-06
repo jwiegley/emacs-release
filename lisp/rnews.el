@@ -1,11 +1,15 @@
-;;; USENET news reader for gnu emacs
+;;; rnews.el --- USENET news reader for gnu emacs
+
 ;; Copyright (C) 1985, 1986, 1987 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,8 +18,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
+;;; Change Log:
 
 ;; Created Sun Mar 10,1985 at 21:35:01 ads and sundar@hernes.ai.mit.edu
 ;; Should do the point pdl stuff sometime
@@ -37,13 +44,15 @@
 ;; 	tower@prep Sep  3 1986
 ;; added news-rotate-buffer-body
 ;;	tower@prep Oct 17 1986
-;; made messages more user friendly, cleanuped news-inews
+;; made messages more user friendly, cleaned up news-inews
 ;; move posting and mail code to new file rnewpost.el
 ;;	tower@prep Oct 29 1986
 ;; added caesar-region, rename news-caesar-buffer-body, hacked accordingly
 ;;	tower@prep Nov 21 1986
-;; added (provide 'rnews)	tower@prep 22 Apr 87
-(provide 'rnews)
+;; added tower@prep 22 Apr 87
+
+;;; Code:
+
 (require 'mail-utils)
 
 (autoload 'rmail-output "rmailout"
@@ -71,6 +80,11 @@ original message into it."
 While composing the reply, use \\[mail-yank-original] to yank the original
 message into it."
   t)
+
+(defvar news-group-hook-alist nil
+  "Alist of (GROUP-REGEXP . HOOK) pairs.
+Just before displaying a message, each HOOK is called
+if its GROUP-REGEXP matches the current newsgroup name.")
 
 (defvar rmail-last-file (expand-file-name "~/mbox.news"))
 
@@ -352,11 +366,8 @@ U       unsubscribe from specified newsgroup."
 ;  This breaks it.  I don't have time to figure out why. -- RMS
 ;  (make-local-variable 'news-group-article-assoc)
   (setq major-mode 'news-mode)
-  (if (boundp 'minor-mode-alist)
-      ;; Emacs versions 18.16 and up.
-      (setq mode-name '("NEWS" news-minor-modes))
-    ;; Earlier versions display minor-modes via a special mechanism.
-    (setq mode-name "NEWS"))
+  (setq mode-line-process '(news-minor-modes))
+  (setq mode-name "NEWS")
   (news-set-mode-line)
   (set-syntax-table text-mode-syntax-table)
   (use-local-map news-mode-map)
@@ -495,7 +506,7 @@ to a list (a . b)"
 (defun news-select-news-group (gp)
   (let ((grp (assoc gp news-group-article-assoc)))
     (if (null grp)
- 	(error "Group not subscribed to in file %s." news-startup-file)
+ 	(error "Group %s not subscribed to" gp)
       (progn
 	(news-update-message-read news-current-news-group
 				  (news-cdar news-point-pdl))
@@ -514,10 +525,10 @@ to a list (a . b)"
   (let ((file (concat news-path
 		      (string-subst-char ?/ ?. news-current-news-group)
 		      "/" arg)))
-    (if (= arg
-  	   (or (news-cadr (memq (news-cdar news-point-pdl) news-list-of-files))
-  	       0))
-  	(setcdr (car news-point-pdl) arg))
+    (if (= arg 
+	   (or (news-cadr (memq (news-cdar news-point-pdl) news-list-of-files))
+	       0))
+	(setcdr (car news-point-pdl) arg))
     (setq news-current-message-number arg)
     (if (file-exists-p file)
   	(let ((buffer-read-only nil))
@@ -609,6 +620,13 @@ one for moving forward and one for moving backward."
   (let ((start (point)))
   (insert-file-contents filename)
   (news-convert-format)
+  ;; Run each hook that applies to the current newsgroup.
+  (let ((hooks news-group-hook-alist))
+    (while hooks
+      (goto-char start)
+      (if (string-match (car (car hooks)) news-group-name)
+	  (funcall (cdr (car hooks))))
+      (setq hooks (cdr hooks))))
   (goto-char start)
   (forward-line 1)
   (if (eobp)
@@ -680,11 +698,10 @@ one for moving forward and one for moving backward."
     (save-excursion
       (if (not (null news-current-news-group))
 	  (news-update-message-read news-current-news-group
-				(news-cdar news-point-pdl)))
-      (switch-to-buffer newsrcbuf)
+				    (news-cdar news-point-pdl)))
+      (set-buffer newsrcbuf)
       (while tem
-	(setq group (assoc (car tem)
-			   news-group-article-assoc))
+	(setq group (assoc (car tem) news-group-article-assoc))
 	(if (= (news-cadr (news-cadr group)) (news-caddr (news-cadr group)))
 	    nil
 	  (goto-char 0)
@@ -780,7 +797,7 @@ Using ls was found to be too slow in a previous version."
 	       (setq tem news-list-of-files)
 	       (while tem
 		 (if (or (not (string-match "^[0-9]*$" (car tem)))
-			 ;; dont get confused by directories that look like numbers
+			 ;; don't get confused by directories that look like numbers
 			 (file-directory-p
 			  (concat file-directory "/" (car tem)))
 			 (<= (string-to-int (car tem)) end-file-no))
@@ -842,7 +859,7 @@ Using ls was found to be too slow in a previous version."
 (defun news-add-news-group (gp)
   "Resubscribe to or add a USENET news group named GROUP (a string)."
 ; @@ (completing-read ...)
-; @@ could be based on news library file ../active (slightly facist)
+; @@ could be based on news library file ../active (slightly fascist)
 ; @@ or (expensive to compute) all directories under the news spool directory
   (interactive "sAdd news group: ")
   (let ((file-dir (concat news-path (string-subst-char ?/ ?. gp))))
@@ -911,8 +928,7 @@ FName to link to message: ")
 		   (list (prefix-numeric-value current-prefix-arg))
 		 (list nil)))
   (cond ((not (numberp n)) (setq n 13))
-	((< n 0) (setq n (- 26 (% (- n) 26))))
-	(t (setq n (% n 26))))		;canonicalize N
+	(t (setq n (mod n 26))))	;canonicalize N
   (if (not (zerop n))		; no action needed for a rot of 0
       (progn
 	(if (or (not (boundp 'caesar-translate-table))
@@ -967,3 +983,7 @@ Mail and USENET news headers are not rotated."
       (goto-char (point-max))
       (caesar-region rotnum)
       (setq buffer-read-only buffer-status))))
+
+(provide 'rnews)
+
+;;; rnews.el ends here

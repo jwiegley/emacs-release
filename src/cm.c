@@ -1,12 +1,12 @@
 /* Cursor motion subroutines for GNU Emacs.
-   Copyright (C) 1985 Free Software Foundation, Inc.
+   Copyright (C) 1985, 1995 Free Software Foundation, Inc.
     based primarily on public domain code written by Chris Torek
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -16,10 +16,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
 
 
-#include "config.h"
+#include <config.h>
 #include <stdio.h>
 #include "cm.h"
 #include "termhooks.h"
@@ -38,15 +39,16 @@ evalcost (c)
      char c;
 {
   cost++;
+  return c;
 }
 
-void
 cmputc (c)
      char c;
 {
   if (termscript)
     fputc (c & 0177, termscript);
   putchar (c & 0177);
+  return c;
 }
 
 /* NEXT TWO ARE DONE WITH MACROS */
@@ -97,6 +99,35 @@ addcol (n) {
     }
 }
 #endif
+
+/*
+ * Terminals with magicwrap (xn) don't all behave identically.
+ * The VT100 leaves the cursor in the last column but will wrap before
+ * printing the next character.  I hear that the Concept terminal does
+ * the wrap immediately but ignores the next newline it sees.  And some
+ * terminals just have buggy firmware, and think that the cursor is still
+ * in limbo if we use direct cursor addressing from the phantom column.
+ * The only guaranteed safe thing to do is to emit a CRLF immediately
+ * after we reach the last column; this takes us to a known state.
+ */
+void
+cmcheckmagic ()
+{
+  if (curX == FrameCols)
+    {
+      if (!MagicWrap || curY >= FrameRows - 1)
+	abort ();
+      if (termscript)
+	putc ('\r', termscript);
+      putchar ('\r');
+      if (termscript)
+	putc ('\n', termscript);
+      putchar ('\n');
+      curX = 0;
+      curY++;
+    }
+}
+
 
 /*
  * (Re)Initialize the cost factors, given the output speed of the terminal
@@ -266,10 +297,12 @@ done:
     return totalcost;
 }
 
+#if 0
 losecursor ()
 {
   curY = -1;
 }
+#endif
 
 #define	USEREL	0
 #define	USEHOME	1
@@ -293,8 +326,9 @@ cmgoto (row, col)
 
   if (curY >= 0 && curX >= 0)
     {
-      /* 
-       * Pick least-cost motions
+      /* We may have quick ways to go to the upper-left, bottom-left,
+       * start-of-line, or start-of-next-line.  Or it might be best to
+       * start where we are.  Examine the options, and pick the cheapest.
        */
 
       relcost = calccost (curY, curX, row, col, 0);
@@ -387,19 +421,25 @@ Wcm_clear ()
 /*
  * Initialized stuff
  * Return 0 if can do CM.
+ * Return -1 if cannot.
+ * Return -2 if size not specified.
  */
 
 Wcm_init ()
 {
-  /* Check that we know the size of the screen.... */
-  if (Wcm.cm_rows <= 0 || Wcm.cm_cols <= 0)
-    return - 1;
+#if 0
   if (Wcm.cm_abs && !Wcm.cm_ds)
+    return 0;
+#endif
+  if (Wcm.cm_abs)
     return 0;
   /* Require up and left, and, if no absolute, down and right */
   if (!Wcm.cm_up || !Wcm.cm_left)
     return - 1;
   if (!Wcm.cm_abs && (!Wcm.cm_down || !Wcm.cm_right))
     return - 1;
+  /* Check that we know the size of the screen.... */
+  if (Wcm.cm_rows <= 0 || Wcm.cm_cols <= 0)
+    return - 2;
   return 0;
 }

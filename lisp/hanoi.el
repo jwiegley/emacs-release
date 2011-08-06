@@ -1,8 +1,43 @@
-;
-; hanoi - towers of hanoi in GNUmacs
-;
+;;; hanoi.el --- towers of hanoi in GNUmacs
+
+;; Author: Damon Anton Permezel
+;; Maintainer: FSF
+;; Keywords: games
+
 ; Author (a) 1985, Damon Anton Permezel
-;
+; This is in the public domain
+; since he distributed it without copyright notice in 1985.
+
+;;; Commentary:
+
+;; Solves the Towers of Hanoi puzzle while-U-wait.
+;;
+;; The puzzle: Start with N rings, decreasing in sizes from bottom to
+;; top, stacked around a post.  There are two other posts.  Your mission,
+;; should you choose to accept it, is to shift the pile, stacked in its
+;; original order, to another post.
+;;
+;; The challenge is to do it in the fewest possible moves.  Each move
+;; shifts one ring to a different post.  But there's a rule; you can
+;; only stack a ring on top of a larger one.
+;;
+;; The simplest nontrivial version of this puzzle is N = 3.  Solution
+;; time rises as 2**N, and programs to solve it have long been considered
+;; classic introductory exercises in the use of recursion.
+;;
+;; The puzzle is called `Towers of Hanoi' because an early popular
+;; presentation wove a fanciful legend around it.  According to this
+;; myth (uttered long before the Vietnam War), there is a Buddhist
+;; monastery at Hanoi which contains a large room with three time-worn
+;; posts in it surrounded by 21 golden discs.  Monks, acting out the
+;; command of an ancient prophecy, have been moving these disks, in
+;; accordance with the rules of the puzzle, once every day since the
+;; monastery was founded over a thousand years ago.  They are said
+;; believe that when the last move of the puzzle is completed, the
+;; world will end in a clap of thunder.  Fortunately, they are nowhere
+;; even close to being done...
+
+;;; Code:
 
 ;;;
 ;;; hanoi-topos - direct cursor addressing
@@ -15,47 +50,43 @@
 ;;;
 ;;; hanoi - user callable Towers of Hanoi
 ;;;
+;;;###autoload
 (defun hanoi (nrings)
   "Towers of Hanoi diversion.  Argument is number of rings."
-  (interactive
-   (list (if (null current-prefix-arg)
-	     3
-	     (prefix-numeric-value current-prefix-arg))))  
-  (if (<= nrings 0) (error "Negative number of rings"))
-  (let (pole-spacing
-	floor-row
-	fly-row
-	(window-height (window-height (selected-window)))
-	(window-width (window-width (selected-window))))
-    (let ((h (+ nrings 2))
-	  (w (+ (* (1- nrings) 6) 2 5)))
-      (if (not (and (>= window-width h)
-		    (> window-width w)))
-	  (progn
-	    (delete-other-windows)
-	    (if (not (and (>= (setq window-height
-				    (window-height (selected-window))) h)
-			  (> (setq window-width
-				   (window-width (selected-window))) w)))
-		(error "Screen is too small (need at least %dx%d)" w h))))
-      (setq pole-spacing (/ window-width 6))
-      (if (not (zerop (logand pole-spacing 1)))
-	  ;; must be even
-	  (setq pole-spacing (1+ pole-spacing)))
-      (setq floor-row (if (> (- window-height 3) h)
-			  (- window-height 3) window-height)))
+  (interactive "p")
+  (if (<= nrings 1) (setq nrings 7))
+  (let* (floor-row
+	 fly-row
+	 (window-height (1- (window-height (selected-window))))
+	 (window-width (window-width (selected-window)))
+
+	 ;; This is half the spacing to use between poles.
+	 (pole-spacing (/ window-width 6)))
+    (if (not (and (> window-height (1+ nrings))
+		  (> pole-spacing nrings)))
+	(progn
+	  (delete-other-windows)
+	  (if (not (and (> (setq window-height
+				 (1- (window-height (selected-window))))
+			   (1+ nrings))
+			(> (setq pole-spacing (/ window-width 6))
+			   nrings)))
+	      (error "Window is too small (need at least %dx%d)"
+		     (* 6 (1+ nrings)) (+ 2 nrings)))))
+    (setq floor-row (if (> (- window-height 3) (1+ nrings))
+			(- window-height 3) window-height))
     (let ((fly-row (- floor-row nrings 1))
 	  ;; pole: column . fill height
-	  (pole-1 (cons pole-spacing floor-row))
-	  (pole-2 (cons (* 3 pole-spacing) floor-row))
-	  (pole-3 (cons (* 5 pole-spacing) floor-row))
+	  (pole-1 (cons (1- pole-spacing) floor-row))
+	  (pole-2 (cons (1- (* 3 pole-spacing)) floor-row))
+	  (pole-3 (cons (1- (* 5 pole-spacing)) floor-row))
 	  (rings (make-vector nrings nil)))
       ;; construct the ring list
       (let ((i 0))
 	(while (< i nrings)
 	  ;; ring: [pole-number string empty-string]
 	  (aset rings i (vector nil
-				(make-string (+ i i 3) (+ ?0 i))
+				(make-string (+ i i 3) (+ ?0 (% i 10)))
 				(make-string (+ i i 3) ?\  )))
 	  (setq i (1+ i))))
       ;;
@@ -63,7 +94,7 @@
       ;;
       (switch-to-buffer "*Hanoi*")
       (setq buffer-read-only nil)
-      (buffer-flush-undo (current-buffer))
+      (buffer-disable-undo (current-buffer))
       (erase-buffer)
       (let ((i 0))
 	(while (< i floor-row)
@@ -74,7 +105,7 @@
 
       (let ((n 1))
 	(while (< n 6)
-	  (hanoi-topos fly-row (* n pole-spacing))
+	  (hanoi-topos fly-row (1- (* n pole-spacing)))
 	  (setq n (+ n 2))
 	  (let ((i fly-row))
 	    (while (< i floor-row)
@@ -99,14 +130,15 @@
 	  (setq i (1+ i))))
       (setq buffer-read-only t)
       (sit-for 0)
-      ;;
-      ;; do it!
-      ;;
-      (hanoi0 (1- nrings) pole-1 pole-2 pole-3)
+      ;; Disable display of line and column numbers, for speed.
+      (let ((line-number-mode nil)
+	    (column-number-mode nil))
+	;; do it!
+	(hanoi0 (1- nrings) pole-1 pole-2 pole-3))
       (goto-char (point-min))
       (message "Done")
       (setq buffer-read-only t)
-      (set-buffer-modified-p (buffer-modified-p))
+      (force-mode-line-update)
       (sit-for 0))))
 
 ;;;
@@ -190,3 +222,6 @@
 	    (backward-char (/ (+ len 1) 2))
 	    (delete-char 1) (insert ?\|))))))
 
+(provide 'hanoi)
+
+;;; hanoi.el ends here

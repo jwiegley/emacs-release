@@ -20,7 +20,7 @@
 /*      2. places fildes into raw mode                         */
 /*      3. converts ioctl arguments to datastream              */
 /*      4. waits for 2 secs for acknowledgement before         */
-/*         timimg out.                                         */
+/*         timing out.                                         */
 /*      5. places response in callers buffer ( just like       */
 /*         ioctl.                                              */
 /*      6. returns fildes to its original mode                 */
@@ -41,13 +41,15 @@
 /*                                                             */
 /***************************************************************/
 
+#include <sys/signal.h>
+#include <errno.h>
+
+#include <config.h>
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <setjmp.h>
 #include <sys/ioctl.h>
-#include <sys/signal.h>
 #include <sys/devinfo.h>
 #include <termios.h>
 #include <termio.h>
@@ -55,14 +57,13 @@
 #include <sys/uio.h>
 #include <sys/tty.h>
 /* #include <sys/pty.h> */
+
 #define REMOTE 0x01
 
 #undef ioctl
 static char     SCCSid[] = "com/gnuemacs/src,3.1,9021-90/05/03-5/3/90";
 
 /*************** LOCAL DEFINES **********************************/
-
-typedef int    (*FUNC)();     /* pointer to a function        */
 
 #define QDEV   ((HFQPDEVCH<<8)|HFQPDEVCL)
 #define QLOC   ((HFQLOCCH<<8)|HFQLOCCL)
@@ -79,12 +80,12 @@ typedef int    (*FUNC)();     /* pointer to a function        */
 
 static int              hfqry();
 static int              hfskbd();
-       char            *malloc();
+       char            *xmalloc();
 
 extern int              errno;
 static jmp_buf          hftenv;
 static int              is_ack_vtd;
-static FUNC             sav_alrm;
+static SIGTYPE             (*sav_alrm) ();
 static struct hfctlreq  req =
 			{ 0x1b,'[','x',0,0,0,21,HFCTLREQCH,HFCTLREQCL};
 static struct hfctlack  ACK =
@@ -110,11 +111,11 @@ static struct hfctlack  ACK =
 #ifdef __STDC__
 static GT_ACK (int fd, int req, char *buf);
 static WR_REQ (int fd, int request, int cmdlen, char *cmd, int resplen);
-static hft_alrm(int sig);
+static void hft_alrm(int sig);
 #else
 static GT_ACK ();
 static WR_REQ ();
-static hft_alrm ();
+static void hft_alrm ();
 #endif
 
 /*************** HFTCTL FUNCTION *******************************/
@@ -233,7 +234,7 @@ GT_ACK (fd, req, buf)
     }
 
   alarm(3);			/* time out in 3 secs          */
-  sav_alrm = (FUNC) signal (SIGALRM, (void(*)())hft_alrm); /* prepare to catch time out */
+  sav_alrm = signal (SIGALRM, hft_alrm); /* prepare to catch time out   */
 
   p.ack = &ack;
   while (! is_ack_vtd)		/* do until valid ACK VTD      */
@@ -261,7 +262,7 @@ GT_ACK (fd, req, buf)
     }				/***** TRY AGAIN               */
 
   alarm(0);			/* ACK VTD received, reset alrm*/
-  signal (SIGALRM, (void(*)())sav_alrm); /* reset signal                */
+  signal (SIGALRM, sav_alrm);	/* reset signal                */
 
   if (i = ack.hf_arg_len)	/* any data following ?        */
     {				/* yes,                        */
@@ -275,14 +276,14 @@ GT_ACK (fd, req, buf)
 }
 
 /*************** HFT_ALRM FUNCTION ******************************/
-static int
-hft_alrm (sig)                    /* Function hft_alrm - handle  */
-        int sig;		/* alarm signal               */
+static void
+hft_alrm (sig)                  /* Function hft_alrm - handle */
+     int sig;			/* alarm signal		      */
 {
-  signal (SIGALRM, (void(*)())sav_alrm); /* reset to previous          */
+  signal (SIGALRM, sav_alrm);	/* reset to previous          */
 
   if (is_ack_vtd)		/* has ack vtd arrived ?      */
-    return(0);			/* yes, then continue         */
+    return;			/* yes, then continue         */
   else				/* no, then return with error */
     longjmp (hftenv, -1);
 
@@ -319,7 +320,7 @@ WR_REQ (fd, request, cmdlen, cmd, resplen)
   if (cmdlen)			/* if arg structure to pass    */
     {
       size = sizeof (struct hfctlreq) + cmdlen;
-      if ((p.c = malloc(size)) == NULL) /* malloc one area            */
+      if ((p.c = xmalloc(size)) == NULL) /* malloc one area            */
 	return (-1);
 
       memcpy (p.c, &req, sizeof (req)); /* copy CTL REQ struct         */
@@ -334,7 +335,7 @@ WR_REQ (fd, request, cmdlen, cmd, resplen)
   /* write request to terminal   */
   if (write(fd,p.c,size) == -1) return (-1);
   if (p.req != &req)		/* free if allocated           */
-    free (p.c);
+    xfree (p.c);
   return (0);
 
 }

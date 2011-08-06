@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: AddSel.c,v 1.4 87/12/20 12:04:00 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/AddSel.c,v 1.1 1992/04/11 22:10:17 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
@@ -13,6 +13,7 @@
  *
  */
 
+#include <config.h>
 #include "XMenuInt.h"
 
 int
@@ -61,8 +62,17 @@ XMenuAddSelection(display, menu, p_num, data, label, active)
     /*
      * Fill the XMSelect structure.
      */
-    select->type = SELECTION;
-    select->active = active;
+    if (!strcmp (label, "--") || !strcmp (label, "---"))
+      {
+	select->type = SEPARATOR;
+	select->active = 0;
+      }
+    else
+      {
+	select->type = SELECTION;
+	select->active = active;
+      }
+
     select->serial = -1;
     select->label = label;
     select->label_width = label_width;
@@ -73,7 +83,7 @@ XMenuAddSelection(display, menu, p_num, data, label, active)
     /*
      * Insert the selection at the end of the selection list.
      */
-    insque(select, pane->s_list->prev);
+    emacs_insque(select, pane->s_list->prev);
 
     /*
      * Update the selection count.

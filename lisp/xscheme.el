@@ -1,11 +1,15 @@
-;; Run Scheme under Emacs
-;; Copyright (C) 1986, 1987, 1989 Free Software Foundation, Inc.
+;;; xscheme.el --- run Scheme under Emacs
+
+;; Copyright (C) 1986, 1987, 1989, 1990 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: languages, lisp
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,13 +18,18 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
-;;; Requires C-Scheme release 5 or later
-;;; Changes to Control-G handler require runtime version 13.85 or later
+;;; Commentary:
 
-;;; $Header: xscheme.el,v 1.23 89/04/28 22:59:40 GMT cph Rel $
+;; A major mode for editing Scheme and interacting with MIT's C-Scheme.
+;;
+;; Requires C-Scheme release 5 or later
+;; Changes to Control-G handler require runtime version 13.85 or later
+
+;;; Code:
 
 (require 'scheme)
 
@@ -70,7 +79,7 @@ Is processed with `substitute-command-keys' first.")
 (xscheme-interrupt-commands scheme-mode-map)
 
 (defun run-scheme (command-line)
-  "Run an inferior Scheme process.
+  "Run MIT Scheme in an inferior process.
 Output goes to the buffer `*scheme*'.
 With argument, asks for a command line."
   (interactive
@@ -81,7 +90,7 @@ With argument, asks for a command line."
 	       (read-string "Run Scheme: " default)
 	       default))))
   (setq xscheme-process-command-line command-line)
-  (switch-to-buffer (xscheme-start-process command-line)))
+  (pop-to-buffer (xscheme-start-process command-line)))
 
 (defun reset-scheme ()
   "Reset the Scheme process."
@@ -176,13 +185,15 @@ Blank lines separate paragraphs.  Semicolons start comments.
 \\{scheme-interaction-mode-map}
 
 Entry to this mode calls the value of scheme-interaction-mode-hook
-with no args, if that value is non-nil."
+with no args, if that value is non-nil.
+ Likewise with the value of scheme-mode-hook.
+ scheme-interaction-mode-hook is called after scheme-mode-hook."
   (interactive)
   (kill-all-local-variables)
   (scheme-interaction-mode-initialize)
   (scheme-mode-variables)
   (make-local-variable 'xscheme-previous-send)
-  (run-hooks 'scheme-interaction-mode-hook))
+  (run-hooks 'scheme-mode-hook 'scheme-interaction-mode-hook))
 
 (defun scheme-interaction-mode-initialize ()
   (use-local-map scheme-interaction-mode-map)
@@ -446,8 +457,8 @@ waiting for input.  Otherwise, it is busy evaluating something.")
 
 (defconst xscheme-control-g-synchronization-p t
   "If non-nil, insert markers in the scheme input stream to indicate when
-control-g interrupts were signalled.  Do not allow more control-g's to be
-signalled until the scheme process acknowledges receipt.")
+control-g interrupts were signaled.  Do not allow more control-g's to be
+signaled until the scheme process acknowledges receipt.")
 
 (defvar xscheme-control-g-disabled-p nil
   "This variable, if non-nil, indicates that a control-g is being processed
@@ -664,17 +675,14 @@ When called, the current buffer will be the Scheme process-buffer.")
 
 (defun xscheme-set-runlight (runlight)
   (setq xscheme-runlight-string runlight)
-  (xscheme-modeline-redisplay))
-
-(defun xscheme-modeline-redisplay ()
-  (save-excursion (set-buffer (other-buffer)))
-  (set-buffer-modified-p (buffer-modified-p))
-  (sit-for 0))
+  (force-mode-line-update t))
 
 ;;;; Process Filter Operations
 
 (defvar xscheme-process-filter-alist
   '((?D xscheme-enter-debugger-mode
+	xscheme-process-filter:string-action)
+    (?E xscheme-eval
 	xscheme-process-filter:string-action)
     (?P xscheme-set-prompt-variable
 	xscheme-process-filter:string-action)
@@ -770,6 +778,9 @@ the remaining input.")
 (defun xscheme-unsolicited-read-char ()
   nil)
 
+(defun xscheme-eval (string)
+  (eval (car (read-from-string string))))
+
 (defun xscheme-message (string)
   (if (not (zerop (length string)))
       (xscheme-write-message-1 string (format ";%s" string))))
@@ -796,7 +807,7 @@ the remaining input.")
   (setq xscheme-prompt string)
   (xscheme-guarantee-newlines 2)
   (setq xscheme-mode-string (xscheme-coerce-prompt string))
-  (xscheme-modeline-redisplay))
+  (force-mode-line-update t))
 
 (defun xscheme-output-goto ()
   (xscheme-goto-output-point)
@@ -861,3 +872,7 @@ the remaining input.")
 		   (let ((state (parse-partial-sexp start (nth 2 state))))
 		     (if (nth 2 state) 'many 'one)))))
 	(set-syntax-table old-syntax-table)))))
+
+(provide 'xscheme)
+
+;;; xscheme.el ends here

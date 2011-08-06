@@ -1,0 +1,1236 @@
+This is Info file ../info/gnus, produced by Makeinfo-1.63 from the
+input file gnus.texi.
+
+   This file documents Gnus, the GNU Emacs newsreader.
+
+   Copyright (C) 1995,96 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+
+File: gnus,  Node: Customizing Threading,  Next: Thread Commands,  Up: Threading
+
+Customizing Threading
+---------------------
+
+`gnus-show-threads'
+     If this variable is `nil', no threading will be done, and all of
+     the rest of the variables here will have no effect.  Turning
+     threading off will speed group selection up a bit, but it is sure
+     to make reading slower and more awkward.
+
+`gnus-fetch-old-headers'
+     If non-`nil', Gnus will attempt to build old threads by fetching
+     more old headers--headers to articles that are marked as read.  If
+     you would like to display as few summary lines as possible, but
+     still connect as many loose threads as possible, you should set
+     this variable to `some' or a number.  If you set it to a number,
+     no more than that number of extra old headers will be fetched.  In
+     either case, fetching old headers only works if the backend you
+     are using carries overview files--this would normally be `nntp',
+     `nnspool' and `nnml'.  Also remember that if the root of the
+     thread has been expired by the server, there's not much Gnus can
+     do about that.
+
+`gnus-build-sparse-threads'
+     Fetching old headers can be slow.  A low-rent similar effect can be
+     gotten by setting this variable to `some'.  Gnus will then look at
+     the complete `References' headers of all articles and try to string
+     articles that belong in the same thread together.  This will leave
+     "gaps" in the threading display where Gnus guesses that an article
+     is missing from the thread.  (These gaps appear like normal summary
+     lines.  If you select a gap, Gnus will try to fetch the article in
+     question.)  If this variable is `t', Gnus will display all these
+     "gaps" without regard for whether they are useful for completing
+     the thread or not.  Finally, if this variable is `more', Gnus
+     won't cut off sparse leaf nodes that don't lead anywhere.  This
+     variable is `nil' by default.
+
+`gnus-summary-gather-subject-limit'
+     Loose threads are gathered by comparing subjects of articles.  If
+     this variable is `nil', Gnus requires an exact match between the
+     subjects of the loose threads before gathering them into one big
+     super-thread.  This might be too strict a requirement, what with
+     the presence of stupid newsreaders that chop off long subjects
+     lines.  If you think so, set this variable to, say, 20 to require
+     that only the first 20 characters of the subjects have to match.
+     If you set this variable to a really low number, you'll find that
+     Gnus will gather everything in sight into one thread, which isn't
+     very helpful.
+
+     If you set this variable to the special value `fuzzy', Gnus will
+     use a fuzzy string comparison algorithm on the subjects.
+
+`gnus-simplify-subject-fuzzy-regexp'
+     This can either be a regular expression or list of regular
+     expressions that match strings that will be removed from subjects
+     if fuzzy subject simplification is used.
+
+`gnus-simplify-ignored-prefixes'
+     If you set `gnus-summary-gather-subject-limit' to something as low
+     as 10, you might consider setting this variable to something
+     sensible:
+
+          (setq gnus-simplify-ignored-prefixes
+                (concat
+                 "\\`\\[?\\("
+                 (mapconcat 'identity
+                            '("looking"
+                               "wanted" "followup" "summary\\( of\\)?"
+                               "help" "query" "problem" "question"
+                               "answer" "reference" "announce"
+                               "How can I" "How to" "Comparison of"
+                               ;; ...
+                               )
+                            "\\|")
+                            "\\)\\s *\\("
+                            (mapconcat 'identity
+                                       '("for" "for reference" "with" "about")
+                                       "\\|")
+                            "\\)?\\]?:?[ \t]*"))
+
+     All words that match this regexp will be removed before comparing
+     two subjects.
+
+`gnus-summary-gather-exclude-subject'
+     Since loose thread gathering is done on subjects only, that might
+     lead to many false hits, especially with certain common subjects
+     like `' and `(none)'.  To make the situation slightly better, you
+     can use the regexp `gnus-summary-gather-exclude-subject' to say
+     what subjects should be excluded from the gathering process.  The
+     default is `^ *$\\|^(none)$'.
+
+`gnus-summary-thread-gathering-function'
+     Gnus gathers threads by looking at `Subject' headers.  This means
+     that totally unrelated articles may end up in the same "thread",
+     which is confusing.  An alternate approach is to look at all the
+     `Message-ID's in all the `References' headers to find matches.
+     This will ensure that no gathered threads ever includes unrelated
+     articles, but it's also means that people who have posted with
+     broken newsreaders won't be gathered properly.  The choice is
+     yours--plague or cholera:
+
+    `gnus-gather-threads-by-subject'
+          This function is the default gathering function and looks at
+          `Subject's exclusively.
+
+    `gnus-gather-threads-by-references'
+          This function looks at `References' headers exclusively.
+
+     If you want to test gathering by `References', you could say
+     something like:
+
+          (setq gnus-summary-thread-gathering-function
+                'gnus-gather-threads-by-references)
+
+`gnus-summary-make-false-root'
+     If non-`nil', Gnus will gather all loose subtrees into one big tree
+     and create a dummy root at the top.  (Wait a minute.  Root at the
+     top?  Yup.)  Loose subtrees occur when the real root has expired,
+     or you've read or killed the root in a previous session.
+
+     When there is no real root of a thread, Gnus will have to fudge
+     something.  This variable says what fudging method Gnus should use.
+     There are four possible values:
+
+    `adopt'
+          Gnus will make the first of the orphaned articles the parent.
+          This parent will adopt all the other articles.  The adopted
+          articles will be marked as such by pointy brackets (`<>')
+          instead of the standard square brackets (`[]').  This is the
+          default method.
+
+    `dummy'
+          Gnus will create a dummy summary line that will pretend to be
+          the parent.  This dummy line does not correspond to any real
+          article, so selecting it will just select the first real
+          article after the dummy article.
+          `gnus-summary-dummy-line-format' is used to specify the
+          format of the dummy roots.  It accepts only one format spec:
+          `S', which is the subject of the article.  *Note Formatting
+          Variables::.
+
+    `empty'
+          Gnus won't actually make any article the parent, but simply
+          leave the subject field of all orphans except the first
+          empty.  (Actually, it will use `gnus-summary-same-subject' as
+          the subject (*note Summary Buffer Format::.).)
+
+    `none'
+          Don't make any article parent at all.  Just gather the
+          threads and display them after one another.
+
+    `nil'
+          Don't gather loose threads.
+
+`gnus-thread-hide-subtree'
+     If non-`nil', all threads will be hidden when the summary buffer is
+     generated.
+
+`gnus-thread-hide-killed'
+     if you kill a thread and this variable is non-`nil', the subtree
+     will be hidden.
+
+`gnus-thread-ignore-subject'
+     Sometimes somebody changes the subject in the middle of a thread.
+     If this variable is non-`nil', the subject change is ignored.  If
+     it is `nil', which is the default, a change in the subject will
+     result in a new thread.
+
+`gnus-thread-indent-level'
+     This is a number that says how much each sub-thread should be
+     indented.  The default is `4'.
+
+
+File: gnus,  Node: Thread Commands,  Prev: Customizing Threading,  Up: Threading
+
+Thread Commands
+---------------
+
+`T k'
+`M-C-k'
+     Mark all articles in the current sub-thread as read
+     (`gnus-summary-kill-thread').  If the prefix argument is positive,
+     remove all marks instead.  If the prefix argument is negative, tick
+     articles instead.
+
+`T l'
+`M-C-l'
+     Lower the score of the current thread
+     (`gnus-summary-lower-thread').
+
+`T i'
+     Increase the score of the current thread
+     (`gnus-summary-raise-thread').
+
+`T #'
+     Set the process mark on the current thread (`gnus-uu-mark-thread').
+
+`T M-#'
+     Remove the process mark from the current thread
+     (`gnus-uu-unmark-thread').
+
+`T T'
+     Toggle threading (`gnus-summary-toggle-threads').
+
+`T s'
+     Expose the thread hidden under the current article, if any
+     (`gnus-summary-show-thread').
+
+`T h'
+     Hide the current (sub)thread (`gnus-summary-hide-thread').
+
+`T S'
+     Expose all hidden threads (`gnus-summary-show-all-threads').
+
+`T H'
+     Hide all threads (`gnus-summary-hide-all-threads').
+
+`T t'
+     Re-thread the thread the current article is part of
+     (`gnus-summary-rethread-current').  This works even when the
+     summary buffer is otherwise unthreaded.
+
+`T ^'
+     Make the current article the child of the marked (or previous)
+     article (`gnus-summary-reparent-thread'.
+
+   The following commands are thread movement commands.  They all
+understand the numeric prefix.
+
+`T n'
+     Go to the next thread (`gnus-summary-next-thread').
+
+`T p'
+     Go to the previous thread (`gnus-summary-prev-thread').
+
+`T d'
+     Descend the thread (`gnus-summary-down-thread').
+
+`T u'
+     Ascend the thread (`gnus-summary-up-thread').
+
+`T o'
+     Go to the top of the thread (`gnus-summary-top-thread').
+
+   If you ignore subject while threading, you'll naturally end up with
+threads that have several different subjects in them.  If you then issue
+a command like `T k' (`gnus-summary-kill-thread') you might not wish to
+kill the entire thread, but just those parts of the thread that have
+the same subject as the current article.  If you like this idea, you
+can fiddle with `gnus-thread-operation-ignore-subject'.  If is is
+non-`nil' (which it is by default), subjects will be ignored when doing
+thread commands.  If this variable is `nil', articles in the same
+thread with different subjects will not be included in the operation in
+question.  If this variable is `fuzzy', only articles that have
+subjects that are fuzzily equal will be included.
+
+
+File: gnus,  Node: Sorting,  Next: Asynchronous Fetching,  Prev: Threading,  Up: The Summary Buffer
+
+Sorting
+=======
+
+   If you are using a threaded summary display, you can sort the
+threads by setting `gnus-thread-sort-functions', which is a list of
+functions.  By default, sorting is done on article numbers.  Ready-made
+sorting predicate functions include `gnus-thread-sort-by-number',
+`gnus-thread-sort-by-author', `gnus-thread-sort-by-subject',
+`gnus-thread-sort-by-date', `gnus-thread-sort-by-score', and
+`gnus-thread-sort-by-total-score'.
+
+   Each function takes two threads and return non-`nil' if the first
+thread should be sorted before the other.  Note that sorting really is
+normally done by looking only at the roots of each thread.  If you use
+more than one function, the primary sort key should be the last function
+in the list.  You should probably always include
+`gnus-thread-sort-by-number' in the list of sorting
+functions--preferably first.  This will ensure that threads that are
+equal with respect to the other sort criteria will be displayed in
+ascending article order.
+
+   If you would like to sort by score, then by subject, and finally by
+number, you could do something like:
+
+     (setq gnus-thread-sort-functions
+           '(gnus-thread-sort-by-number
+             gnus-thread-sort-by-subject
+             gnus-thread-sort-by-score))
+
+   The threads that have highest score will be displayed first in the
+summary buffer.  When threads have the same score, they will be sorted
+alphabetically.  The threads that have the same score and the same
+subject will be sorted by number, which is (normally) the sequence in
+which the articles arrived.
+
+   If you want to sort by score and then reverse arrival order, you
+could say something like:
+
+     (setq gnus-thread-sort-functions
+           '((lambda (t1 t2)
+               (not (gnus-thread-sort-by-number t1 t2)))
+             gnus-thread-sort-by-score))
+
+   The function in the `gnus-thread-score-function' variable (default
+`+') is used for calculating the total score of a thread.  Useful
+functions might be `max', `min', or squared means, or whatever tickles
+your fancy.
+
+   If you are using an unthreaded display for some strange reason or
+other, you have to fiddle with the `gnus-article-sort-functions'
+variable.  It is very similar to the `gnus-thread-sort-functions',
+except that is uses slightly different functions for article
+comparison.  Available sorting predicate functions are
+`gnus-article-sort-by-number', `gnus-article-sort-by-author',
+`gnus-article-sort-by-subject', `gnus-article-sort-by-date', and
+`gnus-article-sort-by-score'.
+
+   If you want to sort an unthreaded summary display by subject, you
+could say something like:
+
+     (setq gnus-article-sort-functions
+           '(gnus-article-sort-by-number
+             gnus-article-sort-by-subject))
+
+
+File: gnus,  Node: Asynchronous Fetching,  Next: Article Caching,  Prev: Sorting,  Up: The Summary Buffer
+
+Asynchronous Article Fetching
+=============================
+
+   If you read your news from an NNTP server that's far away, the
+network latencies may make reading articles a chore.  You have to wait
+for a while after pressing `n' to go to the next article before the
+article appears.  Why can't Gnus just go ahead and fetch the article
+while you are reading the previous one? Why not, indeed.
+
+   First, some caveats.  There are some pitfalls to using asynchronous
+article fetching, especially the way Gnus does it.
+
+   Let's say you are reading article 1, which is short, and article 2 is
+quite long, and you are not interested in reading that.  Gnus does not
+know this, so it goes ahead and fetches article 2.  You decide to read
+article 3, but since Gnus is in the process of fetching article 2, the
+connection is blocked.
+
+   To avoid these situations, Gnus will open two (count 'em two)
+connections to the server.  Some people may think this isn't a very nice
+thing to do, but I don't see any real alternatives.  Setting up that
+extra connection takes some time, so Gnus startup will be slower.
+
+   Gnus will fetch more articles than you will read.  This will mean
+that the link between your machine and the NNTP server will become more
+loaded than if you didn't use article pre-fetch.  The server itself will
+also become more loaded--both with the extra article requests, and the
+extra connection.
+
+   Ok, so now you know that you shouldn't really use this thing...
+unless you really want to.
+
+   Here's how:  Set `gnus-asynchronous' to `t'.  The rest should happen
+automatically.
+
+   You can control how many articles that are to be pre-fetched by
+setting `nntp-async-number'.  This is five by default, which means that
+when you read an article in the group, `nntp' will pre-fetch the next
+five articles.  If this variable is `t', `nntp' will pre-fetch all the
+articles that it can without bound.  If it is `nil', no pre-fetching
+will be made.
+
+   You may wish to create some sort of scheme for choosing which
+articles that `nntp' should consider as candidates for pre-fetching.
+For instance, you may wish to pre-fetch all articles with high scores,
+and not pre-fetch low-scored articles.  You can do that by setting the
+`gnus-asynchronous-article-function', which will be called with an
+alist where the keys are the article numbers.  Your function should
+return an alist where the articles you are not interested in have been
+removed.  You could also do sorting on article score and the like.
+
+
+File: gnus,  Node: Article Caching,  Next: Persistent Articles,  Prev: Asynchronous Fetching,  Up: The Summary Buffer
+
+Article Caching
+===============
+
+   If you have an *extremely* slow NNTP connection, you may consider
+turning article caching on.  Each article will then be stored locally
+under your home directory.  As you may surmise, this could potentially
+use *huge* amounts of disk space, as well as eat up all your inodes so
+fast it will make your head swim.  In vodka.
+
+   Used carefully, though, it could be just an easier way to save
+articles.
+
+   To turn caching on, set `gnus-use-cache' to `t'.  By default, all
+articles that are ticked or marked as dormant will then be copied over
+to your local cache (`gnus-cache-directory').  Whether this cache is
+flat or hierarchal is controlled by the `gnus-use-long-file-name'
+variable, as usual.
+
+   When re-select a ticked or dormant article, it will be fetched from
+the cache instead of from the server.  As articles in your cache will
+never expire, this might serve as a method of saving articles while
+still keeping them where they belong.  Just mark all articles you want
+to save as dormant, and don't worry.
+
+   When an article is marked as read, is it removed from the cache.
+
+   The entering/removal of articles from the cache is controlled by the
+`gnus-cache-enter-articles' and `gnus-cache-remove-articles' variables.
+Both are lists of symbols.  The first is `(ticked dormant)' by
+default, meaning that ticked and dormant articles will be put in the
+cache.  The latter is `(read)' by default, meaning that articles that
+are marked as read are removed from the cache.  Possibly symbols in
+these two lists are `ticked', `dormant', `unread' and `read'.
+
+   So where does the massive article-fetching and storing come into the
+picture?  The `gnus-jog-cache' command will go through all subscribed
+newsgroups, request all unread articles, and store them in the cache.
+You should only ever, ever ever ever, use this command if 1) your
+connection to the NNTP server is really, really, really slow and 2) you
+have a really, really, really huge disk.  Seriously.
+
+   It is likely that you do not want caching on some groups.  For
+instance, if your `nnml' mail is located under your home directory, it
+makes no sense to cache it somewhere else under your home directory.
+Unless you feel that it's neat to use twice as much space.  To limit
+the caching, you could set the `gnus-uncacheable-groups' regexp to
+`^nnml', for instance.  This variable is `nil' by default.
+
+   The cache stores information on what articles it contains in its
+active file (`gnus-cache-active-file').  If this file (or any other
+parts of the cache) becomes all messed up for some reason or other, Gnus
+offers two functions that will try to set things right.  `M-x
+gnus-cache-generate-nov-databases' will (re)build all the NOV files,
+and `gnus-cache-generate-active' will (re)generate the active file.
+
+
+File: gnus,  Node: Persistent Articles,  Next: Article Backlog,  Prev: Article Caching,  Up: The Summary Buffer
+
+Persistent Articles
+===================
+
+   Closely related to article caching, we have "persistent articles".
+In fact, it's just a different way of looking at caching, and much more
+useful in my opinion.
+
+   Say you're reading a newsgroup, and you happen on to some valuable
+gem that you want to keep and treasure forever.  You'd normally just
+save it (using one of the many saving commands) in some file.  The
+problem with that is that it's just, well, yucky.  Ideally you'd prefer
+just having the article remain in the group where you found it forever;
+untouched by the expiry going on at the news server.
+
+   This is what a "persistent article" is--an article that just won't
+be deleted.  It's implemented using the normal cache functions, but you
+use two explicit commands for managing persistent articles:
+
+`*'
+     Make the current article persistent (`gnus-cache-enter-article').
+
+`M-*'
+     Remove the current article from the persistent articles
+     (`gnus-cache-remove-article').  This will normally delete the
+     article.
+
+   Both these commands understand the process/prefix convention.
+
+   To avoid having all ticked articles (and stuff) entered into the
+cache, you should set `gnus-use-cache' to `passive' if you're just
+interested in persistent articles:
+
+     (setq gnus-use-cache 'passive)
+
+
+File: gnus,  Node: Article Backlog,  Next: Saving Articles,  Prev: Persistent Articles,  Up: The Summary Buffer
+
+Article Backlog
+===============
+
+   If you have a slow connection, but the idea of using caching seems
+unappealing to you (and it is, really), you can help the situation some
+by switching on the "backlog".  This is where Gnus will buffer already
+read articles so that it doesn't have to re-fetch articles you've
+already read.  This only helps if you are in the habit of re-selecting
+articles you've recently read, of course.  If you never do that,
+turning the backlog on will slow Gnus down a little bit, and increase
+memory usage some.
+
+   If you set `gnus-keep-backlog' to a number N, Gnus will store at
+most N old articles in a buffer for later re-fetching.  If this
+variable is non-`nil' and is not a number, Gnus will store *all* read
+articles, which means that your Emacs will grow without bound before
+exploding and taking your machine down with you.  I put that in there
+just to keep y'all on your toes.
+
+   This variable is `nil' by default.
+
+
+File: gnus,  Node: Saving Articles,  Next: Decoding Articles,  Prev: Article Backlog,  Up: The Summary Buffer
+
+Saving Articles
+===============
+
+   Gnus can save articles in a number of ways.  Below is the
+documentation for saving articles in a fairly straight-forward fashion
+(i.e., little processing of the article is done before it is saved).
+For a different approach (uudecoding, unsharing) you should use
+`gnus-uu' (*note Decoding Articles::.).
+
+   If `gnus-save-all-headers' is non-`nil', Gnus will not delete
+unwanted headers before saving the article.
+
+   If the preceding variable is `nil', all headers that match the
+`gnus-saved-headers' regexp will be kept, while the rest will be
+deleted before saving.
+
+`O o'
+`o'
+     Save the current article using the default article saver
+     (`gnus-summary-save-article').
+
+`O m'
+     Save the current article in mail format
+     (`gnus-summary-save-article-mail').
+
+`O r'
+     Save the current article in rmail format
+     (`gnus-summary-save-article-rmail').
+
+`O f'
+     Save the current article in plain file format
+     (`gnus-summary-save-article-file').
+
+`O b'
+     Save the current article body in plain file format
+     (`gnus-summary-save-article-body-file').
+
+`O h'
+     Save the current article in mh folder format
+     (`gnus-summary-save-article-folder').
+
+`O v'
+     Save the current article in a VM folder
+     (`gnus-summary-save-article-vm').
+
+`O p'
+     Save the current article in a pipe.  Uhm, like, what I mean
+     is--Pipe the current article to a process
+     (`gnus-summary-pipe-output').
+
+   All these commands use the process/prefix convention (*note
+Process/Prefix::.).  If you save bunches of articles using these
+functions, you might get tired of being prompted for files to save each
+and every article in.  The prompting action is controlled by the
+`gnus-prompt-before-saving' variable, which is `always' by default,
+giving you that excessive prompting action you know and loathe.  If you
+set this variable to `t' instead, you'll be prompted just once for each
+series of articles you save.  If you like to really have Gnus do all
+your thinking for you, you can even set this variable to `nil', which
+means that you will never be prompted for files to save articles in.
+Gnus will simply save all the articles in the default files.
+
+   You can customize the `gnus-default-article-saver' variable to make
+Gnus do what you want it to.  You can use any of the four ready-made
+functions below, or you can create your own.
+
+`gnus-summary-save-in-rmail'
+     This is the default format, "babyl".  Uses the function in the
+     `gnus-rmail-save-name' variable to get a file name to save the
+     article in.  The default is `gnus-plain-save-name'.
+
+`gnus-summary-save-in-mail'
+     Save in a Unix mail (mbox) file.  Uses the function in the
+     `gnus-mail-save-name' variable to get a file name to save the
+     article in.  The default is `gnus-plain-save-name'.
+
+`gnus-summary-save-in-file'
+     Append the article straight to an ordinary file.  Uses the
+     function in the `gnus-file-save-name' variable to get a file name
+     to save the article in.  The default is `gnus-numeric-save-name'.
+
+`gnus-summary-save-body-in-file'
+     Append the article body to an ordinary file.  Uses the function in
+     the `gnus-file-save-name' variable to get a file name to save the
+     article in.  The default is `gnus-numeric-save-name'.
+
+`gnus-summary-save-in-folder'
+     Save the article to an MH folder using `rcvstore' from the MH
+     library.  Uses the function in the `gnus-folder-save-name' variable
+     to get a file name to save the article in.  The default is
+     `gnus-folder-save-name', but you can also use
+     `gnus-Folder-save-name'.  The former creates capitalized names, and
+     the latter does not.
+
+`gnus-summary-save-in-vm'
+     Save the article in a VM folder.  You have to have the VM mail
+     reader to use this setting.
+
+   All of these functions, except for the last one, will save the
+article in the `gnus-article-save-directory', which is initialized from
+the `SAVEDIR' environment variable.  This is `~/News/' by default.
+
+   As you can see above, the functions use different functions to find a
+suitable name of a file to save the article in.  Below is a list of
+available functions that generate names:
+
+`gnus-Numeric-save-name'
+     Generates file names that look like `~/News/Alt.andrea-dworkin/45'.
+
+`gnus-numeric-save-name'
+     Generates file names that look like `~/News/alt.andrea-dworkin/45'.
+
+`gnus-Plain-save-name'
+     Generates file names that look like `~/News/Alt.andrea-dworkin'.
+
+`gnus-plain-save-name'
+     Generates file names that look like `~/News/alt.andrea-dworkin'.
+
+   You can have Gnus suggest where to save articles by plonking a
+regexp into the `gnus-split-methods' alist.  For instance, if you would
+like to save articles related to Gnus in the file `gnus-stuff', and
+articles related to VM in `vm-stuff', you could set this variable to
+something like:
+
+     (("^Subject:.*gnus\\|^Newsgroups:.*gnus" "gnus-stuff")
+      ("^Subject:.*vm\\|^Xref:.*vm" "vm-stuff")
+      (my-choosing-function "../other-dir/my-stuff")
+      ((equal gnus-newsgroup-name "mail.misc") "mail-stuff"))
+
+   We see that this is a list where each element is a list that has two
+elements--the "match" and the "file".  The match can either be a string
+(in which case it is used as a regexp to match on the article head); it
+can be a symbol (which will be called as a function with the group name
+as a parameter); or it can be a list (which will be `eval'ed).  If any
+of these actions have a non-`nil' result, the "file" will be used as a
+default prompt.  In addition, the result of the operation itself will
+be used if the function or form called returns a string or a list of
+strings.
+
+   You basically end up with a list of file names that might be used
+when saving the current article.  (All "matches" will be used.)  You
+will then be prompted for what you really want to use as a name, with
+file name completion over the results from applying this variable.
+
+   This variable is `((gnus-article-archive-name))' by default, which
+means that Gnus will look at the articles it saves for an
+`Archive-name' line and use that as a suggestion for the file name.
+
+   Finally, you have the `gnus-use-long-file-name' variable.  If it is
+`nil', all the preceding functions will replace all periods (`.') in
+the group names with slashes (`/')--which means that the functions will
+generate hierarchies of directories instead of having all the files in
+the toplevel directory (`~/News/alt/andrea-dworkin' instead of
+`~/News/alt.andrea-dworkin'.)  This variable is `t' by default on most
+systems.  However, for historical reasons, this is `nil' on Xenix and
+usg-unix-v machines by default.
+
+   This function also affects kill and score file names.  If this
+variable is a list, and the list contains the element `not-score', long
+file names will not be used for score files, if it contains the element
+`not-save', long file names will not be used for saving, and if it
+contains the element `not-kill', long file names will not be used for
+kill files.
+
+   If you'd like to save articles in a hierarchy that looks something
+like a spool, you could
+
+     (setq gnus-use-long-file-name '(not-save)) ; to get a hierarchy
+     (setq gnus-default-article-save 'gnus-summary-save-in-file) ; no encoding
+
+   Then just save with `o'.  You'd then read this hierarchy with
+ephemeral `nneething' groups--`G D' in the group buffer, and the
+toplevel directory as the argument (`~/News/').  Then just walk around
+to the groups/directories with `nneething'.
+
+
+File: gnus,  Node: Decoding Articles,  Next: Article Treatment,  Prev: Saving Articles,  Up: The Summary Buffer
+
+Decoding Articles
+=================
+
+   Sometime users post articles (or series of articles) that have been
+encoded in some way or other.  Gnus can decode them for you.
+
+* Menu:
+
+* Uuencoded Articles::    Uudecode articles.
+* Shared Articles::       Unshar articles.
+* PostScript Files::      Split PostScript.
+* Decoding Variables::    Variables for a happy decoding.
+* Viewing Files::         You want to look at the result of the decoding?
+
+   All these functions use the process/prefix convention (*note
+Process/Prefix::.) for finding out what articles to work on, with the
+extension that a "single article" means "a single series".  Gnus can
+find out by itself what articles belong to a series, decode all the
+articles and unpack/view/save the resulting file(s).
+
+   Gnus guesses what articles are in the series according to the
+following simplish rule: The subjects must be (nearly) identical,
+except for the last two numbers of the line.  (Spaces are largely
+ignored, however.)
+
+   For example: If you choose a subject called `cat.gif (2/3)', Gnus
+will find all the articles that match the regexp `^cat.gif
+([0-9]+/[0-9]+).*$'.
+
+   Subjects that are nonstandard, like `cat.gif (2/3) Part 6 of a
+series', will not be properly recognized by any of the automatic viewing
+commands, and you have to mark the articles manually with `#'.
+
+
+File: gnus,  Node: Uuencoded Articles,  Next: Shared Articles,  Up: Decoding Articles
+
+Uuencoded Articles
+------------------
+
+`X u'
+     Uudecodes the current series (`gnus-uu-decode-uu').
+
+`X U'
+     Uudecodes and saves the current series
+     (`gnus-uu-decode-uu-and-save').
+
+`X v u'
+     Uudecodes and views the current series (`gnus-uu-decode-uu-view').
+
+`X v U'
+     Uudecodes, views and saves the current series
+     (`gnus-uu-decode-uu-and-save-view').
+
+   Remember that these all react to the presence of articles marked with
+the process mark.  If, for instance, you'd like to decode and save an
+entire newsgroup, you'd typically do `M P a' (`gnus-uu-mark-all') and
+then `X U' (`gnus-uu-decode-uu-and-save').
+
+   All this is very much different from how `gnus-uu' worked with GNUS
+4.1, where you had explicit keystrokes for everything under the sun.
+This version of `gnus-uu' generally assumes that you mark articles in
+some way (*note Setting Process Marks::.) and then press `X u'.
+
+   Note: When trying to decode articles that have names matching
+`gnus-uu-notify-files', which is hard-coded to
+`[Cc][Ii][Nn][Dd][Yy][0-9]+.\\(gif\\|jpg\\)', `gnus-uu' will
+automatically post an article on `comp.unix.wizards' saying that you
+have just viewed the file in question.  This feature can't be turned
+off.
+
+
+File: gnus,  Node: Shared Articles,  Next: PostScript Files,  Prev: Uuencoded Articles,  Up: Decoding Articles
+
+Shared Articles
+---------------
+
+`X s'
+     Unshars the current series (`gnus-uu-decode-unshar').
+
+`X S'
+     Unshars and saves the current series
+     (`gnus-uu-decode-unshar-and-save').
+
+`X v s'
+     Unshars and views the current series
+     (`gnus-uu-decode-unshar-view').
+
+`X v S'
+     Unshars, views and saves the current series
+     (`gnus-uu-decode-unshar-and-save-view').
+
+
+File: gnus,  Node: PostScript Files,  Next: Decoding Variables,  Prev: Shared Articles,  Up: Decoding Articles
+
+PostScript Files
+----------------
+
+`X p'
+     Unpack the current PostScript series (`gnus-uu-decode-postscript').
+
+`X P'
+     Unpack and save the current PostScript series
+     (`gnus-uu-decode-postscript-and-save').
+
+`X v p'
+     View the current PostScript series
+     (`gnus-uu-decode-postscript-view').
+
+`X v P'
+     View and save the current PostScript series
+     (`gnus-uu-decode-postscript-and-save-view').
+
+
+File: gnus,  Node: Decoding Variables,  Next: Viewing Files,  Prev: PostScript Files,  Up: Decoding Articles
+
+Decoding Variables
+------------------
+
+   Adjective, not verb.
+
+* Menu:
+
+* Rule Variables::          Variables that say how a file is to be viewed.
+* Other Decode Variables::  Other decode variables.
+* Uuencoding and Posting::  Variables for customizing uuencoding.
+
+
+File: gnus,  Node: Rule Variables,  Next: Other Decode Variables,  Up: Decoding Variables
+
+Rule Variables
+..............
+
+   Gnus uses "rule variables" to decide how to view a file.  All these
+variables are on the form
+
+           (list '(regexp1 command2)
+                 '(regexp2 command2)
+                 ...)
+
+`gnus-uu-user-view-rules'
+     This variable is consulted first when viewing files.  If you wish
+     to use, for instance, `sox' to convert an `.au' sound file, you
+     could say something like:
+                 (setq gnus-uu-user-view-rules
+                   (list '(\"\\\\.au$\" \"sox %s -t .aiff > /dev/audio\")))
+
+`gnus-uu-user-view-rules-end'
+     This variable is consulted if Gnus couldn't make any matches from
+     the user and default view rules.
+
+`gnus-uu-user-archive-rules'
+     This variable can be used to say what commands should be used to
+     unpack archives.
+
+
+File: gnus,  Node: Other Decode Variables,  Next: Uuencoding and Posting,  Prev: Rule Variables,  Up: Decoding Variables
+
+Other Decode Variables
+......................
+
+`gnus-uu-grabbed-file-functions'
+     All functions in this list will be called right each file has been
+     successfully decoded--so that you can move or view files right
+     away, and don't have to wait for all files to be decoded before
+     you can do anything.  Ready-made functions you can put in this
+     list are:
+
+    `gnus-uu-grab-view'
+          View the file.
+
+    `gnus-uu-grab-move'
+          Move the file (if you're using a saving function.)
+
+`gnus-uu-ignore-files-by-name'
+     Files with name matching this regular expression won't be viewed.
+
+`gnus-uu-ignore-files-by-type'
+     Files with a MIME type matching this variable won't be viewed.
+     Note that Gnus tries to guess what type the file is based on the
+     name.  `gnus-uu' is not a MIME package (yet), so this is slightly
+     kludgey.
+
+`gnus-uu-tmp-dir'
+     Where `gnus-uu' does its work.
+
+`gnus-uu-do-not-unpack-archives'
+     Non-`nil' means that `gnus-uu' won't peek inside archives looking
+     for files to display.
+
+`gnus-uu-view-and-save'
+     Non-`nil' means that the user will always be asked to save a file
+     after viewing it.
+
+`gnus-uu-ignore-default-view-rules'
+     Non-`nil' means that `gnus-uu' will ignore the default viewing
+     rules.
+
+`gnus-uu-ignore-default-archive-rules'
+     Non-`nil' means that `gnus-uu' will ignore the default archive
+     unpacking commands.
+
+`gnus-uu-kill-carriage-return'
+     Non-`nil' means that `gnus-uu' will strip all carriage returns
+     from articles.
+
+`gnus-uu-unmark-articles-not-decoded'
+     Non-`nil' means that `gnus-uu' will mark articles that were
+     unsuccessfully decoded as unread.
+
+`gnus-uu-correct-stripped-uucode'
+     Non-`nil' means that `gnus-uu' will *try* to fix uuencoded files
+     that have had trailing spaces deleted.
+
+`gnus-uu-view-with-metamail'
+     Non-`nil' means that `gnus-uu' will ignore the viewing commands
+     defined by the rule variables and just fudge a MIME content type
+     based on the file name.  The result will be fed to `metamail' for
+     viewing.
+
+`gnus-uu-save-in-digest'
+     Non-`nil' means that `gnus-uu', when asked to save without
+     decoding, will save in digests.  If this variable is `nil',
+     `gnus-uu' will just save everything in a file without any
+     embellishments.  The digesting almost conforms to RFC1153--no easy
+     way to specify any meaningful volume and issue numbers were found,
+     so I simply dropped them.
+
+
+File: gnus,  Node: Uuencoding and Posting,  Prev: Other Decode Variables,  Up: Decoding Variables
+
+Uuencoding and Posting
+......................
+
+`gnus-uu-post-include-before-composing'
+     Non-`nil' means that `gnus-uu' will ask for a file to encode
+     before you compose the article.  If this variable is `t', you can
+     either include an encoded file with `C-c C-i' or have one included
+     for you when you post the article.
+
+`gnus-uu-post-length'
+     Maximum length of an article.  The encoded file will be split into
+     how many articles it takes to post the entire file.
+
+`gnus-uu-post-threaded'
+     Non-`nil' means that `gnus-uu' will post the encoded file in a
+     thread.  This may not be smart, as no other decoder I have seen
+     are able to follow threads when collecting uuencoded articles.
+     (Well, I have seen one package that does that--`gnus-uu', but
+     somehow, I don't think that counts...) Default is `nil'.
+
+`gnus-uu-post-separate-description'
+     Non-`nil' means that the description will be posted in a separate
+     article.  The first article will typically be numbered (0/x).  If
+     this variable is `nil', the description the user enters will be
+     included at the beginning of the first article, which will be
+     numbered (1/x).  Default is `t'.
+
+
+File: gnus,  Node: Viewing Files,  Prev: Decoding Variables,  Up: Decoding Articles
+
+Viewing Files
+-------------
+
+   After decoding, if the file is some sort of archive, Gnus will
+attempt to unpack the archive and see if any of the files in the
+archive can be viewed.  For instance, if you have a gzipped tar file
+`pics.tar.gz' containing the files `pic1.jpg' and `pic2.gif', Gnus will
+uncompress and de-tar the main file, and then view the two pictures.
+This unpacking process is recursive, so if the archive contains archives
+of archives, it'll all be unpacked.
+
+   Finally, Gnus will normally insert a "pseudo-article" for each
+extracted file into the summary buffer.  If you go to these "articles",
+you will be prompted for a command to run (usually Gnus will make a
+suggestion), and then the command will be run.
+
+   If `gnus-view-pseudo-asynchronously' is `nil', Emacs will wait until
+the viewing is done before proceeding.
+
+   If `gnus-view-pseudos' is `automatic', Gnus will not insert the
+pseudo-articles into the summary buffer, but view them immediately.  If
+this variable is `not-confirm', the user won't even be asked for a
+confirmation before viewing is done.
+
+   If `gnus-view-pseudos-separately' is non-`nil', one pseudo-article
+will be created for each file to be viewed.  If `nil', all files that
+use the same viewing command will be given as a list of parameters to
+that command.
+
+   If `gnus-insert-pseudo-articles' is non-`nil', insert
+pseudo-articles when decoding.  It is `t' by default.
+
+   So; there you are, reading your *pseudo-articles* in your *virtual
+newsgroup* from the *virtual server*; and you think: Why isn't anything
+real anymore? How did we get here?
+
+
+File: gnus,  Node: Article Treatment,  Next: Summary Sorting,  Prev: Decoding Articles,  Up: The Summary Buffer
+
+Article Treatment
+=================
+
+   Reading through this huge manual, you may have quite forgotten that
+the object of newsreaders are to actually, like, read what people have
+written.  Reading articles.  Unfortunately, people are quite bad at
+writing, so there are tons of functions and variables to make reading
+these articles easier.
+
+* Menu:
+
+* Article Highlighting::    You want to make the article look like fruit salad.
+* Article Hiding::          You also want to make certain info go away.
+* Article Washing::         Lots of way-neat functions to make life better.
+* Article Buttons::         Click on URLs, Message-IDs, addresses and the like.
+* Article Date::            Grumble, UT!
+
+
+File: gnus,  Node: Article Highlighting,  Next: Article Hiding,  Up: Article Treatment
+
+Article Highlighting
+--------------------
+
+   Not only do you want your article buffer to look like fruit salad,
+but you want it to look like technicolor fruit salad.
+
+`W H a'
+     Highlight the current article (`gnus-article-highlight').
+
+`W H h'
+     Highlight the headers (`gnus-article-highlight-headers').  The
+     highlighting will be done according to the `gnus-header-face-alist'
+     variable, which is a list where each element has the form (REGEXP
+     NAME CONTENT).  REGEXP is a regular expression for matching the
+     header, NAME is the face used for highlighting the header name and
+     CONTENT is the face for highlighting the header value.  The first
+     match made will be used.  Note that REGEXP shouldn't have `^'
+     prepended--Gnus will add one.
+
+`W H c'
+     Highlight cited text (`gnus-article-highlight-citation').
+
+     Some variables to customize the citation highlights:
+
+    `gnus-cite-parse-max-size'
+          If the article size if bigger than this variable (which is
+          25000 by default), no citation highlighting will be performed.
+
+    `gnus-cite-prefix-regexp'
+          Regexp matching the longest possible citation prefix on a
+          line.
+
+    `gnus-cite-max-prefix'
+          Maximum possible length for a citation prefix (default 20).
+
+    `gnus-cite-face-list'
+          List of faces used for highlighting citations.  When there
+          are citations from multiple articles in the same message,
+          Gnus will try to give each citation from each article its own
+          face.  This should make it easier to see who wrote what.
+
+    `gnus-supercite-regexp'
+          Regexp matching normal Supercite attribution lines.
+
+    `gnus-supercite-secondary-regexp'
+          Regexp matching mangled Supercite attribution lines.
+
+    `gnus-cite-minimum-match-count'
+          Minimum number of identical prefixes we have to see before we
+          believe that it's a citation.
+
+    `gnus-cite-attribution-prefix'
+          Regexp matching the beginning of an attribution line.
+
+    `gnus-cite-attribution-suffix'
+          Regexp matching the end of an attribution line.
+
+    `gnus-cite-attribution-face'
+          Face used for attribution lines.  It is merged with the face
+          for the cited text belonging to the attribution.
+
+`W H s'
+     Highlight the signature (`gnus-article-highlight-signature').
+     Everything after `gnus-signature-separator' in an article will be
+     considered a signature and will be highlighted with
+     `gnus-signature-face', which is `italic' by default.
+
+
+File: gnus,  Node: Article Hiding,  Next: Article Washing,  Prev: Article Highlighting,  Up: Article Treatment
+
+Article Hiding
+--------------
+
+   Or rather, hiding certain things in each article.  There usually is
+much too much cruft in most articles.
+
+`W W a'
+     Do maximum hiding on the summary buffer (`gnus-article-hide').
+
+`W W h'
+     Hide headers (`gnus-article-hide-headers').  *Note Hiding
+     Headers::.
+
+`W W b'
+     Hide headers that aren't particularly interesting
+     (`gnus-article-hide-boring-headers').  *Note Hiding Headers::.
+
+`W W s'
+     Hide signature (`gnus-article-hide-signature').
+
+`W W p'
+     Hide PGP signatures (`gnus-article-hide-pgp').
+
+`W W c'
+     Hide citation (`gnus-article-hide-citation').  Some variables for
+     customizing the hiding:
+
+    `gnus-cite-hide-percentage'
+          If the cited text is of a bigger percentage than this
+          variable (default 50), hide the cited text.
+
+    `gnus-cite-hide-absolute'
+          The cited text must be have at least this length (default 10)
+          before it is hidden.
+
+    `gnus-cited-text-button-line-format'
+          Gnus adds buttons show where the cited text has been hidden,
+          and to allow toggle hiding the text.  The format of the
+          variable is specified by this format-like variable.  These
+          specs are legal:
+
+         `b'
+               Start point of the hidden text.
+
+         `e'
+               End point of the hidden text.
+
+         `l'
+               Length of the hidden text.
+
+    `gnus-cited-lines-visible'
+          The number of lines at the beginning of the cited text to
+          leave shown.
+
+`W W C'
+     Hide cited text in articles that aren't roots
+     (`gnus-article-hide-citation-in-followups').  This isn't very
+     useful as an interactive command, but might be a handy function to
+     stick in `gnus-article-display-hook' (*note Customizing
+     Articles::.).
+
+   All these "hiding" commands are toggles, but if you give a negative
+prefix to these commands, they will show what they have previously
+hidden.  If you give a positive prefix, they will always hide.
+
+   Also *note Article Highlighting::. for further variables for
+citation customization.
+
+   `gnus-signature-limit' provides a limit to what is considered a
+signature.  If it is a number, no signature may not be longer (in
+characters) than that number.  If it is a function, the function will be
+called without any parameters, and if it returns `nil', there is no
+signature in the buffer.  If it is a string, it will be used as a
+regexp.  If it matches, the text in question is not a signature.
+
+
+File: gnus,  Node: Article Washing,  Next: Article Buttons,  Prev: Article Hiding,  Up: Article Treatment
+
+Article Washing
+---------------
+
+   We call this "article washing" for a really good reason.  Namely, the
+`A' key was taken, so we had to use the `W' key instead.
+
+   "Washing" is defined by us as "changing something from something to
+something else", but normally results in something looking better.
+Cleaner, perhaps.
+
+`W l'
+     Remove page breaks from the current article
+     (`gnus-summary-stop-page-breaking').
+
+`W r'
+     Do a Caesar rotate (rot13) on the article buffer
+     (`gnus-summary-caesar-message').
+
+`W t'
+     Toggle whether to display all headers in the article buffer
+     (`gnus-summary-toggle-header').
+
+`W v'
+     Toggle whether to display all headers in the article buffer
+     permanently (`gnus-summary-verbose-header').
+
+`W m'
+     Toggle whether to run the article through MIME before displaying
+     (`gnus-summary-toggle-mime').
+
+`W o'
+     Treat overstrike (`gnus-article-treat-overstrike').
+
+`W w'
+     Do word wrap (`gnus-article-fill-cited-article').
+
+`W c'
+     Remove CR (`gnus-article-remove-cr').
+
+`W L'
+     Remove all blank lines at the end of the article
+     (`gnus-article-remove-trailing-blank-lines').
+
+`W q'
+     Treat quoted-printable (`gnus-article-de-quoted-unreadable').
+
+`W f'
+     Look for and display any X-Face headers
+     (`gnus-article-display-x-face').  The command executed by this
+     function is given by the `gnus-article-x-face-command' variable.
+     If this variable is a string, this string will be executed in a
+     sub-shell.  If it is a function, this function will be called with
+     the face as the argument.  If the `gnus-article-x-face-too-ugly'
+     (which is a regexp) matches the `From' header, the face will not
+     be shown.  The default action under Emacs is to fork off an `xv'
+     to view the face; under XEmacs the default action is to display
+     the face before the `From' header.  (It's nicer if XEmacs has been
+     compiled with X-Face support - that will make display somewhat
+     faster.  If there's no native X-Face support, Gnus will try to
+     convert the `X-Face' header using external programs from the
+     `pbmplus' package and friends.)  If you want to have this function
+     in the display hook, it should probably come last.
+
+`W b'
+     Add clickable buttons to the article (`gnus-article-add-buttons').
+
+`W B'
+     Add clickable buttons to the article headers
+     (`gnus-article-add-buttons-to-head').
+

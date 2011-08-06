@@ -1,0 +1,1331 @@
+This is Info file ../info/gnus, produced by Makeinfo-1.63 from the
+input file gnus.texi.
+
+   This file documents Gnus, the GNU Emacs newsreader.
+
+   Copyright (C) 1995,96 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+
+File: gnus,  Node: Process/Prefix,  Next: Interactive,  Up: Various
+
+Process/Prefix
+==============
+
+   Many functions, among them functions for moving, decoding and saving
+articles, use what is known as the "Process/Prefix convention".
+
+   This is a method for figuring out what articles that the user wants
+the command to be performed on.
+
+   It goes like this:
+
+   If the numeric prefix is N, perform the operation on the next N
+articles, starting with the current one.  If the numeric prefix is
+negative, perform the operation on the previous N articles, starting
+with the current one.
+
+   If `transient-mark-mode' in non-`nil' and the region is active, all
+articles in the region will be worked upon.
+
+   If there is no numeric prefix, but some articles are marked with the
+process mark, perform the operation on the articles that are marked with
+the process mark.
+
+   If there is neither a numeric prefix nor any articles marked with the
+process mark, just perform the operation on the current article.
+
+   Quite simple, really, but it needs to be made clear so that surprises
+are avoided.
+
+   One thing that seems to shock & horrify lots of people is that, for
+instance, `3 d' does exactly the same as `d' `d' `d'.  Since each `d'
+(which marks the current article as read) by default goes to the next
+unread article after marking, this means that `3 d' will mark the next
+three unread articles as read, no matter what the summary buffer looks
+like.  Set `gnus-summary-goto-unread' to `nil' for a more
+straightforward action.
+
+
+File: gnus,  Node: Interactive,  Next: Formatting Variables,  Prev: Process/Prefix,  Up: Various
+
+Interactive
+===========
+
+`gnus-novice-user'
+     If this variable is non-`nil', you are either a newcomer to the
+     World of Usenet, or you are very cautious, which is a nice thing
+     to be, really.  You will be given questions of the type "Are you
+     sure you want to do this?" before doing anything dangerous.  This
+     is `t' by default.
+
+`gnus-expert-user'
+     If this variable is non-`nil', you will never ever be asked any
+     questions by Gnus.  It will simply assume you know what you're
+     doing, no matter how strange.
+
+`gnus-interactive-catchup'
+     Require confirmation before catching up a group if non-`nil'.  It
+     is `t' by default.
+
+`gnus-interactive-exit'
+     Require confirmation before exiting Gnus.  This variable is `t' by
+     default.
+
+
+File: gnus,  Node: Formatting Variables,  Next: Windows Configuration,  Prev: Interactive,  Up: Various
+
+Formatting Variables
+====================
+
+   Throughout this manual you've probably noticed lots of variables that
+are called things like `gnus-group-line-format' and
+`gnus-summary-mode-line-format'.  These control how Gnus is to output
+lines in the various buffers.  There's quite a lot of them.
+Fortunately, they all use the same syntax, so there's not that much to
+be annoyed by.
+
+   Here's an example format spec (from the group buffer): `%M%S%5y:
+%(%g%)\n'.  We see that it is indeed extremely ugly, and that there are
+lots of percentages everywhere.
+
+   Each `%' element will be replaced by some string or other when the
+buffer in question is generated.  `%5y' means "insert the `y' spec, and
+pad with spaces to get a 5-character field".  Just like a normal format
+spec, almost.
+
+   You can also say `%6,4y', which means that the field will never be
+more than 6 characters wide and never less than 4 characters wide.
+
+   There are also specs for highlighting, and these are shared by all
+the format variables.  Text inside the `%(' and `%)' specifiers will
+get the special `mouse-face' property set, which means that it will be
+highlighted (with `gnus-mouse-face') when you put the mouse pointer
+over it.
+
+   Text inside the `%[' and `%]' specifiers will have their normal
+faces set using `gnus-face-0', which is `bold' by default.  If you say
+`%1[' instead, you'll get `gnus-face-1' instead, and so on.  Create as
+many faces as you wish.  The same goes for the `mouse-face' specs--you
+can say `%3(hello%)' to have `hello' mouse-highlighted with
+`gnus-mouse-face-3'.
+
+   Here's an alternative recipe for the group buffer:
+
+     ;; Create three face types.
+     (setq gnus-face-1 'bold)
+     (setq gnus-face-3 'italic)
+     
+     ;; We want the article count to be in
+     ;; a bold and green face.  So we create
+     ;; a new face called `my-green-bold'.
+     (copy-face 'bold 'my-green-bold)
+     ;; Set the color.
+     (set-face-foreground 'my-green-bold "ForestGreen")
+     (setq gnus-face-2 'my-green-bold)
+     
+     ;; Set the new & fancy format.
+     (setq gnus-group-line-format
+           "%M%S%3{%5y%}%2[:%] %(%1{%g%}%)\n")
+
+   I'm sure you'll be able to use this scheme to create totally
+unreadable and extremely vulgar displays.  Have fun!
+
+   Currently Gnus uses the following formatting variables:
+`gnus-group-line-format', `gnus-summary-line-format',
+`gnus-server-line-format', `gnus-topic-line-format',
+`gnus-group-mode-line-format', `gnus-summary-mode-line-format',
+`gnus-article-mode-line-format', `gnus-server-mode-line-format'.
+
+   Note that the `%(' specs (and friends) do not make any sense on the
+mode-line variables.
+
+   All these format variables can also be arbitrary elisp forms.  In
+that case, they will be `eval'ed to insert the required lines.
+
+   Gnus includes a command to help you while creating your own format
+specs.  `M-x gnus-update-format' will `eval' the current form, update
+the spec in question and pop you to a buffer where you can examine the
+resulting lisp code to be run to generate the line.
+
+
+File: gnus,  Node: Windows Configuration,  Next: Compilation,  Prev: Formatting Variables,  Up: Various
+
+Windows Configuration
+=====================
+
+   No, there's nothing here about X, so be quiet.
+
+   If `gnus-use-full-window' non-`nil', Gnus will delete all other
+windows and occupy the entire Emacs screen by itself.  It is `t' by
+default.
+
+   `gnus-buffer-configuration' describes how much space each Gnus
+buffer should be given.  Here's an excerpt of this variable:
+
+     ((group (vertical 1.0 (group 1.0 point)
+                           (if gnus-carpal (group-carpal 4))))
+      (article (vertical 1.0 (summary 0.25 point)
+                             (article 1.0))))
+
+   This is an alist.  The "key" is a symbol that names some action or
+other.  For instance, when displaying the group buffer, the window
+configuration function will use `group' as the key.  A full list of
+possible names is listed below.
+
+   The "value" (i. e., the "split") says how much space each buffer
+should occupy.  To take the `article' split as an example -
+
+     (article (vertical 1.0 (summary 0.25 point)
+                            (article 1.0)))
+
+   This "split" says that the summary buffer should occupy 25% of upper
+half of the screen, and that it is placed over the article buffer.  As
+you may have noticed, 100% + 25% is actually 125% (yup, I saw y'all
+reaching for that calculator there).  However, the special number `1.0'
+is used to signal that this buffer should soak up all the rest of the
+space available after the rest of the buffers have taken whatever they
+need.  There should be only one buffer with the `1.0' size spec per
+split.
+
+   Point will be put in the buffer that has the optional third element
+`point'.
+
+   Here's a more complicated example:
+
+     (article (vertical 1.0 (group 4)
+                            (summary 0.25 point)
+                            (if gnus-carpal (summary-carpal 4))
+                            (article 1.0)))
+
+   If the size spec is an integer instead of a floating point number,
+then that number will be used to say how many lines a buffer should
+occupy, not a percentage.
+
+   If the "split" looks like something that can be `eval'ed (to be
+precise--if the `car' of the split is a function or a subr), this split
+will be `eval'ed.  If the result is non-`nil', it will be used as a
+split.  This means that there will be three buffers if `gnus-carpal' is
+`nil', and four buffers if `gnus-carpal' is non-`nil'.
+
+   Not complicated enough for you?  Well, try this on for size:
+
+     (article (horizontal 1.0
+                  (vertical 0.5
+                      (group 1.0)
+                      (gnus-carpal 4))
+                  (vertical 1.0
+                      (summary 0.25 point)
+                      (summary-carpal 4)
+                      (article 1.0))))
+
+   Whoops.  Two buffers with the mystery 100% tag.  And what's that
+`horizontal' thingie?
+
+   If the first element in one of the split is `horizontal', Gnus will
+split the window horizontally, giving you two windows side-by-side.
+Inside each of these strips you may carry on all you like in the normal
+fashion.  The number following `horizontal' says what percentage of the
+screen is to be given to this strip.
+
+   For each split, there *must* be one element that has the 100% tag.
+The splitting is never accurate, and this buffer will eat any leftover
+lines from the splits.
+
+   To be slightly more formal, here's a definition of what a legal split
+may look like:
+
+     split       = frame | horizontal | vertical | buffer | form
+     frame       = "(frame " size *split ")"
+     horizontal  = "(horizontal " size *split ")"
+     vertical    = "(vertical " size *split ")"
+     buffer      = "(" buffer-name " " size *[ "point" ] ")"
+     size        = number | frame-params
+     buffer-name = group | article | summary ...
+
+   The limitations are that the `frame' split can only appear as the
+top-level split.  FORM should be an Emacs Lisp form that should return
+a valid split.  We see that each split is fully recursive, and may
+contain any number of `vertical' and `horizontal' splits.
+
+   Finding the right sizes can be a bit complicated.  No window may be
+less than `gnus-window-min-height' (default 2) characters high, and all
+windows must be at least `gnus-window-min-width' (default 1) characters
+wide.  Gnus will try to enforce this before applying the splits.  If
+you want to use the normal Emacs window width/height limit, you can
+just set these two variables to `nil'.
+
+   If you're not familiar with Emacs terminology, `horizontal' and
+`vertical' splits may work the opposite way of what you'd expect.
+Windows inside a `horizontal' split are shown side-by-side, and windows
+within a `vertical' split are shown above each other.
+
+   If you want to experiment with window placement, a good tip is to
+call `gnus-configure-frame' directly with a split.  This is the function
+that does all the real work when splitting buffers.  Below is a pretty
+nonsensical configuration with 5 windows; two for the group buffer and
+three for the article buffer.  (I said it was nonsensical.)  If you
+`eval' the statement below, you can get an idea of how that would look
+straight away, without going through the normal Gnus channels.  Play
+with it until you're satisfied, and then use `gnus-add-configuration'
+to add your new creation to the buffer configuration list.
+
+     (gnus-configure-frame
+      '(horizontal 1.0
+         (vertical 10
+           (group 1.0)
+           (article 0.3 point))
+         (vertical 1.0
+           (article 1.0)
+           (horizontal 4
+             (group 1.0)
+             (article 10)))))
+
+   You might want to have several frames as well.  No prob--just use the
+`frame' split:
+
+     (gnus-configure-frame
+      '(frame 1.0
+              (vertical 1.0
+                        (summary 0.25 point)
+                        (article 1.0))
+              (vertical ((height . 5) (width . 15)
+                         (user-position . t)
+                         (left . -1) (top . 1))
+                        (picon 1.0))))
+
+   This split will result in the familiar summary/article window
+configuration in the first (or "main") frame, while a small additional
+frame will be created where picons will be shown.  As you can see,
+instead of the normal `1.0' top-level spec, each additional split
+should have a frame parameter alist as the size spec.  *Note Frame
+Parameters: (elisp)Frame Parameters.
+
+   Here's a list of all possible keys for `gnus-buffer-configuration':
+
+   `group', `summary', `article', `server', `browse', `group-mail',
+`summary-mail', `summary-reply', `info', `summary-faq', `edit-group',
+`edit-server', `reply', `reply-yank', `followup', `followup-yank',
+`edit-score'.
+
+   Since the `gnus-buffer-configuration' variable is so long and
+complicated, there's a function you can use to ease changing the config
+of a single setting: `gnus-add-configuration'.  If, for instance, you
+want to change the `article' setting, you could say:
+
+     (gnus-add-configuration
+      '(article (vertical 1.0
+                    (group 4)
+                    (summary .25 point)
+                    (article 1.0))))
+
+   You'd typically stick these `gnus-add-configuration' calls in your
+`.gnus' file or in some startup hook - they should be run after Gnus
+has been loaded.
+
+
+File: gnus,  Node: Compilation,  Next: Mode Lines,  Prev: Windows Configuration,  Up: Various
+
+Compilation
+===========
+
+   Remember all those line format specification variables?
+`gnus-summary-line-format', `gnus-group-line-format', and so on.  Now,
+Gnus will of course heed whatever these variables are, but,
+unfortunately, changing them will mean a quite significant slow-down.
+(The default values of these variables have byte-compiled functions
+associated with them, while the user-generated versions do not, of
+course.)
+
+   To help with this, you can run `M-x gnus-compile' after you've
+fiddled around with the variables and feel that you're (kind of)
+satisfied.  This will result in the new specs being byte-compiled, and
+you'll get top speed again.
+
+
+File: gnus,  Node: Mode Lines,  Next: Highlighting and Menus,  Prev: Compilation,  Up: Various
+
+Mode Lines
+==========
+
+   `gnus-updated-mode-lines' says what buffers should keep their mode
+lines updated.  It is a list of symbols.  Supported symbols include
+`group', `article', `summary', `server', `browse', and `tree'.  If the
+corresponding symbol is present, Gnus will keep that mode line updated
+with information that may be pertinent.  If this variable is `nil',
+screen refresh may be quicker.
+
+   By default, Gnus displays information on the current article in the
+mode lines of the summary and article buffers.  The information Gnus
+wishes to display (eg. the subject of the article) is often longer than
+the mode lines, and therefore have to be cut off at some point.  The
+`gnus-mode-non-string-length' variable says how long the other elements
+on the line is (i.e., the non-info part).  If you put additional
+elements on the mode line (eg. a clock), you should modify this
+variable:
+
+     (add-hook 'display-time-hook
+               (lambda () (setq gnus-mode-non-string-length
+                                (+ 21
+                                   (if line-number-mode 5 0)
+                                   (if column-number-mode 4 0)
+                                   (length display-time-string)))))
+
+   If this variable is `nil' (which is the default), the mode line
+strings won't be chopped off, and they won't be padded either.
+
+
+File: gnus,  Node: Highlighting and Menus,  Next: Buttons,  Prev: Mode Lines,  Up: Various
+
+Highlighting and Menus
+======================
+
+   The `gnus-visual' variable controls most of the prettifying Gnus
+aspects.  If `nil', Gnus won't attempt to create menus or use fancy
+colors or fonts.  This will also inhibit loading the `gnus-vis.el' file.
+
+   This variable can be a list of visual properties that are enabled.
+The following elements are legal, and are all included by default:
+
+`group-highlight'
+     Do highlights in the group buffer.
+
+`summary-highlight'
+     Do highlights in the summary buffer.
+
+`article-highlight'
+     Do highlights in the article buffer.
+
+`highlight'
+     Turn on highlighting in all buffers.
+
+`group-menu'
+     Create menus in the group buffer.
+
+`summary-menu'
+     Create menus in the summary buffers.
+
+`article-menu'
+     Create menus in the article buffer.
+
+`browse-menu'
+     Create menus in the browse buffer.
+
+`server-menu'
+     Create menus in the server buffer.
+
+`score-menu'
+     Create menus in the score buffers.
+
+`menu'
+     Create menus in all buffers.
+
+   So if you only want highlighting in the article buffer and menus in
+all buffers, you could say something like:
+
+     (setq gnus-visual '(article-highlight menu))
+
+   If you want only highlighting and no menus whatsoever, you'd say:
+
+     (setq gnus-visual '(highlight))
+
+   If `gnus-visual' is `t', highlighting and menus will be used in all
+Gnus buffers.
+
+   Other general variables that influence the look of all buffers
+include:
+
+`gnus-mouse-face'
+     This is the face (i.e., font) used for mouse highlighting in Gnus.
+     No mouse highlights will be done if `gnus-visual' is `nil'.
+
+`gnus-display-type'
+     This variable is symbol indicating the display type Emacs is
+     running under.  The symbol should be one of `color', `grayscale' or
+     `mono'.  If Gnus guesses this display attribute wrongly, either set
+     this variable in your `~/.emacs' or set the resource
+     `Emacs.displayType' in your `~/.Xdefaults'.
+
+`gnus-background-mode'
+     This is a symbol indicating the Emacs background brightness.  The
+     symbol should be one of `light' or `dark'.  If Gnus guesses this
+     frame attribute wrongly, either set this variable in your
+     `~/.emacs' or set the resource `Emacs.backgroundMode' in your
+     `~/.Xdefaults'.  `gnus-display-type'.
+
+   There are hooks associated with the creation of all the different
+menus:
+
+`gnus-article-menu-hook'
+     Hook called after creating the article mode menu.
+
+`gnus-group-menu-hook'
+     Hook called after creating the group mode menu.
+
+`gnus-summary-menu-hook'
+     Hook called after creating the summary mode menu.
+
+`gnus-server-menu-hook'
+     Hook called after creating the server mode menu.
+
+`gnus-browse-menu-hook'
+     Hook called after creating the browse mode menu.
+
+`gnus-score-menu-hook'
+     Hook called after creating the score mode menu.
+
+
+File: gnus,  Node: Buttons,  Next: Daemons,  Prev: Highlighting and Menus,  Up: Various
+
+Buttons
+=======
+
+   Those new-fangled "mouse" contraptions is very popular with the
+young, hep kids who don't want to learn the proper way to do things
+these days.  Why, I remember way back in the summer of '89, when I was
+using Emacs on a Tops 20 system.  Three hundred users on one single
+machine, and every user was running Simula compilers.  Bah!
+
+   Right.
+
+   Well, you can make Gnus display bufferfuls of buttons you can click
+to do anything by setting `gnus-carpal' to `t'.  Pretty simple, really.
+Tell the chiropractor I sent you.
+
+`gnus-carpal-mode-hook'
+     Hook run in all carpal mode buffers.
+
+`gnus-carpal-button-face'
+     Face used on buttons.
+
+`gnus-carpal-header-face'
+     Face used on carpal buffer headers.
+
+`gnus-carpal-group-buffer-buttons'
+     Buttons in the group buffer.
+
+`gnus-carpal-summary-buffer-buttons'
+     Buttons in the summary buffer.
+
+`gnus-carpal-server-buffer-buttons'
+     Buttons in the server buffer.
+
+`gnus-carpal-browse-buffer-buttons'
+     Buttons in the browse buffer.
+
+   All the `buttons' variables are lists.  The elements in these list
+is either a cons cell where the car contains a text to be displayed and
+the cdr contains a function symbol, or a simple string.
+
+
+File: gnus,  Node: Daemons,  Next: NoCeM,  Prev: Buttons,  Up: Various
+
+Daemons
+=======
+
+   Gnus, being larger than any program ever written (allegedly), does
+lots of strange stuff that you may wish to have done while you're not
+present.  For instance, you may want it to check for new mail once in a
+while.  Or you may want it to close down all connections to all servers
+when you leave Emacs idle.  And stuff like that.
+
+   Gnus will let you do stuff like that by defining various "handlers".
+Each handler consists of three elements:  A FUNCTION, a TIME, and an
+IDLE parameter.
+
+   Here's an example of a handler that closes connections when Emacs has
+been idle for thirty minutes:
+
+     (gnus-demon-close-connections nil 30)
+
+   Here's a handler that scans for PGP headers every hour when Emacs is
+idle:
+
+     (gnus-demon-scan-pgp 60 t)
+
+   This TIME parameter and than IDLE parameter works together in a
+strange, but wonderful fashion.  Basically, if IDLE is `nil', then the
+function will be called every TIME minutes.
+
+   If IDLE is `t', then the function will be called after TIME minutes
+only if Emacs is idle.  So if Emacs is never idle, the function will
+never be called.  But once Emacs goes idle, the function will be called
+every TIME minutes.
+
+   If IDLE is a number and TIME is a number, the function will be
+called every TIME minutes only when Emacs has been idle for IDLE
+minutes.
+
+   If IDLE is a number and TIME is `nil', the function will be called
+once every time Emacs has been idle for IDLE minutes.
+
+   And if TIME is a string, it should look like `07:31', and the
+function will then be called once every day somewhere near that time.
+Modified by the IDLE parameter, of course.
+
+   (When I say "minute" here, I really mean `gnus-demon-timestep'
+seconds.  This is `60' by default.  If you change that variable, all
+the timings in the handlers will be affected.)
+
+   To set the whole thing in motion, though, you have to set
+`gnus-use-demon' to `t'.
+
+   So, if you want to add a handler, you could put something like this
+in your `.gnus' file:
+
+     (gnus-demon-add-handler 'gnus-demon-close-connections nil 30)
+
+   Some ready-made functions to do this has been created:
+`gnus-demon-add-nocem', `gnus-demon-add-disconnection', and
+`gnus-demon-add-scanmail'.  Just put those functions in your `.gnus' if
+you want those abilities.
+
+   If you add handlers to `gnus-demon-handlers' directly, you should
+run `gnus-demon-init' to make the changes take hold.  To cancel all
+daemons, you can use the `gnus-demon-cancel' function.
+
+   Note that adding daemons can be pretty naughty if you overdo it.
+Adding functions that scan all news and mail from all servers every two
+seconds is a sure-fire way of getting booted off any respectable
+system.  So behave.
+
+
+File: gnus,  Node: NoCeM,  Next: Picons,  Prev: Daemons,  Up: Various
+
+NoCeM
+=====
+
+   "Spamming" is posting the same article lots and lots of times.
+Spamming is bad.  Spamming is evil.
+
+   Spamming is usually canceled within a day or so by various
+anti-spamming agencies.  These agencies usually also send out "NoCeM"
+messages.  NoCeM is pronounced "no see-'em", and means what the name
+implies--these are messages that make the offending articles, like, go
+away.
+
+   What use are these NoCeM messages if the articles are canceled
+anyway?  Some sites do not honor cancel messages and some sites just
+honor cancels from a select few people.  Then you may wish to make use
+of the NoCeM messages, which are distributed in the `alt.nocem.misc'
+newsgroup.
+
+   Gnus can read and parse the messages in this group automatically, and
+this will make spam disappear.
+
+   There are some variables to customize, of course:
+
+`gnus-use-nocem'
+     Set this variable to `t' to set the ball rolling.  It is `nil' by
+     default.
+
+`gnus-nocem-groups'
+     Gnus will look for NoCeM messages in the groups in this list.  The
+     default is `("alt.nocem.misc" "news.admin.net-abuse.announce")'.
+
+`gnus-nocem-issuers'
+     There are many people issuing NoCeM messages.  This list says what
+     people you want to listen to.  The default is `("Automoose-1"
+     "clewis@ferret.ocunix.on.ca;" "jem@xpat.com;"
+     "red@redpoll.mrfs.oh.us (Richard E. Depew)")'; fine, upstanding
+     citizens all of them.
+
+     Known despammers that you can put in this list include:
+
+    `clewis@ferret.ocunix.on.ca;'
+          Chris Lewis--Major Canadian despammer who has probably
+          canceled more usenet abuse than anybody else.
+
+    `Automoose-1'
+          The CancelMoose[tm] on autopilot.  The CancelMoose[tm] is
+          reputed to be Norwegian, and was the person(s) who invented
+          NoCeM.
+
+    `jem@xpat.com;'
+          Jem--Korean despammer who is getting very busy these days.
+
+    `red@redpoll.mrfs.oh.us (Richard E. Depew)'
+          Richard E. Depew--lone American despammer.  He mostly cancels
+          binary postings to non-binary groups and removes spews
+          (regurgitated articles).
+
+     You do not have to heed NoCeM messages from all these people--just
+     the ones you want to listen to.
+
+`gnus-nocem-directory'
+     This is where Gnus will store its NoCeM cache files.  The default
+     is `~/News/NoCeM/'.
+
+`gnus-nocem-expiry-wait'
+     The number of days before removing old NoCeM entries from the
+     cache.  The default is 15.  If you make it shorter Gnus will be
+     faster, but you might then see old spam.
+
+
+File: gnus,  Node: Picons,  Next: Various Various,  Prev: NoCeM,  Up: Various
+
+Picons
+======
+
+   So...  You want to slow down your news reader even more!  This is a
+good way to do so.  Its also a great way to impress people staring over
+your shoulder as you read news.
+
+* Menu:
+
+* Picon Basics::           What are picons and How do I get them.
+* Picon Requirements::     Don't go further if you aren't using XEmacs.
+* Easy Picons::            Displaying Picons - the easy way.
+* Hard Picons::            The way you should do it.  You'll learn something.
+* Picon Configuration::    Other variables you can trash/tweak/munge/play with.
+
+
+File: gnus,  Node: Picon Basics,  Next: Picon Requirements,  Up: Picons
+
+Picon Basics
+------------
+
+   What are Picons?  To quote directly from the Picons Web site
+(`http://www.cs.indiana.edu/picons/ftp/index.html'):
+
+     "Picons" is short for "personal icons".  They're small,
+     constrained images used to represent users and domains on the net,
+     organized into databases so that the appropriate image for a given
+     e-mail address can be found.  Besides users and domains, there are
+     picon databases for Usenet newsgroups and weather forecasts.  The
+     picons are in either monochrome `XBM' format or color `XPM' and
+     `GIF' formats.
+
+   Please see the above mentioned web site for instructions on obtaining
+and installing the picons databases, or the following ftp site:
+`http://www.cs.indiana.edu/picons/ftp/index.html'.
+
+   Gnus expects picons to be installed into a location pointed to by
+`gnus-picons-database'.
+
+
+File: gnus,  Node: Picon Requirements,  Next: Easy Picons,  Prev: Picon Basics,  Up: Picons
+
+Picon Requirements
+------------------
+
+   To use have Gnus display Picons for you, you must be running XEmacs
+19.13 or greater since all other versions of Emacs aren't yet able to
+display images.
+
+   Additionally, you must have `xpm' support compiled into XEmacs.
+
+   If you want to display faces from `X-Face' headers, you must have
+the `netpbm' utilities installed, or munge the
+`gnus-picons-convert-x-face' variable to use something else.
+
+
+File: gnus,  Node: Easy Picons,  Next: Hard Picons,  Prev: Picon Requirements,  Up: Picons
+
+Easy Picons
+-----------
+
+   To enable displaying picons, simply put the following line in your
+`~/.gnus' file and start Gnus.
+
+     (setq gnus-use-picons t)
+     (add-hook 'gnus-article-display-hook 'gnus-article-display-picons t)
+     (add-hook 'gnus-summary-prepare-hook 'gnus-group-display-picons t)
+     (add-hook 'gnus-article-display-hook 'gnus-picons-article-display-x-face)
+
+
+File: gnus,  Node: Hard Picons,  Next: Picon Configuration,  Prev: Easy Picons,  Up: Picons
+
+Hard Picons
+-----------
+
+   Gnus can display picons for you as you enter and leave groups and
+articles.  It knows how to interact with three sections of the picons
+database.  Namely, it can display the picons newsgroup pictures,
+author's face picture(s), and the authors domain.  To enable this
+feature, you need to first decide where to display them.
+
+`gnus-picons-display-where'
+     Where the picon images should be displayed.  It is `picons' by
+     default (which by default maps to the buffer `*Picons*').  Other
+     valid places could be `article', `summary', or `"*scratch*"' for
+     all I care.  Just make sure that you've made the buffer visible
+     using the standard Gnus window configuration routines - *Note
+     Windows Configuration::.
+
+   Note: If you set `gnus-use-picons' to `t', it will set up your
+window configuration for you to include the `picons' buffer.
+
+   Now that you've made that decision, you need to add the following
+functions to the appropriate hooks so these pictures will get displayed
+at the right time.
+
+`gnus-article-display-picons'
+     Looks up and display the picons for the author and the author's
+     domain in the `gnus-picons-display-where' buffer.  Should be added
+     to the `gnus-article-display-hook'.
+
+`gnus-group-display-picons'
+     Displays picons representing the current group.  This function
+     should be added to the `gnus-summary-prepare-hook' or to the
+     `gnus-article-display-hook' if `gnus-picons-display-where' is set
+     to `article'.
+
+`gnus-picons-article-display-x-face'
+     Decodes and displays the X-Face header if present.  This function
+     should be added to `gnus-article-display-hook'.
+
+   Note:  You must append them to the hook, so make sure to specify 't'
+to the append flag of `add-hook':
+
+     (add-hook 'gnus-article-display-hook 'gnus-article-display-picons t)
+
+
+File: gnus,  Node: Picon Configuration,  Prev: Hard Picons,  Up: Picons
+
+Picon Configuration
+-------------------
+
+   The following variables offer further control over how things are
+done, where things are located, and other useless stuff you really
+don't need to worry about.
+
+`gnus-picons-database'
+     The location of the picons database.  Should point to a directory
+     containing the `news', `domains', `users' (and so on)
+     subdirectories.  Defaults to `/usr/local/faces'.
+
+`gnus-picons-news-directory'
+     Sub-directory of the faces database containing the icons for
+     newsgroups.
+
+`gnus-picons-user-directories'
+     List of subdirectories to search in `gnus-picons-database' for user
+     faces.  Defaults to `("local" "users" "usenix" "misc/MISC")'.
+
+`gnus-picons-domain-directories'
+     List of subdirectories to search in `gnus-picons-database' for
+     domain name faces.  Defaults to `("domains")'.  Some people may
+     want to add `unknown' to this list.
+
+`gnus-picons-convert-x-face'
+     The command to use to convert the `X-Face' header to an X bitmap
+     (`xbm').  Defaults to `(format "{ echo '/* Width=48, Height=48
+     */'; uncompface; } | icontopbm | pbmtoxbm > %s"
+     gnus-picons-x-face-file-name)'
+
+`gnus-picons-x-face-file-name'
+     Names a temporary file to store the `X-Face' bitmap in.  Defaults
+     to `(format "/tmp/picon-xface.%s.xbm" (user-login-name))'.
+
+`gnus-picons-buffer'
+     The name of the buffer that `picons' points to.  Defaults to
+     `*Icon Buffer*'.
+
+
+File: gnus,  Node: Various Various,  Prev: Picons,  Up: Various
+
+Various Various
+===============
+
+`gnus-verbose'
+     This variable is an integer between zero and ten.  The higher the
+     value, the more messages will be displayed.  If this variable is
+     zero, Gnus will never flash any messages, if it is seven (which is
+     the default), most important messages will be shown, and if it is
+     ten, Gnus won't ever shut up, but will flash so many messages it
+     will make your head swim.
+
+`gnus-verbose-backends'
+     This variable works the same way as `gnus-verbose', but it applies
+     to the Gnus backends instead of Gnus proper.
+
+`nnheader-max-head-length'
+     When the backends read straight heads of articles, they all try to
+     read as little as possible.  This variable (default `4096')
+     specifies the absolute max length the backends will try to read
+     before giving up on finding a separator line between the head and
+     the body.  If this variable is `nil', there is no upper read
+     bound.  If it is `t', the backends won't try to read the articles
+     piece by piece, but read the entire articles.  This makes sense
+     with some versions of `ange-ftp'.
+
+`nnheader-file-name-translation-alist'
+     This is an alist that says how to translate characters in file
+     names.  For instance, if `:' is illegal as a file character in
+     file names on your system (you OS/2 user you), you could say
+     something like:
+
+          (setq nnheader-file-name-translation-alist
+                '((?: . ?_)))
+
+     In fact, this is the default value for this variable on OS/2 and MS
+     Windows (phooey) systems.
+
+`gnus-hidden-properties'
+     This is a list of properties to use to hide "invisible" text.  It
+     is `(invisible t intangible t)' by default on most systems, which
+     makes invisible text invisible and intangible.
+
+`gnus-parse-headers-hook'
+     A hook called before parsing headers.  It can be used, for
+     instance, to gather statistics on the headers fetched, or perhaps
+     you'd like to prune some headers.  I don't see why you'd want
+     that, though.
+
+
+File: gnus,  Node: The End,  Next: Appendices,  Prev: Various,  Up: Top
+
+The End
+*******
+
+   Well, that's the manual--you can get on with your life now.  Keep in
+touch.  Say hello to your cats from me.
+
+   My *ghod*--I just can't stand goodbyes.  Sniffle.
+
+   Ol' Charles Reznikoff said it pretty well, so I leave the floor to
+him:
+
+     *Te Deum*
+
+     Not because of victories
+     I sing,
+     having none,
+     but for the common sunshine,
+     the breeze,
+     the largess of the spring.
+
+     Not for victory
+     but for the day's work done
+     as well as I was able;
+     not for a seat upon the dais
+     but at the common table.
+
+
+File: gnus,  Node: Appendices,  Next: Index,  Prev: The End,  Up: Top
+
+Appendices
+**********
+
+* Menu:
+
+* History::                        How Gnus got where it is today.
+* Terminology::                    We use really difficult, like, words here.
+* Customization::                  Tailoring Gnus to your needs.
+* Troubleshooting::                What you might try if things do not work.
+* A Programmers Guide to Gnus::    Rilly, rilly technical stuff.
+* Emacs for Heathens::             A short introduction to Emacsian terms.
+* Frequently Asked Questions::     A question-and-answer session.
+
+
+File: gnus,  Node: History,  Next: Terminology,  Up: Appendices
+
+History
+=======
+
+   GNUS was written by Masanobu UMEDA.  When autumn crept up in '94,
+Lars Magne Ingebrigtsen grew bored and decided to rewrite Gnus.
+
+   If you want to investigate the person responsible for this outrage,
+you can point your (feh!) web browser to
+`http://www.ifi.uio.no/~larsi/'.  This is also the primary distribution
+point for the new and spiffy versions of Gnus, and is known as The Site
+That Destroys Newsrcs And Drives People Mad.
+
+   During the first extended alpha period of development, the new Gnus
+was called "(ding) Gnus".  "(ding)", is, of course, short for "ding is
+not Gnus", which is a total and utter lie, but who cares?  (Besides,
+the "Gnus" in this abbreviation should probably be pronounced "news" as
+UMEDA intended, which makes it a more appropriate name, don't you
+think?)
+
+   In any case, after spending all that energy on coming up with a new
+and spunky name, we decided that the name was *too* spunky, so we
+renamed it back again to "Gnus".  But in mixed case.  "Gnus" vs.
+"GNUS".  New vs. old.
+
+   The first "proper" release of Gnus 5 was done in November 1995 when
+it was included in the Emacs 19.30 distribution.
+
+   In May 1996 the next Gnus generation (aka.  "September Gnus") was
+released under the name "Gnus 5.2".
+
+* Menu:
+
+* Why?::                What's the point of Gnus?
+* Compatibility::       Just how compatible is Gnus with GNUS?
+* Conformity::          Gnus tries to conform to all standards.
+* Emacsen::             Gnus can be run on a few modern Emacsen.
+* Contributors::        Oodles of people.
+* New Features::        Pointers to some of the new stuff in Gnus.
+* Newest Features::     Features so new that they haven't been written yet.
+
+
+File: gnus,  Node: Why?,  Next: Compatibility,  Up: History
+
+Why?
+----
+
+   What's the point of Gnus?
+
+   I want to provide a "rad", "happening", "way cool" and "hep"
+newsreader, that lets you do anything you can think of.  That was my
+original motivation, but while working on Gnus, it has become clear to
+me that this generation of newsreaders really belong in the stone age.
+Newsreaders haven't developed much since the infancy of the net.  If the
+volume continues to rise with the current rate of increase, all current
+newsreaders will be pretty much useless.  How do you deal with
+newsgroups that have thousands of new articles each day?  How do you
+keep track of millions of people who post?
+
+   Gnus offers no real solutions to these questions, but I would very
+much like to see Gnus being used as a testing ground for new methods of
+reading and fetching news.  Expanding on UMEDA-san's wise decision to
+separate the newsreader from the backends, Gnus now offers a simple
+interface for anybody who wants to write new backends for fetching mail
+and news from different sources.  I have added hooks for customizations
+everywhere I could imagine useful.  By doing so, I'm inviting every one
+of you to explore and invent.
+
+   May Gnus never be complete. `C-u 100 M-x hail-emacs'.
+
+
+File: gnus,  Node: Compatibility,  Next: Conformity,  Prev: Why?,  Up: History
+
+Compatibility
+-------------
+
+   Gnus was designed to be fully compatible with GNUS.  Almost all key
+bindings have been kept.  More key bindings have been added, of course,
+but only in one or two obscure cases have old bindings been changed.
+
+   Our motto is:
+                         In a cloud bones of steel.
+
+
+   All commands have kept their names.  Some internal functions have
+changed their names.
+
+   The `gnus-uu' package has changed drastically. *note Decoding
+Articles::..
+
+   One major compatibility question is the presence of several summary
+buffers.  All variables that are relevant while reading a group are
+buffer-local to the summary buffer they belong in.  Although many
+important variables have their values copied into their global
+counterparts whenever a command is executed in the summary buffer, this
+change might lead to incorrect values being used unless you are careful.
+
+   All code that relies on knowledge of GNUS internals will probably
+fail.  To take two examples: Sorting `gnus-newsrc-alist' (or changing
+it in any way, as a matter of fact) is strictly verboten.  Gnus
+maintains a hash table that points to the entries in this alist (which
+speeds up many functions), and changing the alist directly will lead to
+peculiar results.
+
+   Old hilit19 code does not work at all.  In fact, you should probably
+remove all hilit code from all Gnus hooks (`gnus-group-prepare-hook'
+and `gnus-summary-prepare-hook').  Gnus provides various integrated
+functions for highlighting.  These are faster and more accurate.  To
+make life easier for everybody, Gnus will by default remove all hilit
+calls from all hilit hooks.  Uncleanliness!  Away!
+
+   Packages like `expire-kill' will no longer work.  As a matter of
+fact, you should probably remove all old GNUS packages (and other code)
+when you start using Gnus.  More likely than not, Gnus already does
+what you have written code to make GNUS do.  (Snicker.)
+
+   Even though old methods of doing things are still supported, only the
+new methods are documented in this manual.  If you detect a new method
+of doing something while reading this manual, that does not mean you
+have to stop doing it the old way.
+
+   Gnus understands all GNUS startup files.
+
+   Overall, a casual user who hasn't written much code that depends on
+GNUS internals should suffer no problems.  If problems occur, please
+let me know by issuing that magic command `M-x gnus-bug'.
+
+
+File: gnus,  Node: Conformity,  Next: Emacsen,  Prev: Compatibility,  Up: History
+
+Conformity
+----------
+
+   No rebels without a clue here, ma'am.  We conform to all standards
+known to (wo)man.  Except for those standards and/or conventions we
+disagree with, of course.
+
+*RFC 822*
+     There are no known breaches of this standard.
+
+*RFC 1036*
+     There are no known breaches of this standard, either.
+
+*Usenet Seal of Approval*
+     Gnus hasn't been formally through the Seal process, but I have read
+     through the Seal text and I think Gnus would pass.
+
+*Son-of-RFC 1036*
+     We do have some breaches to this one.
+
+    *MIME*
+          Gnus does no MIME handling, and this standard-to-be seems to
+          think that MIME is the bees' knees, so we have major breakage
+          here.
+
+    *X-Newsreader*
+          This is considered to be a "vanity header", while I consider
+          it to be consumer information.  After seeing so many badly
+          formatted articles coming from `tin' and `Netscape' I know
+          not to use either of those for posting articles.  I would not
+          have known that if it wasn't for the `X-Newsreader' header.
+
+    *References*
+          Gnus does line breaking on this header.  I infer from RFC1036
+          that being conservative in what you output is not creating
+          5000-character lines, so it seems like a good idea to me.
+          However, this standard-to-be says that whitespace in the
+          `References' header is to be preserved, so...  It doesn't
+          matter one way or the other to Gnus, so if somebody tells me
+          what The Way is, I'll change it.  Or not.
+
+   If you ever notice Gnus acting non-compliantly with regards to the
+texts mentioned above, don't hesitate to drop a note to Gnus Towers and
+let us know.
+
+
+File: gnus,  Node: Emacsen,  Next: Contributors,  Prev: Conformity,  Up: History
+
+Emacsen
+-------
+
+   Gnus should work on :
+
+   * Emacs 19.30 and up.
+
+   * XEmacs 19.13 and up.
+
+   * Mule versions based on Emacs 19.30 and up.
+
+   Gnus will absolutely not work on any Emacsen older than that.  Not
+reliably, at least.
+
+   There are some vague differences between Gnus on the various
+platforms:
+
+   * The mouse-face on Gnus lines under Emacs and Mule is delimited to
+     certain parts of the lines while they cover the entire line under
+     XEmacs.
+
+   * The same with current-article marking--XEmacs puts an underline
+     under the entire summary line while Emacs and Mule are nicer and
+     kinder.
+
+   * XEmacs features more graphics--a logo and a toolbar.
+
+   * Citation highlighting us better under Emacs and Mule than under
+     XEmacs.
+
+   * Emacs 19.26-19.28 have tangible hidden headers, which can be a bit
+     confusing.
+
+
+File: gnus,  Node: Contributors,  Next: New Features,  Prev: Emacsen,  Up: History
+
+Contributors
+------------
+
+   The new Gnus version couldn't have been done without the help of all
+the people on the (ding) mailing list.  Every day for over a year I have
+gotten billions of nice bug reports from them, filling me with joy,
+every single one of them.  Smooches.  The people on the list have been
+tried beyond endurance, what with my "oh, that's a neat idea <type
+type>, yup, I'll release it right away <ship off> no wait, that doesn't
+work at all <type type>, yup, I'll ship that one off right away <ship
+off> no, wait, that absolutely does not work" policy for releases.
+Micro$oft--bah.  Amateurs.  I'm *much* worse.  (Or is that "worser"?
+"much worser"?  "worsest"?)
+
+   I would like to take this opportunity to thank the Academy for...
+oops, wrong show.
+
+   * Masanobu UMEDA The writer of the original GNUS.
+
+   * Per Abrahamsen Custom, scoring, highlighting and SOUP code (as
+     well as numerous other things).
+
+   * Luis Fernandes Design and graphics.
+
+   * Wes Hardaker `gnus-picon.el' and the manual section on "picons"
+     (*note Picons::.).
+
+   * Brad Miller `gnus-gl.el' and the GroupLens manual section (*note
+     GroupLens::.).
+
+   * Sudish Joseph Innumerable bug fixes.
+
+   * Ilja Weis `gnus-topic.el'.
+
+   * Steven L. Baur Lots and lots of bugs detections and fixes.
+
+   * Vladimir Alexiev The refcard and reference booklets.
+
+   * Felix Lee & JWZ I stole some pieces from the XGnus distribution by
+     Felix Lee and JWZ.
+
+   * Scott Byer `nnfolder.el' enhancements & rewrite.
+
+   * Peter Mutsaers Orphan article scoring code.
+
+   * Ken Raeburn POP mail support.
+
+   * Hallvard B Furuseth Various bits and pieces, especially dealing
+     with .newsrc files.
+
+   * Brian Edmonds `gnus-bbdb.el'.
+
+   * Ricardo Nassif and Mark Borges Proof-reading.
+
+   * Kevin Davidson Came up with the name "ding", so blame him.
+
+   Peter Arius, Stainless Steel Rat, Ulrik Dickow, Jack Vinson, Daniel
+Quinlan, Frank D. Cringle, Geoffrey T. Dairiki, Fabrice Popineau and
+Andrew Eskilsson have all contributed code and suggestions.
+
+
+File: gnus,  Node: New Features,  Next: Newest Features,  Prev: Contributors,  Up: History
+
+New Features
+------------
+
+   * The look of all buffers can be changed by setting format-like
+     variables (*note Group Buffer Format::. and *note Summary Buffer
+     Format::.).
+
+   * Local spool and several NNTP servers can be used at once (*note
+     Select Methods::.).
+
+   * You can combine groups into virtual groups (*note Virtual
+     Groups::.).
+
+   * You can read a number of different mail formats (*note Getting
+     Mail::.).  All the mail backends implement a convenient mail
+     expiry scheme (*note Expiring Mail::.).
+
+   * Gnus can use various strategies for gathering threads that have
+     lost their roots (thereby gathering loose sub-threads into one
+     thread) or it can go back and retrieve enough headers to build a
+     complete thread (*note Customizing Threading::.).
+
+   * Killed groups can be displayed in the group buffer, and you can
+     read them as well (*note Listing Groups::.).
+
+   * Gnus can do partial group updates--you do not have to retrieve the
+     entire active file just to check for new articles in a few groups
+     (*note The Active File::.).
+
+   * Gnus implements a sliding scale of subscribedness to groups (*note
+     Group Levels::.).
+
+   * You can score articles according to any number of criteria (*note
+     Scoring::.).  You can even get Gnus to find out how to score
+     articles for you (*note Adaptive Scoring::.).
+
+   * Gnus maintains a dribble buffer that is auto-saved the normal Emacs
+     manner, so it should be difficult to lose much data on what you
+     have read if your machine should go down (*note Auto Save::.).
+
+   * Gnus now has its own startup file (`.gnus') to avoid cluttering up
+     the `.emacs' file.
+
+   * You can set the process mark on both groups and articles and
+     perform operations on all the marked items (*note
+     Process/Prefix::.).
+
+   * You can grep through a subset of groups and create a group from the
+     results (*note Kibozed Groups::.).
+
+   * You can list subsets of groups according to, well, anything (*note
+     Listing Groups::.).
+
+   * You can browse foreign servers and subscribe to groups from those
+     servers (*note Browse Foreign Server::.).
+
+   * Gnus can fetch articles asynchronously on a second connection to
+     the server (*note Asynchronous Fetching::.).
+
+   * You can cache articles locally (*note Article Caching::.).
+
+   * The uudecode functions have been expanded and generalized (*note
+     Decoding Articles::.).
+
+   * You can still post uuencoded articles, which was a little-known
+     feature of GNUS' past (*note Uuencoding and Posting::.).
+
+   * Fetching parents (and other articles) now actually works without
+     glitches (*note Finding the Parent::.).
+
+   * Gnus can fetch FAQs and group descriptions (*note Group
+     Information::.).
+
+   * Digests (and other files) can be used as the basis for groups
+     (*note Document Groups::.).
+
+   * Articles can be highlighted and customized (*note Customizing
+     Articles::.).
+
+   * URLs and other external references can be buttonized (*note
+     Article Buttons::.).
+
+   * You can do lots of strange stuff with the Gnus window & frame
+     configuration (*note Windows Configuration::.).
+
+   * You can click on buttons instead of using the keyboard (*note
+     Buttons::.).
+
+   * Gnus can use NoCeM files to weed out spam (*note NoCeM::.).
+
+   This is, of course, just a *short* overview of the *most* important
+new features.  No, really.  There are tons more.  Yes, we have feeping
+creaturism in full effect, but nothing too gratuitous, I would hope.
+
+
+File: gnus,  Node: Newest Features,  Prev: New Features,  Up: History
+
+Newest Features
+---------------
+
+   Also known as the "todo list".  Sure to be implemented before the
+next millennium.
+
+   Be afraid.  Be very afraid.
+
+   * Native MIME support is something that should be done.
+
+   * A better and simpler method for specifying mail composing methods.
+
+   * Allow posting through mail-to-news gateways.
+
+   * Really do unbinhexing.
+
+   And much, much, much more.  There is more to come than has already
+been implemented.  (But that's always true, isn't it?)
+
+   `<URL:http://www.ifi.uio.no/~larsi/sgnus/todo>' is where the actual
+up-to-the-second todo list is located, so if you're really curious, you
+could point your Web browser over that-a-way.
+

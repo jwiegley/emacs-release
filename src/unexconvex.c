@@ -1,6 +1,4 @@
 /* Modified version of unexec for convex machines.
-   Copyright (C) 1985, 1986, 1988 Free Software Foundation, Inc.
-
    Note that the GNU project considers support for the peculiarities
    of the Convex operating system a peripheral activity which should
    not be allowed to divert effort from development of the GNU system.
@@ -9,26 +7,27 @@
    think about it, or about whether other Emacs maintenance might
    break it.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+   Copyright (C) 1985, 1986, 1988 Free Software Foundation, Inc.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This file is part of GNU Emacs.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+GNU Emacs is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
-In other words, you are welcome to use, share and improve this program.
-You are forbidden to forbid anyone else to use, share and improve
-what you give them.   Help stamp out software-hoarding!  */
+GNU Emacs is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU Emacs; see the file COPYING.  If not, write to
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
 
 
-/* modifyed for C-1 arch by jthomp@convex 871103 */
+/* modified for C-1 arch by jthomp@convex 871103 */
 /* Corrected to support convex SOFF object file formats and thread specific
  * regions.  streepy@convex 890302
 */
@@ -165,7 +164,7 @@ pointer looks like an int) but not on all machines.
 
 */
 
-#include "config.h"
+#include <config.h>
 #define PERROR(file) report_error (file, new)
 
 #include <a.out.h>
@@ -440,7 +439,7 @@ make_hdr (new, a_out, data_start, bss_start, entry_address, a_name, new_name)
 
     for( scns = 0; scns < f_hdr.h_nscns; scns++ ) {
 
-	/* This is a cheesey little loop to write out the section headers
+	/* This is a cheesy little loop to write out the section headers
 	 * in order of increasing virtual address. Dull but effective.
 	 */
 
@@ -563,7 +562,7 @@ copy_sym (new, a_out, a_name, new_name)
 /* ****************************************************************
  * mark_x
  *
- * After succesfully building the new a.out, mark it executable
+ * After successfully building the new a.out, mark it executable
  */
 static
 mark_x (name)

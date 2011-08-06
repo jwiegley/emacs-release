@@ -1,1173 +1,1143 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.49 from the
+This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
 input file emacs.texi.
 
-   This file documents the GNU Emacs editor.
-
-   Copyright (C) 1985, 1986, 1988, 1992 Richard M. Stallman.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
-
-   Permission is granted to copy and distribute modified versions of
-this manual under the conditions for verbatim copying, provided also
-that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
-General Public License" are included exactly as in the original, and
-provided that the entire resulting derived work is distributed under the
-terms of a permission notice identical to this one.
-
-   Permission is granted to copy and distribute translations of this
-manual into another language, under the above conditions for modified
-versions, except that the sections entitled "The GNU Manifesto",
-"Distribution" and "GNU General Public License" may be included in a
-translation approved by the author instead of in the original English.
-
 
-File: emacs,  Node: Dissociated Press,  Next: Amusements,  Prev: Hardcopy,  Up: Top
+File: emacs,  Node: TeX Mode,  Next: Nroff Mode,  Prev: Outline Mode,  Up: Text
 
-Dissociated Press
-=================
+TeX Mode
+========
 
-   `M-x dissociated-press' is a command for scrambling a file of text
-either word by word or character by character.  Starting from a buffer
-of straight English, it produces extremely amusing output.  The input
-comes from the current Emacs buffer.  Dissociated Press writes its
-output in a buffer named `*Dissociation*', and redisplays that buffer
-after every couple of lines (approximately) to facilitate reading it.
+   TeX is a powerful text formatter written by Donald Knuth; it is also
+free, like GNU Emacs.  LaTeX is a simplified input format for TeX,
+implemented by TeX macros; it comes with TeX.  SliTeX is a special form
+of LaTeX.
 
-   `dissociated-press' asks every so often whether to continue
-operating.  Answer `n' to stop it.  You can also stop at any time by
-typing `C-g'.  The dissociation output remains in the `*Dissociation*'
-buffer for you to copy elsewhere if you wish.
+   Emacs has a special TeX mode for editing TeX input files.  It
+provides facilities for checking the balance of delimiters and for
+invoking TeX on all or part of the file.
 
-   Dissociated Press operates by jumping at random from one point in the
-buffer to another.  In order to produce plausible output rather than
-gibberish, it insists on a certain amount of overlap between the end of
-one run of consecutive words or characters and the start of the next. 
-That is, if it has just printed out `president' and then decides to
-jump to a different point in the file, it might spot the `ent' in
-`pentagon' and continue from there, producing `presidentagon'.  Long
-sample texts produce the best results.
+   TeX mode has three variants, Plain TeX mode, LaTeX mode, and SliTeX
+mode (these three distinct major modes differ only slightly).  They are
+designed for editing the three different formats.  The command `M-x
+tex-mode' looks at the contents of the buffer to determine whether the
+contents appear to be either LaTeX input or SliTeX input; if so, it
+selects the appropriate mode.  If the file contents do not appear to be
+LaTeX or SliTeX, it selects Plain TeX mode.  If the contents are
+insufficient to determine this, the variable `tex-default-mode'
+controls which mode is used.
 
-   A positive argument to `M-x dissociated-press' tells it to operate
-character by character, and specifies the number of overlap characters.
- A negative argument tells it to operate word by word and specifies the
-number of overlap words.  In this mode, whole words are treated as the
-elements to be permuted, rather than characters.  No argument is
-equivalent to an argument of two.  For your againformation, the output
-goes only into the buffer `*Dissociation*'.  The buffer you start with
-is not changed.
-
-   Dissociated Press produces nearly the same results as a Markov chain
-based on a frequency table constructed from the sample text.  It is,
-however, an independent, ignoriginal invention.  Dissociated Press
-techniquitously copies several consecutive characters from the sample
-between random choices, whereas a Markov chain would choose randomly for
-each word or character.  This makes for more plausible sounding results,
-and runs faster.
-
-   It is a mustatement that too much use of Dissociated Press can be a
-developediment to your real work.  Sometimes to the point of outragedy.
-And keep dissociwords out of your documentation, if you want it to be
-well userenced and properbose.  Have fun.  Your buggestions are welcome.
-
-
-File: emacs,  Node: Amusements,  Next: Emulation,  Prev: Dissociated Press,  Up: Top
-
-Other Amusements
-================
-
-   If you are a little bit bored, you can try `M-x hanoi'.  If you are
-considerably bored, give it a numeric argument.  If you are very very
-bored, try an argument of 9.  Sit back and watch.
-
-   When you are frustrated, try the famous Eliza program.  Just do `M-x
-doctor'.  End each input by typing `RET' twice.
-
-   When you are feeling strange, type `M-x yow'.
-
-
-File: emacs,  Node: Emulation,  Next: Customization,  Prev: Amusements,  Up: Top
-
-Emulation
-=========
-
-   GNU Emacs can be programmed to emulate (more or less) most other
-editors.  Standard facilities can emulate these:
-
-EDT (DEC VMS editor)
-     Turn on EDT emulation with `M-x edt-emulation-on'.  `M-x
-     edt-emulation-off' restores normal Emacs command bindings.
-
-     Most of the EDT emulation commands are keypad keys, and most
-     standard Emacs key bindings are still available.  The EDT
-     emulation rebindings are done in the global keymap, so there is no
-     problem switching buffers or major modes while in EDT emulation.
-
-Gosling Emacs
-     Turn on emulation of Gosling Emacs (aka Unipress Emacs) with `M-x
-     set-gosmacs-bindings'.  This redefines many keys, mostly on the
-     `C-x' and `ESC' prefixes, to work as they do in Gosmacs. `M-x
-     set-gnu-bindings' returns to normal GNU Emacs by rebinding the
-     same keys to the definitions they had at the time `M-x
-     set-gosmacs-bindings' was done.
-
-     It is also possible to run Mocklisp code written for Gosling Emacs.
-     *Note Mocklisp::.
-
-vi (Berkeley Unix editor)
-     Turn on vi emulation with `M-x vi-mode'.  This is a major mode
-     that replaces the previously established major mode.  All of the
-     vi commands that, in real vi, enter "input" mode are programmed in
-     the Emacs emulator to return to the previous major mode.  Thus,
-     ordinary Emacs serves as vi's "input" mode.
-
-     Because vi emulation works through major modes, it does not work
-     to switch buffers during emulation.  Return to normal Emacs first.
-
-     If you plan to use vi emulation much, you probably want to bind a
-     key to the `vi-mode' command.
-
-vi (alternate emulator)
-     Another vi emulator said to resemble real vi more thoroughly is
-     invoked by `M-x vip-mode'.  "Input" mode in this emulator is
-     changed from ordinary Emacs so you can use ESC to go back to
-     emulated vi command mode.  To get from emulated vi command mode
-     back to ordinary Emacs, type `C-z'.
-
-     This emulation does not work through major modes, and it is
-     possible to switch buffers in various ways within the emulator. 
-     It is not so necessary to assign a key to the command `vip-mode' as
-     it is with `vi-mode' because terminating insert mode does not use
-     it.
-
-     For full information, see the long comment at the beginning of the
-     source file, which is `lisp/vip.el' in the Emacs distribution.
-
-   I am interested in hearing which vi emulator users prefer, as well
-as in receiving more complete user documentation for either or both
-emulators. Warning: loading both at once may cause name conficts; no
-one has checked.
-
-
-File: emacs,  Node: Customization,  Next: Quitting,  Prev: Emulation,  Up: Top
-
-Customization
-*************
-
-   This chapter talks about various topics relevant to adapting the
-behavior of Emacs in minor ways.
-
-   All kinds of customization affect only the particular Emacs job that
-you do them in.  They are completely lost when you kill the Emacs job,
-and have no effect on other Emacs jobs you may run at the same time or
-later.  The only way an Emacs job can affect anything outside of it is
-by writing a file; in particular, the only way to make a customization
-`permanent' is to put something in your `.emacs' file or other
-appropriate file to do the customization in each session.  *Note Init
-File::.
+   When `M-x tex-mode' does not guess right, you can use the commands
+`M-x plain-tex-mode', `M-x latex-mode', and `M-x slitex-mode' to select
+explicitly the particular variants of TeX mode.
 
 * Menu:
 
-* Minor Modes::     Each minor mode is one feature you can turn on
-                     independently of any others.
-* Variables::       Many Emacs commands examine Emacs variables
-                     to decide what to do; by setting variables,
-                     you can control their functioning.
-* Keyboard Macros:: A keyboard macro records a sequence of keystrokes
-                     to be replayed with a single command.
-* Key Bindings::    The keymaps say what command each key runs.
-                     By changing them, you can "redefine keys".
-* Syntax::          The syntax table controls how words and expressions
-                     are parsed.
-* Init File::       How to write common customizations in the `.emacs' file.
+* Editing: TeX Editing.   Special commands for editing in TeX mode.
+* LaTeX: LaTeX Editing.   Additional commands for LaTeX input files.
+* Printing: TeX Print.    Commands for printing part of a file with TeX.
+* Getting: TeX Distrib.   Getting the latest Unix TeX distribution.
 
 
-File: emacs,  Node: Minor Modes,  Next: Variables,  Prev: Customization,  Up: Customization
+File: emacs,  Node: TeX Editing,  Next: LaTeX Editing,  Up: TeX Mode
 
-Minor Modes
-===========
+TeX Editing Commands
+--------------------
 
-   Minor modes are options which you can use or not.  For example, Auto
-Fill mode is a minor mode in which SPC breaks lines between words as you
-type.  All the minor modes are independent of each other and of the
-selected major mode.  Most minor modes say in the mode line when they
-are on; for example, `Fill' in the mode line means that Auto Fill mode
-is on.
-
-   Append `-mode' to the name of a minor mode to get the name of a
-command function that turns the mode on or off.  Thus, the command to
-enable or disable Auto Fill mode is called `M-x auto-fill-mode'.  These
-commands are usually invoked with `M-x', but you can bind keys to them
-if you wish.  With no argument, the function turns the mode on if it was
-off and off if it was on.  This is known as "toggling".  A positive
-argument always turns the mode on, and an explicit zero argument or a
-negative argument always turns it off.
-
-   Auto Fill mode allows you to enter filled text without breaking lines
-explicitly.  Emacs inserts newlines as necessary to prevent lines from
-becoming too long.  *Note Filling::.
-
-   Overwrite mode causes ordinary printing characters to replace
-existing text instead of shoving it over.  For example, if the point is
-in front of the `B' in `FOOBAR', then in Overwrite mode typing a `G'
-changes it to `FOOGAR', instead of making it `FOOGBAR' as usual.
-
-   Abbrev mode allows you to define abbreviations that automatically
-expand as you type them.  For example, `amd' might expand to `abbrev
-mode'.  *Note Abbrevs::, for full information.
-
-
-File: emacs,  Node: Variables,  Next: Keyboard Macros,  Prev: Minor Modes,  Up: Customization
-
-Variables
-=========
-
-   A "variable" is a Lisp symbol which has a value.  The symbol's name
-is also called the name of the variable.  Variable names can contain any
-characters, but conventionally they are chosen to be words separated by
-hyphens.  A variable can have a documentation string which describes
-what kind of value it should have and how the value will be used.
-
-   Lisp allows any variable to have any kind of value, but most
-variables that Emacs uses require a value of a certain type.  Often the
-value should always be a string, or should always be a number. 
-Sometimes we say that a certain feature is turned on if a variable is
-"non-`nil'," meaning that if the variable's value is `nil', the feature
-is off, but the feature is on for any other value.  The conventional
-value to use to turn on the feature--since you have to pick one
-particular value when you set the variable--is `t'.
-
-   Emacs uses many Lisp variables for internal recordkeeping, as any
-Lisp program must, but the most interesting variables for you are the
-ones that exist for the sake of customization.  Emacs does not
-(usually) change the values of these variables; instead, you set the
-values, and thereby alter and control the behavior of certain Emacs
-commands.  These variables are called "options".  Most options are
-documented in this manual, and appear in the Variable Index (*note
-Variable Index::.).
-
-   One example of a variable which is an option is `fill-column', which
-specifies the position of the right margin (as a number of characters
-from the left margin) to be used by the fill commands (*note
-Filling::.).
-
-* Menu:
-
-* Examining::           Examining or setting one variable's value.
-* Edit Options::        Examining or editing list of all variables' values.
-* Locals::              Per-buffer values of variables.
-* File Variables::      How files can specify variable values.
-
-
-File: emacs,  Node: Examining,  Next: Edit Options,  Prev: Variables,  Up: Variables
-
-Examining and Setting Variables
--------------------------------
-
-`C-h v'
-`M-x describe-variable'
-     Print the value and documentation of a variable.
-
-`M-x set-variable'
-     Change the value of a variable.
-
-   To examine the value of a single variable, type `C-h v'
-(`describe-variable'), which reads a variable name using the
-minibuffer, with completion.  It prints both the value and the
-documentation of the variable.
-
-     C-h v fill-column RET
-
-prints something like
-     fill-column's value is 72
-     
-     Documentation:
-     *Column beyond which automatic line-wrapping should happen.
-     Automatically becomes local when set in any fashion.
-
-The star at the beginning of the documentation indicates that this
-variable is an option.  `C-h v' is not restricted to options; it allows
-any variable name.
-
-   If you know which option you want to set, you can set it using `M-x
-set-variable'.  This reads the variable name with the minibuffer (with
-completion), and then reads a Lisp expression for the new value using
-the minibuffer a second time.  For example,
-
-     M-x set-variable RET fill-column RET 72 RET
-
-sets `fill-column' to 72, like executing the Lisp expression
-
-     (setq fill-column 72)
-
-   Setting variables in this way, like all means of customizing Emacs
-except where explicitly stated, affects only the current Emacs session.
-
-
-File: emacs,  Node: Edit Options,  Next: Locals,  Prev: Examining,  Up: Variables
-
-Editing Variable Values
------------------------
-
-`M-x list-options'
-     Display a buffer listing names, values and documentation of all
-     options.
-
-`M-x edit-options'
-     Change option values by editing a list of options.
-
-   `M-x list-options' displays a list of all Emacs option variables, in
-an Emacs buffer named `*List Options*'.  Each option is shown with its
-documentation and its current value.  Here is what a portion of it might
-look like:
-
-     ;; exec-path:
-     ("." "/usr/local/bin" "/usr/ucb" "/bin" "/usr/bin" "/u2/emacs/etc")
-     *List of directories to search programs to run in subprocesses.
-     Each element is a string (directory name)
-     or nil (try the default directory).
-     ;;
-     ;; fill-column:
-     72
-     *Column beyond which automatic line-wrapping should happen.
-     Automatically becomes local when set in any fashion.
-     ;;
-
-   `M-x edit-options' goes one step further and immediately selects the
-`*List Options*' buffer; this buffer uses the major mode Options mode,
-which provides commands that allow you to point at an option and change
-its value:
-
-`s'
-     Set the variable point is in or near to a new value read using the
-     minibuffer.
-
-`x'
-     Toggle the variable point is in or near: if the value was `nil',
-     it becomes `t'; otherwise it becomes `nil'.
-
-`1'
-     Set the variable point is in or near to `t'.
-
-`0'
-     Set the variable point is in or near to `nil'.
-
-`n'
-`p'
-     Move to the next or previous variable.
-
-   Changes take effect immediately.
-
-
-File: emacs,  Node: Locals,  Next: File Variables,  Prev: Edit Options,  Up: Variables
-
-Local Variables
----------------
-
-`M-x make-local-variable'
-     Make a variable have a local value in the current buffer.
-
-`M-x kill-local-variable'
-     Make a variable use its global value in the current buffer.
-
-`M-x make-variable-buffer-local'
-     Mark a variable so that setting it will make it local to the
-     buffer that is current at that time.
-
-   Any variable can be made "local" to a specific Emacs buffer.  This
-means that its value in that buffer is independent of its value in other
-buffers.  A few variables are always local in every buffer.  Every other
-Emacs variable has a "global" value which is in effect in all buffers
-that have not made the variable local.
-
-   Major modes always make the variables they set local to the buffer.
-This is why changing major modes in one buffer has no effect on other
-buffers.
-
-   `M-x make-local-variable' reads the name of a variable and makes it
-local to the current buffer.  Further changes in this buffer will not
-affect others, and further changes in the global value will not affect
-this buffer.
-
-   `M-x make-variable-buffer-local' reads the name of a variable and
-changes the future behavior of the variable so that it will become local
-automatically when it is set.  More precisely, once a variable has been
-marked in this way, the usual ways of setting the variable will
-automatically do `make-local-variable' first.  We call such variables
-"per-buffer" variables.
-
-   Some important variables have been marked per-buffer already.  These
-include `abbrev-mode', `auto-fill-hook', `case-fold-search',
-`ctl-arrow', `comment-column', `fill-column', `fill-prefix',
-`indent-tabs-mode', `left-margin', `mode-line-format', `overwrite-mode',
-`selective-display', `tab-width', `selective-display-ellipses', and
-`truncate-lines'.  Some other variables are always local in every
-buffer, but they are used for internal purposes.
-
-   `M-x kill-local-variable' reads the name of a variable and makes it
-cease to be local to the current buffer.  The global value of the
-variable henceforth is in effect in this buffer.  Setting the major
-mode kills all the local variables of the buffer.
-
-   To set the global value of a variable, regardless of whether the
-variable has a local value in the current buffer, you can use the Lisp
-function `setq-default'.  It works like `setq'. If there is a local
-value in the current buffer, the local value is not affected by
-`setq-default'; thus, the new global value may not be visible until you
-switch to another buffer.  For example,
-
-     (setq-default fill-column 72)
-
-`setq-default' is the only way to set the global value of a variable
-that has been marked with `make-variable-buffer-local'.
-
-   Programs can look at a variable's default value with `default-value'.
-This function takes a symbol as argument and returns its default value.
-The argument is evaluated; usually you must quote it explicitly.  For
-example,
-
-     (default-value 'fill-column)
-
-
-File: emacs,  Node: File Variables,  Prev: Locals,  Up: Variables
-
-Local Variables in Files
-------------------------
-
-   A file can contain a "local variables list", which specifies the
-values to use for certain Emacs variables when that file is edited.
-Visiting the file checks for a local variables list and makes each
-variable in the list local to the buffer in which the file is visited,
-with the value specified in the file.
-
-   A local variables list goes near the end of the file, in the last
-page. (It is often best to put it on a page by itself.)  The local
-variables list starts with a line containing the string `Local
-Variables:', and ends with a line containing the string `End:'.  In
-between come the variable names and values, one set per line, as
-`VARIABLE: VALUE'.  The VALUEs are not evaluated; they are used
-literally.
-
-   The line which starts the local variables list does not have to say
-just `Local Variables:'.  If there is other text before `Local
-Variables:', that text is called the "prefix", and if there is other
-text after, that is called the "suffix".  If these are present, each
-entry in the local variables list should have the prefix before it and
-the suffix after it.  This includes the `End:' line.  The prefix and
-suffix are included to disguise the local variables list as a comment so
-that the compiler or text formatter will not be perplexed by it.  If
-you do not need to disguise the local variables list as a comment in
-this way, do not bother with a prefix or a suffix.
-
-   Two "variable" names are special in a local variables list: a value
-for the variable `mode' really sets the major mode, and a value for the
-variable `eval' is simply evaluated as an expression and the value is
-ignored.  These are not real variables; setting such variables in any
-other context has no such effect.  If `mode' is used in a local
-variables list, it should be the first entry in the list.
-
-   Here is an example of a local variables list:
-
-     ;;; Local Variables: ***
-     ;;; mode:lisp ***
-     ;;; comment-column:0 ***
-     ;;; comment-start: ";;; "  ***
-     ;;; comment-end:"***" ***
-     ;;; End: ***
-
-   Note that the prefix is `;;; ' and the suffix is ` ***'.  Note also
-that comments in the file begin with and end with the same strings.
-Presumably the file contains code in a language which is like Lisp
-(like it enough for Lisp mode to be useful) but in which comments start
-and end in that way.  The prefix and suffix are used in the local
-variables list to make the list appear as comments when the file is read
-by the compiler or interpreter for that	language.
-
-   The start of the local variables list must be no more than 3000
-characters from the end of the file, and must be in the last page if the
-file is divided into pages.  Otherwise, Emacs will not notice it is
-there. The purpose of this is so that a stray `Local Variables:' not in
-the last page does not confuse Emacs, and so that visiting a long file
-that is all one page and has no local variables list need not take the
-time to search the whole file.
-
-   You may be tempted to try to turn on Auto Fill mode with a local
-variable list.  That is a mistake.  The choice of Auto Fill mode or not
-is a matter of individual taste, not a matter of the contents of
-particular files. If you want to use Auto Fill, set up major mode hooks
-with your `.emacs' file to turn it on (when appropriate) for you alone
-(*note Init File::.). Don't try to use a local variable list that would
-impose your taste on everyone.
-
-   If you are concerned that you might visit a file containing a
-Trojan-horse local variable specification, you can prevent local
-variables processing by setting the variable `inhibit-local-variables'
-to a non-`nil' value.  Emacs will display the local variables
-specification and then ask you whether to process it.
-
-
-File: emacs,  Node: Keyboard Macros,  Next: Key Bindings,  Prev: Variables,  Up: Customization
-
-Keyboard Macros
-===============
-
-   A "keyboard macro" is a command defined by the user to abbreviate a
-sequence of keys.  For example, if you discover that you are about to
-type `C-n C-d' forty times, you can speed your work by defining a
-keyboard macro to do `C-n C-d' and calling it with a repeat count of
-forty.
-
-`C-x ('
-     Start defining a keyboard macro (`start-kbd-macro').
-
-`C-x )'
-     End the definition of a keyboard macro (`end-kbd-macro').
-
-`C-x e'
-     Execute the most recent keyboard macro (`call-last-kbd-macro').
-
-`C-u C-x ('
-     Re-execute last keyboard macro, then add more keys to its
-     definition.
-
-`C-x q'
-     When this point is reached during macro execution, ask for
-     confirmation (`kbd-macro-query').
-
-`M-x name-last-kbd-macro'
-     Give a command name (for the duration of the session) to the most
-     recently defined keyboard macro.
-
-`M-x insert-kbd-macro'
-     Insert in the buffer a keyboard macro's definition, as Lisp code.
-
-   Keyboard macros differ from ordinary Emacs commands in that they are
-written in the Emacs command language rather than in Lisp.  This makes
-it easier for the novice to write them, and makes them more convenient
-as temporary hacks.  However, the Emacs command language is not powerful
-enough as a programming language to be useful for writing anything
-intelligent or general.  For such things, Lisp must be used.
-
-   You define a keyboard macro while executing the commands which are
-the definition.  Put differently, as you are defining a keyboard macro,
-the definition is being executed for the first time.  This way, you can
-see what the effects of your commands are, so that you don't have to
-figure them out in your head.  When you are finished, the keyboard
-macro is defined and also has been, in effect, executed once.  You can
-then do the whole thing over again by invoking the macro.
-
-* Menu:
-
-* Basic Kbd Macro::     Defining and running keyboard macros.
-* Save Kbd Macro::      Giving keyboard macros names; saving them in files.
-* Kbd Macro Query::     Keyboard macros that do different things each use.
-
-
-File: emacs,  Node: Basic Kbd Macro,  Next: Save Kbd Macro,  Prev: Keyboard Macros,  Up: Keyboard Macros
-
-Basic Use
----------
-
-   To start defining a keyboard macro, type the `C-x (' command
-(`start-kbd-macro').  From then on, your keys continue to be executed,
-but also become part of the definition of the macro.  `Def' appears in
-the mode line to remind you of what is going on.  When you are
-finished, the `C-x )' command (`end-kbd-macro') terminates the
-definition (without becoming part of it!).
-
-For example,
-
-     C-x ( M-F foo C-x )
-
-defines a macro to move forward a word and then insert `foo'.
-
-   The macro thus defined can be invoked again with the `C-x e' command
-(`call-last-kbd-macro'), which may be given a repeat count as a numeric
-argument to execute the macro many times.  `C-x )' can also be given a
-repeat count as an argument, in which case it repeats the macro that
-many times right after defining it, but defining the macro counts as
-the first repetition (since it is executed as you define it).  So,
-giving `C-x )' an argument of 4 executes the macro immediately 3
-additional times.  An argument of zero to `C-x e' or `C-x )' means
-repeat the macro indefinitely (until it gets an error or you type
-`C-g').
-
-   If you wish to repeat an operation at regularly spaced places in the
-text, define a macro and include as part of the macro the commands to
-move to the next place you want to use it.  For example, if you want to
-change each line, you should position point at the start of a line, and
-define a macro to change that line and leave point at the start of the
-next line. Then repeating the macro will operate on successive lines.
-
-   After you have terminated the definition of a keyboard macro, you
-can add to the end of its definition by typing `C-u C-x ('.  This is
-equivalent to plain `C-x (' followed by retyping the whole definition
-so far.  As a consequence it re-executes the macro as previously
-defined.
-
-   One limitation on the use of keyboard macros is that if you exit a
-recursive edit within a macro that was not entered within the macro,
-then the execution of the macro stops at that point.  In Emacs 18, View
-mode uses a recursive edit, so exiting View mode is an occasion for such
-a problem.
-
-
-File: emacs,  Node: Save Kbd Macro,  Next: Kbd Macro Query,  Prev: Basic Kbd Macro,  Up: Keyboard Macros
-
-Naming and Saving Keyboard Macros
----------------------------------
-
-   If you wish to save a keyboard macro for longer than until you
-define the next one, you must give it a name using `M-x
-name-last-kbd-macro'. This reads a name as an argument using the
-minibuffer and defines that name to execute the macro.  The macro name
-is a Lisp symbol, and defining it in this way makes it a valid command
-name for calling with `M-x' or for binding a key to with
-`global-set-key' (*note Keymaps::.).  If you specify a name that has a
-prior definition other than another keyboard macro, an error message is
-printed and nothing is changed.
-
-   Once a macro has a command name, you can save its definition in a
-file. Then it can be used in another editing session.  First visit the
-file you want to save the definition in.  Then use the command
-
-     M-x insert-kbd-macro RET MACRONAME RET
-
-This inserts some Lisp code that, when executed later, will define the
-same macro with the same definition it has now.  You need not
-understand Lisp code to do this, because `insert-kbd-macro' writes the
-Lisp code for you. Then save the file.  The file can be loaded with
-`load-file' (*note Lisp Libraries::.).  If the file you save in is your
-init file `~/.emacs' (*note Init File::.) then the macro will be
-defined each time you run Emacs.
-
-   If you give `insert-kbd-macro' a prefix argument, it makes
-additional Lisp code to record the keys (if any) that you have bound to
-the keyboard macro, so that the macro will be reassigned the same keys
-when you load the file.
-
-
-File: emacs,  Node: Kbd Macro Query,  Prev: Save Kbd Macro,  Up: Keyboard Macros
-
-Executing Macros with Variations
---------------------------------
-
-   Using `C-x q' (`kbd-macro-query'), you can get an effect similar to
-that of `query-replace', where the macro asks you each time around
-whether to make a change.  When you are defining the macro, type `C-x
-q' at the point where you want the query to occur.  During macro
-definition, the `C-x q' does nothing, but when the macro is invoked the
-`C-x q' reads a character from the terminal to decide whether to
-continue.
-
-   The special answers are SPC, DEL, `C-d', `C-l' and `C-r'.  Any other
-character terminates execution of the keyboard macro and is then read
-as a command.  SPC means to continue.  DEL means to skip the remainder
-of this repetition of the macro, starting again from the beginning in
-the next repetition.  `C-d' means to skip the remainder of this
-repetition and cancel further repetition.  `C-l' redraws the screen and
-asks you again for a character to say what to do. `C-r' enters a
-recursive editing level, in which you can perform editing which is not
-part of the macro.  When you exit the recursive edit using `C-M-c', you
-are asked again how to continue with the keyboard macro.  If you type a
-SPC at this time, the rest of the macro definition is executed.  It is
-up to you to leave point and the text in a state such that the rest of
-the macro will do what you want.
-
-   `C-u C-x q', which is `C-x q' with a numeric argument, performs a
-different function.  It enters a recursive edit reading input from the
-keyboard, both when you type it during the definition of the macro, and
-when it is executed from the macro.  During definition, the editing you
-do inside the recursive edit does not become part of the macro.  During
-macro execution, the recursive edit gives you a chance to do some
-particularized editing.  *Note Recursive Edit::.
-
-
-File: emacs,  Node: Key Bindings,  Next: Syntax,  Prev: Keyboard Macros,  Up: Customization
-
-Customizing Key Bindings
-========================
-
-   This section deals with the "keymaps" which define the bindings
-between keys and functions, and shows how you can customize these
-bindings.
-
-   A command is a Lisp function whose definition provides for
-interactive use.  Like every Lisp function, a command has a function
-name, a Lisp symbol whose name usually consists of lower case letters
-and hyphens.
-
-* Menu:
-
-* Keymaps::    Definition of the keymap data structure.
-               Names of Emacs's standard keymaps.
-* Rebinding::  How to redefine one key's meaning conveniently.
-* Disabling::  Disabling a command means confirmation is required
-                before it can be executed.  This is done to protect
-                beginners from surprises.
-
-
-File: emacs,  Node: Keymaps,  Next: Rebinding,  Prev: Key Bindings,  Up: Key Bindings
-
-Keymaps
--------
-
-   The bindings between characters and command functions are recorded in
-data structures called "keymaps".  Emacs has many of these.  One, the
-"global" keymap, defines the meanings of the single-character keys that
-are defined regardless of major mode.  It is the value of the variable
-`global-map'.
-
-   Each major mode has another keymap, its "local keymap", which
-contains overriding definitions for the single-character keys that are
-to be redefined in that mode.  Each buffer records which local keymap is
-installed for it at any time, and the current buffer's local keymap is
-the only one that directly affects command execution.  The local
-keymaps for Lisp mode, C mode, and many other major modes always exist
-even when not in use.  They are the values of the variables
-`lisp-mode-map', `c-mode-map', and so on.  For major modes less often
-used, the local keymap is sometimes constructed only when the mode is
-used for the first time in a session.  This is to save space.
-
-   There are local keymaps for the minibuffer too; they contain various
-completion and exit commands.
-
-   * `minibuffer-local-map' is used for ordinary input (no completion).
-
-   * `minibuffer-local-ns-map' is similar, except that SPC exits just
-     like RET.  This is used mainly for Mocklisp compatibility.
-
-   * `minibuffer-local-completion-map' is for permissive completion.
-
-   * `minibuffer-local-must-match-map' is for strict completion and for
-     cautious completion.
-
-   * `repeat-complex-command-map' is for use in `C-x ESC'.
-
-   Finally, each prefix key has a keymap which defines the key sequences
-that start with it.  For example, `ctl-x-map' is the keymap used for
-characters following a `C-x'.
-
-   * `ctl-x-map' is the variable name for the map used for characters
-     that follow `C-x'.
-
-   * `help-map' is used for characters that follow `C-h'.
-
-   * `esc-map' is for characters that follow ESC.  Thus, all Meta
-     characters are actually defined by this map.
-
-   * `ctl-x-4-map' is for characters that follow `C-x 4'.
-
-   * `mode-specific-map' is for characters that follow `C-c'.
-
-   The definition of a prefix key is just the keymap to use for looking
-up the following character.  Actually, the definition is sometimes a
-Lisp symbol whose function definition is the following character
-keymap.  The effect is the same, but it provides a command name for the
-prefix key that can be used as a description of what the prefix key is
-for.  Thus, the binding of `C-x' is the symbol `Ctl-X-Prefix', whose
-function definition is the keymap for `C-x' commands, the value of
-`ctl-x-map'.
-
-   Prefix key definitions of this sort can appear in either the global
-map or a local map.  The definitions of `C-c', `C-x', `C-h' and ESC as
-prefix keys appear in the global map, so these prefix keys are always
-available.  Major modes can locally redefine a key as a prefix by
-putting a prefix key definition for it in the local map.
-
-   A mode can also put a prefix definition of a global prefix character
-such as `C-x' into its local map.  This is how major modes override the
-definitions of certain keys that start with `C-x'.  This case is
-special, because the local definition does not entirely replace the
-global one.  When both the global and local definitions of a key are
-other keymaps, the next character is looked up in both keymaps, with
-the local definition overriding the global one as usual.  So, the
-character after the `C-x' is looked up in both the major mode's own
-keymap for redefined `C-x' commands and in `ctl-x-map'.  If the major
-mode's own keymap for `C-x' commands contains `nil', the definition
-from the global keymap for `C-x' commands is used.
-
-   A keymap is actually a Lisp object.  The simplest form of keymap is a
-Lisp vector of length 128.  The binding for a character in such a
-keymap is found by indexing into the vector with the character as an
-index.  A keymap can also be a Lisp list whose CAR is the symbol
-`keymap' and whose remaining elements are pairs of the form `(CHAR .
-BINDING)'. Such lists are called "sparse keymaps" because they are used
-when most of the characters' entries will be `nil'.  Sparse keymaps are
-used mainly for prefix characters.
-
-   Keymaps are only of length 128, so what about Meta characters, whose
-codes are from 128 to 255?  A key that contains a Meta character
-actually represents it as a sequence of two characters, the first of
-which is ESC.  So the key `M-a' is really represented as `ESC a', and
-its binding is found at the slot for `a' in `esc-map'.
-
-
-File: emacs,  Node: Rebinding,  Next: Disabling,  Prev: Keymaps,  Up: Key Bindings
-
-Changing Key Bindings Interactively
------------------------------------
-
-   The way to redefine an Emacs key is to change its entry in a keymap.
-You can change the global keymap, in which case the change is effective
-in all major modes (except those that have their own overriding local
-definitions for the same key).  Or you can change the current buffer's
-local map, which affects all buffers using the same major mode.
-
-`M-x global-set-key RET KEY CMD RET'
-     Defines KEY globally to run CMD.
-
-`M-x local-set-key RET KEY CMD RET'
-     Defines KEY locally (in the major mode now in effect) to run CMD.
-
-   For example,
-
-     M-x global-set-key RET C-f next-line RET
-
-would redefine `C-f' to move down a line.  The fact that CMD is read
-second makes it serve as a kind of confirmation for KEY.
-
-   These functions offer no way to specify a particular prefix keymap
-as the one to redefine in, but that is not necessary, as you can
-include prefixes in KEY.  KEY is read by reading characters one by one
-until they amount to a complete key (that is, not a prefix key).  Thus,
-if you type `C-f' for KEY, that's the end; the minibuffer is entered
-immediately to read CMD.  But if you type `C-x', another character is
-read; if that is `4', another character is read, and so on.  For
-example,
-
-     M-x global-set-key RET C-x 4 $ spell-other-window RET
-
-would redefine `C-x 4 $' to run the (fictitious) command
-`spell-other-window'.
-
-   All the key sequences which consist of `C-c' followed by a letter
-are supposed to be reserved for user customization.  That is, Emacs Lisp
-libraries should not define any of these commands.
-
-   The most general way to modify a keymap is the function `define-key',
-used in Lisp code (such as your `.emacs' file).  `define-key' takes
-three arguments: the keymap, the key to modify in it, and the new
-definition.  *Note Init File::, for an example. 
-`substitute-key-definition' is used similarly; it takes three
-arguments, an old definition, a new definition and a keymap, and
-redefines in that keymap all keys that were previously defined with the
-old definition to have the new definition instead.
-
-
-File: emacs,  Node: Disabling,  Prev: Rebinding,  Up: Key Bindings
-
-Disabling Commands
-------------------
-
-   Disabling a command marks the command as requiring confirmation
-before it can be executed.  The purpose of disabling a command is to
-prevent beginning users from executing it by accident and being
-confused.
-
-   The direct mechanism for disabling a command is to have a non-`nil'
-`disabled' property on the Lisp symbol for the command.  These
-properties are normally set up by the user's `.emacs' file with Lisp
-expressions such as
-
-     (put 'delete-region 'disabled t)
-
-   If the value of the `disabled' property is a string, that string is
-included in the message printed when the command is used:
-
-     (put 'delete-region 'disabled
-          "Text deleted this way cannot be yanked back!\n")
-
-   You can make a command disabled either by editing the `.emacs' file
-directly or with the command `M-x disable-command', which edits the
-`.emacs' file for you.  *Note Init File::.
-
-   Attempting to invoke a disabled command interactively in Emacs
-causes the display of a window containing the command's name, its
-documentation, and some instructions on what to do immediately; then
-Emacs asks for input saying whether to execute the command as
-requested, enable it and execute, or cancel it.  If you decide to
-enable the command, you are asked whether to do this permanently or
-just for the current session.  Enabling permanently works by
-automatically editing your `.emacs' file.  You can use `M-x
-enable-command' at any time to enable any command permanently.
-
-   Whether a command is disabled is independent of what key is used to
-invoke it; it also applies if the command is invoked using `M-x'.
-Disabling a command has no effect on calling it as a function from Lisp
-programs.
-
-
-File: emacs,  Node: Syntax,  Next: Init File,  Prev: Key Bindings,  Up: Customization
-
-The Syntax Table
-================
-
-   All the Emacs commands which parse words or balance parentheses are
-controlled by the "syntax table".  The syntax table says which
-characters are opening delimiters, which are parts of words, which are
-string quotes, and so on.  Actually, each major mode has its own syntax
-table (though sometimes related major modes use the same one) which it
-installs in each buffer that uses that major mode.  The syntax table
-installed in the current buffer is the one that all commands use, so we
-call it "the" syntax table.  A syntax table is a Lisp object, a vector
-of length 256 whose elements are numbers.
-
-* Menu:
-
-* Entry: Syntax Entry.    What the syntax table records for each character.
-* Change: Syntax Change.  How to change the information.
-
-
-File: emacs,  Node: Syntax Entry,  Next: Syntax Change,  Prev: Syntax,  Up: Syntax
-
-Information about Each Character
---------------------------------
-
-   The syntax table entry for a character is a number that encodes six
-pieces of information:
-
-   * The syntactic class of the character, represented as a small
-     integer.
-
-   * The matching delimiter, for delimiter characters only. The
-     matching delimiter of `(' is `)', and vice versa.
-
-   * A flag saying whether the character is the first character of a
-     two-character comment starting sequence.
-
-   * A flag saying whether the character is the second character of a
-     two-character comment starting sequence.
-
-   * A flag saying whether the character is the first character of a
-     two-character comment ending sequence.
-
-   * A flag saying whether the character is the second character of a
-     two-character comment ending sequence.
-
-   The syntactic classes are stored internally as small integers, but
-are usually described to or by the user with characters.  For example,
-`(' is used to specify the syntactic class of opening delimiters.  Here
-is a table of syntactic classes, with the characters that specify them.
-
-` '
-     The class of whitespace characters.
-
-`-'
-     Another name for the class of whitespace characters.
-
-`w'
-     The class of word-constituent characters.
-
-`_'
-     The class of characters that are part of symbol names but not
-     words. This class is represented by `_' because the character `_'
-     has this class in both C and Lisp.
-
-`.'
-     The class of punctuation characters that do not fit into any other
-     special class.
-
-`('
-     The class of opening delimiters.
-
-`)'
-     The class of closing delimiters.
-
-`''
-     The class of expression-adhering characters.  These characters are
-     part of a symbol if found within or adjacent to one, and are part
-     of a following expression if immediately preceding one, but are
-     like whitespace if surrounded by whitespace.
+   Here are the special commands provided in TeX mode for editing the
+text of the file.
 
 `"'
-     The class of string-quote characters.  They match each other in
-     pairs, and the characters within the pair all lose their syntactic
-     significance except for the `\' and `/' classes of escape
-     characters, which can be used to include a string-quote inside the
-     string.
+     Insert, according to context, either ```' or `"' or `'''
+     (`tex-insert-quote').
 
-`$'
-     The class of self-matching delimiters.  This is intended for TeX's
-     `$', which is used both to enter and leave math mode.  Thus, a
-     pair of matching `$' characters surround each piece of math mode
-     TeX input.  A pair of adjacent `$' characters act like a single
-     one for purposes of matching.
+`LFD'
+     Insert a paragraph break (two newlines) and check the previous
+     paragraph for unbalanced braces or dollar signs
+     (`tex-terminate-paragraph').
 
-`/'
-     The class of escape characters that always just deny the following
-     character its special syntactic significance.  The character after
-     one of these escapes is always treated as alphabetic.
+`M-x validate-tex-region'
+     Check each paragraph in the region for unbalanced braces or dollar
+     signs.
 
-`\'
-     The class of C-style escape characters.  In practice, these are
-     treated just like `/'-class characters, because the extra
-     possibilities for C escapes (such as being followed by digits)
-     have no effect on where the containing expression ends.
+`C-c {'
+     Insert `{}' and position point between them (`tex-insert-braces').
 
-`<'
-     The class of comment-starting characters.  Only single-character
-     comment starters (such as `;' in Lisp mode) are represented this
-     way.
+`C-c }'
+     Move forward past the next unmatched close brace (`up-list').
 
-`>'
-     The class of comment-ending characters.  Newline has this syntax in
-     Lisp mode.
+   In TeX, the character `"' is not normally used; we use ```' to start
+a quotation and `''' to end one.  To make editing easier under this
+formatting convention, TeX mode overrides the normal meaning of the key
+`"' with a command that inserts a pair of single-quotes or backquotes
+(`tex-insert-quote').  To be precise, this command inserts ```' after
+whitespace or an open brace, `"' after a backslash, and `''' after any
+other character.
 
-   The characters flagged as part of two-character comment delimiters
-can have other syntactic functions most of the time.  For example, `/'
-and `*' in C code, when found separately, have nothing to do with
-comments.  The comment-delimiter significance overrides when the pair of
-characters occur together in the proper order.  Only the list and sexp
-commands use the syntax table to find comments; the commands
-specifically for comments have other variables that tell them where to
-find comments. And the list and sexp commands notice comments only if
-`parse-sexp-ignore-comments' is non-`nil'.  This variable is set to
-`nil' in modes where comment-terminator sequences are liable to appear
-where there is no comment; for example, in Lisp mode where the comment
-terminator is a newline but not every newline ends a comment.
+   If you need the character `"' itself in unusual contexts, use `C-q'
+to insert it.  Also, `"' with a numeric argument always inserts that
+number of `"' characters.
 
-
-File: emacs,  Node: Syntax Change,  Prev: Syntax Entry,  Up: Syntax
+   In TeX mode, `$' has a special syntax code which attempts to
+understand the way TeX math mode delimiters match.  When you insert a
+`$' that is meant to exit math mode, the position of the matching `$'
+that entered math mode is displayed for a second.  This is the same
+feature that displays the open brace that matches a close brace that is
+inserted.  However, there is no way to tell whether a `$' enters math
+mode or leaves it; so when you insert a `$' that enters math mode, the
+previous `$' position is shown as if it were a match, even though they
+are actually unrelated.
 
-Altering Syntax Information
----------------------------
+   TeX uses braces as delimiters that must match.  Some users prefer to
+keep braces balanced at all times, rather than inserting them singly.
+Use `C-c {' (`tex-insert-braces') to insert a pair of braces.  It
+leaves point between the two braces so you can insert the text that
+belongs inside.  Afterward, use the command `C-c }' (`up-list') to move
+forward past the close brace.
 
-   It is possible to alter a character's syntax table entry by storing
-a new number in the appropriate element of the syntax table, but it
-would be hard to determine what number to use.  Therefore, Emacs
-provides a command that allows you to specify the syntactic properties
-of a character in a convenient way.
+   There are two commands for checking the matching of braces.  LFD
+(`tex-terminate-paragraph') checks the paragraph before point, and
+inserts two newlines to start a new paragraph.  It prints a message in
+the echo area if any mismatch is found.  `M-x validate-tex-region'
+checks a region, paragraph by paragraph.  When it finds a paragraph that
+contains a mismatch, it displays point at the beginning of the paragraph
+for a few seconds and sets the mark at that spot.  Scanning continues
+until the whole buffer has been checked or until you type another key.
+Afterward, you can use the mark ring to find the last several paragraphs
+that had mismatches (*note Mark Ring::.).
 
-   `M-x modify-syntax-entry' is the command to change a character's
-syntax.  It can be used interactively, and is also the means used by
-major modes to initialize their own syntax tables.  Its first argument
-is the character to change.  The second argument is a string that
-specifies the new syntax.  When called from Lisp code, there is a
-third, optional argument, which specifies the syntax table in which to
-make the change.  If not supplied, or if this command is called
-interactively, the third argument defaults to the current buffer's
-syntax table.
-
-  1. The first character in the string specifies the syntactic class. 
-     It is one of the characters in the previous table (*note Syntax
-     Entry::.).
-
-  2. The second character is the matching delimiter.  For a character
-     that is not an opening or closing delimiter, this should be a
-     space, and may be omitted if no following characters are needed.
-
-  3. The remaining characters are flags.  The flag characters allowed
-     are
-
-    `1'
-          Flag this character as the first of a two-character comment
-          starting sequence.
-
-    `2'
-          Flag this character as the second of a two-character comment
-          starting sequence.
-
-    `3'
-          Flag this character as the first of a two-character comment
-          ending sequence.
-
-    `4'
-          Flag this character as the second of a two-character comment
-          ending sequence.
-
-   A description of the contents of the current syntax table can be
-displayed with `C-h s' (`describe-syntax').  The description of each
-character includes both the string you would have to give to
-`modify-syntax-entry' to set up that character's current syntax, and
-some English to explain that string if necessary.
+   Note that Emacs commands count square brackets and parentheses in
+TeX mode, not just braces.  This is not strictly correct for the
+purpose of checking TeX syntax.  However, parentheses and square
+brackets are likely to be used in text as matching delimiters and it is
+useful for the various motion commands and automatic match display to
+work with them.
 
 
-File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
+File: emacs,  Node: LaTeX Editing,  Next: TeX Print,  Prev: TeX Editing,  Up: TeX Mode
 
-The Init File, .emacs
-=====================
+LaTeX Editing Commands
+----------------------
 
-   When Emacs is started, it normally loads the file `.emacs' in your
-home directory.  This file, if it exists, should contain Lisp code.  It
-is called your "init file".  The command line switches `-q' and `-u'
-can be used to tell Emacs whether to load an init file (*note Entering
-Emacs::.).
+   LaTeX mode, and its variant, SliTeX mode, provide a few extra
+features not applicable to plain TeX.
 
-   There can also be a "default init file", which is the library named
-`default.el', found via the standard search path for libraries.  The
-Emacs distribution contains no such library; your site may create one
-for local customizations.  If this library exists, it is loaded
-whenever you start Emacs.  But your init file, if any, is loaded first;
-if it sets `inhibit-default-init' non-`nil', then `default' is not
-loaded.
+`C-c C-o'
+     Insert `\begin' and `\end' for LaTeX block and position point on a
+     line between them. (`tex-latex-block').
 
-   If you have a large amount of code in your `.emacs' file, you should
-move it into another file named `SOMETHING.el', byte-compile it (*note
-Lisp Libraries::.), and make your `.emacs' file load the other file
-using `load'.
+`C-c C-e'
+     Close the last unended block for LaTeX (`tex-close-latex-block').
+
+   In LaTeX input, `\begin' and `\end' commands are used to group
+blocks of text.  To insert a `\begin' and a matching `\end' (on a new
+line following the `\begin'), use `C-c C-o' (`tex-latex-block').  A
+blank line is inserted between the two, and point is left there.  You
+can use completion when you enter the block type; to specify additional
+block type names beyond the standard list, set the variable
+`latex-block-names'.  For example, here's how to add `theorem',
+`corollary', and `proof':
+
+     (setq latex-block-names '("theorem" "corollary" "proof"))
+
+   In LaTeX input, `\begin' and `\end' commands must balance.  You can
+use `C-c C-e' (`tex-close-latex-block') to insert automatically a
+matching `\end' to match the last unmatched `\begin'.  It indents the
+`\end' to match the corresponding `\begin'.  It inserts a newline after
+`\end' if point is at the beginning of a line.
+
+
+File: emacs,  Node: TeX Print,  Next: TeX Distrib,  Prev: LaTeX Editing,  Up: TeX Mode
+
+TeX Printing Commands
+---------------------
+
+   You can invoke TeX as an inferior of Emacs on either the entire
+contents of the buffer or just a region at a time.  Running TeX in this
+way on just one chapter is a good way to see what your changes look
+like without taking the time to format the entire file.
+
+`C-c C-r'
+     Invoke TeX on the current region, together with the buffer's header
+     (`tex-region').
+
+`C-c C-b'
+     Invoke TeX on the entire current buffer (`tex-buffer').
+
+`C-c TAB'
+     Invoke BibTeX on the current file (`tex-bibtex-file').
+
+`C-c C-f'
+     Invoke TeX on the current file (`tex-file').
+
+`C-c C-l'
+     Recenter the window showing output from the inferior TeX so that
+     the last line can be seen (`tex-recenter-output-buffer').
+
+`C-c C-k'
+     Kill the TeX subprocess (`tex-kill-job').
+
+`C-c C-p'
+     Print the output from the last `C-c C-r', `C-c C-b', or `C-c C-f'
+     command (`tex-print').
+
+`C-c C-v'
+     Preview the output from the last `C-c C-r', `C-c C-b', or `C-c
+     C-f' command (`tex-view').
+
+`C-c C-q'
+     Show the printer queue (`tex-show-print-queue').
+
+   You can pass the current buffer through an inferior TeX by means of
+`C-c C-b' (`tex-buffer').  The formatted output appears in a temporary
+file; to print it, type `C-c C-p' (`tex-print').  Afterward, you can
+use `C-c C-q' (`tex-show-print-queue') to view the progress of your
+output towards being printed.  If your terminal has the ability to
+display TeX output files, you can preview the output on the terminal
+with `C-c C-v' (`tex-view').
+
+   You can specify the directory to use for running TeX by setting the
+variable `tex-directory'.  `"."' is the default value.  If your
+environment variable `TEXINPUTS' contains relative directory names, or
+if your files contains `\input' commands with relative file names, then
+`tex-directory' *must* be `"."' or you will get the wrong results.
+Otherwise, it is safe to specify some other directory, such as `"/tmp"'.
+
+   If you want to specify which shell commands are used in the inferior
+TeX, you can do so by setting the values of the variables
+`tex-run-command', `latex-run-command', `slitex-run-command',
+`tex-dvi-print-command', `tex-dvi-view-command', and
+`tex-show-queue-command'.  You *must* set the value of
+`tex-dvi-view-command' for your particular terminal; this variable has
+no default value.  The other variables have default values that may (or
+may not) be appropriate for your system.
+
+   Normally, the file name given to these commands comes at the end of
+the command string; for example, `latex FILENAME'.  In some cases,
+however, the file name needs to be embedded in the command; an example
+is when you need to provide the file name as an argument to one command
+whose output is piped to another.  You can specify where to put the
+file name with `*' in the command string.  For example,
+
+     (setq tex-dvi-print-command "dvips -f * | lpr")
+
+   The terminal output from TeX, including any error messages, appears
+in a buffer called `*tex-shell*'.  If TeX gets an error, you can switch
+to this buffer and feed it input (this works as in Shell mode; *note
+Interactive Shell::.).  Without switching to this buffer you can scroll
+it so that its last line is visible by typing `C-c C-l'.
+
+   Type `C-c C-k' (`tex-kill-job') to kill the TeX process if you see
+that its output is no longer useful.  Using `C-c C-b' or `C-c C-r' also
+kills any TeX process still running.
+
+   You can also pass an arbitrary region through an inferior TeX by
+typing `C-c C-r' (`tex-region').  This is tricky, however, because most
+files of TeX input contain commands at the beginning to set parameters
+and define macros, without which no later part of the file will format
+correctly.  To solve this problem, `C-c C-r' allows you to designate a
+part of the file as containing essential commands; it is included before
+the specified region as part of the input to TeX.  The designated part
+of the file is called the "header".
+
+   To indicate the bounds of the header in Plain TeX mode, you insert
+two special strings in the file.  Insert `%**start of header' before the
+header, and `%**end of header' after it.  Each string must appear
+entirely on one line, but there may be other text on the line before or
+after.  The lines containing the two strings are included in the header.
+If `%**start of header' does not appear within the first 100 lines of
+the buffer, `C-c C-r' assumes that there is no header.
+
+   In LaTeX mode, the header begins with `\documentstyle' and ends with
+`\begin{document}'.  These are commands that LaTeX requires you to use
+in any case, so nothing special needs to be done to identify the header.
+
+   The commands (`tex-buffer') and (`tex-region') do all of their work
+in a temporary directory, and do not have available any of the auxiliary
+files needed by TeX for cross-references; these commands are generally
+not suitable for running the final copy in which all of the
+cross-references need to be correct.  When you want the auxiliary
+files, use `C-c C-f' (`tex-file') which runs TeX on the current
+buffer's file, in that file's directory.  Before TeX runs, you will be
+asked about saving any modified buffers.  Generally, you need to use
+(`tex-file') twice to get cross-references correct.
+
+   For LaTeX files, you can use BibTeX to process the auxiliary file
+for the current buffer's file.  BibTeX looks up bibliographic citations
+in a data base and prepares the cited references for the bibliography
+section.  The command `C-c TAB' (`tex-bibtex-file') runs the shell
+command (`tex-bibtex-command') to produce a `.bbl' file for the current
+buffer's file.  Generally, you need to do `C-c C-f' (`tex-file') once
+to generate the `.aux' file, then do `C-c TAB' (`tex-bibtex-file'), and
+then repeat `C-c C-f' (`tex-file') twice more to get the
+cross-references correct.
+
+   Entering any kind of TeX mode runs the hooks `text-mode-hook' and
+`tex-mode-hook'.  Then it runs either `plain-tex-mode-hook' or
+`latex-mode-hook', whichever is appropriate.  For SliTeX files, it
+calls `slitex-mode-hook'.  Starting the TeX shell runs the hook
+`tex-shell-hook'.  *Note Hooks::.
+
+
+File: emacs,  Node: TeX Distrib,  Prev: TeX Print,  Up: TeX Mode
+
+Unix TeX Distribution
+---------------------
+
+   TeX for Unix systems can be obtained from the University of
+Washington for a distribution fee.
+
+   To order a full distribution, specify whether you prefer 1/4 inch
+QIC-24 or 4mm DAT tape (9-track reel-to-reel is no longer available)
+and send $210.00 for a (tar or cpio) cartridge, payable to the
+University of Washington to:
+
+     Pierre MacKay
+     Department of Classics
+     Denny Hall, Mail Stop DH-10
+     University of Washington
+     Seattle, Washington 98195
+
+Purchase orders are acceptable, but there is an extra charge of $10.00,
+to pay for processing charges.
+
+For overseas orders please add $20.00 to the base cost for shipment via
+air parcel post, or $30.00 for shipment via courier.
+
+   The normal distribution is a tar tape, blocked 20, 1600 bpi, on an
+industry standard 2400 foot half-inch reel.  The physical format for the
+1/4 inch streamer cartridges is QIC-24.  System V tapes can be written
+in cpio format, blocked 5120 bytes, with ASCII headers.
+
+
+File: emacs,  Node: Nroff Mode,  Next: Formatted Text,  Prev: TeX Mode,  Up: Text
+
+Nroff Mode
+==========
+
+   Nroff mode is a mode like Text mode but modified to handle nroff
+commands present in the text.  Invoke `M-x nroff-mode' to enter this
+mode.  It differs from Text mode in only a few ways.  All nroff command
+lines are considered paragraph separators, so that filling will never
+garble the nroff commands.  Pages are separated by `.bp' commands.
+Comments start with backslash-doublequote.  Also, three special
+commands are provided that are not in Text mode:
+
+`M-n'
+     Move to the beginning of the next line that isn't an nroff command
+     (`forward-text-line').  An argument is a repeat count.
+
+`M-p'
+     Like `M-n' but move up (`backward-text-line').
+
+`M-?'
+     Prints in the echo area the number of text lines (lines that are
+     not nroff commands) in the region (`count-text-lines').
+
+   The other feature of Nroff mode is that you can turn on Electric
+Nroff mode.  This is a minor mode that you can turn on or off with `M-x
+electric-nroff-mode' (*note Minor Modes::.).  When the mode is on, each
+time you use RET to end a line that contains an nroff command that
+opens a kind of grouping, the matching nroff command to close that
+grouping is automatically inserted on the following line.  For example,
+if you are at the beginning of a line and type `. ( b RET', this
+inserts the matching command `.)b' on a new line following point.
+
+   If you use Outline minor mode with Nroff mode (*note Outline
+Mode::.), heading lines are lines of the form `.H' followed by a number
+(the header level).
+
+   Entering Nroff mode runs the hook `text-mode-hook', followed by the
+hook `nroff-mode-hook' (*note Hooks::.).
+
+
+File: emacs,  Node: Formatted Text,  Prev: Nroff Mode,  Up: Text
+
+Editing Formatted Text
+======================
+
+   "Enriched mode" is a minor mode for editing files that contain
+formatted text in WYSIWYG fashion, as in a word processor.  Currently,
+formatted text in Enriched mode can specify fonts, colors, underlining,
+margins, and types of filling and justification.  In the future, we plan
+to implement other formatting features as well.
+
+   Enriched mode is a minor mode (*note Minor Modes::.).  Typically it
+is used in conjunction with Text mode (*note Text Mode::.).  However,
+you can also use it with other major modes such as Outline mode and
+Indented Text mode.
+
+   Potentially, Emacs can store formatted text files in various file
+formats.  Currently, only one format is implemented: "text/enriched"
+format, which is defined by the MIME protocol.  *Note Format
+Conversion: (elisp)Format Conversion, for details of how Emacs
+recognizes and converts file formats.
+
+   The Emacs distribution contains a formatted text file that can serve
+as an example.  Its name is `etc/enriched.doc'.  It contains samples
+illustrating all the features described in this section.  It also
+contains a list of ideas for future enhancements.
 
 * Menu:
 
-* Init Syntax::     Syntax of constants in Emacs Lisp.
-* Init Examples::   How to do some things with an init file.
-* Terminal Init::   Each terminal type can have an init file.
-* Debugging Init::  How to debug your `.emacs' file.
+* Requesting Formatted Text::   Entering and exiting Enriched mode.
+* Hard and Soft Newlines::      There are two different kinds of newlines.
+* Editing Format Info::         How to edit text properties.
+* Faces: Format Faces.          Bold, italic, underline, etc.
+* Color: Format Colors.         Changing the color of text.
+* Indent: Format Indentation.   Changing the left and right margins.
+* Justification: Format Justification.
+                                Centering, setting text flush with the
+                                  left or right margin, etc.
+* Other: Format Properties.     The "special" text properties submenu.
+* Forcing Enriched Mode::       How to force use of Enriched mode.
 
 
-File: emacs,  Node: Init Syntax,  Next: Init Examples,  Prev: Init File,  Up: Init File
+File: emacs,  Node: Requesting Formatted Text,  Next: Hard and Soft Newlines,  Up: Formatted Text
 
-Init File Syntax
-----------------
+Requesting to Edit Formatted Text
+---------------------------------
 
-   The `.emacs' file contains one or more Lisp function call
-expressions.  Each of these consists of a function name followed by
-arguments, all surrounded by parentheses.  For example, `(setq
-fill-column 60)' represents a call to the function `setq' which is used
-to set the variable `fill-column' (*note Filling::.) to 60.
+   Whenever you visit a file that Emacs saved in the text/enriched
+format, Emacs automatically converts the formatting information in the
+file into Emacs's own internal format (text properties), and turns on
+Enriched mode.
 
-   The second argument to `setq' is an expression for the new value of
-the variable.  This can be a constant, a variable, or a function call
-expression.  In `.emacs', constants are used most of the time.  They
-can be:
+   To create a new file of formatted text, first visit the nonexistent
+file, then type `M-x enriched-mode' before you start inserting text.
+This command turns on Enriched mode.  Do this before you begin inserting
+text, to ensure that the text you insert is handled properly.
 
-Numbers:
-     Numbers are written in decimal, with an optional initial minus
-     sign.
+   More generally, the command `enriched-mode' turns Enriched mode on
+if it was off, and off if it was on.  With a prefix argument, this
+command turns Enriched mode on if the argument is positive, and turns
+the mode off otherwise.
 
-Strings:
-     Lisp string syntax is the same as C string syntax with a few extra
-     features.  Use a double-quote character to begin and end a string
-     constant.
+   When you save a buffer while Enriched mode is enabled in it, Emacs
+automatically converts the text to text/enriched format while writing it
+into the file.  When you visit the file again, Emacs will automatically
+recognize the format, reconvert the text, and turn on Enriched mode
+again.
 
-     Newlines and special characters may be present literally in
-     strings.  They can also be represented as backslash sequences:
-     `\n' for newline, `\b' for backspace, `\r' for carriage return,
-     `\t' for tab, `\f' for formfeed (control-l), `\e' for escape, `\\'
-     for a backslash, `\"' for a double-quote, or `\OOO' for the
-     character whose octal code is OOO.  Backslash and double-quote are
-     the only characters for which backslash sequences are mandatory.
+   Normally, after reading a file in text/enriched format, Emacs refills
+each paragraph to fit the width of the window.  You can turn off this
+refilling, to save time, by setting the variable
+`enriched-fill-after-visiting' to `nil' or to `ask'.
 
-     `\C-' can be used as a prefix for a control character, as in
-     `\C-s' for ASCII Control-S, and `\M-' can be used as a prefix for
-     a meta character, as in `\M-a' for Meta-A or `\M-\C-a' for
-     Control-Meta-A.
+   In any case, if the window width is the same as the width with which
+the file was saved, Emacs trusts that the file is already properly
+filled.
 
-Characters:
-     Lisp character constant syntax consists of a `?' followed by
-     either a character or an escape sequence starting with `\'.
-     Examples: `?x', `?\n', `?\"', `?\)'.  Note that strings and
-     characters are not interchangeable in Lisp; some contexts require
-     one and some contexts require the other.
-
-True:
-     `t' stands for `true'.
-
-False:
-     `nil' stands for `false'.
-
-Other Lisp objects:
-     Write a single-quote (') followed by the Lisp object you want.
+   You can add annotations for saving additional text properties, which
+Emacs normally does not save, by adding to `enriched-translations'.
+Note that the text/enriched standard requires any non-standard
+annotations to have names starting with `x-', as in `x-read-only'.
+This ensures that they will not conflict with standard annotations that
+may be added later.
 
 
+File: emacs,  Node: Hard and Soft Newlines,  Next: Editing Format Info,  Prev: Requesting Formatted Text,  Up: Formatted Text
+
+Hard and Soft Newlines
+----------------------
+
+   In formatted text, Emacs distinguishes between two different kinds of
+newlines, "hard" newlines and "soft" newlines.
+
+   Hard newlines are used to separate paragraphs, or items in a list, or
+anywhere that there should always be a line break regardless of the
+margins.  The `RET' command (`newline') and `C-o' (`open-line') insert
+hard newlines.
+
+   Soft newlines are used to make text fit between the margins.  All the
+fill commands, including Auto Fill, insert soft newlines--and they
+delete only soft newlines.
+
+   Although hard and soft newlines look the same, it is important to
+bear the difference in mind.  Do not use RET to break lines in the
+middle of filled paragraphs, or else you will get hard newlines that are
+barriers to further filling.  Instead, let Auto Fill mode break lines,
+so that if the text or the margins change, Emacs can refill the lines
+properly.  *Note Auto Fill::.
+
+   On the other hand, in tables and lists, where the lines should always
+remain as you type them, you can use RET to end lines.  For these
+lines, you may also want to set the justification style to `unfilled'.
+*Note Format Justification::.
+
+
+File: emacs,  Node: Editing Format Info,  Next: Format Faces,  Prev: Hard and Soft Newlines,  Up: Formatted Text
+
+Editing Format Information
+--------------------------
+
+   There are two ways to alter the formatting information for a
+formatted text file: with keyboard commands, and with the mouse.
+
+   The easiest way to add properties to your document is by using the
+Text Properties menu.  You can get to this menu in two ways: from the
+Edit menu in the menu bar, or with `C-mouse-2' (hold the CTRL key and
+press the middle mouse button).
+
+   Most of the items in the Text Properties menu lead to other submenus.
+These are described in the sections that follow.  Some items run
+commands directly:
+
+`Remove Properties'
+     Delete from the region all the text properties that the Text
+     Properties menu works with (`facemenu-remove-props').
+
+`Remove All'
+     Delete *all* text properties from the region
+     (`facemenu-remove-all').
+
+`List Properties'
+     List all the text properties of the character following point
+     (`list-text-properties-at').
+
+`Display Faces'
+     Display a list of all the defined faces.
+
+`Display Colors'
+     Display a list of all the defined colors.
+
+
+File: emacs,  Node: Format Faces,  Next: Format Colors,  Prev: Editing Format Info,  Up: Formatted Text
+
+Faces in Formatted Text
+-----------------------
+
+   The Faces submenu lists various Emacs faces including `bold',
+`italic', and `underline'.  Selecting one of these adds the chosen face
+to the region.  *Note Faces::.  You can also specify a face with these
+keyboard commands:
+
+`M-g d'
+     Set the region, or the next inserted character, to the `default'
+     face (`facemenu-set-default').
+
+`M-g b'
+     Set the region, or the next inserted character, to the `bold' face
+     (`facemenu-set-bold').
+
+`M-g i'
+     Set the region, or the next inserted character, to the `italic'
+     face (`facemenu-set-italic').
+
+`M-g l'
+     Set the region, or the next inserted character, to the
+     `bold-italic' face (`facemenu-set-bold-italic').
+
+`M-g u'
+     Set the region, or the next inserted character, to the `underline'
+     face (`facemenu-set-underline').
+
+`M-g o FACE RET'
+     Set the region, or the next inserted character, to the face FACE
+     (`facemenu-set-face').
+
+   If you use these commands with a prefix argument--or, in Transient
+Mark mode, if the region is not active--then these commands specify a
+face to use for your next self-inserting input.  *Note Transient
+Mark::.  This applies to both the keyboard commands and the menu
+commands.
+
+   Enriched mode defines two additional faces: `excerpt' and `fixed'.
+These correspond to codes used in the text/enriched file format.
+
+   The `excerpt' face is intended for quotations.  This face is the
+same as `italic' unless you customize it (*note Modifying Faces::.).
+
+   The `fixed' face is meant to say, "Use a fixed-width font for this
+part of the text."  Emacs currently supports only fixed-width fonts;
+therefore, the `fixed' annotation is not necessary now.  However, we
+plan to support variable width fonts in future Emacs versions, and
+other systems that display text/enriched format may not use a
+fixed-width font as the default.  So if you specifically want a certain
+part of the text to use a fixed-width font, you should specify the
+`fixed' face for that part.
+
+   The `fixed' face is normally defined to use a different font from
+the default.  However, systems have different fonts installed, you may
+need to customize this.
+
+   If your terminal cannot display different faces, you will not be able
+to see them, but you can still edit documents containing faces.  You can
+even add faces and colors to documents.  They will be visible when the
+file is viewed on a terminal that can display them.
+
+
+File: emacs,  Node: Format Colors,  Next: Format Indentation,  Prev: Format Faces,  Up: Formatted Text
+
+Colors in Formatted Text
+------------------------
+
+   You can specify foreground and background colors for portions of the
+text.  There is a menu for specifying the foreground color and a menu
+for specifying the background color.  Each color menu lists all the
+colors that you have used in Enriched mode in the current Emacs session.
+
+   If you specify a color with a prefix argument--or, in Transient Mark
+mode, if the region is not active--then it applies to your next
+self-inserting input.  *Note Transient Mark::.  Otherwise, the command
+applies to the region.
+
+   Each color menu contains one additional item: `Other'.  You can use
+this item to specify a color that is not listed in the menu; it reads
+the color name with the minibuffer.  To display list of available colors
+and their names, use the `Display Colors' menu item in the Text
+Properties menu (*note Editing Format Info::.).
+
+   Any color that you specify in this way, or that is mentioned in a
+formatted text file that you read in, is added to both color menus for
+the duration of the Emacs session.
+
+   There are no key bindings for specifying colors, but you can do so
+with the extended commands `M-x facemenu-set-foreground' and `M-x
+facemenu-set-background'.  Both of these commands read the name of the
+color with the minibuffer.
+
+
+File: emacs,  Node: Format Indentation,  Next: Format Justification,  Prev: Format Colors,  Up: Formatted Text
+
+Indentation in Formatted Text
+-----------------------------
+
+   When editing formatted text, you can specify different amounts of
+indentation for the right or left margin of an entire paragraph or a
+part of a paragraph.  The margins you specify automatically affect the
+Emacs fill commands (*note Filling::.) and line-breaking commands.
+
+   The Indentation submenu provides a convenient interface for
+specifying these properties.  The submenu contains four items:
+
+`Indent More'
+     Indent the region by 4 columns (`increase-left-margin').  In
+     Enriched mode, this command is also available on `C-x TAB'; if you
+     supply a numeric argument, that says how many columns to add to the
+     margin (a negative argument reduces the number of columns).
+
+`Indent Less'
+     Remove 4 columns of indentation from the region.
+
+`Indent Right More'
+     Make the text narrower by indenting 4 columns at the right margin.
+
+`Indent Right Less'
+     Remove 4 columns of indentation from the right margin.
+
+   You can use these commands repeatedly to increase or decrease the
+indentation.
+
+   The most common way to use these commands is to change the
+indentation of an entire paragraph.  However, that is not the only use.
+You can change the margins at any point; the new values take effect at
+the end of the line (for right margins) or the beginning of the next
+line (for left margins).
+
+   This makes it possible to format paragraphs with "hanging indents",
+which means that the first line is indented less than subsequent lines.
+To set up a hanging indent, increase the indentation of the region
+starting after the first word of the paragraph and running until the end
+of the paragraph.
+
+   Indenting the first line of a paragraph is easier.  Set the margin
+for the whole paragraph where you want it to be for the body of the
+paragraph, then indent the first line by inserting extra spaces or tabs.
+
+   Sometimes, as a result of editing, the filling of a paragraph becomes
+messed up--parts of the paragraph may extend past the left or right
+margins.  When this happens, use `M-q' (`fill-paragraph') to refill the
+paragraph.
+
+   The variable `standard-indent' specifies how many columns these
+commands should add to or subtract from the indentation.  The default
+value is 4.
+
+   Enriched mode automatically sets the variable `fill-column' based on
+the window width: it leaves a certain number of columns for the right
+margin.  The variable `enriched-default-right-margin' says how many
+columns.  The default value is 10.
+
+
+File: emacs,  Node: Format Justification,  Next: Format Properties,  Prev: Format Indentation,  Up: Formatted Text
+
+Justification in Formatted Text
+-------------------------------
+
+   When editing formatted text, you can specify various styles of
+justification for a paragraph.  The style you specify automatically
+affects the Emacs fill commands.
+
+   The Justification submenu provides a convenient interface for
+specifying the style.  The submenu contains five items:
+
+`Flush Left'
+     This is the most common style of justification (at least for
+     English).  Lines are aligned at the left margin but left uneven at
+     the right.
+
+`Flush Right'
+     This aligns each line with the right margin.  Spaces and tabs are
+     added on the left, if necessary, to make lines line up on the
+     right.
+
+`Full'
+     This justifies the text, aligning both edges of each line.
+     Justified text looks very nice in a printed book, where the spaces
+     can all be adjusted equally, but it does not look as nice with a
+     fixed-width font on the screen.  Perhaps a future version of Emacs
+     will be able to adjust the width of spaces in a line to achieve
+     elegant justification.
+
+`Center'
+     This centers every line between the current margins.
+
+`None'
+     This turns off filling entirely.  Each line will remain as you
+     wrote it; the fill and auto-fill functions will have no effect on
+     text which has this setting.  You can, however, still indent the
+     left margin.  In unfilled regions, all newlines are treated as
+     hard newlines (*note Hard and Soft Newlines::.) .
+
+   In Enriched mode, you can also specify justification from the
+keyboard using the `M-j' prefix character:
+
+`M-j l'
+     Make the region left-filled (`set-justification-left').
+
+`M-j r'
+     Make the region right-filled (`set-justification-right').
+
+`M-j f'
+     Make the region fully-justified (`set-justification-full').
+
+`M-j c'
+`M-S'
+     Make the region centered (`set-justification-center').
+
+`M-j u'
+     Make the region unfilled (`set-justification-none').
+
+   Justification styles apply to entire paragraphs.  All the
+justification-changing commands operate on the paragraph containing
+point, or, if the region is active, on all paragraphs which overlap the
+region.
+
+   The default justification style is specified by the variable
+`default-justification'.  Its value should be one of the symbols
+`left', `right', `full', `center', or `none'.
+
+
+File: emacs,  Node: Format Properties,  Next: Forcing Enriched Mode,  Prev: Format Justification,  Up: Formatted Text
+
+Setting Other Text Properties
+-----------------------------
+
+   The Other Properties menu lets you add or remove three other useful
+text properties: `read-only', `invisible' and `intangible'.  The
+`intangible' property disallows moving point within the text, the
+`invisible' text property hides text from display, and the `read-only'
+property disallows alteration of the text.
+
+   Each of these special properties has a menu item to add it to the
+region.  The last menu item, `Remove Special', removes all of these
+special properties from the text in the region.
+
+   Currently, the `invisible' and `intangible' properties are *not*
+saved in the text/enriched format.  The `read-only' property is saved,
+but it is not a standard part of the text/enriched format, so other
+editors may not respect it.
+
+
+File: emacs,  Node: Forcing Enriched Mode,  Prev: Format Properties,  Up: Formatted Text
+
+Forcing Enriched Mode
+---------------------
+
+   Normally, Emacs knows when you are editing formatted text because it
+recognizes the special annotations used in the file that you visited.
+However, there are situations in which you must take special actions to
+convert file contents or turn on Enriched mode:
+
+   * When you visit a file that was created with some other editor,
+     Emacs may not recognize the file as being in the text/enriched
+     format.  In this case, when you visit the file you will see the
+     formatting commands rather than the formatted text.  Type `M-x
+     format-decode-buffer' to translate it.
+
+   * When you *insert* a file into a buffer, rather than visiting it.
+     Emacs does the necessary conversions on the text which you insert,
+     but it does not enable Enriched mode.  If you wish to do that,
+     type `M-x enriched-mode'.
+
+   The command `format-decode-buffer' translates text in various
+formats into Emacs's internal format.  It asks you to specify the format
+to translate from; however, normally you can type just RET, which tells
+Emacs to guess the format.
+
+   If you wish to look at a file in text/enriched format in its raw
+form, as a sequence of characters with no formatting, use `M-x
+format-find-file RET FILENAME RET RET'.  The empty second argument
+means, "read without format conversion."
+
+
+File: emacs,  Node: Programs,  Next: Building,  Prev: Text,  Up: Top
+
+Editing Programs
+****************
+
+   Emacs has many commands designed to understand the syntax of
+programming languages such as Lisp and C.  These commands can
+
+   * Move over or kill balanced expressions or "sexps" (*note Lists::.).
+
+   * Move over or mark top-level expressions--"defuns", in Lisp;
+     functions, in C (*note Defuns::.).
+
+   * Show how parentheses balance (*note Matching::.).
+
+   * Insert, kill or align comments (*note Comments::.).
+
+   * Follow the usual indentation conventions of the language (*note
+     Program Indent::.).
+
+   The commands for words, sentences and paragraphs are very useful in
+editing code even though their canonical application is for editing
+human language text.  Most symbols contain words (*note Words::.);
+sentences can be found in strings and comments (*note Sentences::.).
+Paragraphs per se don't exist in code, but the paragraph commands are
+useful anyway, because programming language major modes define
+paragraphs to begin and end at blank lines (*note Paragraphs::.).
+Judicious use of blank lines to make the program clearer will also
+provide useful chunks of text for the paragraph commands to work on.
+
+   The selective display feature is useful for looking at the overall
+structure of a function (*note Selective Display::.).  This feature
+causes only the lines that are indented less than a specified amount to
+appear on the screen.
+
+* Menu:
+
+* Program Modes::     Major modes for editing programs.
+* Lists::             Expressions with balanced parentheses.
+* List Commands::     The commands for working with list and sexps.
+* Defuns::            Each program is made up of separate functions.
+                        There are editing commands to operate on them.
+* Program Indent::    Adjusting indentation to show the nesting.
+* Matching::          Insertion of a close-delimiter flashes matching open.
+* Comments::          Inserting, killing, and aligning comments.
+* Balanced Editing::  Inserting two matching parentheses at once, etc.
+* Symbol Completion:: Completion on symbol names of your program or language.
+* Documentation::     Getting documentation of functions you plan to call.
+* Change Log::        Maintaining a change history for your program.
+* Tags::              Go direct to any function in your program in one
+                        command.  Tags remembers which file it is in.
+* Emerge::	      A convenient way of merging two versions of a program.
+* C Mode::	      Special commands of C, C++, Objective-C and Java modes.
+* Fortran::	      Fortran mode and its special features.
+* Asm Mode::	      Asm mode and its special features.
+
+
+File: emacs,  Node: Program Modes,  Next: Lists,  Up: Programs
+
+Major Modes for Programming Languages
+=====================================
+
+   Emacs also has major modes for the programming languages Lisp, Scheme
+(a variant of Lisp), Awk, C, C++, Fortran, Icon, Java, Objective-C,
+Pascal, Perl and Tcl.  There is also a major mode for makefiles, called
+Makefile mode.
+
+   Ideally, a major mode should be implemented for each programming
+language that you might want to edit with Emacs; but often the mode for
+one language can serve for other syntactically similar languages.  The
+language modes that exist are those that someone decided to take the
+trouble to write.
+
+   There are several forms of Lisp mode, which differ in the way they
+interface to Lisp execution.  *Note Executing Lisp::.
+
+   Each of the programming language modes defines the TAB key to run an
+indentation function that knows the indentation conventions of that
+language and updates the current line's indentation accordingly.  For
+example, in C mode TAB is bound to `c-indent-line'.  LFD is normally
+defined to do RET followed by TAB; thus, it too indents in a
+mode-specific fashion.
+
+   In most programming languages, indentation is likely to vary from
+line to line.  So the major modes for those languages rebind DEL to
+treat a tab as if it were the equivalent number of spaces (using the
+command `backward-delete-char-untabify').  This makes it possible to
+rub out indentation one column at a time without worrying whether it is
+made up of spaces or tabs.  Use `C-b C-d' to delete a tab character
+before point, in these modes.
+
+   Programming language modes define paragraphs to be separated only by
+blank lines, so that the paragraph commands remain useful.  Auto Fill
+mode, if enabled in a programming language major mode, indents the new
+lines which it creates.
+
+   Turning on a major mode runs a normal hook called the "mode hook",
+which is the value of a Lisp variable.  Each major mode has a mode hook,
+and the hook's name is always made from the mode command's name by
+adding `-hook'.  For example, turning on C mode runs the hook
+`c-mode-hook', while turning on Lisp mode runs the hook
+`lisp-mode-hook'.  *Note Hooks::.
+
+
+File: emacs,  Node: Lists,  Next: List Commands,  Prev: Program Modes,  Up: Programs
+
+Lists and Sexps
+===============
+
+   By convention, Emacs keys for dealing with balanced expressions are
+usually Control-Meta characters.  They tend to be analogous in function
+to their Control and Meta equivalents.  These commands are usually
+thought of as pertaining to expressions in programming languages, but
+can be useful with any language in which some sort of parentheses exist
+(including human languages).
+
+   These commands fall into two classes.  Some deal only with "lists"
+(parenthetical groupings).  They see nothing except parentheses,
+brackets, braces (whichever ones must balance in the language you are
+working with), and escape characters that might be used to quote those.
+
+   The other commands deal with expressions or "sexps".  The word `sexp'
+is derived from "s-expression", the ancient term for an expression in
+Lisp.  But in Emacs, the notion of `sexp' is not limited to Lisp.  It
+refers to an expression in whatever language your program is written in.
+Each programming language has its own major mode, which customizes the
+syntax tables so that expressions in that language count as sexps.
+
+   Sexps typically include symbols, numbers, and string constants, as
+well as anything contained in parentheses, brackets or braces.
+
+   In languages that use prefix and infix operators, such as C, it is
+not possible for all expressions to be sexps.  For example, C mode does
+not recognize `foo + bar' as a sexp, even though it *is* a C expression;
+it recognizes `foo' as one sexp and `bar' as another, with the `+' as
+punctuation between them.  This is a fundamental ambiguity: both `foo +
+bar' and `foo' are legitimate choices for the sexp to move over if
+point is at the `f'.  Note that `(foo + bar)' is a single sexp in C
+mode.
+
+   Some languages have obscure forms of expression syntax that nobody
+has bothered to make Emacs understand properly.
+
+
+File: emacs,  Node: List Commands,  Next: Defuns,  Prev: Lists,  Up: Programs
+
+List And Sexp Commands
+======================
+
+`C-M-f'
+     Move forward over a sexp (`forward-sexp').
+
+`C-M-b'
+     Move backward over a sexp (`backward-sexp').
+
+`C-M-k'
+     Kill sexp forward (`kill-sexp').
+
+`C-M-DEL'
+     Kill sexp backward (`backward-kill-sexp').
+
+`C-M-u'
+     Move up and backward in list structure (`backward-up-list').
+
+`C-M-d'
+     Move down and forward in list structure (`down-list').
+
+`C-M-n'
+     Move forward over a list (`forward-list').
+
+`C-M-p'
+     Move backward over a list (`backward-list').
+
+`C-M-t'
+     Transpose expressions (`transpose-sexps').
+
+`C-M-@'
+     Put mark after following expression (`mark-sexp').
+
+   To move forward over a sexp, use `C-M-f' (`forward-sexp').  If the
+first significant character after point is an opening delimiter (`(' in
+Lisp; `(', `[' or `{' in C), `C-M-f' moves past the matching closing
+delimiter.  If the character begins a symbol, string, or number,
+`C-M-f' moves over that.
+
+   The command `C-M-b' (`backward-sexp') moves backward over a sexp.
+The detailed rules are like those above for `C-M-f', but with
+directions reversed.  If there are any prefix characters (single-quote,
+backquote and comma, in Lisp) preceding the sexp, `C-M-b' moves back
+over them as well.  The sexp commands move across comments as if they
+were whitespace in most modes.
+
+   `C-M-f' or `C-M-b' with an argument repeats that operation the
+specified number of times; with a negative argument, it moves in the
+opposite direction.
+
+   Killing a sexp at a time can be done with `C-M-k' (`kill-sexp') or
+`C-M-DEL' (`backward-kill-sexp').  `C-M-k' kills the characters that
+`C-M-f' would move over, and `C-M-DEL' kills the characters that
+`C-M-b' would move over.
+
+   The "list commands" move over lists like the sexp commands but skip
+blithely over any number of other kinds of sexps (symbols, strings,
+etc).  They are `C-M-n' (`forward-list') and `C-M-p' (`backward-list').
+The main reason they are useful is that they usually ignore comments
+(since the comments usually do not contain any lists).
+
+   `C-M-n' and `C-M-p' stay at the same level in parentheses, when
+that's possible.  To move *up* one (or N) levels, use `C-M-u'
+(`backward-up-list').  `C-M-u' moves backward up past one unmatched
+opening delimiter.  A positive argument serves as a repeat count; a
+negative argument reverses direction of motion and also requests
+repetition, so it moves forward and up one or more levels.
+
+   To move *down* in list structure, use `C-M-d' (`down-list').  In
+Lisp mode, where `(' is the only opening delimiter, this is nearly the
+same as searching for a `('.  An argument specifies the number of levels
+of parentheses to go down.
+
+   A somewhat random-sounding command which is nevertheless handy is
+`C-M-t' (`transpose-sexps'), which drags the previous sexp across the
+next one.  An argument serves as a repeat count, and a negative
+argument drags backwards (thus canceling out the effect of `C-M-t' with
+a positive argument).  An argument of zero, rather than doing nothing,
+transposes the sexps ending after point and the mark.
+
+   To set the region around the next sexp in the buffer, use `C-M-@'
+(`mark-sexp'), which sets mark at the same place that `C-M-f' would
+move to.  `C-M-@' takes arguments like `C-M-f'.  In particular, a
+negative argument is useful for putting the mark at the beginning of
+the previous sexp.
+
+   The list and sexp commands' understanding of syntax is completely
+controlled by the syntax table.  Any character can, for example, be
+declared to be an opening delimiter and act like an open parenthesis.
+*Note Syntax::.
+
+
+File: emacs,  Node: Defuns,  Next: Program Indent,  Prev: List Commands,  Up: Programs
+
+Defuns
+======
+
+   In Emacs, a parenthetical grouping at the top level in the buffer is
+called a "defun".  The name derives from the fact that most top-level
+lists in a Lisp file are instances of the special form `defun', but any
+top-level parenthetical grouping counts as a defun in Emacs parlance
+regardless of what its contents are, and regardless of the programming
+language in use.  For example, in C, the body of a function definition
+is a defun.
+
+`C-M-a'
+     Move to beginning of current or preceding defun
+     (`beginning-of-defun').
+
+`C-M-e'
+     Move to end of current or following defun (`end-of-defun').
+
+`C-M-h'
+     Put region around whole current or following defun (`mark-defun').
+
+   The commands to move to the beginning and end of the current defun
+are `C-M-a' (`beginning-of-defun') and `C-M-e' (`end-of-defun').
+
+   If you wish to operate on the current defun, use `C-M-h'
+(`mark-defun') which puts point at the beginning and mark at the end of
+the current or next defun.  For example, this is the easiest way to get
+ready to move the defun to a different place in the text.  In C mode,
+`C-M-h' runs the function `mark-c-function', which is almost the same
+as `mark-defun'; the difference is that it backs up over the argument
+declarations, function name and returned data type so that the entire C
+function is inside the region.  *Note Marking Objects::.
+
+   Emacs assumes that any open-parenthesis found in the leftmost column
+is the start of a defun.  Therefore, *never put an open-parenthesis at
+the left margin in a Lisp file unless it is the start of a top level
+list.  Never put an open-brace or other opening delimiter at the
+beginning of a line of C code unless it starts the body of a function.*
+The most likely problem case is when you want an opening delimiter at
+the start of a line inside a string.  To avoid trouble, put an escape
+character (`\', in C and Emacs Lisp, `/' in some other Lisp dialects)
+before the opening delimiter.  It will not affect the contents of the
+string.
+
+   In the remotest past, the original Emacs found defuns by moving
+upward a level of parentheses until there were no more levels to go up.
+This always required scanning all the way back to the beginning of the
+buffer, even for a small function.  To speed up the operation, Emacs
+was changed to assume that any `(' (or other character assigned the
+syntactic class of opening-delimiter) at the left margin is the start
+of a defun.  This heuristic is nearly always right and avoids the
+costly scan; however, it mandates the convention described above.
+
+
+File: emacs,  Node: Program Indent,  Next: Matching,  Prev: Defuns,  Up: Programs
+
+Indentation for Programs
+========================
+
+   The best way to keep a program properly indented is to use Emacs to
+re-indent it as you change it.  Emacs has commands to indent properly
+either a single line, a specified number of lines, or all of the lines
+inside a single parenthetical grouping.
+
+* Menu:
+
+* Basic Indent::	Indenting a single line.
+* Multi-line Indent::   Commands to reindent many lines at once.
+* Lisp Indent::		Specifying how each Lisp function should be indented.
+* C Indent::		Extra features for indenting C code.
+* Custom C Indent::	Controlling indentation style for C code.
+
+   Emacs also provides a Lisp pretty-printer in the library `pp'.  This
+program prints a Lisp object with indentation chosen to look nice.
+
+
+File: emacs,  Node: Basic Indent,  Next: Multi-line Indent,  Up: Program Indent
+
+Basic Program Indentation Commands
+----------------------------------
+
+`TAB'
+     Adjust indentation of current line.
+
+`LFD'
+     Equivalent to RET followed by TAB (`newline-and-indent').
+
+   The basic indentation command is TAB, which gives the current line
+the correct indentation as determined from the previous lines.  The
+function that TAB runs depends on the major mode; it is
+`lisp-indent-line' in Lisp mode, `c-indent-line' in C mode, etc.  These
+functions understand different syntaxes for different languages, but
+they all do about the same thing.  TAB in any programming language
+major mode inserts or deletes whitespace at the beginning of the
+current line, independent of where point is in the line.  If point is
+inside the whitespace at the beginning of the line, TAB leaves it at
+the end of that whitespace; otherwise, TAB leaves point fixed with
+respect to the characters around it.
+
+   Use `C-q TAB' to insert a tab at point.
+
+   When entering lines of new code, use LFD (`newline-and-indent'),
+which is equivalent to a RET followed by a TAB.  LFD creates a blank
+line, and then gives it the appropriate indentation.
+
+   TAB indents the second and following lines of the body of a
+parenthetical grouping each under the preceding one; therefore, if you
+alter one line's indentation to be nonstandard, the lines below will
+tend to follow it.  This behavior is convenient in cases where you have
+overridden the standard result of TAB because you find it unaesthetic
+for a particular line.
+
+   Remember that an open-parenthesis, open-brace or other opening
+delimiter at the left margin is assumed by Emacs (including the
+indentation routines) to be the start of a function.  Therefore, you
+must never have an opening delimiter in column zero that is not the
+beginning of a function, not even inside a string.  This restriction is
+vital for making the indentation commands fast; you must simply accept
+it.  *Note Defuns::, for more information on this.
+

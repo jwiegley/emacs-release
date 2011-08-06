@@ -2,22 +2,19 @@
    Also has _setjmp and _longjmp for pyramids.
    Copyright (C) 1985, 1986, 1988 Free Software Foundation, Inc.
 
-This file is part of GNU Emacs.
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version.
 
-GNU Emacs is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
-any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-GNU Emacs is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
-
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
 /* Both 68000 systems I have run this on have had broken versions of alloca.
    Also, I am told that non-berkeley systems do not have it at all.
@@ -25,7 +22,11 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    on all 68000 systems.  */
 
 #define NOT_C_CODE
+#ifdef emacs
+#include <config.h>
+#else
 #include "config.h"
+#endif
 
 #ifndef HAVE_ALLOCA  /* define this to use system's alloca */
 
@@ -45,21 +46,15 @@ lose!!
 #endif /* ATT3B5 */
 #endif /* pyramid */
 #endif /* sequent */
-#endif /* ns32000 */
 #endif /* ns16000 */
+#endif /* ns32000 */
 #endif /* WICAT */
 #endif /* m68000 */
 #endif /* m68k */
 #endif /* hp9000s300 */
 
 
-#if defined (hp9000s300) || defined (mot_delta)
-#ifdef mot_delta
-	file "alloca.s"
-; This syntax is what pot@fly.cnuce.cnr.it says we should use.
-	global	alloca
-alloca:
-#endif
+#ifdef hp9000s300
 #ifdef OLD_HP_ASSEMBLER
 	data
 	text
@@ -90,7 +85,7 @@ PROBE	equ	-128		; safety buffer for C compiler scratch
 	set	MAXREG,22	# d2-d7, a2-a5, fp2-fp7 may have been saved
 	global	_alloca
 _alloca:
-	mov.l	(%sp)+,%a0	# return addess
+	mov.l	(%sp)+,%a0	# return address
 	mov.l	(%sp)+,%d0	# number of bytes to allocate
 	mov.l	%sp,%a1		# save old sp for register copy
 	mov.l	%sp,%d1		# compute new sp
@@ -115,6 +110,35 @@ copy_regs_loop:			/* save caller's saved registers */
 	file	"alloca.s"
 	global	alloca
 alloca:
+#ifdef MOTOROLA_DELTA
+/* slightly modified version of alloca to motorola sysV/68 pcc - based
+   compiler. 
+   this compiler saves used registers relative to %sp instead of %fp.
+   alright, just make new copy of saved register set whenever we allocate
+   new space from stack..
+   this is true at last until SVR3V7 . bug has reported to Motorola. */
+	set	MAXREG,10	# max no of registers to save (d2-d7, a2-a5)
+        mov.l   (%sp)+,%a1	# pop return addr from top of stack
+        mov.l   (%sp)+,%d0	# pop size in bytes from top of stack
+	mov.l	%sp,%a0		# save stack pointer for register copy
+        addq.l  &3,%d0		# round size up to long word
+        andi.l  &-4,%d0		# mask out lower two bits of size
+	mov.l	%sp,%d1		# compute new value of sp to d1
+        sub.l	%d0,%d1		# pseudo-allocate by moving stack pointer
+	sub.l	&MAXREG*4,%d1	# allocate more space for saved regs.
+	mov.l	%d1,%sp		# actual allocation.
+	move.w	&MAXREG-1,%d0	# d0 counts saved regs.
+	mov.l	%a2,%d1		# preserve a2.
+	mov.l	%sp,%a2		# make pointer to new reg save area.
+copy_regs_loop: 		# copy stuff from old save area.
+	mov.l	(%a0)+,(%a2)+	# save saved register
+	dbra	%d0,copy_regs_loop
+        mov.l   %a2,%a0		# now a2 is start of allocated space.
+	mov.l	%a2,%d0		# return it in both a0 and d0 to play safe.
+	mov.l	%d1,%a2		# restore a2.
+        subq.l  &4,%sp		# new top of stack
+        jmp     (%a1)		# far below normal return
+#else /* not MOTOROLA_DELTA */
 	mov.l	(%sp)+,%a1	# pop return addr from top of stack
 	mov.l	(%sp)+,%d0	# pop size in bytes from top of stack
 	add.l	&R%1,%d0	# round size up to long word
@@ -128,6 +152,7 @@ alloca:
 	set	S%1,64		# safety factor for C compiler scratch
 	set	R%1,3+S%1	# add to size for rounding
 	set	P%1,-132	# probe this far below current top of stack
+#endif /* not MOTOROLA_DELTA */
 
 #else /* not m68k */
 
@@ -156,7 +181,7 @@ _alloca:
 	move.l	sp,d1		; get current SP value
 	sub.l	d0,d1		; adjust to reflect required size...
 	sub.l	#MAXREG*4,d1	; ...and space needed for registers
-	and.l	#-4,d1		; backup to longword boundry
+	and.l	#-4,d1		; backup to longword boundary
 	move.l	sp,a0		; save old SP value for register copy
 	move.l	d1,sp		; set the new SP value
 	tst.b	-4096(sp)	; grab an extra page (to cover caller)
@@ -211,8 +236,13 @@ alloca:
 #define IM
 #define REGISTER(x) x
 #else
+#ifdef NS5   /* ns SysV assembler */
+#define IM $
+#define REGISTER(x) x
+#else
 #define IM $
 #define REGISTER(x) 0(x)
+#endif
 #endif
 
 /*
@@ -241,7 +271,7 @@ alloca:
 	movmd	0(r2),4(sp),IM/**/4	/*  copy regs */
 	movmd	0x10(r2),0x14(sp),IM/**/4
 	jump	REGISTER(r1)	/* funky return */
-#endif /* ns16000 or ns32000. */
+#endif /* ns16000 or ns32000 */
 
 #ifdef pyramid
 

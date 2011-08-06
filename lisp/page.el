@@ -1,11 +1,14 @@
-;; Page motion commands for emacs.
+;;; page.el --- page motion commands for emacs.
+
 ;; Copyright (C) 1985 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,30 +17,49 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
+
+;; This code provides the page-oriented movement and selection commands
+;; documented in the Emacs manual.
+
+;;; Code:
 
 (defun forward-page (&optional count)
   "Move forward to page boundary.  With arg, repeat, or go back if negative.
-A page boundary is any line whose beginning matches the regexp  page-delimiter."
+A page boundary is any line whose beginning matches the regexp
+`page-delimiter'."
   (interactive "p")
   (or count (setq count 1))
   (while (and (> count 0) (not (eobp)))
+    ;; In case the page-delimiter matches the null string,
+    ;; don't find a match without moving.
+    (if (bolp) (forward-char 1))
     (if (re-search-forward page-delimiter nil t)
 	nil
       (goto-char (point-max)))
     (setq count (1- count)))
   (while (and (< count 0) (not (bobp)))
+    ;; In case the page-delimiter matches the null string,
+    ;; don't find a match without moving.
+    (and (save-excursion (re-search-backward page-delimiter nil t))
+	 (= (match-end 0) (point))
+	 (goto-char (match-beginning 0)))
     (forward-char -1)
     (if (re-search-backward page-delimiter nil t)
+	;; We found one--move to the end of it.
 	(goto-char (match-end 0))
+      ;; We found nothing--go to beg of buffer.
       (goto-char (point-min)))
     (setq count (1+ count))))
 
 (defun backward-page (&optional count)
   "Move backward to page boundary.  With arg, repeat, or go fwd if negative.
-A page boundary is any line whose beginning matches the regexp  page-delimiter."
+A page boundary is any line whose beginning matches the regexp
+`page-delimiter'."
   (interactive "p")
   (or count (setq count 1))
   (forward-page (- count)))
@@ -53,7 +75,7 @@ thus marking a page other than the one point was originally in."
     (if (< arg 0)
         (forward-page (1- arg))))
   (forward-page)
-  (push-mark nil t)
+  (push-mark nil t t)
   (forward-page -1))
 
 (defun narrow-to-page (&optional arg)
@@ -73,8 +95,9 @@ thus showing a page other than the one point was originally in."
     ;; If we stopped due to end of buffer, stay there.
     ;; If we stopped after a page delimiter, put end of restriction
     ;; at the beginning of that line.
-    (if (save-excursion (beginning-of-line)
-			(looking-at page-delimiter))
+    (if (save-excursion
+	  (goto-char (match-beginning 0)) ; was (beginning-of-line)
+	  (looking-at page-delimiter))
 	(beginning-of-line))
     (narrow-to-region (point)
 		      (progn
@@ -87,6 +110,7 @@ thus showing a page other than the one point was originally in."
 			(if (and (eolp) (not (bobp)))
 			    (forward-line 1))
 			(point)))))
+(put 'narrow-to-page 'disabled t)
 
 (defun count-lines-page ()
   "Report number of lines on current page, and how many are before or after point."
@@ -121,3 +145,8 @@ thus showing a page other than the one point was originally in."
 	(message "Page %d, line %d"
 		 count
 		 (1+ (count-lines (point) opoint)))))))
+
+;;; Place `provide' at end of file.
+(provide 'page)
+
+;;; page.el ends here

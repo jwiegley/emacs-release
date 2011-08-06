@@ -1,0 +1,395 @@
+This is Info file ../info/mh-e, produced by Makeinfo-1.63 from the
+input file mh-e.texi.
+
+   This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
+Emacs Interface to MH', for mh-e, Version 5.0.2.
+
+   Copyright 1995 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the section entitled "Copying" is included exactly as in the
+original, and provided that the entire resulting derived work is
+distributed under the terms of a permission notice identical to this
+one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Free Software Foundation.
+
+
+File: mh-e,  Node: Variable Index,  Next: Concept Index,  Prev: Command Index,  Up: Top
+
+Variable Index
+**************
+
+* Menu:
+
+* mail-citation-hook:                   Customizing Inserting Letter.
+* mh-auto-folder-collect:               Customizing Organizing.
+* mh-before-quit-hook:                  Customizing Finishing Up.
+* mh-before-send-letter-hook:           Customizing Sending Message.
+* mh-before-send-letter-hook, example:  Customizing Sending Message.
+* mh-bury-show-buffer:                  Customizing Reading.
+* mh-bury-show-buffer, example:         Customizing mh-e.
+* mh-clean-message-header:              Customizing Viewing.
+* mh-cmd-note:                          Customizing Scan Line Formats.
+* mh-comp-formfile:                     Customizing Sending.
+* mh-compose-letter-function:           Customizing Sending.
+* mh-cur-scan-msg-regexp:               Customizing Scan Line Formats.
+* mh-default-folder-for-message-function: Customizing Organizing.
+* mh-default-folder-for-message-function, example: Customizing Organizing.
+* mh-delete-msg-hook:                   Customizing Deleting.
+* mh-delete-yanked-msg-window:          Customizing Inserting Letter.
+* mh-deleted-msg-regexp:                Customizing Scan Line Formats.
+* mh-do-not-confirm:                    Customizing Reading.
+* mh-folder-mode-hook:                  Customizing Reading.
+* mh-folder-mode-hook, example:         Customizing Reading.
+* mh-forward-subject-format:            Customizing Forwarding.
+* mh-good-msg-regexp:                   Customizing Scan Line Formats.
+* mh-inc-folder-hook:                   Customizing Incorporating.
+* mh-inc-folder-hook, example:          Customizing Incorporating.
+* mh-inc-prog:                          Customizing Incorporating.
+* mh-ins-buf-prefix:                    Customizing Inserting Letter.
+* mh-invisible-headers:                 Customizing Viewing.
+* mh-letter-mode-hook:                  Customizing Sending.
+* mh-lib:                               Customizing Reading.
+* mh-lib, example:                      Getting Started.
+* mh-lpr-command-format:                Customizing Printing.
+* mh-lpr-command-format, example:       Customizing mh-e.
+* mh-mhn-args:                          Customizing Sending MIME.
+* mh-mime-content-types:                Customizing Editing MIME.
+* mh-mime-content-types, example:       Customizing Editing MIME.
+* mh-msg-number-regexp:                 Customizing Scan Line Formats.
+* mh-msg-search-regexp:                 Customizing Scan Line Formats.
+* mh-new-draft-cleaned-headers:         Customizing Old Drafts.
+* mh-new-draft-cleaned-headers, example: Customizing Old Drafts.
+* mh-note-copied:                       Customizing Scan Line Formats.
+* mh-note-cur:                          Customizing Scan Line Formats.
+* mh-note-deleted:                      Customizing Scan Line Formats.
+* mh-note-dist:                         Customizing Scan Line Formats.
+* mh-note-forw:                         Customizing Scan Line Formats.
+* mh-note-printed:                      Customizing Scan Line Formats.
+* mh-note-refiled:                      Customizing Scan Line Formats.
+* mh-note-repl:                         Customizing Scan Line Formats.
+* mh-note-seq:                          Customizing Scan Line Formats.
+* mh-partial-folder-mode-line-annotation: Customizing Searching.
+* mh-pick-mode-hook:                    Customizing Searching.
+* mh-print-background:                  Customizing Printing.
+* mh-progs <1>:                         Customizing Scan Line Formats.
+* mh-progs <1>:                         Customizing Incorporating.
+* mh-progs:                             Customizing Reading.
+* mh-progs, example:                    Getting Started.
+* mh-quit-hook:                         Customizing Finishing Up.
+* mh-recenter-summary-p:                Customizing Moving Around.
+* mh-recursive-folders:                 Customizing Organizing.
+* mh-redist-full-contents:              Customizing Redistributing.
+* mh-refile-msg-hook:                   Customizing Organizing.
+* mh-refiled-msg-regexp:                Customizing Scan Line Formats.
+* mh-repl-formfile:                     Customizing Sending.
+* mh-reply-default-reply-to:            Customizing Replying.
+* mh-scan-prog <1>:                     Customizing Scan Line Formats.
+* mh-scan-prog:                         Customizing Incorporating.
+* mh-send-prog:                         Customizing Sending Message.
+* mh-show-buffer-mode-line-buffer-id:   Customizing Viewing.
+* mh-show-hook:                         Customizing Viewing.
+* mh-show-hook, example:                Customizing Viewing.
+* mh-show-mode-hook:                    Customizing Viewing.
+* mh-show-mode-hook, example:           Customizing Viewing.
+* mh-signature-file-name:               Customizing Signature.
+* mh-sortm-args:                        Customizing Organizing.
+* mh-store-default-directory:           Customizing Files and Pipes.
+* mh-store-default-directory, example:  Customizing Files and Pipes.
+* mh-summary-height:                    Customizing Reading.
+* mh-user-path, example:                Customizing Organizing.
+* mh-valid-scan-line:                   Customizing Scan Line Formats.
+* mh-visible-headers:                   Customizing Viewing.
+* mh-yank-from-start-of-msg:            Customizing Inserting Letter.
+* mhl-formfile:                         Customizing Viewing.
+
+
+File: mh-e,  Node: Concept Index,  Prev: Variable Index,  Up: Top
+
+Concept Index
+*************
+
+* Menu:
+
+* burst:                                Reading Digests.
+* comp:                                 Customizing Sending.
+* dist:                                 Customizing Redistributing.
+* folder:                               Organizing.
+* forw:                                 Forwarding.
+* ftp <1>:                              Tar.
+* ftp:                                  FTP.
+* inc <1>:                              Customizing Scan Line Formats.
+* inc <1>:                              Customizing Incorporating.
+* inc:                                  Reading Mail Tour.
+* install-mh:                           Getting Started.
+* lpr <1>:                              Customizing Printing.
+* lpr:                                  Printing.
+* mark:                                 Sequences.
+* mh-e: comparison between versions:    Changes to mh-e.
+* mhl <1>:                              Customizing Viewing.
+* mhl <1>:                              Printing.
+* mhl:                                  Replying.
+* mhn <1>:                              Sending MIME.
+* mhn <1>:                              Editing MIME.
+* mhn:                                  Reading MIME.
+* pick <1>:                             Sequences.
+* pick:                                 Searching.
+* refile:                               Organizing.
+* repl <1>:                             Customizing Sending.
+* repl:                                 Replying.
+* scan <1>:                             Customizing Scan Line Formats.
+* scan:                                 Reading Mail Tour.
+* send <1>:                             Customizing Sending Message.
+* send:                                 Customizing Redistributing.
+* shar <1>:                             Customizing Files and Pipes.
+* shar:                                 Files and Pipes.
+* show:                                 Reading MIME.
+* sortm:                                Customizing Organizing.
+* tar:                                  Tar.
+* uuencode <1>:                         Customizing Files and Pipes.
+* uuencode:                             Files and Pipes.
+* whom:                                 Recipients.
+* xmh, in mh-e history:                 From Jim Larus.
+* .emacs <1>:                           Getting mh-e.
+* .emacs <1>:                           Customizing Organizing.
+* .emacs <1>:                           Customizing Reading.
+* .emacs <1>:                           Customizing mh-e.
+* .emacs <1>:                           Incorporating.
+* .emacs:                               Getting Started.
+* .mh_profile:                          Customizing Organizing.
+* .signature <1>:                       Customizing Signature.
+* .signature:                           Signature.
+* components:                           Customizing Sending.
+* draft:                                Old Drafts.
+* mhl.reply:                            Replying.
+* replcomps:                            Customizing Sending.
+* bugs:                                 Bug Reports.
+* checking recipients:                  Recipients.
+* content description:                  Editing MIME.
+* content types:                        Editing MIME.
+* deleting <1>:                         Customizing Deleting.
+* deleting:                             Deleting.
+* digests:                              Reading Digests.
+* editing draft <1>:                    Customizing Draft Editing.
+* editing draft:                        Draft Editing.
+* editing header:                       Header.
+* Emacs <1>:                            Conventions.
+* Emacs:                                Preface.
+* Emacs, Emacs Lisp manual:             Customizing mh-e.
+* Emacs, file completion:               Conventions.
+* Emacs, functions; describe-mode:      Using mh-e.
+* Emacs, info:                          Customizing mh-e.
+* Emacs, interrupting:                  Conventions.
+* Emacs, mark <1>:                      Inserting Letter.
+* Emacs, mark:                          Conventions.
+* Emacs, minibuffer:                    Conventions.
+* Emacs, notification of new mail:      Incorporating.
+* Emacs, online help <1>:               Customizing mh-e.
+* Emacs, online help:                   Using mh-e.
+* Emacs, packages, supercite:           Customizing Inserting Letter.
+* Emacs, point <1>:                     Inserting Letter.
+* Emacs, point:                         Conventions.
+* Emacs, prefix argument:               Conventions.
+* Emacs, quitting <1>:                  Leaving mh-e.
+* Emacs, quitting:                      Conventions.
+* Emacs, region <1>:                    Inserting Letter.
+* Emacs, region:                        Conventions.
+* Emacs, setting variables:             Customizing mh-e.
+* Emacs, terms and conventions:         Conventions.
+* expunging refiles and deletes:        Finishing Up.
+* FAQ:                                  MH FAQ.
+* file completion:                      Conventions.
+* files, .emacs <1>:                    Getting mh-e.
+* files, .emacs <1>:                    Customizing Organizing.
+* files, .emacs <1>:                    Customizing Reading.
+* files, .emacs <1>:                    Customizing mh-e.
+* files, .emacs <1>:                    Incorporating.
+* files, .emacs:                        Getting Started.
+* files, .mh_profile:                   Customizing Organizing.
+* files, .signature <1>:                Customizing Signature.
+* files, .signature:                    Signature.
+* files, components:                    Customizing Sending.
+* files, draft:                         Old Drafts.
+* files, mhl.reply:                     Replying.
+* files, replcomps:                     Customizing Sending.
+* files, MH-E-NEWS:                     Getting mh-e.
+* folder:                               Processing Mail Tour.
+* forwarding <1>:                       Customizing Forwarding.
+* forwarding:                           Forwarding.
+* Gildea, Stephen <1>:                  From Stephen Gildea.
+* Gildea, Stephen:                      Bug Reports.
+* history:                              Preface.
+* history of mh-e:                      History.
+* images:                               Other MIME Objects.
+* incorporating <1>:                    Customizing Incorporating.
+* incorporating:                        Incorporating.
+* info:                                 Customizing mh-e.
+* inserting messages <1>:               Customizing Inserting Letter.
+* inserting messages <1>:               Inserting Messages.
+* inserting messages:                   Inserting Letter.
+* inserting signature <1>:              Customizing Signature.
+* inserting signature:                  Signature.
+* interrupting:                         Conventions.
+* junk mail:                            Moving Around.
+* killing draft:                        Killing Draft.
+* Larus, Jim:                           From Jim Larus.
+* Mailer-Daemon:                        Old Drafts.
+* mailing list:                         Mailing List.
+* mark <1>:                             Inserting Letter.
+* mark:                                 Conventions.
+* MH commands, burst:                   Reading Digests.
+* MH commands, comp:                    Customizing Sending.
+* MH commands, dist:                    Customizing Redistributing.
+* MH commands, folder:                  Organizing.
+* MH commands, forw:                    Forwarding.
+* MH commands, inc <1>:                 Customizing Scan Line Formats.
+* MH commands, inc <1>:                 Customizing Incorporating.
+* MH commands, inc:                     Reading Mail Tour.
+* MH commands, install-mh:              Getting Started.
+* MH commands, mark:                    Sequences.
+* MH commands, mhl <1>:                 Customizing Viewing.
+* MH commands, mhl <1>:                 Printing.
+* MH commands, mhl:                     Replying.
+* MH commands, mhn <1>:                 Sending MIME.
+* MH commands, mhn <1>:                 Editing MIME.
+* MH commands, mhn:                     Reading MIME.
+* MH commands, pick <1>:                Sequences.
+* MH commands, pick:                    Searching.
+* MH commands, refile:                  Organizing.
+* MH commands, repl <1>:                Customizing Sending.
+* MH commands, repl:                    Replying.
+* MH commands, scan <1>:                Customizing Scan Line Formats.
+* MH commands, scan:                    Reading Mail Tour.
+* MH commands, send <1>:                Customizing Sending Message.
+* MH commands, send:                    Customizing Redistributing.
+* MH commands, show:                    Reading MIME.
+* MH commands, sortm:                   Customizing Organizing.
+* MH commands, whom:                    Recipients.
+* MH FAQ:                               MH FAQ.
+* MH profile components, sortm:         Customizing Organizing.
+* MH-Folder mode <1>:                   Customizing Moving Around.
+* MH-Folder mode <1>:                   Customizing Reading.
+* MH-Folder mode <1>:                   Sequences.
+* MH-Folder mode <1>:                   Searching.
+* MH-Folder mode <1>:                   Sending Mail.
+* MH-Folder mode <1>:                   Moving Around.
+* MH-Folder mode <1>:                   Reading Mail.
+* MH-Folder mode <1>:                   Processing Mail Tour.
+* MH-Folder mode:                       Reading Mail Tour.
+* MH-Folder Show mode <1>:              Moving Around.
+* MH-Folder Show mode:                  Reading Digests.
+* MH-Letter mode <1>:                   Draft Editing.
+* MH-Letter mode <1>:                   Replying.
+* MH-Letter mode <1>:                   Sending Mail.
+* MH-Letter mode:                       Sending Mail Tour.
+* MH-Show mode <1>:                     Customizing Moving Around.
+* MH-Show mode:                         Customizing Viewing.
+* MIME <1>:                             Customizing Editing MIME.
+* MIME <1>:                             Editing MIME.
+* MIME:                                 Reading MIME.
+* MIME, ftp <1>:                        Tar.
+* MIME, ftp:                            FTP.
+* MIME, tar:                            Tar.
+* MIME, content description:            Editing MIME.
+* MIME, content types:                  Editing MIME.
+* MIME, images:                         Other MIME Objects.
+* MIME, sound:                          Other MIME Objects.
+* MIME, video:                          Other MIME Objects.
+* minibuffer:                           Conventions.
+* mode:                                 Sending Mail Tour.
+* modes, MH-Folder <1>:                 Customizing Moving Around.
+* modes, MH-Folder <1>:                 Customizing Reading.
+* modes, MH-Folder <1>:                 Sequences.
+* modes, MH-Folder <1>:                 Searching.
+* modes, MH-Folder <1>:                 Sending Mail.
+* modes, MH-Folder <1>:                 Moving Around.
+* modes, MH-Folder <1>:                 Reading Mail.
+* modes, MH-Folder <1>:                 Processing Mail Tour.
+* modes, MH-Folder:                     Reading Mail Tour.
+* modes, MH-Folder Show <1>:            Moving Around.
+* modes, MH-Folder Show:                Reading Digests.
+* modes, MH-Letter <1>:                 Draft Editing.
+* modes, MH-Letter <1>:                 Replying.
+* modes, MH-Letter <1>:                 Sending Mail.
+* modes, MH-Letter:                     Sending Mail Tour.
+* modes, MH-Show <1>:                   Customizing Moving Around.
+* modes, MH-Show:                       Customizing Viewing.
+* moving between messages <1>:          Customizing Moving Around.
+* moving between messages:              Moving Around.
+* multimedia mail <1>:                  Customizing Editing MIME.
+* multimedia mail <1>:                  Editing MIME.
+* multimedia mail:                      Reading MIME.
+* new mail:                             Incorporating.
+* news:                                 Getting mh-e.
+* notification of new mail:             Incorporating.
+* obtaining mh-e:                       Getting mh-e.
+* online help <1>:                      Customizing mh-e.
+* online help:                          Using mh-e.
+* point <1>:                            Inserting Letter.
+* point:                                Conventions.
+* prefix argument:                      Conventions.
+* printing <1>:                         Customizing Printing.
+* printing:                             Printing.
+* processing mail <1>:                  Customizing Moving Mail.
+* processing mail <1>:                  Moving Mail.
+* processing mail:                      Processing Mail Tour.
+* quitting <1>:                         Customizing Finishing Up.
+* quitting <1>:                         Leaving mh-e.
+* quitting:                             Conventions.
+* re-editing drafts <1>:                Customizing Old Drafts.
+* re-editing drafts:                    Old Drafts.
+* reading mail <1>:                     Customizing Reading.
+* reading mail <1>:                     Reading Mail.
+* reading mail:                         Reading Mail Tour.
+* redistributing <1>:                   Customizing Redistributing.
+* redistributing:                       Redistributing.
+* region <1>:                           Inserting Letter.
+* region:                               Conventions.
+* regular expressions:                  Customizing Old Drafts.
+* Reid, Brian:                          From Brian Reid.
+* replying <1>:                         Customizing Replying.
+* replying:                             Replying.
+* searching <1>:                        Customizing Searching.
+* searching:                            Searching.
+* sending mail <1>:                     Customizing Sending Message.
+* sending mail <1>:                     Customizing Sending.
+* sending mail <1>:                     Sending Message.
+* sending mail <1>:                     Sending Mail.
+* sending mail:                         Sending Mail Tour.
+* sequences:                            Sequences.
+* setting variables:                    Customizing mh-e.
+* signature <1>:                        Customizing Signature.
+* signature:                            Signature.
+* sound:                                Other MIME Objects.
+* spell check:                          Customizing Sending Message.
+* starting from command line:           Sending Mail.
+* Unix commands, ftp <1>:               Tar.
+* Unix commands, ftp:                   FTP.
+* Unix commands, lpr <1>:               Customizing Printing.
+* Unix commands, lpr:                   Printing.
+* Unix commands, shar <1>:              Customizing Files and Pipes.
+* Unix commands, shar:                  Files and Pipes.
+* Unix commands, tar:                   Tar.
+* Unix commands, uuencode <1>:          Customizing Files and Pipes.
+* Unix commands, uuencode:              Files and Pipes.
+* Unix commands, Emacs <1>:             Conventions.
+* Unix commands, Emacs:                 Preface.
+* using files <1>:                      Customizing Files and Pipes.
+* using files:                          Files and Pipes.
+* using folders <1>:                    Customizing Organizing.
+* using folders:                        Organizing.
+* using pipes <1>:                      Customizing Files and Pipes.
+* using pipes:                          Files and Pipes.
+* video:                                Other MIME Objects.
+* ~:                                    Getting Started.
+
+

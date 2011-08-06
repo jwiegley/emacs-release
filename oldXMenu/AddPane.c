@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: AddPane.c,v 1.3 87/12/20 12:03:52 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/AddPane.c,v 1.1 1992/04/11 22:10:17 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
@@ -13,6 +13,7 @@
  *
  */
 
+#include <config.h>
 #include "XMenuInt.h"
 
 int
@@ -83,7 +84,7 @@ XMenuAddPane(display, menu, label, active)
     /*
      * Insert the pane at the end of the pane list.
      */
-    insque(pane, menu->p_list->prev);
+    emacs_insque(pane, menu->p_list->prev);
 
     /*
      * Update the pane count. 

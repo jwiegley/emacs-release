@@ -1,11 +1,21 @@
 /* Functions for Sun Windows menus and selection buffer.
    Copyright (C) 1987 Free Software Foundation, Inc.
 
+This file is probably totally obsolete.  In any case, the FSF is
+unwilling to support it.  We agreed to include it in our distribution
+only on the understanding that we would spend no time at all on it.
+
+If you have complaints about this file, send them to peck@sun.com.
+If no one at Sun wants to maintain this, then consider it not
+maintained at all.  It would be a bad thing for the GNU project if
+this file took our effort away from higher-priority things.
+
+
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -15,40 +25,31 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
 
-Author: Jeff Peck, Sun Microsystems, Inc. <peck@sun.com>
-    This file provides selection and menu support in SunView
-    [also a function to change the sunview cursor]
-    
+/* Author: Jeff Peck, Sun Microsystems, Inc. <peck@sun.com>
 Original ideas by David Kastan and Eric Negaard, SRI International
 Major help from: Steve Greenbaum, Reasoning Systems, Inc.
  		    <froud@kestrel.arpa>
 who first discovered the Menu_Base_Kludge.
-    Modified 12/91    Jeff Peck to compile without sunview libraries:
-    #define NO_SUNVIEW   	
-    disables SunView support leaving just sit-for-millisecs, sleep-for-millisecs
  */
 
 /*
  *	Emacs Lisp-Callable functions for sunwindows
  */
-#include "config.h"
+#include <config.h>
 
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
-
-#ifndef NO_SUNVIEW
 #include <sunwindow/window_hs.h>
 #include <suntool/selection.h>
 #include <suntool/menu.h>
 #include <suntool/walkmenu.h>
 #include <suntool/frame.h>
 #include <suntool/window.h>
-#endif	/* NO_SUNVIEW */
 
-#include <sys/time.h>		/* for tv_sec, tv_usec */
 #include <fcntl.h>
 #undef NULL /* We don't need sunview's idea of NULL */
 #include "lisp.h"
@@ -56,22 +57,19 @@ who first discovered the Menu_Base_Kludge.
 #include "buffer.h"
 #include "termhooks.h"
 
-#ifndef NO_SUNVIEW
-/* conversion to/from character & screen coordinates */
+/* conversion to/from character & frame coordinates */
 /* From Gosling Emacs SunWindow driver by Chris Torek */
 
-/* Chars to screen coords.  Note that we speak in zero origin. */
+/* Chars to frame coords.  Note that we speak in zero origin. */
 #define CtoSX(cx) ((cx) * Sun_Font_Xsize)
 #define CtoSY(cy) ((cy) * Sun_Font_Ysize)
 
-/* Screen coords to chars */
+/* Frame coords to chars */
 #define StoCX(sx) ((sx) / Sun_Font_Xsize)
 #define StoCY(sy) ((sy) / Sun_Font_Ysize)
 
-#endif	/* NO_SUNVIEW */
 #define CHECK_GFX(x) if((win_fd<0)&&(Fsun_window_init(),(win_fd<0)))return(x)
 int win_fd = -1;
-#ifndef NO_SUNVIEW 
 struct pixfont *Sun_Font;	/* The font */
 int Sun_Font_Xsize;		/* Width of font  */
 int Sun_Font_Ysize;		/* Height of font */
@@ -81,7 +79,7 @@ int Sun_Font_Ysize;		/* Height of font */
 static Frame Menu_Base_Frame;
 static int Menu_Base_fd;
 static Lisp_Object sm_kludge_string;
-#endif	/* Menu_Base_Kludge */
+#endif
 struct cursor CurrentCursor;	/* The current cursor */
 
 static short CursorData[16];	/* Build cursor here */
@@ -98,37 +96,29 @@ static mpr_static(ArrowCursorMpr, 16, 16, 1, ArrowCursorData);
 struct cursor DefaultCursor = {15, 0, PIX_SRC ^ PIX_DST, &ArrowCursorMpr};
 
 #else
-/* The default left-arror cursor, with XOR drawing. */
+/* The default left-arrow cursor, with XOR drawing. */
 static short ArrowCursorData[16] = {
 	0x8000,0xC000,0xE000,0xF000,0xF800,0xFC00,0xFE00,0xF000,
 	0xD800,0x9800,0x0C00,0x0C00,0x0600,0x0600,0x0300,0x0300};
 static mpr_static(ArrowCursorMpr, 16, 16, 1, ArrowCursorData);
 struct cursor DefaultCursor = {0, 0, PIX_SRC ^ PIX_DST, &ArrowCursorMpr};
-#endif	/* RIGHT_ARROW_CURSOR */
-#endif	/* NO_SUNVIEW */
+#endif
 
 /*
  *	Initialize window
  */
 DEFUN ("sun-window-init", Fsun_window_init, Ssun_window_init, 0, 1, 0,
-#ifndef NO_SUNVIEW 
        "One time setup for using Sun Windows with mouse.\n\
 Unless optional argument FORCE is non-nil, is a noop after its first call.\n\
 Returns a number representing the file descriptor of the open Sun Window,\n\
-or -1 if can not open it."
-#else
-       "One time setup for using Sun Windows with mouse.\n\
-Unless optional argument FORCE is non-nil, is a noop after its first call.\n\
-Dummy version, compiled with NO_SUNWINDOW, returns -1."
-#endif	/* NO_SUNVIEW */
-       )
+or -1 if can not open it.")
       (force)
       Lisp_Object force;
 {
   char *cp;
   static int already_initialized = 0;
-#ifndef NO_SUNVIEW 
-  if ((! already_initialized) || (!NULL(force))) {
+
+  if ((! already_initialized) || (!NILP(force))) {
     cp = getenv("WINDOW_GFX");
     if (cp != 0) win_fd = open(cp, 2);
     if (win_fd > 0)
@@ -148,10 +138,9 @@ Dummy version, compiled with NO_SUNWINDOW, returns -1."
 					FRAME_NO_CONFIRM, 1,
 					0);
 	Menu_Base_fd = (int) window_get(Menu_Base_Frame, WIN_FD);
-#endif	/* Menu_Base_Kludge */
+#endif
       }
   }
-#endif	/* NO_SUNVIEW */
   return(make_number(win_fd));
 }
 
@@ -159,9 +148,7 @@ Dummy version, compiled with NO_SUNWINDOW, returns -1."
  *	Mouse sit-for (allows a shorter interval than the regular sit-for
  *	and can be interrupted by the mouse)
  */
-DEFUN ("sit-for-millisecs",
-       Fsit_for_millisecs,
-       Ssit_for_millisecs, 1, 1, 0,
+DEFUN ("sit-for-millisecs", Fsit_for_millisecs, Ssit_for_millisecs, 1, 1, 0,
    "Like sit-for, but ARG is milliseconds. \n\
 Perform redisplay, then wait for ARG milliseconds or until\n\
 input is available.  Returns t if wait completed with no input.\n\
@@ -177,7 +164,7 @@ Redisplay does not happen if input is available before it starts.")
   Timeout.tv_usec = (XINT(n) - (Timeout.tv_sec * 1000)) * 1000;
 
   if (detect_input_pending()) return(Qnil);
-  redisplay ();
+  redisplay_preserve_echo_area ();
   /*
    *	Check for queued keyboard input/mouse hits again
    *	(A bit screen update can take some time!)
@@ -213,8 +200,8 @@ DEFUN ("update-display", Fupdate_display, Supdate_display, 0, 0, 0,
   redisplay_preserve_echo_area ();
   return(Qt);
 }
+
 
-#ifndef NO_SUNVIEW 
 /*
  *	Change the Sun mouse icon
  */
@@ -237,7 +224,7 @@ expressed as a string.  If ICON is nil then the original arrow cursor is used")
   /*
    *	If the icon is null, we just restore the DefaultCursor
    */
-  if (NULL(Icon)) 
+  if (NILP(Icon)) 
     CurrentCursor = DefaultCursor;
   else {
     /*
@@ -315,7 +302,7 @@ sel_read (sel, file)
     return(-1);
   }
   /*
-   * The shelltool select saves newlines as carrige returns,
+   * The shelltool select saves newlines as carriage returns,
    * but emacs wants newlines.
    */
   for (i = 0; i < n; i++) 
@@ -378,9 +365,9 @@ sun_item_create (Pair)
   String = Fcar(Pair);
   CHECK_STRING(String, 0);
   Value = Fcdr(Pair);
-  if(XTYPE(Value) == Lisp_Symbol)
+  if (SYMBOLP (Value))
     Value = XSYMBOL(Value)->value;
-  if(XTYPE(Value) == Lisp_Vector) {
+  if (VECTORP (Value)) {
     submenu = sun_menu_create (Value);
     menu_item = menu_create_item
       (MENU_RELEASE, MENU_PULLRIGHT_ITEM, XSTRING(String)->data, submenu, 0);
@@ -460,7 +447,7 @@ as a menu label.")
   
   CHECK_NUMBER(X_Position, 0);
   CHECK_NUMBER(Y_Position, 1);
-  CHECK_WINDOW(window, 2);
+  CHECK_LIVE_WINDOW(window, 2);
   CHECK_NUMBER(Button, 3);
   CHECK_VECTOR(MEnu, 4);
 
@@ -475,7 +462,7 @@ as a menu label.")
    xpos += XINT (XCONS (Pair)->cdr);
    ypos += XINT (XCONS (Pair)->car);
  }
-#endif	/* Menu_Base_Kludge */
+#endif
 
   button = XINT(Button);
   if(button == 4) button = 3;
@@ -496,34 +483,30 @@ as a menu label.")
  * Right button gets lost, and event sequencing or delivery gets mixed up
  * So, until that gets fixed, we use this <Menu_Base_Frame> kludge:
  */
-#endif	/* Menu_Base_Kludge */
+#endif
   menu_destroy (menu);
 
   return ((int)Value ? Value : Qnil);
 }
-#endif	/* NO_SUNVIEW */
+
 
 /*
  *	Define everything
  */
 syms_of_sunfns()
 {
-#ifndef NO_SUNVIEW
 #ifdef  Menu_Base_Kludge
   /* i'm just too lazy to re-write this into C code */
   /* so we will call this elisp function from C */
   sm_kludge_string = make_pure_string ("sm::menu-kludge", 15);
-#endif	/* Menu_Base_Kludge */
+#endif /* Menu_Base_Kludge */
 
-#endif	/* NO_SUNVIEW */
   defsubr(&Ssun_window_init);
   defsubr(&Ssit_for_millisecs);
   defsubr(&Ssleep_for_millisecs);
   defsubr(&Supdate_display);
-#ifndef NO_SUNVIEW
   defsubr(&Ssun_change_cursor_icon);
   defsubr(&Ssun_set_selection);
   defsubr(&Ssun_get_selection);
   defsubr(&Ssun_menu_internal);
-#endif	/* NO_SUNVIEW */
 }

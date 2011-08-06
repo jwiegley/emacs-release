@@ -1,686 +1,908 @@
+\initial {2}
+\entry {\code {2C-associate-buffer}}{361}
+\entry {\code {2C-dissociate}}{361}
+\entry {\code {2C-merge}}{361}
+\entry {\code {2C-newline}}{361}
+\entry {\code {2C-split}}{360}
+\entry {\code {2C-two-columns}}{360}
 \initial {A}
-\entry {\code {abbrev-mode}}{171}
-\entry {\code {abbrev-prefix-mark}}{173}
-\entry {\code {abort-recursive-edit}}{201, 232}
-\entry {\code {add-change-log-entry}}{149}
-\entry {\code {add-change-log-entry \r {(V19)}}}{244}
-\entry {\code {add-change-log-entry-other-window}}{150}
-\entry {\code {add-global-abbrev}}{171}
-\entry {\code {add-hook \r {(V19)}}}{289}
-\entry {\code {add-mode-abbrev}}{172}
-\entry {\code {add-name-to-file}}{99}
-\entry {\code {append-next-kill}}{57}
-\entry {\code {append-to-buffer}}{58}
-\entry {\code {append-to-file}}{58, 99}
-\entry {\code {apropos}}{47}
-\entry {\code {apropros \r {(V19)}}}{246}
-\entry {\code {ask-user-about-lock}}{92}
-\entry {\code {auto-fill-mode}}{130}
-\entry {\code {auto-save-mode}}{95}
+\entry {\code {abbrev-mode}}{271}
+\entry {\code {abbrev-prefix-mark}}{273}
+\entry {\code {abort-recursive-edit}}{398}
+\entry {\code {add-change-log-entry-other-window}}{230}
+\entry {\code {add-global-abbrev}}{272}
+\entry {\code {add-mode-abbrev}}{272}
+\entry {\code {add-name-to-file}}{136}
+\entry {\code {american-calendar}}{337}
+\entry {\code {append-next-kill}}{67}
+\entry {\code {append-to-buffer}}{68}
+\entry {\code {append-to-file}}{68}
+\entry {\code {apply-macro-to-region-lines}}{378}
+\entry {\code {appt-add}}{340}
+\entry {\code {appt-delete}}{340}
+\entry {\code {appt-make-list}}{340}
+\entry {\code {apropos}}{52}
+\entry {\code {apropos-command}}{51}
+\entry {\code {apropos-documentation}}{52}
+\entry {\code {apropos-value}}{52}
+\entry {\code {ask-user-about-lock}}{113}
+\entry {\code {auto-compression-mode}}{109, 136}
+\entry {\code {auto-fill-mode}}{184}
+\entry {\code {auto-lower-mode}}{160}
+\entry {\code {auto-raise-mode}}{160}
+\entry {\code {auto-save-mode}}{116}
 \initial {B}
-\entry {\code {back-to-indentation}}{113}
-\entry {\code {backward-char}}{28}
-\entry {\code {backward-delete-char-untabify}}{136}
-\entry {\code {backward-kill-sentence}}{55, 81, 127}
-\entry {\code {backward-kill-word}}{55, 81, 126}
-\entry {\code {backward-list}}{137}
-\entry {\code {backward-page}}{129}
-\entry {\code {backward-paragraph}}{128}
-\entry {\code {backward-sentence}}{127}
-\entry {\code {backward-sexp}}{137}
-\entry {\code {backward-text-line}}{118}
-\entry {\code {backward-up-list}}{138}
-\entry {\code {backward-word}}{126}
-\entry {\code {batch-byte-compile}}{165}
-\entry {\code {beginning-of-buffer}}{28}
-\entry {\code {beginning-of-defun}}{138}
-\entry {\code {beginning-of-fortran-subprogram}}{155}
-\entry {\code {beginning-of-line}}{28}
-\entry {\code {buffer-enable-undo}}{35}
-\entry {\code {buffer-menu}}{104}
-\entry {\code {byte-compile-file}}{164}
-\entry {\code {byte-recompile-directory}}{164}
+\entry {\code {back-to-indentation}}{175}
+\entry {\code {backward-char}}{30}
+\entry {\code {backward-delete-char-untabify}}{210}
+\entry {\code {backward-kill-sentence}}{181}
+\entry {\code {backward-kill-sexp}}{211}
+\entry {\code {backward-kill-word}}{180}
+\entry {\code {backward-list}}{211}
+\entry {\code {backward-page}}{183}
+\entry {\code {backward-paragraph}}{182}
+\entry {\code {backward-sentence}}{181}
+\entry {\code {backward-sexp}}{211}
+\entry {\code {backward-text-line}}{200}
+\entry {\code {backward-up-list}}{212}
+\entry {\code {backward-word}}{180}
+\entry {\code {beginning-of-buffer}}{30}
+\entry {\code {beginning-of-defun}}{212}
+\entry {\code {beginning-of-fortran-subprogram}}{250}
+\entry {\code {beginning-of-line}}{30}
+\entry {\code {binary-overwrite-mode}}{368}
+\entry {\code {blackbox}}{366}
+\entry {\code {bookmark-delete}}{76}
+\entry {\code {bookmark-insert}}{76}
+\entry {\code {bookmark-insert-location}}{76}
+\entry {\code {bookmark-jump}}{75}
+\entry {\code {bookmark-load}}{76}
+\entry {\code {bookmark-save}}{75}
+\entry {\code {bookmark-set}}{75}
+\entry {\code {bookmark-write}}{76}
+\entry {\code {buffer-menu}}{143}
 \initial {C}
-\entry {\code {c-beginning-of-statement \r {(V19)}}}{246}
-\entry {\code {c-end-of-statement \r {(V19)}}}{246}
-\entry {\code {c-fill-paragraph \r {(V19)}}}{246, 248}
-\entry {\code {c-indent-line}}{139}
-\entry {\code {c-macro-expand}}{148}
-\entry {\code {c-up-conditional \r {(V19)}}}{246}
-\entry {\code {calendar-count-days-region \r {(V19)}}}{263}
-\entry {\code {calendar-cursor-holidays \r {(V19)}}}{264}
-\entry {\code {calendar-goto-astro-date \r {(V19)}}}{263}
-\entry {\code {calendar-goto-french-date \r {(V19)}}}{263}
-\entry {\code {calendar-goto-hebrew-date \r {(V19)}}}{263}
-\entry {\code {calendar-goto-islamic-date \r {(V19)}}}{263}
-\entry {\code {calendar-goto-iso-date \r {(V19)}}}{263}
-\entry {\code {calendar-goto-julian-date \r {(V19)}}}{264}
-\entry {\code {calendar-print-astro-date \r {(V19)}}}{263}
-\entry {\code {calendar-print-french-date \r {(V19)}}}{263}
-\entry {\code {calendar-print-hebrew-date \r {(V19)}}}{263}
-\entry {\code {calendar-print-islamic-date \r {(V19)}}}{263}
-\entry {\code {calendar-print-iso-date \r {(V19)}}}{263}
-\entry {\code {calendar-print-julian-date \r {(V19)}}}{264}
-\entry {\code {calendar-print-mayan-date \r {(V19)}}}{264}
-\entry {\code {calendar-unmark \r {(V19)}}}{264, 265}
-\entry {\code {call-last-kbd-macro}}{217}
-\entry {\code {cancel-debug-on-entry}}{167}
-\entry {\code {capitalize-word}}{82, 133}
-\entry {\code {center-line}}{131}
-\entry {\code {clear-rectangle}}{60}
-\entry {\code {comint-continue-subjob \r {(V19)}}}{250}
-\entry {\code {comint-dynamic-complete \r {(V19)}}}{249}
-\entry {\code {comint-dynamic-list-completions \r {(V19)}}}{249}
-\entry {\code {comint-kill-output \r {(V19)}}}{250}
-\entry {\code {comint-next-input \r {(V19)}}}{249}
-\entry {\code {comint-next-matching-input \r {(V19)}}}{249}
-\entry {\code {comint-previous-input \r {(V19)}}}{249}
-\entry {\code {comint-previous-matching-input \r {(V19)}}}{249}
-\entry {\code {comint-show-output \r {(V19)}}}{250}
-\entry {\code {command-apropos}}{47}
-\entry {\code {comment-region \r {(V19)}}}{246}
-\entry {\code {compare-windows}}{108}
-\entry {\code {compare-windows \r {(V19)}}}{244}
-\entry {\code {compile}}{161}
-\entry {\code {compile \r {(V19)}}}{245}
-\entry {\code {convert-mocklisp-buffer}}{165}
-\entry {\code {copy-file}}{100}
-\entry {\code {copy-last-shell-input}}{207}
-\entry {\code {copy-region-as-kill}}{56}
-\entry {\code {copy-to-buffer}}{58}
-\entry {\code {copy-to-register}}{62}
-\entry {\code {count-lines-page}}{129}
-\entry {\code {count-lines-region}}{32}
-\entry {\code {count-matches}}{79}
-\entry {\code {count-text-lines}}{118}
+\entry {\code {c-add-style}}{224}
+\entry {\code {c-backslash-region}}{248}
+\entry {\code {c-backward-conditional}}{245}
+\entry {\code {c-backward-into-nomenclature}}{245}
+\entry {\code {c-beginning-of-statement}}{245}
+\entry {\code {c-end-of-statement}}{245}
+\entry {\code {c-fill-paragraph}}{248}
+\entry {\code {c-forward-conditional}}{245}
+\entry {\code {c-forward-into-nomenclature}}{246}
+\entry {\code {c-indent-command}}{216}
+\entry {\code {c-indent-defun}}{216}
+\entry {\code {c-indent-exp}}{216}
+\entry {\code {c-indent-line}}{214}
+\entry {\code {c-macro-expand}}{248}
+\entry {\code {c-mark-function}}{248}
+\entry {\code {c-scope-operator}}{246}
+\entry {\code {c-set-offset}}{220}
+\entry {\code {c-set-style}}{224}
+\entry {\code {c-show-syntactic-information}}{248}
+\entry {\code {c-toggle-auto-hungry-state}}{248}
+\entry {\code {c-toggle-auto-state}}{246}
+\entry {\code {c-toggle-hungry-state}}{247}
+\entry {\code {c-up-conditional}}{245}
+\entry {\code {calendar}}{321}
+\entry {\code {calendar-backward-day}}{321}
+\entry {\code {calendar-backward-month}}{322}
+\entry {\code {calendar-backward-week}}{321}
+\entry {\code {calendar-beginning-of-month}}{322}
+\entry {\code {calendar-beginning-of-week}}{322}
+\entry {\code {calendar-beginning-of-year}}{322}
+\entry {\code {calendar-count-days-region}}{324}
+\entry {\code {calendar-cursor-holidays}}{326}
+\entry {\code {calendar-end-of-month}}{322}
+\entry {\code {calendar-end-of-week}}{322}
+\entry {\code {calendar-end-of-year}}{322}
+\entry {\code {calendar-forward-day}}{321}
+\entry {\code {calendar-forward-month}}{322}
+\entry {\code {calendar-forward-week}}{321}
+\entry {\code {calendar-forward-year}}{322}
+\entry {\code {calendar-goto-astro-day-number}}{331}
+\entry {\code {calendar-goto-chinese-date}}{331}
+\entry {\code {calendar-goto-coptic-date}}{331}
+\entry {\code {calendar-goto-date}}{323}
+\entry {\code {calendar-goto-ethiopic-date}}{331}
+\entry {\code {calendar-goto-french-date}}{331}
+\entry {\code {calendar-goto-hebrew-date}}{331}
+\entry {\code {calendar-goto-islamic-date}}{331}
+\entry {\code {calendar-goto-iso-date}}{331}
+\entry {\code {calendar-goto-julian-date}}{331}
+\entry {\code {calendar-goto-mayan-long-count-date}}{332}
+\entry {\code {calendar-goto-persian-date}}{331}
+\entry {\code {calendar-goto-today}}{323}
+\entry {\code {calendar-next-calendar-round-date}}{333}
+\entry {\code {calendar-next-haab-date}}{333}
+\entry {\code {calendar-next-tzolkin-date}}{333}
+\entry {\code {calendar-other-month}}{323}
+\entry {\code {calendar-phases-of-moon}}{328}
+\entry {\code {calendar-previous-haab-date}}{333}
+\entry {\code {calendar-previous-tzolkin-date}}{333}
+\entry {\code {calendar-print-astro-day-number}}{330}
+\entry {\code {calendar-print-chinese-date}}{330}
+\entry {\code {calendar-print-coptic-date}}{330}
+\entry {\code {calendar-print-day-of-year}}{324}
+\entry {\code {calendar-print-ethiopic-date}}{330}
+\entry {\code {calendar-print-french-date}}{330}
+\entry {\code {calendar-print-hebrew-date}}{330}
+\entry {\code {calendar-print-islamic-date}}{330}
+\entry {\code {calendar-print-iso-date}}{330}
+\entry {\code {calendar-print-julian-date}}{330}
+\entry {\code {calendar-print-mayan-date}}{331}
+\entry {\code {calendar-print-persian-date}}{331}
+\entry {\code {calendar-sunrise-sunset}}{327}
+\entry {\code {calendar-unmark}}{326}
+\entry {\code {call-last-kbd-macro}}{377}
+\entry {\code {capitalize-word}}{188}
+\entry {\code {center-line}}{186}
+\entry {\code {change-log-mode}}{231}
+\entry {\code {choose-completion}}{43}
+\entry {\code {clear-rectangle}}{70}
+\entry {\code {column-number-mode}}{81}
+\entry {\code {comint-bol}}{348}
+\entry {\code {comint-continue-subjob}}{349}
+\entry {\code {comint-copy-old-input}}{351}
+\entry {\code {comint-delchar-or-maybe-eof}}{348}
+\entry {\code {comint-dynamic-complete}}{348}
+\entry {\code {comint-dynamic-complete-variable}}{353}
+\entry {\code {comint-dynamic-list-filename\dots {}}}{348}
+\entry {\code {comint-dynamic-list-input-ring}}{349}
+\entry {\code {comint-interrupt-subjob}}{348}
+\entry {\code {comint-kill-input}}{348}
+\entry {\code {comint-kill-output}}{349}
+\entry {\code {comint-magic-space}}{352}
+\entry {\code {comint-next-input}}{350}
+\entry {\code {comint-next-matching-input}}{350}
+\entry {\code {comint-next-prompt}}{351}
+\entry {\code {comint-previous-input}}{350}
+\entry {\code {comint-previous-matching-input}}{350}
+\entry {\code {comint-previous-prompt}}{351}
+\entry {\code {comint-quit-subjob}}{349}
+\entry {\code {comint-run}}{350}
+\entry {\code {comint-send-input}}{348}
+\entry {\code {comint-show-maximum-output}}{349}
+\entry {\code {comint-show-output}}{349}
+\entry {\code {comint-stop-subjob}}{348}
+\entry {\code {comint-strip-ctrl-m}}{349}
+\entry {\code {comint-truncate-buffer}}{350}
+\entry {\code {comment-region}}{227}
+\entry {\code {compare-windows}}{135}
+\entry {\code {compile}}{259}
+\entry {\code {compile (\r {MS-DOS})}}{439}
+\entry {\code {compile-goto-error}}{260}
+\entry {\code {complete-tag}}{229}
+\entry {\code {copy-file}}{136}
+\entry {\code {copy-rectangle-to-register}}{74}
+\entry {\code {copy-to-buffer}}{68}
+\entry {\code {copy-to-register}}{73}
+\entry {\code {count-lines-page}}{183}
+\entry {\code {count-lines-region}}{36}
+\entry {\code {count-matches}}{98}
+\entry {\code {count-text-lines}}{200}
+\entry {\code {cpp-highlight-buffer}}{248}
 \initial {D}
-\entry {\code {dabbrev-expand}}{175}
-\entry {\code {dbx \r {(V19)}}}{282}
-\entry {\code {debug}}{167}
-\entry {\code {debug-on-entry}}{167}
-\entry {\code {default-value}}{215}
-\entry {\code {define-abbrevs}}{175}
-\entry {\code {define-key}}{222}
-\entry {\code {delete-backward-char}}{27, 53, 81}
-\entry {\code {delete-blank-lines}}{31, 54}
-\entry {\code {delete-char}}{53, 178}
-\entry {\code {delete-file}}{99}
-\entry {\code {delete-horizontal-space}}{54, 114}
-\entry {\code {delete-indentation}}{54, 114}
-\entry {\code {delete-matching-lines}}{79}
-\entry {\code {delete-non-matching-lines}}{79}
-\entry {\code {delete-other-windows}}{109}
-\entry {\code {delete-rectangle}}{60}
-\entry {\code {delete-window}}{109}
-\entry {\code {describe-bindings}}{48}
-\entry {\code {describe-copying}}{48}
-\entry {\code {describe-distribution}}{48}
-\entry {\code {describe-function}}{46, 149}
-\entry {\code {describe-key}}{46}
-\entry {\code {describe-key-briefly}}{46}
-\entry {\code {describe-mode}}{48}
-\entry {\code {describe-no-warranty}}{48}
-\entry {\code {describe-syntax}}{225}
-\entry {\code {describe-variable}}{47, 149, 212}
-\entry {\code {diary \r {(V19)}}}{265}
-\entry {\code {diff \r {(V19)}}}{247}
-\entry {\code {diff-backup \r {(V19)}}}{247}
-\entry {\code {digit-argument}}{33}
-\entry {\code {dired}}{96}
-\entry {\code {dired-backup-diff \r {(V19)}}}{257}
-\entry {\code {dired-change-marks \r {(V19)}}}{254}
-\entry {\code {dired-diff \r {(V19)}}}{257}
-\entry {\code {dired-do-byte-compile \r {(V19)}}}{255}
-\entry {\code {dired-do-chgrp \r {(V19)}}}{255}
-\entry {\code {dired-do-chmod \r {(V19)}}}{255}
-\entry {\code {dired-do-chown \r {(V19)}}}{255}
-\entry {\code {dired-do-compress \r {(V19)}}}{255}
-\entry {\code {dired-do-copy \r {(V19)}}}{254}
-\entry {\code {dired-do-copy-regexp \r {(V19)}}}{256}
-\entry {\code {dired-do-hardlink \r {(V19)}}}{255}
-\entry {\code {dired-do-hardlink-regexp \r {(V19)}}}{256}
-\entry {\code {dired-do-kill-lines \r {(V19)}}}{259}
-\entry {\code {dired-do-load \r {(V19)}}}{255}
-\entry {\code {dired-do-print \r {(V19)}}}{255}
-\entry {\code {dired-do-redisplay \r {(V19)}}}{259}
-\entry {\code {dired-do-rename \r {(V19)}}}{255}
-\entry {\code {dired-do-rename-regexp \r {(V19)}}}{256}
-\entry {\code {dired-do-shell-command \r {(V19)}}}{255}
-\entry {\code {dired-do-symlink \r {(V19)}}}{255}
-\entry {\code {dired-do-symlink-regexp \r {(V19)}}}{256}
-\entry {\code {dired-downcase \r {(V19)}}}{257}
-\entry {\code {dired-flag-files-regexp \r {(V19)}}}{256}
-\entry {\code {dired-hide-all \r {(V19)}}}{259}
-\entry {\code {dired-hide-subdir \r {(V19)}}}{259}
-\entry {\code {dired-mark \r {(V19)}}}{254}
-\entry {\code {dired-mark-directories \r {(V19)}}}{254}
-\entry {\code {dired-mark-executables \r {(V19)}}}{254}
-\entry {\code {dired-mark-files-regexp \r {(V19)}}}{256}
-\entry {\code {dired-mark-symlinks \r {(V19)}}}{254}
-\entry {\code {dired-maybe-insert-subdir \r {(V19)}}}{258}
-\entry {\code {dired-next-subdir \r {(V19)}}}{258}
-\entry {\code {dired-other-window}}{96, 109}
-\entry {\code {dired-prev-subdir \r {(V19)}}}{258}
-\entry {\code {dired-tree-down \r {(V19)}}}{258}
-\entry {\code {dired-tree-up \r {(V19)}}}{258}
-\entry {\code {dired-unmark-all-files \r {(V19)}}}{254}
-\entry {\code {dired-upcase \r {(V19)}}}{257}
-\entry {\code {dirs \r {(V19)}}}{250}
-\entry {\code {disable-command}}{222}
-\entry {\code {disassemble}}{165}
-\entry {\code {display-buffer \r {(V19)}}}{242}
-\entry {\code {display-time}}{16}
-\entry {\code {dissociated-press}}{208}
-\entry {\code {do-auto-save}}{95}
-\entry {\code {doctor}}{234}
-\entry {\code {down-list}}{138}
-\entry {\code {downcase-region}}{133}
-\entry {\code {downcase-word}}{82, 133}
+\entry {\code {dabbrev-completion}}{275}
+\entry {\code {dabbrev-expand}}{275}
+\entry {\code {dbx}}{262}
+\entry {\code {debug{\_}print}}{407}
+\entry {\code {default-value}}{373}
+\entry {\code {define-abbrevs}}{275}
+\entry {\code {define-key}}{384}
+\entry {\code {define-mail-abbrev}}{287}
+\entry {\code {define-mail-alias}}{286}
+\entry {\code {delete-backward-char}}{63}
+\entry {\code {delete-blank-lines}}{34}
+\entry {\code {delete-char}}{63}
+\entry {\code {delete-file}}{136}
+\entry {\code {delete-frame}}{168}
+\entry {\code {delete-horizontal-space}}{64}
+\entry {\code {delete-indentation}}{176}
+\entry {\code {delete-matching-lines}}{98}
+\entry {\code {delete-non-matching-lines}}{98}
+\entry {\code {delete-other-windows}}{151}
+\entry {\code {delete-rectangle}}{70}
+\entry {\code {delete-window}}{151}
+\entry {\code {describe-bindings}}{54}
+\entry {\code {describe-copying}}{55}
+\entry {\code {describe-distribution}}{55}
+\entry {\code {describe-function}}{50}
+\entry {\code {describe-key}}{50}
+\entry {\code {describe-key-briefly}}{50}
+\entry {\code {describe-mode}}{54}
+\entry {\code {describe-no-warranty}}{55}
+\entry {\code {describe-project}}{55}
+\entry {\code {describe-syntax}}{391}
+\entry {\code {desktop-save}}{362}
+\entry {\code {diary}}{335}
+\entry {\code {diary-anniversary}}{338}
+\entry {\code {diary-block}}{338}
+\entry {\code {diary-cyclic}}{339}
+\entry {\code {diary-float}}{339}
+\entry {\code {diff}}{134}
+\entry {\code {diff-backup}}{135}
+\entry {\code {digit-argument}}{37}
+\entry {\code {dired}}{309}
+\entry {\code {dired-backup-diff}}{317}
+\entry {\code {dired-change-marks}}{312}
+\entry {\code {dired-create-directory}}{315}
+\entry {\code {dired-diff}}{317}
+\entry {\code {dired-display-file}}{311}
+\entry {\code {dired-do-byte-compile}}{314}
+\entry {\code {dired-do-chgrp}}{314}
+\entry {\code {dired-do-chmod}}{314}
+\entry {\code {dired-do-chown}}{314}
+\entry {\code {dired-do-compress}}{314}
+\entry {\code {dired-do-copy}}{313}
+\entry {\code {dired-do-copy-regexp}}{316}
+\entry {\code {dired-do-hardlink}}{314}
+\entry {\code {dired-do-hardlink-regexp}}{316}
+\entry {\code {dired-do-kill-lines}}{319}
+\entry {\code {dired-do-load}}{314}
+\entry {\code {dired-do-print}}{314}
+\entry {\code {dired-do-query-replace}}{314}
+\entry {\code {dired-do-redisplay}}{319}
+\entry {\code {dired-do-rename}}{313}
+\entry {\code {dired-do-rename-regexp}}{316}
+\entry {\code {dired-do-search}}{314}
+\entry {\code {dired-do-shell-command}}{315}
+\entry {\code {dired-do-symlink}}{314}
+\entry {\code {dired-do-symlink-regexp}}{316}
+\entry {\code {dired-downcase}}{316}
+\entry {\code {dired-expunge}}{310}
+\entry {\code {dired-find-file}}{311}
+\entry {\code {dired-find-file-other-window}}{311}
+\entry {\code {dired-flag-auto-save-files}}{310}
+\entry {\code {dired-flag-backup-files}}{310}
+\entry {\code {dired-flag-clean-directory}}{310}
+\entry {\code {dired-flag-files-regexp}}{311}
+\entry {\code {dired-hide-all}}{318}
+\entry {\code {dired-hide-subdir}}{318}
+\entry {\code {dired-mark}}{312}
+\entry {\code {dired-mark-directories}}{312}
+\entry {\code {dired-mark-executables}}{312}
+\entry {\code {dired-mark-files-regexp}}{313}
+\entry {\code {dired-mark-symlinks}}{312}
+\entry {\code {dired-maybe-insert-subdir}}{317}
+\entry {\code {dired-mouse-find-file-other-window}}{311}
+\entry {\code {dired-next-subdir}}{318}
+\entry {\code {dired-other-frame}}{309}
+\entry {\code {dired-other-window}}{309}
+\entry {\code {dired-prev-subdir}}{318}
+\entry {\code {dired-sort-toggle-or-edit}}{319}
+\entry {\code {dired-tree-down}}{318}
+\entry {\code {dired-tree-up}}{318}
+\entry {\code {dired-unmark-all-files}}{312}
+\entry {\code {dired-upcase}}{316}
+\entry {\code {dired-view-file}}{312}
+\entry {\code {dirs}}{347}
+\entry {\code {disable-command}}{389}
+\entry {\code {display-time}}{82}
+\entry {\code {dissociated-press}}{365}
+\entry {\code {do-auto-save}}{116}
+\entry {\code {doctor}}{402}
+\entry {\code {down-list}}{212}
+\entry {\code {downcase-region}}{189}
+\entry {\code {downcase-word}}{188}
+\entry {\code {dunnet}}{366}
 \initial {E}
-\entry {\code {edebug-defun \r {(V19)}}}{286}
-\entry {\code {edit-abbrevs}}{174}
-\entry {\code {edit-abbrevs-redefine}}{174}
-\entry {\code {edit-options}}{213}
-\entry {\code {edit-picture}}{177}
-\entry {\code {edit-tab-stops}}{114, 117}
-\entry {\code {edit-tab-stops-note-changes}}{114}
-\entry {\code {edt-emulation-off}}{209}
-\entry {\code {edt-emulation-on}}{209}
-\entry {\code {electric-nroff-mode}}{118}
-\entry {\code {emacs-lisp-mode}}{165}
-\entry {\code {emacs-version}}{236}
-\entry {\code {emerge-auto-advance-mode \r {(V19)}}}{279}
-\entry {\code {emerge-buffers \r {(V19)}}}{277}
-\entry {\code {emerge-buffers-with-ancestor \r {(V19)}}}{277}
-\entry {\code {emerge-files \r {(V19)}}}{277}
-\entry {\code {emerge-files-with-ancestor \r {(V19)}}}{277}
-\entry {\code {emerge-skip-prefers-mode \r {(V19)}}}{279}
-\entry {\code {enable-command}}{222}
-\entry {\code {end-kbd-macro}}{217}
-\entry {\code {end-of-buffer}}{28}
-\entry {\code {end-of-defun}}{138}
-\entry {\code {end-of-fortran-subprogram}}{155}
-\entry {\code {end-of-line}}{28}
-\entry {\code {enlarge-window}}{110}
-\entry {\code {enlarge-window-horizontally}}{110}
-\entry {\code {evade-flow-control-on \r {(V19)}}}{241}
-\entry {\code {eval-current-buffer}}{166}
-\entry {\code {eval-defun}}{166}
-\entry {\code {eval-expression}}{166}
-\entry {\code {eval-last-sexp}}{166}
-\entry {\code {eval-region}}{166}
-\entry {\code {exchange-point-and-mark}}{50}
-\entry {\code {execute-extended-command}}{43}
-\entry {\code {exit-recursive-edit}}{201}
-\entry {\code {expand-abbrev}}{172}
-\entry {\code {expand-region-abbrevs}}{173}
+\entry {\code {edit-abbrevs}}{274}
+\entry {\code {edit-kbd-macro}}{378}
+\entry {\code {edit-options}}{371}
+\entry {\code {edit-picture}}{279}
+\entry {\code {edit-tab-stops}}{177}
+\entry {\code {edit-tab-stops-note-changes}}{177}
+\entry {\code {edt-emulation-off}}{364}
+\entry {\code {edt-emulation-on}}{364}
+\entry {\code {electric-nroff-mode}}{200}
+\entry {\code {emacs-lisp-mode}}{267}
+\entry {\code {emacs-version}}{403}
+\entry {\code {emerge-auto-advance-mode}}{241}
+\entry {\code {emerge-buffers}}{239}
+\entry {\code {emerge-buffers-with-ancestor}}{239}
+\entry {\code {emerge-files}}{239}
+\entry {\code {emerge-files-with-ancestor}}{239}
+\entry {\code {emerge-skip-prefers-mode}}{241}
+\entry {\code {enable-command}}{389}
+\entry {\code {enable-flow-control}}{400}
+\entry {\code {enable-flow-control-on}}{400}
+\entry {\code {enable-local-eval}}{375}
+\entry {\code {enable-local-variables}}{375}
+\entry {\code {end-kbd-macro}}{377}
+\entry {\code {end-of-buffer}}{30}
+\entry {\code {end-of-defun}}{212}
+\entry {\code {end-of-fortran-subprogram}}{250}
+\entry {\code {end-of-line}}{30}
+\entry {\code {enlarge-window}}{151}
+\entry {\code {enlarge-window-horizontally}}{151}
+\entry {\code {enriched-mode}}{201}
+\entry {\code {european-calendar}}{337}
+\entry {\code {eval-current-buffer}}{268}
+\entry {\code {eval-defun}}{268}
+\entry {\code {eval-expression}}{268}
+\entry {\code {eval-last-sexp}}{268}
+\entry {\code {eval-region}}{268}
+\entry {\code {exchange-point-and-mark}}{58}
+\entry {\code {execute-extended-command}}{48}
+\entry {\code {exit-calendar}}{324}
+\entry {\code {exit-recursive-edit}}{363}
+\entry {\code {expand-abbrev}}{273}
+\entry {\code {expand-region-abbrevs}}{273}
 \initial {F}
-\entry {\code {fancy-diary-display \r {(V19)}}}{266}
-\entry {\code {fill-c{\tt\char43}{\tt\char43}-comment \r {(V19)}}}{285}
-\entry {\code {fill-individual-paragraphs}}{132}
-\entry {\code {fill-individual-paragraphs \r {(V19)}}}{248}
-\entry {\code {fill-paragraph}}{131}
-\entry {\code {fill-region}}{131}
-\entry {\code {fill-region-as-paragraph}}{131}
-\entry {\code {fill-region-as-paragraph \r {(V19)}}}{248}
-\entry {\code {find-alternate-file}}{87}
-\entry {\code {find-dired}}{260}
-\entry {\code {find-file}}{87}
-\entry {\code {find-file-other-frame \r {(V19)}}}{245}
-\entry {\code {find-file-other-window}}{87, 109}
-\entry {\code {find-file-read-only-other-window \r {(V19)}}}{246}
-\entry {\code {find-grep-dired}}{260}
-\entry {\code {find-name-dired}}{259}
-\entry {\code {find-tag}}{152}
-\entry {\code {find-tag-other-frame \r {(V19)}}}{246}
-\entry {\code {find-tag-other-window}}{109, 153}
-\entry {\code {find-tag-regexp \r {(V19)}}}{252}
-\entry {\code {fortran-column-ruler}}{159}
-\entry {\code {fortran-comment-region}}{158}
-\entry {\code {fortran-indent-line}}{156}
-\entry {\code {fortran-indent-subprogram}}{156}
-\entry {\code {fortran-mode}}{155}
-\entry {\code {fortran-next-statement}}{155}
-\entry {\code {fortran-previous-statement}}{155}
-\entry {\code {fortran-split-line}}{156}
-\entry {\code {fortran-window-create}}{159}
-\entry {\code {forward-char}}{28}
-\entry {\code {forward-list}}{137}
-\entry {\code {forward-page}}{129}
-\entry {\code {forward-paragraph}}{128}
-\entry {\code {forward-sentence}}{127}
-\entry {\code {forward-sexp}}{137}
-\entry {\code {forward-text-line}}{118}
-\entry {\code {forward-word}}{126}
+\entry {\code {facemenu-remove-all}}{202}
+\entry {\code {facemenu-remove-props}}{202}
+\entry {\code {facemenu-set-background}}{204}
+\entry {\code {facemenu-set-bold}}{203}
+\entry {\code {facemenu-set-bold-italic}}{203}
+\entry {\code {facemenu-set-default}}{203}
+\entry {\code {facemenu-set-face}}{203}
+\entry {\code {facemenu-set-foreground}}{204}
+\entry {\code {facemenu-set-italic}}{203}
+\entry {\code {facemenu-set-underline}}{203}
+\entry {\code {fast-lock-mode}}{166}
+\entry {\code {fill-individual-paragraphs}}{188}
+\entry {\code {fill-nonuniform-paragraphs}}{188}
+\entry {\code {fill-paragraph}}{185}
+\entry {\code {fill-region}}{185}
+\entry {\code {fill-region-as-paragraph}}{185}
+\entry {\code {find-alternate-file}}{108}
+\entry {\code {find-dired}}{320}
+\entry {\code {find-file}}{107}
+\entry {\code {find-file-other-frame}}{108}
+\entry {\code {find-file-other-window}}{108}
+\entry {\code {find-file-read-only}}{108}
+\entry {\code {find-file-read-only-other-frame}}{158}
+\entry {\code {find-grep-dired}}{320}
+\entry {\code {find-name-dired}}{319}
+\entry {\code {find-tag}}{236}
+\entry {\code {find-tag-other-frame}}{237}
+\entry {\code {find-tag-other-window}}{237}
+\entry {\code {find-tag-regexp}}{237}
+\entry {\code {finder-by-keyword}}{52}
+\entry {\code {flush-lines}}{98}
+\entry {\code {font-lock-fontify-block}}{165}
+\entry {\code {font-lock-mode}}{165}
+\entry {\code {format-find-file}}{207}
+\entry {\code {fortran-auto-fill-mode}}{255}
+\entry {\code {fortran-column-ruler}}{256}
+\entry {\code {fortran-comment-region}}{254}
+\entry {\code {fortran-indent-line}}{250}
+\entry {\code {fortran-indent-new-line}}{250}
+\entry {\code {fortran-indent-subprogram}}{251}
+\entry {\code {fortran-mode}}{250}
+\entry {\code {fortran-next-statement}}{250}
+\entry {\code {fortran-previous-statement}}{250}
+\entry {\code {fortran-split-line}}{251}
+\entry {\code {fortran-window-create}}{256}
+\entry {\code {forward-char}}{30}
+\entry {\code {forward-list}}{211}
+\entry {\code {forward-page}}{183}
+\entry {\code {forward-paragraph}}{182}
+\entry {\code {forward-sentence}}{181}
+\entry {\code {forward-sexp}}{211}
+\entry {\code {forward-text-line}}{200}
+\entry {\code {forward-word}}{180}
+\entry {\code {frame-configuration-to-register}}{74}
 \initial {G}
-\entry {\code {gdb \r {(V19)}}}{282}
-\entry {\code {global-set-key}}{221}
-\entry {\code {global-set-key \r {(V19)}}}{288}
-\entry {\code {gnus \r {(V19)}}}{260}
-\entry {\code {gnus-Group-exit \r {(V19)}}}{261}
-\entry {\code {gnus-Group-list-all-groups \r {(V19)}}}{261}
-\entry {\code {gnus-Group-list-groups \r {(V19)}}}{261}
-\entry {\code {gnus-Group-next-group \r {(V19)}}}{262}
-\entry {\code {gnus-Group-next-unread-group \r {(V19)}}}{262}
-\entry {\code {gnus-Group-prev-group \r {(V19)}}}{262}
-\entry {\code {gnus-Group-prev-unread-group \r {(V19)}}}{262}
-\entry {\code {gnus-Group-read-group \r {(V19)}}}{262}
-\entry {\code {gnus-Group-suspend \r {(V19)}}}{261}
-\entry {\code {gnus-Group-unsubscribe-current-group \r {(V19)}}}{261}
-\entry {\code {gnus-Summary-isearch-article \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-next-page \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-next-same-subject \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-next-subject \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-prev-page \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-prev-same-subject \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-prev-subject \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-search-article-forward \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-sort-by-author \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-sort-by-date \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-sort-by-number \r {(V19)}}}{262}
-\entry {\code {gnus-Summary-sort-by-subject \r {(V19)}}}{262}
-\entry {\code {goto-char}}{28}
-\entry {\code {goto-line}}{28}
-\entry {\code {grep}}{162}
-\entry {\code {gud-cont \r {(V19)}}}{284}
-\entry {\code {gud-def \r {(V19)}}}{284}
-\entry {\code {gud-down \r {(V19)}}}{284}
-\entry {\code {gud-finish \r {(V19)}}}{284}
-\entry {\code {gud-next \r {(V19)}}}{284}
-\entry {\code {gud-refresh \r {(V19)}}}{283}
-\entry {\code {gud-step \r {(V19)}}}{284}
-\entry {\code {gud-stepi \r {(V19)}}}{284}
-\entry {\code {gud-up \r {(V19)}}}{284}
+\entry {\code {gdb}}{262}
+\entry {\code {global-font-lock-mode}}{165}
+\entry {\code {global-set-key}}{383}
+\entry {\code {global-unset-key}}{383}
+\entry {\code {gnus}}{343}
+\entry {\code {gnus-group-exit}}{344}
+\entry {\code {gnus-group-kill-group}}{344}
+\entry {\code {gnus-group-list-all-groups}}{344}
+\entry {\code {gnus-group-list-groups}}{344}
+\entry {\code {gnus-group-next-group}}{345}
+\entry {\code {gnus-group-next-unread-group}}{345}
+\entry {\code {gnus-group-prev-group}}{345}
+\entry {\code {gnus-group-prev-unread-group}}{345}
+\entry {\code {gnus-group-read-group}}{345}
+\entry {\code {gnus-group-unsubscribe-current-group}}{344}
+\entry {\code {gnus-summary-isearch-article}}{345}
+\entry {\code {gnus-summary-next-subject}}{345}
+\entry {\code {gnus-summary-next-unread-article}}{345}
+\entry {\code {gnus-summary-prev-page}}{345}
+\entry {\code {gnus-summary-prev-subject}}{345}
+\entry {\code {gnus-summary-prev-unread-article}}{345}
+\entry {\code {gnus-summary-search-article-forward}}{345}
+\entry {\code {gomoku}}{366}
+\entry {\code {goto-char}}{30}
+\entry {\code {goto-line}}{30}
+\entry {\code {grep}}{260}
+\entry {\code {grep (\r {MS-DOS})}}{439}
+\entry {\code {gud-cont}}{264}
+\entry {\code {gud-def}}{265}
+\entry {\code {gud-down}}{264}
+\entry {\code {gud-finish}}{264}
+\entry {\code {gud-gdb-complete-command}}{264}
+\entry {\code {gud-next}}{263}
+\entry {\code {gud-refresh}}{263}
+\entry {\code {gud-remove}}{264}
+\entry {\code {gud-step}}{263}
+\entry {\code {gud-stepi}}{264}
+\entry {\code {gud-tbreak}}{264}
+\entry {\code {gud-up}}{264}
 \initial {H}
-\entry {\code {hanoi}}{209}
-\entry {\code {help-with-tutorial}}{27, 48}
-\entry {\code {hide-body}}{125}
-\entry {\code {hide-entry}}{125}
-\entry {\code {hide-leaves}}{125}
-\entry {\code {hide-subtree}}{125}
-\entry {\code {holidays \r {(V19)}}}{264}
+\entry {\code {hanoi}}{366}
+\entry {\code {help-command}}{49}
+\entry {\code {help-for-help}}{49}
+\entry {\code {help-with-tutorial}}{29}
+\entry {\code {hide-body}}{194}
+\entry {\code {hide-entry}}{193}
+\entry {\code {hide-leaves}}{193}
+\entry {\code {hide-other}}{194}
+\entry {\code {hide-sublevels}}{194}
+\entry {\code {hide-subtree}}{193}
+\entry {\code {holidays}}{326}
 \initial {I}
-\entry {\code {iconify-frame \r {(V19)}}}{245}
-\entry {\code {indent-c-exp}}{140}
-\entry {\code {indent-for-comment}}{145}
-\entry {\code {indent-new-comment-line}}{147}
-\entry {\code {indent-region}}{114, 141}
-\entry {\code {indent-relative}}{114}
-\entry {\code {indent-rigidly}}{114}
-\entry {\code {indent-sexp}}{140}
-\entry {\code {indented-text-mode}}{117}
-\entry {\code {info}}{48}
-\entry {\code {insert-abbrevs}}{175}
-\entry {\code {insert-anniversary-diary-entry \r {(V19)}}}{265}
-\entry {\code {insert-block-diary-entry \r {(V19)}}}{266}
-\entry {\code {insert-cyclic-diary-entry \r {(V19)}}}{266}
-\entry {\code {insert-diary-entry \r {(V19)}}}{265}
-\entry {\code {insert-file}}{99}
-\entry {\code {insert-kbd-macro}}{218}
-\entry {\code {insert-monthly-diary-entry \r {(V19)}}}{265}
-\entry {\code {insert-parentheses}}{148}
-\entry {\code {insert-register}}{62}
-\entry {\code {insert-weekly-diary-entry \r {(V19)}}}{265}
-\entry {\code {insert-yearly-diary-entry \r {(V19)}}}{265}
-\entry {\code {interrupt-shell-subjob}}{207}
-\entry {\code {inverse-add-global-abbrev}}{172}
-\entry {\code {inverse-add-mode-abbrev}}{172}
-\entry {\code {isearch \r {(V19)}}}{247}
-\entry {\code {isearch-backward}}{67}
-\entry {\code {isearch-backward-regexp}}{71}
-\entry {\code {isearch-backward-regexp \r {(V19)}}}{245}
-\entry {\code {isearch-forward}}{67}
-\entry {\code {isearch-forward-regexp}}{71}
-\entry {\code {ispell-buffer \r {(V19)}}}{250}
-\entry {\code {ispell-region \r {(V19)}}}{250}
+\entry {\code {iconify-or-deiconify-frame}}{168}
+\entry {\code {ielm}}{269}
+\entry {\code {increase-left-margin}}{204}
+\entry {\code {indent-c-exp}}{214}
+\entry {\code {indent-for-comment}}{226}
+\entry {\code {indent-new-comment-line}}{227}
+\entry {\code {indent-region}}{176}
+\entry {\code {indent-relative}}{176}
+\entry {\code {indent-rigidly}}{176}
+\entry {\code {indent-sexp}}{214}
+\entry {\code {indented-text-mode}}{189}
+\entry {\code {info}}{54}
+\entry {\code {Info-goto-emacs-command-node}}{54}
+\entry {\code {Info-goto-emacs-key-command-node}}{54}
+\entry {\code {insert-abbrevs}}{275}
+\entry {\code {insert-anniversary-diary-entry}}{338}
+\entry {\code {insert-block-diary-entry}}{339}
+\entry {\code {insert-cyclic-diary-entry}}{339}
+\entry {\code {insert-diary-entry}}{337}
+\entry {\code {insert-file}}{135}
+\entry {\code {insert-kbd-macro}}{378}
+\entry {\code {insert-monthly-diary-entry}}{337}
+\entry {\code {insert-parentheses}}{229}
+\entry {\code {insert-register}}{73}
+\entry {\code {insert-weekly-diary-entry}}{337}
+\entry {\code {insert-yearly-diary-entry}}{337}
+\entry {\code {inverse-add-global-abbrev}}{272}
+\entry {\code {inverse-add-mode-abbrev}}{272}
+\entry {\code {invert-face}}{164}
+\entry {\code {isearch-backward}}{87}
+\entry {\code {isearch-backward-regexp}}{89}
+\entry {\code {isearch-forward}}{85}
+\entry {\code {isearch-forward-regexp}}{89}
+\entry {\code {iso-accents-mode}}{80}
+\entry {\code {ispell-buffer}}{101}
+\entry {\code {ispell-complete-word}}{102}
+\entry {\code {ispell-kill-ispell}}{102}
+\entry {\code {ispell-message}}{289}
+\entry {\code {ispell-region}}{101}
+\entry {\code {ispell-word}}{101}
 \initial {J}
-\entry {\code {just-one-space}}{54}
+\entry {\code {jump-to-register}}{73}
+\entry {\code {just-one-space}}{64}
 \initial {K}
-\entry {\code {kbd-macro-query}}{218}
-\entry {\code {kill-all-abbrevs}}{172}
-\entry {\code {kill-buffer}}{103}
-\entry {\code {kill-comment}}{146}
-\entry {\code {kill-compilation}}{161}
-\entry {\code {kill-ispell \r {(V19)}}}{250}
-\entry {\code {kill-line}}{54, 55}
-\entry {\code {kill-local-variable}}{214}
-\entry {\code {kill-output-from-shell}}{207}
-\entry {\code {kill-rectangle}}{60}
-\entry {\code {kill-region}}{55}
-\entry {\code {kill-sentence}}{55, 127}
-\entry {\code {kill-sexp}}{55, 137}
-\entry {\code {kill-some-buffers}}{103}
-\entry {\code {kill-word}}{55, 126}
+\entry {\code {kbd-macro-query}}{379}
+\entry {\code {keep-lines}}{98}
+\entry {\code {keyboard-escape-quit}}{398}
+\entry {\code {keyboard-translate}}{390}
+\entry {\code {kill-all-abbrevs}}{272}
+\entry {\code {kill-buffer}}{142}
+\entry {\code {kill-comment}}{227}
+\entry {\code {kill-compilation}}{260}
+\entry {\code {kill-line}}{64}
+\entry {\code {kill-local-variable}}{373}
+\entry {\code {kill-rectangle}}{70}
+\entry {\code {kill-region}}{65}
+\entry {\code {kill-ring-save}}{66}
+\entry {\code {kill-sentence}}{181}
+\entry {\code {kill-sexp}}{211}
+\entry {\code {kill-some-buffers}}{142}
+\entry {\code {kill-word}}{180}
 \initial {L}
-\entry {\code {latex-mode}}{118}
-\entry {\code {LaTeX-mode}}{118}
-\entry {\code {lisp-complete-symbol}}{148}
-\entry {\code {lisp-indent-line}}{139}
-\entry {\code {lisp-interaction-mode}}{169}
-\entry {\code {lisp-mode}}{169}
-\entry {\code {lisp-send-defun}}{170}
-\entry {\code {list-abbrevs}}{173}
-\entry {\code {list-buffers}}{102}
-\entry {\code {list-command-history}}{41}
-\entry {\code {list-directory}}{96}
-\entry {\code {list-matching-lines}}{79}
-\entry {\code {list-options}}{213}
-\entry {\code {list-tags}}{154}
-\entry {\code {load}}{163}
-\entry {\code {load-file}}{163}
-\entry {\code {load-library}}{163}
-\entry {\code {local-set-key}}{221}
-\entry {\code {lpr-buffer}}{208}
-\entry {\code {lpr-region}}{208}
+\entry {\code {latex-mode}}{195}
+\entry {\code {lazy-lock-mode}}{167}
+\entry {\code {line-number-mode}}{81}
+\entry {\code {lisp-complete-symbol}}{229}
+\entry {\code {lisp-eval-defun}}{270}
+\entry {\code {lisp-indent-line}}{214}
+\entry {\code {lisp-interaction-mode}}{269}
+\entry {\code {lisp-mode}}{270}
+\entry {\code {list-abbrevs}}{274}
+\entry {\code {list-bookmarks}}{75}
+\entry {\code {list-buffers}}{140}
+\entry {\code {list-calendar-holidays}}{326}
+\entry {\code {list-colors-display}}{164}
+\entry {\code {list-command-history}}{45}
+\entry {\code {list-directory}}{134}
+\entry {\code {list-faces-display}}{163}
+\entry {\code {list-matching-lines}}{98}
+\entry {\code {list-options}}{371}
+\entry {\code {list-tags}}{238}
+\entry {\code {list-text-properties-at}}{202}
+\entry {\code {list-yahrzeit-dates}}{332}
+\entry {\code {load}}{266}
+\entry {\code {load-file}}{266}
+\entry {\code {load-library}}{266}
+\entry {\code {local-set-key}}{383}
+\entry {\code {local-unset-key}}{383}
+\entry {\code {lpr-buffer}}{355}
+\entry {\code {lpr-region}}{355}
 \initial {M}
-\entry {\code {mail}}{181}
-\entry {\code {mail-cc}}{184}
-\entry {\code {mail-fill-yanked-message}}{185}
-\entry {\code {mail-other-frame \r {(V19)}}}{246}
-\entry {\code {mail-other-window}}{109, 181}
-\entry {\code {mail-send}}{184}
-\entry {\code {mail-send-and-exit}}{184}
-\entry {\code {mail-signature}}{184}
-\entry {\code {mail-subject}}{184}
-\entry {\code {mail-to}}{184}
-\entry {\code {mail-yank-original}}{184, 198}
-\entry {\code {make-local-variable}}{214}
-\entry {\code {make-symbolic-link}}{100}
-\entry {\code {make-symbolic-link \r {(V19)}}}{244}
-\entry {\code {make-variable-buffer-local}}{214}
-\entry {\code {manual-entry}}{149}
-\entry {\code {manual-entry \r {(V19)}}}{245}
-\entry {\code {mark-calendar-holidays \r {(V19)}}}{264}
-\entry {\code {mark-defun}}{51, 138}
-\entry {\code {mark-diary-entries \r {(V19)}}}{265}
-\entry {\code {mark-fortran-subprogram}}{155}
-\entry {\code {mark-page}}{51, 129}
-\entry {\code {mark-paragraph}}{51, 128}
-\entry {\code {mark-sexp}}{51, 138}
-\entry {\code {mark-whole-buffer}}{51}
-\entry {\code {mark-word}}{51, 127}
-\entry {\code {minibuffer-complete}}{39}
-\entry {\code {minibuffer-complete-word}}{40}
-\entry {\code {modify-syntax-entry}}{225}
-\entry {\code {move-over-close-and-reindent}}{148}
-\entry {\code {move-to-window-line}}{28}
+\entry {\code {mail}}{283}
+\entry {\code {mail-bcc}}{288}
+\entry {\code {mail-cc}}{288}
+\entry {\code {mail-complete}}{288}
+\entry {\code {mail-fcc}}{288}
+\entry {\code {mail-fill-yanked-message}}{289}
+\entry {\code {mail-interactive-insert-alias}}{287}
+\entry {\code {mail-other-frame}}{283}
+\entry {\code {mail-other-window}}{283}
+\entry {\code {mail-send}}{288}
+\entry {\code {mail-send-and-exit}}{288}
+\entry {\code {mail-signature}}{289}
+\entry {\code {mail-subject}}{288}
+\entry {\code {mail-text}}{289}
+\entry {\code {mail-to}}{288}
+\entry {\code {mail-yank-original}}{289}
+\entry {\code {make-face-bold}}{164}
+\entry {\code {make-face-bold-italic}}{164}
+\entry {\code {make-face-italic}}{164}
+\entry {\code {make-face-unbold}}{164}
+\entry {\code {make-face-unitalic}}{164}
+\entry {\code {make-frame}}{157}
+\entry {\code {make-frame-on-display}}{158}
+\entry {\code {make-indirect-buffer}}{144}
+\entry {\code {make-local-variable}}{373}
+\entry {\code {make-symbolic-link}}{136}
+\entry {\code {make-variable-buffer-local}}{373}
+\entry {\code {Man-fontify-manpage}}{230}
+\entry {\code {manual-entry}}{230}
+\entry {\code {mark-calendar-holidays}}{326}
+\entry {\code {mark-defun}}{212}
+\entry {\code {mark-diary-entries}}{334}
+\entry {\code {mark-fortran-subprogram}}{250}
+\entry {\code {mark-page}}{183}
+\entry {\code {mark-paragraph}}{182}
+\entry {\code {mark-sexp}}{212}
+\entry {\code {mark-whole-buffer}}{60}
+\entry {\code {mark-word}}{180}
+\entry {\code {minibuffer-complete}}{41}
+\entry {\code {minibuffer-complete-word}}{42}
+\entry {\code {mode25}}{436}
+\entry {\code {mode4350}}{436}
+\entry {\code {modify-face}}{164}
+\entry {\code {mouse-choose-completion}}{42}
+\entry {\code {mouse-save-then-click}}{153}
+\entry {\code {mouse-secondary-save-then-kill}}{156}
+\entry {\code {mouse-set-point}}{153}
+\entry {\code {mouse-set-region}}{153}
+\entry {\code {mouse-set-secondary}}{155}
+\entry {\code {mouse-start-secondary}}{155}
+\entry {\code {mouse-yank-at-click}}{153}
+\entry {\code {mouse-yank-secondary}}{156}
+\entry {\code {move-over-close-and-reindent}}{229}
+\entry {\code {move-to-window-line}}{30}
+\entry {\code {mpuz}}{366}
 \initial {N}
-\entry {\code {name-last-kbd-macro}}{218}
-\entry {\code {narrow-to-region}}{202}
-\entry {\code {negative-argument}}{33}
-\entry {\code {newline}}{27}
-\entry {\code {newline-and-indent}}{140}
-\entry {\code {next-complex-command}}{42}
-\entry {\code {next-error}}{162}
-\entry {\code {next-file}}{154}
-\entry {\code {next-history-element \r {(V19)}}}{240}
-\entry {\code {next-line}}{28}
-\entry {\code {next-matching-history-element \r {(V19)}}}{240}
-\entry {\code {normal-mode}}{112}
-\entry {\code {not-modified}}{88}
-\entry {\code {nroff-mode}}{118}
+\entry {\code {name-last-kbd-macro}}{378}
+\entry {\code {narrow-to-page}}{360}
+\entry {\code {narrow-to-region}}{360}
+\entry {\code {negative-argument}}{37}
+\entry {\code {newline}}{30}
+\entry {\code {newline-and-indent}}{214}
+\entry {\code {next-completion}}{43}
+\entry {\code {next-error}}{260}
+\entry {\code {next-history-element}}{44}
+\entry {\code {next-line}}{30}
+\entry {\code {next-matching-history-element}}{45}
+\entry {\code {normal-mode}}{173}
+\entry {\code {not-modified}}{110}
+\entry {\code {nroff-mode}}{200}
 \initial {O}
-\entry {\code {occur}}{79}
-\entry {\code {open-dribble-file}}{237}
-\entry {\code {open-line}}{31}
-\entry {\code {open-rectangle}}{60}
-\entry {\code {open-termscript}}{237}
-\entry {\code {other-window}}{108}
-\entry {\code {outline-backward-same-level}}{124}
-\entry {\code {outline-forward-same-level}}{124}
-\entry {\code {outline-mode}}{122}
-\entry {\code {outline-next-visible-heading}}{124}
-\entry {\code {outline-previous-visible-heading}}{124}
-\entry {\code {outline-up-heading}}{124}
-\entry {\code {overwrite-mode}}{211}
+\entry {\code {occur}}{98}
+\entry {\code {open-dribble-file}}{405}
+\entry {\code {open-line}}{34}
+\entry {\code {open-rectangle}}{70}
+\entry {\code {open-termscript}}{405}
+\entry {\code {other-frame}}{168}
+\entry {\code {other-window}}{149}
+\entry {\code {outline-backward-same-level}}{192}
+\entry {\code {outline-forward-same-level}}{192}
+\entry {\code {outline-minor-mode}}{190}
+\entry {\code {outline-mode}}{190}
+\entry {\code {outline-next-visible-heading}}{192}
+\entry {\code {outline-previous-visible-heading}}{192}
+\entry {\code {outline-up-heading}}{192}
+\entry {\code {overwrite-mode}}{368}
 \initial {P}
-\entry {\code {picture-backward-clear-column}}{178}
-\entry {\code {picture-backward-column}}{177}
-\entry {\code {picture-clear-column}}{178}
-\entry {\code {picture-clear-line}}{178}
-\entry {\code {picture-clear-rectangle}}{180}
-\entry {\code {picture-clear-rectangle-to-register}}{180}
-\entry {\code {picture-forward-column}}{177}
-\entry {\code {picture-motion}}{179}
-\entry {\code {picture-motion-reverse}}{179}
-\entry {\code {picture-move-down}}{177}
-\entry {\code {picture-move-up}}{177}
-\entry {\code {picture-movement-down}}{178}
-\entry {\code {picture-movement-left}}{178}
-\entry {\code {picture-movement-ne}}{178}
-\entry {\code {picture-movement-nw}}{178}
-\entry {\code {picture-movement-right}}{178}
-\entry {\code {picture-movement-se}}{178}
-\entry {\code {picture-movement-sw}}{178}
-\entry {\code {picture-movement-up}}{178}
-\entry {\code {picture-newline}}{178}
-\entry {\code {picture-open-line}}{178}
-\entry {\code {picture-set-tab-stops}}{179}
-\entry {\code {picture-tab}}{179}
-\entry {\code {picture-tab-search}}{179}
-\entry {\code {picture-yank-rectangle}}{180}
-\entry {\code {picture-yank-rectangle-from-register}}{180}
-\entry {\code {plain-tex-mode}}{118}
-\entry {\code {plain-TeX-mode}}{118}
-\entry {\code {point-to-register}}{61}
-\entry {\code {prepend-to-buffer}}{58}
-\entry {\code {previous-complex-command}}{42}
-\entry {\code {previous-history-element \r {(V19)}}}{240}
-\entry {\code {previous-line}}{28}
-\entry {\code {previous-matching-history-element \r {(V19)}}}{240}
-\entry {\code {print-buffer}}{208}
-\entry {\code {print-diary-entries \r {(V19)}}}{267}
-\entry {\code {print-region}}{208}
+\entry {\code {perldb}}{262}
+\entry {\code {phases-of-moon}}{328}
+\entry {\code {picture-backward-clear-column}}{280}
+\entry {\code {picture-backward-column}}{279}
+\entry {\code {picture-clear-column}}{280}
+\entry {\code {picture-clear-line}}{280}
+\entry {\code {picture-clear-rectangle}}{282}
+\entry {\code {picture-clear-rectangle-to-register}}{282}
+\entry {\code {picture-forward-column}}{279}
+\entry {\code {picture-motion}}{281}
+\entry {\code {picture-motion-reverse}}{281}
+\entry {\code {picture-move-down}}{279}
+\entry {\code {picture-move-up}}{279}
+\entry {\code {picture-movement-down}}{280}
+\entry {\code {picture-movement-left}}{280}
+\entry {\code {picture-movement-ne}}{280}
+\entry {\code {picture-movement-nw}}{280}
+\entry {\code {picture-movement-right}}{280}
+\entry {\code {picture-movement-se}}{280}
+\entry {\code {picture-movement-sw}}{280}
+\entry {\code {picture-movement-up}}{280}
+\entry {\code {picture-newline}}{280}
+\entry {\code {picture-open-line}}{280}
+\entry {\code {picture-set-tab-stops}}{281}
+\entry {\code {picture-tab}}{281}
+\entry {\code {picture-tab-search}}{281}
+\entry {\code {picture-yank-rectangle}}{282}
+\entry {\code {picture-yank-rectangle-from-register}}{282}
+\entry {\code {plain-tex-mode}}{195}
+\entry {\code {point-to-register}}{73}
+\entry {\code {prepend-to-buffer}}{68}
+\entry {\code {previous-completion}}{43}
+\entry {\code {previous-history-element}}{44}
+\entry {\code {previous-line}}{30}
+\entry {\code {previous-matching-history-element}}{45}
+\entry {\code {print-buffer}}{355}
+\entry {\code {print-buffer, under MS-DOS}}{438}
+\entry {\code {print-region}}{355}
+\entry {\code {print-region, under MS-DOS}}{438}
+\entry {\code {ps-print-buffer}}{356}
+\entry {\code {ps-print-buffer, under MS-DOS}}{439}
+\entry {\code {ps-print-buffer-with-faces}}{356}
+\entry {\code {ps-print-buffer-with-faces, under MS-DOS}}{439}
+\entry {\code {ps-print-region}}{356}
+\entry {\code {ps-print-region, under MS-DOS}}{439}
+\entry {\code {ps-print-region-with-faces}}{356}
+\entry {\code {ps-print-region-with-faces, under MS-DOS}}{439}
+\entry {\code {ps-spool-buffer}}{357}
+\entry {\code {ps-spool-buffer, under MS-DOS}}{439}
+\entry {\code {ps-spool-buffer-with-faces}}{357}
+\entry {\code {ps-spool-buffer-with-faces, under MS-DOS}}{439}
+\entry {\code {ps-spool-region}}{357}
+\entry {\code {ps-spool-region, under MS-DOS}}{439}
+\entry {\code {ps-spool-region-with-faces}}{357}
+\entry {\code {ps-spool-region-with-faces, under MS-DOS}}{439}
 \initial {Q}
-\entry {\code {query-replace}}{78}
-\entry {\code {query-replace-regexp}}{78}
-\entry {\code {quietly-read-abbrev-file}}{174}
-\entry {\code {quit-shell-subjob}}{207}
-\entry {\code {quoted-insert}}{27}
+\entry {\code {query-replace}}{96}
+\entry {\code {query-replace-regexp}}{96}
+\entry {\code {quietly-read-abbrev-file}}{275}
+\entry {\code {quoted-insert}}{29}
 \initial {R}
-\entry {\code {re-search-backward}}{72}
-\entry {\code {re-search-forward}}{72}
-\entry {\code {read-abbrev-file}}{174}
-\entry {\code {recenter}}{28, 63}
-\entry {\code {recover-file}}{95}
-\entry {\code {register-to-point}}{61}
-\entry {\code {reload-ispell \r {(V19)}}}{251}
-\entry {\code {rename-buffer}}{103}
-\entry {\code {rename-file}}{99}
-\entry {\code {repeat-complex-command}}{41}
-\entry {\code {replace-regexp}}{76}
-\entry {\code {replace-string}}{76}
-\entry {\code {reposition-window \r {(V19)}}}{245}
-\entry {\code {revert-buffer}}{93}
-\entry {\code {revert-buffer \r {(Dired, V19)}}}{259}
-\entry {\code {revert-buffer \r {(V19)}}}{240}
-\entry {\code {rmail}}{187}
-\entry {\code {rmail-add-label}}{194}
-\entry {\code {rmail-beginning-of-message}}{188}
-\entry {\code {rmail-continue}}{198}
-\entry {\code {rmail-delete-backward}}{190}
-\entry {\code {rmail-delete-forward}}{190}
-\entry {\code {rmail-edit-current-message}}{199}
-\entry {\code {rmail-expunge}}{190}
-\entry {\code {rmail-forward}}{198}
-\entry {\code {rmail-get-new-mail}}{192}
-\entry {\code {rmail-input}}{191}
-\entry {\code {rmail-kill-label}}{194}
-\entry {\code {rmail-last-message}}{189}
-\entry {\code {rmail-mail}}{198}
-\entry {\code {rmail-next-labeled-message}}{194}
-\entry {\code {rmail-next-message}}{189}
-\entry {\code {rmail-next-undeleted-message}}{189}
-\entry {\code {rmail-output}}{192}
-\entry {\code {rmail-output-to-rmail-file}}{192}
-\entry {\code {rmail-previous-labeled-message}}{194}
-\entry {\code {rmail-previous-message}}{189}
-\entry {\code {rmail-previous-undeleted-message}}{189}
-\entry {\code {rmail-quit}}{187}
-\entry {\code {rmail-reply}}{197}
-\entry {\code {rmail-resend \r {(V19)}}}{251}
-\entry {\code {rmail-retry-failure \r {(V19)}}}{251}
-\entry {\code {rmail-save}}{187}
-\entry {\code {rmail-search}}{189}
-\entry {\code {rmail-show-message}}{189}
-\entry {\code {rmail-summary}}{195}
-\entry {\code {rmail-summary-by-labels}}{194, 195}
-\entry {\code {rmail-summary-by-recipients}}{196}
-\entry {\code {rmail-summary-delete-forward}}{197}
-\entry {\code {rmail-summary-exit}}{197}
-\entry {\code {rmail-summary-goto-msg}}{196}
-\entry {\code {rmail-summary-next-all}}{196}
-\entry {\code {rmail-summary-next-msg}}{196}
-\entry {\code {rmail-summary-previous-all}}{196}
-\entry {\code {rmail-summary-previous-msg}}{196}
-\entry {\code {rmail-summary-quit}}{197}
-\entry {\code {rmail-summary-scroll-msg-down}}{197}
-\entry {\code {rmail-summary-scroll-msg-up}}{197}
-\entry {\code {rmail-summary-undelete}}{197}
-\entry {\code {rmail-toggle-header}}{198}
-\entry {\code {rmail-undelete-previous-message}}{190}
-\entry {\code {run-lisp}}{169}
+\entry {\code {re-search-backward}}{89}
+\entry {\code {re-search-forward}}{89}
+\entry {\code {read-abbrev-file}}{275}
+\entry {\code {recenter}}{77}
+\entry {\code {recover-file}}{117}
+\entry {\code {recover-session}}{117}
+\entry {\code {redraw-calendar}}{324}
+\entry {\code {rename-buffer}}{141}
+\entry {\code {rename-file}}{136}
+\entry {\code {repeat-complex-command}}{45}
+\entry {\code {replace-regexp}}{95}
+\entry {\code {replace-string}}{95}
+\entry {\code {report-emacs-bug}}{404}
+\entry {\code {reposition-window}}{78}
+\entry {\code {resize-minibuffer-mode}}{40}
+\entry {\code {revert-buffer}}{114}
+\entry {\code {revert-buffer \r {(Dired)}}}{319}
+\entry {\code {rlogin}}{353}
+\entry {\code {rlogin-directory-tracking-mode}}{354}
+\entry {\code {rmail}}{291}
+\entry {\code {rmail-add-label}}{299}
+\entry {\code {rmail-beginning-of-message}}{292}
+\entry {\code {rmail-bury}}{291}
+\entry {\code {rmail-continue}}{302}
+\entry {\code {rmail-delete-backward}}{294}
+\entry {\code {rmail-delete-forward}}{294}
+\entry {\code {rmail-edit-current-message}}{306}
+\entry {\code {rmail-expunge}}{294}
+\entry {\code {rmail-first-message}}{293}
+\entry {\code {rmail-forward}}{301}
+\entry {\code {rmail-get-new-mail}}{297}
+\entry {\code {rmail-input}}{296}
+\entry {\code {rmail-kill-label}}{299}
+\entry {\code {rmail-last-message}}{293}
+\entry {\code {rmail-mail}}{302}
+\entry {\code {rmail-next-labeled-message}}{299}
+\entry {\code {rmail-next-message}}{293}
+\entry {\code {rmail-next-undeleted-message}}{293}
+\entry {\code {rmail-output}}{297}
+\entry {\code {rmail-output-to-rmail-file}}{297}
+\entry {\code {rmail-previous-labeled-message}}{299}
+\entry {\code {rmail-previous-message}}{293}
+\entry {\code {rmail-previous-undeleted-message}}{293}
+\entry {\code {rmail-quit}}{291}
+\entry {\code {rmail-reply}}{300}
+\entry {\code {rmail-resend}}{302}
+\entry {\code {rmail-retry-failure}}{301}
+\entry {\code {rmail-save}}{291}
+\entry {\code {rmail-search}}{293}
+\entry {\code {rmail-show-message}}{293}
+\entry {\code {rmail-summary}}{303}
+\entry {\code {rmail-summary-by-labels}}{303}
+\entry {\code {rmail-summary-by-recipients}}{303}
+\entry {\code {rmail-summary-by-topic}}{303}
+\entry {\code {rmail-summary-quit}}{304}
+\entry {\code {rmail-summary-wipe}}{304}
+\entry {\code {rmail-toggle-header}}{305}
+\entry {\code {rmail-undelete-previous-message}}{294}
+\entry {\code {rot13-other-window}}{307}
+\entry {\code {run-lisp}}{269}
 \initial {S}
-\entry {\code {save-buffer}}{88}
-\entry {\code {save-buffers-kill-emacs}}{21}
-\entry {\code {save-some-buffers}}{88}
-\entry {\code {scroll-bar-mode \r {(V19)}}}{239}
-\entry {\code {scroll-down}}{63}
-\entry {\code {scroll-left}}{64}
-\entry {\code {scroll-other-window}}{108}
-\entry {\code {scroll-right}}{64}
-\entry {\code {scroll-up}}{63}
-\entry {\code {sdb \r {(V19)}}}{283}
-\entry {\code {search-backward}}{70}
-\entry {\code {search-forward}}{70}
-\entry {\code {self-insert}}{27}
-\entry {\code {send-gud-command \r {(V19)}}}{285}
-\entry {\code {send-invisible \r {(V19)}}}{250}
-\entry {\code {send-shell-input}}{207}
-\entry {\code {set-comment-column}}{147}
-\entry {\code {set-fill-column}}{131}
-\entry {\code {set-fill-prefix}}{132}
-\entry {\code {set-gnu-bindings}}{209}
-\entry {\code {set-goal-column}}{29}
-\entry {\code {set-gosmacs-bindings}}{209}
-\entry {\code {set-mark-command}}{49}
-\entry {\code {set-rmail-inbox-list}}{192}
-\entry {\code {set-selective-display}}{64}
-\entry {\code {set-variable}}{212}
-\entry {\code {set-visited-file-name}}{89}
-\entry {\code {setq-default}}{214}
-\entry {\code {shell}}{205}
-\entry {\code {shell-command}}{205}
-\entry {\code {shell-command-on-region}}{205}
-\entry {\code {shell-send-eof}}{207}
-\entry {\code {show-all}}{125}
-\entry {\code {show-all-diary-entries \r {(V19)}}}{265}
-\entry {\code {show-branches}}{125}
-\entry {\code {show-children}}{125}
-\entry {\code {show-entry}}{125}
-\entry {\code {show-output-from-shell}}{207}
-\entry {\code {show-subtree}}{125}
-\entry {\code {sort-columns}}{204}
-\entry {\code {sort-fields}}{203}
-\entry {\code {sort-lines}}{203}
-\entry {\code {sort-numeric-fields}}{203}
-\entry {\code {sort-pages}}{203}
-\entry {\code {sort-paragraphs}}{203}
-\entry {\code {spell-buffer}}{83}
-\entry {\code {spell-region}}{83}
-\entry {\code {spell-string}}{83}
-\entry {\code {spell-word}}{83}
-\entry {\code {split-line}}{113}
-\entry {\code {split-window-horizontally}}{107}
-\entry {\code {split-window-vertically}}{107}
-\entry {\code {start-kbd-macro}}{217}
-\entry {\code {stop-shell-subjob}}{207}
-\entry {\code {substitute-key-definition}}{222}
-\entry {\code {super-apropos \r {(V19)}}}{246}
-\entry {\code {suspend-emacs}}{21}
-\entry {\code {switch-to-buffer}}{101}
-\entry {\code {switch-to-buffer-other-frame \r {(V19)}}}{245}
-\entry {\code {switch-to-buffer-other-window}}{109}
+\entry {\code {save-buffer}}{109}
+\entry {\code {save-buffers-kill-emacs}}{26}
+\entry {\code {save-some-buffers}}{109}
+\entry {\code {scroll-bar-mode}}{161}
+\entry {\code {scroll-calendar-left}}{323}
+\entry {\code {scroll-calendar-left-three-months}}{323}
+\entry {\code {scroll-calendar-right}}{323}
+\entry {\code {scroll-calendar-right-three-months}}{323}
+\entry {\code {scroll-down}}{77}
+\entry {\code {scroll-left}}{78}
+\entry {\code {scroll-other-window}}{149}
+\entry {\code {scroll-right}}{78}
+\entry {\code {scroll-up}}{77}
+\entry {\code {sdb}}{262}
+\entry {\code {search-backward}}{88}
+\entry {\code {search-forward}}{88}
+\entry {\code {self-insert}}{30}
+\entry {\code {send-invisible}}{349}
+\entry {\code {server-edit}}{354}
+\entry {\code {set-background-color}}{160}
+\entry {\code {set-border-color}}{160}
+\entry {\code {set-comment-column}}{227}
+\entry {\code {set-cursor-color}}{160}
+\entry {\code {set-default-font}}{160}
+\entry {\code {set-face-background}}{164}
+\entry {\code {set-face-font}}{164}
+\entry {\code {set-face-foreground}}{164}
+\entry {\code {set-face-underline-p}}{164}
+\entry {\code {set-fill-column}}{186}
+\entry {\code {set-fill-prefix}}{187}
+\entry {\code {set-foreground-color}}{160}
+\entry {\code {set-goal-column}}{31}
+\entry {\code {set-justification-center}}{206}
+\entry {\code {set-justification-full}}{206}
+\entry {\code {set-justification-left}}{206}
+\entry {\code {set-justification-none}}{206}
+\entry {\code {set-justification-right}}{206}
+\entry {\code {set-mark-command}}{57}
+\entry {\code {set-mouse-color}}{160}
+\entry {\code {set-rmail-inbox-list}}{297}
+\entry {\code {set-selective-display}}{79}
+\entry {\code {set-variable}}{370}
+\entry {\code {set-visited-file-name}}{110}
+\entry {\code {setq-default}}{373}
+\entry {\code {shell}}{346}
+\entry {\code {shell-backward-command}}{349}
+\entry {\code {shell-command}}{346}
+\entry {\code {shell-command-on-region}}{346}
+\entry {\code {shell-forward-command}}{349}
+\entry {\code {shell-pushd-dextract}}{353}
+\entry {\code {shell-pushd-dunique}}{353}
+\entry {\code {shell-pushd-tohome}}{353}
+\entry {\code {show-all}}{194}
+\entry {\code {show-all-diary-entries}}{335}
+\entry {\code {show-branches}}{193}
+\entry {\code {show-children}}{193}
+\entry {\code {show-entry}}{193}
+\entry {\code {show-subtree}}{193}
+\entry {\code {slitex-mode}}{195}
+\entry {\code {sort-columns}}{359}
+\entry {\code {sort-fields}}{357}
+\entry {\code {sort-lines}}{357}
+\entry {\code {sort-numeric-fields}}{357}
+\entry {\code {sort-pages}}{357}
+\entry {\code {sort-paragraphs}}{357}
+\entry {\code {split-line}}{176}
+\entry {\code {split-window-horizontally}}{148}
+\entry {\code {split-window-vertically}}{148}
+\entry {\code {spook}}{290}
+\entry {\code {standard-display-european}}{79}
+\entry {\code {start-kbd-macro}}{377}
+\entry {\code {string-rectangle}}{71}
+\entry {\code {substitute-key-definition}}{384}
+\entry {\code {sunrise-sunset}}{327}
+\entry {\code {suspend-emacs}}{26}
+\entry {\code {switch-to-buffer}}{139}
+\entry {\code {switch-to-buffer-other-frame}}{139}
+\entry {\code {switch-to-buffer-other-window}}{139}
+\entry {\code {switch-to-completions}}{42}
 \initial {T}
-\entry {\code {tab-to-tab-stop}}{114, 117}
-\entry {\code {tabify}}{115}
-\entry {\code {tags-apropos}}{154}
-\entry {\code {tags-loop-continue}}{153}
-\entry {\code {tags-query-replace}}{153}
-\entry {\code {tags-search}}{153}
-\entry {\code {tex-bibtex-file \r {(V19)}}}{248}
-\entry {\code {TeX-buffer}}{121}
-\entry {\code {TeX-close-LaTeX-block}}{120}
-\entry {\code {tex-close-latex-block \r {(V19)}}}{248}
-\entry {\code {TeX-insert-braces}}{120}
-\entry {\code {TeX-insert-quote}}{120}
-\entry {\code {TeX-kill-job}}{121}
-\entry {\code {tex-latex-block \r {(V19)}}}{248}
-\entry {\code {tex-mode}}{118}
-\entry {\code {TeX-mode}}{118}
-\entry {\code {TeX-print}}{121}
-\entry {\code {TeX-recenter-output-buffer}}{121}
-\entry {\code {TeX-region}}{121}
-\entry {\code {TeX-show-print-queue}}{121}
-\entry {\code {TeX-terminate-paragraph}}{120}
-\entry {\code {tex-view \r {(V19)}}}{248}
-\entry {\code {texinfo-mode}}{122}
-\entry {\code {text-mode}}{117}
-\entry {\code {toggle-read-only}}{102}
-\entry {\code {top-level}}{201, 232}
-\entry {\code {transpose-chars}}{28, 81}
-\entry {\code {transpose-lines}}{82}
-\entry {\code {transpose-sexps}}{82, 138}
-\entry {\code {transpose-words}}{82, 126}
+\entry {\code {tab-to-tab-stop}}{177}
+\entry {\code {tabify}}{177}
+\entry {\code {tags-apropos}}{238}
+\entry {\code {tags-loop-continue}}{237}
+\entry {\code {tags-query-replace}}{237}
+\entry {\code {tags-search}}{237}
+\entry {\code {telnet}}{353}
+\entry {\code {tex-bibtex-file}}{199}
+\entry {\code {tex-buffer}}{197}
+\entry {\code {tex-close-latex-block}}{197}
+\entry {\code {tex-file}}{198}
+\entry {\code {tex-insert-braces}}{196}
+\entry {\code {tex-insert-quote}}{195}
+\entry {\code {tex-kill-job}}{198}
+\entry {\code {tex-latex-block}}{196}
+\entry {\code {tex-mode}}{195}
+\entry {\code {tex-print}}{197}
+\entry {\code {tex-recenter-output-buffer}}{198}
+\entry {\code {tex-region}}{198}
+\entry {\code {tex-show-print-queue}}{197}
+\entry {\code {tex-terminate-paragraph}}{196}
+\entry {\code {tex-view}}{197}
+\entry {\code {text-mode}}{189}
+\entry {\code {tmm-menubar}}{162}
+\entry {\code {toggle-scroll-bar}}{161}
+\entry {\code {top-level}}{398}
+\entry {\code {transient-mark-mode}}{58}
+\entry {\code {transpose-chars}}{100}
+\entry {\code {transpose-lines}}{100}
+\entry {\code {transpose-sexps}}{100, 212}
+\entry {\code {transpose-words}}{100, 180}
+\entry {\code {turn-on-font-lock}}{165}
 \initial {U}
-\entry {\code {undigestify-rmail-message}}{199}
-\entry {\code {undo}}{35}
-\entry {\code {unexpand-abbrev}}{173}
-\entry {\code {universal-argument}}{33}
-\entry {\code {untabify}}{115}
-\entry {\code {up-list}}{120}
-\entry {\code {upcase-region}}{133}
-\entry {\code {upcase-word}}{82, 133}
+\entry {\code {undigestify-rmail-message}}{306}
+\entry {\code {undo}}{32}
+\entry {\code {unforward-rmail-message}}{301}
+\entry {\code {universal-argument}}{37}
+\entry {\code {untabify}}{177}
+\entry {\code {up-list}}{196}
+\entry {\code {upcase-region}}{189}
+\entry {\code {upcase-word}}{188}
 \initial {V}
-\entry {\code {validate-TeX-buffer}}{120}
-\entry {\code {vc-cancel-version \r {(V19)}}}{270}
-\entry {\code {vc-create-snapshot \r {(V19)}}}{275}
-\entry {\code {vc-diff \r {(V19)}}}{273}
-\entry {\code {vc-directory \r {(V19)}}}{274}
-\entry {\code {vc-insert-headers \r {(V19)}}}{276}
-\entry {\code {vc-print-log \r {(V19)}}}{274}
-\entry {\code {vc-register \r {(V19)}}}{270}
-\entry {\code {vc-rename-file \r {(V19)}}}{274}
-\entry {\code {vc-retrieve-snapshot \r {(V19)}}}{275}
-\entry {\code {vc-revert-buffer \r {(V19)}}}{269}
-\entry {\code {vc-toggle-read-only \r {(V19)}}}{269}
-\entry {\code {vc-update-change-log \r {(V19)}}}{272}
-\entry {\code {vi-mode}}{209}
-\entry {\code {view-buffer}}{103}
-\entry {\code {view-buffer \r {(V19)}}}{245}
-\entry {\code {view-diary-entries \r {(V19)}}}{264}
-\entry {\code {view-emacs-news}}{48}
-\entry {\code {view-file}}{99}
-\entry {\code {view-file \r {(V19)}}}{245}
-\entry {\code {view-lossage}}{48}
-\entry {\code {view-register}}{61}
-\entry {\code {vip-mode}}{210}
-\entry {\code {visit-tags-table}}{152}
+\entry {\code {validate-tex-region}}{196}
+\entry {\code {vc-cancel-version}}{122}
+\entry {\code {vc-create-snapshot}}{130}
+\entry {\code {vc-diff}}{126}
+\entry {\code {vc-directory}}{129}
+\entry {\code {vc-insert-headers}}{131}
+\entry {\code {vc-print-log}}{129}
+\entry {\code {vc-register}}{121}
+\entry {\code {vc-rename-file}}{129}
+\entry {\code {vc-retrieve-snapshot}}{130}
+\entry {\code {vc-revert-buffer}}{122}
+\entry {\code {vc-toggle-read-only}}{141}
+\entry {\code {vc-update-change-log}}{125}
+\entry {\code {vc-version-other-window}}{126}
+\entry {\code {vi-mode}}{364}
+\entry {\code {view-buffer}}{141}
+\entry {\code {view-diary-entries}}{334}
+\entry {\code {view-emacs-news}}{55}
+\entry {\code {view-file}}{135}
+\entry {\code {view-lossage}}{54}
+\entry {\code {view-register}}{73}
+\entry {\code {vip-mode}}{364}
+\entry {\code {viper-mode}}{364}
+\entry {\code {visit-tags-table}}{235}
 \initial {W}
-\entry {\code {what-cursor-position}}{32}
-\entry {\code {what-line}}{32}
-\entry {\code {what-page}}{32}
-\entry {\code {where-is}}{47}
-\entry {\code {widen}}{202}
-\entry {\code {word-search-backward}}{71}
-\entry {\code {word-search-forward}}{71}
-\entry {\code {write-abbrev-file}}{174}
-\entry {\code {write-file}}{89}
-\entry {\code {write-region}}{99}
+\entry {\code {what-cursor-position}}{36}
+\entry {\code {what-cursor-position (\r {MS-DOS})}}{438}
+\entry {\code {what-line}}{36}
+\entry {\code {what-page}}{36}
+\entry {\code {where-is}}{51}
+\entry {\code {widen}}{360}
+\entry {\code {window-configuration-to-register}}{74}
+\entry {\code {word-search-backward}}{89}
+\entry {\code {word-search-forward}}{89}
+\entry {\code {write-abbrev-file}}{275}
+\entry {\code {write-file}}{110}
+\entry {\code {write-region}}{136}
+\initial {X}
+\entry {\code {xdb}}{262}
 \initial {Y}
-\entry {\code {Yank}}{56}
-\entry {\code {yank-pop}}{57}
-\entry {\code {yank-rectangle}}{60}
-\entry {\code {yow}}{209}
+\entry {\code {yank}}{66}
+\entry {\code {yank-pop}}{67}
+\entry {\code {yank-rectangle}}{70}
+\entry {\code {yow}}{366}
 \initial {Z}
-\entry {\code {zap-to-char}}{55}
+\entry {\code {zap-to-char}}{65}

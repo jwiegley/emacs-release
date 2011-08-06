@@ -1,11 +1,11 @@
 /* Definitions needed by most editing commands.
-   Copyright (C) 1985 Free Software Foundation, Inc.
+   Copyright (C) 1985, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -15,18 +15,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
 
 
 #define Ctl(c) ((c)&037)
 
-/* Define the names of keymaps, just so people can refer to them in calls to defkey */
-
-extern Lisp_Object Vglobal_map;
-
-extern Lisp_Object Vesc_map;
-
-extern Lisp_Object Vctl_x_map;
+/* Define the names of keymaps, just so people can refer to them in
+   calls to initial_define_key.  These should *not* be used after
+   initialization; use-global-map doesn't affect these; it sets
+   current_global_map instead.  */
+extern Lisp_Object global_map;
+extern Lisp_Object meta_map;
+extern Lisp_Object control_x_map;
 
 extern Lisp_Object Vminibuffer_local_map;
 
@@ -39,24 +40,47 @@ extern Lisp_Object Vminibuffer_local_completion_map;
 extern Lisp_Object Vminibuffer_local_must_match_map;
 
 /* Last character of last key sequence.  */
-extern int last_command_char;
+extern Lisp_Object last_command_char;
 
-/* Command character to be re-read, or -1 */
+/* Last input character read as a command, not counting menus
+   reached by the mouse.  */
+extern Lisp_Object last_nonmenu_event;
+
+/* List of command events to be re-read, or Qnil.  */
+extern Lisp_Object Vunread_command_events;
+
+/* Command char event to be re-read, or -1 if none.
+   Setting this is obsolete, but some things should still check it.  */
 extern int unread_command_char;
 
-/* Previous command symbol found here for comparison */
-extern Lisp_Object last_command;
+/* The command being executed by the command loop.
+   Commands may set this, and the value set will be copied into
+   current_kboard->Vlast_command instead of the actual command.  */
+extern Lisp_Object this_command;
+
+/* If not Qnil, this is a switch-frame event which we decided to put
+   off until the end of a key sequence.  This should be read as the
+   next command input, after any Vunread_command_events.
+
+   read_key_sequence uses this to delay switch-frame events until the
+   end of the key sequence; Fread_char uses it to put off switch-frame
+   events until a non-ASCII event is acceptable as input.  */
+extern Lisp_Object unread_switch_frame;
+
+/* The value of point when the last command was executed.  */
+extern int last_point_position;
+
+/* The buffer that was current when the last command was started.  */
+extern Lisp_Object last_point_position_buffer;
 
 /* Nonzero means ^G can quit instantly */
 extern int immediate_quit;
 
-/* Character that causes a quit.  Normally C-g.  */
-extern int quit_char;
-
 extern Lisp_Object Vexecuting_macro;
 
 /* Nonzero if input is coming from the keyboard */
-#define FROM_KBD (NULL (Vexecuting_macro) && !noninteractive)
+
+#define INTERACTIVE (NILP (Vexecuting_macro) && !noninteractive)
 
 /* Set this nonzero to force reconsideration of mode line. */
 

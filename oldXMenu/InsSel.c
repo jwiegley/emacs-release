@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: InsSel.c,v 1.3 87/12/20 12:05:16 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/InsSel.c,v 1.1 1992/04/11 22:10:19 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
@@ -13,6 +13,7 @@
  *
  */
 
+#include <config.h>
 #include "XMenuInt.h"
 
 int
@@ -29,7 +30,7 @@ XMenuInsertSelection(menu, p_num, s_num, data, label, active)
 
     XMSelect *select;		/* Newly created selection. */
 
-    int label_length;		/* Label lenght in characters. */
+    int label_length;		/* Label length in characters. */
     int label_width;		/* Label width in pixels. */
     
     /*
@@ -72,7 +73,17 @@ XMenuInsertSelection(menu, p_num, s_num, data, label, active)
     /*
      * Fill the XMSelect structure.
      */
-    select->type = SELECTION;
+    if (!strcmp (label, "--") || !strcmp (label, "---"))
+      {
+	select->type = SEPARATOR;
+	select->active = 0;
+      }
+    else
+      {
+	select->type = SELECTION;
+	select->active = active;
+      }
+
     select->active = active;
     select->serial = -1;
     select->label = label;
@@ -85,7 +96,7 @@ XMenuInsertSelection(menu, p_num, s_num, data, label, active)
      * Insert the selection after the selection with the selection
      * number one less than the desired number for the new selection.
      */
-    insque(select, s_ptr);
+    emacs_insque(select, s_ptr);
 
     /*
      * Update the selection count.

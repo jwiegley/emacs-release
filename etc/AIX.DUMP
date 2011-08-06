@@ -1,5 +1,8 @@
 The following text was written by someone at IBM to describe an older
-version of the code for dumping on AIX.
+version of the code for dumping on AIX.  It does NOT apply to
+the current version of Emacs.  It is included in case someone
+is curious.
+
 
 I (rms) couldn't understand the code, and I can't fully understand
 this text either.  I rewrote the code to use the same basic
@@ -57,7 +60,7 @@ has been modified as follows:
 
         2) Pure data is defined as a shared memory segment and attached
            automatically as read-only data during initialization.  This
-           allows the pure data to be a shared resource amoung all Emacs
+           allows the pure data to be a shared resource among all Emacs
            processes.  The shared memory segment size is PURESIZE bytes.
            If the shared memory segment is unavailable or invalid, a new
            shared memory segment is created and the impure data save file
@@ -146,7 +149,7 @@ has been modified as follows:
 
 
            Sections two and three contain the preloaded data which is
-           resotred at locations _data and initial sbrk(0) respectively.
+           restored at locations _data and initial sbrk(0) respectively.
 
            The reason two separate sections are needed is that process
            initialization allocates data (via malloc) prior to main()
@@ -161,7 +164,7 @@ has been modified as follows:
            function distributed with Emacs anticipates this problem but the
            AIX 3.1 version does not.  Therefore, repeated malloc calls are
            needed to exhaust this initial malloc space.  How do you know
-           when malloc has exhausted its free memroy? You don't!  So the
+           when malloc has exhausted its free memory?  You don't!  So the
            code must repeatedly call malloc for each buffer size and
            detect when a new memory page has been allocated.  Once the new
            memory page is allocated, you can calculate the number of free

@@ -1,0 +1,124 @@
+@c This is part of the Emacs manual.
+@c Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
+@c See file emacs.texi for copying conditions.
+
+@node Antinews, MS-DOS, Command Arguments, Top
+@appendix Emacs 19.28 and 19.29 Antinews
+
+  For those users who live backwards in time, here is information about
+downgrading to Emacs version 19.28 or 19.29.  We hope you will enjoy the
+greater simplicity that results from the absence of certain Emacs 19.34
+features.
+
+@itemize @bullet
+@item
+This version doesn't support Windows NT, or the DEC Alpha.
+
+@item
+In Emacs 19.28, or even 19.29, the features for controlling indentation
+in C are much simpler.  There is a separate variable for each aspect of
+indentation which you can control.  Here is a list of them:
+
+@table @code
+@item c-indent-level
+Level of indentation of C statements with respect to containing block.
+
+@item c-label-offset
+Offset of C label lines and case statements relative to usual indentation.
+
+@item c-continued-brace-offset
+Extra indentation for substatements that start with open-braces.  This
+is in addition to @code{c-continued-statement-offset}.@refill
+
+@item c-continued-statement-offset
+Extra indentation for lines not starting new statements.
+
+@item c-brace-offset
+Extra indentation for braces, compared with other text in same context.
+
+@item c-brace-imaginary-offset
+Imagined indentation of a C open brace that actually follows a statement.
+
+@item c-argdecl-indent
+Indentation level of declarations of C function arguments.
+@end table
+
+@item
+There is no support for editing formatted text.  The text formatter
+@TeX{} does a much better job of formatting than any formatted text
+editor; we recommend you learn to use it.
+
+@item
+@kbd{C-Mouse-2} now runs the menu for setting the default font.
+
+@item
+@key{F1} is no longer an alias for the Help key; you must actually type
+@kbd{C-h} if you want help.
+
+@item
+Integers and buffer sizes are limited to 24 bits on most machines.  But
+as memory gets more expensive, you won't want to edit such large files
+any more.
+
+@item
+There are no indirect buffers, so you can only display one view of an
+outline.  Meanwhile, the prefix key for Outline minor mode is now
+@kbd{C-c C-o}.
+
+@item
+When you are in Transient Mark mode, incremental search always
+deactivates the mark.
+
+@item
+Dynamic abbrev completion has been eliminated in 19.28, and some of the
+other dynamic abbrev customization features are also gone.
+
+@item
+In Dired, Occur mode, Compilation mode, and other such modes, you must
+use @kbd{C-c C-c} to select the item point is on.  @key{RET} won't do
+it.
+
+@item
+@kbd{M-x buffer-menu} now displays the menu buffer in another window.
+
+@item
+The VC (version control) package no longer supports CVS or selecting
+branches other than the principal branch.
+
+@item
+There is no @code{recover-session} command; if Emacs crashes, you simply
+have to remember which files you were editing before the crash, and use
+@code{recover-file} on the individual files.
+
+@item
+In Emacs Lisp mode, @kbd{C-M-x} now lets @code{defvar} operate as it
+usually does---setting the value of the variable only if it has no value
+yet.  Use @kbd{@key{ESC} @key{ESC}} to evaluate a Lisp expression,
+instead of @kbd{M-:}.
+
+@item
+GNU-standard long option names are not supported.  (Real hackers prefer
+the shorter single-dash names, to save typing.)  All the initial options
+must come before all the action options, and whatever initial options
+you use must appear in this order: @samp{-t}, @samp{-d}, @samp{-nw},
+@samp{-batch}, @samp{-q} or @samp{-no-init-file}, @samp{-no-site-file},
+@samp{-u} or @samp{-user}, @samp{-debug-init}.
+
+@item
+Many special-case kludges for MS-DOS have been removed.  This means
+that many features don't work on MS-DOS; however, the code of Emacs
+is much simpler.
+
+For instance, you cannot print from within Emacs, Dired doesn't support
+shell wildcards in filenames, some Lisp packages won't work because
+their standard filenames are invalid on MS-DOS, @code{display-time}
+doesn't work, Font Lock mode won't work unless you create some faces by
+hand first, and @code{call-process} cannot redirect @code{stderr}.
+
+As an additional bonus, you get random characters inserted into the
+buffer without a warning (unless you're clever enough to discover that
+setting @code{visible-bell} makes this problem to go away).
+
+In a word, it's a great relief for those who still need proof that
+MS-DOG isn't a real operating system.
+@end itemize

@@ -1,0 +1,1300 @@
+This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
+input file emacs.texi.
+
+
+File: emacs,  Node: Resume Arguments,  Next: Environment,  Prev: Command Example,  Up: Command Arguments
+
+Resuming Emacs with Arguments
+=============================
+
+   You can specify action arguments for Emacs when you resume it after
+a suspension.  To prepare for this, put the following code in your
+`.emacs' file (*note Hooks::.):
+
+     (add-hook 'suspend-hook 'resume-suspend-hook)
+     (add-hook 'suspend-resume-hook 'resume-process-args)
+
+   As further preparation, you must execute the shell script
+`emacs.csh' (if you use csh as your shell) or `emacs.bash' (if you use
+bash as your shell).  These scripts define an alias named `edit', which
+will resume Emacs giving it new command line arguments such as files to
+visit.
+
+   Only action arguments work properly when you resume Emacs.  Initial
+arguments are not recognized--it's too late to execute them anyway.
+
+   Note that resuming Emacs (with or without arguments) must be done
+from within the shell that is the parent of the Emacs job.  This is why
+`edit' is an alias rather than a program or a shell script.  It is not
+possible to implement a resumption command that could be run from other
+subjobs of the shell; no way to define a command that could be made the
+value of `EDITOR', for example.  Therefore, this feature does not take
+the place of the Emacs Server feature (*note Emacs Server::.).
+
+   The aliases use the Emacs Server feature if you appear to have a
+server Emacs running.  However, they cannot determine this with complete
+accuracy.  They may think that a server is still running when in
+actuality you have killed that Emacs, because the file `/tmp/.esrv...'
+still exists.  If this happens, find that file and delete it.
+
+
+File: emacs,  Node: Environment,  Next: Display X,  Prev: Resume Arguments,  Up: Command Arguments
+
+Environment Variables
+=====================
+
+   This appendix describes how Emacs uses environment variables.  An
+environment variable is a string passed from the operating system to
+Emacs, and the collection of environment variables is known as the
+environment.  Environment variable names are case sensitive and it is
+conventional to use upper case letters only.
+
+   Because environment variables come from the operating system there
+is no general way to set them; it depends on the operating system and
+especially the shell that you are using.  For example, here's how to set
+the environment variable `ORGANIZATION' to `not very much' using bash:
+
+     export ORGANIZATION="not very much"
+
+and here's how to do it in csh or tcsh:
+
+     setenv ORGANIZATION "not very much"
+
+   When Emacs is set-up to use the X windowing system, it inherits the
+use of a large number of environment variables from the X library.  See
+the X documentation for more information.
+
+* Menu:
+
+* General Variables::     Environment variables that all versions of Emacs use.
+* Misc Variables::        Certain system specific variables.
+
+
+File: emacs,  Node: General Variables,  Next: Misc Variables,  Up: Environment
+
+General Variables
+-----------------
+
+`AUTHORCOPY'
+     The name of a file used to archive news articles posted with the
+     GNUS package.
+
+`CDPATH'
+     Used by the `cd' command.
+
+`DOMAINNAME'
+     The name of the internet domain that the machine running Emacs is
+     located in.  Used by the GNUS package.
+
+`EMACSDATA'
+     Used to initialize the variable `data-directory' used to locate the
+     architecture-independent files that come with Emacs.  Setting this
+     variable overrides the setting in `paths.h' when Emacs was built.
+
+`EMACSLOADPATH'
+     A colon-separated list of directories from which to load Emacs Lisp
+     files.  Setting this variable overrides the setting in `paths.h'
+     when Emacs was built.
+
+`EMACSLOCKDIR'
+     The directory that Emacs places lock files--files used to protect
+     users from editing the same files simultaneously.  Setting this
+     variable overrides the setting in `paths.h' when Emacs was built.
+
+`EMACSPATH'
+     The location of Emacs-specific binaries.  Setting this variable
+     overrides the setting in `paths.h' when Emacs was built.
+
+`ESHELL'
+     Used for shell-mode to override the `SHELL' environment variable.
+
+`HISTFILE'
+     The name of the file that shell commands are saved in between
+     logins.  This variable defaults to `~/.history' if you use (t)csh
+     as shell, to `~/.bash_history' if you use bash, to `~/.sh_history'
+     if you use ksh, and to `~/.history' otherwise.
+
+`HOME'
+     The location of the user's files in the directory tree; used for
+     expansion of file names starting with a tilde (`~').  On MS-DOS, it
+     defaults to the directory from which Emacs was started, with `/bin'
+     removed from the end if it was present.
+
+`HOSTNAME'
+     The name of the machine that Emacs is running on.
+
+`INCPATH'
+     A colon-separated list of directories.  Used by the `complete'
+     package to search for files.
+
+`INFOPATH'
+     A colon separated list of directories holding info files.  Setting
+     this variable overrides the setting in `paths.el' when Emacs was
+     built.
+
+`LOGNAME'
+     The user's login name.  See also `USER'.
+
+`MAIL'
+     The name of the user's system mail box.
+
+`MAILRC'
+     Name of file containing mail aliases.  This defaults to
+     `~/.mailrc'.
+
+`MH'
+     Name of setup file for the mh system.  This defaults to
+     `~/.mh_profile'.
+
+`NAME'
+     The real-world name of the user.
+
+`NNTPSERVER'
+     The name of the news server.  Used by the mh and GNUS packages.
+
+`ORGANIZATION'
+     The name of the organization to which you belong.  Used for
+     setting the `Organization:' header in your posts from the GNUS
+     package.
+
+`PATH'
+     A colon-separated list of directories in which executables reside.
+     (On MS-DOS, it is semicolon-separated instead.)  This variable is
+     used to set the Emacs Lisp variable `exec-path' which you should
+     consider to use instead.
+
+`PWD'
+     If set, this should be the default directory when Emacs was
+     started.
+
+`REPLYTO'
+     If set, this specifies an initial value for the variable
+     `mail-default-reply-to'.  *Note Mail Headers::.
+
+`SAVEDIR'
+     The name of a directory in which news articles are saved by
+     default.  Used by the GNUS package.
+
+`SHELL'
+     The name of an interpreter used to parse and execute programs run
+     from inside Emacs.
+
+`TERM'
+     The name of the terminal that Emacs is running on.  The variable
+     must be set unless Emacs is run in batch mode.  On MS-DOS, it
+     defaults to `internal', which specifies a built-in terminal
+     emulation that handles the machine's own display.
+
+`TERMCAP'
+     The name of the termcap library file describing how to program the
+     terminal specified by the `TERM' variable.  This defaults to
+     `/etc/termcap'.
+
+`TMPDIR'
+     Used by the Emerge package as a prefix for temporary files.
+
+`TZ'
+     This specifies the current time zone and possibly also daylight
+     savings information.  On MS-DOS, the default is based on country
+     code; see the file `msdos.c' for details.
+
+`USER'
+     The user's login name.  See also `LOGNAME'.  On MS-DOS, this
+     defaults to `root'.
+
+`VERSION_CONTROL'
+     Used to initialize the `version-control' variable (*note Backup
+     Names::.).
+
+
+File: emacs,  Node: Misc Variables,  Prev: General Variables,  Up: Environment
+
+Misc Variables
+--------------
+
+   These variables are used only on particular configurations:
+
+`COMSPEC'
+     On MS-DOS, the name of the command interpreter to use.  This is
+     used to make a default value for the `SHELL' environment variable.
+
+`NAME'
+     On MS-DOS, this variable defaults to the value of the `USER'
+     variable.
+
+`TEMP'
+`TMP'
+     On MS-DOS, these specify the name of the directory for storing
+     temporary files in.
+
+`EMACSTEST'
+     On MS-DOS, this specifies a file to use to log the operation of the
+     internal terminal emulator.  This feature is useful for submitting
+     bug reports.
+
+`EMACSCOLORS'
+     Used on MS-DOS systems to set screen colors early, so that the
+     screen won't momentarily flash the default colors when Emacs
+     starts up.  The value of this variable should be two-character
+     encoding of the foreground (the first character) and the
+     background (the second character) colors of the default face.
+     Each character should be the hexadecimal code for the desired
+     color on a standard PC text-mode display.
+
+     Only the low three bits of the background color are actually used,
+     because the PC display supports only eight background colors.
+
+`WINDOW_GFX'
+     Used when initializing the Sun windows system.
+
+
+File: emacs,  Node: Display X,  Next: Font X,  Prev: Environment,  Up: Command Arguments
+
+Specifying the Display Name
+===========================
+
+   The environment variable `DISPLAY' tells all X clients, including
+Emacs, where to display their windows.  Its value is set up by default
+in ordinary circumstances, when you start an X server and run jobs
+locally.  Occasionally you may need to specify the display yourself; for
+example, if you do a remote login and want to run a client program
+remotely, displaying on your local screen.
+
+   With Emacs, the main reason people change the default display is to
+let them log into another system, run Emacs on that system, but have the
+window displayed at their local terminal.  You might need to use login
+to another system because the files you want to edit are there, or
+because the Emacs executable file you want to run is there.
+
+   The syntax of the `DISPLAY' environment variable is
+`HOST:DISPLAY.SCREEN', where HOST is the host name of the X Window
+System server machine, DISPLAY is an arbitrarily-assigned number that
+distinguishes your server (X terminal) from other servers on the same
+machine, and SCREEN is a rarely-used field that allows an X server to
+control multiple terminal screens.  The period and the SCREEN field are
+optional.  If included, SCREEN is usually zero.
+
+   For example, if your host is named `glasperle' and your server is
+the first (or perhaps the only) server listed in the configuration, your
+`DISPLAY' is `glasperle:0.0'.
+
+   You can specify the display name explicitly when you run Emacs,
+either by changing the `DISPLAY' variable, or with the option `-d
+DISPLAY' or `--display=DISPLAY'.  Here is an example:
+
+     emacs --display=glasperle:0 &
+
+   You can inhibit the direct use of X with the `-nw' option.  This is
+also an initial option.  It tells Emacs to display using ordinary ASCII
+on its controlling terminal.
+
+   Sometimes, security arrangements prevent a program on a remote system
+from displaying on your local system.  In this case, trying to run Emacs
+produces messages like this:
+
+     Xlib:  connection to "glasperle:0.0" refused by server
+
+You might be able to overcome this problem by using the `xhost' command
+on the local system to give permission for access from your remote
+machine.
+
+
+File: emacs,  Node: Font X,  Next: Colors X,  Prev: Display X,  Up: Command Arguments
+
+Font Specification Options
+==========================
+
+   By default, Emacs displays text in the font named `9x15', which
+makes each character nine pixels wide and fifteen pixels high.  You can
+specify a different font on your command line through the option `-fn
+NAME'.
+
+`-fn NAME'
+     Use font NAME as the default font.
+
+`--font=NAME'
+     `--font' is an alias for `-fn'.
+
+   Under X, each font has a long name which consists of eleven words or
+numbers, separated by dashes.  Some fonts also have shorter
+nicknames--`9x15' is such a nickname.  You can use either kind of name.
+You can use wild card patterns for the font name; then Emacs lets X
+choose one of the fonts that match the pattern.  Here is an example,
+which happens to specify the font whose nickname is `6x13':
+
+     emacs -fn "-misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1" &
+
+You can also specify the font in your `.Xdefaults' file:
+
+     emacs.font: -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
+
+   A long font name has the following form:
+
+     -MAKER-FAMILY-WEIGHT-SLANT-WIDTHTYPE-STYLE...
+     ...-PIXELS-HEIGHT-HORIZ-VERT-SPACING-WIDTH-CHARSET
+
+FAMILY
+     This is the name of the font family-for example, `courier'.
+
+WEIGHT
+     This is normally `bold', `medium' or `light'.  Other words may
+     appear here in some font names.
+
+SLANT
+     This is `r' (roman), `i' (italic), `o' (oblique), `ri' (reverse
+     italic), or `ot' (other).
+
+WIDTHTYPE
+     This is normally `condensed', `extended', `semicondensed' or
+     `normal'.  Other words may appear here in some font names.
+
+STYLE
+     This is an optional additional style name.  Usually it is
+     empty--most long font names have two hyphens in a row at this
+     point.
+
+PIXELS
+     This is the font height, in pixels.
+
+HEIGHT
+     This is the font height on the screen, measured in printer's points
+     (approximately 1/72 of an inch), times ten.  For a given vertical
+     resolution, HEIGHT and PIXELS are proportional; therefore, it is
+     common to specify just one of them and use `*' for the other.
+
+HORIZ
+     This is the horizontal resolution, in pixels per inch, of the
+     screen for which the font is intended.
+
+VERT
+     This is the vertical resolution, in dots per inch, of the screen
+     for which the font is intended.  Normally the resolution of the
+     fonts on your system is the right value for your screen;
+     therefore, you normally specify `*' for this and HORIZ.
+
+SPACING
+     This is `m' (monospace), `p' (proportional) or `c' (character
+     cell).  Emacs can use `m' and `c' fonts.
+
+WIDTH
+     This is the average character width, in pixels, times ten.
+
+CHARSET
+     This is the character set that the font depicts.  Normally you
+     should use `iso8859-1'.
+
+   Use only fixed width fonts--that is, fonts in which all characters
+have the same width; Emacs cannot yet handle display properly for
+variable width fonts.  Any font with `m' or `c' in the SPACING field of
+the long name is a fixed width font.  Here's how to use the `xlsfonts'
+program to list all the fixed width fonts available on your system:
+
+     xlsfonts -fn '*x*'
+     xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-m*'
+     xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-c*'
+
+To see what a particular font looks like, use the `xfd' command.  For
+example:
+
+     xfd -fn 6x13
+
+displays the entire font `6x13'.
+
+   While running Emacs, you can set the font of the current frame
+(*note Frame Parameters::.) or for a specific kind of text (*note
+Faces::.).
+
+
+File: emacs,  Node: Colors X,  Next: Window Size X,  Prev: Font X,  Up: Command Arguments
+
+Window Color Options
+====================
+
+   On a color display, you can specify which color to use for various
+parts of the Emacs display.  To find out what colors are available on
+your system, look at the `/usr/lib/X11/rgb.txt' file.  If you do not
+specify colors, the default for the background is white and the default
+for all other colors is black.  On a monochrome display, the foreground
+is black, the background is white, and the border is gray if the
+display supports that.
+
+   Here is a list of the options for specifying colors:
+
+`-fg COLOR'
+`--foreground-color=COLOR'
+     Specify the foreground color.
+
+`-bg COLOR'
+`--background-color=COLOR'
+     Specify the background color.
+
+`-bd COLOR'
+`--border-color=COLOR'
+     Specify the color of the border of the X window.
+
+`-cr COLOR'
+`--cursor-color=COLOR'
+     Specify the color of the Emacs cursor which indicates where point
+     is.
+
+`-ms COLOR'
+`--mouse-color=COLOR'
+     Specify the color for the mouse cursor when the mouse is in the
+     Emacs window.
+
+`-r'
+`--reverse-video'
+     Reverse video--swap the foreground and background colors.
+
+   For example, to use a coral mouse cursor and a slate blue text
+cursor, enter:
+
+     emacs -ms coral -cr 'slate blue' &
+
+   You can reverse the foreground and background colors through the
+`-r' option or with the X resource `reverseVideo'.
+
+
+File: emacs,  Node: Window Size X,  Next: Borders X,  Prev: Colors X,  Up: Command Arguments
+
+Options for Window Geometry
+===========================
+
+   The `-geometry' option controls the size and position of the initial
+Emacs frame.  Here is the format for specifying the window geometry:
+
+`-g WIDTHxHEIGHT{+-}XOFFSET{+-}YOFFSET'
+     Specify window size WIDTH and HEIGHT (measured in character
+     columns and lines), and positions XOFFSET and YOFFSET (measured in
+     pixels).
+
+`--geometry=WIDTHxHEIGHT{+-}XOFFSET{+-}YOFFSET'
+     This is another way of writing the same thing.
+
+`{+-}' means either a plus sign or a minus sign.  A plus sign before
+XOFFSET means it is the distance from the left side of the screen; a
+minus sign means it counts from the right side.  A plus sign before
+YOFFSET means it is the distance from the top of the screen, and a
+minus sign there indicates the distance from the bottom.  The values
+XOFFSET and YOFFSET may themselves be positive or negative, but that
+doesn't change their meaning, only their direction.
+
+   Emacs uses the same units as `xterm' does to interpret the geometry.
+The WIDTH and HEIGHT are measured in characters, so a large font
+creates a larger frame than a small font.  The XOFFSET and YOFFSET are
+measured in pixels.
+
+   Since the mode line and the echo area occupy the last 2 lines of the
+frame, the height of the initial text window is 2 less than the height
+specified in your geometry.  In non-X-toolkit versions of Emacs, the
+menu bar also takes one line of the specified number.
+
+   You do not have to specify all of the fields in the geometry
+specification.
+
+   If you omit both XOFFSET and YOFFSET, the window manager decides
+where to put the Emacs frame, possibly by letting you place it with the
+mouse.  For example, `164x55' specifies a window 164 columns wide,
+enough for two ordinary width windows side by side, and 55 lines tall.
+
+   The default width for Emacs is 80 characters and the default height
+is 40 lines.  You can omit either the width or the height or both.  If
+you start the geometry with an integer, Emacs interprets it as the
+width.  If you start with an `x' followed by an integer, Emacs
+interprets it as the height.  Thus, `81' specifies just the width;
+`x45' specifies just the height.
+
+   If you start with `+' or `-', that introduces an offset, which means
+both sizes are omitted.  Thus, `-3' specifies the XOFFSET only.  (If
+you give just one offset, it is always XOFFSET.)  `+3-3' specifies both
+the XOFFSET and the YOFFSET, placing the frame near the bottom left of
+the screen.
+
+   You can specify a default for any or all of the fields in
+`.Xdefaults' file, and then override selected fields with a
+`--geometry' option.
+
+
+File: emacs,  Node: Borders X,  Next: Title X,  Prev: Window Size X,  Up: Command Arguments
+
+Internal and External Borders
+=============================
+
+   An Emacs frame has an internal border and an external border.  The
+internal border is an extra strip of the background color around all
+four edges of the frame.  Emacs itself adds the internal border.  The
+external border is added by the window manager outside the internal
+border; it may contain various boxes you can click on to move or iconify
+the window.
+
+`-ib WIDTH'
+`--internal-border=WIDTH'
+     Specify WIDTH as the width of the internal border.
+
+`-bw WIDTH'
+`--border-width=WIDTH'
+     Specify WIDTH as the width of the main border.
+
+   When you specify the size of the frame, that does not count the
+borders.  The frame's position is measured from the outside edge of the
+external border.
+
+   Use the `-ib N' option to specify an internal border N pixels wide.
+The default is 1.  Use `-bw N' to specify the width of the external
+border (though the window manager may not pay attention to what you
+specify).  The default width of the external border is 2.
+
+
+File: emacs,  Node: Title X,  Next: Icons X,  Prev: Borders X,  Up: Command Arguments
+
+Frame Titles
+============
+
+   An Emacs frame may or may not have a specified title.  The frame
+title, if specified, appears in window decorations and icons as the name
+of the frame.  If an Emacs frame has no specified title, the default
+title is the name of the executable program (if there is only one frame)
+or the selected window's buffer name (if there is more than one frame).
+
+   You can specify a title for the initial Emacs frame with a command
+line option:
+
+`-title TITLE'
+`--title=TITLE'
+`-T TITLE'
+     Specify TITLE as the title for the initial Emacs frame.
+
+   The `--name' option (*note Resources X::.) also specifies the title
+for the initial Emacs frame.
+
+
+File: emacs,  Node: Icons X,  Next: Resources X,  Prev: Title X,  Up: Command Arguments
+
+Icons
+=====
+
+   Most window managers allow the user to "iconify" a frame, removing
+it from sight, and leaving a small, distinctive "icon" window in its
+place.  Clicking on the icon window makes the frame itself appear again.
+If you have many clients running at once, you can avoid cluttering up
+the screen by iconifying most of the clients.
+
+`-i'
+`--icon-type'
+     Use a picture of a gnu as the Emacs icon.
+
+`-iconic'
+`--iconic'
+     Start Emacs in iconified state.
+
+   The `-i' or `--icon-type' option tells Emacs to use an icon window
+containing a picture of the GNU gnu.  If omitted, Emacs lets the window
+manager choose what sort of icon to use--usually just a small rectangle
+containing the frame's title.
+
+   The `-iconic' option tells Emacs to begin running as an icon, rather
+than opening a frame right away.  In this situation, the icon window
+provides only indication that Emacs has started; the usual text frame
+doesn't appear until you deiconify it.
+
+
+File: emacs,  Node: Resources X,  Next: Lucid Resources,  Prev: Icons X,  Up: Command Arguments
+
+X Resources
+===========
+
+   Programs running under the X Window System organize their user
+options under a hierarchy of classes and resources.  You can specify
+default values for these options in your X resources file, usually named
+`~/.Xdefaults'.
+
+   Each line in the file specifies a value for one option or for a
+collection of related options, for one program or for several programs
+(optionally even for all programs).
+
+   Programs define named resources with particular meanings.  They also
+define how to group resources into named classes.  For instance, in
+Emacs, the `internalBorder' resource controls the width of the internal
+border, and the `borderWidth' resource controls the width of the
+external border.  Both of these resources are part of the `BorderWidth'
+class.  Case distinctions are significant in these names.
+
+   In `~/.Xdefaults', you can specify a value for a single resource on
+one line, like this:
+
+     emacs.borderWidth: 2
+
+Or you can use a class name to specify the same value for all resources
+in that class.  Here's an example:
+
+     emacs.BorderWidth: 2
+
+   If you specify a value for a class, it becomes the default for all
+resources in that class.  You can specify values for individual
+resources as well; these override the class value, for those particular
+resources.  Thus, this example specifies 2 as the default width for all
+borders, but overrides this value with 4 for the external border:
+
+     emacs.Borderwidth: 2
+     emacs.borderwidth: 4
+
+   The order in which the lines appear in the file does not matter.
+Also, command-line options always override the X resources file.
+
+   The string `emacs' in the examples above is also a resource name.
+It actually represents the name of the executable file that you invoke
+to run Emacs.  If Emacs is installed under a different name, it looks
+for resources under that name instead of `emacs'.
+
+`-name NAME'
+`--name=NAME'
+     Use NAME as the resource name (and the title) for the initial
+     Emacs frame.  This option does not affect subsequent frames, but
+     Lisp programs can specify frame names when they create frames.
+
+     If you don't specify this option, the default is to use the Emacs
+     executable's name as the resource name.
+
+`-xrm RESOURCE-VALUES'
+`--xrm=RESOURCE-VALUES'
+     Specify X resource values for this Emacs job (see below).
+
+   For consistency, `-name' also specifies the name to use for other
+resource values that do not belong to any particular frame.
+
+   The resources that name Emacs invocations also belong to a class; its
+name is `Emacs'.  If you write `Emacs' instead of `emacs', the resource
+applies to all frames in all Emacs jobs, regardless of frame titles and
+regardless of the name of the executable file.  Here is an example:
+
+     Emacs.BorderWidth: 2
+     Emacs.borderWidth: 4
+
+   You can specify a string of additional resource values for Emacs to
+use with the command line option `-xrm RESOURCES'.  The text RESOURCES
+should have the same format that you would use inside a file of X
+resources.  To include multiple resource specifications in DATA, put a
+newline between them, just as you would in a file.  You can also use
+`#include "FILENAME"' to include a file full of resource
+specifications.  Resource values specified with `-xrm' take precedence
+over all other resource specifications.
+
+   The following table lists the resource names that designate options
+for Emacs, each with the class that it belongs to:
+
+`background' (class `Background')
+     Background color name.
+
+`bitmapIcon' (class `BitmapIcon')
+     Use a bitmap icon (a picture of a gnu) if `on', let the window
+     manager choose an icon if `off'.
+
+`borderColor' (class `BorderColor')
+     Color name for the external border.
+
+`borderWidth' (class `BorderWidth')
+     Width in pixels of the external border.
+
+`cursorColor' (class `Foreground')
+     Color name for text cursor (point).
+
+`font' (class `Font')
+     Font name for text.
+
+`foreground' (class `Foreground')
+     Color name for text.
+
+`geometry' (class `Geometry')
+     Window size and position.  Be careful not to specify this resource
+     as `emacs*geometry', because that may affect individual menus as
+     well as the Emacs frame itself.
+
+     If this resource specifies a position, that position applies only
+     to the initial Emacs frame (or, in the case of a resource for a
+     specific frame name, only that frame).  However, the size if
+     specified here applies to all frames.
+
+`iconName' (class `Title')
+     Name to display in the icon.
+
+`internalBorder' (class `BorderWidth')
+     Width in pixels of the internal border.
+
+`menuBar' (class `MenuBar')
+     Give frames menu bars if `on'; don't have menu bars if `off'.
+
+`paneFont' (class `Font')
+     Font name for menu pane titles, in non-toolkit versions of Emacs.
+
+`pointerColor' (class `Foreground')
+     Color of the mouse cursor.
+
+`reverseVideo' (class `ReverseVideo')
+     Switch foreground and background default colors if `on', use
+     colors as specified if `off'.
+
+`verticalScrollBars' (class `ScrollBars')
+     Give frames scroll bars if `on'; don't have scroll bars if `off'.
+
+`selectionFont' (class `Font')
+     Font name for pop-up menu items, in non-toolkit versions of Emacs.
+     (For toolkit versions, see *Note Lucid Resources::, also see
+     *Note Motif Resources::.)
+
+`title' (class `Title')
+     Name to display in the title bar of the initial Emacs frame.
+
+   Here are resources for controlling the appearance of particular faces
+(*note Faces::.):
+
+`FACE.attributeFont'
+     Font for face FACE.
+
+`FACE.attributeForeground'
+     Foreground color for face FACE.
+
+`FACE.attributeBackground'
+     Background color for face FACE.
+
+`FACE.attributeUnderline'
+     Underline flag for face FACE.  Use `on' or `true' for yes.
+
+
+File: emacs,  Node: Lucid Resources,  Next: Motif Resources,  Prev: Resources X,  Up: Command Arguments
+
+Lucid Menu X Resources
+======================
+
+   If the Emacs installed at your site was built to use the X toolkit
+with the Lucid menu widgets, then the menu bar is a separate widget and
+has its own resources.  The resource names contain `pane.menubar'
+(following, as always, the name of the Emacs invocation or `Emacs'
+which stands for all Emacs invocations).  Specify them like this:
+
+     Emacs.pane.menubar.RESOURCE:  VALUE
+
+For example, to specify the font `8x16' for the menu bar items, write
+this:
+
+     Emacs.pane.menubar.font:  8x16
+
+   Resources for *non-menubar* toolkit popup menus have `menu*', in
+like fashion.  For example, to specify the font `8x16' for the popup
+menu items, write this:
+
+     Emacs.menu*.font:	8x16
+
+   For dialog boxes, use `dialog' instead of `menu':
+
+     Emacs.dialog*.font:	8x16
+
+   Experience shows that on some systems you may need to add `shell.'
+before the `pane.menubar' or `menu*'.  On some other systems, you must
+not add `shell.'.
+
+   Here is a list of the specific resources for menu bars and popup
+menus:
+
+`font'
+     Font for menu item text.
+
+`foreground'
+     Color of the foreground.
+
+`background'
+     Color of the background.
+
+`buttonForeground'
+     In the menu bar, the color of the foreground for a selected item.
+
+`horizontalSpacing'
+     Horizontal spacing in pixels between items.  Default is 3.
+
+`verticalSpacing'
+     Vertical spacing in pixels between items.  Default is 1.
+
+`arrowSpacing'
+     Horizontal spacing between the arrow (which indicates a submenu)
+     and the associated text.  Default is 10.
+
+`shadowThickness'
+     Thickness of shadow line around the widget.
+
+
+File: emacs,  Node: Motif Resources,  Prev: Lucid Resources,  Up: Command Arguments
+
+Motif Menu X Resources
+======================
+
+   If the Emacs installed at your site was built to use the X toolkit
+with the Motif widgets, then the menu bar is a separate widget and has
+its own resources.  The resource names contain `pane.menubar'
+(following, as always, the name of the Emacs invocation or `Emacs'
+which stands for all Emacs invocations).  Specify them like this:
+
+     Emacs.pane.menubar.SUBWIDGET.RESOURCE:  VALUE
+
+   Each individual string in the menu bar is a subwidget; the
+subwidget's name is the same as the menu item string.  For example, the
+word `Files' in the menu bar is part of a subwidget named
+`emacs.pane.menubar.Files'.  Most likely, you want to specify the same
+resources for the whole menu bar.  To do this, use `*' instead of a
+specific subwidget name.  For example, to specify the font `8x16' for
+the menu bar items, write this:
+
+     Emacs.pane.menubar.*.fontList:  8x16
+
+This also specifies the resource value for submenus.
+
+   Each item in a submenu in the menu bar also has its own name for X
+resources; for example, the `Files' submenu has an item named `Save
+Buffer'.  A resource specification for a submenu item looks like this:
+
+     Emacs.pane.menubar.popup_*.MENU.ITEM.RESOURCE: VALUE
+
+For example, here's how to specify the font for the `Save Buffer' item:
+
+     Emacs.pane.menubar.popup_*.Files.Save Buffer.fontList: 8x16
+
+   For an item in a second-level submenu, such as `Check Message' under
+`Spell' under `Edit', the resource fits this template:
+
+     Emacs.pane.menubar.popup_*.popup_*.MENU.RESOURCE: VALUE
+
+For example,
+
+     Emacs.pane.menubar.popup_*.popup_*.Spell.Check Message: VALUE
+
+   It's impossible to specify a resource for all the menu bar items
+without also specifying it for the submenus as well.  So if you want the
+submenu items to look different from the menu bar itself, you must ask
+for that in two steps.  First, specify the resource for all of them;
+then, override the value for submenus alone.  Here is an example:
+
+     Emacs.pane.menubar.*.fontList:  8x16
+     Emacs.pane.menubar.popup_*.fontList: 8x16
+
+   For toolkit popup menus, use `menu*' instead of `pane.menubar'.  For
+example, to specify the font `8x16' for the popup menu items, write
+this:
+
+     Emacs.menu*.fontList:  8x16
+
+   Here is a list of the specific resources for menu bars and popup
+menus:
+
+`armColor'
+     The color to show in an armed button.
+
+`fontList'
+     The font to use.
+
+`marginBottom'
+`marginHeight'
+`marginLeft'
+`marginRight'
+`marginTop'
+`marginWidth'
+     Amount of space to leave around the item, within the border.
+
+`borderWidth'
+     The width of border around the menu item, on all sides.
+
+`shadowThickness'
+     The width of the border shadow.
+
+`bottomShadowColor'
+     The color for the border shadow, on the bottom and the right.
+
+`topShadowColor'
+     The color for the border shadow, on the bottom and the right.
+
+
+File: emacs,  Node: Antinews,  Next: MS-DOS,  Prev: Command Arguments,  Up: Top
+
+Emacs 19.28 and 19.29 Antinews
+******************************
+
+   For those users who live backwards in time, here is information about
+downgrading to Emacs version 19.28 or 19.29.  We hope you will enjoy the
+greater simplicity that results from the absence of certain Emacs 19.34
+features.
+
+   * This version doesn't support Windows NT, or the DEC Alpha.
+
+   * In Emacs 19.28, or even 19.29, the features for controlling
+     indentation in C are much simpler.  There is a separate variable
+     for each aspect of indentation which you can control.  Here is a
+     list of them:
+
+    `c-indent-level'
+          Level of indentation of C statements with respect to
+          containing block.
+
+    `c-label-offset'
+          Offset of C label lines and case statements relative to usual
+          indentation.
+
+    `c-continued-brace-offset'
+          Extra indentation for substatements that start with
+          open-braces.  This is in addition to
+          `c-continued-statement-offset'.
+
+    `c-continued-statement-offset'
+          Extra indentation for lines not starting new statements.
+
+    `c-brace-offset'
+          Extra indentation for braces, compared with other text in
+          same context.
+
+    `c-brace-imaginary-offset'
+          Imagined indentation of a C open brace that actually follows
+          a statement.
+
+    `c-argdecl-indent'
+          Indentation level of declarations of C function arguments.
+
+   * There is no support for editing formatted text.  The text formatter
+     TeX does a much better job of formatting than any formatted text
+     editor; we recommend you learn to use it.
+
+   * `C-Mouse-2' now runs the menu for setting the default font.
+
+   * F1 is no longer an alias for the Help key; you must actually type
+     `C-h' if you want help.
+
+   * Integers and buffer sizes are limited to 24 bits on most machines.
+     But as memory gets more expensive, you won't want to edit such
+     large files any more.
+
+   * There are no indirect buffers, so you can only display one view of
+     an outline.  Meanwhile, the prefix key for Outline minor mode is
+     now `C-c C-o'.
+
+   * When you are in Transient Mark mode, incremental search always
+     deactivates the mark.
+
+   * Dynamic abbrev completion has been eliminated in 19.28, and some
+     of the other dynamic abbrev customization features are also gone.
+
+   * In Dired, Occur mode, Compilation mode, and other such modes, you
+     must use `C-c C-c' to select the item point is on.  RET won't do
+     it.
+
+   * `M-x buffer-menu' now displays the menu buffer in another window.
+
+   * The VC (version control) package no longer supports CVS or
+     selecting branches other than the principal branch.
+
+   * There is no `recover-session' command; if Emacs crashes, you simply
+     have to remember which files you were editing before the crash,
+     and use `recover-file' on the individual files.
+
+   * In Emacs Lisp mode, `C-M-x' now lets `defvar' operate as it
+     usually does--setting the value of the variable only if it has no
+     value yet.  Use `ESC ESC' to evaluate a Lisp expression, instead
+     of `M-:'.
+
+   * GNU-standard long option names are not supported.  (Real hackers
+     prefer the shorter single-dash names, to save typing.)  All the
+     initial options must come before all the action options, and
+     whatever initial options you use must appear in this order: `-t',
+     `-d', `-nw', `-batch', `-q' or `-no-init-file', `-no-site-file',
+     `-u' or `-user', `-debug-init'.
+
+   * Many special-case kludges for MS-DOS have been removed.  This means
+     that many features don't work on MS-DOS; however, the code of Emacs
+     is much simpler.
+
+     For instance, you cannot print from within Emacs, Dired doesn't
+     support shell wildcards in filenames, some Lisp packages won't
+     work because their standard filenames are invalid on MS-DOS,
+     `display-time' doesn't work, Font Lock mode won't work unless you
+     create some faces by hand first, and `call-process' cannot
+     redirect `stderr'.
+
+     As an additional bonus, you get random characters inserted into the
+     buffer without a warning (unless you're clever enough to discover
+     that setting `visible-bell' makes this problem to go away).
+
+     In a word, it's a great relief for those who still need proof that
+     MS-DOG isn't a real operating system.
+
+
+File: emacs,  Node: MS-DOS,  Next: Manifesto,  Prev: Antinews,  Up: Top
+
+MS-DOS Issues
+*************
+
+   This section briefly describes the peculiarities of using Emacs under
+the MS-DOS "operating system" (also known as "MS-DOG").  If you build
+Emacs for MS-DOS, the binary will also run on Windows 3, Windows NT,
+Windows 95, or OS-2 as a DOS application; the information in this
+chapter applies for all of those systems, if you use an Emacs that was
+built for MS-DOS.
+
+   Note that it is possible to build Emacs specifically for Windows NT
+or Windows 95.  If you do that, most of this chapter does not apply;
+instead, you get behavior much closer to what is documented in the rest
+of the manual, including support for long file names, multiple frames,
+scroll bars, mouse menus, and subprocesses.  However, the section on
+text files and binary files does still apply.  There are also two
+sections at the end of this chapter which apply specifically for Windows
+NT and 95.
+
+* Menu:
+
+* Keyboard and Mouse on MS-DOS::
+* Display on MS-DOS::
+* File Names on MS-DOS::
+* Text and Binary::
+* Printing and MS-DOS::
+* Subprocesses on MS-DOS::
+* Windows Subprocesses::
+* System Menu on Windows::
+
+
+File: emacs,  Node: Keyboard and Mouse on MS-DOS,  Next: Display on MS-DOS,  Up: MS-DOS
+
+Keyboard and Mouse on MS-DOS
+============================
+
+   The PC keyboard maps use the left Alt key as the META key.  You have
+two choices for emulating the SUPER and HYPER keys: either the right
+CONTROL key or the right ALT key by setting the variables
+`dos-hyper-key' and `dos-super-key' to 1 or 2 respectively.
+
+   The variable `dos-keypad-mode' is a flag variable which controls
+what key codes are returned by keys in the numeric keypad.  There is no
+dedicated LFD key; use `C-j' instead.  You can also define the kp-enter
+key to act as LFD, by putting the following line into your `_emacs'
+file:
+
+     ;; Make the Enter key from the Numeric keypad act as LFD.
+     (define-key function-key-map [kp-enter] [?\C-j])
+
+   The key which is called DEL in Emacs (because that's how it is
+designated on most workstations) is known as BS (backspace) on a PC.
+That is why the PC-specific terminal initialization remaps the BS key
+to act as DEL; the DEL key is remapped to act as `C-d' for the same
+reasons.
+
+   Emacs on MS-DOS supports a mouse (on the default terminal only).
+The mouse commands work as documented, including those that use menus
+and the menu bar (*note Menu Bars::.).  Scroll bars don't work in
+MS-DOS Emacs.  PC mice usually have only two buttons; these act as
+`Mouse-1' and `Mouse-2', but if you press both of them together, that
+has the effect of `Mouse-3'.
+
+   The variable `dos-display-scancodes', when non-`nil', directs Emacs
+to display the ASCII value and the keyboard scan code of each
+keystroke; this feature serves as a complement to the `view-lossage'
+command, for debugging.
+
+
+File: emacs,  Node: Display on MS-DOS,  Next: File Names on MS-DOS,  Prev: Keyboard and Mouse on MS-DOS,  Up: MS-DOS
+
+Display on MS-DOS
+=================
+
+   Display on MS-DOS cannot use multiple fonts, but it does support
+multiple faces, each of which can specify a foreground and a background
+color.  Therefore, you can get the full functionality of Emacs packages
+which use fonts (such as `font-lock', Enriched Text mode, and others)
+by defining the relevant faces to use different colors.  Use the
+`list-colors-display' and `list-faces-display' commands (*note
+Modifying Faces::.) to see what colors and faces are available and what
+they look like.
+
+   Multiple frames (*note Frames::.) are supported on MS-DOS, but they
+all overlap, so you only see a single frame at any given moment.  That
+single visible frame occupies the entire screen.  When you run Emacs
+under Windows version 3, you can make the visible frame smaller than
+the full screen, but Emacs still cannot display more than a single
+frame at a time.
+
+   The `mode4350' command switches the display to 43 or 50 lines,
+depending on your hardware; the `mode25' command switches to the
+default 80x25 screen size.
+
+   By default, Emacs only knows how to set screen sizes of 80 columns by
+25 or 43/50 rows.  However, if your video adapter has special video
+modes that will switch the display to other sizes, you can have Emacs
+support those too.  When you ask Emacs to switch the frame to N rows by
+M cols dimensions, it checks if there is a variable called
+`screen-dimensions-NxM', and if so, uses its value (which must be an
+integer) as the video mode to switch to.  (Emacs switches to that video
+mode by calling the BIOS `Set Video Mode' function with the value of
+`screen-dimensions-NxM' in the `AL' register.)  For example, suppose
+your adapter will switch to 66x80 dimensions when put into video mode
+85.  Then you can make Emacs support this screen size by putting the
+following into your `_emacs' file:
+
+     (setq screen-dimensions-66x80 85)
+
+   Since Emacs on MS-DOS can only set the frame size to specific
+supported dimensions, it cannot honor every possible frame resizing
+request.  When an unsupported size is requested, Emacs chooses the next
+larger supported size beyond the specified size.  For example, if you
+ask for 36x80 frame, you will get 50x80 instead.
+
+   The variables `screen-dimensions-NxM' are used only when they
+exactly match the specified size; the search for the next larger
+supported size ignores them.  In the above example, even if your VGA
+supports 44x80 dimensions and you define a variable
+`screen-dimensions-44x80' with a suitable value, you will still get
+50x80 screen when you ask for a 36x80 frame.  If you want to get the
+44x80 size in this case, you can do it by setting the variable named
+`screen-dimensions-36x80' with the same video mode value as
+`screen-dimensions-44x80'.
+
+   Changing frame dimensions on MS-DOS has the effect of changing all
+the other frames to the new dimensions.
+
+
+File: emacs,  Node: File Names on MS-DOS,  Next: Text and Binary,  Prev: Display on MS-DOS,  Up: MS-DOS
+
+File Names on MS-DOS
+====================
+
+   MS-DOS normally uses a backslash, `\', to separate name units within
+a file name, instead of the slash used on other systems.  Emacs on
+MS-DOS permits use of either slash or backslash, and also knows about
+drive letters in file names.
+
+   On MS-DOS, file names are case-insensitive and limited to eight
+characters, plus optionally a period and three more characters.  Emacs
+knows enough about these limitations to handle file names that were
+meant for other operating systems.  For instance, leading dots `.' in
+file names are invalid in MS-DOS, so Emacs transparently converts them
+to underscores `_'; thus your default init file (*note Init File::.) is
+called `_emacs' on MS-DOS.  Excess characters before or after the
+period are generally ignored by MS-DOS itself, so if you, e.g., visit a
+file `LongFileName.EvenLongerExtension', you will silently get
+`longfile.eve'; but Emacs will still display the long file name on the
+mode line.  Other than that, it's up to you to specify file names which
+are valid under MS-DOS; the transparent conversion as described above
+only works on file names built into Emacs.
+
+   The above restrictions on the file names on MS-DOS make it almost
+impossible to construct the name of a backup file (*note Backup
+Names::.) without losing some of the original file name characters.  For
+example, the name of a backup file for `docs.txt' is `docs.tx~' even if
+single backup is used.
+
+   If you run Emacs as a DOS application under Windows 95 or NT, you can
+turn on support for long file names.  If you do that, Emacs doesn't
+truncate file names or convert them to lower case; instead, it uses the
+file names that you specify, verbatim.  To enable long file name
+support, set the environment variable `LFN' to `y' before starting
+Emacs.
+
+   MS-DOS has no notion of home directory, so Emacs on MS-DOS pretends
+that the directory where it is installed is the value of `HOME'
+environment variable.  That is, if your Emacs binary, `emacs.exe', is
+in the directory `c:/utils/emacs/bin', then Emacs acts as if `HOME'
+were set to `c:/utils/emacs'.  In particular, that is where Emacs looks
+for the init file `_emacs'.  With this in mind, you can use `~' in file
+names as an alias for the home directory, as you would in Unix.  You
+can also set `HOME' variable in the environment before starting Emacs;
+its value will then override the above default behavior.
+
+
+File: emacs,  Node: Text and Binary,  Next: Printing and MS-DOS,  Prev: File Names on MS-DOS,  Up: MS-DOS
+
+Text Files and Binary Files
+===========================
+
+   Emacs on MS-DOS distinguishes between text and binary files.  This
+distinction is not part of MS-DOS; it is made by Emacs only.  Emacs
+treats files of human-readable text (including program source code) as
+text files, and treats executable programs, compressed archives, etc.,
+as binary files.  Emacs uses the file name to decide whether to treat a
+file as text or binary: the variable `file-name-buffer-file-type-alist'
+defines the file name patterns which denote binary files.
+
+   Emacs reads and writes binary files verbatim.  Text files use a two
+character sequence to end a line: carriage-return (control-m) followed
+by newline (control-j).  When you visit a text file, Emacs strips off
+these control-m characters; when you write a text file to disk, Emacs
+puts them back in.  Thus, the text appears within Emacs with just a
+newline character at the end of each line.
+
+   You can tell whether Emacs considers the visited file as text or
+binary based on the mode line (*note Mode Line::.).  Text files have a
+`T:' marker prefixed to the major mode name; binary files have a `B:'
+prefix.
+
+   One consequence of this special format-conversion of text files is
+that character positions as reported by Emacs (*note Position Info::.)
+do not agree with the file size information known to the operating
+system.
+
+
+File: emacs,  Node: Printing and MS-DOS,  Next: Subprocesses on MS-DOS,  Prev: Text and Binary,  Up: MS-DOS
+
+Printing and MS-DOS
+===================
+
+   Printing commands, such as `lpr-buffer' (*note Hardcopy::.) and
+`ps-print-buffer' (*note Postscript::.) can work in MS-DOS by sending
+the output to one of the printer ports, if a Unix-style `lpr' program
+is unavailable.  A few DOS-specific variables control how this works.
+
+   If you want to use your local printer, printing on it in the usual
+DOS manner, then set the Lisp variable `dos-printer' to the name of the
+printer port--for example. `"PRN"', the usual local printer port
+(that's the default), or `"LPT2"' or `"COM1"' for a serial printer.
+You can also set `dos-printer' to a file name, in which case "printed"
+output is actually appended to that file.  If you set `dos-printer' to
+`"NUL"', printed output is silently discarded.
+
+   If you set `dos-printer' to a file name, it's best to use an
+absolute file name.  Emacs changes the working directory according to
+the default directory of the current buffer, so if the file name in
+`dos-printer' is relative, you will end up with several such files,
+each one in the directory of the buffer from which the printing was
+done.
+
+   The commands `print-buffer' and `print-region' call the `pr'
+program, or use special switches to the `lpr' program, to produce
+headers on each printed page.  MS-DOS doesn't normally have these
+programs, so by default, the variable `lpr-headers-switches' is set so
+that the requests to print page headers are silently ignored.  Thus,
+`print-buffer' and `print-region' produce the same output as
+`lpr-buffer' and `lpr-region', respectively.  If you do have a suitable
+`pr' program (e.g., from GNU Textutils), set `lpr-headers-switches' to
+`nil'; Emacs will then call `pr' to produce the page headers, and print
+the resulting output as specified by `dos-printer'.
+
+   Finally, if you do have an `lpr' work-alike, you can set
+`print-region-function' to `nil'.  Then Emacs uses `lpr' for printing,
+as on other systems.  (If the name of the program isn't `lpr', set the
+`lpr-command' variable to specify where to find it.)
+
+   A separate variable, `dos-ps-printer', defines how PostScript files
+should be printed.  If its value is a string, it is used as the name of
+the device (or file) to which PostScript output is sent, just as
+`dos-printer' is used for non-PostScript printing.  (These are two
+distinct variables in case you have two printers attached to two
+different ports, and only one of them is a PostScript printer.)  If the
+value of `dos-ps-printer' is not a string, then the variables
+`ps-lpr-command' and `ps-lpr-switches' (*note Postscript::.) control
+how to print PostScript files.  Thus, if you have a non-PostScript
+printer, you can set these variables to the name and the switches
+appropriate for a PostScript interpreter program (e.g., Ghostscript).
+
+   For example, to use Ghostscript for printing on an Epson printer
+connected to `LPT2' port, put this on your `.emacs' file:
+
+     (setq dos-ps-printer t)  ; Anything but a string.
+     (setq ps-lpr-command "c:/gs/gs386")
+     (setq ps-lpr-switches '("-q" "-dNOPAUSE"
+     			"-sDEVICE=epson"
+     			"-r240x72"
+     			"-sOutputFile=LPT2"
+     			"-Ic:/gs"
+     			"-"))
+
+(This assumes that Ghostscript is installed in the `"c:/gs"' directory.)
+

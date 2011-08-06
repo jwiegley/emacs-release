@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: DelSel.c,v 1.3 87/12/20 12:04:32 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/DelSel.c,v 1.1 1992/04/11 22:10:18 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
@@ -46,7 +46,7 @@ XMenuDeleteSelection(display, menu, p_num, s_num)
      * Remove the selection from the parent pane's selection
      * list and update the selection count.
      */
-    remque(s_ptr);
+    emacs_remque(s_ptr);
     p_ptr->s_count--;
 
     /*

@@ -1,11 +1,15 @@
-;; "RMAIL edit mode"  Edit the current message.
-;; Copyright (C) 1985 Free Software Foundation, Inc.
+;;; rmailedit.el --- "RMAIL edit mode"  Edit the current message.
+
+;; Copyright (C) 1985, 1994 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: mail
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,16 +18,19 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Code:
 
 (require 'rmail)
 
 (defvar rmail-edit-map nil)
 (if rmail-edit-map
     nil
-  (setq rmail-edit-map (copy-keymap text-mode-map))
+  ;; Make a keymap that inherits text-mode-map.
+  (setq rmail-edit-map (nconc (make-sparse-keymap) text-mode-map))
   (define-key rmail-edit-map "\C-c\C-c" 'rmail-cease-edit)
   (define-key rmail-edit-map "\C-c\C-]" 'rmail-abort-edit))
 
@@ -44,6 +51,10 @@ to return to regular RMAIL:
   (if (boundp 'mode-line-modified)
       (setq mode-line-modified (default-value 'mode-line-modified))
     (setq mode-line-format (default-value 'mode-line-format)))
+  (if (rmail-summary-exists)
+      (save-excursion
+	(set-buffer rmail-summary-buffer)
+	(rmail-summary-disable)))
   (run-hooks 'text-mode-hook 'rmail-edit-mode-hook))
 
 (defun rmail-edit-current-message ()
@@ -53,17 +64,20 @@ to return to regular RMAIL:
   (make-local-variable 'rmail-old-text)
   (setq rmail-old-text (buffer-substring (point-min) (point-max)))
   (setq buffer-read-only nil)
-  (set-buffer-modified-p (buffer-modified-p))
-  ;; Make mode line update.
+  (force-mode-line-update)
   (if (and (eq (key-binding "\C-c\C-c") 'rmail-cease-edit)
 	   (eq (key-binding "\C-c\C-]") 'rmail-abort-edit))
       (message "Editing: Type C-c C-c to return to Rmail, C-c C-] to abort")
-    (message (substitute-command-keys
+    (message "%s" (substitute-command-keys
 	       "Editing: Type \\[rmail-cease-edit] to return to Rmail, \\[rmail-abort-edit] to abort"))))
 
 (defun rmail-cease-edit ()
   "Finish editing message; switch back to Rmail proper."
   (interactive)
+  (if (rmail-summary-exists)
+      (save-excursion
+	(set-buffer rmail-summary-buffer)
+	(rmail-summary-enable)))
   ;; Make sure buffer ends with a newline.
   (save-excursion
     (goto-char (point-max))
@@ -73,8 +87,7 @@ to return to regular RMAIL:
     (set-marker (aref rmail-message-vector (1+ rmail-current-message))
 		(point)))
   (let ((old rmail-old-text))
-    ;; Update the mode line.
-    (set-buffer-modified-p (buffer-modified-p))
+    (force-mode-line-update)
     (rmail-mode-1)
     (if (and (= (length old) (- (point-max) (point-min)))
 	     (string= old (buffer-substring (point-min) (point-max))))
@@ -101,5 +114,7 @@ to return to regular RMAIL:
   (interactive)
   (delete-region (point-min) (point-max))
   (insert rmail-old-text)
-  (rmail-cease-edit))
+  (rmail-cease-edit)
+  (rmail-highlight-headers))
 
+;;; rmailedit.el ends here

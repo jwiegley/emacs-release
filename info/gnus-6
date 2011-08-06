@@ -1,0 +1,1312 @@
+This is Info file ../info/gnus, produced by Makeinfo-1.63 from the
+input file gnus.texi.
+
+   This file documents Gnus, the GNU Emacs newsreader.
+
+   Copyright (C) 1995,96 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+
+File: gnus,  Node: SOUP Groups,  Next: SOUP Replies,  Prev: SOUP Commands,  Up: SOUP
+
+SOUP Groups
+...........
+
+   `nnsoup' is the backend for reading SOUP packets.  It will read
+incoming packets, unpack them, and put them in a directory where you
+can read them at leisure.
+
+   These are the variables you can use to customize its behavior:
+
+`nnsoup-tmp-directory'
+     When `nnsoup' unpacks a SOUP packet, it does it in this directory.
+     (`/tmp/' by default.)
+
+`nnsoup-directory'
+     `nnsoup' then moves each message and index file to this directory.
+     The default is `~/SOUP/'.
+
+`nnsoup-replies-directory'
+     All replies will stored in this directory before being packed into
+     a reply packet.  The default is `~/SOUP/replies/"'.
+
+`nnsoup-replies-format-type'
+     The SOUP format of the replies packets.  The default is `?n'
+     (rnews), and I don't think you should touch that variable.  I
+     probably shouldn't even have documented it.  Drats!  Too late!
+
+`nnsoup-replies-index-type'
+     The index type of the replies packet.  The is `?n', which means
+     "none".  Don't fiddle with this one either!
+
+`nnsoup-active-file'
+     Where `nnsoup' stores lots of information.  This is not an "active
+     file" in the `nntp' sense; it's an Emacs Lisp file.  If you lose
+     this file or mess it up in any way, you're dead.  The default is
+     `~/SOUP/active'.
+
+`nnsoup-packer'
+     Format string command for packing a reply SOUP packet.  The default
+     is `tar cf - %s | gzip > $HOME/Soupin%d.tgz'.
+
+`nnsoup-unpacker'
+     Format string command for unpacking incoming SOUP packets.  The
+     default is `gunzip -c %s | tar xvf -'.
+
+`nnsoup-packet-directory'
+     Where `nnsoup' will look for incoming packets.  The default is
+     `~/'.
+
+`nnsoup-packet-regexp'
+     Regular expression matching incoming SOUP packets.  The default is
+     `Soupout'.
+
+
+File: gnus,  Node: SOUP Replies,  Prev: SOUP Groups,  Up: SOUP
+
+SOUP Replies
+............
+
+   Just using `nnsoup' won't mean that your postings and mailings end
+up in SOUP reply packets automagically.  You have to work a bit more
+for that to happen.
+
+   The `nnsoup-set-variables' command will set the appropriate
+variables to ensure that all your followups and replies end up in the
+SOUP system.
+
+   In specific, this is what it does:
+
+     (setq gnus-inews-article-function 'nnsoup-request-post)
+     (setq send-mail-function 'nnsoup-request-mail)
+
+   And that's it, really.  If you only want news to go into the SOUP
+system you just use the first line.  If you only want mail to be SOUPed
+you use the second.
+
+
+File: gnus,  Node: Combined Groups,  Prev: Other Sources,  Up: Select Methods
+
+Combined Groups
+===============
+
+   Gnus allows combining a mixture of all the other group types into
+bigger groups.
+
+* Menu:
+
+* Virtual Groups::     Combining articles from many groups.
+* Kibozed Groups::     Looking through parts of the newsfeed for articles.
+
+
+File: gnus,  Node: Virtual Groups,  Next: Kibozed Groups,  Up: Combined Groups
+
+Virtual Groups
+--------------
+
+   An "nnvirtual group" is really nothing more than a collection of
+other groups.
+
+   For instance, if you are tired of reading many small group, you can
+put them all in one big group, and then grow tired of reading one big,
+unwieldy group.  The joys of computing!
+
+   You specify `nnvirtual' as the method.  The address should be a
+regexp to match component groups.
+
+   All marks in the virtual group will stick to the articles in the
+component groups.  So if you tick an article in a virtual group, the
+article will also be ticked in the component group from whence it came.
+(And vice versa--marks from the component groups will also be shown in
+the virtual group.)
+
+   Here's an example `nnvirtual' method that collects all Andrea Dworkin
+newsgroups into one, big, happy newsgroup:
+
+     (nnvirtual "^alt\\.fan\\.andrea-dworkin$\\|^rec\\.dworkin.*")
+
+   The component groups can be native or foreign; everything should work
+smoothly, but if your computer explodes, it was probably my fault.
+
+   Collecting the same group from several servers might actually be a
+good idea if users have set the Distribution header to limit
+distribution.  If you would like to read `soc.motss' both from a server
+in Japan and a server in Norway, you could use the following as the
+group regexp:
+
+     "^nntp+some.server.jp:soc.motss$\\|^nntp+some.server.no:soc.motss$"
+
+   This should work kinda smoothly--all articles from both groups should
+end up in this one, and there should be no duplicates.  Threading (and
+the rest) will still work as usual, but there might be problems with the
+sequence of articles.  Sorting on date might be an option here (*note
+Selecting a Group::..
+
+   One limitation, however--all groups that are included in a virtual
+group has to be alive (i.e., subscribed or unsubscribed).  Killed or
+zombie groups can't be component groups for `nnvirtual' groups.
+
+   If the `nnvirtual-always-rescan' is non-`nil', `nnvirtual' will
+always scan groups for unread articles when entering a virtual group.
+If this variable is `nil' (which is the default) and you read articles
+in a component group after the virtual group has been activated, the
+read articles from the component group will show up when you enter the
+virtual group.  You'll also see this effect if you have two virtual
+groups that contain the same component group.  If that's the case, you
+should set this variable to `t'.  Or you can just tap `M-g' on the
+virtual group every time before you enter it--it'll have much the same
+effect.
+
+
+File: gnus,  Node: Kibozed Groups,  Prev: Virtual Groups,  Up: Combined Groups
+
+Kibozed Groups
+--------------
+
+   "Kibozing" is defined by OED as "grepping through (parts of) the
+news feed".  `nnkiboze' is a backend that will do this for you.  Oh
+joy!  Now you can grind any NNTP server down to a halt with useless
+requests!  Oh happiness!
+
+   To create a kibozed group, use the `G k' command in the group buffer.
+
+   The address field of the `nnkiboze' method is, as with `nnvirtual',
+a regexp to match groups to be "included" in the `nnkiboze' group.
+There most similarities between `nnkiboze' and `nnvirtual' ends.
+
+   In addition to this regexp detailing component groups, an `nnkiboze'
+group must have a score file to say what articles that are to be
+included in the group (*note Scoring::.).
+
+   You must run `M-x nnkiboze-generate-groups' after creating the
+`nnkiboze' groups you want to have.  This command will take time.  Lots
+of time.  Oodles and oodles of time.  Gnus has to fetch the headers from
+all the articles in all the components groups and run them through the
+scoring process to determine if there are any articles in the groups
+that are to be part of the `nnkiboze' groups.
+
+   Please limit the number of component groups by using restrictive
+regexps.  Otherwise your sysadmin may become annoyed with you, and the
+NNTP site may throw you off and never let you back in again.  Stranger
+things have happened.
+
+   `nnkiboze' component groups do not have to be alive--they can be
+dead, and they can be foreign.  No restrictions.
+
+   The generation of an `nnkiboze' group means writing two files in
+`nnkiboze-directory', which is `~/News/' by default.  One contains the
+NOV header lines for all the articles in the group, and the other is an
+additional `.newsrc' file to store information on what groups that have
+been searched through to find component articles.
+
+   Articles that are marked as read in the `nnkiboze' group will have
+their NOV lines removed from the NOV file.
+
+
+File: gnus,  Node: Scoring,  Next: Various,  Prev: Select Methods,  Up: Top
+
+Scoring
+*******
+
+   Other people use "kill files", but we here at Gnus Towers like
+scoring better than killing, so we'd rather switch than fight.  They do
+something completely different as well, so sit up straight and pay
+attention!
+
+   All articles have a default score (`gnus-summary-default-score'),
+which is 0 by default.  This score may be raised or lowered either
+interactively or by score files.  Articles that have a score lower than
+`gnus-summary-mark-below' are marked as read.
+
+   Gnus will read any "score files" that apply to the current group
+before generating the summary buffer.
+
+   There are several commands in the summary buffer that insert score
+entries based on the current article.  You can, for instance, ask Gnus
+to lower or increase the score of all articles with a certain subject.
+
+   There are two sorts of scoring entries: Permanent and temporary.
+Temporary score entries are self-expiring entries.  Any entries that are
+temporary and have not been used for, say, a week, will be removed
+silently to help keep the sizes of the score files down.
+
+* Menu:
+
+* Summary Score Commands::   Adding score entries for the current group.
+* Group Score Commands::     General score commands.
+* Score Variables::          Customize your scoring.  (My, what terminology).
+* Score File Format::        What a score file may contain.
+* Score File Editing::       You can edit score files by hand as well.
+* Adaptive Scoring::         Big Sister Gnus *knows* what you read.
+* Followups To Yourself::    Having Gnus notice when people answer you.
+* Scoring Tips::             How to score effectively.
+* Reverse Scoring::          That problem child of old is not problem.
+* Global Score Files::       Earth-spanning, ear-splitting score files.
+* Kill Files::               They are still here, but they can be ignored.
+* GroupLens::                Getting predictions on what you like to read.
+
+
+File: gnus,  Node: Summary Score Commands,  Next: Group Score Commands,  Up: Scoring
+
+Summary Score Commands
+======================
+
+   The score commands that alter score entries do not actually modify
+real score files.  That would be too inefficient.  Gnus maintains a
+cache of previously loaded score files, one of which is considered the
+"current score file alist".  The score commands simply insert entries
+into this list, and upon group exit, this list is saved.
+
+   The current score file is by default the group's local score file,
+even if no such score file actually exists.  To insert score commands
+into some other score file (eg. `all.SCORE'), you must first make this
+score file the current one.
+
+   General score commands that don't actually change the score file:
+
+`V s'
+     Set the score of the current article (`gnus-summary-set-score').
+
+`V S'
+     Display the score of the current article
+     (`gnus-summary-current-score').
+
+`V t'
+     Display all score rules that have been used on the current article
+     (`gnus-score-find-trace').
+
+`V R'
+     Run the current summary through the scoring process
+     (`gnus-summary-rescore').  This might be useful if you're playing
+     around with your score files behind Gnus' back and want to see the
+     effect you're having.
+
+`V a'
+     Add a new score entry, and allow specifying all elements
+     (`gnus-summary-score-entry').
+
+`V c'
+     Make a different score file the current
+     (`gnus-score-change-score-file').
+
+`V e'
+     Edit the current score file (`gnus-score-edit-current-scores').
+     You will be popped into a `gnus-score-mode' buffer (*note Score
+     File Editing::.).
+
+`V f'
+     Edit a score file and make this score file the current one
+     (`gnus-score-edit-file').
+
+`V F'
+     Flush the score cahe (`gnus-score-flush-cache').  This is useful
+     after editing score files.
+
+`V C'
+     Customize a score file in a visually pleasing manner
+     (`gnus-score-customize').
+
+`I C-i'
+     Increase the score of the current article
+     (`gnus-summary-raise-score').
+
+`L C-l'
+     Lower the score of the current article
+     (`gnus-summary-lower-score').
+
+   The rest of these commands modify the local score file.
+
+`V m'
+     Prompt for a score, and mark all articles with a score below this
+     as read (`gnus-score-set-mark-below').
+
+`V E'
+     Expunge all articles with a score below the default score (or the
+     numeric prefix) (`gnus-score-set-expunge-below').
+
+   The keystrokes for actually making score entries follow a very
+regular pattern, so there's no need to list all the commands.
+(Hundreds of them.)
+
+  1. The first key is either `I' (upper case i) for increasing the score
+     or `L' for lowering the score.
+
+  2. The second key says what header you want to score on.  The
+     following keys are available:
+    `a'
+          Score on the author name.
+
+    `s'
+          Score on the subject line.
+
+    `x'
+          Score on the Xref line--i.e., the cross-posting line.
+
+    `t'
+          Score on thread--the References line.
+
+    `d'
+          Score on the date.
+
+    `l'
+          Score on the number of lines.
+
+    `i'
+          Score on the Message-ID.
+
+    `f'
+          Score on followups.
+
+    `b'
+          Score on the body.
+
+    `h'
+          Score on the head.
+
+  3. The third key is the match type.  Which match types are legal
+     depends on what headers you are scoring on.
+
+    `strings'
+         `e'
+               Exact matching.
+
+         `s'
+               Substring matching.
+
+         `f'
+               Fuzzy matching.
+
+         `r'
+               Regexp matching
+
+    `date'
+         `b'
+               Before date.
+
+         `a'
+               At date.
+
+         `n'
+               This date.
+
+    `number'
+         `<'
+               Less than number.
+
+         `='
+               Equal to number.
+
+         `>'
+               Greater than number.
+
+  4. The fourth and final key says whether this is a temporary (i.e.,
+     expiring) score entry, or a permanent (i.e., non-expiring) score
+     entry, or whether it is to be done immediately, without adding to
+     the score file.
+    `t'
+          Temporary score entry.
+
+    `p'
+          Permanent score entry.
+
+    `i'
+          Immediately scoring.
+
+
+   So, let's say you want to increase the score on the current author
+with exact matching permanently: `I a e p'.  If you want to lower the
+score based on the subject line, using substring matching, and make a
+temporary score entry: `L s s t'.  Pretty easy.
+
+   To make things a bit more complicated, there are shortcuts.  If you
+use a capital letter on either the second or third keys, Gnus will use
+defaults for the remaining one or two keystrokes.  The defaults are
+"substring" and "temporary".  So `I A' is the same as `I a s t', and `I
+a R' is the same as `I a r t'.
+
+   The `gnus-score-mimic-keymap' says whether these commands will
+pretend they are keymaps or not.
+
+
+File: gnus,  Node: Group Score Commands,  Next: Score Variables,  Prev: Summary Score Commands,  Up: Scoring
+
+Group Score Commands
+====================
+
+   There aren't many of these as yet, I'm afraid.
+
+`W f'
+     Gnus maintains a cache of score alists to avoid having to reload
+     them all the time.  This command will flush the cache
+     (`gnus-score-flush-cache').
+
+
+File: gnus,  Node: Score Variables,  Next: Score File Format,  Prev: Group Score Commands,  Up: Scoring
+
+Score Variables
+===============
+
+`gnus-use-scoring'
+     If `nil', Gnus will not check for score files, and will not, in
+     general, do any score-related work.  This is `t' by default.
+
+`gnus-kill-killed'
+     If this variable is `nil', Gnus will never apply score files to
+     articles that have already been through the kill process.  While
+     this may save you lots of time, it also means that if you apply a
+     kill file to a group, and then change the kill file and want to
+     run it over you group again to kill more articles, it won't work.
+     You have to set this variable to `t' to do that.  (It is `t' by
+     default.)
+
+`gnus-kill-files-directory'
+     All kill and score files will be stored in this directory, which is
+     initialized from the `SAVEDIR' environment variable by default.
+     This is `~/News/' by default.
+
+`gnus-score-file-suffix'
+     Suffix to add to the group name to arrive at the score file name
+     (`SCORE' by default.)
+
+`gnus-score-uncacheable-files'
+     All score files are normally cached to avoid excessive re-loading
+     of score files.  However, if this might make you Emacs grow big and
+     bloated, so this regexp can be used to weed out score files that
+     are unlikely to be needed again.  It would be a bad idea to deny
+     caching of `all.SCORE', while it might be a good idea to not cache
+     `comp.infosystems.www.authoring.misc.ADAPT'.  In fact, this
+     variable is `ADAPT$' by default, so no adaptive score files will
+     be cached.
+
+`gnus-save-score'
+     If you have really complicated score files, and do lots of batch
+     scoring, then you might set this variable to `t'.  This will make
+     Gnus save the scores into the `.newsrc.eld' file.
+
+`gnus-score-interactive-default-score'
+     Score used by all the interactive raise/lower commands to
+     raise/lower score with.  Default is 1000, which may seem
+     excessive, but this is to ensure that the adaptive scoring scheme
+     gets enough room to play with.  We don't want the small changes
+     from the adaptive scoring to overwrite manually entered data.
+
+`gnus-summary-default-score'
+     Default score of an article, which is 0 by default.
+
+`gnus-score-over-mark'
+     Mark (in the third column) used for articles with a score over the
+     default.  Default is `+'.
+
+`gnus-score-below-mark'
+     Mark (in the third column) used for articles with a score below the
+     default.  Default is `-'.
+
+`gnus-score-find-score-files-function'
+     Function used to find score files for the current group.  This
+     function is called with the name of the group as the argument.
+
+     Predefined functions available are:
+    `gnus-score-find-single'
+          Only apply the group's own score file.
+
+    `gnus-score-find-bnews'
+          Apply all score files that match, using bnews syntax.  This
+          is the default.  For instance, if the current group is
+          `gnu.emacs.gnus', `all.emacs.all.SCORE', `not.alt.all.SCORE'
+          and `gnu.all.SCORE' would all apply.  In short, the instances
+          of `all' in the score file names are translated into `.*', and
+          then a regexp match is done.
+
+          This means that if you have some score entries that you want
+          to apply to all groups, then you put those entries in the
+          `all.SCORE' file.
+
+    `gnus-score-find-hierarchical'
+          Apply all score files from all the parent groups.  This means
+          that you can't have score files like `all.SCORE' or
+          `all.emacs.SCORE', but you can have `SCORE',  `comp.SCORE' and
+          `comp.emacs.SCORE'.
+
+     This variable can also be a list of functions.  In that case, all
+     these functions will be called, and all the returned lists of
+     score files will be applied.  These functions can also return
+     lists of score alists directly.  In that case, the functions that
+     return these non-file score alists should probably be placed
+     before the "real" score file functions, to ensure that the last
+     score file returned is the local score file.  Phu.
+
+`gnus-score-expiry-days'
+     This variable says how many days should pass before an unused
+     score file entry is expired.  If this variable is `nil', no score
+     file entries are expired.  It's 7 by default.
+
+`gnus-update-score-entry-dates'
+     If this variable is non-`nil', matching score entries will have
+     their dates updated.  (This is how Gnus controls expiry--all
+     non-matching entries will become too old while matching entries
+     will stay fresh and young.)  However, if you set this variable to
+     `nil', even matching entries will grow old and will have to face
+     that oh-so grim reaper.
+
+`gnus-score-after-write-file-function'
+     Function called with the name of the score file just written.
+
+
+File: gnus,  Node: Score File Format,  Next: Score File Editing,  Prev: Score Variables,  Up: Scoring
+
+Score File Format
+=================
+
+   A score file is an `emacs-lisp' file that normally contains just a
+single form.  Casual users are not expected to edit these files;
+everything can be changed from the summary buffer.
+
+   Anyway, if you'd like to dig into it yourself, here's an example:
+
+     (("from"
+       ("Lars Ingebrigtsen" -10000)
+       ("Per Abrahamsen")
+       ("larsi\\|lmi" -50000 nil R))
+      ("subject"
+       ("Ding is Badd" nil 728373))
+      ("xref"
+       ("alt.politics" -1000 728372 s))
+      ("lines"
+       (2 -100 nil <))
+      (mark 0)
+      (expunge -1000)
+      (mark-and-expunge -10)
+      (read-only nil)
+      (orphan -10)
+      (adapt t)
+      (files "/hom/larsi/News/gnu.SCORE")
+      (exclude-files "all.SCORE")
+      (local (gnus-newsgroup-auto-expire t)
+             (gnus-summary-make-false-root 'empty))
+      (eval (ding)))
+
+   This example demonstrates absolutely everything about a score file.
+
+   Even though this looks much like lisp code, nothing here is actually
+`eval'ed.  The lisp reader is used to read this form, though, so it has
+to be legal syntactically, if not semantically.
+
+   Six keys are supported by this alist:
+
+`STRING'
+     If the key is a string, it is the name of the header to perform the
+     match on.  Scoring can only be performed on these eight headers:
+     `From', `Subject', `References', `Message-ID', `Xref', `Lines',
+     `Chars' and `Date'.  In addition to these headers, there are three
+     strings to tell Gnus to fetch the entire article and do the match
+     on larger parts of the article: `Body' will perform the match on
+     the body of the article, `Head' will perform the match on the head
+     of the article, and `All' will perform the match on the entire
+     article.  Note that using any of these last three keys will slow
+     down group entry *considerably*.  The final "header" you can score
+     on is `Followup'.  These score entries will result in new score
+     entries being added for all follow-ups to articles that matches
+     these score entries.
+
+     Following this key is a arbitrary number of score entries, where
+     each score entry has one to four elements.
+       1. The first element is the "match element".  On most headers
+          this will be a string, but on the Lines and Chars headers,
+          this must be an integer.
+
+       2. If the second element is present, it should be a number--the
+          "score element".  This number should be an integer in the
+          neginf to posinf interval.  This number is added to the score
+          of the article if the match is successful.  If this element
+          is not present, the `gnus-score-interactive-default-score'
+          number will be used instead.  This is 1000 by default.
+
+       3. If the third element is present, it should be a number--the
+          "date element".  This date says when the last time this score
+          entry matched, which provides a mechanism for expiring the
+          score entries.  It this element is not present, the score
+          entry is permanent.  The date is represented by the number of
+          days since December 31, 1 ce.
+
+       4. If the fourth element is present, it should be a symbol--the
+          "type element".  This element specifies what function should
+          be used to see whether this score entry matches the article.
+          What match types that can be used depends on what header you
+          wish to perform the match on.
+         "From, Subject, References, Xref, Message-ID"
+               For most header types, there are the `r' and `R'
+               (regexp) as well as `s' and `S' (substring) types and
+               `e' and `E' (exact match) types.  If this element is not
+               present, Gnus will assume that substring matching should
+               be used.  `R' and `S' differ from the other two in that
+               the matches will be done in a case-sensitive manner.
+               All these one-letter types are really just abbreviations
+               for the `regexp', `string' and `exact' types, which you
+               can use instead, if you feel like.
+
+         "Lines, Chars"
+               These two headers use different match types: `<', `>',
+               `=', `>=' and `<='.
+
+         "Date"
+               For the Date header we have three match types: `before',
+               `at' and `after'.  I can't really imagine this ever
+               being useful, but, like, it would feel kinda silly not
+               to provide this function.  Just in case.  You never
+               know.  Better safe than sorry.  Once burnt, twice shy.
+               Don't judge a book by its cover.  Never not have sex on
+               a first date.
+
+         "Head, Body, All"
+               These three match keys use the same match types as the
+               `From' (etc) header uses.
+
+         "Followup"
+               This match key will add a score entry on all articles
+               that followup to some author.  Uses the same match types
+               as the `From' header uses.
+
+         "Thread"
+               This match key will add a score entry on all articles
+               that are part of a thread.  Uses the same match types as
+               the `References' header uses.
+
+`mark'
+     The value of this entry should be a number.  Any articles with a
+     score lower than this number will be marked as read.
+
+`expunge'
+     The value of this entry should be a number.  Any articles with a
+     score lower than this number will be removed from the summary
+     buffer.
+
+`mark-and-expunge'
+     The value of this entry should be a number.  Any articles with a
+     score lower than this number will be marked as read and removed
+     from the summary buffer.
+
+`thread-mark-and-expunge'
+     The value of this entry should be a number.  All articles that
+     belong to a thread that has a total score below this number will
+     be marked as read and removed from the summary buffer.
+     `gnus-thread-score-function' says how to compute the total score
+     for a thread.
+
+`files'
+     The value of this entry should be any number of file names.  These
+     files are assumed to be score files as well, and will be loaded
+     the same way this one was.
+
+`exclude-files'
+     The clue of this entry should be any number of files.  This files
+     will not be loaded, even though they would normally be so, for
+     some reason or other.
+
+`eval'
+     The value of this entry will be `eval'el.  This element will be
+     ignored when handling global score files.
+
+`read-only'
+     Read-only score files will not be updated or saved.  Global score
+     files should feature this atom (*note Global Score Files::.).
+
+`orphan'
+     The value of this entry should be a number.  Articles that do not
+     have parents will get this number added to their scores.  Imagine
+     you follow some high-volume newsgroup, like `comp.lang.c'.  Most
+     likely you will only follow a few of the threads, also want to see
+     any new threads.
+
+     You can do this with the following two score file entries:
+
+          	(orphan -500)
+          	(mark-and-expunge -100)
+
+     When you enter the group the first time, you will only see the new
+     threads.  You then raise the score of the threads that you find
+     interesting (with `I T' or `I S'), and ignore (`C y') the rest.
+     Next time you enter the group, you will see new articles in the
+     interesting threads, plus any new threads.
+
+     I.e. - the orphan score atom is for high-volume groups where there
+     exist a few interesting threads which can't be found automatically
+     by ordinary scoring rules.
+
+`adapt'
+     This entry controls the adaptive scoring.  If it is `t', the
+     default adaptive scoring rules will be used.  If it is `ignore', no
+     adaptive scoring will be performed on this group.  If it is a
+     list, this list will be used as the adaptive scoring rules.  If it
+     isn't present, or is something other than `t' or `ignore', the
+     default adaptive scoring rules will be used.  If you want to use
+     adaptive scoring on most groups, you'd set
+     `gnus-use-adaptive-scoring' to `t', and insert an `(adapt ignore)'
+     in the groups where you do not want adaptive scoring.  If you only
+     want adaptive scoring in a few groups, you'd set
+     `gnus-use-adaptive-scoring' to `nil', and insert `(adapt t)' in
+     the score files of the groups where you want it.
+
+`adapt-file'
+     All adaptive score entries will go to the file named by this
+     entry.  It will also be applied when entering the group.  This
+     atom might be handy if you want to adapt on several groups at
+     once, using the same adaptive file for a number of groups.
+
+`local'
+     The value of this entry should be a list of `(VAR VALUE)' pairs.
+     Each VAR will be made buffer-local to the current summary buffer,
+     and set to the value specified.  This is a convenient, if somewhat
+     strange, way of setting variables in some groups if you don't like
+     hooks much.
+
+
+File: gnus,  Node: Score File Editing,  Next: Adaptive Scoring,  Prev: Score File Format,  Up: Scoring
+
+Score File Editing
+==================
+
+   You normally enter all scoring commands from the summary buffer, but
+you might feel the urge to edit them by hand as well, so we've supplied
+you with a mode for that.
+
+   It's simply a slightly customized `emacs-lisp' mode, with these
+additional commands:
+
+`C-c C-c'
+     Save the changes you have made and return to the summary buffer
+     (`gnus-score-edit-done').
+
+`C-c C-d'
+     Insert the current date in numerical format
+     (`gnus-score-edit-insert-date').  This is really the day number, if
+     you were wondering.
+
+`C-c C-p'
+     The adaptive score files are saved in an unformatted fashion.  If
+     you intend to read one of these files, you want to "pretty print"
+     it first.  This command (`gnus-score-pretty-print') does that for
+     you.
+
+   Type `M-x gnus-score-mode' to use this mode.
+
+   `gnus-score-menu-hook' is run in score mode buffers.
+
+   In the summary buffer you can use commands like `V f' and `V e' to
+begin editing score files.
+
+
+File: gnus,  Node: Adaptive Scoring,  Next: Followups To Yourself,  Prev: Score File Editing,  Up: Scoring
+
+Adaptive Scoring
+================
+
+   If all this scoring is getting you down, Gnus has a way of making it
+all happen automatically--as if by magic.  Or rather, as if by
+artificial stupidity, to be precise.
+
+   When you read an article, or mark an article as read, or kill an
+article, you leave marks behind.  On exit from the group, Gnus can sniff
+these marks and add score elements depending on what marks it finds.
+You turn on this ability by setting `gnus-use-adaptive-scoring' to `t'.
+
+   To give you complete control over the scoring process, you can
+customize the `gnus-default-adaptive-score-alist' variable.  For
+instance, it might look something like this:
+
+     (defvar gnus-default-adaptive-score-alist
+       '((gnus-unread-mark)
+         (gnus-ticked-mark (from 4))
+         (gnus-dormant-mark (from 5))
+         (gnus-del-mark (from -4) (subject -1))
+         (gnus-read-mark (from 4) (subject 2))
+         (gnus-expirable-mark (from -1) (subject -1))
+         (gnus-killed-mark (from -1) (subject -3))
+         (gnus-kill-file-mark)
+         (gnus-ancient-mark)
+         (gnus-low-score-mark)
+         (gnus-catchup-mark (from -1) (subject -1))))
+
+   As you see, each element in this alist has a mark as a key (either a
+variable name or a "real" mark--a character).  Following this key is a
+arbitrary number of header/score pairs.  If there are no header/score
+pairs following the key, no adaptive scoring will be done on articles
+that have that key as the article mark.  For instance, articles with
+`gnus-unread-mark' in the example above will not get adaptive score
+entries.
+
+   Each article can have only one mark, so just a single of these rules
+will be applied to each article.
+
+   To take `gnus-del-mark' as an example--this alist says that all
+articles that have that mark (i.e., are marked with `D') will have a
+score entry added to lower based on the `From' header by -4, and
+lowered by `Subject' by -1.  Change this to fit your prejudices.
+
+   If you have marked 10 articles with the same subject with
+`gnus-del-mark', the rule for that mark will be applied ten times.
+That means that that subject will get a score of ten times -1, which
+should be, unless I'm much mistaken, -10.
+
+   The headers you can score on are `from', `subject', `message-id',
+`references', `xref', `lines', `chars' and `date'.  In addition, you
+can score on `followup', which will create an adaptive score entry that
+matches on the `References' header using the `Message-ID' of the
+current article, thereby matching the following thread.
+
+   You can also score on `thread', which will try to score all articles
+that appear in a thread.  `thread' matches uses a `Message-ID' to match
+on the `References' header of the article.  If the match is made, the
+`Message-ID' of the article is added to the `thread' rule.  (Think
+about it.  I'd recommend two aspirins afterwards.)
+
+   If you use this scheme, you should set the score file atom `mark' to
+something small--like -300, perhaps, to avoid having small random
+changes result in articles getting marked as read.
+
+   After using adaptive scoring for a week or so, Gnus should start to
+become properly trained and enhance the authors you like best, and kill
+the authors you like least, without you having to say so explicitly.
+
+   You can control what groups the adaptive scoring is to be performed
+on by using the score files (*note Score File Format::.).  This will
+also let you use different rules in different groups.
+
+   The adaptive score entries will be put into a file where the name is
+the group name with `gnus-adaptive-file-suffix' appended.  The default
+is `ADAPT'.
+
+   When doing adaptive scoring, substring or fuzzy matching would
+probably give you the best results in most cases.  However, if the
+header one matches is short, the possibility for false positives is
+great, so if the length of the match is less than
+`gnus-score-exact-adapt-limit', exact matching will be used.  If this
+variable is `nil', exact matching will always be used to avoid this
+problem.
+
+
+File: gnus,  Node: Followups To Yourself,  Next: Scoring Tips,  Prev: Adaptive Scoring,  Up: Scoring
+
+Followups To Yourself
+=====================
+
+   Gnus offers two commands for picking out the `Message-ID' header in
+the current buffer.  Gnus will then add a score rule that scores using
+this `Message-ID' on the `References' header of other articles.  This
+will, in effect, increase the score of all articles that respond to the
+article in the current buffer.  Quite useful if you want to easily note
+when people answer what you've said.
+
+`gnus-score-followup-article'
+     This will add a score to articles that directly follow up your own
+     article.
+
+`gnus-score-followup-thread'
+     This will add a score to all articles that appear in a thread
+     "below" your own article.
+
+   These two functions are both primarily meant to be used in hooks like
+`gnus-inews-article-hook'.
+
+
+File: gnus,  Node: Scoring Tips,  Next: Reverse Scoring,  Prev: Followups To Yourself,  Up: Scoring
+
+Scoring Tips
+============
+
+"Crossposts"
+     If you want to lower the score of crossposts, the line to match on
+     is the `Xref' header.
+          ("xref" (" talk.politics.misc:" -1000))
+
+"Multiple crossposts"
+     If you want to lower the score of articles that have been
+     crossposted to more than, say, 3 groups:
+          ("xref" ("[^:\n]+:[0-9]+ +[^:\n]+:[0-9]+ +[^:\n]+:[0-9]+" -1000 nil r))
+
+"Matching on the body"
+     This is generally not a very good idea--it takes a very long time.
+     Gnus actually has to fetch each individual article from the
+     server.  But you might want to anyway, I guess.  Even though there
+     are three match keys (`Head', `Body' and `All'), you should choose
+     one and stick with it in each score file.  If you use any two,
+     each article will be fetched *twice*.  If you want to match a bit
+     on the `Head' and a bit on the `Body', just use `All' for all the
+     matches.
+
+"Marking as read"
+     You will probably want to mark articles that has a score below a
+     certain number as read.  This is most easily achieved by putting
+     the following in your `all.SCORE' file:
+          ((mark -100))
+     You may also consider doing something similar with `expunge'.
+
+"Negated character classes"
+     If you say stuff like `[^abcd]*', you may get unexpected results.
+     That will match newlines, which might lead to, well, The Unknown.
+     Say `[^abcd\n]*' instead.
+
+
+File: gnus,  Node: Reverse Scoring,  Next: Global Score Files,  Prev: Scoring Tips,  Up: Scoring
+
+Reverse Scoring
+===============
+
+   If you want to keep just articles that have `Sex with Emacs' in the
+subject header, and expunge all other articles, you could put something
+like this in your score file:
+
+     (("subject"
+       ("Sex with Emacs" 2))
+      (mark 1)
+      (expunge 1))
+
+   So, you raise all articles that match `Sex with Emacs' and mark the
+rest as read, and expunge them to boot.
+
+
+File: gnus,  Node: Global Score Files,  Next: Kill Files,  Prev: Reverse Scoring,  Up: Scoring
+
+Global Score Files
+==================
+
+   Sure, other newsreaders have "global kill files".  These are usually
+nothing more than a single kill file that applies to all groups, stored
+in the user's home directory.  Bah!  Puny, weak newsreaders!
+
+   What I'm talking about here are Global Score Files.  Score files from
+all over the world, from users everywhere, uniting all nations in one
+big, happy score file union!  Ange-score!  New and untested!
+
+   All you have to do to use other people's score files is to set the
+`gnus-global-score-files' variable.  One entry for each score file, or
+each score file directory.  Gnus will decide by itself what score files
+are applicable to which group.
+
+   Say you want to use all score files in the
+`/ftp@ftp.some-where:/pub/score' directory and the single score file
+`/ftp@ftp.ifi.uio.no:/pub/larsi/ding/score/soc.motss.SCORE':
+
+     (setq gnus-global-score-files
+           '("/ftp@ftp.ifi.uio.no:/pub/larsi/ding/score/soc.motss.SCORE"
+             "/ftp@ftp.some-where:/pub/score/"))
+
+   Simple, eh?  Directory names must end with a `/'.  These directories
+are typically scanned only once during each Gnus session.  If you feel
+the need to manually re-scan the remote directories, you can use the
+`gnus-score-search-global-directories' command.
+
+   Note that, at present, using this option will slow down group entry
+somewhat.  (That is--a lot.)
+
+   If you want to start maintaining score files for other people to use,
+just put your score file up for anonymous ftp and announce it to the
+world.  Become a retro-moderator!  Participate in the retro-moderator
+wars sure to ensue, where retro-moderators battle it out for the
+sympathy of the people, luring them to use their score files on false
+premises!  Yay!  The net is saved!
+
+   Here are some tips for the would-be retro-moderator, off the top of
+my head:
+
+   * Articles that are heavily crossposted are probably junk.
+
+   * To lower a single inappropriate article, lower by `Message-ID'.
+
+   * Particularly brilliant authors can be raised on a permanent basis.
+
+   * Authors that repeatedly post off-charter for the group can safely
+     be lowered out of existence.
+
+   * Set the `mark' and `expunge' atoms to obliterate the nastiest
+     articles completely.
+
+   * Use expiring score entries to keep the size of the file down.  You
+     should probably have a long expiry period, though, as some sites
+     keep old articles for a long time.
+
+   ... I wonder whether other newsreaders will support global score
+files in the future.  *Snicker*.  Yup, any day now, newsreaders like
+Blue Wave, xrn and 1stReader are bound to implement scoring.  Should we
+start holding our breath yet?
+
+
+File: gnus,  Node: Kill Files,  Next: GroupLens,  Prev: Global Score Files,  Up: Scoring
+
+Kill Files
+==========
+
+   Gnus still supports those pesky old kill files.  In fact, the kill
+file entries can now be expiring, which is something I wrote before
+Daniel Quinlan thought of doing score files, so I've left the code in
+there.
+
+   In short, kill processing is a lot slower (and I do mean *a lot*)
+than score processing, so it might be a good idea to rewrite your kill
+files into score files.
+
+   Anyway, a kill file is a normal `emacs-lisp' file.  You can put any
+forms into this file, which means that you can use kill files as some
+sort of primitive hook function to be run on group entry, even though
+that isn't a very good idea.
+
+   XCNormal kill files look like this:
+
+     (gnus-kill "From" "Lars Ingebrigtsen")
+     (gnus-kill "Subject" "ding")
+     (gnus-expunge "X")
+
+   This will mark every article written by me as read, and remove them
+from the summary buffer.  Very useful, you'll agree.
+
+   Other programs use a totally different kill file syntax.  If Gnus
+encounters what looks like a `rn' kill file, it will take a stab at
+interpreting it.
+
+   Two summary functions for editing a GNUS kill file:
+
+`M-k'
+     Edit this group's kill file (`gnus-summary-edit-local-kill').
+
+`M-K'
+     Edit the general kill file (`gnus-summary-edit-global-kill').
+
+   Two group mode functions for editing the kill files:
+
+`M-k'
+     Edit this group's kill file (`gnus-group-edit-local-kill').
+
+`M-K'
+     Edit the general kill file (`gnus-group-edit-global-kill').
+
+   Kill file variables:
+
+`gnus-kill-file-name'
+     A kill file for the group `soc.motss' is normally called
+     `soc.motss.KILL'.  The suffix appended to the group name to get
+     this file name is detailed by the `gnus-kill-file-name' variable.
+     The "global" kill file (not in the score file sense of "global", of
+     course) is called just `KILL'.
+
+`gnus-kill-save-kill-file'
+     If this variable is non-`nil', Gnus will save the kill file after
+     processing, which is necessary if you use expiring kills.
+
+`gnus-apply-kill-hook'
+     A hook called to apply kill files to a group.  It is
+     `(gnus-apply-kill-file)' by default.  If you want to ignore the
+     kill file if you have a score file for the same group, you can set
+     this hook to `(gnus-apply-kill-file-unless-scored)'.  If you don't
+     want kill files to be processed, you should set this variable to
+     `nil'.
+
+`gnus-kill-file-mode-hook'
+     A hook called in kill-file mode buffers.
+
+
+File: gnus,  Node: GroupLens,  Prev: Kill Files,  Up: Scoring
+
+GroupLens
+=========
+
+   GroupLens is a collaborative filtering system that helps you work
+together with other people to find the quality news articles out of the
+huge volume of news articles generated every day.
+
+   To accomplish this the GroupLens system combines your opinions about
+articles you have already read with the opinions of others who have done
+likewise and gives you a personalized prediction for each unread news
+article.  Think of GroupLens as a matchmaker.  GroupLens watches how you
+rate articles, and finds other people that rate articles the same way.
+Once it has found for you some people you agree with it tells you, in
+the form of a prediction, what they thought of the article.  You can use
+this prediction to help you decide whether or not you want to read the
+article.
+
+* Menu:
+
+* Using GroupLens::          How to make Gnus use GroupLens.
+* Rating Articles::          Letting GroupLens know how you rate articles.
+* Displaying Predictions::   Displaying predictions given by GroupLens.
+* GroupLens Variables::      Customizing GroupLens.
+
+
+File: gnus,  Node: Using GroupLens,  Next: Rating Articles,  Up: GroupLens
+
+Using GroupLens
+---------------
+
+   To use GroupLens you must register a pseudonym with your local Better
+Bit Bureau (BBB).  At the moment the only better bit in town is at
+`http://www.cs.umn.edu/Research/GroupLens/bbb.html'.
+
+   Once you have registered you'll need to set a couple of variables.
+
+`gnus-use-grouplens'
+     Setting this variable to a non-`nil' value will make Gnus hook into
+     all the relevant GroupLens functions.
+
+`grouplens-pseudonym'
+     This variable should be set to the pseudonum you got when
+     registering with the Better Bit Bureau.
+
+`grouplens-newsgroups'
+     A list of groups that you want to get GroupLens predictions for.
+
+   Thats the minimum of what you need to get up and running with
+GroupLens.  Once you've registered, GroupLens will start giving you
+scores for articles based on the average of what other people think.
+But, to get the real benefit of GroupLens you need to start rating
+articles yourself.  Then the scores GroupLens gives you will be
+personalized for you, based on how the people you usually agree with
+have already rated.
+
+
+File: gnus,  Node: Rating Articles,  Next: Displaying Predictions,  Prev: Using GroupLens,  Up: GroupLens
+
+Rating Articles
+---------------
+
+   In GroupLens, an article is rated on a scale from 1 to 5, inclusive.
+Where 1 means something like this article is a waste of bandwidth and 5
+means that the article was really good.  The basic question to ask
+yourself is, "on a scale from 1 to 5 would I like to see more articles
+like this one?"
+
+   There are four ways to enter a rating for an article in GroupLens.
+
+`r'
+     This function will prompt you for a rating on a scale of one to
+     five.
+
+`k'
+     This function will prompt you for a rating, and rate all the
+     articles in the thread.  This is really useful for some of those
+     long running giant threads in rec.humor.
+
+   The next two commands, `n' and `,' take a numerical prefix to be the
+score of the article you're reading.
+
+`1-5 n'
+     Rate the article and go to the next unread article.
+
+`1-5 ,'
+     Rate the article and go to the next unread article with the
+     highest score.
+
+   If you want to give the current article a score of 4 and then go to
+the next article, just type `4 n'.
+
+
+File: gnus,  Node: Displaying Predictions,  Next: GroupLens Variables,  Prev: Rating Articles,  Up: GroupLens
+
+Displaying Predictions
+----------------------
+
+   GroupLens makes a prediction for you about how much you will like a
+news article.  The predictions from GroupLens are on a scale from 1 to
+5, where 1 is the worst and 5 is the best.  You can use the predictions
+from GroupLens in one of three ways controlled by the variable
+`gnus-grouplens-override-scoring'.
+
+   There are three ways to display predictions in grouplens.  You may
+choose to have the GroupLens scores contribute to, or override the
+regular gnus scoring mechanism. override is the default; however, some
+people prefer to see the Gnus scores plus the grouplens scores.  To get
+the separate scoring behavior you need to set
+`gnus-grouplens-override-scoring' to `'separate'.  To have the
+GroupLens predictions combined with the grouplens scores set it to
+`'override' and to combine the scores set
+`gnus-grouplens-override-scoring' to `'combine'.  When you use the
+combine option you will also want to set the values for
+`grouplens-prediction-offset' and `grouplens-score-scale-factor'.
+
+   In either case, GroupLens gives you a few choices for how you would
+like to see your predictions displayed.  The display of predictions is
+controlled by the `grouplens-prediction-display' variable.
+
+   The following are legal values for that variable.
+
+`prediction-spot'
+     The higher the prediction, the further to the right an `*' is
+     displayed.
+
+`confidence-interval'
+     A numeric confidence interval.
+
+`prediction-bar'
+     The higher the prediction, the longer the bar.
+
+`confidence-bar'
+     Numerical confidence.
+
+`confidence-spot'
+     The spot gets bigger with more confidence.
+
+`prediction-num'
+     Plain-old numeric value.
+
+`confidence-plus-minus'
+     Prediction +/i confidence.
+
+
+File: gnus,  Node: GroupLens Variables,  Prev: Displaying Predictions,  Up: GroupLens
+
+GroupLens Variables
+-------------------
+
+`gnus-summary-grouplens-line-format'
+     The summary line format used in summary buffers that are GroupLens
+     enhanced.  It accepts the same specs as the normal summary line
+     format (*note Summary Buffer Lines::.).  The default is
+     `%U%R%z%l%I%(%[%4L: %-20,20n%]%) %s\n'.
+
+`grouplens-bbb-host'
+     Host running the bbbd server.  The default is
+     `grouplens.cs.umn.edu'.
+
+`grouplens-bbb-port'
+     Port of the host running the bbbd server.  The default is 9000.
+
+`grouplens-score-offset'
+     Offset the prediction by this value.  In other words, subtract the
+     prediction value by this number to arrive at the effective score.
+     The default is 0.
+
+`grouplens-score-scale-factor'
+     This variable allows the user to magnify the effect of GroupLens
+     scores.  The scale factor is applied after the offset.  The
+     default is 1.
+
+
+File: gnus,  Node: Various,  Next: The End,  Prev: Scoring,  Up: Top
+
+Various
+*******
+
+* Menu:
+
+* Process/Prefix::             A convention used by many treatment commands.
+* Interactive::                Making Gnus ask you many questions.
+* Formatting Variables::       You can specify what buffers should look like.
+* Windows Configuration::      Configuring the Gnus buffer windows.
+* Compilation::                How to speed Gnus up.
+* Mode Lines::                 Displaying information in the mode lines.
+* Highlighting and Menus::     Making buffers look all nice and cozy.
+* Buttons::                    Get tendonitis in ten easy steps!
+* Daemons::                    Gnus can do things behind your back.
+* NoCeM::                      How to avoid spam and other fatty foods.
+* Picons::                     How to display pictures of what your reading.
+* Various Various::            Things that are really various.
+

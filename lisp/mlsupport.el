@@ -1,11 +1,15 @@
-;; Run-time support for mocklisp code.
+;;; mlsupport.el --- run-time support for mocklisp code.
+
 ;; Copyright (C) 1985 Free Software Foundation, Inc.
+
+;; Maintainer: FSF
+;; Keywords: extensions
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -14,11 +18,19 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
 
-(provide 'mlsupport)
+;; This package provides equivalents of certain primitives from Gosling
+;; Emacs (including the commercial UniPress versions).  These have an
+;; ml- prefix to distinguish them from native GNU Emacs functions with
+;; similar names.  The package mlconvert.el translates Mocklisp code
+;; to use these names.
+
+;;; Code:
 
 (defmacro ml-defun (&rest defs)
   (list 'ml-defun-1 (list 'quote defs)))
@@ -30,9 +42,6 @@
 
 (defmacro declare-buffer-specific (&rest vars)
   (cons 'progn (mapcar (function (lambda (var) (list 'make-variable-buffer-local (list 'quote var)))) vars)))
-
-(defmacro setq-default (var val)
-  (list 'set-default (list 'quote var) val))
 
 (defun ml-set-default (varname value)
   (set-default (intern varname) value))
@@ -50,6 +59,10 @@
 
 (defun define-keymap (name)
   (fset (intern name) (make-keymap)))
+
+;; Make it work to use ml-use-...-map on "esc" and such.
+(fset 'esc-map esc-map)
+(fset 'ctl-x-map ctl-x-map)
 
 (defun ml-use-local-map (name)
   (use-local-map (intern (concat name "-map"))))
@@ -80,7 +93,7 @@
   (fset (intern name) defn))
 
 (defun push-back-character (char)
-  (setq unread-command-char char))
+  (setq unread-command-events (list char)))
 
 (defun to-col (column)
   (indent-to column 0))
@@ -121,13 +134,13 @@
 			       (1- (point)) (point-max))))))
 
 (defun set-auto-fill-hook (arg)
-  (setq auto-fill-hook (intern arg)))
+  (setq auto-fill-function (intern arg)))
 
 (defun auto-execute (function pattern)
   (if (/= (aref pattern 0) ?*)
       (error "Only patterns starting with * supported in auto-execute"))
   (setq auto-mode-alist (cons (cons (concat "\\." (substring pattern 1)
-					    "$")
+					    "\\'")
 				    function)
 			      auto-mode-alist)))
 
@@ -406,3 +419,17 @@
     (if (< from 0) (setq from (+ from length)))
     (if (< to 0) (setq to (+ to length)))
     (substring string from (+ from to))))
+
+(defun ml-concat (&rest args)
+  (let ((newargs nil) this)
+    (while args
+      (setq this (car args))
+      (if (numberp this)
+	  (setq this (number-to-string this)))
+      (setq newargs (cons this newargs)
+	    args (cdr args)))
+    (apply 'concat (nreverse newargs))))
+
+(provide 'mlsupport)
+
+;;; mlsupport.el ends here

@@ -1,1 +1,1 @@
-(load (concat term-file-prefix "vt100") nil t)
+(load "term/vt100" nil t)

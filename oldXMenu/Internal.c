@@ -1,18 +1,19 @@
 #include "copyright.h"
 
-/* $Header: Internal.c,v 1.12 87/12/20 12:05:22 rws Exp $ */
+/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/Internal.c,v 1.1 1992/04/11 22:10:20 jimb Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
  * XMenu:	MIT Project Athena, X Window system menu package
  *
- * 	XMenuInternal.c - XMenu internal (not user visable) routines.
+ * 	XMenuInternal.c - XMenu internal (not user visible) routines.
  *
  *	Author:		Tony Della Fera, DEC
  *			November, 1985
  *
  */
 
+#include <config.h>
 #include "XMenuInt.h"
 
 /*
@@ -52,7 +53,7 @@ static XMWinQue _XMWinQue;
  */
 int _XMErrorCode = XME_NO_ERROR; 
 /*
- * _XMErrorList - Global XMenu error code discription strings.
+ * _XMErrorList - Global XMenu error code description strings.
  */
 char *
 _XMErrorList[XME_CODE_COUNT] = {
@@ -95,7 +96,15 @@ _XMWinQueInit()
 	/*
 	 * Blank the queue structure.
 	 */
-	bzero(&_XMWinQue, sizeof(XMWinQue));
+	register int i;
+
+	for (i = 0; i < S_QUE_SIZE; i++)
+	  _XMWinQue.sq[i] = 0;
+
+	for (i = 0; i < P_QUE_SIZE; i++)
+	  _XMWinQue.pq[i] = 0;
+
+	_XMWinQue.sq_size = _XMWinQue.pq_size = 0;
 
 	/*
 	 * Initialize the next free location pointers.
@@ -288,7 +297,7 @@ _XMWinQueFlush(display, menu, pane, select)
 	    /*
 	     * Insert the new window id and its
 	     * associated XMSelect structure into the 
-	     * assoction table.
+	     * association table.
 	     */
 	    XMakeAssoc(display, menu->assoc_tab, s_ptr->window, s_ptr);
 	    XSelectInput(display, s_ptr->window, menu->s_events);
@@ -402,7 +411,7 @@ _XMRecomputeGlobals(display, menu)
     register int s_count = 0;		/* Maximum selection count. */
 
     int p_s_pad;		/* Pane <-> selection padding. */
-    int p_s_diff;		/* Pane <-> selection seperation. */
+    int p_s_diff;		/* Pane <-> selection separation. */
 
     int p_height;		/* Pane window height. */
     int p_width;		/* Pane window width. */
@@ -758,7 +767,7 @@ _XMRecomputeSelection(display, menu, s_ptr, s_num)
 	    s_ptr->label_x = s_ptr->window_x + ((menu->s_width - s_ptr->label_width) >> 1);
 	    break;
 	default:
-	    /* Error! Invaild style parameter. */
+	    /* Error! Invalid style parameter. */
 	    _XMErrorCode = XME_STYLE_PARAM;
 	    return(_FAILURE);
     }
@@ -781,7 +790,7 @@ _XMRecomputeSelection(display, menu, s_ptr, s_num)
  *		      the center of the current pane and selection to the 
  *		      the menu origin.
  *
- *	WARNING! ******	Be certain that all menu depencies have been
+ *	WARNING! ******	Be certain that all menu dependencies have been
  *			recomputed before calling this routine or
  *			unpredictable results will follow.
  */
@@ -924,7 +933,16 @@ _XMRefreshSelection(display, menu, select)
     register int height = select->window_h;
     register int bdr_width = menu->s_bdr_width;
     
-    if (select->activated) {
+    if (select->type == SEPARATOR) {
+        XDrawLine(display,
+                  select->parent_p->window,
+                  menu->normal_select_GC,
+                  select->window_x,
+                  select->window_y + height / 2,
+                  select->window_x + width,
+                  select->window_y + height / 2);
+    }
+    else if (select->activated) {
 	if (menu->menu_mode == INVERT) {
 	    XFillRectangle(display, 
 			   select->parent_p->window,

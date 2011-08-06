@@ -1,277 +1,36 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.49 from the
+This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
 input file emacs.texi.
 
-   This file documents the GNU Emacs editor.
-
-   Copyright (C) 1985, 1986, 1988, 1992 Richard M. Stallman.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
-
-   Permission is granted to copy and distribute modified versions of
-this manual under the conditions for verbatim copying, provided also
-that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
-General Public License" are included exactly as in the original, and
-provided that the entire resulting derived work is distributed under the
-terms of a permission notice identical to this one.
-
-   Permission is granted to copy and distribute translations of this
-manual into another language, under the above conditions for modified
-versions, except that the sections entitled "The GNU Manifesto",
-"Distribution" and "GNU General Public License" may be included in a
-translation approved by the author instead of in the original English.
-
 
-File: emacs,  Node: TeX Mode Changes,  Next: Shell Changes,  Prev: Filling Changes,  Up: Version 19
+File: emacs,  Node: Select Tags Table,  Next: Find Tag,  Prev: Create Tags Table,  Up: Tags
 
-Changes in TeX Mode
-===================
+Selecting a Tags Table
+----------------------
 
-   The old TeX mode bindings of `M-{' and `M-}' have been moved to `C-c
-{' and `C-c }'.  (These commands are `up-list' and `tex-insert-braces';
-they are the TeX equivalents of `M-(' and `M-)'.)
+   Emacs has at any time one "selected" tags table, and all the commands
+for working with tags tables use the selected one.  To select a tags
+table, type `M-x visit-tags-table', which reads the tags table file
+name as an argument.  The name `TAGS' in the default directory is used
+as the default file name.
 
-   The new command `C-c C-o' (`tex-latex-block') inserts a matching
-`\begin'--`\end' pair.  The new command `C-c C-e'
-(`tex-close-latex-block') inserts a matching `\end' for the last
-unterminated `\begin'.
+   All this command does is store the file name in the variable
+`tags-file-name'.  Emacs does not actually read in the tags table
+contents until you try to use them.  Setting this variable yourself is
+just as good as using `visit-tags-table'.  The variable's initial value
+is `nil'; that value tells all the commands for working with tags tables
+that they must ask for a tags table file name to use.
 
-   You can run BibTeX on the current file using `C-c TAB'
-(`tex-bibtex-file').
-
-   There is a new command `C-c C-v' (`tex-view') for running a DVI
-previewer.
-
-   You can specify the directory to use for running TeX by setting the
-variable `tex-directory'.  `"."' is the default value.  If your
-environment variable `TEXINPUTS' contains relative directory names, or
-if your files contains `\input' commands with relative file names, then
-`tex-directory' *must* be `"."' or you will get the wrong results. 
-Otherwise, it is safe to specify some other directory, such as `/tmp'.
-
-   There is now a third variant of TeX mode, for SliTeX.  This is in
-addition to the variants for plain TeX and LaTeX.  As before, the
-correct variant is chosen automatically when you visit a file.
-
-
-File: emacs,  Node: Shell Changes,  Next: Spell Changes,  Prev: TeX Mode Changes,  Up: Version 19
-
-Changes in Shell Mode
-=====================
-
-   Shell mode has been completely replaced with a new implementation.
-The basic idea is the same: Emacs runs a subshell, and all input and
-output to the subshell go through the shell buffer.  But the special
-commands of Shell mode have been redesigned.
-
-`TAB'
-     Complete the file name before point in the shell buffer
-     (`comint-dynamic-complete').
-
-`M-?'
-     To get a list of all possible completions of the file name before,
-     type `M-?'  (`comint-dynamic-list-completions').
-
-`M-p'
-`M-n'
-     There is a new convenient history mechanism for repeating previous
-     shell inputs.  Use the command `M-p' (`comint-previous-input') to
-     recall the last input; it copies the text of that input to the
-     place where you are editing.  If you repeat `M-p', it replaces the
-     copied input with successively earlier inputs.  `M-n' is similar
-     but goes in the opposite direction, towards the present
-     (`comint-next-input').
-
-     When you find the previous input you want, you can resubmit it by
-     typing RET, or you can edit it first and then resubmit it if you
-     wish.
-
-     These shell history commands operate outside the minibuffer, but
-     they are completely analogous to the minibuffer history commands.
-
-`M-r'
-`M-s'
-     You can also use `M-r' and `M-s' to search for (respectively)
-     earlier or later inputs starting with a given string.  First type
-     the string, then type `M-r' (`comint-previous-matching-input') to
-     yank a previous input from the history which starts with that
-     string. You can repeat `M-r' to find successively earlier inputs
-     starting with the same string.
-
-     You can start moving in the opposite direction (toward more recent
-     inputs) by typing `M-s' (`comint-next-matching-input') instead of
-     `M-r'.  As long as you don't use any commands except `M-r' and
-     `M-s', they keep using the same string that you had entered
-     initially.
-
-     These commands serve a purpose similar to that of `M-r' and `M-s'
-     in the minibuffer, but do not work in quite the same way.  We may
-     change the interface of these commands, as well as that of the
-     analogous minibuffer commands; one goal will be to make the two
-     sets of commands compatible.  But we haven't yet figured out which
-     of the possible interfaces is best.  To find out what interface is
-     actually supported in Emacs 19, type `C-h f
-     comint-previous-matching-input RET'.
-
-`C-c C-o'
-     Kill the last batch of output from a shell command
-     (`comint-kill-output').  This is useful if a shell command spews
-     out lots of output that just gets in the way.
-
-`C-c C-r'
-     Scroll to display the beginning of the last batch of output at the
-     top of the window; it also moves the cursor there
-     (`comint-show-output').
-
-`C-a'
-     If you type `C-a' on a line that starts with a shell prompt, it
-     moves to the end of the prompt, not to the very beginning of the
-     line.
-
-`C-d'
-     Typed at the end of the shell buffer, `C-d' sends EOF to the
-     subshell.  Typed at any other position in the buffer, `C-d'
-     deletes a character as usual.
-
-`M-x dirs'
-     If Emacs gets confused while trying to track changes in the shell's
-     current directory, type `M-x dirs' to re-synchronize.
-
-`M-x send-invisible'
-     This command reads a line of text without echoing it, and sends it
-     to the shell.
-
-`M-x comint-continue-subjob'
-     If you accidentally suspend your process, use this command to
-     continue it.
-
-
-File: emacs,  Node: Spell Changes,  Next: Tags Changes,  Prev: Shell Changes,  Up: Version 19
-
-Changes in Spell Checking
-=========================
-
-   Emacs 19 uses the Ispell program for spelling correction instead of
-the Unix spell program.  Ispell has many advantages; one is that it can
-be started the first time you check a word, and left running thereafter,
-which makes further checking much faster.  If you want to get rid of the
-Ispell process, use `M-x kill-ispell'.
-
-   To check the entire current buffer, use `M-x ispell-buffer'.  Use
-`M-x ispell-region' to check just the current region.
-
-   Ispell commands often involve interactive replacement of words. You
-can interrupt the interactive replacement with `C-g'. You can restart
-it again afterward with `C-u M-$'.
-
-   Interactive replacement shows you one misspelling at a time and asks
-you what to do.  To answer, type one of the following characters:
-
-`DIGIT'
-     Replace the word (this time) with one of the displayed near-misses.
-     The digit you use says which near-miss to use.
-
-`a'
-     Accept this word this time.
-
-`i'
-     Insert this word in your private dictionary so that Ispell will
-     consider it correct it from now on.
-
-`r'
-     Replace the word this time with a string typed by you.
-
-   When the Ispell process starts, it reads your private dictionary
-which is the file `~/ispell.words'.  Words that you "insert" with the
-`i' command are added to that file, but not right away--only at the end
-of the interactive replacement procedure.
-
-   Use the `M-x reload-ispell' command to reload your private
-dictionary from `~/ispell.words' if you edit the file outside of Ispell.
-
-
-File: emacs,  Node: Mail Changes,  Next: Info Changes,  Prev: Tags Changes,  Up: Version 19
-
-Changes in Mail Reading and Sending
-===================================
-
-   `%' is now a word-separator character in Mail mode.  This is because
-that character frequently appears in addresses.
-
-   If you set the variable `mail-signature' non-`nil', then `mail'
-inserts the contents of your `.signature' file automatically when it
-initializes a mail buffer.  If you don't want your signature in a
-particular message, just delete it from the buffer before you send the
-message.
-
-   You can specify the text to insert at the beginning of each line when
-you use `C-c C-y' to yank the message you are replying to.  Set
-`mail-yank-prefix' to the desired string.  A value of `nil' (the
-default) means to use indentation, as in Emacs 18.  If you use `C-u' by
-itself as the prefix argument to `C-c C-y', then it does not insert
-anything at the beginning of the lines, regardless of the value of
-`mail-yank-prefix'.
-
-   You can easily convert an Rmail file to system mailbox format with
-the command `unrmail'.  This command reads two arguments, the name of
-the Rmail file to convert, and the name of the new mailbox file. The
-Rmail file is unchanged by this command.
-
-   Rmail now initially positions you at the first message in the Rmail
-file that you have not seen.  This may not be a message that just
-arrived; it may have arrived in a previous session during which you did
-not select it.  You can then read all the unseen messages going
-forwards.
-
-   When a message that you sent "bounces" back to you, you can retry
-sending it by typing `C-M-m' (`rmail-retry-failure') on the failure
-message.
-
-   By contrast, the new command `M-x rmail-resend' is used for
-forwarding a message and marking it as "resentby" you, with the special
-header fields `Resent-by:' and `Resent-to:'.
-
-   Another new Rmail command is `<', which moves to the first message.
-(This is for symmetry with `>'.)  `<' is actually an alias for `j'.
-
-   `e' (`rmail-edit-current-message') is now the command to edit a
-message.  To expunge, type `x'.  We know this will surprise people some
-of the time, but the surprise will not be disastrous--if you type `e'
-meaning to expunge, just type `C-c C-c' to leave Rmail Edit mode, and
-then type `x'.
-
-   The variable `rmail-output-file-alist' now controls the default for
-the file to output a message to.
-
-   In the Rmail summary, `C-n' and `C-p' are now ordinary cursor motion
-commands.  To move in the summary *and* select a new message, use `n'
-and `p' (which skip deleted messages) or `M-n' and `M-p' (which stop at
-all messages).  These are, of course, the same commands you would use
-in the Rmail buffer.
-
-
-File: emacs,  Node: Tags Changes,  Next: Mail Changes,  Prev: Spell Changes,  Up: Version 19
-
-Changes in Tags Commands
-========================
-
-   `M-.' (`find-tag') and the other commands to find a tag now look
-first for an exact match in the tags table, and try substring matches
-only afterward.
-
-   Another change in `M-.' is that it has no effect on what `M-,' will
-do subsequently.  You can no longer use `M-,' to find the next similar
-tag; instead, use `M-.' with a prefix argument.
-
-   The new command `find-tag-regexp' successively visits the tags that
-match a specified regular expression.
-
-   You can now use more than one tags table.  Using `visit-tags-table'
-to load a new tags table does not discard the other tables previously
-loaded.  The other tags commands use all the tags tables that are
-loaded; the first one they use is the one that mentions the current
-visited file.
+   Using `visit-tags-table' when a tags table is already loaded gives
+you a choice: you can add the new tags table to the current list of
+tags tables, or start a new list.  The tags commands use all the tags
+tables in the current list.  If you start a new list, the new tags table
+is used *instead* of others.  If you add the new table to the current
+list, it is used *as well as* the others.  When the tags commands scan
+the list of tags tables, they don't always start at the beginning of
+the list; they start with the first tags table (if any) that describes
+the current file, proceed from there to the end of the list, and then
+scan from the beginning of the list until they have covered all the
+tables in the list.
 
    You can specify a precise list of tags tables by setting the variable
 `tags-table-list' to a list of strings, like this:
@@ -279,1052 +38,1197 @@ visited file.
      (setq tags-table-list
            '("~/emacs" "/usr/local/lib/emacs/src"))
 
-This tells `find-tag' to look at the `TAGS' files in your `~/emacs'
-directory and in the `/usr/local/lib/emacs/src' directory.  The order
-depends on which file you are in and which tags table mentions that
-file, as explained above.
+This tells the tags commands to look at the `TAGS' files in your
+`~/emacs' directory and in the `/usr/local/lib/emacs/src' directory.
+The order depends on which file you are in and which tags table
+mentions that file, as explained above.
 
-   You can now use the tags table for completion of names during
-ordinary editing.  The command `M-TAB' (except in Emacs Lisp and Lisp
-Interaction modes) completes the identifier in the buffer before point,
-using the set of all tags as the list of possible completions.
-
-   `tags-query-replace' and `tags-search' now create buffers only
-temporarily for the files that they have to search (those which are not
-already visited in Emacs buffers).  If one of these files contains a
-match for the search pattern, then its buffer continues to exist;
-otherwise, it is killed.
+   Do not set both `tags-file-name' and `tags-table-list'.
 
 
-File: emacs,  Node: Info Changes,  Next: Dired Changes,  Prev: Mail Changes,  Up: Version 19
+File: emacs,  Node: Find Tag,  Next: Tags Search,  Prev: Select Tags Table,  Up: Tags
 
-Changes in Info
-===============
-
-   There are new commands in Info mode.
-
-`]'
-     Move forward a node, going up and down levels as needed in a
-     depth-first tree walk.  This command treats all the nodes in the
-     file as forming a single sequence in which the "children" of a
-     node follow that node. It is the equivalent of reading a printed
-     manual sequentially.
-
-`['
-     Similar, but move backward.
-
-`<'
-     Move to the top node of the current Info file.
-
-`>'
-     Move to the last node of the file.
-
-`SPC'
-     Scroll through this node, or advance to the next node in
-     depth-first order (like `]').
-
-`i STRING RET'
-     Move to the node associated with STRING in the index or indices of
-     this manual.  If there is more than one match for STRING, the `i'
-     command finds the first match.
-
-`,'
-     Find the next match for the string in the previous `i' command, and
-     go to that node.
-
-   If you click the middle mouse button near a cross-reference, menu
-item or node pointer while in Info, you will go to the node which is
-referenced.
-
-   The variable `Info-directory-list' specifies a list of directory
-names that contain Info files.  Each time Info looks for an Info file,
-it searches all these directories.  This makes it easy to install the
-Info files that come with various packages.  You can specify the path
-with the environment variable `INFOPATH'.
-
-
-File: emacs,  Node: Dired Changes,  Next: GNUS,  Prev: Info Changes,  Up: Version 19
-
-Changes in Dired
-================
-
-   Dired has many new features which allow you to do these things:
-
-   * Make distinguishable types of marks for different operations.
-
-   * Rename, copy, or make links to many files at once.
-
-   * Display contents of subdirectories in the same Dired buffer as the
-     parent directory.
-
-* Menu:
-
-* Marks in Dired::	    Flagging for deletion vs marking for other actions.
-* Multiple Files::	    How to copy, rename, print, compress, etc.
-			      either one file or several files.
-* Shell Commands in Dired:: Running a shell command on the marked files.
-* Dired Regexps::	    Using patterns to rename multiple files.
-* Dired Case Conversion::   Converting file names to upper or lower case.
-* Comparison in Dired::	    Running `diff' by way of Dired.
-* Subdirectories in Dired:: Adding subdirectories to the Dired buffer.
-* Hiding Subdirectories::   Making subdirectories visible or invisible.
-* Editing Dired Buffer::    Discarding lines for files of no interest.
-* Dired and Find::	    Using `find' to select the files for Dired to show.
-
-
-File: emacs,  Node: Marks in Dired,  Next: Multiple Files,  Up: Dired Changes
-
-Setting and Clearing Marks
---------------------------
-
-   There are now two kinds of marker that you can put on a file in
-Dired: `D' for deletion, and `*' for any other kind of operation. The
-`x' command deletes only files marked with `D', and most other Dired
-commands operate only on the files marked with `*'.
-
-   To mark files with `D' (also called "flagging" the files), you can
-use `d' as usual.  Here are some commands for marking with `*' (and
-also for unmarking):
-
-`m'
-     Mark the current file with `*', for an operation other than
-     deletion (`dired-mark').
-
-`*'
-     Mark all executable files (`dired-mark-executables'). With a
-     prefix argument, unmark all those files.
-
-`@'
-     Mark all symbolic links (`dired-mark-symlinks').  With a prefix
-     argument, unmark all those files.
-
-`/'
-     Mark all files which are actually directories, except for `.' and
-     `..' (`dired-mark-directories').  With a prefix argument, unmark
-     all those files.
-
-`M-DEL'
-     Remove a specific or all marks from every file
-     (`dired-unmark-all-files'). With an argument, query for each
-     marked file. Type your help character, usually `C-h', at that time
-     for help.
-
-`c OLD NEW'
-     Replace all marks that use the character OLD with marks that use
-     the character NEW.  You can use almost any character as a mark
-     character by means of this command, to distinguish various classes
-     of files.  If OLD is ` ', then the command operates on all
-     unmarked files; if NEW is ` ', then the command unmarks the files
-     it acts on.
-
-     To illustrate the power of this command, here is how to put `*'
-     marks on all the files that were unmarked, while unmarking all
-     those that had `*' marks:
-
-          c * t c SPC * c t SPC
-
-
-File: emacs,  Node: Multiple Files,  Next: Shell Commands in Dired,  Prev: Marks in Dired,  Up: Dired Changes
-
-Operating on Multiple Files
----------------------------
-
-   The Dired commands to operate on files (rename them, copy them, and
-so on) have been generalized to work on multiple files.  There are also
-some additional commands in this series.
-
-   All of these commands use the same convention to decide which files
-to manipulate:
-
-   * If you give the command a numeric prefix argument N, it operates
-     on the next N files, starting with the current file.
-
-   * Otherwise, if there are marked files, the commands operate on all
-     the marked files.
-
-   * Otherwise, the command operates on the current file only.
-
-   Here are the commands that operate on multiple files in this way:
-
-`C'
-     Copy the specified files (`dired-do-copy').  You must specify a
-     directory to copy into, or (if copying a single file) a new name.
-
-     If `dired-copy-preserve-time' is non-`nil', then copying with this
-     command sets the modification time of the new file to be the same
-     as that of the old file.
-
-`R'
-     Rename the specified files (`dired-do-rename').  You must specify
-     a directory to rename into, or (if renaming a single file) a new
-     name.
-
-     Dired automatically changes the visited file name of buffers
-     associated with renamed files so that they refer to the new names.
-
-`H'
-     Make hard links to the specified files (`dired-do-hardlink'). You
-     must specify a directory to make the links in, or (if making just
-     one link) the name to give the link.
-
-`S'
-     Make symbolic links to the specified files (`dired-do-symlink').
-     You must specify a directory to make the links in, or (if making
-     just one link) the name to give the link.
-
-`M'
-     Change the mode (also called "permission bits") of the specified
-     files (`dired-do-chmod').  This calls the `chmod' program, so you
-     can describe the desired mode change with any argument that
-     `chmod' would handle.
-
-`G'
-     Change the group of the specified files (`dired-do-chgrp').
-
-`O'
-     Change the owner of the specified files (`dired-do-chown'). (On
-     most systems, only the superuser can do this.)
-
-     The variable `dired-chown-program' specifies the name of the
-     program to use to do the work (different systems put `chown' in
-     different places.
-
-`Z'
-     Compress or uncompress the specified files. If the file appears to
-     be a compressed file, it is uncompressed; otherwise, it is
-     compressed (`dired-do-compress').
-
-`L'
-     Load the specified Emacs Lisp files (`dired-do-load').
-
-`B'
-     Byte compile the specified Emacs Lisp files
-     (`dired-do-byte-compile').
-
-`P'
-     Print the specified files (`dired-do-print').  This command uses
-     the variables `lpr-command' and `lpr-switches' just as `lpr-file'
-     does (*note Hardcopy::.).
-
-
-File: emacs,  Node: Shell Commands in Dired,  Next: Dired Regexps,  Prev: Multiple Files,  Up: Dired Changes
-
-Shell Commands in Dired
------------------------
-
-   The dired command `!' (`dired-do-shell-command') reads a shell
-command string in the minibuffer and runs the shell command on all the
-specified files.  There are two ways of applying a shell command to
-multiple files:
-
-   * If you use `*' in the shell command, then it runs just once, with
-     the list of file names substituted for the `*'.
-
-     Thus, `! tar cf foo.tar * RET' runs `tar' on the entire list of
-     file names, putting them into one tar file `foo.tar'.  The file
-     names are inserted in the order that they appear in the Dired
-     buffer.
-
-   * If the command string doesn't contain `*', then it runs once *for
-     each file*, with the file name attached at the end.
-
-     For example, `! uudecode RET' runs `uudecode' on each file.
-
-   What if you want to run the shell command once for each file but with
-the file name inserted in the middle?  Or if you want to use the file
-names in a more complicated fashion?  Use a shell loop.  For example,
-this shell command would run `uuencode' on each of the specified files,
-writing the output into a corresponding `.uu' file:
-
-     for file in *; uuencode $file $file >$file.uu; done
-
-   The working directory for the shell command is the top level
-directory of the Dired buffer.
-
-   The `!' command does not attempt to update the Dired buffer to show
-new or modified files, because it doesn't know what those files might
-be.  Type `g' to update the Dired buffer.
-
-
-File: emacs,  Node: Dired Regexps,  Next: Dired Case Conversion,  Prev: Shell Commands in Dired,  Up: Dired Changes
-
-Regular Expression File Name Substitution
------------------------------------------
-
-   Here are commands that select files according to a regular
-expression:
-
-`% m REGEXP RET'
-     Mark all files whose names match the regular expression REGEXP
-     (`dired-mark-files-regexp').
-
-     Only the non-directory part of the file name is used in matching. 
-     Use `^' and `$' to anchor matches.  Exclude subdirs by hiding them
-     (*note Hiding Subdirectories::.).
-
-`% d REGEXP RET'
-     Flag for deletion all files whose names match the regular
-     expression REGEXP (`dired-flag-files-regexp').
-
-`% R FROM RET TO RET'
-`% C FROM RET TO RET'
-`% H FROM RET TO RET'
-`% S FROM RET TO RET'
-     These four commands rename, copy, make hard links and make soft
-     links, in each case computing the new name by regular expression
-     substitution from the name of the old file.
-
-   The four regular expression substitution commands effectively perform
-`query-replace-regexp' on the selected file names in the Dired buffer. 
-They read two arguments: a regular expression FROM, and a substitution
-pattern TO.  Each selected file name is matched against the regular
-expression, and then the part which matched is replaced with the
-substitution pattern.  You can use `\&' and `\DIGIT' in the
-substitution pattern to refer to all or part of the old file name.
-
-   Thus, `% R ^.*$ RET x-\& RET' renames each selected file by
-prepending `x-' to its name.  The inverse of this is to remove `x-'
-from the front of each file name.  One way to do that is `% R ^x-.*$
-RET \& RET'; another is `% R ^x- RET RET'.  (Use `^' and `$' to anchor
-matches that should span the whole filename.)
-
-   If the regular expression matches more than once in a file name,
-only the first match is replaced.
-
-   Normally, the replacement process does not consider the directory
-names; it operates on the file name within the directory.  If you
-specify a prefix argument of zero, then replacement affects the entire
-file name.
-
-   Often you will want to apply the command to all files matching the
-same REGEXP that you use in the command.  To do this, mark those files
-with `% m REGEXP RET', then use the same regular expression in `% R'. 
-To make this easier, `% R' uses the last regular expression specified
-in a `%' command as a default.
-
-
-File: emacs,  Node: Dired Case Conversion,  Next: Comparison in Dired,  Prev: Dired Regexps,  Up: Dired Changes
-
-Dired Case Conversion
----------------------
-
-   Here are commands for changing the case of selected files:
-
-`% u'
-     Rename each of the selected files to an upper case name
-     (`dired-upcase').
-
-`% l'
-     Rename each of the selected files to a lower case name
-     (`dired-downcase').
-
-
-File: emacs,  Node: Comparison in Dired,  Next: Subdirectories in Dired,  Prev: Dired Case Conversion,  Up: Dired Changes
-
-File Comparison with Dired
---------------------------
-
-   Here are two commands to run `diff' on selected files:
-
-`='
-     Compare the current file with another file (the file at the mark),
-     by running the `diff' program (`dired-diff').  The file at the
-     mark is the first argument of `diff', and the file at point is the
-     second argument.
-
-`M-='
-     Compare the current file with its backup file
-     (`dired-backup-diff'). If there are several numerical backups, use
-     the most recent one.  If this file is a backup, compare it to its
-     original.  The backup file is the first file given to `diff'.
-
-
-File: emacs,  Node: Subdirectories in Dired,  Next: Hiding Subdirectories,  Prev: Comparison in Dired,  Up: Dired Changes
-
-Subdirectories in Dired
------------------------
-
-   One Dired buffer can now display more than one directory.
-
-   The simplest way to include multiple directories is to specify the
-options `-lR' for running `ls'.  That produces a recursive directory
-listing showing all subdirectories, all within the same Dired buffer.
-
-   But the simplest way is not usually the most convenient way--usually
-the complete recursive listing is more than you want.  So there is a
-Dired command to insert a single subdirectory into the Dired buffer:
-
-`i'
-     Use the `i' (`dired-maybe-insert-subdir') command on a line that
-     describes a file which is a directory.  It inserts the contents of
-     that directory into the same Dired buffer.  Inserted subdirectory
-     contents follow the top-level directory of the Dired buffer, just
-     as they do in `ls -lR' output.
-
-     If the subdirectory's contents are already present in the buffer,
-     the `i' command just moves to it (type `l' (`dired-do-redisplay')
-     to refresh it).  It sets the Emacs mark before moving, so `C-x
-     C-x' takes you back to the old position in the buffer.
-
-   When you have subdirectories in the Dired buffer, you can use the
-page motion commands `C-x [' and `C-x ]' to move by entire directories.
-
-   The following commands move up and down in the tree of directories
-in one Dired buffer:
-
-`C-M-u'
-     Go up to the parent directory's headerline (`dired-tree-up').
-
-`C-M-d'
-     Go down in the tree, to the first subdirectory's headerline
-     (`dired-tree-down').
-
-   The following commands move forwards and backwards to subdirectory
-headerlines:
-
-`C-M-n'
-     Go to next subdirectory headerline, regardless of level
-     (`dired-next-subdir').
-
-`C-M-p'
-     Go to previous subdirectory headerline, regardless of level
-     (`dired-prev-subdir').
-
-
-File: emacs,  Node: Hiding Subdirectories,  Next: Editing Dired Buffer,  Prev: Subdirectories in Dired,  Up: Dired Changes
-
-Hiding Subdirectories
----------------------
-
-   "Hiding" a subdirectory means to make it invisible, except for its
-headerline.  Files inside a hidden subdirectory are never considered by
-Dired.  For example, the commands to operate on marked files ignore
-files in hidden directories even if they are marked.  Thus you can use
-hiding to temporarily exclude subdirectories from operations without
-having to remove the markers.
-
-   The hiding commands toggle; that is they unhide what was hidden and
-vice versa.
-
-`$'
-     Hide or reveal the current subdirectory and move point to the next
-     subdirectory (`dired-hide-subdir').  A prefix argument serves as a
-     repeat count.
-
-`M-$'
-     Hide all subdirectories, leaving only their header lines
-     (`dired-hide-all').  Or, if any subdirectory is currently hidden,
-     make all subdirectories visible again.  You can use this command
-     to get an overview in very deep directory trees or to move quickly
-     to subdirectories far away.
-
-
-File: emacs,  Node: Editing Dired Buffer,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired Changes
-
-Editing the Dired Buffer
-------------------------
-
-`l'
-     Update the specified files in a Dired buffer.  This means reading
-     their current status from the file system and changing the buffer
-     to reflect it properly (`dired-do-redisplay').
-
-     If you use this command on a subdirectory header line, it updates
-     the contents of the subdirectory.
-
-`g'
-     Update the entire contents of the Dired buffer (`revert-buffer'). 
-     Preserve all marks except for those on files that have vanished. 
-     Hidden subdirectories are updated but remain hidden.
-
-`k'
-     Kill all marked lines (`dired-do-kill-lines').  With a prefix
-     argument, kill that many lines starting with the current line.
-
-     This command does not delete files; it just deletes text from the
-     Dired buffer.
-
-     If you kill the line for a file that is a directory, then its
-     contents are also deleted from the buffer.  Typing `C-u k' on the
-     header line for a subdirectory is another way to delete a
-     subdirectory from the Dired buffer.
-
-     The `g' command will bring back any individual lines that you have
-     killed in this way, but not subdirectories--you must use `i' to
-     reinsert each subdirectory.
-
-
-File: emacs,  Node: Dired and Find,  Prev: Editing Dired Buffer,  Up: Dired Changes
-
-Dired and `find'
-----------------
-
-   You can select a set of files for display in a Dired buffer more
-flexibly by using the `find' utility to choose the files.
-
-   To search for files with names matching a wildcard pattern use
-`find-name-dired'.  Its arguments are DIRECTORY and PATTERN.  It
-selects all the files in DIRECTORY or its subdirectories whose own
-names match PATTERN.
-
-   The files thus selected are displayed in a Dired buffer in which the
-ordinary Dired commands are available.
-
-   If you want to test the contents of files, rather than their names,
-use `find-grep-dired'.  This command takes two minibuffer arguments,
-DIRECTORY and REGEXP; it selects all the files in DIRECTORY or its
-subdirectories that contain a match for REGEXP.  It works by running
-`find' and `grep'.
-
-   The most general command in this series is `find-dired', which lets
-you specify any condition that `find' can test.  It takes two
-minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
-DIRECTORY with FIND-ARGS as the arguments to `find' that specify which
-files to accept.  To use this command, you need to know how to use
-`find'.
-
-
-File: emacs,  Node: GNUS,  Next: Calendar/Diary,  Prev: Dired Changes,  Up: Version 19
-
-GNUS
-====
-
-   GNUS is an Emacs subsystem for reading and responding to netnews. 
-You can use GNUS to browse through news groups, look at summaries of
-articles in specific group, and read articles of interest.  You can
-respond to authors or write replies to all the readers of a news group.
-
-   This document introduces GNUS and describes several basic features.
-Full documentation will appear in `The GNU Emacs Extensions Manual'.
-
-   To start GNUS, type `M-x gnus RET'.
-
-* Menu:
-
-* Buffers of GNUS::   The Newsgroups, Summary and Article buffers.
-* GNUS Startup::      What you should know about starting GNUS.
-* Summary of GNUS::   A short description of the basic GNUS commands.
-
-
-File: emacs,  Node: Buffers of GNUS,  Next: GNUS Startup,  Up: GNUS
-
-GNUS's Three Buffers
---------------------
-
-   GNUS creates and uses three Emacs buffers, each with its own
-particular purpose and its own major mode.
-
-   The "Newsgroup buffer" contains a list of newsgroups.  This is the
-first buffer that GNUS displays when it starts up.  Normally the list
-contains only the newsgroups to which you subscribe (which are listed in
-your `.newsrc' file) and which contain unread articles.  Use this
-buffer to select a specific newsgroup.
-
-   The "Summary buffer" lists the articles in a single newsgroup,
-including their subjects, their numbers, and who posted them.  GNUS
-creates a Summary buffer for a newsgroup when you select the group in
-the Newsgroup buffer.  Use this buffer to select an article, and to move
-around in an article.
-
-   The "Article buffer" displays the text of an article.  You rarely
-need to select this buffer because you can read the text while keeping
-the Summary buffer selected.
-
-
-File: emacs,  Node: GNUS Startup,  Next: Summary of GNUS,  Prev: Buffers of GNUS,  Up: GNUS
-
-When GNUS Starts Up
--------------------
-
-   At startup, GNUS reads your `.newsrc' news initialization file and
-attempts to communicate with the local news server, which is a
-repository of news articles.  The news server need not be the same
-computer you are logged in on.
-
-   If you start GNUS and connect to the server, but do not see any
-newsgroups listed in the Newsgroup buffer, type `L' to get a listing of
-all the newsgroups.  Then type `u' to unsubscribe from particular
-newsgroups.  (Move the cursor using `n' and `p' or the usual Emacs
-commands.)  When you quit with `q', GNUS automatically records the
-subscribed groups in your `.newsrc' initialization file.  (You do not
-have to edit this file yourself, although you may.) Next time you start
-GNUS, you will see only the subscribed groups.
-
-
-File: emacs,  Node: Summary of GNUS,  Prev: GNUS Startup,  Up: GNUS
-
-Summary of GNUS Commands
-------------------------
-
-   Reading news is a two step process:
-
-  1. Choose a newsgroup in the Newsgroup buffer.
-
-  2. Choose an article in the Summary buffer.  The article is displayed
-     in the Article buffer in a large window, below the Summary buffer
-     in its small window.
-
-   Each buffer has commands particular to it, but commands that do the
-same things have similar keybindings.  Here are commands for the
-Newsgroup and Summary buffers:
-
-`z'
-     In the Newsgroup buffer, suspend GNUS.  You can return to GNUS
-     later by selecting the Newsgroup buffer and typing `g' to get
-     newly arrived articles.
-
-`q'
-     In the Newsgroup buffer, update your `.newsrc' initialization file
-     and quit GNUS.
-
-     In the Summary buffer, exit the current newsgroup and return to the
-     Newsgroup buffer.  Thus, typing `q' twice quits GNUS.
-
-`L'
-     In the Newsgroup buffer, list all the newsgroups available on your
-     news server.  This may be a long list!
-
-`l'
-     In the Newsgroup buffer, list only the newsgroups to which you
-     subscribe and which contain unread articles.
-
-`u'
-     In the Newsgroup buffer, unsubscribe from (or subscribe to) the
-     newsgroup listed in the line that point is on.  When you quit GNUS
-     by typing `q', GNUS lists your subscribed-to newsgroups in your
-     `.newsrc' file.  The next time you start GNUS, you see only the
-     newsgroups listed in your `.newsrc' file.
-
-     You may also edit your `.newsrc' file directly in Emacs.  First
-     quit GNUS, then visit the `.newsrc' file.  For example, you can
-     remove all the `alt.' groups by going to the beginning of the file
-     and typing `M-x flush-lines RET alt RET'.  Next time you start
-     GNUS, you will see only the newsgroups still listed in the
-     `.newsrc' file.
-
-`SPC'
-     In the Newsgroup buffer, select the group on the line under the
-     cursor and display the first unread article in that group.
-
-     In the Summary buffer,
-
-        - Select the article on the line under the cursor if none is
-          selected.
-
-        - Scroll the text of the article if one is selected.
-
-        - Select the next unread article if at the end of the current
-          article.
-
-     Thus, you can move through all the articles by repeatedly typing
-     SPC.
-
-`DEL'
-     In the Newsgroup Buffer, move point to the previous newsgroup
-     containing unread articles.
-
-     In the Summary buffer, scroll the text of the article backwards.
-
-`n'
-     Move point to the next unread newsgroup, or select the next unread
-     article.
-
-`p'
-     Move point to the previous unread newsgroup, or select the previous
-     unread article.
-
-`C-n'
-`C-p'
-     Move point to the next or previous item, even if it is marked as
-     read. This does not select the article or newsgroup on that line.
-
-`s'
-     In the Summary buffer, do an incremental search of the current
-     text in the Article buffer, just as if you switched to the Article
-     buffer and typed `C-s'.
-
-`M-s REGEXP RET'
-     In the Summary buffer, search forward for articles containing a
-     match for REGEXP.
-
-`C-c C-s C-n'
-`C-c C-s C-s'
-`C-c C-s C-d'
-`C-c C-s C-a'
-     In the Summary buffer, sort the list of articles by number,
-     subject, date, or author.
-
-`C-M-n'
-`C-M-p'
-     In the Summary buffer, read the next or previous article with the
-     same subject as the current article.
-
-
-File: emacs,  Node: Calendar/Diary,  Next: Version Control,  Prev: GNUS,  Up: Version 19
-
-Calendar and Diary
-==================
-
-   The calendar facility in Emacs 19 is almost completely new, and it
-comes with a diary feature.  You can use the diary to keep track of
-appointments, anniversaries, and other events.
-
-   To use the diary, you must write diary entries in a particular file,
-called your "diary file".  Its name is `~/diary'.  Emacs displays the
-entries for particular dates by finding them in the diary file,
-formatting them, and displaying them in a diary display buffer.
-
-* Menu:
-
-* Calendar::			New features of the calendar proper.
-* Entries: Diary Entries.	The location and form of a diary entry.
-* New Entries::			Inserting diary entries using the calendar.
-* Displaying Diary::            How to display diary entries from the calendar.
-* European Calendar Style ::    Day-month-year style for dates.
-* Simple and Fancy::            The diary has two modes for display.
-* Other Diary Features::        The diary has many advanced commands.
-* Startup Diary::		How to display your diary when you start Emacs.
-* Printing Diary:: 		Print selected entries of the diary.
-
-
-File: emacs,  Node: Calendar,  Next: Diary Entries,  Up: Calendar/Diary
-
-Calendar
---------
-
-   In Emacs 19 you can use ordinary Emacs cursor commands to move
-through the calendar, which scrolls automatically to display different
-months or different years.  Character motion translates to days, line
-motion to weeks, sentence and paragraph motion to months, and page
-motion to years.  The vertical and horizontal scroll commands also
-handle the calendar suitably.
-
-   `p d' displays the selected date as a day within the year.  `g d'
-selects a date given as month, day, year.  Type `.' to go back to
-today's date.
-
-   The command `M-=', which normally gives the number of lines in the
-region, in Calendar mode gives the number of days in the region
-(`calendar-count-days-region').
-
-   The calendar facility also knows about other important calendars. 
-The commands for these come in pairs; the commands to convert *to*
-another calendar start with the `p' prefix (short for "print"), and the
-commands to convert from another calendar start with the `g' prefix
-(short for "go to").  Here is a complete list:
-
-`g a', `p a'
-     The astronomical calendar, a simple count of days elapsed since
-     noon, Monday, January 1, 4713 B.C. on the Julian calendar.  The
-     number of days elapsed is also called the "Julian day number"
-     (`calendar-goto-astro-date', `calendar-print-astro-date').
-
-`g c', `p c'
-     ISO commercial calendar
-     (`calendar-goto-iso-date', `calendar-print-iso-date').
-
-`g f', `p f'
-     French revolutionary calendar
-     (`calendar-goto-french-date',
-     `calendar-print-french-date').
-
-`g h', `p h'
-     Hebrew calendar
-     (`calendar-goto-hebrew-date',
-     `calendar-print-hebrew-date').
-
-`g i', `p i'
-     Islamic calendar
-     (`calendar-goto-islamic-date',
-     `calendar-print-islamic-date').
-
-`g j', `p j'
-     Julian calendar
-     (`calendar-goto-julian-date',
-     `calendar-print-julian-date').
-
-`p m'
-     Mayan calendar (`calendar-print-mayan-date').
-
-   The calendar also knows the dates of standard holidays.  Type `h'
-(`calendar-cursor-holidays') to display a list of holidays for the
-selected date.  This list appears in another window.  Type `x'
-(`mark-calendar-holidays') to mark each day that is a holiday with `*'
-in the calendar itself.  The command `u' (`calendar-unmark') turns off
-this marking.
-
-   At any time, you can use `M-x holidays' to display a list of
-holidays for the present month and the preceding and following months.
-
-
-File: emacs,  Node: Diary Entries,  Next: New Entries,  Prev: Calendar,  Up: Calendar/Diary
-
-Diary Entries
+Finding a Tag
 -------------
 
-   To use the diary feature, you must write "diary entries" that
-describe plans associated with particular dates, and put them in your
-"diary file", which is normally the file `~/diary'.  You can specify a
-different name for it by setting the variable `diary-file'; you would
-do this before using any of the commands that operate on the diary.
+   The most important thing that a tags table enables you to do is to
+find the definition of a specific tag.
 
-   Diary file entries follow a simple convention: begin entries with a
-date at the beginning of a line, followed optionally by a time, and
-then by the text of the entry:
+`M-. TAG RET'
+     Find first definition of TAG (`find-tag').
 
-     DATE OPTIONAL-TIME-OF-DAY TEXT-OF-ENTRY
+`C-u M-.'
+     Find next alternate definition of last tag specified.
 
-To continue an entry over two or more lines, indent the second and
-subsequent lines.  The lines of the entry after the first are called
-"continuation lines".  Other lines in the diary file that are not part
-of any entry are comment lines; Emacs does not display these.
+`C-u - M-.'
+     Go back to previous tag found.
 
-   When you make diary entries using Calendar mode, Emacs inserts the
-date for you in the appropriate format and places the cursor so you can
-type the text of the entry.
+`C-M-. PATTERN RET'
+     Find a tag whose name matches PATTERN (`find-tag-regexp').
 
-   You can write entries in any order and Emacs will display the
-entries by date.  However, time-of-day entries can be sorted
-chronologically only in a diary mode called Fancy mode; in Simple mode,
-Emacs displays time-of-day entries in their order in the diary file.
+`C-u C-M-.'
+     Find the next tag whose name matches the last pattern used.
 
-
-File: emacs,  Node: Displaying Diary,  Next: European Calendar Style,  Prev: New Entries,  Up: Calendar/Diary
+`C-x 4 . TAG RET'
+     Find first definition of TAG, but display it in another window
+     (`find-tag-other-window').
 
-Calendar Commands to Display Diary Entries
-------------------------------------------
+`C-x 5 . TAG RET'
+     Find first definition of TAG, and create a new frame to select the
+     buffer (`find-tag-other-frame').
 
-   In Calendar mode, use the following commands to display your diary
-entries:
+   `M-.' (`find-tag') is the command to find the definition of a
+specified tag.  It searches through the tags table for that tag, as a
+string, and then uses the tags table info to determine the file that the
+definition is in and the approximate character position in the file of
+the definition.  Then `find-tag' visits that file, moves point to the
+approximate character position, and searches ever-increasing distances
+away to find the tag definition.
 
-`d'
-     Display any diary entries for the date under the cursor
-     (`view-diary-entries').
+   If an empty argument is given (just type RET), the sexp in the
+buffer before or around point is used as the TAG argument.  *Note
+Lists::, for info on sexps.
 
-     With a numeric argument, Emacs shows the diary entries for that
-     many successive days, starting with and including the date under
-     the cursor. Thus, `2 d' displays all the entries for the selected
-     date and for the following day.
+   You don't need to give `M-.' the full name of the tag; a part will
+do.  This is because `M-.' finds tags in the table which contain TAG as
+a substring.  However, it prefers an exact match to a substring match.
+To find other tags that match the same substring, give `find-tag' a
+numeric argument, as in `C-u M-.'; this does not read a tag name, but
+continues searching the tags table's text for another tag containing
+the same substring last used.  If you have a real META key, `M-0 M-.'
+is an easier alternative to `C-u M-.'.
 
-`s'
-     Display your entire diary file (`show-all-diary-entries').
+   Like most commands that can switch buffers, `find-tag' has a variant
+that displays the new buffer in another window, and one that makes a
+new frame for it.  The former is `C-x 4 .', which invokes the command
+`find-tag-other-window'.  The latter is `C-x 5 .', which invokes
+`find-tag-other-frame'.
 
-`m'
-     In the calendar, mark all visible dates that have diary entries
-     (`mark-diary-entries').
+   To move back to places you've found tags recently, use `C-u - M-.';
+more generally, `M-.' with a negative numeric argument.  This command
+can take you to another buffer.  `C-x 4 .' with a negative argument
+finds the previous tag location in another window.
 
-`u'
-     Unmark the calendar (`calendar-unmark').
-
-   At any time, not just in Calendar mode, you can display today's diary
-entries by typing:
-
-     M-x diary
-
-With a prefix argument N, this command displays diary entries for N
-successive days, starting from and including today.
-
-
-File: emacs,  Node: New Entries,  Next: Displaying Diary,  Prev: Diary Entries,  Up: Calendar/Diary
-
-Calendar Commands for Making Diary Entries
-------------------------------------------
-
-   Calendar mode provides several commands to help you make diary file
-entries.  These commands work by visiting the diary file and inserting
-the date information; you must finish the job by inserting the text of
-the entry, and then save the diary file with `C-x C-s'.  The commands
-are:
-
-`i d'
-     Add a diary entry for the selected date in the calendar
-     (`insert-diary-entry').
-
-`i w'
-     Add a diary entry for the selected day of the week
-     (`insert-weekly-diary-entry').  This entry is displayed each week
-     on the selected day.
-
-`i m'
-     Add a diary entry for the selected day of the month
-     (`insert-monthly-diary-entry').  This entry is displayed each month
-     on the selected day.
-
-`i y'
-     Add a diary entry for the selected day of the year
-     (`insert-yearly-diary-entry').  This entry is displayed each year
-     on the selected day.
-
-   Here are commands for entering more complex kinds of diary entries in
-Calendar mode.  These kinds of entries operate properly only in Fancy
-Diary Display mode (*note Simple and Fancy::.).
-
-`i a'
-     Add an anniversary diary entry for the selected date
-     (`insert-anniversary-diary-entry').
-
-     Select the date you want remembered, in the proper year--if it is a
-     birthday, remember to go to the person's year of birth!  Then type
-     `i a' and enter the text of the entry.
-
-     In the textual part of the entry you can type `%d'.  When Emacs
-     displays the entry in the diary buffer, the `%d' is replaced by the
-     number of years since the date.  Thus, if you use `%d years old' as
-     the text of the entry, it will display as `53 years old' on the
-     53rd birthday.
-
-`i c'
-     Add a cyclic diary entry starting at the date
-     (`insert-cyclic-diary-entry').  An entry is displayed on a
-     specified starting date and then is repeatedly displayed at the
-     specified interval.  This is useful for ten day cycles of
-     preventive maintenance and similar activities.
-
-     To use this command, first select the start date.  The command
-     reads the interval (the number of days between repetitions) using
-     the minibuffer, then inserts the beginning of the entry.
-
-`i b'
-     Add a block diary entry for the current region
-     (`insert-block-diary-entry').  With a block entry, Emacs writes
-     the same message in the display for successive days.
-
-     Position point and mark at the beginning and end of the block of
-     days you want entered and type `i b'.  This sets up the diary
-     entry's date info and positions point so you can write the text of
-     the entry. People usually use this command for trips or vacations.
+   The command `C-M-.' (`find-tag-regexp') visits the tags that match a
+specified regular expression.  It is just like `M-.'  except that it
+does regexp matching instead of substring matching.
 
 
-File: emacs,  Node: European Calendar Style,  Next: Simple and Fancy,  Prev: Displaying Diary,  Up: Calendar/Diary
+File: emacs,  Node: Tags Search,  Next: List Tags,  Prev: Find Tag,  Up: Tags
 
-European Calendar Style
------------------------
-
-   By default, Emacs interprets and displays diary dates in civilian
-American form, `MONTH/DAY/YEAR': `2/15/1993', or `February 15, 1993'.
-
-   Alternatively, you can specify the European calendar style for
-writing dates: `DAY/MONTH/YEAR', `15/2/1993' or `15 February 1993'.  To
-do this, set the variable `european-calendar-style' to `t', before
-using any calendar or diary command.  This also affects display of
-dates.
-
-   Here's how to do this in your `.emacs' file:
-
-     (setq european-calendar-style t)
-
-
-File: emacs,  Node: Simple and Fancy,  Next: Other Diary Features,  Prev: European Calendar Style,  Up: Calendar/Diary
-
-Simple and Fancy Diary Display
-------------------------------
-
-   There are two modes for displaying a subset of diary entries: Simple
-mode and Fancy mode.  Fancy mode provides a more dramatic display for
-the diary, and can also display the actual matching date for diary
-entries that match more than one date.
-
-   By default, Emacs uses Simple mode, which is quicker than Fancy mode.
-Another advantage of Simple mode is that you can edit the displayed
-diary entries "in place" and save them.  When you use Fancy mode, it is
-useless to edit the displayed subset of the diary; instead you must
-visit the diary file separately.  To select Fancy mode, set
-`diary-display-hook' to `fancy-diary-display' like this:
-
-     (setq diary-display-hook 'fancy-diary-display)
-
-
-File: emacs,  Node: Other Diary Features,  Next: Startup Diary,  Prev: Simple and Fancy,  Up: Calendar/Diary
-
-Other Diary Features
---------------------
-
-   Here are some additional diary features.  These will be explained in
-full in `The GNU Emacs Extensions Manual'.
-
-   You can schedule meetings on a date such as the first Tuesday of
-every month.  This is called an "offset" date.  The diary has commands
-for specifying such meetings, but not in Calendar mode.  To create such
-an entry, you need to edit the diary file yourself.
-
-   You can make entries according to Hebrew and Islamic dates.  Calendar
-mode provides commands of the form `i h d' to add a diary entry for the
-Hebrew date corresponding to the selected date and `i i d' to add a
-diary entry for the Islamic date corresponding to the selected date. 
-You can make entries that repeat every week, month, or year. Before
-using these commands, you must set the
-`nongregorian-diary-listing-hook' and the
-`nongregorian-diary-marking-hook' in your `.emacs' file.
-
-   You can include other diary files in your diary display.  This way, a
-group of people can share a common diary file.
-
-
-File: emacs,  Node: Startup Diary,  Next: Printing Diary,  Prev: Other Diary Features,  Up: Calendar/Diary
-
-Displaying your Diary on Emacs Startup
---------------------------------------
-
-   If you start a new Emacs each day, you might want to display your
-diary automatically at that time.  To do so, put this in your `.emacs'
-file:
-
-     (diary)
-
-   If you want to see both the calendar and your diary at startup, use
-this instead:
-
-     (setq view-diary-entries-initially t)
-     (calendar)
-
-
-File: emacs,  Node: Printing Diary,  Prev: Startup Diary,  Up: Calendar/Diary
-
-Printing the Displayed Part of the Diary
+Searching and Replacing with Tags Tables
 ----------------------------------------
 
-   To print the selected diary entries as they appear on the screen, use
-`M-x print-diary-entries'.  The same variables that customize
-`lpr-buffer' also affect this command.
+   The commands in this section visit and search all the files listed
+in the selected tags table, one by one.  For these commands, the tags
+table serves only to specify a sequence of files to search.
 
-   In Simple mode, the diary display buffer uses selective display
-(*note Selective Display::.).  This means that what you see on the
-screen is just part of the text in the Emacs buffer.  The diary entries
-that don't apply to the dates you asked for are still in the buffer, but
-hidden.  The ordinary printing commands such as `lpr-buffer' would not
-do what you want; they print the entire text, including the hidden
-parts.  This is why we need `print-diary-entries'.
+`M-x tags-search RET REGEXP RET'
+     Search for REGEXP through the files in the selected tags table.
+
+`M-x tags-query-replace RET REGEXP RET REPLACEMENT RET'
+     Perform a `query-replace-regexp' on each file in the selected tags
+     table.
+
+`M-,'
+     Restart one of the commands above, from the current location of
+     point (`tags-loop-continue').
+
+   `M-x tags-search' reads a regexp using the minibuffer, then searches
+for matches in all the files in the selected tags table, one file at a
+time.  It displays the name of the file being searched so you can
+follow its progress.  As soon as it finds an occurrence, `tags-search'
+returns.
+
+   Having found one match, you probably want to find all the rest.  To
+find one more match, type `M-,' (`tags-loop-continue') to resume the
+`tags-search'.  This searches the rest of the current buffer, followed
+by the remaining files of the tags table.
+
+   `M-x tags-query-replace' performs a single `query-replace-regexp'
+through all the files in the tags table.  It reads a regexp to search
+for and a string to replace with, just like ordinary `M-x
+query-replace-regexp'.  It searches much like `M-x tags-search', but
+repeatedly, processing matches according to your input.  *Note
+Replace::, for more information on query replace.
+
+   It is possible to get through all the files in the tags table with a
+single invocation of `M-x tags-query-replace'.  But often it is useful
+to exit temporarily, which you can do with any input event that has no
+special query replace meaning.  You can resume the query replace
+subsequently by typing `M-,'; this command resumes the last tags search
+or replace command that you did.
+
+   The commands in this section carry out much broader searches than the
+`find-tag' family.  The `find-tag' commands search only for definitions
+of tags that match your substring or regexp.  The commands
+`tags-search' and `tags-query-replace' find every occurrence of the
+regexp, as ordinary search commands and replace commands do in the
+current buffer.
+
+   These commands create buffers only temporarily for the files that
+they have to search (those which are not already visited in Emacs
+buffers).  Buffers in which no match is found are quickly killed; the
+others continue to exist.
+
+   It may have struck you that `tags-search' is a lot like `grep'.  You
+can also run `grep' itself as an inferior of Emacs and have Emacs show
+you the matching lines one by one.  This works much like running a
+compilation; finding the source locations of the `grep' matches works
+like finding the compilation errors.  *Note Compilation::.
 
 
-File: emacs,  Node: Version Control,  Next: Emerge,  Prev: Calendar/Diary,  Up: Version 19
+File: emacs,  Node: List Tags,  Prev: Tags Search,  Up: Tags
 
-Version Control
-===============
+Tags Table Inquiries
+--------------------
 
-   "Version control systems" are packages that can record multiple
-versions of a source file, usually storing the unchanged parts of the
-file just once.  Version control systems also record history information
-such as the creation time of each version, who created it, and a
-description of what was changed in that version.
+`M-x list-tags RET FILE RET'
+     Display a list of the tags defined in the program file `file'.
 
-   The GNU project recommends the version control system known as RCS,
-which is free software and available from the Free Software Foundation.
-Emacs supports use of either RCS or SCCS (a proprietary, but widely
-used, version control system that is not quite as powerful as RCS)
-through a facility called VC.  The same Emacs commands work with either
-RCS or SCCS, so you hardly have to know which one of them you are using.
+`M-x tags-apropos RET REGEXP RET'
+     Display a list of all tags matching REGEXP.
+
+   `M-x list-tags' reads the name of one of the files described by the
+selected tags table, and displays a list of all the tags defined in
+that file.  The "file name" argument is really just a string to compare
+against the file names recorded in the tags table; it is read as a
+string rather than as a file name.  Therefore, completion and
+defaulting are not available, and you must enter the file name the same
+way it appears in the tags table.  Do not include a directory as part of
+the file name unless the file name recorded in the tags table includes a
+directory.
+
+   `M-x tags-apropos' is like `apropos' for tags (*note Apropos::.).
+It reads a regexp, then finds all the tags in the selected tags table
+whose entries match that regexp, and displays the tag names found.
+
+   You can also perform completion in the buffer on the name space of
+tag names in the current tags tables.  *Note Symbol Completion::.
+
+
+File: emacs,  Node: Emerge,  Next: C Mode,  Prev: Tags,  Up: Programs
+
+Merging Files with Emerge
+=========================
+
+   It's not unusual for programmers to get their signals crossed and
+modify the same program in two different directions.  To recover from
+this confusion, you need to merge the two versions.  Emerge makes this
+easier.  See also *Note Comparing Files::.
 
 * Menu:
 
-* Concepts of VC::
-* Editing with VC::
-* Variables for Check-in/out::
-* Comparing Versions::
-* VC Status::
-* Renaming and VC::
-* Snapshots::
-* Log Entries::
-* Change Logs and VC::
-* Version Headers::
+* Overview of Emerge::	    How to start Emerge.  Basic concepts.
+* Submodes of Emerge::      Fast mode vs. Edit mode.
+			      Skip Prefers mode and Auto Advance mode.
+* State of Difference::	    You do the merge by specifying state A or B
+			      for each difference.
+* Merge Commands::	    Commands for selecting a difference,
+			      changing states of differences, etc.
+* Exiting Emerge::	    What to do when you've finished the merge.
+* Combining in Emerge::	    How to keep both alternatives for a difference.
+* Fine Points of Emerge::   Misc.
 
 
+File: emacs,  Node: Overview of Emerge,  Next: Submodes of Emerge,  Up: Emerge
+
+Overview of Emerge
+------------------
+
+   To start Emerge, run one of these four commands:
+
+`M-x emerge-files'
+     Merge two specified files.
+
+`M-x emerge-files-with-ancestor'
+     Merge two specified files, with reference to a common ancestor.
+
+`M-x emerge-buffers'
+     Merge two buffers.
+
+`M-x emerge-buffers-with-ancestor'
+     Merge two buffers with reference to a common ancestor in a third
+     buffer.
+
+   The Emerge commands compare two files or buffers, and display the
+comparison in three buffers: one for each input text (the "A buffer"
+and the "B buffer"), and one (the "merge buffer") where merging takes
+place.  The merge buffer shows the full merged text, not just the
+differences.  Wherever the two input texts differ, you can choose which
+one of them to include in the merge buffer.
+
+   The Emerge commands that take input from existing buffers use only
+the accessible portions of those buffers, if they are narrowed (*note
+Narrowing::.).
+
+   If a common ancestor version is available, from which the two texts
+to be merged were both derived, Emerge can use it to guess which
+alternative is right.  Wherever one current version agrees with the
+ancestor, Emerge presumes that the other current version is a deliberate
+change which should be kept in the merged version.  Use the
+`with-ancestor' commands if you want to specify a common ancestor text.
+These commands read three file or buffer names--variant A, variant B,
+and the common ancestor.
+
+   After the comparison is done and the buffers are prepared, the
+interactive merging starts.  You control the merging by typing special
+"merge commands" in the merge buffer.  The merge buffer shows you a
+full merged text, not just differences.  For each run of differences
+between the input texts, you can choose which one of them to keep, or
+edit them both together.
+
+   The merge buffer uses a special major mode, Emerge mode, with
+commands for making these choices.  But you can also edit the buffer
+with ordinary Emacs commands.
+
+   At any given time, the attention of Emerge is focused on one
+particular difference, called the "selected" difference.  This
+difference is marked off in the three buffers like this:
+
+     vvvvvvvvvvvvvvvvvvvv
+     TEXT THAT DIFFERS
+     ^^^^^^^^^^^^^^^^^^^^
+
+Emerge numbers all the differences sequentially and the mode line
+always shows the number of the selected difference.
+
+   Normally, the merge buffer starts out with the A version of the text.
+But when the A version of a difference agrees with the common ancestor,
+then the B version is initially preferred for that difference.
+
+   Emerge leaves the merged text in the merge buffer when you exit.  At
+that point, you can save it in a file with `C-x C-w'.  If you give a
+numeric argument to `emerge-files' or `emerge-files-with-ancestor', it
+reads the name of the output file using the minibuffer.  (This is the
+last file name those commands read.) Then exiting from Emerge saves the
+merged text in the output file.
+
+   Normally, Emerge commands save the output buffer in its file when you
+exit.  If you abort Emerge with `C-]', the Emerge command does not save
+the output buffer, but you can save it yourself if you wish.
+
+
+File: emacs,  Node: Submodes of Emerge,  Next: State of Difference,  Prev: Overview of Emerge,  Up: Emerge
+
+Submodes of Emerge
+------------------
+
+   You can choose between two modes for giving merge commands: Fast mode
+and Edit mode.  In Fast mode, basic merge commands are single
+characters, but ordinary Emacs commands are disabled.  This is
+convenient if you use only merge commands.  In Edit mode, all merge
+commands start with the prefix key `C-c C-c', and the normal Emacs
+commands are also available.  This allows editing the merge buffer, but
+slows down Emerge operations.
+
+   Use `e' to switch to Edit mode, and `C-c C-c f' to switch to Fast
+mode.  The mode line indicates Edit and Fast modes with `E' and `F'.
+
+   Emerge has two additional submodes that affect how particular merge
+commands work: Auto Advance mode and Skip Prefers mode.
+
+   If Auto Advance mode is in effect, the `a' and `b' commands advance
+to the next difference.  This lets you go through the merge faster as
+long as you simply choose one of the alternatives from the input.  The
+mode line indicates Auto Advance mode with `A'.
+
+   If Skip Prefers mode is in effect, the `n' and `p' commands skip
+over differences in states prefer-A and prefer-B (*note State of
+Difference::.).  Thus you see only differences for which neither version
+is presumed "correct".  The mode line indicates Skip Prefers mode with
+`S'.
+
+   Use the command `s a' (`emerge-auto-advance-mode') to set or clear
+Auto Advance mode.  Use `s s' (`emerge-skip-prefers-mode') to set or
+clear Skip Prefers mode.  These commands turn on the mode with a
+positive argument, turns it off with a negative or zero argument, and
+toggle the mode with no argument.
+
+
+File: emacs,  Node: State of Difference,  Next: Merge Commands,  Prev: Submodes of Emerge,  Up: Emerge
+
+State of a Difference
+---------------------
+
+   In the merge buffer, a difference is marked with lines of `v' and
+`^' characters.  Each difference has one of these seven states:
+
+A
+     The difference is showing the A version.  The `a' command always
+     produces this state; the mode line indicates it with `A'.
+
+B
+     The difference is showing the B version.  The `b' command always
+     produces this state; the mode line indicates it with `B'.
+
+default-A
+default-B
+     The difference is showing the A or the B state by default, because
+     you haven't made a choice.  All differences start in the default-A
+     state (and thus the merge buffer is a copy of the A buffer),
+     except those for which one alternative is "preferred" (see below).
+
+     When you select a difference, its state changes from default-A or
+     default-B to plain A or B.  Thus, the selected difference never has
+     state default-A or default-B, and these states are never displayed
+     in the mode line.
+
+     The command `d a' chooses default-A as the default state, and `d
+     b' chooses default-B.  This chosen default applies to all
+     differences which you haven't ever selected and for which no
+     alternative is preferred.  If you are moving through the merge
+     sequentially, the differences you haven't selected are those
+     following the selected one.  Thus, while moving sequentially, you
+     can effectively make the A version the default for some sections
+     of the merge buffer and the B version the default for others by
+     using `d a' and `d b' between sections.
+
+prefer-A
+prefer-B
+     The difference is showing the A or B state because it is
+     "preferred".  This means that you haven't made an explicit choice,
+     but one alternative seems likely to be right because the other
+     alternative agrees with the common ancestor.  Thus, where the A
+     buffer agrees with the common ancestor, the B version is
+     preferred, because chances are it is the one that was actually
+     changed.
+
+     These two states are displayed in the mode line as `A*' and `B*'.
+
+combined
+     The difference is showing a combination of the A and B states, as a
+     result of the `x c' or `x C' commands.
+
+     Once a difference is in this state, the `a' and `b' commands don't
+     do anything to it unless you give them a numeric argument.
+
+     The mode line displays this state as `comb'.
+
+
+File: emacs,  Node: Merge Commands,  Next: Exiting Emerge,  Prev: State of Difference,  Up: Emerge
+
+Merge Commands
+--------------
+
+   Here are the Merge commands for Fast mode; in Edit mode, precede them
+with `C-c C-c':
+
+`p'
+     Select the previous difference.
+
+`n'
+     Select the next difference.
+
+`a'
+     Choose the A version of this difference.
+
+`b'
+     Choose the B version of this difference.
+
+`C-u N j'
+     Select difference number N.
+
+`.'
+     Select the difference containing point.  You can use this command
+     in the merge buffer or in the A or B buffer.
+
+`q'
+     Quit--finish the merge.
+
+`C-]'
+     Abort--exit merging and do not save the output.
+
+`f'
+     Go into Fast mode.  (In Edit mode, this is actually `C-c C-c f'.)
+
+`e'
+     Go into Edit mode.
+
+`l'
+     Recenter (like `C-l') all three windows.
+
+`-'
+     Specify part of a prefix numeric argument.
+
+`DIGIT'
+     Also specify part of a prefix numeric argument.
+
+`d a'
+     Choose the A version as the default from here down in the merge
+     buffer.
+
+`d b'
+     Choose the B version as the default from here down in the merge
+     buffer.
+
+`c a'
+     Copy the A version of this difference into the kill ring.
+
+`c b'
+     Copy the B version of this difference into the kill ring.
+
+`i a'
+     Insert the A version of this difference at point.
+
+`i b'
+     Insert the B version of this difference at point.
+
+`m'
+     Put point and mark around the difference.
+
+`^'
+     Scroll all three windows down (like `M-v').
+
+`v'
+     Scroll all three windows up (like `C-v').
+
+`<'
+     Scroll all three windows left (like `C-x <').
+
+`>'
+     Scroll all three windows right (like `C-x >').
+
+`|'
+     Reset horizontal scroll on all three windows.
+
+`x 1'
+     Shrink the merge window to one line.  (Use `C-u l' to restore it
+     to full size.)
+
+`x c'
+     Combine the two versions of this difference (*note Combining in
+     Emerge::.).
+
+`x f'
+     Show the names of the files/buffers Emerge is operating on, in a
+     Help window.  (Use `C-u l' to restore windows.)
+
+`x j'
+     Join this difference with the following one.  (`C-u x j' joins
+     this difference with the previous one.)
+
+`x s'
+     Split this difference into two differences.  Before you use this
+     command, position point in each of the three buffers at the place
+     where you want to split the difference.
+
+`x t'
+     Trim identical lines off top and bottom of the difference.  Such
+     lines occur when the A and B versions are identical but differ
+     from the ancestor version.
+
+
+File: emacs,  Node: Exiting Emerge,  Next: Combining in Emerge,  Prev: Merge Commands,  Up: Emerge
+
+Exiting Emerge
+--------------
+
+   The `q' command (`emerge-quit') finishes the merge, storing the
+results into the output file if you specified one.  It restores the A
+and B buffers to their proper contents, or kills them if they were
+created by Emerge and you haven't changed them.  It also disables the
+Emerge commands in the merge buffer, since executing them later could
+damage the contents of the various buffers.
+
+   `C-]' aborts the merge.  This means exiting without writing the
+output file.  If you didn't specify an output file, then there is no
+real difference between aborting and finishing the merge.
+
+   If the Emerge command was called from another Lisp program, then its
+return value is `t' for successful completion, or `nil' if you abort.
+
+
+File: emacs,  Node: Combining in Emerge,  Next: Fine Points of Emerge,  Prev: Exiting Emerge,  Up: Emerge
+
+Combining the Two Versions
+--------------------------
+
+   Sometimes you want to keep *both* alternatives for a particular
+difference.  To do this, use `x c', which edits the merge buffer like
+this:
+
+     #ifdef NEW
+     VERSION FROM A BUFFER
+     #else /* NEW */
+     VERSION FROM B BUFFER
+     #endif /* NEW */
+
+While this example shows C preprocessor conditionals delimiting the two
+alternative versions, you can specify the strings to use by setting the
+variable `emerge-combine-versions-template' to a string of your choice.
+In the string, `%a' says where to put version A, and `%b' says where
+to put version B.  The default setting, which produces the results
+shown above, looks like this:
+
+     "#ifdef NEW\n%a#else /* NEW */\n%b#endif /* NEW */\n"
+
+
+File: emacs,  Node: Fine Points of Emerge,  Prev: Combining in Emerge,  Up: Emerge
+
+Fine Points of Emerge
+---------------------
+
+   During the merge, you mustn't try to edit the A and B buffers
+yourself.  Emerge modifies them temporarily, but ultimately puts them
+back the way they were.
+
+   You can have any number of merges going at once--just don't use any
+one buffer as input to more than one merge at once, since the temporary
+changes made in these buffers would get in each other's way.
+
+   Starting Emerge can take a long time because it needs to compare the
+files fully.  Emacs can't do anything else until `diff' finishes.
+Perhaps in the future someone will change Emerge to do the comparison in
+the background when the input files are large--then you could keep on
+doing other things with Emacs until Emerge is ready to accept commands.
+
+   After setting up the merge, Emerge runs the hook
+`emerge-startup-hook' (*note Hooks::.).
+
+
+File: emacs,  Node: C Mode,  Next: Fortran,  Prev: Emerge,  Up: Programs
+
+C Mode
+======
+
+   This section describes special features available in C, C++,
+Objective-C and Java modes.
+
+* Menu:
+
+* Motion in C::
+* Electric C::
+* Hungry Delete::
+* Other C Commands::
+* Comments in C::
+
+
+File: emacs,  Node: Motion in C,  Next: Electric C,  Up: C Mode
+
+C Mode Motion Commands
+----------------------
+
+   This section commands for moving point, in C mode and related modes.
+
+`C-c C-u'
+     Move point back to the containing preprocessor conditional,
+     leaving the mark behind.  A prefix argument acts as a repeat
+     count.  With a negative argument, move point forward to the end of
+     the containing preprocessor conditional.  When going backwards,
+     `#elif' is treated like `#else' followed by `#if'.  When going
+     forwards, `#elif' is ignored.
+
+`C-c C-p'
+     Move point back over a preprocessor conditional, leaving the mark
+     behind.  A prefix argument acts as a repeat count.  With a negative
+     argument, move forward.
+
+`C-c C-n'
+     Move point forward across a preprocessor conditional, leaving the
+     mark behind.  A prefix argument acts as a repeat count.  With a
+     negative argument, move backward.
+
+`M-a'
+     Move point to the beginning of the innermost C statement.  If
+     point is already at the beginning of a statement, move to the
+     beginning of the preceding statement.  With prefix argument N,
+     move back N - 1 statements.
+
+     If point is within a string or comment, or next to a comment (only
+     whitespace between them), this command moves by sentences instead
+     of statements.
+
+     When called from a program, this function takes two optional
+     arguments: the numeric prefix argument, and a buffer position
+     limit (don't move back before that place).
+
+`M-e'
+     Move point to the end of the innermost C statement.  If point is
+     at the end of a statement, move to the end of the next statement.
+     With prefix argument N, move forward N - 1 statements.
+
+     If point is within a string or comment, or next to a comment (only
+     whitespace between them), this command moves by sentences instead
+     of statements.
+
+     When called from a program, this function takes two optional
+     arguments: the numeric prefix argument, and a buffer position
+     limit (don't move past that place).
+
+`M-x c-backward-into-nomenclature'
+     Move point backward to beginning of a C++ nomenclature section or
+     word.  With prefix argument N, move N times.  If N is negative,
+     move forward.  C++ nomenclature means a symbol name in the style
+     of NamingSymbolsWithMixedCaseAndNoUnderlines; each capital letter
+     begins a section or word.
+
+     In the GNU project, we recommend using underscores to separate
+     words within an identifier in C or C++, rather than using case
+     distinctions.
+
+`M-x c-forward-into-nomenclature'
+     Move point forward to end of a C++ nomenclature section or word.
+     With prefix argument N, move N times.
+
+
+File: emacs,  Node: Electric C,  Next: Hungry Delete,  Prev: Motion in C,  Up: C Mode
+
+Electric C Characters
+---------------------
+
+   In C mode and related modes, certain printing characters are
+"electric"--in addition to inserting themselves, they also reindent the
+current line and may insert newlines.  This feature is controlled by
+the variable `c-auto-newline'.  The "electric" characters are `{', `}',
+`:', `#', `;', `,', `<', `>', `/' and `*'.
+
+   Electric characters insert newlines only when the "auto-newline"
+feature is enabled (indicated by `/a' in the mode line after the mode
+name).  This feature is controlled by the variable `c-auto-newline'.
+You can turn this feature on or off with the command `C-c C-a':
+
+`C-c C-a'
+     Toggle the auto-newline feature (`c-toggle-auto-state').  With a
+     prefix argument, this command turns the auto-newline feature on if
+     the argument is positive, and off if it is negative.
+
+   The colon character is electric because that is appropriate for a
+single colon.  But when you want to insert a double colon in C++, the
+electric behavior of colon is inconvenient.  You can insert a double
+colon with no reindentation or newlines by typing `C-c :':
+
+`C-c :'
+     Insert a double colon scope operator at point, without reindenting
+     the line or adding any newlines (`c-scope-operator').
+
+   The electric `#' key reindents the line if it appears to be the
+beginning of a preprocessor directive.  This happens when the value of
+`c-electric-pound-behavior' is `(alignleft)'.  You can turn this
+feature off by setting `c-electric-pound-behavior' to `nil'.
+
+   The variable `c-hanging-braces-alist' controls the insertion of
+newlines before and after inserted braces.  It is an association list
+with elements of the following form: `(SYNTACTIC-SYMBOL . NL-LIST)'.
+Most of the syntactic symbols that appear in `c-offsets-alist' are
+meaningful here as well.
+
+   The list NL-LIST may contain either of the symbols `before' or
+`after', or both; or it may be `nil'.  When a brace is inserted, the
+syntactic context it defines is looked up in `c-hanging-braces-alist';
+if it is found, the NL-LIST is used to determine where newlines are
+inserted: either before the brace, after, or both.  If not found, the
+default is to insert a newline both before and after braces.
+
+   The variable `c-hanging-colons-alist' controls the insertion of
+newlines before and after inserted colons.  It is an association list
+with elements of the following form: `(SYNTACTIC-SYMBOL . NL-LIST)'.
+The list NL-LIST may contain either of the symbols `before' or `after',
+or both; or it may be `nil'.
+
+   When a colon is inserted, the syntactic symbol it defines is looked
+up in this list, and if found, the NL-LIST is used to determine where
+newlines are inserted: either before the brace, after, or both.  If the
+syntactic symbol is not found in this list, no newlines are inserted.
+
+   Electric characters can also delete newlines automatically when the
+auto-newline feature is enabled.  This feature makes auto-newline more
+acceptable, by deleting the newlines in the most common cases where you
+do not want them.  Emacs can recognize several cases in which deleting a
+newline might be desirable; by setting the variable `c-cleanup-list',
+you can specify *which* of these cases that should happen.  The
+variable's value is a list of symbols, each describing one case for
+possible deletion of a newline.  Here are the meaningful symbols, and
+their meanings:
+
+`brace-else-brace'
+     Clean up `} else {' constructs by placing entire construct on a
+     single line.  The clean-up occurs when you type the `{' after the
+     `else', but only if there is nothing but white space between the
+     braces and the `else'.
+
+`empty-defun-braces'
+     Clean up empty defun braces by placing the braces on the same
+     line.  Clean-up occurs when you type the closing brace.
+
+`defun-close-semi'
+     Clean up the semicolon after a `struct' or similar type
+     declaration, by placing the semicolon on the same line as the
+     closing brace.  Clean-up occurs when you type the semicolon.
+
+`list-close-comma'
+     Clean up commas following braces in array and aggregate
+     initializers.  Clean-up occurs when you type the comma.
+
+`scope-operator'
+     Clean up double colons which may designate a C++ scope operator, by
+     placing the colons together.  Clean-up occurs when you type the
+     second colon, but only when the two colons are separated by
+     nothing but whitespace.
+
+
+File: emacs,  Node: Hungry Delete,  Next: Other C Commands,  Prev: Electric C,  Up: C Mode
+
+Hungry Delete Feature in C
+--------------------------
+
+   When the "hungry-delete" feature is enabled (indicated by `/h' or
+`/ah' in the mode line after the mode name), a single DEL command
+deletes all preceding whitespace, not just one space.  To turn this
+feature on or off, use `C-c C-d':
+
+`C-c C-d'
+     Toggle the hungry-delete feature (`c-toggle-hungry-state').  With a
+     prefix argument, this command turns the hungry-delete feature on
+     if the argument is positive, and off if it is negative.
+
+`C-c C-t'
+     Toggle the auto-newline and hungry-delete features, both at once
+     (`c-toggle-auto-hungry-state').
+
+   The variable `c-hungry-delete-key' controls whether the
+hungry-delete feature is enabled.
+
+
+File: emacs,  Node: Other C Commands,  Next: Comments in C,  Prev: Hungry Delete,  Up: C Mode
+
+Other Commands for C Mode
+-------------------------
+
+`C-M-h'
+     Put mark at the end of a function definition, and put point at the
+     beginning (`c-mark-function').
+
+`M-q'
+     Fill a paragraph, handling C and C++ comments (`c-fill-paragraph').
+     If any part of the current line is a comment or within a comment,
+     this command fills the comment or the paragraph of it that point
+     is in, preserving the comment indentation and comment delimiters.
+
+`C-c C-e'
+     Run the C preprocessor on the text in the region, and show the
+     result, which includes the expansion of all the macro calls
+     (`c-macro-expand').  The buffer text before the region is also
+     included in preprocessing, for the sake of macros defined there,
+     but the output from this part isn't shown.
+
+     When you are debugging C code that uses macros, sometimes it is
+     hard to figure out precisely how the macros expand.  With this
+     command, you don't have to figure it out; you can see the
+     expansions.
+
+`C-c C-\'
+     Insert or align `\' characters at the ends of the lines of the
+     region (`c-backslash-region').  This is useful after writing or
+     editing a C macro definition.
+
+     If a line already ends in `\', this command adjusts the amount of
+     whitespace before it.  Otherwise, it inserts a new `\'.  However,
+     the last line in the region is treated specially; no `\' is
+     inserted on that line, and any `\' there is deleted.
+
+`M-x cpp-highlight-buffer'
+     Highlight parts of the text according to its preprocessor
+     conditionals.  This command displays another buffer named `*CPP
+     Edit*', which serves as a graphic menu for selecting how to
+     display particular kinds of conditionals and their contents.
+     After changing various settings, click on `[A]pply these settings'
+     (or go to that buffer and type `a') to rehighlight the C mode
+     buffer accordingly.
+
+`C-c C-s'
+     Display the syntactic information about the current source line
+     (`c-show-syntactic-information').  This is the information that
+     directs how the line is indented.
+
+
+File: emacs,  Node: Comments in C,  Prev: Other C Commands,  Up: C Mode
+
+Comments in C Modes
+-------------------
+
+   C mode and related modes use a number of variables for controlling
+comment format.
+
+`c-block-comments-indent-p'
+     This variable specifies how to reindent block comments.  The C
+     modes support five styles of block comments:
+
+           style 1:    style 2 (GNU):   style 3:    style 4:    style 5:
+           /*          /* Blah          /*          /*          /*
+              blah        blah.  */      * blah     ** blah     blah
+              blah                       * blah     ** blah     blah
+              */                         */         */          */
+
+     For the styles 1 through 4, `c-block-comments-indent-p' should be
+     `nil' (the default).  If you want to use style 5, set
+     `c-block-comments-indent-p' to `t'.
+
+     This variable has no effect on the indentation of the comment-start
+     itself or on insertion of asterisks when auto-filling C comments.
+     It does not affect `M-q' either.
+
+`c-comment-only-line-offset'
+     Extra offset for line which contains only the start of a comment.
+     It can be either an integer or a cons cell of the form
+     `(NON-ANCHORED-OFFSET . ANCHORED-OFFSET)', where
+     NON-ANCHORED-OFFSET is the amount of offset given to
+     non-column-zero anchored comment-only lines, and ANCHORED-OFFSET
+     is the amount of offset to give column-zero anchored comment-only
+     lines.  Just an integer as value is equivalent to `(VAL . 0)'.
+
+`c-comment-start-regexp'
+     This buffer-local variable specifies how to recognize the start of
+     a comment.
+
+`c-hanging-comment-ender-p'
+     If this variable is `nil', `c-fill-paragraph' leaves the comment
+     terminator of a block comment on a line by itself.  The default
+     value is `t', which always puts the comment-end delimiter `*/' at
+     the end of the last line of the comment text.
+
+
+File: emacs,  Node: Fortran,  Next: Asm Mode,  Prev: C Mode,  Up: Programs
+
+Fortran Mode
+============
+
+   Fortran mode provides special motion commands for Fortran statements
+and subprograms, and indentation commands that understand Fortran
+conventions of nesting, line numbers and continuation statements.
+Fortran mode has its own Auto Fill mode that breaks long lines into
+proper Fortran continuation lines.
+
+   Special commands for comments are provided because Fortran comments
+are unlike those of other languages.  Built-in abbrevs optionally save
+typing when you insert Fortran keywords.
+
+   Use `M-x fortran-mode' to switch to this major mode.  This command
+runs the hook `fortran-mode-hook' (*note Hooks::.).
+
+* Menu:
+
+* Motion: Fortran Motion.	 Moving point by statements or subprograms.
+* Indent: Fortran Indent.	 Indentation commands for Fortran.
+* Comments: Fortran Comments.	 Inserting and aligning comments.
+* Autofill: Fortran Autofill.	 Auto fill minor mode for Fortran.
+* Columns: Fortran Columns.	 Measuring columns for valid Fortran.
+* Abbrev: Fortran Abbrev.	 Built-in abbrevs for Fortran keywords.
+
+
+File: emacs,  Node: Fortran Motion,  Next: Fortran Indent,  Up: Fortran
+
+Motion Commands
+---------------
+
+   Fortran mode provides special commands to move by subprograms
+(functions and subroutines) and by statements.  There is also a command
+to put the region around one subprogram, convenient for killing it or
+moving it.
+
+`C-M-a'
+     Move to beginning of subprogram
+     (`beginning-of-fortran-subprogram').
+
+`C-M-e'
+     Move to end of subprogram (`end-of-fortran-subprogram').
+
+`C-M-h'
+     Put point at beginning of subprogram and mark at end
+     (`mark-fortran-subprogram').
+
+`C-c C-n'
+     Move to beginning of current or next statement
+     (`fortran-next-statement').
+
+`C-c C-p'
+     Move to beginning of current or previous statement
+     (`fortran-previous-statement').
+
+
+File: emacs,  Node: Fortran Indent,  Next: Fortran Comments,  Prev: Fortran Motion,  Up: Fortran
+
+Fortran Indentation
+-------------------
+
+   Special commands and features are needed for indenting Fortran code
+in order to make sure various syntactic entities (line numbers, comment
+line indicators and continuation line flags) appear in the columns that
+are required for standard Fortran.
+
+* Menu:
+
+* Commands: ForIndent Commands.  Commands for indenting Fortran.
+* Contline: ForIndent Cont.      How continuation lines indent.
+* Numbers:  ForIndent Num.       How line numbers auto-indent.
+* Conv:     ForIndent Conv.      Conventions you must obey to avoid trouble.
+* Vars:     ForIndent Vars.      Variables controlling Fortran indent style.
+
+
+File: emacs,  Node: ForIndent Commands,  Next: ForIndent Cont,  Up: Fortran Indent
+
+Fortran Indentation Commands
+............................
+
+`TAB'
+     Indent the current line (`fortran-indent-line').
+
+`LFD'
+     Indent the current and start a new indented line
+     (`fortran-indent-new-line').
+
+`M-LFD'
+     Break the current line and set up a continuation line.
+
+`C-M-q'
+     Indent all the lines of the subprogram point is in
+     (`fortran-indent-subprogram').
+
+   Fortran mode redefines TAB to reindent the current line for Fortran
+(`fortran-indent-line').  This command indents Line numbers and
+continuation markers to their required columns, and independently
+indents the body of the statement based on its nesting in the program.
+
+   The key `LFD' runs the command `fortran-indent-new-line', which
+reindents the current line then makes and indents a new line.  This
+command is useful to reindent the closing statement of `do' loops and
+other blocks before starting a new line.
+
+   The key `C-M-q' runs `fortran-indent-subprogram', a command to
+reindent all the lines of the Fortran subprogram (function or
+subroutine) containing point.
+
+   The key `M-LFD' runs `fortran-split-line', which splits a line in
+the appropriate fashion for Fortran.  In a non-comment line, the second
+half becomes a continuation line and is indented accordingly.  In a
+comment line, both halves become separate comment lines.
+
+
+File: emacs,  Node: ForIndent Cont,  Next: ForIndent Num,  Prev: ForIndent Commands,  Up: Fortran Indent
+
+Continuation Lines
+..................
+
+   Most modern Fortran compilers allow two ways of writing continuation
+lines.  If the first non-space character on a line is in column 5, then
+that line is a continuation of the previous line.  We call this "fixed
+format".  (In GNU Emacs we always count columns from 0.)  The variable
+`fortran-continuation-string' specifies what character to put on column
+5.  A line that starts with a tab character followed by any digit
+except `0' is also a continuation line.  We call this style of
+continuation "tab format".
+
+   Fortran mode can make either style of continuation line, but you
+must specify which one you prefer.  The value of the variable
+`indent-tabs-mode' controls the choice: `nil' for fixed format, and
+non-`nil' for tab format.  You can tell which style is presently in
+effect by the presence or absence of the string `Tab' in the mode line.
+
+   If the text on a line starts with the conventional Fortran
+continuation marker `$', or if it begins with any non-whitespace
+character in column 5, Fortran mode treats it as a continuation line.
+When you indent a continuation line with TAB, it converts the line to
+the current continuation style.  When you split a Fortran statement
+with `M-LFD', the continuation marker on the newline is created
+according to the continuation style.
+
+   The setting of continuation style affects several other aspects of
+editing in Fortran mode.  In fixed format mode, the minimum column
+number for the body of a statement is 6.  Lines inside of Fortran
+blocks that are indented to larger column numbers always use only the
+space character for whitespace.  In tab format mode, the minimum column
+number for the statement body is 8, and the whitespace before column 8
+must always consist of one tab character.
+
+   When you enter Fortran mode for an existing file, it tries to deduce
+the proper continuation style automatically from the file contents.
+The first line that begins with either a tab character or six spaces
+determines the choice.  The variable `fortran-analyze-depth' specifies
+how many lines to consider (at the beginning of the file); if none of
+those lines indicates a style, then the variable
+`fortran-tab-mode-default' specifies the style.  If it is `nil', that
+specifies fixed format, and non-`nil' specifies tab format.
+
+
+File: emacs,  Node: ForIndent Num,  Next: ForIndent Conv,  Prev: ForIndent Cont,  Up: Fortran Indent
+
+Line Numbers
+............
+
+   If a number is the first non-whitespace in the line, Fortran
+indentation assumes it is a line number and moves it to columns 0
+through 4.  (Columns always count from 0 in GNU Emacs.)
+
+   Line numbers of four digits or less are normally indented one space.
+The variable `fortran-line-number-indent' controls this; it specifies
+the maximum indentation a line number can have.  Line numbers are
+indented to right-justify them to end in column 4 unless that would
+require more than this maximum indentation.  The default value of the
+variable is 1.
+
+   Simply inserting a line number is enough to indent it according to
+these rules.  As each digit is inserted, the indentation is recomputed.
+To turn off this feature, set the variable
+`fortran-electric-line-number' to `nil'.  Then inserting line numbers
+is like inserting anything else.
+
+
+File: emacs,  Node: ForIndent Conv,  Next: ForIndent Vars,  Prev: ForIndent Num,  Up: Fortran Indent
+
+Syntactic Conventions
+.....................
+
+   Fortran mode assumes that you follow certain conventions that
+simplify the task of understanding a Fortran program well enough to
+indent it properly:
+
+   * Two nested `do' loops never share a `continue' statement.
+
+   * Fortran keywords such as `if', `else', `then', `do' and others are
+     written without embedded whitespace or line breaks.
+
+     Fortran compilers generally ignore whitespace outside of string
+     constants, but Fortran mode does not recognize these keywords if
+     they are not contiguous.  Constructs such as `else if' or `end do'
+     are acceptable, but the second word should be on the same line as
+     the first and not on a continuation line.
+
+If you fail to follow these conventions, the indentation commands may
+indent some lines unaesthetically.  However, a correct Fortran program
+retains its meaning when reindented even if the conventions are not
+followed.
+
+
+File: emacs,  Node: ForIndent Vars,  Prev: ForIndent Conv,  Up: Fortran Indent
+
+Variables for Fortran Indentation
+.................................
+
+   Several additional variables control how Fortran indentation works:
+
+`fortran-do-indent'
+     Extra indentation within each level of `do' statement (default 3).
+
+`fortran-if-indent'
+     Extra indentation within each level of `if' statement (default 3).
+     This value is also used for extra indentation within each level of
+     the Fortran 90 `where' statement.
+
+`fortran-structure-indent'
+     Extra indentation within each level of `structure', `union', or
+     `map' statements (default 3).
+
+`fortran-continuation-indent'
+     Extra indentation for bodies of continuation lines (default 5).
+
+`fortran-check-all-num-for-matching-do'
+     If this is `nil', indentation assumes that each `do' statement
+     ends on a `continue' statement.  Therefore, when computing
+     indentation for a statement other than `continue', it can save time
+     by not checking for a `do' statement ending there.  If this is
+     non-`nil', indenting any numbered statement must check for a `do'
+     that ends there.  The default is `nil'.
+
+`fortran-blink-matching-if'
+     If this is `t', indenting an `endif' statement moves the cursor
+     momentarily to the matching `if' statement to show where it is.
+     The default is `nil'.
+
+`fortran-minimum-statement-indent-fixed'
+     Minimum indentation for fortran statements when using fixed format
+     continuation line style.  Statement bodies are never indented less
+     than this much.  The default is 6.
+
+`fortran-minimum-statement-indent-tab'
+     Minimum indentation for fortran statements for tab format
+     continuation line style.  Statement bodies are never indented less
+     than this much.  The default is 8.
+
+
+File: emacs,  Node: Fortran Comments,  Next: Fortran Autofill,  Prev: Fortran Indent,  Up: Fortran
+
+Fortran Comments
+----------------
+
+   The usual Emacs comment commands assume that a comment can follow a
+line of code.  In Fortran, the standard comment syntax requires an
+entire line to be just a comment.  Therefore, Fortran mode replaces the
+standard Emacs comment commands and defines some new variables.
+
+   Fortran mode can also handle a nonstandard comment syntax where
+comments start with `!' and can follow other text.  Because only some
+Fortran compilers accept this syntax, Fortran mode will not insert such
+comments unless you have said in advance to do so.  To do this, set the
+variable `comment-start' to `"!"' (*note Variables::.).
+
+`M-;'
+     Align comment or insert new comment (`fortran-comment-indent').
+
+`C-x ;'
+     Applies to nonstandard `!' comments only.
+
+`C-c ;'
+     Turn all lines of the region into comments, or (with argument)
+     turn them back into real code (`fortran-comment-region').
+
+   `M-;' in Fortran mode is redefined as the command
+`fortran-comment-indent'.  Like the usual `M-;' command, this
+recognizes any kind of existing comment and aligns its text
+appropriately; if there is no existing comment, a comment is inserted
+and aligned.  But inserting and aligning comments are not the same in
+Fortran mode as in other modes.
+
+   When a new comment must be inserted, if the current line is blank, a
+full-line comment is inserted.  On a non-blank line, a nonstandard `!'
+comment is inserted if you have said you want to use them.  Otherwise a
+full-line comment is inserted on a new line before the current line.
+
+   Nonstandard `!' comments are aligned like comments in other
+languages, but full-line comments are different.  In a standard
+full-line comment, the comment delimiter itself must always appear in
+column zero.  What can be aligned is the text within the comment.  You
+can choose from three styles of alignment by setting the variable
+`fortran-comment-indent-style' to one of these values:
+
+`fixed'
+     Align the text at a fixed column, which is the sum of
+     `fortran-comment-line-extra-indent' and the minimum statement
+     indentation.  This is the default.
+
+     The minimum statement indentation is
+     `fortran-minimum-statement-indent-fixed' for fixed format
+     continuation line style and `fortran-minimum-statement-indent-tab'
+     for tab format style.
+
+`relative'
+     Align the text as if it were a line of code, but with an additional
+     `fortran-comment-line-extra-indent' columns of indentation.
+
+`nil'
+     Don't move text in full-line columns automatically at all.
+
+   In addition, you can specify the character to be used to indent
+within full-line comments by setting the variable
+`fortran-comment-indent-char' to the single-character string you want
+to use.
+
+   Fortran mode introduces two variables `comment-line-start' and
+`comment-line-start-skip' which play for full-line comments the same
+roles played by `comment-start' and `comment-start-skip' for ordinary
+text-following comments.  Normally these are set properly by Fortran
+mode so you do not need to change them.
+
+   The normal Emacs comment command `C-x ;' has not been redefined.  If
+you use `!' comments, this command can be used with them.  Otherwise it
+is useless in Fortran mode.
+
+   The command `C-c ;' (`fortran-comment-region') turns all the lines
+of the region into comments by inserting the string `C$$$' at the front
+of each one.  With a numeric argument, it turns the region back into
+live code by deleting `C$$$' from the front of each line in it.  The
+string used for these comments can be controlled by setting the
+variable `fortran-comment-region'.  Note that here we have an example
+of a command and a variable with the same name; these two uses of the
+name never conflict because in Lisp and in Emacs it is always clear
+from the context which one is meant.
+

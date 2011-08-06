@@ -1,1191 +1,1127 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.49 from the
+This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
 input file emacs.texi.
 
-   This file documents the GNU Emacs editor.
+
+File: emacs,  Node: Multi-User Branching,  Prev: Creating Branches,  Up: Branches
 
-   Copyright (C) 1985, 1986, 1988, 1992 Richard M. Stallman.
+Multi-User Branching
+....................
 
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
+   It is sometimes useful for multiple developers to work simultaneously
+on different branches of a file.  This is possible if you create
+multiple source directories.  Each source directory should have a link
+named `RCS' which points to a common directory of RCS master files.
+Then each source directory can have its own choice of versions checked
+out, but all share the same common RCS records.
 
-   Permission is granted to copy and distribute modified versions of
-this manual under the conditions for verbatim copying, provided also
-that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
-General Public License" are included exactly as in the original, and
-provided that the entire resulting derived work is distributed under the
-terms of a permission notice identical to this one.
+   This technique works reliably and automatically, provided that the
+source files contain RCS version headers (*note Version Headers::.).
+The headers enable Emacs to be sure, at all times, which version number
+is present in the work file.
 
-   Permission is granted to copy and distribute translations of this
-manual into another language, under the above conditions for modified
-versions, except that the sections entitled "The GNU Manifesto",
-"Distribution" and "GNU General Public License" may be included in a
-translation approved by the author instead of in the original English.
+   If the files do not have version headers, you must instead tell Emacs
+explicitly in each session which branch you are working on.  To do this,
+first find the file, then type `C-u C-x C-q' and specify the correct
+branch number.  This ensures that Emacs knows which branch it is using
+during this particular editing session.
 
 
-File: emacs,  Node: Comments,  Next: Macro Expansion,  Prev: Matching,  Up: Programs
+File: emacs,  Node: Status in VC,  Next: Renaming and VC,  Prev: Branches,  Up: Version Control
 
-Manipulating Comments
-=====================
+VC Status Commands
+------------------
 
-   The comment commands insert, kill and align comments.
+   To view the detailed version control status and history of a file,
+type `C-x v l' (`vc-print-log').  It displays the history of changes to
+the current file, including the text of the log entries.  The output
+appears in a separate window.
 
-`M-;'
-     Insert or align comment (`indent-for-comment').
+   When you are working on a large program, it's often useful to find
+all the files that are currently locked, or all the files maintained in
+version control at all.  You can use `C-x v d' (`vc-directory') to show
+all the locked files in or beneath a certain directory.  This includes
+all files that are locked by any user.  `C-u C-x v d' lists all files
+in or beneath the specified directory that are maintained with version
+control.
 
-`C-x ;'
-     Set comment column (`set-comment-column').
+   The list of files is displayed as a buffer that uses an augmented
+Dired mode.  The names of the users locking various files are shown (in
+parentheses) in place of the owner and group.  (With CVS, a more
+detailed status is shown for each file.)  All the normal Dired commands
+work in this buffer.  Most interactive VC commands work also, and apply
+to the file name on the current line.
 
-`C-u - C-x ;'
-     Kill comment on current line (`kill-comment').
-
-`M-LFD'
-     Like RET followed by inserting and aligning a comment
-     (`indent-new-comment-line').
-
-   The command that creates a comment is `Meta-;'
-(`indent-for-comment'). If there is no comment already on the line, a
-new comment is created, aligned at a specific column called the
-"comment column".  The comment is created by inserting the string Emacs
-thinks comments should start with (the value of `comment-start'; see
-below).  Point is left after that string.  If the text of the line
-extends past the comment column, then the indentation is done to a
-suitable boundary (usually, at least one space is inserted).  If the
-major mode has specified a string to terminate comments, that is
-inserted after point, to keep the syntax valid.
-
-   `Meta-;' can also be used to align an existing comment.  If a line
-already contains the string that starts comments, then `M-;' just moves
-point after it and re-indents it to the conventional place.  Exception:
-comments starting in column 0 are not moved.
-
-   Some major modes have special rules for indenting certain kinds of
-comments in certain contexts.  For example, in Lisp code, comments which
-start with two semicolons are indented as if they were lines of code,
-instead of at the comment column.  Comments which start with three
-semicolons are supposed to start at the left margin.  Emacs understands
-these conventions by indenting a double-semicolon comment using TAB,
-and by not changing the indentation of a triple-semicolon comment at
-all.
-
-     ;; This function is just an example
-     ;;; Here either two or three semicolons are appropriate.
-     (defun foo (x)
-     ;;; And now, the first part of the function:
-       ;; The following line adds one.
-       (1+ x))           ; This line adds one.
-
-   In C code, a comment preceded on its line by nothing but whitespace
-is indented like a line of code.
-
-   Even when an existing comment is properly aligned, `M-;' is still
-useful for moving directly to the start of the comment.
-
-   `C-u - C-x ;' (`kill-comment') kills the comment on the current line,
-if there is one.  The indentation before the start of the comment is
-killed as well.  If there does not appear to be a comment in the line,
-nothing is done.  To reinsert the comment on another line, move to the
-end of that line, do `C-y', and then do `M-;' to realign it.  Note that
-`C-u - C-x ;' is not a distinct key; it is `C-x ;'
-(`set-comment-column') with a negative argument.  That command is
-programmed so that when it receives a negative argument it calls
-`kill-comment'.  However, `kill-comment' is a valid command which you
-could bind directly to a key if you wanted to.
-
-Multiple Lines of Comments
---------------------------
-
-   If you are typing a comment and find that you wish to continue it on
-another line, you can use the command `Meta-LFD'
-(`indent-new-comment-line'), which terminates the comment you are
-typing, creates a new blank line afterward, and begins a new comment
-indented under the old one.  When Auto Fill mode is on, going past the
-fill column while typing a comment causes the comment to be continued
-in just this fashion.  If point is not at the end of the line when
-`M-LFD' is typed, the text on the rest of the line becomes part of the
-new comment line.
-
-Options Controlling Comments
-----------------------------
-
-   The comment column is stored in the variable `comment-column'.  You
-can set it to a number explicitly.  Alternatively, the command `C-x ;'
-(`set-comment-column') sets the comment column to the column point is
-at.  `C-u C-x ;' sets the comment column to match the last comment
-before point in the buffer, and then does a `Meta-;' to align the
-current line's comment under the previous one.  Note that `C-u - C-x ;'
-runs the function `kill-comment' as described above.
-
-   `comment-column' is a per-buffer variable; altering the variable
-affects only the current buffer, but there is a default value which you
-can change as well.  *Note Locals::.  Many major modes initialize this
-variable for the current buffer.
-
-   The comment commands recognize comments based on the regular
-expression that is the value of the variable `comment-start-skip'. 
-This regexp should not match the null string.  It may match more than
-the comment starting delimiter in the strictest sense of the word; for
-example, in C mode the value of the variable is `"/\\*+ *"', which
-matches extra stars and spaces after the `/*' itself.  (Note that `\\'
-is needed in Lisp syntax to include a `\' in the string, which is needed
-to deny the first star its special meaning in regexp syntax.  *Note
-Regexps::.)
-
-   When a comment command makes a new comment, it inserts the value of
-`comment-start' to begin it.  The value of `comment-end' is inserted
-after point, so that it will follow the text that you will insert into
-the comment.  In C mode, `comment-start' has the value `"/* "' and
-`comment-end' has the value `" */"'.
-
-   `comment-multi-line' controls how `M-LFD' (`indent-new-comment-line')
-behaves when used inside a comment.  If `comment-multi-line' is `nil',
-as it normally is, then the comment on the starting line is terminated
-and a new comment is started on the new following line.  If
-`comment-multi-line' is not `nil', then the new following line is set
-up as part of the same comment that was found on the starting line.
-This is done by not inserting a terminator on the old line, and not
-inserting a starter on the new line.  In languages where multi-line
-comments work, the choice of value for this variable is a matter of
-taste.
-
-   The variable `comment-indent-hook' should contain a function that
-will be called to compute the indentation for a newly inserted comment
-or for aligning an existing comment.  It is set differently by various
-major modes.  The function is called with no arguments, but with point
-at the beginning of the comment, or at the end of a line if a new
-comment is to be inserted.  It should return the column in which the
-comment ought to start. For example, in Lisp mode, the indent hook
-function bases its decision on how many semicolons begin an existing
-comment, and on the code in the preceding lines.
+   The `C-x v v' command (`vc-next-action'), when used in the augmented
+Dired buffer, operates on all the marked files (or the file on the
+current line).  If it operates on more than one file, it handles each
+file according to its current state; thus, it may check out one file
+and check in another (because it is already checked out).  If it has to
+check in any files, it reads a single log entry, then uses that text
+for all the files being checked in.  This can be convenient for
+registering or checking in several files at once, as part of the same
+change.
 
 
-File: emacs,  Node: Macro Expansion,  Next: Balanced Editing,  Prev: Comments,  Up: Programs
+File: emacs,  Node: Renaming and VC,  Next: Snapshots,  Prev: Status in VC,  Up: Version Control
 
-Viewing How C Macros Expand
-===========================
-
-   When you are debugging C code that uses macros, sometimes it is hard
-to figure out precisely how the macros expand.  The command `M-x
-c-macro-expand'.  It runs the C preprocessor and shows you what
-expansion results from the region.  The portion of the buffer before the
-region is also included in preprocessing, for the sake of macros defined
-there, but the output from this part isn't shown.
-
-
-File: emacs,  Node: Balanced Editing,  Next: Lisp Completion,  Prev: Macro Expansion,  Up: Programs
-
-Editing Without Unbalanced Parentheses
-======================================
-
-`M-('
-     Put parentheses around next sexp(s) (`insert-parentheses').
-
-`M-)'
-     Move past next close parenthesis and re-indent
-     (`move-over-close-and-reindent').
-
-   The two commands, `M-(' (`insert-parentheses') and `M-)'
-(`move-over-close-and-reindent'), are designed to facilitate a style of
-editing which keeps parentheses balanced at all times.  `M-(' inserts a
-pair of parentheses, either together as in `()', or, if given an
-argument, around the next several sexps, and leaves point after the open
-parenthesis.  Instead of typing `( F O O )', you can type `M-( F O O',
-which has the same effect except for leaving the cursor before the
-close parenthesis.  Then you would type `M-)', which moves past the
-close parenthesis, deleting any indentation preceding it (in this
-example there is none), and indenting with LFD after it.
-
-
-File: emacs,  Node: Lisp Completion,  Next: Documentation,  Prev: Balanced Editing,  Up: Programs
-
-Completion for Lisp Symbols
-===========================
-
-   Usually completion happens in the minibuffer.  But one kind of
-completion is available in all buffers: completion for Lisp symbol
-names.
-
-   The command `M-TAB' (`lisp-complete-symbol') takes the partial Lisp
-symbol before point to be an abbreviation, and compares it against all
-nontrivial Lisp symbols currently known to Emacs.  Any additional
-characters that they all have in common are inserted at point.
-Nontrivial symbols are those that have function definitions, values or
-properties.
-
-   If there is an open-parenthesis immediately before the beginning of
-the partial symbol, only symbols with function definitions are
-considered as completions.
-
-   If the partial name in the buffer has more than one possible
-completion and they have no additional characters in common, a list of
-all possible completions is displayed in another window.
-
-
-File: emacs,  Node: Documentation,  Next: Change Log,  Prev: Lisp Completion,  Up: Programs
-
-Documentation Commands
-======================
-
-   As you edit Lisp code to be run in Emacs, the commands `C-h f'
-(`describe-function') and `C-h v' (`describe-variable') can be used to
-print documentation of functions and variables that you want to call. 
-These commands use the minibuffer to read the name of a function or
-variable to document, and display the documentation in a window.
-
-   For extra convenience, these commands provide default arguments
-based on the code in the neighborhood of point.  `C-h f' sets the
-default to the function called in the innermost list containing point. 
-`C-h v' uses the symbol name around or adjacent to point as its default.
-
-   Documentation on Unix commands, system calls and libraries can be
-obtained with the `M-x manual-entry' command.  This reads a topic as an
-argument, and displays the text on that topic from the Unix manual.
-`manual-entry' always searches all 8 sections of the manual, and
-concatenates all the entries that are found.  For example, the topic
-`termcap' finds the description of the termcap library from section 3,
-followed by the description of the termcap data base from section 5.
-
-
-File: emacs,  Node: Change Log,  Next: Tags,  Prev: Documentation,  Up: Programs
-
-Change Logs
-===========
-
-   The Emacs command `M-x add-change-log-entry' helps you keep a record
-of when and why you have changed a program.  It assumes that you have a
-file in which you write a chronological sequence of entries describing
-individual changes.  The default is to store the change entries in a
-file called `ChangeLog' in the same directory as the file you are
-editing. The same `ChangeLog' file therefore records changes for all
-the files in the directory.
-
-   A change log entry starts with a header line that contains your name
-and the current date.  Aside from these header lines, every line in the
-change log starts with a tab.  One entry can describe several changes;
-each change starts with a line starting with a tab and a star. `M-x
-add-change-log-entry' visits the change log file and creates a new
-entry unless the most recent entry is for today's date and your name. 
-In either case, it adds a new line to start the description of another
-change just after the header line of the entry.  When `M-x
-add-change-log-entry' is finished, all is prepared for you to edit in
-the description of what you changed and how.  You must then save the
-change log file yourself.
-
-   The change log file is always visited in Indented Text mode, which
-means that LFD and auto-filling indent each new line like the previous
-line.  This is convenient for entering the contents of an entry, which
-must all be indented.  *Note Text Mode::.
-
-   An alternative convenient command for starting a change log entry is
-`C-x 4 a' (`add-change-log-entry-other-window').  It resembles
-`add-change-log-entry' except that it visits the change log in another
-window, and always uses the file `./ChangeLog'--it does not ask you for
-the file name.
-
-   Here is an example of the formatting conventions used in the change
-log for Emacs:
-
-     Wed Jun 26 19:29:32 1985  Richard M. Stallman  (rms at mit-prep)
-     
-             * xdisp.c (try_window_id):
-             If C-k is done at end of next-to-last line,
-             this fn updates window_end_vpos and cannot leave
-             window_end_pos nonnegative (it is zero, in fact).
-             If display is preempted before lines are output,
-             this is inconsistent.  Fix by setting
-             blank_end_of_window to nonzero.
-
-     Tue Jun 25 05:25:33 1985  Richard M. Stallman  (rms at mit-prep)
-     
-             * cmds.c (Fnewline):
-             Call the auto fill hook if appropriate.
-
-     * xdisp.c (try_window_id):
-             If point is found by compute_motion after xp, record that
-             permanently.  If display_text_line sets point position wrong
-             (case where line is killed, point is at eob and that line is
-             not displayed), set it again in final compute_motion.
-
-
-File: emacs,  Node: Tags,  Next: Fortran,  Prev: Change Log,  Up: Programs
-
-Tag Tables
-==========
-
-   A "tag table" is a description of how a multi-file program is broken
-up into files.  It lists the names of the component files and the names
-and positions of the functions in each file.  Grouping the related
-files makes it possible to search or replace through all the files with
-one command. Recording the function names and positions makes possible
-the `Meta-.' command which you can use to find the definition of a
-function without having to know which of the files it is in.
-
-   Tag tables are stored in files called "tag table files".  The
-conventional name for a tag table file is `TAGS'.
-
-   Each entry in the tag table records the name of one tag, the name of
-the file that the tag is defined in (implicitly), and the position in
-that file of the tag's definition.
-
-   Just what names from the described files are recorded in the tag
-table depends on the programming language of the described file.  They
-normally include all functions and subroutines, and may also include
-global variables, data types, and anything else convenient.  In any
-case, each name recorded is called a "tag".
-
-* Menu:
-
-* Tag Syntax::
-* Create Tag Table::
-* Select Tag Table::
-* Find Tag::
-* Tags Search::
-* Tags Stepping::
-* List Tags::
-
-
-File: emacs,  Node: Tag Syntax,  Next: Create Tag Table,  Prev: Tags,  Up: Tags
-
-Source File Tag Syntax
-----------------------
-
-   In Lisp code, any function defined with `defun', any variable
-defined with `defvar' or `defconst', and in general the first argument
-of any expression that starts with `(def' in column zero, is a tag.
-
-   In C code, any C function is a tag, and so is any typedef if `-t' is
-specified when the tag table is constructed.
-
-   In Fortran code, functions and subroutines are tags.
-
-   In LaTeX text, the argument of any of the commands `\chapter',
-`\section', `\subsection', `\subsubsection', `\eqno', `\label', `\ref',
-`\cite', `\bibitem' and `\typeout' is a tag.
-
-
-File: emacs,  Node: Create Tag Table,  Next: Select Tag Table,  Prev: Tag Syntax,  Up: Tags
-
-Creating Tag Tables
--------------------
-
-   The `etags' program is used to create a tag table file.  It knows
-the syntax of C, Fortran, LaTeX, Scheme and Emacs Lisp/Common Lisp.  To
-use `etags', type
-
-     etags INPUTFILES...
-
-as a shell command.  It reads the specified files and writes a tag table
-named `TAGS' in the current working directory.  `etags' recognizes the
-language used in an input file based on its file name and contents;
-there are no switches for specifying the language.  The `-t' switch
-tells `etags' to record typedefs in C code as tags.
-
-   If the tag table data become outdated due to changes in the files
-described in the table, the way to update the tag table is the same way
-it was made in the first place.  It is not necessary to do this often.
-
-   If the tag table fails to record a tag, or records it for the wrong
-file, then Emacs cannot possibly find its definition.  However, if the
-position recorded in the tag table becomes a little bit wrong (due to
-some editing in the file that the tag definition is in), the only
-consequence is to slow down finding the tag slightly.  Even if the
-stored position is very wrong, Emacs will still find the tag, but it
-must search the entire file for it.
-
-   So you should update a tag table when you define new tags that you
-want to have listed, or when you move tag definitions from one file to
-another, or when changes become substantial.  Normally there is no need
-to update the tag table after each edit, or even every day.
-
-
-File: emacs,  Node: Select Tag Table,  Next: Find Tag,  Prev: Create Tag Table,  Up: Tags
-
-Selecting a Tag Table
----------------------
-
-   Emacs has at any time one "selected" tag table, and all the commands
-for working with tag tables use the selected one.  To select a tag
-table, type `M-x visit-tags-table', which reads the tag table file name
-as an argument.  The name `TAGS' in the default directory is used as the
-default file name.
-
-   All this command does is store the file name in the variable
-`tags-file-name'.  Emacs does not actually read in the tag table
-contents until you try to use them.  Setting this variable yourself is
-just as good as using `visit-tags-table'.  The variable's initial value
-is `nil'; this value tells all the commands for working with tag tables
-that they must ask for a tag table file name to use.
-
-
-File: emacs,  Node: Find Tag,  Next: Tags Search,  Prev: Select Tag Table,  Up: Tags
-
-Finding a Tag
--------------
-
-   The most important thing that a tag table enables you to do is to
-find the definition of a specific tag.
-
-`M-. TAG'
-     Find first definition of TAG (`find-tag').
-
-`C-u M-.'
-     Find next alternate definition of last tag specified.
-
-`C-x 4 . TAG'
-     Find first definition of TAG, but display it in another window
-     (`find-tag-other-window').
-
-   `M-.' (`find-tag') is the command to find the definition of a
-specified tag.  It searches through the tag table for that tag, as a
-string, and then uses the tag table info to determine the file that the
-definition is in and the approximate character position in the file of
-the definition.  Then `find-tag' visits that file, moves point to the
-approximate character position, and starts searching ever-increasing
-distances away for the the text that should appear at the beginning of
-the definition.
-
-   If an empty argument is given (just type RET), the sexp in the
-buffer before or around point is used as the name of the tag to find.
-*Note Lists::, for info on sexps.
-
-   The argument to `find-tag' need not be the whole tag name; it can be
-a substring of a tag name.  However, there can be many tag names
-containing the substring you specify.  Since `find-tag' works by
-searching the text of the tag table, it finds the first tag in the
-table that the specified substring appears in.
-
-   The way to find other tags that match the substring is to give
-`find-tag' a numeric argument, as in `C-u M-.'; this does not read a
-tag name, but continues searching the tag table's text for another tag
-containing the same substring last used.  If you have a real META key,
-`M-0 M-.' is an easier alternative to `C-u M-.'. (That is a zero in
-`M-0'.)
-
-   Like most commands that can switch buffers, `find-tag' has another
-similar command that displays the new buffer in another window.  `C-x 4
-.' invokes the function `find-tag-other-window'.  (This key sequence
-ends with a period.)
-
-   Emacs comes with a tag table file `TAGS', in the `src' subdirectory,
-which includes all the Lisp libraries and all the C sources of Emacs. 
-By specifying this file with `visit-tags-table' and then using `M-.'
-you can quickly look at the source of any Emacs function.
-
-
-File: emacs,  Node: Tags Search,  Next: Tags Stepping,  Prev: Find Tag,  Up: Tags
-
-Searching and Replacing with Tag Tables
+Renaming VC Work Files and Master Files
 ---------------------------------------
 
-   The commands in this section visit and search all the files listed
-in the selected tag table, one by one.  For these commands, the tag
-table serves only to specify a sequence of files to search.  A related
-command is `M-x grep' (*note Compilation::.).
+   When you rename a registered file, you must also rename its master
+file correspondingly to get proper results.  Use `vc-rename-file' to
+rename the source file as you specify, and rename its master file
+accordingly.  It also updates any snapshots (*note Snapshots::.) that
+mention the file, so that they use the new name; despite this, the
+snapshot thus modified may not completely work (*note Snapshot
+Caveats::.).
 
-`M-x tags-search'
-     Search for the specified regexp through the files in the selected
-     tag table.
-
-`M-x tags-query-replace'
-     Perform a `query-replace' on each file in the selected tag table.
-
-`M-,'
-     Restart one of the commands above, from the current location of
-     point (`tags-loop-continue').
-
-   `M-x tags-search' reads a regexp using the minibuffer, then visits
-the files of the selected tag table one by one, and searches through
-each one for that regexp.  It displays the name of the file being
-searched so you can follow its progress.  As soon as an occurrence is
-found, `tags-search' returns.
-
-   Having found one match, you probably want to find all the rest.  To
-find one more match, type `M-,' (`tags-loop-continue') to resume the
-`tags-search'.  This searches the rest of the current buffer, followed
-by the remaining files of the tag table.
-
-   `M-x tags-query-replace' performs a single `query-replace' through
-all the files in the tag table.  It reads a string to search for and a
-string to replace with, just like ordinary `M-x query-replace'. It
-searches much like `M-x tags-search' but repeatedly, processing matches
-according to your input.  *Note Replace::, for more information on
-`query-replace'.
-
-   It is possible to get through all the files in the tag table with a
-single invocation of `M-x tags-query-replace'.  But since any
-unrecognized character causes the command to exit, you may need to
-continue where you left off.  `M-,' can be used for this.  It resumes
-the last tags search or replace command that you did.
-
-   It may have struck you that `tags-search' is a lot like `grep'. You
-can also run `grep' itself as an inferior of Emacs and have Emacs show
-you the matching lines one by one.  This works mostly the same as
-running a compilation and having Emacs show you where the errors were.
-*Note Compilation::.
+   You cannot use `vc-rename-file' on a file that is locked by someone
+else.
 
 
-File: emacs,  Node: Tags Stepping,  Next: List Tags,  Prev: Tags Search,  Up: Tags
+File: emacs,  Node: Snapshots,  Next: Version Headers,  Prev: Renaming and VC,  Up: Version Control
 
-Stepping Through a Tag Table
-----------------------------
+Snapshots
+---------
 
-   If you wish to process all the files in the selected tag table, but
-`M-x tags-search' and `M-x tags-query-replace' in particular are not
-what you want, you can use `M-x next-file'.
-
-`C-u M-x next-file'
-     With a numeric argument, regardless of its value, visit the first
-     file in the tag table, and prepare to advance sequentially by
-     files.
-
-`M-x next-file'
-     Visit the next file in the selected tag table.
-
-
-File: emacs,  Node: List Tags,  Prev: Tags Stepping,  Up: Tags
-
-Tag Table Inquiries
--------------------
-
-`M-x list-tags'
-     Display a list of the tags defined in a specific program file.
-
-`M-x tags-apropos'
-     Display a list of all tags matching a specified regexp.
-
-   `M-x list-tags' reads the name of one of the files described by the
-selected tag table, and displays a list of all the tags defined in that
-file.  The "file name" argument is really just a string to compare
-against the names recorded in the tag table; it is read as a string
-rather than as a file name.  Therefore, completion and defaulting are
-not available, and you must enter the string the same way it appears in
-the tag table.  Do not include a directory as part of the file name
-unless the file name recorded in the tag table includes a directory.
-
-   `M-x tags-apropos' is like `apropos' for tags.  It reads a regexp,
-then finds all the tags in the selected tag table whose entries match
-that regexp, and displays the tag names found.
-
-
-File: emacs,  Node: Fortran,  Prev: Tags,  Up: Programs
-
-Fortran Mode
-============
-
-   Fortran mode provides special motion commands for Fortran statements
-and subprograms, and indentation commands that understand Fortran
-conventions of nesting, line numbers and continuation statements.
-
-   Special commands for comments are provided because Fortran comments
-are unlike those of other languages.
-
-   Built-in abbrevs optionally save typing when you insert Fortran
-keywords.
-
-   Use `M-x fortran-mode' to switch to this major mode.  Doing so calls
-the value of `fortran-mode-hook' as a function of no arguments if that
-variable has a value that is not `nil'.
+   A "snapshot" is a named set of file versions (one for each
+registered file) that you can treat as a unit.  One important kind of
+snapshot is a "release", a (theoretically) stable version of the system
+that is ready for distribution to users.
 
 * Menu:
 
-* Motion: Fortran Motion.     Moving point by statements or subprograms.
-* Indent: Fortran Indent.     Indentation commands for Fortran.
-* Comments: Fortran Comments. Inserting and aligning comments.
-* Columns: Fortran Columns.   Measuring columns for valid Fortran.
-* Abbrev: Fortran Abbrev.     Built-in abbrevs for Fortran keywords.
-
-   Fortran mode was contributed by Michael Prange.
+* Making Snapshots::		The snapshot facilities.
+* Snapshot Caveats::		Things to be careful of when using snapshots.
 
 
-File: emacs,  Node: Fortran Motion,  Next: Fortran Indent,  Prev: Fortran,  Up: Fortran
+File: emacs,  Node: Making Snapshots,  Next: Snapshot Caveats,  Up: Snapshots
 
-Motion Commands
----------------
+Making and Using Snapshots
+..........................
 
-   Fortran mode provides special commands to move by subprograms
-(functions and subroutines) and by statements.  There is also a command
-to put the region around one subprogram, convenient for killing it or
-moving it.
+   There are two basic commands for snapshots; one makes a snapshot
+with a given name, the other retrieves a named snapshot.
 
-`C-M-a'
-     Move to beginning of subprogram
-     (`beginning-of-fortran-subprogram').
+`C-x v s NAME RET'
+     Define the last saved versions of every registered file in or
+     under the current directory as a snapshot named NAME
+     (`vc-create-snapshot').
 
-`C-M-e'
-     Move to end of subprogram (`end-of-fortran-subprogram').
+`C-x v r NAME RET'
+     Check out all registered files at or below the current directory
+     level using whatever versions correspond to the snapshot NAME
+     (`vc-retrieve-snapshot').
 
-`C-M-h'
-     Put point at beginning of subprogram and mark at end
-     (`mark-fortran-subprogram').
+     This command reports an error if any files are locked at or below
+     the current directory, without changing anything; this is to avoid
+     overwriting work in progress.
 
-`C-c C-n'
-     Move to beginning of current or next statement
-     (`fortran-next-statement').
+   A snapshot uses a very small amount of resources--just enough to
+record the list of file names and which version belongs to the
+snapshot.  Thus, you need not hesitate to create snapshots whenever
+they are useful.
 
-`C-c C-p'
-     Move to beginning of current or previous statement
-     (`fortran-previous-statement').
+   You can give a snapshot name as an argument to `C-x v =' or `C-x v
+~' (*note Old Versions::.).  Thus, you can use it to compare a snapshot
+against the current files, or two snapshots against each other, or a
+snapshot against a named version.
 
 
-File: emacs,  Node: Fortran Indent,  Next: Fortran Comments,  Prev: Fortran Motion,  Up: Fortran
+File: emacs,  Node: Snapshot Caveats,  Prev: Making Snapshots,  Up: Snapshots
 
-Fortran Indentation
--------------------
+Snapshot Caveats
+................
 
-   Special commands and features are needed for indenting Fortran code
-in order to make sure various syntactic entities (line numbers, comment
-line indicators and continuation line flags) appear in the columns that
-are required for standard Fortran.
+   VC's snapshot facilities are modeled on RCS's named-configuration
+support.  They use RCS's native facilities for this, so under VC
+snapshots made using RCS are visible even when you bypass VC.
+
+   For SCCS, VC implements snapshots itself.  The files it uses contain
+name/file/version-number triples.  These snapshots are visible only
+through VC.
+
+   A snapshot is a set of checked-in versions.  So make sure that all
+the files are checked in and not locked when you make a snapshot.
+
+   File renaming and deletion can create some difficulties with
+snapshots.  This is not a VC-specific problem, but a general design
+issue in version control systems that no one has solved very well yet.
+
+   If you rename a registered file, you need to rename its master along
+with it (the command `vc-rename-file' does this automatically).  If you
+are using SCCS, you must also update the records of the snapshot, to
+mention the file by its new name (`vc-rename-file' does this, too).  An
+old snapshot that refers to a master file that no longer exists under
+the recorded name is invalid; VC can no longer retrieve it.  It would
+be beyond the scope of this manual to explain enough about RCS and SCCS
+to explain how to update the snapshots by hand.
+
+   Using `vc-rename-file' makes the snapshot remain valid for
+retrieval, but it does not solve all problems.  For example, some of the
+files in the program probably refer to others by name.  At the very
+least, the makefile probably mentions the file that you renamed.  If you
+retrieve an old snapshot, the renamed file is retrieved under its new
+name, which is not the name that the makefile expects.  So the program
+won't really work as retrieved.
+
+
+File: emacs,  Node: Version Headers,  Next: Customizing VC,  Prev: Snapshots,  Up: Version Control
+
+Inserting Version Control Headers
+---------------------------------
+
+   Sometimes it is convenient to put version identification strings
+directly into working files.  Certain special strings called "version
+headers" are replaced in each successive version by the number of that
+version.
+
+   If you are using RCS, and version headers are present in your working
+files, Emacs can use them to determine the current version and the
+locking state of the files.  This is more reliable than referring to the
+master files, which is done when there are no version headers.  Note
+that in a multi-branch environment, version headers are necessary to
+make VC behave correctly (*note Multi-User Branching::.).
+
+   Searching for version headers is controlled by the variable
+`vc-consult-headers'.  If it is non-`nil', Emacs searches for headers
+to determine the version number you are editing.  Setting it to `nil'
+disables this feature.
+
+   You can use the `C-x v h' command (`vc-insert-headers') to insert a
+suitable header string.
+
+`C-x v h'
+     Insert headers in a file for use with your version-control system.
+
+   The default header string is `$Id$' for RCS and `%W%' for SCCS.  You
+can specify other headers to insert by setting the variable
+`vc-header-alist'.  Its value is a list of elements of the form
+`(PROGRAM . STRING)' where PROGRAM is `RCS' or `SCCS' and STRING is the
+string to use.
+
+   Instead of a single string, you can specify a list of strings; then
+each string in the list is inserted as a separate header on a line of
+its own.
+
+   It is often necessary to use "superfluous" backslashes when writing
+the strings that you put in this variable.  This is to prevent the
+string in the constant from being interpreted as a header itself if the
+Emacs Lisp file containing it is maintained with version control.
+
+   Each header is inserted surrounded by tabs, inside comment
+delimiters, on a new line at the start of the buffer.  Normally the
+ordinary comment start and comment end strings of the current mode are
+used, but for certain modes, there are special comment delimiters for
+this purpose; the variable `vc-comment-alist' specifies them.  Each
+element of this list has the form `(MODE STARTER ENDER)'.
+
+   The variable `vc-static-header-alist' specifies further strings to
+add based on the name of the buffer.  Its value should be a list of
+elements of the form `(REGEXP . FORMAT)'.  Whenever REGEXP matches the
+buffer name, FORMAT is inserted as part of the header.  A header line
+is inserted for each element that matches the buffer name, and for each
+string specified by `vc-header-alist'.  The header line is made by
+processing the string from `vc-header-alist' with the format taken from
+the element.  The default value for `vc-static-header-alist' is as
+follows:
+
+     (("\\.c$" .
+       "\n#ifndef lint\nstatic char vcid[] = \"\%s\";\n\
+     #endif /* lint */\n"))
+
+It specifies insertion of text of this form:
+
+
+     #ifndef lint
+     static char vcid[] = "STRING";
+     #endif /* lint */
+
+Note that the text above starts with a blank line.
+
+   If you use more than one version header in a file, put them close
+together in the file.  The mechanism in `revert-buffer' that preserves
+markers may not handle markers positioned between two version headers.
+
+
+File: emacs,  Node: Customizing VC,  Prev: Version Headers,  Up: Version Control
+
+Customizing VC
+--------------
+
+   There are many ways of customizing VC.  The variables that control
+its behavior fall into three categories, described in the following
+sections.
 
 * Menu:
 
-* Commands: ForIndent Commands. Commands for indenting Fortran.
-* Numbers:  ForIndent Num.      How line numbers auto-indent.
-* Conv:     ForIndent Conv.     Conventions you must obey to avoid trouble.
-* Vars:     ForIndent Vars.     Variables controlling Fortran indent style.
+* VC Workfile Handling::  Various options concerning working files.
+* VC Status Retrieval::   How VC finds the version control status of a file,
+                            and how to customize this.
+* VC Command Execution::  Which commands VC should run, and how.
 
 
-File: emacs,  Node: ForIndent Commands,  Next: ForIndent Num,  Prev: Fortran Indent,  Up: Fortran Indent
+File: emacs,  Node: VC Workfile Handling,  Next: VC Status Retrieval,  Up: Customizing VC
 
-Fortran Indentation Commands
-............................
+VC Workfile Handling
+....................
 
-`TAB'
-     Indent the current line (`fortran-indent-line').
+   Emacs normally does not save backup files for source files that are
+maintained with version control.  If you want to make backup files even
+for files that use version control, set the variable
+`vc-make-backup-files' to a non-`nil' value.
 
-`M-LFD'
-     Break the current line and set up a continuation line.
+   Normally the work file exists all the time, whether it is locked or
+not.  If you set `vc-keep-workfiles' to `nil', then checking in a new
+version with `C-x C-q' deletes the work file; but any attempt to visit
+the file with Emacs creates it again.  (With CVS, work files are always
+kept.)
 
-`C-M-q'
-     Indent all the lines of the subprogram point is in
-     (`fortran-indent-subprogram').
+   Editing a version-controlled file through a symbolic link can be
+dangerous.  It bypasses the version control system--you can edit the
+file without checking it out, and fail to check your changes in.  Also,
+your changes might overwrite those of another user.  To protect against
+this, VC checks each symbolic link that you visit, to see if it points
+to a file under version control.
 
-   TAB is redefined by Fortran mode to reindent the current line for
-Fortran (`fortran-indent-line').  Line numbers and continuation markers
-are indented to their required columns, and the body of the statement
-is independently indented based on its nesting in the program.
-
-   The key `C-M-q' is redefined as `fortran-indent-subprogram', a
-command to reindent all the lines of the Fortran subprogram (function or
-subroutine) containing point.
-
-   The key `M-LFD' is redefined as `fortran-split-line', a command to
-split a line in the appropriate fashion for Fortran.  In a non-comment
-line, the second half becomes a continuation line and is indented
-accordingly.  In a comment line, both halves become separate comment
-lines.
-
-
-File: emacs,  Node: ForIndent Num,  Next: ForIndent Conv,  Prev: ForIndent Commands,  Up: Fortran Indent
-
-Line Numbers and Continuation
-.............................
-
-   If a number is the first non-whitespace in the line, it is assumed
-to be a line number and is moved to columns 0 through 4.  (Columns are
-always counted from 0 in GNU Emacs.)  If the text on the line starts
-with the conventional Fortran continuation marker `$', it is moved to
-column 5. If the text begins with any non whitespace character in
-column 5, it is assumed to be an unconventional continuation marker and
-remains in column 5.
-
-   Line numbers of four digits or less are normally indented one space.
-This amount is controlled by the variable `fortran-line-number-indent'
-which is the maximum indentation a line number can have.  Line numbers
-are indented to right-justify them to end in column 4 unless that would
-require more than this maximum indentation.  The default value of the
-variable is 1.
-
-   Simply inserting a line number is enough to indent it according to
-these rules.  As each digit is inserted, the indentation is recomputed.
- To turn off this feature, set the variable
-`fortran-electric-line-number' to `nil'.  Then inserting line numbers
-is like inserting anything else.
+   The variable `vc-follow-symlinks' controls what to do when a
+symbolic link points to a version-controlled file.  If it is `nil', VC
+only displays a warning message.  If it is `t', VC automatically
+follows the link, and visits the real file instead, telling you about
+this in the echo area.  If the value is `ask' (the default), VC asks
+you each time whether to follow the link.
 
 
-File: emacs,  Node: ForIndent Conv,  Next: ForIndent Vars,  Prev: ForIndent Num,  Up: Fortran Indent
+File: emacs,  Node: VC Status Retrieval,  Next: VC Command Execution,  Prev: VC Workfile Handling,  Up: Customizing VC
 
-Syntactic Conventions
-.....................
+VC Status Retrieval
+...................
 
-   Fortran mode assumes that you follow certain conventions that
-simplify the task of understanding a Fortran program well enough to
-indent it properly:
+   When deducing the locked/unlocked state of a file, VC first looks for
+an RCS version header string in the file (*note Version Headers::.).  If
+there is no header string (or if the backend system is SCCS), VC
+normally looks at the file permissions of the work file; this is fast.
+But there might be situations when the file permissions cannot be
+trusted.  In this case the master file has to be consulted, which is
+rather expensive.  Also the master file can only tell you *if* there's
+any lock on the file, but not whether your work file really contains
+that locked version.
 
-   * Two nested `do' loops never share a `continue' statement.
+   You can tell VC not to use version headers to determine lock status
+by setting `vc-consult-headers' to `nil'.  VC then always uses the file
+permissions (if it can trust them), or else checks the master file.
 
-   * The same character appears in column 5 of all continuation lines,
-     and this character is the value of the variable
-     `fortran-continuation-char'. By default, this character is `$'.
-
-If you fail to follow these conventions, the indentation commands may
-indent some lines unaesthetically.  However, a correct Fortran program
-will retain its meaning when reindented even if the conventions are not
-followed.
-
-
-File: emacs,  Node: ForIndent Vars,  Prev: ForIndent Conv,  Up: Fortran Indent
-
-Variables for Fortran Indentation
-.................................
-
-   Several additional variables control how Fortran indentation works.
-
-`fortran-do-indent'
-     Extra indentation within each level of `do' statement
-     (default 3).
-
-`fortran-if-indent'
-     Extra indentation within each level of `if' statement
-     (default 3).
-
-`fortran-continuation-indent'
-     Extra indentation for bodies of continuation lines (default 5).
-
-`fortran-check-all-num-for-matching-do'
-     If this is `nil', indentation assumes that each `do' statement
-     ends on a `continue' statement.  Therefore, when computing
-     indentation for a statement other than `continue', it can save
-     time by not checking for a `do' statement ending there. If this is
-     non-`nil', indenting any numbered statement must check for a `do'
-     that ends there.  The default is `nil'.
-
-`fortran-minimum-statement-indent'
-     Minimum indentation for fortran statements.  For standard Fortran,
-     this is 6.  Statement bodies will never be indented less than this
-     much.
+   You can specify the criterion for whether to trust the file
+permissions by setting the variable `vc-mistrust-permissions'.  Its
+value may be `t' (always mistrust the file permissions and check the
+master file), `nil' (always trust the file permissions), or a function
+of one argument which makes the decision.  The argument is the
+directory name of the `RCS', `CVS' or `SCCS' subdirectory.  A non-`nil'
+value from the function says to mistrust the file permissions.  If you
+find that the file permissions of work files are changed erroneously,
+set `vc-mistrust-permissions' to `t'.  Then VC always checks the master
+file to determine the file's status.
 
 
-File: emacs,  Node: Fortran Comments,  Next: Fortran Columns,  Prev: Fortran Indent,  Up: Fortran
+File: emacs,  Node: VC Command Execution,  Prev: VC Status Retrieval,  Up: Customizing VC
 
-Comments
---------
+VC Command Execution
+....................
 
-   The usual Emacs comment commands assume that a comment can follow a
-line of code.  In Fortran, the standard comment syntax requires an
-entire line to be just a comment.  Therefore, Fortran mode replaces the
-standard Emacs comment commands and defines some new variables.
+   If `vc-suppress-confirm' is non-`nil', then `C-x C-q' and `C-x v i'
+can save the current buffer without asking, and `C-x v u' also operates
+without asking for confirmation.  (This variable does not affect `C-x v
+c'; that operation is so drastic that it should always ask for
+confirmation.)
 
-   Fortran mode can also handle a nonstandard comment syntax where
-comments start with `!' and can follow other text.  Because only some
-Fortran compilers accept this syntax, Fortran mode will not insert such
-comments unless you have said in advance to do so.  To do this, set the
-variable `comment-start' to `"!"' (*note Variables::.).
+   VC mode does much of its work by running the shell commands for RCS,
+CVS and SCCS.  If `vc-command-messages' is non-`nil', VC displays
+messages to indicate which shell commands it runs, and additional
+messages when the commands finish.
 
-`M-;'
-     Align comment or insert new comment (`fortran-comment-indent').
-
-`C-x ;'
-     Applies to nonstandard `!' comments only.
-
-`C-c ;'
-     Turn all lines of the region into comments, or (with arg) turn
-     them back into real code (`fortran-comment-region').
-
-   `M-;' in Fortran mode is redefined as the command
-`fortran-comment-indent'.  Like the usual `M-;' command, this
-recognizes any kind of existing comment and aligns its text
-appropriately; if there is no existing comment, a comment is inserted
-and aligned.  But inserting and aligning comments are not the same in
-Fortran mode as in other modes.
-
-   When a new comment must be inserted, if the current line is blank, a
-full-line comment is inserted.  On a non-blank line, a nonstandard `!'
-comment is inserted if you have said you want to use them.  Otherwise a
-full-line comment is inserted on a new line before the current line.
-
-   Nonstandard `!' comments are aligned like comments in other
-languages, but full-line comments are different.  In a standard
-full-line comment, the comment delimiter itself must always appear in
-column zero. What can be aligned is the text within the comment.  You
-can choose from three styles of alignment by setting the variable
-`fortran-comment-indent-style' to one of these values:
-
-`fixed'
-     The text is aligned at a fixed column, which is the value of
-     `fortran-comment-line-column'.  This is the default.
-
-`relative'
-     The text is aligned as if it were a line of code, but with an
-     additional `fortran-comment-line-column' columns of indentation.
-
-`nil'
-     Text in full-line columns is not moved automatically.
-
-   In addition, you can specify the character to be used to indent
-within full-line comments by setting the variable
-`fortran-comment-indent-char' to the character you want to use.
-
-   Fortran mode introduces the two variables, `comment-line-start' and
-`comment-line-start-skip', which play for full-line comments the same
-roles played by `comment-start' and `comment-start-skip' for ordinary
-text-following comments.  Normally these are set properly by Fortran
-mode so you do not need to change them.
-
-   The normal Emacs comment command `C-x ;' has not been redefined. If
-you use `!' comments, this command can be used with them.  Otherwise it
-is useless in Fortran mode.
-
-   The command `C-c ;' (`fortran-comment-region') turns all the lines
-of the region into comments by inserting the string `C$$$' at the front
-of each one.  With a numeric arg, the region is turned back into live
-code by deleting `C$$$' from the front of each line in it.  The string
-used for these comments can be controlled by setting the variable
-`fortran-comment-region'.  Note that here we have an example of a
-command and a variable with the same name; these two uses of the name
-never conflict because in Lisp and in Emacs it is always clear from the
-context which one is meant.
+   You can specify additional directories to search for version control
+programs by setting the variable `vc-path'.  These directories are
+searched before the usual search path.  But the proper files are usually
+found automatically.
 
 
-File: emacs,  Node: Fortran Columns,  Next: Fortran Abbrev,  Prev: Fortran Comments,  Up: Fortran
+File: emacs,  Node: Directories,  Next: Comparing Files,  Prev: Version Control,  Up: Files
 
-Columns
--------
+File Directories
+================
 
-`C-c C-r'
-     Displays a "column ruler" momentarily above the current line
-     (`fortran-column-ruler').
+   The file system groups files into "directories".  A "directory
+listing" is a list of all the files in a directory.  Emacs provides
+commands to create and delete directories, and to make directory
+listings in brief format (file names only) and verbose format (sizes,
+dates, and authors included).  There is also a directory browser called
+Dired; see *Note Dired::.
 
-`C-c C-w'
-     Splits the current window horizontally so that it is 72 columns
-     wide. This may help you avoid going over that limit
-     (`fortran-window-create').
+`C-x C-d DIR-OR-PATTERN RET'
+     Display a brief directory listing (`list-directory').
 
-   The command `C-c C-r' (`fortran-column-ruler') shows a column ruler
-momentarily above the current line.  The comment ruler is two lines of
-text that show you the locations of columns with special significance
-in Fortran programs.  Square brackets show the limits of the columns for
-line numbers, and curly brackets show the limits of the columns for the
-statement body.  Column numbers appear above them.
+`C-u C-x C-d DIR-OR-PATTERN RET'
+     Display a verbose directory listing.
 
-   Note that the column numbers count from zero, as always in GNU
-Emacs.  As a result, the numbers may not be those you are familiar
-with; but the actual positions in the line are standard Fortran.
+`M-x make-directory RET DIRNAME RET'
+     Create a new directory named DIRNAME.
 
-   The text used to display the column ruler is the value of the
-variable `fortran-comment-ruler'.  By changing this variable, you can
-change the display.
+`M-x delete-directory RET DIRNAME RET'
+     Delete the directory named DIRNAME.  It must be empty, or you get
+     an error.
 
-   For even more help, use `C-c C-w' (`fortran-window-create'), a
-command which splits the current window horizontally, making a window 72
-columns wide.  By editing in this window you can immediately see when
-you make a line too wide to be correct Fortran.
+   The command to display a directory listing is `C-x C-d'
+(`list-directory').  It reads using the minibuffer a file name which is
+either a directory to be listed or a wildcard-containing pattern for
+the files to be listed.  For example,
 
-
-File: emacs,  Node: Fortran Abbrev,  Prev: Fortran Columns,  Up: Fortran
+     C-x C-d /u2/emacs/etc RET
 
-Fortran Keyword Abbrevs
------------------------
+lists all the files in directory `/u2/emacs/etc'.  Here is an example
+of specifying a file name pattern:
 
-   Fortran mode provides many built-in abbrevs for common keywords and
-declarations.  These are the same sort of abbrev that you can define
-yourself.  To use them, you must turn on Abbrev mode (*note Abbrevs::.).
+     C-x C-d /u2/emacs/src/*.c RET
 
-   The built-in abbrevs are unusual in one way: they all start with a
-semicolon.  You cannot normally use semicolons in an abbrev, but Fortran
-mode makes this possible by changing the syntax of semicolon to "word
-constituent".
+   Normally, `C-x C-d' prints a brief directory listing containing just
+file names.  A numeric argument (regardless of value) tells it to make
+a verbose listing including sizes, dates, and authors (like `ls -l').
 
-   For example, one built-in Fortran abbrev is `;c' for `continue'.  If
-you insert `;c' and then insert a punctuation character such as a space
-or a newline, the `;c' will change automatically to `continue',
-provided Abbrev mode is enabled.
-
-   Type `;?' or `;C-h' to display a list of all the built-in Fortran
-abbrevs and what they stand for.
+   The text of a directory listing is obtained by running `ls' in an
+inferior process.  Two Emacs variables control the switches passed to
+`ls': `list-directory-brief-switches' is a string giving the switches
+to use in brief listings (`"-CF"' by default), and
+`list-directory-verbose-switches' is a string giving the switches to
+use in a verbose listing (`"-l"' by default).
 
 
-File: emacs,  Node: Compiling/Testing,  Next: Abbrevs,  Prev: Programs,  Up: Top
+File: emacs,  Node: Comparing Files,  Next: Misc File Ops,  Prev: Directories,  Up: Files
 
-Compiling and Testing Programs
-******************************
+Comparing Files
+===============
 
-   The previous chapter discusses the Emacs commands that are useful for
-making changes in programs.  This chapter deals with commands that
-assist in the larger process of developing and maintaining programs.
+   The command `M-x diff' compares two files, displaying the
+differences in an Emacs buffer named `*Diff*'.  It works by running the
+`diff' program, using options taken from the variable `diff-switches',
+whose value should be a string.
+
+   The buffer `*Diff*' has Compilation mode as its major mode, so you
+can use `C-x `' to visit successive changed locations in the two source
+files.  You can also move to a particular hunk of changes and type RET
+or `C-c C-c', or click `Mouse-2' on it, to move to the corresponding
+source location.  You can also use the other special commands of
+Compilation mode: SPC and DEL for scrolling, and `M-p' and `M-n' for
+cursor motion.  *Note Compilation::.
+
+   The command `M-x diff-backup' compares a specified file with its most
+recent backup.  If you specify the name of a backup file, `diff-backup'
+compares it with the source file that it is a backup of.
+
+   The command `M-x compare-windows' compares the text in the current
+window with that in the next window.  Comparison starts at point in each
+window, and each starting position is pushed on the mark ring in its
+respective buffer.  Then point moves forward in each window, a character
+at a time, until a mismatch between the two windows is reached.  Then
+the command is finished.  For more information about windows in Emacs,
+*Note Windows::.
+
+   With a numeric argument, `compare-windows' ignores changes in
+whitespace.  If the variable `compare-ignore-case' is non-`nil', it
+ignores differences in case as well.
+
+   See also *Note Emerge::, for convenient facilities for merging two
+similar files.
+
+
+File: emacs,  Node: Misc File Ops,  Next: Compressed Files,  Prev: Comparing Files,  Up: Files
+
+Miscellaneous File Operations
+=============================
+
+   Emacs has commands for performing many other operations on files.
+All operate on one file; they do not accept wild card file names.
+
+   `M-x view-file' allows you to scan or read a file by sequential
+screenfuls.  It reads a file name argument using the minibuffer.  After
+reading the file into an Emacs buffer, `view-file' displays the
+beginning.  You can then type SPC to scroll forward one windowful, or
+DEL to scroll backward.  Various other commands are provided for moving
+around in the file, but none for changing it; type `?' while viewing
+for a list of them.  They are mostly the same as normal Emacs cursor
+motion commands.  To exit from viewing, type `q'.  The commands for
+viewing are defined by a special major mode called View mode.
+
+   A related command, `M-x view-buffer', views a buffer already present
+in Emacs.  *Note Misc Buffer::.
+
+   `M-x insert-file' inserts a copy of the contents of the specified
+file into the current buffer at point, leaving point unchanged before
+the contents and the mark after them.
+
+   `M-x write-region' is the inverse of `M-x insert-file'; it copies
+the contents of the region into the specified file.  `M-x
+append-to-file' adds the text of the region to the end of the specified
+file.  *Note Accumulating Text::.
+
+   `M-x delete-file' deletes the specified file, like the `rm' command
+in the shell.  If you are deleting many files in one directory, it may
+be more convenient to use Dired (*note Dired::.).
+
+   `M-x rename-file' reads two file names OLD and NEW using the
+minibuffer, then renames file OLD as NEW.  If a file named NEW already
+exists, you must confirm with `yes' or renaming is not done; this is
+because renaming causes the old meaning of the name NEW to be lost.  If
+OLD and NEW are on different file systems, the file OLD is copied and
+deleted.
+
+   The similar command `M-x add-name-to-file' is used to add an
+additional name to an existing file without removing its old name.  The
+new name must belong on the same file system that the file is on.
+
+   `M-x copy-file' reads the file OLD and writes a new file named NEW
+with the same contents.  Confirmation is required if a file named NEW
+already exists, because copying has the consequence of overwriting the
+old contents of the file NEW.
+
+   `M-x make-symbolic-link' reads two file names OLD and LINKNAME, then
+creates a symbolic link named LINKNAME and pointing at OLD.  The effect
+is that future attempts to open file LINKNAME will refer to whatever
+file is named OLD at the time the opening is done, or will get an error
+if the name OLD is not in use at that time.  This command does not
+expand the argument FILENAME, so that it allows you to specify a
+relative name as the target of the link.
+
+   Confirmation is required when creating the link if LINKNAME is in
+use.  Note that not all systems support symbolic links.
+
+
+File: emacs,  Node: Compressed Files,  Prev: Misc File Ops,  Up: Files
+
+Accessing Compressed Files
+==========================
+
+   Emacs comes with a library that can automatically uncompress
+compressed files when you visit them, and automatically recompress them
+if you alter them and save them.  To enable this feature, type the
+command `M-x auto-compression-mode'.
+
+   When automatic compression (which implies automatic uncompression as
+well) is enabled, Emacs recognizes compressed files by their file names.
+File names ending in `.gz' indicate a file compressed with `gzip'.
+Other endings indicate other compression programs.
+
+   Automatic uncompression and compression apply to all the operations
+in which Emacs uses the contents of a file.  This includes visiting it,
+saving it, inserting its contents into a buffer, loading it, and byte
+compiling it.
+
+
+File: emacs,  Node: Buffers,  Next: Windows,  Prev: Files,  Up: Top
+
+Using Multiple Buffers
+**********************
+
+   The text you are editing in Emacs resides in an object called a
+"buffer".  Each time you visit a file, a buffer is created to hold the
+file's text.  Each time you invoke Dired, a buffer is created to hold
+the directory listing.  If you send a message with `C-x m', a buffer
+named `*mail*' is used to hold the text of the message.  When you ask
+for a command's documentation, that appears in a buffer called `*Help*'.
+
+   At any time, one and only one buffer is "selected".  It is also
+called the "current buffer".  Often we say that a command operates on
+"the buffer" as if there were only one; but really this means that the
+command operates on the selected buffer (most commands do).
+
+   When Emacs has multiple windows, each window has a chosen buffer
+which is displayed there, but at any time only one of the windows is
+selected and its chosen buffer is the selected buffer.  Each window's
+mode line displays the name of the buffer that the window is displaying
+(*note Windows::.).
+
+   Each buffer has a name, which can be of any length, and you can
+select any buffer by giving its name.  Most buffers are made by
+visiting files, and their names are derived from the files' names.  But
+you can also create an empty buffer with any name you want.  A newly
+started Emacs has a buffer named `*scratch*' which can be used for
+evaluating Lisp expressions in Emacs.  The distinction between upper
+and lower case matters in buffer names.
+
+   Each buffer records individually what file it is visiting, whether
+it is modified, and what major mode and minor modes are in effect in it
+(*note Major Modes::.).  Any Emacs variable can be made "local to" a
+particular buffer, meaning its value in that buffer can be different
+from the value in other buffers.  *Note Locals::.
 
 * Menu:
 
-* Compilation::        Compiling programs in languages other than Lisp
-                        (C, Pascal, etc.)
-* Modes: Lisp Modes.   Various modes for editing Lisp programs, with
-                       different facilities for running the Lisp programs.
-* Libraries: Lisp Libraries.      Creating Lisp programs to run in Emacs.
-* Interaction: Lisp Interaction.  Executing Lisp in an Emacs buffer.
-* Eval: Lisp Eval.     Executing a single Lisp expression in Emacs.
-* Debug: Lisp Debug.   Debugging Lisp programs running in Emacs.
-* External Lisp::      Communicating through Emacs with a separate Lisp.
+* Select Buffer::      Creating a new buffer or reselecting an old one.
+* List Buffers::       Getting a list of buffers that exist.
+* Misc Buffer::	       Renaming; changing read-onliness; copying text.
+* Kill Buffer::	       Killing buffers you no longer need.
+* Several Buffers::    How to go through the list of all buffers
+			 and operate variously on several of them.
+* Indirect Buffers::   An indirect buffer shares the text of another buffer.
 
 
-File: emacs,  Node: Compilation,  Next: Lisp Modes,  Prev: Compiling/Testing,  Up: Compiling/Testing
+File: emacs,  Node: Select Buffer,  Next: List Buffers,  Up: Buffers
 
-Running `make', or Compilers Generally
-======================================
+Creating and Selecting Buffers
+==============================
 
-   Emacs can run compilers for noninteractive languages such as C and
-Fortran as inferior processes, feeding the error log into an Emacs
-buffer. It can also parse the error messages and visit the files in
-which errors are found, moving point right to the line where the error
-occurred.
+`C-x b BUFFER RET'
+     Select or create a buffer named BUFFER (`switch-to-buffer').
 
-`M-x compile'
-     Run a compiler asynchronously under Emacs, with error messages to
-     `*compilation*' buffer.
+`C-x 4 b BUFFER RET'
+     Similar, but select BUFFER in another window
+     (`switch-to-buffer-other-window').
 
-`M-x grep'
-     Run `grep' asynchronously under Emacs, with matching lines listed
-     in the buffer named `*compilation*'.
+`C-x 5 b BUFFER RET'
+     Similar, but select BUFFER in a separate frame
+     (`switch-to-buffer-other-frame').
 
-`M-x kill-compilation'
-`M-x kill-grep'
-     Kill the running compilation or `grep' subprocess.
+   To select the buffer named BUFNAME, type `C-x b BUFNAME RET'.  This
+runs the command `switch-to-buffer' with argument BUFNAME.  You can use
+completion on an abbreviation for the buffer name you want (*note
+Completion::.).  An empty argument to `C-x b' specifies the most
+recently selected buffer that is not displayed in any window.
 
-`C-x `'
-     Visit the locus of the next compiler error message or `grep' match.
+   Most buffers are created by visiting files, or by Emacs commands that
+want to display some text, but you can also create a buffer explicitly
+by typing `C-x b BUFNAME RET'.  This makes a new, empty buffer which is
+not visiting any file, and selects it for editing.  Such buffers are
+used for making notes to yourself.  If you try to save one, you are
+asked for the file name to use.  The new buffer's major mode is
+determined by the value of `default-major-mode' (*note Major Modes::.).
 
-   To run `make' or another compiler, do `M-x compile'.  This command
-reads a shell command line using the minibuffer, and then executes the
-specified command line in an inferior shell with output going to the
-buffer named `*compilation*'.  The current buffer's default directory
-is used as the working directory for the execution of the command;
-normally, therefore, the makefile comes from this directory.
+   Note that `C-x C-f', and any other command for visiting a file, can
+also be used to switch to an existing file-visiting buffer.  *Note
+Visiting::.
 
-   When the shell command line is read, the minibuffer appears
-containing a default command line, which is the command you used the
-last time you did `M-x compile'.  If you type just RET, the same
-command line is used again.  The first `M-x compile' provides `make -k'
-as the default. The default is taken from the variable
-`compile-command'; if the appropriate compilation command for a file is
-something other than `make -k', it can be useful to have the file
-specify a local value for `compile-command' (*note File Variables::.).
-
-   Starting a compilation causes the buffer `*compilation*' to be
-displayed in another window but not selected.  Its mode line tells you
-whether compilation is finished, with the word `run' or `exit' inside
-the parentheses.  You do not have to keep this buffer visible;
-compilation continues in any case.
-
-   To kill the compilation process, do `M-x kill-compilation'.  You will
-see that the mode line of the `*compilation*' buffer changes to say
-`signal' instead of `run'.  Starting a new compilation also kills any
-running compilation, as only one can exist at any time.  However, this
-requires confirmation before actually killing a compilation that is
-running.
-
-   To parse the compiler error messages, type `C-x `' (`next-error'). 
-The character following the `C-x' is the grave accent, not the single
-quote.  This command displays the buffer `*compilation*' in one window
-and the buffer in which the next error occurred in another window. 
-Point in that buffer is moved to the line where the error was found. 
-The corresponding error message is scrolled to the top of the window in
-which `*compilation*' is displayed.
-
-   The first time `C-x `' is used after the start of a compilation, it
-parses all the error messages, visits all the files that have error
-messages, and makes markers pointing at the lines that the error
-messages refer to.  Then it moves to the first error message location. 
-Subsequent uses of `C-x `' advance down the data set up by the first
-use.  When the preparsed error messages are exhausted, the next `C-x `'
-checks for any more error messages that have come in; this is useful if
-you start editing the compiler errors while the compilation is still
-going on.  If no more error messages have come in, `C-x `' reports an
-error.
-
-   `C-u C-x `' discards the preparsed error message data and parses the
-`*compilation*' buffer over again, then displaying the first error.
-This way, you can process the same set of errors again.
-
-   Instead of running a compiler, you can run `grep' and see the lines
-on which matches were found.  To do this, type `M-x grep' with an
-argument line that contains the same arguments you would give `grep'
-when running it normally: a `grep'-style regexp (usually in
-singlequotes to quote the shell's special characters) followed by
-filenames which may use wildcards. The output from `grep' goes in the
-`*compilation*' buffer and the lines that matched can be found with
-`C-x `' as if they were compilation errors.
-
-   Note: a shell is used to run the compile command, but the shell is
-told that it should be noninteractive.  This means in particular that
-the shell starts up with no prompt.  If you find your usual shell
-prompt making an unsightly appearance in the `*compilation*' buffer, it
-means you have made a mistake in your shell's init file (`.cshrc' or
-`.shrc' or ...) by setting the prompt unconditionally.  The shell init
-file should set the prompt only if there already is a prompt.
-
-   Here is how to do it in `csh':
-
-     if ($?prompt) set prompt = ...
-
-   Here is how to do it in the Bourne-Again shell:
-
-     if [ ! "$PS1" ]; then
-        PS1=...
-     fi
+   Emacs uses buffer names that start with a space for internal
+purposes.  It treats these buffers specially in minor ways--for
+example, by default they do not record undo information.  It is best to
+avoid using such buffer names yourself.
 
 
-File: emacs,  Node: Lisp Modes,  Next: Lisp Libraries,  Prev: Compilation,  Up: Compiling/Testing
+File: emacs,  Node: List Buffers,  Next: Misc Buffer,  Prev: Select Buffer,  Up: Buffers
 
-Major Modes for Lisp
-====================
+Listing Existing Buffers
+========================
 
-   Emacs has four different major modes for Lisp.  They are the same in
-terms of editing commands, but differ in the commands for executing Lisp
-expressions.
+`C-x C-b'
+     List the existing buffers (`list-buffers').
 
-Emacs-Lisp mode
-     The mode for editing source files of programs to run in Emacs Lisp.
-     This mode defines `C-M-x' to evaluate the current defun. *Note
-     Lisp Libraries::.
+   To display a list of all the buffers that exist, type `C-x C-b'.
+Each line in the list shows one buffer's name, major mode and visited
+file.  The buffers are listed in the order, most recently visited first.
 
-Lisp Interaction mode
-     The mode for an interactive session with Emacs Lisp.  It defines
-     LFD to evaluate the sexp before point and insert its value in the
-     buffer.  *Note Lisp Interaction::.
+   `*' at the beginning of a line indicates the buffer is "modified".
+If several buffers are modified, it may be time to save some with `C-x
+s' (*note Saving::.).  `%' indicates a read-only buffer.  `.' marks the
+selected buffer.  Here is an example of a buffer list:
 
-Lisp mode
-     The mode for editing source files of programs that run in Lisps
-     other than Emacs Lisp.  This mode defines `C-M-x' to send the
-     current defun to an inferior Lisp process.  *Note External Lisp::.
+      MR Buffer         Size  Mode           File
+      -- ------         ----  ----           ----
+     .*  emacs.tex      383402 Texinfo       /u2/emacs/man/emacs.tex
+         *Help*         1287  Fundamental
+         files.el       23076 Emacs-Lisp     /u2/emacs/lisp/files.el
+       % RMAIL          64042 RMAIL          /u/rms/RMAIL
+      *% man            747   Dired          /u2/emacs/man/
+         net.emacs      343885 Fundamental   /u/rms/net.emacs
+         fileio.c       27691 C              /u2/emacs/src/fileio.c
+         NEWS           67340 Text           /u2/emacs/etc/NEWS
+         *scratch*	   0	 Lisp Interaction
 
-Inferior Lisp mode
-     The mode for an interactive session with an inferior Lisp process.
-     This mode combines the special features of Lisp mode and Shell mode
-     (*note Shell Mode::.).
-
-Scheme mode
-     Like Lisp mode but for Scheme programs.
-
-Inferior Scheme mode
-     The mode for an interactive session with an inferior Scheme
-     process.
+Note that the buffer `*Help*' was made by a help request; it is not
+visiting any file.  The buffer `man' was made by Dired on the directory
+`/u2/emacs/man/'.
 
 
-File: emacs,  Node: Lisp Libraries,  Next: Lisp Eval,  Prev: Lisp Modes,  Up: Compiling/Testing
+File: emacs,  Node: Misc Buffer,  Next: Kill Buffer,  Prev: List Buffers,  Up: Buffers
 
-Libraries of Lisp Code for Emacs
-================================
+Miscellaneous Buffer Operations
+===============================
 
-   Lisp code for Emacs editing commands is stored in files whose names
-conventionally end in `.el'.  This ending tells Emacs to edit them in
-Emacs-Lisp mode (*note Lisp Modes::.).
+`C-x C-q'
+     Toggle read-only status of buffer (`vc-toggle-read-only').
+
+`M-x rename-buffer RET NAME RET'
+     Change the name of the current buffer.
+
+`M-x rename-uniquely'
+     Rename the current buffer by adding `<NUMBER>' to the end.
+
+`M-x view-buffer RET BUFFER RET'
+     Scroll through buffer BUFFER.
+
+   A buffer can be "read-only", which means that commands to change its
+contents are not allowed.  The mode line indicates read-only buffers
+with `%%' or `%*' near the left margin.  Read-only buffers are usually
+made by subsystems such as Dired and Rmail that have special commands
+to operate on the text; also by visiting a file whose access control
+says you cannot write it.
+
+   If you wish to make changes in a read-only buffer, use the command
+`C-x C-q' (`vc-toggle-read-only').  It makes a read-only buffer
+writable, and makes a writable buffer read-only.  In most cases, this
+works by setting the variable `buffer-read-only', which has a local
+value in each buffer and makes the buffer read-only if its value is
+non-`nil'.  If the file is maintained with version control, `C-x C-q'
+works through the version control system to change the read-only status
+of the file as well as the buffer.  *Note Version Control::.
+
+   `M-x rename-buffer' changes the name of the current buffer.  Specify
+the new name as a minibuffer argument.  There is no default.  If you
+specify a name that is in use for some other buffer, an error happens
+and no renaming is done.
+
+   `M-x rename-uniquely' renames the current buffer to a similar name
+with a numeric suffix added to make it both different and unique.  This
+command does not need an argument.  It is useful for creating multiple
+shell buffers: if you rename the `*Shell*' buffer, then do `M-x shell'
+again, it makes a new shell buffer named `*Shell*'; meanwhile, the old
+shell buffer continues to exist under its new name.  This method is
+also good for mail buffers, compilation buffers, and most Emacs
+features that create special buffers with particular names.
+
+   `M-x view-buffer' is much like `M-x view-file' (*note Misc File
+Ops::.) except that it examines an already existing Emacs buffer.  View
+mode provides commands for scrolling through the buffer conveniently
+but not for changing it.  When you exit View mode, the value of point
+that resulted from your perusal remains in effect.
+
+   The commands `M-x append-to-buffer' and `M-x insert-buffer' can be
+used to copy text from one buffer to another.  *Note Accumulating
+Text::.
+
+
+File: emacs,  Node: Kill Buffer,  Next: Several Buffers,  Prev: Misc Buffer,  Up: Buffers
+
+Killing Buffers
+===============
+
+   If you continue an Emacs session for a while, you may accumulate a
+large number of buffers.  You may then find it convenient to "kill" the
+buffers you no longer need.  On most operating systems, killing a
+buffer releases its space back to the operating system so that other
+programs can use it.  Here are some commands for killing buffers:
+
+`C-x k BUFNAME RET'
+     Kill buffer BUFNAME (`kill-buffer').
+
+`M-x kill-some-buffers'
+     Offer to kill each buffer, one by one.
+
+   `C-x k' (`kill-buffer') kills one buffer, whose name you specify in
+the minibuffer.  The default, used if you type just RET in the
+minibuffer, is to kill the current buffer.  If you kill the current
+buffer, another buffer is selected; one that has been selected recently
+but does not appear in any window now.  If you ask to kill a
+file-visiting buffer that is modified (has unsaved editing), then you
+must confirm with `yes' before the buffer is killed.
+
+   The command `M-x kill-some-buffers' asks about each buffer, one by
+one.  An answer of `y' means to kill the buffer.  Killing the current
+buffer or a buffer containing unsaved changes selects a new buffer or
+asks for confirmation just like `kill-buffer'.
+
+   The buffer menu feature (*note Several Buffers::.) is also convenient
+for killing various buffers.
+
+   If you want to do something special every time a buffer is killed,
+you can add hook functions to the hook `kill-buffer-hook' (*note
+Hooks::.).
+
+
+File: emacs,  Node: Several Buffers,  Next: Indirect Buffers,  Prev: Kill Buffer,  Up: Buffers
+
+Operating on Several Buffers
+============================
+
+   The "buffer-menu" facility is like a "Dired for buffers"; it allows
+you to request operations on various Emacs buffers by editing an Emacs
+buffer containing a list of them.  You can save buffers, kill them
+(here called "deleting" them, for consistency with Dired), or display
+them.
+
+`M-x buffer-menu'
+     Begin editing a buffer listing all Emacs buffers.
+
+   The command `buffer-menu' writes a list of all Emacs buffers into
+the buffer `*Buffer List*', and selects that buffer in Buffer Menu
+mode.  The buffer is read-only, and can be changed only through the
+special commands described in this section.  The usual Emacs cursor
+motion commands can be used in the `*Buffer List*' buffer.  The
+following commands apply to the buffer described on the current line.
+
+`d'
+     Request to delete (kill) the buffer, then move down.  The request
+     shows as a `D' on the line, before the buffer name.  Requested
+     deletions take place when you type the `x' command.
+
+`C-d'
+     Like `d' but move up afterwards instead of down.
+
+`s'
+     Request to save the buffer.  The request shows as an `S' on the
+     line.  Requested saves take place when you type the `x' command.
+     You may request both saving and deletion for the same buffer.
+
+`x'
+     Perform previously requested deletions and saves.
+
+`u'
+     Remove any request made for the current line, and move down.
+
+`DEL'
+     Move to previous line and remove any request made for that line.
+
+   The `d', `C-d', `s' and `u' commands to add or remove flags also
+move down (or up) one line.  They accept a numeric argument as a repeat
+count.
+
+   These commands operate immediately on the buffer listed on the
+current line:
+
+`~'
+     Mark the buffer "unmodified".  The command `~' does this
+     immediately when you type it.
+
+`%'
+     Toggle the buffer's read-only flag.  The command `%' does this
+     immediately when you type it.
+
+`t'
+     Visit the buffer as a tags table.  *Note Select Tags Table::.
+
+   There are also commands to select another buffer or buffers:
+
+`q'
+     Quit the buffer menu--immediately display the most recent formerly
+     visible buffer in its place.
+
+`RET'
+`f'
+     Immediately select this line's buffer in place of the `*Buffer
+     List*' buffer.
+
+`o'
+     Immediately select this line's buffer in another window as if by
+     `C-x 4 b', leaving `*Buffer List*' visible.
+
+`C-o'
+     Immediately display this line's buffer in another window, but don't
+     select the window.
+
+`1'
+     Immediately select this line's buffer in a full-screen window.
+
+`2'
+     Immediately set up two windows, with this line's buffer in one,
+     and the previously selected buffer (aside from the buffer `*Buffer
+     List*') in the other.
+
+`m'
+     Mark this line's buffer to be displayed in another window if you
+     exit with the `v' command.  The request shows as a `>' at the
+     beginning of the line.  (A single buffer may not have both a delete
+     request and a display request.)
+
+`v'
+     Immediately select this line's buffer, and also display in other
+     windows any buffers previously marked with the `m' command.  If
+     you have not marked any buffers, this command is equivalent to `1'.
+
+   All that `buffer-menu' does directly is create and switch to a
+suitable buffer, and turn on Buffer Menu mode.  Everything else
+described above is implemented by the special commands provided in
+Buffer Menu mode.  One consequence of this is that you can switch from
+the `*Buffer List*' buffer to another Emacs buffer, and edit there.
+You can reselect the `*Buffer List*' buffer later, to perform the
+operations already requested, or you can kill it, or pay no further
+attention to it.
+
+   The only difference between `buffer-menu' and `list-buffers' is that
+`buffer-menu' switches to the `*Buffer List*' buffer in the selected
+window; `list-buffers' displays it in another window.  If you run
+`list-buffers' (that is, type `C-x C-b') and select the buffer list
+manually, you can use all of the commands described here.
+
+   The buffer `*Buffer List*' is not updated automatically when buffers
+are created and killed; its contents are just text.  If you have
+created, deleted or renamed buffers, the way to update `*Buffer List*'
+to show what you have done is to type `g' (`revert-buffer') or repeat
+the `buffer-menu' command.
+
+
+File: emacs,  Node: Indirect Buffers,  Prev: Several Buffers,  Up: Buffers
+
+Indirect Buffers
+================
+
+   An "indirect buffer" shares the text of some other buffer, which is
+called the "base buffer" of the indirect buffer.  In some ways it is
+the analogue, for buffers, of a symbolic link between files.
+
+`M-x make-indirect-buffer BASE-BUFFER RET INDIRECT-NAME RET'
+     Create an indirect buffer named INDIRECT-NAME whose base buffer is
+     BASE-BUFFER.
+
+   The text of the indirect buffer is always identical to the text of
+its base buffer; changes made by editing either one are visible
+immediately in the other.  But in all other respects, the indirect
+buffer and its base buffer are completely separate.  They have
+different names, different values of point, different narrowing,
+different markers, different major modes, and different local variables.
+
+   An indirect buffer cannot visit a file, but its base buffer can.  If
+you try to save the indirect buffer, that actually works by saving the
+base buffer.  Killing the base buffer effectively kills the indirect
+buffer, but killing an indirect buffer has no effect on its base buffer.
+
+   One way to use indirect buffers is to display multiple views of an
+outline.  *Note Outline Views::.
+
+
+File: emacs,  Node: Windows,  Next: Frames,  Prev: Buffers,  Up: Top
+
+Multiple Windows
+****************
+
+   Emacs can split a frame into two or many windows.  Multiple windows
+can display parts of different buffers, or different parts of one
+buffer.  Multiple frames always imply multiple windows, because each
+frame has its own set of windows.  Each window belongs to one and only
+one frame.
 
 * Menu:
 
-* Loading::		Loading libraries of Lisp code into Emacs for use.
-* Compiling Libraries:: Compiling a library makes it load and run faster.
-* Mocklisp::		Converting Mocklisp to Lisp so GNU Emacs can run it.
+* Basic Window::       Introduction to Emacs windows.
+* Split Window::       New windows are made by splitting existing windows.
+* Other Window::       Moving to another window or doing something to it.
+* Pop Up Window::      Finding a file or buffer in another window.
+* Force Same Window::  Forcing certain buffers to appear in the selected
+                         window rather than in another window.
+* Change Window::      Deleting windows and changing their sizes.
 
 
-File: emacs,  Node: Loading,  Next: Compiling Libraries,  Prev: Lisp Libraries,  Up: Lisp Libraries
+File: emacs,  Node: Basic Window,  Next: Split Window,  Up: Windows
 
-Loading Libraries
------------------
+Concepts of Emacs Windows
+=========================
 
-   To execute a file of Emacs Lisp, use `M-x load-file'.  This command
-reads a file name using the minibuffer and then executes the contents of
-that file as Lisp code.  It is not necessary to visit the file first;
-in any case, this command reads the file as found on disk, not text in
-an Emacs buffer.
+   Each Emacs window displays one Emacs buffer at any time.  A single
+buffer may appear in more than one window; if it does, any changes in
+its text are displayed in all the windows where it appears.  But the
+windows showing the same buffer can show different parts of it, because
+each window has its own value of point.
 
-   Once a file of Lisp code is installed in the Emacs Lisp library
-directories, users can load it using `M-x load-library'.  Programs can
-load it by calling `load-library', or with `load', a more primitive
-function that is similar but accepts some additional arguments.
+   At any time, one of the windows is the "selected window"; the buffer
+this window is displaying is the current buffer.  The terminal's cursor
+shows the location of point in this window.  Each other window has a
+location of point as well, but since the terminal has only one cursor
+there is no way to show where those locations are.  When multiple
+frames are visible in X Windows, each frame has a cursor which appears
+in the frame's selected window.  The cursor in the selected frame is
+solid; the cursor in other frames is a hollow box.
 
-   `M-x load-library' differs from `M-x load-file' in that it searches
-a sequence of directories and tries three file names in each directory.
- The three names are, first, the specified name with `.elc' appended;
-second, with `.el' appended; third, the specified name alone.  A `.elc'
-file would be the result of compiling the Lisp file into byte code; it
-is loaded if possible in preference to the Lisp file itself because the
-compiled file will load and run faster.
+   Commands to move point affect the value of point for the selected
+Emacs window only.  They do not change the value of point in any other
+Emacs window, even one showing the same buffer.  The same is true for
+commands such as `C-x b' to change the selected buffer in the selected
+window; they do not affect other windows at all.  However, there are
+other commands such as `C-x 4 b' that select a different window and
+switch buffers in it.  Also, all commands that display information in a
+window, including (for example) `C-h f' (`describe-function') and `C-x
+C-b' (`list-buffers'), work by switching buffers in a nonselected window
+without affecting the selected window.
 
-   Because the argument to `load-library' is usually not in itself a
-valid file name, file name completion is not available.  Indeed, when
-using this command, you usually do not know exactly what file name will
-be used.
+   When multiple windows show the same buffer, they can have different
+regions, because they can have different values of point.  This means
+that in Transient Mark mode, each window highlights a different part of
+the buffer.  The part that is highlighted in the selected window is the
+region that editing commands use.
 
-   The sequence of directories searched by `M-x load-library' is
-specified by the variable `load-path', a list of strings that are
-directory names.  The default value of the list contains the directory
-where the Lisp code for Emacs itself is stored.  If you have libraries
-of your own, put them in a single directory and add that directory to
-`load-path'.  `nil' in this list stands for the current default
-directory, but it is probably not a good idea to put `nil' in the list.
- If you find yourself wishing that `nil' were in the list, most likely
-what you really want to do is use `M-x load-file' this once.
-
-   Often you do not have to give any command to load a library, because
-the commands defined in the library are set up to "autoload" that
-library. Running any of those commands causes `load' to be called to
-load the library; this replaces the autoload definitions with the real
-ones from the library.
-
-   If autoloading a file does not finish, either because of an error or
-because of a `C-g' quit, all function definitions made by the file are
-undone automatically.  So are any calls to `provide'.  As a consequence,
-if you use one of the autoloadable commands again, the entire file will
-be loaded a second time.  This prevents problems where the command is no
-longer autoloading but it works wrong because not all the file was
-loaded. Function definitions are undone only for autoloading; explicit
-calls to `load' do not undo anything if loading is not completed.
+   Each window has its own mode line, which displays the buffer name,
+modification status and major and minor modes of the buffer that is
+displayed in the window.  *Note Mode Line::, for full details on the
+mode line.
 
 
-File: emacs,  Node: Compiling Libraries,  Next: Mocklisp,  Prev: Loading,  Up: Lisp Libraries
+File: emacs,  Node: Split Window,  Next: Other Window,  Prev: Basic Window,  Up: Windows
 
-Compiling Libraries
--------------------
+Splitting Windows
+=================
 
-   Emacs Lisp code can be compiled into byte-code which loads faster,
-takes up less space when loaded, and executes faster.
+`C-x 2'
+     Split the selected window into two windows, one above the other
+     (`split-window-vertically').
 
-   The way to make a byte-code compiled file from an Emacs-Lisp source
-file is with `M-x byte-compile-file'.  The default argument for this
-function is the file visited in the current buffer.  It reads the
-specified file, compiles it into byte code, and writes an output file
-whose name is made by appending `c' to the input file name.  Thus, the
-file `rmail.el' would be compiled into `rmail.elc'.
+`C-x 3'
+     Split the selected window into two windows positioned side by side
+     (`split-window-horizontally').
 
-   To recompile the changed Lisp files in a directory, use `M-x
-byte-recompile-directory'.  Specify just the directory name as an
-argument. Each `.el' file that has been byte-compiled before is
-byte-compiled again if it has changed since the previous compilation. 
-A numeric argument to this command tells it to offer to compile each
-`.el' file that has not already been compiled.  You must answer `y' or
-`n' to each offer.
+`C-Mouse-2'
+     In the mode line or scroll bar of a window, split that window.
 
-   Emacs can be invoked noninteractively from the shell to do byte
-compilation with the aid of the function `batch-byte-compile'.  In this
-case, the files to be compiled are specified with command-line
-arguments. Use a shell command of the form
+   The command `C-x 2' (`split-window-vertically') breaks the selected
+window into two windows, one above the other.  Both windows start out
+displaying the same buffer, with the same value of point.  By default
+the two windows each get half the height of the window that was split; a
+numeric argument specifies how many lines to give to the top window.
 
-     emacs -batch -f batch-byte-compile FILES...
+   `C-x 3' (`split-window-horizontally') breaks the selected window
+into two side-by-side windows.  A numeric argument specifies how many
+columns to give the one on the left.  A line of vertical bars separates
+the two windows.  Windows that are not the full width of the screen
+have mode lines, but they are truncated; also, they do not always
+appear in inverse video, because the Emacs display routines have not
+been taught how to display a region of inverse video that is only part
+of a line on the screen.
 
-   Directory names may also be given as arguments;
-`byte-recompile-directory' is invoked (in effect) on each such
-directory. `batch-byte-compile' uses all the remaining command-line
-arguments as file or directory names, then kills the Emacs process.
+   You can split a window horizontally or vertically by clicking
+`C-Mouse-2' in the mode line or the scroll bar.  The line of splitting
+goes through the place where you click: if you click on the mode line,
+the new scroll bar goes above the spot; if you click in the scroll bar,
+the mode line of the split window is side by side with your click.
 
-   `M-x disassemble' explains the result of byte compilation.  Its
-argument is a function name.  It displays the byte-compiled code in a
-help window in symbolic form, one instruction per line.  If the
-instruction refers to a variable or constant, that is shown too.
+   When a window is less than the full width, text lines too long to
+fit are frequent.  Continuing all those lines might be confusing.  The
+variable `truncate-partial-width-windows' can be set non-`nil' to force
+truncation in all windows less than the full width of the screen,
+independent of the buffer being displayed and its value for
+`truncate-lines'.  *Note Continuation Lines::.
 
-
-File: emacs,  Node: Mocklisp,  Prev: Compiling Libraries,  Up: Lisp Libraries
+   Horizontal scrolling is often used in side-by-side windows.  *Note
+Display::.
 
-Converting Mocklisp to Lisp
----------------------------
-
-   GNU Emacs can run Mocklisp files by converting them to Emacs Lisp
-first. To convert a Mocklisp file, visit it and then type `M-x
-convert-mocklisp-buffer'.  Then save the resulting buffer of Lisp file
-in a file whose name ends in `.el' and use the new file as a Lisp
-library.
-
-   It does not currently work to byte-compile converted Mocklisp code.
-This is because converted Mocklisp code uses some special Lisp features
-to deal with Mocklisp's incompatible ideas of how arguments are
-evaluated and which values signify "true" or "false".
+   If `split-window-keep-point' is non-nil, `C-x 2' tries to avoid
+shifting any text on the screen by putting point in whichever window
+happens to contain the screen line the cursor is already on.  The
+default is that `split-window-keep-point' is non-nil on slow terminals.
 
 
+File: emacs,  Node: Other Window,  Next: Pop Up Window,  Prev: Split Window,  Up: Windows
+
+Using Other Windows
+===================
+
+`C-x o'
+     Select another window (`other-window').  That is `o', not zero.
+
+`C-M-v'
+     Scroll the next window (`scroll-other-window').
+
+`M-x compare-windows'
+     Find next place where the text in the selected window does not
+     match the text in the next window.
+
+`Mouse-1'
+     `Mouse-1', in a window's mode line, selects that window but does
+     not move point in it (`mouse-select-region').
+
+   To select a different window, click with `Mouse-1' on its mode line.
+With the keyboard, you can switch windows by typing `C-x o'
+(`other-window').  That is an `o', for `other', not a zero.  When there
+are more than two windows, this command moves through all the windows
+in a cyclic order, generally top to bottom and left to right.  After
+the rightmost and bottommost window, it goes back to the one at the
+upper left corner.  A numeric argument means to move several steps in
+the cyclic order of windows.  A negative argument moves around the
+cycle in the opposite order.  When the minibuffer is active, the
+minibuffer is the last window in the cycle; you can switch from the
+minibuffer window to one of the other windows, and later switch back and
+finish supplying the minibuffer argument that is requested.  *Note
+Minibuffer Edit::.
+
+   The usual scrolling commands (*note Display::.) apply to the selected
+window only, but there is one command to scroll the next window.
+`C-M-v' (`scroll-other-window') scrolls the window that `C-x o' would
+select.  It takes arguments, positive and negative, like `C-v'.  (In
+the minibuffer, `C-M-v' scrolls the window that contains the minibuffer
+help display, if any, rather than the next window in the standard
+cyclic order.)
+
+   The command `M-x compare-windows' lets you compare two files or
+buffers visible in two windows, by moving through them to the next
+mismatch.  *Note Comparing Files::, for details.
+
+
+File: emacs,  Node: Pop Up Window,  Next: Force Same Window,  Prev: Other Window,  Up: Windows
+
+Displaying in Another Window
+============================
+
+   `C-x 4' is a prefix key for commands that select another window
+(splitting the window if there is only one) and select a buffer in that
+window.  Different `C-x 4' commands have different ways of finding the
+buffer to select.
+
+`C-x 4 b BUFNAME RET'
+     Select buffer BUFNAME in another window.  This runs
+     `switch-to-buffer-other-window'.
+
+`C-x 4 C-o BUFNAME RET'
+     Display buffer BUFNAME in another window, but don't select that
+     buffer or that window.  This runs `display-buffer'.
+
+`C-x 4 f FILENAME RET'
+     Visit file FILENAME and select its buffer in another window.  This
+     runs `find-file-other-window'.  *Note Visiting::.
+
+`C-x 4 d DIRECTORY RET'
+     Select a Dired buffer for directory DIRECTORY in another window.
+     This runs `dired-other-window'.  *Note Dired::.
+
+`C-x 4 m'
+     Start composing a mail message in another window.  This runs
+     `mail-other-window'; its same-window analogue is `C-x m' (*note
+     Sending Mail::.).
+
+`C-x 4 .'
+     Find a tag in the current tags table, in another window.  This runs
+     `find-tag-other-window', the multiple-window variant of `M-.'
+     (*note Tags::.).
+
+`C-x 4 r FILENAME RET'
+     Visit file FILENAME read-only, and select its buffer in another
+     window.  This runs `find-file-read-only-other-window'.  *Note
+     Visiting::.
+
+
+File: emacs,  Node: Force Same Window,  Next: Change Window,  Prev: Pop Up Window,  Up: Windows
+
+Forcing Display in the Same Window
+==================================
+
+   Certain Emacs commands switch to a specific buffer with special
+contents.  For example, `M-x shell' switches to a buffer named
+`*Shell*'.  By convention, all these commands are written to pop up the
+buffer in a separate window.  But you can specify that certain of these
+buffers should appear in the selected window.
+
+   If you add a buffer name to the list `same-window-buffer-names', the
+effect is that such commands display that particular buffer by
+switching to it in the selected window.  For example, if you add the
+element `"*grep*"' to the list, the `grep' command will display its
+output buffer in the selected window.
+
+   The default value of `same-window-buffer-names' is not `nil'.  It
+specifies the buffers `*info*', `*mail*' and `*shell*'.  This is why
+`M-x shell' normally switches to the `*shell*' buffer in the selected
+window.  If you delete this element from the value of
+`same-window-buffer-names', the behavior of `M-x shell' will change--it
+will pop up the buffer in another window instead.
+
+   You can specify these buffers more generally with the variable
+`same-window-regexps'.  Set it to a list of regular expressions; then
+any buffer whose name matches one of those regular expressions is
+displayed by switching to it in the selected window.  (Once again, this
+applies only to buffers that normally get displayed for you in a
+separate window.)  The default value of this variable specifies Telnet
+and rlogin buffers.
+
+   An analogous feature lets you specify buffers which should be
+displayed in their own individual frames.  *Note Special Buffer
+Frames::.
+

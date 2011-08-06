@@ -1,0 +1,1285 @@
+This is Info file ../info/gnus, produced by Makeinfo-1.63 from the
+input file gnus.texi.
+
+   This file documents Gnus, the GNU Emacs newsreader.
+
+   Copyright (C) 1995,96 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+
+File: gnus,  Node: Unavailable Servers,  Prev: Servers and Methods,  Up: The Server Buffer
+
+Unavailable Servers
+-------------------
+
+   If a server seems to be unreachable, Gnus will mark that server as
+`denied'.  That means that any subsequent attempt to make contact with
+that server will just be ignored.  "It can't be opened," Gnus will tell
+you, without making the least effort to see whether that is actually
+the case or not.
+
+   That might seem quite naughty, but it does make sense most of the
+time.  Let's say you have 10 groups subscribed to the server
+`nepholococcygia.com'.  This server is located somewhere quite far away
+from you, the machine is quite, so it takes 1 minute just to find out
+that it refuses connection from you today.  If Gnus were to attempt to
+do that 10 times, you'd be quite annoyed, so Gnus won't attempt to do
+that.  Once it has gotten a single "connection refused", it will regard
+that server as "down".
+
+   So, what happens if the machine was only feeling unwell temporarily?
+How do you test to see whether the machine has come up again?
+
+   You jump to the server buffer (*note The Server Buffer::.) and poke
+it with the following commands:
+
+`O'
+     Try to establish connection to the server on the current line
+     (`gnus-server-open-server').
+
+`C'
+     Close the connection (if any) to the server
+     (`gnus-server-close-server').
+
+`D'
+     Mark the current server as unreachable (`gnus-server-deny-server').
+
+`R'
+     Remove all marks to whether Gnus was denied connection from all
+     servers (`gnus-server-remove-denials').
+
+
+File: gnus,  Node: Getting News,  Next: Getting Mail,  Prev: The Server Buffer,  Up: Select Methods
+
+Getting News
+============
+
+   A newsreader is normally used for reading news.  Gnus currently
+provides only two methods of getting news - it can read from an NNTP
+server, or it can read from a local spool.
+
+* Menu:
+
+* NNTP::               Reading news from an NNTP server.
+* News Spool::         Reading news from the local spool.
+
+
+File: gnus,  Node: NNTP,  Next: News Spool,  Up: Getting News
+
+NNTP
+----
+
+   Subscribing to a foreign group from an NNTP server is rather easy.
+You just specify `nntp' as method and the address of the NNTP server as
+the, uhm, address.
+
+   If the NNTP server is located at a non-standard port, setting the
+third element of the select method to this port number should allow you
+to connect to the right port.  You'll have to edit the group info for
+that (*note Foreign Groups::.).
+
+   The name of the foreign group can be the same as a native group.  In
+fact, you can subscribe to the same group from as many different servers
+you feel like.  There will be no name collisions.
+
+   The following variables can be used to create a virtual `nntp'
+server:
+
+`nntp-server-opened-hook'
+     `nntp-server-opened-hook' is run after a connection has been made.
+     It can be used to send commands to the NNTP server after it has
+     been contacted.  By default is sends the command `MODE READER' to
+     the server with the `nntp-send-mode-reader' function.  Another
+     popular function is `nntp-send-authinfo', which will prompt you for
+     an NNTP password and stuff.
+
+`nntp-server-action-alist'
+     This is an list of regexps to match on server types and actions to
+     be taken when matches are made.  For instance, if you want Gnus to
+     beep every time you connect to innd, you could say something like:
+
+          (setq nntp-server-action-alist
+                '(("innd" (ding))))
+
+     You probably don't want to do that, though.
+
+     The default value is
+
+            '(("nntpd 1\\.5\\.11t"
+               (remove-hook 'nntp-server-opened-hook nntp-send-mode-reader)))
+
+     This ensures that Gnus doesn't send the `MODE READER' command to
+     nntpd 1.5.11t, since that command chokes that server, I've been
+     told.
+
+`nntp-maximum-request'
+     If the NNTP server doesn't support NOV headers, this backend will
+     collect headers by sending a series of `head' commands.  To speed
+     things up, the backend sends lots of these commands without
+     waiting for reply, and then reads all the replies.  This is
+     controlled by the `nntp-maximum-request' variable, and is 400 by
+     default.  If your network is buggy, you should set this to 1.
+
+`nntp-connection-timeout'
+     If you have lots of foreign `nntp' groups that you connect to
+     regularly, you're sure to have problems with NNTP servers not
+     responding properly, or being too loaded to reply within reasonable
+     time.  This is can lead to awkward problems, which can be helped
+     somewhat by setting `nntp-connection-timeout'.  This is an integer
+     that says how many seconds the `nntp' backend should wait for a
+     connection before giving up.  If it is `nil', which is the default,
+     no timeouts are done.
+
+`nntp-command-timeout'
+     If you're running Gnus on a machine that has a dynamically assigned
+     address, Gnus may become confused.  If the address of your machine
+     changes after connecting to the NNTP server, Gnus will simply sit
+     waiting forever for replies from the server.  To help with this
+     unfortunate problem, you can set this command to a number.  Gnus
+     will then, if it sits waiting longer than that number of seconds
+     for a reply from the server, shut down the connection, start a new
+     one, and resend the command.  This should hopefully be transparent
+     to the user.  A likely number is 30 seconds.
+
+`nntp-retry-on-break'
+     If this variable is non-`nil', you can also `C-g' if Gnus hangs.
+     This will have much the same effect as the command timeout
+     described above.
+
+`nntp-server-hook'
+     This hook is run as the last step when connecting to an NNTP
+     server.
+
+`nntp-open-server-function'
+     This function is used to connect to the remote system.  Two
+     pre-made functions are `nntp-open-network-stream', which is the
+     default, and simply connects to some port or other on the remote
+     system.  The other is `nntp-open-rlogin', which does an rlogin on
+     the remote system, and then does a telnet to the NNTP server
+     available there.
+
+`nntp-rlogin-parameters'
+     If you use `nntp-open-rlogin' as the `nntp-open-server-function',
+     this list will be used as the parameter list given to `rsh'.
+
+`nntp-end-of-line'
+     String to use as end-of-line markers when talking to the NNTP
+     server.  This is `\r\n' by default, but should be `\n' when using
+     `rlogin' to talk to the server.
+
+`nntp-rlogin-user-name'
+     User name on the remote system when using the `rlogin' connect
+     function.
+
+`nntp-address'
+     The address of the remote system running the NNTP server.
+
+`nntp-port-number'
+     Port number to connect to when using the `nntp-open-network-stream'
+     connect function.
+
+`nntp-buggy-select'
+     Set this to non-`nil' if your select routine is buggy.
+
+`nntp-nov-is-evil'
+     If the NNTP server does not support NOV, you could set this
+     variable to `t', but `nntp' usually checks whether NOV can be used
+     automatically.
+
+`nntp-xover-commands'
+     List of strings that are used as commands to fetch NOV lines from a
+     server.  The default value of this variable is `("XOVER"
+     "XOVERVIEW")'.
+
+`nntp-nov-gap'
+     `nntp' normally sends just one big request for NOV lines to the
+     server.  The server responds with one huge list of lines.  However,
+     if you have read articles 2-5000 in the group, and only want to
+     read article 1 and 5001, that means that `nntp' will fetch 4999 NOV
+     lines that you do not want, and will not use.  This variable says
+     how big a gap between two consecutive articles is allowed to be
+     before the `XOVER' request is split into several request.  Note
+     that if your network is fast, setting this variable to a really
+     small number means that fetching will probably be slower.  If this
+     variable is `nil', `nntp' will never split requests.
+
+`nntp-prepare-server-hook'
+     A hook run before attempting to connect to an NNTP server.
+
+`nntp-async-number'
+     How many articles should be pre-fetched when in asynchronous mode.
+     If this variable is `t', `nntp' will pre-fetch all the articles
+     that it can without bound.  If it is `nil', no pre-fetching will be
+     made.
+
+`nntp-warn-about-losing-connection'
+     If this variable is non-`nil', some noise will be made when a
+     server closes connection.
+
+
+File: gnus,  Node: News Spool,  Prev: NNTP,  Up: Getting News
+
+News Spool
+----------
+
+   Subscribing to a foreign group from the local spool is extremely
+easy, and might be useful, for instance, to speed up reading groups like
+`alt.binaries.pictures.furniture'.
+
+   Anyways, you just specify `nnspool' as the method and `' (or
+anything else) as the address.
+
+   If you have access to a local spool, you should probably use that as
+the native select method (*note Finding the News::.).  It is normally
+faster than using an `nntp' select method, but might not be.  It
+depends.  You just have to try to find out what's best at your site.
+
+`nnspool-inews-program'
+     Program used to post an article.
+
+`nnspool-inews-switches'
+     Parameters given to the inews program when posting an article.
+
+`nnspool-spool-directory'
+     Where `nnspool' looks for the articles.  This is normally
+     `/usr/spool/news/'.
+
+`nnspool-nov-directory'
+     Where `nnspool' will look for NOV files.  This is normally
+     `/usr/spool/news/over.view/'.
+
+`nnspool-lib-dir'
+     Where the news lib dir is (`/usr/lib/news/' by default).
+
+`nnspool-active-file'
+     The path of the active file.
+
+`nnspool-newsgroups-file'
+     The path of the group descriptions file.
+
+`nnspool-history-file'
+     The path of the news history file.
+
+`nnspool-active-times-file'
+     The path of the active date file.
+
+`nnspool-nov-is-evil'
+     If non-`nil', `nnspool' won't try to use any NOV files that it
+     finds.
+
+`nnspool-sift-nov-with-sed'
+     If non-`nil', which is the default, use `sed' to get the relevant
+     portion from the overview file.  If nil, `nnspool' will load the
+     entire file into a buffer and process it there.
+
+
+File: gnus,  Node: Getting Mail,  Next: Other Sources,  Prev: Getting News,  Up: Select Methods
+
+Getting Mail
+============
+
+   Reading mail with a newsreader--isn't that just plain WeIrD? But of
+course.
+
+* Menu:
+
+* Getting Started Reading Mail:: A simple cookbook example.
+* Splitting Mail::               How to create mail groups.
+* Mail Backend Variables::       Variables for customizing mail handling.
+* Fancy Mail Splitting::         Gnus can do hairy splitting of incoming mail.
+* Mail and Procmail::            Reading mail groups that procmail create.
+* Incorporating Old Mail::       What about the old mail you have?
+* Expiring Mail::                Getting rid of unwanted mail.
+* Duplicates::                   Dealing with duplicated mail.
+* Not Reading Mail::             Using mail backends for reading other files.
+* Choosing a Mail Backend::      Gnus can read a variety of mail formats.
+
+
+File: gnus,  Node: Getting Started Reading Mail,  Next: Splitting Mail,  Up: Getting Mail
+
+Getting Started Reading Mail
+----------------------------
+
+   It's quite easy to use Gnus to read your new mail.  You just plonk
+the mail backend of your choice into `gnus-secondary-select-methods',
+and things will happen automatically.
+
+   For instance, if you want to use `nnml' (which is a one file per
+mail backend), you could put the following in your `.gnus' file:
+
+     (setq gnus-secondary-select-methods
+           '((nnml "private")))
+
+   Now, the next time you start Gnus, this backend will be queried for
+new articles, and it will move all the messages in your spool file to
+its directory, which is `~/Mail/' by default.  The new group that will
+be created (`mail.misc') will be subscribed, and you can read it like
+any other group.
+
+   You will probably want to split the mail into several groups, though:
+
+     (setq nnmail-split-methods
+       '(("junk" "^From:.*Lars Ingebrigtsen")
+         ("crazy" "^Subject:.*die\\|^Organization:.*flabby")
+         ("other" "")))
+
+   This will result in three new mail groups being created:
+`nnml:junk', `nnml:crazy', and `nnml:other'.  All the mail that doesn't
+fit into the first two groups will be placed in the latter group.
+
+   This should be sufficient for reading mail with Gnus.  You might
+want to give the other sections in this part of the manual a perusal,
+though, especially *note Choosing a Mail Backend::. and *note Expiring
+Mail::..
+
+
+File: gnus,  Node: Splitting Mail,  Next: Mail Backend Variables,  Prev: Getting Started Reading Mail,  Up: Getting Mail
+
+Splitting Mail
+--------------
+
+   The `nnmail-split-methods' variable says how the incoming mail is to
+be split into groups.
+
+     (setq nnmail-split-methods
+       '(("mail.junk" "^From:.*Lars Ingebrigtsen")
+         ("mail.crazy" "^Subject:.*die\\|^Organization:.*flabby")
+         ("mail.other" "")))
+
+   This variable is a list of lists, where the first element of each of
+these lists is the name of the mail group (they do not have to be called
+something beginning with `mail', by the way), and the second element is
+a regular expression used on the header of each mail to determine if it
+belongs in this mail group.
+
+   The second element can also be a function.  In that case, it will be
+called narrowed to the headers with the first element of the rule as the
+argument.  It should return a non-`nil' value if it thinks that the
+mail belongs in that group.
+
+   The last of these groups should always be a general one, and the
+regular expression should *always* be `' so that it matches any mails
+that haven't been matched by any of the other regexps.
+
+   If you like to tinker with this yourself, you can set this variable
+to a function of your choice.  This function will be called without any
+arguments in a buffer narrowed to the headers of an incoming mail
+message.  The function should return a list of groups names that it
+thinks should carry this mail message.
+
+   Note that the mail backends are free to maul the poor, innocent
+incoming headers all they want to.  They all add `Lines' headers; some
+add `X-Gnus-Group' headers; most rename the Unix mbox `From<SPACE>'
+line to something else.
+
+   The mail backends all support cross-posting.  If several regexps
+match, the mail will be "cross-posted" to all those groups.
+`nnmail-crosspost' says whether to use this mechanism or not.  Note
+that no articles are crossposted to the general (`') group.
+
+   `nnmh' and `nnml' makes crossposts by creating hard links to the
+crossposted articles.  However, not all files systems support hard
+links.  If that's the case for you, set
+`nnmail-crosspost-link-function' to `copy-file'.  (This variable is
+`add-name-to-file' by default.)
+
+   Gnus gives you all the opportunity you could possibly want for
+shooting yourself in the foot.  Let's say you create a group that will
+contain all the mail you get from your boss.  And then you accidentally
+unsubscribe from the group.  Gnus will still put all the mail from your
+boss in the unsubscribed group, and so, when your boss mails you "Have
+that report ready by Monday or you're fired!", you'll never see it and,
+come Tuesday, you'll still believe that you're gainfully employed while
+you really should be out collecting empty bottles to save up for next
+month's rent money.
+
+
+File: gnus,  Node: Mail Backend Variables,  Next: Fancy Mail Splitting,  Prev: Splitting Mail,  Up: Getting Mail
+
+Mail Backend Variables
+----------------------
+
+   These variables are (for the most part) pertinent to all the various
+mail backends.
+
+`nnmail-read-incoming-hook'
+     The mail backends all call this hook after reading new mail.  You
+     can use this hook to notify any mail watch programs, if you want
+     to.
+
+`nnmail-spool-file'
+     The backends will look for new mail in this file.  If this
+     variable is `nil', the mail backends will never attempt to fetch
+     mail by themselves.  If you are using a POP mail server and your
+     name is `larsi', you should set this variable to `po:larsi'.  If
+     your name is not `larsi', you should probably modify that
+     slightly, but you may have guessed that already, you smart &
+     handsome devil!  You can also set this variable to `pop', and Gnus
+     will try to figure out the POP mail string by itself.  In any
+     case, Gnus will call `movemail' which will contact the POP server
+     named in the `MAILHOST' environment variable.  If the POP server
+     needs a password, you can either set
+     `nnmail-pop-password-required' to `t' and be prompted for the
+     password, or set `nnmail-pop-password' to the password itself.
+
+     When you use a mail backend, Gnus will slurp all your mail from
+     your inbox and plonk it down in your home directory.  Gnus doesn't
+     move any mail if you're not using a mail backend--you have to do a
+     lot of magic invocations first.  At the time when you have
+     finished drawing the pentagram, lightened the candles, and
+     sacrificed the goat, you really shouldn't be too surprised when
+     Gnus moves your mail.
+
+`nnmail-use-procmail'
+     If non-`nil', the mail backends will look in
+     `nnmail-procmail-directory' for incoming mail.  All the files in
+     that directory that have names ending in `nnmail-procmail-suffix'
+     will be considered incoming mailboxes, and will be searched for new
+     mail.
+
+`nnmail-crash-box'
+     When the mail backends read a spool file, it is first moved to this
+     file, which is `~/.gnus-crash-box' by default.  If this file
+     already exists, it will always be read (and incorporated) before
+     any other spool files.
+
+`nnmail-prepare-incoming-hook'
+     This is run in a buffer that holds all the new incoming mail, and
+     can be used for, well, anything, really.
+
+`nnmail-pre-get-new-mail-hook'
+`nnmail-post-get-new-mail-hook'
+     These are two useful hooks executed when treating new incoming
+     mail--`nnmail-pre-get-new-mail-hook' (is called just before
+     starting to handle the new mail) and
+     `nnmail-post-get-new-mail-hook' (is called when the mail handling
+     is done).  Here's and example of using these two hooks to change
+     the default file modes the new mail files get:
+
+          (add-hook 'gnus-pre-get-new-mail-hook
+                    (lambda () (set-default-file-modes 511)))
+          
+          (add-hook 'gnus-post-get-new-mail-hook
+                    (lambda () (set-default-file-modes 551)))
+
+`nnmail-tmp-directory'
+     This variable says where to move the incoming mail to while
+     processing it.  This is usually done in the same directory that
+     the mail backend inhabits (i.e., `~/Mail/'), but if this variable
+     is non-`nil', it will be used instead.
+
+`nnmail-movemail-program'
+     This program is executed to move mail from the user's inbox to her
+     home directory.  The default is `movemail'.
+
+`nnmail-delete-incoming'
+     If non-`nil', the mail backends will delete the temporary incoming
+     file after splitting mail into the proper groups.  This is `nil' by
+     default for reasons of security.
+
+`nnmail-use-long-file-names'
+     If non-`nil', the mail backends will use long file and directory
+     names.  Groups like `mail.misc' will end up in directories like
+     `mail.misc/'.  If it is `nil', the same group will end up in
+     `mail/misc/'.
+
+`nnmail-delete-file-function'
+     Function called to delete files.  It is `delete-file' by default.
+
+
+File: gnus,  Node: Fancy Mail Splitting,  Next: Mail and Procmail,  Prev: Mail Backend Variables,  Up: Getting Mail
+
+Fancy Mail Splitting
+--------------------
+
+   If the rather simple, standard method for specifying how to split
+mail doesn't allow you to do what you want, you can set
+`nnmail-split-methods' to `nnmail-split-fancy'.  Then you can play with
+the `nnmail-split-fancy' variable.
+
+   Let's look at an example value of this variable first:
+
+     ;; Messages from the mailer daemon are not crossposted to any of
+     ;; the ordinary groups.  Warnings are put in a separate group
+     ;; from real errors.
+     (| ("from" mail (| ("subject" "warn.*" "mail.warning")
+                        "mail.misc"))
+        ;; Non-error messages are crossposted to all relevant
+        ;; groups, but we don't crosspost between the group for the
+        ;; (ding) list and the group for other (ding) related mail.
+        (& (| (any "ding@ifi\\.uio\\.no" "ding.list")
+              ("subject" "ding" "ding.misc"))
+           ;; Other mailing lists...
+           (any "procmail@informatik\\.rwth-aachen\\.de" "procmail.list")
+           (any "SmartList@informatik\\.rwth-aachen\\.de" "SmartList.list")
+           ;; People...
+           (any "larsi@ifi\\.uio\\.no" "people.Lars Magne Ingebrigtsen"))
+        ;; Unmatched mail goes to the catch all group.
+        "misc.misc"))")
+
+   This variable has the format of a "split".  A split is a (possibly)
+recursive structure where each split may contain other splits.  Here are
+the four possible split syntaxes:
+
+"GROUP"
+     If the split is a string, that will be taken as a group name.
+
+"(FIELD VALUE SPLIT)"
+     If the split is a list, and the first element is a string, then
+     that means that if header FIELD (a regexp) contains VALUE (also a
+     regexp), then store the message as specified by SPLIT.
+
+"(| SPLIT...)"
+     If the split is a list, and the first element is `|' (vertical
+     bar), then process each SPLIT until one of them matches.  A SPLIT
+     is said to match if it will cause the mail message to be stored in
+     one or more groups.
+
+"(& SPLIT...)"
+     If the split is a list, and the first element is `&', then process
+     all SPLITs in the list.
+
+   In these splits, FIELD must match a complete field name.  VALUE must
+match a complete word according to the fundamental mode syntax table.
+You can use `.*' in the regexps to match partial field names or words.
+
+   FIELD and VALUE can also be lisp symbols, in that case they are
+expanded as specified by the variable `nnmail-split-abbrev-alist'.
+This is an alist of cons cells, where the car of the cells contains the
+key, and the cdr contains a string.
+
+   `nnmail-split-fancy-syntax-table' is the syntax table in effect when
+all this splitting is performed.
+
+
+File: gnus,  Node: Mail and Procmail,  Next: Incorporating Old Mail,  Prev: Fancy Mail Splitting,  Up: Getting Mail
+
+Mail and Procmail
+-----------------
+
+   Many people use `procmail' (or some other mail filter program or
+external delivery agent--`slocal', `elm', etc) to split incoming mail
+into groups.  If you do that, you should set `nnmail-spool-file' to
+`procmail' to ensure that the mail backends never ever try to fetch
+mail by themselves.
+
+   This also means that you probably don't want to set
+`nnmail-split-methods' either, which has some, perhaps, unexpected side
+effects.
+
+   When a mail backend is queried for what groups it carries, it replies
+with the contents of that variable, along with any groups it has figured
+out that it carries by other means.  None of the backends (except
+`nnmh') actually go out to the disk and check what groups actually
+exist.  (It's not trivial to distinguish between what the user thinks is
+a basis for a newsgroup and what is just a plain old file or directory.)
+
+   This means that you have to tell Gnus (and the backends) what groups
+exist by hand.
+
+   Let's take the `nnmh' backend as an example.
+
+   The folders are located in `nnmh-directory', say, `~/Mail/'.  There
+are three folders, `foo', `bar' and `mail.baz'.
+
+   Go to the group buffer and type `G m'.  When prompted, answer `foo'
+for the name and `nnmh' for the method.  Repeat twice for the two other
+groups, `bar' and `mail.baz'.  Be sure to include all your mail groups.
+
+   That's it.  You are now set to read your mail.  An active file for
+this method will be created automatically.
+
+   If you use `nnfolder' or any other backend that store more than a
+single article in each file, you should never have procmail add mails to
+the file that Gnus sees.  Instead, procmail should put all incoming mail
+in `nnmail-procmail-directory'.  To arrive at the file name to put the
+incoming mail in, append `nnmail-procmail-suffix' to the group name.
+The mail backends will read the mail from these files.
+
+   When Gnus reads a file called `mail.misc.spool', this mail will be
+put in the `mail.misc', as one would expect.  However, if you want Gnus
+to split the mail the normal way, you could set
+`nnmail-resplit-incoming' to `t'.
+
+   If you use `procmail' to split things directory into an `nnmh'
+directory (which you shouldn't do), you should set
+`nnmail-keep-last-article' to non-`nil' to prevent Gnus from ever
+expiring the final article in a mail newsgroup.  This is quite, quite
+important.
+
+
+File: gnus,  Node: Incorporating Old Mail,  Next: Expiring Mail,  Prev: Mail and Procmail,  Up: Getting Mail
+
+Incorporating Old Mail
+----------------------
+
+   Most people have lots of old mail stored in various file formats.  If
+you have set up Gnus to read mail using one of the spiffy Gnus mail
+backends, you'll probably wish to have that old mail incorporated into
+your mail groups.
+
+   Doing so can be quite easy.
+
+   To take an example: You're reading mail using `nnml' (*note Mail
+Spool::.), and have set `nnmail-split-methods' to a satisfactory value
+(*note Splitting Mail::.).  You have an old Unix mbox file filled with
+important, but old, mail.  You want to move it into your `nnml' groups.
+
+   Here's how:
+
+  1. Go to the group buffer.
+
+  2. Type `G f' and give the path of the mbox file when prompted to
+     create an `nndoc' group from the mbox file (*note Foreign
+     Groups::.).
+
+  3. Type `SPACE' to enter the newly created group.
+
+  4. Type `M P b' to process-mark all articles in this group (*note
+     Setting Process Marks::.).
+
+  5. Type `B r' to respool all the process-marked articles, and answer
+     `nnml' when prompted (*note Mail Group Commands::.).
+
+   All the mail messages in the mbox file will now also be spread out
+over all your `nnml' groups.  Try entering them and check whether things
+have gone without a glitch.  If things look ok, you may consider
+deleting the mbox file, but I wouldn't do that unless I was absolutely
+sure that all the mail has ended up where it should be.
+
+   Respooling is also a handy thing to do if you're switching from one
+mail backend to another.  Just respool all the mail in the old mail
+groups using the new mail backend.
+
+
+File: gnus,  Node: Expiring Mail,  Next: Duplicates,  Prev: Incorporating Old Mail,  Up: Getting Mail
+
+Expiring Mail
+-------------
+
+   Traditional mail readers have a tendency to remove mail articles when
+you mark them as read, in some way.  Gnus takes a fundamentally
+different approach to mail reading.
+
+   Gnus basically considers mail just to be news that has been received
+in a rather peculiar manner.  It does not think that it has the power to
+actually change the mail, or delete any mail messages.  If you enter a
+mail group, and mark articles as "read", or kill them in some other
+fashion, the mail articles will still exist on the system.  I repeat:
+Gnus will not delete your old, read mail.  Unless you ask it to, of
+course.
+
+   To make Gnus get rid of your unwanted mail, you have to mark the
+articles as "expirable".  This does not mean that the articles will
+disappear right away, however.  In general, a mail article will be
+deleted from your system if, 1) it is marked as expirable, AND 2) it is
+more than one week old.  If you do not mark an article as expirable, it
+will remain on your system until hell freezes over.  This bears
+repeating one more time, with some spurious capitalizations: IF you do
+NOT mark articles as EXPIRABLE, Gnus will NEVER delete those ARTICLES.
+
+   You do not have to mark articles as expirable by hand.  Groups that
+match the regular expression `gnus-auto-expirable-newsgroups' will have
+all articles that you read marked as expirable automatically.  All
+articles that are marked as expirable have an `E' in the first column
+in the summary buffer.
+
+   Let's say you subscribe to a couple of mailing lists, and you want
+the articles you have read to disappear after a while:
+
+     (setq gnus-auto-expirable-newsgroups
+           "mail.nonsense-list\\|mail.nice-list")
+
+   Another way to have auto-expiry happen is to have the element
+`auto-expire' in the group parameters of the group.
+
+   The `nnmail-expiry-wait' variable supplies the default time an
+expirable article has to live.  The default is seven days.
+
+   Gnus also supplies a function that lets you fine-tune how long
+articles are to live, based on what group they are in.  Let's say you
+want to have one month expiry period in the `mail.private' group, a one
+day expiry period in the `mail.junk' group, and a six day expiry period
+everywhere else:
+
+     (setq nnmail-expiry-wait-function
+           (lambda (group)
+            (cond ((string= group "mail.private")
+                    31)
+                  ((string= group "mail.junk")
+                    1)
+                  ((string= group "important")
+                    'never)
+                  (t
+                    6))))
+
+   The group names that this function is fed are "unadorned" group
+names--no `nnml:' prefixes and the like.
+
+   The `nnmail-expiry-wait' variable and `nnmail-expiry-wait-function'
+function can be either a number (not necessarily an integer) or the
+symbols `immediate' or `never'.
+
+   You can also use the `expiry-wait' group parameter to selectively
+change the expiry period (*note Group Parameters::.).
+
+   If `nnmail-keep-last-article' is non-`nil', Gnus will never expire
+the final article in a mail newsgroup.  This is to make life easier for
+procmail users.
+
+   By the way, that line up there about Gnus never expiring
+non-expirable articles is a lie.  If you put `total-expire' in the group
+parameters, articles will not be marked as expirable, but all read
+articles will be put through the expiry process.  Use with extreme
+caution.  Even more dangerous is the `gnus-total-expirable-newsgroups'
+variable.  All groups that match this regexp will have all read
+articles put through the expiry process, which means that *all* old
+mail articles in the groups in question will be deleted after a while.
+Use with extreme caution, and don't come crying to me when you discover
+that the regexp you used matched the wrong group and all your important
+mail has disappeared.  Be a *man*!  Or a *woman*!  Whatever you feel
+more comfortable with!  So there!
+
+
+File: gnus,  Node: Duplicates,  Next: Not Reading Mail,  Prev: Expiring Mail,  Up: Getting Mail
+
+Duplicates
+----------
+
+   If you are a member of a couple of mailing list, you will sometime
+receive two copies of the same mail.  This can be quite annoying, so
+`nnmail' checks for and treats any duplicates it might find.  To do
+this, it keeps a cache of old `Message-ID's -
+`nnmail-message-id-cache-file', which is `~/.nnmail-cache' by default.
+The approximate maximum number of `Message-ID's stored there is
+controlled by the `nnmail-message-id-cache-length' variable, which is
+1000 by default. (So 1000 `Message-ID's will be stored.) If all this
+sounds scary to you, you can set `nnmail-treat-duplicates' to `warn'
+(which is what it is by default), and `nnmail' won't delete duplicate
+mails.  Instead it will generate a brand new `Message-ID' for the mail
+and insert a warning into the head of the mail saying that it thinks
+that this is a duplicate of a different message.
+
+   This variable can also be a function.  If that's the case, the
+function will be called from a buffer narrowed to the message in
+question with the `Message-ID' as a parameter.  The function must
+return either `nil', `warn', or `delete'.
+
+   You can turn this feature off completely by setting the variable to
+`nil'.
+
+   If you want all the duplicate mails to be put into a special
+"duplicates" group, you could do that using the normal mail split
+methods:
+
+     (setq nnmail-split-fancy
+           '(| ;; Messages duplicates go to a separate group.
+               ("gnus-warning" "duplication of message" "duplicate")
+               ;; Message from daemons, postmaster, and the like to another.
+               (any mail "mail.misc")
+               ;; Other rules.
+               [ ... ] ))
+
+   Or something like:
+     (setq nnmail-split-methods
+           '(("duplicates" "^Gnus-Warning:")
+             ;; Other rules.
+             [...]))
+
+   Here's a neat feature: If you know that the recipient reads her mail
+with Gnus, and that she has `nnmail-treat-duplicates' set to `delete',
+you can send her as many insults as you like, just by using a
+`Message-ID' of a mail that you know that she's already received.
+Think of all the fun!  She'll never see any of it!  Whee!
+
+
+File: gnus,  Node: Not Reading Mail,  Next: Choosing a Mail Backend,  Prev: Duplicates,  Up: Getting Mail
+
+Not Reading Mail
+----------------
+
+   If you start using any of the mail backends, they have the annoying
+habit of assuming that you want to read mail with them.  This might not
+be unreasonable, but it might not be what you want.
+
+   If you set `nnmail-spool-file' to `nil', none of the backends will
+ever attempt to read incoming mail, which should help.
+
+   This might be too much, if, for instance, you are reading mail quite
+happily with `nnml' and just want to peek at some old RMAIL file you
+have stashed away with `nnbabyl'.  All backends have variables called
+backend-`get-new-mail'.  If you want to disable the `nnbabyl' mail
+reading, you edit the virtual server for the group to have a setting
+where `nnbabyl-get-new-mail' to `nil'.
+
+   All the mail backends will call `nn'*`-prepare-save-mail-hook'
+narrowed to the article to be saved before saving it when reading
+incoming mail.
+
+
+File: gnus,  Node: Choosing a Mail Backend,  Prev: Not Reading Mail,  Up: Getting Mail
+
+Choosing a Mail Backend
+-----------------------
+
+   Gnus will read the mail spool when you activate a mail group.  The
+mail file is first copied to your home directory.  What happens after
+that depends on what format you want to store your mail in.
+
+* Menu:
+
+* Unix Mail Box::               Using the (quite) standard Un*x mbox.
+* Rmail Babyl::                 Emacs programs use the rmail babyl format.
+* Mail Spool::                  Store your mail in a private spool?
+* MH Spool::                    An mhspool-like backend.
+* Mail Folders::                Having one file for each group.
+
+
+File: gnus,  Node: Unix Mail Box,  Next: Rmail Babyl,  Up: Choosing a Mail Backend
+
+Unix Mail Box
+.............
+
+   The "nnmbox" backend will use the standard Un*x mbox file to store
+mail.  `nnmbox' will add extra headers to each mail article to say
+which group it belongs in.
+
+   Virtual server settings:
+
+`nnmbox-mbox-file'
+     The name of the mail box in the user's home directory.
+
+`nnmbox-active-file'
+     The name of the active file for the mail box.
+
+`nnmbox-get-new-mail'
+     If non-`nil', `nnmbox' will read incoming mail and split it into
+     groups.
+
+
+File: gnus,  Node: Rmail Babyl,  Next: Mail Spool,  Prev: Unix Mail Box,  Up: Choosing a Mail Backend
+
+Rmail Babyl
+...........
+
+   The "nnbabyl" backend will use a babyl mail box (aka. "rmail mbox")
+to store mail. `nnbabyl' will add extra headers to each mail article to
+say which group it belongs in.
+
+   Virtual server settings:
+
+`nnbabyl-mbox-file'
+     The name of the rmail mbox file.
+
+`nnbabyl-active-file'
+     The name of the active file for the rmail box.
+
+`nnbabyl-get-new-mail'
+     If non-`nil', `nnbabyl' will read incoming mail.
+
+
+File: gnus,  Node: Mail Spool,  Next: MH Spool,  Prev: Rmail Babyl,  Up: Choosing a Mail Backend
+
+Mail Spool
+..........
+
+   The "nnml" spool mail format isn't compatible with any other known
+format.  It should be used with some caution.
+
+   If you use this backend, Gnus will split all incoming mail into
+files; one file for each mail, and put the articles into the correct
+directories under the directory specified by the `nnml-directory'
+variable.  The default value is `~/Mail/'.
+
+   You do not have to create any directories beforehand; Gnus will take
+care of all that.
+
+   If you have a strict limit as to how many files you are allowed to
+store in your account, you should not use this backend.  As each mail
+gets its own file, you might very well occupy thousands of inodes
+within a few weeks.  If this is no problem for you, and it isn't a
+problem for you having your friendly systems administrator walking
+around, madly, shouting "Who is eating all my inodes?! Who? Who!?!",
+then you should know that this is probably the fastest format to use.
+You do not have to trudge through a big mbox file just to read your new
+mail.
+
+   `nnml' is probably the slowest backend when it comes to article
+splitting.  It has to create lots of files, and it also generates NOV
+databases for the incoming mails.  This makes is the fastest backend
+when it comes to reading mail.
+
+   Virtual server settings:
+
+`nnml-directory'
+     All `nnml' directories will be placed under this directory.
+
+`nnml-active-file'
+     The active file for the `nnml' server.
+
+`nnml-newsgroups-file'
+     The `nnml' group descriptions file.  *Note Newsgroups File
+     Format::.
+
+`nnml-get-new-mail'
+     If non-`nil', `nnml' will read incoming mail.
+
+`nnml-nov-is-evil'
+     If non-`nil', this backend will ignore any NOV files.
+
+`nnml-nov-file-name'
+     The name of the NOV files.  The default is `.overview'.
+
+`nnml-prepare-save-mail-hook'
+     Hook run narrowed to an article before saving.
+
+   If your `nnml' groups and NOV files get totally out of whack, you
+can do a complete update by typing `M-x nnml-generate-nov-databases'.
+This command will trawl through the entire `nnml' hierarchy, looking at
+each and every article, so it might take a while to complete.
+
+
+File: gnus,  Node: MH Spool,  Next: Mail Folders,  Prev: Mail Spool,  Up: Choosing a Mail Backend
+
+MH Spool
+........
+
+   `nnmh' is just like `nnml', except that is doesn't generate NOV
+databases and it doesn't keep an active file.  This makes `nnmh' a
+*much* slower backend than `nnml', but it also makes it easier to write
+procmail scripts for.
+
+   Virtual server settings:
+
+`nnmh-directory'
+     All `nnmh' directories will be located under this directory.
+
+`nnmh-get-new-mail'
+     If non-`nil', `nnmh' will read incoming mail.
+
+`nnmh-be-safe'
+     If non-`nil', `nnmh' will go to ridiculous lengths to make sure
+     that the articles in the folder are actually what Gnus thinks they
+     are.  It will check date stamps and stat everything in sight, so
+     setting this to `t' will mean a serious slow-down.  If you never
+     use anything but Gnus to read the `nnmh' articles, you do not have
+     to set this variable to `t'.
+
+
+File: gnus,  Node: Mail Folders,  Prev: MH Spool,  Up: Choosing a Mail Backend
+
+Mail Folders
+............
+
+   `nnfolder' is a backend for storing each mail group in a separate
+file.  Each file is in the standard Un*x mbox format.  `nnfolder' will
+add extra headers to keep track of article numbers and arrival dates.
+
+   Virtual server settings:
+
+`nnfolder-directory'
+     All the `nnfolder' mail boxes will be stored under this directory.
+
+`nnfolder-active-file'
+     The name of the active file.
+
+`nnfolder-newsgroups-file'
+     The name of the group descriptions file.  *Note Newsgroups File
+     Format::.
+
+`nnfolder-get-new-mail'
+     If non-`nil', `nnfolder' will read incoming mail.
+
+   If you have lots of `nnfolder'-like files you'd like to read with
+`nnfolder', you can use the `M-x nnfolder-generate-active-file' command
+to make `nnfolder' aware of all likely files in `nnfolder-directory'.
+
+
+File: gnus,  Node: Other Sources,  Next: Combined Groups,  Prev: Getting Mail,  Up: Select Methods
+
+Other Sources
+=============
+
+   Gnus can do more than just read news or mail.  The methods described
+below allow Gnus to view directories and files as if they were
+newsgroups.
+
+* Menu:
+
+* Directory Groups::   You can read a directory as if it was a newsgroup.
+* Anything Groups::    Dired?  Who needs dired?
+* Document Groups::    Single files can be the basis of a group.
+* SOUP::               Reading SOUP packets "offline".
+
+
+File: gnus,  Node: Directory Groups,  Next: Anything Groups,  Up: Other Sources
+
+Directory Groups
+----------------
+
+   If you have a directory that has lots of articles in separate files
+in it, you might treat it as a newsgroup.  The files have to have
+numerical names, of course.
+
+   This might be an opportune moment to mention `ange-ftp', that most
+wonderful of all wonderful Emacs packages.  When I wrote `nndir', I
+didn't think much about it--a backend to read directories.  Big deal.
+
+   `ange-ftp' changes that picture dramatically.  For instance, if you
+enter `"/ftp.hpc.uh.edu:/pub/emacs/ding-list/"' as the the directory
+name, ange-ftp will actually allow you to read this directory over at
+`sina' as a newsgroup.  Distributed news ahoy!
+
+   `nndir' will use NOV files if they are present.
+
+   `nndir' is a "read-only" backend--you can't delete or expire
+articles with this method.  You can use `nnmh' or `nnml' for whatever
+you use `nndir' for, so you could switch to any of those methods if you
+feel the need to have a non-read-only `nndir'.
+
+
+File: gnus,  Node: Anything Groups,  Next: Document Groups,  Prev: Directory Groups,  Up: Other Sources
+
+Anything Groups
+---------------
+
+   From the `nndir' backend (which reads a single spool-like
+directory), it's just a hop and a skip to `nneething', which pretends
+that any arbitrary directory is a newsgroup.  Strange, but true.
+
+   When `nneething' is presented with a directory, it will scan this
+directory and assign article numbers to each file.  When you enter such
+a group, `nneething' must create "headers" that Gnus can use.  After
+all, Gnus is a newsreader, in case you're forgetting. `nneething' does
+this in a two-step process.  First, it snoops each file in question.
+If the file looks like an article (i.e., the first few lines look like
+headers), it will use this as the head.  If this is just some arbitrary
+file without a head (eg. a C source file), `nneething' will cobble up a
+header out of thin air.  It will use file ownership, name and date and
+do whatever it can with these elements.
+
+   All this should happen automatically for you, and you will be
+presented with something that looks very much like a newsgroup.
+Totally like a newsgroup, to be precise.  If you select an article, it
+will be displayed in the article buffer, just as usual.
+
+   If you select a line that represents a directory, Gnus will pop you
+into a new summary buffer for this `nneething' group.  And so on.  You
+can traverse the entire disk this way, if you feel like, but remember
+that Gnus is not dired, really, and does not intend to be, either.
+
+   There are two overall modes to this action--ephemeral or solid.  When
+doing the ephemeral thing (i.e., `G D' from the group buffer), Gnus
+will not store information on what files you have read, and what files
+are new, and so on.  If you create a solid `nneething' group the normal
+way with `G m', Gnus will store a mapping table between article numbers
+and file names, and you can treat this group like any other groups.
+When you activate a solid `nneething' group, you will be told how many
+unread articles it contains, etc., etc.
+
+   Some variables:
+
+`nneething-map-file-directory'
+     All the mapping files for solid `nneething' groups will be stored
+     in this directory, which defaults to `~/.nneething/'.
+
+`nneething-exclude-files'
+     All files that match this regexp will be ignored.  Nice to use to
+     exclude auto-save files and the like, which is what it does by
+     default.
+
+`nneething-map-file'
+     Name of the map files.
+
+
+File: gnus,  Node: Document Groups,  Next: SOUP,  Prev: Anything Groups,  Up: Other Sources
+
+Document Groups
+---------------
+
+   `nndoc' is a cute little thing that will let you read a single file
+as a newsgroup.  Several files types are supported:
+
+`babyl'
+     The babyl (rmail) mail box.
+
+`mbox'
+     The standard Unix mbox file.
+
+`mmdf'
+     The MMDF mail box format.
+
+`news'
+     Several news articles appended into a file.
+
+`rnews'
+     The rnews batch transport format.
+
+`forward'
+     Forwarded articles.
+
+`mime-digest'
+     MIME (RFC 1341) digest format.
+
+`standard-digest'
+     The standard (RFC 1153) digest format.
+
+`slack-digest'
+     Non-standard digest format--matches most things, but does it badly.
+
+   You can also use the special "file type" `guess', which means that
+`nndoc' will try to guess what file type it is looking at.  `digest'
+means that `nndoc' should guess what digest type the file is.
+
+   `nndoc' will not try to change the file or insert any extra headers
+into it--it will simply, like, let you use the file as the basis for a
+group.  And that's it.
+
+   If you have some old archived articles that you want to insert into
+your new & spiffy Gnus mail backend, `nndoc' can probably help you with
+that.  Say you have an old `RMAIL' file with mail that you now want to
+split into your new `nnml' groups.  You look at that file using
+`nndoc', set the process mark on all the articles in the buffer (`M P
+b', for instance), and then re-spool (`B r') using `nnml'.  If all goes
+well, all the mail in the `RMAIL' file is now also stored in lots of
+`nnml' directories, and you can delete that pesky `RMAIL' file.  If you
+have the guts!
+
+   Virtual server variables:
+
+`nndoc-article-type'
+     This should be one of `mbox', `babyl', `digest', `mmdf',
+     `forward', `news', `rnews', `mime-digest', `clari-briefs', or
+     `guess'.
+
+`nndoc-post-type'
+     This variable says whether Gnus is to consider the group a news
+     group or a mail group.  There are two legal values:  `mail' (the
+     default) and `news'.
+
+
+File: gnus,  Node: SOUP,  Prev: Document Groups,  Up: Other Sources
+
+SOUP
+----
+
+   In the PC world people often talk about "offline" newsreaders.  These
+are thingies that are combined reader/news transport monstrosities.
+With built-in modem programs.  Yecchh!
+
+   Of course, us Unix Weenie types of human beans use things like
+`uucp' and, like, `nntpd' and set up proper news and mail transport
+things like Ghod intended.  And then we just use normal newsreaders.
+
+   However, it can sometimes be convenient to do something a that's a
+bit easier on the brain if you have a very slow modem, and you're not
+really that interested in doing things properly.
+
+   A file format called SOUP has been developed for transporting news
+and mail from servers to home machines and back again.  It can be a bit
+fiddly.
+
+  1. You log in on the server and create a SOUP packet.  You can either
+     use a dedicated SOUP thingie, or you can use Gnus to create the
+     packet with the `O s' command.
+
+  2. You transfer the packet home.  Rail, boat, car or modem will do
+     fine.
+
+  3. You put the packet in your home directory.
+
+  4. You fire up Gnus using the `nnsoup' backend as the native server.
+
+  5. You read articles and mail and answer and followup to the things
+     you want.
+
+  6. You do the `G s r' command to pack these replies into a SOUP
+     packet.
+
+  7. You transfer this packet to the server.
+
+  8. You use Gnus to mail this packet out with the `G s s' command.
+
+  9. You then repeat until you die.
+
+
+   So you basically have a bipartite system--you use `nnsoup' for
+reading and Gnus for packing/sending these SOUP packets.
+
+* Menu:
+
+* SOUP Commands::     Commands for creating and sending SOUP packets
+* SOUP Groups::       A backend for reading SOUP packets.
+* SOUP Replies::      How to enable `nnsoup' to take over mail and news.
+
+
+File: gnus,  Node: SOUP Commands,  Next: SOUP Groups,  Up: SOUP
+
+SOUP Commands
+.............
+
+`G s b'
+     Pack all unread articles in the current group
+     (`gnus-group-brew-soup').  This command understands the
+     process/prefix convention.
+
+`G s w'
+     Save all data files (`gnus-soup-save-areas').
+
+`G s s'
+     Send all replies from the replies packet
+     (`gnus-soup-send-replies').
+
+`G s p'
+     Pack all files into a SOUP packet (`gnus-soup-pack-packet').
+
+`G s r'
+     Pack all replies into a replies packet (`nnsoup-pack-replies').
+
+`O s'
+     This summary-mode command adds the current article to a SOUP packet
+     (`gnus-soup-add-article').  It understands the process/prefix
+     convention.
+
+   There are a few variables to customize where Gnus will put all these
+thingies:
+
+`gnus-soup-directory'
+     Directory where Gnus will save intermediate files while composing
+     SOUP packets.  The default is `~/SoupBrew/'.
+
+`gnus-soup-replies-directory'
+     This is what Gnus will use as a temporary directory while sending
+     our reply packets.  The default is `~/SoupBrew/SoupReplies/'.
+
+`gnus-soup-prefix-file'
+     Name of the file where Gnus stores the last used prefix.  The
+     default is `gnus-prefix'.
+
+`gnus-soup-packer'
+     A format string command for packing a SOUP packet.  The default is
+     `tar cf - %s | gzip > $HOME/Soupout%d.tgz'.
+
+`gnus-soup-unpacker'
+     Format string command for unpacking a SOUP packet.  The default is
+     `gunzip -c %s | tar xvf -'.
+
+`gnus-soup-packet-directory'
+     Where Gnus will look for reply packets.  The default is `~/'.
+
+`gnus-soup-packet-regexp'
+     Regular expression matching SOUP reply packets in
+     `gnus-soup-packet-directory'.
+

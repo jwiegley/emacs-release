@@ -13,10 +13,9 @@ suitability of this software for any purpose.  It is provided "as is"
 without express or implied warranty.
 */
 
-/* #include "X11/Xlibint.h" */
-#include "X11/Xlib.h"
+#include <X11/Xlib.h>
 #include "X10.h"
-void remque();
+void emacs_remque();
 struct qelem {
 	struct    qelem *q_forw;
 	struct    qelem *q_back;
@@ -53,7 +52,7 @@ XDeleteAssoc(dpy, table, x_id)
 				/* We have the right entry! */
 				/* Remove it from the queue and */
 				/* free the entry. */
-				remque((struct qelem *)Entry);
+				emacs_remque((struct qelem *)Entry);
 				free((char *)Entry);
 				return;
 			}

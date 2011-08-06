@@ -1,10 +1,15 @@
+;;; userlock.el --- handle file access contention between multiple users
+
 ;; Copyright (C) 1985, 1986 Free Software Foundation, inc.
+
+;; Maintainer: FSF
+;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -13,18 +18,22 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
+;;; Commentary:
 
-;; This file is autloaded to handle certain conditions
+;; This file is autoloaded to handle certain conditions
 ;; detected by the file-locking code within Emacs.
 ;; The two entry points are `ask-user-about-lock' and
 ;; `ask-user-about-supersession-threat'.
 
+;;; Code:
 
 (put 'file-locked 'error-conditions '(file-locked file-error error))
 
+;;;###autoload
 (defun ask-user-about-lock (fn opponent)
   "Ask user what to do when he wants to edit FILE but it is locked by USER.
 This function has a choice of three things to do:
@@ -68,22 +77,29 @@ already started modifying in EMACS.
 You can <s>teal the file; The other user becomes the
   intruder if (s)he ever unmodifies the file and then changes it again.
 You can <p>roceed; you edit at your own (and the other user's) risk.
-You can <q>uit; don't modify this file.")))
+You can <q>uit; don't modify this file.")
+    (save-excursion
+      (set-buffer standard-output)
+      (help-mode))))
 
 (put
  'file-supersession 'error-conditions '(file-supersession file-error error))
 
+;;;###autoload
 (defun ask-user-about-supersession-threat (fn)
   "Ask a user who is about to modify an obsolete buffer what to do.
 This function has two choices: it can return, in which case the modification
 of the buffer will proceed, or it can (signal 'file-supersession (file)),
 in which case the proposed buffer modification will not be made.
-You can rewrite this to use any criterion you like to choose which one to do."
+
+You can rewrite this to use any criterion you like to choose which one to do.
+The buffer in question is current when this function is called."
   (discard-input)
   (save-window-excursion
     (let (answer)
       (while (null answer)
-	(message "File has changed on disk; really want to edit the buffer? (y, n or C-h) ")
+	(message "%s changed on disk; really edit the buffer? (y, n, r or C-h) "
+		 (file-name-nondirectory fn))
 	(let ((tem (downcase (let ((cursor-in-echo-area t))
 			       (read-char)))))
 	  (setq answer
@@ -92,14 +108,20 @@ You can rewrite this to use any criterion you like to choose which one to do."
 		  (cdr (assoc tem '((?n . yield)
 				    (?\C-g . yield)
 				    (?y . proceed)
+				    (?r . revert)
 				    (?? . help))))))
 	  (cond ((null answer)
 		 (beep)
-		 (message "Please type y or n; or ? for help")
+		 (message "Please type y, n or r; or ? for help")
 		 (sit-for 3))
 		((eq answer 'help)
 		 (ask-user-about-supersession-help)
 		 (setq answer nil))
+		((eq answer 'revert)
+		 (revert-buffer nil (not (buffer-modified-p)))
+					; ask confirmation iff buffer modified
+		 (signal 'file-supersession
+			 (list "File reverted" fn)))
 		((eq answer 'yield)
 		 (signal 'file-supersession
 			 (list "File changed on disk" fn))))))
@@ -114,10 +136,14 @@ since you last read it in or saved it with this buffer.
 
 If you say `y' to go ahead and modify this buffer,
 you risk ruining the work of whoever rewrote the file.
+If you say `r' to revert, the contents of the buffer are refreshed
+from the file on disk.
 If you say `n', the change you started to make will be aborted.
 
-You might consider answering `n', running `M-x revert-buffer' to
-bring the text in Emacs into accord with what is on disk, and then
-making the change again.")))
+Usually, you should type `n' and then `M-x revert-buffer',
+to get the latest version of the file, then make the change again.")
+    (save-excursion
+      (set-buffer standard-output)
+      (help-mode))))
 
-
+;;; userlock.el ends here

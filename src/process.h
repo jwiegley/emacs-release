@@ -1,11 +1,11 @@
 /* Definitions for asynchronous process control in GNU Emacs.
-   Copyright (C) 1985, 1990 Free Software Foundation, Inc.
+   Copyright (C) 1985, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -15,7 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
 
 
 /*
@@ -25,7 +26,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 struct Lisp_Process
   {
-    int size;
+    EMACS_INT size;
     struct Lisp_Vector *v_next;
     /* Descriptor by which we read from this process */
     Lisp_Object infd;
@@ -34,6 +35,8 @@ struct Lisp_Process
     /* Descriptor for the tty which this process is using.
        nil if we didn't record it (on some systems, there's no need).  */
     Lisp_Object subtty;
+    /* Name of subprocess terminal.  */
+    Lisp_Object tty_name;
     /* Name of this process */
     Lisp_Object name;
     /* List of command arguments that this process was run with */
@@ -74,3 +77,35 @@ struct Lisp_Process
 };
 
 #define ChannelMask(n) (1<<(n))
+
+/* Indexed by descriptor, gives the process (if any) for that descriptor.  */
+extern Lisp_Object chan_process[];
+
+/* Alist of elements (NAME . PROCESS).  */
+extern Lisp_Object Vprocess_alist;
+
+/* True iff we are about to fork off a synchronous process or if we
+   are waiting for it.  */
+extern int synch_process_alive;
+
+/* Communicate exit status of sync process to from sigchld_handler
+   to Fcall_process.  */
+
+/* Nonzero => this is a string explaining death of synchronous subprocess.  */
+extern char *synch_process_death;
+
+/* If synch_process_death is zero,
+   this is exit code of synchronous subprocess.  */
+extern int synch_process_retcode;
+
+/* The name of the file open to get a null file, or a data sink.
+   VMS, MS-DOS, and OS/2 redefine this.  */
+#ifndef NULL_DEVICE
+#define NULL_DEVICE "/dev/null"
+#endif
+
+/* A string listing the possible suffixes used for executable files,
+   separated by colons.  VMS, MS-DOS, and OS/2 redefine this.  */
+#ifndef EXEC_SUFFIXES
+#define EXEC_SUFFIXES ""
+#endif

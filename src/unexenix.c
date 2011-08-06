@@ -1,6 +1,4 @@
 /* Unexec for Xenix.
-   Copyright (C) 1988 Free Software Foundation, Inc.
-
    Note that the GNU project considers support for Xenix operation
    a peripheral activity which should not be allowed to divert effort
    from development of the GNU system.  Changes in this code will be
@@ -8,23 +6,25 @@
    we don't plan to think about it, or about whether other Emacs
    maintenance might break it.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+   Copyright (C) 1988, 1994 Free Software Foundation, Inc.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This file is part of GNU Emacs.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+GNU Emacs is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
 
-In other words, you are welcome to use, share and improve this program.
-You are forbidden to forbid anyone else to use, share and improve
-what you give them.   Help stamp out software-hoarding!  */
+GNU Emacs is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU Emacs; see the file COPYING.  If not, write to
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
+
 
 
 /*
@@ -41,7 +41,7 @@ what you give them.   Help stamp out software-hoarding!  */
   gb@entity.com
 */
 
-#include "config.h"
+#include <config.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/file.h>
@@ -67,8 +67,7 @@ static void fatal_unexec ();
 	  fatal_unexec(_error_message, _error_arg);
 
 extern int errno;
-extern int sys_nerr;
-extern char *sys_errlist[];
+extern char *strerror ();
 #define EEOF -1
 
 #ifndef L_SET
@@ -229,7 +228,7 @@ copyrec (infd, outfd, len, in_name, out_name)
 /*
  * mark_x
  *
- * After succesfully building the new a.out, mark it executable
+ * After successfully building the new a.out, mark it executable
  */
 static
 mark_x (name)
@@ -252,10 +251,8 @@ fatal_unexec (s, va_alist)
   va_list ap;
   if (errno == EEOF)
     fputs ("unexec: unexpected end of file, ", stderr);
-  else if (errno < sys_nerr)
-    fprintf (stderr, "unexec: %s, ", sys_errlist[errno]);
   else
-    fprintf (stderr, "unexec: error code %d, ", errno);
+    fprintf (stderr, "unexec: %s, ", strerror (errno));
   va_start (ap);
   _doprnt (s, ap, stderr);
   fputs (".\n", stderr);

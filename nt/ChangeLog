@@ -1,0 +1,242 @@
+Wed Aug 21 03:51:42 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Version 19.34 released.
+
+Sun Aug 11 03:36:03 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Version 19.33 released.
+
+Fri Aug  9 10:55:29 1996  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* runemacs.c (WinMain): Put a space between the binary and its args.
+
+Wed Jul 31 13:52:46 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Version 19.32 released.
+
+Tue Jul 16 19:22:57 1996  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* makefile.nt (clean): Use OBJDIR macro.
+
+Mon Jun  3 11:40:33 1996  Kim F. Storm  <kfs@olicom.dk>
+
+        * runemacs.c (CHOOSE_NEWEST_EXE): New parameter macro.
+	Not defined by default.
+	(WinMain): Add conditional testing CHOOSE_NEWEST_EXE.
+	(WinMain): Convert backslashes to slashes in env var values.
+
+        * addpm.c (env_vars): Use slashes, not backslashes.
+
+Sat May 25 15:30:10 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+
+	* Version 19.31 released.
+
+Mon May 13 17:35:11 1996  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* install.bat: Set BUILD_TYPE and INSTALL_DIR before calling make;
+	undo settings afterwards.
+
+Wed May  8 15:28:59 1996  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* addpm.c (env_vars): Set SHELL registry entry to value of COMSPEC
+ 	environment variable.
+
+Fri May  3 15:02:44 1996  Andrew Innes <andrewi@harlequin.co.uk>
+
+	* install.bat: Allow for optimized build.
+	* makefile.def [BUILD_TYPE]: Build optimized version in its own dir.
+	(ARCH_CFLAGS) [BUILD_TYPE == spd]: Build optimized version.
+
+Fri May  3 14:18:18 1996  Andrew Innes <andrewi@harlequin.co.uk>
+
+	* addpm.c (REG_ROOT): Don't use a trailing backslash.
+	(env_vars): Rename field emacs_path to emacs_dir.
+	(main): Add link to runemacs instead of emacs.
+
+	* install.bat: Check if INSTALL_DIR is passed as an argument.
+
+	* makefile.def (CONFIG_H) [WIN95]: Use config.nt.
+
+	* makefile.nt: Build and install runemacs.exe.
+
+	* runemacs.c: New file.
+
+	* config.w95: File removed.
+
+	* inc/netdb.h, inc/unistd.h, inc/arpa/inet.h, inc/netinet/in.h,
+	inc/sys/socket.h, inc/sys/time.h: New header files.
+
+	* inc/sys/file.h (F_OK, X_OK, W_OK, R_OK): New macros.
+	
+Wed Mar 27 23:37:07 1996  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.def (DEL): Defined.
+	(DEL_TREE) [win95]: Defined.
+	(SYS_LDFLAGS): Set executable versions to 3.10.
+	
+	* makefile.nt: Change uses of del to $(DEL).
+
+Wed Jan 17 14:48:00 1996  Erik Naggum  <erik@naggum.no>
+
+	* All files: Update FSF's address in comment preamble.
+
+Wed Jan  3 22:10:17 1996  George V. Reilly  <georger@microcrafts.com>
+
+	* emacs.ico: Now the proverbial kitchen sink icon.
+
+Fri Nov 24 23:44:08 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+
+	* Version 19.30 released.
+
+Wed Nov 22 13:53:40 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.def (CP_DIR): Use platform independent switches for xcopy.
+
+	* makefile.nt (install, fast_install, real_install, clean):
+	Don't use switches to del not supported by Win95.
+
+Tue Nov  7 02:55:14 1995  Kevin Gallo  <kgallo@microsoft.com>
+
+	* makefile.nt (addpm.exe): Link with $(ADVAPI32).
+	(install, fast_install): Change same-dir test to create test file in
+	installation tree and thereby support read-only shares.
+	(clean): Remove .pdb files.
+
+	* makefile.def (NTGUI): New macro.
+	[NTGUI] (CFLAGS): Define HAVE_NTGUI.
+
+	* config.nt, config.w95: Update to latest src/config.in.
+
+	* addpm.c (env_vars): New variable.
+	(add_registry): New procedure.
+	(main): Use values of configuration environment variables from
+	the registry if defined, the process environment otherwise.
+
+Mon Jun 19 17:32:51 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+
+	* Version 19.29 released.
+
+	* makefile.nt (addpm.exe): Change WinMainCRTStartup to mainCRTStartup.
+
+Tue Jun 13 22:20:29 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt: Define .c to .obj suffix rule.
+	(addpm.obj): Compile directly, use CFLAGS.
+	(addpm.exe): Link from addpm.obj.
+	
+	* makefile.def (MSVCNT11): Defined.
+	(BASE_LIBS) [MSVCNT11]: Use oldnames.lib.
+	(CFLAGS_COMMON): Defined.
+	(CFLAGS) [MSVCNT11]: Define _CRTAPI1 to _cdecl.
+	
+Fri Jun  9 22:09:46 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* emacs.bat.in: Renamed from emacs.bat
+	(emacs_dir): Renamed from emacs_path
+	Definition removed.
+
+	* addpm.c: New file.
+	* makefile.nt (ALL,addpm,addpm.exe,addpm.obj): Defined.
+	(all): Depend upon $(BLD) and $(ALL).
+	(install): Depend upon emacs.bat.
+	Create program item for Emacs.
+	(clean): Delete obj.
+	(emacs.bat): Defined.
+	* makefile.def (EMACS_ICON_PATH,ADDPM): Defined.
+
+Sat May 27 22:15:14 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* ebuild.bat, emacs.bat, fast-install.bat, install.bat:
+	Add carriage returns; necessary for batch files on Win95.
+
+Thu May 25 20:57:08 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* config.w95: Created.
+	* config.h: Changed to config.nt.
+	
+	* makefile.nt (SUBDIRS): Commented out.
+	(all,install,clean): Expand for-loops.
+	(BUILD_CMD,INSTALL_CMD,CLEAN_CMD): Defined.
+
+	* makefile.def (SYS_LIB_DIR,SYS_INC_DIR): Undefined.
+	(ARCH): New definition.
+	(CPU,CONFIG_H,OS_TYPE): Defined.
+	(INCLUDE,LIB): Checked if valid.
+	(ntwin32.mak): Included.
+	(AR,CC,LINK): New definition.
+	(ADVAPI32,libc,BASE_LIBS): Defined.
+	(SYS_LDFLAGS): New definition.
+	Update comments and preprocessor conditionals.
+
+	* emacs.bat (SHELL): Conditionally defined.
+	(HOME): Conditionally defined.
+	(emacs_path,HOME): Update comments.
+	Turn off all echo.
+
+Tue May  9 01:51:06 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* _emacs, config.h, ebuild.bat, emacs.bat, emacs.rc,
+	fast-install.bat, install.bat, makefile.def, makefile.nt, paths.h,
+	inc/pwd.h, inc/sys/dir.h, inc/sys/file.h, inc/sys/ioctl.h,
+	inc/sys/param.h: Removed carriage-returns.
+
+Sat May 06 23:12:45 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.def (CVTRES): Defined.
+
+	* emacs.ico, emacs.rc: New files by Kevin Gallo.
+
+Mon Apr 10 21:23:24 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* src: Removed.
+
+	* src\config.h, src\paths.h: Moved to parent dir, src removed.
+
+Sun Apr 09 13:23:30 1995  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.def (INSTALL_DIR): Changed to generic directory.
+
+	* emacs.bat: Added arguments when emacs.exe invoked.
+
+	* ebuild.cmd, emacs.cmd, install.cmd: Changed extension to .bat.
+
+Tue Dec 13 17:55:58 1994  voelker  <voelker@cs.washington.edu>
+
+	* makefile.def (CC): In configuration section.
+	(COMPAT_LIB): Defined.
+
+Tue Nov 01 16:31:29 1994  voelker  <voelker@cs.washington.edu>
+
+	* src/paths.h: New file.
+
+	* src/config.h: New file.
+
+	* inc/pwd.h: New file.
+
+	* inc/sys/dir.h: New file.
+
+	* inc/sys/file.h: New file.
+
+	* inc/sys/ioctl.h: New file.
+
+	* inc/sys/param.h: New file.
+
+	* todo: New file.
+
+	* readme: New file.
+
+	* makefile.nt: New file.
+
+        * makefile.def: New file.
+ 
+        * install.cmd: New file.
+
+        * install: New file.
+
+        * fast-install.cmd: New file.
+
+	* emacs.cmd: New file.
+
+	* ebuild.cmd: New file.
+
+	* _emacs: New file.
