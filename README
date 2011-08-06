@@ -1,5 +1,8 @@
-This directory tree holds version 21.3 of GNU Emacs, the extensible,
-customizable, self-documenting real-time display editor.
+This directory tree holds version 21.4 of GNU Emacs, the extensible,
+customizable, self-documenting real-time display editor.  This release
+was made to fix a security bug, so most directories have no changes
+from 21.3.  The documentation still identifies the version as 21.3,
+since it has not been altered.
 
 You may encounter bugs in this release.  If you do, please report
 them; your bug reports are valuable contributions to the FSF, since
