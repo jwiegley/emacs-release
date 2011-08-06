@@ -131,7 +131,8 @@ Understands the following styles:
  (5) 22-AUG-1993 10:59:12.82
  (6) Thu, 11 Apr 16:17:12 91 [MET]
  (7) Mon, 6  Jul 16:47:20 T 1992 [MET]
- (8) 1996-06-24 21:13:12 [GMT]"
+ (8) 1996-06-24 21:13:12 [GMT]
+ (9) 1996-06-24 21:13-ZONE"
  ;; Get rid of any text properties.
   (and (stringp date)
        (or (text-properties-at 0 date)
@@ -145,6 +146,16 @@ Understands the following styles:
 	(time nil)
 	(zone nil))			;This may be nil.
     (cond ((string-match
+	    "\\([0-9]+\\)[ \t]+\\([^ \t,]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]*\\([-+a-zA-Z0-9]+\\)" date)
+	   ;; Styles: (1) and (2) with timezone and buggy timezone
+	   ;; This is most common in mail and news,
+	   ;; so it is worth trying first.
+	   (setq year 3 month 2 day 1 time 4 zone 5))
+	  ((string-match
+	    "\\([0-9]+\\)[ \t]+\\([^ \t,]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]*\\'" date)
+	   ;; Styles: (1) and (2) without timezone
+	   (setq year 3 month 2 day 1 time 4 zone nil))
+	  ((string-match
 	    "\\([^ \t,]+\\),[ \t]+\\([0-9]+\\)[ \t]+\\([^ \t,]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]+\\(T[ \t]+\\|\\)\\([0-9]+\\)[ \t]*\\'" date)
 	   ;; Styles: (6) and (7) without timezone
 	   (setq year 6 month 3 day 2 time 4 zone nil))
@@ -152,14 +163,6 @@ Understands the following styles:
 	    "\\([^ \t,]+\\),[ \t]+\\([0-9]+\\)[ \t]+\\([^ \t,]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]+\\(T[ \t]+\\|\\)\\([0-9]+\\)[ \t]*\\([-+a-zA-Z0-9]+\\)" date)
 	   ;; Styles: (6) and (7) with timezone and buggy timezone
 	   (setq year 6 month 3 day 2 time 4 zone 7))
-	  ((string-match
-	    "\\([0-9]+\\)[ \t]+\\([^ \t,]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]*\\'" date)
-	   ;; Styles: (1) and (2) without timezone
-	   (setq year 3 month 2 day 1 time 4 zone nil))
-	  ((string-match
-	    "\\([0-9]+\\)[ \t]+\\([^ \t,]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]*\\([-+a-zA-Z0-9]+\\)" date)
-	   ;; Styles: (1) and (2) with timezone and buggy timezone
-	   (setq year 3 month 2 day 1 time 4 zone 5))
 	  ((string-match
 	    "\\([^ \t,]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9:]+\\)[ \t]+\\([0-9]+\\)" date)
 	   ;; Styles: (3) without timezone
@@ -181,6 +184,10 @@ Understands the following styles:
 	   ;; Styles: (8) with timezone.
 	   (setq year 1 month 2 day 3 time 4 zone 5))
 	  ((string-match
+	    "\\([0-9]+\\)-\\([0-9]+\\)-\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9]+\\)[ \t]*\\([-+a-zA-Z0-9:]+\\)" date)
+	   ;; Styles: (8) with timezone with a colon in it.
+	   (setq year 1 month 2 day 3 time 4 zone 5))
+	  ((string-match
 	    "\\([0-9]+\\)-\\([0-9]+\\)-\\([0-9]+\\)[ \t]+\\([0-9]+:[0-9]+:[0-9]+\\)" date)
 	   ;; Styles: (8) without timezone.
 	   (setq year 1 month 2 day 3 time 4 zone nil))
@@ -190,19 +197,24 @@ Understands the following styles:
 	  (setq year
 		(substring date (match-beginning year) (match-end year)))
 	  ;; It is now Dec 1992.  8 years before the end of the World.
-	  (if (< (length year) 4)
-	      (setq year (concat "19" (substring year -2 nil))))
+	  (if (= (length year) 1)
+	      (setq year (concat "190" (substring year -1 nil)))
+	    (if (< (length year) 4)
+		(setq year (concat "19" (substring year -2 nil)))))
           (setq month
 		(if (= (aref date (+ (match-beginning month) 2)) ?-)
 		    ;; Handle numeric months, spanning exactly two digits.
 		    (substring date
 			       (match-beginning month)
 			       (+ (match-beginning month) 2))
- 	          (let ((string (substring date
-				 (match-beginning month)
-				 (+ (match-beginning month) 3))))
-		    (int-to-string
-		     (cdr (assoc (upcase string) timezone-months-assoc))))))
+ 	          (let* ((string (substring date
+					    (match-beginning month)
+					    (+ (match-beginning month) 3)))
+			 (monthnum
+			  (cdr (assoc (upcase string) timezone-months-assoc))))
+		    (if monthnum
+			(int-to-string monthnum)
+		      nil))))
 	  (setq day
 		(substring date (match-beginning day) (match-end day)))
 	  (setq time
@@ -211,7 +223,7 @@ Understands the following styles:
 	(setq zone
 	      (substring date (match-beginning zone) (match-end zone))))
     ;; Return a vector.
-    (if year
+    (if (and year month)
 	(vector year month day time zone)
       (vector "0" "0" "0" "0" nil))
     ))
@@ -277,7 +289,7 @@ Return a list suitable as an argument to current-time-zone,
 or nil if the date cannot be thus represented.
 DATE is the number of days elapsed since the (imaginary)
 Gregorian date Sunday, December 31, 1 BC."
-  (let* ((current-time-origin 719162)
+  (let* ((current-time-origin 719163)
 	    ;; (timezone-absolute-from-gregorian 1 1 1970)
 	 (days (- date current-time-origin))
 	 (seconds-per-day (float 86400))

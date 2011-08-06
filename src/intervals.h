@@ -37,9 +37,15 @@ Boston, MA 02111-1307, USA.  */
 /* True if an interval pointer is null, or is a Lisp_Buffer or
    Lisp_String pointer (meaning it points to the owner of this
    interval tree). */
+#ifdef NO_UNION_TYPE
 #define NULL_INTERVAL_P(i) ((i) == NULL_INTERVAL           \
 			    || BUFFERP ((Lisp_Object)(i)) \
 			    || STRINGP ((Lisp_Object)(i)))
+#else
+#define NULL_INTERVAL_P(i) ((i) == NULL_INTERVAL           \
+			    || BUFFERP ((Lisp_Object){(EMACS_INT)(i)}) \
+			    || STRINGP ((Lisp_Object){(EMACS_INT)(i)}))
+#endif
 
 /* True if this interval has no right child. */
 #define NULL_RIGHT_CHILD(i) ((i)->right == NULL_INTERVAL)
@@ -159,6 +165,8 @@ Boston, MA 02111-1307, USA.  */
   (! NULL_INTERVAL_P (i) && ! NILP (textget ((i)->plist, Qfront_sticky)))
 #define END_NONSTICKY_P(i) \
   (! NULL_INTERVAL_P (i) && ! NILP (textget ((i)->plist, Qrear_nonsticky)))
+#define FRONT_NONSTICKY_P(i) \
+  (! NULL_INTERVAL_P (i) && ! EQ (Qt, textget ((i)->plist, Qfront_sticky)))
 
 
 /* If PROP is the `invisible' property of a character,
@@ -203,6 +211,7 @@ extern INLINE void copy_intervals_to_string ();
 extern INTERVAL copy_intervals ();
 extern Lisp_Object textget ();
 extern Lisp_Object get_local_map ();
+extern INTERVAL update_interval ();
 
 /* Declared in textprop.c */
 

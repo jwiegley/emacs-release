@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Buffers, Windows, Files, Top
 @chapter Using Multiple Buffers
@@ -39,13 +39,13 @@ particular buffer, meaning its value in that buffer can be different from
 the value in other buffers.  @xref{Locals}.
 
 @menu
-* Select Buffer::      Creating a new buffer or reselecting an old one.
-* List Buffers::       Getting a list of buffers that exist.
-* Misc Buffer::	       Renaming; changing read-onliness; copying text.
-* Kill Buffer::	       Killing buffers you no longer need.
-* Several Buffers::    How to go through the list of all buffers
-			 and operate variously on several of them.
-* Indirect Buffers::   An indirect buffer shares the text of another buffer. 
+* Select Buffer::       Creating a new buffer or reselecting an old one.
+* List Buffers::        Getting a list of buffers that exist.
+* Misc Buffer::	        Renaming; changing read-onlyness; copying text.
+* Kill Buffer::	        Killing buffers you no longer need.
+* Several Buffers::     How to go through the list of all buffers
+			  and operate variously on several of them.
+* Indirect Buffers::    An indirect buffer shares the text of another buffer. 
 @end menu
 
 @node Select Buffer
@@ -78,12 +78,13 @@ specifies the most recently selected buffer that is not displayed in any
 window.@refill
 
   Most buffers are created by visiting files, or by Emacs commands that
-want to display some text, but you can also create a buffer explicitly by
-typing @kbd{C-x b @var{bufname} @key{RET}}.  This makes a new, empty buffer which
-is not visiting any file, and selects it for editing.  Such buffers are
-used for making notes to yourself.  If you try to save one, you are asked
-for the file name to use.  The new buffer's major mode is determined by the
-value of @code{default-major-mode} (@pxref{Major Modes}).
+want to display some text, but you can also create a buffer explicitly
+by typing @kbd{C-x b @var{bufname} @key{RET}}.  This makes a new, empty
+buffer that is not visiting any file, and selects it for editing.  Such
+buffers are used for making notes to yourself.  If you try to save one,
+you are asked for the file name to use.  The new buffer's major mode is
+determined by the value of @code{default-major-mode} (@pxref{Major
+Modes}).
 
   Note that @kbd{C-x C-f}, and any other command for visiting a file,
 can also be used to switch to an existing file-visiting buffer.
@@ -105,11 +106,12 @@ List the existing buffers (@code{list-buffers}).
 @cindex listing current buffers
 @kindex C-x C-b
 @findex list-buffers
-  To display a list of all the buffers that exist, type @kbd{C-x C-b}.  Each
-line in the list shows one buffer's name, major mode and visited file.  The
-buffers are listed in the order, most recently visited first.
+  To display a list of all the buffers that exist, type @kbd{C-x C-b}.
+Each line in the list shows one buffer's name, major mode and visited
+file.  The buffers are listed in the order that they were current; the
+buffers that were current most recently come first.
 
-  @samp{*} at the beginning of a line indicates the buffer is ``modified''.
+  @samp{*} at the beginning of a line indicates the buffer is ``modified.''
 If several buffers are modified, it may be time to save some with @kbd{C-x s}
 (@pxref{Saving}).  @samp{%} indicates a read-only buffer.  @samp{.} marks the
 selected buffer.  Here is an example of a buffer list:@refill
@@ -288,7 +290,7 @@ line:
 
 @table @kbd
 @item ~
-Mark the buffer ``unmodified''.  The command @kbd{~} does this
+Mark the buffer ``unmodified.''  The command @kbd{~} does this
 immediately when you type it.
 @item %
 Toggle the buffer's read-only flag.  The command @kbd{%} does

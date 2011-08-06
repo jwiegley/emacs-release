@@ -3,6 +3,7 @@
 ;; Copyright (C) 1993, 1994 Free Software Foundation, Inc.
 
 ;; Author: Lynn Slater <lrs@indetech.com>
+;; Maintainer: FSF
 ;; Created: : Mon Oct  1 11:42:39 1990
 ;; Adapted-By: ESR
 
@@ -123,6 +124,7 @@ and then returns."
 					 prev-frame))
 				(setq new-frame (window-frame (selected-window))
 				      config nil))
+			   (setq buffer-read-only nil)
 			   (erase-buffer)
 			   (insert help-screen)
 			   (help-mode)
@@ -150,6 +152,8 @@ and then returns."
 						       (point-max))
 						      "" " or Space to scroll")))
 				     char (aref key 0))))))
+		     ;; We don't need the prompt any more.
+		     (message "")
 		     ;; Mouse clicks are not part of the help feature,
 		     ;; so reexecute them in the standard environment.
 		     (if (listp char)

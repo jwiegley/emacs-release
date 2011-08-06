@@ -86,6 +86,14 @@ extern struct re_pattern_buffer *compile_pattern ();
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+/* Encode the file name NAME using the specified coding system
+   for file names, if any.  */
+#define ENCODE_FILE(name)					\
+  (! NILP (Vfile_name_coding_system)				\
+   && XFASTINT (Vfile_name_coding_system) != 0			\
+   ? Fencode_coding_string (name, Vfile_name_coding_system, Qt)	\
+   : name)
+
 /* if system does not have symbolic links, it does not have lstat.
    In that case, use ordinary stat instead.  */
 
@@ -95,6 +103,7 @@ extern struct re_pattern_buffer *compile_pattern ();
 
 extern int completion_ignore_case;
 extern Lisp_Object Vcompletion_regexp_list;
+extern Lisp_Object Vfile_name_coding_system;
 
 Lisp_Object Vcompletion_ignored_extensions;
 Lisp_Object Qcompletion_ignore_case;
@@ -117,6 +126,7 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
   DIR *d;
   int dirnamelen;
   Lisp_Object list, name, dirfilename;
+  Lisp_Object encoded_directory;
   Lisp_Object handler;
   struct re_pattern_buffer *bufp;
 
@@ -164,6 +174,10 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
 #endif
     }
 
+  dirfilename = ENCODE_FILE (dirfilename);
+
+  encoded_directory = ENCODE_FILE (directory);
+
   /* Now *bufp is the compiled form of MATCH; don't call anything
      which might compile a new regexp until we're done with the loop!  */
 
@@ -176,7 +190,8 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
     report_file_error ("Opening directory", Fcons (directory, Qnil));
 
   list = Qnil;
-  dirnamelen = XSTRING (directory)->size;
+  dirnamelen = XSTRING (encoded_directory)->size;
+  re_match_object = Qt;
 
   /* Loop reading blocks */
   while (1)
@@ -200,12 +215,12 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
 		  /* Decide whether we need to add a directory separator.  */
 #ifndef VMS
 		  if (dirnamelen == 0
-		      || !IS_ANY_SEP (XSTRING (directory)->data[dirnamelen - 1]))
+		      || !IS_ANY_SEP (XSTRING (encoded_directory)->data[dirnamelen - 1]))
 		    needsep = 1;
 #endif /* VMS */
 
 		  name = make_uninit_string (total + needsep);
-		  bcopy (XSTRING (directory)->data, XSTRING (name)->data,
+		  bcopy (XSTRING (encoded_directory)->data, XSTRING (name)->data,
 			 dirnamelen);
 		  if (needsep)
 		    XSTRING (name)->data[afterdirindex++] = DIRECTORY_SEP;
@@ -214,6 +229,9 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
 		}
 	      else
 		name = make_string (dp->d_name, len);
+	      if (! NILP (Vfile_name_coding_system))
+		name = Fdecode_coding_string (name, Vfile_name_coding_system,
+					      Qt);
 	      list = Fcons (name, list);
 	    }
 	}
@@ -289,24 +307,13 @@ file_name_completion (file, dirname, all_flag, ver_flag)
   unsigned char *p1, *p2;
   int matchcount = 0;
   Lisp_Object bestmatch, tem, elt, name;
+  Lisp_Object encoded_file;
+  Lisp_Object encoded_dir;
   struct stat st;
   int directoryp;
   int passcount;
   int count = specpdl_ptr - specpdl;
-  struct gcpro gcpro1, gcpro2, gcpro3;
-
-#ifdef MSDOS
-#if __DJGPP__ > 1
-  /* Some fields of struct stat are *very* expensive to compute on MS-DOS,
-     but aren't required here.  Avoid computing the following fields:
-     st_inode, st_size and st_nlink for directories, and the execute bits
-     in st_mode for non-directory files with non-standard extensions.  */
-
-  unsigned short save_djstat_flags = _djstat_flags;
-
-  _djstat_flags = _STAT_INODE | _STAT_EXEC_MAGIC | _STAT_DIRSIZE;
-#endif
-#endif
+  struct gcpro gcpro1, gcpro2, gcpro3, gcpro4, gcpro5;
 
 #ifdef VMS
   extern DIRENTRY * readdirver ();
@@ -328,8 +335,16 @@ file_name_completion (file, dirname, all_flag, ver_flag)
   file = FILE_SYSTEM_CASE (file);
 #endif
   bestmatch = Qnil;
-  GCPRO3 (file, dirname, bestmatch);
+  encoded_file = encoded_dir = Qnil;
+  GCPRO5 (file, dirname, bestmatch, encoded_file, encoded_dir);
   dirname = Fexpand_file_name (dirname, Qnil);
+
+  /* Do completion on the encoded file name
+     because the other names in the directory are (we presume)
+     encoded likewise.  We decode the completed string at the end.  */
+  encoded_file = ENCODE_FILE (file);
+
+  encoded_dir = ENCODE_FILE (dirname);
 
   /* With passcount = 0, ignore files that end in an ignored extension.
      If nothing found then try again with passcount = 1, don't ignore them.
@@ -341,7 +356,8 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 
   for (passcount = !!all_flag; NILP (bestmatch) && passcount < 2; passcount++)
     {
-      if (!(d = opendir (XSTRING (Fdirectory_file_name (dirname))->data)))
+      d = opendir (XSTRING (Fdirectory_file_name (encoded_dir))->data);
+      if (!d)
 	report_file_error ("Opening directory", Fcons (dirname, Qnil));
 
       /* Loop reading blocks */
@@ -363,12 +379,12 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 	  if (!NILP (Vquit_flag) && NILP (Vinhibit_quit))
 	    goto quit;
 	  if (! DIRENTRY_NONEMPTY (dp)
-	      || len < XSTRING (file)->size
-	      || 0 <= scmp (dp->d_name, XSTRING (file)->data,
-			    XSTRING (file)->size))
+	      || len < XSTRING (encoded_file)->size
+	      || 0 <= scmp (dp->d_name, XSTRING (encoded_file)->data,
+			    XSTRING (encoded_file)->size))
 	    continue;
 
-          if (file_name_completion_stat (dirname, dp, &st) < 0)
+          if (file_name_completion_stat (encoded_dir, dp, &st) < 0)
             continue;
 
           directoryp = ((st.st_mode & S_IFMT) == S_IFDIR);
@@ -387,7 +403,7 @@ file_name_completion (file, dirname, all_flag, ver_flag)
             {
 	      /* Compare extensions-to-be-ignored against end of this file name */
 	      /* if name is not an exact match against specified string */
-	      if (!passcount && len > XSTRING (file)->size)
+	      if (!passcount && len > XSTRING (encoded_file)->size)
 		/* and exit this for loop if a match is found */
 		for (tem = Vcompletion_ignored_extensions;
 		     CONSP (tem); tem = XCONS (tem)->cdr)
@@ -444,6 +460,9 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 		name = make_string (dp->d_name, len);
 	      if (all_flag)
 		{
+		  if (! NILP (Vfile_name_coding_system))
+		    name = Fdecode_coding_string (name,
+						  Vfile_name_coding_system, Qt);
 		  bestmatch = Fcons (name, bestmatch);
 		}
 	      else
@@ -484,8 +503,8 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 			==
 			(matchsize + !!directoryp 
 			 == XSTRING (bestmatch)->size))
-		       && !bcmp (p2, XSTRING (file)->data, XSTRING (file)->size)
-		       && bcmp (p1, XSTRING (file)->data, XSTRING (file)->size)))
+		       && !bcmp (p2, XSTRING (encoded_file)->data, XSTRING (encoded_file)->size)
+		       && bcmp (p1, XSTRING (encoded_file)->data, XSTRING (encoded_file)->size)))
 		    {
 		      bestmatch = make_string (dp->d_name, len);
 		      if (directoryp)
@@ -509,17 +528,25 @@ file_name_completion (file, dirname, all_flag, ver_flag)
   UNGCPRO;
   bestmatch = unbind_to (count, bestmatch);
 
-#ifdef MSDOS
-#if __DJGPP__ > 1
-  _djstat_flags = save_djstat_flags;
-#endif
-#endif
-
   if (all_flag || NILP (bestmatch))
-    return bestmatch;
+    {
+      if (! NILP (Vfile_name_coding_system)
+	  && STRINGP (bestmatch))
+	bestmatch = Fdecode_coding_string (bestmatch,
+					   Vfile_name_coding_system, Qt);
+      return bestmatch;
+    }
   if (matchcount == 1 && bestmatchsize == XSTRING (file)->size)
     return Qt;
-  return Fsubstring (bestmatch, make_number (0), make_number (bestmatchsize));
+  bestmatch = Fsubstring (bestmatch, make_number (0),
+			  make_number (bestmatchsize));
+  /* Now that we got the right initial segment of BESTMATCH,
+     decode it from the coding system in use.  */
+  if (! NILP (Vfile_name_coding_system))
+    bestmatch = Fdecode_coding_string (bestmatch,
+				       Vfile_name_coding_system, Qt);
+  return bestmatch;
+
  quit:
   if (d) closedir (d);
   Vquit_flag = Qnil;
@@ -535,6 +562,19 @@ file_name_completion_stat (dirname, dp, st_addr)
   int pos = XSTRING (dirname)->size;
   int value;
   char *fullname = (char *) alloca (len + pos + 2);
+
+#ifdef MSDOS
+#if __DJGPP__ > 1
+  /* Some fields of struct stat are *very* expensive to compute on MS-DOS,
+     but aren't required here.  Avoid computing the following fields:
+     st_inode, st_size and st_nlink for directories, and the execute bits
+     in st_mode for non-directory files with non-standard extensions.  */
+
+  unsigned short save_djstat_flags = _djstat_flags;
+
+  _djstat_flags = _STAT_INODE | _STAT_EXEC_MAGIC | _STAT_DIRSIZE;
+#endif /* __DJGPP__ > 1 */
+#endif /* MSDOS */
 
   bcopy (XSTRING (dirname)->data, fullname, pos);
 #ifndef VMS
@@ -553,8 +593,14 @@ file_name_completion_stat (dirname, dp, st_addr)
   stat (fullname, st_addr);
   return value;
 #else
-  return stat (fullname, st_addr);
-#endif
+  value = stat (fullname, st_addr);
+#ifdef MSDOS
+#if __DJGPP__ > 1
+  _djstat_flags = save_djstat_flags;
+#endif /* __DJGPP__ > 1 */
+#endif /* MSDOS */
+  return value;
+#endif /* S_IFLNK */
 }
 
 #ifdef VMS
@@ -630,6 +676,7 @@ If file does not exist, returns nil.")
 {
   Lisp_Object values[12];
   Lisp_Object dirname;
+  Lisp_Object encoded;
   struct stat s;
   struct stat sdir;
   char modes[10];
@@ -643,7 +690,9 @@ If file does not exist, returns nil.")
   if (!NILP (handler))
     return call2 (handler, Qfile_attributes, filename);
 
-  if (lstat (XSTRING (filename)->data, &s) < 0)
+  encoded = ENCODE_FILE (filename);
+
+  if (lstat (XSTRING (encoded)->data, &s) < 0)
     return Qnil;
 
   switch (s.st_mode & S_IFMT)
@@ -674,7 +723,9 @@ If file does not exist, returns nil.")
 #endif
 #ifdef BSD4_2			/* file gid will be dir gid */
   dirname = Ffile_name_directory (filename);
-  if (! NILP (dirname) && stat (XSTRING (dirname)->data, &sdir) == 0)
+  if (! NILP (dirname))
+    encoded = ENCODE_FILE (dirname);
+  if (! NILP (dirname) && stat (XSTRING (encoded)->data, &sdir) == 0)
     values[9] = (sdir.st_gid != s.st_gid) ? Qt : Qnil;
   else					/* if we can't tell, assume worst */
     values[9] = Qt;
@@ -684,7 +735,15 @@ If file does not exist, returns nil.")
 #ifdef BSD4_3
 #undef BSD4_2 /* ok, you can look again without throwing up */
 #endif
-  values[10] = make_number (s.st_ino);
+  /* Cast -1 to avoid warning if int is not as wide as VALBITS.  */
+  if (s.st_ino & (((EMACS_INT) (-1)) << VALBITS))
+    /* To allow inode numbers larger than VALBITS, separate the bottom
+       16 bits.  */
+    values[10] = Fcons (make_number (s.st_ino >> 16),
+			make_number (s.st_ino & 0xffff));
+  else
+    /* But keep the most common cases as integers.  */
+    values[10] = make_number (s.st_ino);
   values[11] = make_number (s.st_dev);
   return Flist (sizeof(values) / sizeof(values[0]), values);
 }
@@ -695,6 +754,11 @@ syms_of_dired ()
   Qfile_name_completion = intern ("file-name-completion");
   Qfile_name_all_completions = intern ("file-name-all-completions");
   Qfile_attributes = intern ("file-attributes");
+
+  staticpro (&Qdirectory_files);
+  staticpro (&Qfile_name_completion);
+  staticpro (&Qfile_name_all_completions);
+  staticpro (&Qfile_attributes);
 
   defsubr (&Sdirectory_files);
   defsubr (&Sfile_name_completion);

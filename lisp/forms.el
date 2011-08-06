@@ -1,6 +1,6 @@
 ;;; forms.el --- Forms mode: edit a file as a form to fill in
 
-;; Copyright (C) 1991, 1994, 1995, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1991, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 
 ;; Author: Johan Vromans <jvromans@squirrel.nl>
 
@@ -287,18 +287,24 @@
 
 ;;; Code:
 
+(defgroup forms nil
+  "Edit a file as a form to fill in."
+  :group 'data)
+
 ;;; Global variables and constants:
 
 (provide 'forms)			;;; official
 (provide 'forms-mode)			;;; for compatibility
 
-(defconst forms-version (substring "$Revision: 2.29 $" 11 -2)
+(defconst forms-version (substring "$Revision: 2.34 $" 11 -2)
   "The version number of forms-mode (as string).  The complete RCS id is:
 
-  $Id: forms.el,v 2.29 1996/03/01 21:13:01 jvromans Exp $")
+  $Id: forms.el,v 2.34 1997/08/27 23:10:59 rms Exp $")
 
-(defvar forms-mode-hooks nil
-  "Hook functions to be run upon entering Forms mode.")
+(defcustom forms-mode-hooks nil
+  "Hook functions to be run upon entering Forms mode."
+  :group 'forms
+  :type 'function)
 
 ;;; Mandatory variables - must be set by evaluating the control file.
 
@@ -313,26 +319,32 @@
 
 ;;; Optional variables with default values.
 
-(defvar forms-check-number-of-fields t
-  "*If non-nil, warn about records with wrong number of fields.")
+(defcustom forms-check-number-of-fields t
+  "*If non-nil, warn about records with wrong number of fields."
+  :group 'forms
+  :type 'boolean)
 
 (defvar forms-field-sep "\t"
   "Field separator character (default TAB).")
 
 (defvar forms-read-only nil
   "Non-nil means: visit the file in view (read-only) mode.
-\(Defaults to the write access on the data file).")
+This is set automatically if the file permissions don't let you write it.")
 
-(defvar forms-multi-line "\C-k"
-  "If not nil: use this character to separate multi-line fields (default C-k).")
+(defvar forms-multi-line "\C-k" "\
+If not nil: use this character to separate multi-line fields (default C-k).")
 
-(defvar forms-forms-scroll nil
+(defcustom forms-forms-scroll nil
   "*Non-nil means replace scroll-up/down commands in Forms mode.
-The replacement commands performs forms-next/prev-record.")
+The replacement commands performs forms-next/prev-record."
+  :group 'forms
+  :type 'boolean)
 
-(defvar forms-forms-jump nil
+(defcustom forms-forms-jump nil
   "*Non-nil means redefine beginning/end-of-buffer in Forms mode.
-The replacement commands performs forms-first/last-record.")
+The replacement commands performs forms-first/last-record."
+  :group 'forms
+  :type 'boolean)
 
 (defvar forms-read-file-filter nil
   "The name of a function that is called after reading the data file.
@@ -341,7 +353,7 @@ suitable for forms processing.")
 
 (defvar forms-write-file-filter nil
   "The name of a function that is called before writing the data file.
-This can be used to undo the effects of form-read-file-hook.")
+This can be used to undo the effects of `form-read-file-hook'.")
 
 (defvar forms-new-record-filter nil
   "The name of a function that is called when a new record is created.")
@@ -354,19 +366,27 @@ This can be used to undo the effects of form-read-file-hook.")
 This variable is for use by the filter routines only. 
 The contents may NOT be modified.")
 
-(defvar forms-use-text-properties (fboundp 'set-text-properties)
-  "*Non-nil means: use emacs-19 text properties.
-Defaults to t if this emacs is capable of handling text properties.")
+(defcustom forms-use-text-properties t
+  "*Non-nil means: use text properties.
+Defaults to t if this Emacs is capable of handling text properties."
+  :group 'forms
+  :type 'boolean)
 
-(defvar forms-insert-after nil
+(defcustom forms-insert-after nil
   "*Non-nil means: inserts of new records go after current record.
-Also, initial position is at last record.")
+Also, initial position is at last record."
+  :group 'forms
+  :type 'boolean)
 
-(defvar forms-ro-face 'default
-  "The face (a symbol) that is used to display read-only text on the screen.")
+(defcustom forms-ro-face 'default
+  "The face (a symbol) that is used to display read-only text on the screen."
+  :group 'forms
+  :type 'face)
 
-(defvar forms-rw-face 'region
-  "The face (a symbol) that is used to display read-write text on the screen.")
+(defcustom forms-rw-face 'region
+  "The face (a symbol) that is used to display read-write text on the screen."
+  :group 'forms
+  :type 'face)
 
 ;;; Internal variables.
 
@@ -505,22 +525,22 @@ Commands:                        Equivalent keys in read-only mode:
 	;; Check if the mandatory variables make sense.
 	(or forms-file
 	    (error (concat "Forms control file error: " 
-			   "'forms-file' has not been set")))
+			   "`forms-file' has not been set")))
 
 	;; Check forms-field-sep first, since it can be needed to
 	;; construct a default format list.
 	(or (stringp forms-field-sep)
 	    (error (concat "Forms control file error: "
-			   "'forms-field-sep' is not a string")))
+			   "`forms-field-sep' is not a string")))
 
 	(if forms-number-of-fields
 	    (or (and (numberp forms-number-of-fields)
 		     (> forms-number-of-fields 0))
 		(error (concat "Forms control file error: "
-			       "'forms-number-of-fields' must be a number > 0")))
+			       "`forms-number-of-fields' must be a number > 0")))
 	  (or (null forms-format-list)
 	      (error (concat "Forms control file error: "
-			     "'forms-number-of-fields' has not been set"))))
+			     "`forms-number-of-fields' has not been set"))))
 
 	(or forms-format-list
 	    (forms--intuit-from-file))
@@ -530,14 +550,15 @@ Commands:                        Equivalent keys in read-only mode:
 		     (eq (length forms-multi-line) 1))
 		(if (string= forms-multi-line forms-field-sep)
 		    (error (concat "Forms control file error: " 
-				   "'forms-multi-line' is equal to 'forms-field-sep'")))
+				   "`forms-multi-line' is equal to 'forms-field-sep'")))
 	      (error (concat "Forms control file error: "
-			     "'forms-multi-line' must be nil or a one-character string"))))
+			     "`forms-multi-line' must be nil or a one-character string"))))
 	(or (fboundp 'set-text-properties)
 	    (setq forms-use-text-properties nil))
 	    
 	;; Validate and process forms-format-list.
 	;;(message "forms: pre-processing format list...")
+	(make-local-variable 'forms--elements)
 	(forms--process-format-list)
 
 	;; Build the formatter and parser.
@@ -545,7 +566,6 @@ Commands:                        Equivalent keys in read-only mode:
 	(make-local-variable 'forms--format)
 	(make-local-variable 'forms--markers)
 	(make-local-variable 'forms--dyntexts)
-	(make-local-variable 'forms--elements)
 	;;(message "forms: building parser...")
 	(forms--make-format)
 	(make-local-variable 'forms--parser)
@@ -556,12 +576,12 @@ Commands:                        Equivalent keys in read-only mode:
 	(if (and forms-new-record-filter
 		 (not (fboundp forms-new-record-filter)))
 	    (error (concat "Forms control file error: "
-			   "'forms-new-record-filter' is not a function")))
+			   "`forms-new-record-filter' is not a function")))
 
 	(if (and forms-modified-record-filter
 		 (not (fboundp forms-modified-record-filter)))
 	    (error (concat "Forms control file error: "
-			   "'forms-modified-record-filter' is not a function")))
+			   "`forms-modified-record-filter' is not a function")))
 
 	;; The filters acces the contents of the forms using `forms-fields'.
 	(make-local-variable 'forms-fields)
@@ -721,11 +741,11 @@ Commands:                        Equivalent keys in read-only mode:
   ;; Verify that `forms-format-list' is not nil.
   (or forms-format-list
       (error (concat "Forms control file error: "
-		     "'forms-format-list' has not been set")))
+		     "`forms-format-list' has not been set")))
   ;; It must be a list.
   (or (listp forms-format-list)
       (error (concat "Forms control file error: "
-		     "'forms-format-list' is not a list")))
+		     "`forms-format-list' is not a list")))
 
   ;; Assume every field is painted once.
   ;; `forms--elements' will grow if needed.
@@ -770,7 +790,7 @@ Commands:                        Equivalent keys in read-only mode:
 		     el forms-number-of-fields))
 
 	  ;; Store forms order.
-	  (if (> field-num (length forms--elements))
+	  (if (>= field-num (length forms--elements))
 	      (setq forms--elements (vconcat forms--elements (1- el)))
 	    (aset forms--elements field-num (1- el)))
 	  (setq field-num (1+ field-num))
@@ -786,7 +806,7 @@ Commands:                        Equivalent keys in read-only mode:
 	  ;; Validate.
 	  (or (fboundp (car-safe el))
 	      (error (concat "Forms format error: "
-			     "not a function %S")
+			     "%S is not a function")
 		     (car-safe el)))
 
 	  ;; Shift.
@@ -821,13 +841,13 @@ Commands:                        Equivalent keys in read-only mode:
 
 ;; Special treatment for read-only segments.
 ;;
-;; If text is inserted between two read-only segments, it inherits the
-;; read-only properties.  This is not what we want.
+;; If text is inserted between two read-only segments, there seems to
+;; be no way to give the newly inserted text the RW face.
 ;; To solve this, read-only segments get the `insert-in-front-hooks'
-;; property set with a function that temporarily switches the properties
-;; of the first character of the segment to read-write, so the new
-;; text gets the right properties.
-;; The `post-command-hook' is used to restore the original properties.
+;; property set with a function that temporarily switches the
+;; properties of the first character of the segment to the RW face, so
+;; the new text gets the right face. The `post-command-hook' is
+;; used to restore the original properties.
 
 (defvar forms--iif-start nil
   "Record start of modification command.")
@@ -1148,12 +1168,12 @@ Commands:                        Equivalent keys in read-only mode:
 	(if forms--field
 	    (` ((setq here (point))
 		(if (not (search-forward (, el) nil t nil))
-		    (error "Parse error: cannot find \"%s\"" (, el)))
+		    (error "Parse error: cannot find `%s'" (, el)))
 		(aset forms--recordv (, (1- forms--field))
 		      (buffer-substring-no-properties here
 					(- (point) (, (length el)))))))
 	  (` ((if (not (looking-at (, (regexp-quote el))))
-		  (error "Parse error: not looking at \"%s\"" (, el)))
+		  (error "Parse error: not looking at `%s'" (, el)))
 	      (forward-char (, (length el))))))
       (setq forms--seen-text t)
       (setq forms--field nil)))
@@ -1173,13 +1193,13 @@ Commands:                        Equivalent keys in read-only mode:
 	    (` ((let ((here (point))
 		      (forms--dyntext (aref forms--dyntexts (, forms--dyntext))))
 		  (if (not (search-forward forms--dyntext nil t nil))
-		      (error "Parse error: cannot find \"%s\"" forms--dyntext))
+		      (error "Parse error: cannot find `%s'" forms--dyntext))
 		  (aset forms--recordv (, (1- forms--field))
 			(buffer-substring-no-properties here
 					  (- (point) (length forms--dyntext)))))))
 	  (` ((let ((forms--dyntext (aref forms--dyntexts (, forms--dyntext))))
 		(if (not (looking-at (regexp-quote forms--dyntext)))
-		    (error "Parse error: not looking at \"%s\"" forms--dyntext))
+		    (error "Parse error: not looking at `%s'" forms--dyntext))
 		(forward-char (length forms--dyntext))))))
       (setq forms--dyntext (1+ forms--dyntext))
       (setq forms--seen-text t)
@@ -1458,10 +1478,8 @@ Commands:                        Equivalent keys in read-only mode:
       (delete-auto-save-file-if-necessary)
       (kill-buffer (current-buffer)))
     (if (get-buffer buf)	; not killed???
-      (if save
-	  (progn
-	    (beep)
-	    (message "Problem saving buffers?")))
+	(if save
+	    (error "Problem saving buffer %s" (buffer-name buf)))
       (delete-auto-save-file-if-necessary)
       (kill-buffer (current-buffer)))))
 
@@ -1508,7 +1526,6 @@ Commands:                        Equivalent keys in read-only mode:
       nil
     (if (null forms-check-number-of-fields)
 	nil
-      (beep)
       (message "Warning: this record has %d fields instead of %d"
 	       (length forms--the-record-list) forms-number-of-fields))
     (if (< (length forms--the-record-list) forms-number-of-fields)
@@ -1563,38 +1580,34 @@ Commands:                        Equivalent keys in read-only mode:
 As a side effect: sets `forms--the-record-list'."
 
   (if forms-read-only
-      (progn
-	(message "Read-only buffer!")
-	(beep))
+      (error "Buffer is read-only"))
 
-    (let (the-record)
-      ;; Build new record.
-      (setq forms--the-record-list (forms--parse-form))
-      (setq the-record
-	    (mapconcat 'identity forms--the-record-list forms-field-sep))
+  (let (the-record)
+    ;; Build new record.
+    (setq forms--the-record-list (forms--parse-form))
+    (setq the-record
+	  (mapconcat 'identity forms--the-record-list forms-field-sep))
+    
+    (if (string-match (regexp-quote forms-field-sep)
+		      (mapconcat 'identity forms--the-record-list ""))
+	(error "Field separator occurs in record - update refused"))
+    
+    ;; Handle multi-line fields, if allowed.
+    (if forms-multi-line
+	(forms--trans the-record "\n" forms-multi-line))
 
-      (if (string-match (regexp-quote forms-field-sep)
-			(mapconcat 'identity forms--the-record-list ""))
-	  (error "Field separator occurs in record - update refused!"))
+    ;; A final sanity check before updating.
+    (if (string-match "\n" the-record)
+	(error "Multi-line fields in this record - update refused"))
 
-      ;; Handle multi-line fields, if allowed.
-      (if forms-multi-line
-	  (forms--trans the-record "\n" forms-multi-line))
-
-      ;; A final sanity check before updating.
-      (if (string-match "\n" the-record)
-	  (progn
-	    (message "Multi-line fields in this record - update refused!")
-	    (beep))
-
-	(save-excursion
-	  (set-buffer forms--file-buffer)
-	  ;; Use delete-region instead of kill-region, to avoid
-	  ;; adding junk to the kill-ring.
-	  (delete-region (save-excursion (beginning-of-line) (point))
-			 (save-excursion (end-of-line) (point)))
-	  (insert the-record)
-	  (beginning-of-line))))))
+    (save-excursion
+      (set-buffer forms--file-buffer)
+      ;; Use delete-region instead of kill-region, to avoid
+      ;; adding junk to the kill-ring.
+      (delete-region (save-excursion (beginning-of-line) (point))
+		     (save-excursion (end-of-line) (point)))
+      (insert the-record)
+      (beginning-of-line))))
 
 (defun forms--checkmod ()
   "Check if this form has been modified, and call forms--update if so."
@@ -1653,45 +1666,43 @@ As a side effect: sets `forms--the-record-list'."
   ;; Verify that the record number is within range.
   (if (or (> arg forms--total-records)
 	  (<= arg 0))
-    (progn
-      (beep)
+    (error
       ;; Don't give the message if just paging.
       (if (not relative)
 	  (message "Record number %d out of range 1..%d"
-		   arg forms--total-records))
-      )
+		   arg forms--total-records)
+	"")))
 
-    ;; Flush.
-    (forms--checkmod)
+  ;; Flush.
+  (forms--checkmod)
 
-    ;; Calculate displacement.
-    (let ((disp (- arg forms--current-record))
-	  (cur forms--current-record))
+  ;; Calculate displacement.
+  (let ((disp (- arg forms--current-record))
+	(cur forms--current-record))
 
-      ;; `forms--show-record' needs it now.
-      (setq forms--current-record arg)
+    ;; `forms--show-record' needs it now.
+    (setq forms--current-record arg)
 
-      ;; Get the record and show it.
-      (forms--show-record
-       (save-excursion
-	 (set-buffer forms--file-buffer)
-	 (beginning-of-line)
+    ;; Get the record and show it.
+    (forms--show-record
+     (save-excursion
+       (set-buffer forms--file-buffer)
+       (beginning-of-line)
 
-	 ;; Move, and adjust the amount if needed (shouldn't happen).
-	 (if relative
-	     (if (zerop disp)
-		 nil
-	       (setq cur (+ cur disp (- (forward-line disp)))))
-	   (setq cur (+ cur disp (- (goto-line arg)))))
+       ;; Move, and adjust the amount if needed (shouldn't happen).
+       (if relative
+	   (if (zerop disp)
+	       nil
+	     (setq cur (+ cur disp (- (forward-line disp)))))
+	 (setq cur (+ cur disp (- (goto-line arg)))))
 
-	 (forms--get-record)))
+       (forms--get-record)))
 
-      ;; This shouldn't happen.
-      (if (/= forms--current-record cur)
-	  (progn
-	    (setq forms--current-record cur)
-	    (beep)
-	    (message "Stuck at record %d" cur))))))
+    ;; This shouldn't happen.
+    (if (/= forms--current-record cur)
+	(progn
+	  (setq forms--current-record cur)
+	  (error "Stuck at record %d" cur)))))
 
 (defun forms-first-record ()
   "Jump to first record."
@@ -1709,7 +1720,6 @@ As a side effect: re-calculates the number of records in the data file."
 	  (count-lines (point-min) (point-max)))))
     (if (= numrec forms--total-records)
 	nil
-      (beep)
       (setq forms--total-records numrec)
       (message "Warning: number of records changed to %d" forms--total-records)))
   (forms-jump-record forms--total-records))
@@ -1736,8 +1746,7 @@ Otherwise enables edit mode if the visited file is writable."
 	      buffer-read-only)
 	    (progn
 	      (setq forms-read-only t)
-	      (message "No write access to `%s'" forms-file)
-	      (beep))
+	      (message "No write access to `%s'" forms-file))
 	  (setq forms-read-only nil))
 	(if (equal ro forms-read-only)
 	    nil
@@ -1844,21 +1853,25 @@ after the current record."
 
   (let (the-line the-record here
 		 (fld-sep forms-field-sep))
-    (if (save-excursion
-	  (set-buffer forms--file-buffer)
-	  (setq here (point))
-	  (end-of-line)
-	  (if (null (re-search-forward regexp nil t))
-	      (progn
-		(goto-char here)
-		(message "\"%s\" not found" regexp)
-		nil)
+    (save-excursion
+      (set-buffer forms--file-buffer)
+      (end-of-line)
+      (setq here (point))
+      (if (or (re-search-forward regexp nil t)
+	      (and (> here (point-min))
+		   (progn
+		     (goto-char (point-min))
+		     (re-search-forward regexp here t))))
+	  (progn
 	    (setq the-record (forms--get-record))
-	    (setq the-line (1+ (count-lines (point-min) (point))))))
-	(progn
-	  (setq forms--current-record the-line)
-	  (forms--show-record the-record)
-	  (re-search-forward regexp nil t))))
+	    (setq the-line (1+ (count-lines (point-min) (point))))
+	    (if (< (point) here)
+		(message "Wrapped")))
+	(goto-char here)
+	(error "Search failed: %s" regexp)))
+    (setq forms--current-record the-line)
+    (forms--show-record the-record))
+  (re-search-forward regexp nil t)
   (setq forms--search-regexp regexp))
 
 (defun forms-search-backward (regexp)
@@ -1876,36 +1889,47 @@ after the current record."
 
   (let (the-line the-record here
 		 (fld-sep forms-field-sep))
-    (if (save-excursion
-	  (set-buffer forms--file-buffer)
-	  (setq here (point))
-	  (beginning-of-line)
-	  (if (null (re-search-backward regexp nil t))
-	      (progn
-		(goto-char here)
-		(message "\"%s\" not found" regexp)
-		nil)
+    (save-excursion
+      (set-buffer forms--file-buffer)
+      (beginning-of-line)
+      (setq here (point))
+      (if (or (re-search-backward regexp nil t)
+	      (and (< (point) (point-max))
+		   (progn
+		     (goto-char (point-max))
+		     (re-search-backward regexp here t))))
+	  (progn
 	    (setq the-record (forms--get-record))
-	    (setq the-line (1+ (count-lines (point-min) (point))))))
-	(progn
-	  (setq forms--current-record the-line)
-	  (forms--show-record the-record)
-	  (re-search-forward regexp nil t))))
+	    (setq the-line (1+ (count-lines (point-min) (point))))
+	    (if (> (point) here)
+		(message "Wrapped")))
+	(goto-char here)
+	(error "Search failed: %s" regexp)))
+    (setq forms--current-record the-line)
+    (forms--show-record the-record))
+  (re-search-forward regexp nil t)
   (setq forms--search-regexp regexp))
 
 (defun forms-save-buffer (&optional args)
   "Forms mode replacement for save-buffer.
 It saves the data buffer instead of the forms buffer.
-Calls `forms-write-file-filter' before writing out the data."
+Calls `forms-write-file-filter' before, and `forms-read-file-filter'
+after writing out the data."
   (interactive "p")
   (forms--checkmod)
-  (let ((read-file-filter forms-read-file-filter))
+  (let ((write-file-filter forms-write-file-filter)
+	(read-file-filter forms-read-file-filter))
     (save-excursion
       (set-buffer forms--file-buffer)
       (let ((inhibit-read-only t))
+	;; Write file hooks are run via local-write-file-hooks.
+	;; (if write-file-filter 
+	;;  (save-excursion 
+	;;   (run-hooks 'write-file-filter))) 
 	(save-buffer args)
 	(if read-file-filter
-	    (run-hooks 'read-file-filter))
+	   (save-excursion
+	     (run-hooks 'read-file-filter)))
 	(set-buffer-modified-p nil))))
   t)
 

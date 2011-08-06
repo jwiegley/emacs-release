@@ -1,12 +1,11 @@
-\input texinfo   @c -*- texinfo -*-
+\input texinfo
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @comment %**start of header (This is for running Texinfo on a region)
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@comment This Info file name was chosen to avoid lossage on MSDOS.
 @setfilename  ../info/ccmode
-@settitle     CC-MODE Version 4 Documentation
+@settitle     CC MODE Version 5 Documentation
 @footnotestyle end
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -17,13 +16,11 @@
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @comment 
-@comment texinfo manual for @file{cc-mode.el} version 4
-@comment manual version: 2.35
-@comment generated from the original README file by Krishna Padmasola
+@comment Texinfo manual for CC Mode
+@comment Generated from the original README file by Krishna Padmasola
 @comment <krishna@earth-gw.njit.edu>
 @comment 
-@comment Barry A. Warsaw <bwarsaw@cnri.reston.va.us>
-@comment Last modification: 1996/01/19 20:50:48
+@comment Maintained by Barry A. Warsaw <cc-mode-help@python.org>
 @comment 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -34,7 +31,7 @@
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @ifinfo
-Copyright @copyright{} 1995 Free Software Foundation, Inc.
+Copyright @copyright{} 1995, 1996 Free Software Foundation, Inc.
 @end ifinfo
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -49,10 +46,9 @@ Copyright @copyright{} 1995 Free Software Foundation, Inc.
 @comment The title is printed in a large font.
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@center @titlefont{CC-MODE Version 4}
+@center @titlefont{CC Mode 5.17}
 @sp 2
-@center A GNU Emacs mode for editing C, C++, and Objective-C code.
-@center (manual revision: 2.35)
+@center @subtitlefont{A GNU Emacs mode for editing C and C-like languages}
 @sp 2
 @center Barry A. Warsaw
 
@@ -85,14 +81,13 @@ Copyright @copyright{} 1995 Free Software Foundation, Inc.
 * Getting Connected::           
 * New Indentation Engine::
 * Minor Modes::
-* Indentation Commands::
+* Commands::
 * Customizing Indentation::
 * Syntactic Symbols::
 * Performance Issues::
 * Frequently Asked Questions::
-* Getting the latest cc-mode release::
+* Getting the latest CC Mode release::
 * Sample .emacs File::
-* Requirements::                
 * Limitations and Known Bugs::  
 * Mailing Lists and Submitting Bug Reports::  
 * Concept Index::               
@@ -109,28 +104,36 @@ Copyright @copyright{} 1995 Free Software Foundation, Inc.
 @chapter  Introduction
 @cindex   Introduction
 
-@cindex BOCM
-Welcome to @code{cc-mode}, version 4.  This is a GNU Emacs mode for
-editing files containing C, C++, Objective-C, and Java code.
-This incarnation of the mode is descendant from @file{c-mode.el} (also
-called "Boring Old C Mode" or BOCM @code{:-)}, and @file{c++-mode.el}
-version 2, which I have been maintaining since 1992.  @code{cc-mode}
-represents a significant milestone in the mode's life.  It has been
-fully merged back with Emacs 19's @file{c-mode.el}. Also a new, more
-intuitive and flexible mechanism for controlling indentation has been
-developed.
+@macro ccmode
+CC Mode
+@end macro
 
-@code{cc-mode} version 4 supports the editing of K&R and ANSI C,
-@dfn{ARM} @footnote{i.e. ``The Annotated C++ Reference Manual'', by
-Ellis and Stroustrup.} C++, Objective-C, and Java files.  In this way,
-you can easily set up consistent coding styles for use in editing all C,
-C++, Objective-C, and Java programs.
+@cindex BOCM
+
+Welcome to @ccmode{}.  This is a GNU Emacs mode for editing files
+containing C, C++, Objective-C, Java, and IDL code.  This incarnation of
+the mode is descendant from @file{c-mode.el} (also called "Boring Old C
+Mode" or BOCM @code{:-)}, and @file{c++-mode.el} version 2, which I have
+been maintaining since 1992.  @ccmode{} represents a significant
+milestone in the mode's life.  It has been fully merged back with Emacs
+19's @file{c-mode.el}. Also a new, more intuitive and flexible mechanism
+for controlling indentation has been developed.
+
+@ccmode{} supports the editing of K&R and ANSI C, @dfn{ARM}
+@footnote{``The Annotated C++ Reference Manual'', by Ellis and
+Stroustrup.} C++, Objective-C, Java and IDL@footnote{CORBA's Interface
+Definition Language} files.  In this way, you can
+easily set up consistent coding styles for use in editing all C, C++,
+Objective-C, Java and IDL programs. @ccmode{} does @emph{not} handle
+font-locking (a.k.a. syntax coloring, keyword highlighting) or anything
+of that nature, for any of these modes.  Font-locking is handled by other
+Emacs packages.
 
 This manual will describe the following:
 
 @itemize @bullet
 @item
-How to get started using @code{cc-mode}.
+How to get started using @ccmode{}.
 
 @item
 How the new indentation engine works.
@@ -140,38 +143,32 @@ How to customize the new indentation engine.
 
 @end itemize
 
-Note that the name of this file is @file{cc-mode.el}, and I'll often
-refer to the package as @code{cc-mode}, but there really is no top level
-@code{cc-mode} entry point.  I call it @code{cc-mode} simply to
-differentiate it from @file{c-mode.el}.  All of the variables, commands,
-and functions in @code{cc-mode} are prefixed with @code{c-<thing>}, and
-@code{c-mode}, @code{c++-mode}, @code{objc-mode}, and @code{java-mode}
-entry points are provided.  This file is intended to be a replacement
-for @file{c-mode.el} and @file{c++-mode.el}.
-
-@findex c-version
-The major version number was incremented to 4 with the addition of
-@code{objc-mode}. To find the minor revision number of this release, use
-@kbd{M-x c-version RET}.  Work has already begun on @code{cc-mode}
-version 5, in which Emacs 18 will not be supported.
-
-As of this writing (19-Jan-1996), both Emacs 19.30 and XEmacs 19.13 are
-distributed with @code{cc-mode}.  Emacs 19.31 and XEmacs 19.14 will both
-contain the latest version of cc-mode when it is released.  If you are
-running older versions of these Emacsen, you may want to upgrade your
-copy of @code{cc-mode}.  See @ref{Getting the latest cc-mode release}.
+@findex c-mode
+@findex c++-mode
+@findex objc-mode
+@findex java-mode
+@findex idl-mode
+Note that the name of this package is ``@ccmode{}'', but there is no top
+level @code{cc-mode} entry point.  All of the variables, commands, and
+functions in @ccmode{} are prefixed with @code{c-@var{<thing>}}, and
+@code{c-mode}, @code{c++-mode}, @code{objc-mode}, @code{java-mode}, and
+@code{idl-mode} entry points are provided.  This file is intended to be
+a replacement for @file{c-mode.el} and @file{c++-mode.el}.
 
 @cindex @file{cc-compat.el} file
-This distribution also contains a file called @file{cc-compat.el}
-which should ease your transition from BOCM to @code{cc-mode}.  It
-currently comes unguaranteed and unsupported, but this may change for
-future versions.
+This distribution also contains a file
+called @file{cc-compat.el} which should ease your transition from BOCM
+to @ccmode{}.  If you have a BOCM configuration you are really happy
+with, and want to postpone learning how to configure @ccmode{}, take a
+look at that file.  It maps BOCM configuration variables to @ccmode{}'s
+new indentation model.  It is not actively supported so for the long
+run, you should learn how to customize @ccmode{} to support your coding
+style.
 
 A special word of thanks goes to Krishna Padmasola for his work in
-converting the original @file{README} file to texinfo format.
-@code{cc-mode} users have been clamoring for a manual for a long time,
-and thanks to Krishna, it is now available <clap> <clap> <clap>!
-@code{:-)}
+converting the original @file{README} file to Texinfo format.  I'd also
+like to thank all the @ccmode{} victims who help enormously during the
+early beta stages of @ccmode{}'s development.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -183,197 +180,62 @@ and thanks to Krishna, it is now available <clap> <clap> <clap>!
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@file{cc-mode.el} works well with the 2 main branches of Emacs 19:
-XEmacs and the Emacs 19 maintained by the FSF.  Emacs 19 users will want
-to use Emacs version 19.21 or better, XEmacs users will want 19.6 or
-better.  Earlier versions of these Emacsen have deficiencies and/or bugs
-which will adversely affect the performance and usability of
-@code{cc-mode}.
+If you got this version of @ccmode{} with Emacs or XEmacs, it should
+work just fine right out of the box.  Note however that you may not have
+the latest @ccmode{} release and may want to upgrade your copy.
+
+If you are upgrading an existing @ccmode{} installation, please see the
+@file{README} file for installation details.  @ccmode{} may not work
+with older versions of Emacs or XEmacs.  See the @ccmode{} release notes
+Web pages for the latest information on Emacs version and package
+compatibility, etc.  The Web page locations are outlined in @ref{Getting
+the latest CC Mode release}.
 
 @cindex @file{cc-mode-18.el} file
-Similarly if you use the @file{cc-mode-18.el} compatibility file,
-@file{cc-mode.el} will work with Emacs 18, but only moderately well.  A
-word of warning though, @emph{Emacs 18 lacks some fundamental
-functionality and that ultimately means using Emacs 18 is a losing
-battle}.  Hence @code{cc-mode} under Emacs 18 is no longer supported and
-it is highly recommended that you upgrade to Emacs 19.  If you use
-@code{cc-mode} under Emacs 18, you're on your own.  With @code{cc-mode}
-version 5, Emacs 18 support will be dropped altogether.
+@emph{Note that @ccmode{} no longer works with Emacs 18!}  The
+@file{cc-mode-18.el} file is no longer distributed with @ccmode{}.  If
+you haven't upgraded from Emacs 18 by now, you are out of luck.
 
-Note that as of XEmacs 19.13 and Emacs 19.30, your Emacs already comes
-with @code{cc-mode} version 4 preconfigured for your use.  You should be
-able to safely skip the rest of the setup information in this chapter.
-
-@cindex @file{.emacs} file
-The first thing you will want to do is put @file{cc-mode.el} somewhere
-on your @code{load-path} so Emacs can find it.  Do a @kbd{C-h v
-load-path RET} to see all the directories Emacs looks at when loading a
-file.  If none of these directories are appropriate, create a new
-directory and add it to your @code{load-path}:
-
-@noindent
-@emph{[in the shell]}
+@findex c-version
+@findex version (c-)
+You can find out what version of @ccmode{} you are using by visiting a C
+file and entering @kbd{M-x c-version RET}.  You should see this message in
+the echo area:
 @example
-@group
 
-% cd
-% mkdir mylisp
-% mv cc-mode.el mylisp
-% cd mylisp
+Using CC Mode version 5.XX
 
-@end group
 @end example
 
 @noindent
-@emph{[in your .emacs file add]}
-@example
+where @samp{XX} is the minor release number.
 
-(setq load-path (cons "~/mylisp" load-path))
-
-@end example
-
-@cindex byte compile
-Next you want to @dfn{byte compile} @file{cc-mode.el}.  The mode uses a
-lot of macros so if you don't byte compile it, things will be unbearably
-slow.  @emph{You can ignore all byte-compiler warnings!}  They are the
-result of the supporting different versions of Emacs, and none of the
-warnings have any effect on operation. Let me say this again:
-@strong{You really can ignore all byte-compiler warnings!}
-
-Here's what to do to byte-compile the file [in emacs]:
-@example
-
-M-x byte-compile-file RET ~/mylisp/cc-mode.el RET
-
-@end example
-
-If you are running a version of Emacs or XEmacs that comes with
-@code{cc-mode} by default, you can simply add the following to your
-@file{.emacs} file in order to upgrade to the latest version of
-@code{cc-mode}:
-@example
-
-(load "cc-mode")
-
-@end example
-
-Users of even older versions of Emacs 19, Emacs 18, or of the older
-Lucid Emacs will probably be running an Emacs that has BOCM
-@file{c-mode.el} and possible @file{c++-mode.el} pre-dumped.  If your
-Emacs is dumped with either of these files you first need to make Emacs
-``forget'' about those older modes.
-
-If you can do a @kbd{C-h v c-mode-map RET} without getting an error, you
-need to add these lines at the top of your @file{.emacs} file:
-@example
-@group
-
-(fmakunbound 'c-mode)
-(makunbound  'c-mode-map)
-(fmakunbound 'c++-mode)
-(makunbound  'c++-mode-map)
-(makunbound  'c-style-alist)
-
-@end group
-@end example
-
-After those lines you will want to add the following autoloads to your
-@file{.emacs} file so that @code{cc-mode} gets loaded at the right time:
-@example
-@group
-
-(autoload 'c++-mode  "cc-mode" "C++ Editing Mode" t)
-(autoload 'c-mode    "cc-mode" "C Editing Mode" t)
-(autoload 'objc-mode "cc-mode" "Objective-C Editing Mode" t)
-(autoload 'java-mode "cc-mode" "Java Editing Mode" t)
-
-@end group
-@end example
-
-Alternatively, if you want to make sure @code{cc-mode} is loaded when
-Emacs starts up, you could use this line instead of the three autoloads
-above:
-@example
-
-(require 'cc-mode)
-
-@end example
-
-Next, you will want to set up Emacs so that it edits C files in
-@code{c-mode}, C++ files in @code{c++-mode}, and Objective-C files in
-@code{objc-mode}. All users should add the following to their
-@file{.emacs} file.  Note that this assumes you'll be editing @code{.h}
-and @code{.c} files as C, @code{.hh}, @code{.cc}, @code{.H}, and
-@code{.C} files as C++, @code{.m} files as Objective-C, and @code{.java}
-files as Java code. YMMV:
-@example
-@group
-
-(setq auto-mode-alist
-  (append
-    '(("\\.C$"    . c++-mode)
-      ("\\.H$"    . c++-mode)
-      ("\\.cc$"   . c++-mode)
-      ("\\.hh$"   . c++-mode)
-      ("\\.c$"    . c-mode)
-      ("\\.h$"    . c-mode)
-      ("\\.m$"    . objc-mode)
-      ("\\.java$" . java-mode)
-     ) auto-mode-alist))
-
-@end group
-@end example
-
-You may already have some or all of these settings on your
-@code{auto-mode-alist}, but it won't hurt to put them on there again.
-
-That's all you need -- I know, I know, it sounds like a lot @code{:-)},
-but after you've done all this, you should only need to quit and restart
-Emacs.  The next time you visit a C, C++, Objective-C, or Java file you
-should be using @code{cc-mode}.  You can check this easily by hitting
-@kbd{M-x c-version RET} in the @code{c-mode}, @code{c++-mode}, or
-@code{objc-mode} buffer.  You should see this message in the echo area:
-@example
-
-Using @code{cc-mode} version 4.@var{xxx}
-
-Where @var{xxx} is the latest release minor number.
-
-@end example
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-@menu
-* Syntactic Analysis::
-* Indentation Calculation::
-@end menu
-
 @node     New Indentation Engine, Minor Modes, Getting Connected, Top
-@comment  node-name,              next,                    previous,up
+@comment  node-name,              next,        previous,          up
 
 @chapter  New Indentation Engine
 @cindex   New Indentation Engine
-
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@code{cc-mode} has a new indentation engine, providing a simplified, yet
-flexible and general mechanism for customizing indentation. It breaks
-indentation calculation into two steps. First for the line of code being
-indented, @code{cc-mode} analyzes what kind of language construct it's
-looking at, then it applies user defined offsets to the current line
-based on this analysis.
+@ccmode{} has a new indentation engine, providing a simplified, yet
+flexible and general mechanism for customizing indentation. It separates
+indentation calculation into two steps: first, @ccmode{} analyzes the
+line of code being indented to determine the kind of language construct
+it's looking at, then it applies user defined offsets to the current
+line based on this analysis.
 
 This section will briefly cover how indentation is calculated in
-@code{cc-mode}. It is important to understand the indentation model
-being used so that you will know how to customize @code{cc-mode} for
+@ccmode{}. It is important to understand the indentation model
+being used so that you will know how to customize @ccmode{} for
 your personal coding style.
 
-@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @menu
 * Syntactic Analysis::
 * Indentation Calculation::
 @end menu
-@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node  Syntactic Analysis, Indentation Calculation, , New Indentation Engine
@@ -389,13 +251,13 @@ your personal coding style.
 @cindex syntactic component
 @cindex syntactic component list
 @cindex relative buffer position
-The first thing @code{cc-mode} does when indenting a line of code, is to
+The first thing @ccmode{} does when indenting a line of code, is to
 analyze the line, determining the @dfn{syntactic component list} of the
-construct on that line.  A @dfn{syntactic component} consists of a pair
+construct on that line.  A syntactic component consists of a pair
 of information (in lisp parlance, a @emph{cons cell}), where the first
 part is a @dfn{syntactic symbol}, and the second part is a @dfn{relative
 buffer position}.  Syntactic symbols describe elements of C code
-@footnote{or C++, Objective-C, or Java code.  In general, for the rest
+@footnote{or C++, Objective-C, Java or IDL code.  In general, for the rest
 of this manual I'll use the term ``C code'' to refer to all the C-like
 dialects, unless otherwise noted.}, e.g. @code{statement},
 @code{substatement}, @code{class-open}, @code{class-close}, etc.
@@ -408,9 +270,9 @@ Conceptually, a line of C code is always indented relative to the
 indentation of some line higher up in the buffer.  This is represented
 by the relative buffer position in the syntactic component.
 
-It might help to see an example. Suppose we had the following code as
-the only thing in a @code{c++-mode} buffer @footnote{The line numbers in
-this and future examples don't actually appear in the buffer, of course!}:
+Here is an example.  Suppose we had the following code as the only thing
+in a @code{c++-mode} buffer @footnote{The line numbers in this and
+future examples don't actually appear in the buffer, of course!}:
 @example
 @group
 
@@ -430,7 +292,10 @@ this and future examples don't actually appear in the buffer, of course!}:
 We can use the command @kbd{C-c C-s}
 (@code{c-show-syntactic-information}) to simply report what the
 syntactic analysis is for the current line.  Running this command on
-line 4 this example, we'd see in the echo area:
+line 4 of this example, we'd see in the echo area@footnote{With a universal
+argument (i.e. @kbd{C-u C-c C-s}) the analysis is inserted into the
+buffer as a comment
+on the current line.}:
 @example
 
 ((statement . 35))
@@ -476,13 +341,13 @@ Hitting @kbd{C-c C-s} on line 4 gives us:
 @end example
 
 @cindex substatement
-@cindex substatement block
+@cindex substatment block
 @noindent
 which tells us that this is a brace that @emph{opens} a substatement
-block. @footnote{A @dfn{substatement} indicates the line after an
-@code{if}, @code{else}, @code{while}, @code{do}, @code{switch}, or
-@code{for} statement, and a @dfn{substatement block} is a brace block
-following one of those constructs.}
+block. @footnote{A @dfn{substatement} indicates the line after a
+conditional statement, such as @code{if}, @code{else}, @code{while},
+@code{do}, @code{switch}, or @code{for} in C.  A @dfn{substatement
+block} is a brace block following one of those conditionals.}
 
 @cindex comment only line
 Syntactic component lists can contain more than one component, and
@@ -505,7 +370,7 @@ only line}.
 @end example
 
 @noindent
-Hitting @kbd{C-c C-s} on line 3 of example 3 gives us:
+Hitting @kbd{C-c C-s} on line 3 of this example gives:
 @example
 
 ((comment-intro) (defun-block-intro . 46))
@@ -513,7 +378,7 @@ Hitting @kbd{C-c C-s} on line 3 of example 3 gives us:
 @end example
 
 @noindent
-so you can see that the syntactic component list contains two syntactic
+and you can see that the syntactic component list contains two syntactic
 components.  Also notice that the first component,
 @samp{(comment-intro)} has no relative buffer position.
 
@@ -534,10 +399,10 @@ two ways.
 
 First, the syntactic symbols are looked up in the @code{c-offsets-alist}
 variable, which is an association list of syntactic symbols and the
-offsets to apply for those symbols.  These offsets are added to the
+offsets to apply for those symbols.  These offsets are added to a
 running total.
 
-Second, if the component has a relative buffer position, @code{cc-mode}
+Second, if the component has a relative buffer position, @ccmode{}
 adds the column number of that position to the running total.  By adding
 up the offsets and columns for every syntactic component on the list,
 the final total indentation for the current line is computed.
@@ -568,13 +433,13 @@ line is:
 @end example
 
 @noindent
-@code{cc-mode} looks up @code{defun-block-intro} in the
+@ccmode{} looks up @code{defun-block-intro} in the
 @code{c-offsets-alist} variable.  Let's say it finds the value @samp{4};
 it adds this to the running total (initialized to zero), yielding a
 running total indentation of 4 spaces.
 
-Next @code{cc-mode} goes to buffer position 29 and asks for the current
-column.  Since the brace at buffer position 29 is in column zero, it
+Next @ccmode{} goes to buffer position 29 and asks for the current
+column.  This brace is in column zero, so @ccmode{}
 adds @samp{0} to the running total.  Since there is only one syntactic
 component on the list for this line, indentation calculation is
 complete, and the total indentation for the line
@@ -605,9 +470,9 @@ component list.  Remember that the list for this line is:
 
 @end example
 
-Here, @code{cc-mode} first looks up the @code{substatement-open} symbol
+Here, @ccmode{} first looks up the @code{substatement-open} symbol
 in @code{c-offsets-alist}. Let's say it finds the value @samp{4}.  This
-yields a running total of 4.  @code{cc-mode} then goes to
+yields a running total of 4.  @ccmode{} then goes to
 buffer position 46, which is the @samp{i} in @code{if} on line 3.  This
 character is in the fourth column on that line so adding this to the
 running total yields an indentation for the line of 8 spaces.
@@ -622,35 +487,35 @@ being used.
 @vindex c-echo-syntactic-information-p
 @vindex echo-syntactic-information-p (c-)
 @cindex TAB
-To help you configure @code{cc-mode}, you can set the variable
+As you configure @ccmode{}, you might want to set the variable
 @code{c-echo-syntactic-information-p} to non-@code{nil} so that the
 syntactic component list and calculated offset will always be echoed in
 the minibuffer when you hit @kbd{TAB}.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Minor Modes, Indentation Commands, New Indentation Engine, Top
+@node  Minor Modes, Commands, New Indentation Engine, Top
 @comment  node-name,              next,                    previous,up
 
 @chapter  Minor Modes
 @cindex   Minor Modes
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@code{cc-mode} contains two minor-mode-like features that you should
+@ccmode{} contains two minor-mode-like features that you should
 find useful while you enter new C code.  The first is called
 @dfn{auto-newline} mode, and the second is called @dfn{hungry-delete}
 mode.  These minor modes can be toggled on and off independently, and
-@code{cc-mode} can be configured so that it comes up with any
+@ccmode{} can be configured so that it starts up with any
 combination of these minor modes.  By default, both of these minor modes
 are turned off.
 
 The state of the minor modes is always reflected in the minor mode list
-on the modeline of the @code{cc-mode} buffer.  When auto-newline mode is
+on the modeline of the @ccmode{} buffer.  When auto-newline mode is
 enabled, you will see @samp{C/a} on the mode line @footnote{Remember
-that the @samp{C} would be replaced with @samp{C++} or @samp{ObjC} if
-you were editing C++ or Objective-C code.}.  When hungry delete mode is
-enabled you would see @samp{C/h} and when both modes are enabled, you'd
-see @samp{C/ah}.
+that the @samp{C} could be replaced with @samp{C++}, @samp{ObjC},
+@samp{Java} or @samp{IDL}.}.  When hungry delete mode is enabled you
+would see @samp{C/h} and when both modes are enabled, you'd see
+@samp{C/ah}.
 
 @kindex C-c C-a
 @kindex C-c C-d
@@ -661,13 +526,13 @@ see @samp{C/ah}.
 @findex toggle-hungry-state (c-)
 @findex toggle-auto-state (c-)
 @findex toggle-auto-hungry-state (c-)
-@code{cc-mode} provides keybindings which allow you to toggle the minor
-modes while editing code on the fly.  To toggle just the auto-newline
+@ccmode{} provides keybindings which allow you to toggle the minor
+modes on the fly while editing code.  To toggle just the auto-newline
 state, hit @kbd{C-c C-a} (@code{c-toggle-auto-state}).  When you do
 this, you should see the @samp{a} indicator either appear or disappear
 on the modeline.  Similarly, to toggle just the hungry-delete state, use
-@kbd{C-c C-d} (@code{c-toggle-hungry-state}), and to toggle both states
-together, use @kbd{C-c C-t} (@code{c-toggle-auto-hungry-state}).
+@kbd{C-c C-d} (@code{c-toggle-hungry-state}), and to toggle both states,
+use @kbd{C-c C-t} (@code{c-toggle-auto-hungry-state}).
 
 To set up the auto-newline and hungry-delete states to your preferred
 values, you would need to add some lisp to your @file{.emacs} file that
@@ -681,7 +546,8 @@ hungry-delete for all your C file editing, you could add the following
 to your @file{.emacs} file:
 @example
 
-(add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-hungry-state 1)))
+(add-hook 'c-mode-common-hook
+	  '(lambda () (c-toggle-auto-hungry-state 1)))
 
 @end example
 
@@ -691,6 +557,7 @@ to your @file{.emacs} file:
 @menu
 * Auto-newline insertion::
 * Hungry-deletion of whitespace::
+* Auto-fill mode interaction::
 @end menu
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -718,10 +585,9 @@ Auto-newline minor mode is enabled, as evidenced by a @samp{C/a} or
 @cindex syntactic whitespace
 @item
 The character was not typed inside of a literal @footnote{A
-@dfn{literal} is defined in @code{cc-mode} as any comment,
-string, or cpp macro definition.  These constructs are also known as
-@dfn{syntactic whitespace} since they are usually ignored when scanning
-C code.}.
+@dfn{literal} is defined as any comment, string, or cpp macro
+definition.  These constructs are also known as @dfn{syntactic
+whitespace} since they are usually ignored when scanning C code.}.
 
 @item
 @kindex C-u
@@ -729,12 +595,6 @@ No numeric argument was supplied to the command (i.e. it was typed as
 normal, with no @kbd{C-u} prefix).
 
 @end itemize
-
-Certain other conditions may apply on a language specific basis.  For
-example, the second slash (@kbd{/}) of a C++ style line comment is
-electric in @code{c++-mode}, @code{objc-mode}, and @code{java-mode}, but
-not in @code{c-mode}.
-
 
 @menu
 * Hanging Braces::
@@ -765,7 +625,7 @@ re-indentation of the line the brace was typed on, and second, it will
 add various newlines before and/or after the typed brace.
 Re-indentation occurs automatically whenever the electric behavior is
 enabled.  If the brace ends up on a line other than the one it was typed
-on, then that line is on is also indented according to
+on, then that line is also indented according to
 @code{c-offsets-alist}.
 
 @cindex class-open syntactic symbol
@@ -782,6 +642,8 @@ on, then that line is on is also indented according to
 @cindex block-close syntactic symbol
 @cindex substatement-open syntactic symbol
 @cindex statement-case-open syntactic symbol
+@cindex extern-lang-open syntactic symbol
+@cindex extern-lang-close syntactic symbol
 
 The insertion of newlines is controlled by the
 @code{c-hanging-braces-alist} variable.  This variable contains a
@@ -791,8 +653,10 @@ this list are: @code{class-open}, @code{class-close}, @code{defun-open},
 @code{defun-close}, @code{inline-open}, @code{inline-close},
 @code{brace-list-open}, @code{brace-list-close},
 @code{brace-list-intro}, @code{brace-list-entry}, @code{block-open},
-@code{block-close}, @code{substatement-open}, and
-@code{statement-case-open}.  @xref{Syntactic Symbols} for a more
+@code{block-close}, @code{substatement-open}, 
+@code{statement-case-open},
+@code{extern-lang-open}, and @code{extern-lang-close}.
+@xref{Syntactic Symbols} for a more
 detailed description of these syntactic symbols.
 
 @cindex custom indentation function
@@ -801,8 +665,8 @@ is called an @var{ACTION} which can be either a function or a list.
 @xref{Custom Brace and Colon Hanging} for a more detailed discussion of
 using a function as a brace hanging @var{ACTION}.
 
-When @var{ACTION} is a list, it can contain any combination of the
-symbols @code{before} or @code{after}, directing @code{cc-mode} where to
+When the @var{ACTION} is a list, it can contain any combination of the
+symbols @code{before} and @code{after}, directing @ccmode{} where to
 put newlines in relationship to the brace being inserted.  Thus, if the
 list contains only the symbol @code{after}, then the brace is said to
 @dfn{hang} on the right side of the line, as in:
@@ -831,7 +695,8 @@ For example, the default value of @code{c-hanging-braces-alist} is:
 
 (defvar c-hanging-braces-alist '((brace-list-open)
                                  (substatement-open after)
-                                 (block-close . c-snug-do-while)))
+                                 (block-close . c-snug-do-while)
+                                 (extern-lang-open after)))
 
 @end group
 @end example
@@ -839,10 +704,16 @@ For example, the default value of @code{c-hanging-braces-alist} is:
 @noindent
 which says that @code{brace-list-open} braces should both hang on the
 right side, and allow subsequent text to follow on the same line as the
-brace.  Also, @code{substatement-open} braces should hang on the right
-side, but subsequent text should follow on the next line.  Here, in the
-@code{block-close} entry, you also see an example of using a function as
-an @var{ACTION}.
+brace.  Also, @code{substatement-open} and @code{extern-lang-open}
+braces should hang on the right side, but subsequent text should follow
+on the next line.  Here, in the @code{block-close} entry, you also see
+an example of using a function as an @var{ACTION}.
+
+A word of caution: it is not a good idea to hang top-level construct
+introducing braces, such as @code{class-open} or @code{defun-open}.
+Emacs makes an assumption that such braces will always appear in column
+zero, hanging such braces can introduce performance problems.
+@xref{Performance Issues} for more information.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -858,17 +729,17 @@ an @var{ACTION}.
 Using a mechanism similar to brace hanging (see @ref{Hanging Braces}),
 colons can also be made to hang using the variable
 @code{c-hanging-colons-alist}.  The syntactic symbols appropriate for
-this association list are: @code{case-label}, @code{label},
+this assocation list are: @code{case-label}, @code{label},
 @code{access-label}, @code{member-init-intro}, and @code{inher-intro}.
-@xref{Hanging Braces} and @ref{Custom Brace and Colon Hanging} for
-details.  Note however, that @code{c-hanging-colons-alist} does not
-implement functions as @var{ACTION}s.
+Note however that for @code{c-hanging-colons-alist}, @var{ACTION}s as
+functions are not supported. See also @ref{Custom Brace and Colon
+Hanging} for details.
 
 @cindex clean-ups
 In C++, double-colons are used as a scope operator but because these
 colons always appear right next to each other, newlines before and after
 them are controlled by a different mechanism, called @dfn{clean-ups} in
-@code{cc-mode}.  @xref{Clean-ups} for details.
+@ccmode{}.  @xref{Clean-ups} for details.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -879,7 +750,7 @@ them are controlled by a different mechanism, called @dfn{clean-ups} in
 @cindex   Hanging Semi-colons and commas
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Semicolons and commas are also electric in @code{cc-mode}, but since
+Semicolons and commas are also electric in @ccmode{}, but since
 these characters do not correspond directly to syntactic symbols, a
 different mechanism is used to determine whether newlines should be
 automatically inserted after these characters.  @xref{Customizing
@@ -901,8 +772,8 @@ Semi-colons and Commas} for details.
 @vindex electric-pound-behavior (c-)
 @vindex c-offsets-alist
 @vindex offsets-alist (c-)
-A few other keys also provide electric behavior.  For example the
-@kbd{#} key (@code{c-electric-pound}) is electric when it is typed as
+A few other keys also provide electric behavior.  For example
+@kbd{#} (@code{c-electric-pound}) is electric when typed as
 the first non-whitespace character on a line.  In this case, the
 variable @code{c-electric-pound-behavior} is consulted for the electric
 behavior.  This variable takes a list value, although the only element
@@ -915,7 +786,8 @@ cpp macro definitions.
 @findex electric-star (c-)
 @findex electric-slash (c-)
 @cindex comment-only line
-Stars and slashes (i.e. @kbd{*} and @kbd{/}) are also electric under
+Stars and slashes (i.e. @kbd{*} and @kbd{/}, @code{c-electric-star} and
+@code{c-electric-slash} respectively) are also electric under
 certain circumstances.  If a star is inserted as the second character of
 a C style block comment on a @dfn{comment-only} line, then the comment
 delimiter is indented as defined by @code{c-offsets-alist}.  A
@@ -940,6 +812,14 @@ Likewise, if a slash is inserted as the second slash in a C++ style line
 comment (also only on a comment-only line), then the line is indented as
 defined by @code{c-offsets-alist}.
 
+@findex c-electric-lt-gt
+@findex electric-lt-gt (c-)
+@kindex <
+@kindex >
+Less-than and greater-than signs (@code{c-electric-lt-gt}) are also
+electric, but only in C++ mode.  Hitting the second of two @kbd{<} or
+@kbd{>} keys re-indents the line if it is a C++ style stream operator.
+
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node  Clean-ups, , Other electric commands, Auto-newline insertion
@@ -954,13 +834,13 @@ hanging.  On the surface, it would seem that clean-ups overlap the
 functionality provided by the @code{c-hanging-*-alist} variables, and
 similarly, clean-ups are only enabled when auto-newline minor mode is
 enabled.  Clean-ups are used however to adjust code ``after-the-fact'',
-i.e. to eliminate some whitespace that isn't inserted by electric
+i.e. to eliminate some whitespace that is inserted by electric
 commands, or whitespace that contains intervening constructs.
 
 @cindex literal
-You can configure @code{cc-mode}'s clean-ups by setting the variable
+You can configure @ccmode{}'s clean-ups by setting the variable
 @code{c-cleanup-list}, which is a list of clean-up symbols.  By default,
-@code{cc-mode} cleans up only the @code{scope-operator} construct, which
+@ccmode{} cleans up only the @code{scope-operator} construct, which
 is necessary for proper C++ support.  Note that clean-ups are only
 performed when the construct does not occur within a literal (see
 @ref{Auto-newline insertion}), and when there is nothing but whitespace
@@ -968,12 +848,12 @@ appearing between the individual components of the construct.
 
 @vindex c-cleanup-list
 @vindex cleanup-list (c-)
-There are currently only five specific constructs that @code{cc-mode}
+There are currently only five specific constructs that @ccmode{}
 can clean up, as indicated by these symbols:
 
 @itemize @bullet
 @item
-@code{brace-else-brace} -- cleans up @samp{@} else @{} constructs by
+@code{brace-else-brace} --- cleans up @samp{@} else @{} constructs by
 placing the entire construct on a single line.  Clean-up occurs when the
 open brace after the @samp{else} is typed.  So for example, this:
 @example
@@ -1005,7 +885,38 @@ void spam(int i)
 @end example
 
 @item
-@code{empty-defun-braces} -- cleans up braces following a top-level
+@code{brace-elseif-brace} --- similar to the @code{brace-else-brace}
+clean-up, but cleans up @samp{@} else if (...)@{} constructs.  For
+example:
+@example
+@group
+
+void spam(int i)
+@{
+    if( i==7 )
+    @{
+        dosomething();
+    @}
+    else if( i==3 ) @{
+
+@end group
+@end example
+@noindent
+appears like this after the open brace is typed:
+@example
+@group
+
+void spam(int i)
+@{
+    if( i==7 ) @{
+        dosomething();
+    @} else if( i==3 ) @{
+
+@end group
+@end example
+
+@item
+@code{empty-defun-braces} --- cleans up braces following a top-level
 function or class definition that contains no body.  Clean up occurs
 when the closing brace is typed.  Thus the following:
 @example
@@ -1029,7 +940,7 @@ class Spam
 @end example
 
 @item
-@code{defun-close-semi} -- cleans up the terminating semi-colon on
+@code{defun-close-semi} --- cleans up the terminating semi-colon on
 top-level function or class definitions when they follow a close
 brace. Clean up occurs when the semi-colon is typed.
 So for example, the following:
@@ -1057,11 +968,11 @@ class Spam
 @end example
 
 @item
-@code{list-close-comma} -- cleans up commas following braces in array
+@code{list-close-comma} --- cleans up commas following braces in array
 and aggregate initializers.  Clean up occurs when the comma is typed.
 
 @item
-@code{scope-operator} -- cleans up double colons which may designate a
+@code{scope-operator} --- cleans up double colons which may designate a
 C++ scope operator split across multiple lines@footnote{Certain C++
 constructs introduce ambiguous situations, so @code{scope-operator}
 clean-ups may not always be correct.  This usually only occurs when
@@ -1073,7 +984,7 @@ in the @code{c-cleanup-list} when you are editing C++ code.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Hungry-deletion of whitespace, , Auto-newline insertion, Minor Modes
+@node  Hungry-deletion of whitespace, Auto-fill mode interaction, Auto-newline insertion, Minor Modes
 @comment  node-name,              next,                    previous,up
 
 @section  Hungry-deletion of whitespace
@@ -1086,42 +997,126 @@ extremely useful.  In fact, you might find yourself wanting
 hungry-delete in @strong{all} your editing modes!
 
 @kindex DEL
-In a nutshell, when hungry-delete mode is enabled, hitting the @kbd{DEL}
-character will consume all preceding whitespace, including newlines and
-tabs.  This can really cut down on the number of @kbd{DEL}'s you have to
-type if, for example you made a mistake on the preceding line.
+@kindex Backspace
+In a nutshell, when hungry-delete mode is enabled, hitting the
+@kbd{Backspace} key@footnote{I say ``hit the @kbd{Backspace} key'' but
+what I really mean is ``when Emacs receives the @code{BackSpace} keysym
+event''.  The difference usually isn't significant to most users, but
+advanced users will realize that under window systems such as X, any
+physical key (keycap) on the keyboard can be configured to generate any
+keysym.  Also, the use of Emacs on TTYs will affect which keycap
+generates which keysym.  From a pedantic point of view, here we are only
+concerned with the keysym event that Emacs receives.} will consume all
+preceding whitespace, including newlines and tabs.  This can really cut
+down on the number of @kbd{Backspace}'s you have to type if, for example
+you made a mistake on the preceding line.
+
+@findex c-electric-backspace
+@findex electric-backspace (c-)
+@vindex c-backspace-function
+@vindex backspace-function (c-)
 
 @findex c-electric-delete
 @findex electric-delete (c-)
 @vindex c-delete-function
 @vindex delete-function (c-)
 @cindex literal
-By default, @code{cc-mode} actually runs the command
-@code{c-electric-delete} when you hit @kbd{DEL}.  When this command is
-used to delete a single character (i.e. when it is called interactively
-with no numeric argument), it really runs the function contained in the
-variable @code{c-delete-function}.  This function is called with a
-single argument, which is the number of characters to delete.
-@code{c-delete-function} is also called when the @kbd{DEL} key is typed
-inside a literal (see @ref{Auto-newline insertion}.  Inside a literal,
-@code{c-electric-delete} is not electric, which is typical of all the
-so-called electric commands.
+
+@findex backward-delete-char-untabify
+
+By default, when you hit the @kbd{Backspace} key
+@ccmode{} runs the command @code{c-electric-backspace}, which deletes
+text in the backwards direction.  When deleting a single character, or
+when @kbd{Backspace} is hit in a literal
+(see @ref{Auto-newline insertion}), 
+or when hungry-delete mode is disabled, the function
+contained in the @code{c-backspace-function} variable is called with one
+argument (the number of characters to delete).  This variable is set to
+@code{backward-delete-char-untabify} by default.
+
+@vindex delete-key-deletes-forward
+@findex delete-char
+
+Similarly, hitting the @kbd{DEL} key runs the command
+@code{c-electric-delete}.  Some versions of Emacs@footnote{As of this
+writing, 20-Jun-1997, only XEmacs 20.3 supports this.} support separation
+of the @kbd{Backspace} and @kbd{DEL} keys, so that @kbd{DEL} will delete
+in the forward direction when @code{delete-key-deletes-forward} is
+non-@code{nil}.  If your Emacs supports this, and
+@code{delete-key-deletes-forward} is non-@code{nil}, and hungry-delete
+mode is enabled, then @kbd{DEL} will consume all whitespace following
+point.  When deleting a single character, or when @kbd{DEL} is hit in a
+literal, or when hungry-delete mode is disabled, the function contained
+in the @code{c-delete-function} variable is called with one argument
+(the number of characters to delete).  This variable is set to
+@code{delete-char} by default.
+
+However, if @code{delete-key-deletes-forward} is @code{nil}, or your
+Emacs does not support separation of @kbd{Backspace} and @kbd{DEL}, then 
+@code{c-electric-delete} simply calls @code{c-electric-backspace}.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Indentation Commands, Customizing Indentation, Minor Modes, Top
+@node  Auto-fill mode interaction, , Hungry-deletion of whitespace, Minor Modes
 @comment  node-name,              next,                    previous,up
 
-@chapter  Indentation Commands
+@section  Auto-fill mode interaction
+@cindex   Auto-fill mode interaction
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+One other note about minor modes is worth mentioning here.  CC Mode now
+works much better with auto-fill mode (a standard Emacs minor mode) by
+correctly auto-filling both line (e.g. C++ style) and block (e.g. C
+style) oriented comments.  When @code{auto-fill-mode} is enabled, line
+oriented comments will also be auto-filled by inserting a newline at the 
+line break, and inserting @samp{//} at the start of the next line.
+
+@vindex c-comment-continuation-stars
+@vindex comment-continuation-stars (c-)
+@vindex comment-line-break-function
+When auto-filling block oriented comments, the behavior is dependent on
+the value of the variable @code{c-comment-continuation-stars}.  When
+this variable is @code{nil}, the old behavior for auto-filling C
+comments is in effect.  In this case, the line is broken by closing the
+comment and starting a new comment on the next line.
+
+If you set @code{c-comment-continuation-stars} to a string, then a long
+C block comment line is broken by inserting a newline at the line break
+position, and inserting this string at the beginning of the next comment
+line.  The default value for @code{c-comment-continuation-stars} is
+@samp{* } (a star followed by a single space)@footnote{To get block
+comment continuation lines indented under the block comment starter
+(e.g. the @samp{/*}), it is not enough to set
+@code{c-comment-continuation-stars} to the empty string.  You need to do
+this, but you also need to set the offset for the @code{c} syntactic
+symbol to be zero.}.
+
+
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@node  Commands, Customizing Indentation, Minor Modes, Top
+@comment  node-name,              next,                    previous,up
+
+@chapter  Commands
+@cindex   Commands
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+@menu
+* Indentation Commands::
+* Other Commands::
+@end menu
+
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@node  Indentation Commands, Other Commands, , Commands
+@comment  node-name,              next,                    previous,up
+
+@section  Indentation Commands
 @cindex   Indentation Commands
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@findex c-set-style
-@findex set-style (c-)
 Various commands are provided which allow you to conveniently re-indent
-C constructs, and these are outlined below.  There are several things to
+C constructs.  There are several things to
 note about these indentation commands.  First, when you
-change your programming style, either though @code{c-set-style} or some
+change your programming style, either interactively or through some
 other means, your file does @emph{not} automatically get re-indented.
 When you change style parameters, you will typically need to reformat
 the line, expression, or buffer to see the effects of your changes.
@@ -1130,26 +1125,24 @@ the line, expression, or buffer to see the effects of your changes.
 @findex c-hanging-braces-alist
 @findex hanging-braces-alist (c-)
 Second, changing some variables have no effect on existing code, even
-when you do re-indent.  For example, the @code{c-hanging-*} variables and
-@code{c-cleanup-list} only affect newly entered code.  So for example,
-changing @code{c-hanging-braces-alist} and re-indenting the buffer will
-not adjust placement of braces already in the file.
+when you do re-indent.  For example, the @code{c-hanging-*} variables
+and @code{c-cleanup-list} only affect new code as it is typed in
+on-the-fly, so changing @code{c-hanging-braces-alist} and re-indenting
+the buffer will not adjust placement of braces already in the file.
 
 @vindex c-progress-interval
 @vindex progress-interval (c-)
 Third, re-indenting large portions of code is currently rather
 inefficient.  Improvements have been made since previous releases of
-@code{cc-mode}, and much more radical improvements will be made for the
-next release, but for now you need to be aware of this @footnote{In
-particular, I have had people complain about the speed that
-@code{cc-mode} re-indents @code{lex(1)} output.  Lex, yacc, and other
-code generators usually output some pretty perverse code.  @emph{Don't}
-try to indent this stuff with @code{cc-mode}!}.  Some provision has been
-made to at least inform you as to the progress of your large
-re-indentation command.  The variable @code{c-progress-interval}
-controls how often a progress message is displayed.  Set this variable
-to @code{nil} to inhibit progress messages.  Note that this feature only
-works with Emacs 19.
+@ccmode{}, and much more radical improvements are planned, but for now
+you need to be aware of this @footnote{In particular, I have had people
+complain about the speed with which @code{lex(1)} output is re-indented.
+Lex, yacc, and other code generators usually output some pretty
+perversely formatted code.  @emph{Don't} try to indent this stuff!}.
+Some provision has been made to at least inform you as to the progress
+of the re-indentation.  The variable @code{c-progress-interval} controls
+how often a progress message is displayed.  Set this variable to
+@code{nil} to inhibit progress messages.
 
 Also, except as noted below, re-indentation is always driven by the
 same mechanisms that control on-the-fly indentation of code.  @xref{New
@@ -1161,17 +1154,28 @@ Indentation Engine} for details.
 @vindex tab-always-indent (c-)
 @kindex TAB
 @cindex literal
+@vindex indent-tabs-mode
+@vindex c-insert-tab-function
+@vindex insert-tab-function (c-)
+@findex tab-to-tab-stop
 To indent a single line of code, use @kbd{TAB}
 (@code{c-indent-command}).  The behavior of this command is controlled
 by the variable @code{c-tab-always-indent}.  When this variable is
 @code{t}, @kbd{TAB} always just indents the current line.  When
-@code{nil}, the line is indented only if point is at the left
-margin, or on or before the first non-whitespace character on the line,
-otherwise a real tab character is inserted.  If this variable's value is
-something other that @code{t} or @code{nil} (e.g. @code{'other}), then a
-real tab character is inserted only when point is inside a
-literal (see @ref{Auto-newline insertion}), otherwise the line is
-indented.
+@code{nil}, the line is indented only if point is at the left margin, or
+on or before the first non-whitespace character on the line, otherwise
+@emph{something else happens}@footnote{Actually what happens is that the
+function stored in @code{c-insert-tab-function} is called.
+Normally this just inserts a real tab character, or the equivalent
+number of spaces, depending on the setting of the variable
+@code{indent-tabs-mode}.  If you preferred, you could set
+@code{c-insert-tab-function} to @code{tab-to-tab-stop} for example.}.
+If the value of @code{c-tab-always-indent} is something other than
+@code{t} or @code{nil} (e.g. @code{'other}), then a real tab
+character@footnote{The caveat about @code{indent-tabs-mode} in the
+previous footnote also applies here.}  is inserted only when point is
+inside a literal (see @ref{Auto-newline insertion}), otherwise the line
+is indented.
 
 @kindex M-C-q
 @findex c-indent-exp
@@ -1192,7 +1196,7 @@ same position within the buffer.
 @findex indent-region
 To indent any arbitrary region of code, use @kbd{M-C-\}
 (@code{indent-region}).   This is a standard Emacs command, specially
-tailored for C code in a @code{cc-mode} buffer.  Note that of course,
+tailored for C code in a @ccmode{} buffer.  Note that of course,
 point and mark must delineate the region you
 want to indent.
 
@@ -1203,23 +1207,163 @@ While not strictly an indentation function, @kbd{M-C-h}
 (@code{c-mark-function}) is useful for marking the current top-level
 function or class definition as the current region.
 
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@node  Other Commands, , Indentation Commands, Commands
+@comment  node-name,              next,                    previous,up
+
+@section  Other Commands
+@cindex   Other Commands
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+@ccmode{} contains other useful command for moving around in C
+code.
+
+@table @code
+@item C-c C-u (c-up-conditional)
+@kindex C-c C-u
+@findex c-up-conditional
+@findex up-conditional (c-)
+Move point back to the containing preprocessor conditional, leaving the
+mark behind.  A prefix argument acts as a repeat count.  With a negative
+argument, move point forward to the end of the containing
+preprocessor conditional.  When going backwards, @code{#elif} is treated
+like @code{#else} followed by @code{#if}.  When going forwards,
+@code{#elif} is ignored.@refill
+
+@item C-c C-p (c-backward-conditional)
+@kindex C-c C-p
+@findex c-backward-conditional
+@findex backward-conditional (c-)
+Move point back over a preprocessor conditional, leaving the mark
+behind.  A prefix argument acts as a repeat count.  With a negative
+argument, move forward.
+
+@item C-c C-n (c-forward-conditional)
+@kindex C-c C-n
+@findex c-forward-conditional
+@findex forward-conditional (c-)
+Move point forward across a preprocessor conditional, leaving the mark
+behind.  A prefix argument acts as a repeat count.  With a negative
+argument, move backward.
+
+@item M-a (c-beginning-of-statement)
+@kindex ESC a
+@findex c-beginning-of-statement
+@findex beginning-of-statement (c-)
+Move point to the beginning of the innermost C statement.  If point is
+already at the beginning of a statement, it moves to the beginning of
+the preceding statement.  With prefix argument @var{n}, move back
+@var{n} @minus{} 1 statements.
+
+If point is within a string or comment, or at the end of a comment, this
+command moves by sentences instead of statements.
+
+When called from a program, this function takes three optional
+arguments: the numeric prefix argument, a buffer position limit (don't
+move back before that place), and a flag to indicate whether movement
+should be by statements (if @code{t}) or sentence (if non-@code{nil}).
+
+@item M-e (c-end-of-statement)
+@kindex ESC e
+@findex c-end-of-statement
+@findex end-of-statement (c-)
+Move point to the end of the innermost C statement.  If point is at the
+end of a statement, move to the end of the next statement.  With prefix
+argument @var{n}, move forward @var{n} @minus{} 1 statements.
+
+If point is within a string or comment, or at the end of a comment, this
+command moves by sentences instead of statements.
+
+When called from a program, this function takes three optional
+arguments: the numeric prefix argument, a buffer position limit (don't
+move back before that place), and a flag to indicate whether movement
+should be by statements (if @code{t}) or sentence (if non-@code{nil}).
+
+@item M-x c-forward-into-nomenclature
+@findex c-forward-into-nomenclature
+@findex forward-into-nomenclature (c-)
+A popular programming style, especially for object-oriented languages
+such as C++ is to write symbols in a mixed case format, where the first
+letter of each word is capitalized, and not separated by underscores.
+E.g. @samp{SymbolsWithMixedCaseAndNoUnderlines}.
+
+This command moves point forward to next capitalized word.  With prefix
+argument @var{n}, move @var{n} times.
+
+@item M-x c-backward-into-nomenclature
+@findex c-backward-into-nomenclature
+@findex backward-into-nomenclature (c-)
+Move point backward to beginning of the next capitalized
+word.  With prefix argument @var{n}, move @var{n} times.  If
+@var{n} is negative, move forward.
+
+@kindex C-c :
+@findex c-scope-operator
+@findex scope-operator (c-)
+@item C-c : (c-scope-operator)
+In C++, it is also sometimes desirable to insert the double-colon scope
+operator without performing the electric behavior of colon insertion.
+@kbd{C-c :} does just this.
+
+@item M-q (fill-paragraph)
+@kindex ESC q
+@findex fill-paragraph
+@vindex c-hanging-comment-starter-p
+@vindex c-hanging-comment-ender-p
+@vindex hanging-comment-starter-p (c-)
+@vindex hanging-comment-ender-p (c-)
+
+The command is used to fill a block style (C) or line style (C++)
+comment, in much the same way that text in the various text modes can be
+filled@footnote{You should not use specialized filling packages such as
+@code{filladapt} with CC Mode.  They don't work as well for filling as
+@code{c-fill-paragraph}}.  You should never attempt to fill non-comment
+code sections; you'll end up with garbage!  Two variables control how C
+style block comments are filled, specifically how the comment start and
+end delimiters are handled.
+
+The variable @code{c-hanging-comment-starter-p} controls whether comment
+start delimiters which appear on a line by themselves, end up on a line
+by themselves after the fill.  When the value is @code{nil}, the comment
+starter will remain on its own line@footnote{It will not be placed on a
+separate line if it is not already on a separate line.}.  Otherwise,
+text on the next line will be put on the same line as the comment
+starter.  This is called @dfn{hanging} because the following text hangs
+on the line with the comment starter@footnote{This variable is @code{t}
+by default, except in @code{java-mode}.  Hanging comment starters mess
+up Javadoc style comments.}
+
+The variable @code{c-hanging-comment-ender-p} controls the analogous
+behavior for the block comment end delimiter.  When the value is
+@code{nil}, the comment ender will remain on its own line after the
+file@footnote{The same caveat as above holds true.}.  Otherwise, the
+comment end delimiter will be placed at the end of the previous line.
+
+@end table
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node     Customizing Indentation, Syntactic Symbols, Indentation Commands, Top
+@node     Customizing Indentation, Syntactic Symbols, Commands, Top
 @comment  node-name,              next,                    previous,up
 
 @chapter  Customizing Indentation
 @cindex   Customizing Indentation
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+@vindex c-offsets-alist
+@vindex offsets-alist (c-)
 @cindex c-set-offset
 @cindex set-offset (c-)
+The variable @code{c-offsets-alist} contains the mappings between
+syntactic symbols and the offsets to apply for those symbols.  You
+should never modify this variable directly though.  Use the function
+@code{c-set-offset} instead (see below for details).
+
 The @code{c-offsets-alist} variable is where you customize all your
 indentations.  You simply need to decide what additional offset you want
 to add for every syntactic symbol.  You can use the command @kbd{C-c
 C-o} (@code{c-set-offset}) as the way to set offsets, both interactively
 and from your mode hook.  Also, you can set up @emph{styles} of
-indentation just like in BOCM.  Most likely, you'll
+indentatio.  Most likely, you'll
 find one of the pre-defined styles will suit your needs, but if not,
 this section will describe how to set up basic editing configurations.
 @xref{Styles} for an explanation of how to set up named styles.
@@ -1227,53 +1371,66 @@ this section will describe how to set up basic editing configurations.
 @cindex c-basic-offset
 @cindex basic-offset (c-)
 As mentioned previously, the variable @code{c-offsets-alist} is an
-association list between syntactic symbols and the offsets to be applied
-for those symbols.  In fact, these offset values can be an integer, a
-function or variable name, or one of the following symbols: @code{+},
-@code{-}, @code{++}, @code{--}, @code{*}, or @code{/}.  These symbols
-describe offset in multiples of the value of the variable
-@code{c-basic-offset}.  By defining a style's indentation in terms of
-this fundamental variable, you can change the amount of whitespace given
-to an indentation level while leaving the same relationship between
-levels.  Here are multiples of @code{c-basic-offset} that the special
+association list of syntactic symbols and the offsets to be applied for
+those symbols.  In fact, these offset values can be any of an integer, a
+function or lambda expression, a variable name, or one of the following
+symbols: @code{+}, @code{-}, @code{++}, @code{--}, @code{*}, or
+@code{/}.  These symbols describe offset in multiples of the value of
+the variable @code{c-basic-offset}.  By defining a style's indentation
+in terms of this fundamental variable, you can change the amount of
+whitespace given to an indentation level while leaving the same
+relationship between levels.  Here are the values that the special
 symbols correspond to:
 
-@itemize @bullet
+@table @code
 
-@item
-@code{+ } =  @code{c-basic-offset} times 1
-@item
-@code{- } =  @code{c-basic-offset} times -1
-@item
-@code{++} =  @code{c-basic-offset} times 2
-@item
-@code{--} =  @code{c-basic-offset} times -2
-@item
-@code{* } =  @code{c-basic-offset} times 0.5
-@item
-@code{/ } =  @code{c-basic-offset} times -0.5
+@item +
+@code{c-basic-offset} times 1
+@item -
+@code{c-basic-offset} times -1
+@item ++
+@code{c-basic-offset} times 2
+@item --
+@code{c-basic-offset} times -2
+@item *
+@code{c-basic-offset} times 0.5
+@item /
+@code{c-basic-offset} times -0.5
 
-@end itemize
+@end table
 
+@vindex c-style-variables-are-local-p
+@vindex style-variables-are-local-p (c-)
 @noindent
 So, for example, because most of the default offsets are defined in
 terms of @code{+}, @code{-}, and @code{0}, if you like the general
 indentation style, but you use 4 spaces instead of 2 spaces per level,
 you can probably achieve your style just by changing
-@code{c-basic-offset} like so (in your @file{.emacs} file)@footnote{The
-reason you need to use @code{setq-default} instead of @code{setq} is
-that @code{c-basic-offset} is a buffer local variable, as are most of
-the @code{cc-mode} configuration variables.  If you were to put this
-code in, e.g. your @code{c-mode-common-hook} function, you could use
-@code{setq}.}:
+@code{c-basic-offset} like so (in your @file{.emacs} file):
 @example
 
-(setq-default c-basic-offset 4)
+(setq c-basic-offset 4)
 
 @end example
 
 @noindent
 This would change
+@example
+@group
+
+int add( int val, int incr, int doit )
+@{
+  if( doit )
+    @{
+      return( val + incr );
+    @}
+  return( val );
+@}
+
+@end group
+@end example
+@noindent
+to
 @example
 @group
 
@@ -1289,22 +1446,6 @@ int add( int val, int incr, int doit )
 @end group
 @end example
 
-@noindent
-to
-@example
-@group
-
-int add( int val, int incr, int doit )
-@{
-  if( doit )
-    @{
-      return( val + incr );
-    @}
-  return( val );
-@}
-
-@end group
-@end example
 
 To change indentation styles more radically, you will want to change the
 value associated with the syntactic symbols in the
@@ -1328,17 +1469,19 @@ interactively, then I'll describe how to make changes to your
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 As an example of how to customize indentation, let's change the
-style of example 2 above from:
+style of this example@footnote{In this an subsequent examples, the
+original code is formatted using the @samp{gnu} style unless otherwise
+indicated. @xref{Styles}.}:
 @example
 @group
 
 1: int add( int val, int incr, int doit )
 2: @{
-3:     if( doit )
-4:         @{
-5:             return( val + incr );
-6:         @}
-7:     return( val );
+3:   if( doit )
+4:     @{
+5:       return( val + incr );
+6:     @}
+7:   return( val );
 8: @}
 
 @end group
@@ -1350,11 +1493,11 @@ to:
 
 1: int add( int val, int incr, int doit )
 2: @{
-3:     if( doit )
-4:     @{
-5:         return( val + incr );
-6:     @}
-7:     return( val );
+3:   if( doit )
+4:   @{
+5:     return( val + incr );
+6:   @}
+7:   return( val );
 8: @}
 
 @end group
@@ -1364,11 +1507,11 @@ In other words, we want to change the indentation of braces that open a
 block following a condition so that the braces line up under the
 conditional, instead of being indented.  Notice that the construct we
 want to change starts on line 4.  To change the indentation of a line,
-we need to see which syntactic component affect the offset calculations
+we need to see which syntactic components affect the offset calculations
 for that line.  Hitting @kbd{C-c C-s} on line 4 yields:
 @example
 
-((substatement-open . 46))
+((substatement-open . 44))
 
 @end example
 
@@ -1384,9 +1527,9 @@ change, providing a reasonable default.  In this case, the default is
 @code{substatement-open}, which is just the syntactic symbol we want to
 change!
 
-After you hit return, @code{cc-mode} will then prompt you for the new
+After you hit return, @ccmode{} will then prompt you for the new
 offset value, with the old value as the default.  The default in this
-case is @samp{+}, so hit backspace to delete the @samp{+}, then hit
+case is @samp{+}, but we want no extra indentation so enter
 @samp{0} and @kbd{RET}.  This will associate the offset 0 with the
 syntactic symbol @code{substatement-open} in the @code{c-offsets-alist}
 variable.
@@ -1402,11 +1545,11 @@ should now look like:
 
 1: int add( int val, int incr, int doit )
 2: @{
-3:     if( doit )
-4:     @{
-5:         return( val + incr );
-6:     @}
-7:     return( val );
+3:   if( doit )
+4:   @{
+5:     return( val + incr );
+6:   @}
+7:   return( val );
 8: @}
 
 @end group
@@ -1424,8 +1567,8 @@ adjustments.
 @node     Permanent Customization, Styles, Interactive Customization, Customizing Indentation
 @comment  node-name,              next,                    previous,up
 
-@section  Permanent Indentation
-@cindex   Permanent Indentation
+@section  Permanent Customization
+@cindex   Permanent Customization
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @vindex c-mode-common-hook
@@ -1433,33 +1576,81 @@ adjustments.
 @vindex c++-mode-hook
 @vindex objc-mode-hook
 @vindex java-mode-hook
+@vindex idl-mode-hook
+@vindex c-initialization-hook
+@vindex initialization-hook (c-)
 @cindex hooks
-To make this change permanent, you need to add some lisp code to your
-@file{.emacs} file.  @code{cc-mode} provides four hooks that you can use
-to customize your language editing styles.  Four language specific hooks
-are provided, according to Emacs major mode conventions:
-@code{c-mode-hook}, @code{c++-mode-hook}, @code{objc-mode-hook}, and
-@code{java-mode-hook}.  These get run as the last thing when you enter
-@code{c-mode}, @code{c++-mode}, @code{objc-mode}, or
-@code{java-mode-hook} respectively.  @code{cc-mode} also provides a hook
-called @code{c-mode-common-hook} which is run by all three modes
-@emph{before} the language specific hook.  Thus, to make changes
-consistently across all supported @code{cc-mode} modes, use
-@code{c-mode-common-hook}.  Most of the examples in this section will
-assume you are using the common hook.
+To make your changes permanent, you need to add some lisp code to your
+@file{.emacs} file, but first you need to decide whether your styles
+should be global in every buffer, or local to each specific buffer.
+
+If you edit primarily one style of code, you may want to make the
+@ccmode{} style variables have global values so that every buffer will
+share the style settings.  This will allow you to set the @ccmode{}
+variables at the top level of your @file{.emacs} file, and is the
+way @ccmode{} works by default.
+
+@vindex c-mode-common-hook
+@vindex mode-common-hook (c-)
+@vindex c-style-variables-are-local-p
+@vindex style-variables-are-local-p (c-)
+If you edit many different styles of code at
+the same time, you might want to make the @ccmode{} style variables
+have buffer local values.  If you do this, then you will need to set any
+@ccmode{} style variables in a hook function (e.g. off of
+@code{c-mode-common-hook} instead of at the top level of your
+@file{.emacs} file.  The recommended way to do this is to set the
+variable @code{c-style-variables-are-local-p} to @code{t}
+@strong{before} @ccmode{} is loaded into your Emacs session.
+
+@ccmode{} provides several hooks that you can
+use to customize the mode according to your coding style.  Each language
+mode has its own hook, adhering to standard Emacs major mode
+conventions.  There is also one general hook and one package
+initialization hook:
+
+@itemize @bullet
+
+@item
+@code{c-mode-hook} --- for C buffers only
+@item
+@code{c++-mode-hook} --- for C++ buffers only
+@item
+@code{objc-mode-hook} --- for Objective-C buffers only
+@item
+@code{java-mode-hook} --- for Java buffers only
+@item
+@code{idl-mode-hook} --- for IDL buffers only
+@item
+@code{c-mode-common-hook} --- common across all languages
+@item
+@code{c-initialization-hook} --- hook run only once per Emacs session,
+when @ccmode{} is initialized.
+
+@end itemize
+
+The language hooks get run as the last thing when you enter that
+language mode.  The @code{c-mode-common-hook} is run by all
+supported modes @emph{before} the language specific hook, and thus can
+contain customizations that are common across all languages.  Most of
+the examples in this section will assume you are using the common
+hook@footnote{The interaction between @code{java-mode} and the hook
+variables is slightly different than for the other modes.
+@code{java-mode} sets the style (see @ref{Styles}) of the buffer to
+@samp{java} @emph{before} running the @code{c-mode-common-hook} or
+@code{java-mode-hook}.  You need to be aware of this so that style
+settings in @code{c-mode-common-hook} don't clobber your Java style.}.
 
 Here's a simplified example of what you can add to your @file{.emacs}
 file to make the changes described in the previous section
-(@ref{Interactive Customization}) more permanent.  See the Emacs
-manuals for more information on customizing Emacs via hooks.
-@xref{Sample .emacs File} for a more complete sample @file{.emacs} file.
-@footnote{The use of @code{add-hook} in this example only works for
-Emacs 19.  Workarounds are available if you are using Emacs 18.}
+(@ref{Interactive Customization}) more permanent.  See the Emacs manuals
+for more information on customizing Emacs via hooks.  @xref{Sample
+.emacs File} for a more complete sample @file{.emacs} file.
 @example
 @group
 
 (defun my-c-mode-common-hook ()
-  ;; my customizations for all of c-mode, c++-mode, objc-mode, java-mode
+  ;; my customizations for all of c-mode and related modes
   (c-set-offset 'substatement-open 0)
   ;; other customizations can go here
   )
@@ -1471,10 +1662,6 @@ Emacs 19.  Workarounds are available if you are using Emacs 18.}
 For complex customizations, you will probably want to set up a
 @emph{style} that groups all your customizations under a single
 name.
-
-The offset value can also be a function, and this is how power users
-gain enormous flexibility in customizing indentation. @xref{Advanced
-Customizations} for details.
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node     Styles, Advanced Customizations, Permanent Customization, Customizing Indentation
@@ -1488,12 +1675,12 @@ Most people only need to edit code formatted in just a few well-defined
 and consistent styles.  For example, their organization might impose a
 ``blessed'' style that all its programmers must conform to.  Similarly,
 people who work on GNU software will have to use the GNU coding style on
-C code.  Some shops are more lenient, allowing some variety of coding
+C code.  Some shops are more lenient, allowing a variety of coding
 styles, and as programmers come and go, there could be a number of
-styles in use.  For this reason, @code{cc-mode} makes it convenient for
+styles in use.  For this reason, @ccmode{} makes it convenient for
 you to set up logical groupings of customizations called @dfn{styles},
 associate a single name for any particular style, and pretty easily
-start editing new or existing code using these styles.  This chapter
+start editing new or existing code using these styles.  This section
 describes how to set up styles and how to edit your C code using styles.
 
 @menu
@@ -1511,81 +1698,87 @@ describes how to set up styles and how to edit your C code using styles.
 @cindex   Built-in Styles
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-If you're lucky, one of @code{cc-mode}'s built-in styles might be just
-what you're looking for.  Some of the most common C and C++ styles are
-already built-in.  These include:
+If you're lucky, one of @ccmode{}'s built-in styles might be just
+what you're looking for.  These include:
 
 @itemize @bullet
 @item
 @cindex GNU style
-@code{gnu} -- coding style blessed by the Free Software Foundation
+@code{gnu} --- coding style blessed by the Free Software Foundation
 for C code in GNU programs.
 
 @item
 @cindex K&R style
-@code{k&r} -- The classic Kernighan and Ritchie style for C code.
+@code{k&r} --- The classic Kernighan and Ritchie style for C code.
 
 @item
 @cindex BSD style
-@code{bsd} -- @strong{<TBD> Anybody know anything about the history of
-this style?}
-
-@item
-@cindex Stroustrup style
-@code{stroustrup} -- The classic Stroustrup style for C++ code.
+@code{bsd} --- Also known as ``Allman style'' after Eric Allman.
 
 @item
 @cindex Whitesmith style
-@code{whitesmith} -- @strong{<TBD> Anybody know anything about the history of
-this style?}
+@code{whitesmith} --- Popularized by the examples that came with
+Whitesmiths C, an early commercial C compiler.
+
+@item
+@cindex Stroustrup style
+@code{stroustrup} --- The classic Stroustrup style for C++ code.
 
 @item
 @cindex Ellemtel style
-@code{ellemtel} -- Popular C++ coding standards as defined by
+@code{ellemtel} --- Popular C++ coding standards as defined by
 ``Programming in C++, Rules and Recommendations'', Erik Nyquist and Mats
 Henricson, Ellemtel @footnote{This document is ftp'able from
 @code{euagate.eua.ericsson.se}}.
 
 @item
-@cindex Java style
-@cindex java-mode
-@code{java} -- The style for editing Java code.  Note that this style is
-automatically installed when you enter @code{java-mode}.
+@cindex Linux style
+@code{linux} --- C coding standard for Linux development.
 
 @item
-@cindex CC-MODE style
-@code{CC-MODE} -- Style that encapsulates the default values of the
-@code{cc-mode} variables.  See below for details.
+@cindex Python style
+@code{python} --- C coding standard for Python extension
+modules@footnote{Python is a high level scripting language with a C/C++
+foreign function interface.  For more information, see
+@code{<http://www.python.org/>}.}.
+
+@item
+@cindex Java style
+@cindex java-mode
+@code{java} --- The style for editing Java code.  Note that this style is
+automatically installed when you enter @code{java-mode}.
 
 @end itemize
 
 @findex c-set-style
 @findex set-style (c-)
+@kindex C-c .
 If you'd like to experiment with these built-in styles you can simply
-type the following in a @code{cc-mode} buffer:
+type the following in a @ccmode{} buffer:
 @example
 @group
 
-@kbd{M-x c-set-style RET @var{STYLE-NAME} RET}
+@kbd{C-c . @var{STYLE-NAME} RET}
 
 @end group
 @end example
 @noindent
-Note that all style names are case insensitive, even the ones you define.
+@kbd{C-c .} runs the command @code{c-set-style}.  Note that all style
+names are case insensitive, even the ones you define.
 
 Setting a style in this way does @emph{not} automatically re-indent your
 file.  For commands that you can use to view the effect of your changes,
-see @ref{Indentation Commands}.
+see @ref{Commands}.
 
 Once you find a built-in style you like, you can make the change
-permanent by adding a call to your @file{.emacs} file.  Let's say for
-example that you want to use the @code{ellemtel} style in all your
+permanent by adding some lisp to your @file{.emacs} file.  Let's say for
+example that you want to use the @samp{ellemtel} style in all your
 files.  You would add this:
 @example
 @group
 
 (defun my-c-mode-common-hook ()
-  ;; use Ellemtel style for all C, C++, and Objective-C code
+  ;; use Ellemtel style for all C like languages
   (c-set-style "ellemtel")
   ;; other customizations can go here
   )
@@ -1594,18 +1787,28 @@ files.  You would add this:
 @end group
 @end example
 
-There is one other special style you can use, called @code{CC-MODE}.
-This is a style that is calculated by @code{cc-mode} when it starts up.
-The @code{CC-MODE} style is also special because all other styles
-implicitly inherit from it; in other words, whenever you set a style,
-@code{cc-mode} first re-instates the @code{CC-MODE} style, then applies
-your new style configurations.
+@cindex cc-mode style
+There is one other special style you can use, called @samp{cc-mode}
+style.  This style is special because all other styles implicitly
+inherit from it; in other words, whenever you set a style,
+@samp{cc-mode} is applied before the one you selected.  This means
+your style need only define the differences between it and
+@samp{cc-mode} style.
 
-The @code{CC-MODE} style exists because once @code{cc-mode} initializes,
-it institutes the @code{gnu} style for compatibility with BOCM's
-defaults.  Any customizations you make in mode hooks will be based on
-the @code{gnu} style, unless you first do a @code{c-set-style} to
-@code{CC-MODE} or some other built-in style.
+Note @emph{you should never change any of the default styles}.
+Instead, it's better to add a new style using @code{c-add-style}
+(@xref{Adding Styles}).  This is especially true for @code{cc-mode} and
+@code{java} styles.
+
+@vindex c-indentation-style
+@vindex indentation-style (c-)
+Note that for BOCM compatibility, @samp{gnu} is the default
+style, and any non-style based customizations you make (i.e. in
+@code{c-mode-common-hook} in your
+@file{.emacs} file) will be based on @samp{gnu} style unless you do
+a @code{c-set-style} as the first thing in your hook.  The variable
+@code{c-indentation-style} always contains the buffer's current style name,
+as a string.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1621,17 +1824,21 @@ the @code{gnu} style, unless you first do a @code{c-set-style} to
 @findex c-add-style
 @findex add-style (c-)
 If none of the built-in styles is appropriate, you'll probably want to
-add a new style definition.  Styles are kept in the @code{c-style-alist}
-variable, but you probably won't want to modify this variable directly.
-@code{cc-mode} provides a function, called @code{c-add-style}, that you
-can use to easily add new styles or update existing styles.  This
-function takes two arguments, a @var{stylename} string, and an
-association list @var{description} of style customizations.  If
-@var{stylename} is not already in @code{c-style-alist}, the new style is
-added, otherwise the style already associated with @var{stylename} is
-changed to the new @var{description}.  This function also takes an
-optional third argument, which if non-@code{nil}, automatically
-institutes the new style in the current buffer.
+add a new @dfn{style definition}.  Styles are kept in the
+@code{c-style-alist} variable, but you should never modify this variable
+directly.  Instead, @ccmode{} provides the function
+@code{c-add-style} that you can use to easily add new styles or change
+existing styles.  This function takes two arguments, a @var{stylename}
+string, and an association list @var{description} of style
+customizations.  If @var{stylename} is not already in
+@code{c-style-alist}, the new style is added, otherwise the style is
+changed to the new @var{description}.
+This function also takes an optional third argument, which if
+non-@code{nil}, automatically applies the new style to the current
+buffer.
+
+@comment TBD: The next paragraph is bogus.  I really need to better
+@comment document adding styles, including setting up inherited styles.
 
 The sample @file{.emacs} file provides a concrete example of how a new
 style can be added and automatically set.  @xref{Sample .emacs File}.
@@ -1645,22 +1852,25 @@ style can be added and automatically set.  @xref{Sample .emacs File}.
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @cindex local variables
+
 The Emacs manual describes how you can customize certain variables on a
 per-file basis by including a @dfn{Local Variable} block at the end of
-the file.  So far, you've only seen a functional interface to
-@code{cc-mode}, which is highly inconvenient for use in a Local Variable
-block.  @code{cc-mode} provides two variables that make it easier for
-you to customize your style on a per-file basis.
+the file.  So far, you've only seen a functional interface to @ccmode{}
+customization, which is highly inconvenient for use in a Local Variable
+block.  @ccmode{} provides two variables that make it easier for you to
+customize your style on a per-file basis@footnote{Note that this feature
+doesn't work with Emacs versions before XEmacs 19.12 and Emacs 19.29.
+It works via the standard Emacs hook variable
+@code{hack-local-variables-hook}.}
 
 @vindex c-file-style
 @vindex file-style (c-)
 @vindex c-file-offsets
 @vindex file-offsets (c-)
 
-The variable @code{c-file-style} can be set to a style name string as
-described in @ref{Built-in Styles}.  When the file is visited,
-@code{cc-mode} will automatically set the file's style to this style
-using @code{c-set-style}.
+The variable @code{c-file-style} can be set to a style name string.
+When the file is visited, @ccmode{} will automatically set the
+file's style to this style using @code{c-set-style}.
 
 @vindex c-offsets-alist
 @vindex offsets-alist (c-)
@@ -1668,7 +1878,7 @@ using @code{c-set-style}.
 @findex set-offset (c-)
 Another variable, @code{c-file-offsets}, takes an association list
 similar to what is allowed in @code{c-offsets-alist}.  When the file is
-visited, @code{cc-mode} will automatically institute these offsets using
+visited, @ccmode{} will automatically institute these offets using
 @code{c-set-offset}.
 
 Note that file style settings (i.e. @code{c-file-style}) are applied
@@ -1687,16 +1897,33 @@ before file offset settings (i.e. @code{c-file-offsets}).
 @vindex style-alist (c-)
 @vindex c-basic-offset
 @vindex basic-offset (c-)
-For most users, @code{cc-mode} will support their coding styles with
-very little need for customizations.  Usually, one of the standard
-styles defined in @code{c-style-alist} will do the trick.  At most,
-perhaps one of the syntactic symbol offsets will need to be tweaked
-slightly, or maybe @code{c-basic-offset} will need to be changed.
-However, some styles require a more advanced ability for customization,
-and one of the real strengths of @code{cc-mode} is that the syntactic
-analysis model provides a very flexible framework for customizing
-indentation. This allows you to perform special indentation calculations
-for situations not handled by the mode directly.
+For most users, @ccmode{} will support their coding styles with
+very little need for more advanced customizations.  Usually, one of the
+standard styles defined in @code{c-style-alist} will do the trick.  At
+most, perhaps one of the syntactic symbol offsets will need to be
+tweaked slightly, or maybe @code{c-basic-offset} will need to be
+changed.  However, some styles require a more flexible framework for
+customization, and one of the real strengths of @ccmode{} is that
+the syntactic analysis model provides just such a framework. This allows
+you to implement custom indentation calculations for situations not
+handled by the mode directly.
+
+@vindex c-style-variables-are-local-p
+@vindex style-variables-are-local-p
+Note that the style controlling variables can either have global values,
+or can be buffer local (e.g. different in every buffer).  If all the C
+files you edit tend to have the same style, you might want to keep the
+variables global.  If you tend to edit files with many different styles,
+you will have to make the variables buffer local.  The variable
+@code{c-style-variables-are-local-p} controls this.
+
+When @code{c-style-variables-are-local-p} is non-nil, then the style
+variables will have a different settable value for each buffer,
+otherwise all buffers will share the same values.  By default, its value
+is @code{nil} (i.e. global values).  You @strong{must} set this variable
+before @ccmode{} is loaded into your Emacs session, and once the
+variables are made buffer local, they cannot be made global again
+(unless you restart Emacs of course!)
 
 @menu
 * Custom Indentation Functions::
@@ -1714,11 +1941,11 @@ for situations not handled by the mode directly.
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @cindex custom indentation functions
-One of the most common ways to customize @code{cc-mode} is by writing
-@dfn{custom indentation functions} and associating them with specific
-syntactic symbols (see @ref{Syntactic Symbols}).  @code{cc-mode} itself
-uses custom indentation functions to provide more sophisticated
-indentation, for example when lining up C++ stream operator blocks:
+The most flexible way to customize @ccmode{} is by writing @dfn{custom
+indentation functions} and associating them with specific syntactic
+symbols (see @ref{Syntactic Symbols}).  @ccmode{} itself uses custom
+indentation functions to provide more sophisticated indentation, for
+example when lining up C++ stream operator blocks:
 @example
 @group
 
@@ -1734,14 +1961,14 @@ indentation, for example when lining up C++ stream operator blocks:
 @end example
 
 In this example, lines 4 through 6 are assigned the @code{stream-op}
-syntactic symbol.  If @code{stream-op} had an offset of @code{+}, and
-@code{c-basic-offset} was 2, lines 4 through 6 would simply be indented
-two spaces to the right of line 3.  But perhaps we'd like @code{cc-mode}
-to be a little more intelligent so that it offsets the stream operators
-under the operator in line 3.  To do this, we have to write a custom
-indentation function which finds the column of first stream operator on
-the first line of the statement.  Here is the lisp code (from the
-@file{cc-mode.el} source file) that implements this:
+syntactic symbol.  Here, @code{stream-op} has an offset of @code{+}, and
+with a @code{c-basic-offset} of 2, you can see that lines 4 through 6
+are simply indented two spaces to the right of line 3.  But perhaps we'd
+like @ccmode{} to be a little more intelligent so that it aligns
+all the @samp{<<} symbols in lines 3 through 6.  To do this, we have
+to write a custom indentation function which finds the column of first
+stream operator on the first line of the statement.  Here is sample 
+lisp code implementing this:
 @example
 @group
 
@@ -1764,9 +1991,9 @@ function returns an integer offset value that will be added to the
 running total indentation for the line.  Note that what actually gets
 returned is the difference between the column that the first stream
 operator is on, and the column of the buffer relative position passed in
-the function's argument.  Remember that @code{cc-mode} automatically
+the function's argument.  Remember that @ccmode{} automatically
 adds in the column of the component's relative buffer position and we
-don't want that value added into the final total twice.
+don't the column offset added in twice.
 
 @cindex stream-op syntactic symbol
 @findex c-lineup-streamop
@@ -1775,7 +2002,7 @@ Now, to associate the function @code{c-lineup-streamop} with the
 @code{stream-op} syntactic symbol, we can add something like the
 following to our @code{c++-mode-hook}@footnote{It probably makes more
 sense to add this to @code{c++-mode-hook} than @code{c-mode-common-hook}
-since stream operators are only relevant for C++.}:
+since stream operators are only relevent for C++.}:
 @example
 
 (c-set-offset 'stream-op 'c-lineup-streamop)
@@ -1803,7 +2030,92 @@ C-q}):
 @vindex offsets-alist (c-)
 Custom indentation functions can be as simple or as complex as you like,
 and any syntactic symbol that appears in @code{c-offsets-alist} can have
-a custom indentation function associated with it.
+a custom indentation function associated with it.  @ccmode{} comes
+with several standard custom indentation functions, not all of which are
+used by the default styles.
+
+@itemize @bullet
+@item
+@findex c-lineup-arglist
+@findex lineup-arglist (c-)
+@code{c-lineup-arglist} --- lines up function argument lines under the
+argument on the previous line.
+
+@item
+@findex c-lineup-arglist-intro-after-paren
+@findex lineup-arglist-intro-after-paren (c-)
+@code{c-lineup-arglist-intro-after-paren} --- similar to
+@code{c-lineup-arglist}, but works for argument lists that begin with an
+open parenthesis followed by a newline.
+
+@item
+@findex c-lineup-arglist-close-under-paren
+@findex lineup-arglist-close-under-paren (c-)
+@code{c-lineup-arglist-close-under-paren} --- set your
+@code{arglist-close} syntactic symbol to this line-up function so that
+parentheses that close argument lists will line up under the parenthesis
+that opened the argument list.
+
+@item
+@findex c-lineup-streamop
+@findex lineup-streamop (c-)
+@code{c-lineup-streamop} --- lines up C++ stream operators
+(e.g. @samp{<<} and @samp{>>}).
+
+@item
+@findex c-lineup-multi-inher
+@findex lineup-multi-inher (c-)
+@code{c-lineup-multi-inher} --- lines up multiple inheritance lines.
+
+@item
+@findex c-lineup-C-comments
+@findex lineup-C-comments (c-)
+@code{c-lineup-C-comments} --- lines up C block comment continuation
+lines.
+
+@item
+@findex c-lineup-comment
+@findex lineup-comment (c-)
+@vindex c-comment-only-line-offset
+@vindex comment-only-line-offset (c-)
+@code{c-lineup-comment} --- lines up comment only lines according to
+the variable @code{c-comment-only-line-offset}.
+
+@item
+@findex c-lineup-runin-statements
+@findex lineup-runin-statements (c-)
+@code{c-lineup-runin-statements} --- lines up @code{statement}s for coding
+standards which place the first statement in a block on the same line as
+the block opening brace@footnote{Run-in style doesn't really work too
+well.  You might need to write your own custom indentation functions to
+better support this style.}.
+
+@item
+@findex c-lineup-math
+@findex lineup-math (c-)
+@code{c-lineup-math} --- lines up math @code{statement-cont} lines under
+the previous line after the equals sign.
+
+@item
+@findex c-lineup-ObjC-method-call
+@findex lineup-ObjC-method-call (c-)
+@code{c-lineup-ObjC-method-call} --- for Objective-C code, lines up
+selector arguments just after the message receiver.
+
+@item
+@findex c-lineup-ObjC-method-args
+@findex lineup-ObjC-method-args (c-)
+@code{c-lineup-ObjC-method-args} --- for Objective-C code, lines up the
+colons that separate arguments by aligning colons vertically.
+
+@item
+@findex c-lineup-ObjC-method-args-2
+@findex lineup-ObjC-method-args-2 (c-)
+@code{c-lineup-ObjC-method-args-2} --- similar to
+@code{c-lineup-ObjC-method-args} but lines up the colon on the current
+line with the colon on the previous line.
+
+@end itemize
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node     Custom Brace and Colon Hanging, Customizing Semi-colons and Commas, Custom Indentation Functions, Advanced Customizations
@@ -1816,14 +2128,14 @@ a custom indentation function associated with it.
 @vindex c-hanging-braces-alist
 @vindex hanging-braces-alist (c-)
 Syntactic symbols aren't the only place where you can customize
-@code{cc-mode} with the lisp equivalent of callback functions.  Brace
-hanginess can also be determined by custom functions associated with
+@ccmode{} with the lisp equivalent of callback functions.  Brace
+``hanginess'' can also be determined by custom functions associated with
 syntactic symbols on the @code{c-hanging-braces-alist} variable.
 Remember that @var{ACTION}'s are typically a list containing some
 combination of the symbols @code{before} and @code{after} (see
 @ref{Hanging Braces}).  However, an @var{ACTION} can also be a function
-symbol which gets called when a brace matching that syntactic symbol is
-typed.
+which gets called when a brace matching that syntactic symbol is
+entered.
 
 @cindex customizing brace hanging
 These @var{ACTION} functions are called with two arguments: the
@@ -1831,10 +2143,10 @@ syntactic symbol for the brace, and the buffer position at which the
 brace was inserted.  The @var{ACTION} function is expected to return a
 list containing some combination of @code{before} and @code{after}.  The
 function can also return @code{nil}.  This return value has the normal
-brace hanging semantics described in @ref{Hanging Braces}.
+brace hanging semantics.
 
-As an example, @code{cc-mode} itself uses this feature to dynamically
-determine the hanginess of braces which close @samp{do-while}
+As an example, @ccmode{} itself uses this feature to dynamically
+determine the hanginess of braces which close ``do-while''
 constructs:
 @example
 @group
@@ -1843,7 +2155,7 @@ void do_list( int count, char** atleast_one_string )
 @{
     int i=0;
     do @{
-        handle_string( atleast_one_string( i ));
+        handle_string( atleast_one_string[i] );
         i++;
     @} while( i < count );
 @}
@@ -1853,10 +2165,10 @@ void do_list( int count, char** atleast_one_string )
 
 @findex c-snug-do-while
 @findex snug-do-while (c-)
-@code{cc-mode} assigns the @code{block-close} syntactic symbol to the
+@ccmode{} assigns the @code{block-close} syntactic symbol to the
 brace that closes the @code{do} construct, and normally we'd like the
 line that follows a @code{block-close} brace to begin on a separate
-line.  However, with @samp{do-while} constructs, we want the
+line.  However, with ``do-while'' constructs, we want the
 @code{while} clause to follow the closing brace.  To do this, we
 associate the @code{block-close} symbol with the @var{ACTION} function
 @code{c-snug-do-while}:
@@ -1882,10 +2194,10 @@ ACTION associated with `block-close' syntax."
 
 @end example
 
-This function simply looks to see if the brace closes a @samp{do-while}
-clause and if so, returns the list @samp{@code{(before)}} indicating
+This function simply looks to see if the brace closes a ``do-while''
+clause and if so, returns the list @samp{(before)} indicating
 that a newline should be inserted before the brace, but not after it.
-In all other cases, it returns the list @samp{@code{(before after)}} so
+In all other cases, it returns the list @samp{(before after)} so
 that the brace appears on a line by itself.
 
 @vindex c-syntactic-context
@@ -1899,7 +2211,7 @@ During the call to the brace hanging @var{ACTION} function, the variable
 Note that for symmetry, colon hanginess should be customizable by
 allowing function symbols as @var{ACTION}s on the
 @code{c-hanging-colon-alist} variable.  Since no use has actually been
-found for this feature, it isn't currently implemented.
+found for this feature, it isn't currently implemented!
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node     Customizing Semi-colons and Commas, Other Special Indentations, Custom Brace and Colon Hanging, Advanced Customizations
@@ -1921,15 +2233,15 @@ zero arguments, and is expected to return one of the following values:
 
 @itemize @bullet
 @item
-non-@code{nil} -- A newline is inserted, and no more functions from the
+non-@code{nil} --- A newline is inserted, and no more functions from the
 list are called.
 
 @item
-@code{stop} -- No more functions from the list are called, but no
+@code{stop} --- No more functions from the list are called, but no
 newline is inserted.
 
 @item
-@code{nil} -- No determination is made, and the next function in the
+@code{nil} --- No determination is made, and the next function in the
 list is called.
 
 @end itemize
@@ -1940,6 +2252,26 @@ list containing a single function which inserts newlines only after
 semi-colons which do not appear inside parenthesis lists (i.e. those
 that separate @code{for}-clause statements).
 
+Here's an example of a criteria function that will prevent newlines from
+being inserted after semicolons when there is a non-blank following
+line.  Otherwise, it makes no determination.  To use, add this to the
+front of the @code{c-hanging-semi&comma-criteria} list.
+
+@example
+@group
+
+(defun my-semicolon-criteria ()
+  (save-excursion
+    (if (and (eq last-command-char ?\;)
+             (zerop (forward-line 1))
+             (not (looking-at "^[ \t]*$")))
+        'stop
+      nil)))
+
+@end group
+@end example
+
+
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node     Other Special Indentations, , Customizing Semi-colons and Commas, Advanced Customizations
 @comment  node-name,              next,                    previous,up
@@ -1948,11 +2280,19 @@ that separate @code{for}-clause statements).
 @cindex   Customizing Semi-colons and Commas
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+@vindex c-label-minimum-indentation
+@vindex label-minimum-indentation (c-)
+In @samp{gnu} style (see @ref{Built-in Styles}), a minimum indentation
+is imposed on lines inside top-level constructs.  This minimum
+indentation is controlled by the variable
+@code{c-label-minimum-indentation}.  The default value for this variable
+is 1.
+
 @vindex c-special-indent-hook
 @vindex special-indent-hook (c-)
-One other customization variable is available in @code{cc-mode}:
+One other customization variable is available in @ccmode{}:
 @code{c-special-indent-hook}.  This is a standard hook variable that is
-called after every line is indented by @code{cc-mode}.  You can use it
+called after every line is indented by @ccmode{}.  You can use it
 to do any special indentation or line adjustments your style dictates,
 such as adding extra indentation to constructors or destructor
 declarations in a class definition, etc.  Note however, that you should
@@ -1960,6 +2300,31 @@ not change point or mark inside your @code{c-special-indent-hook}
 functions (i.e. you'll probably want to wrap your function in a
 @code{save-excursion}).
 
+Setting @code{c-special-indent-hook} in your style definition is handled
+slightly differently than other variables.  In your style definition,
+you should set the value for
+@code{c-special-indent-hook} to a function or list of functions, which
+will be appended to @code{c-special-indent-hook} using @code{add-hook}.
+That way, the current setting for the buffer local value of
+@code{c-special-indent-hook} won't be overridden.
+
+@kindex M-;
+@findex indent-for-comment
+@vindex c-indent-comments-syntactically-p
+@vindex indent-comments-syntactically-p (c-)
+@vindex comment-column
+
+Normally, the standard Emacs command @kbd{M-;}
+(@code{indent-for-comment}) will indent comment only lines to
+@code{comment-column}.  Some users however, prefer that @kbd{M-;} act
+just like @kbd{TAB} for purposes of indenting comment-only lines;
+i.e. they want the comments to always indent as they would for normal
+code, regardless of whether @kbd{TAB} or @kbd{M-;} were used.  This
+behavior is controlled by the variable
+@code{c-indent-comments-syntactically-p}.  When @code{nil} (the
+default), @kbd{M-;} indents comment-only lines to @code{comment-column}, 
+otherwise, they are indented just as they would be if @kbd{TAB} were
+typed.
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node  Syntactic Symbols, Performance Issues, Customizing Indentation, Top
@@ -1971,9 +2336,127 @@ functions (i.e. you'll probably want to wrap your function in a
 
 @vindex c-offsets-alist
 @vindex offsets-alist (c-)
-The complete list of recognized syntactic symbols is described in the
-@code{c-offsets-alist} variable.  This chapter will provide some
-examples to help clarify these symbols.
+
+Here is a complete list of the recognized syntactic symbols as described
+in the @code{c-offsets-alist} variable, along with a brief description.
+More detailed descriptions follow below.
+
+@itemize @bullet
+@item
+@code{string} --- inside multi-line string
+@item
+@code{c} --- inside a multi-line C style block comment
+@item
+@code{defun-open} --- brace that opens a function definition
+@item
+@code{defun-close} --- brace that closes a function definition
+@item
+@code{defun-block-intro} --- the first line in a top-level defun
+@item
+@code{class-open} --- brace that opens a class definition
+@item
+@code{class-close} --- brace that closes a class definition
+@item
+@code{inline-open} --- brace that opens an in-class inline method
+@item
+@code{inline-close} --- brace that closes an in-class inline method
+@item
+@code{func-decl-cont} --- the region between a function definition's
+argument list and the function opening brace (excluding K&R argument
+declarations).  In C, you cannot put anything but whitespace and comments
+between them; in C++ and Java, @code{throws} declarations and other
+things can appear in this context.
+@item
+@code{knr-argdecl-intro} --- first line of a K&R C argument declaration
+@item
+@code{knr-argdecl} --- subsequent lines in a K&R C argument declaration
+@item
+@code{topmost-intro} --- the first line in a topmost definition
+@item
+@code{topmost-intro-cont} --- topmost definition continuation lines
+@item
+@code{member-init-intro} --- first line in a member initialization list
+@item
+@code{member-init-cont} --- subsequent member initialization list lines
+@item
+@code{inher-intro} --- first line of a multiple inheritance list
+@item
+@code{inher-cont} --- subsequent multiple inheritance lines
+@item
+@code{block-open} --- statement block open brace
+@item
+@code{block-close} --- statement block close brace
+@item
+@code{brace-list-open} --- open brace of an enum or static array list
+@item
+@code{brace-list-close} --- close brace of an enum or static array list
+@item
+@code{brace-list-intro} --- first line in an enum or static array list
+@item
+@code{brace-list-entry} --- subsequent lines in an enum or static array list
+@item
+@code{statement} --- a C statement
+@item
+@code{statement-cont} --- a continuation of a C statement
+@item
+@code{statement-block-intro} --- the first line in a new statement block
+@item
+@code{statement-case-intro} --- the first line in a case `block'
+@item
+@code{statement-case-open} --- the first line in a case block starting
+with brace
+@item
+@code{substatement} --- the first line after a conditional
+@item
+@code{substatement-open} --- the brace that opens a substatement block
+@item
+@code{case-label} --- a case or default label
+@item
+@code{access-label} --- C++ access control label
+@item
+@code{label} --- any non-special C label
+@item
+@code{do-while-closure} --- the `while' that ends a
+@code{do}-@code{while} construct
+@item
+@code{else-clause} --- the `else' of an @code{if}-@code{else} construct
+@item
+@code{comment-intro} --- a line containing only a comment introduction
+@item
+@code{arglist-intro} --- the first line in an argument list
+@item
+@code{arglist-cont} --- subsequent argument list lines when no arguments
+follow on the same line as the the arglist opening paren
+@item
+@code{arglist-cont-nonempty} --- subsequent argument list lines when at
+least one argument follows on the same line as the arglist opening paren
+@item
+@code{arglist-close} --- the solo close paren of an argument list
+@item
+@code{stream-op} --- lines continuing a stream operator
+@item
+@code{inclass} --- the line is nested inside a class definition
+@item
+@code{cpp-macro} --- the start of a cpp macro
+@item
+@code{friend} --- a C++ friend declaration
+@item
+@code{objc-method-intro} --- the first line of an Objective-C method definition
+@item
+@code{objc-method-args-cont} --- lines continuing an Objective-C method
+definition 
+@item
+@code{objc-method-call-cont} --- lines continuing an Objective-C method call
+@item
+@code{extern-lang-open} --- brace that opens an external language block
+@item
+@code{extern-lang-close} --- brace that closes an external language block
+@item
+@code{inextern-lang} --- analogous to `inclass' syntactic symbol, but
+for @code{extern} blocks.
+@item
+@code{template-args-cont} --- C++ template argument list continuations
+@end itemize
 
 @cindex -open syntactic symbols
 @cindex -close syntactic symbols
@@ -2010,6 +2493,11 @@ you can check the syntax of any line by using @kbd{C-c C-s}.
 @end group
 @end example
 
+@cindex topmost-intro syntactic symbol
+@cindex topmost-intro-cont syntactic symbol
+@cindex defun-open syntactic symbol
+@cindex defun-close syntactic symbol
+@cindex defun-block-intro syntactic symbol
 Line 1 shows a @code{topmost-intro} since it is the first line that
 introduces a top-level construct.  Line 2 is a continuation of the
 top-level construct introduction so it has the syntax
@@ -2017,9 +2505,11 @@ top-level construct introduction so it has the syntax
 the brace that opens a top-level function definition.  Line 9 is a
 @code{defun-close} since it contains the brace that closes the top-level
 function definition.  Line 4 is a @code{defun-block-intro}, i.e. it is
-the first line of a brace-block, which happens to be enclosed in a
+the first line of a brace-block, enclosed in a
 top-level function definition.
 
+@cindex statement syntactic symbol
+@cindex statement-cont syntactic symbol
 Lines 5, 6, and 7 are all given @code{statement} syntax since there
 isn't much special about them.  Note however that line 8 is given
 @code{statement-cont} syntax since it continues the statement begun
@@ -2046,35 +2536,63 @@ symbols:
   14:         dString.tune( 'D' );
   15:         gString.tune( 'G' );
   16:     @}
-  17: @}
+  17:     friend class Luthier;
+  18: @}
 
 @end group
 @end example
 
+@cindex class-open syntactic symbol
+@cindex class-close syntactic symbol
 As in the previous example, line 1 has the @code{topmost-intro} syntax.
 Here however, the brace that opens a C++ class definition on line 4 is
-assigned the @code{class-open} syntax.  Note that in C++, structs and
-unions are essentially equivalent syntactically (and are very similar
-semantically), so replacing the @code{class} keyword in the example
-above with @code{struct} or @code{union} would still result in a syntax
-of @code{class-open} for line 4 @footnote{This is the case even for C
-and Objective-C.  For consistency, structs in all three languages are
-syntactically equivalent to classes.  Note however that the keyword
-@code{class} is meaningless in C and Objective-C.}.  Similarly, line 17
-is assigned @code{class-close} syntax.
+assigned the @code{class-open} syntax.  Note that in C++, classes,
+structs, and unions are essentially equivalent syntactically (and are
+very similar semantically), so replacing the @code{class} keyword in the
+example above with @code{struct} or @code{union} would still result in a
+syntax of @code{class-open} for line 4 @footnote{This is the case even
+for C and Objective-C.  For consistency, structs in all supported
+languages are syntactically equivalent to classes.  Note however that
+the keyword @code{class} is meaningless in C and Objective-C.}.
+Similarly, line 18 is assigned @code{class-close} syntax.
 
+@cindex inher-intro syntactic symbol
+@cindex inher-cont syntactic symbol
 Line 2 introduces the inheritance list for the class so it is assigned
 the @code{inher-intro} syntax, and line 3, which continues the
 inheritance list is given @code{inher-cont} syntax.
 
-Things get interesting at line 5.  The primary syntactic symbol for this
-line is @code{access-label} since this a label keyword that specifies
-access protection in C++.  However, this line actually shows two
-syntactic symbols when you hit @kbd{C-c C-s}.  This is because it is
-also a top-level construct inside a class definition.  Thus the other
-syntactic symbol assigned to this line is @code{inclass}.  Similarly,
-line 6 is given both @code{inclass} and @code{topmost-intro} syntax.
+@cindex access-label syntactic symbol
+@cindex inclass syntactic symbol
+Hitting @kbd{C-c C-s} on line 5 shows the following analysis:
 
+@example
+@group
+
+@code{((inclass . 1) (access-label . 67))}
+
+@end group
+@end example
+
+@noindent
+The primary syntactic symbol for this line is @code{access-label} as
+this a label keyword that specifies access protection in C++.  However,
+because this line is also a top-level construct inside a class
+definition, the analysis actually shows two syntactic symbols.  The
+other syntactic symbol assigned to this line is @code{inclass}.
+Similarly, line 6 is given both @code{inclass} and @code{topmost-intro}
+syntax:
+
+@example
+@group
+
+@code{((inclass . 58) (topmost-intro . 60))}
+
+@end group
+@end example
+
+@cindex member-init-intro syntactic symbol
+@cindex member-init-cont syntactic symbol
 Line 7 introduces a C++ member initialization list and as such is given
 @code{member-init-intro} syntax.  Note that in this case it is
 @emph{not} assigned @code{inclass} since this is not considered a
@@ -2083,14 +2601,27 @@ top-level construct.  Lines 8 through 10 are all assigned
 list started on line 7.
 
 @cindex in-class inline methods
-Line 11 is assigned @code{inline-open} because it opens an
-@dfn{in-class} C++ inline method definition.  This is distinct from, but
-related to, the C++ notion of an inline function in that its definition
-occurs inside an enclosing class definition, which in C++ implies that
-the function should be inlined.  For example, if the definition of the
-@code{Bass} constructor appeared outside the class definition, line 11
-would be given the @code{defun-open} syntax, even if the keyword
-@code{inline} appeared before the method name, as in:
+@cindex inline-open syntactic symbol
+@cindex inline-close syntactic symbol
+Line 11's analysis is a bit more complicated:
+
+@example
+@group
+
+@code{((inclass . 1) (inline-open))}
+
+@end group
+@end example
+
+This line is assigned a syntax of both @code{inline-open} and
+@code{inclass} because it opens an @dfn{in-class} C++ inline method
+definition.  This is distinct from, but related to, the C++ notion of an
+inline function in that its definition occurs inside an enclosing class
+definition, which in C++ implies that the function should be inlined.
+If though, the definition of the @code{Bass} constructor appeared
+outside the class definition, the construct would be given the
+@code{defun-open} syntax, even if the keyword @code{inline} appeared
+before the method name, as in:
 @example
 @group
 
@@ -2118,11 +2649,36 @@ Bass::Bass()
 @end group
 @end example
 
-@noindent
-Similarly, line 16 is given @code{inline-close} syntax.
+@cindex friend syntactic symbol
+Returning to the previous example, line 16 is given @code{inline-close}
+syntax, while line 12 is given @code{defun-block-open} syntax, and lines
+13 through 15 are all given @code{statement} syntax.  Line 17 is
+interesting in that its syntactic analysis list contains three
+elements:
 
-As in the first example above, line 12 is given @code{defun-block-open}
-syntax and lines 13 through 15 are all given @code{statement} syntax.
+@example
+
+@code{((friend) (inclass . 58) (topmost-intro . 380))}
+
+@end example
+
+The @code{friend} syntactic symbol is a modifier that typically does not
+have a relative buffer position.
+
+Template definitions introduce yet another syntactic symbol:
+
+@example
+@group
+
+   1: ThingManager <int,
+   2:    Framework::Callback *,
+   3:    Mutex> framework_callbacks;
+
+@end group
+@end example
+
+Here, line 1 is analyzed as a @code{topmost-intro}, but lines 2 and 3
+are both analyzed as @code{template-args-cont} lines.
 
 Here is another (totally contrived) example which illustrates how syntax
 is assigned to various conditional constructs:
@@ -2153,25 +2709,32 @@ is assigned to various conditional constructs:
 @noindent
 Only the lines that illustrate new syntactic symbols will be discussed.
 
+@cindex substatement-open syntactic symbol
+@cindex substatement-block-intro syntactic symbol
+@cindex block-close syntactic symbol
 Line 4 has a brace which opens a conditional's substatement block.  It
 is thus assigned @code{substatement-open} syntax, and since line 5 is
 the first line in the substatement block, it is assigned
 @code{substatement-block-intro} syntax.  Lines 6 and 7 are assigned
 similar syntax.  Line 8 contains the brace that closes the inner
-substatement block.  It is given the generic syntax @code{block-close},
+substatement block.  It is given the syntax @code{block-close},
 as are lines 11 and 14.
 
-Line 9 is a little different -- since it contains the keyword
-@code{else} matching the @code{if} statement introduced on line 5; it is
+@cindex else-clause syntactic symbol
+@cindex substatement syntactic symbol
+Line 9 is a little different --- since it contains the keyword
+@code{else} matching the @code{if} statement introduced on line 5, it is
 given the @code{else-clause} syntax.  Note also that line 10 is slightly
 different too.  Because @code{else} is considered a conditional
 introducing keyword @footnote{The list of conditional keywords are (in
-C, Objective-C and C++): @code{for}, @code{if}, @code{do}, @code{else},
-@code{while}, and @code{switch}.  C++ has two additional conditional
-keywords: @code{try} and @code{catch}.}, and because the following
-substatement is not a brace block, line 10 is assigned the
+C, C++, Objective-C, and Java): @code{for}, @code{if}, @code{do},
+@code{else}, @code{while}, and @code{switch}.  C++ and Java have two
+additional conditional keywords: @code{try} and @code{catch}.  Java also
+has the @code{finally} and @code{synchronized} keywords.}, and because
+the following substatement is not a brace block, line 10 is assigned the
 @code{substatement} syntax.
 
+@cindex do-while-closure syntactic symbol
 One other difference is seen on line 15.  The @code{while} construct
 that closes a @code{do} conditional is given the special syntax
 @code{do-while-closure} if it appears on a line by itself.  Note that if
@@ -2203,10 +2766,13 @@ example:
 @end group
 @end example
 
+@cindex case-label syntactic symbol
+@cindex statement-case-intro syntactic symbol
+@cindex statement-case-open syntactic symbol
 Here, lines 4, 7, and 10 are all assigned @code{case-label} syntax,
 while lines 5 and 8 are assigned @code{statement-case-intro}.  Line 11
 is treated slightly differently since it contains a brace that opens a
-block -- it is given @code{statement-case-open} syntax.
+block --- it is given @code{statement-case-open} syntax.
 
 @cindex brace lists
 There are a set of syntactic symbols that are used to recognize
@@ -2226,12 +2792,40 @@ initialize an array of structs.  For example:
 @end group
 @end example
 
+@cindex brace-list-open syntactic symbol
+@cindex brace-list-intro syntactic symbol
+@cindex brace-list-close syntactic symbol
+@cindex brace-list-entry syntactic symbol
 Following convention, line 2 in this example is assigned
 @code{brace-list-open} syntax, and line 3 is assigned
 @code{brace-list-intro} syntax.  Likewise, line 6 is assigned
 @code{brace-list-close} syntax.  Lines 4 and 5 however, are assigned
 @code{brace-list-entry} syntax, as would all subsequent lines in this
 initializer list.
+
+External language definition blocks also have their own syntactic
+symbols.  In this example:
+@example
+@group
+
+   1: extern "C" 
+   2: @{
+   3:     int thing_one( int );
+   4:     int thing_two( double );
+   5: @}
+
+@end group
+@end example
+
+@cindex extern-lang-open syntactic symbol
+@cindex extern-lang-close syntactic symbol
+@cindex inextern-lang syntactic symbol
+@cindex inclass syntactic symbol
+@noindent
+line 2 is given the @code{extern-lang-open} syntax while line 5 is given
+the @code{extern-lang-close} syntax.  The analysis for line 3 yields:
+@code{((inextern-lang) (topmost-intro . 14))}, where
+@code{inextern-lang} is a modifier similar in purpose to @code{inclass}.
 
 A number of syntactic symbols are associated with parenthesis lists,
 a.k.a argument lists, as found in function declarations and function
@@ -2261,30 +2855,30 @@ calls.  This example illustrates these:
 @end group
 @end example
 
+@cindex arglist-intro syntactic symbol
+@cindex arglist-close syntactic symbol
 Lines 5 and 12 are assigned @code{arglist-intro} syntax since they are
 the first line following the open parenthesis, and lines 7 and 14 are
 assigned @code{arglist-close} syntax since they contain the parenthesis
 that closes the argument list.
 
-The other lines with relevant syntactic symbols include lines 2 and 17
-which are assigned @code{arglist-cont-nonempty} syntax.  What this means
+@cindex arglist-cont-nonempty syntactic symbol
+@cindex arglist-cont syntactic symbol
+Lines that continue argument lists can be assigned one of two syntactic
+symbols.  For example, Lines 2 and 17
+are assigned @code{arglist-cont-nonempty} syntax.  What this means
 is that they continue an argument list, but that the line containing the
-parenthesis that opens the list is @emph{non-empty} following the open
+parenthesis that opens the list is @emph{not empty} following the open
 parenthesis.  Contrast this against lines 6 and 13 which are assigned
 @code{arglist-cont} syntax.  This is because the parenthesis that opens
-their argument lists is the last character on that line @footnote{The
-need for this somewhat confusing arrangement is that the typical
-indentation desired for these lines is calculated very differently.
-This should be simplified in version 5 of @code{cc-mode}, along with the
-added distinction between argument lists in function declarations, and
-argument lists in function calls.}.
+their argument lists is the last character on that line.
 
 Note that there is no @code{arglist-open} syntax.  This is because any
 parenthesis that opens an argument list, appearing on a separate line,
 is assigned the @code{statement-cont} syntax instead.
 
 A few miscellaneous syntactic symbols that haven't been previously
-covered are illustrated by this example:
+covered are illustrated by this C++ example:
 @example
 @group
 
@@ -2294,7 +2888,7 @@ covered are illustrated by this example:
    4:     /* this line starts a multi-line
    5:      * comment.  This line should get `c' syntax */
    6: 
-   7:     char* a_long_multiline_string = "This line starts a multi-line \
+   7:     char* a_multiline_string = "This line starts a multi-line \
    8: string.  This line should get `string' syntax.";
    9: 
   10:   note:
@@ -2316,18 +2910,18 @@ The lines to note in this example include:
 
 @itemize @bullet
 
+@cindex func-decl-cont syntactic symbol
 @item
-line 2 which is assigned the @code{ansi-funcdecl-cont} syntax;
+line 2, assigned the @code{func-decl-cont} syntax;
 
+@cindex comment-intro syntactic symbol
 @item
-line 4 which is assigned both @code{defun-block-intro} @emph{and}
-@code{comment-intro} syntax @footnote{The @code{comment-intro} syntactic
-symbol is known generically as a @dfn{modifier} since it always appears
-on a syntactic analysis list with other symbols, and never has a
-relative buffer position.};
+line 4, assigned both @code{defun-block-intro} @emph{and}
+@code{comment-intro} syntax;
 
+@cindex c syntactic symbol
 @item
-line 5 which is assigned @code{c} syntax;
+line 5, assigned @code{c} syntax;
 
 @item
 @cindex syntactic whitespace
@@ -2335,23 +2929,28 @@ line 6 which, even though it contains nothing but whitespace, is
 assigned @code{defun-block-intro}.  Note that the appearance of the
 comment on lines 4 and 5 do not cause line 6 to be assigned
 @code{statement} syntax because comments are considered to be
-@dfn{syntactic whitespace}, which are essentially ignored when analyzing
+@dfn{syntactic whitespace}, which are ignored when analyzing
 code;
 
+@cindex string syntactic symbol
 @item
-line 8 which is assigned @code{string} syntax;
+line 8, assigned @code{string} syntax;
 
+@cindex label syntactic symbol
 @item
-line 10 which is assigned @code{label} syntax;
+line 10, assigned @code{label} syntax;
 
+@cindex block-open syntactic symbol
 @item
-line 11 which is assigned @code{block-open} syntax;
+line 11, assigned @code{block-open} syntax;
 
+@cindex cpp-macro syntactic symbol
 @item
-lines 12 and 14 which are assigned @code{cpp-macro} syntax;
+lines 12 and 14, assigned @code{cpp-macro} syntax;
 
+@cindex stream-op syntactic symbol
 @item
-line 17 which is assigned @code{stream-op} syntax @footnote{In C++ only.}.
+line 17, assigned @code{stream-op} syntax.
 
 @end itemize
 
@@ -2372,14 +2971,35 @@ illustrating these:
 @end group
 @end example
 
+@cindex objc-method-intro syntactic symbol
+@cindex objc-method-args-cont syntactic symbol
+@cindex objc-method-call-cont syntactic symbol
 Here, line 1 is assigned @code{objc-method-intro} syntax, and line 2 is
 assigned @code{objc-method-args-cont} syntax.  Lines 5 and 6 are both
 assigned @code{objc-method-call-cont} syntax.
 
-Other syntactic symbols may be recognized by @code{cc-mode}, but these
-are more obscure and so I haven't included examples of them.  These
-include: @code{knr-argdecl-intro}, @code{knr-argdecl}, and the
-@code{friend} modifier.
+@cindex knr-argdecl-intro
+@cindex knr-argdecl
+Two other syntactic symbols can appear in old style, non-prototyped C
+code @footnote{a.k.a. K&R C, or Kernighan & Ritchie C}:
+@example
+@group
+
+  1: int add_three_integers(a, b, c)
+  2:      int a;
+  3:      int b;
+  4:      int c;
+  5: @{
+  6:     return a + b + c;
+  7: @}
+
+@end group
+@end example
+
+Here, line 2 is the first line in an argument declaration list and so is
+given the @code{knr-argdecl-intro} syntactic symbol.  Subsequent lines
+(i.e. lines 3 and 4 in this example), are given @code{knr-argdecl}
+syntax.
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node  Performance Issues, Frequently Asked Questions, Syntactic Symbols, Top
@@ -2390,75 +3010,87 @@ include: @code{knr-argdecl-intro}, @code{knr-argdecl}, and the
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 C and its derivative languages are highly complex creatures.  Often,
-ambiguous code situations arise that require @code{cc-mode} to scan
-large portions of the buffer to determine syntactic context.  Some
-pathological code can cause @code{cc-mode} to slow down considerably.
+ambiguous code situations arise that require @ccmode{} to scan
+large portions of the buffer to determine syntactic context.  Such
+pathological code@footnote{such as the output of @code{lex(1)}!}
+can cause @ccmode{} to perform fairly badly.
 This section identifies some of the coding styles to watch out for, and
 suggests some workarounds that you can use to improve performance.
 
-Note that this is an area that will get a lot of attention in
-@code{cc-mode} version 5.  The mode should end up being much faster, at
-the expense of dropping Emacs 18 support, owing to the implementation of
-syntactic analysis caching.  This is the last release of @code{cc-mode}
-that will be compatible with Emacs 18.
-
-Because @code{cc-mode} has to scan the buffer backwards from the current
+Because @ccmode{} has to scan the buffer backwards from the current
 insertion point, and because C's syntax is fairly difficult to parse in
-the backwards direction, @code{cc-mode} often tries to find the nearest
+the backwards direction, @ccmode{} often tries to find the nearest
 position higher up in the buffer from which to begin a forward scan.
 The farther this position is from the current insertion point, the
-slower the mode gets.  Some coding styles can even force @code{cc-mode}
-to scan from the beginning of the buffer!
+slower the mode gets.  Some coding styles can even force @ccmode{}
+to scan from the beginning of the buffer for every line of code!
 
 @findex beginning-of-defun
 @findex defun-prompt-regexp
 One of the simplest things you can do to reduce scan time, is make sure
 any brace that opens a top-level block construct always appears in the
 leftmost column.  This is actually an Emacs constraint, as embodied in
-the @code{beginning-of-defun} function which @code{cc-mode} uses
+the @code{beginning-of-defun} function which @ccmode{} uses
 heavily.  If you insist on hanging top-level open braces on the right
 side of the line, then you should set the variable
 @code{defun-prompt-regexp} to something reasonable @footnote{Note that
 this variable is only defined in Emacs 19.}, however that ``something
-reasonable'' is difficult to define, so @code{cc-mode} doesn't do it
+reasonable'' is difficult to define, so @ccmode{} doesn't do it
 for you.
 
-@cindex @file{cc-lobotomy.el} file
-You will probably notice pathological behavior from @code{cc-mode} when
+@vindex c-Java-defun-prompt-regexp
+@vindex Java-defun-prompt-regexp (c-)
+A special note about @code{defun-prompt-regexp} in Java mode: while much
+of the early sample Java code seems to encourage a style where the brace
+that opens a class is hung on the right side of the line, this is not a
+good style to pursue in Emacs.  @ccmode{} comes with a variable
+@code{c-Java-defun-prompt-regexp} which tries to define a regular
+expression usable for this style, but there are problems with it.  In
+some cases it can cause @code{beginning-of-defun} to hang@footnote{This
+has been observed in Emacs 19.34 and XEmacs 19.15.}.  For this reason,
+it is not used by default, but if you feel adventurous, you can set
+@code{defun-prompt-regexp} to it in your mode hook.  In any event,
+setting and rely on @code{defun-prompt-regexp} will definitely slow
+things down!
+
+You will probably notice pathological behavior from @ccmode{} when
 working in files containing large amounts of cpp macros.  This is
-because @code{cc-mode} cannot quickly skip backwards over these lines,
-which do not contribute to the syntactic calculations.  You'll probably
-also have problems if you are editing ``K&R'' C code, i.e. C code that
-does not use function prototypes.  This is because there are ambiguities
-in the C syntax when K&R style argument lists are used, and
-@code{cc-mode} has to use a slower scan to determine what it's looking
-at.
+because Emacs cannot be made to quickly skip backwards over these lines.
 
 @vindex c-recognize-knr-p
 @vindex recognize-knr-p (c-)
-For the latter problem, I would suggest converting to ANSI style
-protocols, and turning the variable @code{c-recognize-knr-p} to
-@code{nil} (this is its default value for all modes).
+Previous versions of @ccmode{} had potential performance problems
+when recognizing K&R style function argument declarations.  This was
+because there are ambiguities in the C syntax when K&R style argument
+lists are used@footnote{It is hard to distinguish them from top-level
+declarations.}.  @ccmode{} has adopted BOCM's convention for
+limiting the search: it assumes that argdecls are indented at least one
+space, and that the function headers are not indented at all.  With
+current versions of @ccmode{}, user customization of
+@code{c-recognize-knr-p} is deprecated.  Just don't put argdecls in
+column zero!
 
+@cindex @file{cc-lobotomy.el} file
 @vindex cc-lobotomy-pith-list
-For the former problem, you might want to investigate some of the
-speed-ups provided for you in the file @file{cc-lobotomy.el}, which
-is part of the canonical @code{cc-mode} distribution.  As mentioned
-previously, @code{cc-mode} always trades accuracy for speed; however it is
-recognized that sometimes you need speed and can sacrifice some accuracy
-in indentation.  The file @file{cc-lobotomy.el} contains hacks that
-will ``dumb down'' @code{cc-mode} in some specific ways, making that
-trade-off of speed for accuracy.  I won't go into details of its use
-here; you should read the comments at the top of the file, and look at
-the variable @code{cc-lobotomy-pith-list} for details.
+You might want to investigate the speed-ups contained in the
+file @file{cc-lobotomy.el}, which comes as part of the @ccmode{}
+distribution, but is completely unsupported.
+As mentioned previous, @ccmode{} always trades accuracy for speed,
+however it is recognized that sometimes you need speed and can sacrifice
+some accuracy in indentation.  The file @file{cc-lobotomy.el} contains
+hacks that will ``dumb down'' @ccmode{} in some specific ways, making
+that trade-off of speed for accuracy.  I won't go into details of its
+use here; you should read the comments at the top of the file, and look
+at the variable @code{cc-lobotomy-pith-list} for details.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Frequently Asked Questions, Getting the latest cc-mode release, Performance Issues, Top
+@node  Frequently Asked Questions, Getting the latest CC Mode release, Performance Issues, Top
 @comment  node-name,              next,                    previous,up
 
 @chapter  Frequently Asked Questions
 @cindex   Frequently Asked Questions
+@comment FAQ
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @kindex C-x h
@@ -2468,7 +3100,7 @@ the variable @code{cc-lobotomy-pith-list} for details.
 @kindex ESC C-q
 @kindex ESC C-u
 @kindex RET
-@kindex LFD
+@kindex C-j
 @findex newline-and-indent
 @quotation
 
@@ -2476,47 +3108,47 @@ the variable @code{cc-lobotomy-pith-list} for details.
 
 @strong{A.} Visit the file and hit @kbd{C-x h} to mark the whole
 buffer. Then hit @kbd{@key{ESC} C-\}.
-@sp 2
+@sp 1
 
 @strong{Q.} @emph{How do I re-indent the entire function?
 @kbd{@key{ESC} C-x} doesn't work.}
 
 @strong{A.} @kbd{@key{ESC} C-x} is reserved for future Emacs use.
 To re-indent the entire function hit @kbd{C-c C-q}.
-@sp 2
+@sp 1
 
 @strong{Q.} @emph{How do I re-indent the current block?}
 
 @strong{A.} First move to the brace which opens the block with
 @kbd{@key{ESC} C-u}, then re-indent that expression with
 @kbd{@key{ESC} C-q}.
-@sp 2
+@sp 1
 
 @strong{Q.} @emph{Why doesn't the @key{RET} key indent the line to
 where the new text should go after inserting the newline?}
 
 @strong{A.} Emacs' convention is that @key{RET} just adds a newline,
-and that @key{LFD} adds a newline and indents it.  You can make
+and that @key{C-j} adds a newline and indents it.  You can make
 @key{RET} do this too by adding this to your
 @code{c-mode-common-hook} (see the sample @file{.emacs} file
 @ref{Sample .emacs File}):
 @example
 
-(define-key c-mode-map "\C-m" 'newline-and-indent)
+(define-key c-mode-base-map "\C-m" 'newline-and-indent)
 
 @end example
 
-This is a very common question. @code{:-)} If you want this to be the
-default behavior, don't lobby me, lobby RMS!
-@sp 2
+This is a very common question.  If you want this to be the default
+behavior, don't lobby me, lobby RMS!  @code{:-)}
+@sp 1
 
 @strong{Q.} @emph{I put @code{(c-set-offset 'substatement-open 0)}
 in my @file{.emacs} file but I get an error saying that
 @code{c-set-offset}'s function definition is void.}
 
-@strong{A.} This means that @code{cc-mode} wasn't loaded into your
+@strong{A.} This means that @ccmode{} wasn't loaded into your
 Emacs session by the time the @code{c-set-offset} call was reached,
-mostly likely because @code{cc-mode} is being autoloaded.  Instead
+mostly likely because @ccmode{} is being autoloaded.  Instead
 of putting the @code{c-set-offset} line in your top-level
 @file{.emacs} file, put it in your @code{c-mode-common-hook}, or
 simply add the following to the top of your @file{.emacs} file:
@@ -2529,40 +3161,59 @@ simply add the following to the top of your @file{.emacs} file:
 See the sample @file{.emacs} file @ref{Sample .emacs File} for
 details.
 
+@sp 1
 @strong{Q.} @emph{How do I make strings, comments, keywords, and other
 constructs appear in different colors, or in bold face, etc.?}
 
-@strong{A.} ``Syntax Colorization'' is an Emacs 19 feature, controlled
-by @code{font-lock-mode}.  It is not part of @code{cc-mode}.
+@strong{A.} ``Syntax Colorization'' is a standard Emacs feature,
+controlled by @code{font-lock-mode}.  It is not part of @ccmode{}.
 
 @end quotation
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Getting the latest cc-mode release, Sample .emacs File, Frequently Asked Questions, Top
+@node  Getting the latest CC Mode release, Sample .emacs File, Frequently Asked Questions, Top
 @comment  node-name,              next,                    previous,up
 
-@chapter  Getting the latest @code{cc-mode} release
-@cindex   Getting the latest @code{cc-mode} release
+@chapter  Getting the latest CC Mode release
+@cindex   Getting the latest CC Mode release
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-@code{cc-mode} is now distributed with both Emacs 19 and XEmacs 19, so
-you would typically just use the version that comes with your Emacs.
-Users of older versions of Emacs can get the latest release from this
-URL:
+@ccmode{} is now standard with later versions Emacs 19 and XEmacs 19.
+It is also the standard for XEmacs 20, and will be the standard for
+Emacs 20 (unreleased as of this writing).  You would typically just use
+the version that comes with your X/Emacs.  These may be slightly out of
+date due to release schedule skew, so you should always check the
+canonical site for the latest version.
 
 @example
+@group
 
-    @code{ftp://ftp.python.org/pub/emacs/cc-mode.tar.gz}
+    World Wide Web:
 
+        @code{http://www.python.org/ftp/emacs/}
+
+    Anonymous FTP:
+
+        @code{ftp://ftp.python.org/pub/emacs/}
+
+@end group
 @end example
 
-Note that this is a ``gzipped'' tar file.
+There are many files under these directories; you can pick up the entire
+distribution (named @code{cc-mode.tar.gz}; a gzip'd tar file), or any of
+the individual files, including PostScript documentation.
 
-If you do not have anonymous ftp access, you can get the distribution
-through an anonymous ftp-to-mail gateway, such as the one run by DEC at
-@code{ftpmail@@decwrl.dec.com}.  To get @code{cc-mode} via email, send
-the following message in the body of your mail to that address:
+If you do not have World Wide Web, or anonymous ftp access, you can get
+the distribution through an anonymous ftp-to-mail gateway, such as the
+one run by DEC at:
+@example
+
+@code{ftpmail@@decwrl.dec.com}
+
+@end example
+To get @ccmode{} via email, send the following message in the body of
+your mail to that address:
 @example
 
 reply <a valid net address back to you>
@@ -2575,14 +3226,16 @@ get cc-mode.tar.gz
 @end example
 @noindent
 or just send the message "help" for more information on ftpmail.
-Response times will vary with the number of requests in the queue.
+Response times will vary with the number of requests in the queue.  I am
+in no way connected to this service, so I make no claims or guarantees
+about its availability!
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Sample .emacs File, Requirements, Getting the latest cc-mode release, Top
+@node  Sample .emacs File, Limitations and Known Bugs, Getting the latest CC Mode release, Top
 @comment  node-name,              next,                    previous,up
 
-@chapter  Sample @file{.emacs} file
-@cindex   Sample @file{.emacs} file
+@chapter  Sample .emacs file
+@cindex   Sample .emacs file
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @example
@@ -2591,23 +3244,23 @@ Response times will vary with the number of requests in the queue.
 ;; change some of the actual values.
 
 (defconst my-c-style
-  '((c-tab-always-indent           . t)
-    (c-comment-only-line-offset    . 4)
-    (c-hanging-braces-alist        . ((substatement-open after)
-                                      (brace-list-open)))
-    (c-hanging-colons-alist        . ((member-init-intro before)
-                                      (inher-intro)
-                                      (case-label after)
-                                      (label after)
-                                      (access-label after)))
-    (c-cleanup-list                . (scope-operator
-                                      empty-defun-braces
-                                      defun-close-semi))
-    (c-offsets-alist               . ((arglist-close     . c-lineup-arglist)
-                                      (substatement-open . 0)
-                                      (case-label        . 4)
-                                      (block-open        . 0)
-                                      (knr-argdecl-intro . -)))
+  '((c-tab-always-indent        . t)
+    (c-comment-only-line-offset . 4)
+    (c-hanging-braces-alist     . ((substatement-open after)
+                                   (brace-list-open)))
+    (c-hanging-colons-alist     . ((member-init-intro before)
+                                   (inher-intro)
+                                   (case-label after)
+                                   (label after)
+                                   (access-label after)))
+    (c-cleanup-list             . (scope-operator
+                                   empty-defun-braces
+                                   defun-close-semi))
+    (c-offsets-alist            . ((arglist-close . c-lineup-arglist)
+                                   (substatement-open . 0)
+                                   (case-label        . 4)
+                                   (block-open        . 0)
+                                   (knr-argdecl-intro . -)))
     (c-echo-syntactic-information-p . t)
     )
   "My C Programming Style")
@@ -2624,45 +3277,17 @@ Response times will vary with the number of requests in the queue.
         indent-tabs-mode nil)
   ;; we like auto-newline and hungry-delete
   (c-toggle-auto-hungry-state 1)
-  ;; keybindings for C, C++, and Objective-C.  We can put these in
-  ;; c-mode-map because c++-mode-map and objc-mode-map inherit it
-  (define-key c-mode-map "\C-m" 'newline-and-indent)
+  ;; keybindings for all supported languages.  We can put these in
+  ;; c-mode-base-map because c-mode-map, c++-mode-map, objc-mode-map,
+  ;; java-mode-map, and idl-mode-map inherit from it.
+  (define-key c-mode-base-map "\C-m" 'newline-and-indent)
   )
 
-;; the following only works in Emacs 19
-;; Emacs 18ers can use (setq c-mode-common-hook 'my-c-mode-common-hook)
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
 @end example
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Requirements, Limitations and Known Bugs, Sample .emacs File, Top
-@comment  node-name,              next,                    previous,up
-@chapter  Requirements
-@cindex   Requirements
-@comment * Requirements
-@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-@cindex reporter.el
-@file{cc-mode.el} requires @file{reporter.el} for submission of bug
-reports.  @file{reporter.el} is distributed with the latest Emacs 19s.
-Here is the Emacs Lisp Archive anonymous ftp'ing record for those of you
-who are using older Emacsen.
-
-@comment * Here's the Emacs Lisp Archive information for @file{reporter.el}:
-@example
-
-         GNU Emacs Lisp Code Directory Apropos -- "reporter"
-"~/" refers to archive.cis.ohio-state.edu:/pub/gnu/emacs/elisp-archive/
-
-reporter (2.12)       06-Jul-1994
-     Barry A. Warsaw, <bwarsaw@@cnri.reston.va.us>
-     ~/misc/reporter.el.Z
-     Customizable bug reporting of lisp programs.
-
-@end example
-
-@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node  Limitations and Known Bugs, Mailing Lists and Submitting Bug Reports, Requirements, Top
+@node  Limitations and Known Bugs, Mailing Lists and Submitting Bug Reports, Sample .emacs File, Top
 @comment  node-name,              next,                    previous,up
 @chapter  Limitations and Known Bugs
 @cindex   Limitations and Known Bugs
@@ -2677,19 +3302,17 @@ Multi-line macros are not handled properly.
 Re-indenting large regions or expressions can be slow.
 
 @item
-Use with Emacs 18 can be slow and annoying. You should seriously
-consider upgrading to Emacs 19.
+Add-on fill packages may not work as well as @ccmode{}'s built-in
+filling routines.  I no longer recommend you use @code{filladapt} to
+fill comments.
 
+@cindex c-indent-exp
+@cindex indent-exp (c-)
 @item
-There is still some weird behavior when filling C block comments.
-My suggestion is to check out add-on fill packages such as
-@code{filladapt}, available at the elisp archive.
-
-@cindex inline-close
-@kindex TAB
-@item
-Lines following @code{inline-close} braces which hang ``after'' do not
-line up correctly.  Hit @kbd{TAB} to reindent the line.
+@code{c-indent-exp} has not been fully optimized.  It essentially
+equivalent to hitting @kbd{TAB} (@code{c-indent-command}) on every
+line.  Some information is cached from line to line, but such caching
+invariable causes inaccuracies in analysis in some bizarre situations.
 
 @end itemize
 
@@ -2711,17 +3334,25 @@ problem.  Make sure you include a concise, but complete code example.
 Please try to boil your example down to just the essential code needed
 to reproduce the problem, and include an exact recipe of steps needed to
 expose the bug.  Be especially sure to include any code that appears
-@emph{before} your bug example.
+@emph{before} your bug example, if you think it might affect my ability
+to reproduce it.
 
-Bug reports are now to be sent to @code{bug-gnu-emacs@@prep.ai.mit.edu}
-which is mirrored on the Usenet newsgroup @code{gnu.emacs.bug}.  Other
-questions and suggestions should be mailed to
-@code{help-gnu-emacs@@prep.ai.mit.edu} which is mirrored on
+Bug reports are now sent to the following email addresses:
+@code{cc-mode-help@@python.org} and
+@code{bug-gnu-emacs@@prep.ai.mit.edu}; the latter is mirrored on the
+Usenet newsgroup @code{gnu.emacs.bug}.  You can send other questions and
+suggestions (kudos? @code{;-)} to @code{cc-mode-help@@python.org}, or
+@code{help-gnu-emacs@@prep.ai.mit.edu} which is mirrored on newsgroup
 @code{gnu.emacs.help}.
 
-Note that the @code{cc-mode} Majordomo mailing lists have been
-disbanded!  With the inclusion of @code{cc-mode} in both of the latest
-flavors of Emacs 19, the need for them has ended.
+If you want to get announcements of new CC Mode releases, send the
+word @emph{subscribe} in the body of a message to
+@code{cc-mode-announce-request@@python.org}.  Announcements will also be 
+posted to the Usenet newsgroups @code{gnu.emacs.sources},
+@code{comp.emacs}, @code{comp.emacs.xemacs}, and possibly some of the
+language oriented newsgroups.  Note that the
+@code{cc-mode-victims@@python.org} mailing list was recently
+decommissioned.
 
 @c !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node    Concept Index, Command Index,  Mailing Lists and Submitting Bug Reports, Top
@@ -2741,9 +3372,9 @@ flavors of Emacs 19, the need for them has ended.
 @ifinfo
 
 @end ifinfo
-Since all @code{cc-mode} commands are prepended with the string
-@samp{c-}, each appears under its @code{c-<thing>} name and its
-@code{<thing> (c-)} name.
+Since all @ccmode{} commands are prepended with the string
+@samp{c-}, each appears under its @code{c-@var{<thing>}} name and its
+@code{@var{<thing>} (c-)} name.
 @iftex
 @sp 2
 @end iftex
@@ -2768,13 +3399,14 @@ Since all @code{cc-mode} commands are prepended with the string
 @ifinfo
 
 @end ifinfo
-Since all @code{cc-mode} variables are prepended with the string
-@samp{c-}, each appears under its @code{c-<thing>} name and its
-@code{<thing> (c-)} name.
+Since all @ccmode{} variables are prepended with the string
+@samp{c-}, each appears under its @code{c-@var{<thing>}} name and its
+@code{@var{<thing>} (c-)} name.
 @iftex
 @sp 2
 @end iftex
 @printindex vr
+@page
 @summarycontents
 @contents
 @bye

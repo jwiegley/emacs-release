@@ -64,6 +64,7 @@ for initializing `Info-directory-list' when Info is started.")
   (cond ((file-exists-p "/usr/bin/inews") "/usr/bin/inews")
 	((file-exists-p "/usr/local/inews") "/usr/local/inews")
 	((file-exists-p "/usr/local/bin/inews") "/usr/local/bin/inews")
+	((file-exists-p "/usr/contrib/lib/news/inews") "/usr/contrib/lib/news/inews")
 	((file-exists-p "/usr/lib/news/inews") "/usr/lib/news/inews")
 	(t "inews"))
   "Program to post news.")
@@ -77,12 +78,6 @@ The null string means use the local host as the server site.")
   "NNTP service name, usually \"nntp\" or 119).
 Go to a local news spool if its value is nil, in which case `gnus-nntp-server'
 should be set to `(system-name)'.")
-
-(defvar gnus-local-domain nil
-  "*Your domain name without a host name: for example, \"ai.mit.edu\".
-The DOMAINNAME environment variable is used instead if defined.
-If the function `system-name' returns a fully qualified domain name,
-there is no need to set this variable.")
 
 (defvar gnus-local-organization nil
   "*The name of your organization, as a string.
@@ -118,8 +113,8 @@ Its name should end with a slash.")
 
 (defconst sendmail-program
   (cond
-    ((file-exists-p "/usr/lib/sendmail") "/usr/lib/sendmail")
     ((file-exists-p "/usr/sbin/sendmail") "/usr/sbin/sendmail")
+    ((file-exists-p "/usr/lib/sendmail") "/usr/lib/sendmail")
     ((file-exists-p "/usr/ucblib/sendmail") "/usr/ucblib/sendmail")
     (t "fakemail"))			;In ../etc, to interface to /bin/mail.
   "Program used to send messages.")

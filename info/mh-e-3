@@ -1,5 +1,5 @@
-This is Info file ../info/mh-e, produced by Makeinfo-1.63 from the
-input file mh-e.texi.
+This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
+the input file mh-e.texi.
 
    This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
 Emacs Interface to MH', for mh-e, Version 5.0.2.
@@ -31,7 +31,7 @@ Organizing Your Mail with Folders
    By default, operations on folders work only one level at a time.  Set
 `mh-recursive-folders' to non-`nil' to operate on all folders.  This
 mostly means that you'll be able to see all your folders when you press
-TAB when prompted for a folder name.  The variable
+<TAB> when prompted for a folder name.  The variable
 `mh-auto-folder-collect' is normally turned on to generate a list of
 folder names in the background as soon as mh-e is loaded.  Otherwise,
 the list is generated when you need a folder name the first time (as
@@ -230,7 +230,7 @@ function `mh-store-buffer'.  I mention this because you can use it
 directly if you're editing a buffer that contains a file that has been
 run through `uuencode' or `shar'.  For example, you can extract the
 contents of the current buffer in your home directory by typing `M-x
-mh-store-buffer RET ~ RET'.
+mh-store-buffer <RET> ~ <RET>'.
 
 
 File: mh-e,  Node: Customizing Finishing Up,  Prev: Customizing Files and Pipes,  Up: Customizing Moving Mail
@@ -345,10 +345,10 @@ Make sure it is at least Version 4.0.
 `/misc/mh-e/mh-e-5.0.2.tar.Z'.  I suggest that you extract the files
 from `mh-e-5.0.2.tar.Z' in the following fashion:
 
-     % `cd'                                  # Start in your home directory
-     % `mkdir lib lib/emacs'                 # Create directory for mh-e
-     % `cd lib/emacs'
-     % `zcat PATH/TO/mh-e-5.0.2.tar.Z | tar xvf -'    # Extract files
+     % cd                                  # Start in your home directory
+     % mkdir lib lib/emacs                 # Create directory for mh-e
+     % cd lib/emacs
+     % zcat PATH/TO/mh-e-5.0.2.tar.Z | tar xvf -    # Extract files
 
    To use these new files, add the following to `~/.emacs':
 
@@ -404,11 +404,11 @@ conceptual models, and have different key bindings.  (1)
 
    ---------- Footnotes ----------
 
-   (1)  After reading this article, I questioned Brian about his
-version of MHE, and received some great ideas for improving mh-e such
-as a dired-like method of selecting folders; and removing the prompting
-when sending mail, filling in the blanks in the draft buffer instead.
-I passed them on to Stephen Gildea, the current maintainer, and he was
+   (1) After reading this article, I questioned Brian about his version
+of MHE, and received some great ideas for improving mh-e such as a
+dired-like method of selecting folders; and removing the prompting when
+sending mail, filling in the blanks in the draft buffer instead.  I
+passed them on to Stephen Gildea, the current maintainer, and he was
 excited about the ideas as well.  Perhaps one day, mh-e will again
 resemble MHE, although none of these ideas are manifest in Version 5.0.
 
@@ -589,7 +589,7 @@ GNU GENERAL PUBLIC LICENSE
                          Version 2, June 1991
 
      Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-     675 Mass Ave, Cambridge, MA 02139, USA
+     59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
      
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -904,9 +904,9 @@ the "copyright" line and a pointer to where the full notice is found.
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
      GNU General Public License for more details.
      
-     You should have received a copy of the GNU General Public License
-     along with this program; if not, write to the Free Software
-     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+     You should have received a copy of the GNU General Public License along
+     with this program; if not, write to the Free Software Foundation, Inc.,
+     59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
    Also add information on how to contact you by electronic and paper
 mail.
@@ -952,86 +952,86 @@ Command Index
 
 * Menu:
 
-* display-time:                         Incorporating.
-* mh-burst-digest:                      Reading Digests.
-* mh-check-whom:                        Recipients.
-* mh-copy-msg:                          Organizing.
-* mh-delete-msg-from-seq:               Sequences.
-* mh-delete-msg-no-motion:              Deleting.
-* mh-delete-msg:                        Deleting.
-* mh-delete-seq:                        Sequences.
-* mh-do-pick-search:                    Searching.
-* mh-edit-again:                        Old Drafts.
-* mh-edit-mhn:                          Sending MIME.
-* mh-execute-commands <1>:              Customizing Finishing Up.
-* mh-execute-commands <1>:              Customizing Incorporating.
-* mh-execute-commands:                  Finishing Up.
-* mh-extract-rejected-mail:             Old Drafts.
-* mh-first-msg:                         Moving Around.
-* mh-forward:                           Forwarding.
-* mh-fully-kill-draft:                  Killing Draft.
-* mh-goto-msg:                          Moving Around.
-* mh-inc-folder:                        Incorporating.
-* mh-insert-letter:                     Inserting Messages.
-* mh-insert-signature:                  Signature.
-* mh-insert-signature, example:         Customizing Sending.
-* mh-last-msg:                          Moving Around.
-* mh-list-folders:                      Organizing.
-* mh-list-sequences:                    Sequences.
-* mh-mhn-compose-anon-ftp:              FTP.
+* display-time:                          Incorporating.
+* mh-burst-digest:                       Reading Digests.
+* mh-check-whom:                         Recipients.
+* mh-copy-msg:                           Organizing.
+* mh-delete-msg:                         Deleting.
+* mh-delete-msg-from-seq:                Sequences.
+* mh-delete-msg-no-motion:               Deleting.
+* mh-delete-seq:                         Sequences.
+* mh-do-pick-search:                     Searching.
+* mh-edit-again:                         Old Drafts.
+* mh-edit-mhn:                           Sending MIME.
+* mh-execute-commands <1>:               Customizing Finishing Up.
+* mh-execute-commands <2>:               Customizing Incorporating.
+* mh-execute-commands:                   Finishing Up.
+* mh-extract-rejected-mail:              Old Drafts.
+* mh-first-msg:                          Moving Around.
+* mh-forward:                            Forwarding.
+* mh-fully-kill-draft:                   Killing Draft.
+* mh-goto-msg:                           Moving Around.
+* mh-inc-folder:                         Incorporating.
+* mh-insert-letter:                      Inserting Messages.
+* mh-insert-signature:                   Signature.
+* mh-insert-signature, example:          Customizing Sending.
+* mh-last-msg:                           Moving Around.
+* mh-list-folders:                       Organizing.
+* mh-list-sequences:                     Sequences.
+* mh-mhn-compose-anon-ftp:               FTP.
 * mh-mhn-compose-external-compressed-tar: Tar.
-* mh-mhn-compose-forw:                  Forwarding MIME.
-* mh-mhn-compose-insertion:             Other MIME Objects.
-* mh-msg-is-in-seq:                     Sequences.
-* mh-narrow-to-seq:                     Sequences.
-* mh-next-undeleted-msg:                Moving Around.
-* mh-pack-folder:                       Organizing.
-* mh-page-digest-backwards:             Reading Digests.
-* mh-page-digest:                       Reading Digests.
-* mh-page-msg:                          Viewing.
-* mh-pipe-msg:                          Files and Pipes.
-* mh-previous-page:                     Viewing.
-* mh-previous-undeleted-msg:            Moving Around.
-* mh-print-msg:                         Printing.
-* mh-put-msg-in-seq:                    Sequences.
-* mh-quit:                              Finishing Up.
-* mh-redistribute:                      Redistributing.
-* mh-refile-msg <1>:                    Customizing Organizing.
-* mh-refile-msg:                        Organizing.
-* mh-refile-or-write-again:             Organizing.
-* mh-reply:                             Replying.
-* mh-rescan-folder:                     Organizing.
-* mh-rescan-folder, example:            Customizing Incorporating.
-* mh-revert-mhn-edit:                   Sending MIME.
-* mh-rmail <1>:                         Finishing Up.
-* mh-rmail <1>:                         Reading Mail.
-* mh-rmail:                             Reading Mail Tour.
-* mh-rmail, example:                    Customizing Reading.
-* mh-search-folder:                     Searching.
-* mh-send-letter:                       Sending Message.
-* mh-send:                              Sending Mail.
-* mh-show:                              Viewing.
-* mh-show, example:                     Customizing Incorporating.
-* mh-smail-other-window:                Sending Mail.
-* mh-smail <1>:                         Sending Mail.
-* mh-smail <1>:                         Processing Mail Tour.
-* mh-smail:                             Sending Mail Tour.
-* mh-sort-folder <1>:                   Customizing Organizing.
-* mh-sort-folder:                       Organizing.
-* mh-store-buffer:                      Customizing Files and Pipes.
-* mh-store-msg <1>:                     Customizing Files and Pipes.
-* mh-store-msg:                         Files and Pipes.
-* mh-to-fcc <1>:                        Customizing Organizing.
-* mh-to-fcc:                            Header.
-* mh-to-field <1>:                      Searching.
-* mh-to-field:                          Header.
-* mh-toggle-showing:                    Moving Around.
-* mh-undo-folder:                       Finishing Up.
-* mh-undo:                              Finishing Up.
-* mh-update-sequences:                  Sequences.
-* mh-version:                           Miscellaneous.
-* mh-visit-folder:                      Organizing.
-* mh-widen:                             Sequences.
-* mh-write-msg-to-file:                 Files and Pipes.
-* mh-yank-cur-msg:                      Inserting Letter.
+* mh-mhn-compose-forw:                   Forwarding MIME.
+* mh-mhn-compose-insertion:              Other MIME Objects.
+* mh-msg-is-in-seq:                      Sequences.
+* mh-narrow-to-seq:                      Sequences.
+* mh-next-undeleted-msg:                 Moving Around.
+* mh-pack-folder:                        Organizing.
+* mh-page-digest:                        Reading Digests.
+* mh-page-digest-backwards:              Reading Digests.
+* mh-page-msg:                           Viewing.
+* mh-pipe-msg:                           Files and Pipes.
+* mh-previous-page:                      Viewing.
+* mh-previous-undeleted-msg:             Moving Around.
+* mh-print-msg:                          Printing.
+* mh-put-msg-in-seq:                     Sequences.
+* mh-quit:                               Finishing Up.
+* mh-redistribute:                       Redistributing.
+* mh-refile-msg <1>:                     Customizing Organizing.
+* mh-refile-msg:                         Organizing.
+* mh-refile-or-write-again:              Organizing.
+* mh-reply:                              Replying.
+* mh-rescan-folder:                      Organizing.
+* mh-rescan-folder, example:             Customizing Incorporating.
+* mh-revert-mhn-edit:                    Sending MIME.
+* mh-rmail <1>:                          Finishing Up.
+* mh-rmail <2>:                          Reading Mail.
+* mh-rmail:                              Reading Mail Tour.
+* mh-rmail, example:                     Customizing Reading.
+* mh-search-folder:                      Searching.
+* mh-send:                               Sending Mail.
+* mh-send-letter:                        Sending Message.
+* mh-show:                               Viewing.
+* mh-show, example:                      Customizing Incorporating.
+* mh-smail <1>:                          Sending Mail.
+* mh-smail <2>:                          Processing Mail Tour.
+* mh-smail:                              Sending Mail Tour.
+* mh-smail-other-window:                 Sending Mail.
+* mh-sort-folder <1>:                    Customizing Organizing.
+* mh-sort-folder:                        Organizing.
+* mh-store-buffer:                       Customizing Files and Pipes.
+* mh-store-msg <1>:                      Customizing Files and Pipes.
+* mh-store-msg:                          Files and Pipes.
+* mh-to-fcc <1>:                         Customizing Organizing.
+* mh-to-fcc:                             Header.
+* mh-to-field <1>:                       Searching.
+* mh-to-field:                           Header.
+* mh-toggle-showing:                     Moving Around.
+* mh-undo:                               Finishing Up.
+* mh-undo-folder:                        Finishing Up.
+* mh-update-sequences:                   Sequences.
+* mh-version:                            Miscellaneous.
+* mh-visit-folder:                       Organizing.
+* mh-widen:                              Sequences.
+* mh-write-msg-to-file:                  Files and Pipes.
+* mh-yank-cur-msg:                       Inserting Letter.
 

@@ -1,7 +1,7 @@
 \input texinfo                  @c -*-texinfo-*-
 
 @setfilename ../info/message
-@settitle Message Manual
+@settitle Message 5.5 Manual
 @synindex fn cp
 @synindex vr cp
 @synindex pg cp
@@ -12,7 +12,7 @@
 
 @ifinfo
 
-This file documents Messa, the Emacs message composition mode.
+This file documents Message, the Emacs message composition mode.
 
 Copyright (C) 1996 Free Software Foundation, Inc.
 
@@ -39,7 +39,7 @@ into another language, under the above conditions for modified versions.
 @tex
 
 @titlepage
-@title Message Manual
+@title Message 5.5 Manual
 
 @author by Lars Magne Ingebrigtsen
 @page
@@ -74,6 +74,7 @@ buffers.
 * Interface::         Setting up message buffers.
 * Commands::          Commands you can execute in message mode buffers.
 * Variables::         Customizing the message buffers.
+* Compatibility::     Making Message backwards compatible.
 * Index::             Variable, function and concept index.
 * Key Index::         List of Message mode keys.
 @end menu
@@ -169,7 +170,9 @@ the head of the outgoing mail.
 
 @findex message-wide-reply
 The @code{message-wide-reply} pops up a message buffer that's a wide
-reply to the message in the current buffer.
+reply to the message in the current buffer.  A @dfn{wide reply} is a
+reply that goes out to all people listed in the @code{To}, @code{From}
+and @code{Cc} headers.
 
 @vindex message-wide-reply-to-function
 Message uses the normal methods to determine where wide replies are to go,
@@ -178,7 +181,7 @@ but you can change the behavior to suit your needs by fiddling with the
 @code{message-reply-to-function} (@pxref{Reply}). 
 
 @findex rmail-dont-reply-to-names
-Addresses that matches the @code{rmail-dont-reply-to-names} regular
+Addresses that match the @code{rmail-dont-reply-to-names} regular
 expression will be removed from the @code{Cc} header.
 
 
@@ -220,8 +223,9 @@ supersede the message in the current buffer.
 
 @vindex message-ignored-supersedes-headers
 Headers matching the @code{message-ignored-supersedes-headers} are
-removed before popping up the new message buffer.  The default is
-@samp{^Path:\\|^Date\\|^NNTP-Posting-Host:\\|^Xref:\\|^Lines:\\|^Received:\\|^X-From-Line:\\|Return-Path:}.
+removed before popping up the new message buffer.  The default is@*
+@samp{^Path:\\|^Date\\|^NNTP-Posting-Host:\\|^Xref:\\|^Lines:\\|@*
+^Received:\\|^X-From-Line:\\|Return-Path:}.
 
 
 
@@ -236,13 +240,13 @@ news.
 @table @code
 @item message-forward-start-separator
 @vindex message-forward-start-separator
-Delimiter inserted before forwarded messages.  The default is
+Delimiter inserted before forwarded messages.  The default is@*
 @samp{------- Start of forwarded message -------\n}. 
 
 @vindex message-forward-end-separator
 @item message-forward-end-separator
 @vindex message-forward-end-separator
-Delimiter inserted after forwarded messages.  The default is
+Delimiter inserted after forwarded messages.  The default is@*
 @samp{------- End of forwarded message -------\n}. 
 
 @item message-signature-before-forwarded-message
@@ -266,7 +270,7 @@ The @code{message-resend} command will prompt the user for an address
 and resend the message in the current buffer to that address.
 
 @vindex message-ignored-resent-headers
-Headers the match the @code{message-ignored-resent-headers} regexp will
+Headers that match the @code{message-ignored-resent-headers} regexp will
 be removed before sending the message.  The default is
 @samp{^Return-receipt}. 
 
@@ -277,7 +281,9 @@ be removed before sending the message.  The default is
 @findex message-bounce
 The @code{message-bounce} command will, if the current buffer contains a
 bounced mail message, pop up a message buffer stripped of the bounce
-information.
+information.  A @dfn{bounced message} is typically a mail you've sent
+out that has been returned by some @code{mailer-daemon} as
+undeliverable. 
 
 @vindex message-ignored-bounced-headers
 Headers that match the @code{message-ignored-bounced-headers} regexp
@@ -294,6 +300,7 @@ will be removed before popping up the buffer.  The default is
 * Insertion::           Inserting things into message buffers.
 * Various Commands::    Various things.
 * Sending::             Actually sending the message.
+* Mail Aliases::        How to use mail aliases.
 @end menu
 
 
@@ -471,7 +478,7 @@ Note that RFC1036 says that a signature should be preceded by the three
 characters @samp{-- } on a line by themselves.  This is to make it
 easier for the recipient to automatically recognize and process the
 signature.  So don't remove those characters, even though you might feel
-that they ruin you beautiful design, like, totally.
+that they ruin your beautiful design, like, totally.
 
 Also note that no signature should be more than four lines long.
 Including ASCII graphics is an efficient way to get everybody to believe
@@ -491,6 +498,13 @@ Caesar rotate (aka. rot13) the current message
 (@code{message-caesar-buffer-body}).  If narrowing is in effect, just
 rotate the visible portion of the buffer.  A numerical prefix says how
 many places to rotate the text.  The default is 13.
+
+@item C-c C-e
+@kindex C-c C-e
+@findex message-elide-region
+Elide the text between point and mark (@code{message-elide-region}).
+The text is killed and an ellipsis (@samp{[...]}) will be inserted in
+its place.
 
 @item C-c C-t
 @kindex C-c C-t 
@@ -541,6 +555,30 @@ Bury the message buffer and exit (@code{message-dont-send}).
 Kill the message buffer and exit (@code{message-kill-buffer}).
 
 @end table
+
+
+
+@node Mail Aliases
+@section Mail Aliases
+@cindex mail aliases
+@cindex aliases
+
+Message uses @code{mailabbrev} to handle mail aliases.  
+@code{mailabbrev} works by parsing the @file{/etc/mailrc} and
+@file{~/.mailrc} files.  These files look like:
+
+@example
+alias lmi "Lars Magne Ingebrigtsen <larsi@@ifi.uio.no>"
+alias ding "ding@@ifi.uio.no (ding mailing list)"
+@end example
+
+After adding lines like this to your @file{~/.mailrc} file, you should
+be able to just write @samp{lmi} in the @code{To} or @code{Cc} (and so
+on) headers and press @kbd{SPC} to expand the alias.
+
+No expansion will be performed upon sending of the message---all
+expansions have to be done explicitly.
+
 
 
 @node Variables
@@ -622,7 +660,7 @@ buffers.
 @table @code
 @item message-required-mail-headers
 @vindex message-required-mail-headers
-See @pxref{News Headers} for the syntax of this variable.  It is
+@xref{News Headers}, for the syntax of this variable.  It is
 @code{(From Date Subject (optional . In-Reply-To) Message-ID Lines
 (optional . X-Mailer))} by default.
 
@@ -648,6 +686,13 @@ buffers that are initialized as mail.
 Function used to send the current buffer as mail.  The default is
 @code{message-send-mail-with-sendmail}.   If you prefer using MH
 instead, set this variable to @code{message-send-mail-with-mh}.
+
+@item message-mh-deletable-headers
+@vindex message-mh-deletable-headers
+Most versions of MH doesn't like being fed messages that contain the
+headers in this variable.  If this variable is non-@code{nil} (which is
+the default), these headers will be removed before mailing.  Set it to
+@code{nil} if your MH can handle these headers.
 
 @end table
 
@@ -684,8 +729,10 @@ to.  If it isn't present already, it will be prompted for.
 @cindex organization
 This optional header will be filled out depending on the
 @code{message-user-organization} variable.
-@code{message-user-organization-file} will be used if that variable is
-@code{t}.
+@code{message-user-organization-file} will be used if this variable is
+@code{t}.  This variable can also be a string (in which case this string
+will be used), or it can be a function (which will be called with no
+parameters and should return a string to be used).
 
 @item Lines
 @cindex Lines
@@ -697,9 +744,9 @@ This optional header will be computed by Message.
 @findex system-name
 @cindex Sun
 This required header will be generated by Message.  A unique ID will be
-created based on date, time, user name and system name.  Message will
+created based on the date, time, user name and system name.  Message will
 use @code{mail-host-address} as the fully qualified domain name (FQDN)
-of the machine if that variable is define.  If not, it will use
+of the machine if that variable is defined.  If not, it will use
 @code{system-name}, which doesn't report a FQDN on some machines --
 notably Suns.
 
@@ -715,7 +762,7 @@ This optional header will be filled out according to the
 
 @item In-Reply-To
 This optional header is filled out using the @code{Date} and @code{From}
-header of the article being replied.
+header of the article being replied to.
 
 @item Expires
 @cindex Expires
@@ -731,11 +778,11 @@ much misunderstood header.
 
 @item Path
 @cindex path
-This extremely optional header should probably not ever be used.
+This extremely optional header should probably never be used.
 However, some @emph{very} old servers require that this header is
 present.  @code{message-user-path} further controls how this
-@code{Path} header is to look.  If is is @code{nil}, the the server name
-as the leaf node.  If is is a string, use the string.  If it is neither
+@code{Path} header is to look.  If it is @code{nil}, use the server name
+as the leaf node.  If it is a string, use the string.  If it is neither
 a string nor @code{nil}, use the user name only.  However, it is highly
 unlikely that you should need to fiddle with this variable at all.
 @end table
@@ -762,7 +809,7 @@ Other variables for customizing outgoing news articles:
 
 @item message-syntax-checks
 @vindex message-syntax-checks
-If non-@code{nil}, message will attempt to check the legality of the
+If non-@code{nil}, Message will attempt to check the legality of the
 headers, as well as some other stuff, before posting.  You can control
 the granularity of the check by adding or removing elements from this
 list.  Legal elements are:
@@ -802,19 +849,22 @@ Check whether the article is empty.
 @item empty-headers
 Check whether any of the headers are empty.
 @item existing-newsgroups
-Check whether the newsgroups mentioned in the Newsgroups and 
-Followup-To headers exist.
+Check whether the newsgroups mentioned in the @code{Newsgroups} and 
+@code{Followup-To} headers exist.
 @item valid-newsgroups
-Check whether the @code{Newsgroups} and @code{Followup-To} headers
-are valid syntactially.
+Check whether the @code{Newsgroups} and @code{Followup-to} headers
+are valid syntactically.
+@item shorten-followup-to
+Check whether to add a @code{Followup-to} header to shorten the number
+of groups to post to.
 @end table
 
 All these conditions are checked by default.
 
 @item message-ignored-news-headers
 @vindex message-ignored-news-headers
-Regexp of headers to be removed before posting.  The default is
-@samp{^NNTP-Posting-Host:\\|^Xref:\\|^Bcc:\\|^Gcc:\\|^Fcc:}. 
+Regexp of headers to be removed before posting.  The default is@*
+@samp{^NNTP-Posting-Host:\\|^Xref:\\|^Bcc:\\|^Gcc:\\|^Fcc:}.
 
 @item message-default-news-headers
 @vindex message-default-news-headers
@@ -875,9 +925,47 @@ Hook run as the last thing when the message buffer has been initialized.
 @vindex message-header-setup-hook
 Hook called narrowed to the headers after initializing the headers. 
 
+For instance, if you're running Gnus and wish to insert a
+@samp{Mail-Copies-To} header in all your news articles and all messages
+you send to mailing lists, you could do something like the following:
+
+@lisp
+(defun my-message-header-setup-hook ()
+  (let ((group (or gnus-newsgroup-name "")))
+    (when (or (message-fetch-field "newsgroups")
+              (gnus-group-find-parameter group 'to-address)
+              (gnus-group-find-parameter group 'to-list))
+      (insert "Mail-Copies-To: never\n"))))
+
+(add-hook 'message-header-setup-hook 'my-message-header-setup-hook)
+@end lisp
+
 @item message-send-hook
 @vindex message-send-hook
 Hook run before sending messages.
+
+If you want to add certain headers before sending, you can use the
+@code{message-add-header} function in this hook.  For instance:
+@findex message-add-header
+
+@lisp
+(add-hook 'message-send-hook 'my-message-add-content)
+(defun my-message-add-content ()
+  (message-add-header
+   "Mime-Version: 1.0"
+   "Content-Type: text/plain"
+   "Content-Transfer-Encoding: 7bit"))
+@end lisp
+
+This function won't add the header if the header is already present.
+
+@item message-send-mail-hook
+@vindex message-send-mail-hook
+Hook run before sending mail messages.
+
+@item message-send-news-hook
+@vindex message-send-news-hook
+Hook run before sending news messages.
 
 @item message-sent-hook
 @vindex message-sent-hook
@@ -905,8 +993,11 @@ function is @code{rmail-output} which saves in Unix mailbox format.
 @item message-courtesy-message
 @vindex message-courtesy-message
 When sending combined messages, this string is inserted at the start of
-the mailed copy.  If this variable is @code{nil}, no such courtesy
-message will be added.
+the mailed copy.  If the string contains the format spec @samp{%s}, the
+newsgroups the article has been posted to will be inserted there.  If
+this variable is @code{nil}, no such courtesy message will be added.
+The default value is @samp{"The following message is a courtesy copy of
+an article\nthat has been posted to %s as well.\n\n"}. 
 
 @end table
 
@@ -916,7 +1007,7 @@ message will be added.
 
 Message will generate new buffers with unique buffer names when you
 request a message buffer.  When you send the message, the buffer isn't
-normally killed off.  It's name is changed and a certain number of old
+normally killed off.  Its name is changed and a certain number of old
 message buffers are kept alive.
 
 @table @code
@@ -988,9 +1079,27 @@ to.  Here's an example from Gnus:
 This restores the Gnus window configuration when the message buffer is
 killed, postponed or exited.
 
-An @dfn{action} can be either a normal function; or a list where the
-@code{car} is a function and the @code{cdr} is the list of arguments; or
+An @dfn{action} can be either: a normal function, or a list where the
+@code{car} is a function and the @code{cdr} is the list of arguments, or
 a form to be @code{eval}ed.
+
+
+@node Compatibility
+@chapter Compatibility
+@cindex compatibility
+
+Message uses virtually only its own variables---older @code{mail-}
+variables aren't consulted.  To force Message to take those variables
+into account, you can put the following in your @code{.emacs} file:
+
+@lisp
+(require 'messcompat)
+@end lisp
+
+This will initialize many Message variables from the values in the
+corresponding mail variables.
+
+
 
 @node Index
 @chapter Index

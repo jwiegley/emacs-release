@@ -24,6 +24,8 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 #endif
 
+#include <paths.h>
+
 #include <stdio.h>
 
 #if 1 /* I'd really appreciate it if this code could go away...  -JimB */
@@ -364,8 +366,6 @@ search_magic_path (search_path, class, escaped_suffix, suffix)
 
 /* Producing databases for individual sources.  */
 
-#define X_DEFAULT_SEARCH_PATH "/usr/lib/X11/%L/%T/%N%C%S:/usr/lib/X11/%l/%T/%N%C%S:/usr/lib/X11/%T/%N%C%S:/usr/lib/X11/%L/%T/%N%S:/usr/lib/X11/%l/%T/%N%S:/usr/lib/X11/%T/%N%S"
-
 static XrmDatabase
 get_system_app (class)
      char *class;
@@ -374,7 +374,7 @@ get_system_app (class)
   char *path;
 
   path = getenv ("XFILESEARCHPATH");
-  if (! path) path = X_DEFAULT_SEARCH_PATH;
+  if (! path) path = PATH_X_DEFAULTS;
 
   path = search_magic_path (path, class, 0, 0);
   if (path)
@@ -403,6 +403,7 @@ get_user_app (class)
 {
   char *path;
   char *file = 0;
+  char *free_it = 0;
 
   /* Check for XUSERFILESEARCHPATH.  It is a path of complete file
      names, not directories.  */
@@ -417,16 +418,20 @@ get_user_app (class)
       
       /* Check in the home directory.  This is a bit of a hack; let's
 	 hope one's home directory doesn't contain any %-escapes.  */
-      || (path = gethomedir (),
-	  ((file = search_magic_path (path, class, "%L/%N", 0))
-	   || (file = search_magic_path (path, class, "%N", 0)))))
+      || (free_it = gethomedir (),
+	  ((file = search_magic_path (free_it, class, "%L/%N", 0))
+	   || (file = search_magic_path (free_it, class, "%N", 0)))))
     {
       XrmDatabase db = XrmGetFileDatabase (file);
       free (file);
+      if (free_it)
+	free (free_it);
       return db;
     }
-  else
-    return NULL;
+
+  if (free_it)
+    free (free_it);
+  return NULL;
 }
 
 

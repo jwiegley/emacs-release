@@ -1,6 +1,6 @@
 ;;; ispell.el --- spell checking using Ispell
 
-;; Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1995, 1997 Free Software Foundation, Inc.
 
 ;; Authors         : Ken Stevens <k.stevens@ieee.org>
 ;; Last Modified On: Tue Jun 13 12:05:28 EDT 1995
@@ -212,7 +212,7 @@
 ;; lookup-words rehacked to use call-process (Jamie).
 ;; ispell-complete-word rehacked to be compatible with the rest of the
 ;; system for word searching and to include multiple wildcards,
-;; and it's own dictionary.
+;; and its own dictionary.
 ;; query-replace capability added.  New options 'X', 'R', and 'A'.
 ;; buffer-local modes for dictionary, word-spelling, and formatter-parsing.
 ;; Many random bugs, like commented comments being skipped, fix to
@@ -315,32 +315,47 @@
 
 ;;; Code:
 
-(defvar ispell-highlight-p t
-  "*Highlight spelling errors when non-nil.")
+(defgroup ispell nil
+  "Spell checking using ispell"
+  :group 'processes)
 
-(defvar ispell-highlight-face 'highlight
+
+(defcustom ispell-highlight-p t
+  "*Highlight spelling errors when non-nil."
+  :type 'boolean
+  :group 'ispell)
+
+(defcustom ispell-highlight-face 'highlight
   "*The face used for Ispell highlighting.  For Emacses with overlays.
 Possible values are `highlight', `modeline', `secondary-selection',
 `region', and `underline'.
 This variable can be set by the user to whatever face they desire.
 It's most convenient if the cursor color and highlight color are
-slightly different.")
+slightly different."
+  :type 'face
+  :group 'ispell)
 
-(defvar ispell-check-comments t
-  "*If nil, don't check spelling of comments.")
+(defcustom ispell-check-comments t
+  "*If nil, don't check spelling of comments."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-query-replace-choices nil
+(defcustom ispell-query-replace-choices nil
   "*Corrections made throughout region when non-nil.
-Uses `query-replace' (\\[query-replace]) for corrections.")
+Uses `query-replace' (\\[query-replace]) for corrections."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-skip-tib nil
+(defcustom ispell-skip-tib nil
   "*Does not spell check `tib' bibliography references when non-nil.
 Skips any text between strings matching regular expressions
 `ispell-tib-ref-beginning' and `ispell-tib-ref-end'.
 
 TeX users beware:  Any field starting with [. will skip until a .] -- even
 your whole buffer -- unless you set `ispell-skip-tib' to nil.  That includes
-a [.5mm] type of number....")
+a [.5mm] type of number...."
+  :type 'boolean
+  :group 'ispell)
 
 (defvar ispell-tib-ref-beginning "[[<]\\."
   "Regexp matching the beginning of a Tib reference.")
@@ -348,18 +363,24 @@ a [.5mm] type of number....")
 (defvar ispell-tib-ref-end "\\.[]>]"
   "Regexp matching the end of a Tib reference.")
 
-(defvar ispell-keep-choices-win t
+(defcustom ispell-keep-choices-win t
   "*When not nil, the `*Choices*' window remains for spelling session.
-This minimizes redisplay thrashing.")
+This minimizes redisplay thrashing."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-choices-win-default-height 2
+(defcustom ispell-choices-win-default-height 2
   "*The default size of the `*Choices*' window, including status line.
-Must be greater than 1.")
+Must be greater than 1."
+  :type 'integer
+  :group 'ispell)
 
-(defvar ispell-program-name "ispell"
-  "Program invoked by \\[ispell-word] and \\[ispell-region] commands.")
+(defcustom ispell-program-name "ispell"
+  "Program invoked by \\[ispell-word] and \\[ispell-region] commands."
+  :type 'string
+  :group 'ispell)
 
-(defvar ispell-alternate-dictionary
+(defcustom ispell-alternate-dictionary
   (cond ((file-exists-p "/usr/dict/web2") "/usr/dict/web2")
 	((file-exists-p "/usr/share/dict/web2") "/usr/share/dict/web2")
 	((file-exists-p "/usr/dict/words") "/usr/dict/words")
@@ -367,10 +388,14 @@ Must be greater than 1.")
 	((file-exists-p "/usr/share/dict/words") "/usr/share/dict/words")
 	((file-exists-p "/sys/dict") "/sys/dict")
 	(t "/usr/dict/words"))
-  "*Alternate dictionary for spelling help.")
+  "*Alternate dictionary for spelling help."
+  :type 'file
+  :group 'ispell)
 
-(defvar ispell-complete-word-dict ispell-alternate-dictionary
-  "*Dictionary used for word completion.")
+(defcustom ispell-complete-word-dict ispell-alternate-dictionary
+  "*Dictionary used for word completion."
+  :type 'file
+  :group 'ispell)
 
 (defvar ispell-grep-command "egrep"
   "Name of the grep command for search processes.")
@@ -384,12 +409,16 @@ Some machines (like the NeXT) don't support \"-i\"")
   "Name of the look command for search processes.
 This must be an absolute file name.")
 
-(defvar ispell-look-p (file-exists-p ispell-look-command)
+(defcustom ispell-look-p (file-exists-p ispell-look-command)
   "*Non-nil means use `look' rather than `grep'.
-Default is based on whether `look' seems to be available.")
+Default is based on whether `look' seems to be available."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-have-new-look nil
-  "*Non-nil means use the `-r' option (regexp) when running `look'.")
+(defcustom ispell-have-new-look nil
+  "*Non-nil means use the `-r' option (regexp) when running `look'."
+  :type 'boolean
+  :group 'ispell)
 
 (defvar ispell-look-options (if ispell-have-new-look "-dfr" "-df")
   "String of command options for `ispell-look-command'.")
@@ -398,29 +427,42 @@ Default is based on whether `look' seems to be available.")
   "When non-nil, Emacs uses ptys to communicate with Ispell.
 When nil, Emacs uses pipes.")
 
-(defvar ispell-following-word nil
+(defcustom ispell-following-word nil
   "*Non-nil means `ispell-word' checks the word around or after point.
-Otherwise `ispell-word' checks the preceding word.")
+Otherwise `ispell-word' checks the preceding word."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-help-in-bufferp nil
+(defcustom ispell-help-in-bufferp nil
   "*Non-nil means display interactive keymap help in a buffer.
-Otherwise use the minibuffer.")
+Otherwise use the minibuffer."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-quietly nil
-  "*Non-nil means suppress messages in `ispell-word'.")
+(defcustom ispell-quietly nil
+  "*Non-nil means suppress messages in `ispell-word'."
+  :type 'boolean
+  :group 'ispell)
 
-(defvar ispell-format-word (function upcase)
+(defcustom ispell-format-word (function upcase)
   "*Formatting function for displaying word being spell checked.
-The function must take one string argument and return a string.")
+The function must take one string argument and return a string."
+  :type 'function
+  :group 'ispell)
 
 ;;;###autoload
-(defvar ispell-personal-dictionary nil
+(defcustom ispell-personal-dictionary nil
   "*File name of your personal spelling dictionary, or nil.
 If nil, the default personal dictionary, \"~/.ispell_DICTNAME\" is used,
-where DICTNAME is the name of your default dictionary.")
+where DICTNAME is the name of your default dictionary."
+  :type '(choice file
+		 (const :tag "default" nil))
+  :group 'ispell)
 
-(defvar ispell-silently-savep nil
-  "*When non-nil, save the personal dictionary without confirmation.")
+(defcustom ispell-silently-savep nil
+  "*When non-nil, save the personal dictionary without confirmation."
+  :type 'boolean
+  :group 'ispell)
 
 ;;; This variable contains the current dictionary being used if the ispell
 ;;; process is running.  Otherwise it contains the global default.
@@ -434,11 +476,13 @@ commands in the Emacs session, or else use the \\[ispell-change-dictionary]
 command to change it.  Otherwise, this variable only takes effect in a newly
 started Ispell process.")
 
-(defvar ispell-extra-args nil
+(defcustom ispell-extra-args nil
   "*If non-nil, a list of extra switches to pass to the Ispell program.
 For example, '(\"-W\" \"3\") to cause it to accept all 1-3 character
 words as correct.  See also `ispell-dictionary-alist', which may be used
-for language-specific arguments.")
+for language-specific arguments."
+  :type '(repeat string)
+  :group 'ispell)
 
 ;;; The preparation of the menu bar menu must be autoloaded
 ;;; because otherwise this file gets autoloaded every time Emacs starts
@@ -448,24 +492,26 @@ for language-specific arguments.")
 (defvar ispell-dictionary-alist-1	; sk  9-Aug-1991 18:28
   '((nil				; default (english.aff)
      "[A-Za-z]" "[^A-Za-z]" "[']" nil ("-B") nil)
-    ("english"				; make english explicitly selectable
+    ("english"				; make English explicitly selectable
      "[A-Za-z]" "[^A-Za-z]" "[']" nil ("-B") nil)
-    ("british"				; british version
+    ("british"				; British version
      "[A-Za-z]" "[^A-Za-z]" "[']" nil ("-B" "-d" "british") nil)
+    ("american"				; American version
+     "[A-Za-z]" "[^A-Za-z]" "[']" nil ("-B" "-d" "american") nil)
     ("deutsch"				; deutsch.aff
      "[a-zA-Z\"]" "[^a-zA-Z\"]" "[']" t ("-C") "~tex")
     ("deutsch8"
      "[a-zA-Z\304\326\334\344\366\337\374]"
      "[^a-zA-Z\304\326\334\344\366\337\374]"
-     "[']" t ("-C" "-d" "deutsch") "~latin1")
+     "[']" t ("-C" "-d" "deutsch") "~latin1" iso-latin-1)
     ("nederlands"				; nederlands.aff
      "[A-Za-z\300-\305\307\310-\317\322-\326\331-\334\340-\345\347\350-\357\361\362-\366\371-\374]"
      "[^A-Za-z\300-\305\307\310-\317\322-\326\331-\334\340-\345\347\350-\357\361\362-\366\371-\374]"
-     "[']" t ("-C") nil)
+     "[']" t ("-C") nil iso-latin-1)
     ("nederlands8"				; dutch8.aff
      "[A-Za-z\300-\305\307\310-\317\322-\326\331-\334\340-\345\347\350-\357\361\362-\366\371-\374]"
      "[^A-Za-z\300-\305\307\310-\317\322-\326\331-\334\340-\345\347\350-\357\361\362-\366\371-\374]"
-     "[']" t ("-C") nil)))
+     "[']" t ("-C") nil iso-latin-1)))
 
 ;;;###autoload
 (defvar ispell-dictionary-alist-2
@@ -474,20 +520,21 @@ for language-specific arguments.")
      "[']" nil ("-C") nil)
     ("svenska8"				;8 bit swedish mode
      "[A-Za-z\345\344\366\305\304\366]"  "[^A-Za-z\345\344\366\305\304\366]"
-     "[']" nil ("-C" "-d" "svenska") "~list") ; Add `"-T" "list"' instead?
+     "[']" nil ("-C" "-d" "svenska") "~list" ; Add `"-T" "list"' instead?
+     iso-latin-1)
     ("francais7"
      "[A-Za-z]" "[^A-Za-z]" "[`'^---]" t nil nil)
     ("francais"				; francais.aff
      "[A-Za-z\300\302\306\307\310\311\312\313\316\317\324\331\333\334\340\342\347\350\351\352\353\356\357\364\371\373\374]"
      "[^A-Za-z\300\302\306\307\310\311\312\313\316\317\324\331\333\334\340\342\347\350\351\352\353\356\357\364\371\373\374]"
-     "[---']" t nil "~list")
+     "[---']" t nil "~list" iso-latin-1)
     ("francais-tex"			; francais.aff
      "[A-Za-z\300\302\306\307\310\311\312\313\316\317\324\331\333\334\340\342\347\350\351\352\353\356\357\364\371\373\374\\]"
      "[^A-Za-z\300\302\306\307\310\311\312\313\316\317\324\331\333\334\340\342\347\350\351\352\353\356\357\364\371\373\374\\]"
-     "[---'^`\"]" t nil "~tex")
+     "[---'^`\"]" t nil "~tex" iso-latin-1)
     ("dansk"				; dansk.aff
      "[A-Z\306\330\305a-z\346\370\345]" "[^A-Z\306\330\305a-z\346\370\345]"
-     "" nil ("-C") nil)
+      "[']" nil ("-C") nil iso-latin-1)
     ))
 
 
@@ -511,15 +558,19 @@ word.
 
 NOT-CASECHARS is the opposite regexp of CASECHARS.
 
-OTHERCHARS is a regular expression of other characters that are valid
-in word constructs.  Otherchars cannot be adjacent to each other in a
-word, nor can they begin or end a word.  This implies we can't check
-\"Stevens'\" as a correct possessive and other correct formations.
-
+OTHERCHARS are characters in the NOT-CASECHARS set but which can be used to
+construct words in some special way.  If OTHERCHARS characters follow and
+precede characters from CASECHARS, they are parsed as part of a word,
+otherwise they become word-breaks.  As an example in English, assume the
+set ['] (as a regular expression) for OTHERCHARS.  Then \"they're\" and
+\"Steven's\" are parsed as single words including the \"'\" character, but
+\"Stevens'\" does not include the quote character as part of the word.
+If you want OTHERCHARS to be empty, use nil.
 Hint: regexp syntax requires the hyphen to be declared first here.
 
-MANY-OTHERCHARS-P is non-nil if many otherchars are to be allowed in a
-word instead of only one.
+MANY-OTHERCHARS-P is non-nil when multiple OTHERCHARS are allowed in a word.
+Otherwise only a single OTHERCHARS character is allowed to be part of any
+single word.
 
 ISPELL-ARGS is a list of additional arguments passed to the ispell
 subprocess.
@@ -657,18 +708,30 @@ language.aff file \(e.g., english.aff\).")
 (defvar ispell-offset 1
   "Offset that maps protocol differences between ispell 3.1 versions.")
 
+(defun ispell-decode-string (str)
+  (let (coding-system)
+    (if (and enable-multibyte-characters
+	     (setq coding-system (ispell-get-coding-system)))
+	(decode-coding-string str coding-system)
+    str)))
+
 (defun ispell-get-casechars ()
-  (nth 1 (assoc ispell-dictionary ispell-dictionary-alist)))
+  (ispell-decode-string
+   (nth 1 (assoc ispell-dictionary ispell-dictionary-alist))))
 (defun ispell-get-not-casechars ()
-  (nth 2 (assoc ispell-dictionary ispell-dictionary-alist)))
+  (ispell-decode-string
+   (nth 2 (assoc ispell-dictionary ispell-dictionary-alist))))
 (defun ispell-get-otherchars ()
-  (nth 3 (assoc ispell-dictionary ispell-dictionary-alist)))
+  (ispell-decode-string
+   (nth 3 (assoc ispell-dictionary ispell-dictionary-alist))))
 (defun ispell-get-many-otherchars-p ()
   (nth 4 (assoc ispell-dictionary ispell-dictionary-alist)))
 (defun ispell-get-ispell-args ()
   (nth 5 (assoc ispell-dictionary ispell-dictionary-alist)))
 (defun ispell-get-extended-character-mode ()
   (nth 6 (assoc ispell-dictionary ispell-dictionary-alist)))
+(defun ispell-get-coding-system ()
+  (nth 7 (assoc ispell-dictionary ispell-dictionary-alist)))
 
 (defvar ispell-process nil
   "The process object for Ispell.")
@@ -974,6 +1037,8 @@ used."
 				ispell-choices-win-default-height))
 	(command-characters '( ?  ?i ?a ?A ?r ?R ?? ?x ?X ?q ?l ?u ?m ))
 	(skipped 0)
+	(window (selected-window))
+	(dedicated (window-dedicated-p (selected-window)))
 	char num result textwin highlighted)
 
     ;; setup the *Choices* buffer with valid data.
@@ -1058,8 +1123,9 @@ used."
 		result
 		(progn
 		  (undo-boundary)
-		  (message (concat "C-h or ? for more options; SPC to leave "
-				   "unchanged, Character to replace word"))
+		  (let (message-log-max)
+		    (message (concat "C-h or ? for more options; SPC to leave "
+				     "unchanged, Character to replace word")))
 		  (let ((inhibit-quit t))
 		    (setq char (if (fboundp 'read-char-exclusive)
 				   (read-char-exclusive)
@@ -1200,7 +1266,8 @@ used."
       (if ispell-highlight-p		; unhighlight
 	  (save-window-excursion
 	    (select-window textwin)
-	    (ispell-highlight-spelling-error start end))))))
+	    (ispell-highlight-spelling-error start end)))
+      (set-window-dedicated-p window dedicated))))
 
 
 ;;;###autoload
@@ -1434,6 +1501,12 @@ scrolling the current window.  Leave the new window selected."
       (if (string-match "19\.9.*Lucid" (emacs-version))
 	  (setq height (1+ height)))
       (split-window nil height)
+      ;; The lower of the two windows is the logical successor
+      ;; of the original window, so move the dedicated flag to there.
+      ;; The new upper window should not be dedicated.
+      (set-window-dedicated-p (next-window)
+			      (window-dedicated-p (selected-window)))
+      (set-window-dedicated-p (selected-window) nil)
       (set-window-start (next-window) top))))
 
 
@@ -1555,6 +1628,9 @@ scrolling the current window.  Leave the new window selected."
 	  ispell-filter-continue nil
 	  ispell-process-directory default-directory)
     (set-process-filter ispell-process 'ispell-filter)
+    (if (and enable-multibyte-characters
+	     ispell-dictionary)
+	(set-process-coding-system ispell-process (ispell-get-coding-system)))
     (accept-process-output ispell-process) ; Get version ID line
     (cond ((null ispell-filter)
 	   (error "%s did not output version line" ispell-program-name))
@@ -1764,8 +1840,20 @@ With prefix argument, set the default directory."
 		      (while (and (not ispell-quit) ispell-filter)
 			(setq poss (ispell-parse-output (car ispell-filter)))
 			(if (listp poss) ; spelling error occurred.
-			    (let* ((word-start (+ start offset-change
-						  (car (cdr poss))))
+			    (let* ((word-start
+				    (if (and enable-multibyte-characters
+					     (ispell-get-coding-system))
+					;; OFFSET returned by ispell
+					;; counts non-ASCII chars as
+					;; one, so just adding OFFSET
+					;; to START will cause an
+					;; error.
+					(save-excursion
+					  (goto-char (+ start offset-change))
+					  (forward-char (car (cdr poss)))
+					  (point))
+				      (+ start offset-change
+					 (car (cdr poss)))))
 				   (word-end (+ word-start
 						(length (car poss))))
 				   replace)
@@ -1862,8 +1950,9 @@ With prefix argument, set the default directory."
 					offset-change (+ offset-change change)
 					end (+ end change)))))
 			      (if (not ispell-quit)
-				  (message "Continuing spelling check using %s dictionary..."
-					   (or ispell-dictionary "default")))
+				  (let (message-log-max)
+				    (message "Continuing spelling check using %s dictionary..."
+					     (or ispell-dictionary "default"))))
 			      (sit-for 0)))
 			;; finished with line!
 			(setq ispell-filter (cdr ispell-filter)))))
@@ -2057,8 +2146,9 @@ warns you if the previous word is incorrectly spelled."
                ;; Matches reporter.el bug report
                "^current state:\n==============\n"
 	       ;; Matches "----------------- cut here"
-	       ;; and "------- Start of forwarded message"
-	       "^[-=_]+\\s ?\\(cut here\\|Start of forwarded message\\)")
+               ;; and "------- Start of forwarded message",
+	       ;; or either one with "- " in front.
+               "^\\(- \\)?[-=_]+\\s ?\\(cut here\\|\\(Start of \\)?forwarded message\\)")
 	     "\\|")
   "*End of text which will be checked in ispell-message.
 If it is a string, limit at first occurrence of that regular expression.
@@ -2389,7 +2479,7 @@ Both should not be used to define a buffer-local dictionary."
 ;;; Local Variables:
 ;;; mode: emacs-lisp
 ;;; comment-column: 40
-;;; ispell-local-dictionary: "english"
+;;; ispell-local-dictionary: "american"
 ;;; End:
 
 

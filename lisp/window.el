@@ -142,11 +142,13 @@ even if it is inactive."
 		  'nomini)))
 
 ;;; I think this should be the default; I think people will prefer it--rms.
-(defvar split-window-keep-point t
+(defcustom split-window-keep-point t
   "*If non-nil, split windows keeps the original point in both children.
 This is often more convenient for editing.
 If nil, adjust point in each of the two windows to minimize redisplay.
-This is convenient on slow terminals, but point can move strangely.")
+This is convenient on slow terminals, but point can move strangely."
+  :type 'boolean
+  :group 'windows)
 
 (defun split-window-vertically (&optional arg)
   "Split current window into two windows, one above the other.
@@ -194,6 +196,16 @@ new mode line."
                (progn
                  (set-window-point new-w old-point)
                  (select-window new-w)))))
+    (split-window-save-restore-data new-w old-w)))
+
+(defun split-window-save-restore-data (new-w old-w)
+  (save-excursion
+    (set-buffer (window-buffer))
+    (if view-mode
+	(let ((old-info (assq old-w view-return-to-alist)))
+	  (setq view-return-to-alist
+		(cons (cons new-w (cons (and old-info (car (cdr old-info))) t))
+		      view-return-to-alist))))
     new-w))
 
 (defun split-window-horizontally (&optional arg)
@@ -202,10 +214,11 @@ This window becomes the leftmost of the two, and gets ARG columns.
 Negative arg means select the size of the rightmost window instead.
 No arg means split equally."
   (interactive "P")
-  (let ((size (and arg (prefix-numeric-value arg))))
+  (let ((old-w (selected-window))
+	(size (and arg (prefix-numeric-value arg))))
     (and size (< size 0)
 	 (setq size (+ (window-width) size)))
-    (split-window nil size t)))
+    (split-window-save-restore-data (split-window nil size t) old-w)))
 
 (defun enlarge-window-horizontally (arg)
   "Make current window ARG columns wider."
@@ -226,63 +239,60 @@ or if the window is not the full width of the frame,
 or if the window is the only window of its frame."
   (interactive)
   (or window (setq window (selected-window)))
-  (save-excursion
-    (set-buffer (window-buffer window))
-    (let* ((w (selected-window))	;save-window-excursion can't win
-	   (buffer-file-name buffer-file-name)
-	   (p (point))
-	   (n 0)
-	   (ignore-final-newline
-	    ;; If buffer ends with a newline, ignore it when counting height
-	    ;; unless point is after it.
-	    (and (not (eobp))
-		 (eq ?\n (char-after (1- (point-max))))))
-	   (buffer-read-only nil)
-	   (modified (buffer-modified-p))
-	   (buffer (current-buffer))
-	   (params (frame-parameters (window-frame window)))
-	   (mini (cdr (assq 'minibuffer params)))
-	   (edges (window-edges (selected-window))))
-      (if (and (< 1 (let ((frame (selected-frame)))
-		      (select-frame (window-frame window))
-		      (unwind-protect
-			  (count-windows)
-			(select-frame frame))))
-	       (= (window-width window) (frame-width (window-frame window)))
-	       (pos-visible-in-window-p (point-min) window)
-	       (not (eq mini 'only))
-	       (or (not mini)
-		   (< (nth 3 edges)
-		      (nth 1 (window-edges mini)))
-		   (> (nth 1 edges)
-		      (cdr (assq 'menu-bar-lines params)))))
-	  (unwind-protect
-	      (progn
-		(select-window (or window w))
-		(goto-char (point-min))
-		(while (pos-visible-in-window-p
-			(- (point-max)
-			   (if ignore-final-newline 1 0)))
-		  ;; defeat file locking... don't try this at home, kids!
-		  (setq buffer-file-name nil)
-		  (insert ?\n) (setq n (1+ n)))
-		(if (> n 0)
-		    (shrink-window (min (1- n)
-					(- (window-height)
-					   window-min-height)))))
-	    (delete-region (point-min) (point))
-	    (set-buffer-modified-p modified)
-	    (goto-char p)
-	    (select-window w)
-	    ;; Make sure we unbind buffer-read-only
-	    ;; with the proper current buffer.
-	    (set-buffer buffer))))))
-      
+  (let* ((ignore-final-newline
+	  ;; If buffer ends with a newline, ignore it when counting height
+	  ;; unless point is after it.
+	  (and (not (eobp))
+	       (eq ?\n (char-after (1- (point-max))))))
+	 (params (frame-parameters (window-frame window)))
+	 (mini (cdr (assq 'minibuffer params)))
+	 (edges (window-edges (selected-window))))
+    (if (and (< 1 (save-selected-window
+		    (select-window window)
+		    (count-windows)))
+	     (= (window-width window) (frame-width (window-frame window)))
+	     (pos-visible-in-window-p (point-min) window)
+	     (not (eq mini 'only))
+	     (or (not mini)
+		 (< (nth 3 edges)
+		    (nth 1 (window-edges mini)))
+		 (> (nth 1 edges)
+		    (cdr (assq 'menu-bar-lines params)))))
+	(save-selected-window
+	  (select-window window)
+	  (let (result height)
+	    (save-excursion
+	      (set-buffer (window-buffer window))
+	      (goto-char (point-min))
+	      (setq result
+		    (compute-motion (point-min) '(0 . 0)
+				    (- (point-max)
+				       (if ignore-final-newline 1 0))
+				    (cons 0 (window-height))
+				    (window-width) nil
+				    window))
+	      ;; Get number of screen lines that the text needs.
+	      (setq text-height (+ 1 (nth 2 result)))
+	      ;; Shrink down to that, or as far as we can go.
+	      (if (> (window-height) (1+ text-height))
+		  (shrink-window (- (window-height)
+				    (max (1+ text-height) window-min-height))))))))))
+
+(defun kill-buffer-and-window ()
+  "Kill the current buffer and delete the selected window."
+  (interactive)
+  (if (yes-or-no-p (format "Kill buffer `%s'? " (buffer-name)))
+      (let ((buffer (current-buffer)))
+	(delete-window (selected-window))
+	(kill-buffer buffer))
+    (error "Aborted")))
+
 (define-key ctl-x-map "2" 'split-window-vertically)
 (define-key ctl-x-map "3" 'split-window-horizontally)
 (define-key ctl-x-map "}" 'enlarge-window-horizontally)
 (define-key ctl-x-map "{" 'shrink-window-horizontally)
 (define-key ctl-x-map "-" 'shrink-window-if-larger-than-buffer)
 (define-key ctl-x-map "+" 'balance-windows)
+(define-key ctl-x-4-map "0" 'kill-buffer-and-window)
 
 ;;; windows.el ends here

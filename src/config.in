@@ -33,8 +33,11 @@ Boston, MA 02111-1307, USA.  */
    numbers. */
 #undef LISP_FLOAT_TYPE
 
-/* Define GNU_MALLOC if you want to use the *new* GNU memory allocator. */
+/* Define GNU_MALLOC if you want to use the GNU memory allocator. */
 #undef GNU_MALLOC
+
+/* Define if you are using the GNU C Library. */
+#undef DOUG_LEA_MALLOC
 
 /* Define REL_ALLOC if you want to use the relocating allocator for
    buffer space. */
@@ -53,6 +56,9 @@ Boston, MA 02111-1307, USA.  */
 /* Define this if you're using XFree386.  */
 #undef HAVE_XFREE386
 
+/* Define this if you have Motif 2.1 or newer.  */
+#undef HAVE_MOTIF_2_1
+
 /* Define HAVE_MENUS if you have mouse menus.
    (This is automatic if you use X, but the option to specify it remains.)
    It is also defined with other window systems that support xmenu.c.  */
@@ -69,9 +75,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* Define if netdb.h declares h_errno.  */
 #undef HAVE_H_ERRNO
-
-/* Nowadays we have frame objects even if we support only ASCII terminals.  */
-#define MULTI_FRAME
 
 /* If we're using any sort of window system, define some consequences.  */
 #ifdef HAVE_X_WINDOWS
@@ -108,6 +111,8 @@ Boston, MA 02111-1307, USA.  */
 
 /* Define to support Kerberos-authenticated POP mail retrieval.  */
 #undef KERBEROS
+/* Define to use Kerberos 5 instead of Kerberos 4 */
+#undef KERBEROS5
 
 /* Define to support using a Hesiod database to find the POP server.  */
 #undef HESIOD
@@ -123,6 +128,9 @@ Boston, MA 02111-1307, USA.  */
 #undef HAVE_UNISTD_H
 #undef HAVE_UTIME_H
 #undef HAVE_LINUX_VERSION_H
+#undef HAVE_SYS_SYSTEMINFO_H
+#undef HAVE_TERMIOS_H
+#undef HAVE_LIMITS_H
 #undef STDC_HEADERS
 #undef TIME_WITH_SYS_TIME
 
@@ -131,6 +139,30 @@ Boston, MA 02111-1307, USA.  */
 #undef HAVE_LIBRESOLV
 #undef HAVE_LIBXMU
 #undef HAVE_LIBNCURSES
+
+/* movemail Kerberos support */
+/* libraries */
+#undef HAVE_LIBKRB
+#undef HAVE_LIBKRB4
+#undef HAVE_LIBDES
+#undef HAVE_LIBDES425
+#undef HAVE_LIBKRB5
+#undef HAVE_LIBCRYPTO
+#undef HAVE_LIBCOM_ERR
+/* header files */
+#undef HAVE_KRB5_H
+#undef HAVE_DES_H
+#undef HAVE_KRB_H
+#undef HAVE_KERBEROSIV_DES_H
+#undef HAVE_KERBEROSIV_KRB_H
+#undef HAVE_KERBEROS_DES_H
+#undef HAVE_KERBEROS_KRB_H
+#undef HAVE_COM_ERR_H
+
+/* Mail-file locking */
+#undef HAVE_LIBMAIL
+#undef HAVE_MAILLOCK_H
+#undef HAVE_TOUCHLOCK
 
 #undef HAVE_ALLOCA_H
 
@@ -142,6 +174,7 @@ Boston, MA 02111-1307, USA.  */
 #undef GETTIMEOFDAY_ONE_ARGUMENT
 #endif
 #undef HAVE_GETHOSTNAME
+#undef HAVE_GETDOMAINNAME
 #undef HAVE_DUP2
 #undef HAVE_RENAME
 #undef HAVE_CLOSEDIR
@@ -166,6 +199,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef HAVE_MKDIR
 #undef HAVE_RMDIR
+#undef HAVE_SYSINFO
 #undef HAVE_RANDOM
 #undef HAVE_LRAND48
 #undef HAVE_BCOPY
@@ -173,6 +207,8 @@ Boston, MA 02111-1307, USA.  */
 #undef HAVE_LOGB
 #undef HAVE_FREXP
 #undef HAVE_FMOD
+#undef HAVE_RINT
+#undef HAVE_CBRT
 #undef HAVE_FTIME
 #undef HAVE_RES_INIT /* For -lresolv on Suns.  */
 #undef HAVE_SETSID
@@ -183,6 +219,12 @@ Boston, MA 02111-1307, USA.  */
 #undef HAVE_GETPAGESIZE
 #undef HAVE_TZSET
 #undef HAVE_SETLOCALE
+#undef HAVE_UTIMES
+#undef HAVE_SETRLIMIT
+#undef HAVE_SETPGID
+#undef HAVE_GETCWD
+#undef HAVE_SHUTDOWN
+
 #undef LOCALTIME_CACHE
 #undef HAVE_INET_SOCKETS
 
@@ -191,8 +233,6 @@ Boston, MA 02111-1307, USA.  */
 /* Define if you have the ANSI `strerror' function.
    Otherwise you must have the variable `char *sys_errlist[]'.  */
 #undef HAVE_STRERROR
-
-#undef HAVE_UTIMES
 
 /* Define if `sys_siglist' is declared by <signal.h>.  */
 #undef SYS_SIGLIST_DECLARED
@@ -306,6 +346,12 @@ Boston, MA 02111-1307, USA.  */
 #ifdef emacs /* Don't do this for lib-src.  */
 /* Tell regex.c to use a type compatible with Emacs.  */
 #define RE_TRANSLATE_TYPE Lisp_Object *
+#define RE_TRANSLATE(TBL, C) XINT ((TBL)[C])
+#endif
+
+/* Avoid link-time collision with system mktime if we will use our own.  */
+#if ! HAVE_MKTIME || BROKEN_MKTIME
+#define mktime emacs_mktime
 #endif
 
 /* The rest of the code currently tests the CPP symbol BSTRING.

@@ -1,5 +1,5 @@
-This is Info file ../info/mh-e, produced by Makeinfo-1.63 from the
-input file mh-e.texi.
+This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
+the input file mh-e.texi.
 
    This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
 Emacs Interface to MH', for mh-e, Version 5.0.2.
@@ -88,7 +88,7 @@ first one, `C-o' (`mh-write-msg-to-file'), writes a message to a file
 If the file already exists, the message is appended to it.  You can
 also write the message to the file without the header by specifying a
 prefix argument (such as `C-u C-o /tmp/foobar RET').  Subsequent writes
-to the same file can be made with the `!' command.
+to the same file can be made with the `!'  command.
 
    You can also pipe the message through a Unix shell command with the
 `|' (`mh-pipe-msg') command.  You are prompted for the Unix command
@@ -398,7 +398,7 @@ prefix like `my-' or your initials.
 
    ---------- Footnotes ----------
 
-   (1)  Perhaps you can find the online version of *Note The GNU Emacs
+   (1) Perhaps you can find the online version of *Note The GNU Emacs
 Lisp Reference Manual: (elisp)Top.  If not, you can order a printed
 manual, which has the desirable side-effect of helping to support the
 Free Software Foundation which made all this great software available.
@@ -570,7 +570,7 @@ bindings, for example:
 
    ---------- Footnotes ----------
 
-   (1)  Stephen Gildea's favorite binding is `(global-set-key "\C-cr"
+   (1) Stephen Gildea's favorite binding is `(global-set-key "\C-cr"
 'mh-rmail)'.
 
 
@@ -816,8 +816,8 @@ to `nil'.
 
    ---------- Footnotes ----------
 
-   (1)  To see which options your copy of MH was compiled with, use
-`M-x mh-version' (*Note Miscellaneous::).
+   (1) To see which options your copy of MH was compiled with, use `M-x
+mh-version' (*Note Miscellaneous::).
 
 
 File: mh-e,  Node: Customizing Old Drafts,  Prev: Customizing Redistributing,  Up: Customizing Sending
@@ -935,7 +935,7 @@ your screen for your reply.
 
    ---------- Footnotes ----------
 
-   (1)  *Supercite* is an example of a full-bodied, full-featured
+   (1) *Supercite* is an example of a full-bodied, full-featured
 citation package.  It is in Emacs versions 19.15 and later, and can be
 found via anonymous `ftp' on `archive.cis.ohio-state.edu' in
 `/pub/gnu/emacs/elisp-archive/packages/sc3.1.tar.Z'

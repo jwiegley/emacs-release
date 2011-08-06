@@ -117,7 +117,7 @@ arguments compiles from `load-path'."
        (lambda (d)
 	 (mapcar
 	  (lambda (f) 
-	    (if (and (string-match "^[^=].*\\.el$" f)
+	    (if (and (string-match "^[^=.].*\\.el$" f)
 		     (not (member f processed)))
 		(let (summary keystart keywords)
 		  (setq processed (cons f processed))
@@ -149,7 +149,8 @@ arguments compiles from `load-path'."
 
 (defun finder-compile-keywords-make-dist ()
   "Regenerate `finder-inf.el' for the Emacs distribution."
-  (finder-compile-keywords default-directory))
+  (apply 'finder-compile-keywords command-line-args-left)
+  (kill-emacs))
 
 ;;; Now the retrieval code
 
@@ -171,23 +172,29 @@ arguments compiles from `load-path'."
 (defun finder-list-keywords ()
   "Display descriptions of the keywords in the Finder buffer."
   (interactive)
-  (setq buffer-read-only nil)
-  (erase-buffer)
-  (mapcar
-   (lambda (assoc)
-     (let ((keyword (car assoc)))
-       (insert (symbol-name keyword))
-       (finder-insert-at-column 14 (concat (cdr assoc) "\n"))
-       (cons (symbol-name keyword) keyword)))
-   finder-known-keywords)
-  (goto-char (point-min))
-  (setq finder-headmark (point))
-  (setq buffer-read-only t)
-  (set-buffer-modified-p nil)
-  (balance-windows)
-  (finder-summary))
+  (if (get-buffer "*Finder*")
+      (pop-to-buffer "*Finder*")
+    (pop-to-buffer (set-buffer (get-buffer-create "*Finder*")))
+    (finder-mode)
+    (setq buffer-read-only nil)
+    (erase-buffer)
+    (mapcar
+     (lambda (assoc)
+       (let ((keyword (car assoc)))
+	 (insert (symbol-name keyword))
+	 (finder-insert-at-column 14 (concat (cdr assoc) "\n"))
+	 (cons (symbol-name keyword) keyword)))
+     finder-known-keywords)
+    (goto-char (point-min))
+    (setq finder-headmark (point))
+    (setq buffer-read-only t)
+    (set-buffer-modified-p nil)
+    (balance-windows)
+    (finder-summary)))
 
 (defun finder-list-matches (key)
+  (pop-to-buffer (set-buffer (get-buffer-create "*Finder Category*")))
+  (finder-mode)
   (setq buffer-read-only nil)
   (erase-buffer)
   (let ((id (intern key)))
@@ -261,7 +268,6 @@ arguments compiles from `load-path'."
 (defun finder-by-keyword ()
   "Find packages matching a given keyword."
   (interactive)
-  (finder-mode)
   (finder-list-keywords))
 
 (defun finder-mode ()
@@ -271,9 +277,6 @@ arguments compiles from `load-path'."
 \\[finder-exit]	exit Finder mode and kill the Finder buffer.
 "
   (interactive)
-  (pop-to-buffer "*Finder*")
-  (setq buffer-read-only nil)
-  (erase-buffer)
   (use-local-map finder-mode-map)
   (set-syntax-table emacs-lisp-mode-syntax-table)
   (setq mode-name "Finder")

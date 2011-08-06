@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Programs, Building, Text, Top
 @chapter Editing Programs
@@ -42,34 +42,30 @@ only the lines that are indented less than a specified amount to appear
 on the screen.
 
 @menu
-* Program Modes::     Major modes for editing programs.
-* Lists::             Expressions with balanced parentheses.
-* List Commands::     The commands for working with list and sexps.
-* Defuns::            Each program is made up of separate functions.
-                        There are editing commands to operate on them.
-* Program Indent::    Adjusting indentation to show the nesting.
-* Matching::          Insertion of a close-delimiter flashes matching open.
-* Comments::          Inserting, killing, and aligning comments.
-* Balanced Editing::  Inserting two matching parentheses at once, etc.
-* Symbol Completion:: Completion on symbol names of your program or language.
-* Documentation::     Getting documentation of functions you plan to call.
-* Change Log::        Maintaining a change history for your program.
-* Tags::              Go direct to any function in your program in one
-                        command.  Tags remembers which file it is in.
-* Emerge::	      A convenient way of merging two versions of a program.
-* C Mode::	      Special commands of C, C++, Objective-C and Java modes.
-* Fortran::	      Fortran mode and its special features.
-* Asm Mode::	      Asm mode and its special features.
+* Program Modes::       Major modes for editing programs.
+* Lists::	        Expressions with balanced parentheses.
+* List Commands::       The commands for working with list and sexps.
+* Defuns::	        Each program is made up of separate functions.
+			  There are editing commands to operate on them.
+* Program Indent::      Adjusting indentation to show the nesting.
+* Matching::	        Insertion of a close-delimiter flashes matching open.
+* Comments::	        Inserting, killing, and aligning comments.
+* Balanced Editing::    Inserting two matching parentheses at once, etc.
+* Symbol Completion::   Completion on symbol names of your program or language.
+* Documentation::       Getting documentation of functions you plan to call.
+* Change Log::	        Maintaining a change history for your program.
+* Tags::	        Go direct to any function in your program in one
+			  command.  Tags remembers which file it is in.
+* Emerge::	        A convenient way of merging two versions of a program.
+* C/Java Modes::        Special commands of C, C++, Objective-C and Java modes.
+* Fortran::	        Fortran mode and its special features.
+* Asm Mode::	        Asm mode and its special features.
 @end menu
 
 @node Program Modes
 @section Major Modes for Programming Languages
 
-@cindex Lisp mode
-@cindex Scheme mode
-@cindex C++ mode
-@cindex Objective-C mode
-@cindex Java mode
+@cindex modes for programming languages
 @cindex Perl mode
 @cindex Icon mode
 @cindex Awk mode
@@ -89,12 +85,12 @@ trouble to write.
   There are several forms of Lisp mode, which differ in the way they
 interface to Lisp execution.  @xref{Executing Lisp}.
 
-  Each of the programming language modes defines the @key{TAB} key to run
-an indentation function that knows the indentation conventions of that
-language and updates the current line's indentation accordingly.  For
-example, in C mode @key{TAB} is bound to @code{c-indent-line}.  @key{LFD}
-is normally defined to do @key{RET} followed by @key{TAB}; thus, it too
-indents in a mode-specific fashion.
+  Each of the programming language major modes defines the @key{TAB} key
+to run an indentation function that knows the indentation conventions of
+that language and updates the current line's indentation accordingly.
+For example, in C mode @key{TAB} is bound to @code{c-indent-line}.
+@kbd{C-j} is normally defined to do @key{RET} followed by @key{TAB};
+thus, it too indents in a mode-specific fashion.
 
 @kindex DEL @r{(programming modes)}
 @findex backward-delete-char-untabify
@@ -216,19 +212,18 @@ opposite direction.
 
 @kindex C-M-k
 @findex kill-sexp
-@kindex C-M-@key{DEL}
+@kindex C-M-DEL
 @findex backward-kill-sexp
-  Killing a sexp at a time can be done with @kbd{C-M-k}
-(@code{kill-sexp}) or @kbd{C-M-@key{DEL}} (@code{backward-kill-sexp}).
-@kbd{C-M-k} kills the characters that @kbd{C-M-f} would move over, and
-@kbd{C-M-@key{DEL}} kills the characters that @kbd{C-M-b} would move
-over.
+  Killing a whole sexp can be done with @kbd{C-M-k} (@code{kill-sexp})
+or @kbd{C-M-@key{DEL}} (@code{backward-kill-sexp}).  @kbd{C-M-k} kills
+the characters that @kbd{C-M-f} would move over, and @kbd{C-M-@key{DEL}}
+kills the characters that @kbd{C-M-b} would move over.
 
 @kindex C-M-n
 @kindex C-M-p
 @findex forward-list
 @findex backward-list
-  The @dfn{list commands} move over lists like the sexp commands but skip
+  The @dfn{list commands} move over lists, as the sexp commands do, but skip
 blithely over any number of other kinds of sexps (symbols, strings, etc).
 They are @kbd{C-M-n} (@code{forward-list}) and @kbd{C-M-p}
 (@code{backward-list}).  The main reason they are useful is that they
@@ -247,10 +242,10 @@ positive argument serves as a repeat count; a negative argument reverses
 direction of motion and also requests repetition, so it moves forward and
 up one or more levels.@refill
 
-  To move @emph{down} in list structure, use @kbd{C-M-d} (@code{down-list}).  In Lisp mode,
-where @samp{(} is the only opening delimiter, this is nearly the same as
-searching for a @samp{(}.  An argument specifies the number of levels
-of parentheses to go down.
+  To move @emph{down} in list structure, use @kbd{C-M-d}
+(@code{down-list}).  In Lisp mode, where @samp{(} is the only opening
+delimiter, this is nearly the same as searching for a @samp{(}.  An
+argument specifies the number of levels of parentheses to go down.
 
 @cindex transposition
 @kindex C-M-t
@@ -307,11 +302,12 @@ Put region around whole current or following defun (@code{mark-defun}).
   The commands to move to the beginning and end of the current defun are
 @kbd{C-M-a} (@code{beginning-of-defun}) and @kbd{C-M-e} (@code{end-of-defun}).
 
+@findex c-mark-function
   If you wish to operate on the current defun, use @kbd{C-M-h}
 (@code{mark-defun}) which puts point at the beginning and mark at the end
 of the current or next defun.  For example, this is the easiest way to get
 ready to move the defun to a different place in the text.  In C mode,
-@kbd{C-M-h} runs the function @code{mark-c-function}, which is almost the
+@kbd{C-M-h} runs the function @code{c-mark-function}, which is almost the
 same as @code{mark-defun}; the difference is that it backs up over the
 argument declarations, function name and returned data type so that the
 entire C function is inside the region.  @xref{Marking Objects}.
@@ -319,7 +315,7 @@ entire C function is inside the region.  @xref{Marking Objects}.
   Emacs assumes that any open-parenthesis found in the leftmost column
 is the start of a defun.  Therefore, @strong{never put an
 open-parenthesis at the left margin in a Lisp file unless it is the
-start of a top level list.  Never put an open-brace or other opening
+start of a top-level list.  Never put an open-brace or other opening
 delimiter at the beginning of a line of C code unless it starts the body
 of a function.}  The most likely problem case is when you want an
 opening delimiter at the start of a line inside a string.  To avoid
@@ -354,7 +350,7 @@ inside a single parenthetical grouping.
 @end menu
 
   Emacs also provides a Lisp pretty-printer in the library @code{pp}.
-This program prints a Lisp object with indentation chosen to look nice.
+This program reformats a Lisp object with indentation chosen to look nice.
 
 @node Basic Indent
 @subsection Basic Program Indentation Commands
@@ -363,7 +359,7 @@ This program prints a Lisp object with indentation chosen to look nice.
 @table @kbd
 @item @key{TAB}
 Adjust indentation of current line.
-@item @key{LFD}
+@item C-j
 Equivalent to @key{RET} followed by @key{TAB} (@code{newline-and-indent}).
 @end table
 
@@ -375,7 +371,7 @@ the correct indentation as determined from the previous lines.  The
 function that @key{TAB} runs depends on the major mode; it is @code{lisp-indent-line}
 in Lisp mode, @code{c-indent-line} in C mode, etc.  These functions
 understand different syntaxes for different languages, but they all do
-about the same thing.  @key{TAB} in any programming language major mode
+about the same thing.  @key{TAB} in any programming-language major mode
 inserts or deletes whitespace at the beginning of the current line,
 independent of where point is in the line.  If point is inside the
 whitespace at the beginning of the line, @key{TAB} leaves it at the end of
@@ -384,11 +380,11 @@ the characters around it.
 
   Use @kbd{C-q @key{TAB}} to insert a tab at point.
 
-@kindex LFD
+@kindex C-j
 @findex newline-and-indent
-  When entering lines of new code, use @key{LFD} (@code{newline-and-indent}),
-which is equivalent to a @key{RET} followed by a @key{TAB}.  @key{LFD} creates
-a blank line, and then gives it the appropriate indentation.
+  When entering lines of new code, use @kbd{C-j} (@code{newline-and-indent}),
+which is equivalent to a @key{RET} followed by a @key{TAB}.  @kbd{C-j} creates
+a blank line and then gives it the appropriate indentation.
 
   @key{TAB} indents the second and following lines of the body of a
 parenthetical grouping each under the preceding one; therefore, if you
@@ -424,10 +420,9 @@ Re-indent all lines in the region (@code{indent-region}).
 
 @kindex C-M-q
 @findex indent-sexp
-@findex indent-c-exp
   You can re-indent the contents of a single list by positioning point
 before the beginning of it and typing @kbd{C-M-q} (@code{indent-sexp} in
-Lisp mode, @code{indent-c-exp} in C mode; also bound to other suitable
+Lisp mode, @code{c-indent-exp} in C mode; also bound to other suitable
 commands in other modes).  The indentation of the line the sexp starts on
 is not changed; therefore, only the relative indentation within the list,
 and not its position, is changed.  To correct the position as well, type a
@@ -526,13 +521,13 @@ lines until the end of the list.
 
 @table @code
 @item C-c C-q
-@kindex C-c C-q
+@kindex C-c C-q @r{(C mode)}
 @findex c-indent-defun
 Reindent the current top-level function definition or aggregate type
 declaration (@code{c-indent-defun}).
 
 @item C-M-q
-@kindex C-M-q
+@kindex C-M-q @r{(C mode)}
 @findex c-indent-exp
 Reindent each line in the balanced expression that follows point
 (@code{c-indent-exp}).  A prefix argument inhibits error checking and
@@ -587,15 +582,16 @@ indentation offset which you can customize.
 
 @node Syntactic Analysis
 @subsubsection Step 1---Syntactic Analysis
-@cindex Syntactic Analysis
+@cindex syntactic analysis
 
   In the first step, the C indentation mechanism looks at the line you
 are currently indenting and determines the syntactic components of the
 construct on that line.  It builds a list of these syntactic components,
 where each component on the list contains a @dfn{syntactic symbol} and a
 relative buffer position.  Syntactic symbols describe grammatical
-elements such as @var{statement}, @var{substatement}, @var{class-open},
-@var{class-close}, @var{knr-argdecl}, etc.
+elements, for example @code{statement} and @code{substatement}; others
+describe locations amidst grammatical elements, for example
+@code{class-open} and @code{knr-argdecl}.
 
   Conceptually, a line of C code is always indented relative to the
 indentation of some line higher up in the buffer.  This is represented
@@ -664,12 +660,13 @@ statements.
 @cindex syntactic component
 @cindex syntactic symbol
 @vindex c-syntactic-context
-  After a line has been analyzed syntactically for indentation, the
-global variable @code{c-syntactic-context} contains a list that
-describes the results.  Each element in this list is a a @dfn{syntactic
-component}: a cons cell containing a syntactic symbol and (optionally)
-its corresponding buffer position.  There may be several elements in a
-component list; typically only one element has a buffer position.
+  Within the C indentation commands, after a line has been analyzed
+syntactically for indentation, the variable @code{c-syntactic-context}
+contains a list that describes the results.  Each element in this list
+is a a @dfn{syntactic component}: a cons cell containing a syntactic
+symbol and (optionally) its corresponding buffer position.  There may be
+several elements in a component list; typically only one element has a
+buffer position.
 
 @node Indentation Calculation
 @subsubsection  Step 2---Indentation Calculation
@@ -678,8 +675,7 @@ component list; typically only one element has a buffer position.
   The C indentation mechanism calculates the indentation for the current
 line using the list of syntactic components, @code{c-syntactic-context},
 derived from syntactic analysis.  Each component is a cons cell that
-contains a syntactic symbol and may also contain a pointer to a location
-in the buffer.
+contains a syntactic symbol and may also contain a buffer position.
 
   Each component contributes to the final total indentation of the line
 in two ways.  First, the syntactic symbol identifies an element of
@@ -777,7 +773,7 @@ indentation to give to each syntactic symbol.  Its value is an
 association list, and each element of the list has the form
 @code{(@var{syntactic-symbol} . @var{offset})}.  By changing the offsets
 for various syntactic symbols, you can customize indentation in fine
-detail.
+detail.  To change this alist, use @code{c-set-offset} (see below).
 
    Each offset value in @code{c-offsets-alist} can be an integer, a
 function or variable name, or one of the following symbols: @code{+},
@@ -792,15 +788,12 @@ argument containing the @code{cons} of the syntactic symbol and
 the relative indent point.  The function should return an integer
 offset.
 
-@kindex C-c C-o
+@kindex C-c C-o @r{(C mode)}
 @findex c-set-offset
    The command @kbd{C-c C-o} (@code{c-set-offset}) is the easiest way to
 set offsets, both interactively or in your @file{~/.emacs} file.  First
 specify the syntactic symbol, then the offset you want.  @xref{Syntactic
 Symbols}, for a list of valid syntactic symbols and their meanings.
-
-   The variable @code{c-offsets-alist-default} holds the default settings
-for the offsets of the syntactic symbols.  @emph{Do not change this value!}
 
 @node Syntactic Symbols
 @subsubsection Syntactic Symbols
@@ -837,9 +830,17 @@ On a brace that opens an in-class inline method.
 @item inline-close
 On a brace that closes an in-class inline method.
 
-@item ansi-funcdecl-cont
-In the nether region between an ANSI function declaration
-and the defun opening brace.
+@item extern-lang-open
+On a brace that opens an external language block.
+
+@item extern-lang-close
+On a brace that closes an external language block.
+
+@item func-decl-cont
+The region between a function definition's argument list and the defun
+opening brace (excluding K&R function definitions).  In C, you cannot
+put anything but whitespace and comments between them; in C++ and Java,
+@code{throws} declarations and other things can appear in this context.
 
 @item knr-argdecl-intro
 On the first line of a K&R C argument declaration.
@@ -894,7 +895,7 @@ On a continuation line of a statement.
 On the first line in a new statement block.
 
 @item statement-case-intro
-On the first line in a @code{case} ``block''.
+On the first line in a @code{case} ``block.''
 
 @item statement-case-open
 On the first line in a @code{case} block starting with brace.
@@ -929,7 +930,7 @@ On the first line in an argument list.
 
 @item arglist-cont
 On one of the subsequent argument list lines when no arguments follow on
-the same line as the the arglist opening parenthesis.
+the same line as the arglist opening parenthesis.
 
 @item arglist-cont-nonempty
 On one of the subsequent argument list lines when at least one argument
@@ -942,7 +943,10 @@ On the closing parenthesis of an argument list.
 On one of the lines continuing a stream operator construct.
 
 @item inclass
-On a construct which is nested inside a class definition.
+On a construct that is nested inside a class definition.
+
+@item inextern-lang
+On a construct that is nested inside an external language block.
 
 @item cpp-macro
 On the start of a cpp macro.
@@ -969,33 +973,18 @@ indentation behavior of C mode and related mode.
 @table @code
 @item c-offsets-alist
 @vindex c-offsets-alist
-Association list of syntactic symbols and their indentation
-offsets.  @xref{Changing Indent Style}, for details.
-
-@item c-offsets-alist-default
-@vindex c-offsets-alist-default
-Default settings for the offsets of the syntactic symbols.  @xref{Changing
-Indent Style}.
+Association list of syntactic symbols and their indentation offsets.
+You should not set this directly, only with @code{c-set-offset}.
+@xref{Changing Indent Style}, for details.
 
 @item c-style-alist
 @vindex c-style-alist
-Variable for specifying styles of indentation; see below.
+Variable for defining indentation styles; see below.
 
 @item c-basic-offset
 @vindex c-basic-offset
 Amount of basic offset used by @code{+} and @code{-} symbols in
 @code{c-offsets-alist}.@refill 
-
-@item c-recognize-knr-p
-@vindex c-recognize-knr-p
-If this variable is non-@code{nil}, C mode and Objective C mode
-recognize K&R constructs.  This variable is needed because of
-ambiguities in C syntax that make recognition of K&R constructs
-problematic and slow.  If you always use ANSI C prototype syntax, set
-this variable to @code{nil} to speed up C indentation.
-
-This variable is @code{nil} by default in C++ mode, and @code{t} by
-default in C mode and Objective C mode.
 
 @item c-special-indent-hook
 @vindex c-special-indent-hook
@@ -1026,9 +1015,9 @@ the variable @code{c-comment-only-line-offset} (@pxref{Comments in C}).
 
   A @dfn{C style} is a collection of indentation style customizations.
 Emacs comes with several predefined indentation styles for C code
-including @code{gnu}, @code{k&r}, @code{bsd}, @code{stroustrup}
-@code{whitesmith}, @code{ellemtel}, and @code{cc-mode}.  The default
-style is @code{gnu}.
+including @code{gnu}, @code{k&r}, @code{bsd}, @code{stroustrup},
+@code{linux}, @code{python}, @code{java}, @code{whitesmith},
+@code{ellemtel}, and @code{cc-mode}.  The default style is @code{gnu}.
 
 @findex c-set-style
   To choose the style you want, use the command @kbd{M-x c-set-style}.
@@ -1089,17 +1078,18 @@ the match is not found in that far, scanning stops, and nothing is
 displayed.  This is to prevent scanning for the matching delimiter from
 wasting lots of time when there is no match.  The default is 12,000.
 
-@cindex @code{paren} library
-  When using X Windows, you can request a more powerful kind of
-automatic parenthesis matching by loading the @code{paren} library.
-To load it, type @kbd{M-x load-library @key{RET} paren @key{RET}}.
-This library turns off the usual kind of matching parenthesis display
-and substitutes another: whenever point is after a close parenthesis,
-the close parenthesis and its matching open parenthesis are both
-highlighted; otherwise, if point is before an open parenthesis, the
-matching close parenthesis is highlighted.  (There is no need to
-highlight the open parenthesis after point because the cursor appears on
-top of that character.)
+@cindex Show Paren mode
+@findex show-paren-mode
+  When using X Windows, you can request a more powerful alternative kind
+of automatic parenthesis matching by enabling Show Paren mode.  This
+mode turns off the usual kind of matching parenthesis display and
+instead uses highlighting to show what matches.  Whenever point is after
+a close parenthesis, the close parenthesis and its matching open
+parenthesis are both highlighted; otherwise, if point is before an open
+parenthesis, the matching close parenthesis is highlighted.  (There is
+no need to highlight the open parenthesis after point because the cursor
+appears on top of that character.)  Use the command @kbd{M-x
+show-paren-mode} to enable or disable this mode.
 
 @node Comments
 @section Manipulating Comments
@@ -1131,7 +1121,7 @@ Insert or align comment (@code{indent-for-comment}).
 Set comment column (@code{set-comment-column}).
 @item C-u - C-x ;
 Kill comment on current line (@code{kill-comment}).
-@item M-@key{LFD}
+@item C-M-j
 Like @key{RET} followed by inserting and aligning a comment
 (@code{indent-new-comment-line}).
 @item M-x comment-region
@@ -1192,18 +1182,17 @@ key if you wanted to.
 @node Multi-Line Comments
 @subsection Multiple Lines of Comments
 
-@kindex M-LFD
+@kindex C-M-j
 @cindex blank lines in programs
 @findex indent-new-comment-line
   If you are typing a comment and wish to continue it on another line,
-you can use the command @kbd{M-@key{LFD}}
-(@code{indent-new-comment-line}).  This terminates the comment you are
-typing, creates a new blank line afterward, and begins a new comment
-indented under the old one.  When Auto Fill mode is on, going past the
-fill column while typing a comment causes the comment to be continued in
-just this fashion.  If point is not at the end of the line when
-@kbd{M-@key{LFD}} is typed, the text on the rest of the line becomes
-part of the new comment line.
+you can use the command @kbd{C-M-j} (@code{indent-new-comment-line}).
+This terminates the comment you are typing, creates a new blank line
+afterward, and begins a new comment indented under the old one.  When
+Auto Fill mode is on, going past the fill column while typing a comment
+causes the comment to be continued in just this fashion.  If point is
+not at the end of the line when @kbd{C-M-j} is typed, the text on
+the rest of the line becomes part of the new comment line.
 
 @findex comment-region
   To turn existing lines into comment lines, use the @kbd{M-x
@@ -1261,7 +1250,7 @@ into the comment.  In C mode, @code{comment-start} has the value
 @w{@code{"/* "}} and @code{comment-end} has the value @w{@code{" */"}}.
 
 @vindex comment-multi-line
-  The variable @code{comment-multi-line} controls how @kbd{M-@key{LFD}}
+  The variable @code{comment-multi-line} controls how @kbd{C-M-j}
 (@code{indent-new-comment-line}) behaves when used inside a comment.  If
 @code{comment-multi-line} is @code{nil}, as it normally is, then the
 comment on the starting line is terminated and a new comment is started
@@ -1291,31 +1280,31 @@ comment, and on the code in the preceding lines.
 Put parentheses around next sexp(s) (@code{insert-parentheses}).
 @item M-)
 Move past next close parenthesis and re-indent
-(@code{move-over-close-and-reindent}).
+(@code{move-past-close-and-reindent}).
 @end table
 
 @kindex M-(
 @kindex M-)
 @findex insert-parentheses
-@findex move-over-close-and-reindent
+@findex move-past-close-and-reindent
   The commands @kbd{M-(} (@code{insert-parentheses}) and @kbd{M-)}
-(@code{move-over-close-and-reindent}) are designed to facilitate a style
+(@code{move-past-close-and-reindent}) are designed to facilitate a style
 of editing which keeps parentheses balanced at all times.  @kbd{M-(}
 inserts a pair of parentheses, either together as in @samp{()}, or, if
 given an argument, around the next several sexps.  It leaves point after
 the open parenthesis.  The command @kbd{M-)} moves past the close
 parenthesis, deleting any indentation preceding it (in this example
-there is none), and indenting with @key{LFD} after it.
+there is none), and indenting with @kbd{C-j} after it.
 
   For example, instead of typing @kbd{( F O O )}, you can type @kbd{M-(
 F O O}, which has the same effect except for leaving the cursor before
 the close parenthesis.
 
-@vindex parens-dont-require-spaces
+@vindex parens-require-spaces
   @kbd{M-(} may insert a space before the open parenthesis, depending on
 the syntax class of the preceding character.  Set
-@code{parens-dont-require-spaces} to a non-@code{nil} value if you wish
-to inhibit this.
+@code{parens-require-spaces} to @code{nil} value if you wish to inhibit
+this.
 
 @node Symbol Completion
 @section Completion for Symbol Names
@@ -1336,12 +1325,18 @@ completions is displayed in another window.
 
 @cindex completion using tags
 @cindex tags completion
-@findex complete-tag
-  There are two ways of determining the set of legitimate symbol names
-to complete against.  In most major modes, this uses a tags table
-(@pxref{Tags}); the legitimate symbol names are the tag names listed in
-the tags table file.  The command which implements this is
-@code{complete-tag}.
+@cindex Info index completion
+@findex complete-symbol
+  In most programming language major modes, @kbd{M-@key{TAB}} runs the
+command @code{complete-symbol}, which provides two kinds of completion.
+Normally it does completion based on a tags table (@pxref{Tags}); with a
+numeric argument (regardless of the value), it does completion based on
+the names listed in the Info file indexes for your language.  Thus, to
+complete the name of a symbol defined in your own program, use
+@kbd{M-@key{TAB}} with no argument; to complete the name of a standard
+library function, use @kbd{C-u M-@key{TAB}}.  Of course, Info-based
+completion works only if there is an Info file for the standard library
+functions of your language, and only if it is installed at your site.
 
 @cindex Lisp symbol completion
 @cindex completion in Lisp
@@ -1370,21 +1365,43 @@ the code in the neighborhood of point.  @kbd{C-h f} sets the default to the
 function called in the innermost list containing point.  @kbd{C-h v} uses
 the symbol name around or adjacent to point as its default.
 
+@cindex Eldoc mode
+@findex eldoc-mode
+  For Emacs Lisp code, you can also use Eldoc mode.  This minor mode
+constantly displays in the echo area the argument list for the function
+being called at point.  (In other words, it finds the function call that
+point is contained in, and displays the argument list of that function.)
+Eldoc mode applies in Emacs Lisp and Lisp Interaction modes only.  Use
+the command @kbd{M-x eldoc-mode} to enable or disable this feature.
+
+@findex info-lookup-symbol
+@findex info-lookup-file
+@kindex C-h C-i
+  For C, Lisp, and other languages, you can use @kbd{C-h C-i}
+(@code{info-lookup-symbol}) to view the Info documentation for a symbol.
+You specify the symbol with the minibuffer; by default, it uses the
+symbol that appears in the buffer at point.  The major mode determines
+where to look for documentation for the symbol---which Info files and
+which indices.  You can also use @kbd{M-x info-lookup-file} to look for
+documentation for a file name.
+
 @findex manual-entry
-  Documentation on operating system commands, library functions and
-system calls can be obtained with the @kbd{M-x manual-entry} command.
-This reads a topic as an argument, and displays the ``man page'' on that
-topic.  @code{manual-entry} starts a background process that formats the
-manual page, by running the @code{man} program.  The result goes in a
-buffer named @samp{*man @var{topic}*}.  These buffers use a special
-major mode, Man mode, that facilitates scrolling and examining other
-manual pages.  For details, type @kbd{C-h m} while in a man page buffer.
+  You can read the ``man page'' for an operating system command, library
+function, or system call, with the @kbd{M-x manual-entry} command.  It
+runs the @code{man} program to format the man page, and runs it
+asynchronously if your system permits, so that you can keep on editing
+while the page is being formatted.  (MS-DOS and MS-Windows 3 do not
+permit asynchronous subprocesses, so on these systems you cannot edit
+while Emacs waits for @code{man} to exit.)  The result goes in a buffer
+named @samp{*man @var{topic}*}.  These buffers use a special major mode,
+Man mode, that facilitates scrolling and examining other manual pages.
+For details, type @kbd{C-h m} while in a man page buffer.
 
 @vindex Man-fontify-manpage-flag
   For a long man page, setting the faces properly can take substantial
-time.  By default, Emacs uses faces in man pages if you are using X
-Windows.  You can turn off use of faces in man pages by setting the
-variable @code{Man-fontify-manpage-flag} to @code{nil}.
+time.  By default, Emacs uses faces in man pages if Emacs can display
+different fonts or colors.  You can turn off use of faces in man pages
+by setting the variable @code{Man-fontify-manpage-flag} to @code{nil}.
 
 @findex Man-fontify-manpage
   If you insert the text of a man page into an Emacs buffer in some
@@ -1455,7 +1472,7 @@ even guess the name of the function or other object that was changed.
   The change log file is visited in Change Log mode.  In this major
 mode, each bunch of grouped items counts as one paragraph, and each
 entry is considered a page.  This facilitates editing the entries.
-@key{LFD} and auto-fill indent each new line like the previous line;
+@kbd{C-j} and auto-fill indent each new line like the previous line;
 this is convenient for entering the contents of an entry.
 
   Version control systems are another way to keep track of changes in your
@@ -1498,51 +1515,30 @@ recorded is called a @dfn{tag}.
 @node Tag Syntax
 @subsection Source File Tag Syntax
 
+  Here is how tag syntax is defined for the most popular languages:
+
 @itemize @bullet
 @item
-In Lisp code, any function defined with @code{defun}, any variable
-defined with @code{defvar} or @code{defconst}, and in general the first
-argument of any expression that starts with @samp{(def} in column zero, is
-a tag.
-
-@item
-In Scheme code, tags include anything defined with @code{def} or with a
-construct whose name starts with @samp{def}.  They also include variables
-set with @code{set!} at top level in the file.
-
-@item
 In C code, any C function or typedef is a tag, and so are definitions of
-struct, union and enum.  Any @code{#define} is also a tag, unless
-@samp{--no-defines} is specified when the tags table is constructed,
-which sometimes makes the tags file much smaller.  In C++ code, member
-functions are also recognized.
+@code{struct}, @code{union} and @code{enum}.  @code{#define} macro
+definitions and @code{enum} constants are also tags, unless you specify
+@samp{--no-defines} when making the tags table.  Similarly, global
+variables are tags, unless you specify @samp{--no-globals}.  Use of
+@samp{--no-globals} and @samp{--no-defines} can make the tags table file
+much smaller.
 
 @item
-In Yacc or Bison input files, each rule defines as a tag the
-nonterminal it constructs.  The portions of the file that contain C code
-are parsed as C code.
+In C++ code, in addition to all the tag constructs of C code, member
+functions are also recognized, and optionally member variables if you
+use the @samp{--members} option.  Tags for variables and functions in
+classes are named @samp{@var{class}::@var{variable}} and
+@samp{@var{class}::@var{function}}.
 
 @item
-In Fortran code, functions and subroutines are tags.
-
-@item
-In Pascal code, the tags are the functions and procedures defined in
-the file.
-
-@item
-In Perl code, the tags are the procedures defined by the @code{sub}
-keyword.
-
-@item
-In Prolog code, a tag name appears at the left margin.
-
-@item
-In Erlang code, the tags are the functions, records, and macros defined
-in the file.
-
-@item
-In assembler code, labels appearing at the beginning of a line,
-followed by a colon, are tags.
+In Java code, tags include all the constructs recognized in C++, plus
+the @code{extends} and @code{implements} constructs.  Tags for variables
+and functions in classes are named @samp{@var{class}.@var{variable}} and
+@samp{@var{class}.@var{function}}.
 
 @item
 In La@TeX{} text, the argument of any of the commands @code{\chapter},
@@ -1554,7 +1550,7 @@ tag.@refill
 Other commands can make tags as well, if you specify them in the
 environment variable @code{TEXTAGS} before invoking @code{etags}.  The
 value of this environment variable should be a colon-separated list of
-commands names.  For example,
+command names.  For example,
 
 @example
 TEXTAGS="def:newcommand:newenvironment"
@@ -1566,9 +1562,61 @@ specifies (using Bourne shell syntax) that the commands @samp{\def},
 @samp{\newcommand} and @samp{\newenvironment} also define tags.
 
 @item
-You can also generate tags based on regexp matching
-(@pxref{Create Tags Table}) for any text file.
+In Lisp code, any function defined with @code{defun}, any variable
+defined with @code{defvar} or @code{defconst}, and in general the first
+argument of any expression that starts with @samp{(def} in column zero, is
+a tag.
+
+@item
+In Scheme code, tags include anything defined with @code{def} or with a
+construct whose name starts with @samp{def}.  They also include variables
+set with @code{set!} at top level in the file.
 @end itemize
+
+  Several other languages are also supported:
+
+@itemize @bullet
+@item
+In assembler code, labels appearing at the beginning of a line,
+followed by a colon, are tags.
+
+@item
+In Bison or Yacc input files, each rule defines as a tag the nonterminal
+it constructs.  The portions of the file that contain C code are parsed
+as C code.
+
+@item
+In Cobol code, tags are paragraph names; that is, any word starting in
+column 8 and followed by a period.
+
+@item
+In Erlang code, the tags are the functions, records, and macros defined
+in the file.
+
+@item
+In Fortran code, functions and subroutines are tags.
+
+@item
+In Objective C code, tags include Objective C definitions for classes,
+class categories, methods, and protocols.
+
+@item
+In Pascal code, the tags are the functions and procedures defined in
+the file.
+
+@item
+In Perl code, the tags are the procedures defined by the @code{sub}
+keyword.
+
+@item
+In Postscript code, the tags are the functions.
+
+@item
+In Prolog code, a tag name appears at the left margin.
+@end itemize
+
+  You can also generate tags based on regexp matching (@pxref{Create
+Tags Table}) to handle other formats and languages.
 
 @node Create Tags Table
 @subsection Creating Tags Tables
@@ -1629,7 +1677,7 @@ files.
 the tags file will contain absolute file names.  This way, the tags file
 will still refer to the same files even if you move it, as long as the
 source files remain in the same place.  Absolute file names start with
-@samp{/}, or with @samp{@var{device}:/} on MS-DOS and Windows.
+@samp{/}, or with @samp{@var{device}:/} on MS-DOS and MS-Windows.
 
   When you want to make a tags table from a great number of files, you
 may have problems listing them on the command line, because some systems
@@ -1666,8 +1714,15 @@ anchored, that is, it behaves as if preceded by @samp{^}.  If you want
 to account for indentation, just match any initial number of blanks by
 beginning your regular expression with @samp{[ \t]*}.  In the regular
 expressions, @samp{\} quotes the next character, and @samp{\t} stands
-for the tab character.  Note that @code{etags} does not handle the
-other C escape sequences for special characters.
+for the tab character.  Note that @code{etags} does not handle the other
+C escape sequences for special characters.
+
+@cindex interval operator (in regexps)
+  The syntax of regular expressions in @code{etags} is the same as in
+Emacs, augmented with the @dfn{interval operator}, which works as in
+@code{grep} and @code{ed}.  The syntax of an interval operator is
+@samp{\@{@var{m},@var{n}\@}}, and its meaning is to match the preceding
+expression at least @var{m} times and up to @var{n} times.
 
   You should not match more characters with @var{tagregexp} than that
 needed to recognize what you want to tag.  If the match is such that
@@ -1695,44 +1750,32 @@ matching, to recognize tags in @file{los.er}.
   Here are some more examples.  The regexps are quoted to protect them
 from shell interpretation.
 
-@noindent
+@itemize @bullet
+@item
 Tag the @code{DEFVAR} macros in the emacs source files:
 
-@example
+@smallexample
 --regex='/[ \t]*DEFVAR_[A-Z_ \t(]+"\([^"]+\)"/'
-@end example
+@end smallexample
 
-@noindent
+@item
 Tag VHDL files (this example is a single long line, broken here for
 formatting reasons):
 
-@example
+@smallexample
 --language=none
 --regex='/[ \t]*\(ARCHITECTURE\|CONFIGURATION\) +[^ ]* +OF/'
 --regex='/[ \t]*\(ATTRIBUTE\|ENTITY\|FUNCTION\|PACKAGE\
 \( BODY\)?\|PROCEDURE\|PROCESS\|TYPE\)[ \t]+\([^ \t(]+\)/\3/'
-@end example
+@end smallexample
 
-@noindent
-Tag Cobol files (every label starting in column seven):
+@item
+Tag Tcl files (this last example shows the usage of a @var{nameregexp}):
 
-@example
---language=none --regex='/.......[a-zA-Z0-9-]+\./'
-@end example
-
-@noindent
-Tag Postscript files (every label starting in column one):
-
-@example
---language=none --regex='#/[^ \t@{]+#/'
-@end example
-
-@noindent
-Tag TCL files (this last example shows the usage of a @var{nameregexp}):
-
-@example
+@smallexample
 --lang=none --regex='/proc[ \t]+\([^ \t]+\)/\1/'
-@end example
+@end smallexample
+@end itemize
 
   For a list of the other available @code{etags} options, execute
 @code{etags --help}.
@@ -1964,14 +2007,14 @@ confusion, you need to merge the two versions.  Emerge makes this
 easier.  See also @ref{Comparing Files}.
 
 @menu
-* Overview of Emerge::	    How to start Emerge.  Basic concepts.
-* Submodes of Emerge::      Fast mode vs. Edit mode.
-			      Skip Prefers mode and Auto Advance mode.
-* State of Difference::	    You do the merge by specifying state A or B
-			      for each difference.
-* Merge Commands::	    Commands for selecting a difference,
-			      changing states of differences, etc.
-* Exiting Emerge::	    What to do when you've finished the merge.
+* Overview of Emerge::	How to start Emerge.  Basic concepts.
+* Submodes of Emerge::	Fast mode vs. Edit mode.
+			  Skip Prefers mode and Auto Advance mode.
+* State of Difference::	You do the merge by specifying state A or B
+			  for each difference.
+* Merge Commands::	Commands for selecting a difference,
+			  changing states of differences, etc.
+* Exiting Emerge::	What to do when you've finished the merge.
 * Combining in Emerge::	    How to keep both alternatives for a difference.
 * Fine Points of Emerge::   Misc.
 @end menu
@@ -2088,7 +2131,7 @@ input.  The mode line indicates Auto Advance mode with @samp{A}.
   If Skip Prefers mode is in effect, the @kbd{n} and @kbd{p} commands
 skip over differences in states prefer-A and prefer-B (@pxref{State of
 Difference}).  Thus you see only differences for which neither version
-is presumed ``correct''.  The mode line indicates Skip Prefers mode with
+is presumed ``correct.''  The mode line indicates Skip Prefers mode with
 @samp{S}.
 
 @findex emerge-auto-advance-mode
@@ -2263,7 +2306,7 @@ command, position point in each of the three buffers at the place where
 you want to split the difference.
 
 @item x t
-Trim identical lines off top and bottom of the difference.
+Trim identical lines off the top and bottom of the difference.
 Such lines occur when the A and B versions are
 identical but differ from the ancestor version.
 @end table
@@ -2297,9 +2340,9 @@ like this:
 @group
 #ifdef NEW
 @var{version from A buffer}
-#else /* NEW */
+#else /* not NEW */
 @var{version from B buffer}
-#endif /* NEW */
+#endif /* not NEW */
 @end group
 @end example
 
@@ -2314,7 +2357,7 @@ produces the results shown above, looks like this:
 
 @example
 @group
-"#ifdef NEW\n%a#else /* NEW */\n%b#endif /* NEW */\n"
+"#ifdef NEW\n%a#else /* not NEW */\n%b#endif /* not NEW */\n"
 @end group
 @end example
 
@@ -2340,8 +2383,15 @@ commands.
   After setting up the merge, Emerge runs the hook
 @code{emerge-startup-hook} (@pxref{Hooks}).
 
-@node C Mode
-@section C Mode
+@node C/Java Modes
+@section C Modes and Java Mode
+@cindex C mode
+@cindex Java mode
+@cindex Objective C mode
+@cindex C++ mode
+@cindex mode, Java
+@cindex mode, C
+@cindex mode, Objective C
 
   This section describes special features available in C, C++,
 Objective-C and Java modes.
@@ -2357,11 +2407,12 @@ Objective-C and Java modes.
 @node Motion in C
 @subsection C Mode Motion Commands
 
-  This section commands for moving point, in C mode and related modes.
+  This section describes commands for moving point, in C mode and
+  related modes.
 
 @table @code
 @item C-c C-u
-@kindex C-c C-u
+@kindex C-c C-u @r{(C mode)}
 @findex c-up-conditional
 Move point back to the containing preprocessor conditional, leaving the
 mark behind.  A prefix argument acts as a repeat count.  With a negative
@@ -2371,14 +2422,14 @@ like @code{#else} followed by @code{#if}.  When going forwards,
 @code{#elif} is ignored.@refill
 
 @item C-c C-p
-@kindex C-c C-p
+@kindex C-c C-p @r{(C mode)}
 @findex c-backward-conditional
 Move point back over a preprocessor conditional, leaving the mark
 behind.  A prefix argument acts as a repeat count.  With a negative
 argument, move forward.
 
 @item C-c C-n
-@kindex C-c C-n
+@kindex C-c C-n @r{(C mode)}
 @findex c-forward-conditional
 Move point forward across a preprocessor conditional, leaving the mark
 behind.  A prefix argument acts as a repeat count.  With a negative
@@ -2387,33 +2438,25 @@ argument, move backward.
 @item M-a
 @kindex ESC a
 @findex c-beginning-of-statement
-Move point to the beginning of the innermost C statement.  If point is
-already at the beginning of a statement, move to the beginning of
-the preceding statement.  With prefix argument @var{n}, move back
-@var{n} @minus{} 1 statements.
+Move point to the beginning of the innermost C statement
+(@code{c-beginning-of-statement}).  If point is already at the beginning
+of a statement, move to the beginning of the preceding statement.  With
+prefix argument @var{n}, move back @var{n} @minus{} 1 statements.
 
 If point is within a string or comment, or next to a comment (only
 whitespace between them), this command moves by sentences instead of
 statements.
 
-When called from a program, this function takes two optional arguments:
-the numeric prefix argument, and a buffer position limit (don't move
-back before that place).
+When called from a program, this function takes three optional
+arguments: the numeric prefix argument, a buffer position limit
+(don't move back before that place), and a flag that controls whether
+to do sentence motion when inside of a comment.
 
 @item M-e
 @kindex ESC e
 @findex c-end-of-statement
-Move point to the end of the innermost C statement.  If point is at the
-end of a statement, move to the end of the next statement.  With prefix
-argument @var{n}, move forward @var{n} @minus{} 1 statements.
-
-If point is within a string or comment, or next to a comment (only
-whitespace between them), this command moves by sentences instead of
-statements.
-
-When called from a program, this function takes two optional arguments:
-the numeric prefix argument, and a buffer position limit (don't move
-past that place).
+Move point to the end of the innermost C statement; like @kbd{M-a}
+except that it moves in the other direction (@code{c-end-of-statement}).
 
 @item M-x c-backward-into-nomenclature
 @findex c-backward-into-nomenclature
@@ -2515,10 +2558,16 @@ meaningful symbols, and their meanings:
 
 @table @code
 @item brace-else-brace
-Clean up @samp{@} else @{} constructs by placing entire construct on a
-single line.  The clean-up occurs when you type the @samp{@{} after the
-@code{else}, but only if there is nothing but white space between the
-braces and the @code{else}.
+Clean up @samp{@} else @{} constructs by placing the entire construct on
+a single line.  The clean-up occurs when you type the @samp{@{} after
+the @code{else}, but only if there is nothing but white space between
+the braces and the @code{else}.
+
+@item brace-elseif-brace
+Clean up @samp{@} else if (@dots{}) @{} constructs by placing the entire
+construct on a single line.  The clean-up occurs when you type the
+@samp{@{}, if there is nothing but white space between the @samp{@}} and
+@samp{@{} aside from the keywords and the @code{if}-condition.
 
 @item empty-defun-braces
 Clean up empty defun braces by placing the braces on the same
@@ -2550,14 +2599,14 @@ To turn this feature on or off, use @kbd{C-c C-d}:
 
 @table @kbd
 @item C-c C-d
-@kindex C-c C-d
+@kindex C-c C-d @r{(C mode)}
 @findex c-toggle-hungry-state
 Toggle the hungry-delete feature (@code{c-toggle-hungry-state}).  With a
 prefix argument, this command turns the hungry-delete feature on if the
 argument is positive, and off if it is negative.
 
 @item C-c C-t
-@kindex C-c C-t
+@kindex C-c C-t @r{(C mode)}
 @findex c-toggle-auto-hungry-state
 Toggle the auto-newline and hungry-delete features, both at once
 (@code{c-toggle-auto-hungry-state}).
@@ -2637,30 +2686,6 @@ directs how the line is indented.
 comment format.
 
 @table @code
-@item c-block-comments-indent-p
-@vindex c-block-comments-indent-p
-This variable specifies how to reindent block comments.  The C modes
-support five styles of block comments:
-
-@smallexample
- style 1:    style 2 (GNU):   style 3:    style 4:    style 5:
- /*          /* Blah          /*          /*          /*
-    blah        blah.  */      * blah     ** blah     blah
-    blah                       * blah     ** blah     blah
-    */                         */         */          */
-@end smallexample
-
-@noindent
-For the styles 1 through 4, @code{c-block-comments-indent-p} should be
-@code{nil} (the default).  If you want to use style 5, set
-@code{c-block-comments-indent-p} to @code{t}.
-
-This variable has no effect on the indentation of the comment-start
-itself or on insertion of asterisks when auto-filling C comments.
-It does not affect @kbd{M-q} either.
-@c ???   In any case, you still have to insert the asterisks
-@c ???   manually.
-
 @item c-comment-only-line-offset
 @vindex c-comment-only-line-offset
 Extra offset for line which contains only the start of a comment.  It
@@ -2679,8 +2704,15 @@ This buffer-local variable specifies how to recognize the start of a comment.
 @vindex c-hanging-comment-ender-p
 If this variable is @code{nil}, @code{c-fill-paragraph} leaves the
 comment terminator of a block comment on a line by itself.  The default
-value is @code{t}, which always puts the comment-end delimiter @samp{*/}
-at the end of the last line of the comment text.
+value is @code{t}, which puts the comment-end delimiter @samp{*/} at the
+end of the last line of the comment text.
+
+@item c-hanging-comment-starter-p
+@vindex c-hanging-comment-starter-p
+If this variable is @code{nil}, @code{c-fill-paragraph} leaves the
+starting delimiter of a block comment on a line by itself.  The default
+value is @code{t}, which puts the comment-start delimiter @samp{/*} at
+the beginning of the first line of the comment text.
 @end table
 
 @node Fortran
@@ -2768,10 +2800,10 @@ required for standard Fortran.
 @table @kbd
 @item @key{TAB}
 Indent the current line (@code{fortran-indent-line}).
-@item @key{LFD}
+@item C-j
 Indent the current and start a new indented line
 (@code{fortran-indent-new-line}).
-@item M-@key{LFD}
+@item C-M-j
 Break the current line and set up a continuation line.
 @item C-M-q
 Indent all the lines of the subprogram point is in
@@ -2784,9 +2816,9 @@ Fortran (@code{fortran-indent-line}).  This command indents Line numbers
 and continuation markers to their required columns, and independently
 indents the body of the statement based on its nesting in the program.
 
-@kindex LFD @r{(Fortran mode)}
+@kindex C-j @r{(Fortran mode)}
 @findex fortran-indent-new-line
-  The key @kbd{LFD} runs the command @code{fortran-indent-new-line},
+  The key @kbd{C-j} runs the command @code{fortran-indent-new-line},
 which reindents the current line then makes and indents a new line.
 This command is useful to reindent the closing statement of @samp{do}
 loops and other blocks before starting a new line.
@@ -2797,9 +2829,9 @@ loops and other blocks before starting a new line.
 to reindent all the lines of the Fortran subprogram (function or
 subroutine) containing point.
 
-@kindex M-LFD @r{(Fortran mode)}
+@kindex C-M-j @r{(Fortran mode)}
 @findex fortran-split-line
-  The key @kbd{M-@key{LFD}} runs @code{fortran-split-line}, which splits
+  The key @kbd{C-M-j} runs @code{fortran-split-line}, which splits
 a line in the appropriate fashion for Fortran.  In a non-comment line,
 the second half becomes a continuation line and is indented
 accordingly.  In a comment line, both halves become separate comment
@@ -2830,10 +2862,10 @@ is presently in effect by the presence or absence of the string
   If the text on a line starts with the conventional Fortran
 continuation marker @samp{$}, or if it begins with any non-whitespace
 character in column 5, Fortran mode treats it as a continuation line.
-When you indent a continuation line with @key{TAB}, it converts the
-line to the current continuation style.  When you split a Fortran
-statement with @kbd{M-@key{LFD}}, the continuation marker on the
-newline is created according to the continuation style.
+When you indent a continuation line with @key{TAB}, it converts the line
+to the current continuation style.  When you split a Fortran statement
+with @kbd{C-M-j}, the continuation marker on the newline is created
+according to the continuation style.
 
   The setting of continuation style affects several other aspects of
 editing in Fortran mode.  In fixed format mode, the minimum column
@@ -3030,10 +3062,10 @@ to use.
 @vindex comment-line-start
 @vindex comment-line-start-skip
   Fortran mode introduces two variables @code{comment-line-start} and
-@code{comment-line-start-skip} which play for full-line comments the same
+@code{comment-line-start-skip}, which play for full-line comments the same
 roles played by @code{comment-start} and @code{comment-start-skip} for
 ordinary text-following comments.  Normally these are set properly by
-Fortran mode so you do not need to change them.
+Fortran mode, so you do not need to change them.
 
   The normal Emacs comment command @kbd{C-x ;} has not been redefined.  If
 you use @samp{!} comments, this command can be used with them.  Otherwise
@@ -3095,8 +3127,8 @@ Display a ``column ruler'' momentarily above the current line
 (@code{fortran-column-ruler}).
 @item C-c C-w
 Split the current window horizontally temporarily so that it is 72
-columns wide.  This may help you avoid making lines longer than the 72
-character limit that some fortran compilers impose
+columns wide.  This may help you avoid making lines longer than the
+72-character limit that some Fortran compilers impose
 (@code{fortran-window-create-momentarily}).
 @end table
 
@@ -3159,7 +3191,7 @@ defines these commands:
 @table @kbd
 @item @key{TAB}
 @code{tab-to-tab-stop}.
-@item @key{LFD}
+@item C-j
 Insert a newline and then indent using @code{tab-to-tab-stop}.
 @item :
 Insert a colon and then remove the indentation from before the label

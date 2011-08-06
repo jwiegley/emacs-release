@@ -3,6 +3,7 @@
 ;; Copyright (C) 1985, 1986, 1992, 1994 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>.
+;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
@@ -98,7 +99,10 @@ With prefix arg, prompt for argument SWITCHES which is options for `diff'."
     (setq failures
 	  (dired-bunch-files 10000
 			     (function dired-check-process)
-			     (list operation program new-attribute)
+			     (append 
+			      (list operation program new-attribute)
+			      (if (string-match "gnu" system-configuration)
+				  '("--") nil))
 			     files))
     (dired-do-redisplay arg);; moves point if ARG is an integer
     (if failures
@@ -264,7 +268,7 @@ with a prefix argument."
       ;;The caller may want to flag some of these files for deletion.
       (let* ((base-versions
 	      (concat (file-name-nondirectory fn) ".~"))
-	     (bv-length (length base-versions))
+	     (backup-extract-version-start (length base-versions))
 	     (possibilities (file-name-all-completions
 			     base-versions
 			     (file-name-directory fn)))
@@ -315,7 +319,7 @@ with a prefix argument."
 ;; The in-background argument is only needed in Emacs 18 where
 ;; shell-command doesn't understand an appended ampersand `&'.
 ;;;###autoload
-(defun dired-do-shell-command (command &optional arg)
+(defun dired-do-shell-command (command &optional arg file-list)
   "Run a shell command COMMAND on the marked files.
 If no files are marked or a specific numeric prefix arg is given,
 the next ARG files are used.  Just \\[universal-argument] means the current file.
@@ -335,16 +339,17 @@ The shell command has the top level directory as working directory, so
 output files usually are created there instead of in a subdir."
 ;;Functions dired-run-shell-command and dired-shell-stuff-it do the
 ;;actual work and can be redefined for customization.
-  (interactive (list
-		;; Want to give feedback whether this file or marked files are used:
-		(dired-read-shell-command (concat "! on "
-						  "%s: ")
-					  current-prefix-arg
-					  (dired-get-marked-files
-					   t current-prefix-arg))
-		current-prefix-arg))
-  (let* ((on-each (not (string-match "\\*" command)))
-	 (file-list (dired-get-marked-files t arg)))
+  (interactive
+   (let ((files (dired-get-marked-files t current-prefix-arg)))
+     (list
+      ;; Want to give feedback whether this file or marked files are used:
+      (dired-read-shell-command (concat "! on "
+					"%s: ")
+				current-prefix-arg
+				files)
+      current-prefix-arg
+      files)))
+  (let* ((on-each (not (string-match "\\*" command))))
     (if on-each
 	(dired-bunch-files
 	 (- 10000 (length command))
@@ -589,7 +594,8 @@ Otherwise, the rule is a compression rule, and compression is done with gzip.")
   ;; Confirmation consists in a y-or-n question with a file list
   ;; pop-up unless OP-SYMBOL is a member of `dired-no-confirm'.
   ;; The files used are determined by ARG (as in dired-get-marked-files).
-  (or (memq op-symbol dired-no-confirm)
+  (or (eq dired-no-confirm t)
+      (memq op-symbol dired-no-confirm)
       (let ((files (dired-get-marked-files t arg))
 	    (string (if (eq op-symbol 'compress) "Compress or uncompress"
 		      (capitalize (symbol-name op-symbol)))))
@@ -752,16 +758,20 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
     (delete-region (point) (progn (forward-line 1) (point)))
     (if file
 	(progn
-	  (dired-add-entry file)
+	  (dired-add-entry file nil t)
 	  ;; Replace space by old marker without moving point.
 	  ;; Faster than goto+insdel inside a save-excursion?
 	  (subst-char-in-region opoint (1+ opoint) ?\040 char))))
   (dired-move-to-filename))
 
-(defun dired-fun-in-all-buffers (directory fun &rest args)
+(defun dired-fun-in-all-buffers (directory file fun &rest args)
   ;; In all buffers dired'ing DIRECTORY, run FUN with ARGS.
+  ;; If the buffer has a wildcard pattern, check that it matches FILE.
+  ;; (FILE does not include a directory component.)
+  ;; FILE may be nil, in which case ignore it.
   ;; Return list of buffers where FUN succeeded (i.e., returned non-nil).
-  (let ((buf-list (dired-buffers-for-dir (expand-file-name directory)))
+  (let ((buf-list (dired-buffers-for-dir (expand-file-name directory)
+					 file))
 	(obuf (current-buffer))
 	buf success-list)
     (while buf-list
@@ -778,10 +788,10 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
 ;;;###autoload
 (defun dired-add-file (filename &optional marker-char)
   (dired-fun-in-all-buffers
-   (file-name-directory filename)
+   (file-name-directory filename) (file-name-nondirectory filename)
    (function dired-add-entry) filename marker-char))
 
-(defun dired-add-entry (filename &optional marker-char)
+(defun dired-add-entry (filename &optional marker-char relative)
   ;; Add a new entry for FILENAME, optionally marking it
   ;; with MARKER-CHAR (a character, else dired-marker-char is used).
   ;; Note that this adds the entry `out of order' if files sorted by
@@ -791,12 +801,15 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
   ;; Hidden subdirs are exposed if a file is added there.
   (setq filename (directory-file-name filename))
   ;; Entry is always for files, even if they happen to also be directories
-  (let ((opoint (point))
+  (let* ((opoint (point))
 	(cur-dir (dired-current-directory))
 	(orig-file-name filename)
-	(directory (file-name-directory filename))
+	(directory (if relative cur-dir (file-name-directory filename)))
 	reason)
-    (setq filename (file-name-nondirectory filename)
+    (setq filename
+	  (if relative
+	      (file-relative-name filename directory)
+	    (file-name-nondirectory filename))
 	  reason
 	  (catch 'not-found
 	    (if (string= directory cur-dir)
@@ -883,7 +896,8 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
 ;;;###autoload
 (defun dired-remove-file (file)
   (dired-fun-in-all-buffers
-   (file-name-directory file) (function dired-remove-entry) file))
+   (file-name-directory file) (file-name-nondirectory file)
+   (function dired-remove-entry) file))
 
 (defun dired-remove-entry (file)
   (save-excursion
@@ -895,6 +909,7 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
 ;;;###autoload
 (defun dired-relist-file (file)
   (dired-fun-in-all-buffers (file-name-directory file)
+			    (file-name-nondirectory file)
 			    (function dired-relist-entry) file))
 
 (defun dired-relist-entry (file)
@@ -915,9 +930,13 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
 
 ;;; Copy, move/rename, making hard and symbolic links
 
-(defvar dired-backup-overwrite nil
+(defcustom dired-backup-overwrite nil
   "*Non-nil if Dired should ask about making backups before overwriting files.
-Special value `always' suppresses confirmation.")
+Special value `always' suppresses confirmation."
+  :type '(choice (const :tag "off" nil)
+		 (const :tag "suppress" always)
+		 (sexp :tag "ask" :format "%t\n" t))
+  :group 'dired)
 
 (defvar dired-overwrite-confirmed)
 
@@ -939,7 +958,10 @@ Special value `always' suppresses confirmation.")
 ;;;###autoload
 (defun dired-copy-file (from to ok-flag)
   (dired-handle-overwrite to)
-  (copy-file from to ok-flag dired-copy-preserve-time))
+  (condition-case ()
+      (copy-file from to ok-flag dired-copy-preserve-time)
+    (file-date-error (message "Can't set date")
+		     (sit-for 1))))
 
 ;;;###autoload
 (defun dired-rename-file (from to ok-flag)
@@ -947,11 +969,8 @@ Special value `always' suppresses confirmation.")
   (rename-file from to ok-flag)		; error is caught in -create-files
   ;; Silently rename the visited file of any buffer visiting this file.
   (and (get-file-buffer from)
-       (save-excursion
-	 (set-buffer (get-file-buffer from))
-	 (let ((modflag (buffer-modified-p)))
-	   (set-visited-file-name to)
-	   (set-buffer-modified-p modflag))))
+       (with-current-buffer (get-file-buffer from)
+	 (set-visited-file-name to nil t)))
   (dired-remove-file from)
   ;; See if it's an inserted subdir, and rename that, too.
   (dired-rename-subdir from to))
@@ -959,7 +978,7 @@ Special value `always' suppresses confirmation.")
 (defun dired-rename-subdir (from-dir to-dir)
   (setq from-dir (file-name-as-directory from-dir)
 	to-dir (file-name-as-directory to-dir))
-  (dired-fun-in-all-buffers from-dir
+  (dired-fun-in-all-buffers from-dir nil
 			    (function dired-rename-subdir-1) from-dir to-dir)
   ;; Update visited file name of all affected buffers
   (let ((expanded-from-dir (expand-file-name from-dir))

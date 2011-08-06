@@ -62,6 +62,7 @@ Boston, MA 02111-1307, USA.  */
 #include <stdio.h>
 #include <errno.h>
 #include <../src/syswait.h>
+#include <getopt.h>
 #ifdef MAIL_USE_POP
 #include "pop.h"
 #endif
@@ -121,6 +122,17 @@ Boston, MA 02111-1307, USA.  */
 extern int lk_open (), lk_close ();
 #endif
 
+#if !defined (MAIL_USE_SYSTEM_LOCK) && !defined (MAIL_USE_MMDF) && \
+	defined (HAVE_LIBMAIL) && defined (HAVE_MAILLOCK_H)
+#include <maillock.h>
+/* We can't use maillock unless we know what directory system mail
+   files appear in. */
+#ifdef MAILDIR
+#define MAIL_USE_MAILLOCK
+static char *mail_spool_name ();
+#endif
+#endif
+
 /* Cancel substitutions made by config.h for Emacs.  */
 #undef open
 #undef read
@@ -131,6 +143,7 @@ extern int lk_open (), lk_close ();
 extern int errno;
 #endif
 char *strerror ();
+extern char *rindex ();
 
 void fatal ();
 void error ();
@@ -156,6 +169,7 @@ main (argc, argv)
   int indesc, outdesc;
   int nread;
   WAITTYPE status;
+  int c, preserve_mail = 0;
 
 #ifndef MAIL_USE_SYSTEM_LOCK
   struct stat st;
@@ -166,16 +180,43 @@ main (argc, argv)
   int desc;
 #endif /* not MAIL_USE_SYSTEM_LOCK */
 
+#ifdef MAIL_USE_MAILLOCK
+  char *spool_name;
+#endif
+
   delete_lockname = 0;
 
-  if (argc < 3)
+  while ((c = getopt (argc, argv, "p")) != EOF)
     {
-      fprintf (stderr, "Usage: movemail inbox destfile [POP-password]\n");
-      exit(1);
+      switch (c) {
+      case 'p':
+	preserve_mail++;
+	break;
+      default:
+	exit(1);
+      }
     }
 
-  inname = argv[1];
-  outname = argv[2];
+  if (
+#ifdef MAIL_USE_POP
+      (argc - optind < 2) || (argc - optind > 3)
+#else
+      (argc - optind != 2)
+#endif
+      )
+    {
+      fprintf (stderr, "Usage: movemail [-p] inbox destfile%s\n",
+#ifdef MAIL_USE_POP
+	       " [POP-password]"
+#else
+	       ""
+#endif
+	       );
+      exit (1);
+    }
+
+  inname = argv[optind];
+  outname = argv[optind+1];
 
 #ifdef MAIL_USE_MMDF
   mmdf_init (argv[0]);
@@ -208,7 +249,8 @@ main (argc, argv)
     {
       int status;
 
-      status = popmail (inname + 3, outname, argc > 3 ? argv[3] : NULL);
+      status = popmail (inname + 3, outname, preserve_mail,
+			(argc - optind == 3) ? argv[optind+2] : NULL);
       exit (status);
     }
 
@@ -223,78 +265,90 @@ main (argc, argv)
 
 #ifndef MAIL_USE_MMDF
 #ifndef MAIL_USE_SYSTEM_LOCK
-  /* Use a lock file named after our first argument with .lock appended:
-     If it exists, the mail file is locked.  */
-  /* Note: this locking mechanism is *required* by the mailer
-     (on systems which use it) to prevent loss of mail.
-
-     On systems that use a lock file, extracting the mail without locking
-     WILL occasionally cause loss of mail due to timing errors!
-
-     So, if creation of the lock file fails
-     due to access permission on the mail spool directory,
-     you simply MUST change the permission
-     and/or make movemail a setgid program
-     so it can create lock files properly.
-
-     You might also wish to verify that your system is one
-     which uses lock files for this purpose.  Some systems use other methods.
-
-     If your system uses the `flock' system call for mail locking,
-     define MAIL_USE_SYSTEM_LOCK in config.h or the s-*.h file
-     and recompile movemail.  If the s- file for your system
-     should define MAIL_USE_SYSTEM_LOCK but does not, send a bug report
-     to bug-gnu-emacs@prep.ai.mit.edu so we can fix it.  */
-
-  lockname = concat (inname, ".lock", "");
-  tempname = (char *) xmalloc (strlen (inname) + strlen ("EXXXXXX") + 1);
-  strcpy (tempname, inname);
-  p = tempname + strlen (tempname);
-  while (p != tempname && !IS_DIRECTORY_SEP (p[-1]))
-    p--;
-  *p = 0;
-  strcpy (p, "EXXXXXX");
-  mktemp (tempname);
-  unlink (tempname);
-
-  while (1)
+#ifdef MAIL_USE_MAILLOCK
+  spool_name = mail_spool_name (inname);
+  if (! spool_name)
+#endif
     {
-      /* Create the lock file, but not under the lock file name.  */
-      /* Give up if cannot do that.  */
-      desc = open (tempname, O_WRONLY | O_CREAT | O_EXCL, 0666);
-      if (desc < 0)
-	{
-	  char *message = (char *) xmalloc (strlen (tempname) + 50);
-	  sprintf (message, "%s--see source file lib-src/movemail.c",
-		   tempname);
-	  pfatal_with_name (message);
-	}
-      close (desc);
+      /* Use a lock file named after our first argument with .lock appended:
+	 If it exists, the mail file is locked.  */
+      /* Note: this locking mechanism is *required* by the mailer
+	 (on systems which use it) to prevent loss of mail.
 
-      tem = link (tempname, lockname);
+	 On systems that use a lock file, extracting the mail without locking
+	 WILL occasionally cause loss of mail due to timing errors!
+
+	 So, if creation of the lock file fails
+	 due to access permission on the mail spool directory,
+	 you simply MUST change the permission
+	 and/or make movemail a setgid program
+	 so it can create lock files properly.
+
+	 You might also wish to verify that your system is one
+	 which uses lock files for this purpose.  Some systems use other methods.
+
+	 If your system uses the `flock' system call for mail locking,
+	 define MAIL_USE_SYSTEM_LOCK in config.h or the s-*.h file
+	 and recompile movemail.  If the s- file for your system
+	 should define MAIL_USE_SYSTEM_LOCK but does not, send a bug report
+	 to bug-gnu-emacs@prep.ai.mit.edu so we can fix it.  */
+
+      lockname = concat (inname, ".lock", "");
+      tempname = (char *) xmalloc (strlen (inname) + strlen ("EXXXXXX") + 1);
+      strcpy (tempname, inname);
+      p = tempname + strlen (tempname);
+      while (p != tempname && !IS_DIRECTORY_SEP (p[-1]))
+	p--;
+      *p = 0;
+      strcpy (p, "EXXXXXX");
+      mktemp (tempname);
       unlink (tempname);
-      if (tem >= 0)
-	break;
-      sleep (1);
 
-      /* If lock file is five minutes old, unlock it.
-	 Five minutes should be good enough to cope with crashes
-	 and wedgitude, and long enough to avoid being fooled
-	 by time differences between machines.  */
-      if (stat (lockname, &st) >= 0)
+      while (1)
 	{
-	  now = time (0);
-	  if (st.st_ctime < now - 300)
-	    unlink (lockname);
-	}
-    }
+	  /* Create the lock file, but not under the lock file name.  */
+	  /* Give up if cannot do that.  */
+	  desc = open (tempname, O_WRONLY | O_CREAT | O_EXCL, 0666);
+	  if (desc < 0)
+	    {
+	      char *message = (char *) xmalloc (strlen (tempname) + 50);
+	      sprintf (message, "%s--see source file lib-src/movemail.c",
+		       tempname);
+	      pfatal_with_name (message);
+	    }
+	  close (desc);
 
-  delete_lockname = lockname;
+	  tem = link (tempname, lockname);
+	  unlink (tempname);
+	  if (tem >= 0)
+	    break;
+	  sleep (1);
+
+	  /* If lock file is five minutes old, unlock it.
+	     Five minutes should be good enough to cope with crashes
+	     and wedgitude, and long enough to avoid being fooled
+	     by time differences between machines.  */
+	  if (stat (lockname, &st) >= 0)
+	    {
+	      now = time (0);
+	      if (st.st_ctime < now - 300)
+		unlink (lockname);
+	    }
+	}
+
+      delete_lockname = lockname;
+    }
 #endif /* not MAIL_USE_SYSTEM_LOCK */
 #endif /* not MAIL_USE_MMDF */
 
   if (fork () == 0)
     {
+      int lockcount = 0;
+      int status = 0;
+#if defined (MAIL_USE_MAILLOCK) && defined (HAVE_TOUCHLOCK)
+      long touched_lock, now;
+#endif
+
       setuid (getuid ());
 
 #ifndef MAIL_USE_MMDF
@@ -310,32 +364,78 @@ main (argc, argv)
       if (indesc < 0)
 	pfatal_with_name (inname);
 
-#if defined (BSD) || defined (XENIX)
+#if defined (BSD_SYSTEM) || defined (XENIX)
       /* In case movemail is setuid to root, make sure the user can
 	 read the output file.  */
       /* This is desirable for all systems
 	 but I don't want to assume all have the umask system call */
       umask (umask (0) & 0333);
-#endif /* BSD or Xenix */
+#endif /* BSD_SYSTEM || XENIX */
       outdesc = open (outname, O_WRONLY | O_CREAT | O_EXCL, 0666);
       if (outdesc < 0)
 	pfatal_with_name (outname);
+
+      /* This label exists so we can retry locking
+	 after a delay, if it got EAGAIN or EBUSY.  */
+    retry_lock:
+
+      /* Try to lock it.  */
+#ifdef MAIL_USE_MAILLOCK
+      if (spool_name)
+	{
+	  /* The "0 - " is to make it a negative number if maillock returns
+	     non-zero. */
+	  status = 0 - maillock (spool_name, 1);
+#ifdef HAVE_TOUCHLOCK
+	  touched_lock = time (0);
+#endif
+	  lockcount = 5;
+	}
+      else
+#endif /* MAIL_USE_MAILLOCK */
+	{
 #ifdef MAIL_USE_SYSTEM_LOCK
 #ifdef MAIL_USE_LOCKF
-      if (lockf (indesc, F_LOCK, 0) < 0) pfatal_with_name (inname);
+	  status = lockf (indesc, F_LOCK, 0);
 #else /* not MAIL_USE_LOCKF */
 #ifdef XENIX
-      if (locking (indesc, LK_RLCK, 0L) < 0) pfatal_with_name (inname);
+	  status = locking (indesc, LK_RLCK, 0L);
 #else
 #ifdef WINDOWSNT
-      if (locking (indesc, LK_RLCK, -1L) < 0) pfatal_with_name (inname);
+	  status = locking (indesc, LK_RLCK, -1L);
 #else
-      if (flock (indesc, LOCK_EX) < 0) pfatal_with_name (inname);
+	  status = flock (indesc, LOCK_EX);
 #endif
 #endif
 #endif /* not MAIL_USE_LOCKF */
 #endif /* MAIL_USE_SYSTEM_LOCK */
+	}
 
+      /* If it fails, retry up to 5 times
+	 for certain failure codes.  */
+      if (status < 0)
+	{
+	  if (++lockcount <= 5)
+	    {
+#ifdef EAGAIN
+	      if (errno == EAGAIN)
+		{
+		  sleep (1);
+		  goto retry_lock;
+		}
+#endif
+#ifdef EBUSY
+	      if (errno == EBUSY)
+		{
+		  sleep (1);
+		  goto retry_lock;
+		}
+#endif
+	    }
+
+	  pfatal_with_name (inname);
+	}
+  
       {
 	char buf[1024];
 
@@ -351,10 +451,21 @@ main (argc, argv)
 	      }
 	    if (nread < sizeof buf)
 	      break;
+#if defined (MAIL_USE_MAILLOCK) && defined (HAVE_TOUCHLOCK)
+	    if (spool_name)
+	      {
+		now = time (0);
+		if (now - touched_lock > 60)
+		  {
+		    touchlock ();
+		    touched_lock = now;
+		  }
+	      }
+#endif /* MAIL_USE_MAILLOCK */
 	  }
       }
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
       if (fsync (outdesc) < 0)
 	pfatal_and_delete (outname);
 #endif
@@ -364,11 +475,15 @@ main (argc, argv)
 	pfatal_and_delete (outname);
 
 #ifdef MAIL_USE_SYSTEM_LOCK
+      if (! preserve_mail)
+	{
 #if defined (STRIDE) || defined (XENIX) || defined (WINDOWSNT)
-      /* Stride, xenix have file locking, but no ftruncate.  This mess will do. */
-      close (open (inname, O_CREAT | O_TRUNC | O_RDWR, 0666));
+	  /* Stride, xenix have file locking, but no ftruncate.
+	     This mess will do. */
+	  close (open (inname, O_CREAT | O_TRUNC | O_RDWR, 0666));
 #else
-      ftruncate (indesc, 0L);
+	  ftruncate (indesc, 0L);
+	}
 #endif /* STRIDE or XENIX */
 #endif /* MAIL_USE_SYSTEM_LOCK */
 
@@ -379,16 +494,25 @@ main (argc, argv)
 #endif
 
 #ifndef MAIL_USE_SYSTEM_LOCK
-      /* Delete the input file; if we can't, at least get rid of its
-	 contents.  */
+      if (! preserve_mail)
+	{
+	  /* Delete the input file; if we can't, at least get rid of its
+	     contents.  */
 #ifdef MAIL_UNLINK_SPOOL
-      /* This is generally bad to do, because it destroys the permissions
-	 that were set on the file.  Better to just empty the file.  */
-      if (unlink (inname) < 0 && errno != ENOENT)
+	  /* This is generally bad to do, because it destroys the permissions
+	     that were set on the file.  Better to just empty the file.  */
+	  if (unlink (inname) < 0 && errno != ENOENT)
 #endif /* MAIL_UNLINK_SPOOL */
-	creat (inname, 0600);
+	    creat (inname, 0600);
+	}
 #endif /* not MAIL_USE_SYSTEM_LOCK */
 
+#ifdef MAIL_USE_MAILLOCK
+      /* This has to occur in the child, i.e., in the process that
+         acquired the lock! */
+      if (spool_name)
+	mailunlock ();
+#endif
       exit (0);
     }
 
@@ -399,13 +523,57 @@ main (argc, argv)
     exit (WRETCODE (status));
 
 #if !defined (MAIL_USE_MMDF) && !defined (MAIL_USE_SYSTEM_LOCK)
-  unlink (lockname);
+#ifdef MAIL_USE_MAILLOCK
+  if (! spool_name)
+#endif /* MAIL_USE_MAILLOCK */
+    unlink (lockname);
 #endif /* not MAIL_USE_MMDF and not MAIL_USE_SYSTEM_LOCK */
 
 #endif /* ! DISABLE_DIRECT_ACCESS */
 
   return 0;
 }
+
+#ifdef MAIL_USE_MAILLOCK
+/* This function uses stat to confirm that the mail directory is
+   identical to the directory of the input file, rather than just
+   string-comparing the two paths, because one or both of them might
+   be symbolic links pointing to some other directory. */
+static char *
+mail_spool_name (inname)
+     char *inname;
+{
+  struct stat stat1, stat2;
+  char *indir, *fname;
+  int status;
+
+  if (! (fname = rindex (inname, '/')))
+    return NULL;
+
+  fname++;
+
+  if (stat (MAILDIR, &stat1) < 0)
+    return NULL;
+
+  indir = (char *) xmalloc (fname - inname + 1);
+  strncpy (indir, inname, fname - inname);
+  indir[fname-inname] = '\0';
+
+
+  status = stat (indir, &stat2);
+
+  free (indir);
+
+  if (status < 0)
+    return NULL;
+
+  if (stat1.st_dev == stat2.st_dev
+      && stat1.st_ino == stat2.st_ino)
+    return fname;
+
+  return NULL;
+}
+#endif /* MAIL_USE_MAILLOCK */
 
 /* Print error message and exit.  */
 
@@ -488,17 +656,7 @@ xmalloc (size)
 #undef _WINSOCKAPI_
 #include <winsock.h>
 #endif
-#include <stdio.h>
 #include <pwd.h>
-
-#ifdef USG
-#include <fcntl.h>
-/* Cancel substitutions made by config.h for Emacs.  */
-#undef open
-#undef read
-#undef write
-#undef close
-#endif /* USG */
 
 #define NOTOK (-1)
 #define OK 0
@@ -511,9 +669,10 @@ char ibuffer[BUFSIZ];
 char obuffer[BUFSIZ];
 char Errmsg[80];
 
-popmail (user, outfile, password)
+popmail (user, outfile, preserve, password)
      char *user;
      char *outfile;
+     int preserve;
      char *password;
 {
   int nmsgs, nbytes;
@@ -521,9 +680,7 @@ popmail (user, outfile, password)
   int mbfi;
   FILE *mbf;
   char *getenv ();
-  int mbx_write ();
   popserver server;
-  extern char *strerror ();
 
   server = pop_open (0, user, password, POP_NO_GETPASS);
   if (! server)
@@ -565,7 +722,7 @@ popmail (user, outfile, password)
   for (i = 1; i <= nmsgs; i++)
     {
       mbx_delimit_begin (mbf);
-      if (pop_retr (server, i, mbx_write, mbf) != OK)
+      if (pop_retr (server, i, mbf) != OK)
 	{
 	  error (Errmsg);
 	  close (mbfi);
@@ -588,7 +745,7 @@ popmail (user, outfile, password)
    *      directories have lost mail when over quota because these checks were
    *      not made in previous versions of movemail. */
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
   if (fsync (mbfi) < 0)
     {
       error ("Error in fsync: %s", strerror (errno));
@@ -602,15 +759,16 @@ popmail (user, outfile, password)
       return (1);
     }
 
-  for (i = 1; i <= nmsgs; i++)
-    {
-      if (pop_delete (server, i))
-	{
-	  error (pop_error);
-	  pop_close (server);
-	  return (1);
-	}
-    }
+  if (! preserve)
+    for (i = 1; i <= nmsgs; i++)
+      {
+	if (pop_delete (server, i))
+	  {
+	    error (pop_error);
+	    pop_close (server);
+	    return (1);
+	  }
+      }
 
   if (pop_quit (server))
     {
@@ -621,9 +779,10 @@ popmail (user, outfile, password)
   return (0);
 }
 
-pop_retr (server, msgno, action, arg)
+int
+pop_retr (server, msgno, arg)
      popserver server;
-     int (*action)();
+     FILE *arg;
 {
   extern char *strerror ();
   char *line;
@@ -641,7 +800,7 @@ pop_retr (server, msgno, action, arg)
       if (! line)
 	break;
 
-      if ((*action)(line, arg) != OK)
+      if (mbx_write (line, arg) != OK)
 	{
 	  strcpy (Errmsg, strerror (errno));
 	  pop_close (server);

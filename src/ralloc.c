@@ -57,7 +57,12 @@ typedef unsigned long SIZE;
    overlap.  */
 extern void safe_bcopy ();
 
+#ifdef DOUG_LEA_MALLOC
+#define M_TOP_PAD           -2 
+extern int mallopt ();
+#else
 extern int __malloc_extra_blocks;
+#endif
 
 #else /* not emacs */
 
@@ -1119,9 +1124,13 @@ r_alloc_init ()
   page_size = PAGE;
   extra_bytes = ROUNDUP (50000);
 
+#ifdef DOUG_LEA_MALLOC
+    mallopt (M_TOP_PAD, 64 * 4096);
+#else
   /* Give GNU malloc's morecore some hysteresis
      so that we move all the relocatable blocks much less often.  */
   __malloc_extra_blocks = 64;
+#endif
 
   first_heap->end = (POINTER) ROUNDUP (first_heap->start);
 
@@ -1141,6 +1150,24 @@ r_alloc_init ()
   virtual_break_value = break_value = first_heap->bloc_start = first_heap->end;
   use_relocatable_buffers = 1;
 }
+
+#if defined (emacs) && defined (DOUG_LEA_MALLOC)
+
+/* Reinitialize the morecore hook variables after restarting a dumped
+   Emacs.  This is needed when using Doug Lea's malloc from GNU libc.  */
+void
+r_alloc_reinit ()
+{
+  /* Only do this if the hook has been reset, so that we don't get an
+     infinite loop, in case Emacs was linked statically.  */
+  if (__morecore != r_alloc_sbrk)
+    {
+      real_morecore = __morecore;
+      __morecore = r_alloc_sbrk;
+    }
+}
+#endif
+
 #ifdef DEBUG
 #include <assert.h>
 

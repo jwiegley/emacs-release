@@ -1,13 +1,13 @@
 ;;; rsz-mini.el --- dynamically resize minibuffer to display entire contents
 
-;; Copyright (C) 1990, 1993, 1994, 1995 Free Software Foundation, Inc.
+;; Copyright (C) 1990, 1993, 1994, 1995, 1997 Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman <friedman@prep.ai.mit.edu>
 ;;         Roland McGrath <roland@prep.ai.mit.edu>
 ;; Maintainer: friedman@prep.ai.mit.edu
 ;; Keywords: minibuffer, window, frame, display
-;; Status: Known to work in FSF GNU Emacs 19.26 and later.
-;; $Id: rsz-mini.el,v 1.11 1996/01/14 07:34:30 erik Exp $
+
+;; $Id: rsz-mini.el,v 1.17 1997/06/23 08:21:26 friedman Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -34,8 +34,8 @@
 ;; typing, the minibuffer will return to its original size.
 
 ;; In window systems where it is possible to have a frame in which the
-;; minibuffer is the only window, the frame itself can be resized.  In FSF
-;; GNU Emacs 19.22 and earlier, the frame may not be properly returned to
+;; minibuffer is the only window, the frame itself can be resized.  In
+;; Emacs 19.22 and earlier, the frame may not be properly returned to
 ;; its original size after it ceases to be active because
 ;; `minibuffer-exit-hook' didn't exist until version 19.23.
 ;;
@@ -57,40 +57,54 @@
 ;;; Code:
 
 
-;;;###autoload
-(defvar resize-minibuffer-mode nil
-  "*If non-`nil', resize the minibuffer so its entire contents are visible.")
+(defgroup resize-minibuffer nil
+  "Dynamically resize minibuffer to display entire contents"
+  :group 'frames)
 
 ;;;###autoload
-(defvar resize-minibuffer-window-max-height nil
+(defcustom resize-minibuffer-mode nil
+  "*If non-`nil', resize the minibuffer so its entire contents are visible."
+  :type 'boolean
+  :group 'resize-minibuffer)
+
+;;;###autoload
+(defcustom resize-minibuffer-window-max-height nil
   "*Maximum size the minibuffer window is allowed to become.
 If less than 1 or not a number, the limit is the height of the frame in
-which the active minibuffer window resides.")
+which the active minibuffer window resides."
+  :type '(choice (const nil) integer)
+  :group 'resize-minibuffer)
 
 ;;;###autoload
-(defvar resize-minibuffer-window-exactly t
+(defcustom resize-minibuffer-window-exactly t
   "*Allow making minibuffer exactly the size to display all its contents.
 If `nil', the minibuffer window can temporarily increase in size but
 never get smaller while it is active.  Any other value allows exact
-resizing.")
+resizing."
+  :type 'boolean
+  :group 'resize-minibuffer)
 
 ;;;###autoload
-(defvar resize-minibuffer-frame nil
+(defcustom resize-minibuffer-frame nil
   "*Allow changing the frame height of minibuffer frames.
 If non-`nil' and the active minibuffer is the sole window in its frame,
-allow changing the frame height.")
+allow changing the frame height."
+  :type 'boolean
+  :group 'resize-minibuffer)
 
 ;;;###autoload
-(defvar resize-minibuffer-frame-max-height nil
+(defcustom resize-minibuffer-frame-max-height nil
   "*Maximum size the minibuffer frame is allowed to become.
 If less than 1 or not a number, there is no limit.")
 
 ;;;###autoload
-(defvar resize-minibuffer-frame-exactly t
+(defcustom resize-minibuffer-frame-exactly t
   "*Allow making minibuffer frame exactly the size to display all its contents.
 If `nil', the minibuffer frame can temporarily increase in size but
 never get smaller while it is active.  Any other value allows exact
-resizing.")
+resizing."
+  :type 'boolean
+  :group 'resize-minibuffer)
 
 ;; Variable used to store the height of the minibuffer frame
 ;; on entry, so it can be restored on exit.  It is made local before it is
@@ -130,7 +144,8 @@ counterparts."
    ((>= prefix 0)
     (setq resize-minibuffer-mode t))
    (t
-    (setq resize-minibuffer-mode nil))))
+    (setq resize-minibuffer-mode nil)))
+  (add-hook 'minibuffer-setup-hook 'resize-minibuffer-setup))
 
 (defun resize-minibuffer-setup ()
   (cond
@@ -232,24 +247,21 @@ respectively."
          (setq lines (min lines resize-minibuffer-frame-max-height)))
     (cond
      ((> lines height)
-      (set-frame-size (selected-frame) (frame-width) lines))
+      (set-frame-size (window-frame (minibuffer-window)) (frame-width) lines))
      ((and resize-minibuffer-frame-exactly
            (> height resize-minibuffer-frame-original-height)
            (< lines height))
-      (set-frame-size (selected-frame) (frame-width) lines)))))
+      (set-frame-size (window-frame (minibuffer-window))
+		      (frame-width) lines)))))
 
 ;; Restore the original height of the frame.
 ;; resize-minibuffer-frame-original-height is set in
 ;; resize-minibuffer-setup.
 (defun resize-minibuffer-frame-restore ()
-  (set-frame-size (selected-frame)
+  (set-frame-size (window-frame (minibuffer-window))
                   (frame-width)
                   resize-minibuffer-frame-original-height))
 
-
 (provide 'rsz-mini)
-
-(add-hook 'minibuffer-setup-hook 'resize-minibuffer-setup)
-(resize-minibuffer-mode)
 
 ;; rsz-mini.el ends here

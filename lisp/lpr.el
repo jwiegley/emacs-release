@@ -30,40 +30,61 @@
 
 ;;; Code:
 
-;;;###autoload
-(defvar lpr-switches nil 
-  "*List of strings to pass as extra options for the printer program.
-See `lpr-command'.")
+(defgroup lpr nil
+  "Print Emacs buffer on line printer"
+  :group 'wp)
 
-(defvar lpr-add-switches (eq system-type 'berkeley-unix)
+
+;;;###autoload
+(defcustom lpr-switches nil 
+  "*List of strings to pass as extra options for the printer program.
+See `lpr-command'."
+  :type '(repeat (string :tag "Argument"))
+  :group 'lpr)
+
+(defcustom lpr-add-switches (eq system-type 'berkeley-unix)
   "*Non-nil means construct -T and -J options for the printer program.
 These are made assuming that the program is `lpr';
 if you are using some other incompatible printer program,
-this variable should be nil.")
+this variable should be nil."
+  :type 'boolean
+  :group 'lpr)
 
 ;;;###autoload
-(defvar lpr-command
+(defcustom lpr-command
   (if (memq system-type '(usg-unix-v dgux hpux irix))
       "lp" "lpr")
-  "*Name of program for printing a file.")
+  "*Name of program for printing a file."
+  :type 'string
+  :group 'lpr)
 
 ;; Default is nil, because that enables us to use pr -f
 ;; which is more reliable than pr with no args, which is what lpr -p does.
-(defvar lpr-headers-switches nil
+(defcustom lpr-headers-switches nil
   "*List of strings of options to request page headings in the printer program.
 If nil, we run `lpr-page-header-program' to make page headings
-and print the result.")
+and print the result."
+  :type '(repeat (string :tag "Argument"))
+  :group 'lpr)
 
-(defvar print-region-function nil
+(defcustom print-region-function nil
   "Function to call to print the region on a printer.
-See definition of `print-region-1' for calling conventions.")
+See definition of `print-region-1' for calling conventions."
+  :type 'function
+  :group 'lpr)
 
-(defvar lpr-page-header-program "pr"
-  "*Name of program for adding page headers to a file.")
+(defcustom lpr-page-header-program "pr"
+  "*Name of program for adding page headers to a file."
+  :type 'string
+  :group 'lpr)
 
-(defvar lpr-page-header-switches '("-f")
+;; Berkeley systems support -F, and GNU pr supports both -f and -F,
+;; So it looks like -F is a better default.
+(defcustom lpr-page-header-switches '("-F")
   "*List of strings to use as options for the page-header-generating program.
-The variable `lpr-page-header-program' specifies the program to use.")
+The variable `lpr-page-header-program' specifies the program to use."
+  :type '(repeat string)
+  :group 'lpr)
 
 ;;;###autoload
 (defun lpr-buffer ()
@@ -168,9 +189,9 @@ The variable `lpr-page-header-program' specifies the program to use.")
       (cons (point-min) (point-max)))))
 
 (defun printify-region (begin end)
-  "Turn nonprinting characters (other than TAB, LF, SPC, RET, and FF)
-in the current buffer into printable representations as control or
-hexadecimal escapes."
+  "Replace nonprinting characters in region with printable representations.
+The printable representations use ^ (for ASCII control characters) or hex.
+The characters tab, linefeed, space, return and formfeed are not affected."
   (interactive "r")
   (save-excursion
     (goto-char begin)

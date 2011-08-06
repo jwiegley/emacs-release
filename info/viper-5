@@ -1,0 +1,236 @@
+This is Info file ../info/viper, produced by Makeinfo-1.64 from the
+input file viper.texi.
+
+Distribution
+************
+
+Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the same conditions as for modified
+versions.
+
+
+File: viper,  Node: Concept Index,  Prev: Package Index,  Up: Top
+
+Concept Index
+*************
+
+* Menu:
+
+* # (Previous file) <1>:                Shell Commands.
+* # (Previous file):                    Groundwork.
+* % (Current file) <1>:                 Groundwork.
+* % (Current file):                     Shell Commands.
+* % (Ex address) <1>:                   Shell Commands.
+* % (Ex address):                       Groundwork.
+* .emacs:                               Customization.
+* .viper:                               Customization.
+* <a-z>:                                Groundwork.
+* <address>:                            Groundwork.
+* <args>:                               Groundwork.
+* <cmd>:                                Groundwork.
+* <cr>:                                 Groundwork.
+* <esc>:                                Groundwork.
+* <ht>:                                 Groundwork.
+* <lf>:                                 Groundwork.
+* <move>:                               Groundwork.
+* <sp>:                                 Groundwork.
+* abbrevs:                              Abbreviation Facilities.
+* absolute paths:                       Multiple Files in Viper.
+* appending:                            Appending Text.
+* auto fill:                            Options.
+* auto save:                            Undo and Backups.
+* autoindent:                           Options.
+* backup files <1>:                     Undoing.
+* backup files:                         Undo and Backups.
+* buffer:                               Emacs Preliminaries.
+* buffer (modified):                    Emacs Preliminaries.
+* buffer information:                   Emacs Preliminaries.
+* buffer search:                        Improved Search.
+* C-c and Viper:                        Packages that Change Keymaps.
+* case and searching:                   Options.
+* case-insensitive search <1>:          New Commands.
+* case-insensitive search <2>:          Vi State.
+* case-insensitive search:              Move Commands.
+* case-sensitive search <1>:            New Commands.
+* case-sensitive search <2>:            Vi State.
+* case-sensitive search:                Move Commands.
+* changing case <1>:                    Changing Text.
+* changing case:                        New Commands.
+* changing tab width:                   Options.
+* char:                                 Groundwork.
+* column movement:                      Move Commands.
+* Command history:                      New Commands.
+* command line:                         Emacs Preliminaries.
+* Command ring:                         New Commands.
+* compiling:                            Useful Packages.
+* completion:                           Completion.
+* Control keys:                         Emacs Preliminaries.
+* customization:                        Customization.
+* cut and paste:                        Yanking.
+* describing regions:                   Basics.
+* desktop:                              Useful Packages.
+* Destructive command history:          Viper Specials.
+* Destructive command ring:             Viper Specials.
+* dired:                                Useful Packages.
+* dynamic abbrevs:                      Abbreviation Facilities.
+* ediff:                                Useful Packages.
+* Emacs state <1>:                      Emacs State.
+* Emacs state:                          States in Viper.
+* email:                                Useful Packages.
+* end (of buffer):                      Emacs Preliminaries.
+* end (of line):                        Emacs Preliminaries.
+* Ex addresses:                         Groundwork.
+* Ex commands <1>:                      States in Viper.
+* Ex commands:                          Vi State.
+* Ex style motion:                      Movement and Markers.
+* expanding (region):                   Basics.
+* font-lock:                            Useful Packages.
+* global keymap:                        Emacs Preliminaries.
+* headings <1>:                         Viper Specials.
+* headings:                             Move Commands.
+* history:                              History.
+* incremental search:                   Improved Search.
+* initialization:                       Customization.
+* Insert state <1>:                     Insert State.
+* Insert state <2>:                     Editing in Insert State.
+* Insert state:                         States in Viper.
+* inserting:                            Appending Text.
+* Insertion history:                    New Commands.
+* Insertion ring <1>:                   New Commands.
+* Insertion ring:                       Viper Specials.
+* interactive shell:                    Useful Packages.
+* ispell:                               Useful Packages.
+* joining lines:                        Changing Text.
+* keybindings <1>:                      Mapping.
+* keybindings:                          Keybindings.
+* keyboard macros <1>:                  Macros and Registers.
+* keyboard macros:                      New Commands.
+* keymap:                               Emacs Preliminaries.
+* keymapping:                           Mapping.
+* keymaps:                              Keybindings.
+* last keyboard macro:                  Macros and Registers.
+* layout:                               Options.
+* line commands <1>:                    Groundwork.
+* line commands:                        Basics.
+* line editor motion:                   Movement and Markers.
+* literal searching:                    Options.
+* local keymap:                         Emacs Preliminaries.
+* looking at:                           Emacs Preliminaries.
+* macros:                               Macros and Registers.
+* mail:                                 Useful Packages.
+* major mode:                           Emacs Preliminaries.
+* make:                                 Useful Packages.
+* managing multiple files:              Multiple Files in Viper.
+* mark:                                 Emacs Preliminaries.
+* markers <1>:                          Undo and Backups.
+* markers <2>:                          Move Commands.
+* markers:                              Multiple Files in Viper.
+* marking:                              Marking.
+* matching parens <1>:                  Move Commands.
+* matching parens:                      Options.
+* Meta key <1>:                         Insert State.
+* Meta key <2>:                         Vi State.
+* Meta key:                             Emacs Preliminaries.
+* Minibuffer <1>:                       Emacs Preliminaries.
+* Minibuffer <2>:                       History.
+* Minibuffer:                           The Minibuffer.
+* minor mode:                           Emacs Preliminaries.
+* mode:                                 Emacs Preliminaries.
+* mode line <1>:                        States in Viper.
+* mode line:                            Emacs Preliminaries.
+* mouse:                                Viper Specials.
+* mouse search:                         Improved Search.
+* mouse-insert:                         Viper Specials.
+* mouse-search:                         Viper Specials.
+* movement commands <1>:                Move Commands.
+* movement commands:                    Basics.
+* movements:                            Groundwork.
+* Multifile documents and programs:     Viper Specials.
+* multiple files <1>:                   Multiple Files in Viper.
+* multiple files:                       File and Buffer Handling.
+* multiple undo:                        Vi State.
+* paragraphs <1>:                       Move Commands.
+* paragraphs:                           Viper Specials.
+* paren matching <1>:                   Options.
+* paren matching:                       Move Commands.
+* paste <1>:                            Appending Text.
+* paste:                                Yanking.
+* point:                                Emacs Preliminaries.
+* point commands <1>:                   Groundwork.
+* point commands:                       Basics.
+* put:                                  Appending Text.
+* query replace <1>:                    New Commands.
+* query replace:                        Improved Search.
+* quoting regions:                      Changing Text.
+* r and R region specifiers <1>:        Groundwork.
+* r and R region specifiers:            Basics.
+* RCS:                                  Useful Packages.
+* readonly files:                       Options.
+* region <1>:                           Emacs Preliminaries.
+* region:                               Basics.
+* region specification:                 Basics.
+* register execution <1>:               Macros and Registers.
+* register execution:                   New Commands.
+* registers <1>:                        Undo and Backups.
+* registers <2>:                        Macros and Registers.
+* registers:                            Multiple Files in Viper.
+* regular expressions:                  Vi State.
+* Replace state <1>:                    Replace State.
+* Replace state:                        States in Viper.
+* scrolling:                            Display.
+* searching <1>:                        Move Commands.
+* searching:                            Options.
+* sections <1>:                         Viper Specials.
+* sections:                             Move Commands.
+* sentences <1>:                        Viper Specials.
+* sentences:                            Move Commands.
+* setting variables:                    Rudimentary Changes.
+* shell <1>:                            Useful Packages.
+* shell:                                Options.
+* shell commands:                       Shell Commands.
+* shifting text <1>:                    Options.
+* shifting text:                        Deleting Text.
+* substitution:                         Changing Text.
+* syntax table <1>:                     Groundwork.
+* syntax table:                         Movement and Markers.
+* tabbing:                              Options.
+* text:                                 Emacs Preliminaries.
+* text processing:                      Search and Replace.
+* textmarkers <1>:                      Undo and Backups.
+* textmarkers <2>:                      Movement and Markers.
+* textmarkers <3>:                      Multiple Files in Viper.
+* textmarkers:                          Move Commands.
+* transparent ftp:                      Useful Packages.
+* undo <1>:                             Undo and Backups.
+* undo <2>:                             Vi State.
+* undo:                                 Undoing.
+* vanilla search <1>:                   Vi State.
+* vanilla search <2>:                   Move Commands.
+* vanilla search:                       New Commands.
+* variables for customization:          Rudimentary Changes.
+* version maintenance:                  Useful Packages.
+* Vi macros:                            Vi Macros.
+* Vi options:                           Options.
+* Vi state <1>:                         States in Viper.
+* Vi state:                             Vi State.
+* viewing registers and markers <1>:    Undo and Backups.
+* viewing registers and markers:        Macros and Registers.
+* Viper and C-c:                        Packages that Change Keymaps.
+* Viper as minor mode:                  Emacs Preliminaries.
+* window:                               Emacs Preliminaries.
+* word search:                          Improved Search.
+* word wrap:                            Options.
+* words:                                Groundwork.
+
+

@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Windows, Frames, Buffers, Top
 @chapter Multiple Windows
@@ -13,13 +13,13 @@ frame has its own set of windows.  Each window belongs to one and only
 one frame.
 
 @menu
-* Basic Window::       Introduction to Emacs windows.
-* Split Window::       New windows are made by splitting existing windows.
-* Other Window::       Moving to another window or doing something to it.
-* Pop Up Window::      Finding a file or buffer in another window.
-* Force Same Window::  Forcing certain buffers to appear in the selected
-                         window rather than in another window.
-* Change Window::      Deleting windows and changing their sizes.
+* Basic Window::        Introduction to Emacs windows.
+* Split Window::        New windows are made by splitting existing windows.
+* Other Window::        Moving to another window or doing something to it.
+* Pop Up Window::       Finding a file or buffer in another window.
+* Force Same Window::   Forcing certain buffers to appear in the selected
+                          window rather than in another window.
+* Change Window::       Deleting windows and changing their sizes.
 @end menu
 
 @node Basic Window
@@ -53,10 +53,9 @@ it.  Also, all commands that display information in a window, including
 without affecting the selected window.
 
   When multiple windows show the same buffer, they can have different
-regions, because they can have different values of point.  This means
-that in Transient Mark mode, each window highlights a different part of
-the buffer.  The part that is highlighted in the selected window is the
-region that editing commands use.
+regions, because they can have different values of point.  However,
+they all have the same value for the mark, because each buffer has
+only one mark position.
 
   Each window has its own mode line, which displays the buffer name,
 modification status and major and minor modes of the buffer that is
@@ -92,13 +91,12 @@ numeric argument specifies how many lines to give to the top window.
 @kindex C-x 3
 @findex split-window-horizontally
   @kbd{C-x 3} (@code{split-window-horizontally}) breaks the selected
-window into two side-by-side windows.  A numeric argument specifies
-how many columns to give the one on the left.  A line of vertical bars
+window into two side-by-side windows.  A numeric argument specifies how
+many columns to give the one on the left.  A line of vertical bars
 separates the two windows.  Windows that are not the full width of the
-screen have mode lines, but they are truncated; also, they do not
-always appear in inverse video, because the Emacs display routines
-have not been taught how to display a region of inverse video that is
-only part of a line on the screen.
+screen have mode lines, but they are truncated.  On terminals where
+Emacs does not support highlighting, truncated mode lines sometimes do
+not appear in inverse video.
 
 @kindex C-Mouse-2 @r{(scroll bar)}
   You can split a window horizontally or vertically by clicking
@@ -251,14 +249,24 @@ displayed in their own individual frames.  @xref{Special Buffer Frames}.
 
 @table @kbd
 @item C-x 0
-Delete the selected window (@code{delete-window}).  That is a zero.
+Delete the selected window (@code{delete-window}).  The last character
+in this key sequence is a zero.
 @item C-x 1
 Delete all windows in the selected frame except the selected window
 (@code{delete-other-windows}).
+@item C-x 4 0
+Delete the selected window and kill the buffer that was showing in it
+(@code{kill-buffer-and-window}).  The last character in this key
+sequence is a zero.
 @item C-x ^
 Make selected window taller (@code{enlarge-window}).
 @item C-x @}
 Make selected window wider (@code{enlarge-window-horizontally}).
+@item C-x -
+Shrink this window if its buffer doesn't need so many lines
+(@code{shrink-window-if-larger-than-buffer}).
+@item C-x +
+Make all windows the same height (@code{balance-windows}).
 @item Drag-Mouse-1
 Dragging a window's mode line up or down with @kbd{Mouse-1} changes
 window heights.
@@ -281,16 +289,22 @@ window has no effect on the buffer it used to display; the buffer
 continues to exist, and you can select it in any window with @kbd{C-x
 b}.
 
+@findex kill-buffer-and-window
+@kindex C-x 4 0
+  @kbd{C-x 4 0} (@code{kill-buffer-and-window}) is a stronger command
+than @kbd{C-x 0}; it kills the current buffer and then deletes the
+selected window.
+
 @kindex C-x 1
 @findex delete-other-windows
-  @kbd{C-x 1} (@code{delete-other-windows}) is more powerful than
-@kbd{C-x 0}; it deletes all the windows except the selected one (and the
-minibuffer); the selected window expands to use the whole frame except
-for the echo area.
+  @kbd{C-x 1} (@code{delete-other-windows}) is more powerful in a
+different way; it deletes all the windows except the selected one (and
+the minibuffer); the selected window expands to use the whole frame
+except for the echo area.
 
   You can also delete a window by clicking on its mode line with
-@kbd{Mouse-2}, and expand a window to fill its frame by clicking on its
-mode line with @kbd{Mouse-3}.
+@kbd{Mouse-2}, and delete all the windows in a frame except one window
+by clicking on that window's mode line with @kbd{Mouse-3}.
 
   The easiest way to adjust window heights is with a mouse.  If you
 press @kbd{Mouse-1} on a mode line, you can drag that mode line up or
@@ -308,11 +322,24 @@ selected window get one line bigger, or as many lines as is specified
 with a numeric argument.  With a negative argument, it makes the
 selected window smaller.  @kbd{C-x @}}
 (@code{enlarge-window-horizontally}) makes the selected window wider by
-the specified number of columns.  The extra screen space given to a
-window comes from one of its neighbors, if that is possible.  If this
-makes any window too small, it is deleted and its space is given to an
-adjacent window.  The minimum size is specified by the variables
-@code{window-min-height} and @code{window-min-width}.
+the specified number of columns.
+
+  When you make a window bigger, the space comes from one of its
+neighbors.  If this makes any window too small, it is deleted and its
+space is given to an adjacent window.  The minimum size is specified by
+the variables @code{window-min-height} and @code{window-min-width}.
+
+@kindex C-x -
+@findex shrink-window-if-larger-than-buffer
+  The command @kbd{C-x -} (@code{shrink-window-if-larger-than-buffer})
+reduces the height of the selected window, if it is taller than
+necessary to show the whole text of the buffer it is displaying.  It
+gives the extra lines to other windows in the frame.
+
+@kindex C-x +
+@findex balance-windows
+  You can also use @kbd{C-x +} (@code{balance-windows}) to even out the
+heights of all the windows in the selected frame.
 
   @xref{Minibuffer Edit}, for information about the Resize-Minibuffer
 mode, which automatically changes the size of the minibuffer window to

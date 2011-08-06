@@ -3,6 +3,8 @@
 ;; Copyright (c) 1993, 1994 Free Software Foundation, Inc.
 
 ;; Author:   Jonathan Stigelman <stig@hackvan.com>
+;; Maintainer: FSF
+;;	(actually no longer maintained)
 ;; Keywords: faces
 
 ;; This file is part of GNU Emacs.
@@ -29,10 +31,9 @@
 ;; Hilit19 knows (or thinks it knows) how to highlight emacs buffers in
 ;; about 25 different modes.
 ;; 
-;; WHERE TO GET THE LATEST VERSIONS OF HILIT19.EL (beta and release), 
-;; PLUS LOTS OF OTHER *WAY COOL* STUFF VIA ANONYMOUS FTP:
+;; WHERE TO GET THE LATEST VERSIONS OF HILIT19.EL (beta and release):
 ;;
-;;      ftp.hackvan.com:/pub/stig/src/elisp/hilit19.el.gz
+;;      http://hackvan.com/pub/stig/src/elisp/
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -149,7 +150,7 @@
 ;;
 ;; * Moved hilit-wysiwyg-replace here from my version of man.el, this is not
 ;;   a bug.  The bug is that I don't have a reverse operation yet...just a
-;;   stub Wysiwyg-anything really belongs in a package of it's own.
+;;   stub Wysiwyg-anything really belongs in a package of its own.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -204,7 +205,7 @@
 ;; changed references to default-bold-italic to just bold-italic because the
 ;;   font for that face is maintained by emacs.
 ;;
-;; the pattern matcher now starts it's searches from the end of the most
+;; the pattern matcher now starts its searches from the end of the most
 ;;   recently highlighted region (which is not necessarily the end of the most
 ;;   recently matched regex).
 ;;
@@ -265,7 +266,7 @@
 ;; documented another "known problem" to "head off gripe mail at the pass."
 ;;
 ;; Revision 2.3  1993/07/27  02:15:49  stig
-;; (hilit-lookup-face-create) incorporated patch which improves it's behavior
+;; (hilit-lookup-face-create) incorporated patch which improves its behavior
 ;; with more than one frame...  Still can't have bold on the same face in two
 ;; different fonts sizes at the same time...
 ;;
@@ -287,7 +288,7 @@
 ;; added hilit-parser-alist which can be used to apply different patterns to
 ;;   different parts of a buffer.  This could be integrated in a far more
 ;;   elegant manner, but it presently serves the purpose of not applying
-;;   message header patterns to message bodies in mail-mode and it's kin.
+;;   message header patterns to message bodies in mail-mode and its kin.
 ;; hilit-set-mode-patterns now takes a list of modes and an optional parse-fn
 ;;
 
@@ -404,12 +405,12 @@ your init file.")
 (eval-when-compile (require 'reporter))	; no compilation gripes
 
 (defun hilit-submit-feedback ()
-  "Submit feedback on hilit19 to the author: stig@hackvan.com"
+  "Submit feedback on hilit19 to hilit@hackvan.com"
   (interactive)
   (require 'reporter)
   (and (y-or-n-p "Do you really want to submit a report on hilit19? ")
        (reporter-submit-bug-report
-	"Jonathan Stigelman <stig@hackvan.com>"
+	"Jonathan Stigelman <hilit@hackvan.com>"
 	"hilit19.el (Release 2.19)"
 	(and (y-or-n-p "Do you need to include a dump hilit variables? ")
 	     (append
@@ -786,7 +787,9 @@ non-nil."
   "Highlight a buffer containing a news article or mail message."
   (save-excursion
     (goto-char (point-min))
-    (re-search-forward "^$" nil 'noerr)
+    ;; find separation between headers and body (either a blank line or
+    ;; the message separator line in mail-mode)
+    (re-search-forward "^\\(\\|--text follows this line--\\)$" nil 'noerr)
     (hilit-unhighlight-region (point-min) (point-max) quietly)
     (hilit-highlight-region (point-min) (point) 'msg-header quietly)
     (hilit-highlight-region (point) (point-max) 'msg-body quietly)))
@@ -921,7 +924,7 @@ the entire buffer is forced."
 ;;   (message "*sigh* hilit-wysiwyg-write-repair not implemented yet")
 ;;
 ;; For efficiency, this hook should copy the current buffer to a scratch
-;; buffer and do it's overstriking there.  Overlays are not copied, so it'll
+;; buffer and do its overstriking there.  Overlays are not copied, so it'll
 ;; be necessary to hop back and forth.  This is OK since you're not fiddling
 ;; with--making or deleting--any overlays.  THEN write the new buffer,
 ;; delete it, and RETURN T. << important

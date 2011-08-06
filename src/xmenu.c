@@ -86,6 +86,8 @@ Boston, MA 02111-1307, USA.  */
 #define FALSE 0
 #endif /* no TRUE */
 
+Lisp_Object Vmenu_updating_frame;
+
 Lisp_Object Qdebug_on_next_call;
 
 Lisp_Object Qmenu_alias;
@@ -502,7 +504,7 @@ keymap_panes (keymaps, nmaps, notreal)
      But don't make a pane that is empty--ignore that map instead.
      P is the number of panes we have made so far.  */
   for (mapno = 0; mapno < nmaps; mapno++)
-    single_keymap_panes (keymaps[mapno], Qnil, Qnil, notreal);
+    single_keymap_panes (keymaps[mapno], Qnil, Qnil, notreal, 10);
 
   finish_menu_items ();
 }
@@ -512,18 +514,24 @@ keymap_panes (keymaps, nmaps, notreal)
    The other arguments are passed along
    or point to local variables of the previous function.
    If NOTREAL is nonzero,
-   don't bother really computing whether an item is enabled.  */
+   don't bother really computing whether an item is enabled.
+
+   If we encounter submenus deeper than MAXDEPTH levels, ignore them.  */
 
 static void
-single_keymap_panes (keymap, pane_name, prefix, notreal)
+single_keymap_panes (keymap, pane_name, prefix, notreal, maxdepth)
      Lisp_Object keymap;
      Lisp_Object pane_name;
      Lisp_Object prefix;
      int notreal;
+     int maxdepth;
 {
   Lisp_Object pending_maps;
   Lisp_Object tail, item, item1, item_string, table;
   struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
+
+  if (maxdepth <= 0)
+    return;
 
   pending_maps = Qnil;
 
@@ -591,7 +599,8 @@ single_keymap_panes (keymap, pane_name, prefix, notreal)
 			{
 			  push_submenu_start ();
 			  single_keymap_panes (submap, Qnil,
-					       XCONS (item)->car, notreal);
+					       XCONS (item)->car, notreal,
+					       maxdepth - 1);
 			  push_submenu_end ();
 			}
 #endif
@@ -660,7 +669,8 @@ single_keymap_panes (keymap, pane_name, prefix, notreal)
 			    {
 			      push_submenu_start ();
 			      single_keymap_panes (submap, Qnil,
-						   character, notreal);
+						   character, notreal,
+						   maxdepth - 1);
 			      push_submenu_end ();
 			    }
 #endif
@@ -681,7 +691,7 @@ single_keymap_panes (keymap, pane_name, prefix, notreal)
       /* We no longer discard the @ from the beginning of the string here.
 	 Instead, we do this in xmenu_show.  */
       single_keymap_panes (Fcar (elt), string,
-			   XCONS (eltcdr)->cdr, notreal);
+			   XCONS (eltcdr)->cdr, notreal, maxdepth - 1);
       pending_maps = Fcdr (pending_maps);
     }
 }
@@ -753,10 +763,14 @@ The menu items come from key bindings that have a menu string as well as\n\
 a definition; actually, the \"definition\" in such a key binding looks like\n\
 \(STRING . REAL-DEFINITION).  To give the menu a title, put a string into\n\
 the keymap as a top-level element.\n\n\
+If REAL-DEFINITION is nil, that puts a nonselectable string in the menu.\n\
+Otherwise, REAL-DEFINITION should be a valid key binding definition.\n\
+\n\
 You can also use a list of keymaps as MENU.\n\
   Then each keymap makes a separate pane.\n\
 When MENU is a keymap or a list of keymaps, the return value\n\
 is a list of events.\n\n\
+\n\
 Alternatively, you can specify a menu of multiple panes\n\
   with a list of the form (TITLE PANE1 PANE2...),\n\
 where each pane is a list of form (TITLE ITEM1 ITEM2...).\n\
@@ -846,8 +860,10 @@ cached information about equivalent key sequences.")
 	  CHECK_LIVE_WINDOW (window, 0);
 	  f = XFRAME (WINDOW_FRAME (XWINDOW (window)));
 
-	  xpos = (FONT_WIDTH (f->output_data.x->font) * XWINDOW (window)->left);
-	  ypos = (f->output_data.x->line_height * XWINDOW (window)->top);
+	  xpos = (FONT_WIDTH (f->output_data.x->font)
+		  * XFASTINT (XWINDOW (window)->left));
+	  ypos = (f->output_data.x->line_height
+		  * XFASTINT (XWINDOW (window)->top));
 	}
       else
 	/* ??? Not really clean; should be CHECK_WINDOW_OR_FRAME,
@@ -856,7 +872,10 @@ cached information about equivalent key sequences.")
 
       xpos += XINT (x);
       ypos += XINT (y);
+
+      XSETFRAME (Vmenu_updating_frame, f);
     }
+  Vmenu_updating_frame = Qnil;
 #endif /* HAVE_MENUS */
 
   title = Qnil;
@@ -880,6 +899,8 @@ cached information about equivalent key sequences.")
       /* Search for a string appearing directly as an element of the keymap.
 	 That string is the title of the menu.  */
       prompt = map_prompt (keymap);
+      if (NILP (title) && !NILP (prompt))
+	title = prompt;
 
       /* Make that be the pane title of the first pane.  */
       if (!NILP (prompt) && menu_items_n_panes >= 0)
@@ -1418,7 +1439,7 @@ single_submenu (item_key, item_name, maps)
 	  push_menu_item (item_name, Qt, item_key, mapvec[i], Qnil);
 	}
       else
-	single_keymap_panes (mapvec[i], item_name, item_key, 0);
+	single_keymap_panes (mapvec[i], item_name, item_key, 0, 10);
     }
 
   /* Create a tree of widget_value objects
@@ -1616,6 +1637,8 @@ set_frame_menubar (f, first_time, deep_p)
   int i;
   LWLIB_ID id;
 
+  XSETFRAME (Vmenu_updating_frame, f);
+
   if (f->output_data.x->id == 0)
     f->output_data.x->id = next_menubar_widget_id++;
   id = f->output_data.x->id;
@@ -1650,13 +1673,18 @@ set_frame_menubar (f, first_time, deep_p)
 	= (Lisp_Object *) alloca (previous_menu_items_used
 				  * sizeof (Lisp_Object));
 
+      /* If we are making a new widget, its contents are empty,
+	 do always reinitialize them.  */
+      if (! menubar_widget)
+	previous_menu_items_used = 0;
+
       buffer = XWINDOW (FRAME_SELECTED_WINDOW (f))->buffer;
       specbind (Qinhibit_quit, Qt);
       /* Don't let the debugger step into this code
 	 because it is not reentrant.  */
       specbind (Qdebug_on_next_call, Qnil);
 
-      record_unwind_protect (Fstore_match_data, Fmatch_data ());
+      record_unwind_protect (Fstore_match_data, Fmatch_data (Qnil, Qnil));
       if (NILP (Voverriding_local_map_menu_flag))
 	{
 	  specbind (Qoverriding_terminal_local_map, Qnil);
@@ -1716,7 +1744,7 @@ set_frame_menubar (f, first_time, deep_p)
 
       for (i = 0; i < previous_menu_items_used; i++)
 	if (menu_items_used == i
-	    || (previous_items[i] != XVECTOR (menu_items)->contents[i]))
+	    || (!EQ (previous_items[i], XVECTOR (menu_items)->contents[i])))
 	  break;
       if (i == menu_items_used && i == previous_menu_items_used && i != 0)
 	{
@@ -1814,6 +1842,8 @@ set_frame_menubar (f, first_time, deep_p)
 	    + f->output_data.x->menubar_widget->core.border_width)
 	 : 0);
 
+#if 0 /* Experimentally, we now get the right results
+	 for -geometry -0-0 without this.  24 Aug 96, rms.  */
 #ifdef USE_LUCID
     if (FRAME_EXTERNAL_MENU_BAR (f))
       {
@@ -1823,6 +1853,7 @@ set_frame_menubar (f, first_time, deep_p)
         menubar_size += ibw;
       }
 #endif /* USE_LUCID */
+#endif /* 0 */
 
     f->output_data.x->menubar_height = menubar_size;
   }
@@ -1860,6 +1891,8 @@ free_frame_menubar (f)
   int id;
 
   menubar_widget = f->output_data.x->menubar_widget;
+
+  f->output_data.x->menubar_height = 0;
   
   if (menubar_widget)
     {
@@ -2300,7 +2333,7 @@ xdialog_show (f, keymaps, title, error)
 	    i++;
 	    continue;
 	  }
-	if (nb_buttons >= 10)
+	if (nb_buttons >= 9)
 	  {
 	    free_menubar_widget_value_tree (first_wv);
 	    *error = "Too many dialog items";
@@ -2702,6 +2735,11 @@ syms_of_xmenu ()
 
   Qdebug_on_next_call = intern ("debug-on-next-call");
   staticpro (&Qdebug_on_next_call);
+
+  DEFVAR_LISP ("menu-updating-frame", &Vmenu_updating_frame,
+    "Frame for which we are updating a menu.\n\
+The enable predicate for a menu command should check this variable.");
+  Vmenu_updating_frame = Qnil;
 
 #ifdef USE_X_TOOLKIT
   widget_id_tick = (1<<16);	

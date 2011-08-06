@@ -1,5 +1,5 @@
-This is Info file ../info/cl, produced by Makeinfo-1.64 from the input
-file cl.texi.
+This is Info file ../info/cl, produced by Makeinfo version 1.68 from
+the input file cl.texi.
 
    This file documents the GNU Emacs Common Lisp emulation package.
 
@@ -223,7 +223,7 @@ name:
      member*       assoc*        rassoc*       get*
      remove*       delete*       mapcar*       sort*
      floor*        ceiling*      truncate*     round*
-     mod*          rem*          random*
+     mod*          rem*          random*       last*
 
    Internal function and variable names in the package are prefixed by
 `cl-'.  Here is a complete list of functions *not* prefixed by `cl-'
@@ -242,7 +242,7 @@ they do not cause other components like `cl-extra' to be loaded.
 
      eql           floatp-safe   abs           endp
      evenp         oddp          plusp         minusp
-     last          butlast       nbutlast      caar .. cddddr
+     butlast       nbutlast                    caar .. cddddr
      list*         ldiff         rest          first .. tenth
      member [1]    copy-list     subst         mapcar* [2]
      adjoin [3]    acons         pairlis       when
@@ -718,7 +718,7 @@ related to `typep'.
      the body FORMS are evaluated and should return a type specifier
      that is equivalent to the type.  The ARGLIST is a Common Lisp
      argument list of the sort accepted by `defmacro*'.  The type
-     specifier `(NAME ARGS...)' is expanded by calling the expander
+     specifier `(NAME ARGS...)'  is expanded by calling the expander
      with those arguments; the type symbol `NAME' is expanded by
      calling the expander with no arguments.  The ARGLIST is processed
      the same as for `defmacro*' except that optional arguments without

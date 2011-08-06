@@ -1,5 +1,5 @@
-This is Info file ../info/mh-e, produced by Makeinfo-1.63 from the
-input file mh-e.texi.
+This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
+the input file mh-e.texi.
 
    This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
 Emacs Interface to MH', for mh-e, Version 5.0.2.
@@ -86,7 +86,7 @@ Bill Wohler <wohler@newt.com>
 
    ---------- Footnotes ----------
 
-   (1)  Note that mh-e is supported with MH 6 and either Emacs 18 or
+   (1) Note that mh-e is supported with MH 6 and either Emacs 18 or
 Emacs 19.  Reportedly, large parts of it work with MH 5 and also with
 Lucid/XEmacs and Epoch, but there are no guarantees.  It is also
 distributed with Lucid/XEmacs, as well as with MH itself.
@@ -118,7 +118,7 @@ and then you can read the other two as you wish.
 
    ---------- Footnotes ----------
 
-   (1)  The keys mentioned in these chapters refer to the default key
+   (1) The keys mentioned in these chapters refer to the default key
 bindings.  If you've changed the bindings, refer to the command
 summaries at the beginning of each major section in *Note Using mh-e::,
 for a mapping between default key bindings and function names.
@@ -134,28 +134,28 @@ conventions and definition of terms and go directly to *Note Getting
 Started:: below.  The conventions are as follows:
 
 `C-x'
-     Hold down the CTRL (Control) key and press the `x' key.
+     Hold down the <CTRL> (Control) key and press the `x' key.
 
 `M-x'
-     Hold down the META or ALT key and press the `x' key.
+     Hold down the <META> or <ALT> key and press the `x' key.
 
-     Since some keyboards don't have a META key, you can generate
-     `M-x', for example, by pressing ESC (Escape), *releasing it*, (1)
+     Since some keyboards don't have a <META> key, you can generate
+     `M-x', for example, by pressing <ESC> (Escape), *releasing it*, (1)
      and then pressing the `x' key.
 
 `RET'
-     Press the RETURN or ENTER key.  This is normally used to complete
-     a command.
+     Press the <RETURN> or <ENTER> key.  This is normally used to
+     complete a command.
 
 `SPC'
      Press the space bar.
 
 `TAB'
-     Press the TAB key.
+     Press the <TAB> key.
 
 `DEL'
-     Press the DELETE key.  This may also be a Backspace key, depending
-     on your keyboard or Emacs configuration.
+     Press the <DELETE> key.  This may also be a Backspace key,
+     depending on your keyboard or Emacs configuration.
 
    A "prefix argument" allows you to pass an argument to any Emacs
 function.  To pass an argument, type `C-u' before the Emacs command or
@@ -165,8 +165,9 @@ insert five f's, use `C-u 5 f'.  There is a default of four when using
 of powers of four.  To continue our example, you could insert four f's
 with `C-u f', 16 f's with `C-u C-u f', 64 f's with `C-u C-u C-u f', and
 so on.  Numeric and valueless negative arguments can also be inserted
-with the META key.  Examples include `M-5' to specify an argument of 5,
-or `M--' which specifies a negative argument with no particular value.
+with the <META> key.  Examples include `M-5' to specify an argument of
+5, or `M--' which specifies a negative argument with no particular
+value.
 
                                 *NOTE*
 
@@ -185,13 +186,13 @@ paragraphs.  A mark can be set with `C-@' (or `C-SPC').
    The "minibuffer" is the bottom line of the Emacs window, where all
 prompting and multiple-character input is directed.  If you are prompted
 for information in the minibuffer, such as a filename, Emacs can help
-you complete your answer if you type SPC or TAB.  A second SPC or TAB
-will list all possibilities at that point.  The minibuffer is also
-where you enter Emacs function names after typing `M-x'.  For example,
-in the first paragraph, I mentioned that you could obtain help with
-`C-h t' (`help-with-tutorial').  What this means is that you can get a
-tutorial by typing either `C-h t' or `M-x help-with-tutorial'.  In the
-latter case, you are prompted for `help-with-tutorial' in the
+you complete your answer if you type <SPC> or <TAB>.  A second <SPC> or
+<TAB> will list all possibilities at that point.  The minibuffer is
+also where you enter Emacs function names after typing `M-x'.  For
+example, in the first paragraph, I mentioned that you could obtain help
+with `C-h t' (`help-with-tutorial').  What this means is that you can
+get a tutorial by typing either `C-h t' or `M-x help-with-tutorial'.
+In the latter case, you are prompted for `help-with-tutorial' in the
 minibuffer after typing `M-x'.
 
    In case of trouble: Emacs can be interrupted at any time with `C-g'.
@@ -202,8 +203,8 @@ entirely, use `C-x C-c'.
 
    ---------- Footnotes ----------
 
-   (1)  This is emphasized because pressing ESC twice or holding it
-down a second too long so that it repeats gives you an error message.
+   (1) This is emphasized because pressing ESC twice or holding it down
+a second too long so that it repeats gives you an error message.
 
 
 File: mh-e,  Node: Getting Started,  Next: Sending Mail Tour,  Prev: Conventions,  Up: Tour Through mh-e
@@ -216,13 +217,13 @@ important to know which version you have.  I'll be talking about
 Version 5 which is similar to Version 4 and vastly different from
 Version 3.
 
-   First, enter `M-x load-library RET mh-e RET'. (1)  The message,
+   First, enter `M-x load-library <RET> mh-e <RET>'. (1)  The message,
 `Loading mh-e...done', should be displayed in the minibuffer.  If you
 get `Cannot open load file: mh-e', then your Emacs is very badly
 configured, or mh-e is missing.  You may wish to have your system
 administrator install a new Emacs or at least the latest mh-e files.
 
-   Having loaded mh-e successfully, enter `M-x mh-version RET'.  The
+   Having loaded mh-e successfully, enter `M-x mh-version <RET>'.  The
 version of mh-e should be displayed.  Hopefully it says that you're
 running Version 5.0.2 which is the latest version as of this printing.
 If instead Emacs beeps and says `[No match]', then you're running an
@@ -268,7 +269,7 @@ figure in *Note Reading Mail Tour::.  We're now ready to move on.
 
    ---------- Footnotes ----------
 
-   (1)  You wouldn't ordinarily do this.
+   (1) You wouldn't ordinarily do this.
 
 
 File: mh-e,  Node: Sending Mail Tour,  Next: Reading Mail Tour,  Prev: Getting Started,  Up: Tour Through mh-e
@@ -279,9 +280,9 @@ Sending Mail
    Let's start our tour by sending ourselves a message which we can
 later read and process.  Enter `M-x mh-smail' to invoke the mh-e program
 to send messages.  You will be prompted in the minibuffer by `To:'.
-Enter your login name.  The next prompt is `cc:'.  Hit RET to indicate
-that no carbon copies are to be sent.  At the `Subject:' prompt, enter
-`Test' or anything else that comes to mind.
+Enter your login name.  The next prompt is `cc:'.  Hit <RET> to
+indicate that no carbon copies are to be sent.  At the `Subject:'
+prompt, enter `Test' or anything else that comes to mind.
 
    Once you've specified the recipients and subject, your message
 appears in an Emacs buffer whose mode (1) is MH-Letter.  Enter some
@@ -316,10 +317,10 @@ now.  That's all there is to it!
 
    ---------- Footnotes ----------
 
-   (1)  A "mode" changes Emacs to make it easier to edit a particular
+   (1) A "mode" changes Emacs to make it easier to edit a particular
 type of text.
 
-   (2)  If you're running Emacs under the X Window System, then you
+   (2) If you're running Emacs under the X Window System, then you
 would also see a menubar.  I've left out the menubar in all of the
 example screens.
 
@@ -342,8 +343,8 @@ is MH-Folder.
      pull all your messages into mh-e.
 
    You should see the scan line for your message, and perhaps others.
-Use `n' or `p' to move the cursor to your test message and type RET to
-read your message.  You should see something like:
+Use `n' or `p' to move the cursor to your test message and type <RET>
+to read your message.  You should see something like:
 
         3  24Aug  root       received fax files on Wed Aug 24 11:00:13 PDT 1994
      #  4+ 24Aug  To:wohler  Test<<This is a test message to get the wheels chu
@@ -363,8 +364,8 @@ read your message.  You should see something like:
      -----{show-+inbox} 4      (MH-Show)--Bot----------------------------------
      After incorporating new messages
 
-   If you typed a long message, you can view subsequent pages with SPC
-and previous pages with DEL.
+   If you typed a long message, you can view subsequent pages with <SPC>
+and previous pages with <DEL>.
 
 
 File: mh-e,  Node: Processing Mail Tour,  Next: Leaving mh-e,  Prev: Reading Mail Tour,  Up: Tour Through mh-e
@@ -377,8 +378,8 @@ ourselves.  Ensure that the cursor is still on the same line as your
 test message and type `r'.  You are prompted in the minibuffer with
 `Reply to whom:'.  Here mh-e is asking whether you'd like to reply to
 the original sender only, to the sender and primary recipients, or to
-the sender and all recipients.  If you simply hit RET, you'll reply
-only to the sender.  Hit RET now.
+the sender and all recipients.  If you simply hit <RET>, you'll reply
+only to the sender.  Hit <RET> now.
 
    You'll find yourself in an Emacs buffer similar to that when you were
 sending the original message, like this:
@@ -408,7 +409,7 @@ this case, type `C-c C-f C-t' to create and go to the `To:' field,
 where you can type your login name again.  You can move around with the
 arrow keys or with `C-p' (`previous-line'), `C-n' (`next-line'), `C-b'
 (`backward-char'), and `C-f' (`forward-char') and can delete the
-previous character with DEL.  When you're finished editing your
+previous character with <DEL>.  When you're finished editing your
 message, send it with `C-c C-c' as before.
 
    You'll often want to save messages that were sent to you in an
@@ -417,7 +418,7 @@ to keep messages from your friends, or messages related to a particular
 topic.  With your cursor in the MH-Folder buffer and positioned on the
 message you sent to yourself, type `o' to output (`refile' in MH
 parlance) that message to a folder.  Enter `test' at the `Destination:'
-prompt and type `y' (or SPC) when mh-e asks to create the folder
+prompt and type `y' (or <SPC>) when mh-e asks to create the folder
 `+test'.  Note that a `^' (caret) appears next to the message number,
 which means that the message has been marked for refiling but has not
 yet been refiled.  We'll talk about how the refile is actually carried
@@ -426,7 +427,7 @@ out in a moment.
    Your previous reply is now waiting in the system mailbox.  You
 incorporate this mail into your MH-Folder buffer named `+inbox' with
 the `i' command.  Do this now.  After the mail is incorporated, use `n'
-or `p' to move the cursor to the new message, and read it with RET.
+or `p' to move the cursor to the new message, and read it with <RET>.
 Let's delete this message by typing `d'.  Note that a `D' appears next
 to the message number.  This means that the message is marked for
 deletion but is not yet deleted.  To perform the deletion (and the
@@ -443,9 +444,9 @@ Leaving mh-e
 
    You may now wish to exit `emacs' entirely.  Use `C-x C-c' to exit
 `emacs'.  If you exited without running `x' in the `+inbox' buffer,
-Emacs will offer to save it for you.  Type `y' or SPC to save `+inbox'
-changes, which means to perform any refiles and deletes that you did
-there.
+Emacs will offer to save it for you.  Type `y' or <SPC> to save
+`+inbox' changes, which means to perform any refiles and deletes that
+you did there.
 
    If you don't want to leave Emacs, you can type `q' to bury (hide)
 the mh-e folder or delete them entirely with `C-x k'.  You can then
@@ -592,10 +593,10 @@ lines, and see the Figure in *Note Reading Mail Tour::, for an example.
 
    ---------- Footnotes ----------
 
-   (1)  If you want to see your old mail as well, use `M-r' to pull all
+   (1) If you want to see your old mail as well, use `M-r' to pull all
 your messages into mh-e.  Or, give a prefix argument to `mh-rmail' so
 it will prompt you for folder to visit like `M-f' (for example, `C-u
-M-x mh-rmail RET bob RET').  Both `M-r' and `M-f' are described in
+M-x mh-rmail <RET> bob <RET>').  Both `M-r' and `M-f' are described in
 *Note Organizing::.
 
 
@@ -606,7 +607,7 @@ Viewing Your Mail
 
    The `RET' (`mh-show') command displays the message that the cursor
 is on.  If the message is already displayed, it scrolls to the
-beginning of the message.  Use SPC (`mh-page-msg') and DEL
+beginning of the message.  Use <SPC> (`mh-page-msg') and <DEL>
 (`mh-previous-page') to move forwards and backwards one page at a time
 through the message.  You can give either of these commands a prefix
 argument that specifies the number of lines to scroll (such as `10
@@ -626,9 +627,9 @@ Reading Digests
 ...............
 
    A digest is a message that contains other messages.  Special mh-e
-commands let you read digests conveniently.  You can use SPC and DEL to
-page through the digest as if it were a normal message, but if you wish
-to skip to the next message in the digest, use `M-SPC'
+commands let you read digests conveniently.  You can use <SPC> and
+<DEL> to page through the digest as if it were a normal message, but if
+you wish to skip to the next message in the digest, use `M-SPC'
 (`mh-page-digest').  To return to a previous message, use `M-DEL'
 (`mh-page-digest-backwards').
 
@@ -659,7 +660,7 @@ shell to read MIME messages.  (1)
 
    ---------- Footnotes ----------
 
-   (1)  You can call them directly from Emacs if you're running the X
+   (1) You can call them directly from Emacs if you're running the X
 Window System: type `M-!  xterm -e mhn MESSAGE-NUMBER'.  You can leave
 out the `xterm -e' if you use `mhn -list' or `mhn -store'.
 
@@ -693,7 +694,7 @@ folder for later examination.
 
    ---------- Footnotes ----------
 
-   (1)  For you Emacs wizards, this is implemented as an Emacs minor
+   (1) For you Emacs wizards, this is implemented as an Emacs minor
 mode.
 
 
@@ -705,7 +706,7 @@ Sending Mail
    You can send a mail message in several ways.  You can call `M-x
 mh-smail' directly, or from the command line like this:
 
-     % `emacs -f mh-smail'
+     % emacs -f mh-smail
 
    From within mh-e's MH-Folder mode, other methods of sending mail are
 available as well:
@@ -753,8 +754,8 @@ the window layout, use `M-x mh-smail-other-window'.
 
    ---------- Footnotes ----------
 
-   (1)  I highly recommend that you use a "draft folder" so that you
-can edit several drafts in parallel.  To do so, create a folder (e.g.,
+   (1) I highly recommend that you use a "draft folder" so that you can
+edit several drafts in parallel.  To do so, create a folder (e.g.,
 `+drafts'), and add a profile component called `Draft-Folder:' which
 contains `+drafts' (see `mh-profile'(5)).
 
@@ -775,14 +776,14 @@ whom?'.  You have several choices here.
 
      Response     Reply Goes To
      
-     `from'         The person who sent the message.  This is the default,
-                  so RET is sufficient.
+     from         The person who sent the message.  This is the default,
+                  so <RET> is sufficient.
      
-     `to'           Replies to the sender, plus all recipients in the
+     to           Replies to the sender, plus all recipients in the
                   `To:' header field.
      
-     `all'
-     `cc'           Forms a reply to the sender, plus all recipients.
+     all
+     cc           Forms a reply to the sender, plus all recipients.
 
    Depending on your answer, `repl' is given a different argument to
 form your reply.  Specifically, a choice of `from' or none at all runs
@@ -810,7 +811,7 @@ Draft Editing::).
    You can forward several messages by using a prefix argument; in this
 case, you are prompted for the name of a "sequence", a symbolic name
 that represents a list or range of message numbers (for example, `C-u f
-forbob RET').  All of the messages in the sequence are inserted into
+forbob <RET>').  All of the messages in the sequence are inserted into
 your draft.  By the way, although sequences are often mentioned in this
 chapter, you don't have to worry about them for now; the full
 description of sequences in mh-e is at the end in *Note Sequences::.
@@ -840,8 +841,8 @@ Editing Old Drafts and Bounced Messages
 draft buffer is no longer available, you can pick your draft up again
 with `M-a' (`mh-edit-again').  If you don't use a draft folder, your
 last `draft' file will be used.  If you use draft folders, you'll need
-to visit the draft folder with `M-f drafts RET', use `n' to move to the
-appropriate message, and then use `M-a' to prepare the message for
+to visit the draft folder with `M-f drafts <RET>', use `n' to move to
+the appropriate message, and then use `M-a' to prepare the message for
 editing.
 
    The `M-a' command can also be used to take messages that were sent
@@ -978,7 +979,7 @@ between the mark and point is called the "region".  Having done that,
 
    ---------- Footnotes ----------
 
-   (1)  If you'd rather have the header cleaned up, use `C-u r' instead
+   (1) If you'd rather have the header cleaned up, use `C-u r' instead
 of `r' when replying (see *Note Replying::).
 
 
@@ -1079,7 +1080,7 @@ multimedia fields unless the content description is compelling.
 
    ---------- Footnotes ----------
 
-   (1)  This RFC (Request For Comments) is available via the URL
+   (1) This RFC (Request For Comments) is available via the URL
 `ftp://ds.internic.net/rfc/rfc1521.txt'.
 
 
@@ -1311,7 +1312,7 @@ your `+inbox' buffer with `i' (`mh-inc-folder').  Note that `i' will
 display the `+inbox' buffer, even if there isn't any new mail.  You can
 incorporate mail from any file into the current folder by specifying a
 prefix argument; you'll be prompted for the name of the file to use
-(for example, `C-u i ~/mbox RET').
+(for example, `C-u i ~/mbox <RET>').
 
    Emacs can notify you when you have new mail by displaying `Mail' in
 the mode line.  To enable this behavior, and to have a clock in the mode

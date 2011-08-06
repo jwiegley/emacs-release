@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+@c Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Acknowledgments, Screen, Concept Index, Top
 @chapter Acknowledgments
@@ -11,10 +11,11 @@ portions.
 
 @itemize @bullet
 @item
-Per Abrahamsen wrote @file{double.el}, for typing accented characters
-not normally available from the keyboard, @file{xt-mouse.el}, which
-handles mouse commands through Xterm, and @file{cpp.el}, which hides or
-highlights parts of C programs according to preprocessor conditionals.
+Per Abrahamsen wrote the customization buffer facilities, as well as
+@file{double.el} for typing accented characters not normally available
+from the keyboard, @file{xt-mouse.el} which handles mouse commands
+through Xterm, and @file{cpp.el} which hides or highlights parts of C
+programs according to preprocessor conditionals.
 
 @item
 Jay K. Adams wrote @file{jka-compr.el}, providing automatic
@@ -33,15 +34,26 @@ build process up to the GNU coding standards, and contributed to the
 frame support and multi-face support.
 
 @item
+Terrence M. Brannon wrote @file{landmark.el}, a neural-network robot
+that learns landmarks.
+
+@item
 Frank Bresz wrote @file{diff.el}, a program to display @code{diff}
 output.
+
+@item
+Peter Breton implemented @file{dirtrack} which does better tracking of
+directory changes in shell buffers, @file{filecache.el} which records
+which directories your files are in, and @file{locate.el} which
+interfaces to the @code{locate} command.
 
 @item
 Kevin Broadey wrote @file{foldout.el}, providing folding extensions to
 Emacs's outline modes.
 
 @item
-Vincent Broman wrote @file{ada.el}, a mode for editing Ada code.
+Vincent Broman wrote @file{ada.el}, a mode for editing Ada code
+(since replaced by @file{ada-mode.el}).
 
 @item
 David M. Brown wrote @file{array.el}, for editing arrays and other
@@ -64,6 +76,9 @@ documents, and contributed to Emacs's dumping procedures.
 Mike Clarkson wrote @file{edt.el}, an emulation of DEC's EDT editor.
 
 @item
+Andrew Csillag wrote M4 mode (@file{m4-mode.el}).
+
+@item
 Doug Cutting and Jamie Zawinski wrote @file{disass.el}, a disassembler
 for compiled Emacs Lisp code.
 
@@ -80,6 +95,13 @@ Matthieu Devin wrote @file{delsel.el}, a package to make newly-typed
 text replace the current selection.
 
 @item
+Eric Ding contributed @file{goto-addr.el}, 
+
+@item
+Carsten Dominik wrote @file{reftex.el}, a package for setting up
+labels and cross-references for La@TeX{}.
+
+@item
 Scott Draves wrote @file{tq.el}, help functions for maintaining
 transaction queues between Emacs and its subprocesses.
 
@@ -87,16 +109,28 @@ transaction queues between Emacs and its subprocesses.
 Viktor Dukhovni wrote support for dumping under SunOS version 4.
 
 @item
+John Eaton co-wrote Octave mode (@file{octave.el} and related files).
+
+@item
 Rolf Ebert co-wrote Ada mode (@file{ada-mode.el}).
 
 @item
-@iftex
+Stephen Eglen implemented @file{mspools.el}, for use with Procmail,
+which tells you which mail folders have mail waiting in them, and
+@file{iswitchb.el}, a feature for incremental reading and completion of
+buffer names.
+
+@item
+@c @iftex
 Torbj@"orn
-@end iftex
-@ifinfo
-Torbjorn
-@end ifinfo
+@c @end iftex
+@c @ifinfo
+@c Torbjorn
+@c @end ifinfo
 Einarsson contributed F90 mode (@file{f90.el}).
+
+@item
+Tsugutomo Enami co-wrote the support for international character sets.
 
 @item
 Hans Henrik Eriksen wrote @file{simula.el}, a mode for editing SIMULA 87
@@ -109,6 +143,10 @@ function's source code and preceding comment on the screen.
 @item
 Ata Etemadi wrote @file{cdl.el}, functions for working with Common Data
 Language source code.
+
+@item
+Frederick Farnback implemented @file{morse.el}, which converts text to
+morse code.
 
 @item
 Fred Fish wrote the support for dumping COFF executable files.
@@ -127,7 +165,11 @@ editing sessions.
 @end itemize
 
 @item
-Noah Friedman wrote @file{rlogin.el}, an interface to rlogin, and
+Gary Foster wrote the emulation for CRiSP: @file{crisp.el} and
+@file{scroll-lock.el}.
+
+@item
+Noah Friedman wrote @file{rlogin.el}, an interface to Rlogin, and
 @file{type-break.el}, which reminds you to take periodic breaks from
 typing.  With Roland McGrath, he wrote @file{rsz-mini.el}, a minor mode
 to automatically resize the minibuffer to fit the text it contains.
@@ -183,16 +225,27 @@ package for keeping identical copies of files in more than one place;
 and @file{facemenu.el}, a package for specifying faces.
 
 @item
+Michelangelo Grigni wrote @file{ffap.el} which visits a file,
+taking the file name from the buffer.
+
+@item
+Odd Gripenstam wrote @file{dcl-mode.el}.
+
+@item
 Michael Gschwind wrote @file{iso-cvt.el}, a package to convert between
 the ISO 8859-1 character set and the notations for non-@code{ASCII}
 characters used by @TeX{} and net tradition.
 
 @item
-Henry Guillaume wrote @file{find-file.el}, a package to visit a file
-which is related to the currently visited fil
+Henry Guillaume wrote @file{find-file.el}, a package to visit files
+related to the currently visited file.
 
 @item
 Doug Gwyn wrote the portable @code{alloca} implementation.
+
+@item
+Ken'ichi Handa implemented most of the support for international
+character sets.
 
 @item
 Chris Hanson wrote @file{netuname.el}, a package to use HP-UX's Remote
@@ -217,6 +270,10 @@ them.
 @end itemize
 
 @item
+John Heidemann wrote @file{mouse-copy.el} and @file{mouse-drag.el},
+which provide alternative mouse-based editing and scrolling features.
+
+@item
 Markus Heritsch co-wrote Ada mode (@file{ada-mode.el}).
 
 @item
@@ -232,6 +289,13 @@ Anders Holst wrote @file{hippie-exp.el}, a versatile completion and
 expansion package.
 
 @item
+Kurt Hornik co-wrote Octave mode (@file{octave.el} and related files).
+
+@item
+Tom Houlder wrote @file{mantemp.el}, which generates manual C++ template
+instantiations.
+
+@item
 Lars Ingebrigtsen did a major redesign of the GNUS newsreader.
 
 @item
@@ -241,6 +305,10 @@ Andrew Innes contributed extensively to the Windows NT support.
 Kyle Jones wrote @file{life.el}, a package to play Conway's ``life'' game,
 and @file{mldrag.el}, a package which allows the user to resize windows
 by dragging mode lines and vertical window separators with the mouse.
+
+@item
+Tomoji Kagatani implemented @file{smtpmail.el}, used for sending out
+mail with SMTP.
 
 @item
 David Kaufman wrote @file{yow.c}, an essential utility program for the
@@ -285,12 +353,12 @@ Stevens and others.
 
 @item
 David
-@ifinfo
+@c @ifinfo
 Kågedal
-@end ifinfo
-@iftex
-K@aa gedal
-@end iftex
+@c @end ifinfo
+@c @iftex
+@c K@aa gedal
+@c @end iftex
 wrote @file{tempo.el}, providing support for easy
 insertion of boilerplate text and other common constructions.
 
@@ -313,6 +381,10 @@ Lisp, and
 
 @item
 James R. Larus wrote @file{mh-e.el}, an interface to the MH mail system.
+
+@item
+Frederic Lepied contributed @file{expand.el}, which uses the abbrev
+mechanism for inserting programming constructs.
 
 @item
 Lars Lindberg wrote @file{msb.el}, which provides more flexible menus
@@ -339,10 +411,13 @@ hiding selected code within C @code{#ifdef} clauses.
 Simon Marshall wrote:
 @itemize @bullet
 @item
-@file{fast-lock.el}, which caches the face data computed by Font Lock mode, and
+@file{fast-lock.el}, which caches the face data computed by Font Lock mode,
 @item
 @file{lazy-lock.el}, which delays fontification in Font Lock mode
-until text is actually displayed.
+until text is actually displayed, and
+@item
+@file{regexp-opt.el}, which generates a regular expression from a list
+of strings.
 @end itemize
 
 @item
@@ -386,6 +461,10 @@ major modes by inheriting key bindings and commands from existing major
 modes.
 
 @item
+Wayne Mesard wrote @file{hscroll.el} which does horizontal scrolling
+automatically.
+
+@item
 Richard Mlynarik wrote:
 @itemize @bullet
 @item
@@ -406,6 +485,10 @@ used in mail messages and news articles,
 @item
 Keith Moore wrote @file{aixcc.lex}, a pre-processor designed to help
 Emacs parse the error messages produced by the AIX C compiler.
+
+@item
+Erik Naggum wrote the time-conversion functions, and has tested the
+latest source code daily.
 
 @item
 Thomas Neumann and Eric Raymond wrote @file{makefile.el}, a mode for
@@ -439,6 +522,8 @@ the ``Towers of Hanoi'' puzzle.
 @item
 Daniel Pfeiffer wrote:
 @itemize @bullet
+@item
+@file{executable.el}
 @item
 @file{sh-script.el}, a mode for editing shell scripts,
 @item
@@ -519,12 +604,20 @@ John Robinson wrote @file{bg-mouse.el}, support for the mouse on the BBN
 Bitgraph terminal.
 
 @item
+Danny Roozendaal implemented @file{handwrite.el}, which converts text
+into ``handwriting.''
+
+@item
 William Rosenblatt wrote @file{float.el}, implementing a floating-point
-numeric type using lisp pairs and fixnums.
+numeric type using Lisp cons cells and integers.
 
 @item
 Guillermo J. Rozas wrote @file{scheme.el}, a mode for editing Scheme
 code, and @file{fakemail.c}, an interface to the System V mailer.
+
+@item
+Ivar Rummelhoff provided @file{winner.el}, which records
+recent window configurations so you can move back to them.
 
 @item
 Wolfgang Rupprecht contributed Emacs 19's floating-point support
@@ -543,6 +636,11 @@ William Schelter wrote @file{telnet.el}, support for @code{telnet}
 sessions within Emacs.
 
 @item
+Ralph Schleicher contributed @file{battery.el}, a package for displaying
+laptop computer battery status, and @file{info-look.el}, a package for
+looking up Info documentation for symbols in the buffer.
+
+@item
 Gregor Schmid wrote @file{tcl.el}, a mode for editing Tcl/Tk scripts.
 
 @item
@@ -553,11 +651,15 @@ editing Modula-2 code, based on work by Mick Jordan and Peter Robinson.
 Ronald S. Schnell wrote @file{dunnet.el}, a text adventure game.
 
 @item
-Philippe Schnoebelen wrote @file{gomoku.el}, a gomoku game played
+Philippe Schnoebelen wrote @file{gomoku.el}, a Go Moku game played
 against Emacs, and @file{mpuz.el}, a multiplication puzzle.
 
 @item
 Randal Schwartz wrote @file{pp.el}, a pretty-printer for lisp objects.
+
+@item
+Stanislav Shalunov wrote @file{uce.el}, for responding to unsolicited
+commercial email.
 
 @item
 Olin Shivers wrote:
@@ -572,6 +674,9 @@ oriented subprocesses,
 @item
 @file{shell.el}, for running inferior shells.
 @end itemize
+
+@item
+Sam Shteingold wrote @file{gulp.el}.
 
 @item
 Espen Skoglund wrote @file{pascal.el}, a mode for editing Pascal code.
@@ -597,8 +702,17 @@ files, and @file{server.el}, a package allowing programs to send files
 to an extant Emacs job to be edited.
 
 @item
+Michael Staats wrote @file{pc-select.el}, which rebinds keys for
+selecting regions to follow many other systems.
+
+@item
 Ake Stenhoff and Lars Lindberg wrote @file{imenu.el}, a framework for
 browsing indices made from buffer contents.
+
+@item
+Peter Stephenson contributed @file{vcursor.el}, which implements a
+``virtual cursor'' that you can move with the keyboard and use for
+copying text.
 
 @item
 Jonathan Stigelman wrote @file{hilit19.el}, a package providing
@@ -608,6 +722,10 @@ contexts.
 @item
 Steve Strassman did not write @file{spook.el}, and even if he did, he
 really didn't mean for you to use it in an anarchistic way.
+
+@item
+Jens T. Berger Thielemann wrote @file{word-help.el}, which is
+part of the basis for @file{info-look.el}.
 
 @item
 Spencer Thomas wrote the original @file{dabbrev.el}, providing a command
@@ -636,6 +754,12 @@ some Emacs configurations which lack it, and
 @item
 @file{timezone.el}, providing functions for dealing with time zones.
 @end itemize
+
+@item
+Neil W. Van Dyke wrote @file{webjump.el}, a ``hot links'' package.
+
+@item
+Ulrik Vieth implemented @file{meta-mode.el}, for editing MetaFont code.
 
 @item
 Geoffrey Voelker wrote the Windows NT support.

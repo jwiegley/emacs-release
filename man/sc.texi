@@ -769,9 +769,9 @@ value of @code{sc-preferred-header-style}.
 Set the preferred reference header (i.e.,
 @code{sc-preferred-header-style}) to the currently displayed header.@refill
 
-@item @code{sc-eref-exit} (@key{LFD}, @key{RET}, and @key{ESC C-c})
+@item @code{sc-eref-exit} (@kbd{C-j}, @key{RET}, and @key{ESC C-c})
 @kindex RET
-@kindex LFD
+@kindex C-j
 @kindex q
 @findex sc-eref-exit
 @findex eref-exit (sc-)
@@ -1229,7 +1229,7 @@ yanked text.  This allows you to easily undo Supercite's changes to
 affect alternative citing styles.
 
 @item 
-@emph{Processes the the mail headers.}
+@emph{Processes the mail headers.}
 @vindex sc-confirm-always-p
 @vindex confirm-always-p (sc-)
 @vindex sc-mail-warn-if-non-rfc822-p

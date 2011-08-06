@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Search, Fixit, Display, Top
 @chapter Searching and Replacement
@@ -55,8 +55,9 @@ characters that you have typed.  If you type @kbd{C-s} and then @kbd{F},
 the cursor moves right after the first @samp{F}.  Type an @kbd{O}, and see
 the cursor move to after the first @samp{FO}.  After another @kbd{O}, the
 cursor is after the first @samp{FOO} after the place where you started the
-search.  Meanwhile, the search string @samp{FOO} has been echoed in the
-echo area.@refill
+search.  At each step, the buffer text that matches the search string is
+highlighted, if the terminal can do that; at each step, the current search
+string is updated in the echo area.
 
 @ignore @c isearch mode disabled this feature.
   The echo area display ends with three dots when actual searching is going
@@ -83,14 +84,14 @@ special within searches (@kbd{C-q}, @kbd{C-w}, @kbd{C-r}, @kbd{C-s},
 
   Sometimes you search for @samp{FOO} and find it, but not the one you
 expected to find.  There was a second @samp{FOO} that you forgot about,
-before the one you were looking for.  In this event, type another @kbd{C-s}
+before the one you were aiming for.  In this event, type another @kbd{C-s}
 to move to the next occurrence of the search string.  This can be done any
 number of times.  If you overshoot, you can cancel some @kbd{C-s}
 characters with @key{DEL}.
 
   After you exit a search, you can search for the same string again by
 typing just @kbd{C-s C-s}: the first @kbd{C-s} is the key that invokes
-incremental search, and the second @kbd{C-s} means ``search again''.
+incremental search, and the second @kbd{C-s} means ``search again.''
 
   To reuse earlier search strings, use the @dfn{search ring}.  The
 commands @kbd{M-p} and @kbd{M-n} move through the ring to pick a search
@@ -105,7 +106,7 @@ string as it could.  Thus, if you search for @samp{FOOT}, and there is no
 At this point there are several things you can do.  If your string was
 mistyped, you can rub some of it out and correct it.  If you like the place
 you have found, you can type @key{RET} or some other Emacs command to
-``accept what the search offered''.  Or you can type @kbd{C-g}, which
+``accept what the search offered.''  Or you can type @kbd{C-g}, which
 removes from the search string the characters that could not be found (the
 @samp{T} in @samp{FOOT}), leaving those that were found (the @samp{FOO} in
 @samp{FOOT}).  A second @kbd{C-g} at that point cancels the search
@@ -135,14 +136,13 @@ been found are discarded from the search string.  With them gone, the
 search is now successful and waiting for more input, so a second @kbd{C-g}
 will cancel the entire search.
 
-  To search for a newline, type @key{LFD} (also known as @kbd{C-j}).  To
-search for another control character such as control-S or carriage
-return, you must quote it by typing @kbd{C-q} first.  This function of
-@kbd{C-q} is analogous to its meaning as an Emacs command: it causes the
-following character to be treated the way a graphic character would
-normally be treated in the same context.  You can also specify a
-character by its octal code: enter @kbd{C-q} followed by three octal
-digits.
+  To search for a newline, type @kbd{C-j}.  To search for another
+control character, such as control-S or carriage return, you must quote
+it by typing @kbd{C-q} first.  This function of @kbd{C-q} is analogous
+to its use for insertion (@pxref{Inserting Text}): it causes the
+following character to be treated the way any ``ordinary'' character is
+treated in the same context.  You can also specify a character by its
+octal code: enter @kbd{C-q} followed by a sequence of octal digits.
 
   You can change to searching backwards with @kbd{C-r}.  If a search fails
 because the place you started was too late in the file, you should do this.
@@ -154,7 +154,9 @@ with @key{DEL}.
 @findex isearch-backward
   If you know initially that you want to search backwards, you can use
 @kbd{C-r} instead of @kbd{C-s} to start the search, because @kbd{C-r} as
-a key runs a command (@code{isearch-backward}) to search backward.
+a key runs a command (@code{isearch-backward}) to search backward.  A
+backward search finds matches that are entirely before the starting
+point, just as a forward search finds matches that begin after it.
 
   The characters @kbd{C-y} and @kbd{C-w} can be used in incremental
 search to grab text from the buffer into the search string.  This makes
@@ -164,7 +166,7 @@ advancing point over that word.  Another @kbd{C-s} to repeat the search
 will then search for a string including that word.  @kbd{C-y} is similar
 to @kbd{C-w} but copies all the rest of the current line into the search
 string.  Both @kbd{C-y} and @kbd{C-w} convert the text they copy to
-lower case if the search is current not case-sensitive; this is so the
+lower case if the search is currently not case-sensitive; this is so the
 search remains case-insensitive.
 
   The character @kbd{M-y} copies text from the kill ring into the search
@@ -207,7 +209,7 @@ initially 1200.
 
 @vindex search-slow-window-lines
   The number of lines to use in slow terminal search display is controlled
-by the variable @code{search-slow-window-lines}.  1 is its normal value.
+by the variable @code{search-slow-window-lines}.  Its normal value is 1.
 
 @node Nonincremental Search, Word Search, Incremental Search, Search
 @section Nonincremental Search
@@ -352,7 +354,7 @@ therefore @samp{f} is a regular expression that matches the string
 @samp{ff}.)  Likewise, @samp{o} is a regular expression that matches
 only @samp{o}.  (When case distinctions are being ignored, these regexps
 also match @samp{F} and @samp{O}, but we consider this a generalization
-of ``the same string'', rather than an exception.)
+of ``the same string,'' rather than an exception.)
 
   Any two regular expressions @var{a} and @var{b} can be concatenated.  The
 result is a regular expression which matches a string if @var{a} matches
@@ -367,12 +369,12 @@ need to use one of the special characters.  Here is a list of them.
 @table @kbd
 @item .@: @r{(Period)}
 is a special character that matches any single character except a newline.
-Using concatenation, we can make regular expressions like @samp{a.b} which
-matches any three-character string which begins with @samp{a} and ends with
+Using concatenation, we can make regular expressions like @samp{a.b}, which
+matches any three-character string that begins with @samp{a} and ends with
 @samp{b}.@refill
 
 @item *
-is not a construct by itself; it is a postfix operator, which means to
+is not a construct by itself; it is a postfix operator that means to
 match the preceding regular expression repetitively as many times as
 possible.  Thus, @samp{o*} matches any number of @samp{o}s (including no
 @samp{o}s).
@@ -385,7 +387,7 @@ The matcher processes a @samp{*} construct by matching, immediately,
 as many repetitions as can be found.  Then it continues with the rest
 of the pattern.  If that fails, backtracking occurs, discarding some
 of the matches of the @samp{*}-modified construct in case that makes
-it possible to match the rest of the pattern.  For example, matching
+it possible to match the rest of the pattern.  For example, in matching
 @samp{ca*ar} against the string @samp{caaar}, the @samp{a*} first
 tries to match all three @samp{a}s; but the rest of the pattern is
 @samp{ar} and there is only @samp{r} left to match, so this try fails.
@@ -393,13 +395,13 @@ The next alternative is for @samp{a*} to match only two @samp{a}s.
 With this choice, the rest of the regexp matches successfully.@refill
 
 @item +
-is a postfix character, similar to @samp{*} except that it must match
+is a postfix operator, similar to @samp{*} except that it must match
 the preceding expression at least once.  So, for example, @samp{ca+r}
 matches the strings @samp{car} and @samp{caaaar} but not the string
 @samp{cr}, whereas @samp{ca*r} matches all three strings.
 
 @item ?
-is a postfix character, similar to @samp{*} except that it can match the
+is a postfix operator, similar to @samp{*} except that it can match the
 preceding expression either once or not at all.  For example,
 @samp{ca?r} matches @samp{car} or @samp{cr}; nothing else.
 
@@ -413,11 +415,12 @@ Thus, @samp{[ad]} matches either one @samp{a} or one @samp{d}, and
 (including the empty string), from which it follows that @samp{c[ad]*r}
 matches @samp{cr}, @samp{car}, @samp{cdr}, @samp{caddaar}, etc.
 
-You can also include character ranges a character set, by writing two
-characters with a @samp{-} between them.  Thus, @samp{[a-z]} matches any
-lower-case letter.  Ranges may be intermixed freely with individual
-characters, as in @samp{[a-z$%.]}, which matches any lower case letter
-or @samp{$}, @samp{%} or period.
+You can also include character ranges in a character set, by writing the
+starting and ending characters with a @samp{-} between them.  Thus,
+@samp{[a-z]} matches any lower-case ASCII letter.  Ranges may be
+intermixed freely with individual characters, as in @samp{[a-z$%.]},
+which matches any lower-case ASCII letter or @samp{$}, @samp{%} or
+period.
 
 Note that the usual regexp special characters are not special inside a
 character set.  A completely different set of special characters exists
@@ -439,7 +442,7 @@ all characters @emph{except} letters and digits.
 
 @samp{^} is not special in a character set unless it is the first
 character.  The character following the @samp{^} is treated as if it
-were first (@samp{-} and @samp{]} are not special there).
+were first (in other words, @samp{-} and @samp{]} are not special there).
 
 A complemented character set can match a newline, unless newline is
 mentioned as one of the characters not to match.  This is in contrast to
@@ -448,34 +451,34 @@ the handling of regexps in programs such as @code{grep}.
 @item ^
 is a special character that matches the empty string, but only at the
 beginning of a line in the text being matched.  Otherwise it fails to
-match anything.  Thus, @samp{^foo} matches a @samp{foo} which occurs at
+match anything.  Thus, @samp{^foo} matches a @samp{foo} that occurs at
 the beginning of a line.
 
 @item $
 is similar to @samp{^} but matches only at the end of a line.  Thus,
-@samp{xx*$} matches a string of one @samp{x} or more at the end of a line.
+@samp{x+$} matches a string of one @samp{x} or more at the end of a line.
 
 @item \
 has two functions: it quotes the special characters (including
 @samp{\}), and it introduces additional special constructs.
 
 Because @samp{\} quotes special characters, @samp{\$} is a regular
-expression which matches only @samp{$}, and @samp{\[} is a regular
-expression which matches only @samp{[}, etc.
+expression that matches only @samp{$}, and @samp{\[} is a regular
+expression that matches only @samp{[}, and so on.
 @end table
 
 Note: for historical compatibility, special characters are treated as
 ordinary ones if they are in contexts where their special meanings make no
 sense.  For example, @samp{*foo} treats @samp{*} as ordinary since there is
 no preceding expression on which the @samp{*} can act.  It is poor practice
-to depend on this behavior; better to quote the special character anyway,
+to depend on this behavior; it is better to quote the special character anyway,
 regardless of where it appears.@refill
 
 For the most part, @samp{\} followed by any character matches only that
 character.  However, there are several exceptions: two-character
-sequences starting with @samp{\} which have special meanings.  The
-second character in the sequence is always an ordinary character on
-their own.  Here is a table of @samp{\} constructs.
+sequences starting with @samp{\} that have special meanings.  The second
+character in the sequence is always an ordinary character when used on
+its own.  Here is a table of @samp{\} constructs.
 
 @table @kbd
 @item \|
@@ -487,7 +490,7 @@ Thus, @samp{foo\|bar} matches either @samp{foo} or @samp{bar}
 but no other string.@refill
 
 @samp{\|} applies to the largest possible surrounding expressions.  Only a
-surrounding @samp{\( @dots{} \)} grouping can limit the scope of
+surrounding @samp{\( @dots{} \)} grouping can limit the grouping power of
 @samp{\|}.@refill
 
 Full backtracking capability exists to handle multiple uses of @samp{\|}.
@@ -507,17 +510,19 @@ To enclose a complicated expression for the postfix operators @samp{*},
 strings.@refill
 
 @item
-To mark a matched substring for future reference.
+To record a matched substring for future reference.
 @end enumerate
 
 This last application is not a consequence of the idea of a
-parenthetical grouping; it is a separate feature which is assigned as a
+parenthetical grouping; it is a separate feature that is assigned as a
 second meaning to the same @samp{\( @dots{} \)} construct.  In practice
-there is no conflict between the two meanings.  Here is an explanation
-of this feature:
+there is no conflict between the two meanings.
 
 @item \@var{d}
-after the end of a @samp{\( @dots{} \)} construct, the matcher remembers
+matches the same text that matched the @var{d}th occurrence of a
+@samp{\( @dots{} \)} construct.
+
+After the end of a @samp{\( @dots{} \)} construct, the matcher remembers
 the beginning and end of the text matched by that construct.  Then,
 later on in the regular expression, you can use @samp{\} followed by the
 digit @var{d} to mean ``match the same text matched the @var{d}th time
@@ -525,9 +530,9 @@ by the @samp{\( @dots{} \)} construct.''
 
 The strings matching the first nine @samp{\( @dots{} \)} constructs
 appearing in a regular expression are assigned numbers 1 through 9 in
-order that the open-parentheses appear in the regular expression.
-@samp{\1} through @samp{\9} refer to the text previously matched by the
-corresponding @samp{\( @dots{} \)} construct.
+the order that the open-parentheses appear in the regular expression.
+So you can use @samp{\1} through @samp{\9} to refer to the text matched
+by the corresponding @samp{\( @dots{} \)} constructs.
 
 For example, @samp{\(.*\)\1} matches any newline-free string that is
 composed of two identical halves.  The @samp{\(.*\)} matches the first
@@ -539,18 +544,18 @@ If a particular @samp{\( @dots{} \)} construct matches more than once
 match is recorded.
 
 @item \`
-matches the empty string, provided it is at the beginning
+matches the empty string, but only at the beginning
 of the buffer or string being matched against.
 
 @item \'
-matches the empty string, provided it is at the end of
+matches the empty string, but only at the end of
 the buffer or string being matched against.
 
 @item \=
-matches the empty string, provided it is at point.
+matches the empty string, but only at point.
 
 @item \b
-matches the empty string, provided it is at the beginning or
+matches the empty string, but only at the beginning or
 end of a word.  Thus, @samp{\bfoo\b} matches any occurrence of
 @samp{foo} as a separate word.  @samp{\bballs?\b} matches
 @samp{ball} or @samp{balls} as a separate word.@refill
@@ -559,18 +564,18 @@ end of a word.  Thus, @samp{\bfoo\b} matches any occurrence of
 regardless of what text appears next to it.
 
 @item \B
-matches the empty string, provided it is @emph{not} at the beginning or
+matches the empty string, but @emph{not} at the beginning or
 end of a word.
 
 @item \<
-matches the empty string, provided it is at the beginning of a word.
+matches the empty string, but only at the beginning of a word.
 @samp{\<} matches at the beginning of the buffer only if a
 word-constituent character follows.
 
 @item \>
-matches the empty string, provided it is at the end of a word.
-@samp{\>} matches at the end of the buffer only if the contents end with
-a word-constituent character.
+matches the empty string, but only at the end of a word.  @samp{\>}
+matches at the end of the buffer only if the contents end with a
+word-constituent character.
 
 @item \w
 matches any word-constituent character.  The syntax table
@@ -581,10 +586,10 @@ matches any character that is not a word-constituent.
 
 @item \s@var{c}
 matches any character whose syntax is @var{c}.  Here @var{c} is a
-character which represents a syntax code: thus, @samp{w} for word
-constituent, @samp{(} for open-parenthesis, etc.  Represent a character
-of whitespace (which can be a newline) by either @samp{-} or a space
-character.
+character that represents a syntax code: thus, @samp{w} for word
+constituent, @samp{-} for whitespace, @samp{(} for open parenthesis,
+etc.  Represent a character of whitespace (which can be a newline) by
+either @samp{-} or a space character.
 
 @item \S@var{c}
 matches any character whose syntax is not @var{c}.
@@ -628,11 +633,11 @@ Thus, if you specify searching for @samp{foo}, then @samp{Foo} and
 character sets, are included: @samp{[ab]} would match @samp{a} or
 @samp{A} or @samp{b} or @samp{B}.@refill
 
-  An upper-case letter in the incremental search string makes the search
-case-sensitive.  Thus, searching for @samp{Foo} does not find @samp{foo}
-or @samp{FOO}.  This applies to regular expression search as well as to
-string search.  The effect ceases if you delete the upper-case letter
-from the search string.
+  An upper-case letter anywhere in the incremental search string makes
+the search case-sensitive.  Thus, searching for @samp{Foo} does not find
+@samp{foo} or @samp{FOO}.  This applies to regular expression search as
+well as to string search.  The effect ceases if you delete the
+upper-case letter from the search string.
 
   If you set the variable @code{case-fold-search} to @code{nil}, then
 all letters must match exactly, including case.  This is a per-buffer
@@ -740,12 +745,12 @@ M-x replace-string @key{RET} foo @key{RET} bar @key{RET}
 @noindent
 replaces a lower case @samp{foo} with a lower case @samp{bar}, an
 all-caps @samp{FOO} with @samp{BAR}, and a capitalized @samp{Foo} with
-@samp{Bar}.  (These three alternatives--lower case, all caps, and
+@samp{Bar}.  (These three alternatives---lower case, all caps, and
 capitalized, are the only ones that @code{replace-string} can
 distinguish.)
 
-  If upper case letters are used in the second argument, they remain
-upper case every time that argument is inserted.  If upper case letters
+  If upper-case letters are used in the second argument, they remain
+upper case every time that argument is inserted.  If upper-case letters
 are used in the first argument, the second argument is always
 substituted exactly as given, with no case conversion.  Likewise, if the
 variable @code{case-replace} is set to @code{nil}, replacement is done
@@ -787,16 +792,16 @@ as it normally is.
 or a match for @var{regexp} are:
 
 @ignore @c Not worth it.
-@kindex SPC (query-replace)
-@kindex DEL (query-replace)
-@kindex , (query-replace)
-@kindex RET (query-replace)
-@kindex . (query-replace)
-@kindex ! (query-replace)
-@kindex ^ (query-replace)
-@kindex C-r (query-replace)
-@kindex C-w (query-replace)
-@kindex C-l (query-replace)
+@kindex SPC @r{(query-replace)}
+@kindex DEL @r{(query-replace)}
+@kindex , @r{(query-replace)}
+@kindex RET @r{(query-replace)}
+@kindex . @r{(query-replace)}
+@kindex ! @r{(query-replace)}
+@kindex ^ @r{(query-replace)}
+@kindex C-r @r{(query-replace)}
+@kindex C-w @r{(query-replace)}
+@kindex C-l @r{(query-replace)}
 @end ignore
 
 @c WideCommands
@@ -813,10 +818,10 @@ for another input character to say what to do next.  Since the
 replacement has already been made, @key{DEL} and @key{SPC} are
 equivalent in this situation; both move to the next occurrence.
 
-You could type @kbd{C-r} at this point (see below) to alter the replaced
-text.  You could also type @kbd{C-x u} to undo the replacement; this
-exits the @code{query-replace}, so if you want to do further replacement
-you must use @kbd{C-x @key{ESC} @key{ESC} @key{RET}} to restart
+You can type @kbd{C-r} at this point (see below) to alter the replaced
+text.  You can also type @kbd{C-x u} to undo the replacement; this exits
+the @code{query-replace}, so if you want to do further replacement you
+must use @kbd{C-x @key{ESC} @key{ESC} @key{RET}} to restart
 (@pxref{Repetition}).
 
 @item @key{RET}
@@ -895,7 +900,11 @@ to print before and after each matching line; the default is none.
 To limit the search to part of the buffer, narrow to that part
 (@pxref{Narrowing}).
 
-@kindex @key{RET} @r{(Occur mode)}
+If @var{regexp} contains upper-case letters, then the matching is done
+in a case-sensitive way.  Otherwise, @code{case-fold-search} controls
+whether case is ignored.
+
+@kindex RET @r{(Occur mode)}
 The buffer @samp{*Occur*} containing the output serves as a menu for
 finding the occurrences in their original context.  Click @kbd{Mouse-2}
 on an occurrence listed in @samp{*Occur*}, or position point there and

@@ -29,6 +29,8 @@ Boston, MA 02111-1307, USA.  */
 
 extern char *index ();
 
+extern Lisp_Object Qcursor_in_echo_area;
+
 Lisp_Object Vcurrent_prefix_arg, Qminus, Qplus;
 Lisp_Object Qcall_interactively;
 Lisp_Object Vcommand_history;
@@ -90,19 +92,23 @@ e -- Parametrized event (i.e., one that's a list) that invoked this command.\n\
      This skips events that are integers or symbols.\n\
 f -- Existing file name.\n\
 F -- Possibly nonexistent file name.\n\
+i -- Ignored, i.e. always nil.  Does not do I/O.\n\
 k -- Key sequence (downcase the last event if needed to get a definition).\n\
 K -- Key sequence to be redefined (do not downcase the last event).\n\
 m -- Value of mark as number.  Does not do I/O.\n\
+M -- Any string.  Inherits the current input method.\n\
 n -- Number read using minibuffer.\n\
 N -- Raw prefix arg, or if none, do like code `n'.\n\
 p -- Prefix arg converted to number.  Does not do I/O.\n\
 P -- Prefix arg in raw form.  Does not do I/O.\n\
 r -- Region: point and mark as 2 numeric args, smallest first.  Does no I/O.\n\
-s -- Any string.\n\
+s -- Any string.  Does not inherit the current input method.\n\
 S -- Any symbol.\n\
 v -- Variable name: symbol that is user-variable-p.\n\
 x -- Lisp expression read but not evaluated.\n\
 X -- Lisp expression read and evaluated.\n\
+z -- Coding system.\n\
+Z -- Coding system, nil if no prefix arg.\n\
 In addition, if the string begins with `*'\n\
  then an error is signaled if the buffer is read-only.\n\
  This happens before reading any arguments.\n\
@@ -288,11 +294,11 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
   else if (string == 0)
     {
       Lisp_Object input;
-      i = num_input_chars;
+      i = num_input_events;
       input = specs;
       /* Compute the arg values using the user's expression.  */
       specs = Feval (specs);
-      if (i != num_input_chars || !NILP (record_flag))
+      if (i != num_input_events || !NILP (record_flag))
 	{
 	  /* We should record this command on the command history.  */
 	  Lisp_Object values, car;
@@ -460,7 +466,8 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	{
 	case 'a':		/* Symbol defined as a function */
 	  visargs[i] = Fcompleting_read (build_string (callint_message),
-					 Vobarray, Qfboundp, Qt, Qnil, Qnil);
+					 Vobarray, Qfboundp, Qt,
+					 Qnil, Qnil, Qnil, Qnil);
 	  /* Passing args[i] directly stimulates compiler bug */
 	  teml = visargs[i];
 	  args[i] = Fintern (teml, Qnil);
@@ -493,7 +500,8 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 
 	case 'C':		/* Command: symbol with interactive function */
 	  visargs[i] = Fcompleting_read (build_string (callint_message),
-					 Vobarray, Qcommandp, Qt, Qnil, Qnil);
+					 Vobarray, Qcommandp,
+					 Qt, Qnil, Qnil, Qnil, Qnil);
 	  /* Passing args[i] directly stimulates compiler bug */
 	  teml = visargs[i];
 	  args[i] = Fintern (teml, Qnil);
@@ -521,18 +529,32 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 				     Qnil, Qnil, Qnil, Qnil);
 	  break;
 
+	case 'i':		/* Ignore an argument -- Does not do I/O */
+	  varies[i] = -1;
+	  break;
+
 	case 'k':		/* Key sequence. */
-	  args[i] = Fread_key_sequence (build_string (callint_message),
-					Qnil, Qnil, Qnil);
-	  teml = args[i];
-	  visargs[i] = Fkey_description (teml);
+	  {
+	    int speccount1 = specpdl_ptr - specpdl;
+	    specbind (Qcursor_in_echo_area, Qt);
+	    args[i] = Fread_key_sequence (build_string (callint_message),
+					  Qnil, Qnil, Qnil);
+	    unbind_to (speccount1, Qnil);
+	    teml = args[i];
+	    visargs[i] = Fkey_description (teml);
+	  }
 	  break;
 
 	case 'K':		/* Key sequence to be defined. */
-	  args[i] = Fread_key_sequence (build_string (callint_message),
-					Qnil, Qt, Qnil);
-	  teml = args[i];
-	  visargs[i] = Fkey_description (teml);
+	  {
+	    int speccount1 = specpdl_ptr - specpdl;
+	    specbind (Qcursor_in_echo_area, Qt);
+	    args[i] = Fread_key_sequence (build_string (callint_message),
+					  Qnil, Qt, Qnil);
+	    teml = args[i];
+	    visargs[i] = Fkey_description (teml);
+	    unbind_to (speccount1, Qnil);
+	  }
 	  break;
 
 	case 'e':		/* The invoking event.  */
@@ -559,13 +581,38 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	  varies[i] = 2;
 	  break;
 
+	case 'M':		/* String read via minibuffer with
+				   inheriting the current input method.  */
+	  args[i] = Fread_string (build_string (callint_message),
+				  Qnil, Qnil, Qnil, Qt);
+	  break;
+
 	case 'N':		/* Prefix arg, else number from minibuffer */
 	  if (!NILP (prefix_arg))
 	    goto have_prefix_arg;
 	case 'n':		/* Read number from minibuffer.  */
-	  do
-	    args[i] = Fread_minibuffer (build_string (callint_message), Qnil);
-	  while (! NUMBERP (args[i]));
+	  {
+	    int first = 1;
+	    do
+	      {
+		Lisp_Object tem;
+		if (!  first)
+		  {
+		    message ("Please enter a number.");
+		    sit_for (1, 0, 0, 0, 0);
+		  }
+		first = 0;
+
+		tem = Fread_from_minibuffer (build_string (callint_message),
+					     Qnil, Qnil, Qnil, Qnil, Qnil,
+					     Qnil);
+		if (! STRINGP (tem) || XSTRING (tem)->size == 0)
+		  args[i] = Qnil;
+		else
+		  args[i] = Fread (tem);
+	      }
+	    while (! NUMBERP (args[i]));
+	  }
 	  visargs[i] = last_minibuf_string;
 	  break;
 
@@ -588,19 +635,21 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	  /* visargs[i+1] = Qnil; */
 	  foo = marker_position (current_buffer->mark);
 	  /* visargs[i] = Qnil; */
-	  args[i] = point < foo ? point_marker : current_buffer->mark;
+	  args[i] = PT < foo ? point_marker : current_buffer->mark;
 	  varies[i] = 3;
-	  args[++i] = point > foo ? point_marker : current_buffer->mark;
+	  args[++i] = PT > foo ? point_marker : current_buffer->mark;
 	  varies[i] = 4;
 	  break;
 
-	case 's':		/* String read via minibuffer.  */
-	  args[i] = Fread_string (build_string (callint_message), Qnil, Qnil);
+	case 's':		/* String read via minibuffer without
+				   inheriting the current input method.  */
+	  args[i] = Fread_string (build_string (callint_message),
+				  Qnil, Qnil, Qnil, Qnil);
 	  break;
 
 	case 'S':		/* Any symbol.  */
 	  visargs[i] = Fread_string (build_string (callint_message),
-				     Qnil, Qnil);
+				     Qnil, Qnil, Qnil, Qnil);
 	  /* Passing args[i] directly stimulates compiler bug */
 	  teml = visargs[i];
 	  args[i] = Fintern (teml, Qnil);
@@ -608,7 +657,7 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 
 	case 'v':		/* Variable name: symbol that is
 				   user-variable-p. */
-	  args[i] = Fread_variable (build_string (callint_message));
+	  args[i] = Fread_variable (build_string (callint_message), Qnil);
 	  visargs[i] = last_minibuf_string;
 	  break;
 
@@ -621,6 +670,26 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	  args[i] = Feval_minibuffer (build_string (callint_message), Qnil);
 	  visargs[i] = last_minibuf_string;
  	  break;
+
+	case 'Z':		/* Coding-system symbol, or ignore the
+				   argument if no prefix */
+	  if (NILP (prefix_arg))
+	    {
+	      args[i] = Qnil;
+	      varies[i] = -1;
+	    }
+	  else 
+	    {
+	      args[i]
+		= Fread_non_nil_coding_system (build_string (callint_message));
+	      visargs[i] = last_minibuf_string;
+	    }
+	  break;
+
+	case 'z':		/* Coding-system symbol or nil */
+	  args[i] = Fread_coding_system (build_string (callint_message), Qnil);
+	  visargs[i] = last_minibuf_string;
+	  break;
 
 	  /* We have a case for `+' so we get an error
 	     if anyone tries to define one here.  */

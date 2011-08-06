@@ -30,15 +30,13 @@ extern int frame_garbaged;
 extern int message_buf_print;
 
 
-/* The structure representing a frame.
-
-   We declare this even if MULTI_FRAME is not defined, because when
-   we lack multi-frame support, we use one instance of this structure
-   to represent the one frame we support.  This is cleaner than
-   having miscellaneous random variables scattered about.  */
+/* The structure representing a frame.  */
 
 enum output_method
-{ output_termcap, output_x_window, output_msdos_raw, output_win32 };
+{ output_termcap, output_x_window, output_msdos_raw, output_w32 };
+
+enum vertical_scroll_bar_type
+{ vertical_scroll_bar_none, vertical_scroll_bar_left, vertical_scroll_bar_right };
 
 struct frame
 {
@@ -126,7 +124,10 @@ struct frame
   /* Predicate for selecting buffers for other-buffer.  */
   Lisp_Object buffer_predicate;
 
-  /* Beyond here, there should be no more Lisp_Object components.  */
+  /* List of buffers viewed in this frame, for other-buffer.  */
+  Lisp_Object buffer_list;
+
+  /* beyond here, there should be no more Lisp_Object components.  */
 
 
   /* A buffer to hold the frame's name.  We can't use the Lisp string's
@@ -165,10 +166,13 @@ struct frame
   /* This is handy for undrawing the cursor, because current_glyphs is
      not always accurate when in do_scrolling.  */
   GLYPH phys_cursor_glyph;
+  /* Nonzero means the cursor is displayed.  */
+  int phys_cursor_on;
 
   /* Size of this frame, in units of characters.  */
   EMACS_INT height;
   EMACS_INT width;
+  EMACS_INT window_width;
 
   /* New height and width for pending size change.  0 if no change pending.  */
   int new_height, new_width;
@@ -180,9 +184,9 @@ struct frame
   /* A structure of auxiliary data used for displaying the contents.
      struct x_output is used for X window frames;
      it is defined in xterm.h.  
-     struct win32_output is used for Win32 window frames;
+     struct w32_output is used for W32 window frames;
      it is defined in w32term.h.  */
-  union output_data { struct x_output *x; struct win32_output *win32; int nothing; } output_data;
+  union output_data { struct x_output *x; struct w32_output *w32; int nothing; } output_data;
 
 #ifdef MULTI_KBOARD
   /* A pointer to the kboard structure associated with this frame.
@@ -209,6 +213,14 @@ struct frame
      Note that, since invisible frames aren't updated, whenever a
      frame becomes visible again, it must be marked as garbaged.  The
      FRAME_SAMPLE_VISIBILITY macro takes care of this.
+
+     On Windows NT/9X, to avoid wasting effort updating visible frames
+     that are actually completely obscured by other windows on the
+     display, we bend the meaning of visible slightly: if greater than
+     1, then the frame is obscured - we still consider it to be
+     "visible" as seen from lisp, but we don't bother updating it.  We
+     must take care to garbage the frame when it ceaces to be obscured
+     though.  Note that these semantics are only used on NT/9X.
 
      iconified is nonzero if the frame is currently iconified.
 
@@ -252,7 +264,7 @@ struct frame
 
   /* If can_have_scroll_bars is non-zero, this is non-zero if we should
      actually display them on this frame.  */
-  char has_vertical_scroll_bars;
+  enum vertical_scroll_bar_type vertical_scroll_bar_type;
 
   /* Non-0 means raise this frame to the top of the heap when selected.  */
   char auto_raise;
@@ -289,18 +301,21 @@ struct frame
   /* The baud rate that was used to calculate costs for this frame.  */
   int cost_calculation_baud_rate;
 
+  /* A pointer to the data structure containing all information of
+     fontsets associated with this frame.  See the comments in
+     fontset.h for more detail.  */
+  struct fontset_data *fontset_data;
+
   /* Nonzero if the mouse has moved on this display
      since the last time we checked.  */
   char mouse_moved;
 };
 
-#ifdef MULTI_KBOARD  /* Note that MULTI_KBOARD implies MULTI_FRAME */
+#ifdef MULTI_KBOARD
 #define FRAME_KBOARD(f) ((f)->kboard)
 #else
 #define FRAME_KBOARD(f) (&the_only_kboard)
 #endif
-
-#ifdef MULTI_FRAME
 
 typedef struct frame *FRAME_PTR;
 
@@ -310,7 +325,7 @@ typedef struct frame *FRAME_PTR;
 #define WINDOW_FRAME(w) (w)->frame
 
 #define FRAME_X_P(f) ((f)->output_method == output_x_window)
-#define FRAME_WIN32_P(f) ((f)->output_method == output_win32)
+#define FRAME_W32_P(f) ((f)->output_method == output_w32)
 #define FRAME_MSDOS_P(f) ((f)->output_method == output_msdos_raw)
 
 /* FRAME_WINDOW_P tests whether the frame is a window, and is
@@ -319,7 +334,7 @@ typedef struct frame *FRAME_PTR;
 #define FRAME_WINDOW_P(f) FRAME_X_P (f)
 #endif
 #ifdef HAVE_NTGUI
-#define FRAME_WINDOW_P(f) FRAME_WIN32_P (f)
+#define FRAME_WINDOW_P(f) FRAME_W32_P (f)
 #endif
 #ifndef FRAME_WINDOW_P
 #define FRAME_WINDOW_P(f) (0)
@@ -346,6 +361,7 @@ typedef struct frame *FRAME_PTR;
 #define FRAME_CURSOR_X(f) (f)->cursor_x
 #define FRAME_CURSOR_Y(f) (f)->cursor_y
 #define FRAME_VISIBLE_P(f) ((f)->visible != 0)
+#define FRAME_OBSCURED_P(f) ((f)->visible > 1)
 #define FRAME_SET_VISIBLE(f,p) \
   ((f)->async_visible = (p), FRAME_SAMPLE_VISIBILITY (f))
 #define SET_FRAME_GARBAGED(f) (frame_garbaged = 1, f->garbaged = 1)
@@ -366,13 +382,37 @@ typedef struct frame *FRAME_PTR;
 #define FRAME_SCROLL_BOTTOM_VPOS(f) (f)->scroll_bottom_vpos
 #define FRAME_FOCUS_FRAME(f) (f)->focus_frame
 #define FRAME_CAN_HAVE_SCROLL_BARS(f) ((f)->can_have_scroll_bars)
-#define FRAME_HAS_VERTICAL_SCROLL_BARS(f) ((f)->has_vertical_scroll_bars)
+#define FRAME_VERTICAL_SCROLL_BAR_TYPE(f) ((f)->vertical_scroll_bar_type)
+#define FRAME_HAS_VERTICAL_SCROLL_BARS(f) \
+     ((f)->vertical_scroll_bar_type != vertical_scroll_bar_none)
+#define FRAME_HAS_VERTICAL_SCROLL_BARS_ON_LEFT(f) \
+     ((f)->vertical_scroll_bar_type == vertical_scroll_bar_left)
+#define FRAME_HAS_VERTICAL_SCROLL_BARS_ON_RIGHT(f) \
+     ((f)->vertical_scroll_bar_type == vertical_scroll_bar_right)
 #define FRAME_SCROLL_BAR_PIXEL_WIDTH(f) ((f)->scroll_bar_pixel_width)
 #define FRAME_SCROLL_BAR_COLS(f) ((f)->scroll_bar_cols)
+#define FRAME_LEFT_SCROLL_BAR_WIDTH(f) \
+     (FRAME_HAS_VERTICAL_SCROLL_BARS_ON_LEFT (f) \
+      ? FRAME_SCROLL_BAR_COLS (f) \
+      : 0)
+#define FRAME_SCROLL_BAR_WIDTH(f) \
+     (FRAME_HAS_VERTICAL_SCROLL_BARS (f) \
+      ? FRAME_SCROLL_BAR_COLS (f) \
+      : 0)
+#define FRAME_WINDOW_WIDTH_ARG(f, width) \
+     ((width) + FRAME_SCROLL_BAR_WIDTH (f))
+#define FRAME_WINDOW_WIDTH(f) ((f)->window_width)
+#define SET_FRAME_WIDTH(f,val) ((f)->width = (val), (f)->window_width = FRAME_WINDOW_WIDTH_ARG (f, (f)->width))
 #define FRAME_SCROLL_BARS(f) ((f)->scroll_bars)
 #define FRAME_CONDEMNED_SCROLL_BARS(f) ((f)->condemned_scroll_bars)
 #define FRAME_MENU_BAR_ITEMS(f) ((f)->menu_bar_items)
 #define FRAME_COST_BAUD_RATE(f) ((f)->cost_calculation_baud_rate)
+#define FRAME_FONTSET_DATA(f) ((f)->fontset_data)
+
+/* Return the size of message_buf of the frame F.  We multiply the
+   width of the frame by 4 because multi-byte form may require at most
+   4-byte for a character.  */
+#define FRAME_MESSAGE_BUF_SIZE(f) (((int) (f)->width) * 4)
 
 /* Emacs's redisplay code could become confused if a frame's
    visibility changes at arbitrary times.  For example, if a frame is
@@ -398,7 +438,8 @@ typedef struct frame *FRAME_PTR;
    it must be marked as garbaged, since redisplay hasn't been keeping
    up its contents.  */
 #define FRAME_SAMPLE_VISIBILITY(f) \
-  (((f)->async_visible && ! (f)->visible) ? SET_FRAME_GARBAGED (f) : 0, \
+  (((f)->async_visible && (f)->visible != (f)->async_visible) ? \
+   SET_FRAME_GARBAGED (f) : 0, \
    (f)->visible = (f)->async_visible, \
    (f)->iconified = (f)->async_iconified)
 
@@ -422,8 +463,9 @@ typedef struct frame *FRAME_PTR;
    should be a Lisp_Object too; it is used to iterate through the
    Vframe_list.  
 
-   If MULTI_FRAME isn't defined, then this loop expands to something which 
-   executes the statement once.  */
+   This macro is a holdover from a time when multiple frames weren't always
+   supported.  An alternate definition of the macro would expand to
+   something which executes the statement once.  */
 #define FOR_EACH_FRAME(list_var, frame_var)			\
   for ((list_var) = Vframe_list;				\
        (CONSP (list_var)					\
@@ -446,105 +488,7 @@ extern Lisp_Object Vdefault_frame_alist;
 
 extern Lisp_Object Vterminal_frame;
 
-#else /* not MULTI_FRAME */
-
-/* These definitions are used in a single-frame version of Emacs.  */
-
-/* A frame we use to store all the data concerning the screen when we
-   don't have multiple frames.  Remember, if you store any data in it
-   which needs to be protected from GC, you should staticpro that
-   element explicitly.  */
-extern struct frame the_only_frame;
-
-typedef struct frame *FRAME_PTR;
-#ifdef __GNUC__
-/* A function call for always getting 0 is overkill, so... */
-#define WINDOW_FRAME(w) ({ Lisp_Object tem; XSETFASTINT (tem, 0); tem; })
-#else
-#define WINDOW_FRAME(w) (Fselected_frame ())
-#endif
-#define XSETFRAME(p, v) (p = WINDOW_FRAME (***bogus***))
-#define XFRAME(frame) (&the_only_frame)
-
-extern FRAME_PTR selected_frame;
-extern FRAME_PTR last_nonminibuf_frame;
-
-#define FRAME_LIVE_P(f) 1
-#define FRAME_MSDOS_P(f) 0
-#ifdef MSDOS
-/* The following definitions could also be used in the non-MSDOS case,
-   but the constants below lead to better code.  */
-#define FRAME_TERMCAP_P(f) (the_only_frame.output_method == output_termcap)
-#define FRAME_X_P(f) (the_only_frame.output_method != output_termcap)
-#else
-#define FRAME_TERMCAP_P(f) 1
-#define FRAME_X_P(f) 0
-#endif
-#define FRAME_WINDOW_P(f) FRAME_X_P (f)
-#define FRAME_MINIBUF_ONLY_P(f) 0
-#define FRAME_HAS_MINIBUF_P(f) 1
-#define FRAME_CURRENT_GLYPHS(f) (the_only_frame.current_glyphs)
-#define FRAME_DESIRED_GLYPHS(f) (the_only_frame.desired_glyphs)
-#define FRAME_TEMP_GLYPHS(f) (the_only_frame.temp_glyphs)
-#define FRAME_HEIGHT(f) (the_only_frame.height)
-#define FRAME_WIDTH(f) (the_only_frame.width)
-#define FRAME_NEW_HEIGHT(f) (the_only_frame.new_height)
-#define FRAME_NEW_WIDTH(f) (the_only_frame.new_width)
-#define FRAME_MENU_BAR_LINES(f) (the_only_frame.menu_bar_lines)
-#define FRAME_CURSOR_X(f) (the_only_frame.cursor_x)
-#define FRAME_CURSOR_Y(f) (the_only_frame.cursor_y)
-#define FRAME_SET_VISIBLE(f,p) (p)
-#define FRAME_VISIBLE_P(f) 1
-#define SET_FRAME_GARBAGED(f) (frame_garbaged = 1)
-#define FRAME_GARBAGED_P(f) (frame_garbaged)
-#define FRAME_NO_SPLIT_P(f) 0
-#define FRAME_WANTS_MODELINE_P(f) 1
-#define FRAME_ICONIFIED_P(f) 0
-#define FRAME_WINDOW_SIZES_CHANGED(f) the_only_frame.window_sizes_changed
-#define FRAME_MINIBUF_WINDOW(f) (minibuf_window)
-#define FRAME_ROOT_WINDOW(f) (the_only_frame.root_window)
-#define FRAME_SELECTED_WINDOW(f) (selected_window)
-#define SET_GLYPHS_FRAME(glyphs,frame) do ; while (0)
-#define FRAME_INSERT_COST(frame)  (the_only_frame.insert_line_cost)
-#define FRAME_DELETE_COST(frame)  (the_only_frame.delete_line_cost)
-#define FRAME_INSERTN_COST(frame) (the_only_frame.insert_n_lines_cost)
-#define FRAME_DELETEN_COST(frame) (the_only_frame.delete_n_lines_cost)
-#define FRAME_MESSAGE_BUF(f) (the_only_frame.message_buf)
-#define FRAME_SCROLL_BOTTOM_VPOS(f) (the_only_frame.scroll_bottom_vpos)
-#define FRAME_FOCUS_FRAME(f) (Qnil)
-#define FRAME_CAN_HAVE_SCROLL_BARS(f) (the_only_frame.can_have_scroll_bars)
-#define FRAME_HAS_VERTICAL_SCROLL_BARS(f) \
-  (the_only_frame.has_vertical_scroll_bars)
-#define FRAME_SCROLL_BAR_PIXEL_WIDTH(f) (the_only_frame.scroll_bar_pixel_width)
-#define FRAME_SCROLL_BAR_COLS(f) (the_only_frame.scroll_bar_cols)
-#define FRAME_SCROLL_BARS(f) (the_only_frame.scroll_bars)
-#define FRAME_CONDEMNED_SCROLL_BARS(f) (the_only_frame.condemned_scroll_bars)
-#define FRAME_MENU_BAR_ITEMS(f) (the_only_frame.menu_bar_items)
-#define FRAME_COST_BAUD_RATE(f) (the_only_frame.cost_calculation_baud_rate)
-
-/* See comments in definition above.  */
-#define FRAME_SAMPLE_VISIBILITY(f) (0)
-
-#define CHECK_FRAME(x, i) do; while (0)
-#define CHECK_LIVE_FRAME(x, y) do; while (0)
-
-/* FOR_EACH_FRAME (LIST_VAR, FRAME_VAR) followed by a statement is a
-   `for' loop which iterates over the elements of Vframe_list.  The
-   loop will set FRAME_VAR, a Lisp_Object, to each frame in
-   Vframe_list in succession and execute the statement.  LIST_VAR
-   should be a Lisp_Object too; it is used to iterate through the
-   Vframe_list.  
-
-   If MULTI_FRAME _is_ defined, then this loop expands to a real
-   `for' loop which traverses Vframe_list using LIST_VAR and
-   FRAME_VAR.  */
-#define FOR_EACH_FRAME(list_var, frame_var)			\
-  for (list_var = Qt; frame_var = WINDOW_FRAME (***bogus***), ! NILP (list_var); list_var = Qnil)
-
-#endif /* not MULTI_FRAME */
-
-
-/* Device- and MULTI_FRAME-independent scroll bar stuff.  */
+/* Device-independent scroll bar stuff.  */
 
 /* Return the starting column (zero-based) of the vertical scroll bar
    for window W.  The column before this one is the last column we can
@@ -552,11 +496,13 @@ extern FRAME_PTR last_nonminibuf_frame;
    we have extra space allocated for it.  Otherwise, the scroll bar
    takes over the window's rightmost columns.  */
 #define WINDOW_VERTICAL_SCROLL_BAR_COLUMN(w) \
-  (((XINT ((w)->left) + XINT ((w)->width)) \
-    < FRAME_WIDTH (XFRAME (WINDOW_FRAME (w)))) \
-   ? (XINT ((w)->left) + XINT ((w)->width) \
-      - FRAME_SCROLL_BAR_COLS (XFRAME (WINDOW_FRAME (w)))) \
-   : FRAME_WIDTH (XFRAME (WINDOW_FRAME (w))))
+  (FRAME_HAS_VERTICAL_SCROLL_BARS_ON_RIGHT (XFRAME (WINDOW_FRAME (w))) ? \
+    (((XINT ((w)->left) + XINT ((w)->width)) \
+      < FRAME_WIDTH (XFRAME (WINDOW_FRAME (w)))) \
+     ? (XINT ((w)->left) + XINT ((w)->width) \
+       - FRAME_SCROLL_BAR_COLS (XFRAME (WINDOW_FRAME (w)))) \
+     : FRAME_WIDTH (XFRAME (WINDOW_FRAME (w)))) \
+  : XINT ((w)->left))
 
 /* Return the height in lines of the vertical scroll bar in w.  If the
    window has a mode line, don't make the scroll bar extend that far.  */

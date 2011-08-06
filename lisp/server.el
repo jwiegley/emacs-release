@@ -1,8 +1,9 @@
 ;;; server.el --- Lisp code for GNU Emacs running as server process.
 
-;; Copyright (C) 1986, 1987, 1992, 1994, 1995 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 87, 92, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 ;; Author: William Sommerfeld <wesommer@athena.mit.edu>
+;; Maintainer: FSF
 ;; Keywords: processes
 
 ;; Changes by peck@sun.com and by rms.
@@ -74,17 +75,29 @@
 
 ;;; Code:
 
-(defvar server-program (expand-file-name "emacsserver" exec-directory)
-  "*The program to use as the edit server.")
+(defgroup server nil
+  "Emacs running as a server process."
+  :group 'external)
 
-(defvar server-visit-hook nil
-  "*List of hooks to call when visiting a file for the Emacs server.")
+(defcustom server-program (expand-file-name "emacsserver" exec-directory)
+  "*The program to use as the edit server."
+  :group 'server
+  :type 'string)
 
-(defvar server-switch-hook nil
-  "*List of hooks to call when switching to a buffer for the Emacs server.")
+(defcustom server-visit-hook nil
+  "*List of hooks to call when visiting a file for the Emacs server."
+  :group 'server
+  :type '(repeat function))
 
-(defvar server-done-hook nil
-  "*List of hooks to call when done editing a buffer for the Emacs server.")
+(defcustom server-switch-hook nil
+  "*List of hooks to call when switching to a buffer for the Emacs server."
+  :group 'server
+  :type '(repeat function))
+
+(defcustom server-done-hook nil
+  "*List of hooks to call when done editing a buffer for the Emacs server."
+  :group 'server
+  :type '(repeat function))
 
 (defvar server-process nil 
   "the current server process")
@@ -108,10 +121,12 @@ When a buffer is marked as \"done\", it is removed from this list.")
 If nil, use the selected window.
 If it is a frame, use the frame's selected window.")
 
-(defvar server-temp-file-regexp "^/tmp/Re\\|/draft$"
+(defcustom server-temp-file-regexp "^/tmp/Re\\|/draft$"
   "*Regexp which should match filenames of temporary files
 which are deleted and reused after each edit
-by the programs that invoke the emacs server.")
+by the programs that invoke the emacs server."
+  :group 'server
+  :type 'regexp)
 
 (or (assq 'server-buffer-clients minor-mode-alist)
     (setq minor-mode-alist (cons '(server-buffer-clients " Server") minor-mode-alist)))
@@ -147,20 +162,26 @@ Prefix arg means just kill any existing server communications subprocess."
       (progn
 	(set-process-sentinel server-process nil)
 	(condition-case () (delete-process server-process) (error nil))))
-  (condition-case () (delete-file "~/.emacs_server") (error nil))
+  ;; Delete the socket files made by previous server invocations.
   (let* ((sysname (system-name))
 	 (dot-index (string-match "\\." sysname)))
+    (condition-case ()
+	(delete-file (format "~/.emacs-server-%s" sysname))
+      (error nil))
     (condition-case ()
 	(delete-file (format "/tmp/esrv%d-%s" (user-uid) sysname))
       (error nil))
     ;; In case the server file name was made with a domainless hostname,
     ;; try deleting that name too.
     (if dot-index
-	(condition-case ()
-	    (delete-file (format "/tmp/esrv%d-%s" (user-uid)
-				 (substring sysname 0 dot-index)))
-	  (error nil))))
-  ;; If we already had a server, clear out associated status.
+	(let ((shortname (substring sysname 0 dot-index)))
+	  (condition-case ()
+	      (delete-file (format "~/.emacs-server-%s" shortname))
+	    (error nil))
+	  (condition-case ()
+	      (delete-file (format "/tmp/esrv%d-%s" (user-uid) shortname))
+	    (error nil)))))
+  ;; If this Emacs already had a server, clear out associated status.
   (while server-clients
     (let ((buffer (nth 1 (car server-clients))))
       (server-buffer-done buffer)))
@@ -185,7 +206,7 @@ Prefix arg means just kill any existing server communications subprocess."
   ;; process each line individually.
   (while (string-match "\n" string)
     (let ((request (substring string 0 (match-beginning 0)))
-	  client
+	  client nowait
 	  (files nil)
 	  (lineno 1))
       ;; Remove this line from STRING.
@@ -199,21 +220,36 @@ Prefix arg means just kill any existing server communications subprocess."
 	      (setq request (substring request (match-end 0)))
 	      (while (string-match "[^ ]+ " request)
 		(let ((arg
-		       (substring request (match-beginning 0) (1- (match-end 0)))))
+		       (substring request (match-beginning 0) (1- (match-end 0))))
+		      (pos 0))
 		  (setq request (substring request (match-end 0)))
-		  (if (string-match "\\`\\+[0-9]+\\'" arg)
-		      ;; ARG is a line number option.
-		      (setq lineno (read (substring arg 1)))
-		    ;; ARG is a file name.
-		    ;; Collapse multiple slashes to single slashes.
-		    (setq arg (command-line-normalize-file-name arg))
-		    (setq files
-			  (cons (list arg lineno)
-				files))
-		    (setq lineno 1))))
-	      (server-visit-files files client)
+		  (if (string-match "\\`-nowait" arg)
+		      (setq nowait t)
+		    (if (string-match "\\`\\+[0-9]+\\'" arg)
+			;; ARG is a line number option.
+			(setq lineno (read (substring arg 1)))
+		      ;; ARG is a file name.
+		      ;; Collapse multiple slashes to single slashes.
+		      (setq arg (command-line-normalize-file-name arg))
+		      ;; Undo the quoting that emacsclient does
+		      ;; for certain special characters.
+		      (while (string-match "&." arg pos)
+			(setq pos (1+ (match-beginning 0)))
+			(let ((nextchar (aref arg pos)))
+			  (cond ((= nextchar ?&)
+				 (setq arg (replace-match "&" t t arg)))
+				((= nextchar ?-)
+				 (setq arg (replace-match "-" t t arg)))
+				(t
+				 (setq arg (replace-match " " t t arg))))))
+		      (setq files
+			    (cons (list arg lineno)
+				  files))
+		      (setq lineno 1)))))
+	      (server-visit-files files client nowait)
 	      ;; CLIENT is now a list (CLIENTNUM BUFFERS...)
-	      (setq server-clients (cons client server-clients))
+	      (or nowait
+		  (setq server-clients (cons client server-clients)))
 	      (server-switch-buffer (nth 1 client))
 	      (run-hooks 'server-switch-hook)
 	      (message (substitute-command-keys
@@ -221,9 +257,11 @@ Prefix arg means just kill any existing server communications subprocess."
   ;; Save for later any partial line that remains.
   (setq server-previous-string string))
 
-(defun server-visit-files (files client)
+(defun server-visit-files (files client &optional nowait)
   "Finds FILES and returns the list CLIENT with the buffers nconc'd.
-FILES is an alist whose elements are (FILENAME LINENUMBER)."
+FILES is an alist whose elements are (FILENAME LINENUMBER).
+NOWAIT non-nil means this client is not waiting for the results,
+so don't mark these buffers specially, just visit them normally."
   ;; Bind last-nonmenu-event to force use of keyboard, not mouse, for queries.
   (let (client-record (last-nonmenu-event t) (obuf (current-buffer)))
     ;; Restore the current buffer afterward, but not using save-excursion,
@@ -249,13 +287,15 @@ FILES is an alist whose elements are (FILENAME LINENUMBER)."
 	      (set-buffer (find-file-noselect filen))
 	      (run-hooks 'server-visit-hook)))
 	  (goto-line (nth 1 (car files)))
-	  (setq server-buffer-clients (cons (car client) server-buffer-clients))
+	  (if (not nowait)
+	      (setq server-buffer-clients
+		    (cons (car client) server-buffer-clients)))
 	  (setq client-record (cons (current-buffer) client-record))
 	  (setq files (cdr files)))
       (set-buffer obuf))
     (nconc client client-record)))
 
-(defun server-buffer-done (buffer)
+(defun server-buffer-done (buffer &optional for-killing)
   "Mark BUFFER as \"done\" for its client(s).
 This buries the buffer, then returns a list of the form (NEXT-BUFFER KILLED).
 NEXT-BUFFER is another server buffer, as a suggestion for what to select next,
@@ -297,10 +337,11 @@ or nil.  KILLED is t if we killed BUFFER (because it was a temp file)."
 	    (set-buffer buffer)
 	    (setq server-buffer-clients nil)
 	    (run-hooks 'server-done-hook))
-	  (if (server-temp-file-p buffer)
-	      (progn (kill-buffer buffer)
-		     (setq killed t))
-	    (bury-buffer buffer))))
+	  (if for-killing
+	      (if (server-temp-file-p buffer)
+		  (progn (kill-buffer buffer)
+			 (setq killed t))
+		(bury-buffer buffer)))))
     (list next-buffer killed)))
 
 (defun server-temp-file-p (buffer)
@@ -328,6 +369,7 @@ or nil.  KILLED is t if we killed the BUFFER (because it was a temp file)."
 		    (buffer-backed-up nil))
 		(save-buffer))
 	    (if (and (buffer-modified-p)
+		     buffer-file-name
 		     (y-or-n-p (concat "Save file " buffer-file-name "? ")))
 		(save-buffer buffer)))
 	  (server-buffer-done buffer)))))
@@ -356,6 +398,19 @@ or nil.  KILLED is t if we killed the BUFFER (because it was a temp file)."
 	(yes-or-no-p "Server buffers still have clients; exit anyway? "))))
 
 (add-hook 'kill-emacs-query-functions 'server-kill-emacs-query-function)
+
+(defvar server-kill-buffer-running nil
+  "Non-nil while `server-kill-buffer' is running.")
+
+;; When a buffer is killed, inform the clients.
+(add-hook 'kill-buffer-hook 'server-kill-buffer)
+(defun server-kill-buffer ()
+  ;; Prevent infinite recursion if user has made server-done-hook
+  ;; call kill-buffer.
+  (or server-kill-buffer-running
+      (let ((server-kill-buffer-running t))
+	(when server-process
+	  (server-buffer-done (current-buffer) t)))))
 
 (defun server-edit (&optional arg)
   "Switch to next server editing buffer; say \"Done\" for current buffer.

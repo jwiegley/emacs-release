@@ -1,8 +1,22 @@
-Wed Aug 21 03:51:42 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1997-09-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
-	* Version 19.34 released.
+	* Version 20.1 released.
 
-Sun Aug 11 03:36:03 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1997-07-23  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* xlwmenu.c (display_menu): If an item is disabled,
+	don't display its submenu (if any).
+
+1997-05-01  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* xlwmenu.c (pop_up_menu): Update the call to x_catch_errors.
+
+1997-01-21  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* xlwmenu.c (fit_to_screen): If new menu would overlap the previous
+	one from the side, try moving it up or down.
+
+1996-08-11  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 19.33 released.
 
@@ -10,7 +24,7 @@ Sun Aug 11 03:36:03 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 	When XmIsCascadeButton, don't call XmCreateCascadeButtonGadget,
 	just modify the existing one.
 	
-Fri Aug  9 21:16:57 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-08-09  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* lwlib.c (merge_widget_value): Undo previous change.
 	
@@ -19,28 +33,28 @@ Fri Aug  9 21:16:57 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 	pulldown, the menu item must be switched from an XmPushButtonGadget
 	into a XmCascadeButtonGadget.
 
-Wed Jul 31 13:52:46 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-07-31  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 19.32 released.
 
-Wed Jul 31 12:48:46 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-07-31  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* lwlib-Xm.c (make_menubar): Turn off menu accelerator.
 
-Wed Jul 24 07:26:26 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-07-24  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* lwlib.c (merge_widget_value) [USE_MOTIF]: Pass along the change
 	flag from merged_contents.
 
-Sat Jul 13 14:50:46 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-07-13  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (xm_update_menu): Fix loop termination test.
 
-Sun Jul  7 18:54:35 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-07-07  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* lwlib-Xm.h, lwlib-Xm.c, lwlib.h, lwlib.c: Undo previous change.
 
-Wed Jul  3 01:09:22 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-07-03  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* lwlib-Xm.h: Declare lw_motif_menu_related_event_p.
 
@@ -52,35 +66,35 @@ Wed Jul  3 01:09:22 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 	* lwlib.c (lw_toolkit_related_event_p): A predicate to identify
 	toolkit-specific events.
 
-Fri Jun  7 13:14:02 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-06-07  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* lwlib-Xm.c (make_menu_in_widget): Set mapping delay
 	for cascade buttons to zero.
 
-Sat May 25 15:30:10 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-05-25  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* Version 19.31 released.
 
-Sun Mar 31 15:19:31 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-31  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (destroy_all_children): When freeing a cascade button,
 	free its submenu too.
 	(make_menu_in_widget): Use a cascade button gadget, not a widget.
 	Include Xm/CascadeBG.h.
 
-Fri Mar 29 09:47:25 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-29  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (tags): New target.
 
-Thu Mar 28 13:38:14 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-28  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (TAGS): Renamed from `tags' and fixed to work.
 
-Tue Mar 26 13:45:45 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-26  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (xlwmenu.o): New explicit target.
 
-Sun Mar 24 06:55:06 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib.h (struct widget_value): New field this_one_change.
 	* lwlib.c (merge_widget_value): Set the this_one_change field.
@@ -90,39 +104,39 @@ Sun Mar 24 06:55:06 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	have a structural change.
 	(update_one_menu_entry): Use this_one_change field.
 
-Fri Mar  1 14:41:35 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-01  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (motion_event_is_in_menu): Make x and y signed.
 
-Sun Feb 25 01:59:30 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-02-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib.c (lw_window_is_in_menubar) [USE_MOTIF]:
 	With Motif, the window WIN can be the menu bar widget itself.
 
-Wed Feb 21 15:54:25 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-02-21  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* lwlib.c (free_widget_value_tree, merge_widget_value):
 	Use XtFree for the toolkit_data.
 
-Mon Feb 19 02:36:44 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-02-19  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* lwlib.c (lw_internal_update_other_instances): Move static var
 	outside the function, and rename it to lwlib_updating.
 
-Thu Jan  4 19:09:22 1996  Paul Eggert  <eggert@twinsun.com>
+1996-01-04  Paul Eggert  <eggert@twinsun.com>
 
 	* lwlib.c (instantiate_widget_instance): Renamed from
 	instanciate_widget_instance (spelling correction).
 	All callers changed.
 
-Sun Dec 31 13:57:56 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-12-31  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (xlwMenuActionsList): Add "key" and "nothing".
 	(xlwMenuTranslations): Add translations for Key, KeyUp,
 	and for the modifier keysyms.
 	(Nothing, Key): New functions.
 
-Sun Dec 24 11:02:18 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-12-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (XlwMenuSetValues): Do redisplay if non-null contents
 	get replaced by empty contents.
@@ -130,67 +144,67 @@ Sun Dec 24 11:02:18 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	* lwlib.c (merge_widget_value): Treat disappearance of entire contents
 	as a STRUCTURAL_CHANGE.
 
-Wed Dec 20 20:31:41 1995  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1995-12-20  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* lwlib-utils.c: Add #undef for index and rindex.
 
-Fri Nov 24 23:41:12 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.30 released.
 
-Mon Nov 13 21:45:28 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (display_menu_item): Fix previous change.
 
-Sat Nov  4 15:06:40 1995  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1995-11-04  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* xlwmenu.c (display_menu_item): Don't treat buttons specially.
 
-Mon Aug 14 19:10:49 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-14  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (RANLIB): Get this var from configure.
 
-Wed Aug  2 03:12:39 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-02  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib.c (lw_popup_menu): New arg `event', passed along.
 	* lwlib-Xlw.c (xlw_popup_menu): New arg `event'.
 	* lwlib-Xm.c (xm_popup_menu): New arg `event'.
 
-Mon Jun 19 22:50:57 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-19  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.29 released.
 
-Sun Jun 11 15:39:02 1995  Richard Stallman  <rms@gnu.ai.mit.edu>
+1995-06-11  Richard Stallman  <rms@gnu.ai.mit.edu>
 
 	* lwlib.c (lwlib_toolkit_type): New variable.
 
-Fri May 26 23:54:11 1995  Richard Stallman  <rms@gnu.ai.mit.edu>
+1995-05-26  Richard Stallman  <rms@gnu.ai.mit.edu>
 
 	* xlwmenu.c (Drag): Do nothing unless menu.popped_up field is set.
 
-Mon May 22 22:53:05 1995  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1995-05-22  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* xlwmenu.c (XlwMenuInitialize): Cast XCreatePixmapFromBitmapData args.
 
-Sat May 20 01:15:00 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-05-20  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* lwlib.c: Don't use prototype.
 	* lwlib-Xm.c (activate_button, xm_update_cascadebutton): Likewise.
 
-Fri May  5 21:54:02 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-05-05  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib.c (lw_refigure_widget) [USE_MOTIF]: Fix backward if.
 
-Thu May  4 15:52:16 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-05-04  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (ALL_CFLAGS): Add -I../src.
 
-Wed May  3 19:35:22 1995  Morten Welinder  <terra+@cs.cmu.edu>
+1995-05-03  Morten Welinder  <terra+@cs.cmu.edu>
 
 	* lwlib.c [__osf__]: Include string.h and stdlib.h.
 	[__osf__] (xmalloc): Declared.
 
-Thu Apr 13 01:02:01 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (update_one_menu_entry, make_menu_in_widget):
 	Specify more useful names in XmCreatePulldownMenu calls.
@@ -201,20 +215,20 @@ Thu Apr 13 01:02:01 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	(fit_to_screen): Make screen_width and screen_height unsigned.
 	(motion_event_is_in_menu): Make x, y unsigned.
 
-Sun Apr  9 00:55:40 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-09  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib-utils.c: If HAVE_CONFIG_H, include config.h.
 
 	* Makefile.in (ALL_CFLAGS): Define HAVE_CONFIG_H.
 	Add -I${srcdir}/../src.
 	
-Sat Apr  8 14:01:45 1995  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
+1995-04-08  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c: Remove function prototypes.
 	(xm_pop_down_callback): Call the deactivation callback only when
 	popping	down the top level submenu.
 
-Fri Apr  7 01:44:18 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (lwlib.o): Depend on Makefile.
 
@@ -222,47 +236,47 @@ Fri Apr  7 01:44:18 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (remove_grabs): Use type Widget for `menu'.
 
-Wed Feb 15 14:09:35 1995  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
+1995-02-15  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 
 	* Makefile.in (ALL_CFLAGS): Allow include files to be found in
         `srcdir'.
 
-Tue Feb  7 18:50:09 1995  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
+1995-02-07  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
 
 	* Makefile.in (maintainer-clean): Renamed from realclean.
 
-Mon Nov 28 18:11:00 1994  Richard Stallman  <rms@bethel>
+1994-11-28  Richard Stallman  <rms@bethel>
 
 	* lwlib-int.h (safe_strdup): Don't use ANSI argument prototype.
 
-Tue Nov 15 03:22:52 1994  Paul Reilly  <pmr@duality.gnu.ai.mit.edu>
+1994-11-15  Paul Reilly  <pmr@duality.gnu.ai.mit.edu>
 
 	* lwlib.c (lw_refigure_widget): Use the macro USE_XAW rather than XAW.
 
-Tue Nov  8 13:06:07 1994  Paul Reilly  <pmr@duality.gnu.ai.mit.edu>
+1994-11-08  Paul Reilly  <pmr@duality.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (make_menu_in_widget):  Differentiate a separator
 	entry ("--") from a title.
 	(xm_pop_down_callback): Filter all but the last pop down callbacks.
 
-Mon Nov  7 07:31:19 1994  Paul Reilly  <pmr@duality.gnu.ai.mit.edu>
+1994-11-07  Paul Reilly  <pmr@duality.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (update_one_menu_entry): Use the parent of the
 	cascade button as the parent of the pulldown, rather than the
 	cascade button itself.  This works around a Motif SIGSEGV in the
 	function `InSharedMenuHierarchy'.
 
-Sat Oct 29 23:25:10 1994  Richard Stallman  <rms@duality.gnu.ai.mit.edu>
+1994-10-29  Richard Stallman  <rms@duality.gnu.ai.mit.edu>
 
 	* xlwmenu.c (xlwmenu_default_font): New global variable.
 	(XlwMenuInitialize): Use xlwmenu_default_font to default
 	the font if necessary.  Make mw, itself, an argument.
 
-Wed Oct 26 04:57:41 1994  Richard Stallman  <rms@duality.gnu.ai.mit.edu>
+1994-10-26  Richard Stallman  <rms@duality.gnu.ai.mit.edu>
 
 	* xlwmenu.c (pop_up_menu): Pass a Display * to x_catch_errors, etc.
 
-Wed Oct 26 00:57:28 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-26  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (xlwmenu_default_font): New global variable.
 	(XlwMenuInitialize): Use xlwmenu_default_font to default
@@ -270,11 +284,11 @@ Wed Oct 26 00:57:28 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (pop_up_menu): Pass a Display * to x_catch_errors, etc.
 
-Sat Oct  8 00:15:45 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-08  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (fit_to_screen): Don't put the menu off the left or top.
 
-Sun Oct  2 08:07:15 1994  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
+1994-10-02  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 
 	* xlwmenu.c (display_menu_item): Add support for displaying the
         title in pop up menus.
@@ -282,7 +296,7 @@ Sun Oct  2 08:07:15 1994  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 	* lwlib.c (lw_set_main_areas): Use xm_set_main_areas().
 	(lw_manage_resizing): Use xm_manage_resizing() for Emacs/Motif.
 
-Sun Sep 25 15:57:17 1994  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
+1994-09-25  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 
 	* lwlib-Xaw.c (xaw_create_main): New function to support the
         toolkit independent creation of the main Emacs widget.  *
@@ -299,13 +313,13 @@ Sun Sep 25 15:57:17 1994  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 
 	* xlwmenu.c: Add #include <X11/ObjectP.h> for X11R4.
 
-Sun Sep 18 17:21:52 1994  Fred Pierresteguy <F.Pierresteguy@frcl.bull.fr>
+1994-09-18  Fred Pierresteguy <F.Pierresteguy@frcl.bull.fr>
 
 	* lwlib-Xm.c (make_dialog): When there is more than two pushbuttons,
 	set XmPACK_TIGHT and XmHORIZONTAL to the rowcolumn.  Also add a
 	margin of 10 pixels.
 
-Fri Sep 16 17:21:52 1994  Paul Reilly <pmr@geech.gnu.ai.mit.edu>
+1994-09-16  Paul Reilly <pmr@geech.gnu.ai.mit.edu>
 
 	* lwlib-Xm.c (make_main): New function to support toolkit
         independent creation of the main Emacs widget.
@@ -332,41 +346,41 @@ Fri Sep 16 17:21:52 1994  Paul Reilly <pmr@geech.gnu.ai.mit.edu>
 	(pop_up_menu): Handle popping up submenus from a menubar, i.e. when
 	the menu widget parent is not a shell widget.
 
-Thu Aug 25 17:21:52 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (pop_up_menu): Clear next_release_must_exit.
 	(Start): Clear next_release_must_exit when popping up the menu.
 
-Wed Aug 24 22:19:46 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (Start): Set menu_post_event or next_release_must_exit.
 	(Select): Do nothing if the menu should be left posted.
 
-Thu Jul 28 17:12:31 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-07-28  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* xlwmenu.c (make_windows_if_needed, pop_up_menu):
 	Enable mouse motion events even when no button down.
 
-Mon Jul 11 21:38:00 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-07-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (pointer_grabbed): New variable.
 	(pop_up_menu): Set the variable.
 	(XlwMenuDestroy): Maybe call XtUngrabPointer.
 
-Wed May 25 04:19:01 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-25  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib.c (max): Function deleted.  Define as macro instead,
 	but only if not already defined.
 
-Fri May 20 18:42:58 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-20  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (xlwMenuResources): Use XtRDimension for shadow thickness.
 
-Thu May 19 12:23:39 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib-Xaw.c (xaw_pop_instance): Use XtSetValues, not XtMoveWidget.
 
-Mon May 16 03:25:22 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib.c (lwlib_memset: New function, used instead of memset.
 	All callers changed.
@@ -376,12 +390,12 @@ Mon May 16 03:25:22 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	* lwlib.c: Delete definitions for use of alloca.
 	(name_to_widget): Use xmalloc, not alloca.
 
-Thu May 12 06:20:36 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (XlwMenuDestroy): Set new var submenu_destroyed.
 	(XlwMenuRedisplay): If it's set, truncate the old_depth to 1.
 
-Mon May  9 18:35:53 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-09  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xrdb-cpp.c: Don't include string.h, unistd.h, stdlib.h.
 	* lwlib-Xaw.c: Don't include string.h, unistd.h, stdlib.h.
@@ -394,19 +408,19 @@ Mon May  9 18:35:53 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (string_width): No longer static.
 
-Fri May  6 13:24:17 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-06  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenuP.h (struct _XlwMenu_part): Use Pixel and Cursor
 	for foreground and cursor_shape fields.
 
 	* xlwmenu.c (XlwMenuSetValues): Check for change of font.
 
-Thu Apr 28 16:02:23 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-28  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in: Delete all SRCS variables (unused).
 	(lwlib.o, xrdb-cpp.o): Mention srcdir in dep.
 
-Fri Apr 15 18:31:25 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (ALL_CFLAGS): Don't define THIS_IS_X11R4.
 
@@ -419,26 +433,26 @@ Fri Apr 15 18:31:25 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	(_XtConvertTypeToMask): Conditionalize on HAVE_X11R5.
 	(WouldDispatchEvent): Likewise.
 
-Tue Apr 12 12:32:32 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib-Xaw.c (xaw_generic_callback): Declare without arg names.
 
-Fri Apr  1 03:25:31 1994  Frederic Pierresteguy  (fp@hal.gnu.ai.mit.edu)
+1994-04-01  Frederic Pierresteguy  (fp@hal.gnu.ai.mit.edu)
 
 	* lwlib-Xaw.c (make_dialog): Don't allow any geometry request from the 
 	user.
 
-Tue Mar 22 13:09:25 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-03-22  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (XlwMenuResize): Don't allow the popup menu to resize 
 	itself. Therefore reset the size to its initial value.
 
-Sat Mar 19 02:13:56 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-03-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib-Xaw.c (xaw_update_one_widget): Finish replacing XtVaSetValues.
 	Don't test for scrollbar widget.
 
-Mon Mar 14 11:12:33 1994  Frederic Pierresteguy  (fp@gnu.ai.mit.edu)
+1994-03-14  Frederic Pierresteguy  (fp@gnu.ai.mit.edu)
 
 	* lwlib-int.h: Declare lw_get_widget_info.
 
@@ -449,7 +463,7 @@ Mon Mar 14 11:12:33 1994  Frederic Pierresteguy  (fp@gnu.ai.mit.edu)
 	(xaw_update_one_widget - case dialogWidgetClass): Call XtSetValues,
 	not XtVaSetValues.
 
-Fri Mar 11 05:35:04 1994  Frederic Pierresteguy  (F.Pierresteguy@frcl.bull.fr)
+1994-03-11  Frederic Pierresteguy  (F.Pierresteguy@frcl.bull.fr)
 
 	* xlwmenu.c (display_menu_item): Modify parameters to draw_arrow to
 	right justify the arrow in the pane.
@@ -472,7 +486,7 @@ Fri Mar 11 05:35:04 1994  Frederic Pierresteguy  (F.Pierresteguy@frcl.bull.fr)
 
 	* lwlib-Xaw.c, lwlib-Xaw.h: New files.
 
-Wed Feb 23 02:50:05 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-23  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (XlwMenuInitialize, XlwMenuDestroy): Undo previous changes.
 
@@ -481,11 +495,11 @@ Wed Feb 23 02:50:05 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	No need to copy instance->info->val any more.
 	(xlw_update_one_widget): Use XtSetValues, not XtVaSetValues.
 
-Mon Feb 21 16:34:02 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (pop_up_menu): Call XtUngrabPointer if XtGrabPointer fails.
 
-Sat Feb 19 15:21:40 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (xrdb-cpp.o, lwlib.o): Put ALL_CFLAGS after other flags.
 
@@ -493,7 +507,7 @@ Sat Feb 19 15:21:40 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	Use malloc for allocation.
 	(xlw_create_popup_menu): Likewise.
 
-Fri Feb 18 08:03:02 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-02-18  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* lwlib.c (malloc_cpt): New static variable.
 	(malloc_widget_value): Increment malloc_cpt when allocating a cell.
@@ -504,55 +518,55 @@ Fri Feb 18 08:03:02 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 	free_widget_value instead of XtMalloc and XtFree.
 	(xlw_create_popup_menu): Likewise.
 
-Thu Feb 17 18:30:52 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (ALL_CFLAGS): Specify -Demacs.
 
 	* xlwmenu.c (pop_up_menu) [emacs]: Catch and ignore X protocol errors
 	in XtGrabPointer.
 
-Thu Feb 17 17:09:21 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-02-17  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* lwlib-Xlw.c (xlw_create_popup_menu): Pass tem to 
 	XtVaCreateManagedWidget, not instance->info->val.
 	(xlw_create_menubar): Likewise.
 
-Tue Feb 15 09:04:54 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-02-15  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* lwlib-Xlw.c (xlw_create_popup_menu): Copy instance->info->val
 	before calling XtVaCreateManagedWidget and then free the copy.
 	(xlw_create_menubar): Likewise.
 
-Fri Feb 11 13:06:34 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (XlwMenuInitialize): Copy mw->menu.contents.
 	(XlwMenuDestroy): Free mw->menu.contents.
 
-Wed Feb  9 09:02:27 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-02-09  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (display_menu_item): Call draw_shadow_rectangle to make
 	visible/invisible the selection of the menubar items.
 
-Tue Feb  8 17:46:34 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-02-08  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* lwlib.c (strcasecmp): Renamed to my_strcasecmp.
 	(find_in_table): Changed only caller.
 
-Fri Feb  4 12:00:46 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-02-04  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (display_menu_item): When dealing with the menubar,
 	always call XDrawRectangle to clear the selection after popping down 
 	the pulldown menu.
 
-Tue Feb  1 13:21:57 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-01  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib.c: Include ctype.h.
 
-Mon Jan 31 00:47:29 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-31  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib.c (strcasecmp): New function.
 
-Sun Jan 30 23:30:08 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c, lwlib.c, lwlib-Xlw.c, lwlib-utils.c:
 	Convert all function definitions to non-prototype K&R.
@@ -561,11 +575,11 @@ Sun Jan 30 23:30:08 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	* lwlib.h: Comment out args in function decls.
 	* lwlib-utils.h: Comment out args in function decls.
 
-Sat Jan 29 21:58:47 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib.c: Include StringDefs.h after lwlib.h.
 
-Sat Jan 22 18:21:59 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-01-22  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* Makefile (xrdb-cpp.o, lwlib.o): Use $(srcdir) and file name
 	instead of $*.
@@ -573,11 +587,11 @@ Sat Jan 22 18:21:59 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 	superfluous and didn't work when configured outside srcdir.  The
 	implicit .c.o rule works fine.
 
-Fri Jan 21 11:51:56 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* xlwmenu.c (resource_widget_value): Avoid using strdup.
 
-Tue Jan 18 18:52:43 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-18  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in: New file.
 

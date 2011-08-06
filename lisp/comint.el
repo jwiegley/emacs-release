@@ -1,9 +1,10 @@
 ;;; comint.el --- general command interpreter in a window stuff
 
-;; Copyright (C) 1988, 90, 92, 93, 94, 95, 96 Free Software Foundation, Inc.
+;; Copyright (C) 1988, 90, 92, 93, 94, 95, 96, 97 Free Software Foundation, Inc.
 
-;; Author: Olin Shivers <shivers@cs.cmu.edu>
-;; Adapted-by: Simon Marshall <simon@gnu.ai.mit.edu>
+;; Author: Olin Shivers <shivers@cs.cmu.edu> then
+;;	Simon Marshall <simon@gnu.ai.mit.edu>
+;; Maintainer: FSF
 ;; Keywords: processes
 
 ;; This file is part of GNU Emacs.
@@ -124,6 +125,7 @@
 ;;  comint-get-old-input		function Hooks for specific 
 ;;  comint-input-filter-functions	hook	process-in-a-buffer
 ;;  comint-output-filter-functions	hook	function modes.
+;;  comint-preoutput-filter-functions   hook
 ;;  comint-input-filter			function ...
 ;;  comint-input-sender			function ...
 ;;  comint-eol-on-send			boolean	...
@@ -136,6 +138,20 @@
 ;;  comint-completion-addsuffix		boolean/cons	For file name
 ;;  comint-completion-autolist		boolean		completion behavior
 ;;  comint-completion-recexact		boolean		...
+
+(defgroup comint nil
+  "General command interpreter in a window stuff."
+  :group 'processes)
+
+(defgroup comint-completion nil
+  "Completion facilities in comint"
+  :group 'comint)
+
+(defgroup comint-source nil
+  "Source finding facilities in comint"
+  :prefix "comint-"
+  :group 'comint)
+
 
 (defvar comint-prompt-regexp "^"
   "Regexp to recognise prompts in the inferior process.
@@ -162,7 +178,7 @@ For shells, a good value is (?\\| ?& ?< ?> ?\\( ?\\) ?;).
 
 This is a good thing to set in mode hooks.")
 
-(defvar comint-input-autoexpand nil
+(defcustom comint-input-autoexpand nil
   "*If non-nil, expand input command history references on completion.
 This mirrors the optional behavior of tcsh (its autoexpand and histlit).
 
@@ -171,30 +187,44 @@ If the value is `history', then the expansion is only when inserting
 into the buffer's input ring.  See also `comint-magic-space' and
 `comint-dynamic-complete'.
 
-This variable is buffer-local.")
+This variable is buffer-local."
+  :type '(choice (const :tag "off" nil)
+		 (const :tag "on" t)
+		 (const input)
+		 (const history))
+  :group 'comint)
 
-(defvar comint-input-ignoredups nil
+(defcustom comint-input-ignoredups nil
   "*If non-nil, don't add input matching the last on the input ring.
 This mirrors the optional behavior of bash.
 
-This variable is buffer-local.")
+This variable is buffer-local."
+  :type 'boolean
+  :group 'comint)
 
-(defvar comint-input-ring-file-name nil
+(defcustom comint-input-ring-file-name nil
   "*If non-nil, name of the file to read/write input history.
 See also `comint-read-input-ring' and `comint-write-input-ring'.
 
-This variable is buffer-local, and is a good thing to set in mode hooks.")
+This variable is buffer-local, and is a good thing to set in mode hooks."
+  :type 'boolean
+  :group 'comint)
 
-(defvar comint-scroll-to-bottom-on-input nil
+(defcustom comint-scroll-to-bottom-on-input nil
   "*Controls whether input to interpreter causes window to scroll.
 If nil, then do not scroll.  If t or `all', scroll all windows showing buffer.
 If `this', scroll only the selected window.
 
 The default is nil.
 
-See `comint-preinput-scroll-to-bottom'.  This variable is buffer-local.")
+See `comint-preinput-scroll-to-bottom'.  This variable is buffer-local."
+  :type '(choice (const :tag "off" nil)
+		 (const t)
+		 (const all)
+		 (const this))
+  :group 'comint)
 
-(defvar comint-scroll-to-bottom-on-output nil
+(defcustom comint-scroll-to-bottom-on-output nil
   "*Controls whether interpreter output causes window to scroll.
 If nil, then do not scroll.  If t or `all', scroll all windows showing buffer.
 If `this', scroll only the selected window.
@@ -203,34 +233,49 @@ If `others', scroll only those that are not the selected window.
 The default is nil.
 
 See variable `comint-scroll-show-maximum-output' and function
-`comint-postoutput-scroll-to-bottom'.  This variable is buffer-local.")
+`comint-postoutput-scroll-to-bottom'.  This variable is buffer-local."
+  :type '(choice (const :tag "off" nil)
+		 (const t)
+		 (const all)
+		 (const this)
+		 (const others))
+  :group 'comint)
 
-(defvar comint-scroll-show-maximum-output nil
+(defcustom comint-scroll-show-maximum-output nil
   "*Controls how interpreter output causes window to scroll.
 If non-nil, then show the maximum output when the window is scrolled.
 
 See variable `comint-scroll-to-bottom-on-output' and function
-`comint-postoutput-scroll-to-bottom'.  This variable is buffer-local.")
+`comint-postoutput-scroll-to-bottom'.  This variable is buffer-local."
+  :type 'boolean
+  :group 'comint)
 
-(defvar comint-buffer-maximum-size 1024
+(defcustom comint-buffer-maximum-size 1024
   "*The maximum size in lines for comint buffers.
 Comint buffers are truncated from the top to be no greater than this number, if
-the function `comint-truncate-buffer' is on `comint-output-filter-functions'.")
+the function `comint-truncate-buffer' is on `comint-output-filter-functions'."
+  :type 'integer
+  :group 'comint)
 
 (defvar comint-input-ring-size 32
   "Size of input history ring.")
 
-(defvar comint-process-echoes nil
+(defcustom comint-process-echoes nil
   "*If non-nil, assume that the subprocess echoes any input.
 If so, delete one copy of the input so that only one copy eventually
 appears in the buffer.
 
-This variable is buffer-local.")
+This variable is buffer-local."
+  :type 'boolean
+  :group 'comint)
 
-(defvar comint-password-prompt-regexp
-  "\\(\\([Oo]ld \\|[Nn]ew \\|^\\)[Pp]assword\\|pass phrase\\):\\s *\\'"
+;; AIX puts the name of the person being su'd to in from of the prompt.
+(defcustom comint-password-prompt-regexp
+  "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|^\\)[Pp]assword\\|pass phrase\\):\\s *\\'"
   "*Regexp matching prompts for passwords in the inferior process.
-This is used by `comint-watch-for-password-prompt'.")
+This is used by `comint-watch-for-password-prompt'."
+  :type 'regexp
+  :group 'comint)
 
 ;; Here are the per-interpreter hooks.
 (defvar comint-get-old-input (function comint-get-old-input-default)
@@ -268,6 +313,8 @@ inserted.  Note that this might not be the same as the buffer contents between
 `comint-last-output-start' and the buffer's `process-mark', if other filter
 functions have already modified the buffer.
 
+See also `comint-preoutput-filter-functions'.
+
 This variable is buffer-local.")
 
 (defvar comint-input-sender (function comint-simple-send)
@@ -277,20 +324,26 @@ massage the input string, put a different function here.
 `comint-simple-send' just sends the string plus a newline.
 This is called from the user command `comint-send-input'.")
 
-(defvar comint-eol-on-send t
+(defcustom comint-eol-on-send t
   "*Non-nil means go to the end of the line before sending input.
-See `comint-send-input'.")
+See `comint-send-input'."
+  :type 'boolean
+  :group 'comint)
 
-(defvar comint-mode-hook '()
+(defcustom comint-mode-hook '()
   "Called upon entry into comint-mode
-This is run before the process is cranked up.")
+This is run before the process is cranked up."
+  :type 'hook
+  :group 'comint)
 
-(defvar comint-exec-hook '()
+(defcustom comint-exec-hook '()
   "Called each time a process is exec'd by `comint-exec'.
 This is called after the process is cranked up.  It is useful for things that
 must be done each time a process is executed in a comint mode buffer (e.g.,
 `(process-kill-without-query)').  In contrast, the `comint-mode-hook' is only
-executed once when the buffer is created.")
+executed once when the buffer is created."
+  :type 'hook
+  :group 'comint)
 
 (defvar comint-mode-map nil)
 
@@ -313,10 +366,13 @@ This is to work around a bug in Emacs process signaling.")
 (put 'comint-input-autoexpand 'permanent-local t)
 (put 'comint-input-filter-functions 'permanent-local t)
 (put 'comint-output-filter-functions 'permanent-local t)
+(put 'comint-preoutput-filter-functions 'permanent-local t)
 (put 'comint-scroll-to-bottom-on-input 'permanent-local t)
 (put 'comint-scroll-to-bottom-on-output 'permanent-local t)
 (put 'comint-scroll-show-maximum-output 'permanent-local t)
 (put 'comint-ptyp 'permanent-local t)
+
+(put 'comint-mode 'mode-class 'special)
 
 (defun comint-mode ()
   "Major mode for interacting with an inferior interpreter.
@@ -345,7 +401,8 @@ Commands with no default key bindings include `send-invisible',
 
 Input to, and output from, the subprocess can cause the window to scroll to
 the end of the buffer.  See variables `comint-output-filter-functions',
-`comint-scroll-to-bottom-on-input', and `comint-scroll-to-bottom-on-output'.
+`comint-preoutput-filter-functions', `comint-scroll-to-bottom-on-input',
+and `comint-scroll-to-bottom-on-output'.
 
 If you accidentally suspend your process, use \\[comint-continue-subjob]
 to continue it.
@@ -506,8 +563,6 @@ BUFFER can be either a buffer or the name of one."
   (let ((proc (get-buffer-process buffer)))
     (and proc (memq (process-status proc) '(open run stop)))))
 
-;; Note that this guy, unlike shell.el's make-shell, barfs if you pass it ()
-;; for the second argument (program).
 ;;;###autoload
 (defun make-comint (name program &optional startfile &rest switches)
   "Make a comint process NAME in a buffer, running PROGRAM.
@@ -593,14 +648,14 @@ buffer.  The hook `comint-exec-hook' is run after each exec."
 	  ;; Some programs that use terminfo get very confused
 	  ;; if TERM is not a valid terminal type.
 	  (if (and (boundp 'system-uses-terminfo) system-uses-terminfo)
-	      (list "TERM=dumb"
+	      (list "TERM=dumb" "TERMCAP="
 		    (format "COLUMNS=%d" (frame-width)))
 	    (list "TERM=emacs"
 		  (format "TERMCAP=emacs:co#%d:tc=unknown:" (frame-width))))
 	  (if (getenv "EMACS") nil (list "EMACS=t"))
 	  process-environment))
 	(default-directory
-	  (if (file-directory-p default-directory)
+	  (if (file-accessible-directory-p default-directory)
 	      default-directory
 	    "/")))
     (apply 'start-process name buffer command switches)))
@@ -1169,9 +1224,10 @@ Similarly for Soar, Scheme, etc."
 			  ;; functions used do insertion, rather than return
 			  ;; strings.  We have to expand, then insert back.
 			  (comint-replace-by-expanded-history t)
-			  (let ((copy (buffer-substring pmark (point))))
-			    (delete-region pmark (point))
-			    (insert-before-markers input)
+			  (let ((copy (buffer-substring pmark (point)))
+				(start (point)))
+			    (insert input)
+			    (delete-region pmark start)
 			    copy))))
           (if comint-process-echoes
               (delete-region pmark (point))
@@ -1192,7 +1248,16 @@ Similarly for Soar, Scheme, etc."
 	  (set-marker comint-last-input-end (point))
 	  (set-marker (process-mark proc) (point))
 	  (funcall comint-input-sender proc input)
-	  (comint-output-filter proc "")))))
+	  ;; This used to call comint-output-filter-functions,
+	  ;; but that scrolled the buffer in undesirable ways.
+	  (run-hook-with-args 'comint-output-filter-functions "")))))
+
+(defvar comint-preoutput-filter-functions nil 
+  "Functions to call after output is inserted into the buffer.
+These functions get one argument, a string containing the text to be
+inserted.  They return the string as it should be inserted.
+
+This variable is buffer-local.")
 
 ;; The purpose of using this filter for comint processes
 ;; is to keep comint-last-input-end from moving forward
@@ -1200,7 +1265,11 @@ Similarly for Soar, Scheme, etc."
 (defun comint-output-filter (process string)
   ;; First check for killed buffer
   (let ((oprocbuf (process-buffer process)))
-    (if (and oprocbuf (buffer-name oprocbuf))
+    (let ((functions comint-preoutput-filter-functions))
+      (while (and functions string)
+	(setq string (funcall (car functions) string))
+	(setq functions (cdr functions))))
+    (if (and string oprocbuf (buffer-name oprocbuf))
 	(let ((obuf (current-buffer))
 	      (opoint nil) (obeg nil) (oend nil))
 	  (set-buffer oprocbuf)
@@ -1396,9 +1465,11 @@ RET, LFD, or ESC.  DEL or C-h rubs out.  C-u kills line.  C-g aborts (if
 filter and C-g is pressed, this function returns nil rather than a string).
 
 Note that the keystrokes comprising the text can still be recovered
-\(temporarily) with \\[view-lossage].  This may be a security bug for some
-applications."
+\(temporarily) with \\[view-lossage].  Some people find this worrysome.
+Once the caller uses the password, it can erase the password
+by doing (fillarray STRING 0)."
   (let ((ans "")
+	(newans nil)
 	(c 0)
 	(echo-keystrokes 0)
 	(cursor-in-echo-area t)
@@ -1423,10 +1494,14 @@ applications."
 	    ((or (= c ?\r) (= c ?\n) (= c ?\e))
 	     (setq done t))
 	    ((= c ?\C-u)
+	     (fillarray ans 0)
 	     (setq ans ""))
 	    ((and (/= c ?\b) (/= c ?\177))
-	     (setq ans (concat ans (char-to-string c))))
+	     (setq newans (concat ans (char-to-string c)))
+	     (fillarray ans 0)
+	     (setq ans newans))
 	    ((> (length ans) 0)
+	     (aset ans (1- (length ans)) 0)
 	     (setq ans (substring ans 0 -1)))))
     (if quit-flag
         ;; Emulate a true quit, except that we have to return a value.
@@ -1443,12 +1518,17 @@ Then send it to the process running in the current buffer.
 The string is sent using `comint-input-sender'.
 Security bug: your string can still be temporarily recovered with
 \\[view-lossage]."
-  (interactive "P") ; Defeat snooping via C-x ESC ESC
+  (interactive "P")			; Defeat snooping via C-x ESC ESC
   (let ((proc (get-buffer-process (current-buffer))))
-    (if (not proc)
-	(error "Current buffer has no process")
-      (funcall comint-input-sender proc
-       (if (stringp str) str (comint-read-noecho "Non-echoed text: " t))))))
+    (cond ((not proc)
+	   (error "Current buffer has no process"))
+	  ((stringp str)
+	   (funcall comint-input-sender proc str))
+	  (t
+	   (let ((str (comint-read-noecho "Non-echoed text: " t)))
+	     (if (stringp str)
+		 (send-invisible str)
+	       (message "Warning: text will be echoed")))))))
 
 (defun comint-watch-for-password-prompt (string) 
   "Prompt in the minibuffer for password and send without echoing.
@@ -1534,11 +1614,13 @@ Useful if you accidentally suspend the top-level process."
 	(kill-region pmark (point)))))
 
 (defun comint-delchar-or-maybe-eof (arg)
-  "Delete ARG characters forward, or (if at eob) send an EOF to subprocess."
+  "Delete ARG characters forward or send an EOF to subprocess.
+Sends an EOF only if point is at the end of the buffer and there is no input."
   (interactive "p")
-  (if (eobp)
-      (process-send-eof)
-    (delete-char arg)))
+  (let ((proc (get-buffer-process (current-buffer))))
+    (if (and (eobp) proc (= (point) (marker-position (process-mark proc))))
+	(process-send-eof)
+      (delete-char arg))))
 
 (defun comint-send-eof ()
   "Send an EOF to the current buffer's process."
@@ -1800,27 +1882,35 @@ See `comint-prompt-regexp'."
 ;; Commands like this are fine things to put in load hooks if you
 ;; want them present in specific modes.
 
-(defvar comint-completion-autolist nil
+(defcustom comint-completion-autolist nil
   "*If non-nil, automatically list possibilities on partial completion.
-This mirrors the optional behavior of tcsh.")
+This mirrors the optional behavior of tcsh."
+  :type 'boolean
+  :group 'comint-completion)
 
-(defvar comint-completion-addsuffix t
+(defcustom comint-completion-addsuffix t
   "*If non-nil, add a `/' to completed directories, ` ' to file names.
 If a cons pair, it should be of the form (DIRSUFFIX . FILESUFFIX) where
 DIRSUFFIX and FILESUFFIX are strings added on unambiguous or exact completion.
-This mirrors the optional behavior of tcsh.")
+This mirrors the optional behavior of tcsh."
+  :type 'boolean
+  :group 'comint-completion)
 
-(defvar comint-completion-recexact nil
+(defcustom comint-completion-recexact nil
   "*If non-nil, use shortest completion if characters cannot be added.
 This mirrors the optional behavior of tcsh.
 
-A non-nil value is useful if `comint-completion-autolist' is non-nil too.")
+A non-nil value is useful if `comint-completion-autolist' is non-nil too."
+  :type 'boolean
+  :group 'comint-completion)
 
-(defvar comint-completion-fignore nil
+(defcustom comint-completion-fignore nil
   "*List of suffixes to be disregarded during file completion.
 This mirrors the optional behavior of bash and tcsh.
 
-Note that this applies to `comint-dynamic-complete-filename' only.")
+Note that this applies to `comint-dynamic-complete-filename' only."
+  :type '(repeat (string :tag "Suffix"))
+  :group 'comint-completion)
 
 (defvar comint-file-name-prefix ""
   "Prefix prepended to absolute file names taken from process input.
@@ -1828,15 +1918,21 @@ This is used by comint's and shell's completion functions, and by shell's
 directory tracking functions.")
 
 (defvar comint-file-name-chars
-  (if (memq system-type '(ms-dos windows-nt))
-      "~/A-Za-z0-9_^$!#%&{}@`'.()-"
-    "~/A-Za-z0-9+@:_.$#%,={}-")
+  (cond
+   ((eq system-type 'ms-dos)
+    "~/A-Za-z0-9_^$!#%&{}@`'.()-")
+   ((eq system-type 'windows-nt)
+    "~/A-Za-z0-9_^$!#%&{}@`'.,:()-")
+   (t   
+    "~/A-Za-z0-9+@:_.$#%,={}-"))
   "String of characters valid in a file name.
+Note that all non-ASCII characters are considered valid in a file name
+regardless of what this variable says.
 
 This is a good thing to set in mode hooks.")
 
 (defvar comint-file-name-quote-list nil
-  "List of characters to quote with `\\' when in a file name.
+  "List of characters to quote with `\' when in a file name.
 
 This is a good thing to set in mode hooks.")
 
@@ -1851,12 +1947,14 @@ This is a good thing to set in mode hooks.")
 (defun comint-word (word-chars)
   "Return the word of WORD-CHARS at point, or nil if non is found.
 Word constituents are considered to be those in WORD-CHARS, which is like the
-inside of a \"[...]\" (see `skip-chars-forward')."
+inside of a \"[...]\" (see `skip-chars-forward'),
+plus all non-ASCII characters."
   (save-excursion
     (let ((non-word-chars (concat "[^\\\\" word-chars "]")) (here (point)))
       (while (and (re-search-backward non-word-chars nil 'move)
-		  ;(memq (char-after (point)) shell-file-name-quote-list)
-		  (eq (preceding-char) ?\\))
+		  ;;(memq (char-after (point)) shell-file-name-quote-list)
+		  (or (>= (following-char) 128)
+		      (eq (preceding-char) ?\\)))
 	(backward-char 1))
       ;; Don't go forward over a word-char (this can happen if we're at bob).
       (if (or (not (bobp)) (looking-at non-word-chars))
@@ -2185,12 +2283,6 @@ Typing SPC flushes the help buffer."
 ;;   (add-hook 'comint-input-filter-functions 'shell-directory-tracker)
 ;;   (run-hooks 'shell-mode-hook))
 ;;
-;;
-;; Note that make-comint is different from make-shell in that it
-;; doesn't have a default program argument. If you give make-shell
-;; a program name of NIL, it cleverly chooses one of explicit-shell-name,
-;; $ESHELL, $SHELL, or /bin/sh. If you give make-comint a program argument
-;; of NIL, it barfs. Adjust your code accordingly...
 ;;
 ;; Completion for comint-mode users
 ;; 

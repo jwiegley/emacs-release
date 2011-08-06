@@ -28,28 +28,45 @@
 
 ;;; Code:
 
-(defvar display-time-mail-file nil
+(defgroup display-time nil
+  "Display time and load in mode line of Emacs."
+  :group 'modeline
+  :group 'mail)
+
+
+(defcustom display-time-mail-file nil
   "*File name of mail inbox file, for indicating existence of new mail.
 Non-nil and not a string means don't check for mail.  nil means use
-default, which is system-dependent, and is the same as used by Rmail.")
+default, which is system-dependent, and is the same as used by Rmail."
+  :type '(choice (const :tag "Default" nil)
+		 (file :format "%v"))
+  :group 'display-time)
 
 ;;;###autoload
-(defvar display-time-day-and-date nil "\
-*Non-nil means \\[display-time] should display day and date as well as time.")
+(defcustom display-time-day-and-date nil "\
+*Non-nil means \\[display-time] should display day and date as well as time."
+  :type 'boolean
+  :group 'display-time)
 
 (defvar display-time-timer nil)
 
-(defvar display-time-interval 60
-  "*Seconds between updates of time in the mode line.")
+(defcustom display-time-interval 60
+  "*Seconds between updates of time in the mode line."
+  :type 'integer
+  :group 'display-time)
 
-(defvar display-time-24hr-format nil
+(defcustom display-time-24hr-format nil
   "*Non-nil indicates time should be displayed as hh:mm, 0 <= hh <= 23.
-Nil means 1 <= hh <= 12, and an AM/PM suffix is used.")
+Nil means 1 <= hh <= 12, and an AM/PM suffix is used."
+  :type 'boolean
+  :group 'display-time)
 
 (defvar display-time-string nil)
 
-(defvar display-time-hook nil
-  "* List of functions to be called when the time is updated on the mode line.")
+(defcustom display-time-hook nil
+  "*List of functions to be called when the time is updated on the mode line."
+  :type 'hook
+  :group 'display-time)
 
 (defvar display-time-server-down-time nil
    "Time when mail file's file system was recorded to be down.
@@ -57,39 +74,71 @@ If that file system seems to be up, the value is nil.")
 
 ;;;###autoload
 (defun display-time ()
-  "Display current time, load level, and mail flag in mode line of each buffer.
-Updates automatically every minute.
+  "Enable display of time, load level, and mail flag in mode lines.
+This display updates automatically every minute.
 If `display-time-day-and-date' is non-nil, the current day and date
 are displayed as well.
-After each update, `display-time-hook' is run with `run-hooks'."
+This runs the normal hook `display-time-hook' after each update."
   (interactive)
-  (setq display-time-string "")
-  (or global-mode-string (setq global-mode-string '("")))
-  (or (memq 'display-time-string global-mode-string)
-      (setq global-mode-string
-	    (append global-mode-string '(display-time-string))))
-  ;; Setup the time timer.
-  (and display-time-timer (cancel-timer display-time-timer))
-  (setq display-time-timer
-	;; Start timer at the beginning of the next minute.
-	(run-at-time (apply 'encode-time 60 (cdr (decode-time)))
-		     display-time-interval 'display-time-event-handler))
-  ;; Make the time appear right away.
-  (display-time-update)
-  ;; When you get new mail, clear "Mail" from the mode line.
-  (add-hook 'rmail-after-get-new-mail-hook 'display-time-event-handler))
+  (display-time-mode 1))
 
-(defvar display-time-string-forms
-  '((if display-time-day-and-date
-        (format "%s %s %s " dayname monthname day)
+;;;###autoload
+(defun display-time-mode (arg)
+  "Toggle display of time, load level, and mail flag in mode lines.
+With a numeric arg, enable this display if arg is positive.
+
+When this display is enabled, it updates automatically every minute.
+If `display-time-day-and-date' is non-nil, the current day and date
+are displayed as well.
+This runs the normal hook `display-time-hook' after each update."
+  (interactive "P")
+  (let ((on (if (null arg)
+		(not display-time-timer)
+	      (> (prefix-numeric-value arg) 0))))
+    (and display-time-timer (cancel-timer display-time-timer))
+    (setq display-time-timer nil)
+    (setq display-time-string "")
+    (or global-mode-string (setq global-mode-string '("")))
+    (if on
+	(progn
+	  (or (memq 'display-time-string global-mode-string)
+	      (setq global-mode-string
+		    (append global-mode-string '(display-time-string))))
+	  ;; Set up the time timer.
+	  (setq display-time-timer
+		(run-at-time t display-time-interval
+			     'display-time-event-handler))
+	  ;; Make the time appear right away.
+	  (display-time-update)
+	  ;; When you get new mail, clear "Mail" from the mode line.
+	  (add-hook 'rmail-after-get-new-mail-hook
+		    'display-time-event-handler))
+      (remove-hook 'rmail-after-get-new-mail-hook
+		   'display-time-event-handler))))
+
+
+(defcustom display-time-format nil
+  "*A string specifying the format for displaying the time in the mode line.
+See the function `format-time-string' for an explanation of
+how to write this string.  If this is nil, the defaults
+depend on `display-time-day-and-date' and `display-time-24hr-format'."
+  :type '(choice (const :tag "Default" nil)
+		 string)
+  :group 'display-time)
+
+(defcustom display-time-string-forms
+  '((if (and (not display-time-format) display-time-day-and-date)
+	(format-time-string "%a %b %e " now)
       "")
-    (format "%s:%s%s"
-            (if display-time-24hr-format 24-hours 12-hours)
-            minutes
-            (if display-time-24hr-format "" am-pm))
+    (format-time-string (or display-time-format
+			    (if display-time-24hr-format "%H:%M" "%-I:%M%p"))
+			now)
     load
     (if mail " Mail" ""))
   "*A list of expressions governing display of the time in the mode line.
+For most purposes, you can control the time format using `display-time-format'
+which is a more standard interface.
+
 This expression is a list of expressions that can involve the keywords
 `load', `day', `month', and `year', `12-hours', `24-hours', `minutes',
 `seconds', all numbers in string form, and `monthname', `dayname', `am-pm',
@@ -102,12 +151,34 @@ For example, the form
     (if time-zone \" (\") time-zone (if time-zone \")\")
     (if mail \" Mail\" \"\"))
 
-would give mode line times like `94/12/30 21:07:48 (UTC)'.")
+would give mode line times like `94/12/30 21:07:48 (UTC)'."
+  :type 'sexp
+  :group 'display-time)
 
 (defun display-time-event-handler ()
   (display-time-update)
   ;; Do redisplay right now, if no input pending.
-  (sit-for 0))
+  (sit-for 0)
+  (let* ((current (current-time))
+	 (timer display-time-timer)
+	 ;; Compute the time when this timer will run again, next.
+	 (next-time (timer-relative-time
+		     (list (aref timer 1) (aref timer 2) (aref timer 3))
+		     (* 5 (aref timer 4)) 0)))
+    ;; If the activation time is far in the past,
+    ;; skip executions until we reach a time in the future.
+    ;; This avoids a long pause if Emacs has been suspended for hours.
+    (or (> (nth 0 next-time) (nth 0 current))
+	(and (= (nth 0 next-time) (nth 0 current))
+	     (> (nth 1 next-time) (nth 1 current)))
+	(and (= (nth 0 next-time) (nth 0 current))
+	     (= (nth 1 next-time) (nth 1 current))
+	     (> (nth 2 next-time) (nth 2 current)))
+	(progn
+	  (timer-set-time timer (timer-next-integral-multiple-of-time
+				 current display-time-interval)
+			  display-time-interval)
+	  (timer-activate timer)))))
 
 ;; Update the display-time info for the mode line
 ;; but don't redisplay right now.  This is used for
@@ -137,7 +208,7 @@ would give mode line times like `94/12/30 21:07:48 (UTC)'.")
 			(if (> (- (nth 1 (current-time)) (nth 1 start-time))
 			       20)
 			    ;; Record that mail file is not accessible.
-			    (setq display-time-server-down-time 
+			    (setq display-time-server-down-time
 				  (nth 1 (current-time)))
 			  ;; Record that mail file is accessible.
 			  (setq display-time-server-down-time nil))))))
@@ -169,5 +240,7 @@ would give mode line times like `94/12/30 21:07:48 (UTC)'.")
 (defun display-time-file-nonempty-p (file)
   (and (file-exists-p file)
        (< 0 (nth 7 (file-attributes (file-chase-links file))))))
+
+(provide 'time)
 
 ;;; time.el ends here

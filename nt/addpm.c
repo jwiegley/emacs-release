@@ -54,12 +54,14 @@ static struct entry
 env_vars[] = 
 {
   {"emacs_dir", NULL},
-  {"EMACSLOADPATH", "%emacs_dir%/lisp"},
-  {"SHELL", "%COMSPEC%"},
+  {"EMACSLOADPATH", "%emacs_dir%/site-lisp;%emacs_dir%/lisp"},
+  {"SHELL", "%emacs_dir/bin/cmdproxy.exe%"},
   {"EMACSDATA", "%emacs_dir%/etc"},
   {"EMACSPATH", "%emacs_dir%/bin"},
   {"EMACSLOCKDIR", "%emacs_dir%/lock"},
-  {"INFOPATH", "%emacs_dir%/info"},
+  /* We no longer set INFOPATH because Info-default-directory-list
+     is then ignored.  */
+  /*  {"INFOPATH", "%emacs_dir%/info"},  */
   {"EMACSDOC", "%emacs_dir%/etc"},
   {"TERM", "cmd"}
 };
@@ -106,31 +108,77 @@ main (argc, argv)
      int argc;
      char *argv[];			
 {
-  DWORD idDde;
+  DWORD idDde = 0;
   HCONV HConversation;
   HSZ ProgMan;
+  char modname[MAX_PATH];
   char additem[MAX_PATH*2 + 100];
-  char *lpext;
+  char *prog_name;
+  char *emacs_path;
+  char *p;
 
+  /* If no args specified, use our location to set emacs_path.  */
+#if 0
   if (argc < 2 || argc > 3)
     {
       fprintf (stderr, "usage: addpm emacs_path [icon_path]\n");
       exit (1);
     }
+#endif
 
-  lpext = add_registry (argv[1]) ? "exe" : "bat";
+  if (argc > 1)
+    emacs_path = argv[1];
+  else
+    {
+      if (!GetModuleFileName (NULL, modname, MAX_PATH) ||
+	  (p = strrchr (modname, '\\')) == NULL)
+	{
+	  fprintf (stderr, "fatal error");
+	  exit (1);
+	}
+      *p = 0;
+
+      /* Set emacs_path to emacs_dir if we are in "%emacs_dir%\bin".  */
+      if ((p = strrchr (modname, '\\')) && stricmp (p, "\\bin") == 0)
+	{
+	  *p = 0;
+	  emacs_path = modname;
+	}
+      else
+	{
+	  fprintf (stderr, "usage: addpm emacs_path [icon_path]\n");
+	  exit (1);
+	}
+
+      /* Tell user what we are going to do.  */
+      {
+	char msg[ MAX_PATH ];
+	sprintf (msg, "Install Emacs at %s?\n", emacs_path);
+	if (!MessageBox (NULL, msg, "Install Emacs", MB_OKCANCEL | MB_ICONQUESTION))
+	  {
+	    fprintf (stderr, "Install cancelled\n");
+	    exit (1);
+	  }
+      }
+    }
+
+  prog_name = add_registry (emacs_path) ? "runemacs.exe" : "emacs.bat";
 
   DdeInitialize (&idDde, (PFNCALLBACK)DdeCallback, APPCMD_CLIENTONLY, 0);
 
   ProgMan = DdeCreateStringHandle (idDde, "PROGMAN", CP_WINANSI);
 
-  if (HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL))
+  HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL);
+  if (HConversation != 0)
     {
-      DdeCommand ("[CreateGroup (Gnu Emacs)]");
+      DdeCommand ("[CreateGroup (\"Gnu Emacs\")]");
       DdeCommand ("[ReplaceItem (Emacs)]");
-      sprintf (additem, "[AddItem (%s\\bin\\runemacs.%s, Emacs%c%s)]",
-	       argv[1], lpext, (argc>2 ? ',' : ' '),
-	       (argc>2 ? argv[2] : ""));
+      if (argc > 2)
+	sprintf (additem, "[AddItem (\"%s\\bin\\%s\", Emacs, \"%s\")]",
+		 emacs_path, prog_name, argv[2]);
+      else
+	sprintf (additem, "[AddItem (\"%s\\bin\\%s\", Emacs)]",
+		 emacs_path, prog_name);
       DdeCommand (additem);
 
       DdeDisconnect (HConversation);

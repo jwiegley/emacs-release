@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Glossary, Key Index, Intro, Top
 @unnumbered Glossary
@@ -23,6 +23,18 @@ key.  Such characters are given names that start with @kbd{Alt-}
 (usually written @kbd{A-} for short).  (Note that many terminals have a
 key labeled @key{ALT} which is really a @key{META} key.)  @xref{User
 Input, Alt}.
+
+@item ASCII character
+An ASCII character is either an ASCII control character or an ASCII
+printing character.  @xref{User Input}.
+
+@item ASCII control character
+An ASCII control character is the Control version of an upper-case
+letter, or the Control version of one of the characters @samp{@@[\]^_?}.
+
+@item ASCII printing character
+ASCII printing characters include letters, digits, space, and these
+punctuation characters: @samp{!@@#$%^& *()_-+=|\~` @{@}[]:;"' <>,.?/}.
 
 @item Auto Fill Mode
 Auto Fill mode is a minor mode in which text that you insert is
@@ -65,7 +77,7 @@ The buffer is the basic editing unit; one buffer corresponds to one text
 being edited.  You can have several buffers, but at any time you are
 editing only one, the `selected' buffer, though several can be visible
 when you are using multiple windows (q.v.).  Most buffers are visiting
-(q.v.) some file.  @xref{Buffers}.
+(q.v.@:) some file.  @xref{Buffers}.
 
 @item Buffer Selection History
 Emacs keeps a buffer selection history which records how recently each
@@ -94,9 +106,19 @@ Characters}.  Also, key sequences (q.v.@:) are usually made up of
 characters (though they may include other input events as well).
 @xref{User Input}.
 
+@item Character Set
+Emacs supports a number of character sets, each of which represents a
+particular alphabet or script.  @xref{International}.
+
 @item Click Event
 A click event is the kind of input event generated when you press a
 mouse button and release it without moving the mouse.  @xref{Mouse Buttons}.
+
+@item Coding System
+A coding system is an encoding for representing text characters in a
+file or in a stream of information.  Emacs has the ability to convert
+text to or from a variety of coding systems when reading or writing it.
+@xref{Coding Systems}.
 
 @item Command
 A command is a Lisp function specially defined to be able to serve as a
@@ -147,21 +169,18 @@ first are called continuation lines.  @xref{Basic,Continuation,Basic
 Editing}.
 
 @item Control Character
-ASCII characters with octal codes 0 through 037, and also code 0177, do
-not have graphic images assigned to them.  These are the Control
-characters.  To type a Control character, hold down the @key{CTRL} key
-and type the corresponding non-Control character.  @key{RET}, @key{TAB},
-@key{ESC}, @key{LFD} and @key{DEL} are all control characters.
-@xref{User Input}.
-
-When you are using the X Window System, every non-control character has a
-corresponding control character variant.
+A control character is a character that you type by holding down the
+@key{CTRL} key.  Some control characters also have their own keys, so
+that you can type them without using @key{CTRL}.  For example,
+@key{RET}, @key{TAB}, @key{ESC} and @key{DEL} are all control
+characters.  @xref{User Input}.
 
 @item Copyleft
 A copyleft is a notice giving the public legal permission to
 redistribute a program or other work of art.  Copylefts are used by
-left-wing programmers to give people equal rights, just as copyrights
-are used by right-wing programmers to gain power over other people.
+left-wing programmers to promote freedom and cooperation, just as
+copyrights are used by right-wing programmers to gain power over other
+people.
 
 The particular form of copyleft used by the GNU project is called the
 GNU General Public License.  @xref{Copying}.
@@ -238,7 +257,7 @@ you can place individual files or subdirectories.  @xref{Directories}.
 
 @item Dired
 Dired is the Emacs facility that displays the contents of a file
-directory and allows you to ``edit the directory'', performing
+directory and allows you to ``edit the directory,'' performing
 operations on the files in the directory.  @xref{Dired}.
 
 @item Disabled Command
@@ -288,12 +307,16 @@ echo area, accompanied by a beep.
 @key{ESC} is a character used as a prefix for typing Meta characters on
 keyboards lacking a @key{META} key.  Unlike the @key{META} key (which,
 like the @key{SHIFT} key, is held down while another character is
-typed), the @key{ESC} key is pressed once and applies to the next
-character typed.
+typed), you press the @key{ESC} key as you would press a letter key, and
+it applies to the next character you type.
 
 @item Expunging
-Expunging an Rmail file or Dired buffer means really discarding the
-messages or files you have previously flagged for deletion.
+Expunging an Rmail file or Dired buffer is an operation that truly
+discards the messages or files you have previously flagged for deletion.
+
+@item File Locking
+Emacs used file locking to notice when two different users
+start to edit one file at the same time.  @xref{Interlocking}.
 
 @item File Name
 A file name is a name that refers to a file.  File names may be relative
@@ -306,11 +329,11 @@ file name starts with a slash (the root directory) or with @samp{~/} or
 Some people use the term ``pathname'' for file names, but we do not;
 we use the word ``path'' only in the term ``search path'' (q.v.).
 
-@item File Name Component
-A file name component names a file directly within a particular
-directory.  On GNU and Unix systems, a file name is a sequence of file
-name components, separated by slashes.  For example, @file{foo/bar} is a
-file name containing two components, @samp{foo} and @samp{bar}; it
+@item File-Name Component
+A file-name component names a file directly within a particular
+directory.  On GNU and Unix systems, a file name is a sequence of
+file-name components, separated by slashes.  For example, @file{foo/bar}
+is a file name containing two components, @samp{foo} and @samp{bar}; it
 refers to the file named @samp{bar} in the directory named @samp{foo} in
 the current directory.
 
@@ -386,9 +409,9 @@ Hardcopy means printed output.  Emacs has commands for making printed
 listings of text in Emacs buffers.  @xref{Hardcopy}.
 
 @item @key{HELP}
-You can type @key{HELP} at any time to ask what options you have, or to ask
-what any command does.  The character @key{HELP} is really @kbd{C-h}.
-@xref{Help}.
+@key{HELP} is the Emacs name for @kbd{C-h} or @key{F1}.  You can type
+@key{HELP} at any time to ask what options you have, or to ask what any
+command does.  @xref{Help}.
 
 @item Hyper
 Hyper is the name of a modifier bit which a keyboard input character may
@@ -420,9 +443,18 @@ the terminal.  Input events include typing characters, typing function
 keys, pressing or releasing mouse buttons, and switching between Emacs
 frames.  @xref{User Input}.
 
+@item Input Method
+An input method is a system for entering non-ASCII text characters by
+typing sequences of ASCII characters (q.v.@:).  @xref{Input Methods}.
+
 @item Insertion
 Insertion means copying text into the buffer, either from the keyboard
 or from some other place in Emacs.
+
+@item Interlocking
+Interlocking is a feature for warning when you start to alter a file
+that someone else is already editing.  @xref{Interlocking,,Simultaneous
+Editing}.
 
 @item Justification
 Justification means adding extra spaces to lines of text to make them
@@ -457,7 +489,7 @@ called yanking (q.v.@:).  @xref{Yanking}.
 
 @item Killing
 Killing means erasing text and saving it on the kill ring so it can be
-yanked (q.v.@:) later.  Some other systems call this ``cutting''.
+yanked (q.v.@:) later.  Some other systems call this ``cutting.''
 Most Emacs commands to erase text do killing, as opposed to deletion
 (q.v.@:).  @xref{Killing}.
 
@@ -465,6 +497,12 @@ Most Emacs commands to erase text do killing, as opposed to deletion
 Killing a job (such as, an invocation of Emacs) means making it cease
 to exist.  Any data within it, if not saved in a file, is lost.
 @xref{Exiting}.
+
+@item Language Environment
+Your choice of language environment specifies defaults for the input
+method (q.v.@:) and coding system (q.v.@:).  @xref{Language
+Environments}.  These defaults are relevant if you edit non-ASCII text
+(@pxref{International}).
 
 @item List
 A list is, approximately, a text string beginning with an open
@@ -516,6 +554,11 @@ Mail means messages sent from one user to another through the computer
 system, to be read at the recipient's convenience.  Emacs has commands for
 composing and sending mail, and for reading and editing the mail you have
 received.  @xref{Sending Mail}.  @xref{Rmail}, for how to read mail.
+
+@item Mail Composition Method
+A mail composition method is a program runnable within Emacs for editing
+and sending a mail message.  Emacs lets you select from several
+alternative mail composition methods.  @xref{Mail Methods}.
 
 @item Major Mode
 The Emacs major modes are a mutually exclusive set of options, each of
@@ -590,6 +633,16 @@ Moving text means erasing it from one place and inserting it in
 another.  The usual way to move text by killing (q.v.@:) and then
 yanking (q.v.@:).  @xref{Killing}.
 
+@item MULE
+MULE refers to the Emacs features for editing non-ASCII text
+using multibyte characters (q.v.@:).  @xref{International}.
+
+@item Multibyte Character
+A multibyte character is a character that takes up several buffer
+positions.  Emacs uses multibyte characters to represent non-ASCII text,
+since the number of non-ASCII characters is much more than 256.
+@xref{International Intro}.
+
 @item Named Mark
 A named mark is a register (q.v.@:) in its role of recording a
 location in text so that you can move point to that location.
@@ -603,7 +656,7 @@ widened again, but it is still there, and saving the file saves it
 all.  @xref{Narrowing}.
 
 @item Newline
-Linefeed characters in the buffer terminate lines of text and are
+Control-J characters in the buffer terminate lines of text and are
 therefore also called newlines.  @xref{Text Characters,Newline}.
 
 @item Numeric Argument
@@ -670,23 +723,27 @@ a kind of prompting (@pxref{Echo Area}).
 
 @item Quitting
 Quitting means canceling a partially typed command or a running
-command, using @kbd{C-g}.  @xref{Quitting}.
+command, using @kbd{C-g} (or @kbd{C-@key{BREAK}} on MS-DOS).  @xref{Quitting}.
 
 @item Quoting
 Quoting means depriving a character of its usual special significance.
-In Emacs this is usually done with @kbd{C-q}.  What constitutes special
-significance depends on the context and on convention.  For example,
-an ``ordinary'' character as an Emacs command inserts itself; so in
-this context, a special character is any character that does not
-normally insert itself (such as @key{DEL}, for example), and quoting
-it makes it insert itself as if it were not special.  Not all contexts
-allow quoting.  @xref{Basic,Quoting,Basic Editing}.
+The most common kind of quoting in Emacs is with @kbd{C-q}.  What
+constitutes special significance depends on the context and on
+convention.  For example, an ``ordinary'' character as an Emacs command
+inserts itself; so in this context, a special character is any character
+that does not normally insert itself (such as @key{DEL}, for example),
+and quoting it makes it insert itself as if it were not special.  Not
+all contexts allow quoting.  @xref{Basic,Quoting,Basic Editing}.
+
+@item Quoting File Names
+Quoting a file name turns off the special significance of constructs
+such as @samp{$}, @samp{~} and @samp{:}.  @xref{Quoted File Names}.
 
 @item Read-Only Buffer
 A read-only buffer is one whose text you are not allowed to change.
 Normally Emacs makes buffers read-only when they contain text which
 has a special significance to Emacs; for example, Dired buffers.
-Visiting a file that is write protected also makes a read-only buffer.
+Visiting a file that is write-protected also makes a read-only buffer.
 @xref{Buffers}.
 
 @item Rectangle
@@ -927,7 +984,7 @@ Word search is searching for a sequence of words, considering the
 punctuation between them as insignificant.  @xref{Word Search}.
 
 @item WYSIWYG
-WYSIWYG stands for ``What you see is what you get.''  Emacs generally
+WYSIWYG stands for `What you see is what you get.'  Emacs generally
 provides WYSIWYG editing for files of characters; in Enriched mode
 (@pxref{Formatted Text}), it provides WYSIWYG editing for files that
 include text formatting information.
@@ -935,6 +992,6 @@ include text formatting information.
 @item Yanking
 Yanking means reinserting text previously killed.  It can be used to
 undo a mistaken kill, or for copying or moving text.  Some other
-systems call this ``pasting''.  @xref{Yanking}.
+systems call this ``pasting.''  @xref{Yanking}.
 @end table
 

@@ -1,5 +1,161 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
+
+
+File: emacs,  Node: Old Versions,  Next: Branches,  Prev: Change Logs and VC,  Up: Version Control
+
+Examining And Comparing Old Versions
+------------------------------------
+
+`C-u C-x C-q VERSION <RET>'
+     Select version VERSION as the current work file version.
+
+`C-x v ~ VERSION <RET>'
+     Examine version VERSION of the visited file, in a buffer of its
+     own.
+
+`C-x v ='
+     Compare the current buffer contents with the latest checked-in
+     version of the file.
+
+`C-u C-x v = FILE <RET> OLDVERS <RET> NEWVERS <RET>'
+     Compare the specified two versions of FILE.
+
+`C-x v g'
+     Display the result of the CVS annotate command using colors.
+
+   There are two ways to work with an old version of a file.  You can
+make the old version your current work file, for example if you want to
+reproduce a former stage of development, or if you want to create a
+branch from the old version (*note Branches::.).  To do this, visit the
+file and type `C-u C-x C-q VERSION <RET>'.  (This works only with RCS.)
+
+   If you want only to examine an old version, without changing your
+work file, visit the file and then type `C-x v ~ VERSION <RET>'
+(`vc-version-other-window').  This puts the text of version VERSION in
+a file named `FILENAME.~VERSION~', and visits it in its own buffer in a
+separate window.
+
+   To compare two versions of a file, use the command `C-x v ='
+(`vc-diff').  Plain `C-x v =' compares the current buffer contents
+(saving them in the file if necessary) with the last checked-in version
+of the file.  `C-u C-x v =', with a numeric argument, reads a file name
+and two version numbers, then compares those versions of the specified
+file.
+
+   If you supply a directory name instead of the name of a work file,
+this command compares the two specified versions of all registered files
+in that directory and its subdirectories.  You can also specify a
+snapshot name (*note Snapshots::.) instead of one or both version
+numbers.
+
+   You can specify a checked-in version by its number; an empty input
+specifies the current contents of the work file (which may be different
+from all the checked-in versions).
+
+   This command works by running the `diff' utility, getting the
+options from the variable `diff-switches'.  It displays the output in a
+special buffer in another window.  Unlike the `M-x diff' command, `C-x
+v =' does not try to locate the changes in the old and new versions.
+This is because normally one or both versions do not exist as files
+when you compare them; they exist only in the records of the master
+file.  *Note Comparing Files::, for more information about `M-x diff'.
+
+   For CVS-controlled files, you can display the result of the CVS
+annotate command, using colors to enhance the visual appearance.  Use
+the command `M-x vc-annotate' to do this.  Red means new, blue means
+old, and intermediate colors indicate intermediate ages.  A prefix
+argument N specifies a stretch factor for the time scale; it makes each
+color cover a period N times as long.
+
+
+File: emacs,  Node: Branches,  Next: Status in VC,  Prev: Old Versions,  Up: Version Control
+
+Multiple Branches of a File
+---------------------------
+
+   One use of version control is to maintain multiple "current"
+versions of a file.  For example, you might have different versions of a
+program in which you are gradually adding various unfinished new
+features.  Each such independent line of development is called a
+"branch".  VC allows you to create branches, and switch between
+existing branches.  Note, however, that branches are supported only with
+RCS.
+
+   A file's main line of development is usually called the "trunk".
+The versions on the trunk are normally numbered 1.1, 1.2, 1.3, etc.  At
+any such version, you may start an independent branch.  A branch
+starting at version 1.2 would have version number 1.2.1.1.  Consecutive
+versions on this branch would have numbers 1.2.1.2, 1.2.1.3, 1.2.1.4,
+and so on.  If there is a second branch also starting at version 1.2; it
+would consist of versions 1.2.2.1, 1.2.2.2, 1.2.2.3, and so on.
+
+   If you omit the final component of a version number, that is called a
+"branch number".  It refers to the highest existing version on that
+branch.  The branches in the example above have branch numbers 1.2.1 and
+1.2.2.
+
+   A version which is the last in its branch is called a "head" version.
+
+* Menu:
+
+* Switching Branches::    How to get to another existing branch.
+* Creating Branches::     How to start a new branch.
+* Multi-User Branching::  Multiple users working at multiple branches
+                            in parallel.
+
+
+File: emacs,  Node: Switching Branches,  Next: Creating Branches,  Up: Branches
+
+Switching between Branches
+..........................
+
+   To switch between branches, type `C-u C-x C-q' and specify the
+version number you want to select.  This version is then checked out
+*unlocked* (write-protected), so you can examine it before really
+checking it out.  Switching branches in this way is allowed only when
+the file is not locked.
+
+   You may omit the minor version number, thus giving only the branch
+number; this takes you to the highest version on the indicated branch.
+If you only type `RET', Emacs goes to the highest version on the trunk.
+
+   After you have switched to any branch (including the main branch),
+you stay on it for subsequent VC commands, until you explicitly select
+some other branch.
+
+
+File: emacs,  Node: Creating Branches,  Next: Multi-User Branching,  Prev: Switching Branches,  Up: Branches
+
+Creating New Branches
+.....................
+
+   To create a new branch from a head version (one that is the latest in
+the branch that contains it), first select that version if necessary,
+lock it with `C-x C-q', and make whatever changes you want.  Then, when
+you check in the changes, use `C-u C-x C-q'.  This lets you specify the
+version number for the new version.  You should specify a suitable
+branch number for a branch starting at the current version.  For
+example, if the current version is 2.5, the branch number should be
+2.5.1, 2.5.2, and so on, depending on the number of existing branches at
+that point.
+
+   To create a new branch at an older version (one that is no longer the
+head of a branch), first select that version, then lock it with `C-x
+C-q'.  You'll be asked to confirm, when you lock the old version, that
+you really mean to create a new branch--if you say no, you'll be offered
+a chance to lock the latest version instead.
+
+   Then make your changes and type `C-x C-q' again to check in a new
+version.  This automatically creates a new branch starting from the
+selected version.  You need not specially request a new branch, because
+that's the only way to add a new version at a point that is not the head
+of a branch.
+
+   After the branch is created, you "stay" on it.  That means that
+subsequent check-outs and check-ins create new versions on that branch.
+To leave the branch, you must explicitly select a different version with
+`C-u C-x C-q' for check-out.
 
 
 File: emacs,  Node: Multi-User Branching,  Prev: Creating Branches,  Up: Branches
@@ -103,12 +259,12 @@ Making and Using Snapshots
    There are two basic commands for snapshots; one makes a snapshot
 with a given name, the other retrieves a named snapshot.
 
-`C-x v s NAME RET'
+`C-x v s NAME <RET>'
      Define the last saved versions of every registered file in or
      under the current directory as a snapshot named NAME
      (`vc-create-snapshot').
 
-`C-x v r NAME RET'
+`C-x v r NAME <RET>'
      Check out all registered files at or below the current directory
      level using whatever versions correspond to the snapshot NAME
      (`vc-retrieve-snapshot').
@@ -299,13 +455,12 @@ VC Status Retrieval
 
    When deducing the locked/unlocked state of a file, VC first looks for
 an RCS version header string in the file (*note Version Headers::.).  If
-there is no header string (or if the backend system is SCCS), VC
-normally looks at the file permissions of the work file; this is fast.
-But there might be situations when the file permissions cannot be
-trusted.  In this case the master file has to be consulted, which is
-rather expensive.  Also the master file can only tell you *if* there's
-any lock on the file, but not whether your work file really contains
-that locked version.
+there is no header string, or if you are using SCCS, VC normally looks
+at the file permissions of the work file; this is fast.  But there might
+be situations when the file permissions cannot be trusted.  In this case
+the master file has to be consulted, which is rather expensive.  Also
+the master file can only tell you *if* there's any lock on the file,
+but not whether your work file really contains that locked version.
 
    You can tell VC not to use version headers to determine lock status
 by setting `vc-consult-headers' to `nil'.  VC then always uses the file
@@ -357,16 +512,16 @@ listings in brief format (file names only) and verbose format (sizes,
 dates, and authors included).  There is also a directory browser called
 Dired; see *Note Dired::.
 
-`C-x C-d DIR-OR-PATTERN RET'
+`C-x C-d DIR-OR-PATTERN <RET>'
      Display a brief directory listing (`list-directory').
 
-`C-u C-x C-d DIR-OR-PATTERN RET'
+`C-u C-x C-d DIR-OR-PATTERN <RET>'
      Display a verbose directory listing.
 
-`M-x make-directory RET DIRNAME RET'
+`M-x make-directory <RET> DIRNAME <RET>'
      Create a new directory named DIRNAME.
 
-`M-x delete-directory RET DIRNAME RET'
+`M-x delete-directory <RET> DIRNAME <RET>'
      Delete the directory named DIRNAME.  It must be empty, or you get
      an error.
 
@@ -375,12 +530,12 @@ Dired; see *Note Dired::.
 either a directory to be listed or a wildcard-containing pattern for
 the files to be listed.  For example,
 
-     C-x C-d /u2/emacs/etc RET
+     C-x C-d /u2/emacs/etc <RET>
 
 lists all the files in directory `/u2/emacs/etc'.  Here is an example
 of specifying a file name pattern:
 
-     C-x C-d /u2/emacs/src/*.c RET
+     C-x C-d /u2/emacs/src/*.c <RET>
 
    Normally, `C-x C-d' prints a brief directory listing containing just
 file names.  A numeric argument (regardless of value) tells it to make
@@ -406,11 +561,11 @@ whose value should be a string.
 
    The buffer `*Diff*' has Compilation mode as its major mode, so you
 can use `C-x `' to visit successive changed locations in the two source
-files.  You can also move to a particular hunk of changes and type RET
-or `C-c C-c', or click `Mouse-2' on it, to move to the corresponding
-source location.  You can also use the other special commands of
-Compilation mode: SPC and DEL for scrolling, and `M-p' and `M-n' for
-cursor motion.  *Note Compilation::.
+files.  You can also move to a particular hunk of changes and type
+<RET> or `C-c C-c', or click `Mouse-2' on it, to move to the
+corresponding source location.  You can also use the other special
+commands of Compilation mode: <SPC> and <DEL> for scrolling, and `M-p'
+and `M-n' for cursor motion.  *Note Compilation::.
 
    The command `M-x diff-backup' compares a specified file with its most
 recent backup.  If you specify the name of a backup file, `diff-backup'
@@ -438,17 +593,17 @@ Miscellaneous File Operations
 =============================
 
    Emacs has commands for performing many other operations on files.
-All operate on one file; they do not accept wild card file names.
+All operate on one file; they do not accept wildcard file names.
 
    `M-x view-file' allows you to scan or read a file by sequential
 screenfuls.  It reads a file name argument using the minibuffer.  After
 reading the file into an Emacs buffer, `view-file' displays the
-beginning.  You can then type SPC to scroll forward one windowful, or
-DEL to scroll backward.  Various other commands are provided for moving
-around in the file, but none for changing it; type `?' while viewing
-for a list of them.  They are mostly the same as normal Emacs cursor
-motion commands.  To exit from viewing, type `q'.  The commands for
-viewing are defined by a special major mode called View mode.
+beginning.  You can then type <SPC> to scroll forward one windowful, or
+<DEL> to scroll backward.  Various other commands are provided for
+moving around in the file, but none for changing it; type `?'  while
+viewing for a list of them.  They are mostly the same as normal Emacs
+cursor motion commands.  To exit from viewing, type `q'.  The commands
+for viewing are defined by a special major mode called View mode.
 
    A related command, `M-x view-buffer', views a buffer already present
 in Emacs.  *Note Misc Buffer::.
@@ -482,19 +637,19 @@ with the same contents.  Confirmation is required if a file named NEW
 already exists, because copying has the consequence of overwriting the
 old contents of the file NEW.
 
-   `M-x make-symbolic-link' reads two file names OLD and LINKNAME, then
-creates a symbolic link named LINKNAME and pointing at OLD.  The effect
-is that future attempts to open file LINKNAME will refer to whatever
-file is named OLD at the time the opening is done, or will get an error
-if the name OLD is not in use at that time.  This command does not
-expand the argument FILENAME, so that it allows you to specify a
-relative name as the target of the link.
+   `M-x make-symbolic-link' reads two file names TARGET and LINKNAME,
+then creates a symbolic link named LINKNAME and pointing at TARGET.
+The effect is that future attempts to open file LINKNAME will refer to
+whatever file is named TARGET at the time the opening is done, or will
+get an error if the name TARGET is not in use at that time.  This
+command does not expand the argument TARGET, so that it allows you to
+specify a relative name as the target of the link.
 
    Confirmation is required when creating the link if LINKNAME is in
 use.  Note that not all systems support symbolic links.
 
 
-File: emacs,  Node: Compressed Files,  Prev: Misc File Ops,  Up: Files
+File: emacs,  Node: Compressed Files,  Next: Remote Files,  Prev: Misc File Ops,  Up: Files
 
 Accessing Compressed Files
 ==========================
@@ -513,6 +668,53 @@ Other endings indicate other compression programs.
 in which Emacs uses the contents of a file.  This includes visiting it,
 saving it, inserting its contents into a buffer, loading it, and byte
 compiling it.
+
+
+File: emacs,  Node: Remote Files,  Next: Quoted File Names,  Prev: Compressed Files,  Up: Files
+
+Remote Files
+============
+
+   You can refer to files on other machines using a special file name
+syntax:
+
+     /HOST:FILENAME
+     /USER@HOST:FILENAME
+
+When you do this, Emacs uses the FTP program to read and write files on
+the specified host.  It logs in through FTP using your user name or the
+name USER.  It may ask you for a password from time to time; this is
+used for logging in on HOST.
+
+   You can entirely turn off the FTP file name feature by setting the
+variable `file-name-handler-alist' to `nil'.
+
+   The Emacs package that implements FTP file access is called
+`ange-ftp'.  However, you don't need to remember that name to use the
+FTP file access feature.
+
+
+File: emacs,  Node: Quoted File Names,  Prev: Remote Files,  Up: Files
+
+Quoted File Names
+=================
+
+   You can "quote" an absolute file name to prevent special characters
+and syntax in it from having their special effects.  The way to do this
+is to add `/:' at the beginning.
+
+   For example, you can quote a local file name which appears remote, to
+prevent it from being treated as a remote file name.  Thus, if you have
+a directory named `/foo:' and a file named `bar' in it, you can refer
+to that file in Emacs as `/:/foo:/bar'.
+
+   `/:' can also prevent `~' from being treated as a special character
+for a user's home directory.  For example, `/:/tmp/~hack' refers to a
+file whose name is `~hack' in directory `/tmp'.
+
+   Likewise, quoting with `/:' is one way to enter in the minibuffer a
+file name that contains `$'.  However, the `/:' must be at the
+beginning of the buffer in order to quote `$'.
 
 
 File: emacs,  Node: Buffers,  Next: Windows,  Prev: Files,  Up: Top
@@ -554,13 +756,13 @@ from the value in other buffers.  *Note Locals::.
 
 * Menu:
 
-* Select Buffer::      Creating a new buffer or reselecting an old one.
-* List Buffers::       Getting a list of buffers that exist.
-* Misc Buffer::	       Renaming; changing read-onliness; copying text.
-* Kill Buffer::	       Killing buffers you no longer need.
-* Several Buffers::    How to go through the list of all buffers
-			 and operate variously on several of them.
-* Indirect Buffers::   An indirect buffer shares the text of another buffer.
+* Select Buffer::       Creating a new buffer or reselecting an old one.
+* List Buffers::        Getting a list of buffers that exist.
+* Misc Buffer::	        Renaming; changing read-onlyness; copying text.
+* Kill Buffer::	        Killing buffers you no longer need.
+* Several Buffers::     How to go through the list of all buffers
+			  and operate variously on several of them.
+* Indirect Buffers::    An indirect buffer shares the text of another buffer.
 
 
 File: emacs,  Node: Select Buffer,  Next: List Buffers,  Up: Buffers
@@ -568,27 +770,27 @@ File: emacs,  Node: Select Buffer,  Next: List Buffers,  Up: Buffers
 Creating and Selecting Buffers
 ==============================
 
-`C-x b BUFFER RET'
+`C-x b BUFFER <RET>'
      Select or create a buffer named BUFFER (`switch-to-buffer').
 
-`C-x 4 b BUFFER RET'
+`C-x 4 b BUFFER <RET>'
      Similar, but select BUFFER in another window
      (`switch-to-buffer-other-window').
 
-`C-x 5 b BUFFER RET'
+`C-x 5 b BUFFER <RET>'
      Similar, but select BUFFER in a separate frame
      (`switch-to-buffer-other-frame').
 
-   To select the buffer named BUFNAME, type `C-x b BUFNAME RET'.  This
-runs the command `switch-to-buffer' with argument BUFNAME.  You can use
-completion on an abbreviation for the buffer name you want (*note
-Completion::.).  An empty argument to `C-x b' specifies the most
+   To select the buffer named BUFNAME, type `C-x b BUFNAME <RET>'.
+This runs the command `switch-to-buffer' with argument BUFNAME.  You
+can use completion on an abbreviation for the buffer name you want
+(*note Completion::.).  An empty argument to `C-x b' specifies the most
 recently selected buffer that is not displayed in any window.
 
    Most buffers are created by visiting files, or by Emacs commands that
 want to display some text, but you can also create a buffer explicitly
-by typing `C-x b BUFNAME RET'.  This makes a new, empty buffer which is
-not visiting any file, and selects it for editing.  Such buffers are
+by typing `C-x b BUFNAME <RET>'.  This makes a new, empty buffer that
+is not visiting any file, and selects it for editing.  Such buffers are
 used for making notes to yourself.  If you try to save one, you are
 asked for the file name to use.  The new buffer's major mode is
 determined by the value of `default-major-mode' (*note Major Modes::.).
@@ -613,9 +815,10 @@ Listing Existing Buffers
 
    To display a list of all the buffers that exist, type `C-x C-b'.
 Each line in the list shows one buffer's name, major mode and visited
-file.  The buffers are listed in the order, most recently visited first.
+file.  The buffers are listed in the order that they were current; the
+buffers that were current most recently come first.
 
-   `*' at the beginning of a line indicates the buffer is "modified".
+   `*' at the beginning of a line indicates the buffer is "modified."
 If several buffers are modified, it may be time to save some with `C-x
 s' (*note Saving::.).  `%' indicates a read-only buffer.  `.' marks the
 selected buffer.  Here is an example of a buffer list:
@@ -645,13 +848,13 @@ Miscellaneous Buffer Operations
 `C-x C-q'
      Toggle read-only status of buffer (`vc-toggle-read-only').
 
-`M-x rename-buffer RET NAME RET'
+`M-x rename-buffer <RET> NAME <RET>'
      Change the name of the current buffer.
 
 `M-x rename-uniquely'
      Rename the current buffer by adding `<NUMBER>' to the end.
 
-`M-x view-buffer RET BUFFER RET'
+`M-x view-buffer <RET> BUFFER <RET>'
      Scroll through buffer BUFFER.
 
    A buffer can be "read-only", which means that commands to change its
@@ -706,14 +909,14 @@ buffers you no longer need.  On most operating systems, killing a
 buffer releases its space back to the operating system so that other
 programs can use it.  Here are some commands for killing buffers:
 
-`C-x k BUFNAME RET'
+`C-x k BUFNAME <RET>'
      Kill buffer BUFNAME (`kill-buffer').
 
 `M-x kill-some-buffers'
      Offer to kill each buffer, one by one.
 
    `C-x k' (`kill-buffer') kills one buffer, whose name you specify in
-the minibuffer.  The default, used if you type just RET in the
+the minibuffer.  The default, used if you type just <RET> in the
 minibuffer, is to kill the current buffer.  If you kill the current
 buffer, another buffer is selected; one that has been selected recently
 but does not appear in any window now.  If you ask to kill a
@@ -773,7 +976,7 @@ following commands apply to the buffer described on the current line.
 `u'
      Remove any request made for the current line, and move down.
 
-`DEL'
+`<DEL>'
      Move to previous line and remove any request made for that line.
 
    The `d', `C-d', `s' and `u' commands to add or remove flags also
@@ -784,7 +987,7 @@ count.
 current line:
 
 `~'
-     Mark the buffer "unmodified".  The command `~' does this
+     Mark the buffer "unmodified."  The command `~' does this
      immediately when you type it.
 
 `%'
@@ -800,7 +1003,7 @@ current line:
      Quit the buffer menu--immediately display the most recent formerly
      visible buffer in its place.
 
-`RET'
+`<RET>'
 `f'
      Immediately select this line's buffer in place of the `*Buffer
      List*' buffer.
@@ -863,7 +1066,7 @@ Indirect Buffers
 called the "base buffer" of the indirect buffer.  In some ways it is
 the analogue, for buffers, of a symbolic link between files.
 
-`M-x make-indirect-buffer BASE-BUFFER RET INDIRECT-NAME RET'
+`M-x make-indirect-buffer BASE-BUFFER <RET> INDIRECT-NAME <RET>'
      Create an indirect buffer named INDIRECT-NAME whose base buffer is
      BASE-BUFFER.
 
@@ -896,13 +1099,13 @@ one frame.
 
 * Menu:
 
-* Basic Window::       Introduction to Emacs windows.
-* Split Window::       New windows are made by splitting existing windows.
-* Other Window::       Moving to another window or doing something to it.
-* Pop Up Window::      Finding a file or buffer in another window.
-* Force Same Window::  Forcing certain buffers to appear in the selected
-                         window rather than in another window.
-* Change Window::      Deleting windows and changing their sizes.
+* Basic Window::        Introduction to Emacs windows.
+* Split Window::        New windows are made by splitting existing windows.
+* Other Window::        Moving to another window or doing something to it.
+* Pop Up Window::       Finding a file or buffer in another window.
+* Force Same Window::   Forcing certain buffers to appear in the selected
+                          window rather than in another window.
+* Change Window::       Deleting windows and changing their sizes.
 
 
 File: emacs,  Node: Basic Window,  Next: Split Window,  Up: Windows
@@ -937,191 +1140,12 @@ C-b' (`list-buffers'), work by switching buffers in a nonselected window
 without affecting the selected window.
 
    When multiple windows show the same buffer, they can have different
-regions, because they can have different values of point.  This means
-that in Transient Mark mode, each window highlights a different part of
-the buffer.  The part that is highlighted in the selected window is the
-region that editing commands use.
+regions, because they can have different values of point.  However,
+they all have the same value for the mark, because each buffer has only
+one mark position.
 
    Each window has its own mode line, which displays the buffer name,
 modification status and major and minor modes of the buffer that is
 displayed in the window.  *Note Mode Line::, for full details on the
 mode line.
-
-
-File: emacs,  Node: Split Window,  Next: Other Window,  Prev: Basic Window,  Up: Windows
-
-Splitting Windows
-=================
-
-`C-x 2'
-     Split the selected window into two windows, one above the other
-     (`split-window-vertically').
-
-`C-x 3'
-     Split the selected window into two windows positioned side by side
-     (`split-window-horizontally').
-
-`C-Mouse-2'
-     In the mode line or scroll bar of a window, split that window.
-
-   The command `C-x 2' (`split-window-vertically') breaks the selected
-window into two windows, one above the other.  Both windows start out
-displaying the same buffer, with the same value of point.  By default
-the two windows each get half the height of the window that was split; a
-numeric argument specifies how many lines to give to the top window.
-
-   `C-x 3' (`split-window-horizontally') breaks the selected window
-into two side-by-side windows.  A numeric argument specifies how many
-columns to give the one on the left.  A line of vertical bars separates
-the two windows.  Windows that are not the full width of the screen
-have mode lines, but they are truncated; also, they do not always
-appear in inverse video, because the Emacs display routines have not
-been taught how to display a region of inverse video that is only part
-of a line on the screen.
-
-   You can split a window horizontally or vertically by clicking
-`C-Mouse-2' in the mode line or the scroll bar.  The line of splitting
-goes through the place where you click: if you click on the mode line,
-the new scroll bar goes above the spot; if you click in the scroll bar,
-the mode line of the split window is side by side with your click.
-
-   When a window is less than the full width, text lines too long to
-fit are frequent.  Continuing all those lines might be confusing.  The
-variable `truncate-partial-width-windows' can be set non-`nil' to force
-truncation in all windows less than the full width of the screen,
-independent of the buffer being displayed and its value for
-`truncate-lines'.  *Note Continuation Lines::.
-
-   Horizontal scrolling is often used in side-by-side windows.  *Note
-Display::.
-
-   If `split-window-keep-point' is non-nil, `C-x 2' tries to avoid
-shifting any text on the screen by putting point in whichever window
-happens to contain the screen line the cursor is already on.  The
-default is that `split-window-keep-point' is non-nil on slow terminals.
-
-
-File: emacs,  Node: Other Window,  Next: Pop Up Window,  Prev: Split Window,  Up: Windows
-
-Using Other Windows
-===================
-
-`C-x o'
-     Select another window (`other-window').  That is `o', not zero.
-
-`C-M-v'
-     Scroll the next window (`scroll-other-window').
-
-`M-x compare-windows'
-     Find next place where the text in the selected window does not
-     match the text in the next window.
-
-`Mouse-1'
-     `Mouse-1', in a window's mode line, selects that window but does
-     not move point in it (`mouse-select-region').
-
-   To select a different window, click with `Mouse-1' on its mode line.
-With the keyboard, you can switch windows by typing `C-x o'
-(`other-window').  That is an `o', for `other', not a zero.  When there
-are more than two windows, this command moves through all the windows
-in a cyclic order, generally top to bottom and left to right.  After
-the rightmost and bottommost window, it goes back to the one at the
-upper left corner.  A numeric argument means to move several steps in
-the cyclic order of windows.  A negative argument moves around the
-cycle in the opposite order.  When the minibuffer is active, the
-minibuffer is the last window in the cycle; you can switch from the
-minibuffer window to one of the other windows, and later switch back and
-finish supplying the minibuffer argument that is requested.  *Note
-Minibuffer Edit::.
-
-   The usual scrolling commands (*note Display::.) apply to the selected
-window only, but there is one command to scroll the next window.
-`C-M-v' (`scroll-other-window') scrolls the window that `C-x o' would
-select.  It takes arguments, positive and negative, like `C-v'.  (In
-the minibuffer, `C-M-v' scrolls the window that contains the minibuffer
-help display, if any, rather than the next window in the standard
-cyclic order.)
-
-   The command `M-x compare-windows' lets you compare two files or
-buffers visible in two windows, by moving through them to the next
-mismatch.  *Note Comparing Files::, for details.
-
-
-File: emacs,  Node: Pop Up Window,  Next: Force Same Window,  Prev: Other Window,  Up: Windows
-
-Displaying in Another Window
-============================
-
-   `C-x 4' is a prefix key for commands that select another window
-(splitting the window if there is only one) and select a buffer in that
-window.  Different `C-x 4' commands have different ways of finding the
-buffer to select.
-
-`C-x 4 b BUFNAME RET'
-     Select buffer BUFNAME in another window.  This runs
-     `switch-to-buffer-other-window'.
-
-`C-x 4 C-o BUFNAME RET'
-     Display buffer BUFNAME in another window, but don't select that
-     buffer or that window.  This runs `display-buffer'.
-
-`C-x 4 f FILENAME RET'
-     Visit file FILENAME and select its buffer in another window.  This
-     runs `find-file-other-window'.  *Note Visiting::.
-
-`C-x 4 d DIRECTORY RET'
-     Select a Dired buffer for directory DIRECTORY in another window.
-     This runs `dired-other-window'.  *Note Dired::.
-
-`C-x 4 m'
-     Start composing a mail message in another window.  This runs
-     `mail-other-window'; its same-window analogue is `C-x m' (*note
-     Sending Mail::.).
-
-`C-x 4 .'
-     Find a tag in the current tags table, in another window.  This runs
-     `find-tag-other-window', the multiple-window variant of `M-.'
-     (*note Tags::.).
-
-`C-x 4 r FILENAME RET'
-     Visit file FILENAME read-only, and select its buffer in another
-     window.  This runs `find-file-read-only-other-window'.  *Note
-     Visiting::.
-
-
-File: emacs,  Node: Force Same Window,  Next: Change Window,  Prev: Pop Up Window,  Up: Windows
-
-Forcing Display in the Same Window
-==================================
-
-   Certain Emacs commands switch to a specific buffer with special
-contents.  For example, `M-x shell' switches to a buffer named
-`*Shell*'.  By convention, all these commands are written to pop up the
-buffer in a separate window.  But you can specify that certain of these
-buffers should appear in the selected window.
-
-   If you add a buffer name to the list `same-window-buffer-names', the
-effect is that such commands display that particular buffer by
-switching to it in the selected window.  For example, if you add the
-element `"*grep*"' to the list, the `grep' command will display its
-output buffer in the selected window.
-
-   The default value of `same-window-buffer-names' is not `nil'.  It
-specifies the buffers `*info*', `*mail*' and `*shell*'.  This is why
-`M-x shell' normally switches to the `*shell*' buffer in the selected
-window.  If you delete this element from the value of
-`same-window-buffer-names', the behavior of `M-x shell' will change--it
-will pop up the buffer in another window instead.
-
-   You can specify these buffers more generally with the variable
-`same-window-regexps'.  Set it to a list of regular expressions; then
-any buffer whose name matches one of those regular expressions is
-displayed by switching to it in the selected window.  (Once again, this
-applies only to buffers that normally get displayed for you in a
-separate window.)  The default value of this variable specifies Telnet
-and rlogin buffers.
-
-   An analogous feature lets you specify buffers which should be
-displayed in their own individual frames.  *Note Special Buffer
-Frames::.
 

@@ -1,6 +1,6 @@
 ;;; find-file.el --- find a file corresponding to this one given a pattern
 
-;; Author:         Henry Guillaume <henry@qbd.com.au>
+;; Author: Henry Guillaume <henri@tibco.com, henry@c032.aone.net.au>
 ;; Keywords: c, matching, tools
 
 ;; Copyright (C) 1994, 1995 Free Software Foundation, Inc.
@@ -109,6 +109,8 @@
 ;; The *load-hooks allow you to place point where you want it in the other
 ;; file. 
 
+;;; Change Log:
+;;
 ;; FEEDBACK:
 ;; Please send me bug reports, bug fixes, and extensions, so that I can
 ;; merge them into the master source.
@@ -121,9 +123,9 @@
 ;; the development of this package:
 ;;     Rolf Ebert in particular, Fritz Knabe, Heddy Boubaker, Sebastian Kremer,
 ;;     Vasco Lopes Paulo, Mark A. Plaksin, Robert Lang, Trevor West, Kevin 
-;;     Pereira & Benedict Lofstedt.
+;;     Pereira, Benedict Lofstedt & Justin Vallon.
 
-;; Code:
+;;; Code:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User definable variables:
 
@@ -199,7 +201,7 @@ may not exist.
 
 A typical format is 
 
-    '(\".\" \"/usr/include/*\" \"$PROJECT/*/include\")
+    '(\".\" \"/usr/include\" \"$PROJECT/*/include\")
 
 Environment variables can be inserted between slashes (`/').
 They will be replaced by their definition. If a variable does
@@ -210,7 +212,7 @@ the preceding slash.  The star represents all the subdirectories except
 `..', and each of these subdirectories will be searched in turn.")
 
 (defvar cc-search-directories
-  '("." "/usr/include/*" "/usr/local/include/*")
+  '("." "/usr/include" "/usr/local/include/*")
   "*See the description of the `ff-search-directories' variable.")
 
 (defvar cc-other-file-alist
@@ -236,23 +238,6 @@ This list should contain the most used extensions before the others,
 since the search algorithm searches sequentially through each directory
 specified in `ff-search-directories'.  If a file is not found, a new one
 is created with the first matching extension (`.cc' yields `.hh').")
-
-(defvar ada-search-directories
-  '("." "/usr/adainclude" "/usr/local/adainclude")
-  "*See the description for the `ff-search-directories' variable.")
-
-(defvar ada-other-file-alist
-  '(
-    ("\\.ads$" (".adb")) ;; Ada specs and bodies
-    ("\\.adb$" (".ads")) ;; GNAT filename conventions
-    )
-  "*Alist of extensions to find given the current file's extension.
-
-This list should contain the most used extensions before the others,
-since the search algorithm searches sequentially through each directory
-specified in `ada-search-directories'.  If a file is not found, a new one
-is created with the first matching extension (`.adb' yields `.ads').
-")
 
 (defvar modula2-other-file-alist
   '(
@@ -496,7 +481,7 @@ If optional IN-OTHER-WINDOW is non-nil, find the file in another window."
             (ff-find-file pathname in-other-window t)))
 
          (t                        ;; don't create the file, just whinge
-          (message "no file found for %s" fname))))
+          (message "No file found for %s" fname))))
 
        (t                          ;; matching file found
         nil))))
@@ -560,17 +545,17 @@ Arguments: (search-dirs fname-stub &optional suffix-list)
       (setq filename (concat fname-stub this-suffix))
 
       (if (not ff-quiet-mode)
-          (message "finding buffer %s..." filename))
+          (message "Finding buffer %s..." filename))
 
-      (if (bufferp (get-buffer filename))
-          (setq found filename))
+      (if (bufferp (get-file-buffer filename))
+          (setq found (buffer-file-name (get-file-buffer filename))))
 
       (setq blist (buffer-list))
       (setq buf (buffer-name (car blist)))
       (while (and blist (not found))
 
         (if (string-match (concat filename "<[0-9]+>") buf)
-            (setq found buf))
+            (setq found (buffer-file-name (car blist))))
 
         (setq blist (cdr blist))
         (setq buf (buffer-name (car blist))))
@@ -602,7 +587,7 @@ Arguments: (search-dirs fname-stub &optional suffix-list)
               (setq file (concat dir "/" filename))
               
               (if (not ff-quiet-mode)
-                  (message "finding %s..." file))
+                  (message "Finding %s..." file))
 
               (if (file-exists-p file)
                   (setq found file))
@@ -876,8 +861,7 @@ and the name of the file passed in."
 
 (defvar ff-function-name nil "Name of the function we are in.")
 
-(defvar ada-procedure-start-regexp)
-(defvar ada-package-start-regexp)
+(eval-when-compile (require 'ada-mode))
 
 ;; bind with (setq ff-pre-load-hooks 'ff-which-function-are-we-in)
 ;;

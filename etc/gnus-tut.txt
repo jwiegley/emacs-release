@@ -186,7 +186,7 @@ have all changed.  If you have some code lying around that depend on
 these, or change these, you'll have to re-write your code.
 
 Old hilit19 code does not work at all.  In fact, you should probably
-remove all hihit code from all the Gnus hooks
+remove all hilit code from all the Gnus hooks
 (`gnus-group-prepare-hook', `gnus-summary-prepare-hook' and
 `gnus-summary-article-hook').  (Well, at the very least the first
 two.)  Gnus provides various integrated functions for highlighting,
@@ -272,7 +272,7 @@ Subject: Bugs & stuff
 Message-ID: <lars-doc7@eyesore.no>
 
 If you want to report a bug, please type `M-x gnus-bug'.  This will
-give me a precice overview of your Gnus and Emacs version numbers,
+give me a precise overview of your Gnus and Emacs version numbers,
 along with a look at all Gnus variables you have changed.
 
 Du not expect a reply back, but your bug should be fixed in the next

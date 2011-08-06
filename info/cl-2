@@ -1,5 +1,5 @@
-This is Info file ../info/cl, produced by Makeinfo-1.64 from the input
-file cl.texi.
+This is Info file ../info/cl, produced by Makeinfo version 1.68 from
+the input file cl.texi.
 
    This file documents the GNU Emacs Common Lisp emulation package.
 
@@ -352,7 +352,7 @@ variables in various ways.
    Modern Common Lisp defines a second, independent way to specify the
 `setf' behavior of a function, namely "`setf' functions" whose names
 are lists `(setf NAME)' rather than symbols.  For example, `(defun
-(setf foo) ...)' defines the function that is used when `setf' is
+(setf foo) ...)'  defines the function that is used when `setf' is
 applied to `foo'.  This package does not currently support `setf'
 functions.  In particular, it is a compile-time error to use `setf' on
 a form which has not already been `defsetf''d or otherwise declared; in
@@ -685,8 +685,8 @@ and `cond' forms.
      or `otherwise', enclose the symbol in a list.)
 
      For example, this expression reads a keystroke, then does one of
-     four things depending on whether it is an `a', a `b', a RET or
-     LFD, or anything else.
+     four things depending on whether it is an `a', a `b', a <RET> or
+     `C-j', or anything else.
 
           (case (read-char)
             (?a (do-a-thing))
@@ -837,7 +837,7 @@ looping constructs to complement Emacs Lisp's basic `while' loop.
      VAR has no STEP form, it is bound to its INIT value but not
      otherwise modified during the `do' loop (unless the code
      explicitly modifies it); this case is just a shorthand for putting
-     a `(let ((VAR INIT)) ...)' around the loop.  If INIT is also
+     a `(let ((VAR INIT)) ...)'  around the loop.  If INIT is also
      omitted it defaults to `nil', and in this case a plain `VAR' can
      be used in place of `(VAR)', again following the analogy with
      `let'.

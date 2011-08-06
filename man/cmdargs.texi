@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Command Arguments, Antinews, Service, Top
 @appendix Command Line Arguments
@@ -17,10 +17,12 @@ ordinary editing.
   Arguments starting with @samp{-} are @dfn{options}.  Other arguments
 specify files to visit.  Emacs visits the specified files while it
 starts up.  The last file name on your command line becomes the current
-buffer; the other files are also present in other buffers.
+buffer; the other files are also present in other buffers.  As usual,
+the special argument @samp{--} says that all subsequent arguments
+are file names, not options, even if they start with @samp{-}.
 
-  You can use options to specify various other things, such as the size
-and position of the X window Emacs uses, its colors, and so on.  A few
+  Emacs command options can specify many things, such as the size and
+position of the X window Emacs uses, its colors, and so on.  A few
 options support advanced usage, such as running Lisp functions on files
 in batch mode.  The sections of this chapter describe the available
 options, arranged according to their purpose.
@@ -111,7 +113,7 @@ define new ones, by reading and setting this variable.
 @node Initial Options
 @appendixsec Initial Options
 
-  The initial options specify parameter for the Emacs session.  This
+  The initial options specify parameters for the Emacs session.  This
 section describes the more general initial options; some other options
 specifically related to X Windows appear in the following sections.
 
@@ -235,6 +237,7 @@ file and delete it.
 
 @node Environment
 @appendixsec Environment Variables
+@cindex environment variables
 
 This appendix describes how Emacs uses environment variables.  An
 environment variable is a string passed from the operating system to
@@ -264,8 +267,8 @@ use of a large number of environment variables from the X library.  See
 the X documentation for more information.
 
 @menu
-* General Variables::     Environment variables that all versions of Emacs use.
-* Misc Variables::        Certain system specific variables.
+* General Variables::   Environment variables that all versions of Emacs use.
+* Misc Variables::      Certain system-specific variables.
 @end menu
 
 @node General Variables
@@ -276,10 +279,10 @@ the X documentation for more information.
 The name of a file used to archive news articles posted with the @sc{gnus}
 package.
 @item CDPATH
-Used by the @code{cd} command.
-@comment I WISH I KNEW WHAT IT WAS USED FOR!
+Used by the @code{cd} command to search for the directory you specify,
+when you specify a relative directory name.
 @item DOMAINNAME
-The name of the internet domain that the machine running Emacs is
+The name of the Internet domain that the machine running Emacs is
 located in.  Used by the @sc{gnus} package.
 @item EMACSDATA
 Used to initialize the variable @code{data-directory} used to locate the
@@ -314,12 +317,12 @@ The name of the machine that Emacs is running on.
 A colon-separated list of directories.  Used by the @code{complete} package
 to search for files.
 @item INFOPATH
-A colon separated list of directories holding info files.  Setting this
+A colon-separated list of directories holding info files.  Setting this
 variable overrides the setting in @file{paths.el} when Emacs was built.
 @item LOGNAME
 The user's login name.  See also @code{USER}.
 @item MAIL
-The name of the user's system mail box.
+The name of the user's system mail inbox.
 @item MAILRC
 Name of file containing mail aliases.  This defaults to
 @file{~/.mailrc}.
@@ -373,7 +376,7 @@ Names}).
 @end table
 
 @node Misc Variables
-@appendixsubsec Misc Variables
+@appendixsubsec Miscellaneous Variables
 
 These variables are used only on particular configurations:
 
@@ -488,7 +491,7 @@ Use font @var{name} as the default font.
   Under X, each font has a long name which consists of eleven words or
 numbers, separated by dashes.  Some fonts also have shorter
 nicknames---@samp{9x15} is such a nickname.  You can use either kind of
-name.  You can use wild card patterns for the font name; then Emacs lets
+name.  You can use wildcard patterns for the font name; then Emacs lets
 X choose one of the fonts that match the pattern.  Here is an example,
 which happens to specify the font whose nickname is @samp{6x13}:
 
@@ -528,10 +531,11 @@ long font names have two hyphens in a row at this point.
 @item pixels
 This is the font height, in pixels.
 @item height
-This is the font height on the screen, measured in printer's points
-(approximately 1/72 of an inch), times ten.  For a given vertical
-resolution, @var{height} and @var{pixels} are proportional; therefore,
-it is common to specify just one of them and use @samp{*} for the other.
+This is the font height on the screen, measured in tenths of a printer's
+point---approximately 1/720 of an inch.  In other words, it is the point
+size of the font, times ten.  For a given vertical resolution,
+@var{height} and @var{pixels} are proportional; therefore, it is common
+to specify just one of them and use @samp{*} for the other.
 @item horiz
 This is the horizontal resolution, in pixels per inch, of the screen for
 which the font is intended.
@@ -544,17 +548,17 @@ specify @samp{*} for this and @var{horiz}.
 This is @samp{m} (monospace), @samp{p} (proportional) or @samp{c}
 (character cell).  Emacs can use @samp{m} and @samp{c} fonts.
 @item width
-This is the average character width, in pixels, times ten.
+This is the average character width, in pixels, multiplied by ten.
 @item charset
 This is the character set that the font depicts.
 Normally you should use @samp{iso8859-1}.
 @end table
 
-  Use only fixed width fonts---that is, fonts in which all characters
+  Use only fixed-width fonts---that is, fonts in which all characters
 have the same width; Emacs cannot yet handle display properly for
-variable width fonts.  Any font with @samp{m} or @samp{c} in the
-@var{spacing} field of the long name is a fixed width font.  Here's how
-to use the @code{xlsfonts} program to list all the fixed width fonts
+variable-width fonts.  Any font with @samp{m} or @samp{c} in the
+@var{spacing} field of the long name is a fixed-width font.  Here's how
+to use the @code{xlsfonts} program to list all the fixed-width fonts
 available on your system:
 
 @example
@@ -883,7 +887,7 @@ Width in pixels of the external border.
 Color name for text cursor (point).
 
 @item @code{font} (class @code{Font})
-Font name for text.
+Font name for text (or fontset name, @pxref{Fontsets}).
 
 @item @code{foreground} (class @code{Foreground})
 Color name for text.
@@ -906,6 +910,10 @@ Width in pixels of the internal border.
 
 @item @code{menuBar} (class @code{MenuBar})
 Give frames menu bars if @samp{on}; don't have menu bars if @samp{off}.
+
+@item @code{minibuffer} (class @code{Minibuffer})
+If @samp{none}, don't make a minibuffer in this frame.
+It will use a separate minibuffer frame instead.
 
 @item @code{paneFont} (class @code{Font})
 Font name for menu pane titles, in non-toolkit versions of Emacs.
@@ -961,32 +969,35 @@ Emacs.pane.menubar.@var{resource}:  @var{value}
 @end example
 
 @noindent
-For example, to specify the font @samp{8x16} for the menu bar items,
+For example, to specify the font @samp{8x16} for the menu-bar items,
 write this:
 
 @example
 Emacs.pane.menubar.font:  8x16
 @end example
 
-  Resources for @emph{non-menubar} toolkit popup menus have
+@noindent
+Resources for @emph{non-menubar} toolkit pop-up menus have
 @samp{menu*}, in like fashion.  For example, to specify the font
-@samp{8x16} for the popup menu items, write this:
+@samp{8x16} for the pop-up menu items, write this:
 
 @example
 Emacs.menu*.font:	8x16
 @end example
 
-  For dialog boxes, use @samp{dialog} instead of @samp{menu}:
+@noindent
+For dialog boxes, use @samp{dialog} instead of @samp{menu}:
 
 @example
 Emacs.dialog*.font:	8x16
 @end example
 
-  Experience shows that on some systems you may need to add
+@noindent
+Experience shows that on some systems you may need to add
 @samp{shell.}@: before the @samp{pane.menubar} or @samp{menu*}.  On
 some other systems, you must not add @samp{shell.}.
 
-  Here is a list of the specific resources for menu bars and popup menus:
+  Here is a list of the specific resources for menu bars and pop-up menus:
 
 @table @code
 @item font
@@ -1029,7 +1040,7 @@ name is the same as the menu item string.  For example, the word
 @samp{emacs.pane.menubar.Files}.  Most likely, you want to specify the
 same resources for the whole menu bar.  To do this, use @samp{*} instead
 of a specific subwidget name.  For example, to specify the font
-@samp{8x16} for the menu bar items, write this:
+@samp{8x16} for the menu-bar items, write this:
 
 @smallexample
 Emacs.pane.menubar.*.fontList:  8x16
@@ -1055,7 +1066,8 @@ item:
 Emacs.pane.menubar.popup_*.Files.Save Buffer.fontList: 8x16
 @end smallexample
 
-  For an item in a second-level submenu, such as @samp{Check Message}
+@noindent
+For an item in a second-level submenu, such as @samp{Check Message}
 under @samp{Spell} under @samp{Edit}, the resource fits this template:
 
 @smallexample
@@ -1069,7 +1081,7 @@ For example,
 Emacs.pane.menubar.popup_*.popup_*.Spell.Check Message: @var{value}
 @end smallexample
   
-  It's impossible to specify a resource for all the menu bar items
+  It's impossible to specify a resource for all the menu-bar items
 without also specifying it for the submenus as well.  So if you want the
 submenu items to look different from the menu bar itself, you must ask
 for that in two steps.  First, specify the resource for all of them;
@@ -1080,15 +1092,19 @@ Emacs.pane.menubar.*.fontList:  8x16
 Emacs.pane.menubar.popup_*.fontList: 8x16
 @end smallexample
 
-  For toolkit popup menus, use @samp{menu*} instead of
+@noindent
+For toolkit pop-up menus, use @samp{menu*} instead of
 @samp{pane.menubar}.  For example, to specify the font @samp{8x16} for
-the popup menu items, write this:
+the pop-up menu items, write this:
 
 @smallexample
 Emacs.menu*.fontList:  8x16
 @end smallexample
 
-  Here is a list of the specific resources for menu bars and popup menus:
+@iftex
+@medbreak
+@end iftex
+  Here is a list of the specific resources for menu bars and pop-up menus:
 
 @table @code
 @item armColor

@@ -1,10 +1,10 @@
-This is Info file ../info/viper, produced by Makeinfo-1.63 from the
+This is Info file ../info/viper, produced by Makeinfo-1.64 from the
 input file viper.texi.
 
 Distribution
 ************
 
-Copyright (C) 1995, 1996 Free Software Foundation, Inc.
+Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,12 +32,16 @@ descriptions:
      it is a VI Plan for Emacs Rescue
      and/or a venomous VI PERil.
 
-   Technically speaking, Viper is a Vi emulation package for Emacs 19
-and XEmacs 19. Because of its reliance on minor mode keymaps, Viper
-will not work under Emacs 18. Viper implements most Vi and Ex commands.
-It gives you the best of both worlds: Vi keystrokes for editing
-combined with the GNU Emacs environment. Viper also fixes some common
-complaints with Vi commands.  This manual describes Viper,
+   Technically speaking, Viper is a Vi emulation package for GNU Emacs
+and XEmacs. It implements all Vi and Ex commands, occasionally
+improving on them and adding many new features. It gives the user the
+best of both worlds: Vi keystrokes for editing combined with the power
+of Emacs environment.
+
+   Viper emulates Vi at several levels, from the one that closely
+follows Vi conventions to the one that departs from many of them. It
+has many customizable options, which can be used to tailor Viper to the
+work habits of various users.  This manual describes Viper,
 concentrating on the differences from Vi and new features of Viper.
 
    Viper, formerly known as VIP-19, was written by Michael Kifer.  It
@@ -166,10 +170,10 @@ executed. *Note Major Modes: (emacs)Major Modes, for more information.
 
    A buffer can also have a "minor mode". Minor modes are options that
 you can use or not. A buffer in `text-mode' can have `auto-fill-mode'
-as minor mode, which can be turned off or on at any time. In Emacs 19, a
-minor mode may have it own keymap, which overrides the local keymap when
-the minor mode is turned on.  For more information, *note Minor Modes:
-(emacs)Minor Modes.
+as minor mode, which can be turned off or on at any time. In Emacs, a
+minor mode may have it own keymap, which overrides the local keymap
+when the minor mode is turned on.  For more information, *note Minor
+Modes: (emacs)Minor Modes.
 
    Viper is implemented as a collection of minor modes. Different minor
 modes are involved when Viper emulates Vi command mode, Vi insert mode,
@@ -182,7 +186,7 @@ located on each side of the Space bar; it is used in a manner similar
 to the Control key, e.g., `M-x' means typing `x' while holding the Meta
 key down.  For keyboards that do not have a Meta key, ESC is used as
 Meta.  Thus `M-x' is typed as `ESC x'. Viper uses ESC to switch from
-Insert state to Vi state. Therefore Viper defines `_' as its Meta key
+Insert state to Vi state. Therefore Viper defines `C-\' as its Meta key
 in Vi state. *Note Vi State::, for more info.
 
    Emacs is structured as a lisp interpreter around a C core. Emacs keys
@@ -195,55 +199,40 @@ File: viper,  Node: Loading Viper,  Next: States in Viper,  Prev: Emacs Prelimin
 Loading Viper
 =============
 
-   First, make sure that all six Viper files `viper*.el' are somewhere
-on Emacs "load path". The load path is a list of directories where Emacs
-looks for its Lisp code; it is similar to Unix environment variable
-PATH.  The load path is determined by the Lisp variable `load-path'.
+   The most common way to load it automatically is to include the
+following lines (in the given order!):
 
-   Type `C-h v load-path RET' to check the current load path of your
-Emacs. (Here and later, `RET' stands for carriage return.) If the files
-`viper*.el' are not in any directory on the load path, you should
-create your own directory and put it on the load path; then put
-`viper*.el' in that directory.  To put a new directory, say
-`~/emacslib', on your load path, add the following line at the
-beginning of your `~/.emacs' file:
-     (setq load-path (cons "~/emacslib" load-path))
-   It is recommended that you compile `viper.el' by running
-     make all
-   in the directory where Viper was unpacked. The best way to ensure
-that Viper is installed properly is to run
-     make install
-   in the directory where Viper was unpacked. See README in the Viper
-distribution for the details on which modifications to the make file
-may be necessary.
-
-   Once Viper is settled on the load path, the most common way to load
-it automatically is to include the line:
-
+     (setq viper-mode t)
      (require 'viper)
 
 in your `~/.emacs' file.  The `.emacs' file is placed in your home
-directory and it will be executed every time you invoke Emacs.  Viper
-also uses the file `~/.vip' for Viper-specific customization.  If you
-wish to be in Vi command state whenever this is appropriate, you can
-include the following line in your `.vip':
-     (setq vip-always t)
+directory and it is be executed every time you invoke Emacs. This is
+the place where all general Emacs customization takes place. Beginning
+with version 20.0, Emacsen have an interactive interface, which
+simplifies the job of customization significantly.
 
-(*Note Vi State::, for the explanation of Vi mode.)
+   Viper also uses the file `~/.viper' for Viper-specific customization.
+If you wish to be in Vi command state whenever this is deemed
+appropriate by the author, you can include the following line in your
+`.viper':
+     (setq viper-always t)
+
+(*Note Vi State::, for the explanation of Vi command state.)
+
+   The location of Viper customization file can be changed by setting
+the variable `viper-custom-file-name' in `.emacs' *prior* to loading
+Viper.
 
    Once invoked, Viper will arrange to bring up Emacs buffers in Vi
 state whenever this makes sense.  *Note Packages that Change Keymaps::,
 to find out when forcing Vi command state on a buffer may be
 counter-productive.
 
-   Even if your `.emacs' and `.vip' files do not contain any of the
-above lines, you can still load Viper and enter Vi state by typing the
-following from within Emacs:
+   Even if your `.emacs' and `.viper' files do not contain any of the
+above lines, you can still load Viper and enter Vi command state by
+typing the following from within Emacs:
 
-     M-x load-library RET viper RET
      M-x viper-mode
-
-Ask your local Emacs administrator if this fails to work.
 
    When Emacs first comes up, if you have not specified a file on the
 command line, it will show the `*scratch*' buffer, in the `Lisp
@@ -252,6 +241,11 @@ by using `:e', `:vi', or `v' commands.  (*Note File and Buffer
 Handling::, for more information on `v' and other new commands that, in
 many cases, are more convenient than `:e', `:vi', and similar old-style
 Vi commands.)
+
+   Finally, if at some point you would want to get de-Viperize your
+running copy of Emacs after Viper has been loaded, the command `M-x
+viper-go-away' will do it for you. The function `toggle-viper-mode'
+toggles Viperization of Emacs on and off.
 
 
 File: viper,  Node: States in Viper,  Next: The Minibuffer,  Prev: Loading Viper,  Up: Overview
@@ -262,7 +256,7 @@ States in Viper
    Viper has four states, Emacs, Vi, Insert, and Replace.
 
 `Emacs state'
-     This is the mode plain vanilla Emacs is normally in. After you
+     This is the state plain vanilla Emacs is normally in. After you
      have loaded Viper, `C-z' will normally take you to Vi command
      state. Another `C-z' will take you back to Emacs state.  This
      toggle key can be changed, *note Customization::. You can also
@@ -279,15 +273,15 @@ States in Viper
      This is the Vi command mode. Any of the Vi commands, such as `i,
      o, a', ..., will take you to Insert state. All Vi commands may be
      used in this mode. Most Ex commands can also be used.  For a full
-     list of Ex commands supported by Viper, type `:' and then `TAB'.
-     To get help on any issue, including the Ex commands, type `:help'.
+     list of Ex commands supported by Viper, type `:' and then TAB. To
+     get help on any issue, including the Ex commands, type `:help'.
      This will invoke Viper Info (if it is installed). Then typing `i'
      will prompt you for a topic to search in the index. Note, to
      search for Ex commands in the index, you should start them with a
      "`:'", e.g., `:WW'.
 
 `Insert state'
-     Insert state is the Vi insertion mode. `ESC' will take you back to
+     Insert state is the Vi insertion mode. ESC will take you back to
      Vi state. Insert state editing can be done, including
      auto-indentation. By default, Viper disables Emacs keybindings in
      Insert state.
@@ -352,7 +346,7 @@ Emacs State
 
    You will be in this mode only by accident (hopefully). This is the
 state Emacs is normally in (imagine!!). Now leave it as soon as
-possible by typing `C-z'. The you will be in Vi state (sigh of relief)
+possible by typing `C-z'. Then you will be in Vi state (sigh of relief)
 :-).
 
    Emacs state is actually a Viperism to denote all the major and minor
@@ -372,10 +366,9 @@ because major modes designed for editing files, such as cc-mode or
 latex-mode, use key sequences that begin with `C-x' and `C-c'.
 
    There is also a key that lets you temporarily escape to Vi command
-state from Emacs state: typing `M-C-z' (or `ESC C-z') will let you
-execute a single Vi command while staying in Viper's Emacs state.  At
-present, this works only for 1-character Vi commands (and for some
-complex commands).
+state from Emacs or Insert states: typing `C-c \' will let you execute a
+single Vi command while staying in Viper's Emacs or Insert state.  In
+Insert state, the same can also be achieved by typing `C-z'.
 
 
 File: viper,  Node: Vi State,  Next: Insert State,  Prev: Emacs State,  Up: States in Viper
@@ -407,17 +400,25 @@ exceptions are:
      functionality and no key-binding. Recursive edits are indicated by
      `[]' brackets framing the modes on the mode line.  *Note Recursive
      Edit: (emacs)Recursive Edit.  At user level 1, `C-g' is bound to
-     `vip-info-on-file' function instead.
+     `viper-info-on-file' function instead.
 
-`Underscore'
-     Viper uses `ESC' as a switch between Insert and Vi states. Emacs
-     uses `ESC' for Meta. We need a Meta key to call the Meta key
-     functions such as `M-x function name'. The underscore key, `_',
-     was chosen, since it is the only reasonable, free Vi key left.
-     Thus, in Vi state, to get `M-x', you should type `_x' (if the
-     keyboard has no Meta key).  It is possible to use `ESC' as Meta,
-     but then you cannot press `ESC' multiple times in Vi state. *Note
-     Customization::, to find out how to rebind ESC to be Meta.
+`C-\'
+     Viper uses ESC as a switch between Insert and Vi states. Emacs uses
+     ESC for Meta. The Meta key is very important in Emacs since many
+     finctions are accessible only via that key as `M-x function-name'.
+     Therefore, we need to simulate it somehow.  In Viper's Vi, Insert,
+     and Replace states, the meta key is set to be `C-\'.  Thus, to get
+     `M-x', you should type `C-\ x' (if the keyboard has no Meta key).
+     This works both in the Vi command state and in the Insert and
+     Replace states.  In Vi command state, you can also use `\ ESC' as
+     the meta key.
+
+     Note: Emacs binds `C-\' to a function that offers to change the
+     keyboard input method in the multilingual environment. Viper
+     overrides this binding. However, it is still possible to switch
+     the input method by typing `\ C-\' in the Vi command state and
+     `C-z \ C-\' in the Insert state.  Or you can use the MULE menu in
+     the menubar.
 
 Other differences are mostly improvements. The ones you should know
 about are:
@@ -426,7 +427,7 @@ about are:
      `u' will undo. Undo can be repeated by the `.' key. Undo itself
      can be undone. Another `u' will change the direction. The presence
      of repeatable undo means that `U', undoing lines, is not very
-     important. Therefore, `U' also calls `vip-undo'.
+     important. Therefore, `U' also calls `viper-undo'.
 
 `Counts'
      Most commands, `~', `[[', `p', `/', ..., etc., take counts.
@@ -437,9 +438,9 @@ about are:
      escapes `\u', `\L', ..., etc. *Note Regular Expressions:
      (emacs)Regular Expressions, for details.  Files specified to `:e'
      use `csh' regular expressions (globbing, wildcards, what have you).
-     However, the function `vip-toggle-search-style', bound to `C-c /',
-     lets the user switch from search with regular expressions to plain
-     vanilla search and vice versa. It also lets one switch from
+     However, the function `viper-toggle-search-style', bound to `C-c
+     /', lets the user switch from search with regular expressions to
+     plain vanilla search and vice versa. It also lets one switch from
      case-sensitive search to case-insensitive and back.  *Note Viper
      Specials::, for more details.
 
@@ -452,12 +453,12 @@ about are:
      Emacs provides in its prompts. (This is usually convenient, but
      occasionally the prompt may suggest a wrong path name for you.) If
      you see a prompt `/usr/foo/' and you wish to edit the file
-     `~/.vip', you don't have to erase the prompt. Instead, simply
+     `~/.viper', you don't have to erase the prompt. Instead, simply
      continue typing what you need. Emacs will interpret
-     `/usr/foo/~/.vip' correctly. Similarly, if the prompt is `~/foo/'
-     and you need to get to `/bar/file', keep typing. Emacs interprets
-     `~/foo//bar/' as `/bar/file', since when it sees `//', it
-     understands that `~/foo/' is to be discarded.
+     `/usr/foo/~/.viper' correctly. Similarly, if the prompt is
+     `~/foo/' and you need to get to `/bar/file', keep typing. Emacs
+     interprets `~/foo//bar/' as `/bar/file', since when it sees `//',
+     it understands that `~/foo/' is to be discarded.
 
      The command `:cd' will change the default directory for the
      current buffer. The command `:e' will interpret the filename
@@ -468,16 +469,16 @@ about are:
      windows).
 
      When applicable, Ex commands support file completion and history.
-     This means that by typing a partial file name and then `TAB',
-     Emacs will try to complete the name or it will offer a menu of
-     possible completions.  This works similarly to Tcsh and extends
-     the behavior of Csh. While Emacs is waiting for a file name, you
-     can type `M-p' to get the previous file name you typed. Repeatedly
+     This means that by typing a partial file name and then TAB, Emacs
+     will try to complete the name or it will offer a menu of possible
+     completions.  This works similarly to Tcsh and extends the
+     behavior of Csh. While Emacs is waiting for a file name, you can
+     type `M-p' to get the previous file name you typed. Repeatedly
      typing `M-p' and `M-n' will let you browse through the file
      history.
 
      Like file names, partially typed Ex commands can be completed by
-     typing `TAB', and Viper keeps the history of Ex commands. After
+     typing TAB, and Viper keeps the history of Ex commands. After
      typing `:', you can browse through the previously entered Ex
      commands by typing `M-p' and `M-n'.  Viper tries to rationalize
      when it puts Ex commands on the history list.  For instance, if
@@ -538,15 +539,8 @@ M-n' while in Insert or Replace state. (This feature is disabled in the
 minibuffer: the above keys are usually bound to other histories, which
 are more appropriate in the minibuffer.)
 
-   You can call Meta functions from Insert state. The Vi-to-Emacs
-toggle key, normally `C-z', is bound to Meta in Insert state. Thus
-`M-x' is typed as `C-zx'. The key `_' will now insert itself--it is not
-a Meta key in Insert state. (It is well understood that switching Meta
-keys around is inconvenient. However, there seems to be no way around
-this problem, short of changing Vi ESC key to something else. *Note
-Customization::, for the information on `vip-ESC-key', which can be
-used to free up `ESC' and designate some other key to do escape from
-Insert state to Vi state.)
+   You can call Meta functions from Insert state. As in Vi state, the
+Meta key is `C-\'. Thus `M-x' is typed as `C-\ x'.
 
    Other Emacs commands that are useful in Insert state are `C-e' and
 `C-a', which move the cursor to the end and the beginning of the
@@ -554,8 +548,13 @@ current line, respectively. You can also use `M-f' and `M-b', which
 move the cursor forward (or backward) one word.  If your display has a
 Meta key, these functions are invoked by holding the Meta key and then
 typing `f' and `b', respectively. On displays without the Meta key,
-these functions are invoked by typing `C-z f' and `C-z b' (`C-z'
+these functions are invoked by typing `C-\ f' and `C-\ b' (`C-\'
 simulates the Meta key in Insert state, as explained above).
+
+   The key `C-z' is sometimes also useful in Insert state: it allows you
+to execute a single command in Vi state without leaving the Insert
+state!  For instance, `C-z d2w' will delete the next two words without
+leaving the Insert state.
 
    When Viper is in Insert state, you will see <I> in the mode line.
 
@@ -570,7 +569,7 @@ Replace State
 mode line to let you know which state is in effect. If Replace state is
 entered through `R', Viper stays in that state until the user hits ESC.
 If this state is entered via the other replacement commands, then
-Replace state is in effect until you hit `ESC' or until you cross the
+Replace state is in effect until you hit ESC or until you cross the
 rightmost boundary of the replacement region. In the latter case, Viper
 changes its state from Replace to Insert (which you will notice by the
 change in the mode line).
@@ -635,7 +634,7 @@ use the replace mode.  Initially, the Minibuffer comes up in Insert
 state.
 
    Some users prefer plain Emacs bindings in the Minibuffer. To this
-end, set `vip-vi-style-in-minibuffer' to `nil' in `.vip'.  *Note
+end, set `viper-vi-style-in-minibuffer' to `nil' in `.viper'.  *Note
 Customization::, to learn how to do this.
 
    When the Minibuffer changes Viper states, you will notice that the
@@ -665,8 +664,8 @@ Viper elements are common over all the files.
      Command repetitions are common over files. Typing `!!' will repeat
      the last `!' command whichever file it was issued from.  Typing
      `.' will repeat the last command from any file, and searches will
-     repeat the last search. Ex commands can be repeated by typing
-     `:RET'.  Note: in some rare cases, that `:RET' may do something
+     repeat the last search. Ex commands can be repeated by typing `:
+     RET'.  Note: in some rare cases, that `: RET' may do something
      dangerous.  However, usually its effect can be undone by typing
      `u'.
 
@@ -694,8 +693,8 @@ Viper elements are common over all the files.
      to the file name in any `:e', `:r', `:w', etc., command (in Emacs,
      each buffer has a current directory).  This directory is inserted
      in the Minibuffer once you type space after `:e, r', etc. Viper
-     also supports completion of file names and Ex commands (`TAB'),
-     and it keeps track of command and file history (`M-p', `M-n').
+     also supports completion of file names and Ex commands (TAB), and
+     it keeps track of command and file history (`M-p', `M-n').
      Absolute filenames are required less often in Viper.
 
      You should be aware that Emacs interprets `/foo/bar//bla' as
@@ -807,7 +806,7 @@ sense.
 (*Note Multiple Files in Viper::). In addition to the files, Emacs has
 buffers. These can be seen in the `:args' list and switched using
 `:next' if you type `:set ex-cycle-through-non-files t', or specify
-`(setq ex-cycle-through-non-files t)' in your `.vip' file. *Note
+`(setq ex-cycle-through-non-files t)' in your `.viper' file. *Note
 Customization::, for details.
 
 
@@ -888,7 +887,7 @@ and remembered (This is called "learn mode" in some editors.)
 `register' is any character from `a' through `z'. Then you can execute
 this macro using `@register'. It is, of course, possible to yank some
 text into a register and execute it using `@register'. Typing `@@',
-`@RET', or `@LF' will execute the last macro that was executed using
+`@RET', or `@C-j' will execute the last macro that was executed using
 `@register'.
 
    Viper will automatically lowercase the register, so that pressing the
@@ -917,7 +916,7 @@ File: viper,  Node: Completion,  Next: Improved Search,  Prev: Macros and Regist
 Completion
 ==========
 
-   Completion is done when you type `TAB'. The Emacs completer does not
+   Completion is done when you type TAB. The Emacs completer does not
 grok wildcards in filenames. Once you type a wildcard, the completer
 will no longer work for that path.  Remember that Emacs interprets a
 file name of the form `/foo//bar' as `/bar' and `/foo/~/bar' as `~/bar'.
@@ -929,21 +928,21 @@ Improved Search
 ===============
 
    Viper provides buffer search, the ability to search the buffer for a
-region under the cursor. You have to turn this on in `.vip' either by
+region under the cursor. You have to turn this on in `.viper' either by
 calling
 
-     (vip-buffer-search-enable)
+     (viper-buffer-search-enable)
 
-or by setting `vip-buffer-search-char' to, say, `f3':
-     (setq vip-buffer-search-char [f3])
+or by setting `viper-buffer-search-char' to, say, `f3':
+     (setq viper-buffer-search-char [f3])
 
-If the user calls `vip-buffer-search-enable' explicitly (the first
-method), then `vip-buffer-search-char' will be set to `g'.  Regardless
-of how this feature is enabled, the key `vip-buffer-search-char' will
-take movement commands, like `w,/,e', to find a region and then search
-for the contents of that region. This command is very useful for
-searching for variable names, etc., in a program. The search can be
-repeated by `n' or reversed by `N'.
+If the user calls `viper-buffer-search-enable' explicitly (the first
+method), then `viper-buffer-search-char' will be set to `g'.
+Regardless of how this feature is enabled, the key
+`viper-buffer-search-char' will take movement commands, like `w,/,e',
+to find a region and then search for the contents of that region. This
+command is very useful for searching for variable names, etc., in a
+program. The search can be repeated by `n' or reversed by `N'.
 
    Emacs provides incremental search. As you type the string in, the
 cursor will move to the next match. You can snarf words from the buffer
@@ -962,14 +961,18 @@ details.
    Finally, on a window display, Viper highlights search patterns as it
 finds them. This is done through what is known as *faces* in Emacs. The
 variable that controls how search patterns are highlighted is
-`vip-search-face'.  If you don't want any highlighting at all, put
-     (copy-face 'default 'vip-search-face)
+`viper-search-face'.  If you don't want any highlighting at all, put
+     (copy-face 'default 'viper-search-face)
 
-in `~/.vip'. If you want to change how patterns are highlighted, you
-will have to set the variable `vip-search-face' to some other face,
-such as `highlight'. If none of the existing faces fits the bill, you
-may have to create your own. Further details on faces can be found in
-the Emacs Lisp Manual.
+in `~/.viper'. If you want to change how patterns are highlighted, you
+will have to change `viper-search-face' to your liking.  The easiest
+way to do this is to use Emacs customization widget, which is accessible
+from the menubar.  Viper customization group is located under the
+*Emulations* customization group, which in turn is under the *Editing*
+group.  All Viper faces are grouped together under Viper's
+*Highlighting* group.
+
+   Try it: it is really simple!
 
 
 File: viper,  Node: Abbreviation Facilities,  Next: Movement and Markers,  Prev: Improved Search,  Up: Improvements over Vi
@@ -999,11 +1002,11 @@ Movement and Markers
 ====================
 
    Viper can be set free from the line-limited movements in Vi, such as
-`l' refusing to move beyond the line, `ESC' moving one character back,
-etc. These derive from Ex, which is a line editor. If your `.vip'
+`l' refusing to move beyond the line, ESC moving one character back,
+etc. These derive from Ex, which is a line editor. If your `.viper'
 contains
 
-     `(setq vip-ex-style-motion nil)'
+     `(setq viper-ex-style-motion nil)'
 
 the motion will be a true screen editor motion. One thing you must then
 watch out for is that it is possible to be on the end-of-line character.
@@ -1012,35 +1015,41 @@ on the last character.
 
    The word-movement commands `w', `e', etc., and the associated
 deletion/yanking commands, `dw', `yw', etc., can be made to understand
-Emacs syntax tables. If the variable `vip-syntax-preference' is set to
-`'strict-vi' (the default) then the meaning of *word* is the same as in
-Vi. However, if the value is `'reformed-vi' then the alphanumeric
-symbols will be those specified by the current Emacs syntax table (which
-may be different for different major modes) plus the underscore symbol
-`_'. The user can also specify the value `'emacs', which would make
-Viper use exactly the Emacs notion of word. In particular, the
-underscore may not be part of a word. Finally, if
-`vip-syntax-preference' is set to `'extended', Viper words would
-consist of characters that are classified as alphanumeric *or* as parts
-of symbols. This is convenient for writing programs and in many other
-situations.
+Emacs syntax tables. If the variable `viper-syntax-preference' is set
+to `strict-vi' then the meaning of *word* is the same as in Vi.
+However, if the value is `reformed-vi' (the default) then the
+alphanumeric symbols will be those specified by the current Emacs syntax
+table (which may be different for different major modes) plus the
+underscore symbol `_', minus some non-word symbols, like '.;,|, etc.
+Both `strict-vi' and `reformed-vi' work close to Vi in traditional
+cases, but `reformed-vi' does a better job when editing text in
+non-Latin alphabets.
 
-   `vip-syntax-preference' is a local variable, so it can have different
-values for different major modes. For instance, in programming modes it
-can have the value `'extended'. In text modes where words contain
-special characters, such as European (non-English) letters, Cyrillic
-letters, etc., the value can be `'reformed-vi' or `'emacs'.
+   The user can also specify the value `emacs', which would make Viper
+use exactly the Emacs notion of word. In particular, the underscore may
+not be part of a word. Finally, if `viper-syntax-preference' is set to
+`extended', Viper words would consist of characters that are classified
+as alphanumeric *or* as parts of symbols. This is convenient for
+writing programs and in many other situations.
 
-   Changes to `vip-syntax-preference' should be done in the hooks to
-various major modes. Furthermore, for these changes to take effect, you
-should execute `(vip-update-alphanumeric-class)' right after changing
-the value of `vip-syntax-preference'.
+   `viper-syntax-preference' is a local variable, so it can have
+different values for different major modes. For instance, in
+programming modes it can have the value `extended'. In text modes where
+words contain special characters, such as European (non-English)
+letters, Cyrillic letters, etc., the value can be `reformed-vi' or
+`emacs'.
+
+   Changes to `viper-syntax-preference' should be done in the hooks to
+various major modes by executing `viper-set-syntax-preference' as in
+the following example:
+
+     (viper-set-syntax-preference nil "emacs")
 
    The above discussion of the meaning of Viper's words concerns only
 Viper's movement commands. In regular expressions, words remain the
 same as in Emacs.  That is, the expressions `\w', `\>', `\<', etc., use
 Emacs' idea of what is a word, and they don't look into the value of
-variable `vip-syntax-preference'. This is because Viper doesn't change
+variable `viper-syntax-preference'. This is because Viper doesn't change
 syntax tables in fear of upsetting the various major modes that set
 these tables.
 

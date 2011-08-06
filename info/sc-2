@@ -1,11 +1,11 @@
-This is Info file ../info/sc, produced by Makeinfo-1.64 from the input
-file sc.texi.
+This is Info file ../info/sc, produced by Makeinfo version 1.68 from
+the input file sc.texi.
 
    This document describes the Supercite Version 3.1 package for citing
 and attributing the replies for various GNU Emacs mail and news reading
 subsystems.
 
-   Copyright (C) 1993 Barry A® Warsaw
+   Copyright (C) 1993 Barry A. Warsaw
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -86,8 +86,8 @@ encounters this preference, it begins processing a customizable list of
 attributions, contained in the variable `sc-attrib-selection-list'.
 Each element in this list contains lists of the following form:
 
-     (INFOKEY ((REGEXP ® ATTRIBUTION)
-              (REGEXP ® ATTRIBUTION)
+     (INFOKEY ((REGEXP . ATTRIBUTION)
+              (REGEXP . ATTRIBUTION)
               (...)))
 
 where INFOKEY is a key for `sc-mail-field' and REGEXP is a regular
@@ -204,7 +204,7 @@ should be ignored.  The variable `sc-name-filter-alist' is used for
 this purpose. As implied by its name, this variable is an association
 list, where each element is a cons cell of the form:
 
-     (REGEXP ® POSITION)
+     (REGEXP . POSITION)
 
 where REGEXP is a regular expression that is matched (using
 `string-match') against each element of the `From:' field's author
@@ -212,7 +212,7 @@ name.  POSITION is a position indicator, starting at zero.  Thus to
 strip out all titles of "Dr.", "Mr.", etc. from the name,
 `sc-name-filter-alist' would have an entry such as:
 
-     ("^\\(Mr\\|Mrs\\|Ms\\|Dr\\)[.]?$" ® 0)
+     ("^\\(Mr\\|Mrs\\|Ms\\|Dr\\)[.]?$" . 0)
 
 which only removes them if they appear as the first word in the name.
 The position indicator is an integer, or one of the two special symbols
@@ -387,8 +387,8 @@ is consulted to find the frame to use (`sc-cite-frame-alist',
 `sc-uncite-frame-alist', and `sc-recite-frame-alist' respectively).
 These frames can contain alists of the form:
 
-     ((INFOKEY (REGEXP ® FRAME) (REGEXP ® FRAME) ...)
-      (INFOKEY (REGEXP ® FRAME) (REGEXP ® FRAME) ...)
+     ((INFOKEY (REGEXP . FRAME) (REGEXP . FRAME) ...)
+      (INFOKEY (REGEXP . FRAME) (REGEXP . FRAME) ...)
       (...))
 
    Where INFOKEY is a key suitable for `sc-mail-field', REGEXP is a
@@ -576,7 +576,7 @@ because you typically want to run Supercite with either variable as
 `nil' or non-`nil'.  The command to toggle these variables together is
 bound on `C-c C-p C-p'.
 
-   Finally, the command `C-c C-p C-t h' (also `C-c C-p C-t ?') brings
+   Finally, the command `C-c C-p C-t h' (also `C-c C-p C-t ?')  brings
 up a Help message on the toggling keymap.
 
 
@@ -601,7 +601,7 @@ the Info Alist::.
      prompt you (with completion) for the key of the value you want to
      change.  It will then put you in the minibuffer with the key's
      current value so you can edit the value as you wish.  When you hit
-     RET, the key's value is changed.  For those of you running Emacs
+     <RET>, the key's value is changed.  For those of you running Emacs
      19, minibuffer history is kept for the values.
 
      If you choose to delete a key-value pair, Supercite will prompt
@@ -862,96 +862,96 @@ Concept Index
 
 * Menu:
 
-* .emacs file <1>:                      Overloading for Non-conforming MUAs.
-* .emacs file <2>:                      Getting Connected.
-* .emacs file <3>:                      VM with any Emacsen.
-* .emacs file <4>:                      Emacs 19 MUAs.
-* .emacs file <5>:                      Emacs 18 MUAs.
-* .emacs file:                          MH-E with any Emacsen.
-* add-hook substitute:                  Emacs 18 MUAs.
-* attribute, attributing:               Usage Overview.
-* attribution info field (sc-):         Information Keys and the Info Alist.
-* attribution list:                     Selecting an Attribution.
-* attribution string:                   Citation Elements.
-* author info field (sc-):              Information Keys and the Info Alist.
-* author names:                         Author Names.
-* autoload:                             Getting Connected.
-* citation:                             Citations.
-* citation delimiter:                   Citation Elements.
-* citation info field (sc-):            Information Keys and the Info Alist.
-* citation interface specification:     Getting Connected.
-* citation leader:                      Citation Elements.
-* citation separator:                   Citation Elements.
-* citation string:                      Citation Elements.
-* cite, citing:                         Usage Overview.
-* electric references:                  Electric References.
-* emailname info field (sc-):           Information Keys and the Info Alist.
-* entries (Regi):                       Configuring the Citation Engine.
-* filladapt <1>:                        What Supercite Does.
-* filladapt:                            Filling Cited Text.
-* filling paragraphs:                   Filling Cited Text.
-* firstname info field (sc-):           Information Keys and the Info Alist.
-* frames (Regi):                        Configuring the Citation Engine.
-* from-address info field (sc-):        Information Keys and the Info Alist.
-* gin-mode <1>:                         What Supercite Does.
-* gin-mode:                             Filling Cited Text.
-* header rewrite functions:             Reference Headers.
-* header rewrite functions, built-in:   The Built-in Header Rewrite Functions.
-* Hyperbole:                            Overloading for Non-conforming MUAs.
-* Info Alist:                           Information Keys and the Info Alist.
-* info alist:                           What Supercite Does.
+* .emacs file <1>:                       Overloading for Non-conforming MUAs.
+* .emacs file <2>:                       VM with any Emacsen.
+* .emacs file <3>:                       MH-E with any Emacsen.
+* .emacs file <4>:                       Emacs 18 MUAs.
+* .emacs file <5>:                       Emacs 19 MUAs.
+* .emacs file:                           Getting Connected.
+* add-hook substitute:                   Emacs 18 MUAs.
+* attribute, attributing:                Usage Overview.
+* attribution info field (sc-):          Information Keys and the Info Alist.
+* attribution list:                      Selecting an Attribution.
+* attribution string:                    Citation Elements.
+* author info field (sc-):               Information Keys and the Info Alist.
+* author names:                          Author Names.
+* autoload:                              Getting Connected.
+* citation:                              Citations.
+* citation delimiter:                    Citation Elements.
+* citation info field (sc-):             Information Keys and the Info Alist.
+* citation interface specification:      Getting Connected.
+* citation leader:                       Citation Elements.
+* citation separator:                    Citation Elements.
+* citation string:                       Citation Elements.
+* cite, citing:                          Usage Overview.
+* electric references:                   Electric References.
+* emailname info field (sc-):            Information Keys and the Info Alist.
+* entries (Regi):                        Configuring the Citation Engine.
+* filladapt <1>:                         Filling Cited Text.
+* filladapt:                             What Supercite Does.
+* filling paragraphs:                    Filling Cited Text.
+* firstname info field (sc-):            Information Keys and the Info Alist.
+* frames (Regi):                         Configuring the Citation Engine.
+* from-address info field (sc-):         Information Keys and the Info Alist.
+* gin-mode <1>:                          Filling Cited Text.
+* gin-mode:                              What Supercite Does.
+* header rewrite functions:              Reference Headers.
+* header rewrite functions, built-in:    The Built-in Header Rewrite Functions.
+* Hyperbole:                             Overloading for Non-conforming MUAs.
+* Info Alist:                            Information Keys and the Info Alist.
+* info alist:                            What Supercite Does.
 * information extracted from mail fields: Information Keys and the Info Alist.
-* information keys:                     Information Keys and the Info Alist.
-* initials info field (sc-):            Information Keys and the Info Alist.
-* keymap prefix:                        Reply Buffer Initialization.
-* lastname info field (sc-):            Information Keys and the Info Alist.
-* mail-citation-hook:                   MH-E with any Emacsen.
-* mailing list address:                 The Supercite Mailing List.
-* mark:                                 Getting Connected.
-* middlename-1 info field (sc-):        Information Keys and the Info Alist.
-* modeline <1>:                         Reply Buffer Initialization.
-* modeline:                             What Supercite Does.
-* MUA:                                  Introduction.
-* nested citations:                     Citations.
-* non-nested citations:                 Citations.
-* NUA:                                  Introduction.
-* nuking mail headers:                  What Supercite Does.
-* overloading <1>:                      Emacs 18 MUAs.
-* overloading:                          Overloading for Non-conforming MUAs.
-* point:                                Getting Connected.
-* reciting:                             Frames You Can Customize.
-* reference header:                     What Supercite Does.
-* reference headers:                    Reference Headers.
-* Regi:                                 Configuring the Citation Engine.
-* regi.el file:                         Version 3 Changes.
-* reply-address info field (sc-):       Information Keys and the Info Alist.
-* reporter.el file:                     Version 3 Changes.
-* sc-attribution info field:            Information Keys and the Info Alist.
-* sc-author info field:                 Information Keys and the Info Alist.
-* sc-citation info field:               Information Keys and the Info Alist.
-* sc-elec.el from version 2:            Version 3 Changes.
-* sc-emailname info field:              Information Keys and the Info Alist.
-* sc-firstname info field:              Information Keys and the Info Alist.
-* sc-from-address info field:           Information Keys and the Info Alist.
-* sc-initials info field:               Information Keys and the Info Alist.
-* sc-lastname info field:               Information Keys and the Info Alist.
-* sc-middlename-1 info field:           Information Keys and the Info Alist.
-* sc-oloads.el:                         Overloading for Non-conforming MUAs.
-* sc-reply-address info field:          Information Keys and the Info Alist.
-* sc-sender-address info field:         Information Keys and the Info Alist.
-* sc-unsupp.el file <1>:                Version 3 Changes.
-* sc-unsupp.el file:                    Emacs 18 MUAs.
-* sc.el from version 2:                 Version 3 Changes.
-* sender-address info field (sc-):      Information Keys and the Info Alist.
-* sendmail.el:                          Hints to MUA Authors.
-* sendmail.el file:                     Emacs 18 MUAs.
-* setq as a substitute for add-hook:    Emacs 18 MUAs.
-* supercite mailing list address:       The Supercite Mailing List.
-* supercite.el file:                    Version 3 Changes.
-* toggling variables:                   Variable Toggling Shortcuts.
-* unciting:                             Frames You Can Customize.
-* undo boundary:                        Reply Buffer Initialization.
-* yank:                                 Usage Overview.
+* information keys:                      Information Keys and the Info Alist.
+* initials info field (sc-):             Information Keys and the Info Alist.
+* keymap prefix:                         Reply Buffer Initialization.
+* lastname info field (sc-):             Information Keys and the Info Alist.
+* mail-citation-hook:                    MH-E with any Emacsen.
+* mailing list address:                  The Supercite Mailing List.
+* mark:                                  Getting Connected.
+* middlename-1 info field (sc-):         Information Keys and the Info Alist.
+* modeline <1>:                          Reply Buffer Initialization.
+* modeline:                              What Supercite Does.
+* MUA:                                   Introduction.
+* nested citations:                      Citations.
+* non-nested citations:                  Citations.
+* NUA:                                   Introduction.
+* nuking mail headers:                   What Supercite Does.
+* overloading <1>:                       Overloading for Non-conforming MUAs.
+* overloading:                           Emacs 18 MUAs.
+* point:                                 Getting Connected.
+* reciting:                              Frames You Can Customize.
+* reference header:                      What Supercite Does.
+* reference headers:                     Reference Headers.
+* Regi:                                  Configuring the Citation Engine.
+* regi.el file:                          Version 3 Changes.
+* reply-address info field (sc-):        Information Keys and the Info Alist.
+* reporter.el file:                      Version 3 Changes.
+* sc-attribution info field:             Information Keys and the Info Alist.
+* sc-author info field:                  Information Keys and the Info Alist.
+* sc-citation info field:                Information Keys and the Info Alist.
+* sc-elec.el from version 2:             Version 3 Changes.
+* sc-emailname info field:               Information Keys and the Info Alist.
+* sc-firstname info field:               Information Keys and the Info Alist.
+* sc-from-address info field:            Information Keys and the Info Alist.
+* sc-initials info field:                Information Keys and the Info Alist.
+* sc-lastname info field:                Information Keys and the Info Alist.
+* sc-middlename-1 info field:            Information Keys and the Info Alist.
+* sc-oloads.el:                          Overloading for Non-conforming MUAs.
+* sc-reply-address info field:           Information Keys and the Info Alist.
+* sc-sender-address info field:          Information Keys and the Info Alist.
+* sc-unsupp.el file <1>:                 Version 3 Changes.
+* sc-unsupp.el file:                     Emacs 18 MUAs.
+* sc.el from version 2:                  Version 3 Changes.
+* sender-address info field (sc-):       Information Keys and the Info Alist.
+* sendmail.el:                           Hints to MUA Authors.
+* sendmail.el file:                      Emacs 18 MUAs.
+* setq as a substitute for add-hook:     Emacs 18 MUAs.
+* supercite mailing list address:        The Supercite Mailing List.
+* supercite.el file:                     Version 3 Changes.
+* toggling variables:                    Variable Toggling Shortcuts.
+* unciting:                              Frames You Can Customize.
+* undo boundary:                         Reply Buffer Initialization.
+* yank:                                  Usage Overview.
 
 
 File: sc,  Node: Command Index,  Next: Key Index,  Prev: Concept Index,  Up: Top
@@ -964,84 +964,84 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
 
 * Menu:
 
-* add-hook <1>:                         Emacs 18 MUAs.
-* add-hook:                             MH-E with any Emacsen.
-* cite-original (sc-) <1>:              Getting Connected.
-* cite-original (sc-):                  Reply Buffer Initialization.
-* cite-region (sc-):                    Citing Commands.
-* defvar:                               Hints to MUA Authors.
-* describe (sc-):                       Miscellaneous Commands.
-* eref-abort (sc-):                     Electric References.
-* eref-exit (sc-):                      Electric References.
-* eref-goto (sc-):                      Electric References.
-* eref-jump (sc-):                      Electric References.
-* eref-next (sc-):                      Electric References.
-* eref-prev (sc-):                      Electric References.
-* eref-setn (sc-):                      Electric References.
-* eval:                                 Using Regi.
-* fill-paragraph:                       What Supercite Does.
-* header-attributed-writes (sc-):       The Built-in Header Rewrite Functions.
-* header-author-writes (sc-):           The Built-in Header Rewrite Functions.
-* header-inarticle-writes (sc-):        The Built-in Header Rewrite Functions.
-* header-on-said (sc-):                 The Built-in Header Rewrite Functions.
-* header-regarding-adds (sc-):          The Built-in Header Rewrite Functions.
-* header-verbose (sc-):                 The Built-in Header Rewrite Functions.
-* insert-citation (sc-):                Insertion Commands.
-* insert-reference (sc-):               Insertion Commands.
-* looking-at:                           Using Regi.
-* mail-field (sc-) <1>:                 Attribution Preferences.
-* mail-field (sc-):                     Information Keys and the Info Alist.
-* mail-field-query (sc-):               Mail Field Commands.
-* mail-process-headers (sc-):           Mail Field Commands.
-* mail-yank-original:                   Hints to MUA Authors.
-* no-blank-line-or-header (sc-):        The Built-in Header Rewrite Functions.
-* no-header (sc-):                      The Built-in Header Rewrite Functions.
-* open-line:                            Miscellaneous Commands.
-* open-line (sc-):                      Miscellaneous Commands.
-* perform-overloads (sc-):              GNEWS with any Emacsen.
-* recite-region (sc-):                  Citing Commands.
-* regi-interpret:                       Using Regi.
-* sc-cite-original <1>:                 Reply Buffer Initialization.
-* sc-cite-original <2>:                 What Supercite Does.
-* sc-cite-original:                     Getting Connected.
-* sc-cite-region:                       Citing Commands.
-* sc-describe:                          Miscellaneous Commands.
-* sc-eref-abort:                        Electric References.
-* sc-eref-exit:                         Electric References.
-* sc-eref-goto:                         Electric References.
-* sc-eref-jump:                         Electric References.
-* sc-eref-next:                         Electric References.
-* sc-eref-prev:                         Electric References.
-* sc-eref-setn:                         Electric References.
-* sc-header-attributed-writes:          The Built-in Header Rewrite Functions.
-* sc-header-author-writes:              The Built-in Header Rewrite Functions.
-* sc-header-inarticle-writes:           The Built-in Header Rewrite Functions.
-* sc-header-on-said:                    The Built-in Header Rewrite Functions.
-* sc-header-regarding-adds:             The Built-in Header Rewrite Functions.
-* sc-header-verbose:                    The Built-in Header Rewrite Functions.
-* sc-insert-citation:                   Insertion Commands.
-* sc-insert-reference:                  Insertion Commands.
-* sc-mail-field <1>:                    Information Keys and the Info Alist.
-* sc-mail-field:                        Attribution Preferences.
-* sc-mail-field-query:                  Mail Field Commands.
-* sc-mail-process-headers:              Mail Field Commands.
-* sc-no-blank-line-or-header:           The Built-in Header Rewrite Functions.
-* sc-no-header:                         The Built-in Header Rewrite Functions.
-* sc-open-line:                         Miscellaneous Commands.
-* sc-perform-overloads <1>:             Overloading for Non-conforming MUAs.
-* sc-perform-overloads:                 GNEWS with any Emacsen.
-* sc-recite-region:                     Citing Commands.
-* sc-setup-filladapt:                   Filling Cited Text.
-* sc-submit-bug-report <1>:             Miscellaneous Commands.
-* sc-submit-bug-report:                 Getting Connected.
-* sc-uncite-region:                     Citing Commands.
-* sc-version:                           Miscellaneous Commands.
-* set-variable:                         Variable Toggling Shortcuts.
-* setq:                                 Emacs 18 MUAs.
-* setup-filladapt (sc-):                Filling Cited Text.
-* string-match:                         Frames You Can Customize.
-* submit-bug-report (sc-) <1>:          Getting Connected.
-* submit-bug-report (sc-):              Miscellaneous Commands.
-* uncite-region (sc-):                  Citing Commands.
-* version (sc-):                        Miscellaneous Commands.
+* add-hook <1>:                          MH-E with any Emacsen.
+* add-hook:                              Emacs 18 MUAs.
+* cite-original (sc-) <1>:               Reply Buffer Initialization.
+* cite-original (sc-):                   Getting Connected.
+* cite-region (sc-):                     Citing Commands.
+* defvar:                                Hints to MUA Authors.
+* describe (sc-):                        Miscellaneous Commands.
+* eref-abort (sc-):                      Electric References.
+* eref-exit (sc-):                       Electric References.
+* eref-goto (sc-):                       Electric References.
+* eref-jump (sc-):                       Electric References.
+* eref-next (sc-):                       Electric References.
+* eref-prev (sc-):                       Electric References.
+* eref-setn (sc-):                       Electric References.
+* eval:                                  Using Regi.
+* fill-paragraph:                        What Supercite Does.
+* header-attributed-writes (sc-):        The Built-in Header Rewrite Functions.
+* header-author-writes (sc-):            The Built-in Header Rewrite Functions.
+* header-inarticle-writes (sc-):         The Built-in Header Rewrite Functions.
+* header-on-said (sc-):                  The Built-in Header Rewrite Functions.
+* header-regarding-adds (sc-):           The Built-in Header Rewrite Functions.
+* header-verbose (sc-):                  The Built-in Header Rewrite Functions.
+* insert-citation (sc-):                 Insertion Commands.
+* insert-reference (sc-):                Insertion Commands.
+* looking-at:                            Using Regi.
+* mail-field (sc-) <1>:                  Attribution Preferences.
+* mail-field (sc-):                      Information Keys and the Info Alist.
+* mail-field-query (sc-):                Mail Field Commands.
+* mail-process-headers (sc-):            Mail Field Commands.
+* mail-yank-original:                    Hints to MUA Authors.
+* no-blank-line-or-header (sc-):         The Built-in Header Rewrite Functions.
+* no-header (sc-):                       The Built-in Header Rewrite Functions.
+* open-line:                             Miscellaneous Commands.
+* open-line (sc-):                       Miscellaneous Commands.
+* perform-overloads (sc-):               GNEWS with any Emacsen.
+* recite-region (sc-):                   Citing Commands.
+* regi-interpret:                        Using Regi.
+* sc-cite-original <1>:                  Reply Buffer Initialization.
+* sc-cite-original <2>:                  Getting Connected.
+* sc-cite-original:                      What Supercite Does.
+* sc-cite-region:                        Citing Commands.
+* sc-describe:                           Miscellaneous Commands.
+* sc-eref-abort:                         Electric References.
+* sc-eref-exit:                          Electric References.
+* sc-eref-goto:                          Electric References.
+* sc-eref-jump:                          Electric References.
+* sc-eref-next:                          Electric References.
+* sc-eref-prev:                          Electric References.
+* sc-eref-setn:                          Electric References.
+* sc-header-attributed-writes:           The Built-in Header Rewrite Functions.
+* sc-header-author-writes:               The Built-in Header Rewrite Functions.
+* sc-header-inarticle-writes:            The Built-in Header Rewrite Functions.
+* sc-header-on-said:                     The Built-in Header Rewrite Functions.
+* sc-header-regarding-adds:              The Built-in Header Rewrite Functions.
+* sc-header-verbose:                     The Built-in Header Rewrite Functions.
+* sc-insert-citation:                    Insertion Commands.
+* sc-insert-reference:                   Insertion Commands.
+* sc-mail-field <1>:                     Attribution Preferences.
+* sc-mail-field:                         Information Keys and the Info Alist.
+* sc-mail-field-query:                   Mail Field Commands.
+* sc-mail-process-headers:               Mail Field Commands.
+* sc-no-blank-line-or-header:            The Built-in Header Rewrite Functions.
+* sc-no-header:                          The Built-in Header Rewrite Functions.
+* sc-open-line:                          Miscellaneous Commands.
+* sc-perform-overloads <1>:              Overloading for Non-conforming MUAs.
+* sc-perform-overloads:                  GNEWS with any Emacsen.
+* sc-recite-region:                      Citing Commands.
+* sc-setup-filladapt:                    Filling Cited Text.
+* sc-submit-bug-report <1>:              Miscellaneous Commands.
+* sc-submit-bug-report:                  Getting Connected.
+* sc-uncite-region:                      Citing Commands.
+* sc-version:                            Miscellaneous Commands.
+* set-variable:                          Variable Toggling Shortcuts.
+* setq:                                  Emacs 18 MUAs.
+* setup-filladapt (sc-):                 Filling Cited Text.
+* string-match:                          Frames You Can Customize.
+* submit-bug-report (sc-) <1>:           Miscellaneous Commands.
+* submit-bug-report (sc-):               Getting Connected.
+* uncite-region (sc-):                   Citing Commands.
+* version (sc-):                         Miscellaneous Commands.
 

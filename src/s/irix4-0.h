@@ -2,6 +2,8 @@
 
 #define USG5_3
 #define IRIX4
+/* XPointer is not defined in the older X headers  -- JPff@maths.bath.ac.uk */
+#define XPointer caddr_t
 
 #define HAVE_ALLOCA
 #ifndef NOT_C_CODE
@@ -16,9 +18,12 @@
 /* Make process_send_signal work by "typing" a signal character on the pty.  */
 #define SIGNALS_VIA_CHARACTERS
 
-/* use K&R C */
 #ifndef __GNUC__
-#define C_SWITCH_SYSTEM -cckr
+/* use K&R C */
+/* We need to increase the expression tree space with -Wf,-XNh
+   (ghazi@caip.rutgers.edu 7/8/97.)
+*/
+#define C_SWITCH_SYSTEM -cckr -Wf,-XNh3000
 #endif
 
 /* SGI has all the fancy wait stuff, but we can't include sys/wait.h

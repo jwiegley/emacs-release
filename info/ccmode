@@ -1,53 +1,56 @@
-This is Info file ../info/ccmode, produced by Makeinfo-1.63 from the
-input file cc-mode.texi.
+This is Info file ../info/ccmode, produced by Makeinfo version 1.68
+from the input file cc-mode.texi.
 
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
 
 
 Indirect:
-ccmode-1: 149
-ccmode-2: 47440
+ccmode-1: 163
+ccmode-2: 48140
+ccmode-3: 97735
 
 Tag Table:
 (Indirect)
-Node: Top149
-Node: Introduction753
-Node: Getting Connected3483
-Node: New Indentation Engine8450
-Node: Syntactic Analysis9259
-Node: Indentation Calculation12892
-Node: Minor Modes16061
-Node: Auto-newline insertion18220
-Node: Hanging Braces19613
-Node: Hanging Colons22443
-Node: Hanging Semi-colons and commas23326
-Node: Other electric commands23836
-Node: Clean-ups25234
-Node: Hungry-deletion of whitespace28360
-Node: Indentation Commands29647
-Node: Customizing Indentation33083
-Node: Interactive Customization36158
-Node: Permanent Customization38723
-Node: Styles40727
-Node: Built-in Styles41702
-Node: Adding Styles44440
-Node: File Styles45457
-Node: Advanced Customizations46497
-Node: Custom Indentation Functions47440
-Node: Custom Brace and Colon Hanging50561
-Node: Customizing Semi-colons and Commas53940
-Node: Other Special Indentations55175
-Node: Syntactic Symbols55901
-Node: Performance Issues69318
-Node: Frequently Asked Questions72664
-Node: Getting the latest cc-mode release74825
-Node: Sample .emacs File75896
-Node: Requirements78402
-Node: Limitations and Known Bugs79099
-Node: Mailing Lists and Submitting Bug Reports79817
-Node: Concept Index80902
-Node: Command Index87410
-Node: Key Index90851
-Node: Variable Index92722
+Node: Top163
+Node: Introduction738
+Node: Getting Connected3199
+Node: New Indentation Engine4346
+Node: Syntactic Analysis5158
+Node: Indentation Calculation8937
+Node: Minor Modes12079
+Node: Auto-newline insertion14219
+Node: Hanging Braces15386
+Node: Hanging Colons18656
+Node: Hanging Semi-colons and commas19520
+Node: Other electric commands20028
+Node: Clean-ups21667
+Node: Hungry-deletion of whitespace25282
+Node: Auto-fill mode interaction28009
+Node: Commands29553
+Node: Indentation Commands29721
+Node: Other Commands33447
+Node: Customizing Indentation38280
+Node: Interactive Customization41235
+Node: Permanent Customization43921
+Node: Styles47170
+Node: Built-in Styles48140
+Node: Adding Styles51221
+Node: File Styles52194
+Node: Advanced Customizations53414
+Node: Custom Indentation Functions55173
+Node: Custom Brace and Colon Hanging60101
+Node: Customizing Semi-colons and Commas63430
+Node: Other Special Indentations65170
+Node: Syntactic Symbols67134
+Node: Performance Issues85370
+Node: Frequently Asked Questions89276
+Node: Getting the latest CC Mode release91461
+Node: Sample .emacs File93093
+Node: Limitations and Known Bugs95500
+Node: Mailing Lists and Submitting Bug Reports96247
+Node: Concept Index97735
+Node: Command Index107810
+Node: Key Index114597
+Node: Variable Index117156
 
 End Tag Table

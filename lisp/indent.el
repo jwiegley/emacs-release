@@ -28,11 +28,17 @@
 
 ;;; Code:
 
-(defvar standard-indent 4 "\
-Default number of columns for margin-changing functions to indent.")
+(defgroup indent nil
+  "Indentation commands"
+  :group 'editing)
 
-(defvar indent-line-function 'indent-to-left-margin "\
-Function to indent current line.")
+(defcustom standard-indent 4
+  "*Default number of columns for margin-changing functions to indent."
+  :group 'indent
+  :type 'integer)
+
+(defvar indent-line-function 'indent-to-left-margin
+  "Function to indent current line.")
 
 (defun indent-according-to-mode ()
   "Indent line in proper way for current major mode."
@@ -50,7 +56,8 @@ Function to indent current line.")
 
 (defun insert-tab (&optional prefix-arg)
   (let ((count (prefix-numeric-value prefix-arg)))
-    (if abbrev-mode
+    (if (and abbrev-mode
+	     (eq (char-syntax (preceding-char)) ?w))
 	(expand-abbrev))
     (if indent-tabs-mode
 	(insert-char ?\t count)
@@ -84,7 +91,7 @@ only if necessary.  It leaves point at end of indentation."
   (back-to-indentation)
   (let ((cur-col (current-column)))
     (cond ((< cur-col column)
-	   (if (> (- column (* (/ cur-col tab-width) tab-width)) tab-width)
+	   (if (>= (- column (* (/ cur-col tab-width) tab-width)) tab-width)
 	       (delete-region (point)
 			      (progn (skip-chars-backward " ") (point))))
 	   (indent-to column))
@@ -332,7 +339,9 @@ An indent point is a non-whitespace character following whitespace.
 If the previous nonblank line has no indent points beyond the
 column point starts at, `tab-to-tab-stop' is done instead."
   (interactive "P")
-  (if abbrev-mode (expand-abbrev))
+  (if (and abbrev-mode
+	   (eq (char-syntax (preceding-char)) ?w))
+      (expand-abbrev))
   (let ((start-column (current-column))
 	indent)
     (save-excursion
@@ -357,10 +366,12 @@ column point starts at, `tab-to-tab-stop' is done instead."
 	  (move-marker opoint nil))
       (tab-to-tab-stop))))
 
-(defvar tab-stop-list
+(defcustom tab-stop-list
   '(8 16 24 32 40 48 56 64 72 80 88 96 104 112 120)
-  "*List of tab stop positions used by `tab-to-tab-stops'.
-This should be a list of integers, ordered from smallest to largest.")
+  "*List of tab stop positions used by `tab-to-tab-stop'.
+This should be a list of integers, ordered from smallest to largest."
+  :group 'indent
+  :type '(repeat integer))
 
 (defvar edit-tab-stops-map nil "Keymap used in `edit-tab-stops'.")
 (if edit-tab-stops-map

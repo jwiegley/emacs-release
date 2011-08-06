@@ -90,6 +90,9 @@ Lisp_Object Qmocklisp_arguments, Vmocklisp_arguments, Qmocklisp;
 Lisp_Object Qand_rest, Qand_optional;
 Lisp_Object Qdebug_on_error;
 
+/* This holds either the symbol `run-hooks' or nil.
+   It is nil at an early stage of startup, and when Emacs
+   is shutting down.  */
 Lisp_Object Vrun_hooks;
 
 /* Non-nil means record all fset's and provide's, to be undone
@@ -132,13 +135,19 @@ Lisp_Object Vdebug_on_error;
    do not enter the debugger even if Vdebug_on_errors says they should.  */
 Lisp_Object Vdebug_ignored_errors;
 
+/* Non-nil means call the debugger even if the error will be handled.  */
+Lisp_Object Vdebug_on_signal;
+
+/* Hook for edebug to use.  */
+Lisp_Object Vsignal_hook_function;
+
 /* Nonzero means enter debugger if a quit signal
    is handled by the command loop's error handler. */
 int debug_on_quit;
 
-/* The value of num_nonmacro_input_chars as of the last time we
+/* The value of num_nonmacro_input_events as of the last time we
    started to enter the debugger.  If we decide to enter the debugger
-   again when this is still equal to num_nonmacro_input_chars, then we
+   again when this is still equal to num_nonmacro_input_events, then we
    know that the debugger itself has an error, and we should just
    signal the error instead of entering an infinite loop of debugger
    invocations.  */
@@ -159,7 +168,7 @@ init_eval_once ()
   specpdl = (struct specbinding *) xmalloc (specpdl_size * sizeof (struct specbinding));
   specpdl_ptr = specpdl;
   max_specpdl_size = 600;
-  max_lisp_eval_depth = 200;
+  max_lisp_eval_depth = 300;
 
   Vrun_hooks = Qnil;
 }
@@ -173,7 +182,7 @@ init_eval ()
   Vquit_flag = Qnil;
   debug_on_next_call = 0;
   lisp_eval_depth = 0;
-  /* This is less than the initial value of num_nonmacro_input_chars.  */
+  /* This is less than the initial value of num_nonmacro_input_events.  */
   when_entered_debugger = -1;
 }
 
@@ -186,7 +195,7 @@ call_debugger (arg)
   if (specpdl_size + 40 > max_specpdl_size)
     max_specpdl_size = specpdl_size + 40;
   debug_on_next_call = 0;
-  when_entered_debugger = num_nonmacro_input_chars;
+  when_entered_debugger = num_nonmacro_input_events;
   return apply1 (Vdebugger, arg);
 }
 
@@ -649,6 +658,9 @@ for the variable is `*'.")
 {
   Lisp_Object documentation;
   
+  if (!SYMBOLP (variable))
+      return Qnil;
+
   documentation = Fget (variable, Qvariable_documentation);
   if (INTEGERP (documentation) && XINT (documentation) < 0)
     return Qt;
@@ -792,7 +804,7 @@ in place of FORM.  When a non-macro-call results, it is returned.\n\n\
 The second optional arg ENVIRONMENT species an environment of macro\n\
 definitions to shadow the loaded ones for use in file byte-compilation.")
   (form, environment)
-     register Lisp_Object form;
+     Lisp_Object form;
      Lisp_Object environment;
 {
   /* With cleanups from Hallvard Furuseth.  */
@@ -838,7 +850,10 @@ definitions to shadow the loaded ones for use in file byte-compilation.")
 	      if (EQ (tem, Qt) || EQ (tem, Qmacro))
 		/* Yes, load it and try again.  */
 		{
+		  struct gcpro gcpro1;
+		  GCPRO1 (form);
 		  do_autoload (def, sym);
+		  UNGCPRO;
 		  continue;
 		}
 	      else
@@ -1195,6 +1210,9 @@ See also the function `condition-case'.")
   extern int gc_in_progress;
   extern int waiting_for_input;
   Lisp_Object debugger_value;
+  Lisp_Object string;
+  Lisp_Object real_error_symbol;
+  Lisp_Object combined_data;
 
   quit_error_check ();
   immediate_quit = 0;
@@ -1205,7 +1223,16 @@ See also the function `condition-case'.")
   TOTALLY_UNBLOCK_INPUT;
 #endif
 
-  conditions = Fget (error_symbol, Qerror_conditions);
+  if (NILP (error_symbol))
+    real_error_symbol = Fcar (data);
+  else
+    real_error_symbol = error_symbol;
+
+  /* This hook is used by edebug.  */
+  if (! NILP (Vsignal_hook_function))
+    call2 (Vsignal_hook_function, error_symbol, data);
+
+  conditions = Fget (real_error_symbol, Qerror_conditions);
 
   for (; handlerlist; handlerlist = handlerlist->next)
     {
@@ -1224,7 +1251,7 @@ See also the function `condition-case'.")
 	{
 	  /* We can't return values to code which signaled an error, but we
 	     can continue code which has signaled a quit.  */
-	  if (EQ (error_symbol, Qquit))
+	  if (EQ (real_error_symbol, Qquit))
 	    return Qnil;
 	  else
 	    error ("Cannot return from the debugger in an error");
@@ -1237,8 +1264,9 @@ See also the function `condition-case'.")
 	  struct handler *h = handlerlist;
 
 	  handlerlist = allhandlers;
-	  if (EQ (data, memory_signal_data))
-	    unwind_data = memory_signal_data;
+
+	  if (NILP (error_symbol))
+	    unwind_data = data;
 	  else
 	    unwind_data = Fcons (error_symbol, data);
 	  h->chosen_clause = clause;
@@ -1250,7 +1278,14 @@ See also the function `condition-case'.")
   /* If no handler is present now, try to run the debugger,
      and if that fails, throw to top level.  */
   find_handler_clause (Qerror, conditions, error_symbol, data, &debugger_value);
-  Fthrow (Qtop_level, Qt);
+  if (catchlist != 0)
+    Fthrow (Qtop_level, Qt);
+
+  if (! NILP (error_symbol))
+    data = Fcons (error_symbol, data);
+
+  string = Ferror_message_string (data);
+  fatal (XSTRING (string)->data, 0, 0);
 }
 
 /* Return nonzero iff LIST is a non-nil atom or
@@ -1317,6 +1352,10 @@ skip_debugger (conditions, data)
 }
 
 /* Value of Qlambda means we have called debugger and user has continued.
+   There are two ways to pass SIG and DATA:
+    - SIG is the error symbol, and DATA is the rest of the data.
+    = SIG is nil, and DATA is (SYMBOL . REST-OF-DATA).
+
    Store value returned from debugger into *DEBUGGER_VALUE_PTR.  */
 
 static Lisp_Object
@@ -1329,25 +1368,48 @@ find_handler_clause (handlers, conditions, sig, data, debugger_value_ptr)
 
   if (EQ (handlers, Qt))  /* t is used by handlers for all conditions, set up by C code.  */
     return Qt;
-  if (EQ (handlers, Qerror))  /* error is used similarly, but means display a backtrace too */
+  /* error is used similarly, but means print an error message
+     and run the debugger if that is enabled.  */
+  if (EQ (handlers, Qerror)
+      || !NILP (Vdebug_on_signal)) /* This says call debugger even if
+				      there is a handler.  */
     {
+      int count = specpdl_ptr - specpdl;
+      int debugger_called = 0;
+      Lisp_Object sig_symbol, combined_data;
+
+      if (NILP (sig))
+	{
+	  combined_data = data;
+	  sig_symbol = Fcar (data);
+	}
+      else
+	{
+	  combined_data = Fcons (sig, data);
+	  sig_symbol = sig;
+	}
+
       if (wants_debugger (Vstack_trace_on_error, conditions))
 	internal_with_output_to_temp_buffer ("*Backtrace*", Fbacktrace, Qnil);
-      if ((EQ (sig, Qquit)
+      if ((EQ (sig_symbol, Qquit)
 	   ? debug_on_quit
 	   : wants_debugger (Vdebug_on_error, conditions))
-	  && ! skip_debugger (conditions, Fcons (sig, data))
-	  && when_entered_debugger < num_nonmacro_input_chars)
+	  && ! skip_debugger (conditions, combined_data)
+	  && when_entered_debugger < num_nonmacro_input_events)
 	{
-	  int count = specpdl_ptr - specpdl;
 	  specbind (Qdebug_on_error, Qnil);
 	  *debugger_value_ptr
 	    = call_debugger (Fcons (Qerror,
-				    Fcons (Fcons (sig, data),
-					   Qnil)));
-	  return unbind_to (count, Qlambda);
+				    Fcons (combined_data, Qnil)));
+	  debugger_called = 1;
 	}
-      return Qt;
+      /* If there is no handler, return saying whether we ran the debugger.  */
+      if (EQ (handlers, Qerror))
+	{
+	  if (debugger_called)
+	    return unbind_to (count, Qlambda);
+	  return Qt;
+	}
     }
   for (h = handlers; CONSP (h); h = Fcdr (h))
     {
@@ -1552,19 +1614,25 @@ un_autoload (oldqueue)
   return Qnil;
 }
 
+/* Load an autoloaded function.
+   FUNNAME is the symbol which is the function's name.
+   FUNDEF is the autoload definition (a list).  */
+
 do_autoload (fundef, funname)
      Lisp_Object fundef, funname;
 {
   int count = specpdl_ptr - specpdl;
   Lisp_Object fun, val, queue, first, second;
+  struct gcpro gcpro1, gcpro2, gcpro3;
 
   fun = funname;
   CHECK_SYMBOL (funname, 0);
+  GCPRO3 (fun, funname, fundef);
 
   /* Value saved here is to be restored into Vautoload_queue */
   record_unwind_protect (un_autoload, Vautoload_queue);
   Vautoload_queue = Qt;
-  Fload (Fcar (Fcdr (fundef)), Qnil, noninteractive ? Qt : Qnil, Qnil);
+  Fload (Fcar (Fcdr (fundef)), Qnil, noninteractive ? Qt : Qnil, Qnil, Qt);
 
   /* Save the old autoloads, in case we ever do an unload. */
   queue = Vautoload_queue;
@@ -1592,6 +1660,7 @@ do_autoload (fundef, funname)
   if (!NILP (Fequal (fun, fundef)))
     error ("Autoloading failed to define function %s",
 	   XSYMBOL (funname)->name->data);
+  UNGCPRO;
 }
 
 DEFUN ("eval", Feval, Seval, 1, 1, 0,
@@ -1656,7 +1725,7 @@ DEFUN ("eval", Feval, Seval, 1, 1, 0,
   if (SUBRP (fun))
     {
       Lisp_Object numargs;
-      Lisp_Object argvals[7];
+      Lisp_Object argvals[8];
       Lisp_Object args_left;
       register int i, maxargs;
 
@@ -1748,6 +1817,12 @@ DEFUN ("eval", Feval, Seval, 1, 1, 0,
 	  val = (*XSUBR (fun)->function) (argvals[0], argvals[1], argvals[2],
 					  argvals[3], argvals[4], argvals[5],
 					  argvals[6]);
+	  goto done;
+
+	case 8:
+	  val = (*XSUBR (fun)->function) (argvals[0], argvals[1], argvals[2],
+					  argvals[3], argvals[4], argvals[5],
+					  argvals[6], argvals[7]);
 	  goto done;
 
 	default:
@@ -1907,8 +1982,8 @@ not `make-local-variable'.")
   return Qnil;
 }
       
-DEFUN ("run-hook-with-args",
-  Frun_hook_with_args, Srun_hook_with_args, 1, MANY, 0,
+DEFUN ("run-hook-with-args", Frun_hook_with_args,
+  Srun_hook_with_args, 1, MANY, 0,
   "Run HOOK with the specified arguments ARGS.\n\
 HOOK should be a symbol, a hook variable.  If HOOK has a non-nil\n\
 value, that value may be a function or a list of functions to be\n\
@@ -1928,9 +2003,8 @@ not `make-local-variable'.")
   return run_hook_with_args (nargs, args, to_completion);
 }
 
-DEFUN ("run-hook-with-args-until-success",
-  Frun_hook_with_args_until_success, Srun_hook_with_args_until_success,
-  1, MANY, 0,
+DEFUN ("run-hook-with-args-until-success", Frun_hook_with_args_until_success,
+  Srun_hook_with_args_until_success, 1, MANY, 0,
   "Run HOOK with the specified arguments ARGS.\n\
 HOOK should be a symbol, a hook variable.  Its value should\n\
 be a list of functions.  We call those functions, one by one,\n\
@@ -1947,9 +2021,8 @@ not `make-local-variable'.")
   return run_hook_with_args (nargs, args, until_success);
 }
 
-DEFUN ("run-hook-with-args-until-failure",
-  Frun_hook_with_args_until_failure, Srun_hook_with_args_until_failure,
-  1, MANY, 0,
+DEFUN ("run-hook-with-args-until-failure", Frun_hook_with_args_until_failure,
+  Srun_hook_with_args_until_failure, 1, MANY, 0,
   "Run HOOK with the specified arguments ARGS.\n\
 HOOK should be a symbol, a hook variable.  Its value should\n\
 be a list of functions.  We call those functions, one by one,\n\
@@ -2391,9 +2464,16 @@ Thus, (funcall 'cons 'x 'y) returns (x . y).")
 					  internal_args[6]);
 	  goto done;
 
+	case 8:
+	  val = (*XSUBR (fun)->function) (internal_args[0], internal_args[1],
+					  internal_args[2], internal_args[3],
+					  internal_args[4], internal_args[5],
+					  internal_args[6], internal_args[7]);
+	  goto done;
+
 	default:
 
-	  /* If a subr takes more than 6 arguments without using MANY
+	  /* If a subr takes more than 8 arguments without using MANY
 	     or UNEVALLED, we need to extend this function to support it. 
 	     Until this is done, there is no way to call the function.  */
 	  abort ();
@@ -2607,7 +2687,7 @@ specbind (symbol, value)
   if (BUFFER_OBJFWDP (ovalue) || KBOARD_OBJFWDP (ovalue))
     store_symval_forwarding (symbol, ovalue, value);
   else
-    Fset (symbol, value);
+    set_internal (symbol, value, 1);
 }
 
 void
@@ -2645,7 +2725,7 @@ unbind_to (count, value)
       else if (NILP (specpdl_ptr->symbol))
 	Fprogn (specpdl_ptr->old_value);
       else
-        Fset (specpdl_ptr->symbol, specpdl_ptr->old_value);
+        set_internal (specpdl_ptr->symbol, specpdl_ptr->old_value, 1);
     }
   if (NILP (Vquit_flag) && quitf) Vquit_flag = Qt;
 
@@ -2815,10 +2895,12 @@ If NFRAMES is more than the number of frames, the value is nil.")
 syms_of_eval ()
 {
   DEFVAR_INT ("max-specpdl-size", &max_specpdl_size,
-    "Limit on number of Lisp variable bindings & unwind-protects before error.");
+    "*Limit on number of Lisp variable bindings & unwind-protects.\n\
+If Lisp code tries to make more than this many at once,\n\
+an error is signaled.");
 
   DEFVAR_INT ("max-lisp-eval-depth", &max_lisp_eval_depth,
-    "Limit on depth in `eval', `apply' and `funcall' before error.\n\
+    "*Limit on depth in `eval', `apply' and `funcall' before error.\n\
 This limit is to catch infinite recursions for you before they cause\n\
 actual stack overflow in C, which would be fatal for Emacs.\n\
 You can safely make it considerably larger than its default value,\n\
@@ -2910,15 +2992,26 @@ If due to `apply' or `funcall' entry, one arg, `lambda'.\n\
 If due to `eval' entry, one arg, t.");
   Vdebugger = Qnil;
 
+  DEFVAR_LISP ("signal-hook-function", &Vsignal_hook_function,
+    "If non-nil, this is a function for `signal' to call.\n\
+It receives the same arguments that `signal' was given.\n\
+The Edebug package uses this to regain control.");
+  Vsignal_hook_function = Qnil;
+
   Qmocklisp_arguments = intern ("mocklisp-arguments");
   staticpro (&Qmocklisp_arguments);
   DEFVAR_LISP ("mocklisp-arguments", &Vmocklisp_arguments,
     "While in a mocklisp function, the list of its unevaluated args.");
   Vmocklisp_arguments = Qt;
 
-  DEFVAR_LISP ("run-hooks", &Vrun_hooks,
-    "Set to the function `run-hooks', if that function has been defined.\n\
-Otherwise, nil (in a bare Emacs without preloaded Lisp code).");
+  DEFVAR_LISP ("debug-on-signal", &Vdebug_on_signal,
+    "*Non-nil means call the debugger regardless of condition handlers.\n\
+Note that `debug-on-error', `debug-on-quit' and friends\n\
+still determine whether to handle the particular condition.");
+  Vdebug_on_signal = Qnil;
+
+  Vrun_hooks = intern ("run-hooks");
+  staticpro (&Vrun_hooks);
 
   staticpro (&Vautoload_queue);
   Vautoload_queue = Qnil;

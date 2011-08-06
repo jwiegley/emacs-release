@@ -26,7 +26,7 @@
 
 ;; map-y-or-n-p is a general-purpose question-asking function.
 ;; It asks a series of y/n questions (a la y-or-n-p), and decides to
-;; applies an action to each element of a list based on the answer.
+;; apply an action to each element of a list based on the answer.
 ;; The nice thing is that you also get some other possible answers
 ;; to use, reminiscent of query-replace: ! to answer y to all remaining
 ;; questions; ESC or q to answer n to all remaining questions; . to answer
@@ -146,6 +146,8 @@ Returns the number of actions taken."
 		       (message "%s(y, n, !, ., q, %sor %s) "
 				prompt user-keys
 				(key-description (vector help-char)))
+		       (if minibuffer-auto-raise
+			   (raise-frame (window-frame (minibuffer-window))))
 		       (setq char (read-event))
 		       ;; Show the answer to the question.
 		       (message "%s(y, n, !, ., q, %sor %s) %s"

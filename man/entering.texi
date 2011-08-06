@@ -36,8 +36,8 @@ editors.
   Many other editors are designed to be started afresh each time you
 want to edit.  You edit one file and then exit the editor.  The next
 time you want to edit either another file or the same one, you must run
-the editor again.  With these editors, it makes sense to use a command
-line argument to say which file to edit.
+the editor again.  With these editors, it makes sense to use a
+command-line argument to say which file to edit.
 
   But starting a new Emacs each time you want to edit a different file
 does not make sense.  For one thing, this would be annoyingly slow.  For

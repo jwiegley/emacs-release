@@ -1,5 +1,6 @@
 /* Display generation from window structure and buffer text.
-   Copyright (C) 1985, 86, 87, 88, 93, 94, 95 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 1997
+     Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -29,6 +30,7 @@ Boston, MA 02111-1307, USA.  */
 #include "termchar.h"
 #include "dispextern.h"
 #include "buffer.h"
+#include "charset.h"
 #include "indent.h"
 #include "commands.h"
 #include "macros.h"
@@ -36,6 +38,8 @@ Boston, MA 02111-1307, USA.  */
 #include "termhooks.h"
 #include "intervals.h"
 #include "keyboard.h"
+#include "coding.h"
+#include "process.h"
 
 #if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI)
 extern void set_frame_menubar ();
@@ -44,6 +48,8 @@ extern int pending_menu_activation;
 
 extern int interrupt_input;
 extern int command_loop_level;
+
+extern int minibuffer_auto_raise;
 
 extern Lisp_Object Qface;
 
@@ -108,6 +114,11 @@ Lisp_Object Voverlay_arrow_position;
 /* String to display for the arrow.  */
 Lisp_Object Voverlay_arrow_string;
 
+/* Values of those variables at last redisplay.
+   However, if Voverlay_arrow_position is a marker,
+   last_arrow_position is its numerical position.  */
+static Lisp_Object last_arrow_position, last_arrow_string;
+
 /* Like mode-line-format, but for the titlebar on a visible frame.  */
 Lisp_Object Vframe_title_format;
 
@@ -118,9 +129,6 @@ Lisp_Object Vicon_title_format;
    functions get one arg, a frame on which one or more windows' sizes
    have changed.  */
 static Lisp_Object Vwindow_size_change_functions;
-
-/* Values of those variables at last redisplay.  */
-static Lisp_Object last_arrow_position, last_arrow_string;
 
 Lisp_Object Qmenu_bar_update_hook;
 
@@ -138,6 +146,14 @@ static int highlight_nonselected_windows;
 /* If cursor motion alone moves point off frame,
    Try scrolling this many lines up or down if that will bring it back.  */
 static int scroll_step;
+
+/* Non-0 means scroll just far enough to bring point back on the screen,
+   when appropriate.  */
+static int scroll_conservatively;
+
+/* Recenter the window whenever point gets within this many lines
+   of the top or bottom of the window.  */
+int scroll_margin;
 
 /* Nonzero if try_window_id has made blank lines at window bottom
  since the last redisplay that paused */
@@ -197,6 +213,10 @@ int echo_area_glyphs_length;
    same window currently active as a minibuffer.  */
 Lisp_Object echo_area_window;
 
+/* Nonzero means multibyte characters were enabled when the echo area
+   message was specified.  */
+int message_enable_multibyte;
+
 /* true iff we should redraw the mode lines on the next redisplay */
 int update_mode_lines;
 
@@ -211,9 +231,13 @@ int beg_unchanged;
 int end_unchanged;
 
 /* MODIFF as of last redisplay that finished;
-   if it matches MODIFF, beg_unchanged and end_unchanged
+   if it matches MODIFF, and overlay_unchanged_modified
+   matches OVERLAY_MODIFF, that means beg_unchanged and end_unchanged
    contain no useful information */
 int unchanged_modified;
+
+/* OVERLAY_MODIFF as of last redisplay that finished.  */
+int overlay_unchanged_modified;
 
 /* Nonzero if window sizes or contents have changed
    since last redisplay that finished */
@@ -229,6 +253,9 @@ static int line_number_display_limit;
 /* Number of lines to keep in the message log buffer.
    t means infinite.  nil means don't log at all.  */
 Lisp_Object Vmessage_log_max;
+
+#define COERCE_MARKER(X)	\
+  (MARKERP ((X)) ? Fmarker_position (X) : (X))
 
 /* Output a newline in the *Messages* buffer if "needs" one.  */
 
@@ -395,12 +422,16 @@ message2_nolog (m, len)
      char *m;
      int len;
 {
+  message_enable_multibyte
+    = ! NILP (current_buffer->enable_multibyte_characters);
+
   if (noninteractive)
     {
       if (noninteractive_need_newline)
 	putc ('\n', stderr);
       noninteractive_need_newline = 0;
-      fwrite (m, len, 1, stderr);
+      if (m)
+	fwrite (m, len, 1, stderr);
       if (cursor_in_echo_area == 0)
 	fprintf (stderr, "\n");
       fflush (stderr);
@@ -418,17 +449,18 @@ message2_nolog (m, len)
       mini_window = FRAME_MINIBUF_WINDOW (selected_frame);
       f = XFRAME (WINDOW_FRAME (XWINDOW (mini_window)));
 
-#ifdef MULTI_FRAME
       FRAME_SAMPLE_VISIBILITY (f);
       if (FRAME_VISIBLE_P (selected_frame)
 	  && ! FRAME_VISIBLE_P (f))
 	Fmake_frame_visible (WINDOW_FRAME (XWINDOW (mini_window)));
-#endif
 
       if (m)
 	{
 	  echo_area_glyphs = m;
 	  echo_area_glyphs_length = len;
+
+	  if (minibuffer_auto_raise)
+	    Fraise_frame  (WINDOW_FRAME (XWINDOW (mini_window)));
 	}
       else
 	echo_area_glyphs = previous_echo_glyphs = 0;
@@ -533,10 +565,10 @@ message (m, a1, a2, a3)
 	      a[2] = a3;
 
 	      len = doprnt (FRAME_MESSAGE_BUF (f),
-			    FRAME_WIDTH (f), m, (char *)0, 3, a);
+			    FRAME_MESSAGE_BUF_SIZE (f), m, (char *)0, 3, a);
 #else
 	      len = doprnt (FRAME_MESSAGE_BUF (f),
-			    FRAME_WIDTH (f), m, (char *)0, 3, &a1);
+			    FRAME_MESSAGE_BUF_SIZE (f), m, (char *)0, 3, &a1);
 #endif /* NO_ARG_ARRAY */
 
 	      message2 (FRAME_MESSAGE_BUF (f), len);
@@ -594,14 +626,25 @@ echo_area_display ()
 
   if (echo_area_glyphs || minibuf_level == 0)
     {
+      int i;
+
       echo_area_window = mini_window;
 
       vpos = XFASTINT (XWINDOW (mini_window)->top);
       get_display_line (f, vpos, 0);
+
+      /* Make sure the columns that overlap a left-hand scroll bar
+	 are always clear.  */
+      for (i = 0; i < FRAME_LEFT_SCROLL_BAR_WIDTH (f); i++)
+	f->desired_glyphs->glyphs[vpos][i] = SPACEGLYPH;
+
       display_string (XWINDOW (mini_window), vpos,
 		      echo_area_glyphs ? echo_area_glyphs : "",
 		      echo_area_glyphs ? echo_area_glyphs_length : -1,
-		      0, 0, 0, 0, FRAME_WIDTH (f));
+		      FRAME_LEFT_SCROLL_BAR_WIDTH (f),
+		      0, 0, 0,
+		      FRAME_WIDTH (f) + FRAME_LEFT_SCROLL_BAR_WIDTH (f),
+		      message_enable_multibyte);
 
 #if 0 /* This just gets in the way.  update_frame does the job.  */
       /* If desired cursor location is on this line, put it at end of text */
@@ -619,8 +662,14 @@ echo_area_display ()
 	     i < vpos + XFASTINT (XWINDOW (mini_window)->height); i++)
 	  {
 	    get_display_line (f, i, 0);
-	    display_string (XWINDOW (mini_window), vpos,
-			    "", 0, 0, 0, 0, 0, FRAME_WIDTH (f));
+	    /* We don't use FRAME_SCROLL_BAR_WIDTH (f) as the starting
+	       hpos, because it is good to clear whatever is behind the
+	       scroll bar.  This does not affect the scroll bar itself.  */
+	    display_string (XWINDOW (mini_window), i,
+			    "", 0, 
+                            0, 0, 0,
+                            0, FRAME_WIDTH (f) + FRAME_SCROLL_BAR_WIDTH (f),
+			    0);
 	  }
       }
     }
@@ -749,7 +798,7 @@ prepare_menu_bars ()
       Lisp_Object tail, frame;
       int count = specpdl_ptr - specpdl;
 
-      record_unwind_protect (Fstore_match_data, Fmatch_data ());
+      record_unwind_protect (Fstore_match_data, Fmatch_data (Qnil, Qnil));
 
       FOR_EACH_FRAME (tail, frame)
 	{
@@ -835,6 +884,7 @@ redisplay_internal (preserve_echo_area)
   int all_windows;
   register int tlbufpos, tlendpos;
   struct position pos;
+  int number_of_visible_frames;
 
   if (noninteractive)
     return;
@@ -844,7 +894,8 @@ redisplay_internal (preserve_echo_area)
     return;
 #endif
 
-#ifdef MULTI_FRAME
+ retry:
+
   if (! FRAME_WINDOW_P (selected_frame)
       && previous_terminal_frame != selected_frame)
     {
@@ -855,7 +906,6 @@ redisplay_internal (preserve_echo_area)
       XSETFRAME (Vterminal_frame, selected_frame);
     }
   previous_terminal_frame = selected_frame;
-#endif
 
   /* Set the visible flags for all frames.
      Do this before checking for resized or garbaged frames; they want
@@ -864,9 +914,14 @@ redisplay_internal (preserve_echo_area)
   {
     Lisp_Object tail, frame;
 
+    number_of_visible_frames = 0;
+
     FOR_EACH_FRAME (tail, frame)
       {
 	FRAME_SAMPLE_VISIBILITY (XFRAME (frame));
+
+	if (FRAME_VISIBLE_P (XFRAME (frame)))
+	  number_of_visible_frames++;
 
 	/* Clear out all the display lines in which we will generate the
 	   glyphs to display.  */
@@ -901,7 +956,8 @@ redisplay_internal (preserve_echo_area)
       /* This alternative quickly identifies a common case
 	 where no change is needed.  */
       && !(PT == XFASTINT (w->last_point)
-	   && XFASTINT (w->last_modified) >= MODIFF)
+	   && XFASTINT (w->last_modified) >= MODIFF
+	   && XFASTINT (w->last_overlay_modified) >= OVERLAY_MODIFF)
       && XFASTINT (w->column_number_displayed) != current_column ())
     w->update_mode_line = Qt; 
 
@@ -911,7 +967,7 @@ redisplay_internal (preserve_echo_area)
 
   /* If specs for an arrow have changed, do thorough redisplay
      to ensure we remove any arrow that should no longer exist.  */
-  if (! EQ (Voverlay_arrow_position, last_arrow_position)
+  if (! EQ (COERCE_MARKER (Voverlay_arrow_position), last_arrow_position)
       || ! EQ (Voverlay_arrow_string, last_arrow_string))
     all_windows = 1;
 
@@ -939,6 +995,7 @@ redisplay_internal (preserve_echo_area)
   if (!all_windows && tlbufpos > 0 && NILP (w->update_mode_line)
       && !current_buffer->clip_changed
       && FRAME_VISIBLE_P (XFRAME (w->frame))
+      && !FRAME_OBSCURED_P (XFRAME (w->frame))
       /* Make sure recorded data applies to current buffer, etc */
       && this_line_buffer == current_buffer
       && current_buffer == XBUFFER (w->buffer)
@@ -948,7 +1005,8 @@ redisplay_internal (preserve_echo_area)
       && PT <= Z - tlendpos
       /* All text outside that line, including its final newline,
 	 must be unchanged */
-      && (XFASTINT (w->last_modified) >= MODIFF
+      && ((XFASTINT (w->last_modified) >= MODIFF
+	   && (XFASTINT (w->last_overlay_modified) >= OVERLAY_MODIFF))
 	  || (beg_unchanged >= tlbufpos - 1
 	      && GPT >= tlbufpos
 	      /* If selective display, can't optimize
@@ -961,19 +1019,49 @@ redisplay_internal (preserve_echo_area)
 	      && end_unchanged >= tlendpos
 	      && Z - GPT >= tlendpos)))
     {
-      if (tlbufpos > BEGV && FETCH_CHAR (tlbufpos - 1) != '\n'
+      if (tlbufpos > BEGV && FETCH_BYTE (tlbufpos - 1) != '\n'
 	  && (tlbufpos == ZV
-	      || FETCH_CHAR (tlbufpos) == '\n'))
+	      || FETCH_BYTE (tlbufpos) == '\n'))
 	/* Former continuation line has disappeared by becoming empty */
 	goto cancel;
       else if (XFASTINT (w->last_modified) < MODIFF
+	       || XFASTINT (w->last_overlay_modified) < OVERLAY_MODIFF
 	       || MINI_WINDOW_P (w))
 	{
+	  /* We have to handle the case of continuation around a
+	     wide-column character (See the comment in indent.c around
+	     line 885).
+
+	     For instance, in the following case:
+
+	     --------  Insert  --------
+	     K_A_N_\\   `a'    K_A_N_a\		`X_' are wide-column chars.
+	     J_I_       ==>    J_I_		`^^' are cursors.
+	     ^^                ^^
+	     --------          --------
+
+	     As we have to redraw the line above, we should goto cancel.  */
+
+	  struct position val;
+	  int prevline;
+
+	  prevline = find_next_newline (tlbufpos, -1);
+	  val = *compute_motion (prevline, 0,
+				 XINT (w->hscroll) ? 1 - XINT (w->hscroll) : 0,
+				 0,
+				 tlbufpos,
+				 1 << (BITS_PER_SHORT - 1),
+				 1 << (BITS_PER_SHORT - 1),
+				 window_internal_width (w) - 1,
+				 XINT (w->hscroll), 0, w);
+	  if (val.hpos != this_line_start_hpos)
+	    goto cancel;
+
 	  cursor_vpos = -1;
 	  overlay_arrow_seen = 0;
 	  zv_strings_seen = 0;
 	  display_text_line (w, tlbufpos, this_line_vpos, this_line_start_hpos,
-			     pos_tab_offset (w, tlbufpos));
+			     pos_tab_offset (w, tlbufpos), 0);
 	  /* If line contains point, is not continued,
 		 and ends at same distance from eob as before, we win */
 	  if (cursor_vpos >= 0 && this_line_bufpos
@@ -984,7 +1072,7 @@ redisplay_internal (preserve_echo_area)
 	      if (this_line_vpos + 1
 		  < XFASTINT (w->top) + window_internal_height (w))
 		{
-		  int left = XFASTINT (w->left);
+		  int left = WINDOW_LEFT_MARGIN (w);
 		  int *charstart_next_line
 		    = FRAME_CURRENT_GLYPHS (XFRAME (WINDOW_FRAME (w)))->charstarts[this_line_vpos + 1];
 		  int adjust;
@@ -1002,7 +1090,7 @@ redisplay_internal (preserve_echo_area)
 		  adjust_window_charstarts (w, this_line_vpos, adjust);
 		}
 
-	      if (XFASTINT (w->width) != FRAME_WIDTH (XFRAME (WINDOW_FRAME (w))))
+	      if (!WINDOW_FULL_WIDTH_P (w))
 		preserve_other_columns (w);
 	      goto update;
 	    }
@@ -1027,6 +1115,8 @@ redisplay_internal (preserve_echo_area)
 	 then we can't just move the cursor.  */
       else if (! (!NILP (Vtransient_mark_mode)
 		  && !NILP (current_buffer->mark_active))
+	       && (w == XWINDOW (current_buffer->last_selected_window)
+		   || highlight_nonselected_windows)
 	       && NILP (w->region_showing)
 	       && !cursor_in_echo_area)
 	{
@@ -1041,7 +1131,7 @@ redisplay_internal (preserve_echo_area)
 	    {
 	      int width = window_internal_width (w) - 1;
 	      FRAME_CURSOR_X (selected_frame)
-		= XFASTINT (w->left) + minmax (0, pos.hpos, width);
+		= WINDOW_LEFT_MARGIN (w) + minmax (0, pos.hpos, width);
 	      FRAME_CURSOR_Y (selected_frame) = this_line_vpos;
 	      goto update;
 	    }
@@ -1087,7 +1177,7 @@ redisplay_internal (preserve_echo_area)
 	      if (condemn_scroll_bars_hook)
 		(*condemn_scroll_bars_hook) (f);
 
-	      if (FRAME_VISIBLE_P (f))
+	      if (FRAME_VISIBLE_P (f) && !FRAME_OBSCURED_P (f))
 		redisplay_windows (FRAME_ROOT_WINDOW (f), preserve_echo_area);
 
 	      /* Any scroll bars which redisplay_windows should have nuked
@@ -1097,10 +1187,10 @@ redisplay_internal (preserve_echo_area)
 	    }
 	}
     }
-  else if (FRAME_VISIBLE_P (selected_frame))
+  else if (FRAME_VISIBLE_P (selected_frame) && !FRAME_OBSCURED_P (selected_frame))
     {
       redisplay_window (selected_window, 1, preserve_echo_area);
-      if (XFASTINT (w->width) != FRAME_WIDTH (selected_frame))
+      if (!WINDOW_FULL_WIDTH_P (w))
 	preserve_other_columns (w);
     }
 
@@ -1112,7 +1202,6 @@ update:
     unrequest_sigio ();
   stop_polling ();
 
-#ifdef MULTI_FRAME
   if (all_windows)
     {
       Lisp_Object tail;
@@ -1129,7 +1218,7 @@ update:
 	  f = XFRAME (XCONS (tail)->car);
 
 	  if ((FRAME_WINDOW_P (f) || f == selected_frame)
-	      && FRAME_VISIBLE_P (f))
+	      && FRAME_VISIBLE_P (f) && !FRAME_OBSCURED_P (f))
 	    {
 	      pause |= update_frame (f, 0, 0);
 	      if (!pause)
@@ -1142,9 +1231,8 @@ update:
 	}
     }
   else
-#endif /* MULTI_FRAME */
     {
-      if (FRAME_VISIBLE_P (selected_frame))
+      if (FRAME_VISIBLE_P (selected_frame) && !FRAME_OBSCURED_P (selected_frame))
 	pause = update_frame (selected_frame, 0, 0);
       else
 	pause = 0;
@@ -1180,7 +1268,7 @@ update:
 	 may be null, so preserve_other_columns won't be able to
 	 preserve all the vertical-bar separators.  So, avoid using it
 	 in that case.  */
-      if (XFASTINT (w->width) != FRAME_WIDTH (selected_frame))
+      if (!WINDOW_FULL_WIDTH_P (w))
 	update_mode_lines = 1;
     }
 
@@ -1193,6 +1281,7 @@ update:
 
       blank_end_of_window = 0;
       unchanged_modified = BUF_MODIFF (b);
+      overlay_unchanged_modified = BUF_OVERLAY_MODIFF (b);
       beg_unchanged = BUF_GPT (b) - BUF_BEG (b);
       end_unchanged = BUF_Z (b) - BUF_GPT (b);
 
@@ -1207,11 +1296,22 @@ update:
 	  b->clip_changed = 0;
 	  w->update_mode_line = Qnil;
 	  XSETFASTINT (w->last_modified, BUF_MODIFF (b));
+	  XSETFASTINT (w->last_overlay_modified, BUF_OVERLAY_MODIFF (b));
 	  w->last_had_star
 	    = (BUF_MODIFF (XBUFFER (w->buffer)) > BUF_SAVE_MODIFF (XBUFFER (w->buffer))
 	       ? Qt : Qnil);
+
+	  /* Record if we are showing a region, so can make sure to
+	     update it fully at next redisplay.  */
+	  w->region_showing = (!NILP (Vtransient_mark_mode)
+			       && (w == XWINDOW (current_buffer->last_selected_window)
+				   || highlight_nonselected_windows)
+			       && !NILP (XBUFFER (w->buffer)->mark_active)
+			       ? Fmarker_position (XBUFFER (w->buffer)->mark)
+			       : Qnil);
+
 	  w->window_end_valid = w->buffer;
-	  last_arrow_position = Voverlay_arrow_position;
+	  last_arrow_position = COERCE_MARKER (Voverlay_arrow_position);
 	  last_arrow_string = Voverlay_arrow_string;
 	  if (do_verify_charstarts)
 	    verify_charstarts (w);
@@ -1233,13 +1333,38 @@ update:
     request_sigio ();
   start_polling ();
 
+  /* If something has become visible now which was not before,
+     redisplay again, so that we get them.  */
+  if (!pause)
+    {
+      Lisp_Object tail, frame;
+      int new_count = 0;
+
+      FOR_EACH_FRAME (tail, frame)
+	{
+	  int this_is_visible = 0;
+
+	  if (XFRAME (frame)->visible)
+	    this_is_visible = 1;
+	  FRAME_SAMPLE_VISIBILITY (XFRAME (frame));
+	  if (XFRAME (frame)->visible)
+	    this_is_visible = 1;
+
+	  if (this_is_visible)
+	    new_count++;
+	}
+
+      if (new_count != number_of_visible_frames)
+	windows_or_buffers_changed++;
+    }
+
   /* Change frame size now if a change is pending.  */
   do_pending_window_change ();
 
-  /* If we just did a pending size change, redisplay again
-     for the new size.  */
+  /* If we just did a pending size change, or have additional
+     visible frames, redisplay again.  */
   if (windows_or_buffers_changed && !pause)
-    redisplay ();
+    goto retry;
 }
 
 /* Redisplay, but leave alone any recent echo area message
@@ -1278,6 +1403,8 @@ mark_window_display_accurate (window, flag)
 	{
 	  XSETFASTINT (w->last_modified,
 		       !flag ? 0 : BUF_MODIFF (XBUFFER (w->buffer)));
+	  XSETFASTINT (w->last_overlay_modified,
+		       !flag ? 0 : BUF_OVERLAY_MODIFF (XBUFFER (w->buffer)));
 	  w->last_had_star
 	    = (BUF_MODIFF (XBUFFER (w->buffer)) > BUF_SAVE_MODIFF (XBUFFER (w->buffer))
 	       ? Qt : Qnil);
@@ -1285,6 +1412,8 @@ mark_window_display_accurate (window, flag)
 	  /* Record if we are showing a region, so can make sure to
 	     update it fully at next redisplay.  */
 	  w->region_showing = (!NILP (Vtransient_mark_mode)
+			       && (w == XWINDOW (current_buffer->last_selected_window)
+				   || highlight_nonselected_windows)
 			       && !NILP (XBUFFER (w->buffer)->mark_active)
 			       ? Fmarker_position (XBUFFER (w->buffer)->mark)
 			       : Qnil);
@@ -1303,7 +1432,7 @@ mark_window_display_accurate (window, flag)
 
   if (flag)
     {
-      last_arrow_position = Voverlay_arrow_position;
+      last_arrow_position = COERCE_MARKER (Voverlay_arrow_position);
       last_arrow_string = Voverlay_arrow_string;
     }
   else
@@ -1365,7 +1494,7 @@ update_menu_bar (f, save_match_data)
 
 	  set_buffer_internal_1 (XBUFFER (w->buffer));
 	  if (save_match_data)
-	    record_unwind_protect (Fstore_match_data, Fmatch_data ());
+	    record_unwind_protect (Fstore_match_data, Fmatch_data (Qnil, Qnil));
 	  if (NILP (Voverriding_local_map_menu_flag))
 	    {
 	      specbind (Qoverriding_terminal_local_map, Qnil);
@@ -1411,6 +1540,43 @@ redisplay_windows (window, preserve_echo_area)
 {
   for (; !NILP (window); window = XWINDOW (window)->next)
     redisplay_window (window, 0, preserve_echo_area);
+}
+
+/* Return value in display table DP (Lisp_Char_Table *) for character
+   C.  Since a display table doesn't have any parent, we don't have to
+   follow parent.  Do not call this function directly but use the
+   macro DISP_CHAR_VECTOR.  */
+Lisp_Object
+disp_char_vector (dp, c)
+     struct Lisp_Char_Table *dp;
+     int c;
+{
+  int code[4], i;
+  Lisp_Object val;
+
+  if (SINGLE_BYTE_CHAR_P (c)) return (dp->contents[c]);
+  
+  SPLIT_NON_ASCII_CHAR (c, code[0], code[1], code[2]);
+  if (code[0] != CHARSET_COMPOSITION)
+    {
+      if (code[1] < 32) code[1] = -1;
+      else if (code[2] < 32) code[2] = -1;
+    }
+  /* Here, the possible range of CODE[0] (== charset ID) is
+     128..MAX_CHARSET.  Since the top level char table contains data
+     for multibyte characters after 256th element, we must increment
+     CODE[0] by 128 to get a correct index.  */
+  code[0] += 128;
+  code[3] = -1;		/* anchor */
+
+  for (i = 0; code[i] >= 0; i++, dp = XCHAR_TABLE (val))
+    {
+      val = dp->contents[code[i]];
+      if (!SUB_CHAR_TABLE_P (val))
+	return (NILP (val) ? dp->defalt : val);
+    }
+  /* Here, VAL is a sub char table.  We return the default value of it.  */
+  return (dp->defalt);
 }
 
 /* Redisplay window WINDOW and its subwindows.  */
@@ -1471,7 +1637,9 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	  for (i = 0; i < height; i++)
 	    {
 	      get_display_line (f, vpos + i, 0);
-	      display_string (w, vpos + i, "", 0, 0, 0, 1, 0, width);
+	      display_string (w, vpos + i, "", 0, 
+			      FRAME_LEFT_SCROLL_BAR_WIDTH (f),
+			      0, 1, 0, width, 0);
 	    }
 	  
 	  goto finish_scroll_bars;
@@ -1492,7 +1660,8 @@ redisplay_window (window, just_this_one, preserve_echo_area)
       /* This alternative quickly identifies a common case
 	 where no change is needed.  */
       && !(PT == XFASTINT (w->last_point)
-	   && XFASTINT (w->last_modified) >= MODIFF)
+	   && XFASTINT (w->last_modified) >= MODIFF
+	   && XFASTINT (w->last_overlay_modified) >= OVERLAY_MODIFF)
       && XFASTINT (w->column_number_displayed) != current_column ())
     update_mode_line = 1; 
 
@@ -1557,6 +1726,30 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 
   startp = marker_position (w->start);
 
+  /* If someone specified a new starting point but did not insist,
+     check whether it can be used.  */
+  if (!NILP (w->optional_new_start))
+    {
+      w->optional_new_start = Qnil;
+      /* Check whether this start pos is usable given where point is.  */
+
+      pos = *compute_motion (startp, 0,
+			     (((EQ (window, minibuf_window)
+				&& startp == BEG)
+			       ? minibuf_prompt_width : 0)
+			      + (hscroll ? 1 - hscroll : 0)),
+			     0,
+			     PT, height, 
+			     /* BUG FIX: See the comment of
+                                Fpos_visible_in_window_p (window.c).  */
+			     - (1 << (BITS_PER_SHORT - 1)),
+			     width, hscroll, pos_tab_offset (w, startp), w);
+      /* If PT does fit on the screen, we will use this start pos,
+	 so do so by setting force_start.  */
+      if (pos.bufpos == PT)
+	w->force_start = Qt;
+    }
+
   /* Handle case where place to start displaying has been specified,
      unless the specified location is outside the accessible range.  */
   if (!NILP (w->force_start))
@@ -1588,6 +1781,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	    }
 	}
       XSETFASTINT (w->last_modified, 0);
+      XSETFASTINT (w->last_overlay_modified, 0);
       if (startp < BEGV) startp = BEGV;
       if (startp > ZV)   startp = ZV;
       try_window (window, startp);
@@ -1610,7 +1804,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	    {
 	      if (current_buffer == old)
 		lpoint = PT;
-	      FRAME_CURSOR_X (f) = (XFASTINT (w->left)
+	      FRAME_CURSOR_X (f) = (WINDOW_LEFT_MARGIN (w)
 				    + minmax (0, pos.hpos, width));
 	      FRAME_CURSOR_Y (f) = pos.vpos + XFASTINT (w->top);
 	    }
@@ -1637,8 +1831,9 @@ redisplay_window (window, just_this_one, preserve_echo_area)
      in redisplay handles the same cases.  */
 
   if (XFASTINT (w->last_modified) >= MODIFF
+      && XFASTINT (w->last_overlay_modified) >= OVERLAY_MODIFF
       && PT >= startp && !current_buffer->clip_changed
-      && (just_this_one || XFASTINT (w->width) == FRAME_WIDTH (f))
+      && (just_this_one || WINDOW_FULL_WIDTH_P (w))
       /* If force-mode-line-update was called, really redisplay;
 	 that's how redisplay is forced after e.g. changing
 	 buffer-invisibility-spec.  */
@@ -1649,19 +1844,69 @@ redisplay_window (window, just_this_one, preserve_echo_area)
       /* If end pos is out of date, scroll bar and percentage will be wrong */
       && INTEGERP (w->window_end_vpos)
       && XFASTINT (w->window_end_vpos) < XFASTINT (w->height)
-      && !EQ (window, minibuf_window))
+      && !EQ (window, minibuf_window)
+      && (!MARKERP (Voverlay_arrow_position)
+	  || current_buffer != XMARKER (Voverlay_arrow_position)->buffer))
     {
-      pos = *compute_motion (startp, 0, (hscroll ? 1 - hscroll : 0), 0,
-			    PT, height, 0, width, hscroll,
-			    pos_tab_offset (w, startp), w);
+      /* All positions in this clause are relative to the window edge.  */
 
-      if (pos.vpos < height)
+      int this_scroll_margin = scroll_margin;
+      int last_point_y = XFASTINT (w->last_point_y) - XINT (w->top);
+      int last_point_x = (XFASTINT (w->last_point_x) - WINDOW_LEFT_MARGIN (w));
+
+      /* Find where PT is located now on the frame.  */
+      /* Check just_this_one as a way of verifying that the 
+	 window edges have not changed.  */
+      if (PT == XFASTINT (w->last_point) && just_this_one)
+	{
+	  pos.hpos = last_point_x;
+	  pos.vpos = last_point_y;
+	  pos.bufpos = PT;
+	}
+      else if (PT > XFASTINT (w->last_point)
+	       && XFASTINT (w->last_point) > startp && just_this_one
+	       /* We can't use this if point is in the left margin of a
+		  hscrolled window, because w->last_point_x has been
+		  clipped to the window edges.  */
+	       && !(last_point_x <= 0 && hscroll))
+	{
+	  pos = *compute_motion (XFASTINT (w->last_point),
+				 last_point_y, last_point_x, 0,
+				 PT, height,
+				 /* BUG FIX: See the comment of
+				    Fpos_visible_in_window_p (window.c).  */
+				 - (1 << (BITS_PER_SHORT - 1)),
+				 width, hscroll,
+				 pos_tab_offset (w, startp), w);
+	}
+      else
+	{
+	  pos = *compute_motion (startp, 0, (hscroll ? 1 - hscroll : 0), 0,
+				 PT, height,
+				 /* BUG FIX: See the comment of
+				    Fpos_visible_in_window_p (window.c).  */
+				 - (1 << (BITS_PER_SHORT - 1)),
+				 width, hscroll,
+				 pos_tab_offset (w, startp), w);
+	}
+
+      /* Don't use a scroll margin that is negative or too large.  */
+      if (this_scroll_margin < 0)
+	this_scroll_margin = 0;
+
+      if (XINT (w->height) < 4 * scroll_margin)
+	this_scroll_margin = XINT (w->height) / 4;
+
+      /* If point fits on the screen, and not within the scroll margin,
+	 we are ok.  */
+      if (pos.vpos < height - this_scroll_margin
+	  && (pos.vpos >= this_scroll_margin || startp == BEGV))
 	{
 	  /* Ok, point is still on frame */
 	  if (w == XWINDOW (FRAME_SELECTED_WINDOW (f)))
 	    {
 	      /* These variables are supposed to be origin 1 */
-	      FRAME_CURSOR_X (f) = (XFASTINT (w->left)
+	      FRAME_CURSOR_X (f) = (WINDOW_LEFT_MARGIN (w)
 				    + minmax (0, pos.hpos, width));
 	      FRAME_CURSOR_Y (f) = pos.vpos + XFASTINT (w->top);
 	    }
@@ -1669,7 +1914,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	     this one must be redisplayed, this does nothing because there
 	     is nothing in DesiredFrame yet, and then the other window is
 	     redisplayed, making likes that are empty in this window's columns.
-	     if (XFASTINT (w->width) != FRAME_WIDTH (f))
+	     if (WINDOW_FULL_WIDTH_P (w))
 	     preserve_my_columns (w);
 	     */
 	  goto done;
@@ -1681,7 +1926,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
      but no longer is, find a new starting point.  */
   else if (!NILP (w->start_at_line_beg)
 	   && !(startp <= BEGV
-		|| FETCH_CHAR (startp - 1) == '\n'))
+		|| FETCH_BYTE (startp - 1) == '\n'))
     {
       goto recenter;
     }
@@ -1693,7 +1938,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	   && ! EQ (w->window_end_valid, Qnil)
 	   && do_id && !current_buffer->clip_changed
 	   && !blank_end_of_window
-	   && XFASTINT (w->width) == FRAME_WIDTH (f)
+	   && WINDOW_FULL_WIDTH_P (w)
 	   /* Can't use this case if highlighting a region.  */
 	   && !(!NILP (Vtransient_mark_mode)
 		&& !NILP (current_buffer->mark_active))
@@ -1701,7 +1946,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	      doesn't display as the end of a line.  */
 	   && !(dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, '\n')))
 	   && NILP (w->region_showing)
-	   && EQ (last_arrow_position, Voverlay_arrow_position)
+	   && EQ (last_arrow_position, COERCE_MARKER (Voverlay_arrow_position))
 	   && EQ (last_arrow_string, Voverlay_arrow_string)
 	   && (tem = try_window_id (FRAME_SELECTED_WINDOW (f)))
 	   && tem != -2)
@@ -1724,7 +1969,8 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	       || preserve_echo_area
 #endif
 	       || startp == BEGV
-	       || (XFASTINT (w->last_modified) >= MODIFF)))
+	       || (XFASTINT (w->last_modified) >= MODIFF
+		   && XFASTINT (w->last_overlay_modified) >= OVERLAY_MODIFF)))
     {
       /* Try to redisplay starting at same place as before */
       /* If point has not moved off frame, accept the results */
@@ -1742,6 +1988,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
     }
 
   XSETFASTINT (w->last_modified, 0);
+  XSETFASTINT (w->last_overlay_modified, 0);
   /* Redisplay the mode line.  Select the buffer properly for that.  */
   if (!update_mode_line)
     {
@@ -1752,6 +1999,97 @@ redisplay_window (window, just_this_one, preserve_echo_area)
     }
 
   /* Try to scroll by specified few lines */
+
+  if (scroll_conservatively && !current_buffer->clip_changed
+      && startp >= BEGV && startp <= ZV)
+    {
+      int this_scroll_margin = scroll_margin;
+      int scroll_margin_pos;
+
+      /* Don't use a scroll margin that is negative or too large.  */
+      if (this_scroll_margin < 0)
+	this_scroll_margin = 0;
+
+      if (XINT (w->height) < 4 * this_scroll_margin)
+	this_scroll_margin = XINT (w->height) / 4;
+
+      scroll_margin_pos = Z - XFASTINT (w->window_end_pos);
+      if (this_scroll_margin)
+	{
+	  pos = *vmotion (scroll_margin_pos, -this_scroll_margin, w);
+	  scroll_margin_pos = pos.bufpos;
+	}
+      if (PT >= scroll_margin_pos)
+	{
+	  struct position pos;
+	  pos = *compute_motion (scroll_margin_pos, 0, 0, 0,
+				 PT, XFASTINT (w->height), 0,
+				 XFASTINT (w->width), XFASTINT (w->hscroll),
+				 pos_tab_offset (w, startp), w);
+	  if (pos.vpos > scroll_conservatively)
+	    goto scroll_fail_1;
+
+	  pos = *vmotion (startp, pos.vpos + 1, w);
+
+	  if (! NILP (Vwindow_scroll_functions))
+	    {
+	      Fset_marker (w->start, make_number (pos.bufpos), Qnil);
+	      run_hook_with_args_2 (Qwindow_scroll_functions, window,
+				    make_number (pos.bufpos));
+	      pos.bufpos = marker_position (w->start);
+	    }
+	  try_window (window, pos.bufpos);
+	  if (cursor_vpos >= 0)
+	    {
+	      if (!just_this_one || current_buffer->clip_changed
+		  || beg_unchanged < startp)
+		/* Forget any recorded base line for line number display.  */
+		w->base_line_number = Qnil;
+	      goto done;
+	    }
+	  else
+	    cancel_my_columns (w);
+	}
+
+      scroll_margin_pos = startp;
+      if (this_scroll_margin)
+	{
+	  pos = *vmotion (scroll_margin_pos, this_scroll_margin, w);
+	  scroll_margin_pos = pos.bufpos;
+	}
+      if (PT < scroll_margin_pos)
+	{
+	  struct position pos;
+	  pos = *compute_motion (PT, 0, 0, 0,
+				 scroll_margin_pos, XFASTINT (w->height), 0,
+				 XFASTINT (w->width), XFASTINT (w->hscroll),
+				 pos_tab_offset (w, startp), w);
+	  if (pos.vpos > scroll_conservatively)
+	    goto scroll_fail_1;
+
+	  pos = *vmotion (startp, -pos.vpos, w);
+
+	  if (! NILP (Vwindow_scroll_functions))
+	    {
+	      Fset_marker (w->start, make_number (pos.bufpos), Qnil);
+	      run_hook_with_args_2 (Qwindow_scroll_functions, window,
+				    make_number (pos.bufpos));
+	      pos.bufpos = marker_position (w->start);
+	    }
+	  try_window (window, pos.bufpos);
+	  if (cursor_vpos >= 0)
+	    {
+	      if (!just_this_one || current_buffer->clip_changed
+		  || beg_unchanged < startp)
+		/* Forget any recorded base line for line number display.  */
+		w->base_line_number = Qnil;
+	      goto done;
+	    }
+	  else
+	    cancel_my_columns (w);
+	}
+    scroll_fail_1: ;
+    }
 
   if (scroll_step && !current_buffer->clip_changed
       && startp >= BEGV && startp <= ZV)
@@ -1809,13 +2147,13 @@ recenter:
 
   startp = marker_position (w->start);
   w->start_at_line_beg
-    = (startp == BEGV || FETCH_CHAR (startp - 1) == '\n') ? Qt : Qnil;
+    = (startp == BEGV || FETCH_BYTE (startp - 1) == '\n') ? Qt : Qnil;
 
 done:
   if ((update_mode_line
        /* If window not full width, must redo its mode line
 	  if the window to its side is being redone */
-       || (!just_this_one && width < FRAME_WIDTH (f) - 1)
+       || (!just_this_one && !WINDOW_FULL_WIDTH_P (w))
        || INTEGERP (w->base_line_pos)
        || (!NILP (w->column_number_displayed)
 	   && XFASTINT (w->column_number_displayed) != current_column ()))
@@ -1895,30 +2233,33 @@ try_window (window, pos)
   register int height = window_internal_height (w);
   register int vpos = XFASTINT (w->top);
   register int last_text_vpos = vpos;
-  int tab_offset = pos_tab_offset (w, pos);
   FRAME_PTR f = XFRAME (w->frame);
   int width = window_internal_width (w) - 1;
   struct position val;
+
+  /* POS should never be out of range!  */
+  if (pos < XBUFFER (w->buffer)->begv
+      || pos > XBUFFER (w->buffer)->zv)
+    abort ();
 
   Fset_marker (w->start, make_number (pos), Qnil);
   cursor_vpos = -1;
   overlay_arrow_seen = 0;
   zv_strings_seen = 0;
   val.hpos = XINT (w->hscroll) ? 1 - XINT (w->hscroll) : 0;
+  val.ovstring_chars_done = 0;
+  val.tab_offset = pos_tab_offset (w, pos);
 
   while (--height >= 0)
     {
-      val = *display_text_line (w, pos, vpos, val.hpos, tab_offset);
+      val = *display_text_line (w, pos, vpos, val.hpos, val.tab_offset,
+				val.ovstring_chars_done);
+      /* The following code is omitted because we maintain tab_offset
+         in VAL.  */
+#if 0
       tab_offset += width;
-      /* For the first line displayed, display_text_line
-	 subtracts the prompt width from the tab offset.
-	 But it does not affect the value of our variable tab_offset.
-	 So we do the subtraction again,
-	 for the sake of continuation lines of that first line.  */
-      if (MINI_WINDOW_P (w) && vpos == XFASTINT (w->top))
-	tab_offset -= minibuf_prompt_width;
-
       if (val.vpos) tab_offset = 0;
+#endif  /* 0 */
       vpos++;
       if (pos != val.bufpos)
 	{
@@ -1932,7 +2273,7 @@ try_window (window, pos)
 	  last_text_vpos
 	    /* Next line, unless prev line ended in end of buffer with no cr */
 	    = vpos - (val.vpos
-		      && (FETCH_CHAR (val.bufpos - 1) != '\n' || invis));
+		      && (FETCH_BYTE (val.bufpos - 1) != '\n' || invis));
 	}
       pos = val.bufpos;
     }
@@ -1986,7 +2327,7 @@ try_window_id (window)
   struct position val, bp, ep, xp, pp;
   int scroll_amount = 0;
   int delta;
-  int tab_offset, epto, old_tick;
+  int epto, old_tick;
 
   if (GPT - BEG < beg_unchanged)
     beg_unchanged = GPT - BEG;
@@ -1998,7 +2339,10 @@ try_window_id (window)
 
   /* Find position before which nothing is changed.  */
   bp = *compute_motion (start, 0, lmargin, 0,
-			min (ZV, beg_unchanged + BEG), height, 0,
+			min (ZV, beg_unchanged + BEG), height,
+			/* BUG FIX: See the comment of
+                           Fpos_visible_in_window_p() (window.c).  */
+			- (1 << (BITS_PER_SHORT - 1)),
 			width, hscroll, pos_tab_offset (w, start), w);
   if (bp.vpos >= height)
     {
@@ -2009,7 +2353,10 @@ try_window_id (window)
 	     But we need to update window_end_pos to account for
 	     any change in buffer size.  */
 	  bp = *compute_motion (start, 0, lmargin, 0,
-				ZV, height, 0,
+				ZV, height,
+				/* BUG FIX: See the comment of
+                                   Fpos_visible_in_window_p() (window.c).  */
+				- (1 << (BITS_PER_SHORT - 1)),
 				width, hscroll, pos_tab_offset (w, start), w);
 	  XSETFASTINT (w->window_end_vpos, height);
 	  XSETFASTINT (w->window_end_pos, Z - bp.bufpos);
@@ -2041,12 +2388,14 @@ try_window_id (window)
       --vpos;
       pos = bp.bufpos;
     }
+  val.tab_offset = bp.tab_offset; /* Update tab offset.  */
 
   if (bp.contin && bp.hpos != lmargin)
     {
       val.hpos = bp.prevhpos - width + lmargin;
+      val.tab_offset = bp.tab_offset + bp.prevhpos - width;
       did_motion = 1;
-      pos--;
+      DEC_POS (pos);
     }
 
   bp.vpos = vpos;
@@ -2060,7 +2409,9 @@ try_window_id (window)
   /* Compute the cursor position after that newline.  */
   ep = *compute_motion (pos, vpos, val.hpos, did_motion, tem,
 			height, - (1 << (BITS_PER_SHORT - 1)),
-			width, hscroll, pos_tab_offset (w, bp.bufpos), w);
+			width, hscroll,
+			/* We have tab offset in VAL, use it.  */
+			val.tab_offset, w); 
 
   /* If changes reach past the text available on the frame,
      just display rest of frame.  */
@@ -2076,7 +2427,7 @@ try_window_id (window)
      newline before it, so the following line must be redrawn. */
   if (stop_vpos == ep.vpos
       && (ep.bufpos == BEGV
-	  || FETCH_CHAR (ep.bufpos - 1) != '\n'
+	  || FETCH_BYTE (ep.bufpos - 1) != '\n'
 	  || ep.bufpos == Z - end_unchanged))
     stop_vpos = ep.vpos + 1;
 
@@ -2089,17 +2440,20 @@ try_window_id (window)
   if (stop_vpos < height)
     {
       /* Now determine how far up or down the rest of the window has moved */
-      epto = pos_tab_offset (w, ep.bufpos);
       xp = *compute_motion (ep.bufpos, ep.vpos, ep.hpos, 1,
 			    Z - XFASTINT (w->window_end_pos),
-			    10000, 0, width, hscroll, epto, w);
+			    /* Don't care for VPOS... */
+			    1 << (BITS_PER_SHORT - 1),
+			    /* ... nor HPOS.  */
+			    1 << (BITS_PER_SHORT - 1),
+			    width, hscroll, ep.tab_offset, w);
       scroll_amount = xp.vpos - XFASTINT (w->window_end_vpos);
 
       /* Is everything on frame below the changes whitespace?
 	 If so, no scrolling is really necessary.  */
       for (i = ep.bufpos; i < xp.bufpos; i++)
 	{
-	  tem = FETCH_CHAR (i);
+	  tem = FETCH_BYTE (i);
 	  if (tem != ' ' && tem != '\n' && tem != '\t')
 	    break;
 	}
@@ -2110,25 +2464,28 @@ try_window_id (window)
 		   XFASTINT (w->window_end_vpos) + scroll_amount);
 
       /* Before doing any scrolling, verify that point will be on frame. */
-      if (PT > ep.bufpos && !(PT <= xp.bufpos && xp.bufpos < height))
+      if (PT > ep.bufpos && !(PT <= xp.bufpos && xp.vpos < height))
 	{
 	  if (PT <= xp.bufpos)
 	    {
 	      pp = *compute_motion (ep.bufpos, ep.vpos, ep.hpos, 1,
 				    PT, height, - (1 << (BITS_PER_SHORT - 1)),
-				    width, hscroll, epto, w);
+				    width, hscroll,
+				    /* We have tab offset in EP, use it.  */
+				    ep.tab_offset, w);
 	    }
 	  else
 	    {
 	      pp = *compute_motion (xp.bufpos, xp.vpos, xp.hpos, 1,
 				    PT, height, - (1 << (BITS_PER_SHORT - 1)),
 				    width, hscroll,
-				    pos_tab_offset (w, xp.bufpos), w);
+				    /* We have tab offset in XP, use it. */
+				    xp.tab_offset, w);
 	    }
 	  if (pp.bufpos < PT || pp.vpos == height)
 	    return 0;
 	  cursor_vpos = pp.vpos + top;
-	  cursor_hpos = XFASTINT (w->left) + minmax (0, pp.hpos, width);
+	  cursor_hpos = WINDOW_LEFT_MARGIN (w) + minmax (0, pp.hpos, width);
 	}
 
       if (stop_vpos - scroll_amount >= height
@@ -2226,26 +2583,35 @@ try_window_id (window)
 
   /* Redisplay the lines where the text was changed */
   last_text_vpos = vpos;
+  /* The following code is omitted because we maintain tab offset in
+     val.tab_offset.  */
+#if 0
   tab_offset = pos_tab_offset (w, pos);
   /* If we are starting display in mid-character, correct tab_offset
      to account for passing the line that that character really starts in.  */
   if (val.hpos < lmargin)
     tab_offset += width;
+#endif /* 0 */
   old_tick = MODIFF;
   while (vpos < stop_vpos)
     {
-      val = *display_text_line (w, pos, top + vpos++, val.hpos, tab_offset);
+      val = *display_text_line (w, pos, top + vpos++, val.hpos, val.tab_offset,
+				val.ovstring_chars_done);
       /* If display_text_line ran a hook and changed some text,
 	 redisplay all the way to bottom of buffer
 	 So that we show the changes.  */
       if (old_tick != MODIFF)
 	stop_vpos = height;
+      /* The following code is omitted because we maintain tab offset
+	 in val.tab_offset.  */
+#if 0
       tab_offset += width;
       if (val.vpos) tab_offset = 0;
+#endif
       if (pos != val.bufpos)
 	last_text_vpos
 	  /* Next line, unless prev line ended in end of buffer with no cr */
-	    = vpos - (val.vpos && FETCH_CHAR (val.bufpos - 1) != '\n');
+	    = vpos - (val.vpos && FETCH_BYTE (val.bufpos - 1) != '\n');
       pos = val.bufpos;
     }
 
@@ -2272,27 +2638,41 @@ try_window_id (window)
       FRAME_SCROLL_BOTTOM_VPOS (f) = xp.vpos;
       vpos = xp.vpos;
       pos = xp.bufpos;
-      val.hpos = lmargin;
+      val.hpos = xp.hpos;
+      val.tab_offset = xp.tab_offset;
       if (pos == ZV)
-	vpos = height + scroll_amount;
+	{ /* Display from next line */
+	  vpos = height + scroll_amount;
+	  val.hpos = lmargin;
+	  val.tab_offset = 0;
+	}
       else if (xp.contin && xp.hpos != lmargin)
 	{
 	  val.hpos = xp.prevhpos - width + lmargin;
-	  pos--;
+	  val.tab_offset = xp.tab_offset + bp.prevhpos - width;
+	  DEC_POS (pos);
 	}
 
       blank_end_of_window = 1;
+      /* The following code is omitted because we maintain tab offset
+	 in val.tab_offset.  */
+#if 0
       tab_offset = pos_tab_offset (w, pos);
       /* If we are starting display in mid-character, correct tab_offset
 	 to account for passing the line that that character starts in.  */
       if (val.hpos < lmargin)
 	tab_offset += width;
-
+#endif
       while (vpos < height)
 	{
-	  val = *display_text_line (w, pos, top + vpos++, val.hpos, tab_offset);
+	  val = *display_text_line (w, pos, top + vpos++, val.hpos,
+				    val.tab_offset, val.ovstring_chars_done);
+	  /* The following code is omitted because we maintain tab
+	     offset in val.tab_offset.  */
+#if 0
 	  tab_offset += width;
 	  if (val.vpos) tab_offset = 0;
+#endif /* 0 */
 	  pos = val.bufpos;
 	}
 
@@ -2329,7 +2709,11 @@ try_window_id (window)
   if (cursor_vpos < 0)
     {
     findpoint:
-      val = *compute_motion (start, 0, lmargin, 0, PT, 10000, 10000,
+      val = *compute_motion (start, 0, lmargin, 0, PT, 
+			     /* Don't care for VPOS...  */
+			     1 << (BITS_PER_SHORT - 1),
+			     /* ... nor HPOS.  */
+			     1 << (BITS_PER_SHORT - 1),
 			     width, hscroll, pos_tab_offset (w, start), w);
       /* Admit failure if point is off frame now */
       if (val.vpos >= height)
@@ -2339,7 +2723,7 @@ try_window_id (window)
 	  return 0;
 	}
       cursor_vpos = val.vpos + top;
-      cursor_hpos = XFASTINT (w->left) + minmax (0, val.hpos, width);
+      cursor_hpos = WINDOW_LEFT_MARGIN (w) + minmax (0, val.hpos, width);
     }
 
   FRAME_CURSOR_X (f) = cursor_hpos;
@@ -2359,76 +2743,6 @@ try_window_id (window)
 
   return 1;
 }
-
-/* Mark a section of BUF as modified, but only for the sake of redisplay.
-   This is useful for recording changes to overlays.
-
-   We increment the buffer's modification timestamp and set the
-   redisplay caches (windows_or_buffers_changed, beg_unchanged, etc)
-   as if the region of text between START and END had been modified;
-   the redisplay code will check this against the windows' timestamps,
-   and redraw the appropriate area of the buffer.
-
-   However, if the buffer is unmodified, we bump the last-save
-   timestamp as well, so that incrementing the timestamp doesn't fool
-   Emacs into thinking that the buffer's text has been modified. 
-
-   Tweaking the timestamps shouldn't hurt the first-modification
-   timestamps recorded in the undo records; those values aren't
-   written until just before a real text modification is made, so they
-   will never catch the timestamp value just before this function gets
-   called.  */
-
-void
-redisplay_region (buf, start, end)
-     struct buffer *buf;
-     int start, end;
-{
-  if (start == end)
-    return;
-
-  if (start > end)
-    {
-      int temp = start;
-      start = end; end = temp;
-    }
-
-  /* If this is a buffer not in the selected window,
-     we must do other windows.  */
-  if (buf != XBUFFER (XWINDOW (selected_window)->buffer))
-    windows_or_buffers_changed = 1;
-  /* If it's not current, we can't use beg_unchanged, end_unchanged for it.  */
-  else if (buf != current_buffer)
-    windows_or_buffers_changed = 1;
-  /* If multiple windows show this buffer, we must do other windows.  */
-  else if (buffer_shared > 1)
-    windows_or_buffers_changed = 1;
-  else
-    {
-      if (unchanged_modified == MODIFF)
-	{
-	  beg_unchanged = start - BEG;
-	  end_unchanged = Z - end;
-	}
-      else
-	{
-	  if (Z - end < end_unchanged)
-	    end_unchanged = Z - end;
-	  if (start - BEG < beg_unchanged)
-	    beg_unchanged = start - BEG;
-	}
-    }
-
-  /* Increment the buffer's time stamp, but also increment the save
-     and autosave timestamps, so as not to screw up that timekeeping.  */
-  if (BUF_MODIFF (buf) == BUF_SAVE_MODIFF (buf))
-    BUF_SAVE_MODIFF (buf)++;
-  if (BUF_MODIFF (buf) == buf->auto_save_modified)
-    buf->auto_save_modified++;
-
-  BUF_MODIFF (buf) ++;
-}
-
 
 /* Copy LEN glyphs starting address FROM to the rope TO.
    But don't actually copy the parts that would come in before S.
@@ -2454,8 +2768,13 @@ copy_part_of_rope (f, to, s, from, len, face)
   if (! FRAME_TERMCAP_P (f))
     while (n--)
       {
-	int glyph = (INTEGERP (*fp) ? XFASTINT (*fp) : 0);
+	GLYPH glyph = (INTEGERP (*fp) ? XFASTINT (*fp) : 0);
 	int facecode;
+	unsigned int c = FAST_GLYPH_CHAR (glyph);
+
+	if (c > MAX_CHAR)
+	  /* For an invalid character code, use space.  */
+	  c = ' ';
 
 	if (FAST_GLYPH_FACE (glyph) == 0)
 	  /* If GLYPH has no face code, use FACE.  */
@@ -2471,7 +2790,7 @@ copy_part_of_rope (f, to, s, from, len, face)
 	  }
 
 	if (to >= s)
-	  *to = FAST_MAKE_GLYPH (FAST_GLYPH_CHAR (glyph), facecode);
+	  *to = FAST_MAKE_GLYPH (c, facecode);
 	++to;
 	++fp;
       }
@@ -2518,6 +2837,9 @@ fix_glyph (f, glyph, cface)
 
    TABOFFSET is an offset for ostensible hpos, used in tab stop calculations.
 
+   OVSTR_DONE is the number of chars of overlay before/after strings
+   at this position which have already been processed.
+
    Display on position VPOS on the frame.  It is origin 0, relative to
    the top of the frame, not W.
 
@@ -2528,12 +2850,13 @@ fix_glyph (f, glyph, cface)
 struct position val_display_text_line;
 
 static struct position *
-display_text_line (w, start, vpos, hpos, taboffset)
+display_text_line (w, start, vpos, hpos, taboffset, ovstr_done)
      struct window *w;
      int start;
      int vpos;
      int hpos;
      int taboffset;
+     int ovstr_done;
 {
   register int pos = start;
   register int c;
@@ -2558,12 +2881,14 @@ display_text_line (w, start, vpos, hpos, taboffset)
   int hscroll = XINT (w->hscroll);
   int truncate = (hscroll
 		  || (truncate_partial_width_windows
-		      && XFASTINT (w->width) < FRAME_WIDTH (f))
+		      && !WINDOW_FULL_WIDTH_P (w))
 		  || !NILP (current_buffer->truncate_lines));
 
   /* 1 if we should highlight the region.  */
   int highlight_region
-    = !NILP (Vtransient_mark_mode) && !NILP (current_buffer->mark_active);
+    = (!NILP (Vtransient_mark_mode) && !NILP (current_buffer->mark_active)
+       && (XWINDOW (current_buffer->last_selected_window) == w
+	   || highlight_nonselected_windows));
   int region_beg, region_end;
 
   int selective = (INTEGERP (current_buffer->selective_display)
@@ -2589,9 +2914,20 @@ display_text_line (w, start, vpos, hpos, taboffset)
        : default_invis_vector);
 
   GLYPH truncator = (dp == 0 || !INTEGERP (DISP_TRUNC_GLYPH (dp))
+		     || !GLYPH_CHAR_VALID_P (XINT (DISP_TRUNC_GLYPH (dp)))
 		     ? '$' : XINT (DISP_TRUNC_GLYPH (dp)));
   GLYPH continuer = (dp == 0 || !INTEGERP (DISP_CONTINUE_GLYPH (dp))
+		     || !GLYPH_CHAR_VALID_P (XINT (DISP_CONTINUE_GLYPH (dp)))
 		     ? '\\' : XINT (DISP_CONTINUE_GLYPH (dp)));
+
+  /* If 1, we must handle multibyte characters.  */
+  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+  /* Length of multibyte form of each character.  */
+  int len;
+  /* Glyphs generated should be set this bit mask if text must be
+     displayed from right to left.  */
+  GLYPH rev_dir_bit = (NILP (current_buffer->direction_reversed)
+		       ? 0 : GLYPH_MASK_REV_DIR);
 
   /* The next buffer location at which the face should change, due
      to overlays or text property changes.  */
@@ -2608,8 +2944,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
   XSETFASTINT (default_invis_vector[2], '.');
   default_invis_vector[0] = default_invis_vector[1] = default_invis_vector[2];
 
-  hpos += XFASTINT (w->left);
-  get_display_line (f, vpos, XFASTINT (w->left));
+  get_display_line (f, vpos, WINDOW_LEFT_MARGIN (w));
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
 
   /* Show where to highlight the region.  */
@@ -2629,7 +2964,10 @@ display_text_line (w, start, vpos, hpos, taboffset)
       w->region_showing = Qt;
     }
   else
-    region_beg = region_end = -1;
+    {
+      region_beg = region_end = -1;
+      w->region_showing = Qnil;
+    }
 
   if (MINI_WINDOW_P (w)
       && start == BEG
@@ -2637,19 +2975,24 @@ display_text_line (w, start, vpos, hpos, taboffset)
     {
       if (! NILP (minibuf_prompt))
 	{
+	  int old_width = minibuf_prompt_width;
+
 	  minibuf_prompt_width
 	    = (display_string (w, vpos, XSTRING (minibuf_prompt)->data,
-			       XSTRING (minibuf_prompt)->size, hpos,
+			       XSTRING (minibuf_prompt)->size,
+			       hpos + WINDOW_LEFT_MARGIN (w),
 			       /* Display a space if we truncate.  */
 			       ' ',
 			       1, -1,
 			       /* Truncate the prompt a little before the
 				  margin, so user input can at least start
 				  on the first line.  */
-			       w->width > 10 ? w->width - 4 : -1)
-	       - hpos);
+			       (XFASTINT (w->width) > 10
+				? XFASTINT (w->width) - 4 : -1),
+			       -1)
+	       - hpos - WINDOW_LEFT_MARGIN (w));
 	  hpos += minibuf_prompt_width;
-	  taboffset -= minibuf_prompt_width;
+	  taboffset -= minibuf_prompt_width - old_width;
 	}
       else
 	minibuf_prompt_width = 0;
@@ -2676,7 +3019,10 @@ display_text_line (w, start, vpos, hpos, taboffset)
       if (left_edge->vpos > vpos
           || left_edge->hpos > 0)
         {
-          pos = left_edge->bufpos - 1;
+          pos = left_edge->bufpos;
+	  /* Since this should not be a valid multibyte character, we
+             can decrease POS by 1.  */
+	  pos--;
           hpos = left_edge->prevhpos;
         }
       else
@@ -2686,13 +3032,15 @@ display_text_line (w, start, vpos, hpos, taboffset)
         }
     }
 
+  hpos += WINDOW_LEFT_MARGIN (w);
+
   desired_glyphs->bufp[vpos] = start;
   p1 = desired_glyphs->glyphs[vpos] + hpos;
   p1start = p1;
   charstart = desired_glyphs->charstarts[vpos] + hpos;
   /* In case we don't ever write anything into it...  */
-  desired_glyphs->charstarts[vpos][XFASTINT (w->left)] = -1;
-  leftmargin = desired_glyphs->glyphs[vpos] + XFASTINT (w->left);
+  desired_glyphs->charstarts[vpos][WINDOW_LEFT_MARGIN (w)] = -1;
+  leftmargin = desired_glyphs->glyphs[vpos] + WINDOW_LEFT_MARGIN (w);
   endp = leftmargin + width;
 
   /* Arrange the overlays nicely for our purposes.  Usually, we call
@@ -2711,7 +3059,17 @@ display_text_line (w, start, vpos, hpos, taboffset)
   next_boundary = pos;
   p1prev = p1;
   prevpos = pos;
-  while (1)
+
+  /* If the window is hscrolled and point is in the invisible part of the
+     current line beyond the left margin we can record the cursor location
+     right away.  */
+  if (hscroll && start <= PT && PT < pos && cursor_vpos < 0)
+    {
+      cursor_vpos = vpos;
+      cursor_hpos = p1 - leftmargin;
+    }
+
+  while (p1 < endp)
     {
       if (pos >= pause)
 	{
@@ -2727,13 +3085,47 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	      if (pos < ZV || !zv_strings_seen++)
 		{
 		  int ovlen;
-		  char *ovstr;
+		  unsigned char *ovstr;
 		  ovlen = overlay_strings (pos, w, &ovstr);
-		  for (; ovlen; ovlen--, ovstr++)
+
+		  if (ovlen > 0)
 		    {
-		      if (p1 >= leftmargin && p1 < endp)
-			*p1 = MAKE_GLYPH (f, *ovstr, current_face);
-		      p1++;
+		      /* Skip the ones we did in a previous line.  */
+		      ovstr += ovstr_done;
+		      ovlen -= ovstr_done;
+
+		      while (ovlen > 0)
+			{
+			  int charset, cols;
+			  GLYPH g;
+
+			  if (multibyte)
+			    {
+			      c = STRING_CHAR_AND_LENGTH (ovstr, ovlen, len);
+			      ovstr += len, ovlen -= len, ovstr_done += len;
+			      charset = CHAR_CHARSET (c);
+			      cols = (charset == CHARSET_COMPOSITION
+				      ? cmpchar_table[COMPOSITE_CHAR_ID (c)]->width
+				      : CHARSET_WIDTH (charset));
+			    }
+			  else
+			    {
+			      c = *ovstr++, ovlen--, ovstr_done++;
+			      cols = 1;
+			    }
+			  g = MAKE_GLYPH (f, c, current_face) | rev_dir_bit;
+			  while (cols-- > 0)
+			    {
+			      if (p1 >= leftmargin && p1 < endp)
+				*p1 = g, g |= GLYPH_MASK_PADDING;
+			      p1++;
+			    }
+			}
+		      /* If we did all the overlay strings
+			 and we have room for text, clear ovstr_done
+			 just for neatness' sake.  */
+		      if (ovlen == 0 && p1 < endp)
+			ovstr_done = 0;
 		    }
 		}
 
@@ -2753,7 +3145,12 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	      /* This is just an estimate to give reasonable
 		 performance; nothing should go wrong if it is too small.  */
 	      if (XFASTINT (limit) > pos + 50)
-		XSETFASTINT (limit, pos + 50);
+		{
+		  int limitpos = pos + 50;
+		  if (limitpos < Z)
+		    INC_POS (limitpos); /* Adjust to character boundary.  */
+		  XSETFASTINT (limit, limitpos);
+		}
 	      limit = Fnext_single_property_change (position, Qinvisible,
 						    Fcurrent_buffer (), limit);
 #endif
@@ -2834,9 +3231,15 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	     loop, to see what face we should start with.  */
 	  if (pos >= next_face_change
 	      && (FRAME_WINDOW_P (f) || FRAME_MSDOS_P (f)))
-	    current_face = compute_char_face (f, w, pos,
-					      region_beg, region_end,
-					      &next_face_change, pos + 50, 0);
+	    {
+	      int limit = pos + 50;
+
+	      if (limit < Z && !CHAR_HEAD_P (POS_ADDR (limit)))
+		INC_POS (limit); /* Adjust to character boundary.  */
+	      current_face = compute_char_face (f, w, pos,
+						region_beg, region_end,
+						&next_face_change, limit, 0);
+	    }
 #endif
 
 	  /* Compute the next place we need to stop
@@ -2859,7 +3262,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	  if (pos < GPT && GPT < pause)
 	    pause = GPT;
 
-	  p = &FETCH_CHAR (pos);
+	  p = POS_ADDR (pos);
 	}
 
       if (p1 >= endp)
@@ -2867,23 +3270,33 @@ display_text_line (w, start, vpos, hpos, taboffset)
 
       p1prev = p1;
 
-      c = *p++;
+      if (multibyte)
+	/* PAUSE is surely at character boundary.  */
+	c = STRING_CHAR_AND_LENGTH (p, pause - pos, len), p += len;
+      else
+	c = *p++, len = 1;
       /* Let a display table override all standard display methods.  */
       if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c)))
 	{
 	  p1 = copy_part_of_rope (f, p1, leftmargin,
 				  XVECTOR (DISP_CHAR_VECTOR (dp, c))->contents,
 				  XVECTOR (DISP_CHAR_VECTOR (dp, c))->size,
-				  current_face);
+				  current_face, rev_dir_bit);
 	}
       else if (c >= 040 && c < 0177)
 	{
 	  if (p1 >= leftmargin)
-	    *p1 = MAKE_GLYPH (f, c, current_face);
+	    *p1 = MAKE_GLYPH (f, c, current_face) | rev_dir_bit;
 	  p1++;
 	}
       else if (c == '\n')
 	{
+#if 0
+	  /* Same as p1prev, but after the invis_vector_contents text
+	     (if we have that on this line).  */
+	  GLYPH *p1prev_modified;
+#endif
+
 	  invis = 0;
 	  if (last_invis_skip == pos
 	      && TEXT_PROP_MEANS_INVISIBLE_WITH_ELLIPSIS (last_invis_prop))
@@ -2894,28 +3307,35 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	    {
 	      invis = 1;
 	      pos = find_next_newline (pos + 1, 1);
-	      if (FETCH_CHAR (pos - 1) == '\n')
+	      if (FETCH_BYTE (pos - 1) == '\n')
 		pos--;
 	    }
 	  if (invis && selective_rlen > 0 && p1 >= leftmargin)
 	    {
+#if 0
+	      GLYPH *cs, *csend;
+
+	      cs = charstart + (p1 - p1start);
+#endif
+
 	      p1 += selective_rlen;
 	      if (p1 - leftmargin > width)
 		p1 = endp;
-	      copy_part_of_rope (f, p1prev, p1prev, invis_vector_contents,
-				 (p1 - p1prev), current_face);
-	    }
-#ifdef HAVE_FACES
-	  /* Draw the face of the newline character as extending all the 
-	     way to the end of the frame line.  */
-	  if (current_face)
-	    {
-	      if (p1 < leftmargin)
-		p1 = leftmargin;
-	      while (p1 < endp)
-		*p1++ = FAST_MAKE_GLYPH (' ', current_face);
-	    }
+
+#if 0 /* This needs more work; charstarts needs to record
+	 both whether a position ho;ds an ellipsis character
+	 and what buffer position it corresponds to.  */
+	      csend = charstart + (p1 - p1start);
+	      while (cs != csend)
+		*cs++ = -2;
+	      /* The idea is to use p1prev_modified instead of p1prev
+		 in the loop below over p2x.  */
+	      p1prev_modified = p1;
 #endif
+
+	      copy_part_of_rope (f, p1prev, p1prev, invis_vector_contents,
+				 (p1 - p1prev), current_face, rev_dir_bit);
+	    }
 
 	  /* Update charstarts for the newline that ended this line.  */
 	  /* Do nothing here for a char that's entirely off the left edge
@@ -2934,6 +3354,17 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	      while (p2x < p2)
 		*p2x++ = -1;
 	    }
+#ifdef HAVE_FACES
+	  /* Draw the face of the newline character as extending all the 
+	     way to the end of the frame line.  */
+	  if (current_face)
+	    {
+	      if (p1 < leftmargin)
+		p1 = leftmargin;
+	      while (p1 < endp)
+		*p1++ = FAST_MAKE_GLYPH (' ', current_face) | rev_dir_bit;
+	    }
+#endif
 
 	  break;
 	}
@@ -2942,7 +3373,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	  do
 	    {
 	      if (p1 >= leftmargin && p1 < endp)
-		*p1 = MAKE_GLYPH (f, ' ', current_face);
+		*p1 = MAKE_GLYPH (f, ' ', current_face) | rev_dir_bit;
 	      p1++;
 	    }
 	  while ((p1 - leftmargin + taboffset + hscroll - (hscroll > 0))
@@ -2951,7 +3382,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
       else if (c == Ctl ('M') && selective == -1)
 	{
 	  pos = find_next_newline (pos, 1);
-	  if (FETCH_CHAR (pos - 1) == '\n')
+	  if (FETCH_BYTE (pos - 1) == '\n')
 	    pos--;
 	  if (selective_rlen > 0)
 	    {
@@ -2959,7 +3390,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	      if (p1 - leftmargin > width)
 		p1 = endp;
 	      copy_part_of_rope (f, p1prev, p1prev, invis_vector_contents,
-				 (p1 - p1prev), current_face);
+				 (p1 - p1prev), current_face, rev_dir_bit);
 	    }
 #ifdef HAVE_FACES
 	  /* Draw the face of the newline character as extending all the 
@@ -2969,7 +3400,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	      if (p1 < leftmargin)
 		p1 = leftmargin;
 	      while (p1 < endp)
-		*p1++ = FAST_MAKE_GLYPH (' ', current_face);
+		*p1++ = FAST_MAKE_GLYPH (' ', current_face) | rev_dir_bit;
 	    }
 #endif
 
@@ -2995,34 +3426,58 @@ display_text_line (w, start, vpos, hpos, taboffset)
       else if (c < 0200 && ctl_arrow)
 	{
 	  if (p1 >= leftmargin)
-	    *p1 = fix_glyph (f, (dp && INTEGERP (DISP_CTRL_GLYPH (dp))
-				 ? XINT (DISP_CTRL_GLYPH (dp)) : '^'),
-			     current_face);
+	    *p1 = (fix_glyph
+		   (f, (dp && INTEGERP (DISP_CTRL_GLYPH (dp))
+			&& GLYPH_CHAR_VALID_P (XINT (DISP_CTRL_GLYPH (dp)))
+			? XINT (DISP_CTRL_GLYPH (dp)) : '^'),
+		    current_face)
+		   | rev_dir_bit);
 	  p1++;
 	  if (p1 >= leftmargin && p1 < endp)
-	    *p1 = MAKE_GLYPH (f, c ^ 0100, current_face);
+	    *p1 = MAKE_GLYPH (f, c ^ 0100, current_face) | rev_dir_bit;
+	  p1++;
+	}
+      else if (len == 1)
+	{
+	  /* C is not a multibyte character.  */
+	  if (p1 >= leftmargin)
+	    *p1 = (fix_glyph
+		   (f, (dp && INTEGERP (DISP_ESCAPE_GLYPH (dp))
+			&& GLYPH_CHAR_VALID_P (XINT (DISP_ESCAPE_GLYPH (dp)))
+			? XINT (DISP_ESCAPE_GLYPH (dp)) : '\\'),
+		    current_face)
+		   | rev_dir_bit);
+	  p1++;
+	  if (p1 >= leftmargin && p1 < endp)
+	    *p1 = MAKE_GLYPH (f, (c >> 6) + '0', current_face) | rev_dir_bit;
+	  p1++;
+	  if (p1 >= leftmargin && p1 < endp)
+	    *p1 = (MAKE_GLYPH (f, (7 & (c >> 3)) + '0', current_face)
+		   | rev_dir_bit);
+	  p1++;
+	  if (p1 >= leftmargin && p1 < endp)
+	    *p1 = MAKE_GLYPH (f, (7 & c) + '0', current_face) | rev_dir_bit;
 	  p1++;
 	}
       else
 	{
-	  if (p1 >= leftmargin)
-	    *p1 = fix_glyph (f, (dp && INTEGERP (DISP_ESCAPE_GLYPH (dp))
-				 ? XINT (DISP_ESCAPE_GLYPH (dp)) : '\\'),
-			     current_face);
-	  p1++;
-	  if (p1 >= leftmargin && p1 < endp)
-	    *p1 = MAKE_GLYPH (f, (c >> 6) + '0', current_face);
-	  p1++;
-	  if (p1 >= leftmargin && p1 < endp)
-	    *p1 = MAKE_GLYPH (f, (7 & (c >> 3)) + '0', current_face);
-	  p1++;
-	  if (p1 >= leftmargin && p1 < endp)
-	    *p1 = MAKE_GLYPH (f, (7 & c) + '0', current_face);
-	  p1++;
+	  /* C is a multibyte character.  */
+	  int charset = CHAR_CHARSET (c);
+	  int columns = (charset == CHARSET_COMPOSITION
+			 ? cmpchar_table[COMPOSITE_CHAR_ID (c)]->width
+			 : CHARSET_WIDTH (charset));
+	  GLYPH g = MAKE_GLYPH (f, c, current_face) | rev_dir_bit;
+
+	  while (columns--)
+	    {
+	      if (p1 >= leftmargin && p1 < endp)
+		*p1 = g, g |= GLYPH_MASK_PADDING;
+	      p1++;
+	    }
 	}
 
       prevpos = pos;
-      pos++;
+      pos += len;
 
       /* Update charstarts for the character just output.  */
 
@@ -3075,10 +3530,37 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	 This occurs when the minibuffer prompt takes up the whole line.  */
       if (p1prev)
 	{
-	  /* Start the next line with that same character */
-	  pos--;
-	  /* but at negative hpos, to skip the columns output on this line.  */
-	  val.hpos += p1prev - endp;
+	  /* Start the next line with that same character whose
+             character code is C and the length of multi-byte form is
+             LEN.  */
+	  pos = prevpos;
+
+	  if (len == 1)
+	    /* C is not a multi-byte character.  We can break it and
+	       start from the middle column in the next line.  So,
+	       adjust VAL.HPOS to skip the columns output on this
+	       line.  */
+	    val.hpos += p1prev - endp;
+	  else
+	    {
+	      /* C is a multibyte character.  Since we can't broke it
+		 in the middle, the whole character should be driven
+		 into the next line.  */
+	      /* As the result, the actual columns occupied by the
+		 text on this line is less than WIDTH.  VAL.TAB_OFFSET
+		 must be adjusted.  */
+	      taboffset = taboffset + (p1prev - endp);
+	      /* Let's fill unused columns with TRUNCATOR or CONTINUER.  */
+	      {
+		GLYPH g = fix_glyph (f, truncate ? truncator : continuer, 0);
+		while (p1prev < endp)
+		  *p1prev++ = g;
+	      }
+	      /* If POINT is at POS, cursor should not on this line.  */
+	      lastpos = pos;
+	      if (PT == pos)
+		cursor_vpos = -1;
+	    }
 	}
 
       /* Keep in this line everything up to the continuation column.  */
@@ -3092,10 +3574,11 @@ display_text_line (w, start, vpos, hpos, taboffset)
 
   if (pos < ZV)
     {
-      if (FETCH_CHAR (pos) == '\n')
+      if (FETCH_BYTE (pos) == '\n')
 	{
 	  /* If stopped due to a newline, start next line after it */
 	  pos++;
+	  val.tab_offset = 0;
 	  /* Check again for hidden lines, in case the newline occurred exactly
 	     at the right margin.  */
 	  while (pos < ZV && selective > 0
@@ -3117,16 +3600,20 @@ display_text_line (w, start, vpos, hpos, taboffset)
 		     && indented_beyond_p (pos, selective));
 	      val.hpos = XINT (w->hscroll) ? 1 - XINT (w->hscroll) : 0;
 
-	      lastpos = pos - (FETCH_CHAR (pos - 1) == '\n');
+	      lastpos = pos - (FETCH_BYTE (pos - 1) == '\n');
+	      val.tab_offset = 0;
 	    }
 	  else
 	    {
 	      *p1++ = fix_glyph (f, continuer, 0);
 	      val.vpos = 0;
 	      lastpos--;
+	      val.tab_offset = taboffset + width;
 	    }
 	}
     }
+  else
+    val.tab_offset = 0;
 
   /* If point is at eol or in invisible text at eol,
      record its frame location now.  */
@@ -3141,7 +3628,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
     {
       if (cursor_hpos < 0) cursor_hpos = 0;
       if (cursor_hpos > width) cursor_hpos = width;
-      cursor_hpos += XFASTINT (w->left);
+      cursor_hpos += WINDOW_LEFT_MARGIN (w);
       if (w == XWINDOW (FRAME_SELECTED_WINDOW (f)))
 	{
 	  if (!(cursor_in_echo_area && FRAME_HAS_MINIBUF_P (f)
@@ -3155,14 +3642,14 @@ display_text_line (w, start, vpos, hpos, taboffset)
 	    {
 	      /* Line is not continued and did not start
 		 in middle of character */
-	      if ((hpos - XFASTINT (w->left)
+	      if ((hpos - WINDOW_LEFT_MARGIN (w)
 		   == (XINT (w->hscroll) ? 1 - XINT (w->hscroll) : 0))
 		  && val.vpos)
 		{
 		  this_line_bufpos = start;
 		  this_line_buffer = current_buffer;
 		  this_line_vpos = cursor_vpos;
-		  this_line_start_hpos = hpos;
+		  this_line_start_hpos = hpos - WINDOW_LEFT_MARGIN (w);
 		  this_line_endpos = Z - lastpos;
 		}
 	      else
@@ -3174,12 +3661,19 @@ display_text_line (w, start, vpos, hpos, taboffset)
   /* If hscroll and line not empty, insert truncation-at-left marker */
   if (hscroll && lastpos != start)
     {
-      *leftmargin = fix_glyph (f, truncator, 0);
+      GLYPH g = fix_glyph (f, truncator, 0);
+      *leftmargin = g;
       if (p1 <= leftmargin)
 	p1 = leftmargin + 1;
+      else			/* MULE: it may be a wide-column character */
+	{
+	  p1prev = leftmargin + 1;
+	  while (p1prev < p1 && *p1prev & GLYPH_MASK_PADDING)
+	    *p1prev++ = g;
+	}
     }
 
-  if (XFASTINT (w->width) + XFASTINT (w->left) != FRAME_WIDTH (f))
+  if (!WINDOW_RIGHTMOST_P (w))
     {
       endp++;
       if (p1 < leftmargin) p1 = leftmargin;
@@ -3189,15 +3683,15 @@ display_text_line (w, start, vpos, hpos, taboffset)
          covered up by the scroll bars, and it's distracting to see
          them when the scroll bar windows are flickering around to be
          reconfigured.  */
-      if (FRAME_HAS_VERTICAL_SCROLL_BARS (f))
+      if (FRAME_HAS_VERTICAL_SCROLL_BARS_ON_RIGHT (f))
 	{
 	  int i;
 	  for (i = 0; i < FRAME_SCROLL_BAR_COLS (f); i++)
 	    *p1++ = SPACEGLYPH;
 	}
-      else
+      else if (!FRAME_HAS_VERTICAL_SCROLL_BARS (f))
 	*p1++ = (dp && INTEGERP (DISP_BORDER_GLYPH (dp))
-		 ? DISP_BORDER_GLYPH (dp)
+		 ? XINT (DISP_BORDER_GLYPH (dp))
 		 : '|');
     }
   desired_glyphs->used[vpos] = max (desired_glyphs->used[vpos],
@@ -3252,6 +3746,7 @@ display_text_line (w, start, vpos, hpos, taboffset)
     }
 
   val.bufpos = pos;
+  val.ovstring_chars_done = ovstr_done;
   val_display_text_line = val;
   return &val_display_text_line;
 }
@@ -3265,7 +3760,7 @@ display_menu_bar (w)
   Lisp_Object items, tail;
   register int vpos = 0;
   register FRAME_PTR f = XFRAME (WINDOW_FRAME (w));
-  int maxendcol = FRAME_WIDTH (f);
+  int maxendcol = FRAME_WIDTH (f) + WINDOW_LEFT_MARGIN (w);
   int hpos = 0;
   int i;
 
@@ -3292,16 +3787,16 @@ display_menu_bar (w)
       XSETFASTINT (XVECTOR (items)->contents[i + 3], hpos);
 
       if (hpos < maxendcol)
-	hpos = display_string (XWINDOW (FRAME_ROOT_WINDOW (f)), vpos,
+	hpos = display_string (w, vpos,
 			       XSTRING (string)->data,
 			       XSTRING (string)->size,
-			       hpos, 0, 0, hpos, maxendcol);
+			       hpos, 0, 0, hpos, maxendcol, -1);
       /* Put a space between items.  */
       if (hpos < maxendcol)
 	{
 	  int hpos1 = hpos + 1;
 	  hpos = display_string (w, vpos, "", 0, hpos, 0, 0,
-				 min (hpos1, maxendcol), maxendcol);
+				 min (hpos1, maxendcol), maxendcol, 0);
 	}
     }
 
@@ -3310,7 +3805,7 @@ display_menu_bar (w)
 
   /* Fill out the line with spaces.  */
   if (maxendcol > hpos)
-    hpos = display_string (w, vpos, "", 0, hpos, 0, 0, maxendcol, maxendcol);
+    hpos = display_string (w, vpos, "", 0, hpos, 0, 0, maxendcol, maxendcol, 0);
 
   /* Clear the rest of the lines allocated to the menu bar.  */
   vpos++;
@@ -3325,8 +3820,8 @@ display_mode_line (w)
      struct window *w;
 {
   register int vpos = XFASTINT (w->height) + XFASTINT (w->top) - 1;
-  register int left = XFASTINT (w->left);
-  register int right = XFASTINT (w->width) + left;
+  register int left = WINDOW_LEFT_MARGIN (w);
+  register int right = WINDOW_RIGHT_MARGIN (w);
   register FRAME_PTR f = XFRAME (WINDOW_FRAME (w));
 
   line_number_displayed = 0;
@@ -3346,25 +3841,34 @@ display_mode_line (w)
 
   FRAME_DESIRED_GLYPHS (f)->bufp[vpos] = 0;
 
+  /* Put the mode line in inverse video.
+     Use faces if possible, since that lets us handle
+     partial-width windows and avoid inverting the scroll bar columns.  */
+#ifdef HAVE_FACES
+  if (! FRAME_TERMCAP_P (f) && mode_line_inverse_video)
+    {
+      /* For a partial width window, explicitly set face of each glyph. */
+      int i;
+      unsigned int padding;
+      GLYPH *ptr = FRAME_DESIRED_GLYPHS (f)->glyphs[vpos];
+      for (i = left; i < right; ++i)
+	{
+	  padding = ptr[i] & GLYPH_MASK_PADDING;
+	  ptr[i] = FAST_MAKE_GLYPH (FAST_GLYPH_CHAR (ptr[i]), 1) | padding;
+	}
+    }
+  else
+#endif
+
   /* Make the mode line inverse video if the entire line
      is made of mode lines.
      I.e. if this window is full width,
      or if it is the child of a full width window
      (which implies that that window is split side-by-side
      and the rest of this line is mode lines of the sibling windows).  */
-  if (XFASTINT (w->width) == FRAME_WIDTH (f)
-      || XFASTINT (XWINDOW (w->parent)->width) == FRAME_WIDTH (f))
+  if (WINDOW_FULL_WIDTH_P (w)
+      || WINDOW_FULL_WIDTH_P (XWINDOW (w->parent)))
     FRAME_DESIRED_GLYPHS (f)->highlight[vpos] = mode_line_inverse_video;
-#ifdef HAVE_FACES
-  else if (! FRAME_TERMCAP_P (f) && mode_line_inverse_video)
-    {
-      /* For a partial width window, explicitly set face of each glyph. */
-      int i;
-      GLYPH *ptr = FRAME_DESIRED_GLYPHS (f)->glyphs[vpos];
-      for (i = left; i < right; ++i)
-	ptr[i] = FAST_MAKE_GLYPH (FAST_GLYPH_CHAR (ptr[i]), 1);
-    }
-#endif
 }
 
 /* Contribute ELT to the mode line for window W.
@@ -3426,7 +3930,7 @@ display_mode_element (w, vpos, hpos, depth, minendcol, maxendcol, elt)
 		  hpos = store_frame_title (last, hpos, min (lim, maxendcol));
 		else
 		  hpos = display_string (w, vpos, last, -1, hpos, 0, 1,
-					 hpos, min (lim, maxendcol));
+					 hpos, min (lim, maxendcol), -1);
 	      }
 	    else /* c == '%' */
 	      {
@@ -3463,7 +3967,7 @@ display_mode_element (w, vpos, hpos, depth, minendcol, maxendcol, elt)
 		    else
 		      hpos = display_string (w, vpos, spec, -1,
 					     hpos, 0, 1,
-					     minendcol, maxendcol);
+					     minendcol, maxendcol, -1);
 		  }
 	      }
 	  }
@@ -3491,7 +3995,7 @@ display_mode_element (w, vpos, hpos, depth, minendcol, maxendcol, elt)
 		else
 		  hpos = display_string (w, vpos, XSTRING (tem)->data,
 					 XSTRING (tem)->size,
-					 hpos, 0, 1, minendcol, maxendcol);
+					 hpos, 0, 1, minendcol, maxendcol, -1);
 	      }
 	    /* Give up right away for nil or t.  */
 	    else if (!EQ (tem, elt))
@@ -3585,7 +4089,7 @@ display_mode_element (w, vpos, hpos, depth, minendcol, maxendcol, elt)
 	hpos = store_frame_title ("*invalid*", minendcol, maxendcol);
       else
 	hpos = display_string (w, vpos, "*invalid*", -1, hpos, 0, 1,
-			       minendcol, maxendcol);
+			       minendcol, maxendcol, 0);
       return hpos;
     }
 
@@ -3593,7 +4097,8 @@ display_mode_element (w, vpos, hpos, depth, minendcol, maxendcol, elt)
     if (frame_title_ptr)
       hpos = store_frame_title ("", minendcol, maxendcol);
     else
-      hpos = display_string (w, vpos, "", 0, hpos, 0, 1, minendcol, maxendcol);
+      hpos = display_string (w, vpos, "", 0, hpos,
+			     0, 1, minendcol, maxendcol, 0);
   return hpos;
 }
 
@@ -3624,6 +4129,68 @@ pint2str (buf, width, d)
       *buf++ = *p;
       *p-- = d;
   }
+}
+
+/* Set a mnemonic character for CODING_SYSTEM (Lisp symbol) in BUF.
+   If EOL_FLAG is 1, set also a mnemonic character for end-of-line
+   type of CODING_SYSTEM.  Return updated pointer into BUF.  */
+
+static char *
+decode_mode_spec_coding (coding_system, buf, eol_flag)
+     Lisp_Object coding_system;
+     register char *buf;
+     int eol_flag;
+{
+  Lisp_Object val;
+  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+
+  val = coding_system;
+
+  if (NILP (val))		/* Not yet decided.  */
+    {
+      if (multibyte)
+	*buf++ = '-';
+      if (eol_flag)
+	*buf++ = eol_mnemonic_undecided;
+      /* Don't mention EOL conversion if it isn't decided.  */
+    }
+  else
+    {
+      Lisp_Object eolvalue;
+
+      eolvalue = Fget (coding_system, Qeol_type);
+
+      while (!NILP (val) && SYMBOLP (val))
+	{
+	  val = Fget (val, Qcoding_system);
+	  if (NILP (eolvalue))
+	    eolvalue = Fget (val, Qeol_type);
+	}
+
+      if (multibyte)
+	*buf++ = XFASTINT (XVECTOR (val)->contents[1]);
+
+      if (eol_flag)
+	{
+	  /* The EOL conversion we are using.  */
+	  int eoltype;
+	  /* The EOL conversion that is normal on this system.  */
+
+	  if (NILP (eolvalue))	/* Not yet decided.  */
+	    eoltype = eol_mnemonic_undecided;
+	  else if (VECTORP (eolvalue)) /* Not yet decided.  */
+	    eoltype = eol_mnemonic_undecided;
+	  else			/* INTEGERP (eolvalue) -- 0:LF, 1:CRLF, 2:CR */
+	    eoltype = (XFASTINT (eolvalue) == 0
+		       ? eol_mnemonic_unix
+		       : (XFASTINT (eolvalue) == 1
+			  ? eol_mnemonic_dos : eol_mnemonic_mac));
+
+	  /* Mention the EOL conversion if it is not the usual one.  */
+	  *buf++ = eoltype;
+	}
+    }
+  return buf;
 }
 
 /* Return a string for the output of a mode line %-spec for window W,
@@ -3742,12 +4309,10 @@ decode_mode_spec (w, c, spec_width, maxwidth)
 
     case 'F':
       /* %F displays the frame name.  */
-#ifdef MULTI_FRAME
       if (!NILP (f->title))
 	return (char *) XSTRING (f->title)->data;
       if (f->explicit_name || ! FRAME_WINDOW_P (f))
 	return (char *) XSTRING (f->name)->data;
-#endif
       return "Emacs";
 
     case 'f': 
@@ -3777,6 +4342,9 @@ decode_mode_spec (w, c, spec_width, maxwidth)
 	   don't forget that too fast.  */
 	if (EQ (w->base_line_pos, w->buffer))
 	  goto no_value;
+	/* But do forget it, if the window shows a different buffer now.  */
+	else if (BUFFERP (w->base_line_pos))
+	  w->base_line_pos = Qnil;
 
 	/* If the buffer is very big, don't waste time.  */
 	if (BUF_ZV (b) - BUF_BEGV (b) > line_number_display_limit)
@@ -3947,6 +4515,40 @@ decode_mode_spec (w, c, spec_width, maxwidth)
 #else
       return "T";
 #endif
+
+    case 'z':
+      /* coding-system (not including end-of-line format) */
+    case 'Z':
+      /* coding-system (including end-of-line type) */
+      {
+	int eol_flag = (c == 'Z');
+	char *p = decode_mode_spec_buf;
+
+	if (! FRAME_WINDOW_P (f))
+	  {
+	    /* No need to mention EOL here--the terminal never needs
+	       to do EOL conversion.  */
+	    p = decode_mode_spec_coding (keyboard_coding.symbol, p, 0);
+	    p = decode_mode_spec_coding (terminal_coding.symbol, p, 0);
+	  }
+	p = decode_mode_spec_coding (b->buffer_file_coding_system,
+				     p, eol_flag);
+
+#if 0 /* This proves to be annoying; I think we can do without.  -- rms.  */
+#ifdef subprocesses
+	obj = Fget_buffer_process (Fcurrent_buffer ());
+	if (PROCESSP (obj))
+	  {
+	    p = decode_mode_spec_coding (XPROCESS (obj)->decode_coding_system,
+					 p, eol_flag);
+	    p = decode_mode_spec_coding (XPROCESS (obj)->encode_coding_system,
+					 p, eol_flag);
+	  }
+#endif /* subprocesses */
+#endif /* 0 */
+	*p = 0;
+	return decode_mode_spec_buf;
+      }
     }
 
   if (STRINGP (obj))
@@ -3999,8 +4601,8 @@ display_scan_buffer (start, count, shortage)
       {
 	ceiling =  BUFFER_CEILING_OF (start);
 	ceiling = min (limit, ceiling);
-	ceiling_addr = &FETCH_CHAR (ceiling) + 1;
-	base = (cursor = &FETCH_CHAR (start));
+	ceiling_addr = POS_ADDR (ceiling) + 1;
+	base = (cursor = POS_ADDR (start));
 	while (1)
 	  {
 	    while (*cursor != '\n' && *cursor != 015 && ++cursor != ceiling_addr)
@@ -4028,8 +4630,8 @@ display_scan_buffer (start, count, shortage)
 	{			/* we WILL scan under start */
 	  ceiling =  BUFFER_FLOOR_OF (start);
 	  ceiling = max (limit, ceiling);
-	  ceiling_addr = &FETCH_CHAR (ceiling) - 1;
-	  base = (cursor = &FETCH_CHAR (start));
+	  ceiling_addr = POS_ADDR (ceiling) - 1;
+	  base = (cursor = POS_ADDR (start));
 	  cursor++;
 	  while (1)
 	    {
@@ -4106,11 +4708,15 @@ display_count_lines (from, limit, n, pos_ptr)
   and not display anything beyond there.  Otherwise, only MAXCOL
   controls where to stop output.
 
+  MULTIBYTE can be 0 meaning do not display multibyte chars,
+  1 meaning do display them, or -1 meaning obey the current buffer's
+  value of enable_multibyte_characters.
+
   Returns ending hpos.  */
 
 static int
 display_string (w, vpos, string, length, hpos, truncate,
-		obey_window_width, mincol, maxcol)
+		obey_window_width, mincol, maxcol, multibyte)
      struct window *w;
      unsigned char *string;
      int length;
@@ -4118,6 +4724,7 @@ display_string (w, vpos, string, length, hpos, truncate,
      GLYPH truncate;
      int obey_window_width;
      int mincol, maxcol;
+     int multibyte;
 {
   register int c;
   int truncated;
@@ -4136,28 +4743,33 @@ display_string (w, vpos, string, length, hpos, truncate,
   register struct Lisp_Char_Table *dp = 0;
   int i;
 
+  if (multibyte == -1)
+    multibyte = !NILP (current_buffer->enable_multibyte_characters);
+  /* Now multibyte is 1 if we should display multibyte characters.  */
+
   if (DISP_TABLE_P (Vstandard_display_table))
     dp = XCHAR_TABLE (Vstandard_display_table);
 
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
 
   p1 = p1start;
-  start = desired_glyphs->glyphs[vpos] + XFASTINT (w->left);
+  start = desired_glyphs->glyphs[vpos];
 
   if (obey_window_width)
     {
+      start += XFASTINT (w->left);
       end = start + window_width - (truncate != 0);
 
-      if ((window_width + XFASTINT (w->left)) != FRAME_WIDTH (f))
+      if (!WINDOW_RIGHTMOST_P (w))
 	{
-	  if (FRAME_HAS_VERTICAL_SCROLL_BARS (f))
+	  if (FRAME_HAS_VERTICAL_SCROLL_BARS_ON_RIGHT (f))
 	    {
 	      int i;
 
 	      for (i = 0; i < FRAME_SCROLL_BAR_COLS (f); i++)
 		*end-- = ' ';
 	    }
-	  else
+	  else if (!FRAME_HAS_VERTICAL_SCROLL_BARS (f))
 	    *end-- = '|';
 	}
     }
@@ -4173,20 +4785,25 @@ display_string (w, vpos, string, length, hpos, truncate,
   if (maxcol >= 0 && mincol > maxcol)
     mincol = maxcol;
 
+  if (length < 0)
+    /* We need this value for multibyte characters.  */
+    length = strlen (string);
+
   /* We set truncated to 1 if we get stopped by trying to pass END
      (that is, trying to pass MAXCOL.)  */
   truncated = 0;
   while (1)
     {
-      if (length == 0)
+      int len;
+
+      if (length <= 0)
 	break;
-      c = *string++;
-      /* Specified length.  */
-      if (length >= 0)
-	length--;
-      /* Unspecified length (null-terminated string).  */
-      else if (c == 0)
-	break;
+      if (multibyte)
+	c = STRING_CHAR_AND_LENGTH (string, length, len);
+      else
+	c = *string, len = 1;
+
+      string += len, length -= len;
 
       if (p1 >= end)
 	{
@@ -4220,20 +4837,25 @@ display_string (w, vpos, string, length, hpos, truncate,
       else if (c < 0200 && ! NILP (buffer_defaults.ctl_arrow))
 	{
 	  if (p1 >= start)
-	    *p1 = fix_glyph (f, (dp && INTEGERP (DISP_CTRL_GLYPH (dp))
-				 ? XINT (DISP_CTRL_GLYPH (dp)) : '^'),
-			     0);
+	    *p1 = (fix_glyph
+		   (f, (dp && INTEGERP (DISP_CTRL_GLYPH (dp))
+			&& GLYPH_CHAR_VALID_P (XINT (DISP_CTRL_GLYPH (dp)))
+			? XINT (DISP_CTRL_GLYPH (dp)) : '^'),
+		    0));
 	  p1++;
 	  if (p1 >= start && p1 < end)
 	    *p1 = c ^ 0100;
 	  p1++;
 	}
-      else
+      else if (len == 1)
 	{
+	  /* C is a control character or a binary byte data.  */
 	  if (p1 >= start)
-	    *p1 = fix_glyph (f, (dp && INTEGERP (DISP_ESCAPE_GLYPH (dp))
-				 ? XINT (DISP_ESCAPE_GLYPH (dp)) : '\\'),
-			     0);
+	    *p1 = (fix_glyph
+		   (f, (dp && INTEGERP (DISP_ESCAPE_GLYPH (dp))
+			&& GLYPH_CHAR_VALID_P (XINT (DISP_ESCAPE_GLYPH (dp)))
+			? XINT (DISP_ESCAPE_GLYPH (dp)) : '\\'),
+		    0));
 	  p1++;
 	  if (p1 >= start && p1 < end)
 	    *p1 = (c >> 6) + '0';
@@ -4244,6 +4866,48 @@ display_string (w, vpos, string, length, hpos, truncate,
 	  if (p1 >= start && p1 < end)
 	    *p1 = (7 & c) + '0';
 	  p1++;
+	}
+      else
+	{
+	  /* C is a multibyte character.  */	  
+	  int charset = CHAR_CHARSET (c);
+	  int columns = (charset == CHARSET_COMPOSITION
+			 ? cmpchar_table[COMPOSITE_CHAR_ID (c)]->width
+			 : CHARSET_WIDTH (charset));
+
+	  if (p1 < start)
+	    {
+	      /* Since we can't show the left part of C, fill all
+                 columns with spaces.  */
+	      columns -= start - p1;
+	      p1 = start;
+	      while (columns--)
+		{
+		  if (p1 < end)
+		    *p1 = SPACEGLYPH;
+		  p1++;
+		}
+	    }
+	  else if (p1 + columns > end)
+	    {
+	      /* Since we can't show the right part of C, fill all
+                 columns with TRUNCATE if TRUNCATE is specified.  */
+	      if (truncate)
+		{
+		  while (p1 < end)
+		    *p1++ = fix_glyph (f, truncate, 0);
+		  /* And tell the line is truncated.  */
+		  truncated = 1;
+		}
+	      break;
+	    }
+	  else
+	    {
+	      /* We can show the whole glyph of C.  */
+	      *p1++ = c;
+	      while (--columns)
+		*p1++ = c | GLYPH_MASK_PADDING;
+	    }
 	}
     }
 
@@ -4392,6 +5056,16 @@ See also `overlay-arrow-string'.");
 If that fails to bring point back on frame, point is centered instead.\n\
 If this is zero, point is always centered after it moves off frame.");
 
+  DEFVAR_INT ("scroll-conservatively", &scroll_conservatively,
+    "*Scroll up to this many lines, to bring point back on screen.");
+  scroll_conservatively = 0;
+
+  DEFVAR_INT ("scroll-margin", &scroll_margin,
+    "*Number of lines of margin at the top and bottom of a window.\n\
+Recenter the window whenever point gets within this many lines\n\
+of the top or bottom of the window.");
+  scroll_margin = 0;
+
   DEFVAR_INT ("debug-end-pos", &debug_end_pos, "Don't ask");
 
   DEFVAR_BOOL ("truncate-partial-width-windows",
@@ -4409,7 +5083,7 @@ If this is zero, point is always centered after it moves off frame.");
 
   DEFVAR_BOOL ("highlight-nonselected-windows", &highlight_nonselected_windows,
     "*Non-nil means highlight region even in nonselected windows.");
-  highlight_nonselected_windows = 1;
+  highlight_nonselected_windows = 0;
 
   DEFVAR_BOOL ("multiple-frames", &multiple_frames,
     "Non-nil if more than one frame is visible on this display.\n\
@@ -4482,8 +5156,10 @@ init_xdisp ()
   if (!noninteractive)
     {
       FRAME_PTR f = XFRAME (WINDOW_FRAME (XWINDOW (root_window)));
-      XSETFASTINT (XWINDOW (root_window)->top, 0);
-      set_window_height (root_window, FRAME_HEIGHT (f) - 1, 0);
+      XSETFASTINT (XWINDOW (root_window)->top, FRAME_MENU_BAR_LINES (f));
+      set_window_height (root_window,
+			 FRAME_HEIGHT (f) - 1 - FRAME_MENU_BAR_LINES (f),
+			 0);
       XSETFASTINT (mini_w->top, FRAME_HEIGHT (f) - 1);
       set_window_height (minibuf_window, 1, 0);
 

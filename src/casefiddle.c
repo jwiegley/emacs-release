@@ -22,10 +22,13 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 #include "lisp.h"
 #include "buffer.h"
+#include "charset.h"
 #include "commands.h"
 #include "syntax.h"
 
 enum case_action {CASE_UP, CASE_DOWN, CASE_CAPITALIZE, CASE_CAPITALIZE_UP};
+
+Lisp_Object Qidentity;
 
 Lisp_Object
 casify_object (flag, obj)
@@ -34,6 +37,7 @@ casify_object (flag, obj)
 {
   register int i, c, len;
   register int inword = flag == CASE_DOWN;
+  Lisp_Object tem;
 
   /* If the case table is flagged as modified, rescan it.  */
   if (NILP (XCHAR_TABLE (current_buffer->downcase_table)->extras[1]))
@@ -43,23 +47,29 @@ casify_object (flag, obj)
     {
       if (INTEGERP (obj))
 	{
-	  c = XINT (obj);
-	  if (c >= 0 && c <= 0400)
+	  c = DOWNCASE (XFASTINT (obj));
+	  if (inword)
+	    XSETFASTINT (obj, c);
+	  else if (c == XFASTINT (obj))
 	    {
-	      if (inword)
-		XSETFASTINT (obj, DOWNCASE (c));
-	      else if (!UPPERCASEP (c))
-		XSETFASTINT (obj, UPCASE1 (c));
+	      c = UPCASE1 (XFASTINT (obj));
+	      XSETFASTINT (obj, c);
 	    }
 	  return obj;
 	}
       if (STRINGP (obj))
 	{
+	  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+
 	  obj = Fcopy_sequence (obj);
 	  len = XSTRING (obj)->size;
 	  for (i = 0; i < len; i++)
 	    {
 	      c = XSTRING (obj)->data[i];
+	      if (multibyte && c >= 0x80)
+		/* A multibyte character can't be handled in this
+                   simple loop.  */
+		break;
 	      if (inword && flag != CASE_CAPITALIZE_UP)
 		c = DOWNCASE (c);
 	      else if (!UPPERCASEP (c)
@@ -68,6 +78,37 @@ casify_object (flag, obj)
 	      XSTRING (obj)->data[i] = c;
 	      if ((int) flag >= (int) CASE_CAPITALIZE)
 		inword = SYNTAX (c) == Sword;
+	    }
+	  if (i < len)
+	    {
+	      /* The work is not yet finished because of a multibyte
+		 character just encountered.  */
+	      int fromlen, tolen, j = i;
+	      char *buf
+		= (char *) alloca ((len - i) * MAX_LENGTH_OF_MULTI_BYTE_FORM
+				   + i);
+	      char *str, workbuf[4];
+
+	      /* Copy data already handled.  */
+	      bcopy (XSTRING (obj)->data, buf, i);
+
+	      while (i < len)
+		{
+		  c = STRING_CHAR_AND_LENGTH (XSTRING (obj)->data + i,
+					      len - i, fromlen);
+		  if (inword && flag != CASE_CAPITALIZE_UP)
+		    c = DOWNCASE (c);
+		  else if (!UPPERCASEP (c)
+			   && (!inword || flag != CASE_CAPITALIZE_UP))
+		    c = UPCASE1 (c);
+		  tolen = CHAR_STRING (c, workbuf, str);
+		  bcopy (str, buf + j, tolen);
+		  i += fromlen;
+		  j += tolen;
+		  if ((int) flag >= (int) CASE_CAPITALIZE)
+		    inword = SYNTAX (c) == Sword;
+		}
+	      obj = make_string (buf, j);
 	    }
 	  return obj;
 	}
@@ -131,7 +172,9 @@ casify_region (flag, b, e)
   register int i;
   register int c;
   register int inword = flag == CASE_DOWN;
+  register int multibyte = !NILP (current_buffer->enable_multibyte_characters);
   int start, end;
+  Lisp_Object ch, downch, val;
 
   if (EQ (b, e))
     /* Not modifying because nothing marked */
@@ -149,15 +192,69 @@ casify_region (flag, b, e)
 
   for (i = start; i < end; i++)
     {
-      c = FETCH_CHAR (i);
+      c = FETCH_BYTE (i);
+      if (multibyte && c >= 0x80)
+	/* A multibyte character can't be handled in this simple loop.  */
+	break;
       if (inword && flag != CASE_CAPITALIZE_UP)
 	c = DOWNCASE (c);
       else if (!UPPERCASEP (c)
 	       && (!inword || flag != CASE_CAPITALIZE_UP))
 	c = UPCASE1 (c);
-      FETCH_CHAR (i) = c;
+      FETCH_BYTE (i) = c;
       if ((int) flag >= (int) CASE_CAPITALIZE)
 	inword = SYNTAX (c) == Sword;
+    }
+  if (i < end)
+    {
+      /* The work is not yet finished because of a multibyte character
+	 just encountered.  */
+      int opoint = PT, c2;
+
+      while (i < end)
+	{
+	  if ((c = FETCH_BYTE (i)) >= 0x80)
+	    c = FETCH_MULTIBYTE_CHAR (i);
+	  c2 = c;
+	  if (inword && flag != CASE_CAPITALIZE_UP)
+	    c2 = DOWNCASE (c);
+	  else if (!UPPERCASEP (c)
+		   && (!inword || flag != CASE_CAPITALIZE_UP))
+	    c2 = UPCASE1 (c);
+	  if (c != c2)
+	    {
+	      int fromlen, tolen, j;
+	      char workbuf[4], *str;
+
+	      /* Handle the most likely case */
+	      if (c < 0400 && c2 < 0400)
+		FETCH_BYTE (i) = c2;
+	      else if (fromlen = CHAR_STRING (c, workbuf, str),
+		       tolen = CHAR_STRING (c2, workbuf, str),
+		       fromlen == tolen)
+		{
+		  for (j = 0; j < tolen; ++j)
+		    FETCH_BYTE (i + j) = str[j];
+		}
+	      else
+		{
+		  error ("Can't casify letters that change length");
+#if 0 /* This is approximately what we'd like to be able to do here */
+		  if (tolen < fromlen)
+		    del_range_1 (i + tolen, i + fromlen, 0);
+		  else if (tolen > fromlen)
+		    {
+		      TEMP_SET_PT (i + fromlen);
+		      insert_1 (str + fromlen, tolen - fromlen, 1, 0);
+		    }
+#endif
+		}
+	    }
+	  if ((int) flag >= (int) CASE_CAPITALIZE)
+	    inword = SYNTAX (c2) == Sword;
+	  INC_POS (i);
+	}
+      TEMP_SET_PT (opoint);
     }
 
   signal_after_change (start, end - start, end - start);
@@ -227,11 +324,11 @@ operate_on_word (arg, newpoint)
 
   CHECK_NUMBER (arg, 0);
   iarg = XINT (arg);
-  farend = scan_words (point, iarg);
+  farend = scan_words (PT, iarg);
   if (!farend)
     farend = iarg > 0 ? ZV : BEGV;
 
-  *newpoint = point > farend ? point : farend;
+  *newpoint = PT > farend ? PT : farend;
   XSETFASTINT (val, farend);
 
   return val;
@@ -246,7 +343,7 @@ See also `capitalize-word'.")
 {
   Lisp_Object beg, end;
   int newpoint;
-  XSETFASTINT (beg, point);
+  XSETFASTINT (beg, PT);
   end = operate_on_word (arg, &newpoint);
   casify_region (CASE_UP, beg, end);
   SET_PT (newpoint);
@@ -261,7 +358,7 @@ With negative argument, convert previous words but do not move.")
 {
   Lisp_Object beg, end;
   int newpoint;
-  XSETFASTINT (beg, point);
+  XSETFASTINT (beg, PT);
   end = operate_on_word (arg, &newpoint);
   casify_region (CASE_DOWN, beg, end);
   SET_PT (newpoint);
@@ -278,7 +375,7 @@ With negative argument, capitalize previous words but do not move.")
 {
   Lisp_Object beg, end;
   int newpoint;
-  XSETFASTINT (beg, point);
+  XSETFASTINT (beg, PT);
   end = operate_on_word (arg, &newpoint);
   casify_region (CASE_CAPITALIZE, beg, end);
   SET_PT (newpoint);
@@ -287,6 +384,8 @@ With negative argument, capitalize previous words but do not move.")
 
 syms_of_casefiddle ()
 {
+  Qidentity = intern ("identity");
+  staticpro (&Qidentity);
   defsubr (&Supcase);
   defsubr (&Sdowncase);
   defsubr (&Scapitalize);

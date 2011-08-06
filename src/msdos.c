@@ -1,5 +1,5 @@
-/* MS-DOS specific C utilities.
-   Copyright (C) 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+/* MS-DOS specific C utilities.          -*- coding: raw-text -*-
+   Copyright (C) 1993, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -33,10 +33,16 @@ Boston, MA 02111-1307, USA.  */
 #include <sys/time.h>
 #include <dos.h>
 #include <errno.h>
+#include <string.h>	 /* for bzero and string functions */
 #include <sys/stat.h>    /* for _fixpath */
+#include <unistd.h>	 /* for chdir, dup, dup2, etc. */
 #if __DJGPP__ >= 2
 #include <fcntl.h>
+#include <io.h>		 /* for setmode */
+#include <dpmi.h>	 /* for __dpmi_xxx stuff */
+#include <sys/farptr.h>	 /* for _farsetsel, _farnspokeb */
 #include <libc/dosio.h>  /* for _USE_LFN */
+#include <conio.h>	 /* for cputs */
 #endif
 
 #include "dosfns.h"
@@ -47,6 +53,8 @@ Boston, MA 02111-1307, USA.  */
 #include "termopts.h"
 #include "frame.h"
 #include "window.h"
+#include "buffer.h"
+#include "commands.h"
 #include <go32.h>
 #include <pc.h>
 #include <ctype.h>
@@ -58,9 +66,14 @@ Boston, MA 02111-1307, USA.  */
 #define _USE_LFN 0
 #endif
 
+#ifndef _dos_ds
+#define _dos_ds _go32_info_block.selector_for_linear_memory
+#endif
+
 #if __DJGPP__ > 1
 
 #include <signal.h>
+#include "syssignal.h"
 
 #ifndef SYSTEM_MALLOC
 
@@ -294,11 +307,6 @@ struct x_output the_only_x_display;
 /* This is never dereferenced.  */
 Display *x_current_display;
 
-
-#define SCREEN_SET_CURSOR() 						\
-  if (current_pos_X != new_pos_X || current_pos_Y != new_pos_Y) 	\
-    ScreenSetCursor (current_pos_Y = new_pos_Y, current_pos_X = new_pos_X)
-
 static
 dos_direct_output (y, x, buf, len)
      int y;
@@ -307,11 +315,17 @@ dos_direct_output (y, x, buf, len)
      int len;
 {
   int t = (int) ScreenPrimary + 2 * (x + y * screen_size_X);
-  
+
+#if (__DJGPP__ < 2)
   while (--len >= 0) {
     dosmemput (buf++, 1, t);
     t += 2;
   }
+#else
+  /* This is faster.  */
+  for (_farsetsel (_dos_ds); --len >= 0; t += 2, buf++)
+    _farnspokeb (t, *buf);
+#endif
 }
 #endif
 
@@ -365,15 +379,37 @@ ScreenVisualBell (void)
 
 #ifndef HAVE_X_WINDOWS
 
+static int blink_bit = -1;	/* the state of the blink bit at startup */
+
 /* Enable bright background colors.  */
 static void
 bright_bg (void)
 {
   union REGS regs;
 
+  /* Remember the original state of the blink/bright-background bit.
+     It is stored at 0040:0065h in the BIOS data area.  */
+  if (blink_bit == -1)
+    blink_bit = (_farpeekb (_dos_ds, 0x465) & 0x20) == 0x20;
+
   regs.h.bl = 0;
   regs.x.ax = 0x1003;
   int86 (0x10, &regs, &regs);
+}
+
+/* Disable bright background colors (and enable blinking) if we found
+   the video system in that state at startup.  */
+static void
+maybe_enable_blinking (void)
+{
+  if (blink_bit == 1)
+    {
+      union REGS regs;
+
+      regs.h.bl = 1;
+      regs.x.ax = 0x1003;
+      int86 (0x10, &regs, &regs);
+    }
 }
 
 /* Set the screen dimensions so that it can show no less than
@@ -555,7 +591,8 @@ IT_set_face (int face)
   else
     fp = intern_face (selected_frame, FRAME_COMPUTED_FACES (foo)[face]);
   if (termscript)
-    fprintf (termscript, "<FACE:%d:%d>", FACE_FOREGROUND (fp), FACE_BACKGROUND (fp));
+    fprintf (termscript, "<FACE %d: %d/%d>",
+	     face, FACE_FOREGROUND (fp), FACE_BACKGROUND (fp));
   screen_face = face;
   ScreenAttrib = (FACE_BACKGROUND (fp) << 4) | FACE_FOREGROUND (fp);
 }
@@ -647,6 +684,75 @@ IT_cursor_to (int y, int x)
   new_pos_Y = y;
 }
 
+static int cursor_cleared;
+
+static
+IT_display_cursor (int on)
+{
+  if (on && cursor_cleared)
+    {
+      ScreenSetCursor (current_pos_Y, current_pos_X);
+      cursor_cleared = 0;
+    }
+  else if (!on && !cursor_cleared)
+    {
+      ScreenSetCursor (-1, -1);
+      cursor_cleared = 1;
+    }
+}
+
+/* Emacs calls cursor-movement functions a lot when it updates the
+   display (probably a legacy of old terminals where you cannot
+   update a screen line without first moving the cursor there).
+   However, cursor movement is expensive on MSDOS (it calls a slow
+   BIOS function and requires 2 mode switches), while actual screen
+   updates access the video memory directly and don't depend on
+   cursor position.  To avoid slowing down the redisplay, we cheat:
+   all functions that move the cursor only set internal variables
+   which record the cursor position, whereas the cursor is only
+   moved to its final position whenever screen update is complete.
+
+   `IT_cmgoto' is called from the keyboard reading loop and when the
+   frame update is complete.  This means that we are ready for user
+   input, so we update the cursor position to show where the point is,
+   and also make the mouse pointer visible.
+
+   Special treatment is required when the cursor is in the echo area,
+   to put the cursor at the end of the text displayed there.  */
+
+static
+IT_cmgoto (f)
+     FRAME_PTR f;
+{
+  /* Only set the cursor to where it should be if the display is
+     already in sync with the window contents.  */
+  int update_cursor_pos = MODIFF == unchanged_modified;
+
+  /* If we are in the echo area, put the cursor at the end of text.  */
+  if (!update_cursor_pos
+      && XFASTINT (XWINDOW (FRAME_MINIBUF_WINDOW (f))->top) <= new_pos_Y)
+    {
+      new_pos_X = FRAME_DESIRED_GLYPHS (f)->used[new_pos_Y];
+      update_cursor_pos = 1;
+    }
+
+  if (update_cursor_pos
+      && (current_pos_X != new_pos_X || current_pos_Y != new_pos_Y))
+    {
+      ScreenSetCursor (current_pos_Y = new_pos_Y, current_pos_X = new_pos_X);
+      if (termscript)
+	fprintf (termscript, "\n<CURSOR:%dx%d>", current_pos_X, current_pos_Y);
+    }
+
+  /* Maybe cursor is invisible, so make it visible.  */
+  IT_display_cursor (1);
+
+  /* Mouse pointer should be always visible if we are waiting for
+     keyboard input.  */
+  if (!mouse_visible)
+    mouse_on ();
+}
+
 static
 IT_reassert_line_highlight (new, vpos)
      int new, vpos;
@@ -690,6 +796,7 @@ IT_set_menu_bar_lines (window, n)
   struct window *w = XWINDOW (window);
 
   XSETFASTINT (w->last_modified, 0);
+  XSETFASTINT (w->last_overlay_modified, 0);
   XSETFASTINT (w->top, XFASTINT (w->top) + n);
   XSETFASTINT (w->height, XFASTINT (w->height) - n);
 
@@ -706,6 +813,9 @@ IT_set_menu_bar_lines (window, n)
 }
 
 /* This was copied from xfns.c  */
+
+Lisp_Object Qbackground_color;
+Lisp_Object Qforeground_color;
 
 void
 x_set_menu_bar_lines (f, value, oldval)
@@ -737,10 +847,6 @@ x_set_menu_bar_lines (f, value, oldval)
 static
 IT_set_terminal_modes (void)
 {
-  char *colors;
-  FRAME_PTR f;
-  struct face *fp;
-
   if (termscript)
     fprintf (termscript, "\n<SET_TERM>");
   highlight = 0;
@@ -794,6 +900,10 @@ IT_reset_terminal_modes (void)
     return;
   
   mouse_off ();
+
+  /* Leave the video system in the same state as we found it,
+     as far as the blink/bright-background bit is concerned.  */
+  maybe_enable_blinking ();
  
   /* We have a situation here.
      We cannot just do ScreenUpdate(startup_screen_buffer) because
@@ -847,20 +957,38 @@ IT_set_frame_parameters (f, alist)
      Lisp_Object alist;
 {
   Lisp_Object tail;
+  int length = XINT (Flength (alist));
+  int i;
+  Lisp_Object *parms
+    = (Lisp_Object *) alloca (length * sizeof (Lisp_Object));
+  Lisp_Object *values
+    = (Lisp_Object *) alloca (length * sizeof (Lisp_Object));
   int redraw;
   extern unsigned long load_color ();
 
   redraw = 0;
+
+  /* Extract parm names and values into those vectors.  */
+  i = 0;
   for (tail = alist; CONSP (tail); tail = Fcdr (tail))
     {
-      Lisp_Object elt, prop, val;
+      Lisp_Object elt;
 
       elt = Fcar (tail);
-      prop = Fcar (elt);
-      val = Fcdr (elt);
-      CHECK_SYMBOL (prop, 1);
+      parms[i] = Fcar (elt);
+      CHECK_SYMBOL (parms[i], 1);
+      values[i] = Fcdr (elt);
+      i++;
+    }
 
-      if (EQ (prop, intern ("foreground-color")))
+
+  /* Now process them in reverse of specified order.  */
+  for (i--; i >= 0; i--)
+    {
+      Lisp_Object prop = parms[i];
+      Lisp_Object val  = values[i];
+
+      if (EQ (prop, Qforeground_color))
 	{
 	  unsigned long new_color = load_color (f, val);
 	  if (new_color != ~0)
@@ -868,10 +996,10 @@ IT_set_frame_parameters (f, alist)
 	      FRAME_FOREGROUND_PIXEL (f) = new_color;
 	      redraw = 1;
 	      if (termscript)
-		fprintf (termscript, "<FGCOLOR %d>\n", new_color);
+		fprintf (termscript, "<FGCOLOR %lu>\n", new_color);
 	    }
 	}
-      else if (EQ (prop, intern ("background-color")))
+      else if (EQ (prop, Qbackground_color))
 	{
 	  unsigned long new_color = load_color (f, val);
 	  if (new_color != ~0)
@@ -879,20 +1007,28 @@ IT_set_frame_parameters (f, alist)
 	      FRAME_BACKGROUND_PIXEL (f) = new_color;
 	      redraw = 1;
 	      if (termscript)
-		fprintf (termscript, "<BGCOLOR %d>\n", new_color);
+		fprintf (termscript, "<BGCOLOR %lu>\n", new_color);
 	    }
 	}
       else if (EQ (prop, intern ("menu-bar-lines")))
 	x_set_menu_bar_lines (f, val, 0);
+
+      store_frame_param (f, prop, val);
+
     }
 
   if (redraw)
     {
+      extern void recompute_basic_faces (FRAME_PTR);
+      extern void redraw_frame (FRAME_PTR);
+
       recompute_basic_faces (f);
       if (f == selected_frame)
 	redraw_frame (f);
     }
 }
+
+extern void init_frame_faces (FRAME_PTR);
 
 #endif /* !HAVE_X_WINDOWS */
 
@@ -962,6 +1098,7 @@ internal_terminal_init ()
   update_begin_hook = IT_update_begin;
   update_end_hook = IT_update_end;
   reassert_line_highlight_hook = IT_reassert_line_highlight;
+  frame_up_to_date_hook = IT_cmgoto; /* position cursor when update is done */
 
   /* These hooks are called by term.c without being checked.  */
   set_terminal_modes_hook = IT_set_terminal_modes;
@@ -1061,6 +1198,7 @@ static struct keyboard_layout_list
 
 static struct dos_keyboard_map *keyboard;
 static int keyboard_map_all;
+static int international_keyboard;
 
 int
 dos_set_keyboard (code, always)
@@ -1068,6 +1206,13 @@ dos_set_keyboard (code, always)
      int always;
 {
   int i;
+  union REGS regs;
+
+  /* See if Keyb.Com is installed (for international keyboard support).  */
+  regs.x.ax = 0xad80;
+  int86 (0x2f, &regs, &regs);
+  if (regs.h.al == 0xff)
+    international_keyboard = 1;
 
   /* Initialize to US settings, for countries that don't have their own.  */
   keyboard = keyboard_layout_list[0].keyboard_map;
@@ -1375,6 +1520,13 @@ dos_get_modifiers (keymask)
 	      mask |= SUPER_P;
 	      modifiers |= super_modifier;
 	    }
+	  else if (!international_keyboard)
+	    {
+	      /* If Keyb.Com is NOT installed, let Right Alt behave
+		 like the Left Alt.  */
+	      mask &= ~ALT_GR_P;
+	      mask |= ALT_P;
+	    }
 	}
       
       if (regs.h.ah & 1)		/* Left CTRL pressed ? */
@@ -1440,6 +1592,8 @@ and then the scan code.")
 
 /* Get a char from keyboard.  Function keys are put into the event queue.  */
 
+extern void kbd_buffer_store_event (struct input_event *);
+
 static int
 dos_rawgetc ()
 {
@@ -1447,10 +1601,10 @@ dos_rawgetc ()
   union REGS regs;
   
 #ifndef HAVE_X_WINDOWS
-  SCREEN_SET_CURSOR ();
-  if (!mouse_visible) mouse_on ();
+  /* Maybe put the cursor where it should be.  */
+  IT_cmgoto (selected_frame);
 #endif
-    
+
   /* The following condition is equivalent to `kbhit ()', except that
      it uses the bios to do its job.  This pleases DESQview/X.  */
   while ((regs.h.ah = extended_kbd ? 0x11 : 0x01),
@@ -1517,7 +1671,19 @@ dos_rawgetc ()
       
       if (c == 0)
 	{
-	  if (code & Alt)
+        /* We only look at the keyboard Ctrl/Shift/Alt keys when
+           Emacs is ready to read a key.  Therefore, if they press
+           `Alt-x' when Emacs is busy, by the time we get to
+           `dos_get_modifiers', they might have already released the
+           Alt key, and Emacs gets just `x', which is BAD.
+           However, for keys with the `Map' property set, the ASCII
+           code returns zero iff Alt is pressed.  So, when we DON'T
+           have to support international_keyboard, we don't have to
+           distinguish between the left and  right Alt keys, and we
+           can set the META modifier for any keys with the `Map'
+           property if they return zero ASCII code (c = 0).  */
+        if ( (code & Alt)
+             || ( (code & 0xf000) == Map && !international_keyboard))
 	    modifiers |= meta_modifier;
 	  if (code & Ctrl)
 	    modifiers |= ctrl_modifier;
@@ -1993,6 +2159,12 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
   /* Just in case we got here without a mouse present...  */
   if (have_mouse <= 0)
     return XM_IA_SELECT;
+  /* Don't allow non-positive x0 and y0, lest the menu will wrap
+     around the display.  */
+  if (x0 <= 0)
+    x0 = 1;
+  if (y0 <= 0)
+    y0 = 1;
 
   state = alloca (menu->panecount * sizeof (struct IT_menu_state));
   screensize = screen_size * 2;
@@ -2034,6 +2206,10 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
   state[0].menu = menu;
   mouse_off ();
   ScreenRetrieve (state[0].screen_behind = xmalloc (screensize));
+
+  /* Turn off the cursor.  Otherwise it shows through the menu
+     panes, which is ugly.  */
+  IT_display_cursor (0);
 
   IT_menu_display (menu, y0 - 1, x0 - 1, title_faces); /* display menu title */
   if (buffers_num_deleted)
@@ -2122,6 +2298,7 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
   ScreenUpdate (state[0].screen_behind);
   while (statecount--)
     xfree (state[statecount].screen_behind);
+  IT_display_cursor (1);	/* turn cursor back on */
   return result;
 }
 
@@ -2236,7 +2413,6 @@ crlf_to_lf (n, buf)
   unsigned char *np = buf;
   unsigned char *startp = buf;
   unsigned char *endp = buf + n;
-  unsigned char c;
 
   if (n == 0)
     return n;
@@ -2326,6 +2502,122 @@ __write (int handle, const void *buffer, size_t count)
     }
 }
 
+/* A low-level file-renaming function which works around Windows 95 bug.
+   This is pulled directly out of DJGPP v2.01 library sources, and only
+   used when you compile with DJGPP v2.0.  */
+
+#include <io.h>
+ 
+int _rename(const char *old, const char *new)
+{
+  __dpmi_regs r;
+  int olen    = strlen(old) + 1;
+  int i;
+  int use_lfn = _USE_LFN;
+  char tempfile[FILENAME_MAX];
+  const char *orig = old;
+  int lfn_fd = -1;
+
+  r.x.dx = __tb_offset;
+  r.x.di = __tb_offset + olen;
+  r.x.ds = r.x.es = __tb_segment;
+
+  if (use_lfn)
+    {
+      /* Windows 95 bug: for some filenames, when you rename
+	 file -> file~ (as in Emacs, to leave a backup), the
+	 short 8+3 alias doesn't change, which effectively
+	 makes OLD and NEW the same file.  We must rename
+	 through a temporary file to work around this.  */
+
+      char *pbase = 0, *p;
+      static char try_char[] = "abcdefghijklmnopqrstuvwxyz012345789";
+      int idx = sizeof(try_char) - 1;
+
+      /* Generate a temporary name.  Can't use `tmpnam', since $TMPDIR
+	 might point to another drive, which will fail the DOS call.  */
+      strcpy(tempfile, old);
+      for (p = tempfile; *p; p++) /* ensure temporary is on the same drive */
+	if (*p == '/' || *p == '\\' || *p == ':')
+	  pbase = p;
+      if (pbase)
+	pbase++;
+      else
+	pbase = tempfile;
+      strcpy(pbase, "X$$djren$$.$$temp$$");
+
+      do
+	{
+	  if (idx <= 0)
+	    return -1;
+	  *pbase = try_char[--idx];
+	} while (_chmod(tempfile, 0) != -1);
+
+      r.x.ax = 0x7156;
+      _put_path2(tempfile, olen);
+      _put_path(old);
+      __dpmi_int(0x21, &r);
+      if (r.x.flags & 1)
+	{
+	  errno = __doserr_to_errno(r.x.ax);
+	  return -1;
+	}
+
+      /* Now create a file with the original name.  This will
+	 ensure that NEW will always have a 8+3 alias
+	 different from that of OLD.  (Seems to be required
+	 when NameNumericTail in the Registry is set to 0.)  */
+      lfn_fd = _creat(old, 0);
+
+      olen = strlen(tempfile) + 1;
+      old  = tempfile;
+      r.x.di = __tb_offset + olen;
+    }
+
+  for (i=0; i<2; i++)
+    {
+      if(use_lfn)
+	r.x.ax = 0x7156;
+      else
+	r.h.ah = 0x56;
+      _put_path2(new, olen);
+      _put_path(old);
+      __dpmi_int(0x21, &r);
+      if(r.x.flags & 1)
+	{
+	  if (r.x.ax == 5 && i == 0) /* access denied */
+	    remove(new);		 /* and try again */
+	  else
+	    {
+	      errno = __doserr_to_errno(r.x.ax);
+
+	      /* Restore to original name if we renamed it to temporary.  */
+	      if (use_lfn)
+		{
+		  if (lfn_fd != -1)
+		    {
+		      _close (lfn_fd);
+		      remove (orig);
+		    }
+		  _put_path2(orig, olen);
+		  _put_path(tempfile);
+		  r.x.ax = 0x7156;
+		  __dpmi_int(0x21, &r);
+		}
+	      return -1;
+	    }
+	}
+      else
+	break;
+    }
+
+  /* Success.  Delete the file possibly created to work
+     around the Windows 95 bug.  */
+  if (lfn_fd != -1)
+    return (_close (lfn_fd) == 0) ? remove (orig) : -1;
+  return 0;
+}
+
 #endif /* __DJGPP__ == 2 && __DJGPP_MINOR__ == 0 */
 
 DEFUN ("msdos-long-file-names", Fmsdos_long_file_names, Smsdos_long_file_names,
@@ -2369,7 +2661,6 @@ The argument object is never altered--the value is a copy.")
   (filename)
      Lisp_Object filename;
 {
-  char *fname;
   Lisp_Object tem;
 
   if (! STRINGP (filename))
@@ -2418,10 +2709,12 @@ init_environment (argc, argv, skip_args)
   while (len > 0 && root[len] != '/' && root[len] != ':')
     len--;
   root[len] = '\0';
-  if (len > 4 && strcmp (root + len - 4, "/bin") == 0)
+  if (len > 4
+      && (strcmp (root + len - 4, "/bin") == 0
+	  || strcmp (root + len - 4, "/src") == 0)) /* under a debugger */
     root[len - 4] = '\0';
   else
-    strcpy (root, "c:/emacs");  /* Only under debuggers, I think.  */
+    strcpy (root, "c:/emacs");  /* let's be defensive */
   len = strlen (root);
   strcpy (emacsroot, root);
 
@@ -2681,17 +2974,29 @@ run_msdos_command (argv, dir, tempin, tempout, temperr)
      Lisp_Object dir;
      int tempin, tempout, temperr;
 {
-  char *saveargv1, *saveargv2, **envv;
+  char *saveargv1, *saveargv2, **envv, *lowcase_argv0, *pa, *pl;
   char oldwd[MAXPATHLEN + 1]; /* Fixed size is safe on MSDOS.  */
   int msshell, result = -1;
-  int in, out, inbak, outbak, errbak;
+  int inbak, outbak, errbak;
   int x, y;
   Lisp_Object cmd;
 
   /* Get current directory as MSDOS cwd is not per-process.  */
   getwd (oldwd);
 
-  cmd = Ffile_name_nondirectory (build_string (argv[0]));
+  /* If argv[0] is the shell, it might come in any lettercase.
+     Since `Fmember' is case-sensitive, we need to downcase
+     argv[0], even if we are on case-preserving filesystems.  */
+  lowcase_argv0 = alloca (strlen (argv[0]) + 1);
+  for (pa = argv[0], pl = lowcase_argv0; *pa; pl++)
+    {
+      *pl = *pa++;
+      if (*pl >= 'A' && *pl <= 'Z')
+	*pl += 'a' - 'A';
+    }
+  *pl = '\0';
+
+  cmd = Ffile_name_nondirectory (build_string (lowcase_argv0));
   msshell = !NILP (Fmember (cmd, Fsymbol_value (intern ("msdos-shells"))))
     && !strcmp ("-c", argv[1]);
   if (msshell)
@@ -2786,6 +3091,11 @@ run_msdos_command (argv, dir, tempin, tempout, temperr)
       mouse_init ();
       mouse_moveto (x, y);
     }
+
+  /* Some programs might change the meaning of the highest bit of the
+     text attribute byte, so we get blinking characters instead of the
+     bright background colors.  Restore that.  */
+  bright_bg ();
   
  done:
   chdir (oldwd);
@@ -2879,13 +3189,122 @@ int kill (x, y) int x, y; { return -1; }
 nice (p) int p; {}
 void volatile pause () {}
 sigsetmask (x) int x; { return 0; }
+sigblock (mask) int mask; { return 0; } 
 #endif
 
 request_sigio () {}
 setpgrp () {return 0; }
 setpriority (x,y,z) int x,y,z; { return 0; }
-sigblock (mask) int mask; { return 0; } 
 unrequest_sigio () {}
+
+#if __DJGPP__ > 1
+
+#ifdef POSIX_SIGNALS
+
+/* Augment DJGPP library POSIX signal functions.  This is needed
+   as of DJGPP v2.01, but might be in the library in later releases. */
+
+#include <libc/bss.h>
+
+/* A counter to know when to re-initialize the static sets.  */
+static int sigprocmask_count = -1;
+
+/* Which signals are currently blocked (initially none).  */
+static sigset_t current_mask;
+
+/* Which signals are pending (initially none).  */
+static sigset_t pending_signals;
+
+/* Previous handlers to restore when the blocked signals are unblocked.  */
+typedef void (*sighandler_t)(int);
+static sighandler_t prev_handlers[320];
+
+/* A signal handler which just records that a signal occured
+   (it will be raised later, if and when the signal is unblocked).  */
+static void
+sig_suspender (signo)
+     int signo;
+{
+  sigaddset (&pending_signals, signo);
+}
+
+int
+sigprocmask (how, new_set, old_set)
+     int how;
+     const sigset_t *new_set;
+     sigset_t *old_set;
+{
+  int signo;
+  sigset_t new_mask;
+
+  /* If called for the first time, initialize.  */
+  if (sigprocmask_count != __bss_count)
+    {
+      sigprocmask_count = __bss_count;
+      sigemptyset (&pending_signals);
+      sigemptyset (&current_mask);
+      for (signo = 0; signo < 320; signo++)
+	prev_handlers[signo] = SIG_ERR;
+    }
+
+  if (old_set)
+    *old_set = current_mask;
+
+  if (new_set == 0)
+    return 0;
+
+  if (how != SIG_BLOCK && how != SIG_UNBLOCK && how != SIG_SETMASK)
+    {
+      errno = EINVAL;
+      return -1;
+    }
+
+  sigemptyset (&new_mask);
+
+  /* DJGPP supports upto 320 signals.  */
+  for (signo = 0; signo < 320; signo++)
+    {
+      if (sigismember (&current_mask, signo))
+	sigaddset (&new_mask, signo);
+      else if (sigismember (new_set, signo) && how != SIG_UNBLOCK)
+	{
+	  sigaddset (&new_mask, signo);
+
+	  /* SIGKILL is silently ignored, as on other platforms.  */
+	  if (signo != SIGKILL && prev_handlers[signo] == SIG_ERR)
+	    prev_handlers[signo] = signal (signo, sig_suspender);
+	}
+      if ((   how == SIG_UNBLOCK
+	      && sigismember (&new_mask, signo)
+	      && sigismember (new_set, signo))
+	  || (how == SIG_SETMASK
+	      && sigismember (&new_mask, signo)
+	      && !sigismember (new_set, signo)))
+	{
+	  sigdelset (&new_mask, signo);
+	  if (prev_handlers[signo] != SIG_ERR)
+	    {
+	      signal (signo, prev_handlers[signo]);
+	      prev_handlers[signo] = SIG_ERR;
+	    }
+	  if (sigismember (&pending_signals, signo))
+	    {
+	      sigdelset (&pending_signals, signo);
+	      raise (signo);
+	    }
+	}
+    }
+  current_mask = new_mask;
+  return 0;
+}
+
+#else /* not POSIX_SIGNALS */
+
+sigsetmask (x) int x; { return 0; }
+sigblock (mask) int mask; { return 0; } 
+
+#endif /* not POSIX_SIGNALS */
+#endif /* __DJGPP__ > 1 */
 
 #ifndef HAVE_SELECT
 #include "sysselect.h"
@@ -3062,10 +3481,38 @@ abort ()
 }
 #endif
 
+/* The following two are required so that customization feature
+   won't complain about unbound variables.  */
+#ifndef HAVE_X_WINDOWS
+/* Search path for bitmap files (xfns.c).  */
+Lisp_Object Vx_bitmap_file_path;
+#endif
+#ifndef subprocesses
+/* Nonzero means delete a process right away if it exits (process.c).  */
+static int delete_exited_processes;
+#endif
+
 syms_of_msdos ()
 {
   recent_doskeys = Fmake_vector (make_number (NUM_RECENT_DOSKEYS), Qnil);
   staticpro (&recent_doskeys);
+#ifndef HAVE_X_WINDOWS
+  DEFVAR_LISP ("x-bitmap-file-path", &Vx_bitmap_file_path,
+    "List of directories to search for bitmap files for X.");
+  Vx_bitmap_file_path = decode_env_path ((char *) 0, ".");
+
+  /* The following two are from xfns.c:  */
+  Qbackground_color = intern ("background-color");
+  staticpro (&Qbackground_color);
+  Qforeground_color = intern ("foreground-color");
+  staticpro (&Qforeground_color);
+#endif
+#ifndef subprocesses
+  DEFVAR_BOOL ("delete-exited-processes", &delete_exited_processes,
+    "*Non-nil means delete processes immediately when they exit.\n\
+nil means don't delete them until `list-processes' is run.");
+  delete_exited_processes = 0;
+#endif
 
   defsubr (&Srecent_doskeys);
   defsubr (&Smsdos_long_file_names);

@@ -6,7 +6,7 @@
 #### be distributed.  This means that if you add a file with an odd name,
 #### you should make sure that this script will include it.
 
-# Copyright (C) 1995 Free Software Foundation, Inc.
+# Copyright (C) 1995, 1997 Free Software Foundation, Inc.
 #
 # This file is part of GNU Emacs.
 #
@@ -33,6 +33,10 @@ progname="$0"
 ### Print out each line we read, for debugging's sake.
 ### set -v
 
+## Don't protect any files.
+umask 0
+
+update=yes
 clean_up=no
 make_tar=no
 newer=""
@@ -47,6 +51,10 @@ while [ $# -gt 0 ]; do
     ## This option tells make-dist to make a tar file.
     "--tar" )
       make_tar=yes
+    ;;
+    ## This option tells make-dist not to recompile or do analogous things.
+    "--no-update" )
+      update=no
     ;;
     ## This option tells make-dist to make the distribution normally, then
     ## remove all files older than the given timestamp file.  This is useful
@@ -77,6 +85,21 @@ if [ ! -d src -o ! -f src/lisp.h -o ! -d lisp -o ! -f lisp/version.el ]; then
   exit 1
 fi
 
+### Find where to run Emacs.
+if [ $update = yes ];
+then
+  if [ -f src/emacs ];
+  then
+    EMACS=`pwd`/src/emacs
+  else
+    if [ x$EMACS = x ];
+    then 
+      echo You must specify the EMACS environment variable 2>&1
+      exit 1
+    fi
+  fi
+fi
+
 ### Find out which version of Emacs this is.
 shortversion=`grep 'defconst[	 ]*emacs-version' lisp/version.el \
 	 | sed -e 's/^.*"\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`
@@ -89,11 +112,14 @@ fi
 
 echo Version numbers are $version and $shortversion
 
-if grep -s "GNU Emacs version ${shortversion}" ./man/emacs.texi > /dev/null; then
-  true
-else
-  echo "You must update the version number in \`./man/emacs.texi'"
-  sleep 5
+if [ $update = yes ];
+then
+  if grep -s "GNU Emacs version ${shortversion}" ./man/emacs.texi > /dev/null; then
+    true
+  else
+    echo "You must update the version number in \`./man/emacs.texi'"
+    sleep 5
+  fi
 fi
 
 ### Make sure we don't already have a directory  emacs-${version}.
@@ -118,8 +144,8 @@ them, and try again." >&2
 fi
 
 ### Check for .elc files with no corresponding .el file.
-ls -1 lisp/*.el | sed 's/\.el$/.elc/' > /tmp/el
-ls -1 lisp/*.elc > /tmp/elc
+ls -1 {lisp,leim}/[a-z]*.el {lisp,leim}/[a-z]*/[a-z]*.el | sed 's/\.el$/.elc/' > /tmp/el
+ls -1 {lisp,leim}/[a-z]*.elc {lisp,leim}/[a-z]*/[a-z]*.elc > /tmp/elc
 bogosities="`comm -13 /tmp/el /tmp/elc`"
 if [ "${bogosities}" != "" ]; then
   echo "The following .elc files have no corresponding .el files:"
@@ -127,8 +153,36 @@ if [ "${bogosities}" != "" ]; then
 fi
 rm -f /tmp/el /tmp/elc
 
+### Check for .el files with no corresponding .elc file.
+((cd lisp; ls -1 [a-z]*.el [a-z]*/[a-z]*.el)
+ (cd leim; ls -1 [a-z]*.el [a-z]*/[a-z]*.el)) > /tmp/el
+((cd lisp; ls -1 [a-z]*.elc [a-z]*/[a-z]*.elc)
+ (cd leim; ls -1 [a-z]*.elc [a-z]*/[a-z]*.elc)) | sed 's/\.elc$/.el/' > /tmp/elc
+losers="`comm -23 /tmp/el /tmp/elc`"
+bogosities=
+for file in $losers; do
+  file1=`echo $file | sed -e "s|.*/||"`
+  if ! grep -q "dontcompilefiles:.* $file1\($\| \)" lisp/Makefile; then
+    case $file in
+      site-init.el | site-load.el | site-start.el | default.el)
+        ;;
+      term/*)
+        ;;
+      *)
+        bogosities="$file $bogosities"
+	;;
+    esac
+  fi
+done
+if [ x"${bogosities}" != x"" ]; then
+  echo "The following .el files have no corresponding .elc files:"
+  echo "${bogosities}"
+fi
+rm -f /tmp/el /tmp/elc
+
 ### Check for .el files that would overflow the 14-char limit if compiled.
-long=`find lisp -name '[a-zA-Z0-9]??????????*.el' -print`
+long=`find lisp -name '[a-zA-Z0-9]??????????*.el' -print
+      find leim -name '[a-zA-Z0-9]??????????*.el' -print`
 if [ "$long" != "" ]; then
   echo "The following .el file names are too long:"
   echo "$long"
@@ -141,21 +195,24 @@ if [ "x`ls -t configure configure.in | head -1`" != "xconfigure" ]; then
   autoconf || { x=$?; echo Autoconf FAILED! >&2; exit $x; }
 fi
 
-echo "Updating Info files"
+if [ $update = yes ];
+then
+  echo "Updating Info files"
 
-(cd man; make info)
+  (cd man; make info)
 
-echo "Updating finder-inf.el"
+  echo "Updating finder, custom and autoload data"
 
-(cd lisp; ../src/emacs -batch -l finder -f finder-compile-keywords-make-dist)
+  (cd lisp; make updates EMACS=$EMACS)
 
-echo "Recompiling Lisp files"
+  echo "Updating leim-list.el"
 
-src/emacs -batch -f batch-byte-recompile-directory lisp
+  (cd leim; make leim-list.el EMACS=$EMACS)
 
-echo "Updating autoloads"
+  echo "Recompiling Lisp files"
 
-src/emacs -batch -f batch-update-autoloads lisp
+  $EMACS -batch -f batch-byte-recompile-directory lisp leim
+fi
 
 echo "Making lisp/MANIFEST"
 
@@ -199,14 +256,18 @@ echo "Updating version number in README"
 
 
 echo "Creating subdirectories"
-for subdir in lisp lisp/term site-lisp \
+for subdir in lisp site-lisp leim real-leim real-leim/CXTERM-DIC \
+	      real-leim/SKK-DIC real-leim/skk real-leim/quail \
 	      src src/m src/s src/bitmaps lib-src oldXMenu lwlib \
 	      nt nt/inc nt/inc/sys nt/inc/arpa nt/inc/netinet \
 	      etc etc/e lock cpp info man msdos vms; do
   mkdir ${tempdir}/${subdir}
 done
 
-echo "Making links to \`lisp'"
+echo "Initializing \`leim' subdirectory"
+cp leim-Makefile.in ${tempdir}/leim/Makefile.in
+
+echo "Making links to \`lisp' and its subdirectories"
 ### Don't distribute TAGS, =*.el files, site-init.el, site-load.el, or default.el.
 (cd lisp
  ln [a-zA-Z]*.el ../${tempdir}/lisp
@@ -215,47 +276,86 @@ echo "Making links to \`lisp'"
  ## simula.el doesn't keep abbreviations in simula.defns any more.
  ## ln [a-zA-Z]*.defns ../${tempdir}/lisp
  ln ChangeLog Makefile makefile.nt ChangeLog.? README ../${tempdir}/lisp
- cd ../${tempdir}/lisp
- rm -f TAGS =*
- rm -f subdirs.el
- rm -f site-init site-init.el site-init.elc
- rm -f site-load site-load.el site-load.elc
- rm -f site-start site-start.el site-start.elc
- rm -f default default.el default.elc)
+ (cd ../${tempdir}/lisp
+  rm -f TAGS =*
+  rm -f site-init site-init.el site-init.elc
+  rm -f site-load site-load.el site-load.elc
+  rm -f site-start site-start.el site-start.elc
+  rm -f default default.el default.elc
+  )
 
-#echo "Making links to \`lisp/calc-2.02'"
-#### Don't distribute =*.el files, TAGS or backups.
-#(cd lisp/calc-2.02
-# ln [a-zA-Z]*.el ../../${tempdir}/lisp/calc-2.02
-# ln [a-zA-Z]*.elc ../../${tempdir}/lisp/calc-2.02
-# ln calc.info* calc.texinfo calc-refcard.* ../../${tempdir}/lisp/calc-2.02
-# ln INSTALL Makefile README README.prev ../../${tempdir}/lisp/calc-2.02
-# cd ../../${tempdir}/lisp/calc-2.02
-# rm -f *~ TAGS)
+ ## Find all subdirs of lisp dir
+ for file in `find . -type d -print`; do
+   case $file in
+     . | .. | */Old | */RCS | */=*)
+       ;;	
+     *)
+       if [ -d $file ]; then
+	 subdirs="$file $subdirs"
+       fi
+       ;;
+   esac
+ done
 
-echo "Making links to \`lisp/term'"
-### Don't distribute =*.el files or TAGS.
-(cd lisp/term
- ln [a-zA-Z]*.el ../../${tempdir}/lisp/term
- ln [a-zA-Z]*.elc ../../${tempdir}/lisp/term
- ln README ../../${tempdir}/lisp/term
- rm -f =* TAGS)
+ for file in $subdirs; do
+   echo "  lisp/$file"
+   mkdir ../${tempdir}/lisp/$file
+   ln $file/[a-zA-Z]*.el ../${tempdir}/lisp/$file
+   ln $file/[a-zA-Z]*.elc ../${tempdir}/lisp/$file
+   if [ -f $file/README ]; then
+     ln $file/README ../${tempdir}/lisp/$file
+   fi
+ done )
+
+echo "Making links to \`leim' and its subdirectories for the LEIM distribution"
+### Don't distribute TAGS, or =*.el files.
+(cd leim
+ ln Makefile.in makefile.nt ../${tempdir}/real-leim
+ ln ChangeLog README ../${tempdir}/real-leim
+
+ ln CXTERM-DIC/*.tit ../${tempdir}/real-leim/CXTERM-DIC
+ ln SKK-DIC/README SKK-DIC/SKK-JISYO.L ../${tempdir}/real-leim/SKK-DIC
+ ln skk/*.el skk/*.elc ../${tempdir}/real-leim/skk
+ ln quail/*.el quail/*.elc ../${tempdir}/real-leim/quail
+
+ cd ../${tempdir}/real-leim
+ rm -f TAGS =* */=*)
+
+### Move the real-leim directory outside of Emacs proper.
+(cd ${tempparent}
+ mkdir ${emacsname}-leim
+ mkdir ${emacsname}-leim/${emacsname}
+ mv ${emacsname}/real-leim ${emacsname}-leim/${emacsname}/leim)
 
 echo "Making links to \`src'"
 ### Don't distribute =*.[ch] files, or the configured versions of
 ### config.in, paths.in, or Makefile.in, or TAGS.
 (cd src
- echo "  (If we can't link gmalloc.c, that's okay.)"
+ echo "  (It is ok if ln fails in some cases.)"
  ln [a-zA-Z]*.c ../${tempdir}/src
- ## Might be a symlink to a file on another filesystem.
- test -f ../${tempdir}/src/gmalloc.c || cp gmalloc.c ../${tempdir}/src
  ln [a-zA-Z]*.h ../${tempdir}/src
  ln [a-zA-Z]*.s ../${tempdir}/src
- ln README Makefile.in ChangeLog ChangeLog.? config.in paths.in \
-    ../${tempdir}/src
- ln makefile.nt ../${tempdir}/src
+ ln [a-zA-Z]*.in ../${tempdir}/src
+ ln [a-zA-Z]*.opt ../${tempdir}/src
+ ## If we ended up with a symlink, or if we did not get anything
+ ## due to a cross-device symlink, copy the file.
+ for file in [a-zA-Z]*.[hcs] [a-zA-Z]*.in [a-zA-Z]*.opt; do
+   if test -f ../${tempdir}/src/$file; then
+     # test -f appears to succeed for a symlink
+     if test -L ../${tempdir}/src/$file; then
+       rm ../${tempdir}/src/$file
+       cp $file ../${tempdir}/src
+       chmod a-w ../${tempdir}/src/$file
+     fi
+   else
+     rm ../${tempdir}/src/$file
+     cp $file ../${tempdir}/src
+     chmod a-w ../${tempdir}/src/$file
+   fi
+ done
+ ln README ChangeLog ChangeLog.*[0-9] ../${tempdir}/src
+ ln makefile.nt vms-pp.trans ../${tempdir}/src
  ln .gdbinit .dbxinit ../${tempdir}/src
- ln *.opt vms-pp.trans ../${tempdir}/src
  cd ../${tempdir}/src
  rm -f config.h paths.h Makefile Makefile.c
  rm -f =* TAGS)
@@ -278,8 +378,24 @@ echo "Making links to \`lib-src'"
  ln [a-zA-Z]*.[chy] ../${tempdir}/lib-src
  ln ChangeLog Makefile.in README testfile vcdiff ../${tempdir}/lib-src
  ln emacs.csh rcs2log rcs-checkin makefile.nt ../${tempdir}/lib-src
+ ## If we ended up with a symlink, or if we did not get anything
+ ## due to a cross-device symlink, copy the file.
+ for file in [a-zA-Z]*.[chy]; do
+   if test -f ../${tempdir}/lib-src/$file; then
+     # test -f appears to succeed for a symlink
+     if test -L ../${tempdir}/lib-src/$file; then
+       rm ../${tempdir}/lib-src/$file
+       cp $file ../${tempdir}/lib-src
+       chmod a-w ../${tempdir}/lib-src/$file
+     fi
+   else
+     rm ../${tempdir}/lib-src/$file
+     cp $file ../${tempdir}/lib-src
+     chmod a-w ../${tempdir}/lib-src/$file
+   fi
+ done
  cd ../${tempdir}/lib-src
- rm -f getdate.tab.c y.tab.c y.tab.h Makefile.c
+ rm -f Makefile.c
  rm -f =* TAGS)
 
 echo "Making links to \`nt'"
@@ -328,7 +444,24 @@ echo "Making links to \`etc'"
 ### Don't distribute = files, TAGS, DOC files, backups, autosaves, or
 ### tex litter.
 (cd etc
- ln `ls -d * | grep -v 'RCS' | grep -v 'Old' | grep -v '^e$'` ../${tempdir}/etc
+ files=`ls -d * | grep -v 'RCS' | grep -v 'Old' | grep -v '^e$'`
+ ln $files ../${tempdir}/etc
+ ## If we ended up with a symlink, or if we did not get anything
+ ## due to a cross-device symlink, copy the file.
+ for file in $files; do
+   if test -f ../${tempdir}/etc/$file; then
+     # test -f appears to succeed for a symlink
+     if test -L ../${tempdir}/etc/$file; then
+       rm ../${tempdir}/etc/$file
+       cp $file ../${tempdir}/etc
+       chmod a-w ../${tempdir}/etc/$file
+     fi
+   else
+     rm ../${tempdir}/etc/$file
+     cp $file ../${tempdir}/etc
+     chmod a-w ../${tempdir}/etc/$file
+   fi
+ done
  cd ../${tempdir}/etc
  rm -f DOC* *~ \#*\# *.dvi *.log *.orig *.rej *,v =* core
  rm -f TAGS)
@@ -422,17 +555,20 @@ if [ "${make_tar}" = yes ]; then
     compress* ) gzip_extension=.Z ;;
     * )         gzip_extension=.gz ;;
   esac
-  echo "Creating tar file"
+  echo "Creating tar files"
   (cd ${tempparent} ; tar cvf - ${emacsname} ) \
     | ${default_gzip} \
     > ${emacsname}.tar${gzip_extension}
+  (cd ${tempparent}/${emacsname}-leim ; tar cvf - ${emacsname} ) \
+    | ${default_gzip} \
+    > ${emacsname}-leim.tar${gzip_extension}
 fi
 
 if [ "${clean_up}" = yes ]; then
   echo "Cleaning up the staging directory"
   rm -rf ${tempparent}
 else
-  (cd ${tempparent}; mv ${emacsname} ..)
+  (cd ${tempparent}; mv ${emacsname} ${emacsname}-leim ..)
   rm -rf ${tempparent}
 fi
 

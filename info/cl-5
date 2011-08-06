@@ -1,5 +1,5 @@
-This is Info file ../info/cl, produced by Makeinfo-1.64 from the input
-file cl.texi.
+This is Info file ../info/cl, produced by Makeinfo version 1.68 from
+the input file cl.texi.
 
    This file documents the GNU Emacs Common Lisp emulation package.
 
@@ -44,7 +44,7 @@ symbol to identify them.
  - Special Form: defstruct NAME SLOTS...
      The `defstruct' form defines a new structure type called NAME,
      with the specified SLOTS.  (The SLOTS may begin with a string
-     which documents the structure type.) In the simplest case, NAME
+     which documents the structure type.)  In the simplest case, NAME
      and each of the SLOTS are symbols.  For example,
 
           (defstruct person name age sex)
@@ -586,7 +586,7 @@ since Emacs Lisp cannot support multiple return values directly.  The
 macros will be compatible with Common Lisp if `values' or `values-list'
 is always used to return to a `multiple-value-bind' or other
 multiple-value receiver; if `values' is used without
-`multiple-value-...' or vice-versa the effect will be different from
+`multiple-value-...'  or vice-versa the effect will be different from
 Common Lisp.
 
    Many Common Lisp declarations are ignored, and others match the
@@ -714,10 +714,10 @@ Lisp code into Emacs.
      `foo' in one place and `Foo' or `FOO' in another.  Emacs Lisp will
      treat these as three distinct symbols.
 
-     Some Common Lisp code is written in all upper-case.  While Emacs
-     is happy to let the program's own functions and variables use this
-     convention, calls to Lisp builtins like `if' and `defun' will have
-     to be changed to lower-case.
+     Some Common Lisp code is written entirely in upper case.  While
+     Emacs is happy to let the program's own functions and variables use
+     this convention, calls to Lisp builtins like `if' and `defun' will
+     have to be changed to lower case.
 
    * Lexical scoping.  In Common Lisp, function arguments and `let'
      bindings apply only to references physically within their bodies

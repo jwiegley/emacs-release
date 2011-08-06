@@ -25,7 +25,7 @@ Boston, MA 02111-1307, USA.  */
 
    Define HAVE_INVERSE_HYPERBOLIC if you have acosh, asinh, and atanh.
    Define HAVE_CBRT if you have cbrt.
-   Define HAVE_RINT if you have rint.
+   Define HAVE_RINT if you have a working rint.
    If you don't define these, then the appropriate routines will be simulated.
 
    Define HAVE_MATHERR if on a system supporting the SysV matherr callback.
@@ -47,10 +47,26 @@ Boston, MA 02111-1307, USA.  */
 #include <signal.h>
 
 #include <config.h>
+
+/* Put this before lisp.h so that lisp.h can define DBL_DIG if not defined.  */
+#if STDC_HEADERS
+#include <float.h>
+#endif
+
 #include "lisp.h"
 #include "syssignal.h"
 
 #ifdef LISP_FLOAT_TYPE
+
+/* If IEEE_FLOATING_POINT isn't defined, default it from FLT_*. */
+#ifndef IEEE_FLOATING_POINT
+#if (FLT_RADIX == 2 && FLT_MANT_DIG == 24 \
+     && FLT_MIN_EXP == -125 && FLT_MAX_EXP == 128)
+#define IEEE_FLOATING_POINT 1
+#else
+#define IEEE_FLOATING_POINT 0
+#endif
+#endif
 
 /* Work around a problem that happens because math.h on hpux 7
    defines two static variables--which, in Emacs, are not really static,
@@ -109,10 +125,6 @@ extern int errno;
 #define sinh(x) ((exp(x)-exp(-x))*0.5)
 #endif /* VMS */
 
-#ifndef HAVE_RINT
-#define rint(x) (floor((x)+0.5))
-#endif
-
 static SIGTYPE float_error ();
 
 /* Nonzero while executing in floating point.
@@ -121,7 +133,9 @@ static SIGTYPE float_error ();
 static int in_float;
 
 /* If an argument is out of range for a mathematical function,
-   here is the actual argument value to use in the error message.  */
+   here is the actual argument value to use in the error message.
+   These variables are used only across the floating point library call
+   so there is no need to staticpro them.  */
 
 static Lisp_Object float_error_arg, float_error_arg2;
 
@@ -706,34 +720,17 @@ This is the same as the exponent of a float.")
   return val;
 }
 
-/* the rounding functions  */
-
-DEFUN ("ceiling", Fceiling, Sceiling, 1, 1, 0,
-  "Return the smallest integer no less than ARG.  (Round toward +inf.)")
-  (arg)
-     register Lisp_Object arg;
-{
-  CHECK_NUMBER_OR_FLOAT (arg, 0);
-
-  if (FLOATP (arg))
-    {
-      double d;
-
-      IN_FLOAT (d = ceil (XFLOAT (arg)->data), "ceiling", arg);
-      FLOAT_TO_INT (d, arg, "ceiling", arg);
-    }
-
-  return arg;
-}
-
 #endif /* LISP_FLOAT_TYPE */
 
 
-DEFUN ("floor", Ffloor, Sfloor, 1, 2, 0,
-  "Return the largest integer no greater than ARG.  (Round towards -inf.)\n\
-With optional DIVISOR, return the largest integer no greater than ARG/DIVISOR.")
-  (arg, divisor)
+/* the rounding functions  */
+
+static Lisp_Object
+rounding_driver (arg, divisor, double_round, int_round2, name)
      register Lisp_Object arg, divisor;
+     double (*double_round) ();
+     EMACS_INT (*int_round2) ();
+     char *name;
 {
   CHECK_NUMBER_OR_FLOAT (arg, 0);
 
@@ -750,11 +747,11 @@ With optional DIVISOR, return the largest integer no greater than ARG/DIVISOR.")
 
 	  f1 = FLOATP (arg) ? XFLOAT (arg)->data : XINT (arg);
 	  f2 = (FLOATP (divisor) ? XFLOAT (divisor)->data : XINT (divisor));
-	  if (f2 == 0)
+	  if (! IEEE_FLOATING_POINT && f2 == 0)
 	    Fsignal (Qarith_error, Qnil);
 
-	  IN_FLOAT2 (f1 = floor (f1 / f2), "floor", arg, divisor);
-	  FLOAT_TO_INT2 (f1, arg, "floor", arg, divisor);
+	  IN_FLOAT2 (f1 = (*double_round) (f1 / f2), name, arg, divisor);
+	  FLOAT_TO_INT2 (f1, arg, name, arg, divisor);
 	  return arg;
 	}
 #endif
@@ -765,13 +762,7 @@ With optional DIVISOR, return the largest integer no greater than ARG/DIVISOR.")
       if (i2 == 0)
 	Fsignal (Qarith_error, Qnil);
 
-      /* With C's /, the result is implementation-defined if either operand
-	 is negative, so use only nonnegative operands.  */
-      i1 = (i2 < 0
-	    ? (i1 <= 0  ?  -i1 / -i2  :  -1 - ((i1 - 1) / -i2))
-	    : (i1 < 0  ?  -1 - ((-1 - i1) / i2)  :  i1 / i2));
-
-      XSETINT (arg, i1);
+      XSETINT (arg, (*int_round2) (i1, i2));
       return arg;
     }
 
@@ -779,52 +770,139 @@ With optional DIVISOR, return the largest integer no greater than ARG/DIVISOR.")
   if (FLOATP (arg))
     {
       double d;
-      IN_FLOAT (d = floor (XFLOAT (arg)->data), "floor", arg);
-      FLOAT_TO_INT (d, arg, "floor", arg);
+
+      IN_FLOAT (d = (*double_round) (XFLOAT (arg)->data), name, arg);
+      FLOAT_TO_INT (d, arg, name, arg);
     }
 #endif
 
   return arg;
 }
 
-#ifdef LISP_FLOAT_TYPE
+/* With C's /, the result is implementation-defined if either operand
+   is negative, so take care with negative operands in the following
+   integer functions.  */
 
-DEFUN ("round", Fround, Sround, 1, 1, 0,
-  "Return the nearest integer to ARG.")
-  (arg)
-     register Lisp_Object arg;
+static EMACS_INT
+ceiling2 (i1, i2)
+     EMACS_INT i1, i2;
 {
-  CHECK_NUMBER_OR_FLOAT (arg, 0);
-
-  if (FLOATP (arg))
-    {
-      double d;
-
-      /* Screw the prevailing rounding mode.  */
-      IN_FLOAT (d = rint (XFLOAT (arg)->data), "round", arg);
-      FLOAT_TO_INT (d, arg, "round", arg);
-    }
-
-  return arg;
+  return (i2 < 0
+	  ? (i1 < 0  ?  ((-1 - i1) / -i2) + 1  :  - (i1 / -i2))
+	  : (i1 <= 0  ?  - (-i1 / i2)  :  ((i1 - 1) / i2) + 1));
 }
 
-DEFUN ("truncate", Ftruncate, Struncate, 1, 1, 0,
-       "Truncate a floating point number to an int.\n\
-Rounds the value toward zero.")
-  (arg)
-     register Lisp_Object arg;
+static EMACS_INT
+floor2 (i1, i2)
+     EMACS_INT i1, i2;
 {
-  CHECK_NUMBER_OR_FLOAT (arg, 0);
+  return (i2 < 0
+	  ? (i1 <= 0  ?  -i1 / -i2  :  -1 - ((i1 - 1) / -i2))
+	  : (i1 < 0  ?  -1 - ((-1 - i1) / i2)  :  i1 / i2));
+}
 
-  if (FLOATP (arg))
-    {
-      double d;
+static EMACS_INT
+truncate2 (i1, i2)
+     EMACS_INT i1, i2;
+{
+  return (i2 < 0
+	  ? (i1 < 0  ?  -i1 / -i2  :  - (i1 / -i2))
+	  : (i1 < 0  ?  - (-i1 / i2)  :  i1 / i2));
+}
 
-      d = XFLOAT (arg)->data;
-      FLOAT_TO_INT (d, arg, "truncate", arg);
-    }
+static EMACS_INT
+round2 (i1, i2)
+     EMACS_INT i1, i2;
+{
+  /* The C language's division operator gives us one remainder R, but
+     we want the remainder R1 on the other side of 0 if R1 is closer
+     to 0 than R is; because we want to round to even, we also want R1
+     if R and R1 are the same distance from 0 and if C's quotient is
+     odd.  */
+  EMACS_INT q = i1 / i2;
+  EMACS_INT r = i1 % i2;
+  EMACS_INT abs_r = r < 0 ? -r : r;
+  EMACS_INT abs_r1 = (i2 < 0 ? -i2 : i2) - abs_r;
+  return q + (abs_r + (q & 1) <= abs_r1 ? 0 : (i2 ^ r) < 0 ? -1 : 1);
+}
 
-  return arg;
+/* The code uses emacs_rint, so that it works to undefine HAVE_RINT
+   if `rint' exists but does not work right.  */
+#ifdef HAVE_RINT
+#define emacs_rint rint
+#else
+static double
+emacs_rint (d)
+     double d;
+{
+  return floor (d + 0.5);
+}
+#endif
+
+static double
+double_identity (d)
+     double d;
+{
+  return d;
+}
+
+DEFUN ("ceiling", Fceiling, Sceiling, 1, 2, 0,
+  "Return the smallest integer no less than ARG.  (Round toward +inf.)\n\
+With optional DIVISOR, return the smallest integer no less than ARG/DIVISOR.")
+  (arg, divisor)
+     Lisp_Object arg, divisor;
+{
+  return rounding_driver (arg, divisor, ceil, ceiling2, "ceiling");
+}
+
+DEFUN ("floor", Ffloor, Sfloor, 1, 2, 0,
+  "Return the largest integer no greater than ARG.  (Round towards -inf.)\n\
+With optional DIVISOR, return the largest integer no greater than ARG/DIVISOR.")
+  (arg, divisor)
+     Lisp_Object arg, divisor;
+{
+  return rounding_driver (arg, divisor, floor, floor2, "floor");
+}
+
+DEFUN ("round", Fround, Sround, 1, 2, 0,
+  "Return the nearest integer to ARG.\n\
+With optional DIVISOR, return the nearest integer to ARG/DIVISOR.")
+  (arg, divisor)
+     Lisp_Object arg, divisor;
+{
+  return rounding_driver (arg, divisor, emacs_rint, round2, "round");
+}
+
+DEFUN ("truncate", Ftruncate, Struncate, 1, 2, 0,
+       "Truncate a floating point number to an int.\n\
+Rounds ARG toward zero.\n\
+With optional DIVISOR, truncate ARG/DIVISOR.")
+  (arg, divisor)
+     Lisp_Object arg, divisor;
+{
+  return rounding_driver (arg, divisor, double_identity, truncate2,
+			  "truncate");
+}
+
+#ifdef LISP_FLOAT_TYPE
+
+Lisp_Object
+fmod_float (x, y)
+     register Lisp_Object x, y;
+{
+  double f1, f2;
+
+  f1 = FLOATP (x) ? XFLOAT (x)->data : XINT (x);
+  f2 = FLOATP (y) ? XFLOAT (y)->data : XINT (y);
+
+  if (! IEEE_FLOATING_POINT && f2 == 0)
+    Fsignal (Qarith_error, Qnil);
+
+  /* If the "remainder" comes out with the wrong sign, fix it.  */
+  IN_FLOAT2 ((f1 = fmod (f1, f2),
+	      f1 = (f2 < 0 ? f1 > 0 : f1 < 0) ? f1 + f2 : f1),
+	     "mod", x, y);
+  return make_float (f1);
 }
 
 /* It's not clear these are worth adding.  */
@@ -857,12 +935,12 @@ DEFUN ("fround", Ffround, Sfround, 1, 1, 0,
      register Lisp_Object arg;
 {
   double d = extract_float (arg);
-  IN_FLOAT (d = rint (d), "fround", arg);
+  IN_FLOAT (d = emacs_rint (d), "fround", arg);
   return make_float (d);
 }
 
 DEFUN ("ftruncate", Fftruncate, Sftruncate, 1, 1, 0,
-       "Truncate a floating point number to an integral float value.\n\
+  "Truncate a floating point number to an integral float value.\n\
 Rounds the value toward zero.")
   (arg)
      register Lisp_Object arg;
@@ -883,7 +961,7 @@ float_error (signo)
   if (! in_float)
     fatal_error_signal (signo);
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
 #ifdef BSD4_1
   sigrelse (SIGILL);
 #else /* not BSD4_1 */
@@ -892,7 +970,7 @@ float_error (signo)
 #else
   /* Must reestablish handler each time it is called.  */
   signal (SIGILL, float_error);
-#endif /* BSD */
+#endif /* BSD_SYSTEM */
 
   in_float = 0;
 
@@ -989,9 +1067,9 @@ syms_of_floatfns ()
   defsubr (&Sabs);
   defsubr (&Sfloat);
   defsubr (&Slogb);
+#endif /* LISP_FLOAT_TYPE */
   defsubr (&Sceiling);
+  defsubr (&Sfloor);
   defsubr (&Sround);
   defsubr (&Struncate);
-#endif /* LISP_FLOAT_TYPE */
-  defsubr (&Sfloor);
 }

@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Registers, Display, Rectangles, Top
 @chapter Registers
@@ -46,7 +46,7 @@ Save position of point in register @var{r} (@code{point-to-register}).
 Jump to the position saved in register @var{r} (@code{jump-to-register}).
 @end table
 
-@kindex C-x r @key{SPC}
+@kindex C-x r SPC
 @findex point-to-register
   To save the current position of point in a register, choose a name
 @var{r} and type @kbd{C-x r @key{SPC} @var{r}}.  The register @var{r}
@@ -59,6 +59,11 @@ register.
 in register @var{r}.  The register is not affected; it continues to
 record the same position.  You can jump to the saved position any number
 of times.
+
+  If you use @kbd{C-x r j} to go to a saved position, but the buffer it
+was saved from has been killed, @kbd{C-x r j} tries to create the buffer
+again by visiting the same file.  Of course, this works only for buffers
+that were visiting files.
 
 @node RegText
 @section Saving Text in Registers

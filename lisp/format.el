@@ -1,6 +1,6 @@
 ;;; format.el --- read and save files in multiple formats
 
-;; Copyright (c) 1994, 1995 Free Software Foundation
+;; Copyright (c) 1994, 1995, 1997 Free Software Foundation
 
 ;; Author: Boris Goldowsky <boris@gnu.ai.mit.edu>
 
@@ -63,40 +63,113 @@
 
 (put 'buffer-file-format 'permanent-local t)
 
-(defconst format-alist 
+(defvar format-alist 
   '((text/enriched "Extended MIME text/enriched format."
 		   "Content-[Tt]ype:[ \t]*text/enriched"
 		   enriched-decode enriched-encode t enriched-mode)
-    (plain "Standard ASCII format, no text properties."
+    (plain "ISO 8859-1 standard format, no text properties."
 	   ;; Plain only exists so that there is an obvious neutral choice in
 	   ;; the completion list.
-	   nil nil nil nil nil))
+	   nil nil nil nil nil)
+    (ibm   "IBM Code Page 850 (DOS)" 
+	   "1\\(^\\)"
+	   "recode ibm-pc:latin1" "recode latin1:ibm-pc" t nil)
+    (mac   "Apple Macintosh" 
+	   "1\\(^\\)"
+	   "recode mac:latin1" "recode latin1:mac" t nil)
+    (hp    "HP Roman8" 
+	   "1\\(^\\)"
+	   "recode roman8:latin1" "recode latin1:roman8" t nil)
+    (TeX   "TeX (encoding)"  
+	   "1\\(^\\)"
+	   iso-tex2iso iso-iso2tex t nil)
+    (gtex  "German TeX (encoding)" 
+	   "1\\(^\\)"
+	   iso-gtex2iso iso-iso2gtex t nil)
+    (html  "HTML (encoding)" 
+	   "1\\(^\\)"
+	   "recode html:latin1" "recode latin1:html" t nil)
+    (rot13 "rot13" 
+	   "1\\(^\\)"
+	   "tr a-mn-z n-za-m" "tr a-mn-z n-za-m" t nil)
+    (duden "Duden Ersatzdarstellung" 
+	   "1\\(^\\)"
+	   "diac" iso-iso2duden t nil) 
+    (de646 "German ASCII (ISO 646)" 
+	   "1\\(^\\)"
+	   "recode iso646-ge:latin1" "recode latin1:iso646-ge" t nil)
+    (denet "net German" 
+	   "1\\(^\\)"
+	   iso-german iso-cvt-read-only t nil)
+    (esnet "net Spanish" 
+	   "1\\(^\\)"
+	   iso-spanish iso-cvt-read-only t nil))
   "List of information about understood file formats.
 Elements are of the form \(NAME DOC-STR REGEXP FROM-FN TO-FN MODIFY MODE-FN).
+
 NAME    is a symbol, which is stored in `buffer-file-format'.
+
 DOC-STR should be a single line providing more information about the
         format.  It is currently unused, but in the future will be shown to
         the user if they ask for more information.
+
 REGEXP  is a regular expression to match against the beginning of the file;
         it should match only files in that format.
+
 FROM-FN is called to decode files in that format; it gets two args, BEGIN 
         and END, and can make any modifications it likes, returning the new
         end.  It must make sure that the beginning of the file no longer
         matches REGEXP, or else it will get called again.
-TO-FN   is called to encode a region into that format; it is also passed BEGIN
-        and END, and either returns a list of annotations like
-        `write-region-annotate-functions', or modifies the region and returns
-        the new end.
-MODIFY, if non-nil, means the TO-FN modifies the region.  If nil, TO-FN may
-        not make any changes and should return a list of annotations.
+	Alternatively, FROM-FN can be a string, which specifies a shell command
+	(including options) to be used as a filter to perform the conversion.
+
+TO-FN   is called to encode a region into that format; it is passed three
+        arguments: BEGIN, END, and BUFFER.  BUFFER is the original buffer that
+        the data being written came from, which the function could use, for
+        example, to find the values of local variables.  TO-FN should either
+        return a list of annotations like `write-region-annotate-functions',
+        or modify the region and return the new end.
+	Alternatively, TO-FN can be a string, which specifies a shell command
+	(including options) to be used as a filter to perform the conversion.
+
+MODIFY, if non-nil, means the TO-FN wants to modify the region.  If nil,
+        TO-FN will not make any changes but will instead return a list of
+        annotations. 
+
 MODE-FN, if specified, is called when visiting a file with that format.")
 
 ;;; Basic Functions (called from Lisp)
 
-(defun format-annotate-function (format from to)
+(defun format-encode-run-method (method from to &optional buffer)
+  "Translate using function or shell script METHOD the text from FROM to TO.
+If METHOD is a string, it is a shell command;
+otherwise, it should be a Lisp function.
+BUFFER should be the buffer that the output originally came from."
+  (if (stringp method)
+      (save-current-buffer
+	(set-buffer buffer)
+	(with-output-to-temp-buffer "*Format Errors*"
+	  (shell-command-on-region from to method t nil standard-output))
+	(point))
+    (funcall method from to buffer)))
+
+(defun format-decode-run-method (method from to &optional buffer)
+  "Decode using function or shell script METHOD the text from FROM to TO.
+If METHOD is a string, it is a shell command;
+otherwise, it should be a Lisp function."
+  (if (stringp method)
+      (progn
+	(with-output-to-temp-buffer "*Format Errors*"
+	  (shell-command-on-region from to method t nil standard-output))
+	(point))
+    (funcall method from to)))
+
+(defun format-annotate-function (format from to orig-buf)
   "Returns annotations for writing region as FORMAT.
 FORMAT is a symbol naming one of the formats defined in `format-alist',
 it must be a single symbol, not a list like `buffer-file-format'.
+FROM and TO delimit the region to be operated on in the current buffer.
+ORIG-BUF is the original buffer that the data came from.
 This function works like a function on `write-region-annotate-functions':
 it either returns a list of annotations, or returns with a different buffer
 current, which contains the modified text to write.
@@ -114,10 +187,10 @@ For most purposes, consider using `format-encode-region' instead."
 	      (copy-to-buffer copy-buf from to)
 	      (set-buffer copy-buf)
 	      (format-insert-annotations write-region-annotations-so-far from)
-	      (funcall to-fn (point-min) (point-max))
+	      (format-encode-run-method to-fn (point-min) (point-max) orig-buf)
 	      nil)
 	  ;; Otherwise just call function, it will return annotations.
-	  (funcall to-fn from to)))))
+	  (funcall to-fn from to orig-buf)))))
 
 (defun format-decode (format length &optional visit-flag)
   ;; This function is called by insert-file-contents whenever a file is read.
@@ -151,7 +224,8 @@ For most purposes, consider using `format-decode-region' instead."
 		  (progn
 		    (setq format (cons (car f) format))
 		    ;; Decode it
-		    (if (nth 3 f) (setq end (funcall (nth 3 f) begin end)))
+		    (if (nth 3 f)
+			(setq end (format-decode-run-method (nth 3 f) begin end)))
 		    ;; Call visit function if required
 		    (if (and visit-flag (nth 6 f)) (funcall (nth 6 f) 1))
 		    ;; Safeguard against either of the functions changing pt.
@@ -166,7 +240,8 @@ For most purposes, consider using `format-decode-region' instead."
 	  (or (setq f (assq (car do) format-alist))
 	      (error "Unknown format" (car do)))
 	  ;; Decode:
-	  (if (nth 3 f) (setq end (funcall (nth 3 f) begin end)))
+	  (if (nth 3 f)
+	      (setq end (format-decode-run-method (nth 3 f) begin end)))
 	  ;; Call visit function if required
 	  (if (and visit-flag (nth 6 f)) (funcall (nth 6 f) 1))
 	  (setq do (cdr do)))))
@@ -232,8 +307,10 @@ one of the formats defined in `format-alist', or a list of such symbols."
 	      result)
 	 (if to-fn
 	     (if modify
-		 (setq end (funcall to-fn beg end))
-	       (format-insert-annotations (funcall to-fn beg end))))
+		 (setq end (format-encode-run-method to-fn beg end
+						     (current-buffer)))
+	       (format-insert-annotations 
+		(funcall to-fn beg end (current-buffer)))))
 	 (setq format (cdr format)))))))
 
 (defun format-write-file (filename format)
@@ -289,7 +366,7 @@ a list (ABSOLUTE-FILE-NAME . SIZE)."
       (setq value (insert-file-contents filename nil beg end))
       (setq size (nth 1 value)))
     (if format
-	(setq size (format-decode size format)
+	(setq size (format-decode format size)
 	      value (cons (car value) size)))
     value))
 
@@ -461,97 +538,113 @@ to write these unknown annotations back into the file."
 
 	    ;; Delete the annotation
 	    (delete-region loc end)
-	    (if positive
-		;; Positive annotations are stacked, remembering location
-		(setq open-ans (cons (list name loc) open-ans))
-	      ;; It is a negative annotation:
-	      ;; Close the top annotation & add its text property.
-	      ;; If the file's nesting is messed up, the close might not match
-	      ;; the top thing on the open-annotations stack.
-	      ;; If no matching annotation is open, just ignore the close.
-	      (if (not (assoc name open-ans))
-		  (message "Extra closing annotation (%s) in file" name)
-	      ;; If one is open, but not on the top of the stack, close
-	      ;; the things in between as well.  Set `found' when the real
-	      ;; one is closed.
-		(while (not found)
-		  (let* ((top (car open-ans)) ; first on stack: should match.
-			 (top-name (car top))
-			 (start (car (cdr top))) ; location of start
-			 (params (cdr (cdr top))) ; parameters
-			 (aalist translations)
-			 (matched nil))
-		    (if (equal name top-name)
-			(setq found t)
-		      (message "Improper nesting in file."))
-		    ;; Look through property names in TRANSLATIONS
-		    (while aalist
-		      (let ((prop (car (car aalist)))
-			    (alist (cdr (car aalist))))
-			;; And look through values for each property
-			(while alist
-			  (let ((value (car (car alist)))
-				(ans (cdr (car alist))))
-			    (if (member top-name ans)
-				;; This annotation is listed, but still have to
-				;; check if multiple annotations are satisfied
-				(if (member 'nil (mapcar 
-						  (lambda (r)
-						    (assoc r open-ans))
-						  ans))
-				    nil	; multiple ans not satisfied
-				  ;; Yes, all set.
-				  ;; If there are multiple annotations going
-				  ;; into one text property, adjust the 
-				  ;; begin points of the other annotations
-				  ;; so that we don't get double marking.
-				  (let ((to-reset ans)
-					this-one)
-				    (while to-reset
-				      (setq this-one
-					    (assoc (car to-reset) 
-						   (cdr open-ans)))
-				      (if this-one
-					  (setcdr this-one (list loc)))
-				      (setq to-reset (cdr to-reset))))
-				  ;; Set loop variables to nil so loop
-				  ;; will exit.
-				  (setq alist nil aalist nil matched t
-					;; pop annotation off stack.
-					open-ans (cdr open-ans))
-				  (cond 
-				   ;; Check for pseudo-properties
-				   ((eq prop 'PARAMETER)
-				    ;; This is a parameter of the top open ann:
-				    ;; delete text and use as arg.
-				    (if open-ans
-					;; (If nothing open, discard).
-					(setq open-ans
-					      (cons (append (car open-ans)
-							    (list
-							     (buffer-substring
-							      start loc)))
-						    (cdr open-ans))))
-				    (delete-region start loc))
-				   ((eq prop 'FUNCTION)
-				    ;; Not a property, but a function to call.
-				    (let ((rtn (apply value start loc params)))
-				      (if rtn (setq todo (cons rtn todo)))))
-				   (t 
-				    ;; Normal property/value pair
-				    (setq todo 
-					  (cons (list start loc prop value)
-						todo)))))))
-			  (setq alist (cdr alist))))
-		      (setq aalist (cdr aalist)))
-		    (if matched
-			nil
+	    (cond
+	     ;; Positive annotations are stacked, remembering location
+	     (positive (setq open-ans (cons `(,name ((,loc . nil))) open-ans)))
+	     ;; It is a negative annotation:
+	     ;; Close the top annotation & add its text property.
+	     ;; If the file's nesting is messed up, the close might not match
+	     ;; the top thing on the open-annotations stack.
+	     ;; If no matching annotation is open, just ignore the close.
+	     ((not (assoc name open-ans))
+	      (message "Extra closing annotation (%s) in file" name))
+	     ;; If one is open, but not on the top of the stack, close
+	     ;; the things in between as well.  Set `found' when the real
+	     ;; one is closed.
+	     (t
+	      (while (not found)
+		(let* ((top (car open-ans))	; first on stack: should match.
+		       (top-name (car top))	; text property name
+		       (top-extents (nth 1 top)) ; property regions
+		       (params (cdr (cdr top)))	; parameters
+		       (aalist translations)
+		       (matched nil))
+		  (if (equal name top-name)
+		      (setq found t)
+		    (message "Improper nesting in file."))
+		  ;; Look through property names in TRANSLATIONS
+		  (while aalist
+		    (let ((prop (car (car aalist)))
+			  (alist (cdr (car aalist))))
+		      ;; And look through values for each property
+		      (while alist
+			(let ((value (car (car alist)))
+			      (ans (cdr (car alist))))
+			  (if (member top-name ans)
+			      ;; This annotation is listed, but still have to
+			      ;; check if multiple annotations are satisfied
+			      (if (member nil (mapcar (lambda (r)
+							(assoc r open-ans))
+						      ans))
+				  nil	; multiple ans not satisfied
+				;; If there are multiple annotations going
+				;; into one text property, split up the other
+				;; annotations so they apply individually to
+				;; the other regions.
+				(setcdr (car top-extents) loc)
+				(let ((to-split ans) this-one extents)
+				  (while to-split
+				    (setq this-one
+					  (assoc (car to-split) open-ans)
+					  extents (nth 1 this-one))
+				    (if (not (eq this-one top))
+					(setcar (cdr this-one)
+						(format-subtract-regions
+						 extents top-extents)))
+				    (setq to-split (cdr to-split))))
+				;; Set loop variables to nil so loop
+				;; will exit.
+				(setq alist nil aalist nil matched t
+				      ;; pop annotation off stack.
+				      open-ans (cdr open-ans))
+				(let ((extents top-extents)
+				      (start (car (car top-extents)))
+				      (loc (cdr (car top-extents))))
+				  (while extents
+				    (cond
+				     ;; Check for pseudo-properties
+				     ((eq prop 'PARAMETER)
+				      ;; A parameter of the top open ann:
+				      ;; delete text and use as arg.
+				      (if open-ans
+					  ;; (If nothing open, discard).
+					  (setq open-ans
+						(cons
+						 (append (car open-ans)
+							 (list
+							  (buffer-substring
+							   start loc)))
+						 (cdr open-ans))))
+				      (delete-region start loc))
+				     ((eq prop 'FUNCTION)
+				      ;; Not a property, but a function.
+				      (let ((rtn
+					     (apply value start loc params)))
+					(if rtn (setq todo (cons rtn todo)))))
+				     (t
+				      ;; Normal property/value pair
+				      (setq todo
+					    (cons (list start loc prop value)
+						  todo))))
+				    (setq extents (cdr extents)
+					  start (car (car extents))
+					  loc (cdr (car extents))))))))
+			(setq alist (cdr alist))))
+		    (setq aalist (cdr aalist)))
+		  (if (not matched)
 		      ;; Didn't find any match for the annotation:
 		      ;; Store as value of text-property `unknown'.
-		      (setq open-ans (cdr open-ans))
-		      (setq todo (cons (list start loc 'unknown top-name)
-				       todo))
-		      (setq unknown-ans (cons name unknown-ans)))))))))
+		      (let ((extents top-extents)
+			    (start (car (car top-extents)))
+			    (loc (cdr (car top-extents))))
+			(while extents
+			  (setq open-ans (cdr open-ans)
+				todo (cons (list start loc 'unknown top-name)
+					   todo)
+				unknown-ans (cons name unknown-ans)
+				extents (cdr extents)
+				start (car (car extents))
+				loc (cdr (car extents))))))))))))
 
 	;; Once entire file has been scanned, add the properties.
 	(while todo
@@ -560,20 +653,70 @@ to write these unknown annotations back into the file."
 		 (to   (nth 1 item))
 		 (prop (nth 2 item))
 		 (val  (nth 3 item)))
-	
-	    (put-text-property 
+
+	    (if (numberp val)	; add to ambient value if numeric
+		(format-property-increment-region from to prop val 0)
+	      (put-text-property
 	       from to prop
-	       (cond ((numberp val) ; add to ambient value if numeric
-		      (+ val (or (get-text-property from prop) 0)))
-		     ((get prop 'format-list-valued) ; value gets consed onto
+	       (cond ((get prop 'format-list-valued) ; value gets consed onto
 						     ; list-valued properties
 		      (let ((prev (get-text-property from prop)))
 			(cons val (if (listp prev) prev (list prev)))))
-		     (t val)))) ; normally, just set to val.
+		     (t val))))) ; normally, just set to val.
 	  (setq todo (cdr todo)))
-    
+
 	(if unknown-ans
 	    (message "Unknown annotations: %s" unknown-ans))))))
+
+(defun format-subtract-regions (minu subtra)
+  "Remove the regions in SUBTRAHEND from the regions in MINUEND.  A region
+is a dotted pair (from . to).  Both parameters are lists of regions.  Each
+list must contain nonoverlapping, noncontiguous regions, in descending
+order.  The result is also nonoverlapping, noncontiguous, and in descending
+order.  The first element of MINUEND can have a cdr of nil, indicating that
+the end of that region is not yet known."
+  (let* ((minuend (copy-alist minu))
+	 (subtrahend (copy-alist subtra))
+	 (m (car minuend))
+	 (s (car subtrahend))
+	 results)
+    (while (and minuend subtrahend)
+      (cond 
+       ;; The minuend starts after the subtrahend ends; keep it.
+       ((> (car m) (cdr s))
+	(setq results (cons m results)
+	      minuend (cdr minuend)
+	      m (car minuend)))
+       ;; The minuend extends beyond the end of the subtrahend.  Chop it off.
+       ((or (null (cdr m)) (> (cdr m) (cdr s)))
+	(setq results (cons (cons (1+ (cdr s)) (cdr m)) results))
+	(setcdr m (cdr s)))
+       ;; The subtrahend starts after the minuend ends; throw it away.
+       ((< (cdr m) (car s))
+	(setq subtrahend (cdr subtrahend) s (car subtrahend)))
+       ;; The subtrahend extends beyond the end of the minuend.  Chop it off.
+       (t	;(<= (cdr m) (cdr s)))
+	(if (>= (car m) (car s))
+	    (setq minuend (cdr minuend) m (car minuend))
+	  (setcdr m (1- (car s)))
+	  (setq subtrahend (cdr subtrahend) s (car subtrahend))))))
+    (nconc (nreverse results) minuend)))
+
+;; This should probably go somewhere other than format.el.  Then again,
+;; indent.el has alter-text-property.  NOTE: We can also use
+;; next-single-property-change instead of text-property-not-all, but then
+;; we have to see if we passed TO.
+(defun format-property-increment-region (from to prop delta default)
+  "Increment property PROP over the region between FROM and TO by the
+amount DELTA (which may be negative).  If property PROP is nil anywhere
+in the region, it is treated as though it were DEFAULT."
+  (let ((cur from) val newval next)
+    (while cur
+      (setq val    (get-text-property cur prop)
+	    newval (+ (or val default) delta)
+	    next   (text-property-not-all cur to prop val))
+      (put-text-property cur (or next to) prop newval)
+      (setq cur next))))
 
 ;;;
 ;;; Encoding
@@ -749,11 +892,6 @@ Annotations to open and to close are returned as a dotted pair."
 	default)
     (if (not prop-alist)
 	nil
-      ;; If property is numeric, nil means 0
-      (cond ((and (numberp old) (null new))
-	     (setq new 0))
-	    ((and (numberp new) (null old))
-	     (setq old 0)))
       ;; If either old or new is a list, have to treat both that way.
       (if (or (consp old) (consp new))
 	  (let* ((old (if (listp old) old (list old)))
@@ -779,23 +917,34 @@ Annotations to open and to close are returned as a dotted pair."
   "Internal function annotate a single property change.
 PROP-ALIST is the relevant segment of a TRANSLATIONS list.
 OLD and NEW are the values."
-  (cond
-   ;; Numerical annotation - use difference
-   ((and (numberp old) (numberp new))
-    (let* ((entry (progn
-		    (while (and (car (car prop-alist))
-				(not (numberp (car (car prop-alist)))))
-		      (setq prop-alist (cdr prop-alist)))
-		    (car prop-alist)))
-	   (increment (car (car prop-alist)))
-	   (n (ceiling (/ (float (- new old)) (float increment))))
-	   (anno (car (cdr (car prop-alist)))))
-      (if (> n 0)
-	  (cons nil (make-list n anno))
-	(cons (make-list (- n) anno) nil))))
+  (let (num-ann)
+    ;; If old and new values are numbers,
+    ;; look for a number in PROP-ALIST.
+    (if (and (or (null old) (numberp old))
+	     (or (null new) (numberp new)))
+	(progn
+	  (setq num-ann prop-alist)
+	  (while (and num-ann (not (numberp (car (car num-ann)))))
+	    (setq num-ann (cdr num-ann)))))
+    (if num-ann
+	;; Numerical annotation - use difference
+	(progn
+	  ;; If property is numeric, nil means 0
+	  (cond ((and (numberp old) (null new))
+		 (setq new 0))
+		((and (numberp new) (null old))
+		 (setq old 0)))
 
-   ;; Standard annotation
-   (t (let ((close (and old (cdr (assoc old prop-alist))))
+	  (let* ((entry (car num-ann))
+		 (increment (car entry))
+		 (n (ceiling (/ (float (- new old)) (float increment))))
+		 (anno (car (cdr entry))))
+	    (if (> n 0)
+		(cons nil (make-list n anno))
+	      (cons (make-list (- n) anno) nil))))
+
+      ;; Standard annotation
+      (let ((close (and old (cdr (assoc old prop-alist))))
 	    (open  (and new (cdr (assoc new prop-alist)))))
 	(if (or close open)
 	    (format-make-relatively-unique close open)
@@ -804,4 +953,5 @@ OLD and NEW are the values."
 	    (if default
 		(funcall (car (cdr default)) old new))))))))
 
+(provide 'format)
 ;; format.el ends here

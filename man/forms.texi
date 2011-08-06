@@ -1,7 +1,6 @@
 \input texinfo			@c -*-texinfo-*-
 @c documentation for forms-mode
 @c Written by Johan Vromans, and edited by Richard Stallman
-@c $Id: forms.texi,v 1.10 1996/03/01 21:36:47 jv Exp $
 
 @comment %**start of header (This is for running Texinfo on a region.)
 @setfilename ../info/forms
@@ -39,14 +38,16 @@ paragraph not being relevant to the printed manual).
 @sp 4
 @center Forms-Mode version 2
 @sp 1
-@center March 1996
+@center for GNU Emacs 20.1
+@sp 1
+@center June 1997
 @sp 5
 @center Johan Vromans
 @center @i{jvromans@@squirrel.nl}
 @page
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1989, 1995, 1996 Free Software Foundation, Inc.
+Copyright @copyright{} 1989, 1997 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -219,9 +220,9 @@ Jump to the last record (@code{forms-last-record}).  This command also
 recalculates the number of records in the data file.
 
 @findex forms-next-field
-@kindex @key{TAB}
+@kindex TAB
 @item @key{TAB}
-@kindex C-c @key{TAB}
+@kindex C-c TAB
 @itemx C-c @key{TAB}
 Jump to the next field in the current record (@code{forms-next-field}).
 With a numeric argument @var{n}, jump forward @var{n} fields.  If this command
@@ -481,14 +482,31 @@ The default value is @code{"\^k"}, the character Control-K.  Example:
 This variable holds the name of a function to be called after the data
 file has been read in. This can be used to transform the contents of the
 data file into a format more suitable for forms processing.
-If it is @code{nil}, no function is called.
+If it is @code{nil}, no function is called.  For example, to maintain a
+gzipped database:
+
+@example
+(defun gzip-read-file-filter ()
+  (shell-command-on-region (point-min) (point-max)
+                           "gzip -d" t t))
+(setq forms-read-file-filter 'gzip-read-file-filter)
+@end example
 
 @findex forms-write-file-filter
 @item forms-write-file-filter
 This variable holds the name of a function to be called before writing
 out the contents of the data file.
 This can be used to undo the effects of @code{forms-read-file-filter}.
-If it is @code{nil}, no function is called.
+If it is @code{nil}, no function is called.  Example:
+
+@example
+(defun gzip-write-file-filter ()
+  (make-variable-buffer-local 'require-final-newline)
+  (setq require-final-newline nil)
+  (shell-command-on-region (point-min) (point-max)
+                           "gzip" t t))
+(setq forms-write-file-filter 'gzip-write-file-filter)
+@end example
 
 @findex forms-new-record-filter
 @item forms-new-record-filter
@@ -728,32 +746,32 @@ generated while analyzing the definition of @code{forms-format-list}
 start with @samp{Forms format error}.
 
 @table @code
-@item Forms control file error: 'forms-file' has not been set
+@item Forms control file error: `forms-file' has not been set
 The variable @code{forms-file} was not set by the control file.
 
-@item Forms control file error: 'forms-number-of-fields' has not been set
+@item Forms control file error: `forms-number-of-fields' has not been set
 The variable @code{forms-number-of-fields} was not set by the control
 file.
 
-@item Forms control file error: 'forms-number-of-fields' must be a number > 0
+@item Forms control file error: `forms-number-of-fields' must be a number > 0
 The variable @code{forms-number-of-fields} did not contain a positive
 number. 
 
-@item Forms control file error: 'forms-field-sep' is not a string
-@itemx Forms control file error: 'forms-multi-line' must be nil or a one-character string
+@item Forms control file error: `forms-field-sep' is not a string
+@itemx Forms control file error: `forms-multi-line' must be nil or a one-character string
 The variable @code{forms-multi-line} was set to something other than
 @code{nil} or a single-character string.
 
-@item Forms control file error: 'forms-multi-line' is equal to 'forms-field-sep'
+@item Forms control file error: `forms-multi-line' is equal to 'forms-field-sep'
 The variable @code{forms-multi-line} may not be equal to
 @code{forms-field-sep} for this would make it impossible to distinguish
 fields and the lines in the fields.
 
-@item Forms control file error: 'forms-new-record-filter' is not a function
-@itemx Forms control file error: 'forms-modified-record-filter' is not a function
+@item Forms control file error: `forms-new-record-filter' is not a function
+@itemx Forms control file error: `forms-modified-record-filter' is not a function
 The variable has been set to something else than a function.
 
-@item Forms control file error: 'forms-format-list' is not a list
+@item Forms control file error: `forms-format-list' is not a list
 The variable @code{forms-format-list} was not set to a Lisp list
 by the control file.
 
@@ -762,11 +780,11 @@ A field number was supplied in @code{forms-format-list} with a value of
 @var{xx}, which was not greater than zero and smaller than or equal to
 the number of fields in the forms, @var{nn}.
 
-@item Forms format error:  not a function @var{fun}
+@item Forms format error: @var{fun} is not a function
 The first element of a list which is an element of
 @code{forms-format-list} was not a valid Lisp function.
 
-@item Forms format error:  invalid element @var{xx}
+@item Forms format error: invalid element @var{xx}
 A list element was supplied in @code{forms-format-list} which was not a
 string, number or list.
 
@@ -774,11 +792,11 @@ string, number or list.
 @c This applies to Emacs 18 only.
 @c Error messages generated while a modified form is being analyzed.
 
-@item Parse error: not looking at "..."
+@item Parse error: not looking at `...'
 When re-parsing the contents of a forms, the text shown could not
 be found.
 
-@item Parse error: cannot find "..."
+@item Parse error: cannot find `...'
 When re-parsing the contents of a forms, the text shown, which
 separates two fields, could not be found.
 
@@ -812,9 +830,16 @@ An internal error prevented a specific record from being retrieved.
 An attempt was made to enable edit mode on a file that has been write
 protected. 
 
-@item @code{"}@var{regexp}@code{"} not found
-The @var{regexp} could not be found in the data file, starting at the
-current record location.
+@item Search failed: @var{regexp}
+The @var{regexp} could not be found in the data file. Forward searching
+is done from the current location until the end of the file, then
+retrying from the beginning of the file until the current location.
+Backward searching is done from the current location until the beginning
+of the file, then retrying from the end of the file until the current
+location.
+
+@item Wrapped
+A search completed successfully after wrapping around.
 
 @item Warning: number of records changed to @var{nn}
 Forms mode's idea of the number of records has been adjusted to the
@@ -833,16 +858,8 @@ The following example exploits most of the features of Forms mode.
 This example is included in the distribution as file @file{forms-d2.el}.
 
 @example
-;; demo2 -- demo forms-mode	-*- emacs-lisp -*-
+;; demo2 -- demo forms-mode     -*- emacs-lisp -*-
 
-;; SCCS Status     : demo2	1.1.2
-;; Author          : Johan Vromans
-;; Created On      : 1989
-;; Last Modified By: Johan Vromans
-;; Last Modified On: Mon Jul  1 13:56:31 1991
-;; Update Count    : 2
-;; Status          : OK
-;; 
 ;; @r{This sample forms exploit most of the features of forms mode.}
 
 ;; @r{Set the name of the data file.}
@@ -851,17 +868,17 @@ This example is included in the distribution as file @file{forms-d2.el}.
 ;; @r{Use @code{forms-enumerate} to set field names and number thereof.}
 (setq forms-number-of-fields
       (forms-enumerate
-       '(arch-newsgroup			; 1
-	 arch-volume			; 2
-	 arch-issue			; and ...
-	 arch-article			; ... so
-	 arch-shortname			; ... ... on
-	 arch-parts
-	 arch-from
-	 arch-longname
-	 arch-keywords
-	 arch-date
-	 arch-remarks)))
+       '(arch-newsgroup                 ; 1
+         arch-volume                    ; 2
+         arch-issue                     ; and ...
+         arch-article                   ; ... so
+         arch-shortname                 ; ... ... on
+         arch-parts
+         arch-from
+         arch-longname
+         arch-keywords
+         arch-date
+         arch-remarks)))
 
 ;; @r{The following functions are used by this form for layout purposes.}
 ;;
@@ -889,7 +906,7 @@ used to fill to the column."
   "Form a new record with some defaults."
   (aset the-record arch-from (user-full-name))
   (aset the-record arch-date (current-time-string))
-  the-record)				; return it
+  the-record)                           ; return it
 (setq forms-new-record-filter 'new-record-filter)
 
 ;; @r{The format list.}
@@ -897,24 +914,24 @@ used to fill to the column."
      (list
        "====== Public Domain Software Archive ======\n\n"
        arch-shortname
-       " - "			arch-longname
+       " - "                    arch-longname
        "\n\n"
-       "Article: "		arch-newsgroup
-       "/"			arch-article
+       "Article: "              arch-newsgroup
+       "/"                      arch-article
        " "
        '(arch-tocol 40)
-       "Issue: "		arch-issue
+       "Issue: "                arch-issue
        " "
        '(arch-rj 73 10)
-       "Date: "			arch-date
+       "Date: "                 arch-date
        "\n\n"
-       "Submitted by: "		arch-from
+       "Submitted by: "         arch-from
        "\n"
        '(arch-tocol 79 ?-)
        "\n"
-       "Keywords: "		arch-keywords
+       "Keywords: "             arch-keywords
        "\n\n"
-       "Parts: "		arch-parts
+       "Parts: "                arch-parts
        "\n\n====== Remarks ======\n\n"
        arch-remarks
      ))

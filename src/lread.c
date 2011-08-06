@@ -1,6 +1,6 @@
 /* Lisp parsing and input streams.
-   Copyright (C) 1985, 1986, 1987, 1988, 1989, 
-   1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 87, 88, 89, 93, 94, 95, 1997
+      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -30,6 +30,7 @@ Boston, MA 02111-1307, USA.  */
 
 #ifndef standalone
 #include "buffer.h"
+#include "charset.h"
 #include <paths.h>
 #include "commands.h"
 #include "keyboard.h"
@@ -73,8 +74,10 @@ Lisp_Object Qread_char, Qget_file_char, Qstandard_input, Qcurrent_load_list;
 Lisp_Object Qvariable_documentation, Vvalues, Vstandard_input, Vafter_load_alist;
 Lisp_Object Qascii_character, Qload, Qload_file_name;
 Lisp_Object Qbackquote, Qcomma, Qcomma_at, Qcomma_dot, Qfunction;
+Lisp_Object Qinhibit_file_name_operation;
 
 extern Lisp_Object Qevent_symbol_element_mask;
+extern Lisp_Object Qfile_exists_p;
 
 /* non-zero if inside `load' */
 int load_in_progress;
@@ -92,14 +95,27 @@ Lisp_Object Vload_history;
 /* This is used to build the load history. */
 Lisp_Object Vcurrent_load_list;
 
+/* List of files that were preloaded.  */
+Lisp_Object Vpreloaded_file_list;
+
 /* Name of file actually being read by `load'.  */
 Lisp_Object Vload_file_name;
 
 /* Function to use for reading, in `load' and friends.  */
 Lisp_Object Vload_read_function;
 
+/* The association list of objects read with the #n=object form.
+   Each member of the list has the form (n . object), and is used to
+   look up the object for the corresponding #n# construct.
+   It must be set to nil before all top-level calls to read0.  */
+Lisp_Object read_objects;
+
 /* Nonzero means load should forcibly load all dynamic doc strings.  */
 static int load_force_doc_strings;
+
+/* Function to use for loading an Emacs lisp source file (not
+   compiled) instead of readevalloop.  */
+Lisp_Object Vload_source_file_function;
 
 /* List of descriptors now open for Fload.  */
 static Lisp_Object load_descriptor_list;
@@ -131,7 +147,11 @@ static int new_backquote_flag;
 
 /* Handle unreading and rereading of characters.
    Write READCHAR to read a character,
-   UNREAD(c) to unread c to be read again. */
+   UNREAD(c) to unread c to be read again.
+
+   These macros actually read/unread a byte code, multibyte characters
+   are not handled here.  The caller should manage them if necessary.
+ */
 
 #define READCHAR readchar (readcharfun)
 #define UNREAD(c) unreadchar (readcharfun, c)
@@ -219,7 +239,7 @@ unreadchar (readcharfun, c)
   else if (BUFFERP (readcharfun))
     {
       if (XBUFFER (readcharfun) == current_buffer)
-	SET_PT (point - 1);
+	SET_PT (PT - 1);
       else
 	SET_BUF_PT (XBUFFER (readcharfun), BUF_PT (XBUFFER (readcharfun)) - 1);
     }
@@ -364,7 +384,7 @@ static void readevalloop ();
 static Lisp_Object load_unwind ();
 static Lisp_Object load_descriptor_unwind ();
 
-DEFUN ("load", Fload, Sload, 1, 4, 0,
+DEFUN ("load", Fload, Sload, 1, 5, 0,
   "Execute a file of Lisp code named FILE.\n\
 First try FILE with `.elc' appended, then try with `.el',\n\
  then try FILE unmodified.\n\
@@ -375,9 +395,12 @@ Print messages at start and end of loading unless\n\
  optional third arg NOMESSAGE is non-nil.\n\
 If optional fourth arg NOSUFFIX is non-nil, don't try adding\n\
  suffixes `.elc' or `.el' to the specified name FILE.\n\
+If optional fifth arg MUST-SUFFIX is non-nil, insist on\n\
+ the suffix `.elc' or `.el'; don't accept just FILE unless\n\
+ it ends in one of those suffixes or includes a directory name.\n\
 Return t if file exists.")
-  (file, noerror, nomessage, nosuffix)
-     Lisp_Object file, noerror, nomessage, nosuffix;
+  (file, noerror, nomessage, nosuffix, must_suffix)
+     Lisp_Object file, noerror, nomessage, nosuffix, must_suffix;
 {
   register FILE *stream;
   register int fd = -1;
@@ -386,8 +409,10 @@ Return t if file exists.")
   Lisp_Object temp;
   struct gcpro gcpro1;
   Lisp_Object found;
-  /* 1 means inhibit the message at the beginning.  */
-  int nomessage1 = 0;
+  /* 1 means we printed the ".el is newer" message.  */
+  int newer = 0;
+  /* 1 means we are loading a compiled file.  */
+  int compiled = 0;
   Lisp_Object handler;
 #ifdef DOS_NT
   char *dosmode = "rt";
@@ -409,8 +434,29 @@ Return t if file exists.")
      since it would try to load a directory as a Lisp file */
   if (XSTRING (file)->size > 0)
     {
+      int size = XSTRING (file)->size;
+
       GCPRO1 (file);
-      fd = openp (Vload_path, file, !NILP (nosuffix) ? "" : ".elc:.el:",
+
+      if (! NILP (must_suffix))
+	{
+	  /* Don't insist on adding a suffix if FILE already ends with one.  */
+	  if (size > 3
+	      && !strcmp (XSTRING (file)->data + size - 3, ".el"))
+	    must_suffix = Qnil;
+	  else if (size > 4
+		   && !strcmp (XSTRING (file)->data + size - 4, ".elc"))
+	    must_suffix = Qnil;
+	  /* Don't insist on adding a suffix
+	     if the argument includes a directory name.  */
+	  else if (! NILP (Ffile_name_directory (file)))
+	    must_suffix = Qnil;
+	}
+
+      fd = openp (Vload_path, file,
+		  (!NILP (nosuffix) ? ""
+		   : ! NILP (must_suffix) ? ".elc:.el"
+		   : ".elc:.el:"),
 		  &found, 0);
       UNGCPRO;
     }
@@ -425,11 +471,20 @@ Return t if file exists.")
 	return Qnil;
     }
 
+  /* If FD is 0, that means openp found a remote file.  */
+  if (fd == 0)
+    {
+      handler = Ffind_file_name_handler (found, Qload);
+      return call5 (handler, Qload, found, noerror, nomessage, Qt);
+    }
+
   if (!bcmp (&(XSTRING (found)->data[XSTRING (found)->size - 4]),
 	     ".elc", 4))
     {
       struct stat s1, s2;
       int result;
+
+      compiled = 1;
 
 #ifdef DOS_NT
       dosmode = "rb";
@@ -439,13 +494,26 @@ Return t if file exists.")
       result = stat ((char *)XSTRING (found)->data, &s2);
       if (result >= 0 && (unsigned) s1.st_mtime < (unsigned) s2.st_mtime)
 	{
-	  message ("Source file `%s' newer than byte-compiled file",
-		   XSTRING (found)->data);
-	  /* Don't immediately overwrite this message.  */
-	  if (!noninteractive)
-	    nomessage1 = 1;
+	  /* Make the progress messages mention that source is newer.  */
+	  newer = 1;
+
+	  /* If we won't print another message, mention this anyway.  */
+	  if (! NILP (nomessage))
+	    message ("Source file `%s' newer than byte-compiled file",
+		     XSTRING (found)->data);
 	}
       XSTRING (found)->data[XSTRING (found)->size - 1] = 'c';
+    }
+  else
+    {
+      /* We are loading a source file (*.el).  */
+      if (!NILP (Vload_source_file_function))
+	{
+	  close (fd);
+	  return call4 (Vload_source_file_function, found, file,
+			NILP (noerror) ? Qnil : Qt,
+			NILP (nomessage) ? Qnil : Qt);
+	}
     }
 
 #ifdef DOS_NT
@@ -460,8 +528,19 @@ Return t if file exists.")
       error ("Failure to create stdio stream for %s", XSTRING (file)->data);
     }
 
-  if (NILP (nomessage) && !nomessage1)
-    message ("Loading %s...", XSTRING (file)->data);
+  if (! NILP (Vpurify_flag))
+    Vpreloaded_file_list = Fcons (file, Vpreloaded_file_list);
+
+  if (NILP (nomessage))
+    {
+      if (newer)
+	message ("Loading %s (compiled; note, source file is newer)...",
+		 XSTRING (file)->data);
+      else if (compiled)
+	message ("Loading %s (compiled)...", XSTRING (file)->data);
+      else
+	message ("Loading %s...", XSTRING (file)->data);
+    }
 
   GCPRO1 (file);
   lispstream = Fcons (Qnil, Qnil);
@@ -470,6 +549,7 @@ Return t if file exists.")
   record_unwind_protect (load_unwind, lispstream);
   record_unwind_protect (load_descriptor_unwind, load_descriptor_list);
   specbind (Qload_file_name, found);
+  specbind (Qinhibit_file_name_operation, Qnil);
   load_descriptor_list
     = Fcons (make_number (fileno (stream)), load_descriptor_list);
   load_in_progress++;
@@ -488,7 +568,15 @@ Return t if file exists.")
   saved_doc_string_size = 0;
 
   if (!noninteractive && NILP (nomessage))
-    message ("Loading %s...done", XSTRING (file)->data);
+    {
+      if (newer)
+	message ("Loading %s (compiled; note, source file is newer)...done",
+		 XSTRING (file)->data);
+      else if (compiled)
+	message ("Loading %s (compiled)...done", XSTRING (file)->data);
+      else
+	message ("Loading %s...done", XSTRING (file)->data);
+    }
   return Qt;
 }
 
@@ -551,7 +639,11 @@ complete_filename_p (pathname)
 
    If STOREPTR is nonzero, it points to a slot where the name of
    the file actually found should be stored as a Lisp string.
-   Nil is stored there on failure.  */
+   nil is stored there on failure.
+
+   If the file we find is remote, return 0
+   but store the found remote file name in *STOREPTR.
+   We do not check for remote files if EXEC_ONLY is nonzero.  */
 
 int
 openp (path, str, suffix, storeptr, exec_only)
@@ -566,7 +658,7 @@ openp (path, str, suffix, storeptr, exec_only)
   register char *fn = buf;
   int absolute = 0;
   int want_size;
-  register Lisp_Object filename;
+  Lisp_Object filename;
   struct stat st;
   struct gcpro gcpro1;
 
@@ -606,30 +698,73 @@ openp (path, str, suffix, storeptr, exec_only)
 	{
 	  char *esuffix = (char *) index (nsuffix, ':');
 	  int lsuffix = esuffix ? esuffix - nsuffix : strlen (nsuffix);
+	  Lisp_Object handler;
 
-	  /* Concatenate path element/specified name with the suffix.  */
-	  strncpy (fn, XSTRING (filename)->data, XSTRING (filename)->size);
-	  fn[XSTRING (filename)->size] = 0;
+	  /* Concatenate path element/specified name with the suffix.
+	     If the directory starts with /:, remove that.  */
+	  if (XSTRING (filename)->size > 2
+	      && XSTRING (filename)->data[0] == '/'
+	      && XSTRING (filename)->data[1] == ':')
+	    {
+	      strncpy (fn, XSTRING (filename)->data + 2,
+		       XSTRING (filename)->size - 2);
+	      fn[XSTRING (filename)->size - 2] = 0;
+	    }
+	  else
+	    {
+	      strncpy (fn, XSTRING (filename)->data, XSTRING (filename)->size);
+	      fn[XSTRING (filename)->size] = 0;
+	    }
+
 	  if (lsuffix != 0)  /* Bug happens on CCI if lsuffix is 0.  */
 	    strncat (fn, nsuffix, lsuffix);
 
-	  /* Ignore file if it's a directory.  */
-	  if (stat (fn, &st) >= 0
-	      && (st.st_mode & S_IFMT) != S_IFDIR)
+	  /* Check that the file exists and is not a directory.  */
+	  if (absolute)
+	    handler = Qnil;
+	  else
+	    handler = Ffind_file_name_handler (filename, Qfile_exists_p);
+	  if (! NILP (handler) && ! exec_only)
 	    {
-	      /* Check that we can access or open it.  */
-	      if (exec_only)
-		fd = (access (fn, X_OK) == 0) ? 1 : -1;
-	      else
-		fd = open (fn, O_RDONLY, 0);
+	      Lisp_Object string;
+	      int exists;
 
-	      if (fd >= 0)
+	      string = build_string (fn);
+	      exists = ! NILP (exec_only ? Ffile_executable_p (string)
+			       : Ffile_readable_p (string));
+	      if (exists
+		  && ! NILP (Ffile_directory_p (build_string (fn))))
+		exists = 0;
+
+	      if (exists)
 		{
 		  /* We succeeded; return this descriptor and filename.  */
 		  if (storeptr)
 		    *storeptr = build_string (fn);
 		  UNGCPRO;
-		  return fd;
+		  return 0;
+		}
+	    }
+	  else
+	    {
+	      int exists = (stat (fn, &st) >= 0
+			    && (st.st_mode & S_IFMT) != S_IFDIR);
+	      if (exists)
+		{
+		  /* Check that we can access or open it.  */
+		  if (exec_only)
+		    fd = (access (fn, X_OK) == 0) ? 1 : -1;
+		  else
+		    fd = open (fn, O_RDONLY, 0);
+
+		  if (fd >= 0)
+		    {
+		      /* We succeeded; return this descriptor and filename.  */
+		      if (storeptr)
+			*storeptr = build_string (fn);
+		      UNGCPRO;
+		      return fd;
+		    }
 		}
 	    }
 
@@ -780,6 +915,7 @@ readevalloop (readcharfun, stream, sourcename, evalfun, printflag)
       else
 	{
 	  UNREAD (c);
+	  read_objects = Qnil;
 	  if (NILP (Vload_read_function))
 	    val = read0 (readcharfun);
 	  else
@@ -805,17 +941,19 @@ readevalloop (readcharfun, stream, sourcename, evalfun, printflag)
 
 #ifndef standalone
 
-DEFUN ("eval-buffer", Feval_buffer, Seval_buffer, 0, 2, "",
+DEFUN ("eval-buffer", Feval_buffer, Seval_buffer, 0, 3, "",
   "Execute the current buffer as Lisp code.\n\
 Programs can pass two arguments, BUFFER and PRINTFLAG.\n\
 BUFFER is the buffer to evaluate (nil means use current buffer).\n\
 PRINTFLAG controls printing of output:\n\
 nil means discard it; anything else is stream for print.\n\
 \n\
-If there is no error, point does not move.  If there is an error,\n\
-point remains at the end of the last character read from the buffer.")
-  (buffer, printflag)
-     Lisp_Object buffer, printflag;
+If the optional third argument FILENAME is non-nil,\n\
+it specifies the file name to use for `load-history'.\n\
+\n\
+This function preserves the position of point.")
+  (buffer, printflag, filename)
+     Lisp_Object buffer, printflag, filename;
 {
   int count = specpdl_ptr - specpdl;
   Lisp_Object tem, buf;
@@ -825,16 +963,20 @@ point remains at the end of the last character read from the buffer.")
   else
     buf = Fget_buffer (buffer);
   if (NILP (buf))
-    error ("No such buffer.");
+    error ("No such buffer");
 
   if (NILP (printflag))
     tem = Qsymbolp;
   else
     tem = printflag;
+
+  if (NILP (filename))
+    filename = XBUFFER (buf)->filename;
+
   specbind (Qstandard_output, tem);
   record_unwind_protect (save_excursion_restore, save_excursion_save ());
   BUF_SET_PT (XBUFFER (buf), BUF_BEGV (XBUFFER (buf)));
-  readevalloop (buf, 0, XBUFFER (buf)->filename, Feval, !NILP (printflag));
+  readevalloop (buf, 0, filename, Feval, !NILP (printflag));
   unbind_to (count, Qnil);
 
   return Qnil;
@@ -927,6 +1069,7 @@ STREAM or the value of `standard-input' may be:\n\
     stream = Qread_char;
 
   new_backquote_flag = 0;
+  read_objects = Qnil;
 
 #ifndef standalone
   if (EQ (stream, Qread_char))
@@ -974,6 +1117,7 @@ START and END optionally delimit a substring of STRING from which to read;\n\
   read_from_string_limit = endval;
 
   new_backquote_flag = 0;
+  read_objects = Qnil;
 
   tem = read0 (string);
   return Fcons (tem, make_number (read_from_string_index));
@@ -997,6 +1141,27 @@ read0 (readcharfun)
 
 static int read_buffer_size;
 static char *read_buffer;
+
+/* Read multibyte form and return it as a character.  C is a first
+   byte of multibyte form, and rest of them are read from
+   READCHARFUN.  */
+static int
+read_multibyte (c, readcharfun)
+     register int c;
+     Lisp_Object readcharfun;
+{
+  /* We need the actual character code of this multibyte
+     characters.  */
+  unsigned char str[MAX_LENGTH_OF_MULTI_BYTE_FORM];
+  int len = 0;
+
+  str[len++] = c;
+  while ((c = READCHAR) >= 0xA0
+	 && len < MAX_LENGTH_OF_MULTI_BYTE_FORM)
+    str[len++] = c;
+  UNREAD (c);
+  return STRING_CHAR (str, len);
+}
 
 static int
 read_escape (readcharfun)
@@ -1152,6 +1317,8 @@ read_escape (readcharfun)
       }
 
     default:
+      if (BASE_LEADING_CODE_P (c))
+	c = read_multibyte (c, readcharfun);
       return c;
     }
 }
@@ -1169,6 +1336,8 @@ read1 (readcharfun, pch, first_in_list)
      int first_in_list;
 {
   register int c;
+  int uninterned_symbol = 0;
+
   *pch = 0;
 
  retry:
@@ -1204,7 +1373,24 @@ read1 (readcharfun, pch, first_in_list)
 		  || XVECTOR (tmp)->size > CHAR_TABLE_STANDARD_SLOTS + 10)
 		error ("Invalid size char-table");
 	      XSETCHAR_TABLE (tmp, XCHAR_TABLE (tmp));
+	      XCHAR_TABLE (tmp)->top = Qt;
 	      return tmp;
+	    }
+	  else if (c == '^')
+	    {
+	      c = READCHAR;
+	      if (c == '[')
+		{
+		  Lisp_Object tmp;
+		  tmp = read_vector (readcharfun);
+		  if (XVECTOR (tmp)->size != SUB_CHAR_TABLE_STANDARD_SLOTS)
+		    error ("Invalid size char-table");
+		  XSETCHAR_TABLE (tmp, XCHAR_TABLE (tmp));
+		  XCHAR_TABLE (tmp)->top = Qnil;
+		  return tmp;
+		}
+	      Fsignal (Qinvalid_read_syntax,
+		       Fcons (make_string ("#^^", 3), Qnil));
 	    }
 	  Fsignal (Qinvalid_read_syntax, Fcons (make_string ("#^", 2), Qnil));
 	}
@@ -1216,21 +1402,27 @@ read1 (readcharfun, pch, first_in_list)
 	  if (c == '"')
 	    {
 	      Lisp_Object tmp, val;
-	      int size_in_chars = ((XFASTINT (length) + BITS_PER_CHAR)
+	      int size_in_chars = ((XFASTINT (length) + BITS_PER_CHAR - 1)
 				   / BITS_PER_CHAR);
 
 	      UNREAD (c);
 	      tmp = read1 (readcharfun, pch, first_in_list);
-	      if (size_in_chars != XSTRING (tmp)->size)
+	      if (size_in_chars != XSTRING (tmp)->size
+		  /* We used to print 1 char too many
+		     when the number of bits was a multiple of 8.
+		     Accept such input in case it came from an old version.  */
+		  && ! (XFASTINT (length)
+			== (XSTRING (tmp)->size - 1) * BITS_PER_CHAR))
 		Fsignal (Qinvalid_read_syntax,
-			 Fcons (make_string ("#&", 2), Qnil));
+			 Fcons (make_string ("#&...", 5), Qnil));
 		
 	      val = Fmake_bool_vector (length, Qnil);
 	      bcopy (XSTRING (tmp)->data, XBOOL_VECTOR (val)->data,
 		     size_in_chars);
 	      return val;
 	    }
-	  Fsignal (Qinvalid_read_syntax, Fcons (make_string ("#&", 2), Qnil));
+	  Fsignal (Qinvalid_read_syntax, Fcons (make_string ("#&...", 5),
+						Qnil));
 	}
       if (c == '[')
 	{
@@ -1331,7 +1523,43 @@ read1 (readcharfun, pch, first_in_list)
 	return Vload_file_name;
       if (c == '\'')
 	return Fcons (Qfunction, Fcons (read0 (readcharfun), Qnil));
+      /* #:foo is the uninterned symbol named foo.  */
+      if (c == ':')
+	{
+	  uninterned_symbol = 1;
+	  c = READCHAR;
+	  goto default_label;
+	}
+      /* Reader forms that can reuse previously read objects.  */
+      if (c >= '0' && c <= '9')
+	{
+	  int n = 0;
+	  Lisp_Object tem;
 
+	  /* Read a non-negative integer.  */
+	  while (c >= '0' && c <= '9')
+	    {
+	      n *= 10;
+	      n += c - '0';
+	      c = READCHAR;
+	    }
+	  /* #n=object returns object, but associates it with n for #n#.  */
+	  if (c == '=')
+	    {
+	      tem = read0 (readcharfun);
+	      read_objects = Fcons (Fcons (make_number (n), tem), read_objects);
+	      return tem;
+	    }
+	  /* #n# returns a previously read object.  */
+	  if (c == '#')
+	    {
+	      tem = Fassq (make_number (n), read_objects);
+	      if (CONSP (tem))
+		return XCDR (tem);
+	      /* Fall through to error message.  */
+	    }
+	  /* Fall through to error message.  */
+	}
 
       UNREAD (c);
       Fsignal (Qinvalid_read_syntax, Fcons (make_string ("#", 1), Qnil));
@@ -1392,9 +1620,10 @@ read1 (readcharfun, pch, first_in_list)
 	if (c < 0) return Fsignal (Qend_of_file, Qnil);
 
 	if (c == '\\')
-	  XSETINT (val, read_escape (readcharfun));
-	else
-	  XSETINT (val, c);
+	  c = read_escape (readcharfun);
+	else if (BASE_LEADING_CODE_P (c))
+	  c = read_multibyte (c, readcharfun);
+	XSETINT (val, c);
 
 	return val;
       }
@@ -1417,7 +1646,29 @@ read1 (readcharfun, pch, first_in_list)
 		end = read_buffer + read_buffer_size;
 	      }
 	    if (c == '\\')
-	      c = read_escape (readcharfun);
+	      {
+		c = read_escape (readcharfun);
+		if (! SINGLE_BYTE_CHAR_P ((c & ~CHAR_META)))
+		  {
+		    char workbuf[4];
+		    char *str = workbuf;
+		    int length;
+
+		    length = non_ascii_char_to_string (c, workbuf, &str);
+
+		    if (p + length > end)
+		      {
+			char *new = (char *) xrealloc (read_buffer, read_buffer_size *= 2);
+			p += new - read_buffer;
+			read_buffer += new - read_buffer;
+			end = read_buffer + read_buffer_size;
+		      }
+ 
+		    bcopy (str, p, length);
+		    p += length;
+		    continue;
+		  }
+	      }
 	    /* c is -1 if \ newline has just been seen */
 	    if (c == -1)
 	      {
@@ -1523,7 +1774,7 @@ read1 (readcharfun, pch, first_in_list)
 	    UNREAD (c);
 	}
 
-	if (!quoted)
+	if (!quoted && !uninterned_symbol)
 	  {
 	    register char *p1;
 	    register Lisp_Object val;
@@ -1559,7 +1810,10 @@ read1 (readcharfun, pch, first_in_list)
 #endif
 	  }
 
-	return intern (read_buffer);
+	if (uninterned_symbol)
+	  return make_symbol (read_buffer);
+	else
+	  return intern (read_buffer);
       }
     }
 }
@@ -1599,7 +1853,7 @@ isfloat_string (cp)
       while (*cp >= '0' && *cp <= '9')
 	cp++;
     }
-  if (*cp == 'e')
+  if (*cp == 'e' || *cp == 'E')
     {
       state |= E_CHAR;
       cp++;
@@ -1838,10 +2092,20 @@ intern (str)
   tem = oblookup (obarray, str, len);
   if (SYMBOLP (tem))
     return tem;
-  return Fintern ((!NILP (Vpurify_flag)
-		   ? make_pure_string (str, len)
-		   : make_string (str, len)),
-		  obarray);
+  return Fintern (make_string (str, len), obarray);
+}
+
+/* Create an uninterned symbol with name STR.  */
+
+Lisp_Object
+make_symbol (str)
+     char *str;
+{
+  int len = strlen (str);
+
+  return Fmake_symbol ((!NILP (Vpurify_flag)
+			? make_pure_string (str, len)
+			: make_string (str, len)));
 }
 
 DEFUN ("intern", Fintern, Sintern, 1, 2, 0,
@@ -1866,6 +2130,10 @@ it defaults to the value of `obarray'.")
   if (!NILP (Vpurify_flag))
     string = Fpurecopy (string);
   sym = Fmake_symbol (string);
+  XSYMBOL (sym)->obarray = obarray;
+
+  if (XSTRING (string)->data[0] == ':')
+    XSYMBOL (sym)->value = sym;
 
   ptr = &XVECTOR (obarray)->contents[XINT (tem)];
   if (SYMBOLP (*ptr))
@@ -2033,7 +2301,7 @@ map_obarray (obarray, fn, arg)
   for (i = XVECTOR (obarray)->size - 1; i >= 0; i--)
     {
       tail = XVECTOR (obarray)->contents[i];
-      if (XFASTINT (tail) != 0)
+      if (SYMBOLP (tail))
 	while (1)
 	  {
 	    (*fn) (tail, arg);
@@ -2081,6 +2349,7 @@ init_obarray ()
   initial_obarray = Vobarray;
   staticpro (&initial_obarray);
   /* Intern nil in the obarray */
+  XSYMBOL (Qnil)->obarray = Vobarray;
   /* These locals are to kludge around a pyramid compiler bug. */
   hash = hash_string ("nil", 3);
   /* Separate statement here to avoid VAXC bug. */
@@ -2102,6 +2371,7 @@ init_obarray ()
   Vpurify_flag = Qt;
 
   Qvariable_documentation = intern ("variable-documentation");
+  staticpro (&Qvariable_documentation);
 
   read_buffer_size = 100;
   read_buffer = (char *) malloc (read_buffer_size);
@@ -2291,6 +2561,16 @@ init_lread ()
 		   Lisp dirs instead.  */
 		Vload_path = nconc2 (Vload_path, dump_path);
 
+	      /* Add leim under the installation dir, if it exists.  */
+	      tem = Fexpand_file_name (build_string ("leim"),
+				       Vinstallation_directory);
+	      tem1 = Ffile_exists_p (tem);
+	      if (!NILP (tem1))
+		{
+		  if (NILP (Fmember (tem, Vload_path)))
+		    Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+		}
+
 	      /* Add site-list under the installation dir, if it exists.  */
 	      tem = Fexpand_file_name (build_string ("site-lisp"),
 				       Vinstallation_directory);
@@ -2300,15 +2580,58 @@ init_lread ()
 		  if (NILP (Fmember (tem, Vload_path)))
 		    Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
 		}
+
+	      /* If Emacs was not built in the source directory,
+		 and it is run from where it was built, add to load-path
+		 the lisp, leim and site-lisp dirs under that directory.  */
+
+	      if (NILP (Fequal (Vinstallation_directory, Vsource_directory)))
+		{
+		  Lisp_Object tem2;
+
+		  tem = Fexpand_file_name (build_string ("src/Makefile"),
+					   Vinstallation_directory);
+		  tem1 = Ffile_exists_p (tem);
+
+		  /* Don't be fooled if they moved the entire source tree
+		     AFTER dumping Emacs.  If the build directory is indeed
+		     different from the source dir, src/Makefile.in and
+		     src/Makefile will not be found together.  */
+		  tem = Fexpand_file_name (build_string ("src/Makefile.in"),
+					   Vinstallation_directory);
+		  tem2 = Ffile_exists_p (tem);
+		  if (!NILP (tem1) && NILP (tem2))
+		    {
+		      tem = Fexpand_file_name (build_string ("lisp"),
+					       Vsource_directory);
+
+		      if (NILP (Fmember (tem, Vload_path)))
+			Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+
+		      tem = Fexpand_file_name (build_string ("leim"),
+					       Vsource_directory);
+
+		      if (NILP (Fmember (tem, Vload_path)))
+			Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+
+		      tem = Fexpand_file_name (build_string ("site-lisp"),
+					       Vsource_directory);
+
+		      if (NILP (Fmember (tem, Vload_path)))
+			Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+		    }
+		}
 	    }
 	}
     }
   else
     {
-      /* ../lisp refers to the build directory.
-	 NORMAL refers to the lisp dir in the source directory.  */
-      Vload_path = Fcons (build_string ("../lisp"),
-			  decode_env_path (0, normal));
+      /* NORMAL refers to the lisp dir in the source directory.  */
+      /* We used to add ../lisp at the front here, but
+	 that caused trouble because it was copied from dump_path
+	 into Vload_path, aboe, when Vinstallation_directory was non-nil.
+	 It should be unnecessary.  */
+      Vload_path = decode_env_path (0, normal);
       dump_path = Vload_path;
     }
 #endif
@@ -2334,9 +2657,8 @@ init_lread ()
 	    {
 	      dirfile = Fdirectory_file_name (dirfile);
 	      if (access (XSTRING (dirfile)->data, 0) < 0)
-		fprintf (stderr,
-			 "Warning: Lisp directory `%s' does not exist.\n",
-			 XSTRING (Fcar (path_tail))->data);
+		dir_warning ("Warning: Lisp directory `%s' does not exist.\n",
+			     XCONS (path_tail)->car);
 	    }
 	}
     }
@@ -2356,6 +2678,21 @@ init_lread ()
   Vload_file_name = Qnil;
 
   load_descriptor_list = Qnil;
+}
+
+/* Print a warning, using format string FORMAT, that directory DIRNAME
+   does not exist.  Print it on stderr and put it in *Message*.  */
+
+dir_warning (format, dirname)
+     char *format;
+     Lisp_Object dirname;
+{
+  char *buffer
+    = (char *) alloca (XSTRING (dirname)->size + strlen (format) + 5);
+
+  fprintf (stderr, format, XSTRING (dirname)->data);
+  sprintf (buffer, format, XSTRING (dirname)->data);
+  message_dolog (buffer, strlen (buffer), 0);
 }
 
 void
@@ -2432,6 +2769,15 @@ or variables, and cons cells `(provide . FEATURE)' and `(require . FEATURE)'.");
 The default is nil, which means use the function `read'.");
   Vload_read_function = Qnil;
 
+  DEFVAR_LISP ("load-source-file-function", &Vload_source_file_function,
+    "Function called in `load' for loading an Emacs lisp source file.\n\
+This function is for doing code conversion before reading the source file.\n\
+If nil, loading is done without any code conversion.\n\
+Arguments are FULLNAME, FILE, NOERROR, NOMESSAGE, where\n\
+ FULLNAME is the full name of FILE.\n\
+See `load' for the meaning of the remaining arguments.");
+  Vload_source_file_function = Qnil;
+
   DEFVAR_BOOL ("load-force-doc-strings", &load_force_doc_strings,
      "Non-nil means `load' should force-load all dynamic doc strings.\n\
 This is useful when the file being loaded is a temporary copy.");
@@ -2443,6 +2789,10 @@ You cannot count on them to still be there!");
   Vsource_directory
     = Fexpand_file_name (build_string ("../"),
 			 Fcar (decode_env_path (0, PATH_DUMPLOADSEARCH)));
+
+  DEFVAR_LISP ("preloaded-file-list", &Vpreloaded_file_list,
+     "List of files that were preloaded (when dumping Emacs).");
+  Vpreloaded_file_list = Qnil;
 
   /* Vsource_directory was initialized in init_lread.  */
 
@@ -2470,6 +2820,9 @@ You cannot count on them to still be there!");
   Qcomma_dot = intern (",.");
   staticpro (&Qcomma_dot);
 
+  Qinhibit_file_name_operation = intern ("inhibit-file-name-operation");
+  staticpro (&Qinhibit_file_name_operation);
+
   Qascii_character = intern ("ascii-character");
   staticpro (&Qascii_character);
 
@@ -2483,4 +2836,7 @@ You cannot count on them to still be there!");
   staticpro (&Qload_file_name);
 
   staticpro (&dump_path);
+
+  staticpro (&read_objects);
+  read_objects = Qnil;
 }

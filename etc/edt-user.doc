@@ -4,8 +4,8 @@ File:  edt-user.doc  ---  EDT Emulation User Instructions
 
 Copyright (C) 1986, 1992, 1994, 1995 Free Software Foundation, Inc.
 
-Author: Kevin Gallagher <kgallagh@spd.dsccc.com>
-Maintainer: Kevin Gallagher <kgallagh@spd.dsccc.com>
+Author: Kevin Gallagher <kevingal@onramp.net>
+Maintainer: Kevin Gallagher <kevingal@onramp.net>
 Keywords: emulations
 
 This file is part of GNU Emacs.
@@ -37,7 +37,7 @@ some of the code found here was drawn from an earlier re-write of the EDT
 package done at DSC in 1989 by Matthew Frohman.
    
 Send bug fixes, suggestions for enhancements, and corrections to this
-documentation to Kevin Gallagher (kgallagh@spd.dsccc.com).
+documentation to Kevin Gallagher (kevingal@onramp.net).
 
 The EDT emulation consists of the following files:
 
@@ -603,8 +603,8 @@ G-C-\: Split Window                     |  FNDNXT  |   Yank   |   CUT    |
 ;;;
 ;; Copyright (C) 1986, 1992, 1993 Free Software Foundation, Inc.
 
-;; Author: Kevin Gallagher <kgallagh@spd.dsccc.com>
-;; Maintainer: Kevin Gallagher <kgallagh@spd.dsccc.com>
+;; Author: Kevin Gallagher <kevingal@onramp.net>
+;; Maintainer: Kevin Gallagher <kevingal@onramp.net>
 ;; Keywords: emulations
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify

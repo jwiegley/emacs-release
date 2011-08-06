@@ -52,6 +52,9 @@ Boston, MA 02111-1307, USA.  */
 /* This should be true for recent NeXT systems.  At least since 3.2.  */
 #define HAVE_MACH_MACH_H
 
+/* mktime wrongly ignores TZ.  */
+#define BROKEN_MKTIME 1
+
 #if 0 /* I think these are never used--let's see.  -- rms.  */
 /* Mask for address bits within a memory segment */
 
@@ -73,10 +76,15 @@ Boston, MA 02111-1307, USA.  */
 /* Link this program just by running cc.  */
 #define ORDINARY_LINK
 
-#define LD_SWITCH_SYSTEM -X -noseglinkedit
+#define LD_SWITCH_SYSTEM -X
 
 /* Don't use -lc on the NeXT.  */
+#ifdef NS_TARGET /* We use the dynamic libraries under Openstep for Mach 4.0 */
+#define LIB_STANDARD
+#else
 #define LIB_STANDARD -lsys_s
+#endif
+
 #define LIB_MATH -lm
 
 #define START_FILES pre-crt0.o

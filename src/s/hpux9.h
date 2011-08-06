@@ -41,8 +41,10 @@
 /* However, HPUX 9 has Motif includes in a strange place.
    So search that place.  These definitions assume that X11R5 is being
    used -- if X11R4 is used, "s/hpux9-x11r4.h" gets loaded instead.  */
-#define C_SWITCH_X_SYSTEM -I/usr/include/X11R5 -I/usr/include/Motif1.2
-#define LD_SWITCH_X_DEFAULT -L/usr/lib/X11R5 -L/usr/lib/Motif1.2
+/* horst@tkm.physik.uni-karlsruhe.de says that the /usr/contrib/... dirs
+   are needed to find the Xmu and Xaw libraries.  */
+#define C_SWITCH_X_SYSTEM -I/usr/include/X11R5 -I/usr/contrib/X11R5/include -I/usr/include/Motif1.2
+#define LD_SWITCH_X_DEFAULT -L/usr/lib/X11R5 -L/usr/contrib/X11R5/lib -L/usr/lib/Motif1.2
 
 #ifndef HAVE_LIBXMU
 /* HP-UX doesn't supply Xmu.  */
@@ -54,3 +56,16 @@
 
 /* zoo@armadillo.com says we don't need -lXext in HPUX 9.  */
 #undef LIBX11_SYSTEM
+
+/* Tested in getloadavg.c.  */
+#define HAVE_PSTAT_GETDYNAMIC
+
+/* Eric Backus <ericb@lsid.hp.com> says, HP-UX 9.x on HP 700 machines
+   has a broken `rint' in some library versions including math library
+   version number A.09.05.
+
+   You can fix the math library by installing patch number PHSS_4630.
+   But we can fix it more reliably for Emacs like this. */
+#undef HAVE_RINT
+
+

@@ -32,7 +32,7 @@ Boston, MA 02111-1307, USA.  */
 #include <ssdef.h>
 #endif
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
 #include <sys/ioctl.h>
 #endif
 
@@ -44,6 +44,11 @@ Boston, MA 02111-1307, USA.  */
 #include "blockinput.h"
 #include "syssignal.h"
 #include "process.h"
+
+#ifdef HAVE_SETRLIMIT
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
 
 #ifndef O_RDWR
 #define O_RDWR 2
@@ -76,6 +81,16 @@ Lisp_Object Vkill_emacs_hook;
   on subsequent starts.  */
 int initialized;
 
+#ifdef DOUG_LEA_MALLOC
+/* Preserves a pointer to the memory allocated that copies that
+   static data inside glibc's malloc.  */
+void *malloc_state_ptr;
+/* From glibc, a routine that returns a copy of the malloc internal state.  */
+extern void *malloc_get_state ();
+/* From glibc, a routine that overwrites the malloc internal state.  */
+extern void malloc_set_state ();
+#endif
+
 /* Variable whose value is symbol giving operating system type.  */
 Lisp_Object Vsystem_type;
 
@@ -85,6 +100,8 @@ Lisp_Object Vsystem_configuration;
 /* Variable whose value is string giving configuration options,
    for use when reporting bugs.  */
 Lisp_Object Vsystem_configuration_options;
+
+Lisp_Object Qfile_name_handler_alist;
 
 /* If non-zero, emacs should not attempt to use an window-specific code,
    but instead should use the virtual terminal under which it was started */
@@ -205,13 +222,24 @@ init_cmdargs (argc, argv, skip_args)
      int skip_args;
 {
   register int i;
-  Lisp_Object name, dir;
+  Lisp_Object name, dir, tem;
+  int count = specpdl_ptr - specpdl;
+  Lisp_Object raw_name;
 
   initial_argv = argv;
   initial_argc = argc;
 
-  Vinvocation_name = Ffile_name_nondirectory (build_string (argv[0]));
-  Vinvocation_directory = Ffile_name_directory (build_string (argv[0]));
+  raw_name = build_string (argv[0]);
+
+  /* Add /: to the front of the name
+     if it would otherwise be treated as magic.  */
+  tem = Ffind_file_name_handler (raw_name, Qt);
+  if (! NILP (tem))
+    raw_name = concat2 (build_string ("/:"), raw_name);
+
+  Vinvocation_name = Ffile_name_nondirectory (raw_name);
+  Vinvocation_directory = Ffile_name_directory (raw_name);
+
   /* If we got no directory in argv[0], search PATH to find where
      Emacs actually came from.  */
   if (NILP (Vinvocation_directory))
@@ -220,12 +248,20 @@ init_cmdargs (argc, argv, skip_args)
       int yes = openp (Vexec_path, Vinvocation_name,
 		       EXEC_SUFFIXES, &found, 1);
       if (yes == 1)
-	Vinvocation_directory = Ffile_name_directory (found);
+	{
+	  /* Add /: to the front of the name
+	     if it would otherwise be treated as magic.  */
+	  tem = Ffind_file_name_handler (found, Qt);
+	  if (! NILP (tem))
+	    found = concat2 (build_string ("/:"), found);
+	  Vinvocation_directory = Ffile_name_directory (found);
+	}
     }
 
   if (!NILP (Vinvocation_directory)
       && NILP (Ffile_name_absolute_p (Vinvocation_directory)))
-    /* Emacs was started with relative path, like ./emacs  */
+    /* Emacs was started with relative path, like ./emacs.
+       Make it absolute.  */
     Vinvocation_directory = Fexpand_file_name (Vinvocation_directory, Qnil);
 
   Vinstallation_directory = Qnil;
@@ -244,7 +280,18 @@ init_cmdargs (argc, argv, skip_args)
 	     not including lisp and info.  */
 	  tem = Fexpand_file_name (build_string ("lib-src"), dir);
 	  lib_src_exists = Ffile_exists_p (tem);
-	  if (!NILP (lib_src_exists))
+
+#ifdef MSDOS
+	  /* MSDOS installations frequently remove lib-src, but we still
+	     must set installation-directory, or else info won't find
+	     its files (it uses the value of installation-directory).  */
+	  tem = Fexpand_file_name (build_string ("info"), dir);
+	  info_exists = Ffile_exists_p (tem);
+#else
+	  info_exists = Qnil;
+#endif
+
+	  if (!NILP (lib_src_exists) || !NILP (info_exists))
 	    {
 	      tem = Fexpand_file_name (build_string ("etc"), dir);
 	      etc_exists = Ffile_exists_p (tem);
@@ -259,7 +306,17 @@ init_cmdargs (argc, argv, skip_args)
 	  /* See if dir's parent contains those subdirs.  */
 	  tem = Fexpand_file_name (build_string ("../lib-src"), dir);
 	  lib_src_exists = Ffile_exists_p (tem);
-	  if (!NILP (lib_src_exists))
+
+
+#ifdef MSDOS
+	  /* See the MSDOS commentary above.  */
+	  tem = Fexpand_file_name (build_string ("../info"), dir);
+	  info_exists = Ffile_exists_p (tem);
+#else
+	  info_exists = Qnil;
+#endif
+
+	  if (!NILP (lib_src_exists) || !NILP (info_exists))
 	    {
 	      tem = Fexpand_file_name (build_string ("../etc"), dir);
 	      etc_exists = Ffile_exists_p (tem);
@@ -293,6 +350,8 @@ init_cmdargs (argc, argv, skip_args)
 	Vcommand_line_args
 	  = Fcons (build_string (argv[i]), Vcommand_line_args);
     }
+
+  unbind_to (count, Qnil);
 }
 
 DEFUN ("invocation-name", Finvocation_name, Sinvocation_name, 0, 0, 0,
@@ -429,9 +488,26 @@ main (argc, argv, envp)
   int skip_args = 0;
   extern int errno;
   extern sys_nerr;
+#ifdef HAVE_SETRLIMIT
+  struct rlimit rlim;
+#endif
 
 #ifdef LINUX_SBRK_BUG
   __sbrk (1);
+#endif
+
+#ifdef DOUG_LEA_MALLOC
+  if (initialized)
+    {
+      malloc_set_state (malloc_state_ptr);
+      free (malloc_state_ptr);
+      r_alloc_reinit ();
+    }
+#endif
+
+#ifdef RUN_TIME_REMAP
+  if (initialized)
+    run_time_remap (argv[0]);
 #endif
 
   sort_args (argc, argv);
@@ -448,6 +524,12 @@ main (argc, argv, envp)
       else
 	{
 	  printf ("GNU Emacs %s\n", XSTRING (tem)->data);
+	  printf ("Copyright (C) 1997 Free Software Foundation, Inc.\n");
+	  printf ("GNU Emacs comes with ABSOLUTELY NO WARRANTY.\n");
+	  printf ("You may redistribute copies of Emacs\n");
+	  printf ("under the terms of the GNU General Public License.\n");
+	  printf ("For more information about these matters, ");
+	  printf ("see the files named COPYING.\n");
 	  exit (0);
 	}
     }
@@ -501,13 +583,42 @@ main (argc, argv, envp)
 #endif /* LINK_CRTL_SHARE */
 #endif /* VMS */
 
+#if defined (HAVE_SETRLIMIT) && defined (RLIMIT_STACK)
+  /* Extend the stack space available.
+     Don't do that if dumping, since some systems (e.g. DJGPP)
+     might define a smaller stack limit at that time.  */
+  if (1
+#ifndef CANNOT_DUMP
+      && (!noninteractive || initialized)
+#endif
+      && !getrlimit (RLIMIT_STACK, &rlim))
+    {
+      long newlim;
+      extern int re_max_failures;
+      /* Approximate the amount regex.c needs, plus some more.  */
+      newlim = re_max_failures * 2 * 20 * sizeof (char *);
+#ifdef __NetBSD__
+      /* NetBSD (at least NetBSD 1.2G and former) has a bug in its
+       stack allocation routine for new process that the allocation
+       fails if stack limit is not on page boundary.  So, round up the
+       new limit to page boundary.  */
+      newlim = (newlim + getpagesize () - 1) / getpagesize () * getpagesize();
+#endif
+      if (newlim > rlim.rlim_max)
+	{
+	  newlim = rlim.rlim_max;
+	  /* Don't let regex.c overflow the stack.  */
+	  re_max_failures = newlim / (2 * 20 * sizeof (char *));
+	}
+      if (rlim.rlim_cur < newlim)
+	rlim.rlim_cur = newlim;
+
+      setrlimit (RLIMIT_STACK, &rlim);
+    }
+#endif /* HAVE_SETRLIMIT and RLIMIT_STACK */
+
   /* Record (approximately) where the stack begins.  */
   stack_bottom = &stack_bottom_variable;
-
-#ifdef RUN_TIME_REMAP
-  if (initialized)
-    run_time_remap (argv[0]);
-#endif
 
 #ifdef USG_SHARED_LIBRARIES
   if (bss_end)
@@ -603,7 +714,9 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
       [-q] [--no-init-file]  [-u user] [--user user]  [--debug-init]\n\
       [--version] [--no-site-file]\n\
       [-f func] [--funcall func]  [-l file] [--load file]  [--insert file]\n\
-      [+linenum] file-to-visit  [--kill]\n", argv[0]);
+      [+linenum] file-to-visit  [--kill]\n\
+Report bugs to bug-gnu-emacs@prep.ai.mit.edu.  First, please see\n\
+the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       exit (0);
     }
 
@@ -769,7 +882,10 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
       init_alloc_once ();
       init_obarray ();
       init_eval_once ();
+      init_charset_once ();
+      init_coding_once ();
       init_syntax_once ();	/* Create standard syntax table.  */
+      init_category_once ();	/* Create standard category table.  */
 		      /* Must be done before init_buffer */
       init_casetab_once ();
       init_buffer_once ();	/* Create buffer table and some buffers */
@@ -814,6 +930,17 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
 
   init_callproc_1 ();	/* Must precede init_cmdargs and init_sys_modes.  */
   init_cmdargs (argc, argv, skip_args);	/* Must precede init_lread.  */
+
+  if (initialized)
+    {
+      /* Erase any pre-dump messages in the message log, to avoid confusion */
+      Lisp_Object old_log_max;
+      old_log_max = Vmessage_log_max;
+      XSETFASTINT (Vmessage_log_max, 0);
+      message_dolog ("", 0, 1);
+      Vmessage_log_max = old_log_max;
+    }
+
   init_callproc ();	/* Must follow init_cmdargs but not init_sys_modes.  */
   init_lread ();
 
@@ -839,9 +966,6 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
   init_vmsfns ();
 #endif /* VMS */
   init_process ();
-#ifdef CLASH_DETECTION
-  init_filelock ();
-#endif /* CLASH_DETECTION */
 
 /* Intern the names of all standard functions and variables; define standard keys */
 
@@ -865,6 +989,9 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
       syms_of_casefiddle ();
       syms_of_casetab ();
       syms_of_callproc ();
+      syms_of_category ();
+      syms_of_ccl ();
+      syms_of_charset ();
       syms_of_cmds ();
 #ifndef NO_DIR_LIBRARY
       syms_of_dired ();
@@ -874,10 +1001,12 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
       syms_of_editfns ();
       syms_of_emacs ();
       syms_of_fileio ();
+      syms_of_coding ();	/* This should be after syms_of_fileio.  */
 #ifdef CLASH_DETECTION
       syms_of_filelock ();
 #endif /* CLASH_DETECTION */
       syms_of_indent ();
+      syms_of_insdel ();
       syms_of_keyboard ();
       syms_of_keymap ();
       syms_of_macros ();
@@ -904,26 +1033,23 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
 #ifdef HAVE_X_WINDOWS
       syms_of_xterm ();
       syms_of_xfns ();
-      syms_of_xfaces ();
+      syms_of_fontset ();
 #ifdef HAVE_X11
       syms_of_xselect ();
 #endif
 #endif /* HAVE_X_WINDOWS */
 
-#if defined (MSDOS) && !defined (HAVE_X_WINDOWS)
-      syms_of_xfaces ();
-#endif
-
 #ifndef HAVE_NTGUI
+      syms_of_xfaces ();
       syms_of_xmenu ();
 #endif
 
 #ifdef HAVE_NTGUI
-      syms_of_win32term ();
-      syms_of_win32fns ();
-      syms_of_win32faces ();
-      syms_of_win32select ();
-      syms_of_win32menu ();
+      syms_of_w32term ();
+      syms_of_w32fns ();
+      syms_of_w32faces ();
+      syms_of_w32select ();
+      syms_of_w32menu ();
 #endif /* HAVE_NTGUI */
 
 #ifdef SYMS_SYSTEM
@@ -962,13 +1088,6 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
 
   if (initialized)
     {
-      /* Erase any pre-dump messages in the message log, to avoid confusion */
-      Lisp_Object old_log_max;
-      old_log_max = Vmessage_log_max;
-      XSETFASTINT (Vmessage_log_max, 0);
-      message_dolog ("", 0, 1);
-      Vmessage_log_max = old_log_max;
-
 #ifdef HAVE_TZSET
       {
 	/* If the execution TZ happens to be the same as the dump TZ,
@@ -986,6 +1105,29 @@ Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
       }
 #endif
     }
+
+  /* Gerd Moellmann <gerd@acm.org> says this makes profiling work on
+     FreeBSD.  It might work on some other systems too.
+     Give it a try and tell me if it works on your system.  */
+#ifdef __FreeBSD__
+#ifdef PROFILING
+  if (initialized)
+    {
+      extern void _mcleanup ();       
+      extern char etext;
+      extern Lisp_Object Fredraw_frame ();
+      atexit (_mcleanup);
+      /* This uses Fredraw_frame because that function
+	 comes first in the Emacs executable.
+	 It might be better to use something that gives
+	 the start of the text segment, but start_of_text
+	 is not defined on all systems now.  */
+      monstartup (Fredraw_frame, &etext);
+    }
+  else
+    moncontrol (0);
+#endif
+#endif
 
   initialized = 1;
 
@@ -1069,6 +1211,8 @@ struct standard_args standard_args[] =
   { "-f", "--funcall", 0, 1 },
   { "-funcall", 0, 0, 1 },
   { "-eval", "--eval", 0, 1 },
+  { "-find-file", "--find-file", 0, 1 },
+  { "-visit", "--visit", 0, 1 },
   { "-insert", "--insert", 0, 1 },
   /* This should be processed after ordinary file name args and the like.  */
   { "-kill", "--kill", -10, 0 },
@@ -1095,6 +1239,7 @@ sort_args (argc, argv)
   int to = 1;
   int from;
   int i;
+  int end_of_options = argc;
 
   /* Categorize all the options,
      and figure out which argv elts are option arguments.  */
@@ -1106,6 +1251,19 @@ sort_args (argc, argv)
 	{
 	  int match, thislen;
 	  char *equals;
+
+	  /* If we have found "--", don't consider
+	     any more arguments as options.  */
+	  if (argv[from][1] == '-' && argv[from][2] == 0)
+	    {
+	      /* Leave the "--", and everything following it, at the end.  */
+	      for (; from < argc; from++)
+		{
+		  priority[from] = -100;
+		  options[from] = -1;
+		}
+	      break;
+	    }
 
 	  /* Look for a match with a known old-fashioned option.  */
 	  for (i = 0; i < sizeof (standard_args) / sizeof (standard_args[0]); i++)
@@ -1196,6 +1354,10 @@ sort_args (argc, argv)
     }
 
   bcopy (new, argv, sizeof (char *) * argc);
+
+  free (options);
+  free (new);
+  free (priority);
 }
 
 DEFUN ("kill-emacs", Fkill_emacs, Skill_emacs, 0, 1, "P",
@@ -1363,14 +1525,23 @@ DEFUN ("dump-emacs", Fdump_emacs, Sdump_emacs, 2, 2, 0,
 Take symbols from SYMFILE (presumably the file you executed to run Emacs).\n\
 This is used in the file `loadup.el' when building Emacs.\n\
 \n\
-Bind `command-line-processed' to nil before dumping,\n\
-if you want the dumped Emacs to process its command line\n\
-and announce itself normally when it is run.")
+You must run Emacs in batch mode in order to dump it.")
   (filename, symfile)
      Lisp_Object filename, symfile;
 {
   extern char my_edata[];
   Lisp_Object tem;
+  Lisp_Object symbol;
+  int count = specpdl_ptr - specpdl;
+
+  if (! noninteractive)
+    error ("Dumping Emacs works only in batch mode");
+
+  /* Bind `command-line-processed' to nil before dumping,
+     so that the dumped Emacs will process its command line
+     and set up to work with X windows if appropriate.  */
+  symbol = intern ("command-line-process");
+  specbind (symbol, Qnil);
 
   CHECK_STRING (filename, 0);
   filename = Fexpand_file_name (filename, Qnil);
@@ -1405,13 +1576,19 @@ and announce itself normally when it is run.")
   memory_warnings (my_edata, malloc_warning);
 #endif /* not WINDOWSNT */
 #endif
+#ifdef DOUG_LEA_MALLOC
+  malloc_state_ptr = malloc_get_state ();
+#endif
   unexec (XSTRING (filename)->data,
 	  !NILP (symfile) ? XSTRING (symfile)->data : 0, my_edata, 0, 0);
+#ifdef DOUG_LEA_MALLOC
+  free (malloc_state_ptr);
+#endif
 #endif /* not VMS */
 
   Vpurify_flag = tem;
 
-  return Qnil;
+  return unbind_to (count, Qnil);
 }
 
 #endif /* not HAVE_SHM */
@@ -1427,8 +1604,7 @@ decode_env_path (evarname, defalt)
      char *evarname, *defalt;
 {
   register char *path, *p;
-
-  Lisp_Object lpath;
+  Lisp_Object lpath, element, tem;
 
   /* It's okay to use getenv here, because this function is only used
      to initialize variables when Emacs starts up, and isn't called
@@ -1439,14 +1615,35 @@ decode_env_path (evarname, defalt)
     path = 0;
   if (!path)
     path = defalt;
+#ifdef DOS_NT
+  /* Ensure values from the environment use the proper directory separator.  */
+  if (path)
+    {
+      p = alloca (strlen (path) + 1);
+      strcpy (p, path);
+      path = p;
+
+      if ('/' == DIRECTORY_SEP)
+	dostounix_filename (path);
+      else
+	unixtodos_filename (path);
+    }
+#endif
   lpath = Qnil;
   while (1)
     {
       p = index (path, SEPCHAR);
       if (!p) p = path + strlen (path);
-      lpath = Fcons (p - path ? make_string (path, p - path)
-		     : build_string ("."),
-		     lpath);
+      element = (p - path ? make_string (path, p - path)
+		 : build_string ("."));
+
+      /* Add /: to the front of the name
+	 if it would otherwise be treated as magic.  */
+      tem = Ffind_file_name_handler (element, Qt);
+      if (! NILP (tem))
+	element = concat2 (build_string ("/:"), element);
+
+      lpath = Fcons (element, lpath);
       if (*p)
 	path = p + 1;
       else
@@ -1457,6 +1654,9 @@ decode_env_path (evarname, defalt)
 
 syms_of_emacs ()
 {
+  Qfile_name_handler_alist = intern ("file-name-handler-alist");
+  staticpro (&Qfile_name_handler_alist);
+
 #ifndef CANNOT_DUMP
 #ifdef HAVE_SHM
   defsubr (&Sdump_emacs_data);

@@ -36,7 +36,9 @@
 ;; and the keys are returned by (this-command-keys).
 
 ;;;###autoload
-(setq disabled-command-hook 'disabled-command-hook)
+(defvar disabled-command-hook 'disabled-command-hook
+  "Function to call to handle disabled commands.
+If nil, the feature is disabled, i.e., all commands work normally.")
 
 ;;;###autoload
 (defun disabled-command-hook (&rest ignore)
@@ -60,32 +62,35 @@
        ;; Print any special message saying why the command is disabled.
        (if (stringp (get this-command 'disabled))
 	   (princ (get this-command 'disabled)))
-       (princ (or (condition-case ()
-		      (documentation this-command)
-		    (error nil))
-		  "<< not documented >>"))
        ;; Keep only the first paragraph of the documentation.
        (save-excursion
 	 (set-buffer "*Help*")
-	 (goto-char (point-min))
+	 (goto-char (point-max))
+	 (save-excursion
+	   (princ (or (condition-case ()
+			  (documentation this-command)
+			(error nil))
+		      "<< not documented >>")))
 	 (if (search-forward "\n\n" nil t)
 	     (delete-region (1- (point)) (point-max))
 	   (goto-char (point-max))))
        (princ "\n\n")
        (princ "You can now type
-Space to try the command just this once,
-      but leave it disabled,
+Space to try the command just this once, but leave it disabled,
 Y to try it and enable it (no questions if you use it again),
+! to try it and enable all commands in this session, or
 N to do nothing (command remains disabled).")
        (save-excursion
 	(set-buffer standard-output)
 	(help-mode)))
-     (message "Type y, n or Space: ")
+     (message "Type y, n, ! or Space: ")
      (let ((cursor-in-echo-area t))
        (while (not (memq (setq char (downcase (read-char)))
-			 '(?  ?y ?n)))
+			 '(?! ?  ?y ?n)))
 	 (ding)
-	 (message "Please type y, n or Space: "))))
+	 (message "Please type y, n, ! or Space: "))))
+    (if (= char ?!)
+	(setq disabled-command-hook nil))
     (if (= char ?y)
 	(if (and user-init-file
 		 (not (string= "" user-init-file))
@@ -136,5 +141,7 @@ to future sessions."
    (goto-char (point-max))
    (insert "\n(put '" (symbol-name command) " 'disabled t)\n")
    (save-buffer)))
+
+(provide 'novice)
 
 ;;; novice.el ends here

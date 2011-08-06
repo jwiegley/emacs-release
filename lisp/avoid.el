@@ -69,33 +69,50 @@
 
 (provide 'avoid)
 
+(defgroup avoid nil
+  "Make mouse pointer stay out of the way of editing."
+  :prefix "mouse-avoidance-"
+  :group 'mouse)
+
+
 (defvar mouse-avoidance-mode nil
   "Value is t or a symbol if the mouse pointer should avoid the cursor.
 See function `mouse-avoidance-mode' for possible values.  Changing this
 variable is NOT the recommended way to change modes; use that function 
 instead.")
 
-(defvar mouse-avoidance-nudge-dist 15
+(defcustom mouse-avoidance-nudge-dist 15
   "*Average distance that mouse will be moved when approached by cursor.
 Only applies in mouse-avoidance-mode `jump' and its derivatives.
-For best results make this larger than `mouse-avoidance-threshold'.")
+For best results make this larger than `mouse-avoidance-threshold'."
+  :type 'integer
+  :group 'avoid)
 
-(defvar mouse-avoidance-nudge-var 10
-  "*Variability of `mouse-avoidance-nudge-dist' (which see).")
+(defcustom mouse-avoidance-nudge-var 10
+  "*Variability of `mouse-avoidance-nudge-dist' (which see)."
+  :type 'integer
+  :group 'avoid)
 
-(defvar mouse-avoidance-animation-delay .01
-  "Delay between animation steps, in seconds.")
+(defcustom mouse-avoidance-animation-delay .01
+  "Delay between animation steps, in seconds."
+  :type 'number
+  :group 'avoid)
 
-(defvar mouse-avoidance-threshold 5
+(defcustom mouse-avoidance-threshold 5
   "*Mouse-pointer's flight distance.
 If the cursor gets closer than this, the mouse pointer will move away.
-Only applies in mouse-avoidance-modes `animate' and `jump'.")
+Only applies in mouse-avoidance-modes `animate' and `jump'."
+  :type 'integer
+  :group 'avoid)
 
 ;; Internal variables
 (defvar mouse-avoidance-state nil)
 (defvar mouse-avoidance-pointer-shapes nil)
 (defvar mouse-avoidance-n-pointer-shapes 0)
 (defvar mouse-avoidance-old-pointer-shape nil)
+
+;; This timer is used to run something when Emacs is idle.
+(defvar mouse-avoidance-timer nil)
 
 ;;; Functions:
 
@@ -321,9 +338,9 @@ definition of \"random distance\".)"
 		  nil t))))
   (if (eq mode 'cat-and-mouse)
       (setq mode 'animate))
-  (remove-hook 'post-command-idle-hook 'mouse-avoidance-banish-hook)
-  (remove-hook 'post-command-idle-hook 'mouse-avoidance-exile-hook)
-  (remove-hook 'post-command-idle-hook 'mouse-avoidance-fancy-hook)
+  (if mouse-avoidance-timer
+      (cancel-timer mouse-avoidance-timer))
+  (setq mouse-avoidance-timer nil)
 
   ;; Restore pointer shape if necessary
   (if (eq mouse-avoidance-mode 'proteus)
@@ -335,25 +352,30 @@ definition of \"random distance\".)"
 	((or (eq mode 'jump)
 	     (eq mode 'animate)
 	     (eq mode 'proteus))
-	 (add-hook 'post-command-idle-hook 'mouse-avoidance-fancy-hook)
+	 (setq mouse-avoidance-timer
+	       (run-with-idle-timer 0.1 t 'mouse-avoidance-fancy-hook))
 	 (setq mouse-avoidance-mode mode
 	       mouse-avoidance-state (cons 0 0)
 	       mouse-avoidance-old-pointer-shape x-pointer-shape))
 	((eq mode 'exile)
-	 (add-hook 'post-command-idle-hook 'mouse-avoidance-exile-hook)
+	 (setq mouse-avoidance-timer
+	       (run-with-idle-timer 0.1 t 'mouse-avoidance-exile-hook))
 	 (setq mouse-avoidance-mode mode
 	       mouse-avoidance-state nil))
 	((or (eq mode 'banish) 
 	     (eq mode t)
 	     (and (null mode) (null mouse-avoidance-mode))
 	     (and mode (> (prefix-numeric-value mode) 0)))
-	 (add-hook 'post-command-idle-hook 'mouse-avoidance-banish-hook)
+	 (setq mouse-avoidance-timer
+	       (run-with-idle-timer 0.1 t 'mouse-avoidance-banish-hook))
 	 (setq mouse-avoidance-mode 'banish))
 	(t (setq mouse-avoidance-mode nil)))
   (force-mode-line-update))
 
-(or (assq 'mouse-avoidance-mode minor-mode-alist)
-    (setq minor-mode-alist (cons '(mouse-avoidance-mode " Avoid")
-				 minor-mode-alist)))
+;; Most people who use avoid mode leave it on all the time, so it's not
+;; very informative to announce it in the mode line.
+;;(or (assq 'mouse-avoidance-mode minor-mode-alist)
+;;    (setq minor-mode-alist (cons '(mouse-avoidance-mode " Avoid")
+;;				 minor-mode-alist)))
 
 ;;; End of avoid.el

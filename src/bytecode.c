@@ -130,7 +130,8 @@ Lisp_Object Qbytecode;
 #define Bmult 0137
 
 #define Bpoint 0140
-#define Bmark 0141 /* no longer generated as of v18 */
+/* Was Bmark in v17.  */
+#define Bsave_current_buffer 0141
 #define Bgoto_char 0142
 #define Binsert 0143
 #define Bpoint_max 0144
@@ -147,6 +148,7 @@ Lisp_Object Qbytecode;
 #define Bbobp 0157
 #define Bcurrent_buffer 0160
 #define Bset_buffer 0161
+#define Bsave_current_buffer_1 0162 /* Replacing Bsave_current_buffer.  */
 #define Bread_char 0162 /* No longer generated as of v19 */
 #define Bset_mark 0163 /* this loser is no longer generated as of v18 */
 #define Binteractive_p 0164 /* Needed since interactive-p takes unevalled args */
@@ -250,6 +252,30 @@ Lisp_Object Qbytecode;
 
 #define TOP (*stackp)
 
+/* Garbage collect if we have consed enough since the last time.
+   We do this at every branch, to avoid loops that never GC.  */
+
+#define MAYBE_GC()				\
+  if (consing_since_gc > gc_cons_threshold)	\
+    {						\
+      Fgarbage_collect ();			\
+      HANDLE_RELOCATION ();			\
+    }						\
+  else
+
+/* Relocate BYTESTR if there has been a GC recently.  */
+#define HANDLE_RELOCATION()						\
+  if (! EQ (string_saved, bytestr))					\
+    {									\
+      pc = pc - XSTRING (string_saved)->data + XSTRING (bytestr)->data;	\
+      string_saved = bytestr;						\
+    }									\
+  else
+
+/* Check for jumping out of range.  */
+#define CHECK_RANGE(ARG)			\
+  if (ARG >= bytestr_length) abort ()
+
 DEFUN ("byte-code", Fbyte_code, Sbyte_code, 3, 3, 0,
   "Function used internally in byte-compiled code.\n\
 The first argument, BYTESTR, is a string of byte code;\n\
@@ -280,6 +306,7 @@ If the third argument is incorrect, Emacs may crash.")
   /* Cached address of beginning of string,
      valid if BYTESTR equals STRING_SAVED.  */
   register unsigned char *strbeg;
+  int bytestr_length = XSTRING (bytestr)->size;
 
   CHECK_STRING (bytestr, 0);
   if (!VECTORP (vector))
@@ -310,11 +337,8 @@ If the third argument is incorrect, Emacs may crash.")
 	       pc - XSTRING (string_saved)->data);
 #endif
 
-      if (! EQ (string_saved, bytestr))
-	{
-	  pc = pc - XSTRING (string_saved)->data + XSTRING (bytestr)->data;
-	  string_saved = bytestr;
-	}
+      /* Update BYTESTR if we had a garbage collection.  */
+      HANDLE_RELOCATION ();
 
 #ifdef BYTE_CODE_METER
       prev_op = this_op;
@@ -430,55 +454,67 @@ If the third argument is incorrect, Emacs may crash.")
 	  break;
 
 	case Bgoto:
+	  MAYBE_GC ();
 	  QUIT;
 	  op = FETCH2;    /* pc = FETCH2 loses since FETCH2 contains pc++ */
+	  CHECK_RANGE (op);
 	  pc = XSTRING (string_saved)->data + op;
 	  break;
 
 	case Bgotoifnil:
+	  MAYBE_GC ();
 	  op = FETCH2;
 	  if (NILP (POP))
 	    {
 	      QUIT;
+	      CHECK_RANGE (op);
 	      pc = XSTRING (string_saved)->data + op;
 	    }
 	  break;
 
 	case Bgotoifnonnil:
+	  MAYBE_GC ();
 	  op = FETCH2;
 	  if (!NILP (POP))
 	    {
 	      QUIT;
+	      CHECK_RANGE (op);
 	      pc = XSTRING (string_saved)->data + op;
 	    }
 	  break;
 
 	case Bgotoifnilelsepop:
+	  MAYBE_GC ();
 	  op = FETCH2;
 	  if (NILP (TOP))
 	    {
 	      QUIT;
+	      CHECK_RANGE (op);
 	      pc = XSTRING (string_saved)->data + op;
 	    }
 	  else DISCARD (1);
 	  break;
 
 	case Bgotoifnonnilelsepop:
+	  MAYBE_GC ();
 	  op = FETCH2;
 	  if (!NILP (TOP))
 	    {
 	      QUIT;
+	      CHECK_RANGE (op);
 	      pc = XSTRING (string_saved)->data + op;
 	    }
 	  else DISCARD (1);
 	  break;
 
 	case BRgoto:
+	  MAYBE_GC ();
 	  QUIT;
 	  pc += (int) *pc - 127;
 	  break;
 
 	case BRgotoifnil:
+	  MAYBE_GC ();
 	  if (NILP (POP))
 	    {
 	      QUIT;
@@ -488,6 +524,7 @@ If the third argument is incorrect, Emacs may crash.")
 	  break;
 
 	case BRgotoifnonnil:
+	  MAYBE_GC ();
 	  if (!NILP (POP))
 	    {
 	      QUIT;
@@ -497,6 +534,7 @@ If the third argument is incorrect, Emacs may crash.")
 	  break;
 
 	case BRgotoifnilelsepop:
+	  MAYBE_GC ();
 	  op = *pc++;
 	  if (NILP (TOP))
 	    {
@@ -507,6 +545,7 @@ If the third argument is incorrect, Emacs may crash.")
 	  break;
 
 	case BRgotoifnonnilelsepop:
+	  MAYBE_GC ();
 	  op = *pc++;
 	  if (!NILP (TOP))
 	    {
@@ -535,6 +574,11 @@ If the third argument is incorrect, Emacs may crash.")
 
 	case Bsave_excursion:
 	  record_unwind_protect (save_excursion_restore, save_excursion_save ());
+	  break;
+
+	case Bsave_current_buffer:
+	case Bsave_current_buffer_1:
+	  record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
 	  break;
 
 	case Bsave_window_excursion:
@@ -841,7 +885,7 @@ If the third argument is incorrect, Emacs may crash.")
 	  break;
 
 	case Bpoint:
-	  XSETFASTINT (v1, point);
+	  XSETFASTINT (v1, PT);
 	  PUSH (v1);
 	  break;
 
@@ -914,11 +958,6 @@ If the third argument is incorrect, Emacs may crash.")
 
 	case Bset_buffer:
 	  TOP = Fset_buffer (TOP);
-	  break;
-
-	case Bread_char:
-	  PUSH (Fread_char ());
-	  QUIT;
 	  break;
 
 	case Binteractive_p:

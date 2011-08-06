@@ -1,6 +1,6 @@
 ;;; forms-d2.el --- demo forms-mode
 
-;; Author: Johan Vromans
+;; Author: Johan Vromans <jvromans@squirrel.nl>
 ;; Created: 1989
 
 ;; This sample forms exploit most of the features of forms mode.

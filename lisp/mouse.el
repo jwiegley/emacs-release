@@ -37,16 +37,18 @@
 ;;; Indent track-mouse like progn.
 (put 'track-mouse 'lisp-indent-function 0)
 
-(defvar mouse-yank-at-point nil
-  "*If non-nil, mouse yank commands yank at point instead of at click.")
+(defcustom mouse-yank-at-point nil
+  "*If non-nil, mouse yank commands yank at point instead of at click."
+  :type 'boolean
+  :group 'mouse)
 
 ;; Provide a mode-specific menu on a mouse button.
 
-(defun mouse-major-mode-menu (event)
+(defun mouse-major-mode-menu (event prefix)
   "Pop up a mode-specific menu of mouse commands."
   ;; Switch to the window clicked on, because otherwise
   ;; the mode's commands may not make sense.
-  (interactive "@e")
+  (interactive "@e\nP")
   (let (;; This is where mouse-major-mode-menu-prefix
 	;; returns the prefix we should use (after menu-bar).
 	;; It is either nil or (SOME-SYMBOL).
@@ -66,8 +68,12 @@
 			(apply 'vector (append '(menu-bar)
 					       mouse-major-mode-menu-prefix
 					       result)))))
+	  ;; Clear out echoing, which perhaps shows a prefix arg.
+	  (message "")
 	  (if command
-	      (command-execute command))))))
+	      (progn
+		(setq prefix-arg prefix)
+		(command-execute command)))))))
 
 ;; Compute and cache the equivalent keys in MENU and all its submenus.
 ;;;(defun mouse-major-mode-menu-compute-equiv-keys (menu)
@@ -130,8 +136,7 @@ This must be bound to a mouse click."
     (raise-frame frame)
     (select-frame frame)
     (or (eq frame oframe)
-	(set-mouse-position (selected-frame) (1- (frame-width)) 0))
-    (unfocus-frame)))
+	(set-mouse-position (selected-frame) (1- (frame-width)) 0))))
 
 (defun mouse-tear-off-window (click)
   "Delete the window clicked on, and create a new frame displaying its buffer."
@@ -195,9 +200,7 @@ This command must be bound to a mouse click."
 	should-enlarge-minibuffer
 	event mouse minibuffer y top bot edges wconfig params growth)
     (setq params (frame-parameters))
-    (if (and (not (setq minibuffer (cdr (assq 'minibuffer params))))
-	     (one-window-p t))
-	(error "Attempt to resize sole window"))
+    (setq minibuffer (cdr (assq 'minibuffer params)))
     (track-mouse
       (progn
 	;; enlarge-window only works on the selected window, so
@@ -253,6 +256,11 @@ This command must be bound to a mouse click."
 		 ;; compute size change needed
 		 (setq growth (- y bot -1)
 		       wconfig (current-window-configuration))
+		 ;; Check for an error case.
+		 (if (and (/= growth 0)
+			  (not minibuffer)
+			  (one-window-p t))
+		     (error "Attempt to resize sole window"))
 		 ;; grow/shrink minibuffer?
 		 (if should-enlarge-minibuffer
 		     (progn
@@ -402,9 +410,7 @@ This should be bound to a mouse drag event."
     ;; If mark is highlighted, no need to bounce the cursor.
     ;; On X, we highlight while dragging, thus once again no need to bounce.
     (or transient-mark-mode
-	(eq (framep (selected-frame)) 'x)
-	(eq (framep (selected-frame)) 'pc)
-	(eq (framep (selected-frame)) 'win32)
+	(memq (framep (selected-frame)) '(x pc w32))
 	(sit-for 1))
     (push-mark)
     (set-mark (point))
@@ -422,22 +428,26 @@ This should be bound to a mouse drag event."
   (setq mouse-last-region-end (region-end))
   (setq mouse-last-region-tick (buffer-modified-tick)))
 
-(defvar mouse-scroll-delay 0.25
+(defcustom mouse-scroll-delay 0.25
   "*The pause between scroll steps caused by mouse drags, in seconds.
 If you drag the mouse beyond the edge of a window, Emacs scrolls the
 window to bring the text beyond that edge into view, with a delay of
 this many seconds between scroll steps.  Scrolling stops when you move
 the mouse back into the window, or release the button.
 This variable's value may be non-integral.
-Setting this to zero causes Emacs to scroll as fast as it can.")
+Setting this to zero causes Emacs to scroll as fast as it can."
+  :type 'number
+  :group 'mouse)
 
-(defvar mouse-scroll-min-lines 1
+(defcustom mouse-scroll-min-lines 1
   "*The minimum number of lines scrolled by dragging mouse out of window.
 Moving the mouse out the top or bottom edge of the window begins
 scrolling repeatedly.  The number of lines scrolled per repetition
 is normally equal to the number of lines beyond the window edge that
 the mouse has moved.  However, it always scrolls at least the number
-of lines specified by this variable.")
+of lines specified by this variable."
+  :type 'integer
+  :group 'mouse)
 
 (defun mouse-scroll-subr (window jump &optional overlay start)
   "Scroll the window WINDOW, JUMP lines at a time, until new input arrives.
@@ -527,7 +537,7 @@ remains active.  Otherwise, it remains until the next input event."
 	      nil
 	    (setq end (event-end event)
 		  end-point (posn-point end))
-	    (if end-point
+	    (if (numberp end-point)
 		(setq last-end-point end-point))
 
 	    (cond
@@ -563,49 +573,42 @@ remains active.  Otherwise, it remains until the next input event."
 	    ;; Run the binding of the terminating up-event, if possible.
 	    ;; In the case of a multiple click, it gives the wrong results,
 	    ;; because it would fail to set up a region.
-	    (if nil ;; (and (= (mod mouse-selection-click-count 3) 0) (fboundp fun))
-		;; In this case, we can just let the up-event execute normally.
-		(let ((end (event-end event)))
-		  ;; Set the position in the event before we replay it,
-		  ;; because otherwise it may have a position in the wrong
-		  ;; buffer.
-		  (setcar (cdr end) end-of-range)
-		  ;; Delete the overlay before calling the function,
-		  ;; because delete-overlay increases buffer-modified-tick.
-		  (delete-overlay mouse-drag-overlay)
-		  (setq unread-command-events
-			(cons event unread-command-events)))
-	      (if (not (= (overlay-start mouse-drag-overlay)
+	    (if (not (= (overlay-start mouse-drag-overlay)
+			(overlay-end mouse-drag-overlay)))
+		(let* ((stop-point
+			(if (numberp (posn-point (event-end event)))
+			    (posn-point (event-end event))
+			  last-end-point))
+		       ;; The end that comes from where we ended the drag.
+		       ;; Point goes here.
+		       (region-termination
+			(if (and stop-point (< stop-point start-point))
+			    (overlay-start mouse-drag-overlay)
 			  (overlay-end mouse-drag-overlay)))
-		  (let* ((stop-point (or (posn-point (event-end event)) last-end-point))
-			 ;; The end that comes from where we ended the drag.
-			 ;; Point goes here.
-			 (region-termination
-			  (if (and stop-point (< stop-point start-point))
-			      (overlay-start mouse-drag-overlay)
-			    (overlay-end mouse-drag-overlay)))
-			 ;; The end that comes from where we started the drag.
-			 ;; Mark goes there.
-			 (region-commencement
-			  (- (+ (overlay-end mouse-drag-overlay)
-				(overlay-start mouse-drag-overlay))
-			     region-termination))
-			 last-command this-command)
-		    (push-mark region-commencement t t)
-		    (goto-char region-termination)
-		    (copy-region-as-kill (point) (mark t))
-		    (let ((buffer (current-buffer)))
-		      (mouse-show-mark)
-		      ;; mouse-show-mark can call read-event,
-		      ;; and that means the Emacs server could switch buffers
-		      ;; under us.  If that happened, 
-		      ;; avoid trying to use the region.
-		      (and (mark t) mark-active
-			   (eq buffer (current-buffer))
-			   (mouse-set-region-1))))
-		(goto-char (overlay-end mouse-drag-overlay))
-		(setq this-command 'mouse-set-point)
-		(delete-overlay mouse-drag-overlay))))
+		       ;; The end that comes from where we started the drag.
+		       ;; Mark goes there.
+		       (region-commencement
+			(- (+ (overlay-end mouse-drag-overlay)
+			      (overlay-start mouse-drag-overlay))
+			   region-termination))
+		       last-command this-command)
+		  (push-mark region-commencement t t)
+		  (goto-char region-termination)
+		  (copy-region-as-kill (point) (mark t))
+		  (let ((buffer (current-buffer)))
+		    (mouse-show-mark)
+		    ;; mouse-show-mark can call read-event,
+		    ;; and that means the Emacs server could switch buffers
+		    ;; under us.  If that happened, 
+		    ;; avoid trying to use the region.
+		    (and (mark t) mark-active
+			 (eq buffer (current-buffer))
+			 (mouse-set-region-1))))
+	      (delete-overlay mouse-drag-overlay)
+	      ;; Run the binding of the terminating up-event.
+	      (if (fboundp fun)
+		  (setq unread-command-events
+			(cons event unread-command-events)))))
 	(delete-overlay mouse-drag-overlay)))))
 
 ;; Commands to handle xterm-style multiple clicks.
@@ -678,14 +681,14 @@ If DIR is positive skip forward; if negative, skip backward."
 			     (forward-sexp 1)
 			     (point))
 			 (error end))))
-	     (list (1+ start)
-		   (save-excursion
+	     (list (save-excursion
 		     (condition-case nil
 			 (progn
 			   (goto-char (1+ start))
 			   (backward-sexp 1)
 			   (point))
-		       (error end)))))))
+		       (error end)))
+		   (1+ start)))))
         ((= mode 1)
 	 (list (save-excursion
 		 (goto-char start)
@@ -719,19 +722,27 @@ If DIR is positive skip forward; if negative, skip backward."
 	 (last (nthcdr index events))
 	 (event (car last))
 	 (basic (event-basic-type event))
-	 (modifiers (delq 'double (delq 'triple (copy-sequence (event-modifiers event)))))
+	 (old-modifiers (event-modifiers event))
+	 (modifiers (delq 'double (delq 'triple (copy-sequence old-modifiers))))
 	 (new
 	  (if (consp event)
-	      (cons (event-convert-list (nreverse (cons basic modifiers)))
+	      ;; Use reverse, not nreverse, since event-modifiers
+	      ;; does not copy the list it returns.
+	      (cons (event-convert-list (reverse (cons basic modifiers)))
 		    (cdr event))
 	    event)))
     (setcar last new)
-    (if (key-binding (apply 'vector events))
+    (if (and (not (equal modifiers old-modifiers))
+	     (key-binding (apply 'vector events)))
 	t
       (setcar last event)
       nil)))
 
 ;; Momentarily show where the mark is, if highlighting doesn't show it. 
+
+(defvar mouse-region-delete-keys '([delete])
+  "List of keys which shall cause the mouse region to be deleted.")
+
 (defun mouse-show-mark ()
   (if transient-mark-mode
       (if window-system
@@ -739,15 +750,49 @@ If DIR is positive skip forward; if negative, skip backward."
     (if window-system
 	(let ((inhibit-quit t)
 	      (echo-keystrokes 0)
-	      event events)
+	      event events key ignore
+	      x-lost-selection-hooks)
+	  (add-hook 'x-lost-selection-hooks
+		    '(lambda (seltype)
+		       (if (eq seltype 'PRIMARY)
+			   (progn (setq ignore t)
+				  (throw 'mouse-show-mark t)))))
 	  (move-overlay mouse-drag-overlay (point) (mark t))
-	  (while (progn (setq event (read-event))
-			(setq events (append events (list event)))
-			(and (memq 'down (event-modifiers event))
-			     (not (key-binding (apply 'vector events)))
-			     (not (mouse-undouble-last-event events)))))
-	  (setq unread-command-events
-		(nconc events unread-command-events))
+	  (catch 'mouse-show-mark
+	    ;; In this loop, execute scroll bar and switch-frame events.
+	    ;; Also ignore down-events that are undefined.
+	    (while (progn (setq event (read-event))
+			  (setq events (append events (list event)))
+			  (setq key (apply 'vector events))
+			  (or (and (consp event)
+				   (eq (car event) 'switch-frame))
+			      (and (consp event)
+				   (eq (posn-point (event-end event))
+				       'vertical-scroll-bar))
+			      (and (memq 'down (event-modifiers event))
+				   (not (key-binding key))
+				   (not (mouse-undouble-last-event events))
+				   (not (member key mouse-region-delete-keys)))))
+	      (and (consp event)
+		   (or (eq (car event) 'switch-frame)
+		       (eq (posn-point (event-end event))
+			   'vertical-scroll-bar))
+		   (let ((keys (vector 'vertical-scroll-bar event)))
+		     (and (key-binding keys)
+			  (progn
+			    (call-interactively (key-binding keys)
+						nil keys)
+			    (setq events nil)))))))
+	  ;; If we lost the selection, just turn off the highlighting.
+	  (if ignore
+	      nil
+	    ;; For certain special keys, delete the region.
+	    (if (member key mouse-region-delete-keys)
+		(delete-region (overlay-start mouse-drag-overlay)
+			       (overlay-end mouse-drag-overlay))
+	      ;; Otherwise, unread the key so it gets executed normally.
+	      (setq unread-command-events
+		    (nconc events unread-command-events))))
 	  (setq quit-flag nil)
 	  (delete-overlay mouse-drag-overlay))
       (save-excursion
@@ -1000,7 +1045,8 @@ This must be bound to a mouse drag event."
 (defun mouse-drag-secondary (start-event)
   "Set the secondary selection to the text that the mouse is dragged over.
 Highlight the drag area as you move the mouse.
-This must be bound to a button-down mouse event."
+This must be bound to a button-down mouse event.
+The function returns a non-nil value if it creates a secondary selection."
   (interactive "e")
   (mouse-minibuffer-check start-event)
   (let* ((echo-keystrokes 0)
@@ -1071,9 +1117,6 @@ This must be bound to a button-down mouse event."
                                        mouse-secondary-overlay start-point)))))))))
 
 	(if (consp event)
-;;;		 (eq (get (event-basic-type event) 'event-kind) 'mouse-click)
-;;;		 (eq (posn-window (event-end event)) start-window)
-;;;		 (numberp (posn-point (event-end event)))
 	    (if (marker-position mouse-secondary-start)
 		(save-window-excursion
 		  (delete-overlay mouse-secondary-overlay)
@@ -1081,7 +1124,8 @@ This must be bound to a button-down mouse event."
 		  (select-window start-window)
 		  (save-excursion
 		    (goto-char mouse-secondary-start)
-		    (sit-for 1)))
+		    (sit-for 1)
+		    nil))
 	      (x-set-selection
 	       'SECONDARY
 	       (buffer-substring (overlay-start mouse-secondary-overlay)
@@ -1240,10 +1284,25 @@ again.  If you do this twice in the same position, it kills the selection."
 			    (overlay-start mouse-secondary-overlay)
 			    (overlay-end mouse-secondary-overlay)))))))
 
-(defvar mouse-menu-buffer-maxlen 20
+(defcustom mouse-menu-buffer-maxlen 20
   "*Number of buffers in one pane (submenu) of the buffer menu.
 If we have lots of buffers, divide them into groups of
-`mouse-menu-buffer-maxlen' and make a pane (or submenu) for each one.")
+`mouse-menu-buffer-maxlen' and make a pane (or submenu) for each one."
+  :type 'integer
+  :group 'mouse)
+
+(defvar mouse-buffer-menu-mode-groups
+  '(("Info\\|Help\\|Apropos\\|Man" . "Help")
+    ("\\bVM\\b\\|\\bMH\\b\\|Message\\|Mail\\|Group\\|Score\\|Summary\\|Article"
+     . "Mail/News")
+    ("\\<C\\>" . "C")
+    ("ObjC" . "C")
+    ("Text" . "Text")
+    ("Outline" . "Text")
+    ("Lisp" . "Lisp"))
+  "How to group various major modes together in \\[mouse-buffer-menu].
+Each element has the form (REGEXP . GROUPNAME).
+If the major mode's name string matches REGEXP, use GROUPNAME instead.")
 
 (defun mouse-buffer-menu (event)
   "Pop up a menu of buffers for selection with the mouse.
@@ -1251,69 +1310,149 @@ This switches buffers in the window that you clicked on,
 and selects that window."
   (interactive "e")
   (mouse-minibuffer-check event)
-  (let* ((buffers
-	  ;; Make an alist of (MENU-ITEM . BUFFER).
-	  (let ((tail (buffer-list))
-		(maxlen 0)
-		head)
-	    (while tail
-	      (or (eq ?\ (aref (buffer-name (car tail)) 0))
-		  (setq maxlen
-			(max maxlen
-			     (length (buffer-name (car tail))))))
-	      (setq tail (cdr tail)))
-	    (setq tail (buffer-list))
-	    (while tail
-	      (let ((elt (car tail)))
-		(if (/= (aref (buffer-name elt) 0) ?\ )
-		    (setq head
-			  (cons
-			   (cons
-			    (format
-			     (format "%%%ds  %%s%%s  %%s" maxlen)
-			     (buffer-name elt)
-			     (if (buffer-modified-p elt) "*" " ")
-			     (save-excursion
-			       (set-buffer elt)
-			       (if buffer-read-only "%" " "))
-			     (or (buffer-file-name elt) 
-				 (save-excursion
-				   (set-buffer elt)
-				   (if list-buffers-directory
-				       (expand-file-name
-					list-buffers-directory)))
-				 ""))
-			    elt)
-			   head))))
-	      (setq tail (cdr tail)))
-	    ;; Compensate for the reversal that the above loop does.
-	    (nreverse head)))
-	 (menu
-	  ;; If we have lots of buffers, divide them into groups of 20
-	  ;; and make a pane (or submenu) for each one.
-	  (if (> (length buffers) (/ (* mouse-menu-buffer-maxlen 3) 2))
-	      (let ((buffers buffers) sublists next
-		    (i 1))
-		(while buffers
-		  ;; Pull off the next mouse-menu-buffer-maxlen buffers
-		  ;; and make them the next element of sublist.
-		  (setq next (nthcdr mouse-menu-buffer-maxlen buffers))
-		  (if next
-		      (setcdr (nthcdr (1- mouse-menu-buffer-maxlen) buffers)
-			      nil))
-		  (setq sublists (cons (cons (format "Buffers %d" i) buffers)
-				       sublists))
-		  (setq i (1+ i))
-		  (setq buffers next))
-		(cons "Buffer Menu" (nreverse sublists)))
-	    ;; Few buffers--put them all in one pane.
-	    (list "Buffer Menu" (cons "Select Buffer" buffers)))))
+  (let (buffers alist menu split-by-major-mode sum-of-squares)
+    (setq buffers (buffer-list))
+    ;; Make an alist of elements that look like (MENU-ITEM . BUFFER).
+    (let ((tail buffers))
+      (while tail
+	;; Divide all buffers into buckets for various major modes.
+	;; Each bucket looks like (MODE NAMESTRING BUFFERS...).
+	(with-current-buffer (car tail)
+	  (let* ((adjusted-major-mode major-mode) elt)
+	    (let ((tail mouse-buffer-menu-mode-groups))
+	      (while tail
+		(if (string-match (car (car tail)) mode-name)
+		    (setq adjusted-major-mode (cdr (car tail))))
+		(setq tail (cdr tail))))
+	    (setq elt (assoc adjusted-major-mode split-by-major-mode))
+	    (if (null elt)
+		(setq elt (list adjusted-major-mode
+				(if (stringp adjusted-major-mode)
+				    adjusted-major-mode
+				  mode-name))
+		      split-by-major-mode (cons elt split-by-major-mode)))
+	    (or (memq (car tail) (cdr (cdr elt)))
+		(setcdr (cdr elt) (cons (car tail) (cdr (cdr elt)))))))
+	(setq tail (cdr tail))))
+    ;; Compute the sum of squares of sizes of the major-mode buckets.
+    (let ((tail split-by-major-mode))
+      (setq sum-of-squares 0)
+      (while tail
+	(setq sum-of-squares
+	      (+ sum-of-squares
+		 (* (length (cdr (cdr (car tail))))
+		    (length (cdr (cdr (car tail)))))))
+	(setq tail (cdr tail))))
+    (if (< (* sum-of-squares 4) (* (length buffers) (length buffers)))
+	;; Subdividing by major modes really helps, so let's do it.
+	(let (subdivided-menus (buffers-left (length buffers)))
+	  ;; Sort the list to put the most popular major modes first.
+	  (setq split-by-major-mode
+		(sort split-by-major-mode
+		      (function (lambda (elt1 elt2)
+				  (> (length elt1) (length elt2))))))
+	  ;; Make a separate submenu for each major mode
+	  ;; that has more than one buffer,
+	  ;; unless all the remaining buffers are less than 1/10 of them.
+	  (while (and split-by-major-mode
+		      (and (> (length (car split-by-major-mode)) 3)
+			   (> (* buffers-left 10) (length buffers))))
+	    (setq subdivided-menus
+		  (cons (cons
+			 (nth 1 (car split-by-major-mode))
+			 (mouse-buffer-menu-alist
+			  (cdr (cdr (car split-by-major-mode)))))
+			subdivided-menus))
+	    (setq buffers-left
+		  (- buffers-left (length (cdr (car split-by-major-mode)))))
+	    (setq split-by-major-mode (cdr split-by-major-mode)))
+	  ;; If any major modes are left over,
+	  ;; make a single submenu for them.
+	  (if split-by-major-mode
+	      (setq subdivided-menus
+		    (cons (cons
+			   "Others"
+			   (mouse-buffer-menu-alist
+			    (apply 'append
+				   (mapcar 'cdr
+					   (mapcar 'cdr split-by-major-mode)))))
+			  subdivided-menus)))
+	  (setq subdivided-menus
+		(nreverse subdivided-menus))
+	  (setq menu (cons "Buffer Menu" subdivided-menus)))
+      (progn
+	(setq alist (mouse-buffer-menu-alist buffers))
+	(setq menu (cons "Buffer Menu"
+			 (mouse-buffer-menu-split "Select Buffer" alist)))))
     (let ((buf (x-popup-menu event menu))
 	  (window (posn-window (event-start event))))
       (if buf
 	  (progn
 	    (or (framep window) (select-window window))
 	    (switch-to-buffer buf))))))
+
+(defun mouse-buffer-menu-alist (buffers)
+  (let (tail
+	(maxlen 0)
+	head)
+    (setq buffers
+	  (sort buffers
+		(function (lambda (elt1 elt2)
+			    (string< (buffer-name elt1) (buffer-name elt2))))))
+    (setq tail buffers)
+    (while tail
+      (or (eq ?\ (aref (buffer-name (car tail)) 0))
+	  (setq maxlen
+		(max maxlen
+		     (length (buffer-name (car tail))))))
+      (setq tail (cdr tail)))
+    (setq tail buffers)
+    (while tail
+      (let ((elt (car tail)))
+	(if (/= (aref (buffer-name elt) 0) ?\ )
+	    (setq head
+		  (cons
+		   (cons
+		    (format
+		     (format "%%%ds  %%s%%s  %%s" maxlen)
+		     (buffer-name elt)
+		     (if (buffer-modified-p elt) "*" " ")
+		     (save-excursion
+		       (set-buffer elt)
+		       (if buffer-read-only "%" " "))
+		     (or (buffer-file-name elt) 
+			 (save-excursion
+			   (set-buffer elt)
+			   (if list-buffers-directory
+			       (expand-file-name
+				list-buffers-directory)))
+			 ""))
+		    elt)
+		   head))))
+      (setq tail (cdr tail)))
+    ;; Compensate for the reversal that the above loop does.
+    (nreverse head)))
+
+(defun mouse-buffer-menu-split (title alist)
+  ;; If we have lots of buffers, divide them into groups of 20
+  ;; and make a pane (or submenu) for each one.
+  (if (> (length alist) (/ (* mouse-menu-buffer-maxlen 3) 2))
+      (let ((alist alist) sublists next
+	    (i 1))
+	(while alist
+	  ;; Pull off the next mouse-menu-buffer-maxlen buffers
+	  ;; and make them the next element of sublist.
+	  (setq next (nthcdr mouse-menu-buffer-maxlen alist))
+	  (if next
+	      (setcdr (nthcdr (1- mouse-menu-buffer-maxlen) alist)
+		      nil))
+	  (setq sublists (cons (cons (format "Buffers %d" i) alist)
+			       sublists))
+	  (setq i (1+ i))
+	  (setq alist next))
+	(nreverse sublists))
+    ;; Few buffers--put them all in one pane.
+    (list (cons title alist))))
 
 ;;; These need to be rewritten for the new scroll bar implementation.
 
@@ -1761,9 +1900,12 @@ and selects that window."
   "X fonts suitable for use in Emacs.")
 
 (defun mouse-set-font (&rest fonts)
-  "Select an emacs font from a list of known good fonts"
+  "Select an emacs font from a list of known good fonts and fontsets."
   (interactive
-   (x-popup-menu last-nonmenu-event x-fixed-font-alist))
+   (x-popup-menu
+    last-nonmenu-event
+    ;; Append list of fontsets currently defined.
+    (append x-fixed-font-alist (list (generate-fontset-menu)))))
   (if fonts
       (let (font)
 	(while fonts

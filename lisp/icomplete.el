@@ -1,9 +1,9 @@
-;;; icomplete.el --- minibuffer completion incremental feedback
+;;;_. icomplete.el - minibuffer completion incremental feedback
 
-;; Copyright (C) 1992, 1993, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 
-;; Author: Ken Manheimer <klm@nist.gov>
-;; Maintainer: Ken Manheimer <klm@nist.gov>
+;; Author: Ken Manheimer <klm@python.org>
+;; Maintainer: Ken Manheimer <klm@python.org>
 ;; Created: Mar 1993 klm@nist.gov - first release to usenet
 ;; Keywords: help, abbrev
 
@@ -46,13 +46,17 @@
 ;; can be enabled any time after the package is loaded by invoking
 ;; icomplete-mode without a prefix arg.
 
+;; This version of icomplete runs on Emacs 19.18 and later.  (It
+;; depends on the incorporation of minibuffer-setup-hook.)  The elisp
+;; archives, ftp://archive.cis.ohio-state.edu/pub/gnu/emacs/elisp-archive,
+;; probably still has a version that works in GNU Emacs v18.
+
 ;; Thanks to everyone for their suggestions for refinements of this
 ;; package.  I particularly have to credit Michael Cook, who
 ;; implemented an incremental completion style in his 'iswitch'
 ;; functions that served as a model for icomplete.  Some other
 ;; contributors: Noah Freidman (restructuring as minor mode), Colin
-;; Rafferty (lemacs reconciliation), Lars Lindberg, RMS, and
-;; others.
+;; Rafferty (lemacs reconciliation), Lars Lindberg, RMS, and others.
 
 ;; klm.
 
@@ -62,6 +66,13 @@
 (provide 'icomplete)
 
 ;;;_* User Customization variables
+(defvar icomplete-compute-delay .3
+  "*Completions-computation stall, used only with large-number
+completions - see `icomplete-delay-completions-threshold'.")
+(defvar icomplete-delay-completions-threshold 400
+  "*Pending-completions number over which to apply icomplete-compute-delay.")
+(defvar icomplete-max-delay-chars 3
+  "*Maximum number of initial chars to apply icomplete compute delay.")
 
 ;;;_* Initialization
 ;;;_  = icomplete-minibuffer-setup-hook
@@ -72,7 +83,7 @@ This hook is run during minibuffer setup iff icomplete will be active.
 It is intended for use in customizing icomplete for interoperation
 with other packages.  For instance:
 
-  \(add-hook 'icomplete-minibuffer-setup-hook 
+  \(add-hook 'icomplete-minibuffer-setup-hook
 	    \(function
 	     \(lambda ()
 	       \(make-local-variable 'resize-minibuffer-window-max-height)
@@ -84,8 +95,7 @@ icompletion is occurring.")
 ;;;_ + Internal Variables
 ;;;_  = icomplete-mode
 (defvar icomplete-mode t
-  "Non-nil enables incremental minibuffer completion, once
-`\\[icomplete-mode]' function has set things up.")
+  "*Non-nil enables incremental minibuffer completion (see \\[icomplete-mode].")
 ;;;_  = icomplete-eoinput 1
 (defvar icomplete-eoinput 1
   "Point where minibuffer input ends and completion info begins.")
@@ -107,11 +117,33 @@ Use `icomplete-mode' function to set it up properly for incremental
 minibuffer completion.")
 (add-hook 'icomplete-post-command-hook 'icomplete-exhibit)
 
+(defvar icomplete-show-key-bindings t
+  "*When non-nil, show key bindings as well as completion for sole matches.")
+
+(defun icomplete-get-keys (func-name)
+  "Return strings naming keys bound to `func-name', or nil if none.
+Examines the prior, not current, buffer, presuming that current buffer
+is minibuffer."
+  (if (commandp func-name)
+    (save-excursion
+      (let* ((sym (intern func-name))
+	     (buf (other-buffer))
+	     (map (save-excursion (set-buffer buf) (current-local-map)))
+	     (keys (where-is-internal sym map)))
+	(if keys
+	    (concat "<"
+		    (mapconcat 'key-description
+			       (sort keys
+				     #'(lambda (x y)
+					 (< (length x) (length y))))
+			       ", ")
+		    ">"))))))
+
 ;;;_ > icomplete-mode (&optional prefix)
 ;;;###autoload
 (defun icomplete-mode (&optional prefix)
-  "Activate incremental minibuffer completion for this emacs session,
-or deactivate with negative prefix arg."
+  "Activate incremental minibuffer completion for this Emacs session.
+Deactivates with negative universal argument."
   (interactive "p")
   (or prefix (setq prefix 0))
   (cond ((>= prefix 0)
@@ -123,7 +155,6 @@ or deactivate with negative prefix arg."
 
 ;;;_ > icomplete-simple-completing-p ()
 (defun icomplete-simple-completing-p ()
-
   "Non-nil if current window is minibuffer that's doing simple completion.
 
 Conditions are:
@@ -194,7 +225,22 @@ and `minibuffer-setup-hook'."
 	      (make-local-variable 'icomplete-eoinput))
 	  (setq icomplete-eoinput (point))
                                         ; Insert the match-status information:
-	  (if (> (point-max) 1)
+	  (if (and (> (point-max) 1)
+		   (or
+		    ;; Don't bother with delay after certain number of chars:
+		    (> (point-max) icomplete-max-delay-chars)
+		    ;; Don't delay if alternatives number is small enough:
+		    (if minibuffer-completion-table
+			(cond ((numberp minibuffer-completion-table)
+			       (< minibuffer-completion-table
+				  icomplete-delay-completions-threshold))
+			      ((sequencep minibuffer-completion-table)
+			       (< (length minibuffer-completion-table)
+				  icomplete-delay-completions-threshold))
+			      ))
+		    ;; Delay - give some grace time for next keystroke, before
+		    ;; embarking on computing completions:
+		    (sit-for icomplete-compute-delay)))
 	      (insert-string
 	       (icomplete-completions contents
 				      minibuffer-completion-table
@@ -219,7 +265,13 @@ one of \(), \[], or \{} pairs.  The choice of brackets is as follows:
 
 The displays for unambiguous matches have ` [Matched]' appended
 \(whether complete or not), or ` \[No matches]', if no eligible
-matches exist."
+matches exist.  \(Keybindings for uniquely matched commands
+are exhibited within the square braces.)"
+
+  ;; 'all-completions' doesn't like empty
+  ;; minibuffer-completion-table's (ie: (nil))
+  (if (and (listp candidates) (null (car candidates)))
+      (setq candidates nil))
 
   (let ((comps (all-completions name candidates predicate))
                                         ; "-determined" - only one candidate
@@ -229,54 +281,71 @@ matches exist."
         (open-bracket-prospects "{")
         (close-bracket-prospects "}")
         )
-    (cond ((null comps) (format " %sNo matches%s"
-                                open-bracket-determined
-                                close-bracket-determined))
-          ((null (cdr comps))           ;one match
-           (concat (if (and (> (length (car comps))
-                               (length name)))
-                       (concat open-bracket-determined
-                               (substring (car comps) (length name))
-                               close-bracket-determined)
-                     "")
-                   " [Matched]"))
-          (t                            ;multiple matches
-           (let* ((most (try-completion name candidates predicate))
-                  (most-len (length most))
-                  most-is-exact
-                  (alternatives
-                   (apply
-                    (function concat)
-                    (cdr (apply
-			  (function nconc)
-			  (mapcar '(lambda (com)
-				     (if (= (length com) most-len)
-					 ;; Most is one exact match,
-					 ;; note that and leave out
-					 ;; for later indication:
-					 (progn
-					   (setq most-is-exact t)
-					   ())
-				       (list ","
-					     (substring com
-							most-len))))
-				  comps))))))
-             (concat (and (> most-len (length name))
-                          (concat open-bracket-determined
-                                  (substring most (length name))
-                                  close-bracket-determined))
-                     open-bracket-prospects
-                     (if most-is-exact
-                         (concat "," alternatives)
-                       alternatives)
-                     close-bracket-prospects))))))
-
-;;;_ + Initialization
-;;; If user hasn't setq-default icomplete-mode to nil, then setup for
-;;; activation:
-(if icomplete-mode
-    (icomplete-mode))
-
+    (catch 'input
+      (cond ((null comps) (format " %sNo matches%s"
+				  open-bracket-determined
+				  close-bracket-determined))
+	    ((null (cdr comps))		;one match
+	     (concat (if (and (> (length (car comps))
+				 (length name)))
+			 (concat open-bracket-determined
+				 (substring (car comps) (length name))
+				 close-bracket-determined)
+		       "")
+		     " [Matched"
+		     (let ((keys (and icomplete-show-key-bindings
+				      (commandp (intern-soft (car comps)))
+				      (icomplete-get-keys (car comps)))))
+		       (if keys
+			   (concat "; " keys)
+			 ""))
+		     "]"))
+	    (t				;multiple matches
+	     (let* ((most
+		     (try-completion name candidates
+				     (and predicate
+					  ;; Wrap predicate in impatience - ie,
+					  ;; `throw' up when pending input is
+					  ;; noticed.  Adds some overhead to
+					  ;; predicate, but should be worth it.
+					  (function
+					   (lambda (item)
+					     (if (input-pending-p)
+						 (throw 'input "")
+					       (apply predicate
+						      item nil)))))))
+		    (most-len (length most))
+		    most-is-exact
+		    (alternatives
+		     (substring
+		      (apply (function concat)
+			     (mapcar (function
+				      (lambda (com)
+					(if (input-pending-p)
+					    (throw 'input ""))
+					(if (= (length com) most-len)
+					    ;; Most is one exact match,
+					    ;; note that and leave out
+					    ;; for later indication:
+					    (progn
+					      (setq most-is-exact t)
+					      ())
+					  (concat ","
+						  (substring com
+							     most-len)))))
+				     comps))
+		      1)))
+	       (concat (and (> most-len (length name))
+			    (concat open-bracket-determined
+				    (substring most (length name))
+				    close-bracket-determined))
+		       open-bracket-prospects
+		       (if most-is-exact
+			   ;; Add a ',' at the front to indicate "complete but
+			   ;; not unique":
+			   (concat "," alternatives)
+			 alternatives)
+		       close-bracket-prospects)))))))
 
 ;;;_* Local emacs vars.
 ;;;Local variables:
@@ -284,4 +353,3 @@ matches exist."
 ;;;End:
 
 ;;; icomplete.el ends here
-

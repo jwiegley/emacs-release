@@ -23,8 +23,13 @@ Boston, MA 02111-1307, USA.  */
 #include "lisp.h"
 #include "intervals.h"
 #include "buffer.h"
+#include "charset.h"
 #include "window.h"
 #include "blockinput.h"
+
+#ifndef NULL
+#define NULL 0
+#endif
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 
@@ -34,6 +39,27 @@ static void gap_left ();
 static void gap_right ();
 static void adjust_markers ();
 static void adjust_point ();
+
+Lisp_Object Fcombine_after_change_execute ();
+
+/* Non-nil means don't call the after-change-functions right away,
+   just record an element in Vcombine_after_change_calls_list.  */
+Lisp_Object Vcombine_after_change_calls;
+
+/* List of elements of the form (BEG-UNCHANGED END-UNCHANGED CHANGE-AMOUNT)
+   describing changes which happened while combine_after_change_calls
+   was nonzero.  We use this to decide how to call them
+   once the deferral ends.
+
+   In each element.
+   BEG-UNCHANGED is the number of chars before the changed range.
+   END-UNCHANGED is the number of chars after the changed range,
+   and CHANGE-AMOUNT is the number of characters inserted by the change
+   (negative for a deletion).  */
+Lisp_Object combine_after_change_list;
+
+/* Buffer which combine_after_change_list is about.  */
+Lisp_Object combine_after_change_buffer;
 
 /* Move gap to position `pos'.
    Note that this can quit!  */
@@ -64,7 +90,8 @@ gap_left (pos, newgap)
 
   if (!newgap)
     {
-      if (unchanged_modified == MODIFF)
+      if (unchanged_modified == MODIFF
+	  && overlay_unchanged_modified == OVERLAY_MODIFF)
 	{
 	  beg_unchanged = pos;
 	  end_unchanged = Z - pos - 1;
@@ -131,6 +158,7 @@ gap_left (pos, newgap)
      or may be where a quit was detected.  */
   adjust_markers (pos + 1, GPT, GAP_SIZE);
   GPT = pos + 1;
+  if (GAP_SIZE > 0) *(GPT_ADDR) = 0; /* Put an anchor.  */
   QUIT;
 }
 
@@ -144,7 +172,9 @@ gap_right (pos)
 
   pos--;
 
-  if (unchanged_modified == MODIFF)
+  if (unchanged_modified == MODIFF
+      && overlay_unchanged_modified == OVERLAY_MODIFF)
+
     {
       beg_unchanged = pos;
       end_unchanged = Z - pos - 1;
@@ -207,6 +237,7 @@ gap_right (pos)
 
   adjust_markers (GPT + GAP_SIZE, pos + 1 + GAP_SIZE, - GAP_SIZE);
   GPT = pos + 1;
+  if (GAP_SIZE > 0) *(GPT_ADDR) = 0; /* Put an anchor.  */
   QUIT;
 }
 
@@ -247,8 +278,24 @@ adjust_markers (from, to, amount)
 	     but then this range contains no markers.  */
 	  if (mpos > from + amount && mpos <= from)
 	    {
-	      record_marker_adjustment (marker, from + amount - mpos);
-	      mpos = from + amount;
+	      int before = mpos;
+	      int after = from + amount;
+
+	      mpos = after;
+
+	      /* Compute the before and after positions
+		 as buffer positions.  */
+	      if (before > GPT + GAP_SIZE)
+		before -= GAP_SIZE;
+	      else if (before > GPT)
+		before = GPT;
+
+	      if (after > GPT + GAP_SIZE)
+		after -= GAP_SIZE;
+	      else if (after > GPT)
+		after = GPT;
+
+	      record_marker_adjustment (marker, after - before);
 	    }
 	}
       if (mpos > from && mpos <= to)
@@ -266,6 +313,7 @@ adjust_markers_for_insert (pos, amount)
      register int pos, amount;
 {
   Lisp_Object marker;
+  int adjusted = 0;
 
   marker = BUF_MARKERS (current_buffer);
 
@@ -273,9 +321,16 @@ adjust_markers_for_insert (pos, amount)
     {
       register struct Lisp_Marker *m = XMARKER (marker);
       if (m->insertion_type && m->bufpos == pos)
-	m->bufpos += amount;
+	{
+	  m->bufpos += amount;
+	  adjusted = 1;
+	}
       marker = m->chain;
     }
+  if (adjusted)
+    /* Adjusting only markers whose insertion-type is t may result in
+       disordered overlays in the slot `overlays_before'.  */
+    fix_overlays_before (current_buffer, pos, pos + amount);
 }
 
 /* Add the specified amount to point.  This is used only when the value
@@ -315,7 +370,8 @@ make_gap (increment)
     error ("Buffer exceeds maximum size");
 
   BLOCK_INPUT;
-  result = BUFFER_REALLOC (BEG_ADDR, (Z - BEG + GAP_SIZE + increment));
+  /* We allocate extra 1-byte `\0' at the tail for anchoring a search.  */
+  result = BUFFER_REALLOC (BEG_ADDR, (Z - BEG + GAP_SIZE + increment + 1));
 
   if (result == 0)
     {
@@ -345,6 +401,9 @@ make_gap (increment)
   /* Now combine the two into one large gap.  */
   GAP_SIZE += old_gap_size;
   GPT = real_gap_loc;
+
+  /* Put an anchor.  */
+  *(Z_ADDR) = 0;
 
   Vinhibit_quit = tem;
 }
@@ -386,7 +445,7 @@ insert_1 (string, length, inherit, prepare)
   register Lisp_Object temp;
 
   if (prepare)
-    prepare_to_modify_buffer (PT, PT);
+    prepare_to_modify_buffer (PT, PT, NULL);
 
   if (PT != GPT)
     move_gap (PT);
@@ -408,6 +467,7 @@ insert_1 (string, length, inherit, prepare)
   GPT += length;
   ZV += length;
   Z += length;
+  if (GAP_SIZE > 0) *(GPT_ADDR) = 0; /* Put an anchor.  */
   adjust_overlays_for_insert (PT, length);
   adjust_markers_for_insert (PT, length);
   adjust_point (length);
@@ -456,7 +516,7 @@ insert_from_string_1 (string, pos, length, inherit)
     error ("maximum buffer size exceeded");
 
   GCPRO1 (string);
-  prepare_to_modify_buffer (PT, PT);
+  prepare_to_modify_buffer (PT, PT, NULL);
 
   if (PT != GPT)
     move_gap (PT);
@@ -476,6 +536,7 @@ insert_from_string_1 (string, pos, length, inherit)
   GPT += length;
   ZV += length;
   Z += length;
+  if (GAP_SIZE > 0) *(GPT_ADDR) = 0; /* Put an anchor.  */
   adjust_overlays_for_insert (PT, length);
   adjust_markers_for_insert (PT, length);
 
@@ -520,7 +581,7 @@ insert_from_buffer_1 (buf, pos, length, inherit)
   if (length + Z != XINT (temp))
     error ("maximum buffer size exceeded");
 
-  prepare_to_modify_buffer (PT, PT);
+  prepare_to_modify_buffer (PT, PT, NULL);
 
   if (PT != GPT)
     move_gap (PT);
@@ -552,6 +613,7 @@ insert_from_buffer_1 (buf, pos, length, inherit)
   GPT += length;
   ZV += length;
   Z += length;
+  if (GAP_SIZE > 0) *(GPT_ADDR) = 0; /* Put an anchor.  */
   adjust_overlays_for_insert (PT, length);
   adjust_markers_for_insert (PT, length);
   adjust_point (length);
@@ -566,9 +628,12 @@ insert_from_buffer_1 (buf, pos, length, inherit)
 
 void
 insert_char (c)
-     unsigned char c;
+     int c;
 {
-  insert (&c, 1);
+  unsigned char workbuf[4], *str;
+  int len = CHAR_STRING (c, workbuf, str);
+
+  insert (str, len);
 }
 
 /* Insert the null-terminated string S before point */
@@ -630,6 +695,122 @@ insert_from_string_before_markers (string, pos, length, inherit)
     }
 }
 
+/* Replace the text from FROM to TO with NEW,
+   If PREPARE is nonzero, call prepare_to_modify_buffer.
+   If INHERIT, the newly inserted text should inherit text properties
+   from the surrounding non-deleted text.  */
+
+/* Note that this does not yet handle markers quite right.
+   Also it needs to record a single undo-entry that does a replacement
+   rather than a separate delete and insert.
+   That way, undo will also handle markers properly.  */
+
+void
+replace_range (from, to, new, prepare, inherit)
+     Lisp_Object new;
+     int from, to, prepare, inherit;
+{
+  int numdel;
+  int inslen = XSTRING (new)->size;
+  register Lisp_Object temp;
+  struct gcpro gcpro1;
+
+  GCPRO1 (new);
+
+  if (prepare)
+    {
+      int range_length = to - from;
+      prepare_to_modify_buffer (from, to, &from);
+      to = from + range_length;
+    }
+
+  /* Make args be valid */
+  if (from < BEGV)
+    from = BEGV;
+  if (to > ZV)
+    to = ZV;
+
+  UNGCPRO;
+
+  numdel = to - from;
+
+  /* Make sure point-max won't overflow after this insertion.  */
+  XSETINT (temp, Z - numdel + inslen);
+  if (Z - numdel + inslen != XINT (temp))
+    error ("maximum buffer size exceeded");
+
+  if (numdel <= 0 && inslen == 0)
+    return;
+
+  GCPRO1 (new);
+
+  /* Make sure the gap is somewhere in or next to what we are deleting.  */
+  if (from > GPT)
+    gap_right (from);
+  if (to < GPT)
+    gap_left (to, 0);
+
+  /* Relocate all markers pointing into the new, larger gap
+     to point at the end of the text before the gap.
+     This has to be done before recording the deletion,
+     so undo handles this after reinserting the text.  */
+  adjust_markers (to + GAP_SIZE, to + GAP_SIZE, - numdel - GAP_SIZE);
+
+  record_delete (from, numdel);
+
+  GAP_SIZE += numdel;
+  ZV -= numdel;
+  Z -= numdel;
+  GPT = from;
+  *(GPT_ADDR) = 0;		/* Put an anchor.  */
+
+  if (GPT - BEG < beg_unchanged)
+    beg_unchanged = GPT - BEG;
+  if (Z - GPT < end_unchanged)
+    end_unchanged = Z - GPT;
+
+  if (GAP_SIZE < inslen)
+    make_gap (inslen - GAP_SIZE);
+
+  record_insert (from, inslen);
+
+  bcopy (XSTRING (new)->data, GPT_ADDR, inslen);
+
+  /* Relocate point as if it were a marker.  */
+  if (from < PT)
+    adjust_point (from + inslen - (PT < to ? PT : to));
+
+#ifdef USE_TEXT_PROPERTIES
+  offset_intervals (current_buffer, PT, inslen - numdel);
+#endif
+
+  GAP_SIZE -= inslen;
+  GPT += inslen;
+  ZV += inslen;
+  Z += inslen;
+  if (GAP_SIZE > 0) *(GPT_ADDR) = 0; /* Put an anchor.  */
+
+  /* Adjust the overlay center as needed.  This must be done after
+     adjusting the markers that bound the overlays.  */
+  adjust_overlays_for_delete (from, numdel);
+  adjust_overlays_for_insert (from, inslen);
+  adjust_markers_for_insert (from, inslen);
+
+#ifdef USE_TEXT_PROPERTIES
+  /* Only defined if Emacs is compiled with USE_TEXT_PROPERTIES */
+  graft_intervals_into_buffer (XSTRING (new)->intervals, from, inslen,
+			       current_buffer, inherit);
+#endif
+
+  if (inslen == 0)
+    evaporate_overlays (from);
+
+  MODIFF++;
+  UNGCPRO;
+
+  signal_after_change (from, numdel, inslen);
+}
+
 /* Delete characters in current buffer
    from FROM up to (but not including) TO.  */
 
@@ -644,9 +825,16 @@ del_range (from, to)
 
 void
 del_range_1 (from, to, prepare)
-     register int from, to, prepare;
+     int from, to, prepare;
 {
   register int numdel;
+
+  if (prepare)
+    {
+      int range_length = to - from;
+      prepare_to_modify_buffer (from, to, &from);
+      to = from + range_length;
+    }
 
   /* Make args be valid */
   if (from < BEGV)
@@ -662,9 +850,6 @@ del_range_1 (from, to, prepare)
     gap_right (from);
   if (to < GPT)
     gap_left (to, 0);
-
-  if (prepare)
-    prepare_to_modify_buffer (from, to);
 
   /* Relocate all markers pointing into the new, larger gap
      to point at the end of the text before the gap.
@@ -690,6 +875,7 @@ del_range_1 (from, to, prepare)
   ZV -= numdel;
   Z -= numdel;
   GPT = from;
+  *(GPT_ADDR) = 0;		/* Put an anchor.  */
 
   if (GPT - BEG < beg_unchanged)
     beg_unchanged = GPT - BEG;
@@ -714,12 +900,15 @@ modify_region (buffer, start, end)
   if (buffer != old_buffer)
     set_buffer_internal (buffer);
 
-  prepare_to_modify_buffer (start, end);
+  prepare_to_modify_buffer (start, end, NULL);
 
-  if (start - 1 < beg_unchanged || unchanged_modified == MODIFF)
+  if (start - 1 < beg_unchanged
+      || (unchanged_modified == MODIFF
+	  && overlay_unchanged_modified == OVERLAY_MODIFF))
     beg_unchanged = start - 1;
   if (Z - end < end_unchanged
-      || unchanged_modified == MODIFF)
+      || (unchanged_modified == MODIFF
+	  && overlay_unchanged_modified == OVERLAY_MODIFF))
     end_unchanged = Z - end;
 
   if (MODIFF <= SAVE_MODIFF)
@@ -731,22 +920,40 @@ modify_region (buffer, start, end)
   if (buffer != old_buffer)
     set_buffer_internal (old_buffer);
 }
-
+
 /* Check that it is okay to modify the buffer between START and END.
    Run the before-change-function, if any.  If intervals are in use,
    verify that the text to be modified is not read-only, and call
-   any modification properties the text may have. */
+   any modification properties the text may have.
+
+   If PRESERVE_PTR is nonzero, we relocate *PRESERVE_PTR
+   by holding its value temporarily in a marker.  */
 
 void
-prepare_to_modify_buffer (start, end)
-     Lisp_Object start, end;
+prepare_to_modify_buffer (start, end, preserve_ptr)
+     int start, end;
+     int *preserve_ptr;
 {
   if (!NILP (current_buffer->read_only))
     Fbarf_if_buffer_read_only ();
 
   /* Only defined if Emacs is compiled with USE_TEXT_PROPERTIES */
   if (BUF_INTERVALS (current_buffer) != 0)
-    verify_interval_modification (current_buffer, start, end);
+    {
+      if (preserve_ptr)
+	{
+	  Lisp_Object preserve_marker;
+	  struct gcpro gcpro1;
+	  preserve_marker = Fcopy_marker (make_number (*preserve_ptr), Qnil);
+	  GCPRO1 (preserve_marker);
+	  verify_interval_modification (current_buffer, start, end);
+	  *preserve_ptr = marker_position (preserve_marker);
+	  unchain_marker (preserve_marker);
+	  UNGCPRO;
+	}
+      else
+	verify_interval_modification (current_buffer, start, end);
+    }
 
 #ifdef CLASH_DETECTION
   if (!NILP (current_buffer->file_truename)
@@ -764,7 +971,7 @@ prepare_to_modify_buffer (start, end)
 	   current_buffer->filename);
 #endif /* not CLASH_DETECTION */
 
-  signal_before_change (start, end);
+  signal_before_change (start, end, preserve_ptr);
 
   if (current_buffer->newline_cache)
     invalidate_region_cache (current_buffer,
@@ -778,25 +985,74 @@ prepare_to_modify_buffer (start, end)
   Vdeactivate_mark = Qt;
 }
 
+/* These macros work with an argument named `preserve_ptr'
+   and a local variable named `preserve_marker'.  */
+
+#define PRESERVE_VALUE							\
+  if (preserve_ptr && NILP (preserve_marker))				\
+    preserve_marker = Fcopy_marker (make_number (*preserve_ptr), Qnil)
+
+#define RESTORE_VALUE						\
+  if (! NILP (preserve_marker))					\
+    {								\
+      *preserve_ptr = marker_position (preserve_marker);	\
+      unchain_marker (preserve_marker);				\
+    }
+
+#define PRESERVE_START_END			\
+  if (NILP (start_marker))			\
+    start_marker = Fcopy_marker (start, Qnil);	\
+  if (NILP (end_marker))			\
+    end_marker = Fcopy_marker (end, Qnil);
+
+#define FETCH_START				\
+  (! NILP (start_marker) ? Fmarker_position (start_marker) : start)
+
+#define FETCH_END				\
+  (! NILP (end_marker) ? Fmarker_position (end_marker) : end)
+
 /* Signal a change to the buffer immediately before it happens.
-   START and END are the bounds of the text to be changed,
-   as Lisp objects.  */
+   START_INT and END_INT are the bounds of the text to be changed.
+
+   If PRESERVE_PTR is nonzero, we relocate *PRESERVE_PTR
+   by holding its value temporarily in a marker.  */
 
 void
-signal_before_change (start, end)
-     Lisp_Object start, end;
+signal_before_change (start_int, end_int, preserve_ptr)
+     int start_int, end_int;
+     int *preserve_ptr;
 {
+  Lisp_Object start, end;
+  Lisp_Object start_marker, end_marker;
+  Lisp_Object preserve_marker;
+  struct gcpro gcpro1, gcpro2, gcpro3;
+
+  start = make_number (start_int);
+  end = make_number (end_int);
+  preserve_marker = Qnil;
+  start_marker = Qnil;
+  end_marker = Qnil;
+  GCPRO3 (preserve_marker, start_marker, end_marker);
+
   /* If buffer is unmodified, run a special hook for that case.  */
   if (SAVE_MODIFF >= MODIFF
       && !NILP (Vfirst_change_hook)
       && !NILP (Vrun_hooks))
-    call1 (Vrun_hooks, Qfirst_change_hook);
+    {
+      PRESERVE_VALUE;
+      PRESERVE_START_END;
+      call1 (Vrun_hooks, Qfirst_change_hook);
+    }
 
   /* Run the before-change-function if any.
      We don't bother "binding" this variable to nil
      because it is obsolete anyway and new code should not use it.  */
   if (!NILP (Vbefore_change_function))
-    call2 (Vbefore_change_function, start, end);
+    {
+      PRESERVE_VALUE;
+      PRESERVE_START_END;
+      call2 (Vbefore_change_function, FETCH_START, FETCH_END);
+    }
 
   /* Now run the before-change-functions if any.  */
   if (!NILP (Vbefore_change_functions))
@@ -805,6 +1061,9 @@ signal_before_change (start, end)
       Lisp_Object before_change_functions;
       Lisp_Object after_change_functions;
       struct gcpro gcpro1, gcpro2;
+
+      PRESERVE_VALUE;
+      PRESERVE_START_END;
 
       /* "Bind" before-change-functions and after-change-functions
 	 to nil--but in a way that errors don't know about.
@@ -817,8 +1076,8 @@ signal_before_change (start, end)
 
       /* Actually run the hook functions.  */
       args[0] = Qbefore_change_functions;
-      args[1] = start;
-      args[2] = end;
+      args[1] = FETCH_START;
+      args[2] = FETCH_END;
       run_hook_list_with_args (before_change_functions, 3, args);
 
       /* "Unbind" the variables we "bound" to nil.  */
@@ -829,7 +1088,18 @@ signal_before_change (start, end)
 
   if (!NILP (current_buffer->overlays_before)
       || !NILP (current_buffer->overlays_after))
-    report_overlay_modification (start, end, 0, start, end, Qnil);
+    {
+      PRESERVE_VALUE;
+      report_overlay_modification (FETCH_START, FETCH_END, 0,
+				   FETCH_START, FETCH_END, Qnil);
+    }
+
+  if (! NILP (start_marker))
+    free_marker (start_marker);
+  if (! NILP (end_marker))
+    free_marker (end_marker);
+  RESTORE_VALUE;
+  UNGCPRO;
 }
 
 /* Signal a change immediately after it happens.
@@ -843,6 +1113,33 @@ void
 signal_after_change (pos, lendel, lenins)
      int pos, lendel, lenins;
 {
+  /* If we are deferring calls to the after-change functions
+     and there are no before-change functions,
+     just record the args that we were going to use.  */
+  if (! NILP (Vcombine_after_change_calls)
+      && NILP (Vbefore_change_function) && NILP (Vbefore_change_functions)
+      && NILP (current_buffer->overlays_before)
+      && NILP (current_buffer->overlays_after))
+    {
+      Lisp_Object elt;
+
+      if (!NILP (combine_after_change_list)
+	  && current_buffer != XBUFFER (combine_after_change_buffer))
+	Fcombine_after_change_execute ();
+
+      elt = Fcons (make_number (pos - BEG),
+		   Fcons (make_number (Z - (pos - lendel + lenins)),
+			  Fcons (make_number (lenins - lendel), Qnil)));
+      combine_after_change_list
+	= Fcons (elt, combine_after_change_list);
+      combine_after_change_buffer = Fcurrent_buffer ();
+
+      return;
+    }
+
+  if (!NILP (combine_after_change_list)) 
+    Fcombine_after_change_execute ();
+
   /* Run the after-change-function if any.
      We don't bother "binding" this variable to nil
      because it is obsolete anyway and new code should not use it.  */
@@ -893,4 +1190,95 @@ signal_after_change (pos, lendel, lenins)
      insert-behind-hooks or insert-in-front-hooks.  */
   if (lendel == 0)
     report_interval_modification (pos, pos + lenins);
+}
+
+Lisp_Object
+Fcombine_after_change_execute_1 (val)
+     Lisp_Object val;
+{
+  Vcombine_after_change_calls = val;
+  return val;
+}
+
+DEFUN ("combine-after-change-execute", Fcombine_after_change_execute,
+  Scombine_after_change_execute, 0, 0, 0,
+  "This function is for use internally in `combine-after-change-calls'.")
+  ()
+{
+  register Lisp_Object val;
+  int count = specpdl_ptr - specpdl;
+  int beg, end, change;
+  int begpos, endpos;
+  Lisp_Object tail;
+
+  record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
+
+  Fset_buffer (combine_after_change_buffer);
+
+  /* # chars unchanged at beginning of buffer.  */
+  beg = Z - BEG;
+  /* # chars unchanged at end of buffer.  */
+  end = beg;
+  /* Total amount of insertion (negative for deletion).  */
+  change = 0;
+
+  /* Scan the various individual changes,
+     accumulating the range info in BEG, END and CHANGE.  */
+  for (tail = combine_after_change_list; CONSP (tail);
+       tail = XCONS (tail)->cdr)
+    {
+      Lisp_Object elt;
+      int thisbeg, thisend, thischange;
+
+      /* Extract the info from the next element.  */
+      elt = XCONS (tail)->car;
+      if (! CONSP (elt))
+	continue;
+      thisbeg = XINT (XCONS (elt)->car);
+
+      elt = XCONS (elt)->cdr;
+      if (! CONSP (elt))
+	continue;
+      thisend = XINT (XCONS (elt)->car);
+
+      elt = XCONS (elt)->cdr;
+      if (! CONSP (elt))
+	continue;
+      thischange = XINT (XCONS (elt)->car);
+
+      /* Merge this range into the accumulated range.  */
+      change += thischange;
+      if (thisbeg < beg)
+	beg = thisbeg;
+      if (thisend < end)
+	end = thisend;
+    }
+
+  /* Get the current start and end positions of the range
+     that was changed.  */
+  begpos = BEG + beg;
+  endpos = Z - end;
+  
+  /* We are about to handle these, so discard them.  */
+  combine_after_change_list = Qnil;
+
+  /* Now run the after-change functions for real.
+     Turn off the flag that defers them.  */
+  record_unwind_protect (Fcombine_after_change_execute_1,
+			 Vcombine_after_change_calls);
+  signal_after_change (begpos, endpos - begpos - change, endpos - begpos);
+
+  return unbind_to (count, val);
+}
+
+syms_of_insdel ()
+{
+  staticpro (&combine_after_change_list);
+  combine_after_change_list = Qnil;
+
+  DEFVAR_LISP ("combine-after-change-calls", &Vcombine_after_change_calls,
+     "Used internally by the `combine-after-change-calls' macro.");
+  Vcombine_after_change_calls = Qnil;
+
+  defsubr (&Scombine_after_change_execute);
 }

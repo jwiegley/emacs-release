@@ -1,6 +1,6 @@
-;; pc-win.el -- setup support for `PC windows' (whatever that is).
+;;; pc-win.el --- setup support for `PC windows' (whatever that is).
 
-;; Copyright (C) 1994, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1996, 1997 Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
 ;; Maintainer: FSF
@@ -81,6 +81,8 @@
     ("navy blue"	. "cyan")
     ("navyblue"		. "cyan")
     ("navy"		. "cyan")
+    ("royalblue"	. "blue")
+    ("royal blue"	. "blue")
     ("sky blue"		. "lightblue")
     ("skyblue"		. "lightblue")
     ("dodger blue"	. "blue")
@@ -92,9 +94,12 @@
     ("steel blue"	. "blue")
     ("steelblue"	. "blue")
     ("coral"		. "lightred")
+    ("tomato"		. "lightred")
     ("firebrick"	. "red")
     ("gold"		. "yellow")
     ("goldenrod"	. "yellow")
+    ("goldenrod yellow"	. "yellow")
+    ("goldenrodyellow"	. "yellow")
     ("pale goldenrod"	. "yellow")
     ("palegoldenrod"	. "yellow")
     ("olive green"	. "lightgreen")
@@ -109,8 +114,6 @@
     ("seagreen"		. "lightcyan")
     ("spring green"	. "green")
     ("springgreen"	. "green")
-    ("pale green"	. "lightgreen")
-    ("palegreen"	. "lightgreen")
     ("lawn green"	. "lightgreen")
     ("lawngreen"	. "lightgreen")
     ("chartreuse"	. "yellow")
@@ -131,18 +134,19 @@
     ("light gray"	. "lightgray")
     ("gray"		. "darkgray")
     ("grey"		. "darkgray")
-    ("gray80"		. "darkgray")
-    ("gray50"		. "black")
-    ("gray90"		. "darkgray")
     ("khaki"		. "green")
     ("maroon"		. "red")
     ("orange"		. "brown")
     ("orchid"		. "brown")
     ("saddle brown"	. "red")
     ("saddlebrown"	. "red")
-    ("sienna"		. "red")
     ("peru"		. "red")
+    ("burlywood"	. "brown")
+    ("sandy brown"	. "brown")
+    ("sandybrown"	. "brown")
     ("pink"		. "lightred")
+    ("hotpink"		. "lightred")
+    ("hot pink"		."lightred")
     ("plum"		. "magenta")
     ("indian red"	. "red")
     ("indianred"	. "red")
@@ -153,6 +157,7 @@
     ("salmon"		.  "lightred")
     ("sienna"		. "lightred")
     ("tan"		. "lightred")
+    ("chocolate"	. "brown")
     ("thistle"		. "magenta")
     ("turquoise"	. "lightgreen")
     ("pale turquoise"	. "cyan")
@@ -164,8 +169,6 @@
     ("green yellow"	. "yellow")
     ("greenyellow"	. "yellow")
     ("purple"		. "magenta")
-    ("royalblue"	. "blue")
-    ("grey40"		. "darkgray")
     ("rosybrown"	. "brown")
     ("rosy brown"	. "brown")
     ("beige"		. "brown"))
@@ -189,6 +192,14 @@
 	     (string= "light " (substring name 0 6))
 	     (setq try (msdos-color-translate (substring name 6)))
 	     (logior try 8))
+	(and (> len 4)
+	     (string= "pale" (substring name 0 4))
+	     (setq try (msdos-color-translate (substring name 4)))
+	     (logior try 8))
+	(and (> len 5)
+	     (string= "pale " (substring name 0 5))
+	     (setq try (msdos-color-translate (substring name 5)))
+	     (logior try 8))
 	(and (> len 6)
 	     (string= "medium" (substring name 0 6))
 	     (msdos-color-translate (substring name 6)))
@@ -196,24 +207,58 @@
 	     (string= "medium " (substring name 0 7))
 	     (msdos-color-translate (substring name 7)))
 	(and (> len 4)
-	     (string= "dark" (substring name 0 4))
+	     (or (string= "dark" (substring name 0 4))
+		 (string= "deep" (substring name 0 4)))
 	     (msdos-color-translate (substring name 4)))
 	(and (> len 5)
-	     (string= "dark " (substring name 0 5))
-	     (msdos-color-translate (substring name 5))))))
+	     (or (string= "dark " (substring name 0 5))
+		 (string= "deep " (substring name 0 5)))
+	     (msdos-color-translate (substring name 5)))
+	(and (> len 4) ;; gray shades: gray0 to gray100
+	     (save-match-data
+	       (and
+		(string-match "gr[ae]y[0-9]" name)
+		(string-match "[0-9]+\\'" name)
+		(let ((num (string-to-int
+			    (substring name (match-beginning 0)))))
+		  (msdos-color-translate
+		   (cond
+		    ((> num 90) "white")
+		    ((> num 50) "lightgray")
+		    ((> num 10) "darkgray")
+		    (t "black")))))))
+	(and (> len 1) ;; purple1 to purple4 and the like
+	     (save-match-data
+	       (and
+		(string-match "[1-4]\\'" name)
+		(msdos-color-translate
+		 (substring name 0 (match-beginning 0)))))))))
 ;; ---------------------------------------------------------------------------
 ;; We want to delay setting frame parameters until the faces are setup
 (defvar default-frame-alist nil)
 (modify-frame-parameters terminal-frame default-frame-alist)
 
+(defun msdos-bg-mode (&optional frame)
+  (let* ((frame (or frame (selected-frame)))
+	 (params (frame-parameters frame))
+	 (bg (cdr (assq 'background-color params))))
+    (if (member bg '("black" "blue" "darkgray" "green"))
+	'dark
+      'light)))
+
 (defun msdos-face-setup ()
   (modify-frame-parameters terminal-frame default-frame-alist)
+
+  (modify-frame-parameters terminal-frame
+			   (list (cons 'background-mode
+				       (msdos-bg-mode terminal-frame))
+				 (cons 'display-type 'color)))
+  (face-set-after-frame-default terminal-frame)
 
   (set-face-foreground 'bold "yellow" terminal-frame)
   (set-face-foreground 'italic "red" terminal-frame)
   (set-face-foreground 'bold-italic "lightred" terminal-frame)
   (set-face-foreground 'underline "white" terminal-frame)
-  (set-face-background 'region "green" terminal-frame)
 
   (make-face 'msdos-menu-active-face)
   (make-face 'msdos-menu-passive-face)
@@ -229,9 +274,14 @@
 
 ;; We create frames as if we were a terminal, but with a twist.
 (defun make-msdos-frame (&optional parameters)
-  (let ((parms
-	 (append initial-frame-alist default-frame-alist parameters nil)))
-    (make-terminal-frame parms)))
+  (let* ((parms
+	  (append initial-frame-alist default-frame-alist parameters nil))
+	 (frame (make-terminal-frame parms)))
+    (modify-frame-parameters frame
+			     (list (cons 'background-mode
+					 (msdos-bg-mode frame))
+				   (cons 'display-type 'color)))
+    frame))
 
 (setq frame-creation-function 'make-msdos-frame)
 
@@ -243,7 +293,10 @@
 
 ;; From src/xfns.c
 (defun x-display-color-p (&optional display) 't)
-(defun x-list-fonts (pattern &optional face frame) (list "default"))
+(defun x-list-fonts (pattern &optional face frame maximum width)
+  (if (and (numberp width) (= width 1))
+      (list "default")
+    (list "no-such-font")))
 (defun x-color-defined-p (color) (numberp (msdos-color-translate color)))
 (defun x-display-pixel-width (&optional frame) (frame-width frame))
 (defun x-display-pixel-height (&optional frame) (frame-height frame))
@@ -285,15 +338,60 @@
 The argument FRAME specifies which frame to try.
 The value may be different for frames on different X displays."
   x-colors)
+
+;; From lisp/term/win32-win.el
 ;
-;; From lisp/select.el
-(defun x-get-selection (&rest rest) "")
-(fset 'x-set-selection 'ignore)
+;;;; Selections and cut buffers
+;
+;;; We keep track of the last text selected here, so we can check the
+;;; current selection against it, and avoid passing back our own text
+;;; from x-cut-buffer-or-selection-value.
+(defvar x-last-selected-text nil)
+
+(defvar x-select-enable-clipboard t
+  "Non-nil means cutting and pasting uses the clipboard.
+This is in addition to the primary selection.")
+
+(defun x-select-text (text &optional push)
+  (if x-select-enable-clipboard 
+      (win16-set-clipboard-data text))
+  (setq x-last-selected-text text))
+    
+;;; Return the value of the current selection.
+;;; Consult the selection, then the cut buffer.  Treat empty strings
+;;; as if they were unset.
+(defun x-get-selection-value ()
+  (if x-select-enable-clipboard 
+      (let (text)
+	;; Don't die if x-get-selection signals an error.
+	(condition-case c
+	    (setq text (win16-get-clipboard-data))
+	  (error (message "win16-get-clipboard-data:%s" c)))
+	(if (string= text "") (setq text nil))
+	(cond
+	 ((not text) nil)
+	 ((eq text x-last-selected-text) nil)
+	 ((string= text x-last-selected-text)
+	  ;; Record the newer string, so subsequent calls can use the 'eq' test.
+	  (setq x-last-selected-text text)
+	  nil)
+	 (t
+	  (setq x-last-selected-text text))))))
+
+;;; Arrange for the kill and yank functions to set and check the clipboard.
+(setq interprogram-cut-function 'x-select-text)
+(setq interprogram-paste-function 'x-get-selection-value)
 
 ;; From lisp/faces.el: we only have one font, so always return
 ;; it, no matter which variety they've asked for.
 (defun x-frob-font-slant (font which)
   font)
+
+;; From src/fontset.c:
+(fset 'query-fontset 'ignore)
+
+;; From lisp/term/x-win.el: make iconify-or-deiconify-frame a no-op.
+(fset 'iconify-or-deiconify-frame 'ignore)
 
 ;; From lisp/frame.el
 (fset 'set-default-font 'ignore)
@@ -324,3 +422,5 @@ The value may be different for frames on different X displays."
 
 (setq command-line-args (msdos-handle-args command-line-args))
 ;; ---------------------------------------------------------------------------
+
+;;; pc-win.el ends here

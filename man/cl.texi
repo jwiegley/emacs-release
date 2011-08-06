@@ -293,7 +293,7 @@ defun*        defsubst*     defmacro*     function*
 member*       assoc*        rassoc*       get*
 remove*       delete*       mapcar*       sort*
 floor*        ceiling*      truncate*     round*
-mod*          rem*          random*
+mod*          rem*          random*       last*
 @end example
 
 Internal function and variable names in the package are prefixed
@@ -318,7 +318,7 @@ they do not cause other components like @file{cl-extra} to be loaded.
 @example
 eql           floatp-safe   abs           endp
 evenp         oddp          plusp         minusp
-last          butlast       nbutlast      caar .. cddddr
+butlast       nbutlast                    caar .. cddddr
 list*         ldiff         rest          first .. tenth
 member [1]    copy-list     subst         mapcar* [2]
 adjoin [3]    acons         pairlis       when
@@ -2023,7 +2023,7 @@ enclose the symbol in a list.)
 
 For example, this expression reads a keystroke, then does one of
 four things depending on whether it is an @samp{a}, a @samp{b},
-a @key{RET} or @key{LFD}, or anything else.
+a @key{RET} or @kbd{C-j}, or anything else.
 
 @example
 (case (read-char)
@@ -4288,7 +4288,7 @@ a merged sequence which is (stably) sorted according to
 The functions described here operate on lists.
 
 @menu
-* List Functions::                `caddr', `first', `last', `list*', etc.
+* List Functions::                `caddr', `first', `last*', `list*', etc.
 * Substitution of Expressions::   `subst', `sublis', etc.
 * Lists as Sets::                 `member*', `adjoin', `union', etc.
 * Association Lists::             `assoc*', `rassoc*', `acons', `pairlis'
@@ -4334,7 +4334,7 @@ with @code{nil}), this function returns @code{nil}.  (The regular
 @code{length} function would get stuck if given a circular list.)
 @end defun
 
-@defun last x &optional n
+@defun last* x &optional n
 This function returns the last cons, or the @var{n}th-to-last cons,
 of the list @var{x}.  If @var{n} is omitted it defaults to 1.
 The ``last cons'' means the first cons cell of the list whose
@@ -4343,6 +4343,9 @@ The ``last cons'' means the first cons cell of the list whose
 returns @code{nil} if @var{x} is @code{nil} or shorter than
 @var{n}.  Note that the last @emph{element} of the list is
 @code{(car (last @var{x}))}.
+
+The Emacs function @code{last} does the same thing
+except that it does not handle the optional argument @var{n}.
 @end defun
 
 @defun butlast x &optional n
@@ -5533,10 +5536,10 @@ by default.  Some programs refer to a function or variable as
 @code{foo} in one place and @code{Foo} or @code{FOO} in another.
 Emacs Lisp will treat these as three distinct symbols.
 
-Some Common Lisp code is written in all upper-case.  While Emacs
+Some Common Lisp code is written entirely in upper case.  While Emacs
 is happy to let the program's own functions and variables use
 this convention, calls to Lisp builtins like @code{if} and
-@code{defun} will have to be changed to lower-case.
+@code{defun} will have to be changed to lower case.
 
 @item
 Lexical scoping.  In Common Lisp, function arguments and @code{let}

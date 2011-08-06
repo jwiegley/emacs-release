@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Text, Programs, Indentation, Top
 @chapter Commands for Human Languages
@@ -22,7 +22,7 @@ paragraph to be approximately equal in length.  The commands for moving
 over and killing words, sentences and paragraphs, while intended
 primarily for editing text, are also often useful for editing programs.
 
-  Emacs has several major modes for editing human language text.  If the
+  Emacs has several major modes for editing human-language text.  If the
 file contains text pure and simple, use Text mode, which customizes
 Emacs in small ways for the syntactic conventions of text.  Outline mode
 provides special commands for operating on text with an outline
@@ -50,17 +50,17 @@ Then the formatting appears on the screen in Emacs while you edit.
 @end iftex
 
 @menu
-* Words::         Moving over and killing words.
-* Sentences::     Moving over and killing sentences.
-* Paragraphs::	  Moving over paragraphs.
-* Pages::	  Moving over pages.
-* Filling::       Filling or justifying text.
-* Case::          Changing the case of text.
-* Text Mode::     The major modes for editing text files.
-* Outline Mode::  The major mode for editing outlines.
-* TeX Mode::      The major modes for editing input to the formatter TeX.
-* Nroff Mode::    The major mode for editing input to the formatter nroff.
-* Formatted Text::Editing formatted text directly in WYSIWYG fashion.
+* Words::	        Moving over and killing words.
+* Sentences::	        Moving over and killing sentences.
+* Paragraphs::	        Moving over paragraphs.
+* Pages::	        Moving over pages.
+* Filling::	        Filling or justifying text.
+* Case::	        Changing the case of text.
+* Text Mode::	        The major modes for editing text files.
+* Outline Mode::        Editing outlines.
+* TeX Mode::	        Editing input to the formatter TeX.
+* Nroff Mode::	        Editing input to the formatter nroff.
+* Formatted Text::      Editing formatted text directly in WYSIWYG fashion.
 @end menu
 
 @node Words
@@ -88,10 +88,9 @@ Transpose two words or drag a word across other words
 (@code{transpose-words}).
 @end table
 
-  Notice how these keys form a series that parallels the
-character-based @kbd{C-f}, @kbd{C-b}, @kbd{C-d}, @kbd{C-t} and
-@key{DEL}.  @kbd{M-@@} is cognate to @kbd{C-@@}, which is an alias for
-@kbd{C-@key{SPC}}.
+  Notice how these keys form a series that parallels the character-based
+@kbd{C-f}, @kbd{C-b}, @kbd{C-d}, @key{DEL} and @kbd{C-t}.  @kbd{M-@@} is
+cognate to @kbd{C-@@}, which is an alias for @kbd{C-@key{SPC}}.
 
 @kindex M-f
 @kindex M-b
@@ -123,8 +122,9 @@ the end, and kill the word backwards with @kbd{M-@key{DEL}}.)
   @kbd{M-@key{DEL}} (@code{backward-kill-word}) kills the word before
 point.  It kills everything from point back to where @kbd{M-b} would
 move to.  If point is after the space in @w{@samp{FOO, BAR}}, then
-@w{@samp{FOO, }} is killed.  (If you wish to kill just @samp{FOO}, do
-@kbd{M-b M-d} instead of @kbd{M-@key{DEL}}.)
+@w{@samp{FOO, }} is killed.  (If you wish to kill just @samp{FOO}, and
+not the comma and the space, use @kbd{M-b M-d} instead of
+@kbd{M-@key{DEL}}.)
 
 @kindex M-t
 @findex transpose-words
@@ -253,13 +253,15 @@ Put point and mark around this or next paragraph (@code{mark-paragraph}).
 
   @kbd{M-@{} moves to the beginning of the current or previous
 paragraph, while @kbd{M-@}} moves to the end of the current or next
-paragraph.  Blank lines and text formatter command lines separate
-paragraphs and are not considered part of any paragraph.  Also, an
-indented line starts a new paragraph.
+paragraph.  Blank lines and text-formatter command lines separate
+paragraphs and are not considered part of any paragraph.  In Fundamental
+mode, but not in Text mode, an indented line also starts a new
+paragraph.  (If a paragraph is preceded by a blank line, these commands
+treat that blank line as the beginning of the paragraph.)
 
-  In major modes for programs (as opposed to Text mode), paragraphs begin
-and end only at blank lines.  This makes the paragraph commands continue to
-be useful even though there are no paragraphs per se.
+  In major modes for programs, paragraphs begin and end only at blank
+lines.  This makes the paragraph commands continue to be useful even
+though there are no paragraphs per se.
 
   When there is a fill prefix, then paragraphs are delimited by all lines
 which don't start with the fill prefix.  @xref{Filling}.
@@ -283,11 +285,12 @@ variables @code{paragraph-separate} and @code{paragraph-start}.  The
 value of @code{paragraph-start} is a regexp that should match any line
 that either starts or separates paragraphs.  The value of
 @code{paragraph-separate} is another regexp that should match only lines
-that separate paragraphs without being part of any paragraph.  Lines
-that start a new paragraph and are contained in it must match only
-@code{paragraph-start}, not @code{paragraph-separate}.  For example,
-normally @code{paragraph-start} is @code{"[ @t{\}t@t{\}n@t{\}f]"} and
-@code{paragraph-separate} is @code{"[ @t{\}t@t{\}f]*$"}.@refill
+that separate paragraphs without being part of any paragraph (for
+example, blank lines).  Lines that start a new paragraph and are
+contained in it must match only @code{paragraph-start}, not
+@code{paragraph-separate}.  For example, in Fundamental mode,
+@code{paragraph-start} is @code{" [ @t{\}t@t{\}n@t{\}f]"} and
+@code{paragraph-separate} is @code{" [ @t{\}t@t{\}f]*$"}.@refill
 
   Normally it is desirable for page boundaries to separate paragraphs.
 The default values of these variables recognize the usual separator for
@@ -380,9 +383,11 @@ a style of filling for each portion of the text (@pxref{Formatted
 Text}).
 
 @menu
-* Auto Fill::	  Auto Fill mode breaks long lines automatically.
-* Fill Commands:: Commands to refill paragraphs and center lines.
-* Fill Prefix::	  Filling when every line is indented or in a comment, etc.
+* Auto Fill::	        Auto Fill mode breaks long lines automatically.
+* Fill Commands::       Commands to refill paragraphs and center lines.
+* Fill Prefix::	        Filling paragraphs that are indented
+                          or in a comment, etc.
+* Adaptive Fill::       How Emacs can determine the fill prefix automatically.
 @end menu
 
 @node Auto Fill
@@ -411,20 +416,20 @@ see when Auto Fill mode is in effect by the presence of the word
 a minor mode which is enabled or disabled for each buffer individually.
 @xref{Minor Modes}.
 
-  In Auto Fill mode, lines are broken automatically at spaces when they get
-longer than the desired width.  Line breaking and rearrangement takes place
-only when you type @key{SPC} or @key{RET}.  If you wish to insert a space
-or newline without permitting line-breaking, type @kbd{C-q @key{SPC}} or
-@kbd{C-q @key{LFD}} (recall that a newline is really a linefeed).  Also,
-@kbd{C-o} inserts a newline without line breaking.
+  In Auto Fill mode, lines are broken automatically at spaces when they
+get longer than the desired width.  Line breaking and rearrangement
+takes place only when you type @key{SPC} or @key{RET}.  If you wish to
+insert a space or newline without permitting line-breaking, type
+@kbd{C-q @key{SPC}} or @kbd{C-q C-j} (recall that a newline is really a
+control-J).  Also, @kbd{C-o} inserts a newline without line breaking.
 
-  Auto Fill mode works well with Lisp mode, because when it makes a new
-line in Lisp mode it indents that line with @key{TAB}.  If a line ending in
-a comment gets too long, the text of the comment is split into two
-comment lines.  Optionally new comment delimiters are inserted at the end of
-the first line and the beginning of the second so that each line is
-a separate comment; the variable @code{comment-multi-line} controls the
-choice (@pxref{Comments}).
+  Auto Fill mode works well with programming-language modes, because it
+indents new lines with @key{TAB}.  If a line ending in a comment gets
+too long, the text of the comment is split into two comment lines.
+Optionally, new comment delimiters are inserted at the end of the first
+line and the beginning of the second so that each line is a separate
+comment; the variable @code{comment-multi-line} controls the choice
+(@pxref{Comments}).
 
   Adaptive filling (see the following section) works for Auto Filling as
 well as for explicit fill commands.  It takes a fill prefix
@@ -487,41 +492,6 @@ extra spaces, use @kbd{M-q} with no argument.  (Likewise for
 other styles of filling, is with the @code{justification} text property;
 see @ref{Format Justification}.
 
-@vindex adaptive-fill-mode
-  The fill commands can deduce the proper fill prefix for a paragraph
-automatically in certain cases: either whitespace or certain punctuation
-characters at the beginning of a line are treated as a fill prefix.
-They take the fill prefix from the paragraph's second line, unless the
-paragraph has just one line.  You can turn off this feature by setting
-@code{adaptive-fill-mode} to @code{nil}.
-
-  Some major modes, including Text mode, treat whitespace at the
-beginning of a line as a signal that this line starts a new paragraph.
-It would be a mistake to copy text which implies the start of a
-paragraph onto each line of the paragraph when filling it.  Therefore,
-adaptive filling does not accept a fill prefix from a line which is a
-paragraph-starter.  In particular, adaptive filling in Text mode does
-not accept a fill prefix consisting of just whitespace.
-
-  However, other modes including Indented Text mode (@pxref{Text Mode})
-do not consider whitespace as a signal to start a new paragraph.  In
-these modes, adaptive filling does accept a fill prefix consisting of
-just whitespace, if the first or second line of a paragraph begins with
-whitespace.
-
-@vindex adaptive-fill-regexp
-  The variable @code{adaptive-fill-regexp} determines what kinds of line
-beginnings can serve as a fill prefix: any characters at the start of
-the line which match this regular expression are used.
-
-@vindex adaptive-fill-function
-  You can specify more complex ways of choosing a fill prefix
-automatically by setting the variable @code{adaptive-fill-function} to a
-function.  This function is called with point after the left margin of a
-line, and it should return the appropriate fill prefix based on that
-line.  If it returns @code{nil}, that means it sees no fill prefix in
-that line.
-
 @kindex M-s @r{(Text mode)}
 @cindex centering
 @findex center-line
@@ -562,9 +532,11 @@ fill commands put two spaces after a colon.
 
 @cindex fill prefix
   To fill a paragraph in which each line starts with a special marker
-(which might be a few spaces, giving an indented paragraph), use the
-@dfn{fill prefix} feature.  The fill prefix is a string which Emacs expects
-every line to start with, and which is not included in filling.
+(which might be a few spaces, giving an indented paragraph), you can use
+the @dfn{fill prefix} feature.  The fill prefix is a string that Emacs
+expects every line to start with, and which is not included in filling.
+You can specify a fill prefix explicitly; Emacs can also deduce the
+fill prefix automatically (@pxref{Adaptive Fill}).
 
 @table @kbd
 @item C-x .
@@ -649,6 +621,72 @@ but there is a default value which you can change as well.  @xref{Locals}.
   The @code{indentation} text property provides another way to control
 the amount of indentation paragraphs receive.  @xref{Format Indentation}.
 
+@node Adaptive Fill
+@subsection Adaptive Filling
+
+@cindex adaptive filling
+  The fill commands can deduce the proper fill prefix for a paragraph
+automatically in certain cases: either whitespace or certain punctuation
+characters at the beginning of a line are propagated to all lines of the
+paragraph.
+
+  If the paragraph has two or more lines, the fill prefix is taken from
+the paragraph's second line, but only if it appears on the first line as
+well.
+
+  If a paragraph has just one line, fill commands @emph{may} take a
+prefix from that line.  The decision is complicated because there are
+three reasonable things to do in such a case:
+
+@itemize @bullet
+@item
+Use the first line's prefix on all the lines of the paragraph.
+
+@item
+Indent subsequent lines with whitespace, so that they line up under the
+text that follows the prefix on the first line, but don't actually copy
+the prefix from the first line.
+
+@item
+Don't do anything special with the second and following lines.
+@end itemize
+
+  All three of these styles of formatting are commonly used.  So the
+fill commands try to determine what you would like, based on the prefix
+that appears and on the major mode.  Here is how.
+
+@vindex adaptive-fill-first-line-regexp
+  If the prefix found on the first line matches
+@code{adaptive-fill-first-line-regexp}, or if it appears to be a
+comment-starting sequence (this depends on the major mode), then the
+prefix found is used for filling the paragraph, provided it would not
+act as a paragraph starter on subsequent lines.
+
+  Otherwise, the prefix found is converted to an equivalent number of
+spaces, and those spaces are used as the fill prefix for the rest of the
+lines, provided they would not act as a paragraph starter on subsequent
+lines.
+
+  In Text mode, and other modes where only blank lines and page
+delimiters separate paragraphs, the prefix chosen by adaptive filling
+never acts as a paragraph starter, so it can always be used for filling.
+
+@vindex adaptive-fill-mode
+@vindex adaptive-fill-regexp
+  The variable @code{adaptive-fill-regexp} determines what kinds of line
+beginnings can serve as a fill prefix: any characters at the start of
+the line that match this regular expression are used.  If you set the
+variable @code{adaptive-fill-mode} to @code{nil}, the fill prefix is
+never chosen automatically.
+
+@vindex adaptive-fill-function
+  You can specify more complex ways of choosing a fill prefix
+automatically by setting the variable @code{adaptive-fill-function} to a
+function.  This function is called with point after the left margin of a
+line, and it should return the appropriate fill prefix based on that
+line.  If it returns @code{nil}, that means it sees no fill prefix in
+that line.
+
 @node Case
 @section Case Conversion Commands
 @cindex case conversion
@@ -723,27 +761,35 @@ enable the command, which means it will not ask for confirmation again.
 @findex text-mode
 
   When you edit files of text in a human language, it's more convenient
-to use Text mode rather than Fundamental mode.  Invoke @kbd{M-x
-text-mode} to enter Text mode.  In Text mode, @key{TAB} runs the
-function @code{tab-to-tab-stop}, which allows you to use arbitrary tab
-stops set with @kbd{M-x edit-tab-stops} (@pxref{Tab Stops}).  Features
-concerned with comments in programs are turned off in Text mode except
-when explicitly invoked.  The syntax table is changed so that periods
-are not considered part of a word, while apostrophes, backspaces and
-underlines are part of words.
+to use Text mode rather than Fundamental mode.  To enter Text mode, type
+@kbd{M-x text-mode}.
 
-@cindex Indented Text mode
-@cindex mode, Indented Text
-@findex indented-text-mode
-@kindex TAB @r{(Indented Text mode)}
-  A similar variant mode is Indented Text mode, intended for editing
-text in which most lines are indented.  This mode defines @key{TAB} to
-run @code{indent-relative} (@pxref{Indentation}), and makes Auto Fill
-indent the lines it creates.  The result is that normally a line made by
-Auto Filling, or by @key{LFD}, is indented just like the previous line.
-In Indented Text mode, only blank lines separate paragraphs---indented
-lines continue the current paragraph.  Use @kbd{M-x indented-text-mode}
-to select this mode.
+  In Text mode, only blank lines and page delimiters separate
+paragraphs.  As a result, paragraphs can be indented, and adaptive
+filling determines what indentation to use when filling a paragraph.
+@xref{Adaptive Fill}.
+
+@kindex TAB @r{(Text mode)}
+  Text mode defines @key{TAB} to run @code{indent-relative}
+(@pxref{Indentation}), so that you can conveniently indent a line like
+the previous line.  When the previous line is not indented,
+@code{indent-relative} runs @code{tab-to-tab-stop}, which uses Emacs tab
+stops that you can set (@pxref{Tab Stops}).
+
+  Text mode turns off the features concerned with comments except when
+you explicitly invoke them.  It changes the syntax table so that periods
+are not considered part of a word, while apostrophes, backspaces and
+underlines are considered part of words.
+
+@cindex Paragraph-Indent Text mode
+@cindex mode, Paragraph-Indent Text
+@findex paragraph-indent-text-mode
+  If you indent the first lines of paragraphs, then you should use
+Paragraph-Indent Text mode rather than Text mode.  In this mode, you do
+not need to have blank lines between paragraphs, because the first-line
+indentation is sufficient to start a paragraph; however paragraphs in
+which every line is indented are not supported.  Use @kbd{M-x
+paragraph-indent-text-mode} to enter this mode.
 
 @kindex M-TAB @r{(Text mode)}
   Text mode, and all the modes based on it, define @kbd{M-@key{TAB}} as
@@ -752,10 +798,10 @@ the partial word in the buffer before point, using the spelling
 dictionary as the space of possible words.  @xref{Spelling}.
 
 @vindex text-mode-hook
-  Entering Text mode or Indented Text mode runs the hook
-@code{text-mode-hook}.  Other major modes related to Text mode also run
-this hook, followed by hooks of their own; this includes Nroff mode,
-@TeX{} mode, Outline mode and Mail mode.  Hook functions on
+  Entering Text mode runs the hook @code{text-mode-hook}.  Other major
+modes related to Text mode also run this hook, followed by hooks of
+their own; this includes Paragraph-Indent Text mode, Nroff mode, @TeX{}
+mode, Outline mode, and Mail mode.  Hook functions on
 @code{text-mode-hook} can look at the value of @code{major-mode} to see
 which of these modes is actually being entered.  @xref{Hooks}.
 
@@ -794,11 +840,10 @@ deleted, except that an ellipsis (three periods in a row) appears at the
 end of the previous visible line (only one ellipsis no matter how many
 invisible lines follow).
 
-  All editing commands treat the text of the invisible line as part of the
-previous visible line.  For example, @kbd{C-n} moves onto the next visible
-line.  Killing an entire visible line, including its terminating newline,
-really kills all the following invisible lines along with it; yanking it
-all back yanks the invisible lines and they remain invisible.
+  Editing commands that operate on lines, such as @kbd{C-n} and
+@kbd{C-p}, treat the text of the invisible line as part of the previous
+visible line.  Killing an entire visible line, including its terminating
+newline, really kills all the following invisible lines along with it.
 
   Outline minor mode provides the same commands as the major mode,
 Outline mode, but you can use it in conjunction with other major modes.
@@ -843,16 +888,13 @@ an example:
 
 @example
 * Food
-
 This is the body,
 which says something about the topic of food.
 
 ** Delicious Food
-
 This is the body of the second-level header.
 
 ** Distasteful Food
-
 This could have
 a body too, with
 several lines.
@@ -860,7 +902,6 @@ several lines.
 *** Dormitory Food
 
 * Shelter
-
 Another first-level topic with its header line.
 @end example
 
@@ -892,15 +933,6 @@ heading line by setting the variable @code{outline-level}.  The value of
 returns the level of the current heading.  Some major modes such as C,
 Nroff, and Emacs Lisp mode set this variable in order to work with
 Outline minor mode.
-
-  Outline mode makes a line invisible by changing the newline before it
-into an ASCII control-M (code 015).  Most editing commands that work on
-lines treat an invisible line as part of the previous line because,
-strictly speaking, it @emph{is} part of that line, since there is no longer a
-newline in between.  When you save the file in Outline mode, control-M
-characters are saved as newlines, so the invisible lines become ordinary
-lines in the file.  But saving does not change the visibility status of a
-line inside Emacs.
 
 @node Outline Motion
 @subsection Outline Motion Commands
@@ -966,7 +998,7 @@ Make all body lines in the buffer invisible (@code{hide-body}).
 Make all lines in the buffer visible (@code{show-all}).
 @item C-c C-d
 Make everything under this heading invisible, not including this
-heading itself@* (@code{hide-subtree}).
+heading itself3 (@code{hide-subtree}).
 @item C-c C-s
 Make everything under this heading visible, including body,
 subheadings, and their bodies (@code{show-subtree}).
@@ -1063,23 +1095,12 @@ no visible indication of the presence of invisible lines.
 @cindex multiple views of outline
 @cindex views of an outline
 @cindex outline with multiple views
-@cindex @code{noutline}
-  You can display two views of a single outline at the same time, in
-different windows, by means of an alternative implementation of Outline
-mode called @code{noutline}.
-
-  To do this, first load the library @code{noutline} with @kbd{M-x
-load-library @key{RET} noutline @key{RET}}.  This loads the alternative
-implementation of Outline mode.  It provides the same command names and
-key bindings as regular Outline mode, but it implements them
-differently.
-
 @cindex indirect buffers and outlines
-  Then, to display a second view of an outline buffer, you must create
-an indirect buffer using @kbd{M-x make-indirect-buffer}.  The first
-argument of this command is the existing outline buffer name, and its
-second argument is the name to use for the new indirect buffer.
-@xref{Indirect Buffers}.
+  You can display two views of a single outline at the same time, in
+different windows.  To do this, you must create an indirect buffer using
+@kbd{M-x make-indirect-buffer}.  The first argument of this command is
+the existing outline buffer name, and its second argument is the name to
+use for the new indirect buffer.  @xref{Indirect Buffers}.
 
   Once the indirect buffer exists, you can display it in a window in the
 normal fashion, with @kbd{C-x 4 b} or other Emacs commands.  The Outline
@@ -1087,9 +1108,6 @@ mode commands to show and hide parts of the text operate on each buffer
 independently; as a result, each buffer can have its own view.  If you
 want more than two views on the same outline, create additional indirect
 buffers.
-
-  In a future Emacs version, the alternative @code{noutline}
-implementation will probably become the principal implementation.
 
 @node TeX Mode
 @section @TeX{} Mode
@@ -1133,7 +1151,6 @@ mode.
 * Editing: TeX Editing.   Special commands for editing in TeX mode.
 * LaTeX: LaTeX Editing.   Additional commands for LaTeX input files.
 * Printing: TeX Print.    Commands for printing part of a file with TeX.
-* Getting: TeX Distrib.   Getting the latest Unix TeX distribution.
 @end menu
 
 @node TeX Editing
@@ -1146,7 +1163,7 @@ text of the file.
 @item "
 Insert, according to context, either @samp{``} or @samp{"} or
 @samp{''} (@code{tex-insert-quote}).
-@item @key{LFD}
+@item C-j
 Insert a paragraph break (two newlines) and check the previous
 paragraph for unbalanced braces or dollar signs
 (@code{tex-terminate-paragraph}).
@@ -1171,7 +1188,9 @@ character.
 
   If you need the character @samp{"} itself in unusual contexts, use
 @kbd{C-q} to insert it.  Also, @kbd{"} with a numeric argument always
-inserts that number of @samp{"} characters.
+inserts that number of @samp{"} characters.  You can turn off the
+feature of @kbd{"} expansion by eliminating that binding in the local
+map (@xref{Key Bindings}).
 
   In @TeX{} mode, @samp{$} has a special syntax code which attempts to
 understand the way @TeX{} math mode delimiters match.  When you insert a
@@ -1196,8 +1215,8 @@ text that belongs inside.  Afterward, use the command @kbd{C-c @}}
 
 @findex validate-tex-region
 @findex tex-terminate-paragraph
-@kindex LFD @r{(@TeX{} mode)}
-  There are two commands for checking the matching of braces.  @key{LFD}
+@kindex C-j @r{(@TeX{} mode)}
+  There are two commands for checking the matching of braces.  @kbd{C-j}
 (@code{tex-terminate-paragraph}) checks the paragraph before point, and
 inserts two newlines to start a new paragraph.  It prints a message in
 the echo area if any mismatch is found.  @kbd{M-x validate-tex-region}
@@ -1226,7 +1245,8 @@ features not applicable to plain @TeX{}.
 Insert @samp{\begin} and @samp{\end} for La@TeX{} block and position
 point on a line between them. (@code{tex-latex-block}).
 @item C-c C-e
-Close the last unended block for La@TeX{} (@code{tex-close-latex-block}).
+Close the innermost La@TeX{} block not yet closed
+(@code{tex-close-latex-block}).
 @end table
 
 @findex tex-latex-block
@@ -1268,7 +1288,7 @@ Invoke @TeX{} on the current region, together with the buffer's header
 (@code{tex-region}).
 @item C-c C-b
 Invoke @TeX{} on the entire current buffer (@code{tex-buffer}).
-@item C-c TAB
+@item C-c @key{TAB}
 Invoke Bib@TeX{} on the current file (@code{tex-bibtex-file}).
 @item C-c C-f
 Invoke @TeX{} on the current file (@code{tex-file}).
@@ -1385,11 +1405,25 @@ header.
 work in a temporary directory, and do not have available any of the auxiliary
 files needed by @TeX{} for cross-references; these commands are generally
 not suitable for running the final copy in which all of the cross-references
-need to be correct.  When you want the auxiliary files, use @kbd{C-c C-f}
-(@code{tex-file}) which runs @TeX{} on the current buffer's file, in that
-file's directory.  Before @TeX{} runs, you will be asked about saving
-any modified buffers.  Generally, you need to use (@code{tex-file})
-twice to get cross-references correct.
+need to be correct.
+
+  When you want the auxiliary files for cross references, use @kbd{C-c
+C-f} (@code{tex-file}) which runs @TeX{} on the current buffer's file,
+in that file's directory.  Before running @TeX{}, it offers to save any
+modified buffers.  Generally, you need to use (@code{tex-file}) twice to
+get the cross-references right.
+
+@vindex tex-main-file
+  Large @TeX{} documents are often split into several files---one main
+file, plus subfiles.  Running @TeX{} on a subfile typically does not
+work; you have to run it on the main file.  In order to make
+@code{tex-file} useful when you are editing a subfile, you can set the
+variable @code{tex-main-file} to the name of the main file.  Then
+@code{tex-file} runs @TeX{} on that file.
+
+  The most convenient way to use @code{tex-main-file} is to specify it
+in a local variable list in each of the subfiles.  @xref{File
+Variables}.
 
 @findex tex-bibtex-file
 @kindex C-c TAB @r{(@TeX{} mode)}
@@ -1416,43 +1450,6 @@ and @code{tex-mode-hook}.  Then it runs either
 appropriate.  For Sli@TeX{} files, it calls @code{slitex-mode-hook}.
 Starting the @TeX{} shell runs the hook @code{tex-shell-hook}.
 @xref{Hooks}.
-
-@node TeX Distrib
-@subsection Unix @TeX{} Distribution
-
-@c !!! Here is information about obtaining TeX.  Update it whenever.
-@c     Last updated by rms in July 1994
-
-@TeX{} for Unix systems can be obtained from the University of Washington
-for a distribution fee.
-
-To order a full distribution, specify whether you prefer 1/4 inch QIC-24
-or 4mm DAT tape (9-track reel-to-reel is no longer available) and send
-$210.00 for a (tar or cpio) cartridge, payable to the University of
-Washington to:
-
-@display
-@group
-Pierre MacKay
-Department of Classics
-Denny Hall, Mail Stop DH-10
-University of Washington
-Seattle, Washington 98195
-@end group
-@end display
-
-@noindent
-Purchase orders are acceptable, but there is an extra charge of
-$10.00, to pay for processing charges.
-
-@noindent
-For overseas orders please add $20.00 to the base cost for shipment via
-air parcel post, or $30.00 for shipment via courier.
-
-  The normal distribution is a tar tape, blocked 20, 1600 bpi, on an
-industry standard 2400 foot half-inch reel.  The physical format for the
-1/4 inch streamer cartridges is QIC-24.  System V tapes can be written
-in cpio format, blocked 5120 bytes, with ASCII headers.
 
 @node Nroff Mode
 @section Nroff Mode
@@ -1519,8 +1516,8 @@ to implement other formatting features as well.
 
   Enriched mode is a minor mode (@pxref{Minor Modes}).  Typically it is
 used in conjunction with Text mode (@pxref{Text Mode}).  However, you
-can also use it with other major modes such as Outline mode and Indented
-Text mode.
+can also use it with other major modes such as Outline mode and
+Paragraph-Indent Text mode.
 
   Potentially, Emacs can store formatted text files in various file
 formats.  Currently, only one format is implemented: @dfn{text/enriched}
@@ -1573,13 +1570,14 @@ recognize the format, reconvert the text, and turn on Enriched mode
 again.
 
 @vindex enriched-fill-after-visiting
-  Normally, after reading a file in text/enriched format, Emacs refills
-each paragraph to fit the width of the window.  You can turn off this
+  Normally, after visiting a file in text/enriched format, Emacs refills
+each paragraph to fit the specified right margin.  You can turn off this
 refilling, to save time, by setting the variable
 @code{enriched-fill-after-visiting} to @code{nil} or to @code{ask}.
 
-  In any case, if the window width is the same as the width with which the
-file was saved, Emacs trusts that the file is already properly filled.
+  However, when visiting a file that was saved from Enriched mode, there
+is no need for refilling, because Emacs saves the right margin settings
+along with the text.
 
 @vindex enriched-translations
   You can add annotations for saving additional text properties, which
@@ -1708,7 +1706,7 @@ applies to both the keyboard commands and the menu commands.
 format.
 
   The @code{excerpt} face is intended for quotations.  This face is the
-same as @code{italic} unless you customize it (@pxref{Modifying Faces}).
+same as @code{italic} unless you customize it (@pxref{Face Customization}).
 
   The @code{fixed} face is meant to say, ``Use a fixed-width font for this
 part of the text.''  Emacs currently supports only fixed-width fonts;
@@ -1770,7 +1768,7 @@ Emacs fill commands (@pxref{Filling}) and line-breaking commands.
 these properties.  The submenu contains four items:
 
 @table @code
-@kindex C-x @key{TAB} @r{(Enriched mode)}
+@kindex C-x TAB @r{(Enriched mode)}
 @findex increase-left-margin
 @item Indent More
 Indent the region by 4 columns (@code{increase-left-margin}).  In
@@ -1817,11 +1815,8 @@ refill the paragraph.
 commands should add to or subtract from the indentation.  The default
 value is 4.
 
-@vindex enriched-default-right-margin
-  Enriched mode automatically sets the variable @code{fill-column} based
-on the window width: it leaves a certain number of columns for the right
-margin.  The variable @code{enriched-default-right-margin} says how many
-columns.  The default value is 10.
+  The overall default right margin for Enriched mode is controlled by
+the variable @code{fill-column}, as usual.
 
 @node Format Justification
 @subsection Justification in Formatted Text
@@ -1945,8 +1940,12 @@ to translate from; however, normally you can type just @key{RET}, which
 tells Emacs to guess the format.
 
 @findex format-find-file
-  If you wish to look at a file in text/enriched format in its raw form,
-as a sequence of characters with no formatting, use @kbd{M-x
-format-find-file @key{RET} @var{filename} @key{RET} @key{RET}}.  The
-empty second argument means, ``read without format conversion.''
+  If you wish to look at text/enriched file in its raw form, as a
+sequence of characters rather than as formatted text, use the @kbd{M-x
+find-file-literally} command.  This visits a file, like
+@code{find-file}, but does not do format conversion.  It also inhibits
+character code conversion (@pxref{Coding Systems}) and automatic
+uncompression (@pxref{Compressed Files}).  To disable format conversion
+but allow character code conversion and/or automatic uncompression if
+appropriate, use @code{format-find-file} with suitable arguments.
 

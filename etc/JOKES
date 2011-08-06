@@ -64,7 +64,7 @@ SYNOPSIS
      ed [ - ] [ -x ] [ name ]
 DESCRIPTION
      Ed is the standard text editor.
-- ---
+---
 
 Computer Scientists love ed, not just because it comes first
 alphabetically, but because it's the standard.  Everyone else loves ed
@@ -74,9 +74,9 @@ because it's ED!
 
 And ed doesn't waste space on my Timex Sinclair.  Just look:
 
-- -rwxr-xr-x  1 root          24 Oct 29  1929 /bin/ed
-- -rwxr-xr-t  4 root     1310720 Jan  1  1970 /usr/ucb/vi
-- -rwxr-xr-x  1 root  5.89824e37 Oct 22  1990 /usr/bin/emacs
+-rwxr-xr-x  1 root          24 Oct 29  1929 /bin/ed
+-rwxr-xr-t  4 root     1310720 Jan  1  1970 /usr/ucb/vi
+-rwxr-xr-x  1 root  5.89824e37 Oct 22  1990 /usr/bin/emacs
 
 Of course, on the system *I* administrate, vi is symlinked to ed.
 Emacs has been replaced by a shell script which 1) Generates a syslog
@@ -111,7 +111,7 @@ eat flaming death
 ^D
 ?
 
-- ---
+---
 Note the consistent user interface and error reportage.  Ed is
 generous enough to flag errors, yet prudent enough not to overwhelm
 the novice with verbosity.

@@ -1,8 +1,8 @@
 ;;; arc-mode.el --- simple editing of archives
 
-;; Copyright (C) 1995 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 1997 Free Software Foundation, Inc.
 
-;; Author: Morten Welinder (terra@diku.dk)
+;; Author: Morten Welinder <terra@diku.dk>
 ;; Keywords: archives msdog editing major-mode
 ;; Favourite-brand-of-beer: None, I hate beer.
 
@@ -99,118 +99,216 @@
 ;; -------------------------------------------------------------------------
 ;; Section: Configuration.
 
-(defvar archive-dos-members t
-  "*If non-nil then recognize member files using ^M^J as line terminator.")
+(defgroup archive nil
+  "Simple editing of archives."
+  :group 'data)
 
-(defvar archive-tmpdir
+(defgroup archive-arc nil
+  "ARC-specific options to archive."
+  :group 'archive)
+
+(defgroup archive-lzh nil
+  "LZH-specific options to archive."
+  :group 'archive)
+
+(defgroup archive-zip nil
+  "ZIP-specific options to archive."
+  :group 'archive)
+
+(defgroup archive-zoo nil
+  "ZOO-specific options to archive."
+  :group 'archive)
+
+
+(defcustom archive-dos-members t
+  "*If non-nil then recognize member files using ^M^J as line terminator."
+  :type 'boolean
+  :group 'archive)
+
+(defcustom archive-tmpdir
   (expand-file-name
    (make-temp-name (if (eq system-type 'ms-dos) "ar" "archive.tmp"))
    (or (getenv "TMPDIR") (getenv "TMP") "/tmp"))
-  "*Directory for temporary files made by arc-mode.el")
+  "*Directory for temporary files made by arc-mode.el"
+  :type 'directory
+  :group 'archive)
 
-(defvar archive-remote-regexp "^/[^/:]*[^/:.]:"
+(defcustom archive-remote-regexp "^/[^/:]*[^/:.]:"
   "*Regexp recognizing archive files names that are not local.
 A non-local file is one whose file name is not proper outside Emacs.
-A local copy of the archive will be used when updating.")
+A local copy of the archive will be used when updating."
+  :type 'regexp
+  :group 'archive)
 
-(defvar archive-extract-hooks nil
-  "*Hooks to run when an archive member has been extracted.")
+(defcustom archive-extract-hooks nil
+  "*Hooks to run when an archive member has been extracted."
+  :type 'hook
+  :group 'archive)
 ;; ------------------------------
 ;; Arc archive configuration
 
 ;; We always go via a local file since there seems to be no reliable way
 ;; to extract to stdout without junk getting added.
-(defvar archive-arc-extract
+(defcustom archive-arc-extract
   '("arc" "x")
   "*Program and its options to run in order to extract an arc file member.
 Extraction should happen to the current directory.  Archive and member
-name will be added.")
+name will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-arc)
 
-(defvar archive-arc-expunge
+(defcustom archive-arc-expunge
   '("arc" "d")
   "*Program and its options to run in order to delete arc file members.
-Archive and member names will be added.")
+Archive and member names will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-arc)
 
-(defvar archive-arc-write-file-member
+(defcustom archive-arc-write-file-member
   '("arc" "u")
   "*Program and its options to run in order to update an arc file member.
-Archive and member name will be added.")
+Archive and member name will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-arc)
 ;; ------------------------------
 ;; Lzh archive configuration
 
-(defvar archive-lzh-extract
+(defcustom archive-lzh-extract
   '("lha" "pq")
   "*Program and its options to run in order to extract an lzh file member.
 Extraction should happen to standard output.  Archive and member name will
-be added.")
+be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-lzh)
 
-(defvar archive-lzh-expunge
+(defcustom archive-lzh-expunge
   '("lha" "d")
   "*Program and its options to run in order to delete lzh file members.
-Archive and member names will be added.")
+Archive and member names will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-lzh)
 
-(defvar archive-lzh-write-file-member
+(defcustom archive-lzh-write-file-member
   '("lha" "a")
   "*Program and its options to run in order to update an lzh file member.
-Archive and member name will be added.")
+Archive and member name will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-lzh)
 ;; ------------------------------
 ;; Zip archive configuration
 
-(defvar archive-zip-use-pkzip (memq system-type '(ms-dos windows-nt))
+(defcustom archive-zip-use-pkzip (memq system-type '(ms-dos windows-nt))
   "*If non-nil then pkzip option are used instead of zip options.
-Only set to true for msdog systems!")
+Only set to true for msdog systems!"
+  :type 'boolean
+  :group 'archive-zip)
 
-(defvar archive-zip-extract
+(defcustom archive-zip-extract
   (if archive-zip-use-pkzip '("pkunzip" "-e") '("unzip" "-qq" "-c"))
   "*Program and its options to run in order to extract a zip file member.
 Extraction should happen to standard output.  Archive and member name will
 be added.  If `archive-zip-use-pkzip' is non-nil then this program is
-expected to extract to a file junking the directory part of the name.")
+expected to extract to a file junking the directory part of the name."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zip)
 
 ;; For several reasons the latter behaviour is not desirable in general.
 ;; (1) It uses more disk space.  (2) Error checking is worse or non-
 ;; existent.  (3) It tends to do funny things with other systems' file
 ;; names.
 
-(defvar archive-zip-expunge
+(defcustom archive-zip-expunge
   (if archive-zip-use-pkzip '("pkzip" "-d") '("zip" "-d" "-q"))
   "*Program and its options to run in order to delete zip file members.
-Archive and member names will be added.")
+Archive and member names will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zip)
 
-(defvar archive-zip-update
+(defcustom archive-zip-update
   (if archive-zip-use-pkzip '("pkzip" "-u") '("zip" "-q"))
   "*Program and its options to run in order to update a zip file member.
 Options should ensure that specified directory will be put into the zip
-file.  Archive and member name will be added.")
+file.  Archive and member name will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zip)
 
-(defvar archive-zip-update-case
+(defcustom archive-zip-update-case
   (if archive-zip-use-pkzip archive-zip-update '("zip" "-q" "-k"))
   "*Program and its options to run in order to update a case fiddled zip member.
 Options should ensure that specified directory will be put into the zip file.
-Archive and member name will be added.")
+Archive and member name will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zip)
 
-(defvar archive-zip-case-fiddle t
+(defcustom archive-zip-case-fiddle t
   "*If non-nil then zip file members are case fiddled.
 Case fiddling will only happen for members created by a system that
-uses caseless file names.")
+uses caseless file names."
+  :type 'boolean
+  :group 'archive-zip)
 ;; ------------------------------
 ;; Zoo archive configuration
 
-(defvar archive-zoo-extract
+(defcustom archive-zoo-extract
   '("zoo" "xpq")
   "*Program and its options to run in order to extract a zoo file member.
 Extraction should happen to standard output.  Archive and member name will
-be added.")
+be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zoo)
 
-(defvar archive-zoo-expunge
+(defcustom archive-zoo-expunge
   '("zoo" "DqPP")
   "*Program and its options to run in order to delete zoo file members.
-Archive and member names will be added.")
+Archive and member names will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zoo)
 
-(defvar archive-zoo-write-file-member
+(defcustom archive-zoo-write-file-member
   '("zoo" "a")
   "*Program and its options to run in order to update a zoo file member.
-Archive and member name will be added.")
+Archive and member name will be added."
+  :type '(list (string :tag "Program")
+		(repeat :tag "Options"
+			:inline t
+			(string :format "%v")))
+  :group 'archive-zoo)
 ;; -------------------------------------------------------------------------
 ;; Section: Variables
 
@@ -236,21 +334,15 @@ Archive and member name will be added.")
 (make-variable-buffer-local 'archive-subfile-mode)
 (put 'archive-subfile-mode 'permanent-local t)
 
-;; buffer-file-type is a per-buffer variable in the msdog configuration
-(if (boundp 'buffer-file-type) nil
-  (defvar buffer-file-type nil
-    "*Nil for dos-style text file, non-nil otherwise.")
-  (make-variable-buffer-local 'buffer-file-type)
-  (put 'buffer-file-type 'permanent-local t)
-  (setq-default buffer-file-type nil))
-
 (defvar archive-subfile-dos nil
-  "Negation of `buffer-file-type' which see.")
+  "Negation of `buffer-file-type', which see.")
 (make-variable-buffer-local 'archive-subfile-dos)
 (put 'archive-subfile-dos 'permanent-local t)
 
-(defvar archive-files nil "Vector of file descriptors.  Each descriptor is
-a vector of [ext-file-name int-file-name case-fiddled mode ...]")
+(defvar archive-files nil
+  "Vector of file descriptors.
+Each descriptor is a vector of the form
+ [EXT-FILE-NAME INT-FILE-NAME CASE-FIDDLED MODE ...]")
 (make-variable-buffer-local 'archive-files)
 
 (defvar archive-lemacs
@@ -436,7 +528,8 @@ archive.
 	(setq require-final-newline nil)
 	(make-local-variable 'enable-local-variables)
 	(setq enable-local-variables nil)
-	(setq buffer-file-type t)
+	(if (boundp 'default-buffer-file-type)
+	    (setq buffer-file-type t))
 
 	(make-local-variable 'archive-read-only)
 	(setq archive-read-only (not (file-writable-p (buffer-file-name))))
@@ -617,7 +710,7 @@ is visible (and the real data of the buffer is hidden)."
     (archive-next-line no)))
 
 (defun archive-summarize-files (files)
-  "Insert a description of a list of files annotated with proper mouse face"
+  "Insert a description of a list of files annotated with proper mouse face."
   (setq archive-file-list-start (point-marker))
   (setq archive-file-name-indent (if files (aref (car files) 1) 0))
   ;; We don't want to do an insert for each element since that takes too
@@ -737,8 +830,9 @@ This function changes the set of information shown for each files."
           (make-local-variable 'local-write-file-hooks)
           (add-hook 'local-write-file-hooks 'archive-write-file-member)
           (setq archive-subfile-mode descr)
-	  (setq archive-subfile-dos nil
-		buffer-file-type t)
+	  (setq archive-subfile-dos nil)
+	  (if (boundp 'default-buffer-file-type)
+	      (setq buffer-file-type t))
 	  (if (fboundp extractor)
 	      (funcall extractor archive ename)
 	    (archive-*-extract archive ename (symbol-value extractor)))
@@ -756,9 +850,7 @@ This function changes the set of information shown for each files."
 	  (run-hooks 'archive-extract-hooks))
 	(archive-maybe-update t))
       (if view-p
-          (progn
-            (view-buffer buffer)
-            (and just-created (setq view-exit-action 'kill-buffer)))
+	  (view-buffer buffer (and just-created 'kill-buffer))
         (if (eq other-window-p 'display)
             (display-buffer buffer)
           (if other-window-p
@@ -852,7 +944,8 @@ This function changes the set of information shown for each files."
       (goto-char (point-min))
       (setq archive-subfile-dos
 	    (or force (not (search-forward-regexp "[^\r]\n" nil t))))
-      (setq buffer-file-type (not archive-subfile-dos))
+      (if (boundp 'default-buffer-file-type)
+	  (setq buffer-file-type (not archive-subfile-dos)))
       (if archive-subfile-dos
           (let ((modified (buffer-modified-p)))
             (buffer-disable-undo (current-buffer))
@@ -876,7 +969,8 @@ This function changes the set of information shown for each files."
                   (while (search-forward "\n" nil t)
                     (replace-match "\r\n"))
                   (setq archive-subfile-dos nil)
-                  (setq buffer-file-type t)
+		  (if (boundp 'default-buffer-file-type)
+		      (setq buffer-file-type t))
                   ;; OK, we're now have explicit ^M^Js -- save and re-unixfy
                   (archive-write-file-member))
               (progn

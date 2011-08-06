@@ -1,1192 +1,1429 @@
+\initial {%}
+\entry {%}{12}
+\initial {(}
+\entry {(ding) archive}{18}
 \initial {*}
-\entry {*}{15}
+\entry {*}{12}
 \initial {.}
 \entry {.newsrc}{8}
+\entry {.newsrc.el}{8}
+\entry {.newsrc.eld}{8}
 \initial {{\tt\gtr}}
-\entry {{\tt\gtr}}{49}
+\entry {>}{44}
 \initial {{\tt\less}}
-\entry {{\tt\less}}{49}
+\entry {<}{44}
 \initial {1}
-\entry {1153 digest}{117}
+\entry {1153 digest}{106}
 \initial {A}
-\entry {activating groups}{32}
-\entry {active file}{9, 173}
-\entry {adaptive scoring}{134}
-\entry {adopting articles}{51}
-\entry {ange-ftp}{32}
-\entry {archived messages}{89}
-\entry {article}{172}
-\entry {article backlog}{57}
-\entry {article buffer}{81}
-\entry {article caching}{55}
-\entry {article customization}{83}
-\entry {article expiry}{108}
-\entry {article hiding}{67}
-\entry {article marking}{44}
-\entry {article scrolling}{41}
-\entry {article threading}{49}
-\entry {article ticking}{44}
-\entry {article washing}{69}
-\entry {asynchronous article fetching}{54}
-\entry {authentification}{98}
-\entry {authinfo}{98}
-\entry {auto-expire}{23}
+\entry {activating groups}{29}
+\entry {active file}{9, 170}
+\entry {adapt file group parameter}{20}
+\entry {adaptive scoring}{126}
+\entry {adopting articles}{46}
+\entry {Alta Vista}{19, 112}
+\entry {ange-ftp}{29}
+\entry {archive group}{18}
+\entry {archived messages}{82}
+\entry {article}{169}
+\entry {article backlog}{52}
+\entry {article buffer}{77}
+\entry {article caching}{50}
+\entry {article customization}{79}
+\entry {article emphasis}{60}
+\entry {article expiry}{99}
+\entry {article hiding}{61}
+\entry {article marking}{39}
+\entry {article pre-fetch}{49}
+\entry {article scrolling}{36}
+\entry {article signature}{64}
+\entry {article threading}{44}
+\entry {article ticking}{39}
+\entry {article washing}{62}
+\entry {article-de-quoted-unreadable}{101}
+\entry {article-decode-rfc1522}{95}
+\entry {asynchronous article fetching}{49}
+\entry {authentification}{89}
+\entry {authinfo}{89}
+\entry {auto-expire}{20}
 \entry {auto-save}{9}
 \initial {B}
-\entry {babyl}{117}
-\entry {backend}{172}
-\entry {backlog}{57}
-\entry {bbb-summary-rate-article}{141}
-\entry {binary groups}{74}
-\entry {body}{172}
-\entry {bogus groups}{27, 173}
-\entry {bookmarks}{45}
-\entry {bouncing mail}{42}
-\entry {broken-reply-to}{23}
-\entry {browsing servers}{27}
-\entry {bugs}{167, 176}
-\entry {buttons}{70, 154}
-\entry {byte-compilation}{151}
+\entry {babyl}{106}
+\entry {backend}{169}
+\entry {backlog}{52}
+\entry {bbb-summary-rate-article}{133}
+\entry {binary groups}{67}
+\entry {body}{169}
+\entry {bogus groups}{23, 170}
+\entry {bookmarks}{40}
+\entry {bouncing mail}{37}
+\entry {broken-reply-to}{20}
+\entry {browsing servers}{24}
+\entry {bugs}{160, 173}
+\entry {buttons}{63, 147}
+\entry {byte-compilation}{145}
 \initial {C}
-\entry {caching}{55}
-\entry {canceling articles}{43}
-\entry {CancelMoose[tm]}{157}
-\entry {characters in file names}{161}
-\entry {Chris Lewis}{157}
-\entry {ClariNet Briefs}{22}
-\entry {click}{154}
-\entry {compatibility}{166}
-\entry {compilation}{151}
-\entry {composing mail}{41}
-\entry {composing news}{42}
-\entry {contributors}{169}
-\entry {copy mail}{76}
-\entry {cross-posting}{80}
-\entry {crosspost}{103}
-\entry {crosspost mail}{76}
-\entry {crossposts}{136}
-\entry {customizing threading}{49}
+\entry {caching}{50}
+\entry {canceling articles}{39}
+\entry {CancelMoose[tm]}{149}
+\entry {changing servers}{7}
+\entry {characters in file names}{156}
+\entry {Chris Lewis}{149}
+\entry {ClariNet Briefs}{19}
+\entry {click}{147}
+\entry {colophon}{168}
+\entry {compatibility}{160}
+\entry {compilation}{145}
+\entry {composing mail}{37}
+\entry {composing news}{38}
+\entry {contributors}{161}
+\entry {converting kill files}{132}
+\entry {copy mail}{70}
+\entry {cross-posting}{74}
+\entry {crosspost}{94}
+\entry {crosspost mail}{70}
+\entry {crossposting}{38}
+\entry {crossposts}{129}
+\entry {customizing}{18}
+\entry {customizing threading}{44}
 \initial {D}
-\entry {daemons}{155}
-\entry {decoding articles}{61}
-\entry {delete-file}{105}
-\entry {deleting headers}{81}
-\entry {deleting incoming files}{105}
-\entry {demons}{155}
-\entry {describing groups}{32}
-\entry {digest}{117}
-\entry {ding mailing list}{176}
-\entry {directory groups}{115}
-\entry {disk space}{175}
-\entry {display-time}{152}
-\entry {documentation group}{117}
+\entry {daemons}{148}
+\entry {date}{123}
+\entry {decays}{137}
+\entry {decoding articles}{55}
+\entry {DejaNews}{19, 112}
+\entry {delete-file}{96}
+\entry {deleting headers}{77}
+\entry {deleting incoming files}{96}
+\entry {demons}{148}
+\entry {describing groups}{29}
+\entry {digest}{106}
+\entry {ding mailing list}{173}
+\entry {directory groups}{105}
+\entry {disk space}{172}
+\entry {display-time}{145}
+\entry {documentation group}{106}
 \entry {dribble file}{9}
-\entry {duplicate mails}{110}
-\entry {dynamic IP addresses}{99}
+\entry {duplicate mails}{101}
+\entry {dynamic IP addresses}{90}
 \initial {E}
-\entry {elm}{106}
-\entry {Emacs}{168}
-\entry {Emacsen}{168, 191}
-\entry {exiting Gnus}{28}
-\entry {exiting groups}{78}
-\entry {expirable mark}{44}
-\entry {expiry-wait}{24}
+\entry {elm}{97}
+\entry {Emacs}{161}
+\entry {Emacsen}{161, 189}
+\entry {email spam}{154}
+\entry {emphasis}{60}
+\entry {ephemeral groups}{170}
+\entry {excessive crossposting}{38}
+\entry {exiting Gnus}{24}
+\entry {exiting groups}{72}
+\entry {expirable mark}{40}
+\entry {expiry-wait}{20}
 \initial {F}
-\entry {fancy mail splitting}{105}
-\entry {FAQ}{32}
-\entry {file commands}{33}
-\entry {file names}{161}
+\entry {fancy mail splitting}{96}
+\entry {FAQ}{29}
+\entry {fetching a group}{5}
+\entry {fetching by Message-ID}{66}
+\entry {file commands}{30}
+\entry {file names}{156}
+\entry {finding news}{3}
 \entry {first time usage}{4}
-\entry {follow up}{172}
-\entry {followup}{87}
-\entry {foreign}{172}
-\entry {foreign groups}{93}
-\entry {foreign servers}{27}
-\entry {formatting variables}{146}
-\entry {forwarded messages}{117}
-\entry {fuzzy article gathering}{50}
+\entry {follow up}{169}
+\entry {followup}{81}
+\entry {foreign}{169}
+\entry {foreign groups}{18, 85}
+\entry {foreign servers}{24}
+\entry {format-time-string}{64}
+\entry {formatting variables}{140}
+\entry {forwarded messages}{106}
+\entry {functions}{173}
+\entry {fuzzy article gathering}{45}
+\entry {fuzzy matching}{154}
 \initial {G}
-\entry {Gcc}{89}
-\entry {general customization}{173}
-\entry {global score files}{138}
-\entry {gnu.emacs.gnus}{176}
+\entry {gateways}{113}
+\entry {Gcc}{82}
+\entry {gcc-self}{20}
+\entry {general customization}{171}
+\entry {global score files}{130}
+\entry {gnu.emacs.gnus}{173}
 \entry {gnus}{3}
-\entry {gnus-activate-all-groups}{32}
-\entry {gnus-activate-foreign-newsgroups}{22}
-\entry {gnus-activate-level}{20}
-\entry {gnus-adaptive-file-suffix}{136}
-\entry {gnus-add-configuration}{151}
-\entry {gnus-after-getting-new-news-hook}{32}
-\entry {gnus-ancient-mark}{44}
-\entry {gnus-apply-kill-file}{140}
-\entry {gnus-apply-kill-file-unless-scored}{140}
-\entry {gnus-apply-kill-hook}{140}
-\entry {gnus-article-add-buttons}{69}
-\entry {gnus-article-add-buttons-to-head}{69}
-\entry {gnus-article-button-face}{70}
-\entry {gnus-article-date-lapsed}{71}
-\entry {gnus-article-date-local}{71}
-\entry {gnus-article-date-original}{71}
-\entry {gnus-article-date-ut}{71}
-\entry {gnus-article-de-quoted-unreadable}{69}
-\entry {gnus-article-describe-briefly}{84}
-\entry {gnus-article-display-hook}{82, 83, 85, 159}
-\entry {gnus-article-display-picons}{159, 160}
-\entry {gnus-article-display-x-face}{69}
-\entry {gnus-article-fill-cited-article}{69}
-\entry {gnus-article-hide}{67}
-\entry {gnus-article-hide-boring-headers}{68, 82}
-\entry {gnus-article-hide-citation}{68}
-\entry {gnus-article-hide-citation-in-followups}{68}
-\entry {gnus-article-hide-headers}{67}
-\entry {gnus-article-hide-pgp}{68}
-\entry {gnus-article-hide-signature}{68}
-\entry {gnus-article-highlight}{66}
-\entry {gnus-article-highlight-citation}{66}
-\entry {gnus-article-highlight-headers}{66}
-\entry {gnus-article-highlight-signature}{67}
-\entry {gnus-article-mail}{84}
-\entry {gnus-article-maybe-highlight}{83}
-\entry {gnus-article-menu-hook}{154}
-\entry {gnus-article-mode-hook}{85}
-\entry {gnus-article-mode-line-format}{85}
-\entry {gnus-article-mouse-face}{71}
-\entry {gnus-article-next-button}{84}
-\entry {gnus-article-next-page}{84}
-\entry {gnus-article-prepare-hook}{84}
-\entry {gnus-article-prev-button}{84}
-\entry {gnus-article-prev-page}{84}
-\entry {gnus-article-refer-article}{84}
-\entry {gnus-article-remove-cr}{69}
-\entry {gnus-article-remove-trailing-blank-lines}{69}
-\entry {gnus-article-save-directory}{59}
-\entry {gnus-article-show-summary}{84}
-\entry {gnus-article-sort-by-author}{54}
-\entry {gnus-article-sort-by-date}{54}
-\entry {gnus-article-sort-by-number}{54}
-\entry {gnus-article-sort-by-score}{54}
-\entry {gnus-article-sort-by-subject}{54}
-\entry {gnus-article-sort-functions}{54}
-\entry {gnus-article-treat-overstrike}{69}
-\entry {gnus-article-x-face-command}{69}
-\entry {gnus-article-x-face-too-ugly}{69}
-\entry {gnus-asynchronous}{55}
-\entry {gnus-asynchronous-article-function}{55}
-\entry {gnus-auto-center-summary}{39}
-\entry {gnus-auto-expirable-newsgroups}{109}
-\entry {gnus-auto-extend-newsgroup}{40}
-\entry {gnus-auto-select-first}{17}
-\entry {gnus-auto-select-next}{39}
-\entry {gnus-auto-select-same}{39}
+\entry {Gnus utility functions}{173}
+\entry {gnus-activate-all-groups}{29}
+\entry {gnus-activate-foreign-newsgroups}{19}
+\entry {gnus-activate-level}{17}
+\entry {gnus-adaptive-file-suffix}{127}
+\entry {gnus-adaptive-word-syntax-table}{127}
+\entry {gnus-add-configuration}{144}
+\entry {gnus-add-current-to-buffer-list}{174}
+\entry {gnus-add-to-list}{81}
+\entry {gnus-after-getting-new-news-hook}{29}
+\entry {gnus-always-force-window-configuration}{145}
+\entry {gnus-ancient-mark}{40}
+\entry {gnus-apply-kill-file}{132}
+\entry {gnus-apply-kill-file-unless-scored}{132}
+\entry {gnus-apply-kill-hook}{132}
+\entry {gnus-article-add-buttons}{62}
+\entry {gnus-article-add-buttons-to-head}{62}
+\entry {gnus-article-button-face}{64}
+\entry {gnus-article-date-lapsed}{64}
+\entry {gnus-article-date-local}{64}
+\entry {gnus-article-date-original}{64}
+\entry {gnus-article-date-user}{64}
+\entry {gnus-article-date-ut}{64}
+\entry {gnus-article-de-quoted-unreadable}{62}
+\entry {gnus-article-describe-briefly}{79}
+\entry {gnus-article-display-hook}{78, 79, 80, 151}
+\entry {gnus-article-display-picons}{151, 152}
+\entry {gnus-article-display-x-face}{62}
+\entry {gnus-article-emphasis}{60}
+\entry {gnus-article-emphasize}{60}
+\entry {gnus-article-fill-cited-article}{62}
+\entry {gnus-article-hide}{61}
+\entry {gnus-article-hide-boring-headers}{61, 78}
+\entry {gnus-article-hide-citation}{61}
+\entry {gnus-article-hide-citation-in-followups}{61}
+\entry {gnus-article-hide-headers}{61}
+\entry {gnus-article-hide-pem}{61}
+\entry {gnus-article-hide-pgp}{61}
+\entry {gnus-article-hide-signature}{61}
+\entry {gnus-article-highlight}{59}
+\entry {gnus-article-highlight-citation}{59}
+\entry {gnus-article-highlight-headers}{59}
+\entry {gnus-article-highlight-signature}{60}
+\entry {gnus-article-mail}{79}
+\entry {gnus-article-maybe-highlight}{79}
+\entry {gnus-article-menu-hook}{147}
+\entry {gnus-article-mode-hook}{80}
+\entry {gnus-article-mode-line-format}{80}
+\entry {gnus-article-mode-syntax-table}{80}
+\entry {gnus-article-mouse-face}{64}
+\entry {gnus-article-next-button}{79}
+\entry {gnus-article-next-page}{79}
+\entry {gnus-article-prepare-hook}{79}
+\entry {gnus-article-prev-button}{79}
+\entry {gnus-article-prev-page}{79}
+\entry {gnus-article-refer-article}{79}
+\entry {gnus-article-remove-cr}{62}
+\entry {gnus-article-remove-trailing-blank-lines}{63}
+\entry {gnus-article-save-directory}{53}
+\entry {gnus-article-show-summary}{79}
+\entry {gnus-article-sort-by-author}{49}
+\entry {gnus-article-sort-by-date}{49}
+\entry {gnus-article-sort-by-number}{49}
+\entry {gnus-article-sort-by-score}{49}
+\entry {gnus-article-sort-by-subject}{49}
+\entry {gnus-article-sort-functions}{49}
+\entry {gnus-article-strip-blank-lines}{63}
+\entry {gnus-article-strip-leading-blank-lines}{62}
+\entry {gnus-article-strip-leading-space}{63}
+\entry {gnus-article-strip-multiple-blank-lines}{63}
+\entry {gnus-article-time-format}{64}
+\entry {gnus-article-treat-overstrike}{62}
+\entry {gnus-article-x-face-command}{62}
+\entry {gnus-article-x-face-too-ugly}{62}
+\entry {gnus-async-prefetch-article-p}{50}
+\entry {gnus-async-read-p}{50}
+\entry {gnus-asynchronous}{49}
+\entry {gnus-auto-center-summary}{35}
+\entry {gnus-auto-expirable-newsgroups}{99}
+\entry {gnus-auto-extend-newsgroup}{36}
+\entry {gnus-auto-select-first}{15}
+\entry {gnus-auto-select-next}{34}
+\entry {gnus-auto-select-same}{35}
 \entry {gnus-auto-subscribed-groups}{7}
-\entry {gnus-background-mode}{154}
-\entry {gnus-binary-mode}{74}
-\entry {gnus-binary-mode-hook}{74}
-\entry {gnus-binary-show-article}{74}
-\entry {gnus-boring-article-headers}{82}
-\entry {gnus-break-pages}{85}
-\entry {gnus-browse-describe-briefly}{28}
-\entry {gnus-browse-exit}{27}
-\entry {gnus-browse-menu-hook}{154}
-\entry {gnus-browse-mode}{27}
-\entry {gnus-browse-read-group}{27}
-\entry {gnus-browse-select-group}{27}
-\entry {gnus-browse-unsubscribe-current-group}{27}
-\entry {gnus-buffer-configuration}{148}
-\entry {gnus-bug}{167, 176}
-\entry {gnus-build-sparse-threads}{49}
-\entry {gnus-button-alist}{70}
-\entry {gnus-button-url-regexp}{70}
-\entry {gnus-cache-active-file}{56}
-\entry {gnus-cache-directory}{56}
-\entry {gnus-cache-enter-article}{57}
-\entry {gnus-cache-enter-articles}{56}
-\entry {gnus-cache-generate-active}{56}
-\entry {gnus-cache-generate-nov-databases}{56}
-\entry {gnus-cache-remove-article}{57}
-\entry {gnus-cache-remove-articles}{56}
-\entry {gnus-cached-mark}{45}
-\entry {gnus-canceled-mark}{45}
-\entry {gnus-carpal}{154}
-\entry {gnus-carpal-browse-buffer-buttons}{155}
-\entry {gnus-carpal-button-face}{155}
-\entry {gnus-carpal-group-buffer-buttons}{155}
-\entry {gnus-carpal-header-face}{155}
-\entry {gnus-carpal-mode-hook}{154}
-\entry {gnus-carpal-server-buffer-buttons}{155}
-\entry {gnus-carpal-summary-buffer-buttons}{155}
-\entry {gnus-catchup-mark}{45}
-\entry {gnus-check-bogus-newsgroups}{11}
-\entry {gnus-check-new-newsgroups}{7}
-\entry {gnus-cite-attribution-face}{67}
-\entry {gnus-cite-attribution-prefix}{67}
-\entry {gnus-cite-attribution-suffix}{67}
-\entry {gnus-cite-face-list}{67}
-\entry {gnus-cite-hide-absolute}{68}
-\entry {gnus-cite-hide-percentage}{68}
-\entry {gnus-cite-max-prefix}{67}
-\entry {gnus-cite-minimum-match-count}{67}
-\entry {gnus-cite-parse-max-size}{66}
-\entry {gnus-cite-prefix-regexp}{67}
-\entry {gnus-cited-lines-visible}{68}
-\entry {gnus-cited-text-button-line-format}{68}
-\entry {gnus-compile}{151}
-\entry {gnus-configure-frame}{150}
-\entry {gnus-dead-summary-mode}{79}
-\entry {gnus-default-adaptive-score-alist}{134}
-\entry {gnus-default-article-saver}{58}
+\entry {gnus-binary-mode}{67}
+\entry {gnus-binary-mode-hook}{67}
+\entry {gnus-binary-show-article}{67}
+\entry {gnus-boring-article-headers}{78}
+\entry {gnus-break-pages}{80}
+\entry {gnus-browse-describe-briefly}{24}
+\entry {gnus-browse-exit}{24}
+\entry {gnus-browse-menu-hook}{147}
+\entry {gnus-browse-mode}{24}
+\entry {gnus-browse-read-group}{24}
+\entry {gnus-browse-select-group}{24}
+\entry {gnus-browse-unsubscribe-current-group}{24}
+\entry {gnus-buffer-configuration}{142}
+\entry {gnus-bug}{160, 173}
+\entry {gnus-build-sparse-threads}{44}
+\entry {gnus-button-alist}{63}
+\entry {gnus-button-url-regexp}{64}
+\entry {gnus-cache-active-file}{51}
+\entry {gnus-cache-directory}{50}
+\entry {gnus-cache-enter-article}{51}
+\entry {gnus-cache-enter-articles}{50}
+\entry {gnus-cache-generate-active}{51}
+\entry {gnus-cache-generate-nov-databases}{51}
+\entry {gnus-cache-remove-article}{51}
+\entry {gnus-cache-remove-articles}{50}
+\entry {gnus-cached-mark}{41}
+\entry {gnus-canceled-mark}{40}
+\entry {gnus-carpal}{147}
+\entry {gnus-carpal-browse-buffer-buttons}{148}
+\entry {gnus-carpal-button-face}{147}
+\entry {gnus-carpal-group-buffer-buttons}{147}
+\entry {gnus-carpal-header-face}{147}
+\entry {gnus-carpal-mode-hook}{147}
+\entry {gnus-carpal-server-buffer-buttons}{148}
+\entry {gnus-carpal-summary-buffer-buttons}{147}
+\entry {gnus-catchup-mark}{40}
+\entry {gnus-change-server}{7}
+\entry {gnus-check-backend-function}{174}
+\entry {gnus-check-bogus-newsgroups}{10}
+\entry {gnus-check-new-newsgroups}{5}
+\entry {gnus-cite-attribution-face}{60}
+\entry {gnus-cite-attribution-prefix}{60}
+\entry {gnus-cite-attribution-suffix}{60}
+\entry {gnus-cite-face-list}{59}
+\entry {gnus-cite-hide-absolute}{61}
+\entry {gnus-cite-hide-percentage}{61}
+\entry {gnus-cite-max-prefix}{59}
+\entry {gnus-cite-minimum-match-count}{60}
+\entry {gnus-cite-parse-max-size}{59}
+\entry {gnus-cite-prefix-regexp}{59}
+\entry {gnus-cited-lines-visible}{61}
+\entry {gnus-cited-text-button-line-format}{61}
+\entry {gnus-compile}{145}
+\entry {gnus-configure-frame}{143}
+\entry {gnus-continuum-version}{174}
+\entry {gnus-crosspost-complaint}{38}
+\entry {gnus-dead-summary-mode}{73}
+\entry {gnus-decay-score}{137}
+\entry {gnus-decay-scores}{137}
+\entry {gnus-default-adaptive-score-alist}{126}
+\entry {gnus-default-adaptive-word-score-alist}{127}
+\entry {gnus-default-article-saver}{53}
+\entry {gnus-default-directory}{156}
+\entry {gnus-default-ignored-adaptive-words}{127}
 \entry {gnus-default-subscribed-newsgroups}{4}
-\entry {gnus-del-mark}{44}
-\entry {gnus-demon-add-disconnection}{156}
-\entry {gnus-demon-add-handler}{156}
-\entry {gnus-demon-add-nocem}{156}
-\entry {gnus-demon-add-scanmail}{156}
-\entry {gnus-demon-cancel}{156}
-\entry {gnus-demon-handlers}{156}
-\entry {gnus-demon-init}{156}
-\entry {gnus-demon-timestep}{156}
-\entry {gnus-display-type}{153}
-\entry {gnus-dormant-mark}{44}
+\entry {gnus-del-mark}{40}
+\entry {gnus-demon-add-disconnection}{148}
+\entry {gnus-demon-add-handler}{148}
+\entry {gnus-demon-add-nocem}{148}
+\entry {gnus-demon-add-rescan}{148}
+\entry {gnus-demon-add-scanmail}{148}
+\entry {gnus-demon-cancel}{148}
+\entry {gnus-demon-handlers}{148}
+\entry {gnus-demon-init}{148}
+\entry {gnus-demon-timestep}{148}
+\entry {gnus-directory}{155}
+\entry {gnus-dormant-mark}{40}
 \entry {gnus-dribble-directory}{9}
-\entry {gnus-empty-thread-mark}{45}
-\entry {gnus-exit-gnus-hook}{28}
-\entry {gnus-exit-group-hook}{79}
-\entry {gnus-expert-user}{146}
-\entry {gnus-expirable-mark}{45}
-\entry {gnus-extract-address-components}{35}
-\entry {gnus-fetch-group}{6}
-\entry {gnus-fetch-old-headers}{49}
-\entry {gnus-file-save-name}{59}
-\entry {gnus-find-new-newsgroups}{27}
-\entry {gnus-folder-save-name}{59}
-\entry {gnus-Folder-save-name}{59}
-\entry {gnus-gather-threads-by-references}{51}
-\entry {gnus-gather-threads-by-subject}{51}
-\entry {gnus-generate-horizontal-tree}{75}
-\entry {gnus-generate-tree-function}{75}
-\entry {gnus-generate-vertical-tree}{75}
-\entry {gnus-get-new-news-hook}{32}
-\entry {gnus-global-score-files}{138}
-\entry {gnus-goto-next-group-when-activating}{32}
-\entry {gnus-group-add-to-virtual}{22}
-\entry {gnus-group-apropos}{25}
-\entry {gnus-group-archive-directory}{22}
-\entry {gnus-group-best-unread-group}{16}
-\entry {gnus-group-brew-soup}{119}
-\entry {gnus-group-browse-foreign-server}{4, 27}
-\entry {gnus-group-catchup-current}{17}
-\entry {gnus-group-catchup-current-all}{17}
-\entry {gnus-group-catchup-group-hook}{17}
-\entry {gnus-group-check-bogus-groups}{27}
-\entry {gnus-group-default-list-level}{19}
-\entry {gnus-group-delete-group}{22}
-\entry {gnus-group-describe-all-groups}{33}
-\entry {gnus-group-describe-briefly}{33}
-\entry {gnus-group-describe-group}{32}
-\entry {gnus-group-description-apropos}{25}
-\entry {gnus-group-edit-global-kill}{140}
-\entry {gnus-group-edit-group}{21}
-\entry {gnus-group-edit-group-method}{21}
-\entry {gnus-group-edit-group-parameters}{21}
-\entry {gnus-group-edit-local-kill}{140}
-\entry {gnus-group-enter-directory}{22}
-\entry {gnus-group-enter-server-mode}{31}
-\entry {gnus-group-exit}{28}
-\entry {gnus-group-expire-all-groups}{27}
-\entry {gnus-group-expire-articles}{27}
-\entry {gnus-group-faq-directory}{77}
-\entry {gnus-group-fetch-faq}{32}
-\entry {gnus-group-first-unread-group}{17}
-\entry {gnus-group-get-new-news}{32}
-\entry {gnus-group-get-new-news-this-group}{32}
-\entry {gnus-group-goto-unread}{17}
-\entry {gnus-group-highlight}{15}
-\entry {gnus-group-highlight-line}{16}
-\entry {gnus-group-jump-to-group}{16}
-\entry {gnus-group-kill-all-zombies}{18}
-\entry {gnus-group-kill-group}{18}
-\entry {gnus-group-kill-level}{18}
-\entry {gnus-group-kill-region}{18}
-\entry {gnus-group-line-format}{13}
-\entry {gnus-group-list-active}{25}
-\entry {gnus-group-list-all-groups}{25}
-\entry {gnus-group-list-all-matching}{25}
-\entry {gnus-group-list-groups}{25}
-\entry {gnus-group-list-inactive-groups}{19}
-\entry {gnus-group-list-killed}{25}
-\entry {gnus-group-list-level}{25}
-\entry {gnus-group-list-matching}{25}
-\entry {gnus-group-list-zombies}{25}
-\entry {gnus-group-mail}{31}
-\entry {gnus-group-make-archive-group}{22}
-\entry {gnus-group-make-directory-group}{21}
-\entry {gnus-group-make-doc-group}{22}
-\entry {gnus-group-make-empty-virtual}{22}
-\entry {gnus-group-make-group}{21}
-\entry {gnus-group-make-help-group}{21}
-\entry {gnus-group-make-kiboze-group}{22}
-\entry {gnus-group-mark-buffer}{21}
-\entry {gnus-group-mark-group}{21}
-\entry {gnus-group-mark-regexp}{21}
-\entry {gnus-group-mark-region}{21}
-\entry {gnus-group-menu-hook}{154}
-\entry {gnus-group-mode-hook}{32}
-\entry {gnus-group-mode-line-format}{15}
-\entry {gnus-group-next-group}{16, 27}
-\entry {gnus-group-next-unread-group}{16}
-\entry {gnus-group-next-unread-group-same-level}{16}
-\entry {gnus-group-post-news}{31}
-\entry {gnus-group-prepare-hook}{32}
-\entry {gnus-group-prev-group}{16, 27}
-\entry {gnus-group-prev-unread-group}{16}
-\entry {gnus-group-prev-unread-group-same-level}{16}
-\entry {gnus-group-quick-select-group}{17}
-\entry {gnus-group-quit}{28}
-\entry {gnus-group-read-group}{17}
-\entry {gnus-group-read-init-file}{33}
-\entry {gnus-group-recent-archive-directory}{22}
-\entry {gnus-group-rename-group}{21}
-\entry {gnus-group-restart}{32}
-\entry {gnus-group-save-newsrc}{33}
-\entry {gnus-group-select-group}{17}
-\entry {gnus-group-set-current-level}{19}
-\entry {gnus-group-sort-by-alphabet}{26}
-\entry {gnus-group-sort-by-level}{26}
-\entry {gnus-group-sort-by-method}{26}
-\entry {gnus-group-sort-by-rank}{26}
-\entry {gnus-group-sort-by-score}{26}
-\entry {gnus-group-sort-by-unread}{26}
-\entry {gnus-group-sort-function}{26}
-\entry {gnus-group-sort-groups}{26}
-\entry {gnus-group-sort-groups-by-alphabet}{26}
-\entry {gnus-group-sort-groups-by-level}{26}
-\entry {gnus-group-sort-groups-by-method}{26}
-\entry {gnus-group-sort-groups-by-rank}{26}
-\entry {gnus-group-sort-groups-by-score}{26}
-\entry {gnus-group-sort-groups-by-unread}{26}
-\entry {gnus-group-suspend}{28}
-\entry {gnus-group-transpose-groups}{18}
-\entry {gnus-group-uncollapsed-levels}{14}
-\entry {gnus-group-universal-argument}{21}
-\entry {gnus-group-unmark-all-groups}{21}
-\entry {gnus-group-unmark-group}{21}
-\entry {gnus-group-unsubscribe-current-group}{18}
-\entry {gnus-group-unsubscribe-group}{18}
-\entry {gnus-group-update-hook}{16}
-\entry {gnus-group-use-permanent-levels}{20}
-\entry {gnus-group-visible-select-group}{17}
-\entry {gnus-group-yank-group}{18}
-\entry {gnus-grouplens-override-scoring}{142}
-\entry {gnus-header-button-alist}{70}
-\entry {gnus-header-face-alist}{66}
-\entry {gnus-hidden-properties}{161}
-\entry {gnus-ignored-headers}{81}
+\entry {gnus-duplicate-file}{75}
+\entry {gnus-duplicate-list-length}{75}
+\entry {gnus-duplicate-mark}{40}
+\entry {gnus-emphasis-bold}{60}
+\entry {gnus-emphasis-bold-italic}{60}
+\entry {gnus-emphasis-italic}{60}
+\entry {gnus-emphasis-underline}{60}
+\entry {gnus-emphasis-underline-bold}{60}
+\entry {gnus-emphasis-underline-bold-italic}{60}
+\entry {gnus-emphasis-underline-italic}{60}
+\entry {gnus-empty-thread-mark}{41}
+\entry {gnus-ephemeral-group-p}{174}
+\entry {gnus-exit-gnus-hook}{24}
+\entry {gnus-exit-group-hook}{73}
+\entry {gnus-expert-user}{139}
+\entry {gnus-expirable-mark}{40}
+\entry {gnus-extract-address-components}{31}
+\entry {gnus-fetch-group}{5}
+\entry {gnus-fetch-old-headers}{44}
+\entry {gnus-file-save-name}{53}
+\entry {gnus-find-method-for-group}{173}
+\entry {gnus-find-new-newsgroups}{23}
+\entry {gnus-folder-save-name}{53}
+\entry {gnus-Folder-save-name}{53}
+\entry {gnus-gather-threads-by-references}{46}
+\entry {gnus-gather-threads-by-subject}{46}
+\entry {gnus-generate-horizontal-tree}{69}
+\entry {gnus-generate-tree-function}{69}
+\entry {gnus-generate-vertical-tree}{69}
+\entry {gnus-get-info}{174}
+\entry {gnus-get-new-news-hook}{29}
+\entry {gnus-global-score-files}{130}
+\entry {gnus-goto-next-group-when-activating}{29}
+\entry {gnus-group-add-to-virtual}{19}
+\entry {gnus-group-apropos}{22}
+\entry {gnus-group-archive-directory}{18}
+\entry {gnus-group-best-unread-group}{14}
+\entry {gnus-group-brew-soup}{110}
+\entry {gnus-group-browse-foreign-server}{3, 24}
+\entry {gnus-group-catchup-current}{16}
+\entry {gnus-group-catchup-current-all}{16}
+\entry {gnus-group-catchup-group-hook}{16}
+\entry {gnus-group-check-bogus-groups}{23}
+\entry {gnus-group-clear-data}{16}
+\entry {gnus-group-clear-data-on-native-groups}{7, 16}
+\entry {gnus-group-customize}{18}
+\entry {gnus-group-default-list-level}{17}
+\entry {gnus-group-delete-group}{19}
+\entry {gnus-group-describe-all-groups}{29}
+\entry {gnus-group-describe-briefly}{30}
+\entry {gnus-group-describe-group}{29}
+\entry {gnus-group-description-apropos}{22}
+\entry {gnus-group-edit-global-kill}{131}
+\entry {gnus-group-edit-group}{18}
+\entry {gnus-group-edit-group-method}{18}
+\entry {gnus-group-edit-group-parameters}{18}
+\entry {gnus-group-edit-local-kill}{131}
+\entry {gnus-group-enter-directory}{18}
+\entry {gnus-group-enter-server-mode}{28}
+\entry {gnus-group-exit}{24}
+\entry {gnus-group-expire-all-groups}{24}
+\entry {gnus-group-expire-articles}{23}
+\entry {gnus-group-faq-directory}{29, 71}
+\entry {gnus-group-fetch-faq}{29}
+\entry {gnus-group-first-unread-group}{14}
+\entry {gnus-group-foreign-p}{174}
+\entry {gnus-group-get-new-news}{29}
+\entry {gnus-group-get-new-news-this-group}{29}
+\entry {gnus-group-goto-unread}{14}
+\entry {gnus-group-highlight}{12}
+\entry {gnus-group-highlight-line}{13}
+\entry {gnus-group-jump-to-group}{14}
+\entry {gnus-group-kill-all-zombies}{15}
+\entry {gnus-group-kill-group}{15}
+\entry {gnus-group-kill-level}{15}
+\entry {gnus-group-kill-region}{15}
+\entry {gnus-group-line-format}{11}
+\entry {gnus-group-list-active}{22}
+\entry {gnus-group-list-all-groups}{21}
+\entry {gnus-group-list-all-matching}{22}
+\entry {gnus-group-list-groups}{21}
+\entry {gnus-group-list-inactive-groups}{17}
+\entry {gnus-group-list-killed}{22}
+\entry {gnus-group-list-level}{22}
+\entry {gnus-group-list-matching}{22}
+\entry {gnus-group-list-zombies}{22}
+\entry {gnus-group-mail}{28}
+\entry {gnus-group-make-archive-group}{18}
+\entry {gnus-group-make-directory-group}{18}
+\entry {gnus-group-make-doc-group}{19}
+\entry {gnus-group-make-empty-virtual}{19}
+\entry {gnus-group-make-group}{18}
+\entry {gnus-group-make-help-group}{18}
+\entry {gnus-group-make-kiboze-group}{18}
+\entry {gnus-group-make-web-group}{19}
+\entry {gnus-group-mark-buffer}{18}
+\entry {gnus-group-mark-group}{17}
+\entry {gnus-group-mark-regexp}{18}
+\entry {gnus-group-mark-region}{18}
+\entry {gnus-group-menu-hook}{147}
+\entry {gnus-group-mode-hook}{29}
+\entry {gnus-group-mode-line-format}{12}
+\entry {gnus-group-move-group-to-server}{7}
+\entry {gnus-group-native-p}{174}
+\entry {gnus-group-next-group}{13, 24}
+\entry {gnus-group-next-unread-group}{13}
+\entry {gnus-group-next-unread-group-same-level}{14}
+\entry {gnus-group-post-news}{28}
+\entry {gnus-group-prefixed-name}{174}
+\entry {gnus-group-prepare-hook}{29}
+\entry {gnus-group-prev-group}{13, 24}
+\entry {gnus-group-prev-unread-group}{13}
+\entry {gnus-group-prev-unread-group-same-level}{14}
+\entry {gnus-group-quick-select-group}{14}
+\entry {gnus-group-quit}{24}
+\entry {gnus-group-read-group}{14}
+\entry {gnus-group-read-init-file}{30}
+\entry {gnus-group-read-only-p}{174}
+\entry {gnus-group-real-name}{173}
+\entry {gnus-group-recent-archive-directory}{18}
+\entry {gnus-group-rename-group}{18}
+\entry {gnus-group-restart}{29}
+\entry {gnus-group-save-newsrc}{30}
+\entry {gnus-group-secondary-p}{174}
+\entry {gnus-group-select-group}{14}
+\entry {gnus-group-select-group-ephemerally}{14}
+\entry {gnus-group-set-current-level}{16}
+\entry {gnus-group-set-parameter}{174}
+\entry {gnus-group-sort-by-alphabet}{22}
+\entry {gnus-group-sort-by-level}{22}
+\entry {gnus-group-sort-by-method}{23}
+\entry {gnus-group-sort-by-rank}{22}
+\entry {gnus-group-sort-by-real-name}{22}
+\entry {gnus-group-sort-by-score}{22}
+\entry {gnus-group-sort-by-unread}{23}
+\entry {gnus-group-sort-function}{22}
+\entry {gnus-group-sort-groups}{22}
+\entry {gnus-group-sort-groups-by-alphabet}{23}
+\entry {gnus-group-sort-groups-by-level}{23}
+\entry {gnus-group-sort-groups-by-method}{23}
+\entry {gnus-group-sort-groups-by-rank}{23}
+\entry {gnus-group-sort-groups-by-score}{23}
+\entry {gnus-group-sort-groups-by-unread}{23}
+\entry {gnus-group-sort-selected-groups-by-alphabet}{23}
+\entry {gnus-group-sort-selected-groups-by-level}{23}
+\entry {gnus-group-sort-selected-groups-by-method}{23}
+\entry {gnus-group-sort-selected-groups-by-rank}{23}
+\entry {gnus-group-sort-selected-groups-by-score}{23}
+\entry {gnus-group-sort-selected-groups-by-unread}{23}
+\entry {gnus-group-suspend}{24}
+\entry {gnus-group-toolbar}{154}
+\entry {gnus-group-transpose-groups}{15}
+\entry {gnus-group-uncollapsed-levels}{12}
+\entry {gnus-group-universal-argument}{18}
+\entry {gnus-group-unmark-all-groups}{17}
+\entry {gnus-group-unmark-group}{17}
+\entry {gnus-group-unsubscribe-current-group}{15}
+\entry {gnus-group-unsubscribe-group}{15}
+\entry {gnus-group-update-hook}{13}
+\entry {gnus-group-use-permanent-levels}{17}
+\entry {gnus-group-visible-select-group}{14}
+\entry {gnus-group-yank-group}{15}
+\entry {gnus-grouplens-override-scoring}{134}
+\entry {gnus-header-button-alist}{63}
+\entry {gnus-header-face-alist}{59}
+\entry {gnus-hidden-properties}{156}
+\entry {gnus-home-adapt-file}{128}
+\entry {gnus-home-score-file}{128}
+\entry {gnus-ignored-adaptive-words}{127}
+\entry {gnus-ignored-headers}{77}
 \entry {gnus-ignored-newsgroups}{9}
-\entry {gnus-inews-article-hook}{136}
-\entry {gnus-info-find-node}{33, 77}
-\entry {gnus-inhibit-startup-message}{11}
-\entry {gnus-init-file}{33}
-\entry {gnus-insert-pseudo-articles}{66}
-\entry {gnus-interactive-catchup}{146}
-\entry {gnus-interactive-exit}{146}
-\entry {gnus-jog-cache}{56}
-\entry {gnus-keep-backlog}{57}
-\entry {gnus-keep-same-level}{19}
-\entry {gnus-kill-file-mark}{45}
-\entry {gnus-kill-file-mode-hook}{140}
-\entry {gnus-kill-file-name}{140}
-\entry {gnus-kill-files-directory}{128}
-\entry {gnus-kill-killed}{128}
-\entry {gnus-kill-save-kill-file}{140}
-\entry {gnus-kill-summary-on-exit}{79}
-\entry {gnus-killed-mark}{45}
-\entry {gnus-large-newsgroup}{17}
-\entry {gnus-level-default-subscribed}{19}
-\entry {gnus-level-default-unsubscribed}{19}
-\entry {gnus-level-killed}{19}
-\entry {gnus-level-subscribed}{19}
-\entry {gnus-level-unsubscribed}{19}
-\entry {gnus-level-zombie}{19}
-\entry {gnus-list-groups-with-ticked-articles}{25}
+\entry {gnus-info-find-node}{30, 71}
+\entry {gnus-info-group}{188}
+\entry {gnus-info-level}{188}
+\entry {gnus-info-marks}{189}
+\entry {gnus-info-method}{189}
+\entry {gnus-info-params}{189}
+\entry {gnus-info-rank}{188}
+\entry {gnus-info-read}{189}
+\entry {gnus-info-score}{189}
+\entry {gnus-info-set-group}{188}
+\entry {gnus-info-set-level}{188}
+\entry {gnus-info-set-marks}{189}
+\entry {gnus-info-set-method}{189}
+\entry {gnus-info-set-params}{189}
+\entry {gnus-info-set-rank}{188}
+\entry {gnus-info-set-read}{189}
+\entry {gnus-info-set-score}{189}
+\entry {gnus-inhibit-startup-message}{10}
+\entry {gnus-init-file}{8, 30}
+\entry {gnus-insert-pseudo-articles}{59}
+\entry {gnus-interactive-catchup}{139}
+\entry {gnus-interactive-exit}{139}
+\entry {gnus-jog-cache}{51}
+\entry {gnus-keep-backlog}{52}
+\entry {gnus-keep-same-level}{16}
+\entry {gnus-kill-file-mark}{40}
+\entry {gnus-kill-file-mode-hook}{132}
+\entry {gnus-kill-file-name}{132}
+\entry {gnus-kill-files-directory}{119}
+\entry {gnus-kill-killed}{119}
+\entry {gnus-kill-save-kill-file}{132}
+\entry {gnus-kill-summary-on-exit}{73}
+\entry {gnus-killed-mark}{40}
+\entry {gnus-large-newsgroup}{15}
+\entry {gnus-level-default-subscribed}{16}
+\entry {gnus-level-default-unsubscribed}{16}
+\entry {gnus-level-killed}{16}
+\entry {gnus-level-subscribed}{16}
+\entry {gnus-level-unsubscribed}{16}
+\entry {gnus-level-zombie}{16}
+\entry {gnus-list-groups-with-ticked-articles}{22}
 \entry {gnus-load-hook}{10}
-\entry {gnus-low-score-mark}{45}
-\entry {gnus-mail-save-name}{59}
-\entry {gnus-mailing-list-groups}{88}
-\entry {gnus-mark-article-hook}{41}
-\entry {gnus-message-archive-group}{89}
-\entry {gnus-message-archive-method}{89}
-\entry {gnus-mode-non-string-length}{152}
-\entry {gnus-mouse-face}{153}
-\entry {gnus-move-split-methods}{77}
+\entry {gnus-low-score-mark}{40}
+\entry {gnus-mail-save-name}{53}
+\entry {gnus-mailing-list-groups}{82}
+\entry {gnus-mark-article-hook}{36}
+\entry {gnus-mark-unpicked-articles-as-read}{67}
+\entry {gnus-message-archive-group}{82}
+\entry {gnus-message-archive-method}{82}
+\entry {gnus-mode-non-string-length}{145}
+\entry {gnus-mouse-face}{147}
+\entry {gnus-move-split-methods}{70}
+\entry {gnus-narrow-to-body}{174}
+\entry {gnus-new-mail-mark}{12}
+\entry {gnus-news-group-p}{174}
+\entry {gnus-newsgroup-name}{173}
 \entry {gnus-nntp-server}{3}
 \entry {gnus-nntpserver-file}{3}
-\entry {gnus-no-groups-message}{11}
-\entry {gnus-no-server}{5}
-\entry {gnus-nocem-directory}{158}
-\entry {gnus-nocem-expiry-wait}{158}
-\entry {gnus-nocem-groups}{157}
-\entry {gnus-nocem-issuers}{157}
-\entry {gnus-not-empty-thread-mark}{45}
-\entry {gnus-nov-is-evil}{80}
-\entry {gnus-novice-user}{146}
-\entry {gnus-numeric-save-name}{59, 60}
-\entry {gnus-Numeric-save-name}{59}
+\entry {gnus-no-groups-message}{10}
+\entry {gnus-no-server}{4}
+\entry {gnus-nocem-directory}{150}
+\entry {gnus-nocem-expiry-wait}{150}
+\entry {gnus-nocem-groups}{149}
+\entry {gnus-nocem-issuers}{149}
+\entry {gnus-nocem-verifyer}{150}
+\entry {gnus-not-empty-thread-mark}{41}
+\entry {gnus-nov-is-evil}{74}
+\entry {gnus-novice-user}{139}
+\entry {gnus-numeric-save-name}{53, 54}
+\entry {gnus-Numeric-save-name}{54}
 \entry {gnus-options-not-subscribe}{7}
 \entry {gnus-options-subscribe}{7}
 \entry {gnus-other-frame}{3}
-\entry {gnus-outgoing-message-group}{91}
-\entry {gnus-page-delimiter}{85}
-\entry {gnus-parse-headers-hook}{161}
-\entry {gnus-permanently-visible-groups}{25, 32}
-\entry {gnus-pick-display-summary}{73}
-\entry {gnus-pick-mode}{73}
-\entry {gnus-pick-mode-hook}{73}
-\entry {gnus-pick-start-reading}{73}
-\entry {gnus-picons-buffer}{161}
-\entry {gnus-picons-convert-x-face}{159, 160}
-\entry {gnus-picons-database}{158, 160}
-\entry {gnus-picons-display-where}{159}
-\entry {gnus-picons-domain-directories}{160}
-\entry {gnus-picons-news-directory}{160}
-\entry {gnus-picons-user-directories}{160}
-\entry {gnus-picons-x-face-file-name}{160}
-\entry {gnus-plain-save-name}{59, 60}
-\entry {gnus-Plain-save-name}{60}
-\entry {gnus-post-method}{88}
-\entry {gnus-process-mark}{46}
-\entry {gnus-prompt-before-saving}{58}
-\entry {gnus-read-active-file}{10}
-\entry {gnus-read-mark}{44}
-\entry {gnus-refer-article-method}{72}
-\entry {gnus-replied-mark}{45}
-\entry {gnus-rmail-save-name}{59}
-\entry {gnus-save-all-headers}{58}
+\entry {gnus-outgoing-message-group}{84}
+\entry {gnus-page-delimiter}{80}
+\entry {gnus-parse-headers-hook}{47, 156}
+\entry {gnus-permanently-visible-groups}{22, 29}
+\entry {gnus-pick-display-summary}{67}
+\entry {gnus-pick-mode}{66}
+\entry {gnus-pick-mode-hook}{67}
+\entry {gnus-pick-next-page}{67}
+\entry {gnus-pick-start-reading}{67}
+\entry {gnus-picons-buffer}{152}
+\entry {gnus-picons-convert-x-face}{151, 152}
+\entry {gnus-picons-database}{150, 152}
+\entry {gnus-picons-display-where}{151}
+\entry {gnus-picons-domain-directories}{152}
+\entry {gnus-picons-news-directory}{152}
+\entry {gnus-picons-user-directories}{152}
+\entry {gnus-picons-x-face-file-name}{152}
+\entry {gnus-plain-save-name}{53, 54}
+\entry {gnus-Plain-save-name}{54}
+\entry {gnus-play-startup-jingle}{10}
+\entry {gnus-post-method}{81}
+\entry {gnus-prefetched-article-deletion-strategy}{50}
+\entry {gnus-process-mark}{41}
+\entry {gnus-prompt-before-saving}{53}
+\entry {gnus-ps-print-hook}{65}
+\entry {gnus-read-active-file}{9}
+\entry {gnus-read-mark}{40}
+\entry {gnus-read-method}{174}
+\entry {gnus-refer-article-method}{66}
+\entry {gnus-replied-mark}{41}
+\entry {gnus-rmail-save-name}{53}
+\entry {gnus-save-all-headers}{52}
+\entry {gnus-save-duplicate-list}{75}
 \entry {gnus-save-killed-list}{8}
 \entry {gnus-save-newsrc-file}{8}
-\entry {gnus-save-newsrc-hook}{9}
-\entry {gnus-save-quick-newsrc-hook}{9}
-\entry {gnus-save-score}{129}
-\entry {gnus-save-standard-newsrc-hook}{9}
-\entry {gnus-saved-headers}{58}
-\entry {gnus-saved-mark}{45}
-\entry {gnus-score-after-write-file-function}{130}
-\entry {gnus-score-below-mark}{129}
-\entry {gnus-score-change-score-file}{126}
-\entry {gnus-score-customize}{126}
-\entry {gnus-score-edit-current-scores}{126}
-\entry {gnus-score-edit-done}{134}
-\entry {gnus-score-edit-file}{126}
-\entry {gnus-score-edit-insert-date}{134}
-\entry {gnus-score-exact-adapt-limit}{136}
-\entry {gnus-score-expiry-days}{130}
-\entry {gnus-score-file-suffix}{128}
-\entry {gnus-score-find-bnews}{129}
-\entry {gnus-score-find-hierarchical}{129}
-\entry {gnus-score-find-score-files-function}{129}
-\entry {gnus-score-find-single}{129}
-\entry {gnus-score-find-trace}{126}
-\entry {gnus-score-flush-cache}{126, 128}
-\entry {gnus-score-followup-article}{136}
-\entry {gnus-score-followup-thread}{136}
-\entry {gnus-score-interactive-default-score}{129}
-\entry {gnus-score-menu-hook}{154}
-\entry {gnus-score-mimic-keymap}{128}
-\entry {gnus-score-mode-hook}{134}
-\entry {gnus-score-over-mark}{129}
-\entry {gnus-score-pretty-print}{134}
-\entry {gnus-score-search-global-directories}{138}
-\entry {gnus-score-set-expunge-below}{126}
-\entry {gnus-score-set-mark-below}{126}
-\entry {gnus-score-uncacheable-files}{128}
-\entry {gnus-secondary-select-methods}{4}
+\entry {gnus-save-newsrc-hook}{8}
+\entry {gnus-save-quick-newsrc-hook}{8}
+\entry {gnus-save-score}{120}
+\entry {gnus-save-standard-newsrc-hook}{8}
+\entry {gnus-saved-headers}{52}
+\entry {gnus-saved-mark}{41}
+\entry {gnus-score-after-write-file-function}{121}
+\entry {gnus-score-below-mark}{120}
+\entry {gnus-score-change-score-file}{117}
+\entry {gnus-score-customize}{118}
+\entry {gnus-score-decay-constant}{137}
+\entry {gnus-score-decay-function}{137}
+\entry {gnus-score-decay-scale}{137}
+\entry {gnus-score-edit-current-scores}{117}
+\entry {gnus-score-edit-done}{125}
+\entry {gnus-score-edit-file}{117}
+\entry {gnus-score-edit-insert-date}{125}
+\entry {gnus-score-exact-adapt-limit}{127}
+\entry {gnus-score-expiry-days}{121}
+\entry {gnus-score-file-suffix}{120}
+\entry {gnus-score-find-bnews}{120}
+\entry {gnus-score-find-hierarchical}{121}
+\entry {gnus-score-find-score-files-function}{120}
+\entry {gnus-score-find-single}{120}
+\entry {gnus-score-find-trace}{117}
+\entry {gnus-score-flush-cache}{118, 119}
+\entry {gnus-score-followup-article}{129}
+\entry {gnus-score-followup-thread}{129}
+\entry {gnus-score-interactive-default-score}{120}
+\entry {gnus-score-menu-hook}{147}
+\entry {gnus-score-mimic-keymap}{119}
+\entry {gnus-score-mode-hook}{125}
+\entry {gnus-score-over-mark}{120}
+\entry {gnus-score-pretty-print}{125}
+\entry {gnus-score-search-global-directories}{130}
+\entry {gnus-score-set-expunge-below}{118}
+\entry {gnus-score-set-mark-below}{118}
+\entry {gnus-score-uncacheable-files}{120}
+\entry {gnus-secondary-select-methods}{3}
 \entry {gnus-secondary-servers}{3}
-\entry {gnus-select-article-hook}{40}
-\entry {gnus-select-group-hook}{17}
+\entry {gnus-select-article-hook}{36}
+\entry {gnus-select-group-hook}{15}
 \entry {gnus-select-method}{3}
-\entry {gnus-selected-tree-face}{74}
-\entry {gnus-sent-message-ids-file}{87}
-\entry {gnus-sent-message-ids-length}{87}
-\entry {gnus-server-add-server}{94}
-\entry {gnus-server-close-server}{97}
-\entry {gnus-server-copy-server}{95}
-\entry {gnus-server-deny-server}{97}
-\entry {gnus-server-edit-server}{94}
-\entry {gnus-server-exit}{94}
-\entry {gnus-server-kill-server}{94}
-\entry {gnus-server-line-format}{94}
-\entry {gnus-server-list-servers}{95}
-\entry {gnus-server-menu-hook}{154}
-\entry {gnus-server-mode-hook}{94}
-\entry {gnus-server-mode-line-format}{94}
-\entry {gnus-server-open-server}{97}
-\entry {gnus-server-read-server}{94}
-\entry {gnus-server-remove-denials}{97}
-\entry {gnus-server-yank-server}{95}
-\entry {gnus-show-all-headers}{81}
-\entry {gnus-show-mime}{83}
-\entry {gnus-show-mime-method}{83}
-\entry {gnus-show-threads}{49}
-\entry {gnus-signature-face}{67}
-\entry {gnus-signature-limit}{68}
-\entry {gnus-signature-separator}{67}
-\entry {gnus-simplify-ignored-prefixes}{50}
-\entry {gnus-simplify-subject-fuzzy-regexp}{50}
-\entry {gnus-single-article-buffer}{84}
-\entry {gnus-sorted-header-list}{82}
-\entry {gnus-soup-add-article}{119}
-\entry {gnus-soup-directory}{119}
-\entry {gnus-soup-pack-packet}{119}
-\entry {gnus-soup-packer}{119}
-\entry {gnus-soup-packet-directory}{119}
-\entry {gnus-soup-packet-regexp}{120}
-\entry {gnus-soup-prefix-file}{119}
-\entry {gnus-soup-replies-directory}{119}
-\entry {gnus-soup-save-areas}{119}
-\entry {gnus-soup-send-replies}{119}
-\entry {gnus-soup-unpacker}{119}
-\entry {gnus-souped-mark}{45}
-\entry {gnus-sparse-mark}{45}
-\entry {gnus-split-methods}{60}
-\entry {gnus-startup-file}{9}
+\entry {gnus-selected-tree-face}{68}
+\entry {gnus-sent-message-ids-file}{81}
+\entry {gnus-sent-message-ids-length}{81}
+\entry {gnus-server-add-server}{86}
+\entry {gnus-server-close-all-servers}{89}
+\entry {gnus-server-close-server}{88}
+\entry {gnus-server-copy-server}{86}
+\entry {gnus-server-deny-server}{88}
+\entry {gnus-server-edit-server}{86}
+\entry {gnus-server-equal}{174}
+\entry {gnus-server-exit}{86}
+\entry {gnus-server-kill-server}{86}
+\entry {gnus-server-line-format}{85}
+\entry {gnus-server-list-servers}{86}
+\entry {gnus-server-menu-hook}{147}
+\entry {gnus-server-mode-hook}{85}
+\entry {gnus-server-mode-line-format}{86}
+\entry {gnus-server-open-all-servers}{88}
+\entry {gnus-server-open-server}{88}
+\entry {gnus-server-read-server}{86}
+\entry {gnus-server-regenerate-server}{86}
+\entry {gnus-server-remove-denials}{89}
+\entry {gnus-server-scan-server}{86}
+\entry {gnus-server-to-method}{174}
+\entry {gnus-server-yank-server}{86}
+\entry {gnus-shell-command-separator}{156}
+\entry {gnus-show-all-headers}{77}
+\entry {gnus-show-mime}{78}
+\entry {gnus-show-mime-method}{78}
+\entry {gnus-show-threads}{44}
+\entry {gnus-signature-face}{60}
+\entry {gnus-signature-limit}{64}
+\entry {gnus-signature-separator}{60, 64}
+\entry {gnus-simplify-ignored-prefixes}{45}
+\entry {gnus-simplify-subject-fuzzy-regexp}{45}
+\entry {gnus-single-article-buffer}{79}
+\entry {gnus-sorted-header-list}{77}
+\entry {gnus-soup-add-article}{110}
+\entry {gnus-soup-directory}{110}
+\entry {gnus-soup-pack-packet}{110}
+\entry {gnus-soup-packer}{111}
+\entry {gnus-soup-packet-directory}{111}
+\entry {gnus-soup-packet-regexp}{111}
+\entry {gnus-soup-prefix-file}{110}
+\entry {gnus-soup-replies-directory}{110}
+\entry {gnus-soup-save-areas}{110}
+\entry {gnus-soup-send-replies}{110}
+\entry {gnus-soup-unpacker}{111}
+\entry {gnus-souped-mark}{40}
+\entry {gnus-sparse-mark}{40}
+\entry {gnus-split-methods}{54}
+\entry {gnus-started-hook}{10}
+\entry {gnus-startup-file}{8}
 \entry {gnus-startup-hook}{10}
-\entry {gnus-strict-mime}{83}
+\entry {gnus-startup-jingle}{10}
+\entry {gnus-strict-mime}{78}
 \entry {gnus-subscribe-alphabetically}{6}
 \entry {gnus-subscribe-hierarchical-interactive}{6}
 \entry {gnus-subscribe-hierarchically}{6}
 \entry {gnus-subscribe-interactively}{6}
 \entry {gnus-subscribe-killed}{6}
 \entry {gnus-subscribe-newsgroup-method}{6}
-\entry {gnus-subscribe-options-newsgroup-method}{7}
+\entry {gnus-subscribe-options-newsgroup-method}{6}
 \entry {gnus-subscribe-randomly}{6}
 \entry {gnus-subscribe-zombies}{6}
-\entry {gnus-summary-beginning-of-article}{41}
-\entry {gnus-summary-best-unread-article}{40}
-\entry {gnus-summary-bubble-group}{20}
-\entry {gnus-summary-caesar-message}{69}
-\entry {gnus-summary-cancel-article}{43}
-\entry {gnus-summary-catchup}{46}
-\entry {gnus-summary-catchup-all}{46}
-\entry {gnus-summary-catchup-all-and-exit}{79}
-\entry {gnus-summary-catchup-and-exit}{79}
-\entry {gnus-summary-catchup-and-goto-next-group}{79}
-\entry {gnus-summary-catchup-to-here}{46}
-\entry {gnus-summary-check-current}{39}
-\entry {gnus-summary-clear-above}{47}
-\entry {gnus-summary-clear-mark-forward}{47}
-\entry {gnus-summary-copy-article}{76}
-\entry {gnus-summary-crosspost-article}{76}
-\entry {gnus-summary-current-score}{125}
-\entry {gnus-summary-default-score}{129}
-\entry {gnus-summary-delete-article}{76}
-\entry {gnus-summary-describe-briefly}{77}
-\entry {gnus-summary-describe-group}{77}
-\entry {gnus-summary-down-thread}{53}
-\entry {gnus-summary-dummy-line-format}{51}
-\entry {gnus-summary-edit-article}{76}
-\entry {gnus-summary-edit-global-kill}{139}
-\entry {gnus-summary-edit-local-kill}{139}
-\entry {gnus-summary-end-of-article}{41}
-\entry {gnus-summary-enter-digest-group}{78}
-\entry {gnus-summary-execute-command}{78}
-\entry {gnus-summary-exit}{78}
-\entry {gnus-summary-exit-hook}{78}
-\entry {gnus-summary-exit-no-update}{79}
-\entry {gnus-summary-expand-window}{78}
-\entry {gnus-summary-expire-articles}{76}
-\entry {gnus-summary-expire-articles-now}{76}
-\entry {gnus-summary-fetch-faq}{77}
-\entry {gnus-summary-first-unread-article}{40}
-\entry {gnus-summary-followup}{43}
-\entry {gnus-summary-followup-with-original}{43}
-\entry {gnus-summary-gather-exclude-subject}{50}
-\entry {gnus-summary-gather-subject-limit}{50}
-\entry {gnus-summary-generate-hook}{77}
-\entry {gnus-summary-goto-article}{38}
-\entry {gnus-summary-goto-last-article}{40}
-\entry {gnus-summary-goto-subject}{39}
-\entry {gnus-summary-goto-unread}{47, 145}
-\entry {gnus-summary-hide-all-threads}{52}
-\entry {gnus-summary-hide-thread}{52}
-\entry {gnus-summary-highlight}{38}
-\entry {gnus-summary-import-article}{76}
-\entry {gnus-summary-isearch-article}{41}
-\entry {gnus-summary-kill-below}{47}
-\entry {gnus-summary-kill-same-subject}{46}
-\entry {gnus-summary-kill-same-subject-and-select}{46}
-\entry {gnus-summary-kill-thread}{52}
-\entry {gnus-summary-limit-exclude-childless-dormant}{49}
-\entry {gnus-summary-limit-exclude-dormant}{49}
-\entry {gnus-summary-limit-include-dormant}{48}
-\entry {gnus-summary-limit-include-expunged}{48}
-\entry {gnus-summary-limit-mark-excluded-as-read}{49}
-\entry {gnus-summary-limit-to-articles}{48}
-\entry {gnus-summary-limit-to-author}{48}
-\entry {gnus-summary-limit-to-marks}{48}
-\entry {gnus-summary-limit-to-score}{48}
-\entry {gnus-summary-limit-to-subject}{48}
-\entry {gnus-summary-limit-to-unread}{48}
-\entry {gnus-summary-line-format}{35}
-\entry {gnus-summary-lower-score}{126}
-\entry {gnus-summary-lower-thread}{52}
-\entry {gnus-summary-mail-forward}{42}
-\entry {gnus-summary-mail-other-window}{42}
-\entry {gnus-summary-make-false-root}{51}
-\entry {gnus-summary-mark-above}{47}
-\entry {gnus-summary-mark-as-dormant}{46}
-\entry {gnus-summary-mark-as-expirable}{47}
-\entry {gnus-summary-mark-as-processable}{47, 73}
-\entry {gnus-summary-mark-as-read-forward}{46}
-\entry {gnus-summary-mark-below}{125}
-\entry {gnus-summary-mark-read-and-unread-as-read}{41}
-\entry {gnus-summary-mark-region-as-read}{46}
-\entry {gnus-summary-mark-unread-as-read}{41}
-\entry {gnus-summary-menu-hook}{154}
-\entry {gnus-summary-mode-hook}{77}
-\entry {gnus-summary-mode-line-format}{37}
-\entry {gnus-summary-move-article}{76}
-\entry {gnus-summary-next-article}{40}
-\entry {gnus-summary-next-group}{79}
-\entry {gnus-summary-next-page}{40, 41}
-\entry {gnus-summary-next-same-subject}{40}
-\entry {gnus-summary-next-thread}{53}
-\entry {gnus-summary-next-unread-article}{40}
-\entry {gnus-summary-next-unread-subject}{38}
-\entry {gnus-summary-pipe-output}{58}
-\entry {gnus-summary-pop-article}{40}
-\entry {gnus-summary-pop-limit}{48}
-\entry {gnus-summary-post-forward}{42}
-\entry {gnus-summary-post-news}{42}
-\entry {gnus-summary-prepare-exit-hook}{78}
-\entry {gnus-summary-prepare-hook}{77}
-\entry {gnus-summary-prev-article}{40}
-\entry {gnus-summary-prev-group}{79}
-\entry {gnus-summary-prev-page}{41}
-\entry {gnus-summary-prev-same-subject}{40}
-\entry {gnus-summary-prev-thread}{53}
-\entry {gnus-summary-prev-unread-article}{40}
-\entry {gnus-summary-prev-unread-subject}{38}
-\entry {gnus-summary-raise-score}{126}
-\entry {gnus-summary-raise-thread}{52}
-\entry {gnus-summary-refer-article}{72}
-\entry {gnus-summary-refer-parent-article}{72}
-\entry {gnus-summary-refer-references}{72}
-\entry {gnus-summary-remove-bookmark}{47}
-\entry {gnus-summary-reparent-thread}{52}
-\entry {gnus-summary-reply}{41}
-\entry {gnus-summary-reply-with-original}{42}
-\entry {gnus-summary-rescan-group}{79}
-\entry {gnus-summary-rescore}{126}
-\entry {gnus-summary-reselect-current-group}{79}
-\entry {gnus-summary-resend-bounced-mail}{42}
-\entry {gnus-summary-resend-message}{42}
-\entry {gnus-summary-respool-article}{76}
-\entry {gnus-summary-respool-query}{77}
-\entry {gnus-summary-rethread-current}{52}
-\entry {gnus-summary-same-subject}{35}
-\entry {gnus-summary-save-article}{58}
-\entry {gnus-summary-save-article-body-file}{58}
-\entry {gnus-summary-save-article-file}{58}
-\entry {gnus-summary-save-article-folder}{58}
-\entry {gnus-summary-save-article-mail}{58}
-\entry {gnus-summary-save-article-rmail}{58}
-\entry {gnus-summary-save-article-vm}{58}
-\entry {gnus-summary-save-body-in-file}{59}
-\entry {gnus-summary-save-in-file}{59}
-\entry {gnus-summary-save-in-folder}{59}
-\entry {gnus-summary-save-in-mail}{59}
-\entry {gnus-summary-save-in-rmail}{59}
-\entry {gnus-summary-save-in-vm}{59}
-\entry {gnus-summary-score-entry}{126}
-\entry {gnus-summary-scroll-up}{41}
-\entry {gnus-summary-search-article-backward}{78}
-\entry {gnus-summary-search-article-forward}{78}
-\entry {gnus-summary-selected-face}{38}
-\entry {gnus-summary-set-bookmark}{47}
-\entry {gnus-summary-set-score}{125}
-\entry {gnus-summary-show-all-threads}{52}
-\entry {gnus-summary-show-article}{41}
-\entry {gnus-summary-show-thread}{52}
-\entry {gnus-summary-sort-by-author}{71}
-\entry {gnus-summary-sort-by-date}{71}
-\entry {gnus-summary-sort-by-number}{71}
-\entry {gnus-summary-sort-by-score}{71}
-\entry {gnus-summary-sort-by-subject}{71}
-\entry {gnus-summary-stop-page-breaking}{69}
-\entry {gnus-summary-supersede-article}{43}
-\entry {gnus-summary-thread-gathering-function}{51}
-\entry {gnus-summary-tick-above}{47}
-\entry {gnus-summary-tick-article-forward}{46}
-\entry {gnus-summary-toggle-header}{69}
-\entry {gnus-summary-toggle-mime}{69}
-\entry {gnus-summary-toggle-threads}{52}
-\entry {gnus-summary-toggle-truncation}{78}
-\entry {gnus-summary-top-thread}{53}
-\entry {gnus-summary-universal-argument}{78}
-\entry {gnus-summary-unmark-all-processable}{47, 73}
-\entry {gnus-summary-unmark-as-processable}{47, 73}
-\entry {gnus-summary-up-thread}{53}
-\entry {gnus-summary-update-hook}{38}
-\entry {gnus-summary-verbose-header}{69}
-\entry {gnus-summary-wake-up-the-dead}{79}
-\entry {gnus-summary-zcore-fuzz}{36}
-\entry {gnus-supercite-regexp}{67}
-\entry {gnus-supercite-secondary-regexp}{67}
-\entry {gnus-suspend-gnus-hook}{28}
-\entry {gnus-thread-hide-killed}{52}
-\entry {gnus-thread-hide-subtree}{52}
-\entry {gnus-thread-ignore-subject}{52}
-\entry {gnus-thread-indent-level}{52}
-\entry {gnus-thread-operation-ignore-subject}{53}
-\entry {gnus-thread-score-function}{54}
-\entry {gnus-thread-sort-by-author}{53}
-\entry {gnus-thread-sort-by-date}{53}
-\entry {gnus-thread-sort-by-number}{53}
-\entry {gnus-thread-sort-by-score}{53}
-\entry {gnus-thread-sort-by-subject}{53}
-\entry {gnus-thread-sort-by-total-score}{53}
-\entry {gnus-thread-sort-functions}{53}
-\entry {gnus-ticked-mark}{44}
-\entry {gnus-topic-copy-group}{30}
-\entry {gnus-topic-copy-matching}{30}
-\entry {gnus-topic-create-topic}{30}
-\entry {gnus-topic-delete}{30}
-\entry {gnus-topic-indent}{30}
-\entry {gnus-topic-indent-level}{29}
-\entry {gnus-topic-kill-group}{30}
-\entry {gnus-topic-line-format}{29}
-\entry {gnus-topic-list-active}{30}
-\entry {gnus-topic-mark-topic}{30}
-\entry {gnus-topic-mode}{28}
-\entry {gnus-topic-mode-hook}{29}
-\entry {gnus-topic-move-group}{30}
-\entry {gnus-topic-move-matching}{30}
-\entry {gnus-topic-remove-group}{30}
-\entry {gnus-topic-rename}{30}
-\entry {gnus-topic-select-group}{30}
-\entry {gnus-topic-topology}{31}
-\entry {gnus-topic-unmark-topic}{30}
-\entry {gnus-topic-yank-group}{30}
-\entry {gnus-total-expirable-newsgroups}{110}
-\entry {gnus-tree-brackets}{75}
-\entry {gnus-tree-line-format}{74}
-\entry {gnus-tree-minimize-window}{75}
-\entry {gnus-tree-mode-hook}{74}
-\entry {gnus-tree-mode-line-format}{74}
-\entry {gnus-tree-parent-child-edges}{75}
-\entry {gnus-uncacheable-groups}{56}
-\entry {gnus-unload}{28}
-\entry {gnus-unread-mark}{41, 44}
-\entry {gnus-update-format}{147}
-\entry {gnus-update-score-entry-dates}{130}
-\entry {gnus-updated-mode-lines}{152}
-\entry {gnus-use-adaptive-scoring}{134}
-\entry {gnus-use-cache}{56}
-\entry {gnus-use-cross-reference}{79}
-\entry {gnus-use-demon}{156}
+\entry {gnus-summary-article-posted-p}{70}
+\entry {gnus-summary-beginning-of-article}{36}
+\entry {gnus-summary-best-unread-article}{36}
+\entry {gnus-summary-bubble-group}{17}
+\entry {gnus-summary-caesar-message}{62}
+\entry {gnus-summary-cancel-article}{39}
+\entry {gnus-summary-catchup}{41}
+\entry {gnus-summary-catchup-all}{41}
+\entry {gnus-summary-catchup-all-and-exit}{73}
+\entry {gnus-summary-catchup-and-exit}{72}
+\entry {gnus-summary-catchup-and-goto-next-group}{73}
+\entry {gnus-summary-catchup-to-here}{41}
+\entry {gnus-summary-check-current}{35}
+\entry {gnus-summary-clear-above}{42}
+\entry {gnus-summary-clear-mark-forward}{42}
+\entry {gnus-summary-copy-article}{70}
+\entry {gnus-summary-crosspost-article}{70}
+\entry {gnus-summary-current-score}{117}
+\entry {gnus-summary-default-score}{120}
+\entry {gnus-summary-delete-article}{69}
+\entry {gnus-summary-describe-briefly}{71}
+\entry {gnus-summary-describe-group}{71}
+\entry {gnus-summary-down-thread}{48}
+\entry {gnus-summary-dummy-line-format}{46}
+\entry {gnus-summary-edit-article}{70}
+\entry {gnus-summary-edit-global-kill}{131}
+\entry {gnus-summary-edit-local-kill}{131}
+\entry {gnus-summary-end-of-article}{37}
+\entry {gnus-summary-enter-digest-group}{72}
+\entry {gnus-summary-execute-command}{71}
+\entry {gnus-summary-exit}{72}
+\entry {gnus-summary-exit-hook}{72}
+\entry {gnus-summary-exit-no-update}{72}
+\entry {gnus-summary-expand-window}{72}
+\entry {gnus-summary-expire-articles}{69}
+\entry {gnus-summary-expire-articles-now}{69}
+\entry {gnus-summary-expunge-below}{120}
+\entry {gnus-summary-fetch-faq}{71}
+\entry {gnus-summary-first-unread-article}{35}
+\entry {gnus-summary-followup}{38}
+\entry {gnus-summary-followup-to-mail}{38}
+\entry {gnus-summary-followup-with-original}{38}
+\entry {gnus-summary-gather-exclude-subject}{45}
+\entry {gnus-summary-gather-subject-limit}{45}
+\entry {gnus-summary-generate-hook}{70}
+\entry {gnus-summary-goto-article}{34}
+\entry {gnus-summary-goto-last-article}{36}
+\entry {gnus-summary-goto-subject}{34}
+\entry {gnus-summary-goto-unread}{42, 139}
+\entry {gnus-summary-hide-all-threads}{47}
+\entry {gnus-summary-hide-thread}{47}
+\entry {gnus-summary-highlight}{34}
+\entry {gnus-summary-ignore-duplicates}{71}
+\entry {gnus-summary-import-article}{70}
+\entry {gnus-summary-insert-cached-articles}{72}
+\entry {gnus-summary-isearch-article}{37}
+\entry {gnus-summary-kill-below}{42}
+\entry {gnus-summary-kill-process-mark}{43}
+\entry {gnus-summary-kill-same-subject}{41}
+\entry {gnus-summary-kill-same-subject-and-select}{41}
+\entry {gnus-summary-kill-thread}{47}
+\entry {gnus-summary-limit-exclude-childless-dormant}{44}
+\entry {gnus-summary-limit-exclude-dormant}{44}
+\entry {gnus-summary-limit-include-dormant}{44}
+\entry {gnus-summary-limit-include-expunged}{44}
+\entry {gnus-summary-limit-mark-excluded-as-read}{44}
+\entry {gnus-summary-limit-to-age}{43}
+\entry {gnus-summary-limit-to-articles}{43}
+\entry {gnus-summary-limit-to-author}{43}
+\entry {gnus-summary-limit-to-marks}{43}
+\entry {gnus-summary-limit-to-score}{44}
+\entry {gnus-summary-limit-to-subject}{43}
+\entry {gnus-summary-limit-to-unread}{43}
+\entry {gnus-summary-line-format}{31}
+\entry {gnus-summary-lower-score}{118}
+\entry {gnus-summary-lower-thread}{47}
+\entry {gnus-summary-mail-crosspost-complaint}{38}
+\entry {gnus-summary-mail-forward}{37}
+\entry {gnus-summary-mail-other-window}{37}
+\entry {gnus-summary-mail-toolbar}{154}
+\entry {gnus-summary-make-false-root}{46}
+\entry {gnus-summary-mark-above}{42}
+\entry {gnus-summary-mark-as-dormant}{41}
+\entry {gnus-summary-mark-as-expirable}{42}
+\entry {gnus-summary-mark-as-processable}{42, 66}
+\entry {gnus-summary-mark-as-read-backward}{41}
+\entry {gnus-summary-mark-as-read-forward}{41}
+\entry {gnus-summary-mark-below}{117}
+\entry {gnus-summary-mark-read-and-unread-as-read}{36}
+\entry {gnus-summary-mark-region-as-read}{42}
+\entry {gnus-summary-mark-unread-as-read}{36}
+\entry {gnus-summary-menu-hook}{147}
+\entry {gnus-summary-mode-hook}{70}
+\entry {gnus-summary-mode-line-format}{33}
+\entry {gnus-summary-move-article}{69}
+\entry {gnus-summary-next-article}{35}
+\entry {gnus-summary-next-group}{73}
+\entry {gnus-summary-next-page}{35, 36}
+\entry {gnus-summary-next-same-subject}{35}
+\entry {gnus-summary-next-thread}{48}
+\entry {gnus-summary-next-unread-article}{35}
+\entry {gnus-summary-next-unread-subject}{34}
+\entry {gnus-summary-pick-line-format}{67}
+\entry {gnus-summary-pipe-output}{52}
+\entry {gnus-summary-pop-article}{36}
+\entry {gnus-summary-pop-limit}{43}
+\entry {gnus-summary-post-forward}{38}
+\entry {gnus-summary-post-news}{38}
+\entry {gnus-summary-prepare}{72}
+\entry {gnus-summary-prepare-exit-hook}{72}
+\entry {gnus-summary-prepare-hook}{71}
+\entry {gnus-summary-prev-article}{35}
+\entry {gnus-summary-prev-group}{73}
+\entry {gnus-summary-prev-page}{36}
+\entry {gnus-summary-prev-same-subject}{35}
+\entry {gnus-summary-prev-thread}{48}
+\entry {gnus-summary-prev-unread-article}{35}
+\entry {gnus-summary-prev-unread-subject}{34}
+\entry {gnus-summary-print-article}{65}
+\entry {gnus-summary-raise-score}{118}
+\entry {gnus-summary-raise-thread}{47}
+\entry {gnus-summary-read-document}{72}
+\entry {gnus-summary-refer-article}{66}
+\entry {gnus-summary-refer-parent-article}{65}
+\entry {gnus-summary-refer-references}{66}
+\entry {gnus-summary-remove-bookmark}{42}
+\entry {gnus-summary-reparent-thread}{48}
+\entry {gnus-summary-reply}{37}
+\entry {gnus-summary-reply-with-original}{37}
+\entry {gnus-summary-rescan-group}{73}
+\entry {gnus-summary-rescore}{117}
+\entry {gnus-summary-reselect-current-group}{73}
+\entry {gnus-summary-resend-bounced-mail}{37}
+\entry {gnus-summary-resend-message}{37}
+\entry {gnus-summary-respool-article}{70}
+\entry {gnus-summary-respool-query}{70}
+\entry {gnus-summary-rethread-current}{47}
+\entry {gnus-summary-same-subject}{31}
+\entry {gnus-summary-save-article}{52}
+\entry {gnus-summary-save-article-body-file}{52}
+\entry {gnus-summary-save-article-file}{52}
+\entry {gnus-summary-save-article-folder}{52}
+\entry {gnus-summary-save-article-mail}{52}
+\entry {gnus-summary-save-article-rmail}{52}
+\entry {gnus-summary-save-article-vm}{52}
+\entry {gnus-summary-save-body-in-file}{53}
+\entry {gnus-summary-save-in-file}{53}
+\entry {gnus-summary-save-in-folder}{53}
+\entry {gnus-summary-save-in-mail}{53}
+\entry {gnus-summary-save-in-rmail}{53}
+\entry {gnus-summary-save-in-vm}{53}
+\entry {gnus-summary-save-newsrc}{73}
+\entry {gnus-summary-save-process-mark}{43}
+\entry {gnus-summary-score-entry}{117}
+\entry {gnus-summary-scroll-up}{36}
+\entry {gnus-summary-search-article-backward}{71}
+\entry {gnus-summary-search-article-forward}{71}
+\entry {gnus-summary-selected-face}{33}
+\entry {gnus-summary-set-bookmark}{42}
+\entry {gnus-summary-set-score}{117}
+\entry {gnus-summary-show-all-threads}{47}
+\entry {gnus-summary-show-article}{36}
+\entry {gnus-summary-show-thread}{47}
+\entry {gnus-summary-sort-by-author}{65}
+\entry {gnus-summary-sort-by-date}{65}
+\entry {gnus-summary-sort-by-lines}{65}
+\entry {gnus-summary-sort-by-number}{65}
+\entry {gnus-summary-sort-by-score}{65}
+\entry {gnus-summary-sort-by-subject}{65}
+\entry {gnus-summary-stop-page-breaking}{62}
+\entry {gnus-summary-supersede-article}{39}
+\entry {gnus-summary-thread-gathering-function}{46}
+\entry {gnus-summary-tick-above}{42}
+\entry {gnus-summary-tick-article-forward}{41}
+\entry {gnus-summary-toggle-header}{62}
+\entry {gnus-summary-toggle-mime}{62}
+\entry {gnus-summary-toggle-threads}{47}
+\entry {gnus-summary-toggle-truncation}{72}
+\entry {gnus-summary-toolbar}{154}
+\entry {gnus-summary-top-thread}{48}
+\entry {gnus-summary-universal-argument}{71}
+\entry {gnus-summary-unmark-all-processable}{42, 67}
+\entry {gnus-summary-unmark-as-processable}{42, 67}
+\entry {gnus-summary-up-thread}{48}
+\entry {gnus-summary-update-hook}{33}
+\entry {gnus-summary-verbose-header}{62}
+\entry {gnus-summary-wake-up-the-dead}{73}
+\entry {gnus-summary-wide-reply}{37}
+\entry {gnus-summary-wide-reply-with-original}{37}
+\entry {gnus-summary-write-article-file}{52}
+\entry {gnus-summary-yank-process-mark}{43}
+\entry {gnus-summary-zcore-fuzz}{32}
+\entry {gnus-supercite-regexp}{60}
+\entry {gnus-supercite-secondary-regexp}{60}
+\entry {gnus-suppress-duplicates}{75}
+\entry {gnus-suspend-gnus-hook}{24}
+\entry {gnus-thread-expunge-below}{47}
+\entry {gnus-thread-hide-killed}{47}
+\entry {gnus-thread-hide-subtree}{47}
+\entry {gnus-thread-ignore-subject}{47}
+\entry {gnus-thread-indent-level}{47}
+\entry {gnus-thread-operation-ignore-subject}{48}
+\entry {gnus-thread-score-function}{49}
+\entry {gnus-thread-sort-by-author}{48}
+\entry {gnus-thread-sort-by-date}{48}
+\entry {gnus-thread-sort-by-number}{48}
+\entry {gnus-thread-sort-by-score}{48}
+\entry {gnus-thread-sort-by-subject}{48}
+\entry {gnus-thread-sort-by-total-score}{48}
+\entry {gnus-thread-sort-functions}{48}
+\entry {gnus-ticked-mark}{39}
+\entry {gnus-topic-copy-group}{26}
+\entry {gnus-topic-copy-matching}{26}
+\entry {gnus-topic-create-topic}{26}
+\entry {gnus-topic-delete}{26}
+\entry {gnus-topic-display-empty-topics}{25}
+\entry {gnus-topic-edit-parameters}{27}
+\entry {gnus-topic-indent}{26}
+\entry {gnus-topic-indent-level}{25}
+\entry {gnus-topic-kill-group}{26}
+\entry {gnus-topic-line-format}{25}
+\entry {gnus-topic-list-active}{27}
+\entry {gnus-topic-mark-topic}{26}
+\entry {gnus-topic-mode}{25}
+\entry {gnus-topic-mode-hook}{25}
+\entry {gnus-topic-move-group}{26}
+\entry {gnus-topic-move-matching}{26}
+\entry {gnus-topic-remove-group}{26}
+\entry {gnus-topic-rename}{26}
+\entry {gnus-topic-select-group}{26}
+\entry {gnus-topic-sort-groups-by-alphabet}{27}
+\entry {gnus-topic-sort-groups-by-level}{27}
+\entry {gnus-topic-sort-groups-by-method}{27}
+\entry {gnus-topic-sort-groups-by-rank}{27}
+\entry {gnus-topic-sort-groups-by-score}{27}
+\entry {gnus-topic-sort-groups-by-unread}{27}
+\entry {gnus-topic-topology}{27}
+\entry {gnus-topic-unmark-topic}{26}
+\entry {gnus-topic-yank-group}{26}
+\entry {gnus-total-expirable-newsgroups}{100}
+\entry {gnus-tree-brackets}{68}
+\entry {gnus-tree-line-format}{68}
+\entry {gnus-tree-minimize-window}{68}
+\entry {gnus-tree-mode-hook}{68}
+\entry {gnus-tree-mode-line-format}{68}
+\entry {gnus-tree-parent-child-edges}{68}
+\entry {gnus-uncacheable-groups}{51}
+\entry {gnus-undo}{153}
+\entry {gnus-undo-mode}{153}
+\entry {gnus-unload}{24}
+\entry {gnus-unread-mark}{36, 40}
+\entry {gnus-update-format}{140}
+\entry {gnus-update-score-entry-dates}{121}
+\entry {gnus-updated-mode-lines}{145}
+\entry {gnus-use-adaptive-scoring}{126}
+\entry {gnus-use-article-prefetch}{49}
+\entry {gnus-use-cache}{50}
+\entry {gnus-use-cross-reference}{73}
+\entry {gnus-use-demon}{148}
 \entry {gnus-use-dribble-file}{9}
-\entry {gnus-use-full-window}{148}
-\entry {gnus-use-grouplens}{141}
-\entry {gnus-use-long-file-name}{56, 60}
-\entry {gnus-use-nocem}{157}
-\entry {gnus-use-scoring}{128}
-\entry {gnus-use-trees}{74}
-\entry {gnus-uu-correct-stripped-uucode}{64}
-\entry {gnus-uu-decode-postscript}{62}
-\entry {gnus-uu-decode-postscript-and-save}{62}
-\entry {gnus-uu-decode-postscript-and-save-view}{62}
-\entry {gnus-uu-decode-postscript-view}{62}
-\entry {gnus-uu-decode-unshar}{62}
-\entry {gnus-uu-decode-unshar-and-save}{62}
-\entry {gnus-uu-decode-unshar-and-save-view}{62}
-\entry {gnus-uu-decode-unshar-view}{62}
-\entry {gnus-uu-decode-uu}{61}
-\entry {gnus-uu-decode-uu-and-save}{62}
-\entry {gnus-uu-decode-uu-and-save-view}{62}
-\entry {gnus-uu-decode-uu-view}{62}
-\entry {gnus-uu-digest-headers}{87}
-\entry {gnus-uu-digest-mail-forward}{42}
-\entry {gnus-uu-digest-post-forward}{42}
-\entry {gnus-uu-do-not-unpack-archives}{64}
-\entry {gnus-uu-grab-move}{63}
-\entry {gnus-uu-grab-view}{63}
-\entry {gnus-uu-grabbed-file-functions}{63}
-\entry {gnus-uu-ignore-default-archive-rules}{64}
-\entry {gnus-uu-ignore-default-view-rules}{64}
-\entry {gnus-uu-ignore-files-by-name}{63}
-\entry {gnus-uu-ignore-files-by-type}{64}
-\entry {gnus-uu-kill-carriage-return}{64}
-\entry {gnus-uu-mark-all}{48}
-\entry {gnus-uu-mark-buffer}{48, 73}
-\entry {gnus-uu-mark-by-regexp}{47, 73}
-\entry {gnus-uu-mark-over}{48}
-\entry {gnus-uu-mark-region}{47, 73}
-\entry {gnus-uu-mark-series}{48}
-\entry {gnus-uu-mark-sparse}{48}
-\entry {gnus-uu-mark-thread}{47, 52, 73}
-\entry {gnus-uu-notify-files}{62}
-\entry {gnus-uu-post-include-before-composing}{65}
-\entry {gnus-uu-post-length}{65}
-\entry {gnus-uu-post-news}{43}
-\entry {gnus-uu-post-separate-description}{65}
-\entry {gnus-uu-post-threaded}{65}
-\entry {gnus-uu-save-in-digest}{64}
-\entry {gnus-uu-tmp-dir}{64}
-\entry {gnus-uu-unmark-articles-not-decoded}{64}
-\entry {gnus-uu-unmark-buffer}{73}
-\entry {gnus-uu-unmark-by-regexp}{73}
-\entry {gnus-uu-unmark-region}{73}
-\entry {gnus-uu-unmark-thread}{48, 52, 73}
-\entry {gnus-uu-user-archive-rules}{63}
-\entry {gnus-uu-user-view-rules}{63}
-\entry {gnus-uu-user-view-rules-end}{63}
-\entry {gnus-uu-view-and-save}{64}
-\entry {gnus-uu-view-with-metamail}{64}
-\entry {gnus-verbose}{161}
-\entry {gnus-verbose-backends}{161}
-\entry {gnus-version}{33}
-\entry {gnus-view-pseudo-asynchronously}{65}
-\entry {gnus-view-pseudos}{65}
-\entry {gnus-view-pseudos-separately}{65}
-\entry {gnus-visible-headers}{81}
-\entry {gnus-visual}{152}
-\entry {gnus-visual-mark-article-hook}{38}
-\entry {gnus-window-min-height}{150}
-\entry {gnus-window-min-width}{150}
-\entry {group buffer}{13}
-\entry {group buffer format}{13}
-\entry {group description}{32}
-\entry {group information}{32}
-\entry {group level}{19}
-\entry {group listing}{24}
-\entry {group movement}{16}
-\entry {group parameters}{22}
-\entry {group score}{20}
-\entry {group score commands}{128}
-\entry {group selection}{17}
-\entry {GroupLens}{140}
-\entry {grouplens-best-unread-article}{142}
-\entry {grouplens-newsgroups}{141}
-\entry {grouplens-next-unread-article}{142}
-\entry {grouplens-prediction-display}{142}
-\entry {grouplens-pseudonym}{141}
-\entry {grouplens-score-thread}{141}
+\entry {gnus-use-full-window}{142}
+\entry {gnus-use-grouplens}{133}
+\entry {gnus-use-header-prefetch}{50}
+\entry {gnus-use-long-file-name}{50, 54}
+\entry {gnus-use-nocem}{149}
+\entry {gnus-use-scoring}{119}
+\entry {gnus-use-toolbar}{154}
+\entry {gnus-use-trees}{68}
+\entry {gnus-use-undo}{153}
+\entry {gnus-uu-be-dangerous}{57}
+\entry {gnus-uu-correct-stripped-uucode}{57}
+\entry {gnus-uu-decode-postscript}{56}
+\entry {gnus-uu-decode-postscript-and-save}{56}
+\entry {gnus-uu-decode-postscript-and-save-view}{56}
+\entry {gnus-uu-decode-postscript-view}{56}
+\entry {gnus-uu-decode-unshar}{56}
+\entry {gnus-uu-decode-unshar-and-save}{56}
+\entry {gnus-uu-decode-unshar-and-save-view}{56}
+\entry {gnus-uu-decode-unshar-view}{56}
+\entry {gnus-uu-decode-uu}{55}
+\entry {gnus-uu-decode-uu-and-save}{55}
+\entry {gnus-uu-decode-uu-and-save-view}{55}
+\entry {gnus-uu-decode-uu-view}{55}
+\entry {gnus-uu-digest-headers}{81}
+\entry {gnus-uu-digest-mail-forward}{38}
+\entry {gnus-uu-digest-post-forward}{38}
+\entry {gnus-uu-do-not-unpack-archives}{57}
+\entry {gnus-uu-grab-move}{57}
+\entry {gnus-uu-grab-view}{57}
+\entry {gnus-uu-grabbed-file-functions}{57}
+\entry {gnus-uu-ignore-default-archive-rules}{57}
+\entry {gnus-uu-ignore-default-view-rules}{57}
+\entry {gnus-uu-ignore-files-by-name}{57}
+\entry {gnus-uu-ignore-files-by-type}{57}
+\entry {gnus-uu-invert-processable}{42}
+\entry {gnus-uu-kill-carriage-return}{57}
+\entry {gnus-uu-mark-all}{43}
+\entry {gnus-uu-mark-buffer}{43, 67}
+\entry {gnus-uu-mark-by-regexp}{42, 67}
+\entry {gnus-uu-mark-over}{43}
+\entry {gnus-uu-mark-region}{42, 67}
+\entry {gnus-uu-mark-series}{43}
+\entry {gnus-uu-mark-sparse}{43}
+\entry {gnus-uu-mark-thread}{42, 47, 67}
+\entry {gnus-uu-notify-files}{55}
+\entry {gnus-uu-post-include-before-composing}{58}
+\entry {gnus-uu-post-length}{58}
+\entry {gnus-uu-post-news}{38}
+\entry {gnus-uu-post-separate-description}{58}
+\entry {gnus-uu-post-threaded}{58}
+\entry {gnus-uu-save-in-digest}{58}
+\entry {gnus-uu-tmp-dir}{57}
+\entry {gnus-uu-unmark-articles-not-decoded}{57}
+\entry {gnus-uu-unmark-buffer}{67}
+\entry {gnus-uu-unmark-by-regexp}{67}
+\entry {gnus-uu-unmark-region}{67}
+\entry {gnus-uu-unmark-thread}{42, 47, 67}
+\entry {gnus-uu-user-archive-rules}{56}
+\entry {gnus-uu-user-view-rules}{56}
+\entry {gnus-uu-user-view-rules-end}{56}
+\entry {gnus-uu-view-and-save}{57}
+\entry {gnus-uu-view-with-metamail}{58}
+\entry {gnus-valid-select-methods}{184}
+\entry {gnus-verbose}{156}
+\entry {gnus-verbose-backends}{156}
+\entry {gnus-version}{30}
+\entry {gnus-view-pseudo-asynchronously}{58}
+\entry {gnus-view-pseudos}{58}
+\entry {gnus-view-pseudos-separately}{59}
+\entry {gnus-visible-headers}{77}
+\entry {gnus-visual}{146}
+\entry {gnus-visual-mark-article-hook}{33}
+\entry {gnus-window-min-height}{143}
+\entry {gnus-window-min-width}{143}
+\entry {gnus-xmas-glyph-directory}{153}
+\entry {gnus-xmas-logo-color-alist}{153}
+\entry {gnus-xmas-logo-color-style}{154}
+\entry {gnus-xmas-modeline-glyph}{154}
+\entry {Good Net-Keeping Seal of Approval}{161}
+\entry {group buffer}{11}
+\entry {group buffer format}{11}
+\entry {group description}{29}
+\entry {group highlighting}{12}
+\entry {group information}{29}
+\entry {group level}{16}
+\entry {group listing}{21}
+\entry {group modeline}{12}
+\entry {group movement}{13}
+\entry {group parameters}{19, 27}
+\entry {group score}{17}
+\entry {group score commands}{119}
+\entry {group selection}{14}
+\entry {group timestamps}{30}
+\entry {group-group-find-parameter}{174}
+\entry {GroupLens}{132}
+\entry {grouplens-best-unread-article}{133}
+\entry {grouplens-newsgroups}{133}
+\entry {grouplens-next-unread-article}{133}
+\entry {grouplens-prediction-display}{134}
+\entry {grouplens-pseudonym}{133}
+\entry {grouplens-score-thread}{133}
 \initial {H}
-\entry {head}{172}
-\entry {header}{172}
-\entry {headers}{172}
-\entry {help group}{117}
-\entry {hiding headers}{81}
-\entry {highlight}{66}
-\entry {highlighting}{152, 166}
-\entry {highlights}{161}
-\entry {hilit19}{166}
-\entry {history}{165}
+\entry {head}{169}
+\entry {header}{169}
+\entry {headers}{169}
+\entry {help group}{18, 106}
+\entry {hiding headers}{77}
+\entry {highlight}{59}
+\entry {highlighting}{12, 146, 160}
+\entry {highlights}{155}
+\entry {hilit19}{160}
+\entry {history}{159}
 \initial {I}
 \entry {ignored groups}{9}
-\entry {illegal characters in file names}{161}
-\entry {incoming mail files}{105}
-\entry {info}{33}
-\entry {information on groups}{32}
-\entry {interaction}{145}
-\entry {ispell}{89}
-\entry {ispell-message}{89}
+\entry {illegal characters in file names}{156}
+\entry {incoming mail files}{96}
+\entry {incoming mail treatment}{100}
+\entry {info}{30}
+\entry {information on groups}{29}
+\entry {InReference}{19, 112}
+\entry {interaction}{139}
+\entry {internal variables}{173}
+\entry {ISO8601}{123}
+\entry {ispell}{82}
+\entry {ispell-message}{82}
 \initial {J}
-\entry {Jem}{157}
+\entry {Jem}{149}
 \initial {K}
-\entry {kibozing}{123}
-\entry {kill files}{139}
-\entry {killed groups}{173}
+\entry {kibozing}{114}
+\entry {kill files}{131, 132}
+\entry {killed groups}{170}
 \initial {L}
-\entry {levels}{173}
-\entry {limiting}{48}
-\entry {links}{103}
-\entry {LIST overview.fmt}{80}
-\entry {local variables}{133}
+\entry {level}{16}
+\entry {levels}{170}
+\entry {limiting}{43}
+\entry {links}{94}
+\entry {LIST overview.fmt}{74}
+\entry {list server brain damage}{100}
+\entry {local variables}{125}
 \initial {M}
-\entry {mail}{41, 101, 172}
-\entry {mail folders}{114}
-\entry {mail group commands}{76}
-\entry {mail message}{172}
-\entry {mail {\smallcaps nov} spool}{113}
-\entry {mail splitting}{102, 105}
-\entry {mail-extract-address-components}{35}
-\entry {MAILHOST}{104}
-\entry {mailing lists}{88}
-\entry {manual}{33}
-\entry {marking groups}{20}
-\entry {marks}{44}
-\entry {mbox}{117}
-\entry {mbox folders}{114}
-\entry {menus}{152}
-\entry {message}{172}
-\entry {metamail}{64}
-\entry {metamail-buffer}{83}
-\entry {MH folders}{59}
-\entry {mh-e mail spool}{114}
-\entry {{\smallcaps mime}}{83}
-\entry {MIME digest}{117}
-\entry {MMDF mail box}{117}
-\entry {mode lines}{152, 161}
-\entry {{\smallcaps mode reader}}{98}
-\entry {mouse}{154}
-\entry {move mail}{76}
-\entry {movemail}{104}
-\entry {moving articles}{77}
-\entry {Mule}{168}
+\entry {mail}{37, 92, 169}
+\entry {mail folders}{104}
+\entry {mail group commands}{69}
+\entry {mail message}{169}
+\entry {mail \sc {nov} spool}{103}
+\entry {mail splitting}{93, 96}
+\entry {mail washing}{100}
+\entry {mail-extract-address-components}{31}
+\entry {mail-to-news gateways}{113}
+\entry {MAILHOST}{94}
+\entry {mailing lists}{82}
+\entry {making groups}{18}
+\entry {manual}{30, 168}
+\entry {marking groups}{17}
+\entry {marks}{39}
+\entry {max-lisp-eval-depth}{172}
+\entry {mbox}{106}
+\entry {mbox folders}{104}
+\entry {mc-verify}{150}
+\entry {menus}{146}
+\entry {message}{169}
+\entry {Message-ID}{66}
+\entry {message-sent-hook}{129}
+\entry {metamail}{58}
+\entry {metamail-buffer}{78}
+\entry {MH folders}{53}
+\entry {mh-e mail spool}{104}
+\entry {\sc {mime}}{78}
+\entry {MIME digest}{106}
+\entry {MMDF mail box}{106}
+\entry {mode lines}{145, 155}
+\entry {\sc {mode reader}}{89}
+\entry {moderation}{153}
+\entry {mouse}{147}
+\entry {move mail}{69}
+\entry {movemail}{94}
+\entry {moving articles}{70}
+\entry {Mule}{161}
 \initial {N}
-\entry {native}{172}
-\entry {new features}{170}
-\entry {new groups}{6}
-\entry {new messages}{32}
-\entry {news}{172}
-\entry {news backends}{97}
-\entry {news spool}{100}
-\entry {nnbabyl}{112}
-\entry {nnbabyl-active-file}{112, 113}
-\entry {nnbabyl-get-new-mail}{111, 113}
-\entry {nnbabyl-mbox-file}{112}
-\entry {\code {nnchoke}}{178}
-\entry {nndir}{115}
-\entry {nndoc}{117}
-\entry {nndoc-article-type}{118}
-\entry {nndoc-post-type}{118}
-\entry {nneething}{116}
-\entry {nneething-exclude-files}{117}
-\entry {nneething-map-file}{117}
-\entry {nneething-map-file-directory}{116}
-\entry {nnfolder}{114}
-\entry {nnfolder-active-file}{115}
-\entry {nnfolder-directory}{115}
-\entry {nnfolder-generate-active-file}{115}
-\entry {nnfolder-get-new-mail}{111, 115}
-\entry {nnfolder-newsgroups-file}{115}
-\entry {nnheader-file-name-translation-alist}{161}
-\entry {nnheader-max-head-length}{161}
-\entry {nnkiboze}{123}
-\entry {nnkiboze-directory}{123}
-\entry {nnkiboze-generate-groups}{123}
-\entry {nnmail-crash-box}{104}
-\entry {nnmail-crosspost}{103}
-\entry {nnmail-crosspost-link-function}{103}
-\entry {nnmail-delete-file-function}{105}
-\entry {nnmail-delete-incoming}{105}
-\entry {nnmail-expiry-wait}{109}
-\entry {nnmail-expiry-wait-function}{24, 109}
-\entry {nnmail-keep-last-article}{107, 110}
-\entry {nnmail-message-id-cache-file}{110}
-\entry {nnmail-message-id-cache-length}{110}
-\entry {nnmail-movemail-program}{105}
-\entry {nnmail-pop-password}{104}
-\entry {nnmail-pop-password-required}{104}
-\entry {nnmail-post-get-new-mail-hook}{104}
-\entry {nnmail-pre-get-new-mail-hook}{104}
-\entry {nnmail-prepare-incoming-hook}{104}
-\entry {nnmail-procmail-directory}{107}
-\entry {nnmail-procmail-suffix}{104, 107}
-\entry {nnmail-read-incoming-hook}{103}
-\entry {nnmail-resplit-incoming}{107}
-\entry {nnmail-split-abbrev-alist}{106}
-\entry {nnmail-split-fancy}{105}
-\entry {nnmail-split-fancy-syntax-table}{106}
-\entry {nnmail-split-methods}{102}
-\entry {nnmail-spool-file}{103}
-\entry {nnmail-tmp-directory}{105}
-\entry {nnmail-treat-duplicates}{110}
-\entry {nnmail-use-long-file-names}{105}
-\entry {nnmail-use-procmail}{104}
-\entry {nnmbox}{112}
-\entry {nnmbox-active-file}{112}
-\entry {nnmbox-get-new-mail}{111, 112}
-\entry {nnmbox-mbox-file}{112}
-\entry {nnmh}{114}
-\entry {nnmh-be-safe}{114}
-\entry {nnmh-directory}{114}
-\entry {nnmh-get-new-mail}{111, 114}
-\entry {nnml}{113}
-\entry {nnml-active-file}{113}
-\entry {nnml-directory}{113}
-\entry {nnml-generate-nov-databases}{114}
-\entry {nnml-get-new-mail}{111, 114}
-\entry {nnml-newsgroups-file}{113}
-\entry {nnml-nov-file-name}{114}
-\entry {nnml-nov-is-evil}{114}
-\entry {nnml-prepare-save-mail-hook}{114}
-\entry {nnsoup}{120}
-\entry {nnsoup-active-file}{120}
-\entry {nnsoup-directory}{120}
-\entry {nnsoup-pack-replies}{119}
-\entry {nnsoup-packer}{120}
-\entry {nnsoup-packet-directory}{121}
-\entry {nnsoup-packet-regexp}{121}
-\entry {nnsoup-replies-directory}{120}
-\entry {nnsoup-replies-format-type}{120}
-\entry {nnsoup-replies-index-type}{120}
-\entry {nnsoup-set-variables}{121}
-\entry {nnsoup-tmp-directory}{120}
-\entry {nnsoup-unpacker}{120}
-\entry {nnspool}{100}
-\entry {nnspool-active-file}{101}
-\entry {nnspool-active-times-file}{101}
-\entry {nnspool-history-file}{101}
-\entry {nnspool-inews-program}{100}
-\entry {nnspool-inews-switches}{100}
-\entry {nnspool-lib-dir}{101}
-\entry {nnspool-newsgroups-file}{101}
-\entry {nnspool-nov-directory}{101}
-\entry {nnspool-nov-is-evil}{101}
-\entry {nnspool-sift-nov-with-sed}{101}
-\entry {nnspool-spool-directory}{101}
-\entry {nntp}{97}
-\entry {nntp authentification}{98}
-\entry {{\smallcaps nntp} server}{3}
-\entry {nntp-address}{99}
-\entry {nntp-async-number}{55, 100}
-\entry {nntp-buggy-select}{99}
-\entry {nntp-command-timeout}{99}
-\entry {nntp-connection-timeout}{98}
-\entry {nntp-end-of-line}{99}
-\entry {nntp-maximum-request}{98}
-\entry {nntp-nov-gap}{100}
-\entry {nntp-nov-is-evil}{99}
-\entry {nntp-open-network-stream}{99}
-\entry {nntp-open-rlogin}{99}
-\entry {nntp-open-server-function}{99}
-\entry {nntp-port-number}{99}
-\entry {nntp-prepare-server-hook}{100}
-\entry {nntp-retry-on-break}{99}
-\entry {nntp-rlogin-parameters}{99}
-\entry {nntp-rlogin-user-name}{99}
-\entry {nntp-send-authinfo}{98}
-\entry {nntp-send-mode-reader}{98}
-\entry {nntp-server-action-alist}{98}
-\entry {nntp-server-hook}{99}
-\entry {nntp-server-opened-hook}{98}
-\entry {nntp-warn-about-losing-connection}{100}
-\entry {nntp-xover-commands}{100}
+\entry {native}{169}
+\entry {new features}{163}
+\entry {new groups}{5}
+\entry {new messages}{29}
+\entry {news}{169}
+\entry {news backends}{89}
+\entry {news spool}{91}
+\entry {newsgroup}{20}
+\entry {nnbabyl}{103}
+\entry {nnbabyl-active-file}{103}
+\entry {nnbabyl-get-new-mail}{102, 103}
+\entry {nnbabyl-mbox-file}{103}
+\entry {\code {nnchoke}}{175}
+\entry {nndir}{18, 105}
+\entry {nndoc}{19, 106}
+\entry {nndoc-article-type}{107}
+\entry {nndoc-post-type}{107}
+\entry {nneething}{18, 105}
+\entry {nneething-exclude-files}{106}
+\entry {nneething-map-file}{106}
+\entry {nneething-map-file-directory}{106}
+\entry {nnfolder}{104}
+\entry {nnfolder-active-file}{105}
+\entry {nnfolder-directory}{104}
+\entry {nnfolder-generate-active-file}{105}
+\entry {nnfolder-get-new-mail}{102, 105}
+\entry {nnfolder-newsgroups-file}{105}
+\entry {nngateway-address}{113}
+\entry {nngateway-header-transformation}{113}
+\entry {nnheader-file-name-translation-alist}{156}
+\entry {nnheader-get-report}{181}
+\entry {nnheader-head-chop-length}{156}
+\entry {nnheader-max-head-length}{156}
+\entry {nnheader-ms-strip-cr}{101}
+\entry {nnheader-report}{181}
+\entry {nnkiboze}{18, 114}
+\entry {nnkiboze-directory}{115}
+\entry {nnkiboze-generate-groups}{115}
+\entry {nnmail-cache-accepted-message-ids}{96}
+\entry {nnmail-crash-box}{95}
+\entry {nnmail-crosspost}{94}
+\entry {nnmail-crosspost-link-function}{94}
+\entry {nnmail-delete-file-function}{96}
+\entry {nnmail-delete-incoming}{96}
+\entry {nnmail-expiry-wait}{99}
+\entry {nnmail-expiry-wait-function}{20, 100}
+\entry {nnmail-keep-last-article}{98, 100}
+\entry {nnmail-message-id-cache-file}{101}
+\entry {nnmail-message-id-cache-length}{101}
+\entry {nnmail-movemail-program}{95}
+\entry {nnmail-pop-password}{94}
+\entry {nnmail-pop-password-required}{94}
+\entry {nnmail-post-get-new-mail-hook}{95}
+\entry {nnmail-pre-get-new-mail-hook}{95}
+\entry {nnmail-prepare-incoming-header-hook}{101}
+\entry {nnmail-prepare-incoming-hook}{95, 101}
+\entry {nnmail-prepare-incoming-message-hook}{101}
+\entry {nnmail-procmail-directory}{98}
+\entry {nnmail-procmail-suffix}{95, 98}
+\entry {nnmail-read-incoming-hook}{94}
+\entry {nnmail-remove-leading-whitespace}{101}
+\entry {nnmail-remove-list-identifiers}{101}
+\entry {nnmail-remove-tabs}{101}
+\entry {nnmail-resplit-incoming}{98}
+\entry {nnmail-split-abbrev-alist}{97}
+\entry {nnmail-split-fancy}{96}
+\entry {nnmail-split-fancy-syntax-table}{97}
+\entry {nnmail-split-hook}{95}
+\entry {nnmail-split-methods}{93}
+\entry {nnmail-spool-file}{94}
+\entry {nnmail-tmp-directory}{95}
+\entry {nnmail-treat-duplicates}{101}
+\entry {nnmail-use-long-file-names}{96}
+\entry {nnmail-use-procmail}{95}
+\entry {nnmbox}{102}
+\entry {nnmbox-active-file}{102, 103}
+\entry {nnmbox-get-new-mail}{102, 103}
+\entry {nnmbox-mbox-file}{102, 103}
+\entry {nnmh}{104}
+\entry {nnmh-be-safe}{104}
+\entry {nnmh-directory}{104}
+\entry {nnmh-get-new-mail}{102, 104}
+\entry {nnml}{103}
+\entry {nnml-active-file}{103}
+\entry {nnml-directory}{103}
+\entry {nnml-generate-nov-databases}{104}
+\entry {nnml-get-new-mail}{102, 104}
+\entry {nnml-newsgroups-file}{104}
+\entry {nnml-nov-file-name}{104}
+\entry {nnml-nov-is-evil}{104}
+\entry {nnml-prepare-save-mail-hook}{104}
+\entry {nnsoup}{111}
+\entry {nnsoup-active-file}{111}
+\entry {nnsoup-directory}{111}
+\entry {nnsoup-pack-replies}{110}
+\entry {nnsoup-packer}{111}
+\entry {nnsoup-packet-directory}{112}
+\entry {nnsoup-packet-regexp}{112}
+\entry {nnsoup-replies-directory}{111}
+\entry {nnsoup-replies-format-type}{111}
+\entry {nnsoup-replies-index-type}{111}
+\entry {nnsoup-set-variables}{112}
+\entry {nnsoup-tmp-directory}{111}
+\entry {nnsoup-unpacker}{111}
+\entry {nnspool}{91}
+\entry {nnspool-active-file}{92}
+\entry {nnspool-active-times-file}{92}
+\entry {nnspool-history-file}{92}
+\entry {nnspool-inews-program}{92}
+\entry {nnspool-inews-switches}{92}
+\entry {nnspool-lib-dir}{92}
+\entry {nnspool-newsgroups-file}{92}
+\entry {nnspool-nov-directory}{92}
+\entry {nnspool-nov-is-evil}{92}
+\entry {nnspool-sift-nov-with-sed}{92}
+\entry {nnspool-spool-directory}{92}
+\entry {nntp}{89}
+\entry {nntp authentification}{89}
+\entry {\sc {nntp} server}{3}
+\entry {nntp-address}{91}
+\entry {nntp-authinfo-function}{89}
+\entry {nntp-buggy-select}{91}
+\entry {nntp-command-timeout}{90}
+\entry {nntp-connection-timeout}{90}
+\entry {nntp-end-of-line}{91}
+\entry {nntp-maximum-request}{90}
+\entry {nntp-nov-gap}{91}
+\entry {nntp-nov-is-evil}{91}
+\entry {nntp-open-connection-function}{90}
+\entry {nntp-open-network-stream}{90}
+\entry {nntp-open-rlogin}{90}
+\entry {nntp-port-number}{91}
+\entry {nntp-prepare-server-hook}{91}
+\entry {nntp-retry-on-break}{90}
+\entry {nntp-rlogin-parameters}{91}
+\entry {nntp-rlogin-user-name}{91}
+\entry {nntp-send-authinfo}{89}
+\entry {nntp-send-authinfo-from-file}{89}
+\entry {nntp-send-mode-reader}{89}
+\entry {nntp-send-nosy-authinfo}{89}
+\entry {nntp-server-action-alist}{89}
+\entry {nntp-server-hook}{90}
+\entry {nntp-server-opened-hook}{89}
+\entry {nntp-warn-about-losing-connection}{91}
+\entry {nntp-xover-commands}{91}
 \entry {NNTPSERVER}{3}
-\entry {nnvirtual}{121}
-\entry {nnvirtual-always-rescan}{122}
-\entry {nocem}{157}
-\entry {{\smallcaps nov}}{80}
-\entry {nov}{100, 173}
+\entry {nnvirtual}{114}
+\entry {nnvirtual-always-rescan}{114}
+\entry {nnweb}{19, 112}
+\entry {nnweb-max-hits}{113}
+\entry {nnweb-search}{113}
+\entry {nnweb-type}{112}
+\entry {nnweb-type-definition}{113}
+\entry {nocem}{149}
+\entry {\sc {nov}}{74}
+\entry {nov}{91, 170}
 \initial {O}
-\entry {offline}{118}
-\entry {overview.fmt}{80}
+\entry {offline}{109}
+\entry {overview.fmt}{74}
 \initial {P}
-\entry {parent articles}{72}
-\entry {persistent articles}{57}
-\entry {pick and read}{73}
-\entry {POP mail}{104}
-\entry {post}{42, 87}
-\entry {PostScript}{62}
-\entry {PPP connections}{99}
-\entry {process mark}{45}
-\entry {process/prefix convention}{145}
-\entry {procmail}{106}
-\entry {pseudo-articles}{65}
+\entry {parameters}{27}
+\entry {parent articles}{65}
+\entry {persistent articles}{51}
+\entry {pick and read}{66}
+\entry {POP mail}{94}
+\entry {post}{38, 81}
+\entry {PostScript}{56, 65}
+\entry {PPP connections}{90}
+\entry {pre-fetch}{49}
+\entry {printing}{65}
+\entry {process mark}{40}
+\entry {process/prefix convention}{139}
+\entry {procmail}{97}
+\entry {pseudo-articles}{58}
 \initial {R}
-\entry {rcvstore}{59}
-\entry {reading init file}{33}
-\entry {reading mail}{101}
-\entry {reading news}{97}
-\entry {referring articles}{72}
-\entry {reply}{87, 172}
-\entry {reporting bugs}{167, 176}
-\entry {restarting}{32}
-\entry {reverse scoring}{137}
-\entry {RFC 1036}{167}
-\entry {RFC 1153 digest}{117}
-\entry {RFC 341 digest}{117}
-\entry {RFC 822}{167}
-\entry {rmail mbox}{112, 117}
-\entry {rnews batch files}{117}
-\entry {rule variables}{63}
+\entry {rcvstore}{53}
+\entry {reading init file}{30}
+\entry {reading mail}{92}
+\entry {reading news}{89}
+\entry {referring articles}{65}
+\entry {renaming groups}{18}
+\entry {reply}{81, 169}
+\entry {reporting bugs}{160, 173}
+\entry {restarting}{29}
+\entry {reverse scoring}{130}
+\entry {RFC 1036}{161}
+\entry {RFC 1153 digest}{106}
+\entry {RFC 341 digest}{106}
+\entry {RFC 822}{161}
+\entry {RFC1522 decoding}{95}
+\entry {rmail mbox}{103, 106}
+\entry {rnews batch files}{106}
+\entry {rule variables}{56}
 \initial {S}
-\entry {saving .newsrc}{33}
-\entry {saving articles}{58}
-\entry {scanning new news}{32}
-\entry {score cache}{128}
-\entry {score commands}{125}
-\entry {score file format}{130}
-\entry {score variables}{128}
-\entry {scoring}{125}
-\entry {scoring crossposts}{136}
-\entry {scoring tips}{136}
-\entry {secondary}{172}
-\entry {sed}{101}
-\entry {select method}{173}
-\entry {select methods}{93}
-\entry {selecting articles}{40}
-\entry {sent messages}{89}
-\entry {server}{173}
-\entry {server buffer format}{94}
-\entry {server commands}{94}
-\entry {server errors}{5}
-\entry {setting marks}{46}
-\entry {setting process marks}{47}
-\entry {shared articles}{62}
-\entry {slave}{5}
-\entry {slocal}{106}
-\entry {slow machine}{175}
-\entry {Son-of-RFC 1036}{167}
-\entry {sorting groups}{26}
-\entry {SOUP}{118}
-\entry {sox}{63}
-\entry {spam}{157}
-\entry {spamming}{79}
-\entry {splitting mail}{102}
+\entry {saving .newsrc}{30}
+\entry {saving articles}{52}
+\entry {scanning new news}{29}
+\entry {score cache}{120}
+\entry {score commands}{117}
+\entry {score decays}{137}
+\entry {score file format}{121}
+\entry {score file group parameter}{20}
+\entry {score variables}{119}
+\entry {scoring}{117}
+\entry {scoring crossposts}{129}
+\entry {scoring tips}{129}
+\entry {searching the Usenet}{112}
+\entry {secondary}{169}
+\entry {sed}{92}
+\entry {select method}{170}
+\entry {select methods}{85}
+\entry {selecting articles}{35}
+\entry {sent messages}{82}
+\entry {server}{170}
+\entry {server buffer format}{85}
+\entry {server commands}{86}
+\entry {server errors}{4}
+\entry {setting marks}{41}
+\entry {setting process marks}{42}
+\entry {shared articles}{56}
+\entry {signatures}{64}
+\entry {slave}{4}
+\entry {slocal}{97}
+\entry {slow machine}{172}
+\entry {solid groups}{170}
+\entry {Son-of-RFC 1036}{161}
+\entry {sorting groups}{22}
+\entry {SOUP}{109}
+\entry {sox}{56}
+\entry {spam}{149, 154}
+\entry {spamming}{73}
+\entry {sparse articles}{170}
+\entry {splitting mail}{93}
 \entry {starting up}{3}
 \entry {startup files}{8}
-\entry {subscribing}{18}
-\entry {summary buffer}{35}
-\entry {summary buffer format}{35}
-\entry {summary exit}{78}
-\entry {summary movement}{38}
-\entry {summary sorting}{71}
-\entry {superseding articles}{43}
+\entry {subscription}{5, 15}
+\entry {summary buffer}{31}
+\entry {summary buffer format}{31}
+\entry {summary exit}{72}
+\entry {summary movement}{34}
+\entry {summary sorting}{65}
+\entry {superseding articles}{39}
 \initial {T}
-\entry {terminology}{172}
-\entry {thread commands}{52}
-\entry {threading}{49}
-\entry {to-address}{23}
-\entry {to-group}{23}
-\entry {to-list}{23}
-\entry {todo}{171}
-\entry {topic commands}{29}
-\entry {topic topology}{31}
-\entry {topic variables}{29}
-\entry {topics}{28}
-\entry {topology}{31}
-\entry {total-expire}{24}
-\entry {transient-mark-mode}{145}
-\entry {trees}{74}
-\entry {troubleshooting}{175}
+\entry {terminology}{169}
+\entry {thread commands}{47}
+\entry {threading}{44}
+\entry {timestamps}{30}
+\entry {to-address}{19}
+\entry {to-group}{20}
+\entry {to-list}{19}
+\entry {todo}{168}
+\entry {topic commands}{26}
+\entry {topic parameters}{27, 28}
+\entry {topic sorting}{27}
+\entry {topic topology}{27}
+\entry {topic variables}{25}
+\entry {topics}{25}
+\entry {topology}{27}
+\entry {total-expire}{20}
+\entry {transient-mark-mode}{139}
+\entry {trees}{68}
+\entry {troubleshooting}{172}
 \initial {U}
-\entry {unix mail box}{112}
-\entry {Unix mbox}{117}
-\entry {unloading}{28}
-\entry {unshar}{62}
-\entry {Usenet Seal of Approval}{167}
-\entry {uudecode}{61}
-\entry {uuencoded articles}{61}
+\entry {UCE}{154}
+\entry {undo}{152}
+\entry {unix mail box}{102}
+\entry {Unix mbox}{106}
+\entry {unloading}{24}
+\entry {unshar}{56}
+\entry {unsolicited commercial email}{154}
+\entry {Usenet searches}{112}
+\entry {utility functions}{173}
+\entry {uudecode}{55}
+\entry {uuencoded articles}{55}
 \initial {V}
-\entry {V R (Summary)}{126}
-\entry {velveeta}{79}
-\entry {version}{33}
-\entry {viewing files}{65}
-\entry {virtual groups}{121}
-\entry {virtual server}{173}
-\entry {visible group parameter}{25}
-\entry {visual}{152}
+\entry {velveeta}{73}
+\entry {version}{30}
+\entry {viewing files}{58}
+\entry {virtual groups}{114}
+\entry {virtual server}{170}
+\entry {visible group parameter}{22}
+\entry {visual}{146}
 \initial {W}
-\entry {washing}{69}
-\entry {window height}{150}
-\entry {window width}{150}
-\entry {windows configuration}{148}
+\entry {washing}{62, 170}
+\entry {window height}{143}
+\entry {window width}{143}
+\entry {windows configuration}{142}
 \initial {X}
-\entry {x-face}{69}
-\entry {XEmacs}{168, 191}
-\entry {XOVER}{100}
-\entry {Xref}{80}
+\entry {x-face}{62}
+\entry {XEmacs}{153, 161, 189}
+\entry {XOVER}{91}
+\entry {Xref}{74}
 \initial {Z}
-\entry {zombie groups}{173}
+\entry {zombie groups}{170}

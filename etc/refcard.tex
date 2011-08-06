@@ -1,4 +1,4 @@
-% Reference Card for GNU Emacs version 19 on Unix systems
+% Reference Card for GNU Emacs version 20 on Unix systems
 %**start of header
 \newcount\columnsperpage
 
@@ -7,7 +7,7 @@
 
 \columnsperpage=1
 
-% Copyright (c) 1987, 1993, 1996 Free Software Foundation, Inc.
+% Copyright (c) 1987, 1993, 1996, 1997 Free Software Foundation, Inc.
 
 % This file is part of GNU Emacs.
 
@@ -51,9 +51,8 @@
 
 % If there were room, it would be nice to see a section on Dired.
 
-\def\versionnumber{2.1}
-\def\year{1996}
-\def\version{March \year\ v\versionnumber}
+\def\versionnumber{2.2}
+\def\year{1997}
 
 \def\shortcopyrightnotice{\vskip 1ex plus 2 fill
   \centerline{\small \copyright\ \year\ Free Software Foundation, Inc.
@@ -62,8 +61,8 @@
 \def\copyrightnotice{
 \vskip 1ex plus 2 fill\begingroup\small
 \centerline{Copyright \copyright\ \year\ Free Software Foundation, Inc.}
-\centerline{designed by Stephen Gildea, \version}
-\centerline{for GNU Emacs version 19 on Unix systems}
+\centerline{v\versionnumber{} for GNU Emacs version 20, June \year}
+\centerline{designed by Stephen Gildea}
 
 Permission is granted to make and distribute copies of
 this card provided the copyright notice and this permission notice
@@ -252,11 +251,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 \title{GNU Emacs Reference Card}
 
-\centerline{(for version 19)}
+\centerline{(for version 20)}
 
 \section{Starting Emacs}
 
-To enter GNU Emacs 19, just type its name: \kbd{emacs}
+To enter GNU Emacs 20, just type its name: \kbd{emacs}
 
 To read in a file to edit, see Files, below.
 
@@ -277,12 +276,12 @@ To read in a file to edit, see Files, below.
 
 \section{Getting Help}
 
-The Help system is simple.  Type \kbd{C-h} (or \kbd{F1}) and follow
+The help system is simple.  Type \kbd{C-h} (or \kbd{F1}) and follow
 the directions.  If you are a first-time user, type \kbd{C-h t} for a
 {\bf tutorial}.
 
-\key{remove Help window}{C-x 1}
-\key{scroll Help window}{C-M-v}
+\key{remove help window}{C-x 1}
+\key{scroll help window}{C-M-v}
 
 \key{apropos: show commands matching a string}{C-h a}
 \key{show the function a key runs}{C-h c}
@@ -451,7 +450,7 @@ The following keys are defined in the minibuffer.
 \key{complete and execute}{RET}
 \key{show possible completions}{?}
 \key{fetch previous minibuffer input}{M-p}
-\key{fetch next later minibuffer input}{M-n}
+\key{fetch later minibuffer input or default}{M-n}
 \key{regexp search backward through history}{M-r}
 \key{regexp search forward through history}{M-s}
 \key{abort command}{C-g}
@@ -496,7 +495,7 @@ minibuffer.  Type \kbd{F10} to activate the menu bar using the minibuffer.
 \key{execute a shell command}{M-!}
 \key{run a shell command on the region}{M-|}
 \key{filter region through a shell command}{C-u M-|}
-\metax{start a shell in window \kbd{*shell*}}{M-x shell}
+\key{start a shell in window \kbd{*shell*}}{M-x shell}
 
 \section{Rectangles}
 
@@ -523,36 +522,38 @@ minibuffer.  Type \kbd{F10} to activate the menu bar using the minibuffer.
 \key{zero or more repeats}{*}
 \key{one or more repeats}{+}
 \key{zero or one repeat}{?}
-\key{any character in the set}{[ {\rm$\ldots$} ]}
-\key{any character not in the set}{[^ {\rm$\ldots$} ]}
-\key{beginning of line}{^}
-\key{end of line}{\$}
-\key{quote a special character {\it c\/}}{\\{\it c}}
+\key{quote regular expression special character {\it c\/}}{\\{\it c}}
 \key{alternative (``or'')}{\\|}
 \key{grouping}{\\( {\rm$\ldots$} \\)}
-\key{{\it n\/}th group}{\\{\it n}}
-\key{beginning of buffer}{\\`}
-\key{end of buffer}{\\'}
-\key{word break}{\\b}
-\key{not beginning or end of word}{\\B}
-\key{beginning of word}{\\<}
-\key{end of word}{\\>}
-\key{any word-syntax character}{\\w}
-\key{any non-word-syntax character}{\\W}
-\key{character with syntax {\it c}}{\\s{\it c}}
-\key{character with syntax not {\it c}}{\\S{\it c}}
+\key{same text as {\it n\/}th group}{\\{\it n}}
+\key{at word break}{\\b}
+\key{not at word break}{\\B}
 
-\section{Registers}
+\paralign to \hsize{#\tabskip=10pt plus 1 fil&#\tabskip=0pt&#\cr
+\threecol{{\bf entity}}{{\bf match start}}{{\bf match end}}
+\threecol{line}{^}{\$}
+\threecol{word}{\\<}{\\>}
+\threecol{buffer}{\\`}{\\'}
 
-\key{save region in register}{C-x r s}
-\key{insert register contents into buffer}{C-x r i}
+\threecol{{\bf class of characters}}{{\bf match these}}{{\bf match others}}
+\threecol{explicit set}{[ {\rm$\ldots$} ]}{[^ {\rm$\ldots$} ]}
+\threecol{word-syntax character}{\\w}{\\W}
+\threecol{character with syntax {\it c}}{\\s{\it c}}{\\S{\it c}}
+}
 
-\key{save value of point in register}{C-x r SPC}
-\key{jump to point saved in register}{C-x r j}
+\section{International Character Sets}
+
+\metax{specify principal language}{M-x set-language-environment}
+\metax{show all input methods}{M-x list-input-methods}
+\key{enable or disable input method}{C-\\}
+\key{set coding system for next command}{C-x RET c}
+\metax{show all coding systems}{M-x list-coding-systems}
+\metax{choose preferred coding system}{M-x prefer-coding-system}
 
 \section{Info}
 
 \key{enter the Info documentation reader}{C-h i}
+\key{find specified function or variable in Info}{C-h C-i}
 \beginindentedkeys
 
 Moving within a node:
@@ -576,11 +577,18 @@ Moving between nodes:
 Other:
 
 \key{run Info {\bf tutorial}}{h}
-\key{list Info commands}{?}
 \key{{\bf quit} Info}{q}
 \key{search nodes for regexp}{M-s}
 
 \endindentedkeys
+
+\section{Registers}
+
+\key{save region in register}{C-x r s}
+\key{insert register contents into buffer}{C-x r i}
+
+\key{save value of point in register}{C-x r SPC}
+\key{jump to point saved in register}{C-x r j}
 
 \section{Keyboard Macros}
 
@@ -596,37 +604,28 @@ Other:
 \key{eval {\bf sexp} before point}{C-x C-e}
 \key{eval current {\bf defun}}{C-M-x}
 \metax{eval {\bf region}}{M-x eval-region}
-\metax{eval entire {\bf buffer}}{M-x eval-current-buffer}
 \key{read and eval minibuffer}{M-:}
-\key{re-execute last minibuffer command}{C-x ESC ESC}
-\metax{read and eval Emacs Lisp file}{M-x load-file}
 \metax{load from standard system directory}{M-x load-library}
 
 \section{Simple Customization}
 
+\metax{customize variables and faces}{M-x customize}
+
 % The intended audience here is the person who wants to make simple
 % customizations and knows Lisp syntax.
 
-Here are some examples of binding global keys in Emacs Lisp.
+Making global key bindings in Emacs Lisp (examples):
 
 \beginexample%
 (global-set-key "\\C-cg" 'goto-line)
-(global-set-key "\\C-x\\C-k" 'kill-region)
 (global-set-key "\\M-\#" 'query-replace-regexp)
-\endexample
-
-An example of setting a variable in Emacs Lisp:
-
-\beginexample%
-(setq backup-by-copying-when-linked t)
 \endexample
 
 \section{Writing Commands}
 
 \beginexample%
 (defun \<command-name> (\<args>)
-  "\<documentation>"
-  (interactive "\<template>")
+  "\<documentation>" (interactive "\<template>")
   \<body>)
 \endexample
 
@@ -635,17 +634,15 @@ An example:
 \beginexample%
 (defun this-line-to-top-of-window (line)
   "Reposition line point is on to top of window.
-With ARG, put point on line ARG.
-Negative counts from bottom."
+With ARG, put point on line ARG."
   (interactive "P")
   (recenter (if (null line)
                 0
               (prefix-numeric-value line))))
 \endexample
 
-The argument to \kbd{interactive} is a string specifying how to get
-the arguments when the function is called interactively.
-Type \kbd{C-h f interactive} for more information.
+The \kbd{interactive} spec says how to read arguments interactively.
+Type \kbd{C-h f interactive} for more details.
 
 \copyrightnotice
 

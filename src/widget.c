@@ -779,6 +779,8 @@ EmacsFrameResize (widget)
   change_frame_size (f, rows, columns, 0, 1);
   update_wm_hints (ew); 
   update_various_frame_slots (ew);
+
+  cancel_mouse_face (f);
 }
 
 static Boolean
@@ -844,7 +846,7 @@ EmacsFrameSetValues (cur_widget, req_widget, new_widget, dum1, dum2)
   /* #### This doesn't work, I haven't been able to find ANY kludge that
      will let (x-create-frame '((iconic . t))) work.  It seems that changes
      to wm_shell's iconic slot have no effect after it has been realized,
-     and calling XIconifyWindow doesn't work either (even thought the window
+     and calling XIconifyWindow doesn't work either (even though the window
      has been created.)  Perhaps there is some property we could smash
      directly, but I'm sick of this for now.
    */
@@ -963,4 +965,14 @@ EmacsFrameSetCharSize (widget, columns, rows)
      for, then the event won't cause the screen to become garbaged, so
      we have to make sure to do it here.  */
   SET_FRAME_GARBAGED (f);
+}
+
+widget_store_internal_border (widget)
+     Widget widget;
+{
+  EmacsFrame ew = (EmacsFrame) widget;
+  FRAME_PTR f = ew->emacs_frame.frame;
+
+  ew->emacs_frame.internal_border_width
+    = f->output_data.x->internal_border_width;
 }

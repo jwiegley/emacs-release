@@ -47,7 +47,7 @@ extern char *strerror ();
 #include <windows.h>
 #include <stdlib.h>	/* for proper declaration of environ */
 #include <fcntl.h>
-#include "nt.h"
+#include "w32.h"
 #define _P_NOWAIT 1	/* from process.h */
 #endif
 
@@ -71,6 +71,8 @@ extern char *strerror ();
 #include "lisp.h"
 #include "commands.h"
 #include "buffer.h"
+#include "charset.h"
+#include "coding.h"
 #include <paths.h>
 #include "process.h"
 #include "syssignal.h"
@@ -95,6 +97,7 @@ Lisp_Object Vbinary_process_output;
 
 Lisp_Object Vexec_path, Vexec_directory, Vdata_directory, Vdoc_directory;
 Lisp_Object Vconfigure_info_directory;
+Lisp_Object Vtemp_file_name_pattern;
 
 Lisp_Object Vshell_file_name;
 
@@ -116,6 +119,8 @@ char *synch_process_death;
 int synch_process_retcode;
 
 extern Lisp_Object Vdoc_file_name;
+
+extern Lisp_Object Vfile_name_coding_system;
 
 /* Clean up when exiting Fcall_process.
    On MSDOS, delete the temporary file on any kind of termination.
@@ -218,6 +223,9 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
 #if 0
   int mask;
 #endif
+  struct coding_system process_coding; /* coding-system of process output */
+  struct coding_system argument_coding;	/* coding-system of arguments */
+
   CHECK_STRING (args[0], 0);
 
   error_file = Qt;
@@ -227,6 +235,94 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
   if (nargs >= 3 && INTEGERP (args[2]))
     error ("Operating system cannot handle asynchronous subprocesses");
 #endif /* subprocesses */
+
+  /* Decide the coding-system for giving arguments and reading process
+     output.  */
+  {
+    Lisp_Object val, *args2;
+    /* Qt denotes we have not yet called Ffind_operation_coding_system.  */
+    Lisp_Object coding_systems = Qt;
+    int i;
+
+    /* If arguments are supplied, we may have to encode them.  */
+    if (nargs >= 5)
+      {
+	if (!NILP (Vcoding_system_for_write))
+	  val = Vcoding_system_for_write;
+	else if (NILP (current_buffer->enable_multibyte_characters))
+	  val = Qnil;
+	else
+	  {
+	    args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof *args2);
+	    args2[0] = Qcall_process;
+	    for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
+	    coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
+	    if (CONSP (coding_systems))
+	      val = XCONS (coding_systems)->cdr;
+	    else if (CONSP (Vdefault_process_coding_system))
+	      val = XCONS (Vdefault_process_coding_system)->cdr;
+	    else
+	      val = Qnil;
+	  }
+	setup_coding_system (Fcheck_coding_system (val), &argument_coding);
+      }
+
+    /* If BUFFER is nil, we must read process output once and then
+       discard it, so setup coding system but with nil.  If BUFFER is
+       an integer, we can discard it without reading.  */
+    if (nargs < 3 || NILP (args[2]))
+      setup_coding_system (Qnil, &process_coding);
+    else if (!INTEGERP (args[2]))
+      {
+	val = Qnil;
+	if (!NILP (Vcoding_system_for_read))
+	  val = Vcoding_system_for_read;
+	else if (NILP (current_buffer->enable_multibyte_characters))
+	  val = Qemacs_mule;
+	else
+	  {
+	    if (!EQ (coding_systems, Qt))
+	      {
+		args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof *args2);
+		args2[0] = Qcall_process;
+		for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
+		coding_systems
+		  = Ffind_operation_coding_system (nargs + 1, args2);
+	      }
+	    if (CONSP (coding_systems))
+	      val = XCONS (coding_systems)->car;
+	    else if (CONSP (Vdefault_process_coding_system))
+	      val = XCONS (Vdefault_process_coding_system)->car;
+	    else
+	      val = Qnil;
+	  }
+	setup_coding_system (Fcheck_coding_system (val), &process_coding);
+#ifdef MSDOS
+	/* On MSDOS, if the user did not ask for binary, treat it as
+	   "text" which means doing CRLF conversion.  Otherwise, leave
+	   the EOLs alone.
+
+	   Note that ``binary'' here only means whether EOLs should or
+	   should not be converted, since that's what Vbinary_process_XXXput
+	   meant in the days before the coding systems were introduced.
+
+	   For other conversions, the caller should set coding-system
+	   variables explicitly, or rely on auto-detection.  */
+
+	/* FIXME: this probably should be moved into the guts of
+	   `Ffind_operation_coding_system' for the case of `call-process'.  */
+	if (NILP (Vbinary_process_output))
+	  {
+	    process_coding.eol_type = CODING_EOL_CRLF;
+	    if (process_coding.type == coding_type_no_conversion)
+	      /* FIXME: should we set type to undecided?  */
+	      process_coding.type = coding_type_emacs_mule;
+	  }
+	else
+	  process_coding.eol_type = CODING_EOL_LF;
+#endif
+      }
+  }
 
   if (nargs >= 2 && ! NILP (args[1]))
     {
@@ -327,7 +423,23 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
     for (i = 4; i < nargs; i++)
       {
 	CHECK_STRING (args[i], i);
-	new_argv[i - 3] = XSTRING (args[i])->data;
+	if (argument_coding.type == coding_type_no_conversion)
+	  new_argv[i - 3] = XSTRING (args[i])->data;
+	else
+	  {
+	    /* We must encode the arguments.  */
+	    int size = encoding_buffer_size (&argument_coding,
+					     XSTRING (args[i])->size);
+	    int produced, dummy;
+	    unsigned char *dummy1 = (unsigned char *) alloca (size);
+
+	    /* The Irix 4.0 compiler barfs if we eliminate dummy.  */
+	    new_argv[i - 3] = dummy1;
+	    produced = encode_coding (&argument_coding,
+				      XSTRING (args[i])->data, new_argv[i - 3],
+				      XSTRING (args[i])->size, size, &dummy);
+	    new_argv[i - 3][produced] = 0;
+	  }
       }
     new_argv[i - 3] = 0;
   }
@@ -418,6 +530,10 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
 				   ? build_string (NULL_DEVICE) : error_file),
 				  Qnil));
       }
+
+    current_dir
+      = Fencode_coding_string (current_dir, Vfile_name_coding_system, Qt);
+
 #ifdef MSDOS /* MW, July 1993 */
     /* ??? Someone who knows MSDOG needs to check whether this properly
        closes all descriptors that it opens.
@@ -433,13 +549,15 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
     synch_process_alive = 0;
     synch_process_retcode = pid;
     if (synch_process_retcode < 0)  /* means it couldn't be exec'ed */
-      synch_process_death = strerror(errno);
+      synch_process_death = strerror (errno);
 
     close (outfilefd);
     if (fd_error != outfilefd)
       close (fd_error);
     fd1 = -1; /* No harm in closing that one!  */
-    fd[0] = open (tempfile, NILP (Vbinary_process_output) ? O_TEXT : O_BINARY);
+    /* Since CRLF is converted to LF within `decode_coding', we can
+       always open a file with binary mode.  */
+    fd[0] = open (tempfile, O_BINARY);
     if (fd[0] < 0)
       {
 	unlink (tempfile);
@@ -456,7 +574,10 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
       {
 	if (fd[0] >= 0)
 	  close (fd[0]);
-#if defined(USG) && !defined(BSD_PGRPS)
+#ifdef HAVE_SETSID
+        setsid ();
+#endif
+#if defined (USG) && !defined (BSD_PGRPS)
         setpgrp ();
 #else
         setpgrp (pid, pid);
@@ -529,7 +650,7 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
 	   of the buffer size we have.  But don't read
 	   less than 1024--save that for the next bufferful.  */
 
-	nread = 0;
+	nread = process_coding.carryover_size; /* This value is initially 0. */
 	while (nread < bufsize - 1024)
 	  {
 	    int this_read
@@ -548,13 +669,32 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
 
 	/* Now NREAD is the total amount of data in the buffer.  */
 	if (nread == 0)
-	  break;
+	  /* Here, just tell decode_coding that we are processing the
+             last block.  We break the loop after decoding.  */
+	  process_coding.last_block = 1;
 
 	immediate_quit = 0;
 	total_read += nread;
 	
 	if (!NILP (buffer))
-	  insert (bufptr, nread);
+	  {
+	    if (process_coding.type == coding_type_no_conversion)
+	      insert (bufptr, nread);
+	    else
+	      {			/* We have to decode the input.  */
+		int size = decoding_buffer_size (&process_coding, bufsize);
+		char *decoding_buf = get_conversion_buffer (size);
+		int dummy;
+
+		nread = decode_coding (&process_coding, bufptr, decoding_buf,
+				       nread, size, &dummy);
+		if (nread > 0)
+		  insert (decoding_buf, nread);
+	      }
+	  }
+
+	if (process_coding.last_block)
+	  break;
 
 	/* Make the buffer bigger as we continue to read more data,
 	   but not past 64k.  */
@@ -563,6 +703,12 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
 	    bufsize *= 2;
 	    bufptr = (char *) alloca (bufsize);
 	  }
+
+	if (!NILP (buffer) && process_coding.carryover_size > 0)
+	  /* We have carryover in the last decoding.  It should be
+             processed again after reading more data.  */
+	  bcopy (process_coding.carryover, bufptr,
+		 process_coding.carryover_size);
 
 	if (!NILP (display) && INTERACTIVE)
 	  {
@@ -632,13 +778,13 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
   struct gcpro gcpro1;
   Lisp_Object filename_string;
   register Lisp_Object start, end;
+  int count = specpdl_ptr - specpdl;
+  /* Qt denotes we have not yet called Ffind_operation_coding_system.  */
+  Lisp_Object coding_systems = Qt;
+  Lisp_Object val, *args2;
+  int i;
 #ifdef DOS_NT
   char *tempfile;
-#else
-  char tempfile[20];
-#endif
-  int count = specpdl_ptr - specpdl;
-#ifdef DOS_NT
   char *outf = '\0';
 
   if ((outf = egetenv ("TMP")) || (outf = egetenv ("TEMP")))
@@ -660,12 +806,9 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
   strcat (tempfile, "detmp.XXX");
 #endif
 #else /* not DOS_NT */
-
-#ifdef VMS
-  strcpy (tempfile, "tmp:emacsXXXXXX.");
-#else
-  strcpy (tempfile, "/tmp/emacsXXXXXX");
-#endif
+  char *tempfile = (char *) alloca (XSTRING (Vtemp_file_name_pattern)->size + 1);
+  bcopy (XSTRING (Vtemp_file_name_pattern)->data, tempfile,
+	 XSTRING (Vtemp_file_name_pattern)->size + 1);
 #endif /* not DOS_NT */
 
   mktemp (tempfile);
@@ -674,13 +817,59 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again.")
   GCPRO1 (filename_string);
   start = args[0];
   end = args[1];
+  /* Decide coding-system of the contents of the temporary file.  */
 #ifdef DOS_NT
+  /* This is to cause find-buffer-file-type-coding-system (see
+     dos-w32.el) to choose correct EOL translation for write-region.  */
   specbind (Qbuffer_file_type, Vbinary_process_input);
+#endif
+  if (!NILP (Vcoding_system_for_write))
+    val = Vcoding_system_for_write;
+  else if (NILP (current_buffer->enable_multibyte_characters))
+    val = Qnil;
+  else
+    {
+      args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof *args2);
+      args2[0] = Qcall_process_region;
+      for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
+      coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
+      if (CONSP (coding_systems))
+	val = XCONS (coding_systems)->cdr;
+      else if (CONSP (Vdefault_process_coding_system))
+	val = XCONS (Vdefault_process_coding_system)->cdr;
+      else
+	val = Qnil;
+    }
+
+#ifdef DOS_NT
+  /* binary-process-input tells whether the buffer needs to be
+     written with EOL conversions, but it doesn't say anything
+     about the rest of text encoding.  It takes effect whenever
+     the coding system doesn't otherwise specify what to do for
+     eol conversion.  */
+  if (NILP (val))
+    {
+      if (! NILP (Vbinary_process_input))
+	val = intern ("undecided-unix");
+      else
+	val = intern ("undecided-dos");
+    }
+  else if (SYMBOLP (val) && NILP (Vcoding_system_for_write))
+    {
+      Lisp_Object eolval;
+      eolval = Fget (val, Qeol_type);
+      if (VECTORP (eolval) && XVECTOR (eolval)->size > 1)
+	/* Use element 1 (CRLF conversion) for "text",
+	   and element 0 (LF conversion) for "binary".  */
+	val = XVECTOR (eolval)->contents[NILP (Vbinary_process_input)];
+    }
+#endif
+
+  specbind (intern ("coding-system-for-write"), val);
   Fwrite_region (start, end, filename_string, Qnil, Qlambda, Qnil);
-  unbind_to (count, Qnil);
-#else  /* not DOS_NT */
-  Fwrite_region (start, end, filename_string, Qnil, Qlambda, Qnil);
-#endif /* not DOS_NT */
+
+  /* Note that Fcall_process takes care of binding 
+     coding-system-for-read.  */
 
   record_unwind_protect (delete_temp_file, filename_string);
 
@@ -1081,29 +1270,40 @@ init_callproc ()
 	}
     }
 
-  tempdir = Fdirectory_file_name (Vexec_directory);
-  if (access (XSTRING (tempdir)->data, 0) < 0)
+#ifndef CANNOT_DUMP
+  if (initialized)
+#endif
     {
-      fprintf (stderr,
-	       "Warning: arch-dependent data dir (%s) does not exist.\n",
-	       XSTRING (Vexec_directory)->data);
-      sleep (2);
+      tempdir = Fdirectory_file_name (Vexec_directory);
+      if (access (XSTRING (tempdir)->data, 0) < 0)
+	dir_warning ("Warning: arch-dependent data dir (%s) does not exist.\n",
+		     Vexec_directory);
     }
 
   tempdir = Fdirectory_file_name (Vdata_directory);
   if (access (XSTRING (tempdir)->data, 0) < 0)
-    {
-      fprintf (stderr,
-	       "Warning: arch-independent data dir (%s) does not exist.\n",
-	       XSTRING (Vdata_directory)->data);
-      sleep (2);
-    }
+    dir_warning ("Warning: arch-independent data dir (%s) does not exist.\n",
+		 Vdata_directory);
 
 #ifdef VMS
   Vshell_file_name = build_string ("*dcl*");
 #else
   sh = (char *) getenv ("SHELL");
   Vshell_file_name = build_string (sh ? sh : "/bin/sh");
+#endif
+
+#ifdef VMS
+  Vtemp_file_name_pattern = build_string ("tmp:emacsXXXXXX.");
+#else
+  if (getenv ("TMPDIR"))
+    {
+      char *dir = getenv ("TMPDIR");
+      Vtemp_file_name_pattern
+	= Fexpand_file_name (build_string ("emacsXXXXXX"),
+			     build_string (dir));
+    }
+  else
+    Vtemp_file_name_pattern = build_string ("/tmp/emacsXXXXXX");
 #endif
 }
 
@@ -1161,6 +1361,11 @@ This is the name of the directory in which the build procedure installed\n\
 Emacs's info files; the default value for Info-default-directory-list\n\
 includes this.");
   Vconfigure_info_directory = build_string (PATH_INFO);
+
+  DEFVAR_LISP ("temp-file-name-pattern", &Vtemp_file_name_pattern,
+    "Pattern for making names for temporary files.\n\
+This is used by `call-process-region'.");
+  /* This variable is initialized in init_callproc.  */
 
   DEFVAR_LISP ("process-environment", &Vprocess_environment,
     "List of environment variables for subprocesses to inherit.\n\

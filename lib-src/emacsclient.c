@@ -27,9 +27,135 @@ Boston, MA 02111-1307, USA.  */
 #undef close
 #undef signal
 
-
-#if !defined (HAVE_SOCKETS) && !defined (HAVE_SYSVIPC)
 #include <stdio.h>
+#include <getopt.h>
+
+char *getenv (), *getwd ();
+char *getcwd ();
+int geteuid ();
+
+/* This is defined with -D from the compilation command,
+   which extracts it from ../lisp/version.el.  */
+
+#ifndef VERSION
+#define VERSION "unspecified"
+#endif
+
+/* Name used to invoke this program.  */
+char *progname;
+
+/* Nonzero means don't wait for a response from Emacs.  --no-wait.  */
+int nowait = 0;
+
+struct option longopts[] =
+{
+  { "no-wait",	no_argument,	   NULL, 'n' },
+  { "help",	no_argument,	   NULL, 'H' },
+  { "version",	no_argument,	   NULL, 'V' },
+  { 0 }
+};
+
+/* Decode the options from argv and argc.
+   The global variable `optind' will say how many arguments we used up.  */
+
+void
+decode_options (argc, argv)
+     int argc;
+     char **argv;
+{
+  while (1)
+    {
+      int opt = getopt_long (argc, argv,
+			     "VHn", longopts, 0);
+
+      if (opt == EOF)
+	break;
+
+      switch (opt)
+	{
+	case 0:
+	  /* If getopt returns 0, then it has already processed a
+	     long-named option.  We should do nothing.  */
+	  break;
+
+	case 'n':
+	  nowait = 1;
+	  break;
+
+	case 'V':
+	  fprintf (stderr, "Version %s\n", VERSION);
+	  exit (1);
+	  break;
+
+	case 'H':
+	default:
+	  print_help_and_exit ();
+	}
+    }
+}
+
+print_help_and_exit ()
+{
+  fprintf (stderr,
+	   "Usage: %s [-n] [--no-wait] [+LINENUMBER] FILENAME\n",
+	   progname);
+  fprintf (stderr,
+	   "Report bugs to bug-gnu-emacs@prep.ai.mit.edu.\n");
+  exit (1);
+}
+
+/* Return a copy of NAME, inserting a &
+   before each &, each space, and any initial -.
+   Change spaces to underscores, too, so that the
+   return value never contains a space.  */
+
+char *
+quote_file_name (name)
+     char *name;
+{
+  char *copy = (char *) malloc (strlen (name) * 2 + 1);
+  char *p, *q;
+
+  p = name;
+  q = copy;
+  while (*p)
+    {
+      if (*p == ' ')
+	{
+	  *q++ = '&';
+	  *q++ = '_';
+	  p++;
+	}
+      else
+	{
+	  if (*p == '&' || (*p == '-' && p == name))
+	    *q++ = '&';
+	  *q++ = *p++;
+	}
+    }
+  *q++ = 0;
+
+  return copy;
+}
+
+#ifdef C_ALLOCA
+/* Like malloc but get fatal error if memory is exhausted.  */
+
+char *
+xmalloc (size)
+     unsigned int size;
+{
+  char *result = (char *) malloc (size);
+  if (result == NULL)
+  {
+    perror ("malloc");
+    exit (1);
+  }
+  return result;
+}
+#endif /* C_ALLOCA */
+
+#if !defined (HAVE_SOCKETS) && !defined (HAVE_SYSVIPC)
 
 main (argc, argv)
      int argc;
@@ -50,7 +176,6 @@ main (argc, argv)
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/stat.h>
-#include <stdio.h>
 #include <errno.h>
 
 extern char *strerror ();
@@ -68,15 +193,13 @@ main (argc, argv)
   char *homedir, *cwd, *str;
   char string[BUFSIZ];
 
-  char *getenv (), *getwd ();
-  char *getcwd ();
-  int geteuid ();
+  progname = argv[0];
 
-  if (argc < 2)
-    {
-      fprintf (stderr, "Usage: %s [+linenumber] filename\n", argv[0]);
-      exit (1);
-    }
+  /* Process options.  */
+  decode_options (argc, argv);
+
+  if (argc - optind < 1)
+    print_help_and_exit ();
 
   /* 
    * Open up an AF_UNIX socket in this person's home directory
@@ -153,7 +276,7 @@ main (argc, argv)
       exit (1);
     }
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
   cwd = getwd (string);
 #else
   cwd = getcwd (string, sizeof string);
@@ -161,11 +284,20 @@ main (argc, argv)
   if (cwd == 0)
     {
       /* getwd puts message in STRING if it fails.  */
-      fprintf (stderr, "%s: %s (%s)\n", argv[0], string, strerror (errno));
+      fprintf (stderr, "%s: %s (%s)\n", argv[0],
+#ifdef BSD_SYSTEM
+	       string,
+#else
+	       "Cannot get current working directory",
+#endif
+	       strerror (errno));
       exit (1);
     }
 
-  for (i = 1; i < argc; i++)
+  if (nowait)
+    fprintf (out, "-nowait ");
+
+  for (i = optind; i < argc; i++)
     {
       if (*argv[i] == '+')
 	{
@@ -176,10 +308,15 @@ main (argc, argv)
 	}
       else if (*argv[i] != '/')
 	fprintf (out, "%s/", cwd);
-      fprintf (out, "%s ", argv[i]);
+
+      fprintf (out, "%s ", quote_file_name (argv[i]));
     }
   fprintf (out, "\n");
   fflush (out);
+
+  /* Maybe wait for an answer.   */
+  if (nowait)
+    return 0;
 
   printf ("Waiting for Emacs...");
   fflush (stdout);
@@ -202,6 +339,8 @@ main (argc, argv)
 #include <sys/msg.h>
 #include <sys/utsname.h>
 #include <stdio.h>
+#include <errno.h>
+extern int errno;
 
 char *getwd (), *getcwd (), *getenv ();
 struct utsname system_name;
@@ -223,13 +362,14 @@ main (argc, argv)
   char gwdirb[BUFSIZ];
   char *cwd;
   char *temp;
-  char *progname = argv[0];
 
-  if (argc < 2)
-    {
-      fprintf (stderr, "Usage: %s [+linenumber] filename\n", argv[0]);
-      exit (1);
-    }
+  progname = argv[0];
+
+  /* Process options.  */
+  decode_options (argc, argv);
+
+  if (argc - optind < 1)
+    print_help_and_exit ();
 
   /*
    * Create a message queue using ~/.emacs-server as the path for ftok
@@ -259,7 +399,7 @@ main (argc, argv)
     }
 
   /* Determine working dir, so we can prefix it to all the arguments.  */
-#ifdef BSD
+#ifdef BSD_SYSTEM
   temp = getwd (gwdirb);
 #else
   temp = getcwd (gwdirb, sizeof gwdirb);
@@ -276,17 +416,32 @@ main (argc, argv)
     }
   else
     {
+#ifdef BSD_SYSTEM
       fprintf (stderr, "%s: %s\n", argv[0], cwd);
+#else
+      fprintf (stderr, "%s: Cannot get current working directory: %s\n",
+	       argv[0], strerror (errno));
+#endif
       exit (1);
     }
 
   msgp->mtext[0] = 0;
   used = 0;
-  argc--; argv++;
+
+  if (nowait)
+    {
+      strcat (msgp->mtext, "-nowait ");
+      used += 8;
+    }
+
+  argc -= optind;
+  argv += optind;
+
   while (argc)
     {
       int need_cwd = 0;
       char *modified_arg = argv[0];
+
       if (*modified_arg == '+')
 	{
 	  char *p = modified_arg + 1;
@@ -296,6 +451,8 @@ main (argc, argv)
 	}
       else if (*modified_arg != '/')
 	need_cwd = 1;
+
+      modified_arg = quote_file_name (modified_arg);
 
       if (need_cwd)
 	used += strlen (cwd);
@@ -330,9 +487,11 @@ main (argc, argv)
       perror ("msgsnd");
       exit (1);
     }
-  /*
-   * Now, wait for an answer
-   */
+
+  /* Maybe wait for an answer.   */
+  if (nowait)
+    return 0;
+
   printf ("Waiting for Emacs...");
   fflush (stdout);
 

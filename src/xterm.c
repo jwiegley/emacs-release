@@ -1,5 +1,5 @@
 /* X Communication module for terminals which understand the X protocol.
-   Copyright (C) 1989, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -51,9 +51,9 @@ Boston, MA 02111-1307, USA.  */
 #endif /* makedev */
 #endif /* USG */
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
 #include <sys/ioctl.h>
-#endif /* ! defined (BSD) */
+#endif /* ! defined (BSD_SYSTEM) */
 
 #include "systty.h"
 #include "systime.h"
@@ -68,6 +68,9 @@ Boston, MA 02111-1307, USA.  */
 /* Caused redefinition of DBL_DIG on Netbsd; seems not to be needed.  */
 /* #include <sys/param.h>  */
 
+#include "charset.h"
+#include "ccl.h"
+#include "fontset.h"
 #include "frame.h"
 #include "dispextern.h"
 #include "termhooks.h"
@@ -265,7 +268,7 @@ static void do_line_dance ();
 static int XTcursor_to ();
 static int XTclear_end_of_line ();
 static int x_io_error_quitter ();
-void x_catch_errors ();
+int x_catch_errors ();
 void x_uncatch_errors ();
 
 #if 0
@@ -334,6 +337,9 @@ XTupdate_begin (f)
 
   BLOCK_INPUT;
 
+  curs_x = FRAME_CURSOR_X (f);
+  curs_y = FRAME_CURSOR_Y (f);
+
   if (f == FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_frame)
     {
       /* Don't do highlighting for mouse motion during the update.  */
@@ -386,10 +392,9 @@ XTupdate_end (f)
   BLOCK_INPUT;
 
   do_line_dance ();
-  x_display_cursor (f, 1);
+  x_display_cursor (f, 1, curs_x, curs_y);
 
-  if (f == FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_frame)
-    FRAME_X_DISPLAY_INFO (f)->mouse_face_defer = 0;
+  FRAME_X_DISPLAY_INFO (f)->mouse_face_defer = 0;
 #if 0
   /* This fails in the case of having updated only the echo area
      if we have switched buffers.  In that case, FRAME_CURRENT_GLYPHS
@@ -443,7 +448,7 @@ XTchange_line_highlight (new_highlight, vpos, first_unused_hpos)
 {
   highlight = new_highlight;
   XTcursor_to (vpos, 0);
-  XTclear_end_of_line (updating_frame->width);
+  XTclear_end_of_line (FRAME_WINDOW_WIDTH (updating_frame));
 }
 
 /* This is used when starting Emacs and when restarting after suspend.
@@ -482,18 +487,36 @@ XTcursor_to (row, col)
   if (updating_frame == 0)
     {
       BLOCK_INPUT;
-      x_display_cursor (selected_frame, 1);
+      x_display_cursor (selected_frame, 1, curs_x, curs_y);
       XFlush (FRAME_X_DISPLAY (selected_frame));
       UNBLOCK_INPUT;
     }
 }
 
+
+/* Return a pointer to per char metric information in FONT of a
+   character pointed by B (*XChar2b).  */
+
+#define PER_CHAR_METRIC(font, b)					   \
+  ((font)->per_char							   \
+   ? ((font)->per_char + (b)->byte2 - (font)->min_char_or_byte2		   \
+      + (((font)->min_byte1 || (font)->max_byte1)			   \
+	 ? (((b)->byte1 - (font)->min_byte1)				   \
+	    * ((font)->max_char_or_byte2 - (font)->min_char_or_byte2 + 1)) \
+	 : 0))								   \
+   : &((font)->max_bounds))
+
 /* Display a sequence of N glyphs found at GP.
    WINDOW is the x-window to output to.  LEFT and TOP are starting coords.
    HL is 1 if this text is highlighted, 2 if the cursor is on it,
    3 if should appear in its mouse-face.
    JUST_FOREGROUND if 1 means draw only the foreground;
    don't alter the background.
+
+   CMPCHARP if non NULL is a pointer to the struct cmpchar_info, which
+   means drawing glyphs on the same column.  This is set to non NULL
+   only when recursively called within dumpglyphs to draw a composite
+   character specified by CMPCHAR.
 
    FONT is the default font to use (for glyphs whose font-code is 0).
 
@@ -502,62 +525,135 @@ XTcursor_to (row, col)
    the display structure, we can assume that the face code on each
    glyph is a valid index into FRAME_COMPUTED_FACES (f), and the one
    to which we can actually apply intern_face.
-   Call this function with input blocked.  */
+   Call this function with input blocked.
+
+   Return overall pixel width of the drawn glyphs.  */
 
 #if 1
 /* This is the multi-face code.  */
 
-static void
-dumpglyphs (f, left, top, gp, n, hl, just_foreground)
+static int
+dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
      struct frame *f;
      int left, top;
      register GLYPH *gp; /* Points to first GLYPH. */
      register int n;  /* Number of glyphs to display. */
      int hl;
      int just_foreground;
+     struct cmpchar_info *cmpcharp;
 {
   /* Holds characters to be displayed. */
-  char *buf = (char *) alloca (f->width * sizeof (*buf));
-  register char *cp;		/* Steps through buf[]. */
+  XChar2b *x_2byte_buffer
+    = (XChar2b *) alloca (FRAME_WINDOW_WIDTH (f) * sizeof (*x_2byte_buffer));
+  register XChar2b *cp;		/* Steps through x_2byte_buffer[]. */
+  char *x_1byte_buffer
+    = (char *) alloca (FRAME_WINDOW_WIDTH (f) * sizeof (*x_1byte_buffer));
   register int tlen = GLYPH_TABLE_LENGTH;
   register Lisp_Object *tbase = GLYPH_TABLE_BASE;
   Window window = FRAME_X_WINDOW (f);
   int orig_left = left;
+  int gidx = 0;
+  int i;
 
   while (n > 0)
     {
       /* Get the face-code of the next GLYPH.  */
       int cf, len;
-      int g = *gp;
+      GLYPH g = *gp;
+      int ch, charset;
+      Lisp_Object first_ch;
+      /* HIGHEST and LOWEST are used while drawing a composite
+         character.  The meanings are described later.  */
+      int highest, lowest;
 
       GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
-      cf = FAST_GLYPH_FACE (g);
+      cf = (cmpcharp ? cmpcharp->face_work : FAST_GLYPH_FACE (g));
+      ch = FAST_GLYPH_CHAR (g);
+      if (gidx == 0) XSETFASTINT (first_ch, ch);
+      charset = CHAR_CHARSET (ch);
+      if (charset == CHARSET_COMPOSITION)
+	{
+	  /* We must draw components of the composite character on the
+             same column.  */
+	  cmpcharp = cmpchar_table[COMPOSITE_CHAR_ID (ch)];
 
-      /* Find the run of consecutive glyphs with the same face-code.
-	 Extract their character codes into BUF.  */
-      cp = buf;
+	  /* Set the face in the slot for work.  */
+	  cmpcharp->face_work = cf;
+
+	  /* We don't need the return value ... */
+	  dumpglyphs (f, left, top, cmpcharp->glyph, cmpcharp->glyph_len,
+		      hl, just_foreground, cmpcharp);
+	  /* ... because the width of just drawn text can be
+             calculated as follows.  */
+	  left += FONT_WIDTH (f->output_data.x->font) * cmpcharp->width;
+
+	  ++gp, --n;
+	  while (gp && (*gp & GLYPH_MASK_PADDING)) ++gp, --n;
+	  cmpcharp = NULL;
+	  continue;
+	}
+
+      /* Find the run of consecutive glyphs which can be drawn with
+	 the same GC (i.e. the same charset and the same face-code).
+	 Extract their character codes into X_2BYTE_BUFFER.
+	 If CMPCHARP is not NULL, face-code is not checked because we
+	 use only the face specified in `cmpcharp->face_work'.  */
+      cp = x_2byte_buffer;
       while (n > 0)
 	{
+	  int this_charset, c1, c2;
+
 	  g = *gp;
 	  GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
-	  if (FAST_GLYPH_FACE (g) != cf)
+	  ch = FAST_GLYPH_CHAR (g);
+	  SPLIT_CHAR (ch, this_charset, c1, c2);
+	  if (this_charset != charset
+	      || (cmpcharp == NULL && FAST_GLYPH_FACE (g) != cf))
 	    break;
 
-	  *cp++ = FAST_GLYPH_CHAR (g);
-	  --n;
-	  ++gp;
+	  if (c2 > 0)
+	    cp->byte1 = c1, cp->byte2 = c2;
+	  else
+	    cp->byte1 = 0, cp->byte2 = c1;
+	  ++cp;
+	  ++gp, --n;
+	  while (gp && (*gp & GLYPH_MASK_PADDING))
+	    ++gp, --n;
 	}
 
       /* LEN gets the length of the run.  */
-      len = cp - buf;
-
+      len = cp - x_2byte_buffer;
       /* Now output this run of chars, with the font and pixel values
 	 determined by the face code CF.  */
       {
 	struct face *face = FRAME_DEFAULT_FACE (f);
-	XFontStruct *font = FACE_FONT (face);
-	GC gc = FACE_GC (face);
+	XFontStruct *font = NULL;
+	GC gc;
 	int stippled = 0;
+	int line_height = f->output_data.x->line_height;
+	/* Pixel width of each glyph in this run.  */
+	int glyph_width
+	  = (FONT_WIDTH (f->output_data.x->font)
+	     * (cmpcharp ? cmpcharp->width : CHARSET_WIDTH (charset)));
+	/* Overall pixel width of this run.  */
+	int run_width
+	  = (FONT_WIDTH (f->output_data.x->font)
+	     * (cmpcharp ? cmpcharp->width : len * CHARSET_WIDTH (charset)));
+	/* A flag to tell if we have already filled background.  We
+	   fill background in advance in the following cases:
+	   1) A face has stipple.
+	   2) A height of font is shorter than LINE_HEIGHT.
+	   3) Drawing a composite character.
+	   4) Font has non-zero _MULE_BASELINE_OFFSET property.
+	   After filling background, we draw glyphs by XDrawString16.  */
+	int background_filled;
+	/* Baseline position of a character, offset from TOP.  */
+	int baseline;
+	/* The property value of `_MULE_RELATIVE_COMPOSE' and
+           `_MULE_DEFAULT_ASCENT'.  */
+	int relative_compose = 0, default_ascent = 0;
+	/* 1 if we find no font or a font of inappropriate size.  */
+	int require_clipping;
 
 	/* HL = 3 means use a mouse face previously chosen.  */
 	if (hl == 3)
@@ -576,8 +672,6 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
 	      face = FRAME_MODE_LINE_FACE (f);
 	    else
 	      face = intern_face (f, FRAME_COMPUTED_FACES (f) [cf]);
-	    font = FACE_FONT (face);
-	    gc = FACE_GC (face);
 	    if (FACE_STIPPLE (face))
 	      stippled = 1;
 	  }
@@ -588,13 +682,113 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
 	else if (hl == 1)
 	  {
 	    face = FRAME_MODE_LINE_FACE (f);
-	    font = FACE_FONT (face);
-	    gc   = FACE_GC   (face);
 	    if (FACE_STIPPLE (face))
 	      stippled = 1;
 	  }
 
 #define FACE_DEFAULT (~0)
+
+	/* Setting appropriate font and gc for this charset.  */
+	if (charset != CHARSET_ASCII)
+	  {
+	    int font_id;
+	    int fontset = FACE_FONTSET (face);
+	    struct font_info *fontp;
+
+	    if ((fontset < 0 && (fontset = FRAME_FONTSET (f)) < 0)
+		|| !(fontp = FS_LOAD_FONT (f, FRAME_X_FONT_TABLE (f),
+					   charset, NULL, fontset)))
+	      goto font_not_found;
+
+	    font = (XFontStruct *) (fontp->font);
+	    gc = FACE_NON_ASCII_GC (face);
+	    XSetFont (FRAME_X_DISPLAY (f), gc, font->fid);
+	    baseline
+	      = (font->max_byte1 != 0
+		 ? (line_height + font->ascent - font->descent) / 2
+		 : f->output_data.x->font_baseline - fontp->baseline_offset);
+	    if (FONT_HEIGHT (font) <= line_height
+		&& (font->ascent > baseline
+		    || font->descent > line_height - baseline))
+	      /* Adjust baseline for this font to show the whole
+                 glyphs in a line.  */
+	      baseline = line_height - font->descent;
+	      
+	    if (cmpcharp && cmpcharp->cmp_rule == NULL)
+	      {
+		relative_compose = fontp->relative_compose;
+		default_ascent = fontp->default_ascent;
+	      }
+
+	    /* We have to change code points in the following cases.  */
+	    if (fontp->font_encoder)
+	      {
+		/* This font requires CCL program to calculate code
+                   point of characters.  */
+		struct ccl_program *ccl = fontp->font_encoder;
+
+		if (CHARSET_DIMENSION (charset) == 1)
+		  for (cp = x_2byte_buffer; cp < x_2byte_buffer + len; cp++)
+		    {
+		      ccl->reg[0] = charset;
+		      ccl->reg[1] = cp->byte2;
+		      ccl_driver (ccl, NULL, NULL, 0, 0, NULL);
+		      /* We assume that MSBs are appropriately
+                         set/reset by CCL program.  */
+		      if (font->max_byte1 == 0)	/* 1-byte font */
+			cp->byte2 = ccl->reg[1];
+		      else
+			cp->byte1 = ccl->reg[1], cp->byte2 = ccl->reg[2];
+		    }
+		else
+		  for (cp = x_2byte_buffer; cp < x_2byte_buffer + len; cp++)
+		    {
+		      ccl->reg[0] = charset;
+		      ccl->reg[1] = cp->byte1, ccl->reg[2] = cp->byte2;
+		      ccl_driver (ccl, NULL, NULL, 0, 0, NULL);
+		      /* We assume that MSBs are appropriately
+                         set/reset by CCL program.  */
+		      if (font->max_byte1 == 0)	/* 1-byte font */
+			cp->byte2 = ccl->reg[1];
+		      else
+			cp->byte1 = ccl->reg[1], cp->byte2 = ccl->reg[2];
+		    }
+	      }
+	    else if (fontp->encoding[charset])
+	      {
+		int enc = fontp->encoding[charset];
+
+		if ((enc == 1 || enc == 2) && CHARSET_DIMENSION (charset) == 2)
+		  for (cp = x_2byte_buffer; cp < x_2byte_buffer + len; cp++)
+		    cp->byte1 |= 0x80;
+		if (enc == 1 || enc == 3)
+		  for (cp = x_2byte_buffer; cp < x_2byte_buffer + len; cp++)
+		    cp->byte2 |= 0x80;
+	      }
+	  }
+	else
+	  {
+	  font_not_found:
+	    if (charset == CHARSET_ASCII || charset == charset_latin_iso8859_1)
+	      {
+		font = FACE_FONT (face);
+		if (font == (XFontStruct *) FACE_DEFAULT)
+		  font = f->output_data.x->font;
+		baseline = FONT_BASE (f->output_data.x->font);
+		if (charset == charset_latin_iso8859_1)
+		  {
+		    if (font->max_char_or_byte2 < 0x80)
+		      /* This font can't display Latin1 characters.  */
+		      font = NULL;
+		    else
+		      {
+			for (cp = x_2byte_buffer; cp < x_2byte_buffer + len; cp++)
+			  cp->byte2 |= 0x80;
+		      }
+		  }
+	      }
+	    gc = FACE_GC (face);
+	  }
 
 	/* Now override that if the cursor's on this character.  */
 	if (hl == 2)
@@ -602,11 +796,10 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
 	    /* The cursor overrides stippling.  */
 	    stippled = 0;
 
-	    if ((!face->font
-		 || face->font == (XFontStruct *) FACE_DEFAULT
-		 || face->font == f->output_data.x->font)
+	    if (font == f->output_data.x->font
 		&& face->background == f->output_data.x->background_pixel
-		&& face->foreground == f->output_data.x->foreground_pixel)
+		&& face->foreground == f->output_data.x->foreground_pixel
+		&& !cmpcharp)
 	      {
 		gc = f->output_data.x->cursor_gc;
 	      }
@@ -633,7 +826,10 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
 		    xgcv.background = face->foreground;
 		    xgcv.foreground = face->background;
 		  }
-		xgcv.font = face->font->fid;
+		if (font)
+		  xgcv.font = font->fid;
+		else
+		  xgcv.font = FACE_FONT (face)->fid;
 		xgcv.graphics_exposures = 0;
 		mask = GCForeground | GCBackground | GCFont | GCGraphicsExposures;
 		if (FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc)
@@ -653,81 +849,299 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
 	      }
 	  }
 
-	if (font == (XFontStruct *) FACE_DEFAULT)
-	  font = f->output_data.x->font;
+	if (font)
+	  require_clipping = (!NILP (Vclip_large_size_font)
+			      && (font->ascent > baseline
+				  || font->descent > line_height - baseline
+				  || (!cmpcharp
+				      && FONT_WIDTH (font) > glyph_width)));
 
-	if (just_foreground)
-	  XDrawString (FRAME_X_DISPLAY (f), window, gc,
-		       left, top + FONT_BASE (font), buf, len);
-	else
+	if (font && (just_foreground || (cmpcharp && gidx > 0)))
+	  background_filled = 1;
+	else if (stippled)
 	  {
-	    if (stippled)
+	    /* Turn stipple on.  */
+	    XSetFillStyle (FRAME_X_DISPLAY (f), gc, FillOpaqueStippled);
+
+	    /* Draw stipple or background color on background.  */
+	    XFillRectangle (FRAME_X_DISPLAY (f), window, gc,
+			    left, top, run_width, line_height);
+
+	    /* Turn stipple off.  */
+	    XSetFillStyle (FRAME_X_DISPLAY (f), gc, FillSolid);
+
+	    background_filled = 1;
+	  }
+	else if (!font
+		 || FONT_HEIGHT (font) < line_height
+		 || FONT_WIDTH (font) < glyph_width
+		 || cmpcharp)
+	  {
+	    /* Fill a area for the current run in background pixle of GC.  */
+	    XGCValues xgcv;
+	    unsigned long mask = GCForeground | GCBackground | GCFillStyle;
+
+	    /* The current code at first set foreground to background,
+	      fill the area, then recover the original foreground.
+	      Aren't there any smarter ways?  */
+
+	    XGetGCValues (FRAME_X_DISPLAY (f), gc, mask, &xgcv);
+	    XSetForeground (FRAME_X_DISPLAY (f), gc, xgcv.background);
+	    XSetFillStyle (FRAME_X_DISPLAY (f), gc, FillSolid);
+	    XFillRectangle (FRAME_X_DISPLAY (f), window, gc,
+			    left, top, run_width, line_height);
+	    XSetForeground (FRAME_X_DISPLAY (f), gc, xgcv.foreground);
+
+	    background_filled = 1;
+	    if (cmpcharp)
+	      /* To assure not to fill background while drawing
+		 remaining components.  */
+	      just_foreground = 1;
+	  }
+	else
+	  background_filled = 0;
+
+	if (font)
+	  {
+	    if (require_clipping)
 	      {
-		/* Turn stipple on.  */
-		XSetFillStyle (FRAME_X_DISPLAY (f), gc, FillOpaqueStippled);
+		Region region;	/* Region used for setting clip mask to GC.  */
+		XPoint x[4];	/* Data used for creating REGION.  */
 
-		/* Draw stipple on background.  */
-		XFillRectangle (FRAME_X_DISPLAY (f), window, gc,
-				left, top,
-				FONT_WIDTH (font) * len,
-				FONT_HEIGHT (font));
+		x[0].x = x[3].x = left, x[1].x = x[2].x = left + glyph_width;
+		x[0].y = x[1].y = top,  x[2].y = x[3].y = top + line_height;
+		region = XPolygonRegion (x, 4, EvenOddRule);
+		XSetRegion (FRAME_X_DISPLAY (f), gc, region);
+		XDestroyRegion (region);
+	      }
 
-		/* Turn stipple off.  */
-		XSetFillStyle (FRAME_X_DISPLAY (f), gc, FillSolid);
+	    if (!cmpcharp)
+	      {
+		if (require_clipping || FONT_WIDTH (font) != glyph_width)
+		  for (i = 0; i < len; i++)
+		    {
+		      if (require_clipping && i > 0) 
+			XSetClipOrigin (FRAME_X_DISPLAY (f), gc,
+					glyph_width * i, 0);
+		      if (background_filled)
+			XDrawString16 (FRAME_X_DISPLAY (f), window, gc,
+				       left + glyph_width * i,
+				       top + baseline, x_2byte_buffer + i, 1);
+		      else
+			XDrawImageString16 (FRAME_X_DISPLAY (f), window, gc,
+					    left + glyph_width * i,
+					    top + baseline, x_2byte_buffer + i, 1);
+		    }
+		else
+		  {
+		    /* See if this whole buffer can be output as 8-bit chars.
+		       If so, copy x_2byte_buffer to x_1byte_buffer
+		       and do it as 8-bit chars.  */
+		    for (i = 0; i < len; i++)
+		      {
+			if (x_2byte_buffer[i].byte1 != 0)
+			  break;
+			x_1byte_buffer[i] = x_2byte_buffer[i].byte2;
+		      }
 
-		/* Draw the text, solidly, onto the stipple pattern.  */
-		XDrawString (FRAME_X_DISPLAY (f), window, gc,
-			     left, top + FONT_BASE (font), buf, len);
+		    if (i == len)
+		      {
+			if (background_filled)
+			  XDrawString (FRAME_X_DISPLAY (f), window, gc,
+				       left, top + baseline, x_1byte_buffer, len);
+			else
+			  XDrawImageString (FRAME_X_DISPLAY (f), window, gc,
+					    left, top + baseline, x_1byte_buffer, len);
+		      }
+		    else
+		      {
+			/* We can't output them as 8-bit chars,
+			   so do it as 16-bit chars.  */
+
+			if (background_filled)
+			  XDrawString16 (FRAME_X_DISPLAY (f), window, gc,
+					 left, top + baseline, x_2byte_buffer, len);
+			else
+			  XDrawImageString16 (FRAME_X_DISPLAY (f), window, gc,
+					      left, top + baseline, x_2byte_buffer, len);
+		      }
+		  }
 	      }
 	    else
-	      XDrawImageString (FRAME_X_DISPLAY (f), window, gc,
-				left, top + FONT_BASE (font), buf, len);
+	      {
+		/* Handle composite characters.  */
+		XCharStruct *pcm; /* Pointer to per char metric info.  */
 
-	    /* Clear the rest of the line's height.  */
-	    if (f->output_data.x->line_height != FONT_HEIGHT (font))
-	      XClearArea (FRAME_X_DISPLAY (f), window, left,
-			  top + FONT_HEIGHT (font),
-			  FONT_WIDTH (font) * len,
-			  /* This is how many pixels of height
-			     we have to clear.  */
-			  f->output_data.x->line_height - FONT_HEIGHT (font),
-			  False);
-	  }
+		if ((cmpcharp->cmp_rule || relative_compose)
+		    && gidx == 0)
+		  {
+		    /* This is the first character.  Initialize variables.
+		       HIGHEST is the highest position of glyphs ever
+		       written, LOWEST the lowest position.  */
+		    int x_offset = 0;
+
+		    if (default_ascent
+			&& CHAR_TABLE_P (Vuse_default_ascent)
+			&& !NILP (Faref (Vuse_default_ascent, first_ch)))
+		      {
+			highest = default_ascent;
+			lowest = 0;
+		      }
+		    else
+		      {
+			pcm = PER_CHAR_METRIC (font, x_2byte_buffer);
+			highest = pcm->ascent + 1;
+			lowest = - pcm->descent;
+		      }
+
+		    if (cmpcharp->cmp_rule)
+		      x_offset = (cmpcharp->col_offset[0]
+				  * FONT_WIDTH (f->output_data.x->font));
+		    /* Draw the first character at the normal position.  */
+		    XDrawString16 (FRAME_X_DISPLAY (f), window, gc,
+				   left + x_offset, top + baseline, x_2byte_buffer, 1);
+		    i = 1;
+		    gidx++;
+		  }
+		else
+		  i = 0;
+
+		for (; i < len; i++, gidx++)
+		  {
+		    int x_offset = 0, y_offset = 0;
+
+		    if (relative_compose)
+		      {
+			pcm = PER_CHAR_METRIC (font, x_2byte_buffer + i);
+			if (NILP (Vignore_relative_composition)
+			    || NILP (Faref (Vignore_relative_composition,
+					    make_number (cmpcharp->glyph[gidx]))))
+			  {
+			    if (- pcm->descent >= relative_compose)
+			      {
+				/* Draw above the current glyphs.  */
+				y_offset = highest + pcm->descent;
+				highest += pcm->ascent + pcm->descent;
+			      }
+			    else if (pcm->ascent <= 0)
+			      {
+				/* Draw beneath the current glyphs.  */
+				y_offset = lowest - pcm->ascent;
+				lowest -= pcm->ascent + pcm->descent;
+			      }
+			  }
+			else
+			  {
+			    /* Draw the glyph at normal position.  If
+                               it sticks out of HIGHEST or LOWEST,
+                               update them appropriately.  */
+			    if (pcm->ascent > highest)
+			      highest = pcm->ascent;
+			    else if (- pcm->descent < lowest)
+			      lowest = - pcm->descent;
+			  }
+		      }
+		    else if (cmpcharp->cmp_rule)
+		      {
+			int gref = (cmpcharp->cmp_rule[gidx] - 0xA0) / 9;
+			int nref = (cmpcharp->cmp_rule[gidx] - 0xA0) % 9;
+			int bottom, top;
+
+			/* Re-encode GREF and NREF so that they specify
+			   only Y-axis information:
+			   0:top, 1:base, 2:bottom, 3:center  */
+			gref = gref / 3 + (gref == 4) * 2;
+			nref = nref / 3 + (nref == 4) * 2;
+
+			pcm = PER_CHAR_METRIC (font, x_2byte_buffer + i);
+			bottom = ((gref == 0 ? highest : gref == 1 ? 0
+				   : gref == 2 ? lowest
+				   : (highest + lowest) / 2)
+				  - (nref == 0 ? pcm->ascent + pcm->descent
+				     : nref == 1 ? pcm->descent : nref == 2 ? 0
+				     : (pcm->ascent + pcm->descent) / 2));
+			top = bottom + (pcm->ascent + pcm->descent);
+			if (top > highest)
+			  highest = top;
+			if (bottom < lowest)
+			  lowest = bottom;
+			y_offset = bottom + pcm->descent;
+			x_offset = (cmpcharp->col_offset[gidx]
+				    * FONT_WIDTH (f->output_data.x->font));
+		      }
+		    XDrawString16 (FRAME_X_DISPLAY (f), window, gc,
+				   left + x_offset, top + baseline - y_offset,
+				   x_2byte_buffer + i, 1);
+		  }
+	      }
+	    if (require_clipping)
+	      XSetClipMask (FRAME_X_DISPLAY (f), gc, None);
 
 #if 0 /* Doesn't work, because it uses FRAME_CURRENT_GLYPHS,
 	 which often is not up to date yet.  */
-	if (!just_foreground)
-	  {
-	    if (left == orig_left)
-	      redraw_previous_char (f, PIXEL_TO_CHAR_COL (f, left),
-				    PIXEL_TO_CHAR_ROW (f, top), hl == 1);
-	    if (n == 0)
-	      redraw_following_char (f, PIXEL_TO_CHAR_COL (f, left + len * FONT_WIDTH (font)),
-				     PIXEL_TO_CHAR_ROW (f, top), hl == 1);
-	  }
+	    if (!just_foreground)
+	      {
+		if (left == orig_left)
+		  redraw_previous_char (f, PIXEL_TO_CHAR_COL (f, left),
+					PIXEL_TO_CHAR_ROW (f, top), hl == 1);
+		if (n == 0)
+		  redraw_following_char (f, PIXEL_TO_CHAR_COL (f, left + len * FONT_WIDTH (font)),
+					 PIXEL_TO_CHAR_ROW (f, top), hl == 1);
+	      }
 #endif
+	  }
+	if (!font)
+	  {
+	    /* Show rectangles to indicate that we found no font.  */
+	    int limit = cmpcharp ? 1 : len;
+
+	    for (i = 0; i < limit; i++)
+	      XDrawRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			      left + glyph_width * i, top,
+			      glyph_width - 1, line_height - 1);
+	  }
+	else if (require_clipping && !NILP (Vhighlight_wrong_size_font))
+	  {
+	    /* Show ??? to indicate that we found a font of
+               inappropriate size.  */
+	    int limit = cmpcharp ? 1 : len;
+
+	    for (i = 0; i < limit; i++)
+	      {
+		XDrawLine (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			   left + glyph_width * i, top + line_height - 1,
+			   left + glyph_width * i + 1, top + line_height - 1);
+		XDrawLine (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			   left + glyph_width * i, top + line_height - 3,
+			   left + glyph_width * i, top + line_height - 1);
+	      }
+	  }
 
 	/* We should probably check for XA_UNDERLINE_POSITION and
 	   XA_UNDERLINE_THICKNESS properties on the font, but let's
 	   just get the thing working, and come back to that.  */
 	{
-	  int underline_position = 1;
+	  /* Setting underline position based on the metric of the
+	     current font results in shaky underline if it strides
+	     over different fonts.  So, we set the position based only
+	     on the default font of this frame.  */
+	  int underline_position = f->output_data.x->font_baseline + 1;
 
-	  if (font->descent <= underline_position)
-	    underline_position = font->descent - 1;
+	  if (underline_position >= line_height)
+	    underline_position = line_height - 1;
 
 	  if (face->underline)
 	    XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 			    FACE_GC (face),
-			    left, (top
-				   + FONT_BASE (font)
-				   + underline_position),
-			    len * FONT_WIDTH (font), 1);
+			    left, top + underline_position, run_width, 1);
 	}
 
-	left += len * FONT_WIDTH (font);
+	if (!cmpcharp)
+	  left += run_width;
       }
     }
+
+  return (left - orig_left);
 }
 #endif /* 1 */
 
@@ -794,20 +1208,16 @@ XTwrite_glyphs (start, len)
   dumpglyphs (f,
 	      CHAR_TO_PIXEL_COL (f, curs_x),
 	      CHAR_TO_PIXEL_ROW (f, curs_y),
-	      start, len, highlight, 0);
+	      start, len, highlight, 0, NULL);
 
   /* If we drew on top of the cursor, note that it is turned off.  */
   if (curs_y == f->phys_cursor_y
       && curs_x <= f->phys_cursor_x
       && curs_x + len > f->phys_cursor_x)
-    f->phys_cursor_x = -1;
+    f->phys_cursor_on = 0;
 
   if (updating_frame == 0)
-    {
-      f->cursor_x += len;
-      x_display_cursor (f, 1);
-      f->cursor_x -= len;
-    }
+    x_display_cursor (f, 1, FRAME_CURSOR_X (f) + len, FRAME_CURSOR_Y (f));
   else
     curs_x += len;
 
@@ -834,8 +1244,10 @@ XTclear_end_of_line (first_unused)
   if (first_unused <= 0)
     return;
 
-  if (first_unused >= f->width)
-    first_unused = f->width;
+  if (first_unused >= FRAME_WINDOW_WIDTH (f))
+    first_unused = FRAME_WINDOW_WIDTH (f);
+
+  first_unused += FRAME_LEFT_SCROLL_BAR_WIDTH (f);
 
   BLOCK_INPUT;
 
@@ -845,7 +1257,7 @@ XTclear_end_of_line (first_unused)
   if (curs_y == f->phys_cursor_y
       && curs_x <= f->phys_cursor_x
       && f->phys_cursor_x < first_unused)
-    f->phys_cursor_x = -1;
+    f->phys_cursor_on = 0;
 
   XClearArea (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 	      CHAR_TO_PIXEL_COL (f, curs_x),
@@ -868,7 +1280,7 @@ XTclear_frame ()
   if (f == 0)
     f = selected_frame;
 
-  f->phys_cursor_x = -1;	/* Cursor not visible.  */
+  f->phys_cursor_on = 0;	/* Cursor not visible.  */
   curs_x = 0;			/* Nominal cursor position is top left.  */
   curs_y = 0;
 
@@ -923,7 +1335,7 @@ redraw_previous_char (f, x, y, highlight_flag)
       dumpglyphs (f, CHAR_TO_PIXEL_COL (f, start_x),
 		  CHAR_TO_PIXEL_ROW (f, y),
 		  &FRAME_CURRENT_GLYPHS (f)->glyphs[y][start_x],
-		  x - start_x, highlight_flag, 1);
+		  x - start_x, highlight_flag, 1, NULL);
     }
 }
 
@@ -959,7 +1371,7 @@ redraw_following_char (f, x, y, highlight_flag)
       dumpglyphs (f, CHAR_TO_PIXEL_COL (f, x),
 		  CHAR_TO_PIXEL_ROW (f, y),
 		  &FRAME_CURRENT_GLYPHS (f)->glyphs[y][x],
-		  end_x - x, highlight_flag, 1);
+		  end_x - x, highlight_flag, 1, NULL);
     }
 }
 #endif /* 0 */
@@ -1117,11 +1529,49 @@ XTflash (f)
     }
 
     {
-      int width  = PIXEL_WIDTH  (f);
-      int height = PIXEL_HEIGHT (f);
+      /* Get the height not including a menu bar widget.  */
+      int height = CHAR_TO_PIXEL_HEIGHT (f, FRAME_HEIGHT (f));
+      /* Height of each line to flash.  */
+      int flash_height = FRAME_LINE_HEIGHT (f);
+      /* These will be the left and right margins of the rectangles.  */
+      int flash_left = FRAME_INTERNAL_BORDER_WIDTH (f);
+      int flash_right = PIXEL_WIDTH (f) - FRAME_INTERNAL_BORDER_WIDTH (f);
 
-      XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
-		      width/4, height/4, width/2, height/2);
+      int width;
+
+      /* Don't flash the area between a scroll bar and the frame
+	 edge it is next to.  */
+      switch (FRAME_VERTICAL_SCROLL_BAR_TYPE (f))
+	{
+	case vertical_scroll_bar_left:
+	  flash_left += VERTICAL_SCROLL_BAR_WIDTH_TRIM;
+	  break;
+
+	case vertical_scroll_bar_right:
+	  flash_right -= VERTICAL_SCROLL_BAR_WIDTH_TRIM;
+	  break;
+	}
+
+      width = flash_right - flash_left;
+
+      /* If window is tall, flash top and bottom line.  */
+      if (height > 3 * FRAME_LINE_HEIGHT (f))
+	{
+	  XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			  flash_left, FRAME_INTERNAL_BORDER_WIDTH (f),
+			  width, flash_height);
+	  XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			  flash_left,
+			  (height - flash_height
+			   - FRAME_INTERNAL_BORDER_WIDTH (f)),
+			  width, flash_height);
+	}
+      else
+	/* If it is short, flash it all.  */ 
+	XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			flash_left, FRAME_INTERNAL_BORDER_WIDTH (f),
+			width, height - 2 * FRAME_INTERNAL_BORDER_WIDTH (f));
+
       XFlush (FRAME_X_DISPLAY (f));
 
       {
@@ -1151,8 +1601,24 @@ XTflash (f)
 	  }
       }
 
-      XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
-		      width/4, height/4, width/2, height/2);
+      /* If window is tall, flash top and bottom line.  */
+      if (height > 3 * FRAME_LINE_HEIGHT (f))
+	{
+	  XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			  flash_left, FRAME_INTERNAL_BORDER_WIDTH (f),
+			  width, flash_height);
+	  XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			  flash_left,
+			  (height - flash_height
+			   - FRAME_INTERNAL_BORDER_WIDTH (f)),
+			  width, flash_height);
+	}
+      else
+	/* If it is short, flash it all.  */ 
+	XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), gc,
+			flash_left, FRAME_INTERNAL_BORDER_WIDTH (f),
+			width, height - 2 * FRAME_INTERNAL_BORDER_WIDTH (f));
+
       XFreeGC (FRAME_X_DISPLAY (f), gc);
       XFlush (FRAME_X_DISPLAY (f));
     }
@@ -1303,9 +1769,9 @@ do_line_dance ()
     abort ();
 
   ht = f->height;
-  intborder = f->output_data.x->internal_border_width;
+  intborder = CHAR_TO_PIXEL_COL (f, FRAME_LEFT_SCROLL_BAR_WIDTH (f));
 
-  x_display_cursor (updating_frame, 0);
+  x_update_cursor (updating_frame, 0);
 
   for (i = 0; i < ht; ++i)
     if (line_dance[i] != -1 && (distance = line_dance[i]-i) > 0)
@@ -1316,7 +1782,7 @@ do_line_dance ()
 	XCopyArea (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 		   FRAME_X_WINDOW (f), f->output_data.x->normal_gc,
 		   intborder, CHAR_TO_PIXEL_ROW (f, i+distance),
-		   f->width * FONT_WIDTH (f->output_data.x->font),
+		   FRAME_WINDOW_WIDTH (f) * FONT_WIDTH (f->output_data.x->font),
 		   (j-i) * f->output_data.x->line_height,
 		   intborder, CHAR_TO_PIXEL_ROW (f, i));
 	i = j-1;
@@ -1331,7 +1797,7 @@ do_line_dance ()
 	XCopyArea (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 		   FRAME_X_WINDOW (f), f->output_data.x->normal_gc,
 		   intborder, CHAR_TO_PIXEL_ROW (f, j+1+distance),
-		   f->width * FONT_WIDTH (f->output_data.x->font),
+		   FRAME_WINDOW_WIDTH (f) * FONT_WIDTH (f->output_data.x->font),
 		   (i-j) * f->output_data.x->line_height,
 		   intborder, CHAR_TO_PIXEL_ROW (f, j+1));
 	i = j+1;
@@ -1344,7 +1810,7 @@ do_line_dance ()
 	/* Clear [i,j) */
 	XClearArea (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 		    intborder, CHAR_TO_PIXEL_ROW (f, i),
-		    f->width * FONT_WIDTH (f->output_data.x->font),
+		    FRAME_WINDOW_WIDTH (f) * FONT_WIDTH (f->output_data.x->font),
 		    (j-i) * f->output_data.x->line_height, False);
 	i = j-1;
       }
@@ -1391,8 +1857,8 @@ dumprectangle (f, left, top, cols, rows)
     left = 0;
   if (top < 0)
     top = 0;
-  if (right > f->width)
-    right = f->width;
+  if (right > FRAME_WINDOW_WIDTH (f))
+    right = FRAME_WINDOW_WIDTH (f);
   if (bottom > f->height)
     bottom = f->height;
 
@@ -1422,17 +1888,25 @@ dumprectangle (f, left, top, cols, rows)
       if (! active_frame->enable[y] || left > active_frame->used[y])
 	continue;
 
+      while (*line & GLYPH_MASK_PADDING)
+	{
+	  /* We must display the whole glyph of a wide-column
+             character.  */
+	  left--;
+	  line--;
+	  cols++;
+	}
       dumpglyphs (f,
 		  CHAR_TO_PIXEL_COL (f, left),
 		  CHAR_TO_PIXEL_ROW (f, y),
 		  line, min (cols, active_frame->used[y] - left),
-		  active_frame->highlight[y], 0);
+		  active_frame->highlight[y], 0, NULL);
     }
 
   /* Turn the cursor on if we turned it off.  */
 
   if (cursor_cleared)
-    x_display_cursor (f, 1);
+    x_update_cursor (f, 1);
 }
 
 static void
@@ -1745,8 +2219,8 @@ pixel_to_glyph_coords (f, pix_x, pix_y, x, y, bounds, noclip)
     {
       if (pix_x < 0)
 	pix_x = 0;
-      else if (pix_x > f->width)
-	pix_x = f->width;
+      else if (pix_x > FRAME_WINDOW_WIDTH (f))
+	pix_x = FRAME_WINDOW_WIDTH (f);
 
       if (pix_y < 0)
 	pix_y = 0;
@@ -1815,7 +2289,7 @@ construct_menu_click (result, event, f)
   /* Make the event type no_event; we'll change that when we decide
      otherwise.  */
   result->kind = mouse_click;
-  XSETINT (result->code, event->button - Button1);
+  result->code = event->button - Button1;
   result->timestamp = event->time;
   result->modifiers = (x_x_to_emacs_modifiers (FRAME_X_DISPLAY_INFO (f),
 					       event->state)
@@ -1915,7 +2389,9 @@ note_mouse_highlight (f, x, y)
   if (WINDOWP (window) && portion == 0 && row >= 0 && column >= 0
       && row < FRAME_HEIGHT (f) && column < FRAME_WIDTH (f)
       && EQ (w->window_end_valid, w->buffer)
-      && w->last_modified == BUF_MODIFF (XBUFFER (w->buffer)))
+      && XFASTINT (w->last_modified) == BUF_MODIFF (XBUFFER (w->buffer))
+      && (XFASTINT (w->last_overlay_modified)
+	  == BUF_OVERLAY_MODIFF (XBUFFER (w->buffer))))
     {
       int *ptr = FRAME_CURRENT_GLYPHS (f)->charstarts[row];
       int i, pos;
@@ -1967,7 +2443,7 @@ note_mouse_highlight (f, x, y)
 
 	  /* Put all the overlays we want in a vector in overlay_vec.
 	     Store the length in len.  */
-	  noverlays = overlays_at (XINT (pos), 1, &overlay_vec, &len,
+	  noverlays = overlays_at (pos, 1, &overlay_vec, &len,
 				   NULL, NULL);
 	  noverlays = sort_overlays (overlay_vec, noverlays, w);
 
@@ -1998,11 +2474,11 @@ note_mouse_highlight (f, x, y)
 	      before = Foverlay_start (overlay);
 	      after = Foverlay_end (overlay);
 	      /* Record this as the current active region.  */
-	      fast_find_position (window, before,
+	      fast_find_position (window, XFASTINT (before),
 				  &FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_col,
 				  &FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_row);
 	      FRAME_X_DISPLAY_INFO (f)->mouse_face_past_end
-		= !fast_find_position (window, after,
+		= !fast_find_position (window, XFASTINT (after),
 				       &FRAME_X_DISPLAY_INFO (f)->mouse_face_end_col,
 				       &FRAME_X_DISPLAY_INFO (f)->mouse_face_end_row);
 	      FRAME_X_DISPLAY_INFO (f)->mouse_face_window = window;
@@ -2032,11 +2508,11 @@ note_mouse_highlight (f, x, y)
 		= Fnext_single_property_change (position, Qmouse_face,
 						w->buffer, end);
 	      /* Record this as the current active region.  */
-	      fast_find_position (window, before,
+	      fast_find_position (window, XFASTINT (before),
 				  &FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_col,
 				  &FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_row);
 	      FRAME_X_DISPLAY_INFO (f)->mouse_face_past_end
-		= !fast_find_position (window, after,
+		= !fast_find_position (window, XFASTINT (after),
 				       &FRAME_X_DISPLAY_INFO (f)->mouse_face_end_col,
 				       &FRAME_X_DISPLAY_INFO (f)->mouse_face_end_row);
 	      FRAME_X_DISPLAY_INFO (f)->mouse_face_window = window;
@@ -2073,8 +2549,8 @@ fast_find_position (window, pos, columnp, rowp)
   FRAME_PTR f = XFRAME (WINDOW_FRAME (w));
   int i;
   int row = 0;
-  int left = w->left;
-  int top = w->top;
+  int left = WINDOW_LEFT_MARGIN (w);
+  int top = XFASTINT (w->top);
   int height = XFASTINT (w->height) - ! MINI_WINDOW_P (w);
   int width = window_internal_width (w);
   int *charstarts;
@@ -2123,7 +2599,7 @@ fast_find_position (window, pos, columnp, rowp)
   if (maybe_next_line)
     {
       row++;
-      i = 0;
+      lastcol = left;
     }
 
   *rowp = row + top;
@@ -2151,17 +2627,16 @@ show_mouse_face (dpyinfo, hl)
      so that if we have to turn the cursor off and on again
      we will put it back at the same place.  */
   curs_x = f->phys_cursor_x;
-  curs_y = f->phys_cursor_y;
-
+  curs_y = f->phys_cursor_y;  
   for (i = FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_row;
        i <= FRAME_X_DISPLAY_INFO (f)->mouse_face_end_row; i++)
     {
       int column = (i == FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_row
 		    ? FRAME_X_DISPLAY_INFO (f)->mouse_face_beg_col
-		    : w->left);
+		    : WINDOW_LEFT_MARGIN (w));
       int endcolumn = (i == FRAME_X_DISPLAY_INFO (f)->mouse_face_end_row
 		       ? FRAME_X_DISPLAY_INFO (f)->mouse_face_end_col
-		       : w->left + width);
+		       : WINDOW_LEFT_MARGIN (w) + width);
       endcolumn = min (endcolumn, FRAME_CURRENT_GLYPHS (f)->used[i]);
 
       /* If the cursor's in the text we are about to rewrite,
@@ -2170,7 +2645,7 @@ show_mouse_face (dpyinfo, hl)
 	  && curs_x >= column - 1
 	  && curs_x <= endcolumn)
 	{
-	  x_display_cursor (f, 0);
+	  x_update_cursor (f, 0);
 	  cursor_off = 1;
 	}
 
@@ -2180,12 +2655,12 @@ show_mouse_face (dpyinfo, hl)
 		  FRAME_CURRENT_GLYPHS (f)->glyphs[i] + column,
 		  endcolumn - column,
 		  /* Highlight with mouse face if hl > 0.  */
-		  hl > 0 ? 3 : 0, 0);
+		  hl > 0 ? 3 : 0, 0, NULL);
     }
 
   /* If we turned the cursor off, turn it back on.  */
   if (cursor_off)
-    x_display_cursor (f, 1);
+    x_display_cursor (f, 1, curs_x, curs_y);
 
   curs_x = old_curs_x;
   curs_y = old_curs_y;
@@ -2212,6 +2687,24 @@ clear_mouse_face (dpyinfo)
   dpyinfo->mouse_face_beg_row = dpyinfo->mouse_face_beg_col = -1;
   dpyinfo->mouse_face_end_row = dpyinfo->mouse_face_end_col = -1;
   dpyinfo->mouse_face_window = Qnil;
+}
+
+/* Just discard the mouse face information for frame F, if any.
+   This is used when the size of F is changed.  */
+
+cancel_mouse_face (f)
+     FRAME_PTR f;
+{
+  Lisp_Object window;
+  struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
+
+  window = dpyinfo->mouse_face_window;
+  if (! NILP (window) && XFRAME (XWINDOW (window)->frame) == f)
+    {
+      dpyinfo->mouse_face_beg_row = dpyinfo->mouse_face_beg_col = -1;
+      dpyinfo->mouse_face_end_row = dpyinfo->mouse_face_end_col = -1;
+      dpyinfo->mouse_face_window = Qnil;
+    }
 }
 
 static struct scroll_bar *x_window_to_scroll_bar ();
@@ -2296,6 +2789,7 @@ XTmouse_position (fp, insist, bar_window, part, x, y, time)
 	Window win, child;
 	int win_x, win_y;
 	int parent_x, parent_y;
+	int count;
 
 	win = root;
 
@@ -2303,7 +2797,7 @@ XTmouse_position (fp, insist, bar_window, part, x, y, time)
 	   structure is changing at the same time this function
 	   is running.  So at least we must not crash from them.  */
 
-	x_catch_errors (FRAME_X_DISPLAY (*fp));
+	count = x_catch_errors (FRAME_X_DISPLAY (*fp));
 
 	if (FRAME_X_DISPLAY_INFO (*fp)->grabbed && last_mouse_frame
 	    && FRAME_LIVE_P (last_mouse_frame))
@@ -2363,7 +2857,7 @@ XTmouse_position (fp, insist, bar_window, part, x, y, time)
 	if (x_had_errors_p (FRAME_X_DISPLAY (*fp)))
 	  f1 = 0;
 
-	x_uncatch_errors (FRAME_X_DISPLAY (*fp));
+	x_uncatch_errors (FRAME_X_DISPLAY (*fp), count);
 
 	/* If not, is it one of our scroll bars?  */
 	if (! f1)
@@ -2487,7 +2981,8 @@ x_scroll_bar_create (window, top, left, width, height)
        XCreateWindow (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 
 		      /* Position and size of scroll bar.  */
-		      left, top, width, height,
+		      left + VERTICAL_SCROLL_BAR_WIDTH_TRIM, top,
+		      width - VERTICAL_SCROLL_BAR_WIDTH_TRIM * 2, height,
 
 		      /* Border width, depth, class, and visual.  */
 		      0, CopyFromParent, CopyFromParent, CopyFromParent,
@@ -2550,9 +3045,9 @@ x_scroll_bar_set_handle (bar, start, end, rebuild)
   BLOCK_INPUT;
 
   {
-    int inside_width = VERTICAL_SCROLL_BAR_INSIDE_WIDTH (XINT (bar->width));
-    int inside_height = VERTICAL_SCROLL_BAR_INSIDE_HEIGHT (XINT (bar->height));
-    int top_range = VERTICAL_SCROLL_BAR_TOP_RANGE (XINT (bar->height));
+    int inside_width = VERTICAL_SCROLL_BAR_INSIDE_WIDTH (f, XINT (bar->width));
+    int inside_height = VERTICAL_SCROLL_BAR_INSIDE_HEIGHT (f, XINT (bar->height));
+    int top_range = VERTICAL_SCROLL_BAR_TOP_RANGE (f, XINT (bar->height));
 
     /* Make sure the values are reasonable, and try to preserve
        the distance between start and end.  */
@@ -2636,9 +3131,10 @@ x_scroll_bar_move (bar, top, left, width, height)
     XWindowChanges wc;
     unsigned int mask = 0;
 
-    wc.x = left;
+    wc.x = left + VERTICAL_SCROLL_BAR_WIDTH_TRIM;
     wc.y = top;
-    wc.width = width;
+
+    wc.width = width - VERTICAL_SCROLL_BAR_WIDTH_TRIM * 2;
     wc.height = height;
 
     if (left != XINT (bar->left))	mask |= CWX;
@@ -2719,7 +3215,7 @@ XTset_vertical_scroll_bar (window, portion, whole, position)
      dragged.  */
   if (NILP (bar->dragging))
     {
-      int top_range = VERTICAL_SCROLL_BAR_TOP_RANGE (pixel_height);
+      int top_range = VERTICAL_SCROLL_BAR_TOP_RANGE (f, pixel_height);
 
       if (whole == 0)
 	x_scroll_bar_set_handle (bar, 0, top_range, 0);
@@ -2853,6 +3349,7 @@ x_scroll_bar_expose (bar, event)
   Window w = SCROLL_BAR_X_WINDOW (bar);
   FRAME_PTR f = XFRAME (WINDOW_FRAME (XWINDOW (bar->window)));
   GC gc = f->output_data.x->normal_gc;
+  int width_trim = VERTICAL_SCROLL_BAR_WIDTH_TRIM;
 
   BLOCK_INPUT;
 
@@ -2862,8 +3359,10 @@ x_scroll_bar_expose (bar, event)
   XDrawRectangle (FRAME_X_DISPLAY (f), w, gc,
 
 		  /* x, y, width, height */
-		  0, 0, XINT (bar->width) - 1, XINT (bar->height) - 1);
-
+		  0, 0,
+		  XINT (bar->width) - 1 - width_trim - width_trim,
+		  XINT (bar->height) - 1);
+    
   UNBLOCK_INPUT;
 }
 
@@ -2893,10 +3392,11 @@ x_scroll_bar_handle_click (bar, event, emacs_event)
   emacs_event->frame_or_window = bar->window;
   emacs_event->timestamp = event->xbutton.time;
   {
+    FRAME_PTR f = XFRAME (WINDOW_FRAME (XWINDOW (bar->window)));
     int internal_height
-      = VERTICAL_SCROLL_BAR_INSIDE_HEIGHT (XINT (bar->height));
+      = VERTICAL_SCROLL_BAR_INSIDE_HEIGHT (f, XINT (bar->height));
     int top_range
-      = VERTICAL_SCROLL_BAR_TOP_RANGE (XINT (bar->height));
+      = VERTICAL_SCROLL_BAR_TOP_RANGE (f, XINT (bar->height));
     int y = event->xbutton.y - VERTICAL_SCROLL_BAR_TOP_BORDER;
 
     if (y < 0) y = 0;
@@ -3015,9 +3515,9 @@ x_scroll_bar_report_motion (fp, bar_window, part, x, y, time)
   else
     {
       int inside_height
-	= VERTICAL_SCROLL_BAR_INSIDE_HEIGHT (XINT (bar->height));
+	= VERTICAL_SCROLL_BAR_INSIDE_HEIGHT (f, XINT (bar->height));
       int top_range
-	= VERTICAL_SCROLL_BAR_TOP_RANGE     (XINT (bar->height));
+	= VERTICAL_SCROLL_BAR_TOP_RANGE     (f, XINT (bar->height));
 
       win_y -= VERTICAL_SCROLL_BAR_TOP_BORDER;
 
@@ -3095,6 +3595,7 @@ process_expose_from_menu (event)
 	{
 	  f->async_visible = 1;
 	  f->async_iconified = 0;
+	  f->output_data.x->has_been_visible = 1;
 	  SET_FRAME_GARBAGED (f);
 	}
       else
@@ -3238,15 +3739,13 @@ static struct x_display_info *next_noop_dpyinfo;
    We return the number of characters stored into the buffer,
    thus pretending to be `read'.
 
-   WAITP is nonzero if we should block until input arrives.
    EXPECTED is nonzero if the caller knows input is available.  */
 
 int
-XTread_socket (sd, bufp, numchars, waitp, expected)
+XTread_socket (sd, bufp, numchars, expected)
      register int sd;
      /* register */ struct input_event *bufp;
      /* register */ int numchars;
-     int waitp;
      int expected;
 {
   int count = 0;
@@ -3324,6 +3823,16 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 #else
 	  XNextEvent (dpyinfo->display, &event);
 #endif
+#ifdef HAVE_X_I18N
+	  {
+	    struct frame *f1 = x_any_window_to_frame (dpyinfo,
+						      &event.xclient.window);
+	    /* The necessity of the following line took me
+	       a full work-day to decipher from the docs!!  */
+	    if (f1 != 0 && FRAME_XIC (f1) && XFilterEvent (&event, None))
+	      break;
+	  }
+#endif
 	  event_found = 1;
 
 	  switch (event.type)
@@ -3337,20 +3846,32 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		    if (event.xclient.data.l[0]
 			== dpyinfo->Xatom_wm_take_focus)
 		      {
-			f = x_window_to_frame (dpyinfo, event.xclient.window);
+			/* Use x_any_window_to_frame because this
+			   could be the shell widget window
+			   if the frame has no title bar.  */
+			f = x_any_window_to_frame (dpyinfo, event.xclient.window);
+#ifdef HAVE_X_I18N
+			/* Not quite sure this is needed -pd */
+			if (f && FRAME_XIC (f))
+			  XSetICFocus (FRAME_XIC (f));
+#endif
 			/* Since we set WM_TAKE_FOCUS, we must call
 			   XSetInputFocus explicitly.  But not if f is null,
 			   since that might be an event for a deleted frame.  */
-#ifdef HAVE_X_I18N
-			/* Not quite sure this is needed -pd */
 			if (f)
-			  XSetICFocus (FRAME_XIC (f));
-#endif
-			if (f)
-			  XSetInputFocus (event.xclient.display,
-					  event.xclient.window,
-					  RevertToPointerRoot,
-					  event.xclient.data.l[1]);
+			  {
+			    Display *d = event.xclient.display;
+			    /* Catch and ignore errors, in case window has been
+			       iconified by a window manager such as GWM.  */
+			    int count = x_catch_errors (d);
+			    XSetInputFocus (d, event.xclient.window,
+					    RevertToPointerRoot,
+					    event.xclient.data.l[1]);
+			    /* This is needed to detect the error
+			       if there is an error.  */
+			    XSync (d, False);
+			    x_uncatch_errors (d, count);
+			  }  
 			/* Not certain about handling scroll bars here */
 		      }
 		    else if (event.xclient.data.l[0]
@@ -3521,6 +4042,7 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		    {
 		      f->async_visible = 1;
 		      f->async_iconified = 0;
+		      f->output_data.x->has_been_visible = 1;
 		      SET_FRAME_GARBAGED (f);
 		    }
 		  else
@@ -3577,15 +4099,19 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		  /* We can't distinguish, from the event, whether the window
 		     has become iconified or invisible.  So assume, if it
 		     was previously visible, than now it is iconified.
-		     We depend on x_make_frame_invisible to mark it invisible.  */
+		     But x_make_frame_invisible clears both
+		     the visible flag and the iconified flag;
+		     and that way, we know the window is not iconified now.  */
 		  if (FRAME_VISIBLE_P (f) || FRAME_ICONIFIED_P (f))
-		    f->async_iconified = 1;
+		    {
+		      f->async_iconified = 1;
 
-		  bufp->kind = iconify_event;
-		  XSETFRAME (bufp->frame_or_window, f);
-		  bufp++;
-		  count++;
-		  numchars--;
+		      bufp->kind = iconify_event;
+		      XSETFRAME (bufp->frame_or_window, f);
+		      bufp++;
+		      count++;
+		      numchars--;
+		    }
 		}
 	      goto OTHER;
 
@@ -3597,6 +4123,7 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		{
 		  f->async_visible = 1;
 		  f->async_iconified = 0;
+		  f->output_data.x->has_been_visible = 1;
 
 		  /* wait_reading_process_input will notice this and update
 		     the frame's display structures.  */
@@ -3610,7 +4137,7 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		      count++;
 		      numchars--;
 		    }
-		  else if (! NILP(Vframe_list)
+		  else if (! NILP (Vframe_list)
 			   && ! NILP (XCONS (Vframe_list)->cdr))
 		    /* Force a redisplay sooner or later
 		       to update the frame titles
@@ -3664,6 +4191,14 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 					| dpyinfo->hyper_mod_mask
 					| dpyinfo->alt_mod_mask);
 
+		  /* In case Meta is ComposeCharacter,
+		     clear its status.  According to Markus Ehrnsperger
+		     Markus.Ehrnsperger@lehrstuhl-bross.physik.uni-muenchen.de
+		     this enables ComposeCharacter to work whether or
+		     not it is combined with Meta.  */
+		  if (modifiers & dpyinfo->meta_mod_mask)
+		    bzero (&compose_status, sizeof (compose_status));
+
 #ifdef HAVE_X_I18N
 		  if (FRAME_XIC (f))
 		    {
@@ -3690,6 +4225,9 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		    {
 		      if (((keysym >= XK_BackSpace && keysym <= XK_Escape)
 			   || keysym == XK_Delete
+#ifdef XK_ISO_Left_Tab
+			   || (keysym >= XK_ISO_Left_Tab && keysym <= XK_ISO_Enter)
+#endif
 			   || IsCursorKey (keysym) /* 0xff50 <= x < 0xff60 */
 			   || IsMiscFunctionKey (keysym) /* 0xff60 <= x < VARIES */
 #ifdef HPUX
@@ -3901,12 +4439,8 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 	      goto OTHER;
 
 	    case ConfigureNotify:
-	      f = x_any_window_to_frame (dpyinfo, event.xconfigure.window);
-	      if (f
-#ifdef USE_X_TOOLKIT
-		  && (event.xconfigure.window == XtWindow (f->output_data.x->widget))
-#endif
-		  )
+	      f = x_top_window_to_frame (dpyinfo, event.xconfigure.window);
+	      if (f)
 		{
 #ifndef USE_X_TOOLKIT
 		  /* In the toolkit version, change_frame_size
@@ -3926,66 +4460,25 @@ XTread_socket (sd, bufp, numchars, waitp, expected)
 		    {
 		      change_frame_size (f, rows, columns, 0, 1);
 		      SET_FRAME_GARBAGED (f);
+		      cancel_mouse_face (f);
 		    }
 #endif
-
-		  /* Formerly, in the USE_X_TOOLKIT version,
-		     we did not test send_event here.  */
-		  if (1
-#ifndef USE_X_TOOLKIT
-		      && ! event.xconfigure.send_event
-#endif
-		      )
-		    {
-		      Window win, child;
-		      int win_x, win_y;
-
-		      /* Find the position of the outside upper-left corner of
-			 the window, in the root coordinate system.  Don't
-			 refer to the parent window here; we may be processing
-			 this event after the window manager has changed our
-			 parent, but before we have reached the ReparentNotify.  */
-		      XTranslateCoordinates (FRAME_X_DISPLAY (f),
-
-					     /* From-window, to-window.  */
-					     event.xconfigure.window,
-					     FRAME_X_DISPLAY_INFO (f)->root_window,
-
-					     /* From-position, to-position.  */
-					     -event.xconfigure.border_width,
-					     -event.xconfigure.border_width,
-					     &win_x, &win_y,
-
-					     /* Child of win.  */
-					     &child);
-		      event.xconfigure.x = win_x;
-		      event.xconfigure.y = win_y;
-		    }
 
 		  f->output_data.x->pixel_width = event.xconfigure.width;
 		  f->output_data.x->pixel_height = event.xconfigure.height;
-		  f->output_data.x->left_pos = event.xconfigure.x;
-		  f->output_data.x->top_pos = event.xconfigure.y;
 
 		  /* What we have now is the position of Emacs's own window.
 		     Convert that to the position of the window manager window.  */
-		  {
-		    int x, y;
-		    x_real_positions (f, &x, &y);
-		    f->output_data.x->left_pos = x;
-		    f->output_data.x->top_pos = y;
-		    /* Formerly we did not do this in the USE_X_TOOLKIT
-		       version.  Let's try making them the same.  */
-/* #ifndef USE_X_TOOLKIT */
-		    if (y != event.xconfigure.y)
-		      {
-			/* Since the WM decorations come below top_pos now,
-			   we must put them below top_pos in the future.  */
-			f->output_data.x->win_gravity = NorthWestGravity;
-			x_wm_set_size_hint (f, (long) 0, 0);
-		      }
-/* #endif */
-		  }
+		  x_real_positions (f, &f->output_data.x->left_pos,
+				    &f->output_data.x->top_pos);
+
+		  if (f->output_data.x->parent_desc != FRAME_X_DISPLAY_INFO (f)->root_window)
+		    {
+		      /* Since the WM decorations come below top_pos now,
+			 we must put them below top_pos in the future.  */
+		      f->output_data.x->win_gravity = NorthWestGravity;
+		      x_wm_set_size_hint (f, (long) 0, 0);
+		    }
 		}
 	      goto OTHER;
 
@@ -4163,9 +4656,30 @@ x_draw_box (f, x, y)
   int top  = CHAR_TO_PIXEL_ROW (f, y);
   int width = FONT_WIDTH (f->output_data.x->font);
   int height = f->output_data.x->line_height;
+  int c = FAST_GLYPH_CHAR (f->phys_cursor_glyph);
+  int charset = CHAR_CHARSET (c);
 
+  XGCValues xgcv;
+  unsigned long mask = GCForeground;
+
+  xgcv.foreground = f->output_data.x->cursor_pixel;
+
+  /* cursor_gc's foreground color is typically the same as the normal
+     background color, which can cause the cursor box to be invisible.  */
+  if (FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc)
+    XChangeGC (FRAME_X_DISPLAY (f),
+               FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc,
+               mask, &xgcv);
+  else
+    FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc
+      = XCreateGC (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), mask, &xgcv);
+
+  /* If cursor is on a multi-column character, multiply WIDTH by columns.  */
+  width *= (charset == CHARSET_COMPOSITION
+	    ? cmpchar_table[COMPOSITE_CHAR_ID (c)]->width
+	    : CHARSET_WIDTH (charset));
   XDrawRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
-		  f->output_data.x->cursor_gc,
+                  FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc,
 		  left, top, width - 1, height - 1);
 }
 
@@ -4181,11 +4695,11 @@ clear_cursor (f)
   int mask;
 
   if (! FRAME_VISIBLE_P (f)
-      || f->phys_cursor_x < 0)
+      || ! f->phys_cursor_on)
     return;
 
-  x_display_cursor (f, 0);
-  f->phys_cursor_x = -1;
+  x_update_cursor (f, 0);
+  f->phys_cursor_on = 0;
 }
 
 /* Redraw the glyph at ROW, COLUMN on frame F, in the style
@@ -4202,7 +4716,7 @@ x_draw_single_glyph (f, row, column, glyph, highlight)
   dumpglyphs (f,
 	      CHAR_TO_PIXEL_COL (f, column),
 	      CHAR_TO_PIXEL_ROW (f, row),
-	      &glyph, 1, highlight, 0);
+	      &glyph, 1, highlight, 0, NULL);
 }
 
 static void
@@ -4219,11 +4733,11 @@ x_display_bar_cursor (f, on, x, y)
   if (! FRAME_VISIBLE_P (f) || FRAME_GARBAGED_P (f))
     return;
 
-  if (! on && f->phys_cursor_x < 0)
+  if (! on && ! f->phys_cursor_on)
     return;
 
   /* If there is anything wrong with the current cursor state, remove it.  */
-  if (f->phys_cursor_x >= 0
+  if (f->phys_cursor_on
       && (!on
 	  || f->phys_cursor_x != x
 	  || f->phys_cursor_y != y
@@ -4233,12 +4747,12 @@ x_display_bar_cursor (f, on, x, y)
       x_draw_single_glyph (f, f->phys_cursor_y, f->phys_cursor_x,
 			   f->phys_cursor_glyph,
 			   current_glyphs->highlight[f->phys_cursor_y]);
-      f->phys_cursor_x = -1;
+      f->phys_cursor_on = 0;
     }
 
   /* If we now need a cursor in the new place or in the new form, do it so.  */
   if (on
-      && (f->phys_cursor_x < 0
+      && (! f->phys_cursor_on
 	  || (f->output_data.x->current_cursor != bar_cursor)))
     {
       f->phys_cursor_glyph
@@ -4255,6 +4769,7 @@ x_display_bar_cursor (f, on, x, y)
 
       f->phys_cursor_x = x;
       f->phys_cursor_y = y;
+      f->phys_cursor_on = 1;
 
       f->output_data.x->current_cursor = bar_cursor;
     }
@@ -4282,14 +4797,14 @@ x_display_box_cursor (f, on, x, y)
     return;
 
   /* If cursor is off and we want it off, return quickly.  */
-  if (!on && f->phys_cursor_x < 0)
+  if (!on && ! f->phys_cursor_on)
     return;
 
   /* If cursor is currently being shown and we don't want it to be
      or it is in the wrong place,
      or we want a hollow box and it's not so, (pout!)
      erase it.  */
-  if (f->phys_cursor_x >= 0
+  if (f->phys_cursor_on
       && (!on
 	  || f->phys_cursor_x != x
 	  || f->phys_cursor_y != y
@@ -4330,14 +4845,14 @@ x_display_box_cursor (f, on, x, y)
 			   (mouse_face_here
 			    ? 3
 			    : current_glyphs->highlight[f->phys_cursor_y]));
-      f->phys_cursor_x = -1;
+      f->phys_cursor_on = 0;
     }
 
   /* If we want to show a cursor,
      or we want a box cursor and it's not so,
      write it in the right place.  */
   if (on
-      && (f->phys_cursor_x < 0
+      && (! f->phys_cursor_on
 	  || (f->output_data.x->current_cursor != filled_box_cursor
 	      && f == FRAME_X_DISPLAY_INFO (f)->x_highlight_frame)))
     {
@@ -4360,6 +4875,7 @@ x_display_box_cursor (f, on, x, y)
 
       f->phys_cursor_x = x;
       f->phys_cursor_y = y;
+      f->phys_cursor_on = 1;
     }
 
   if (updating_frame != f)
@@ -4367,29 +4883,19 @@ x_display_box_cursor (f, on, x, y)
 }
 
 /* Display the cursor on frame F, or clear it, according to ON.
-   Use the position specified by curs_x and curs_y
-   if we are doing an update of frame F now.
-   Otherwise use the position in the FRAME_CURSOR_X and FRAME_CURSOR_Y fields
-   of F.  */
+   Also set the frame's cursor position to X and Y.  */
 
-x_display_cursor (f, on)
+x_display_cursor (f, on, x, y)
      struct frame *f;
      int on;
+     int x, y;
 {
   BLOCK_INPUT;
 
-  /* If we're not updating, then don't change the physical cursor
-     position.  Just change (if appropriate) the style of display.  */
-  if (f != updating_frame)
-    {
-      curs_x = FRAME_CURSOR_X (f);
-      curs_y = FRAME_CURSOR_Y (f);
-    }
-
   if (FRAME_DESIRED_CURSOR (f) == filled_box_cursor)
-    x_display_box_cursor (f, on, curs_x, curs_y);
+    x_display_box_cursor (f, on, x, y);
   else if (FRAME_DESIRED_CURSOR (f) == bar_cursor)
-    x_display_bar_cursor (f, on, curs_x, curs_y);
+    x_display_bar_cursor (f, on, x, y);
   else
     /* Those are the only two we have implemented!  */
     abort ();
@@ -4404,11 +4910,6 @@ x_update_cursor (f, on)
      struct frame *f;
      int on;
 {
-  /* If we don't have any previous cursor position to use,
-     leave the cursor off.  */
-  if (f->phys_cursor_x < 0)
-    return;
-
   BLOCK_INPUT;
 
   if (FRAME_DESIRED_CURSOR (f) == filled_box_cursor)
@@ -4514,6 +5015,147 @@ x_text_icon (f, icon_name)
   return 0;
 }
 
+#define X_ERROR_MESSAGE_SIZE 200
+
+/* If non-nil, this should be a string.
+   It means catch X errors  and store the error message in this string.  */
+
+static Lisp_Object x_error_message_string;
+
+/* An X error handler which stores the error message in
+   x_error_message_string.  This is called from x_error_handler if
+   x_catch_errors is in effect.  */
+
+static int
+x_error_catcher (display, error)
+     Display *display;
+     XErrorEvent *error;
+{
+  XGetErrorText (display, error->error_code,
+		 XSTRING (x_error_message_string)->data,
+		 X_ERROR_MESSAGE_SIZE);
+}
+
+/* Begin trapping X errors for display DPY.  Actually we trap X errors
+   for all displays, but DPY should be the display you are actually
+   operating on.
+
+   After calling this function, X protocol errors no longer cause
+   Emacs to exit; instead, they are recorded in the string
+   stored in x_error_message_string.
+
+   Calling x_check_errors signals an Emacs error if an X error has
+   occurred since the last call to x_catch_errors or x_check_errors.
+
+   Calling x_uncatch_errors resumes the normal error handling.  */
+
+void x_check_errors ();
+static Lisp_Object x_catch_errors_unwind ();
+
+int
+x_catch_errors (dpy)
+     Display *dpy;
+{
+  int count = specpdl_ptr - specpdl;
+
+  /* Make sure any errors from previous requests have been dealt with.  */
+  XSync (dpy, False);
+
+  record_unwind_protect (x_catch_errors_unwind, x_error_message_string);
+
+  x_error_message_string = make_uninit_string (X_ERROR_MESSAGE_SIZE);
+  XSTRING (x_error_message_string)->data[0] = 0;
+
+  return count;
+}
+
+/* Unbind the binding that we made to check for X errors.  */
+
+static Lisp_Object
+x_catch_errors_unwind (old_val)
+     Lisp_Object old_val;
+{
+  x_error_message_string = old_val;
+  return Qnil;
+}
+
+/* If any X protocol errors have arrived since the last call to
+   x_catch_errors or x_check_errors, signal an Emacs error using
+   sprintf (a buffer, FORMAT, the x error message text) as the text.  */
+
+void
+x_check_errors (dpy, format)
+     Display *dpy;
+     char *format;
+{
+  /* Make sure to catch any errors incurred so far.  */
+  XSync (dpy, False);
+
+  if (XSTRING (x_error_message_string)->data[0])
+    error (format, XSTRING (x_error_message_string)->data);
+}
+
+/* Nonzero if we had any X protocol errors
+   since we did x_catch_errors on DPY.  */
+
+int
+x_had_errors_p (dpy)
+     Display *dpy;
+{
+  /* Make sure to catch any errors incurred so far.  */
+  XSync (dpy, False);
+
+  return XSTRING (x_error_message_string)->data[0] != 0;
+}
+
+/* Forget about any errors we have had, since we did x_catch_errors on DPY.  */
+
+int
+x_clear_errors (dpy)
+     Display *dpy;
+{
+  XSTRING (x_error_message_string)->data[0] = 0;
+}
+
+/* Stop catching X protocol errors and let them make Emacs die.
+   DPY should be the display that was passed to x_catch_errors.
+   COUNT should be the value that was returned by
+   the corresponding call to x_catch_errors.  */
+
+void
+x_uncatch_errors (dpy, count)
+     Display *dpy;
+     int count;
+{
+  unbind_to (count, Qnil);
+}
+
+#if 0
+static unsigned int x_wire_count;
+x_trace_wire ()
+{
+  fprintf (stderr, "Lib call: %d\n", ++x_wire_count);
+}
+#endif /* ! 0 */
+
+
+/* Handle SIGPIPE, which can happen when the connection to a server
+   simply goes away.  SIGPIPE is handled by x_connection_signal.
+   Don't need to do anything, because the write which caused the 
+   SIGPIPE will fail, causing Xlib to invoke the X IO error handler,
+   which will do the appropriate cleanup for us. */
+   
+static SIGTYPE
+x_connection_signal (signalnum)	/* If we don't have an argument, */
+     int signalnum;		/* some compilers complain in signal calls. */
+{
+#ifdef USG
+  /* USG systems forget handlers when they are used;
+     must reestablish each time */
+  signal (signalnum, x_connection_signal);
+#endif /* USG */
+}
+
 /* Handling X errors.  */
 
 /* Handle the loss of connection to display DISPLAY.  */
@@ -4527,6 +5169,10 @@ x_connection_closed (display, error_message)
   Lisp_Object frame, tail;
 
   /* Indicate that this display is dead.  */
+
+#ifdef USE_X_TOOLKIT
+  XtCloseDisplay (display);
+#endif
 
   dpyinfo->display = 0;
 
@@ -4598,6 +5244,22 @@ x_error_quitter (display, error)
   x_connection_closed (display, buf1);
 }
 
+/* This is the first-level handler for X protocol errors.
+   It calls x_error_quitter or x_error_catcher.  */
+
+static int
+x_error_handler (display, error)
+     Display *display;
+     XErrorEvent *error;
+{
+  char buf[256], buf1[356];
+
+  if (! NILP (x_error_message_string))
+    x_error_catcher (display, error);
+  else
+    x_error_quitter (display, error);
+}
+
 /* This is the handler for X IO errors, always.
    It kills all frames on the display that we lost touch with.
    If that was the only one, it prints an error message and kills Emacs.  */
@@ -4612,125 +5274,6 @@ x_io_error_quitter (display)
   x_connection_closed (display, buf);
 }
 
-/* Handle SIGPIPE, which can happen when the connection to a server
-   simply goes away.  SIGPIPE is handled by x_connection_signal.
-   Don't need to do anything, because the write which caused the 
-   SIGPIPE will fail, causing Xlib to invoke the X IO error handler,
-   which will do the appropriate cleanup for us. */
-   
-static SIGTYPE
-x_connection_signal (signalnum)	/* If we don't have an argument, */
-     int signalnum;		/* some compilers complain in signal calls. */
-{
-#ifdef USG
-  /* USG systems forget handlers when they are used;
-     must reestablish each time */
-  signal (signalnum, x_connection_signal);
-#endif /* USG */
-}
-
-/* A buffer for storing X error messages.  */
-static char *x_caught_error_message;
-#define X_CAUGHT_ERROR_MESSAGE_SIZE 200
-
-/* An X error handler which stores the error message in
-   x_caught_error_message.  This is what's installed when
-   x_catch_errors is in effect.  */
-
-static int
-x_error_catcher (display, error)
-     Display *display;
-     XErrorEvent *error;
-{
-  XGetErrorText (display, error->error_code,
-		 x_caught_error_message, X_CAUGHT_ERROR_MESSAGE_SIZE);
-}
-
-
-/* Begin trapping X errors for display DPY.  Actually we trap X errors
-   for all displays, but DPY should be the display you are actually
-   operating on.
-
-   After calling this function, X protocol errors no longer cause
-   Emacs to exit; instead, they are recorded in x_cfc_error_message.
-
-   Calling x_check_errors signals an Emacs error if an X error has
-   occurred since the last call to x_catch_errors or x_check_errors.
-
-   Calling x_uncatch_errors resumes the normal error handling.  */
-
-void x_catch_errors (), x_check_errors (), x_uncatch_errors ();
-
-void
-x_catch_errors (dpy)
-     Display *dpy;
-{
-  /* Make sure any errors from previous requests have been dealt with.  */
-  XSync (dpy, False);
-
-  /* Set up the error buffer.  */
-  x_caught_error_message
-    = (char*) xmalloc (X_CAUGHT_ERROR_MESSAGE_SIZE);
-  x_caught_error_message[0] = '\0';
-
-  /* Install our little error handler.  */
-  XSetErrorHandler (x_error_catcher);
-}
-
-/* If any X protocol errors have arrived since the last call to
-   x_catch_errors or x_check_errors, signal an Emacs error using
-   sprintf (a buffer, FORMAT, the x error message text) as the text.  */
-
-void
-x_check_errors (dpy, format)
-     Display *dpy;
-     char *format;
-{
-  /* Make sure to catch any errors incurred so far.  */
-  XSync (dpy, False);
-
-  if (x_caught_error_message[0])
-    {
-      char buf[X_CAUGHT_ERROR_MESSAGE_SIZE + 56];
-
-      sprintf (buf, format, x_caught_error_message);
-      x_uncatch_errors (dpy);
-      error (buf);
-    }
-}
-
-/* Nonzero if we had any X protocol errors since we did x_catch_errors.  */
-
-int
-x_had_errors_p (dpy)
-     Display *dpy;
-{
-  /* Make sure to catch any errors incurred so far.  */
-  XSync (dpy, False);
-
-  return x_caught_error_message[0] != 0;
-}
-
-/* Stop catching X protocol errors and let them make Emacs die.  */
-
-void
-x_uncatch_errors (dpy)
-     Display *dpy;
-{
-  xfree (x_caught_error_message);
-  x_caught_error_message = 0;
-  XSetErrorHandler (x_error_quitter);
-}
-
-#if 0
-static unsigned int x_wire_count;
-x_trace_wire ()
-{
-  fprintf (stderr, "Lib call: %d\n", ++x_wire_count);
-}
-#endif /* ! 0 */
-
-
 /* Changing the font of the frame.  */
 
 /* Give frame F the font named FONTNAME as its default font, and
@@ -4743,142 +5286,17 @@ x_new_font (f, fontname)
      struct frame *f;
      register char *fontname;
 {
-  int already_loaded;
-  int n_matching_fonts;
-  XFontStruct *font_info;
-  char **font_names;
+  struct font_info *fontp
+    = fs_load_font (f, FRAME_X_FONT_TABLE (f), CHARSET_ASCII, fontname, -1);
 
-  /* Get a list of all the fonts that match this name.  Once we
-     have a list of matching fonts, we compare them against the fonts
-     we already have by comparing font ids.  */
-  font_names = (char **) XListFonts (FRAME_X_DISPLAY (f), fontname,
-				     1024, &n_matching_fonts);
-  /* Apparently it doesn't set n_matching_fonts to zero when it can't
-     find any matches; font_names == 0 is the only clue.  */
-  if (! font_names)
-    n_matching_fonts = 0;
+  if (!fontp)
+    return Qnil;
 
-  /* Don't just give up if n_matching_fonts is 0.
-     Apparently there's a bug on Suns: XListFontsWithInfo can
-     fail to find a font, but XLoadQueryFont may still find it.  */
-
-  /* See if we've already loaded a matching font. */
-  already_loaded = -1;
-  if (n_matching_fonts != 0)
-    {
-      int i, j;
-
-      for (i = 0; i < FRAME_X_DISPLAY_INFO (f)->n_fonts; i++)
-	for (j = 0; j < n_matching_fonts; j++)
-	  if (!strcmp (FRAME_X_DISPLAY_INFO (f)->font_table[i].name, font_names[j])
-	      || !strcmp (FRAME_X_DISPLAY_INFO (f)->font_table[i].full_name, font_names[j]))
-	    {
-	      already_loaded = i;
-	      fontname = FRAME_X_DISPLAY_INFO (f)->font_table[i].full_name;
-	      goto found_font;
-	    }
-    }
- found_font:
-
-  /* If we have, just return it from the table.  */
-  if (already_loaded >= 0)
-    f->output_data.x->font = FRAME_X_DISPLAY_INFO (f)->font_table[already_loaded].font;
-  /* Otherwise, load the font and add it to the table.  */
-  else
-    {
-      int i;
-      char *full_name;
-      XFontStruct *font;
-      int n_fonts;
-      Atom FONT_atom;
-
-      /* Try to find a character-cell font in the list.  */
-#if 0
-      /* A laudable goal, but this isn't how to do it.  */
-      for (i = 0; i < n_matching_fonts; i++)
-	if (! font_info[i].per_char)
-	  break;
-#else
-      i = 0;
-#endif
-
-      /* See comment above.  */
-      if (n_matching_fonts != 0)
-	fontname = font_names[i];
-
-      font = (XFontStruct *) XLoadQueryFont (FRAME_X_DISPLAY (f), fontname);
-      if (! font)
-	{
-	  /* Free the information from XListFonts.  */
-	  if (n_matching_fonts)
-	    XFreeFontNames (font_names);
-	  return Qnil;
-	}
-
-      /* Do we need to create the table?  */
-      if (FRAME_X_DISPLAY_INFO (f)->font_table_size == 0)
-	{
-	  FRAME_X_DISPLAY_INFO (f)->font_table_size = 16;
-	  FRAME_X_DISPLAY_INFO (f)->font_table
-	    = (struct font_info *) xmalloc (FRAME_X_DISPLAY_INFO (f)->font_table_size
-					    * sizeof (struct font_info));
-	}
-      /* Do we need to grow the table?  */
-      else if (FRAME_X_DISPLAY_INFO (f)->n_fonts
-	       >= FRAME_X_DISPLAY_INFO (f)->font_table_size)
-	{
-	  FRAME_X_DISPLAY_INFO (f)->font_table_size *= 2;
-	  FRAME_X_DISPLAY_INFO (f)->font_table
-	    = (struct font_info *) xrealloc (FRAME_X_DISPLAY_INFO (f)->font_table,
-					     (FRAME_X_DISPLAY_INFO (f)->font_table_size
-					      * sizeof (struct font_info)));
-	}
-
-      /* Try to get the full name of FONT.  Put it in full_name.  */
-      full_name = 0;
-      FONT_atom = XInternAtom (FRAME_X_DISPLAY (f), "FONT", False);
-      for (i = 0; i < font->n_properties; i++)
-	{
-	  if (FONT_atom == font->properties[i].name)
-	    {
-	      char *name = XGetAtomName (FRAME_X_DISPLAY (f),
-					 (Atom) (font->properties[i].card32));
-	      char *p = name;
-	      int dashes = 0;
-
-	      /* Count the number of dashes in the "full name".
-		 If it is too few, this isn't really the font's full name,
-		 so don't use it.
-		 In X11R4, the fonts did not come with their canonical names
-		 stored in them.  */
-	      while (*p)
-		{
-		  if (*p == '-')
-		    dashes++;
-		  p++;
-		}
-
-	      if (dashes >= 13)
-		full_name = name;
-
-	      break;
-	    }
-	}
-
-      n_fonts = FRAME_X_DISPLAY_INFO (f)->n_fonts;
-      FRAME_X_DISPLAY_INFO (f)->font_table[n_fonts].name = (char *) xmalloc (strlen (fontname) + 1);
-      bcopy (fontname, FRAME_X_DISPLAY_INFO (f)->font_table[n_fonts].name, strlen (fontname) + 1);
-      if (full_name != 0)
-	FRAME_X_DISPLAY_INFO (f)->font_table[n_fonts].full_name = full_name;
-      else
-	FRAME_X_DISPLAY_INFO (f)->font_table[n_fonts].full_name = FRAME_X_DISPLAY_INFO (f)->font_table[n_fonts].name;
-      f->output_data.x->font = FRAME_X_DISPLAY_INFO (f)->font_table[n_fonts].font = font;
-      FRAME_X_DISPLAY_INFO (f)->n_fonts++;
-
-      if (full_name)
-	fontname = full_name;
-    }
-
+  f->output_data.x->font = (XFontStruct *) (fontp->font);
+  f->output_data.x->font_baseline
+    = (f->output_data.x->font->ascent + fontp->baseline_offset);
+  f->output_data.x->fontset = -1;
+  
   /* Compute the scroll bar width in character columns.  */
   if (f->scroll_bar_pixel_width > 0)
     {
@@ -4886,7 +5304,10 @@ x_new_font (f, fontname)
       f->scroll_bar_cols = (f->scroll_bar_pixel_width + wid-1) / wid;
     }
   else
-    f->scroll_bar_cols = 2;
+    {
+      int wid = FONT_WIDTH (f->output_data.x->font);
+      f->scroll_bar_cols = (14 + wid - 1) / wid;
+    }
 
   /* Now make the frame display the given font.  */
   if (FRAME_X_WINDOW (f) != 0)
@@ -4906,17 +5327,49 @@ x_new_font (f, fontname)
        there are no faces yet, so this font's height is the line height.  */
     f->output_data.x->line_height = FONT_HEIGHT (f->output_data.x->font);
 
-  {
-    Lisp_Object lispy_name;
+  return build_string (fontp->full_name);
+}
 
-    lispy_name = build_string (fontname);
+/* Give frame F the fontset named FONTSETNAME as its default font, and
+   return the full name of that fontset.  FONTSETNAME may be a wildcard
+   pattern; in that case, we choose some fontset that fits the pattern.
+   The return value shows which fontset we chose.  */
 
-    /* Free the information from XListFonts.  The data
-       we actually retain comes from XLoadQueryFont.  */
-    XFreeFontNames (font_names);
+Lisp_Object
+x_new_fontset (f, fontsetname)
+     struct frame *f;
+     char *fontsetname;
+{
+  int fontset = fs_query_fontset (f, fontsetname);
+  struct fontset_info *fontsetp;
+  Lisp_Object result;
 
-    return lispy_name;
-  }
+  if (fontset < 0)
+    return Qnil;
+
+  if (f->output_data.x->fontset == fontset)
+    /* This fontset is already set in frame F.  There's nothing more
+       to do.  */
+    return build_string (fontsetname);
+
+  fontsetp = FRAME_FONTSET_DATA (f)->fontset_table[fontset];
+
+  if (!fontsetp->fontname[CHARSET_ASCII])
+    /* This fontset doesn't contain ASCII font.  */
+    return Qnil;
+
+  result = x_new_font (f, fontsetp->fontname[CHARSET_ASCII]);
+
+  if (!STRINGP (result))
+    /* Can't load ASCII font.  */
+    return Qnil;
+
+  /* Since x_new_font doesn't update any fontset information, do it now.  */
+  f->output_data.x->fontset = fontset;
+  FS_LOAD_FONT (f, FRAME_X_FONT_TABLE (f),
+		CHARSET_ASCII, XSTRING (result)->data, fontset);
+
+  return build_string (fontsetname);
 }
 
 /* Calculate the absolute position in frame F
@@ -4930,6 +5383,11 @@ x_calc_absolute_position (f)
   int flags = f->output_data.x->size_hint_flags;
   int this_window;
 
+  /* We have nothing to do if the current position
+     is already for the top-left corner.  */
+  if (! ((flags & XNegative) || (flags & YNegative)))
+    return;
+
 #ifdef USE_X_TOOLKIT
   this_window = XtWindow (f->output_data.x->widget);
 #else
@@ -4937,21 +5395,47 @@ x_calc_absolute_position (f)
 #endif
 
   /* Find the position of the outside upper-left corner of
-     the inner window, with respect to the outer window.  */
+     the inner window, with respect to the outer window.
+     But do this only if we will need the results.  */
   if (f->output_data.x->parent_desc != FRAME_X_DISPLAY_INFO (f)->root_window)
     {
+      int count;
+
       BLOCK_INPUT;
-      XTranslateCoordinates (FRAME_X_DISPLAY (f),
+      count = x_catch_errors (FRAME_X_DISPLAY (f));
+      while (1)
+	{
+	  x_clear_errors (FRAME_X_DISPLAY (f));
+	  XTranslateCoordinates (FRAME_X_DISPLAY (f),
 
-			     /* From-window, to-window.  */
-			     this_window,
-			     f->output_data.x->parent_desc,
+				 /* From-window, to-window.  */
+				 this_window,
+				 f->output_data.x->parent_desc,
 
-			     /* From-position, to-position.  */
-			     0, 0, &win_x, &win_y,
+				 /* From-position, to-position.  */
+				 0, 0, &win_x, &win_y,
 
-			     /* Child of win.  */
-			     &child);
+				 /* Child of win.  */
+				 &child);
+	  if (x_had_errors_p (FRAME_X_DISPLAY (f)))
+	    {
+	      Window newroot, newparent = 0xdeadbeef;
+	      Window *newchildren;
+	      int nchildren;
+
+	      if (! XQueryTree (FRAME_X_DISPLAY (f), this_window, &newroot,
+				&newparent, &newchildren, &nchildren))
+		break;
+
+	      XFree (newchildren);
+
+	      f->output_data.x->parent_desc = newparent;
+	    }
+	  else
+	    break;
+	}
+
+      x_uncatch_errors (FRAME_X_DISPLAY (f), count);
       UNBLOCK_INPUT;
     }
 
@@ -5006,15 +5490,18 @@ x_set_offset (f, xoff, yoff, change_gravity)
   BLOCK_INPUT;
   x_wm_set_size_hint (f, (long) 0, 0);
 
-  /* It is a mystery why we need to add the border_width here
-     when the frame is already visible, but experiment says we do.  */
   modified_left = f->output_data.x->left_pos;
   modified_top = f->output_data.x->top_pos;
+#if 0 /* Running on psilocin (Debian), and displaying on the NCD X-terminal,
+	 this seems to be unnecessary and incorrect.  rms, 4/17/97.  */
+  /* It is a mystery why we need to add the border_width here
+     when the frame is already visible, but experiment says we do.  */
   if (change_gravity != 0)
     {
       modified_left += f->output_data.x->border_width;
       modified_top += f->output_data.x->border_width;
     }
+#endif
 
 #ifdef USE_X_TOOLKIT
   XMoveWindow (FRAME_X_DISPLAY (f), XtWindow (f->output_data.x->widget),
@@ -5038,7 +5525,6 @@ x_set_window_size (f, change_gravity, cols, rows)
 {
   int pixelwidth, pixelheight;
   int mask;
-  Lisp_Object window;
   struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
 
   BLOCK_INPUT;
@@ -5103,21 +5589,16 @@ x_set_window_size (f, change_gravity, cols, rows)
   if (f->phys_cursor_y >= rows
       || f->phys_cursor_x >= cols)
     {
-      f->phys_cursor_x = -1;
-      f->phys_cursor_y = -1;
+      f->phys_cursor_x = 0;
+      f->phys_cursor_y = 0;
+      f->phys_cursor_on = 0;
     }
 
   /* Clear out any recollection of where the mouse highlighting was,
      since it might be in a place that's outside the new frame size. 
      Actually checking whether it is outside is a pain in the neck,
      so don't try--just let the highlighting be done afresh with new size.  */
-  window = dpyinfo->mouse_face_window;
-  if (! NILP (window) && XFRAME (window) == f)
-    {
-      dpyinfo->mouse_face_beg_row = dpyinfo->mouse_face_beg_col = -1;
-      dpyinfo->mouse_face_end_row = dpyinfo->mouse_face_end_col = -1;
-      dpyinfo->mouse_face_window = Qnil;
-    }
+  cancel_mouse_face (f);
 
   UNBLOCK_INPUT;
 }
@@ -5250,6 +5731,8 @@ x_make_frame_visible (f)
 {
   int mask;
   Lisp_Object type;
+  int starting_flags = f->output_data.x->size_hint_flags;
+  int original_top, original_left;
 
   BLOCK_INPUT;
 
@@ -5293,9 +5776,43 @@ x_make_frame_visible (f)
   {
     Lisp_Object frame;
     int count = input_signal_count;
+    /* This must be before UNBLOCK_INPUT
+       since events that arrive in response to the actions above
+       will set it when they are handled.  */
+    int previously_visible = f->output_data.x->has_been_visible;
+
+    original_left = f->output_data.x->left_pos;
+    original_top = f->output_data.x->top_pos;
 
     /* This must come after we set COUNT.  */
     UNBLOCK_INPUT;
+
+    /* Arriving X events are processed here.  */
+
+    /* Now move the window back to where it was "supposed to be".
+       But don't do it if the gravity is negative.
+       When the gravity is negative, this uses a position
+       that is 3 pixels too low.  Perhaps that's really the border width.
+
+       Don't do this if the window has never been visible before,
+       because the window manager may choose the position
+       and we don't want to override it.  */
+
+    if (! FRAME_VISIBLE_P (f) && ! FRAME_ICONIFIED_P (f)
+	&& f->output_data.x->win_gravity == NorthWestGravity
+	&& previously_visible)
+      {
+	BLOCK_INPUT;
+
+#ifdef USE_X_TOOLKIT
+	XMoveWindow (FRAME_X_DISPLAY (f), XtWindow (f->output_data.x->widget),
+		     original_left, original_top);
+#else /* not USE_X_TOOLKIT */
+	XMoveWindow (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
+		     original_left, original_top);
+#endif /* not USE_X_TOOLKIT */
+	UNBLOCK_INPUT;
+      }
 
     XSETFRAME (frame, f);
 
@@ -5453,7 +5970,9 @@ x_iconify_frame (f)
 	 that an invisible frame was changed to an icon,
 	 so we have to record it here.  */
       f->iconified = 1;
+      f->visible = 1;
       f->async_iconified = 1;
+      f->async_visible = 0;
       UNBLOCK_INPUT;
       return;
     }
@@ -5467,6 +5986,8 @@ x_iconify_frame (f)
     error ("Can't notify window manager of iconification");
 
   f->async_iconified = 1;
+  f->async_visible = 0;
+
 
   BLOCK_INPUT;
   XFlush (FRAME_X_DISPLAY (f));
@@ -5514,6 +6035,7 @@ x_iconify_frame (f)
     }
 
   f->async_iconified = 1;
+  f->async_visible = 0;
 
   XFlush (FRAME_X_DISPLAY (f));
   UNBLOCK_INPUT;
@@ -5556,6 +6078,9 @@ x_destroy_window (f)
       free_frame_faces (f);
       XFlush (FRAME_X_DISPLAY (f));
     }
+
+  if (f->output_data.x->saved_menu_event)
+    free (f->output_data.x->saved_menu_event);
 
   xfree (f->output_data.x);
   f->output_data.x = 0;
@@ -5817,6 +6342,405 @@ x_wm_set_icon_position (f, icon_x, icon_y)
 }
 
 
+/* Interface to fontset handler.  */
+
+/* Return a pointer to struct font_info of font FONT_IDX of frame F.  */
+struct font_info *
+x_get_font_info (f, font_idx)
+     FRAME_PTR f;
+     int font_idx;
+{
+  return (FRAME_X_FONT_TABLE (f) + font_idx);
+}
+
+
+/* Return a list of names of available fonts matching PATTERN on frame
+   F.  If SIZE is not 0, it is the size (maximum bound width) of fonts
+   to be listed.  Frame F NULL means we have not yet created any
+   frame on X, and consult the first display in x_display_list.
+   MAXNAMES sets a limit on how many fonts to match.  */
+
+Lisp_Object
+x_list_fonts (f, pattern, size, maxnames)
+     FRAME_PTR f;
+     Lisp_Object pattern;
+     int size;
+     int maxnames;
+{
+  Lisp_Object list = Qnil, patterns, newlist = Qnil, key, tem, second_best;
+  Display *dpy = f != NULL ? FRAME_X_DISPLAY (f) : x_display_list->display;
+
+  patterns = Fassoc (pattern, Valternate_fontname_alist);
+  if (NILP (patterns))
+    patterns = Fcons (pattern, Qnil);
+
+  /* We try at least 10 fonts because X server will return auto-scaled
+     fonts at the head.  */
+  if (maxnames < 10) maxnames = 10;
+
+  for (; CONSP (patterns); patterns = XCONS (patterns)->cdr)
+    {
+      int num_fonts;
+      char **names;
+
+      pattern = XCONS (patterns)->car;
+      /* See if we cached the result for this particular query.
+         The cache is an alist of the form:
+	   (((PATTERN . MAXNAMES) (FONTNAME . WIDTH) ...) ...)
+      */
+      if (f && (tem = XCONS (FRAME_X_DISPLAY_INFO (f)->name_list_element)->cdr,
+		key = Fcons (pattern, make_number (maxnames)),
+		!NILP (list = Fassoc (key, tem))))
+	{
+	  list = Fcdr_safe (list);
+	  /* We have a cashed list.  Don't have to get the list again.  */
+	  goto label_cached;
+	}
+
+      /* At first, put PATTERN in the cache.  */
+      BLOCK_INPUT;
+      names = XListFonts (dpy, XSTRING (pattern)->data, maxnames, &num_fonts);
+      UNBLOCK_INPUT;
+
+      if (names)
+	{
+	  int i;
+
+	  /* Make a list of all the fonts we got back.
+	     Store that in the font cache for the display.  */
+	  for (i = 0; i < num_fonts; i++)
+	    {
+	      char *p = names[i];
+	      int average_width = -1, dashes = 0, width = 0;
+
+	      /* Count the number of dashes in NAMES[I].  If there are
+		14 dashes, and the field value following 12th dash
+		(AVERAGE_WIDTH) is 0, this is a auto-scaled font which
+		is usually too ugly to be used for editing.  Let's
+		ignore it.  */
+	      while (*p)
+		if (*p++ == '-')
+		  {
+		    dashes++;
+		    if (dashes == 7) /* PIXEL_SIZE field */
+		      width = atoi (p);
+		    else if (dashes == 12) /* AVERAGE_WIDTH field */
+		      average_width = atoi (p);
+		  }
+	      if (dashes < 14 || average_width != 0)
+		{
+		  tem = build_string (names[i]);
+		  if (NILP (Fassoc (tem, list)))
+		    {
+		      if (STRINGP (Vx_pixel_size_width_font_regexp)
+			  && ((fast_c_string_match_ignore_case
+			       (Vx_pixel_size_width_font_regexp, names[i]))
+			      >= 0))
+			/* We can set the value of PIXEL_SIZE to the
+			  width of this font.  */
+			list = Fcons (Fcons (tem, make_number (width)), list);
+		      else
+			/* For the moment, width is not known.  */
+			list = Fcons (Fcons (tem, Qnil), list);
+		    }
+		}
+	    }
+	  XFreeFontNames (names);
+	}
+
+      /* Now store the result in the cache.  */
+      if (f != NULL)
+	XCONS (FRAME_X_DISPLAY_INFO (f)->name_list_element)->cdr
+	  = Fcons (Fcons (key, list),
+		   XCONS (FRAME_X_DISPLAY_INFO (f)->name_list_element)->cdr);
+
+    label_cached:
+      if (NILP (list)) continue; /* Try the remaining alternatives.  */
+
+      newlist = second_best = Qnil;
+      /* Make a list of the fonts that have the right width.  */
+      for (; CONSP (list); list = XCONS (list)->cdr)
+	{
+	  int found_size;
+
+	  tem = XCONS (list)->car;
+
+	  if (!CONSP (tem) || NILP (XCONS (tem)->car))
+	    continue;
+	  if (!size)
+	    {
+	      newlist = Fcons (XCONS (tem)->car, newlist);
+	      continue;
+	    }
+
+	  if (!INTEGERP (XCONS (tem)->cdr))
+	    {
+	      /* Since we have not yet known the size of this font, we
+		must try slow function call XLoadQueryFont.  */
+	      XFontStruct *thisinfo;
+
+	      BLOCK_INPUT;
+	      thisinfo = XLoadQueryFont (dpy,
+					 XSTRING (XCONS (tem)->car)->data);
+	      UNBLOCK_INPUT;
+
+	      if (thisinfo)
+		{
+		  XCONS (tem)->cdr
+		    = (thisinfo->min_bounds.width == 0
+		       ? make_number (0)
+		       : make_number (thisinfo->max_bounds.width));
+		  XFreeFont (dpy, thisinfo);
+		}
+	      else
+		/* For unknown reason, the previous call of XListFont had
+		  retruned a font which can't be opened.  Record the size
+		  as 0 not to try to open it again.  */
+		XCONS (tem)->cdr = make_number (0);
+	    }
+
+	  found_size = XINT (XCONS (tem)->cdr);
+	  if (found_size == size)
+	    newlist = Fcons (XCONS (tem)->car, newlist);
+	  else if (found_size > 0)
+	    {
+	      if (NILP (second_best))
+		second_best = tem;
+	      else if (found_size < size)
+		{
+		  if (XINT (XCONS (second_best)->cdr) > size
+		      || XINT (XCONS (second_best)->cdr) < found_size)
+		    second_best = tem;
+		}
+	      else
+		{
+		  if (XINT (XCONS (second_best)->cdr) > size
+		      && XINT (XCONS (second_best)->cdr) > found_size)
+		    second_best = tem;
+		}
+	    }
+	}
+      if (!NILP (newlist))
+	break;
+      else if (!NILP (second_best))
+	{
+	  newlist = Fcons (XCONS (second_best)->car, Qnil);
+	  break;
+	}
+    }
+
+  return newlist;
+}  
+
+/* Load font named FONTNAME of the size SIZE for frame F, and return a
+   pointer to the structure font_info while allocating it dynamically.
+   If SIZE is 0, load any size of font.
+   If loading is failed, return NULL.  */
+
+struct font_info *
+x_load_font (f, fontname, size)
+     struct frame *f;
+     register char *fontname;
+     int size;
+{
+  struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
+  Lisp_Object font_names;
+
+  /* Get a list of all the fonts that match this name.  Once we
+     have a list of matching fonts, we compare them against the fonts
+     we already have by comparing names.  */
+  font_names = x_list_fonts (f, build_string (fontname), size, 256);
+
+  if (!NILP (font_names))
+    {
+      Lisp_Object tail;
+      int i;
+
+      for (i = 0; i < dpyinfo->n_fonts; i++)
+	for (tail = font_names; CONSP (tail); tail = XCONS (tail)->cdr)
+	  if (!strcmp (dpyinfo->font_table[i].name,
+		       XSTRING (XCONS (tail)->car)->data)
+	      || !strcmp (dpyinfo->font_table[i].full_name,
+			  XSTRING (XCONS (tail)->car)->data))
+	    return (dpyinfo->font_table + i);
+    }
+
+  /* Load the font and add it to the table.  */
+  {
+    char *full_name;
+    XFontStruct *font;
+    struct font_info *fontp;
+    unsigned long value;
+
+    /* If we have found fonts by x_list_font, load one of them.  If
+       not, we still try to load a font by the name given as FONTNAME
+       because XListFonts (called in x_list_font) of some X server has
+       a bug of not finding a font even if the font surely exists and
+       is loadable by XLoadQueryFont.  */
+    if (!NILP (font_names))
+      fontname = (char *) XSTRING (XCONS (font_names)->car)->data;
+
+    BLOCK_INPUT;
+    font = (XFontStruct *) XLoadQueryFont (FRAME_X_DISPLAY (f), fontname);
+    UNBLOCK_INPUT;
+    if (!font)
+      return NULL;
+
+    /* Do we need to create the table?  */
+    if (dpyinfo->font_table_size == 0)
+      {
+	dpyinfo->font_table_size = 16;
+	dpyinfo->font_table
+	  = (struct font_info *) xmalloc (dpyinfo->font_table_size
+					  * sizeof (struct font_info));
+      }
+    /* Do we need to grow the table?  */
+    else if (dpyinfo->n_fonts
+	     >= dpyinfo->font_table_size)
+      {
+	dpyinfo->font_table_size *= 2;
+	dpyinfo->font_table
+	  = (struct font_info *) xrealloc (dpyinfo->font_table,
+					   (dpyinfo->font_table_size
+					    * sizeof (struct font_info)));
+      }
+
+    fontp = dpyinfo->font_table + dpyinfo->n_fonts;
+
+    /* Now fill in the slots of *FONTP.  */
+    BLOCK_INPUT;
+    fontp->font = font;
+    fontp->font_idx = dpyinfo->n_fonts;
+    fontp->name = (char *) xmalloc (strlen (fontname) + 1);
+    bcopy (fontname, fontp->name, strlen (fontname) + 1);
+
+    /* Try to get the full name of FONT.  Put it in FULL_NAME.  */
+    full_name = 0;
+    if (XGetFontProperty (font, XA_FONT, &value))
+      {
+	char *name = (char *) XGetAtomName (FRAME_X_DISPLAY (f), (Atom) value);
+	char *p = name;
+	int dashes = 0;
+
+	/* Count the number of dashes in the "full name".
+	   If it is too few, this isn't really the font's full name,
+	   so don't use it.
+	   In X11R4, the fonts did not come with their canonical names
+	   stored in them.  */
+	while (*p)
+	  {
+	    if (*p == '-')
+	      dashes++;
+	    p++;
+	  }
+
+	if (dashes >= 13)
+	  {
+	    full_name = (char *) xmalloc (p - name + 1);
+	    bcopy (name, full_name, p - name + 1);
+	  }
+
+	XFree (name);
+      }
+    
+    if (full_name != 0)
+      fontp->full_name = full_name;
+    else
+      fontp->full_name = fontp->name;
+
+    fontp->size = font->max_bounds.width;
+    fontp->height = font->max_bounds.ascent + font->max_bounds.descent;
+
+    if (NILP (font_names))
+      {
+	/* We come here because of a bug of XListFonts mentioned at
+	   the head of this block.  Let's store this information in
+	   the cache for x_list_fonts.  */
+	Lisp_Object lispy_name = build_string (fontname);
+	Lisp_Object lispy_full_name = build_string (fontp->full_name);
+
+	XCONS (dpyinfo->name_list_element)->cdr
+	  = Fcons (Fcons (Fcons (lispy_name, make_number (256)),
+			  Fcons (Fcons (lispy_full_name,
+					make_number (fontp->size)),
+				 Qnil)),
+		   XCONS (dpyinfo->name_list_element)->cdr);
+	if (full_name)
+	  XCONS (dpyinfo->name_list_element)->cdr
+	    = Fcons (Fcons (Fcons (lispy_full_name, make_number (256)),
+			    Fcons (Fcons (lispy_full_name,
+					  make_number (fontp->size)),
+				   Qnil)),
+		     XCONS (dpyinfo->name_list_element)->cdr);
+      }
+
+    /* The slot `encoding' specifies how to map a character
+       code-points (0x20..0x7F or 0x2020..0x7F7F) of each charset to
+       the font code-points (0:0x20..0x7F, 1:0xA0..0xFF, 0:0x2020..0x7F7F,
+       the font code-points (0:0x20..0x7F, 1:0xA0..0xFF,
+       0:0x2020..0x7F7F, 1:0xA0A0..0xFFFF, 3:0x20A0..0x7FFF, or
+       2:0xA020..0xFF7F).  For the moment, we don't know which charset
+       uses this font.  So, we set informatoin in fontp->encoding[1]
+       which is never used by any charset.  If mapping can't be
+       decided, set FONT_ENCODING_NOT_DECIDED.  */
+    fontp->encoding[1]
+      = (font->max_byte1 == 0
+	 /* 1-byte font */
+	 ? (font->min_char_or_byte2 < 0x80
+	    ? (font->max_char_or_byte2 < 0x80
+	       ? 0		/* 0x20..0x7F */
+	       : FONT_ENCODING_NOT_DECIDED) /* 0x20..0xFF */
+	    : 1)		/* 0xA0..0xFF */
+	 /* 2-byte font */
+	 : (font->min_byte1 < 0x80
+	    ? (font->max_byte1 < 0x80
+	       ? (font->min_char_or_byte2 < 0x80
+		  ? (font->max_char_or_byte2 < 0x80
+		     ? 0		/* 0x2020..0x7F7F */
+		     : FONT_ENCODING_NOT_DECIDED) /* 0x2020..0x7FFF */
+		  : 3)		/* 0x20A0..0x7FFF */
+	       : FONT_ENCODING_NOT_DECIDED) /* 0x20??..0xA0?? */
+	    : (font->min_char_or_byte2 < 0x80
+	       ? (font->max_char_or_byte2 < 0x80
+		  ? 2		/* 0xA020..0xFF7F */
+		  : FONT_ENCODING_NOT_DECIDED) /* 0xA020..0xFFFF */
+	       : 1)));		/* 0xA0A0..0xFFFF */
+
+    fontp->baseline_offset
+      = (XGetFontProperty (font, dpyinfo->Xatom_MULE_BASELINE_OFFSET, &value)
+	 ? (long) value : 0);
+    fontp->relative_compose
+      = (XGetFontProperty (font, dpyinfo->Xatom_MULE_RELATIVE_COMPOSE, &value)
+	 ? (long) value : 0);
+    fontp->default_ascent
+      = (XGetFontProperty (font, dpyinfo->Xatom_MULE_DEFAULT_ASCENT, &value)
+	 ? (long) value : 0);
+
+    UNBLOCK_INPUT;
+    dpyinfo->n_fonts++;
+
+    return fontp;
+  }
+}
+
+/* Return a pointer to struct font_info of a font named FONTNAME for frame F.
+   If no such font is loaded, return NULL.  */
+struct font_info *
+x_query_font (f, fontname)
+     struct frame *f;
+     register char *fontname;
+{
+  struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
+  int i;
+
+  for (i = 0; i < dpyinfo->n_fonts; i++)
+    if (!strcmp (dpyinfo->font_table[i].name, fontname)
+	|| !strcmp (dpyinfo->font_table[i].full_name, fontname))
+      return (dpyinfo->font_table + i);
+  return NULL;
+}
+
+
 /* Initialization.  */
 
 #ifdef USE_X_TOOLKIT
@@ -6066,6 +6990,8 @@ x_term_init (display_name, xrm_option, resource_name)
     = XInternAtom (dpyinfo->display, "TIMESTAMP", False);
   dpyinfo->Xatom_TEXT
     = XInternAtom (dpyinfo->display, "TEXT", False);
+  dpyinfo->Xatom_COMPOUND_TEXT
+    = XInternAtom (dpyinfo->display, "COMPOUND_TEXT", False);
   dpyinfo->Xatom_DELETE
     = XInternAtom (dpyinfo->display, "DELETE", False);
   dpyinfo->Xatom_MULTIPLE
@@ -6080,11 +7006,31 @@ x_term_init (display_name, xrm_option, resource_name)
     = XInternAtom (dpyinfo->display, "NULL", False);
   dpyinfo->Xatom_ATOM_PAIR
     = XInternAtom (dpyinfo->display, "ATOM_PAIR", False);
+  /* For properties of font.  */
+  dpyinfo->Xatom_PIXEL_SIZE
+    = XInternAtom (dpyinfo->display, "PIXEL_SIZE", False);
+  dpyinfo->Xatom_MULE_BASELINE_OFFSET
+    = XInternAtom (dpyinfo->display, "_MULE_BASELINE_OFFSET", False);
+  dpyinfo->Xatom_MULE_RELATIVE_COMPOSE
+    = XInternAtom (dpyinfo->display, "_MULE_RELATIVE_COMPOSE", False);
+  dpyinfo->Xatom_MULE_DEFAULT_ASCENT
+    = XInternAtom (dpyinfo->display, "_MULE_DEFAULT_ASCENT", False);
 
   dpyinfo->cut_buffers_initialized = 0;
 
   connection = ConnectionNumber (dpyinfo->display);
   dpyinfo->connection = connection;
+
+  {
+    char null_bits[1];
+
+    null_bits[0] = 0x00;
+
+    dpyinfo->null_pixel
+      = XCreatePixmapFromBitmapData (dpyinfo->display, dpyinfo->root_window, 
+				     null_bits, 1, 1, (long) 0, (long) 0,
+				     1);
+  }
 
 #ifdef subprocesses
   /* This is only needed for distinguishing keyboard and process input.  */
@@ -6107,6 +7053,33 @@ x_term_init (display_name, xrm_option, resource_name)
   if (interrupt_input)
     init_sigio (connection);
 #endif /* ! defined (SIGIO) */
+
+#ifdef USE_LUCID
+#ifdef HAVE_X11R5 /* It seems X11R4 lacks XtCvtStringToFont, and XPointer.  */
+  /* Make sure that we have a valid font for dialog boxes
+     so that Xt does not crash.  */
+  {
+    Display *dpy = dpyinfo->display;
+    XrmValue d, fr, to;
+    Font font;
+    int count;
+    
+    d.addr = (XPointer)&dpy;
+    d.size = sizeof (Display *);
+    fr.addr = XtDefaultFont;
+    fr.size = sizeof (XtDefaultFont);
+    to.size = sizeof (Font *);
+    to.addr = (XPointer)&font;
+    count = x_catch_errors (dpy);
+    if (!XtCallConverter (dpy, XtCvtStringToFont, &d, 1, &fr, &to, NULL))
+      abort ();
+    if (x_had_errors_p (dpy) || !XQueryFont (dpy, font))
+      XrmPutLineResource (&xrdb, "Emacs.dialog.*.font: 9x15");
+    x_uncatch_errors (dpy, count);
+  }
+#endif
+#endif
+
 
   UNBLOCK_INPUT;
 
@@ -6219,7 +7192,7 @@ x_initialize ()
 
   /* Note that there is no real way portable across R3/R4 to get the
      original error handler.  */
-  XSetErrorHandler (x_error_quitter);
+  XSetErrorHandler (x_error_handler);
   XSetIOErrorHandler (x_io_error_quitter);
 
   /* Disable Window Change signals;  they are handled by X events. */
@@ -6233,6 +7206,9 @@ x_initialize ()
 void
 syms_of_xterm ()
 {
+  staticpro (&x_error_message_string);
+  x_error_message_string = Qnil;
+
   staticpro (&x_display_name_list);
   x_display_name_list = Qnil;
 

@@ -22,7 +22,9 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 #include "lisp.h"
 #include "syntax.h"
+#include "category.h"
 #include "buffer.h"
+#include "charset.h"
 #include "region-cache.h"
 #include "commands.h"
 #include "blockinput.h"
@@ -30,11 +32,12 @@ Boston, MA 02111-1307, USA.  */
 #include <sys/types.h>
 #include "regex.h"
 
-#define REGEXP_CACHE_SIZE 5
+#define REGEXP_CACHE_SIZE 20
 
 /* If the regexp is non-nil, then the buffer contains the compiled form
    of that regexp, suitable for searching.  */
-struct regexp_cache {
+struct regexp_cache
+{
   struct regexp_cache *next;
   Lisp_Object regexp;
   struct re_pattern_buffer buf;
@@ -104,27 +107,32 @@ matcher_overflow ()
    If it is 0, we should compile the pattern not to record any
    subexpression bounds.
    POSIX is nonzero if we want full backtracking (POSIX style)
-   for this pattern.  0 means backtrack only enough to get a valid match.  */
+   for this pattern.  0 means backtrack only enough to get a valid match.
+   MULTIBYTE is nonzero if we want to handle multibyte characters in
+   PATTERN.  0 means all multibyte characters are recognized just as
+   sequences of binary data.  */
 
 static void
-compile_pattern_1 (cp, pattern, translate, regp, posix)
+compile_pattern_1 (cp, pattern, translate, regp, posix, multibyte)
      struct regexp_cache *cp;
      Lisp_Object pattern;
      Lisp_Object *translate;
      struct re_registers *regp;
      int posix;
+     int multibyte;
 {
-  CONST char *val;
+  char *val;
   reg_syntax_t old;
 
   cp->regexp = Qnil;
   cp->buf.translate = translate;
   cp->posix = posix;
+  cp->buf.multibyte = multibyte;
   BLOCK_INPUT;
   old = re_set_syntax (RE_SYNTAX_EMACS
 		       | (posix ? 0 : RE_NO_POSIX_BACKTRACKING));
-  val = (CONST char *) re_compile_pattern ((char *) XSTRING (pattern)->data,
-					   XSTRING (pattern)->size, &cp->buf);
+  val = (char *) re_compile_pattern ((char *) XSTRING (pattern)->data,
+				     XSTRING (pattern)->size, &cp->buf);
   re_set_syntax (old);
   UNBLOCK_INPUT;
   if (val)
@@ -152,19 +160,24 @@ compile_pattern (pattern, regp, translate, posix)
      int posix;
 {
   struct regexp_cache *cp, **cpp;
+  /* Should we check it here, or add an argument `multibyte' to this
+     function?  */
+  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
 
   for (cpp = &searchbuf_head; ; cpp = &cp->next)
     {
       cp = *cpp;
-      if (!NILP (Fstring_equal (cp->regexp, pattern))
+      if (XSTRING (cp->regexp)->size == XSTRING (pattern)->size
+	  && !NILP (Fstring_equal (cp->regexp, pattern))
 	  && cp->buf.translate == translate
-	  && cp->posix == posix)
+	  && cp->posix == posix
+	  && cp->buf.multibyte == multibyte)
 	break;
 
       /* If we're at the end of the cache, compile into the last cell.  */
       if (cp->next == 0)
 	{
-	  compile_pattern_1 (cp, pattern, translate, regp, posix);
+	  compile_pattern_1 (cp, pattern, translate, regp, posix, multibyte);
 	  break;
 	}
     }
@@ -212,7 +225,7 @@ looking_at_1 (string, posix)
   CHECK_STRING (string, 0);
   bufp = compile_pattern (string, &search_regs,
 			  (!NILP (current_buffer->case_fold_search)
-			   ? DOWNCASE_TABLE : 0),
+			   ? XCHAR_TABLE (DOWNCASE_TABLE)->contents : 0),
 			  posix);
 
   immediate_quit = 1;
@@ -236,9 +249,11 @@ looking_at_1 (string, posix)
       s1 = ZV - BEGV;
       s2 = 0;
     }
+
+  re_match_object = Qnil;
   
   i = re_match_2 (bufp, (char *) p1, s1, (char *) p2, s2,
-		  point - BEGV, &search_regs,
+		  PT - BEGV, &search_regs,
 		  ZV - BEGV);
   if (i == -2)
     matcher_overflow ();
@@ -309,9 +324,11 @@ string_match_1 (regexp, string, start, posix)
 
   bufp = compile_pattern (regexp, &search_regs,
 			  (!NILP (current_buffer->case_fold_search)
-			   ? DOWNCASE_TABLE : 0),
+			   ? XCHAR_TABLE (DOWNCASE_TABLE)->contents : 0),
 			  posix);
   immediate_quit = 1;
+  re_match_object = string;
+  
   val = re_search (bufp, (char *) XSTRING (string)->data,
 		   XSTRING (string)->size, s, XSTRING (string)->size - s,
 		   &search_regs);
@@ -361,9 +378,35 @@ fast_string_match (regexp, string)
 
   bufp = compile_pattern (regexp, 0, 0, 0);
   immediate_quit = 1;
+  re_match_object = string;
+  
   val = re_search (bufp, (char *) XSTRING (string)->data,
 		   XSTRING (string)->size, 0, XSTRING (string)->size,
 		   0);
+  immediate_quit = 0;
+  return val;
+}
+
+/* Match REGEXP against STRING, searching all of STRING ignoring case,
+   and return the index of the match, or negative on failure.
+   This does not clobber the match data.  */
+
+extern Lisp_Object Vascii_downcase_table;
+
+int
+fast_c_string_match_ignore_case (regexp, string)
+     Lisp_Object regexp;
+     char *string;
+{
+  int val;
+  struct re_pattern_buffer *bufp;
+  int len = strlen (string);
+
+  re_match_object = Qt;
+  bufp = compile_pattern (regexp, 0,
+			  XCHAR_TABLE (Vascii_downcase_table)->contents, 0);
+  immediate_quit = 1;
+  val = re_search (bufp, string, len, 0, len, 0);
   immediate_quit = 0;
   return val;
 }
@@ -500,8 +543,8 @@ scan_buffer (target, start, end, count, shortage, allow_quit)
 
         {
           /* The termination address of the dumb loop.  */ 
-          register unsigned char *ceiling_addr = &FETCH_CHAR (ceiling) + 1;
-          register unsigned char *cursor = &FETCH_CHAR (start);
+          register unsigned char *ceiling_addr = POS_ADDR (ceiling) + 1;
+          register unsigned char *cursor = POS_ADDR (start);
           unsigned char *base = cursor;
 
           while (cursor < ceiling_addr)
@@ -564,8 +607,8 @@ scan_buffer (target, start, end, count, shortage, allow_quit)
 
         {
           /* The termination address of the dumb loop.  */
-          register unsigned char *ceiling_addr = &FETCH_CHAR (ceiling);
-          register unsigned char *cursor = &FETCH_CHAR (start - 1);
+          register unsigned char *ceiling_addr = POS_ADDR (ceiling);
+          register unsigned char *cursor = POS_ADDR (start - 1);
           unsigned char *base = cursor;
 
           while (cursor >= ceiling_addr)
@@ -635,171 +678,6 @@ find_before_next_newline (from, to, cnt)
   return pos;
 }
 
-Lisp_Object skip_chars ();
-
-DEFUN ("skip-chars-forward", Fskip_chars_forward, Sskip_chars_forward, 1, 2, 0,
-  "Move point forward, stopping before a char not in STRING, or at pos LIM.\n\
-STRING is like the inside of a `[...]' in a regular expression\n\
-except that `]' is never special and `\\' quotes `^', `-' or `\\'.\n\
-Thus, with arg \"a-zA-Z\", this skips letters stopping before first nonletter.\n\
-With arg \"^a-zA-Z\", skips nonletters stopping before first letter.\n\
-Returns the distance traveled, either zero or positive.")
-  (string, lim)
-     Lisp_Object string, lim;
-{
-  return skip_chars (1, 0, string, lim);
-}
-
-DEFUN ("skip-chars-backward", Fskip_chars_backward, Sskip_chars_backward, 1, 2, 0,
-  "Move point backward, stopping after a char not in STRING, or at pos LIM.\n\
-See `skip-chars-forward' for details.\n\
-Returns the distance traveled, either zero or negative.")
-  (string, lim)
-     Lisp_Object string, lim;
-{
-  return skip_chars (0, 0, string, lim);
-}
-
-DEFUN ("skip-syntax-forward", Fskip_syntax_forward, Sskip_syntax_forward, 1, 2, 0,
-  "Move point forward across chars in specified syntax classes.\n\
-SYNTAX is a string of syntax code characters.\n\
-Stop before a char whose syntax is not in SYNTAX, or at position LIM.\n\
-If SYNTAX starts with ^, skip characters whose syntax is NOT in SYNTAX.\n\
-This function returns the distance traveled, either zero or positive.")
-  (syntax, lim)
-     Lisp_Object syntax, lim;
-{
-  return skip_chars (1, 1, syntax, lim);
-}
-
-DEFUN ("skip-syntax-backward", Fskip_syntax_backward, Sskip_syntax_backward, 1, 2, 0,
-  "Move point backward across chars in specified syntax classes.\n\
-SYNTAX is a string of syntax code characters.\n\
-Stop on reaching a char whose syntax is not in SYNTAX, or at position LIM.\n\
-If SYNTAX starts with ^, skip characters whose syntax is NOT in SYNTAX.\n\
-This function returns the distance traveled, either zero or negative.")
-  (syntax, lim)
-     Lisp_Object syntax, lim;
-{
-  return skip_chars (0, 1, syntax, lim);
-}
-
-Lisp_Object
-skip_chars (forwardp, syntaxp, string, lim)
-     int forwardp, syntaxp;
-     Lisp_Object string, lim;
-{
-  register unsigned char *p, *pend;
-  register unsigned char c;
-  unsigned char fastmap[0400];
-  int negate = 0;
-  register int i;
-
-  CHECK_STRING (string, 0);
-
-  if (NILP (lim))
-    XSETINT (lim, forwardp ? ZV : BEGV);
-  else
-    CHECK_NUMBER_COERCE_MARKER (lim, 1);
-
-  /* In any case, don't allow scan outside bounds of buffer.  */
-  /* jla turned this off, for no known reason.
-     bfox turned the ZV part on, and rms turned the
-     BEGV part back on.  */
-  if (XINT (lim) > ZV)
-    XSETFASTINT (lim, ZV);
-  if (XINT (lim) < BEGV)
-    XSETFASTINT (lim, BEGV);
-
-  p = XSTRING (string)->data;
-  pend = p + XSTRING (string)->size;
-  bzero (fastmap, sizeof fastmap);
-
-  if (p != pend && *p == '^')
-    {
-      negate = 1; p++;
-    }
-
-  /* Find the characters specified and set their elements of fastmap.
-     If syntaxp, each character counts as itself.
-     Otherwise, handle backslashes and ranges specially  */
-
-  while (p != pend)
-    {
-      c = *p++;
-      if (syntaxp)
-	fastmap[c] = 1;
-      else
-	{
-	  if (c == '\\')
-	    {
-	      if (p == pend) break;
-	      c = *p++;
-	    }
-	  if (p != pend && *p == '-')
-	    {
-	      p++;
-	      if (p == pend) break;
-	      while (c <= *p)
-		{
-		  fastmap[c] = 1;
-		  c++;
-		}
-	      p++;
-	    }
-	  else
-	    fastmap[c] = 1;
-	}
-    }
-
-  if (syntaxp && fastmap['-'] != 0)
-    fastmap[' '] = 1;
-
-  /* If ^ was the first character, complement the fastmap. */
-
-  if (negate)
-    for (i = 0; i < sizeof fastmap; i++)
-      fastmap[i] ^= 1;
-
-  {
-    int start_point = point;
-
-    immediate_quit = 1;
-    if (syntaxp)
-      {
-
-	if (forwardp)
-	  {
-	    while (point < XINT (lim)
-		   && fastmap[(unsigned char) syntax_code_spec[(int) SYNTAX (FETCH_CHAR (point))]])
-	      SET_PT (point + 1);
-	  }
-	else
-	  {
-	    while (point > XINT (lim)
-		   && fastmap[(unsigned char) syntax_code_spec[(int) SYNTAX (FETCH_CHAR (point - 1))]])
-	      SET_PT (point - 1);
-	  }
-      }
-    else
-      {
-	if (forwardp)
-	  {
-	    while (point < XINT (lim) && fastmap[FETCH_CHAR (point)])
-	      SET_PT (point + 1);
-	  }
-	else
-	  {
-	    while (point > XINT (lim) && fastmap[FETCH_CHAR (point - 1)])
-	      SET_PT (point - 1);
-	  }
-      }
-    immediate_quit = 0;
-
-    return make_number (point - start_point);
-  }
-}
-
 /* Subroutines of Lisp buffer search functions. */
 
 static Lisp_Object
@@ -826,7 +704,7 @@ search_command (string, bound, noerror, count, direction, RE, posix)
     {
       CHECK_NUMBER_COERCE_MARKER (bound, 1);
       lim = XINT (bound);
-      if (n > 0 ? lim < point : lim > point)
+      if (n > 0 ? lim < PT : lim > PT)
 	error ("Invalid search bound (wrong side of point)");
       if (lim > ZV)
 	lim = ZV;
@@ -834,7 +712,7 @@ search_command (string, bound, noerror, count, direction, RE, posix)
 	lim = BEGV;
     }
 
-  np = search_buffer (string, point, lim, n, RE,
+  np = search_buffer (string, PT, lim, n, RE,
 		      (!NILP (current_buffer->case_fold_search)
 		       ? XCHAR_TABLE (current_buffer->case_canon_table)->contents
 		       : 0),
@@ -890,6 +768,7 @@ trivial_regexp_p (regexp)
 	    case '|': case '(': case ')': case '`': case '\'': case 'b':
 	    case 'B': case '<': case '>': case 'w': case 'W': case 's':
 	    case 'S': case '=':
+	    case 'c': case 'C':	/* for categoryspec and notcategoryspec */
 	    case '1': case '2': case '3': case '4': case '5':
 	    case '6': case '7': case '8': case '9':
 	      return 0;
@@ -980,6 +859,8 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 	  s1 = ZV - BEGV;
 	  s2 = 0;
 	}
+      re_match_object = Qnil;
+  
       while (n < 0)
 	{
 	  int val;
@@ -1064,7 +945,7 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 		len--;
 		base_pat++;
 	      }
-	    *pat++ = (trt ? trt[*base_pat++] : *base_pat++);
+	    *pat++ = (trt ? XINT (trt[*base_pat++]) : *base_pat++);
 	  }
 	len = pat - patbuf;
 	pat = base_pat = patbuf;
@@ -1119,13 +1000,13 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 	  if (i == dirlen) i = infinity;
 	  if (trt != 0)
 	    {
-	      k = (j = trt[j]);
+	      k = (j = XINT (trt[j]));
 	      if (i == infinity)
 		stride_for_teases = BM_tab[j];
 	      BM_tab[j] = dirlen - i;
 	      /* A translation table is accompanied by its inverse -- see */
 	      /* comment following downcase_table for details */ 
-	      while ((j = (unsigned char) inverse_trt[j]) != k)
+	      while ((j = (unsigned char) XINT (inverse_trt[j])) != k)
 		BM_tab[j] = dirlen - i;
 	    }
 	  else
@@ -1165,8 +1046,8 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 		   : max (lim, max (limit, pos - 20000)));
 	  if ((limit - pos) * direction > 20)
 	    {
-	      p_limit = &FETCH_CHAR (limit);
-	      p2 = (cursor = &FETCH_CHAR (pos));
+	      p_limit = POS_ADDR (limit);
+	      p2 = (cursor = POS_ADDR (pos));
 	      /* In this loop, pos + cursor - p2 is the surrogate for pos */
 	      while (1)		/* use one cursor setting as long as i can */
 		{
@@ -1183,7 +1064,7 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 			while ((EMACS_INT) cursor <= (EMACS_INT) p_limit)
 			  cursor += BM_tab[*cursor];
 		      else
-			while ((unsigned EMACS_INT) cursor <= (unsigned EMACS_INT) p_limit)
+			while ((EMACS_UINT) cursor <= (EMACS_UINT) p_limit)
 			  cursor += BM_tab[*cursor];
 		    }
 		  else
@@ -1192,7 +1073,7 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 			while ((EMACS_INT) cursor >= (EMACS_INT) p_limit)
 			  cursor += BM_tab[*cursor];
 		      else
-			while ((unsigned EMACS_INT) cursor >= (unsigned EMACS_INT) p_limit)
+			while ((EMACS_UINT) cursor >= (EMACS_UINT) p_limit)
 			  cursor += BM_tab[*cursor];
 		    }
 /* If you are here, cursor is beyond the end of the searched region. */
@@ -1208,7 +1089,7 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 		  if (trt != 0)
 		    {
 		      while ((i -= direction) + direction != 0)
-			if (pat[i] != trt[*(cursor -= direction)])
+			if (pat[i] != XINT (trt[*(cursor -= direction)]))
 			  break;
 		    }
 		  else
@@ -1256,7 +1137,7 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 		  /* (the reach is at most len + 21, and typically */
 		  /* does not exceed len) */    
 		  while ((limit - pos) * direction >= 0)
-		    pos += BM_tab[FETCH_CHAR(pos)];
+		    pos += BM_tab[FETCH_BYTE (pos)];
 		  /* now run the same tests to distinguish going off the */
 		  /* end, a match or a phony match. */
 		  if ((pos - limit) * direction <= len)
@@ -1269,8 +1150,8 @@ search_buffer (string, pos, lim, n, RE, trt, inverse_trt, posix)
 		    {
 		      pos -= direction;
 		      if (pat[i] != (trt != 0
-				     ? trt[FETCH_CHAR(pos)]
-				     : FETCH_CHAR (pos)))
+				     ? XINT (trt[FETCH_BYTE (pos)])
+				     : FETCH_BYTE (pos)))
 			break;
 		    }
 		  /* Above loop has moved POS part or all the way
@@ -1373,7 +1254,7 @@ wordify (string)
 }
 
 DEFUN ("search-backward", Fsearch_backward, Ssearch_backward, 1, 4,
-  "sSearch backward: ",
+  "MSearch backward: ",
   "Search backward from point for STRING.\n\
 Set point to the beginning of the occurrence found, and return point.\n\
 An optional second argument bounds the search; it is a buffer position.\n\
@@ -1388,7 +1269,7 @@ See also the functions `match-beginning', `match-end' and `replace-match'.")
   return search_command (string, bound, noerror, count, -1, 0, 0);
 }
 
-DEFUN ("search-forward", Fsearch_forward, Ssearch_forward, 1, 4, "sSearch: ",
+DEFUN ("search-forward", Fsearch_forward, Ssearch_forward, 1, 4, "MSearch: ",
   "Search forward from point for STRING.\n\
 Set point to the end of the occurrence found, and return point.\n\
 An optional second argument bounds the search; it is a buffer position.\n\
@@ -1542,6 +1423,7 @@ since only regular expressions have distinguished subexpressions.")
   register int c, prevc;
   int inslen;
   int sub;
+  int opoint, newpoint;
 
   CHECK_STRING (newtext, 0);
 
@@ -1599,7 +1481,7 @@ since only regular expressions have distinguished subexpressions.")
       for (pos = search_regs.start[sub]; pos < last; pos++)
 	{
 	  if (NILP (string))
-	    c = FETCH_CHAR (pos);
+	    c = FETCH_BYTE (pos);
 	  else
 	    c = XSTRING (string)->data[pos];
 
@@ -1656,7 +1538,8 @@ since only regular expressions have distinguished subexpressions.")
 			   make_number (search_regs.start[sub]));
       after = Fsubstring (string, make_number (search_regs.end[sub]), Qnil);
 
-      /* Do case substitution into NEWTEXT if desired.  */
+      /* Substitute parts of the match into NEWTEXT
+	 if desired.  */
       if (NILP (literal))
 	{
 	  int lastpos = -1;
@@ -1691,6 +1574,8 @@ since only regular expressions have distinguished subexpressions.")
 		    }
 		  else if (c == '\\')
 		    delbackslash = 1;
+		  else
+		    error ("Invalid use of `\\' in replacement text");
 		}
 	      if (substart >= 0)
 		{
@@ -1723,6 +1608,7 @@ since only regular expressions have distinguished subexpressions.")
 	  newtext = concat2 (accum, middle);
 	}
 
+      /* Do case substitution in NEWTEXT if desired.  */
       if (case_action == all_caps)
 	newtext = Fupcase (newtext);
       else if (case_action == cap_initial)
@@ -1731,11 +1617,18 @@ since only regular expressions have distinguished subexpressions.")
       return concat3 (before, newtext, after);
     }
 
+  /* Record point, the move (quietly) to the start of the match.  */
+  if (PT > search_regs.start[sub])
+    opoint = PT - ZV;
+  else
+    opoint = PT;
+
+  temp_set_point (search_regs.start[sub], current_buffer);
+
   /* We insert the replacement text before the old text, and then
      delete the original text.  This means that markers at the
      beginning or end of the original will float to the corresponding
      position in the replacement.  */
-  SET_PT (search_regs.start[sub]);
   if (!NILP (literal))
     Finsert_and_inherit (1, &newtext);
   else
@@ -1745,7 +1638,7 @@ since only regular expressions have distinguished subexpressions.")
 
       for (pos = 0; pos < XSTRING (newtext)->size; pos++)
 	{
-	  int offset = point - search_regs.start[sub];
+	  int offset = PT - search_regs.start[sub];
 
 	  c = XSTRING (newtext)->data[pos];
 	  if (c == '\\')
@@ -1764,8 +1657,10 @@ since only regular expressions have distinguished subexpressions.")
 		       make_number (search_regs.start[c - '0'] + offset),
 		       make_number (search_regs.end[c - '0'] + offset));
 		}
-	      else
+	      else if (c == '\\')
 		insert_char (c);
+	      else
+		error ("Invalid use of `\\' in replacement text");
 	    }
 	  else
 	    insert_char (c);
@@ -1773,13 +1668,25 @@ since only regular expressions have distinguished subexpressions.")
       UNGCPRO;
     }
 
-  inslen = point - (search_regs.start[sub]);
+  inslen = PT - (search_regs.start[sub]);
   del_range (search_regs.start[sub] + inslen, search_regs.end[sub] + inslen);
 
   if (case_action == all_caps)
-    Fupcase_region (make_number (point - inslen), make_number (point));
+    Fupcase_region (make_number (PT - inslen), make_number (PT));
   else if (case_action == cap_initial)
-    Fupcase_initials_region (make_number (point - inslen), make_number (point));
+    Fupcase_initials_region (make_number (PT - inslen), make_number (PT));
+
+  newpoint = PT;
+
+  /* Put point back where it was in the text.  */
+  if (opoint <= 0)
+    temp_set_point (opoint + ZV, current_buffer);
+  else
+    temp_set_point (opoint, current_buffer);
+
+  /* Now move point "officially" to the start of the inserted replacement.  */
+  move_if_not_intangible (newpoint);
+  
   return Qnil;
 }
 
@@ -1827,14 +1734,21 @@ Zero means the entire text matched by the whole regexp or whole string.")
   return match_limit (subexp, 0);
 } 
 
-DEFUN ("match-data", Fmatch_data, Smatch_data, 0, 0, 0,
+DEFUN ("match-data", Fmatch_data, Smatch_data, 0, 2, 0,
   "Return a list containing all info on what the last search matched.\n\
 Element 2N is `(match-beginning N)'; element 2N + 1 is `(match-end N)'.\n\
 All the elements are markers or nil (nil if the Nth pair didn't match)\n\
 if the last match was on a buffer; integers or nil if a string was matched.\n\
-Use `store-match-data' to reinstate the data in this list.")
-  ()
+Use `store-match-data' to reinstate the data in this list.\n\
+\n\
+If INTEGERS (the optional first argument) is non-nil, always use integers\n\
+\(rather than markers) to represent buffer positions.\n\
+If REUSE is a list, reuse it as part of the value.  If REUSE is long enough\n\
+to hold all the values, and if INTEGERS is non-nil, no consing is done.")
+  (integers, reuse)
+     Lisp_Object integers, reuse;
 {
+  Lisp_Object tail, prev;
   Lisp_Object *data;
   int i, len;
 
@@ -1850,7 +1764,8 @@ Use `store-match-data' to reinstate the data in this list.")
       int start = search_regs.start[i];
       if (start >= 0)
 	{
-	  if (EQ (last_thing_searched, Qt))
+	  if (EQ (last_thing_searched, Qt)
+	      || ! NILP (integers))
 	    {
 	      XSETFASTINT (data[2 * i], start);
 	      XSETFASTINT (data[2 * i + 1], search_regs.end[i]);
@@ -1875,7 +1790,29 @@ Use `store-match-data' to reinstate the data in this list.")
       else
 	data[2 * i] = data [2 * i + 1] = Qnil;
     }
-  return Flist (2 * len + 2, data);
+
+  /* If REUSE is not usable, cons up the values and return them.  */
+  if (! CONSP (reuse))
+    return Flist (2 * len + 2, data);
+
+  /* If REUSE is a list, store as many value elements as will fit
+     into the elements of REUSE.  */
+  for (i = 0, tail = reuse; CONSP (tail);
+       i++, tail = XCONS (tail)->cdr)
+    {
+      if (i < 2 * len + 2)
+	XCONS (tail)->car = data[i];
+      else
+	XCONS (tail)->car = Qnil;
+      prev = tail;
+    }
+
+  /* If we couldn't fit all value elements into REUSE,
+     cons up the rest of them and add them to the end of REUSE.  */
+  if (i < 2 * len + 2)
+    XCONS (prev)->cdr = Flist (2 * len + 2 - i, data + i);
+
+  return reuse;
 }
 
 
@@ -2072,10 +2009,6 @@ syms_of_search ()
   defsubr (&Sposix_looking_at);
   defsubr (&Sstring_match);
   defsubr (&Sposix_string_match);
-  defsubr (&Sskip_chars_forward);
-  defsubr (&Sskip_chars_backward);
-  defsubr (&Sskip_syntax_forward);
-  defsubr (&Sskip_syntax_backward);
   defsubr (&Ssearch_forward);
   defsubr (&Ssearch_backward);
   defsubr (&Sword_search_forward);

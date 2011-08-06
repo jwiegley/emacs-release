@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Mark, Killing, Help, Top
 @chapter The Mark and the Region
@@ -60,8 +60,8 @@ Set the mark where point is, then move point to where you click
 (@code{mouse-save-then-kill}).
 @end table
 
-  For example, suppose you wish to convert part of the buffer to all
-upper-case, using the @kbd{C-x C-u} (@code{upcase-region}) command
+  For example, suppose you wish to convert part of the buffer to
+upper case, using the @kbd{C-x C-u} (@code{upcase-region}) command,
 which operates on the text in the region.  You can first go to the
 beginning of the text to be capitalized, type @kbd{C-@key{SPC}} to put
 the mark there, move to the end, and then type @kbd{C-x C-u}.  Or, you
@@ -97,10 +97,10 @@ previous position of the mark.  In Transient Mark mode, this command
 reactivates the mark.
 
   @kbd{C-x C-x} is also useful when you are satisfied with the position
-of point but want to move the mark; do @kbd{C-x C-x} to put point at
-that end of the region, and then move it.  A second use of @kbd{C-x
-C-x}, if necessary, puts the mark at the new position with point back at
-its original position.
+of point but want to move the other end of the region (where the mark
+is); do @kbd{C-x C-x} to put point at that end of the region, and then
+move it.  A second use of @kbd{C-x C-x}, if necessary, puts the mark at
+the new position with point back at its original position.
 
 @kindex C-@@
   There is no such character as @kbd{C-@key{SPC}} in ASCII; when you
@@ -143,7 +143,7 @@ the mode.
 @item
 To set the mark, type @kbd{C-@key{SPC}} (@code{set-mark-command}).
 This makes the mark active; as you move point, you will see the region
-highlighting change in extent.
+highlighting grow and shrink.
 
 @item 
 The mouse commands for specifying the mark also make it active.  So do
@@ -153,7 +153,7 @@ keyboard commands whose purpose is to specify a region, including
 
 @item
 When the mark is active, you can execute commands that operate on the
-region, such as killing, indentation, or writing to a file.
+region, such as killing, indenting, or writing to a file.
 
 @item
 Any change to the buffer, such as inserting or deleting a character,
@@ -174,16 +174,18 @@ You can activate the new region by executing @kbd{C-x C-x}
 Quitting with @kbd{C-g} deactivates the mark.
 @end itemize
 
-  Transient Mark mode is also sometimes known as ``Zmacs mode''
-because the Zmacs editor on the MIT Lisp Machine handled the mark in a
-similar way.
+  Highlighting of the region uses the @code{region} face; you can
+customize how the region is highlighted by changing this face.
+@xref{Face Customization}.
 
+@vindex highlight-nonselected-windows
   When multiple windows show the same buffer, they can have different
 regions, because they can have different values of point (though they
-all share common one mark position).  In Transient Mark mode, each
-window highlights its own region.  The part that is highlighted in the
-selected window is the region that editing commands use.
-@xref{Windows}.
+all share one common mark position).  Ordinarily, only the selected
+window highlights its region (@pxref{Windows}).  However, if the
+variable @code{highlight-nonselected-windows} is non-@code{nil}, then
+each window highlights its own region (provided that Transient Mark mode
+is enabled and the window's buffer's mark is active).
 
   When Transient Mark mode is not enabled, every command that sets the
 mark also activates it, and nothing ever deactivates it.
@@ -194,6 +196,11 @@ Transient Mark mode, then commands can use the mark and the region
 even when it is inactive.  Region highlighting appears and disappears 
 just as it normally does in Transient Mark mode, but the mark doesn't
 really go away when the highlighting disappears.
+
+@cindex Zmacs mode
+  Transient Mark mode is also sometimes known as ``Zmacs mode''
+because the Zmacs editor on the MIT Lisp Machine handled the mark in a
+similar way.
 
 @node Using Region
 @section Operating on the Region
@@ -312,13 +319,13 @@ in a register for later retrieval (@pxref{RegPos}).
   The variable @code{mark-ring-max} specifies the maximum number of
 entries to keep in the mark ring.  If that many entries exist and
 another one is pushed, the last one in the list is discarded.  Repeating
-@kbd{C-u C-@key{SPC}} circulates through the positions currently in the
+@kbd{C-u C-@key{SPC}} cycles through the positions currently in the
 ring.
 
 @vindex mark-ring
   The variable @code{mark-ring} holds the mark ring itself, as a list of
-marker objects in the order most recent first.  This variable is local
-in every buffer.
+marker objects, with the most recent first.  This variable is local in
+every buffer.
 
 @node Global Mark Ring
 @section The Global Mark Ring

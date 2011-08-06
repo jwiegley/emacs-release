@@ -370,7 +370,7 @@ _XMGetSelectionPtr(p_ptr, s_num)
     register int s_num;		/* Index number of the selection to find. */
 {
     register XMSelect *s_ptr;	/* Selection pointer to be returned. */
-    register int i;		/* Loop counter. *./
+    register int i;		/* Loop counter. */
     
     /*
      * Is the selection number out of range?

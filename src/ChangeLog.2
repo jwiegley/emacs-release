@@ -1,4 +1,4 @@
-Wed Aug 31 02:45:27 1988  Richard Stallman  (rms at corn-chex.ai.mit.edu)
+1988-08-31  Richard Stallman  (rms at corn-chex.ai.mit.edu)
 
 	* Version 18.52 released.
 
@@ -8,26 +8,26 @@ Wed Aug 31 02:45:27 1988  Richard Stallman  (rms at corn-chex.ai.mit.edu)
 
 	* crt0.c [hp9000s300]: New variable flag_68010.
 
-Tue Aug 30 15:23:40 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-30  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* m-isi-ov.h (LOAD_AVE_{CVT,TYPE}): On 4.3, different definitions.
 
 	* m-iris4d.h: Define XSETMARKBIT.
 
-Mon Aug 29 16:00:03 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-29  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* m-ibmrt.h (CANNOT_DUMP): Was defined by mistake in last change.
 
 	* m-amdahl.h (NSIG): If it's 19, make it 20.
 	Overrides Amdahl's mistake.
 
-Sat Aug 27 14:47:42 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-27  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* x11fns.c, x11term.c (XXscreen): New variable, default screen number.
 	All calls to BlackPixel, WhitePixel, DisplayCells, DefaultColormap
 	pass this.
 
-Fri Aug 26 12:25:02 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-26  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* data.c (init_data) [uts]: Handle SIGEMT.
 
@@ -40,7 +40,7 @@ Fri Aug 26 12:25:02 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* m-alliant4.h: Add missing `*/'.
 
-Thu Aug 25 15:35:46 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-25  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* x11term.c (writechars): Don't call updateline;
 	output just the chars that are specified; don't clear to end.
@@ -48,7 +48,7 @@ Thu Aug 25 15:35:46 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 	* m-ibmrt-aix.h: Define getwd.  Define bcopy, etc. as macros.
 	Define LIBX10_MACHINE and change LIBS_MACHINE.
 
-Wed Aug 24 11:55:33 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-24  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* xterm.c (XTread_socket): If HAVE_SELECT, call xfixscreen
 	before waiting.
@@ -61,20 +61,20 @@ Wed Aug 24 11:55:33 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 	(x_term_init) [IBMRTAIX]: do call gethostname.
 	() [IBMRTAIX]: Include sys/time, not time.
 
-Tue Aug 23 20:24:48 1988  Chris Hanson  (cph at kleph)
+1988-08-23  Chris Hanson  (cph at kleph)
 
 	* xterm.c (XTread_socket): Do not call `xfixscreen' if O_NDELAY is
 	set.  On hpux, this causes an I/O error.
 
-Tue Aug 23 06:33:18 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-23  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* m-news800.h: define HAVE_ALLOCA.
 
-Mon Aug 22 20:11:15 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-22  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* keyboard.c (read_avail_input) [no FIONREAD]: Always set O_NDELAY.
 
-Sun Aug 21 16:02:47 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-21  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* xterm.c, x11term.c (XTclear_end_of_line):
 	Arg was misinterpreted as place to *start* clearing.
@@ -83,7 +83,7 @@ Sun Aug 21 16:02:47 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* sysdep.c [USG] (getwd): Free the entire string retd by getcwd.
 
-Sat Aug 20 12:11:05 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-20  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* m-ibmrt.h: Delete the USG conditionals.
 
@@ -112,30 +112,30 @@ Sat Aug 20 12:11:05 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* emacs.c (main) [IBMRTAIX]: Handle additional fatal signals.
 
-Fri Aug 19 11:30:52 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-19  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* search.c (Fstore_match_data): Failed to skip the 2nd nil in a pair.
 
 	* search.c (search_buffer) [C_ALLOCA]: Use auto space for BM_tab.
 
-Thu Aug 18 22:10:09 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-18  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* keyboard.c: Declare errno.
 
-Mon Aug 15 17:16:30 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-15  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* m-news800.h: Define COMPILER_REGISTER_BUG and LIBS_TERMCAP.
 
-Fri Aug 12 13:37:02 1988  Mike Haertel  (mike at spiff.ai.mit.edu)
+1988-08-12  Mike Haertel  (mike at spiff.ai.mit.edu)
 
 	* m-7300.h: Made it understand how do undump a demand-paged
 	executable.
 
-Thu Aug 11 19:31:56 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-11  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* unexec.c (adjust_lnnoptrs): auxent is a union, not a struct.
 
-Wed Aug 10 00:13:33 1988  Chris Hanson  (cph at kleph)
+1988-08-10  Chris Hanson  (cph at kleph)
 
 	* keyboard.c (read_avail_input): Do not set O_NDELAY if
 	`read_socket_hook' is in use.  This causes Xlib to get an IO error
@@ -153,7 +153,7 @@ Wed Aug 10 00:13:33 1988  Chris Hanson  (cph at kleph)
 
 	* xterm.c: Supply missing definition of `handler'.
 
-Tue Aug  9 19:08:53 1988  Chris Hanson  (cph at kleph)
+1988-08-09  Chris Hanson  (cph at kleph)
 
 	* indent.c (current-column): fix typo.
 
@@ -161,17 +161,17 @@ Tue Aug  9 19:08:53 1988  Chris Hanson  (cph at kleph)
 	variable declarations so that GCC does not generate warning
 	message.
 
-Mon Aug  8 07:50:50 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-08  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* eval.c: doc fix.
 
-Thu Aug  4 15:23:18 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-04  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* fileio.c: Doc fix.
 
 	* keymap.c (Fwhere_is_internal): Call get_keyelt.
 
-Wed Aug  3 19:11:50 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-03  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* unexec.c [sun386]: control header files, like STRIDE, etc.
 
@@ -181,7 +181,7 @@ Wed Aug  3 19:11:50 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 	(LD_SWITCH_SYSTEM): Undefine this, since the s-sunos4.h defn
 	is wrong for the 386.
 
-Sun Jul 31 09:38:14 1988  Richard Stallman  (rms at juicy-juice.lcs.mit.edu)
+1988-07-31  Richard Stallman  (rms at juicy-juice.lcs.mit.edu)
 
 	* sysdep.c (select_alarm): If read_alarm_should_throw, throw back
 	to read_input_waiting.
@@ -194,11 +194,11 @@ Sun Jul 31 09:38:14 1988  Richard Stallman  (rms at juicy-juice.lcs.mit.edu)
 	* x11fns.c (Fx_set_mouse_color): Don't free save_color; can be literal.
 	* x11term.c (x_term_init): Clear reversevideo if fg or bg color specd.
 
-Thu Jul 28 11:12:47 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-07-28  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* print.c (Fwith_output_to_temp_buffer): Detect error for non-strings.
 
-Fri Jul 22 06:05:00 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-07-22  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* s-usg5-3.h: Define LIBX{10,11}_SYSTEM.
 
@@ -213,45 +213,45 @@ Fri Jul 22 06:05:00 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* undo.c (Fundo_more): Better err msg.
 
-Mon Jul 18 01:06:55 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-07-18  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* indent.c (current_column, Fmove_to_column): ignore invisible lines.
 
 	* keyboard.c (command_loop_1): No direct output if selective display.
 
-Sun Jul 17 13:56:29 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-07-17  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* ymakefile (LD_TEXT_START_FLAGS): -e should be __start, not address.
 
 	* m-orion105.h: New file.
 
-Fri Jul 15 03:16:06 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-07-15  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* alloca.s (pyramid): Define _setjmp, _longjmp only if PYRAMID_OLD.
 
-Tue Jul 12 21:56:32 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-07-12  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* s-rtu.h (fsync): Define this as no-op.
 
 	* process.c, sysdep.c: Rename MASSCOMP flag to RTU.
 
-Sun Jul 10 14:30:37 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-07-10  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* term.c (write_chars): Compensate for wasted_chars when comparing curX
 
-Tue Jul  5 14:43:42 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-07-05  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* lread.c (openp): Don't call strncat if lsuffix is 0.
 
-Tue Jun 28 19:57:22 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-28  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* callint.c (Fcall_interactively): On VMS, treat 'f' like 'F'.
 
-Mon Jun 27 18:01:54 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-27  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* emacs.c (Fkill_emacs): Run kill-emacs-hook.
 
-Thu Jun 23 08:16:02 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-23  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* ymakefile: Add missing dependencies.
 
@@ -259,11 +259,11 @@ Thu Jun 23 08:16:02 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* ymakefile: Avoid newline after cpp in commands for alloca.s.
 
-Wed Jun 22 09:26:41 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-22  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* ymakefile: #undef register, in case m- or s- defines it.
 
-Tue Jun 21 04:57:54 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-21  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* unexhp9k800.c: Complete replacement.
 
@@ -298,15 +298,15 @@ Tue Jun 21 04:57:54 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* callint.c (Fcall_interactively): For `N', convert prefix to number.
 
-Sat Jun 18 06:21:13 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-18  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* termcap.c (tgetst1): Tolerate missing colon at end of entry.
 
-Wed Jun 15 01:08:52 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-15  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* data.c (Fkill_local_variable): Used to clobber other buffer's value.
 
-Tue Jun 14 03:08:38 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-14  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* x11fns.c, x11term.c: "Mouse queue" was a stack; make it a queue.
 	New vars XXm_queue_in, XXm_queue_out.
@@ -314,19 +314,19 @@ Tue Jun 14 03:08:38 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 	(internal_socket_read): Use XXm_queue_in as store index.
 	(x_term_init): Init the new vars.
 
-Fri Jun 10 08:09:01 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-10  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* window.c (Fset_window_configuration): Handle change in screen size.
 
 	* s-hpux.h: Delete -lBSD from LIBS_SYSTEM.
 	* m-hp9000s300.h: Define string fns as macros even in version 6.
 
-Wed Jun  8 22:17:15 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-08  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* buffer.c (SetBfp): Initialize `swb'.  This matters when SetBfp
 	is called during initialization, on Masscomp.
 
-Fri Jun  3 07:28:20 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-03  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* sysdep.c (kbd_input_ast, end_kbd_input): Eliminate `ast_active'.
 	(end_kbd_input): Use LIB$AST_IN_PROG.
@@ -337,12 +337,12 @@ Fri Jun  3 07:28:20 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* callint.c (Fcall_interactively): Don't put non-strings into visargs.
 
-Thu Jun  2 04:28:42 1988  Richard Stallman  (rms at rice-krispies.ai.mit.edu)
+1988-06-02  Richard Stallman  (rms at rice-krispies.ai.mit.edu)
 
 	* keyboard.c (read_avail_input, input_available_signal):
 	Make `buf' as long as kbd_buffer.
 
-Wed Jun  1 04:29:18 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-06-01  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* xdisp.c (decode_mode_spec): Output `%%' as a `%'.
 
@@ -351,22 +351,22 @@ Wed Jun  1 04:29:18 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 	* dispnew.c (window_change_signal): Likewise.
 	* process.c (child_sig): Likewise.
 
-Tue May 31 03:22:14 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-05-31  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* x11fns.c (Fx_proc_mouse_event): When looking up a meta-click,
 	look for the meta-prefix-char first.
 
 	* xmenu.c (Fx_popup_menu): Typo calling BLOCK_INPUT_DECLARE.
 
-Sat May 28 02:28:59 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-05-28  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* s-iris3-{5,6}.h: Undo Jan 11 change.
 
-Mon May 23 15:04:34 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-23  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* minibuf.c (read_minibuf): If PROMPT's not a string, make it one.
 
-Sun May 22 16:09:07 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-22  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* m-alliant.h: Typo made m-alliant1.h lose.
 	* m-alliant4.h: New file.
@@ -374,26 +374,26 @@ Sun May 22 16:09:07 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	* fns.c (Freverse): Rename `vector' to `vec'.
 	On alliant, `vector' is a typedef in param.h.
 
-Fri May 20 00:32:07 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-20  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* process.c (kill_buffer_processes): Send SIGHUP, not SIGKILL.
 
-Thu May 19 16:38:15 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-19  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* m-mips.h, m-iris4d.h (XUNMARK): Cast unsigned before shifting.
 
 	* m-sequent.h: No need for DKSTAT_HEADER_FILE.
 
-Mon May 16 21:03:11 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-16  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* x11term.c: First include system headers, then config.h, then maybe
 	undef FIONREAD and SIGIO, then read x11term.h which depends on them.
 
-Sun May 15 12:16:56 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-15  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* keyboard.c (get_input_pending): Hold SIGIO around read_avail_input.
 
-Sat May 14 01:23:49 1988  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
+1988-05-14  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
 
 	* keyboard.c (init_keyboard): Call keyboard_init_hook if nonzero.
 	* x11term.c (x_init_1): Move all keyboard-related inits here.
@@ -402,28 +402,28 @@ Sat May 14 01:23:49 1988  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
 	* m-sun3.h, s-sunos4.h, s-bsd4-3.h: Delete DK_HEADER_FILE.
 	* m-sequent.h: Change it to DKSTAT_HEADER_FILE.
 
-Fri May 13 22:38:12 1988  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
+1988-05-13  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
 
 	* xdisp.c (DoDsp): if pause, and window is partial-width,
 	next redisplay must do all windows since preserve_other_columns
 	may lack the data to work right if we just did scrolling.
 
-Fri May 13 13:56:45 1988  Chris Hanson  (cph at kleph)
+1988-05-13  Chris Hanson  (cph at kleph)
 
 	* m-hp9000s300.h: Conditionalize a couple of things on `__GNUC__'.
 
-Thu May 12 16:51:24 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-12  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* xdisp.c (mark_window_display_accurate): Don't use XBUFFER on nil.
 
 	* keyboard.c (keys_of_keyboard): Change ndefkey to defkey.
 	* keymap.c (keys_of_keymap): Change ndefkey to defkey.
 
-Tue May 10 22:49:36 1988  Richard Stallman  (rms at corn-chex.ai.mit.edu)
+1988-05-10  Richard Stallman  (rms at corn-chex.ai.mit.edu)
 
 	* sysdep.c: Define sigmask.
 
-Fri May  6 10:41:46 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-06  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* Version 18.51 released.
 
@@ -435,24 +435,24 @@ Fri May  6 10:41:46 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	* m-7300.h: Take out the Feb 11 change; umix!sendai!rich@rutgers.edu
 	says it doesn't work.
 
-Fri Apr 29 10:05:02 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-29  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* xdisp.c (DoDsp): Set clip_changed if Voverlay_... has changed.
 
-Thu Apr 28 17:55:45 1988  Chris Hanson  (cph at kleph)
+1988-04-28  Chris Hanson  (cph at kleph)
 
 	* s-hpux.h: Define HAVE_PTYS.  HP-UX has them and they work fine
 	almost all of the time.  The one case where they would fail
 	regularly (inferior Scheme) has been bypassed by using pipes.
 
-Thu Apr 28 09:27:41 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-28  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* keyboard.c (Fsuspend_emacs): Do init_sys_modes via unwind protect.
 
 	* fileio.c [VMS] (Fdefine_logical_name): Empty string value
 	means delete the name.
 
-Wed Apr 27 01:29:04 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-27  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* sysdep.c [VMS]: RAB's never a macro; let RAB$C_BID control rab.h.
 
@@ -461,7 +461,7 @@ Wed Apr 27 01:29:04 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* sysdep.c (creat_copy_attrs): Downcase remaining SYS$OPEN, SSY$CLOSE.
 
-Mon Apr 25 16:06:49 1988  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
+1988-04-25  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
 
 	* fileio.c (Fdo_auto_save): Ignore shrinkage if not visiting file.
 	Wait only 1 second after shrinkage message.
@@ -470,20 +470,20 @@ Mon Apr 25 16:06:49 1988  Richard Stallman  (rms at lucky-charms.ai.mit.edu)
 
 	* buffer.c (Fswitch_buffer): Error if in minibuffer window.
 
-Sun Apr 24 18:56:54 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-24  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* sysdep.c (sys_close): Define this only if INTERRUPTABLE_CLOSE.
 	* s-usg5-3.h: Define INTERRUPTABLE_CLOSE.
 
-Fri Apr 22 17:43:03 1988  Richard Stallman  (rms at rice-krispies.ai.mit.edu)
+1988-04-22  Richard Stallman  (rms at rice-krispies.ai.mit.edu)
 
 	* sysdep.c (init_sys_modes) [VMS]: Undef _IOFBF so don't use setvbuf.
 
-Wed Apr 20 05:44:19 1988  Richard Stallman  (rms at rice-krispies.ai.mit.edu)
+1988-04-20  Richard Stallman  (rms at rice-krispies.ai.mit.edu)
 
 	* m-sun386.h: New file, for Roadrunner.
 
-Tue Apr 19 13:54:37 1988  Chris Hanson  (cph at kleph)
+1988-04-19  Chris Hanson  (cph at kleph)
 
 	* x11term.h, x11term.c, x11fns.c: Again (for the third time)
 	abstract input blocking so these files compile on systems without
@@ -494,25 +494,25 @@ Tue Apr 19 13:54:37 1988  Chris Hanson  (cph at kleph)
 	is unnecessary and untrue -- the interface works, but
 	suboptimally.
 
-Tue Apr 19 04:18:42 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-19  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* sysdep.c (sys_access) [VMS]: If arg is dirname, cvt to name as file.
 	(sys_getenv): If arg is TERM, also look for TERM as logical name.
 
 	* unexconvex.c: New file.
 
-Mon Apr 18 15:23:37 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-18  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* emacs.c (main) [APOLLO]: Eliminate call to set_sbrk_size.
 
 	* search.c (match_limit): Return nil for a paren-pair with no match.
 
-Sun Apr 17 02:43:15 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-17  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* vmsfns.c (Fvms_system_info, Fshrink_to_icon): New functions.
 	Former comes with many subroutines.
 
-Sat Apr 16 00:39:12 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-16  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* x11term.c (updateline, write_chars): Restore sigmask at every return.
 	(stufflines): Restore signal mask only once, at the end.
@@ -524,16 +524,16 @@ Sat Apr 16 00:39:12 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* ymakefile (LIBX): /usr/X11/lib/oldX/liboldX.a becomes -loldX.
 
-Thu Apr 14 22:29:28 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-14  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* fileio.c (auto_save_error): Print msg that there was an error.
 	(Fdo_auto_save): If don't save a bfr because it has shrunk, print msg.
 
-Wed Apr 13 23:58:10 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-13  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* s-umax.h: Define MAIL_USE_FLOCK (LaLiberte says so).
 
-Sun Apr 10 07:23:58 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-10  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* fileio.c (Fdefine_dcl_symbol): Deleted.
 	(Fdefine_logical_name): New function created.
@@ -543,7 +543,7 @@ Sun Apr 10 07:23:58 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	other processes, since when Emacs is run in a subprocess (as it
 	usually is), the others see job-wide logical names, not DCL symbols)."
 
-Sat Apr  9 00:32:25 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-09  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* ymakefile: If UNEXEC is defined, it specifies object file for unexec.
 	* unexmips.c: New file contains MIPS unexec code, moved from unexec.c.
@@ -558,7 +558,7 @@ Sat Apr  9 00:32:25 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* m-sequent.h: Define PTY_ITERATION, etc., for Dynix 3.0 pty names.
 
-Fri Apr  8 05:37:20 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-04-08  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* unexec.c (EXEC_HDR_TYPE): New macro overrides `struct exec' if def.
 
@@ -569,7 +569,7 @@ Fri Apr  8 05:37:20 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* fileio.c: doc fix.
 
-Tue Mar 29 17:25:58 1988  Richard M. Stallman  (rms at wilson)
+1988-03-29  Richard M. Stallman  (rms at wilson)
 
 	* ymakefile: Default LIBX10_MACHINE and LIBX11_MACHINE to null.
 	Use them when defining LIBX.
@@ -598,7 +598,7 @@ Tue Mar 29 17:25:58 1988  Richard M. Stallman  (rms at wilson)
 
 	* sysdep.c (dup2): Alternate defn #ifdef F_DUPFD.
 
-Sun Mar 27 14:49:09 1988  Richard M. Stallman  (rms at wilson)
+1988-03-27  Richard M. Stallman  (rms at wilson)
 
 	* process.c [CYDRIX]: Include sys/tiuser.h; don't include pty.h.
 
@@ -614,7 +614,7 @@ Sun Mar 27 14:49:09 1988  Richard M. Stallman  (rms at wilson)
 
 	* dired.c (file_name_completion) [VMS]: READFUNC is a ptr, not a fcn.
 
-Thu Mar 24 00:26:26 1988  Richard M. Stallman  (rms at wilson)
+1988-03-24  Richard M. Stallman  (rms at wilson)
 
 	* sink.h, sinkmask.h: Don't declare the array static.
 	* xfns.c: Make sink_bits and sink_mask_bits extern;
@@ -638,7 +638,7 @@ Thu Mar 24 00:26:26 1988  Richard M. Stallman  (rms at wilson)
 	* fns.c (Fy_or_n_p): Make cursor_in_echo_area -1 when echoing response.
 	Don't alter cursX.
 
-Wed Mar 23 16:34:27 1988  Richard M. Stallman  (rms at wilson)
+1988-03-23  Richard M. Stallman  (rms at wilson)
 
 	* x11term.h: Use X11/ not X/ for dir of include files.
 	* xmenu.c: Likewise, in the X11 case.
@@ -699,11 +699,11 @@ Wed Mar 23 16:34:27 1988  Richard M. Stallman  (rms at wilson)
 	* dispnew.c (init_display): Check result of egetenv for emptiness
 	as well as nullness.
 
-Mon Mar 21 00:24:51 1988  Richard M. Stallman  (rms at wilson)
+1988-03-21  Richard M. Stallman  (rms at wilson)
 
 	* alloca.s [WICAT]: Don't clobber a2.  Return value in a0 and in d0.
 
-Sun Mar 20 13:33:54 1988  Richard M. Stallman  (rms at wilson)
+1988-03-20  Richard M. Stallman  (rms at wilson)
 
 	* crt0.c (errno): Don't initialize it -- put it in bss space.
 	[M68K]: Define splevel% with `comm' -- put it in bss space.
@@ -732,7 +732,7 @@ Sun Mar 20 13:33:54 1988  Richard M. Stallman  (rms at wilson)
 
 	* alloca.s: Define alloca for Xenix.
 
-Sat Mar 19 00:20:10 1988  Richard M. Stallman  (rms at wilson)
+1988-03-19  Richard M. Stallman  (rms at wilson)
 
 	* keyboard.c (read_avail_input): If `read' gives EAGAIN,
 	kbd_count should be 0.  Can happen on V.3.
@@ -743,7 +743,7 @@ Sat Mar 19 00:20:10 1988  Richard M. Stallman  (rms at wilson)
 	* display.c (syms_of_display): Likewise for Vwindow_system.
 	(init_display): Always set Vwindow_system.
 
-Fri Mar 18 13:37:35 1988  Chris Hanson  (cph at kleph)
+1988-03-18  Chris Hanson  (cph at kleph)
 
 	* m-hp9000s300.h: Add a definition for C_SWITCH_MACHINE which is
 	needed to compile the X11 interface files.
@@ -754,7 +754,7 @@ Fri Mar 18 13:37:35 1988  Chris Hanson  (cph at kleph)
 	Move definitions which depend on these features from the s- file
 	to the m- files, and conditionalize the features based on a flag.
 
-Fri Mar 18 16:03:27 1988  Richard M. Stallman  (rms at wilson)
+1988-03-18  Richard M. Stallman  (rms at wilson)
 
 	* scroll.c (calculate_scrolling): Abort if ->insertcount
 	is out of range.
@@ -787,7 +787,7 @@ Fri Mar 18 16:03:27 1988  Richard M. Stallman  (rms at wilson)
 
 	* sysdep.c (sys_suspend): If forking shell, call close_process_descs.
 
-Sat Feb 13 03:43:55 1988  Richard Stallman  (rms at sugar-smacks.ai.mit.edu)
+1988-02-13  Richard Stallman  (rms at sugar-smacks.ai.mit.edu)
 
 	* Version 18.50 released.
 
@@ -798,7 +798,7 @@ Sat Feb 13 03:43:55 1988  Richard Stallman  (rms at sugar-smacks.ai.mit.edu)
 	* s-vms.h: PURESIZE 132000.
 	* m-sun2.h: Likewise (for HAVE_SUN_WINDOWS).
 
-Thu Feb 11 01:01:27 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-02-11  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* callproc.c (child_setup): Call close_process_descs
 	if can have subprocesses.  Close the argument-descriptors
@@ -838,7 +838,7 @@ Thu Feb 11 01:01:27 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	* m-7300.h: Define SEGMENT_MASK, SECTION_ALIGNMENT
 	and pass the -z switch to ld.  kenobi!ford@bass.nosc.mil says so.
 
-Tue Feb  9 14:12:59 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-02-09  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* unexec.c: Merge gb's code for Xenix.
 
@@ -847,7 +847,7 @@ Tue Feb  9 14:12:59 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* cm.h: Make the bit-fields unsigned.
 
-Mon Feb  8 22:43:18 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-02-08  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* sysdep.c (init_sys_modes) [USG]: Set C-g for VQUIT as well as VINTR.
 	This was formerly done only on HPUX, and worked there.
@@ -857,7 +857,7 @@ Mon Feb  8 22:43:18 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	* process.c (wait_reading_process_output): Change the test on
 	read_kbd to avoid losing on 80386 Xenix.
 
-Sat Feb  6 16:56:50 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-02-06  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* xdisp.c (Voverlay_arrow_string, Voverlay_arrow_position):
 	New variables specifying a string to overlay on the buffer text
@@ -865,22 +865,22 @@ Sat Feb  6 16:56:50 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	* xdisp.c (display_text_line, redisplay_window, DoDsp):
 	Handle these variables.
 
-Thu Feb  4 12:00:23 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-02-04  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* insdel.c (prepare_to_modify_buffer):
 	If CLASH_DETECTION is disabled, verify the modtime here
 	since it won't be done via lock_file.
 
-Sun Jan 31 14:34:24 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-01-31  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* fileio.c (Fcopy_file): Report error in `write'.
 
-Fri Jan 29 08:49:32 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-01-29  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* eval.c (unbind_to): Recompute loop end-test from `count' each time
 	since an unwind-protect function can use realloc to grow the specpdl.
 
-Tue Jan 26 08:35:55 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-01-26  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* sysdep.c (vms_truncate) [VMS]: New fn to truncate a file.
 
@@ -890,24 +890,24 @@ Tue Jan 26 08:35:55 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 	* s-vms.h: Rename `rename', `execvp' and `system' so we don't
 	use the VMS-library versions of it.
 
-Fri Jan 22 04:27:48 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-22  Richard Stallman  (rms at frosted-flakes)
 
 	* m-ibmrt.h: Add some AIX conditionals; output on BSD should
 	be unchnged.  Perhaps will now run on AIX.
 
-Thu Jan 21 07:46:20 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-21  Richard Stallman  (rms at frosted-flakes)
 
 	* keyboard.c (command_loop): Exit here for noninteractive eof.
 	* keyboard.c (kbd_buffer_get_char): Don't exit here.
 
-Wed Jan 20 08:16:27 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-20  Richard Stallman  (rms at frosted-flakes)
 
 	* lread.c (openp): Reject directories even if !exec_only.
 
 	* window.c (Fset_window_configuration): When keeping window's
 	old buffer, make sure its start and pointm are valid.
 
-Tue Jan 19 00:15:37 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-19  Richard Stallman  (rms at frosted-flakes)
 
 	* sysdep.c (sys_suspend) [SIGTSTP]: Use killpg and getpgrp to stop
 	all processes in same pgrp with Emacs.
@@ -915,7 +915,7 @@ Tue Jan 19 00:15:37 1988  Richard Stallman  (rms at frosted-flakes)
 	* syntax.c (Fparse_partial_sexp): Add 7th elt to STATE arg and value,
 	describing minimum depth encountered during the scan.
 
-Mon Jan 18 00:24:13 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-18  Richard Stallman  (rms at frosted-flakes)
 
 	* alloca.s: Change some as-style comments to C-style comments
 	so cccp won't be confused by stray singlequotes.
@@ -932,7 +932,7 @@ Mon Jan 18 00:24:13 1988  Richard Stallman  (rms at frosted-flakes)
 
 	* window.c (Fset_window_point): Now works ok on selected window.
 
-Sun Jan 17 06:41:54 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-17  Richard Stallman  (rms at frosted-flakes)
 
 	* eval.c (Fdefconst, Fdefvar) doc fix.
 
@@ -942,7 +942,7 @@ Sun Jan 17 06:41:54 1988  Richard Stallman  (rms at frosted-flakes)
 	for Unix; was doing so (instead of readfunc) on VMS.
 	* dired.c (Fdirectory_files): Don't call NAMLEN if dp is 0.
 
-Sat Jan 16 02:54:48 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-16  Richard Stallman  (rms at frosted-flakes)
 
 	* alloc.c (syms_of_alloc): Eliminate vars data-bytes-{free,used}.
 	They lose because values are over 24 bits.
@@ -952,19 +952,19 @@ Sat Jan 16 02:54:48 1988  Richard Stallman  (rms at frosted-flakes)
 	* fns.c (Fy_or_n_p): delete `register' for xprompt.
 	* keymap.c (Fcopy_keymap): missing paren.
 
-Fri Jan 15 17:46:24 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-15  Richard Stallman  (rms at frosted-flakes)
 
 	* m-iris4d.h: Changes to support dumping.
 	* m-*.h: Doc fix for VIRT_ADDR_VARIES.
 
 	* unexec.c: Minor changes to mips code for IRIS_4D.
 
-Mon Jan 11 20:17:21 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-11  Richard Stallman  (rms at frosted-flakes)
 
 	* s-iris3-{5,6}.h: Don't #undef SIGIO.  BROKEN_FIONREAD makes it unnec.
 	* process.c [IRIS]: Find sysmacros.h in sys/.
 
-Sat Jan  9 18:15:49 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-09  Richard Stallman  (rms at frosted-flakes)
 
 	* doprnt.c: New arg NARGS says how many args there are in ARGS.
 	Give an error if the string tries to use more than that many.
@@ -973,7 +973,7 @@ Sat Jan  9 18:15:49 1988  Richard Stallman  (rms at frosted-flakes)
 	* editfns.c (Fformat, format1):
 	* xdisp.c (message):
 
-Thu Jan  7 00:57:24 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-07  Richard Stallman  (rms at frosted-flakes)
 
 	* lreadc (init_obarray): Split the stmt `hash =' to avoid
 	a VACX bug.
@@ -981,7 +981,7 @@ Thu Jan  7 00:57:24 1988  Richard Stallman  (rms at frosted-flakes)
 	* alloca.s [pyramid]: Keep sp a multiple of 32.
 	This preserves cache-block alignment.
 
-Wed Jan  6 17:26:28 1988  Richard Stallman  (rms at frosted-flakes)
+1988-01-06  Richard Stallman  (rms at frosted-flakes)
 
 	* s-hpux.h: Don't define nomultiplejobs, LDAV_SYMBOL, LIBS_DEBUG
 	 or BROKEN_FIONREAD.
@@ -1000,23 +1000,23 @@ Wed Jan  6 17:26:28 1988  Richard Stallman  (rms at frosted-flakes)
 
 	* alloca.s, crt0.c: Change hp9000 conditionals to hp9000s300.
 
-Tue Dec 22 21:27:44 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-22  Richard Stallman  (rms at frosted-flakes)
 
 	* alloca.s [WICAT]: Keep sp pointing at lowest word in use.
 
-Thu Dec 17 07:25:05 1987  Richard Stallman  (rms at lucky-charms)
+1987-12-17  Richard Stallman  (rms at lucky-charms)
 
 	* unexec.c (make_hdr): Don't add A_TEXT_OFFSET to a_text
 	in the NO_REMAP case (when a_text comes from the old header).
 
 	* filelock.c: If no symlinks, use `stat' instead of `lstat'.
 
-Mon Dec 14 15:22:04 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-14  Richard Stallman  (rms at frosted-flakes)
 
 	* fileio.c (Fsubstitute_in_file_name): Allow underscore
 	in an env var name.
 
-Wed Dec  9 18:12:58 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-09  Richard Stallman  (rms at frosted-flakes)
 
 	* indent.c (Findent-to): Interactive code `N' instead of `n'.
 
@@ -1024,7 +1024,7 @@ Wed Dec  9 18:12:58 1987  Richard Stallman  (rms at frosted-flakes)
 
 	* lread.c (oblookup): Split a statement to avoid VMS compiler bug.
 
-Fri Dec  4 04:41:09 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-04  Richard Stallman  (rms at frosted-flakes)
 
 	* data.c (sign_extend_temp): Moved from sysdep.c.
 	* data.c (sign_extend_lisp_int): Function to do sign-extend;
@@ -1034,18 +1034,18 @@ Fri Dec  4 04:41:09 1987  Richard Stallman  (rms at frosted-flakes)
 
 	* fileio.c (Fread_file_name): Don't crash if no env var HOME.
 
-Thu Dec  3 11:39:46 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-03  Richard Stallman  (rms at frosted-flakes)
 
 	* m-convex.h: New file.
 
-Wed Dec  2 01:05:38 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-02  Richard Stallman  (rms at frosted-flakes)
 
 	* process.c (wait_reading_process_input):
 	Don't set time_limit to -2; leave it as -1.
 
 	* s-usg5-3.h, m-intel386.h: New files.
 
-Tue Dec  1 00:41:30 1987  Richard Stallman  (rms at frosted-flakes)
+1987-12-01  Richard Stallman  (rms at frosted-flakes)
 
 	* process.c: Support for SYSV_PTYS.
 
@@ -1059,19 +1059,19 @@ Tue Dec  1 00:41:30 1987  Richard Stallman  (rms at frosted-flakes)
 
 	* fileio.c (Ffile_symlink_p): Call Fexpand_file_name.
 
-Sat Nov 21 15:20:39 1987  Richard Stallman  (rms at frosted-flakes)
+1987-11-21  Richard Stallman  (rms at frosted-flakes)
 
 	* print.c: Clean up doc string syntax and fix doc error for `print'.
 
-Sat Oct 31 23:23:38 1987  Richard Stallman  (rms at sugar-smacks)
+1987-10-31  Richard Stallman  (rms at sugar-smacks)
 
 	* editfns.c (Fformat): Realize doprint %-specs can contain - and space.
 
-Fri Oct 30 19:50:38 1987  Richard Stallman  (rms at sugar-smacks)
+1987-10-30  Richard Stallman  (rms at sugar-smacks)
 
 	* fns.c (Fy_or_n_p): Don't try to DOWNCASE -1.
 
-Thu Oct 29 20:11:29 1987  Richard Stallman  (rms at frosted-flakes)
+1987-10-29  Richard Stallman  (rms at frosted-flakes)
 
 	* fns.c (Fy_or_n_p): Protect `prompt' and `xprompt' from gc.
 	* fns.c (Fyes_or_no_p): Protect `prompt' from gc.
@@ -1079,7 +1079,7 @@ Thu Oct 29 20:11:29 1987  Richard Stallman  (rms at frosted-flakes)
 	* buffer.c (Fkill_buffer): Protect `buf' and `bufname' from gc.
 	* fileio.c (barf_or_query_if_file_exists): Protect `absname'.
 
-Thu Sep 17 01:13:55 1987  Richard M. Stallman  (rms at prep)
+1987-09-17  Richard M. Stallman  (rms at prep)
 
 	* Version 18.49 released.
 
@@ -1093,19 +1093,19 @@ Thu Sep 17 01:13:55 1987  Richard M. Stallman  (rms at prep)
 	so that `readfunc' exists only on VMS.  Apollo compiler
 	couldn't deal with it.
 
-Wed Sep 16 14:38:35 1987  Richard M. Stallman  (rms at prep)
+1987-09-16  Richard M. Stallman  (rms at prep)
 
 	* m-sun[23].h: Doc fix.
 
 	* sysdep.c (reset_sys_modes): Don't output anything
 	if have a read_socket_hook (i.e. under X).
 
-Thu Sep 10 18:33:50 1987  Richard M. Stallman  (rms at prep)
+1987-09-10  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (Fget_buffer_create): Test of mode-class property
 	of buffer's major mode was backwards.
 
-Mon Sep  7 20:03:02 1987  Richard Mlynarik  (mly at prep)
+1987-09-07  Richard Mlynarik  (mly at prep)
 
 	* dired.c (file_name_completion):
 	Only filter `leaves' of filesystem structure with
@@ -1116,7 +1116,7 @@ Mon Sep  7 20:03:02 1987  Richard Mlynarik  (mly at prep)
 	* xterm.h (UNBLOCK_INPUT_RESIGNAL):
 	RESIGNAL_INPUT, not INPUT_RESIGNAL
 
-Sun Aug 30 02:03:10 1987  Richard M. Stallman  (rms at prep)
+1987-08-30  Richard M. Stallman  (rms at prep)
 
 	* Version 18.48 released.
 
@@ -1128,16 +1128,16 @@ Sun Aug 30 02:03:10 1987  Richard M. Stallman  (rms at prep)
 	* emacs.c (Fdump_emacs): Don't call malloc_init if SYSTEM_MALLOC.
 	* emacs.c (main): ditto.
 
-Thu Aug 20 20:25:42 1987  Richard M. Stallman  (rms at prep)
+1987-08-20  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region) [VMS]: Move gap to the closest place
 	(first newline after old gap).
 
-Sat Aug 15 20:33:21 1987  Richard M. Stallman  (rms at prep)
+1987-08-15  Richard M. Stallman  (rms at prep)
 
 	* editfns.c (init_editfns): Handle getpwuid returning 0.
 
-Fri Aug 14 19:03:58 1987  Richard M. Stallman  (rms at prep)
+1987-08-14  Richard M. Stallman  (rms at prep)
 
 	* casefiddle.c (casify_region): Use prepare_to_modify_buffer.
 	Don't call modify_region until the end.
@@ -1145,31 +1145,31 @@ Fri Aug 14 19:03:58 1987  Richard M. Stallman  (rms at prep)
 	* sysdep.c (reset_sys_modes): Output a bare CR
 	so kernel can track the cursor hpos.
 
-Thu Jul 30 15:56:12 1987  Richard M. Stallman  (rms at prep)
+1987-07-30  Richard M. Stallman  (rms at prep)
 
 	* vmsfns.c (Fsetprv): Correct spelling SS$NORMAL => SS$_NORMAL.
 	Include <ssdef.h>.
 
-Wed Jul 29 22:43:13 1987  Richard Mlynarik  (mly at prep)
+1987-07-29  Richard Mlynarik  (mly at prep)
 
 	* lread.c (init_read): Initialise load_in_progress.
 
-Tue Jul 28 17:40:22 1987  Richard M. Stallman  (rms at prep)
+1987-07-28  Richard M. Stallman  (rms at prep)
 
 	* vmsfns.c (Fsetprv): Detect error from sys$setprv properly.
 	Add some privileges missing from the table.
 
-Mon Jul 27 15:56:35 1987  Richard M. Stallman  (rms at prep)
+1987-07-27  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (creat_copy_attrs): Flush duplicate `else'.
 
-Sat Jul 25 15:30:30 1987  Richard M. Stallman  (rms at prep)
+1987-07-25  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (update_screen): Use PENDING_OUTPUT_COUNT
 	in all appropriate places.
 	Fix a comment delimiter typo.
 
-Fri Jul 24 20:19:42 1987  Richard M. Stallman  (rms at prep)
+1987-07-24  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (command_loop_1): Don't do direct output
 	if DoDsp is needed to erase a minibuffer message.
@@ -1184,7 +1184,7 @@ Fri Jul 24 20:19:42 1987  Richard M. Stallman  (rms at prep)
 	* sysdep.c (sys_creat for VMS): Get all args via varargs,
 	no named args, to avoid incompatible change in VMS C.
 
-Sat Jul 18 19:10:52 1987  Richard M. Stallman  (rms at prep)
+1987-07-18  Richard M. Stallman  (rms at prep)
 
 	* unexec.c (make-hdr): Split the stmts that use ADDR_CORRECT
 	into two stmts.  Some compilers mysteriously barf on them.
@@ -1212,14 +1212,14 @@ Sat Jul 18 19:10:52 1987  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (file_name_as_directory) [VMS]:  Fix 3rd arg to strncmp.
 
-Fri Jul 17 19:28:46 1987  Paul Rubin  (phr at prep)
+1987-07-17  Paul Rubin  (phr at prep)
 
 	* m-sun2.h: Add comment explaining that filename refers to
 	the OS version, not the CPU model number.  People running
 	SunOS 3.2 on Sun 2 computers have been erroneously trying to
 	use this file, and losing.
 
-Fri Jul 10 15:51:18 1987  Chris Hanson  (cph at prep)
+1987-07-10  Chris Hanson  (cph at prep)
 
 	* xterm.h: Define macros to abstract control of input signals.
 	Alternate set of macros for hp-ux does no signalling.
@@ -1233,7 +1233,7 @@ Fri Jul 10 15:51:18 1987  Chris Hanson  (cph at prep)
 	"xmenu.c" to eliminate unused include files, and reorder the
 	include files so that it compiles under hp-ux.
 
-Mon Jun 29 00:59:41 1987  Richard M. Stallman  (rms at prep)
+1987-06-29  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region) [VMS]: Use creat_copy_attrs.
 
@@ -1246,20 +1246,20 @@ Mon Jun 29 00:59:41 1987  Richard M. Stallman  (rms at prep)
 	* syntax.c: Disguise doc string of non-existent Lisp variable
 	`standard-syntax-table'.
 
-Thu Jun 25 22:12:56 1987  Richard M. Stallman  (rms at prep)
+1987-06-25  Richard M. Stallman  (rms at prep)
 
 	* callproc.c (Fcall_process): On VMS, use NLA0: instead of /dev/null.
 
 	* term.c (term-init):
 	Don't use "nl" cap on VMS if it's a linefeed.
 
-Tue Jun 23 01:44:38 1987  Richard M. Stallman  (rms at prep)
+1987-06-23  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (sys_creat) [VMS]: Use va_start, not va_start_1.
 
 	* sysdep.c (rename) [VMS]: Use SYS$RENAME not LIB$RENAME_FILE.
 
-Thu Jun 18 00:20:53 1987  Richard M. Stallman  (rms at prep)
+1987-06-18  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (readdirver) [VMS]: Don't return bogus version number.
 	Don't lose stepping off end of directory entry.
@@ -1277,7 +1277,7 @@ Thu Jun 18 00:20:53 1987  Richard M. Stallman  (rms at prep)
 	* sysdep.c (random) [VMS]: Likewise, and remove the code to
 	initialize the seed.  Higher levels call srandom if seed should be set.
 
-Mon Jun 15 04:02:51 1987  Richard M. Stallman  (rms at prep)
+1987-06-15  Richard M. Stallman  (rms at prep)
 
 
 	* fileio.c (Fwrite_region) [VMS]: Use `creat' to create
@@ -1286,12 +1286,12 @@ Mon Jun 15 04:02:51 1987  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region): Check result from fsync.
 
-Fri Jun 12 21:41:36 1987  Chris Hanson  (cph at prep)
+1987-06-12  Chris Hanson  (cph at prep)
 
 	* terminfo.c (tparam): Handle the outstring == 0 case by
 	allocating a result of the correct size.
 
-Fri Jun 12 11:50:21 1987  Richard M. Stallman  (rms at prep)
+1987-06-12  Richard M. Stallman  (rms at prep)
 
 	* terminfo.c (tparam): Kludge the outstring == 0 case.
 	Accept (and ignore) the buffer-length argument.
@@ -1303,7 +1303,7 @@ Fri Jun 12 11:50:21 1987  Richard M. Stallman  (rms at prep)
 	if writing fails.  When moving gap to avoid extra newline,
 	move it only to the next newline.
 
-Wed Jun 10 02:33:27 1987  Richard M. Stallman  (rms at prep)
+1987-06-10  Richard M. Stallman  (rms at prep)
 
 	* minibuf.c (Ftry_completion, Fall_completions):
 	GCPRO some strings when calling predicate.
@@ -1321,11 +1321,11 @@ Wed Jun 10 02:33:27 1987  Richard M. Stallman  (rms at prep)
 	* dired.c (file_name_completion): Obey completion-ignore-case
 	by using scmp instead of bcmp.
 
-Tue Jun  9 13:27:06 1987  Richard M. Stallman  (rms at prep)
+1987-06-09  Richard M. Stallman  (rms at prep)
 
 	* syntax.c: (scan_lists): Clear mathexit on 2nd math-char in a pair.
 
-Mon Jun  8 17:11:26 1987  Richard M. Stallman  (rms at prep)
+1987-06-08  Richard M. Stallman  (rms at prep)
 
 	* Version 18.46 released.
 
@@ -1347,7 +1347,7 @@ Mon Jun  8 17:11:26 1987  Richard M. Stallman  (rms at prep)
 	* process.c (Fopen_network_stream): Don't create process object
 	until opens, etc. have succeeded.
 
-Mon Jun  8 11:38:38 1987  Chris Hanson  (cph at prep)
+1987-06-08  Chris Hanson  (cph at prep)
 
 	* keyboard.c (read_avail_input): use `read_socket_hook' if it has
 	a value.  This is required in hp-ux if `HAVE_X_WINDOWS' is
@@ -1356,15 +1356,15 @@ Mon Jun  8 11:38:38 1987  Chris Hanson  (cph at prep)
 	* process.c (wait_reading_process_input): conditionalize `select'
 	call for hp-ux.
 
-Mon Jun  8 04:31:28 1987  Richard M. Stallman  (rms at prep)
+1987-06-08  Richard M. Stallman  (rms at prep)
 
 	* m-isi-ov.h: Cut SEGMENT_MAST in half.  crl@purdue says so.
 
-Sat Jun  6 02:25:47 1987  Richard M. Stallman  (rms at prep)
+1987-06-06  Richard M. Stallman  (rms at prep)
 
 	* tparam.c: Ifdef emacs, include config.h.
 
-Fri Jun  5 13:05:23 1987  Richard M. Stallman  (rms at prep)
+1987-06-05  Richard M. Stallman  (rms at prep)
 
 	* m-apollo.h: Add #undef BSTRING.
 
@@ -1376,7 +1376,7 @@ Fri Jun  5 13:05:23 1987  Richard M. Stallman  (rms at prep)
 	* process.c (Fopen_network_stream): Allow integer as 4th arg
 	to specify foreign port number.
 
-Wed Jun  3 20:35:01 1987  Richard M. Stallman  (rms at prep)
+1987-06-03  Richard M. Stallman  (rms at prep)
 
 	* m-amdahl.h: Add definitions of LD_SWITCH_MACHINE, EXEC_MAGIC,
 	SEGSIZ and SEGMENT_MASK.  Turn on C_ALLOCA.  From Jishnu Mukeji.
@@ -1384,27 +1384,27 @@ Wed Jun  3 20:35:01 1987  Richard M. Stallman  (rms at prep)
 	* eval.c (Fapply): Add missing parens in args to alloca;
 	args were too small.  From Jishnu Mukeji.
 
-Mon Jun  1 18:26:46 1987  Richard M. Stallman  (rms at prep)
+1987-06-01  Richard M. Stallman  (rms at prep)
 
 	* version 18.45.
 
 	* fileio.c (Finsert_file_contents): Always initialize fd.
 
-Sun May 31 17:47:43 1987  Richard M. Stallman  (rms at prep)
+1987-05-31  Richard M. Stallman  (rms at prep)
 
 	* fileio.c: Move declarations of errno and friends to top of file.
 	* filelock.c: Likewise.
 
-Fri May 29 02:55:27 1987  Richard M. Stallman  (rms at prep)
+1987-05-29  Richard M. Stallman  (rms at prep)
 
 	* process.c: #end => #endif.
 
-Wed May 27 03:21:19 1987  Richard M. Stallman  (rms at prep)
+1987-05-27  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fexpand_file_name) [VMS]:
 	Upcase all file names, not just absolute ones.  Use Fupcase.
 
-Tue May 26 16:50:05 1987  Richard M. Stallman  (rms at prep)
+1987-05-26  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fdirectory_file_name) [VMS]:
 	Fix to expansion of VMS logical names.
@@ -1414,12 +1414,12 @@ Tue May 26 16:50:05 1987  Richard M. Stallman  (rms at prep)
 	* xdisp.c (display_string): Use current buffer's tab_width.
 	(display_text_line): Simplify XBUFFER (w->buffer) to bf_cur.
 
-Sat May 23 18:41:19 1987  Richard M. Stallman  (rms at prep)
+1987-05-23  Richard M. Stallman  (rms at prep)
 
 	* alloc.c (init_alloc-once): Don't set Vpurify_flag.
 	* lread.c (init_obarray): Do it here, now that Qt is valid.
 
-Fri May 22 00:02:56 1987  Richard M. Stallman  (rms at prep)
+1987-05-22  Richard M. Stallman  (rms at prep)
 
 	* m-targon31.h: Undefine VIRT_ADDR_VARIES.
 
@@ -1428,7 +1428,7 @@ Fri May 22 00:02:56 1987  Richard M. Stallman  (rms at prep)
 	* lread.c (absolute_filename_p) [VMS]: '[' and '<' don't
 	make a pathname absolute.
 
-Thu May 21 15:19:48 1987  Richard M. Stallman  (rms at prep)
+1987-05-21  Richard M. Stallman  (rms at prep)
 
 	* xterm.c (x_term_init): Don't set Vxterm and Vxterm1.
 	* xfns.c (syms_of_xfns): Don't set Vxterm and Vxterm1.
@@ -1451,7 +1451,7 @@ Thu May 21 15:19:48 1987  Richard M. Stallman  (rms at prep)
 	* fileio.c (Fwrite_region): Check for error from the close.
 	NFS reportedly can report out-of-space there.
 
-Mon May 18 02:31:15 1987  Richard M. Stallman  (rms at prep)
+1987-05-18  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region): Always stat after the close.
 
@@ -1465,7 +1465,7 @@ Mon May 18 02:31:15 1987  Richard M. Stallman  (rms at prep)
 
 	* indent.c (compute_motion): Typo in defn of HPOS.
 
-Sun May 17 11:05:59 1987  Richard M. Stallman  (rms at prep)
+1987-05-17  Richard M. Stallman  (rms at prep)
 
 	* term.c: Pass 0 for buffer and length to tparam,
 	record the value returned as buffer to use, and free it later.
@@ -1478,7 +1478,7 @@ Sun May 17 11:05:59 1987  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (message): Handle NO_ARG_ARRAY for call to doprnt.
 
-Sat May 16 02:03:02 1987  Richard M. Stallman  (rms at prep)
+1987-05-16  Richard M. Stallman  (rms at prep)
 
 	* m-isi-ov.h: Define LIB_STANDARD to avoid bad interaction with
 	crt0 in ISI system 3.07.
@@ -1486,7 +1486,7 @@ Sat May 16 02:03:02 1987  Richard M. Stallman  (rms at prep)
 	* fileio.c (Ffile_name_as_directory) [VMS]: Special handling
 	for foo:[000000] where foo is a logical name.
 
-Wed May 13 02:06:49 1987  Richard M. Stallman  (rms at prep)
+1987-05-13  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fread_file_name) [VMS]: Bind completion-ignore-case to t.
 	* fileio.c (Fexpand_file_name) [VMS]: Upcase letters in filenames.
@@ -1498,7 +1498,7 @@ Wed May 13 02:06:49 1987  Richard M. Stallman  (rms at prep)
 	in a terminal-info structure.  Definitions for USG and BSD.
 	Used in init_baud_rate.
 
-Tue May 12 16:40:36 1987  Richard M. Stallman  (rms at prep)
+1987-05-12  Richard M. Stallman  (rms at prep)
 
 	* search.c (skip_chars, Fstring_match, scan_buffer):
 	Set immediate_quit over the scanning loops.
@@ -1509,13 +1509,13 @@ Tue May 12 16:40:36 1987  Richard M. Stallman  (rms at prep)
 	* sysdep.c (sys_suspend): Delete spurious `*' from
 	declaration of `sigio'.
 
-Tue May 12 16:35:44 1987  Chris Hanson  (cph at prep)
+1987-05-12  Chris Hanson  (cph at prep)
 
 	* regex.c (re_compile_fastmap):
 	Fix typo where `notsyntaxspec' neglected to look at its argument
 	byte, comparing with randomness.
 
-Tue May 12 14:35:09 1987  Richard M. Stallman  (rms at prep)
+1987-05-12  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (sys_access for VMS pre 4.4):
 	Fix typo of `file' where `filename' was meant.
@@ -1533,7 +1533,7 @@ Tue May 12 14:35:09 1987  Richard M. Stallman  (rms at prep)
 	* minibuf.c (Fself_insert_and_exit): 0 as 2nd arg to SelfInsert.
 	* keyboard.c (command_loop_1): likewise.
 
-Mon May 11 18:32:21 1987  Richard M. Stallman  (rms at prep)
+1987-05-11  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c, s-hpux.h, s-iris3-5.h:
 	Eliminate the hpux/iris conditional from keyboard.c.
@@ -1542,7 +1542,7 @@ Mon May 11 18:32:21 1987  Richard M. Stallman  (rms at prep)
 	* buffer.c (Fkill_buffer): Do nothing rather than kill
 	the sole remaining buffer.  Prevent quits during actual killing.
 
-Tue May  5 10:11:45 1987  Richard Mlynarik  (mly at prep)
+1987-05-05  Richard Mlynarik  (mly at prep)
 
 	* m-irist.h:  New version from raible@orville.arpa
 	* s-iris3-5.h:  New file.  (s-usg5-2 with additions)
@@ -1553,14 +1553,14 @@ Tue May  5 10:11:45 1987  Richard Mlynarik  (mly at prep)
 	* window.c, keyboard.c, sysdep.c:
 	Remove some unused local variables.
 
-Mon May  4 17:45:31 1987  Richard M. Stallman  (rms at prep)
+1987-05-04  Richard M. Stallman  (rms at prep)
 
 	* dired.c (Ffile_attributes): Doc fix.
 
 	* term.c (term_init): Mention `unsetenv TERMCAP' in
 	error message for invalid TERM variable.
 
-Mon Apr 27 09:30:55 1987  Richard Mlynarik  (mly at prep)
+1987-04-27  Richard Mlynarik  (mly at prep)
 
 	* fileio.c (APOLLO from lnz):
 	Fcopy_file, Fset_file_modes: Don't use un*x modes if
@@ -1571,7 +1571,7 @@ Mon Apr 27 09:30:55 1987  Richard Mlynarik  (mly at prep)
 	* emacs.c (main): (APOLLO from lnz):
 	Don't use un*x modes if env var USE_DOMAIN_ACLS set.
 
-Sat Apr 25 11:54:45 1987  Richard Mlynarik  (mly at prep)
+1987-04-25  Richard Mlynarik  (mly at prep)
 
 	* unexec.c:
 	CANNOT_UNEXEC Code from lnz (from rps@apollo).
@@ -1582,14 +1582,14 @@ Sat Apr 25 11:54:45 1987  Richard Mlynarik  (mly at prep)
 	wait_for_termination: can sigpause.
 	init_sys_modes: moved static structures out.
 
-Thu Apr 23 11:32:21 1987  Richard Mlynarik  (mly at prep)
+1987-04-23  Richard Mlynarik  (mly at prep)
 
 	* malloc.c, vmsmap.c: (VMS)
 	Define and use our own `sbrk' since malloc and the RTL sbrk don't
 	interact very well.
 	(sasaki@harvard.harvard.edu <8704220244.AA02324@prep>)
 
-Sun Apr 15 12:43:55 1987  Richard Mlynarik  (mly at prep)
+1987-04-15  Richard Mlynarik  (mly at prep)
 
 	* dispnew.c: (VMS) Flush TIOCOUTQ stuff (meaningless on VMS)
 
@@ -1611,35 +1611,35 @@ Sun Apr 15 12:43:55 1987  Richard Mlynarik  (mly at prep)
 	SIGIOTs.  Can somebody please delve into the reasons behind
 	this lossage?
 
-Wed Apr 15 01:29:16 1987  Paul Rubin  (phr at prep)
+1987-04-15  Paul Rubin  (phr at prep)
 
 	* version 18.44 released.
 
-Tue Apr 14 18:05:24 1987  Paul Rubin  (phr at prep)
+1987-04-14  Paul Rubin  (phr at prep)
 
 	* config.h:
 	Increase PURESIZE to 115800 from 115600.
 
-Tue Apr 14 10:14:13 1987  Richard Mlynarik  (mly at prep)
+1987-04-14  Richard Mlynarik  (mly at prep)
 
 	* termcap.c (tgetent) (VMS):
 	File is in emacs_library:[etc]termcap.dat
 	(TUNG@WAIF.MIT.EDU <8704130324.AA10879@prep.ai.mit.edu>)
 
-Fri Apr 10 14:30:54 1987  Richard Mlynarik  (mly at prep)
+1987-04-10  Richard Mlynarik  (mly at prep)
 
 	* window.c (Fset_window_configuration):
 	Don't unchain markers -- this window configuation may be used
 	again.  Let normal GC unchain them.
 
-Wed Apr  8 13:48:45 1987  Richard Mlynarik  (mly at prep)
+1987-04-08  Richard Mlynarik  (mly at prep)
 
 	* m-vax.h: (USG 5.2)
 	define NO_REMAP to kludgily bypass unexec bug.
 	(We don't have such a machine here, so -we- can't find the bug!)
 	(Karl.Kleinpaste <205@cbstr1.att.com>)
 
-Tue Apr  7 09:32:08 1987  Richard Mlynarik  (mly at prep)
+1987-04-07  Richard Mlynarik  (mly at prep)
 
 	* indent.c (compute_motion):
 	Use special code for HPOS if SHORT_CAST_BUG.
@@ -1647,7 +1647,7 @@ Tue Apr  7 09:32:08 1987  Richard Mlynarik  (mly at prep)
 	* m-celerity.h, m-att3b.h, m-ibmrt.h, m-sequent.h:
 	Define SHORT_CAST_BUG.
 
-Mon Apr  6 12:48:54 1987  Richard Mlynarik  (mly at prep)
+1987-04-06  Richard Mlynarik  (mly at prep)
 
 	* malloc.c (morecore):
 	Don't assume sbrk clears memory to 0's.
@@ -1664,7 +1664,7 @@ Mon Apr  6 12:48:54 1987  Richard Mlynarik  (mly at prep)
 	Change first arg (0) to getcwd to (char *) 0
 	Also, call `free' on value returned (after we save it)
 
-Sun Mar 22 09:23:24 1987  Richard M. Stallman  (rms at prep)
+1987-03-22  Richard M. Stallman  (rms at prep)
 
 	* Version 18.41 released.
 
@@ -1673,11 +1673,11 @@ Sun Mar 22 09:23:24 1987  Richard M. Stallman  (rms at prep)
 	to includ xmenu.c
 	* config.h-dist: Tell people about this flag.
 
-Fri Mar 20 12:12:02 1987  Richard Mlynarik  (mly at prep)
+1987-03-20  Richard Mlynarik  (mly at prep)
 
 	* filemode.c:  Hacks for set-uid/gid but not executable.
 
-Fri Mar 20 10:06:13 1987  Richard M. Stallman  (rms at prep)
+1987-03-20  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c [VMS]: include window.h.
 	* sysdep.c (wait_for_kbd_input) [VMS]:
@@ -1689,12 +1689,12 @@ Fri Mar 20 10:06:13 1987  Richard M. Stallman  (rms at prep)
 	* emacs.c (main) [VMS]: If SHAREABLE_LIB_BUG, declare `environ'
 	noshare and initialize it from `envp'.
 
-Fri Mar 20 06:55:01 1987  Chris Hanson  (cph at prep)
+1987-03-20  Chris Hanson  (cph at prep)
 
 	* process.c (pty): On hp-ux, do not enable TIOCREMOTE.  See the
 	code for a comment explaining why.
 
-Thu Mar 19 14:09:15 1987  Richard M. Stallman  (rms at prep)
+1987-03-19  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c: Omit start_of_{data,text} if CANNOT_DUMP and SYSTEM_MALLOC.
 
@@ -1706,7 +1706,7 @@ Thu Mar 19 14:09:15 1987  Richard M. Stallman  (rms at prep)
 	Copy the value of getcwd into pathname.
 	Supposedly needed on Altos 3068.
 
-Wed Mar 18 11:23:33 1987  Richard M. Stallman  (rms at prep)
+1987-03-18  Richard M. Stallman  (rms at prep)
 
 	* Version 18.40 released.
 
@@ -1716,7 +1716,7 @@ Wed Mar 18 11:23:33 1987  Richard M. Stallman  (rms at prep)
 	* fileio.c, termcap.c: Change funny VMS-format #includes
 	to standard Unix format.
 
-Tue Mar 17 09:57:26 1987  Richard M. Stallman  (rms at prep)
+1987-03-17  Richard M. Stallman  (rms at prep)
 
 	* unexec.c (copy_text_and_data): A_TEXT_SEEK if defined controls
 	where in the file to start writing the text segment.
@@ -1780,7 +1780,7 @@ Tue Mar 17 09:57:26 1987  Richard M. Stallman  (rms at prep)
 
 	* alloc.c: Remove defns of `sdata' and `edata'.
 
-Mon Mar 16 09:48:40 1987  Richard M. Stallman  (rms at prep)
+1987-03-16  Richard M. Stallman  (rms at prep)
 
 	* fns.c (Fy_or_n_p): Restore cursor_in_echo_area to previous value.
 
@@ -1793,7 +1793,7 @@ Mon Mar 16 09:48:40 1987  Richard M. Stallman  (rms at prep)
 
 	* emacs.c (main): Don't mention SIGEMT if it's not defined.
 
-Sat Mar 14 06:56:53 1987  Richard M. Stallman  (rms at prep)
+1987-03-14  Richard M. Stallman  (rms at prep)
 
 	* Version 18.39 released.
 
@@ -1808,7 +1808,7 @@ Sat Mar 14 06:56:53 1987  Richard M. Stallman  (rms at prep)
 	* s-vms.h: Define PURESIZE.
 	* m-sun2.h: Define PURESIZE, if HAVE_SUN_WINDOWS.
 
-Fri Mar 13 18:35:09 1987  Richard M. Stallman  (rms at prep)
+1987-03-13  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c: Don't redefine TCSETAW if already defined.
 	(Cancelled by change on March 17).
@@ -1826,7 +1826,7 @@ Fri Mar 13 18:35:09 1987  Richard M. Stallman  (rms at prep)
 	Provide for m- and s- files to specify additional object
 	files to link into temacs.
 
-Thu Mar 12 12:59:38 1987  Richard M. Stallman  (rms at prep)
+1987-03-12  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fsysnetunam): Make this function conditional on
 	HPUX_NET, not on HPUX.
@@ -1840,17 +1840,17 @@ Thu Mar 12 12:59:38 1987  Richard M. Stallman  (rms at prep)
 
 	* m-amdahl.h: New file.
 
-Thu Mar 12 10:37:56 1987  Richard Mlynarik  (mly at prep)
+1987-03-12  Richard Mlynarik  (mly at prep)
 
 	* sysdep.c (child_setup_tty):
 	HPUX: Set baud-rate to 9600 (not 38400)
 	For some reason the former is reported to work faster(!?)
 
-Tue Mar 10 14:29:19 1987  Richard M. Stallman  (rms at prep)
+1987-03-10  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (init_display): Declare alternate_display only if X.
 
-Mon Mar  9 12:43:06 1987  Richard M. Stallman  (rms at prep)
+1987-03-09  Richard M. Stallman  (rms at prep)
 
 	* m-alliant.h, crt0.c for alliant:
 	Must save _curbrk when dumping (from ADJUST_EXEC_HEADER)
@@ -1859,7 +1859,7 @@ Mon Mar  9 12:43:06 1987  Richard M. Stallman  (rms at prep)
 	* unexec.c: Add a separate unexec routine for mips machines.
 	No code is shared with normal unexec.
 
-Sun Mar  8 08:15:50 1987  Richard M. Stallman  (rms at prep)
+1987-03-08  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (baud_convert): Use new macro BAUD_CONVERT
 	to override the standard conversion table.
@@ -1870,12 +1870,12 @@ Sun Mar  8 08:15:50 1987  Richard M. Stallman  (rms at prep)
 	Call modify_buffer before changing it, and pass entire region.
 	If NOUNDO is set, un-increment bf_modified after that.
 
-Sat Mar  7 14:50:26 1987  Richard M. Stallman  (rms at prep)
+1987-03-07  Richard M. Stallman  (rms at prep)
 
 	* lisp.h: #ifndef the definitions of XUINT, XSET, XMARKBIT, etc.
 	Make them all use XUINT when they want to extract the unsigned value.
 
-Thu Mar  5 15:10:38 1987  Richard M. Stallman  (rms at prep)
+1987-03-05  Richard M. Stallman  (rms at prep)
 
 	* term.c (write_standout_marker): If "xs" present and sg#0,
 	don't write standout-off markers.
@@ -1895,11 +1895,11 @@ Thu Mar  5 15:10:38 1987  Richard M. Stallman  (rms at prep)
 	* s-*.h: Define HAVE_SOCKETS, or add place holder.
 	* m-stride.h: Define HAVE_SOCKETS.
 
-Wed Mar  4 03:28:58 1987  Richard M. Stallman  (rms at prep)
+1987-03-04  Richard M. Stallman  (rms at prep)
 
 	* ymakefile (LIBX): add -lXMenu.
 
-Tue Mar  3 21:34:40 1987  Richard M. Stallman  (rms at prep)
+1987-03-03  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region): Really put the `fstat' after
 	the `fsync', trying to solve spurious "file has changed" warnings.
@@ -1913,23 +1913,23 @@ Tue Mar  3 21:34:40 1987  Richard M. Stallman  (rms at prep)
 
 	* Version 18.38 released.
 
-Sat Feb 28 21:36:31 1987  Chris Hanson  (cph at prep)
+1987-02-28  Chris Hanson  (cph at prep)
 
 	* fileio.c: Added `sysnetunam' function for controlling remote
 	file access connections under hp-ux.
 
 	* s-hpux (LIBS_SYSTEM): Added `-ln' which is used by `sysnetunam'.
 
-Sat Feb 28 14:12:07 1987  Richard M. Stallman  (rms at prep)
+1987-02-28  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (display_text_line): Typo in line that fixes tab_width.
 
-Fri Feb 27 14:02:41 1987  Richard M. Stallman  (rms at prep)
+1987-02-27  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (Fopen_termscript): `report_file_error'
 	requires list as 2nd arg.
 
-Thu Feb 26 01:53:16 1987  Richard M. Stallman  (rms at prep)
+1987-02-26  Richard M. Stallman  (rms at prep)
 
 	* xmenu.c: New file defining Fx_popup_menu.
 	* emacs.c (main): Call syms_of_xmenu.
@@ -1937,7 +1937,7 @@ Thu Feb 26 01:53:16 1987  Richard M. Stallman  (rms at prep)
 	* buffer.c (Fother_buffer): Condition for assigning to
 	`notsogood' was backwards (should be if null).
 
-Mon Feb 23 02:59:45 1987  Richard M. Stallman  (rms at prep)
+1987-02-23  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (access_keymap): No longer check lower case
 	equivalent of an upper case letter that is undefined.
@@ -1964,17 +1964,17 @@ Mon Feb 23 02:59:45 1987  Richard M. Stallman  (rms at prep)
 	Remove definition of TEXT_START (safe since GNU crt0.c is used).
 	Add to ADJUST_EXEC_HEADER something to set unexec_text_start.
 
-Sun Feb 22 22:18:00 1987  Richard M. Stallman  (rms at prep)
+1987-02-22  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (Fopen_termscript):  Close existing termscript
 	file before trying to open a new one.  Report open failure
 	with report_file_error.
 
-Sat Feb 21 05:13:46 1987  Paul Rubin  (phr at prep)
+1987-02-21  Paul Rubin  (phr at prep)
 
 	* window.c (set-window-buffer): typo "set-widow-buffer".
 
-Thu Feb 19 15:28:01 1987  Richard Mlynarik  (mly at prep)
+1987-02-19  Richard Mlynarik  (mly at prep)
 
 	* lisp.h:
 	Add type Lisp_Window_Configuration, delete Lisp_Temp_Vector.
@@ -2005,18 +2005,18 @@ Thu Feb 19 15:28:01 1987  Richard Mlynarik  (mly at prep)
 	Print a disturbing message if encounter an illegal dtp --
 	perhaps this should core-dump?
 
-Tue Feb 17 13:13:13 1987  Richard Mlynarik  (mly at prep)
+1987-02-17  Richard Mlynarik  (mly at prep)
 
 	* dired.c (Ffile_attributes):
 	Use make_number.  (XINT doesn't work on LHS of assignment)
 
-Tue Feb 17 04:02:04 1987  Richard M. Stallman  (rms at prep)
+1987-02-17  Richard M. Stallman  (rms at prep)
 
 	* doc.c (get_doc_string, Fsnarf_documentation):
 	In vms4.4, avoid system bug by using sys_translate_unix
 	to translate filename to VMS format before opening.
 
-Mon Feb 16 05:20:41 1987  Richard M. Stallman  (rms at prep)
+1987-02-16  Richard M. Stallman  (rms at prep)
 
 	* crt0.c: Don't define `environ' if DONT_NEED_ENVIRON is defined.
 
@@ -2029,11 +2029,11 @@ Mon Feb 16 05:20:41 1987  Richard M. Stallman  (rms at prep)
 	* sysdep.c (reset_sys_modes): Loop on TCSETAW
 	until it does not get EINTR.
 
-Sun Feb 15 18:01:37 1987  Richard M. Stallman  (rms at prep)
+1987-02-15  Richard M. Stallman  (rms at prep)
 
 	* s-bsd4-2.h: Make defns of BSD and BSD4_2 conditional.
 
-Fri Feb 13 12:27:05 1987  Richard M. Stallman  (rms at prep)
+1987-02-13  Richard M. Stallman  (rms at prep)
 
 	* process.c: TCP connection feature from markl@jhereg.lcs.mit.edu.
 	Uses a process-object to represent a connection.
@@ -2046,7 +2046,7 @@ Fri Feb 13 12:27:05 1987  Richard M. Stallman  (rms at prep)
 	* dired.c (Ffile_attributes): Use XINT to store the inode #.
 	It can be out of range for integers.
 
-Thu Feb 12 11:55:11 1987  Richard M. Stallman  (rms at prep)
+1987-02-12  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (try_window): Fix paren errer in checking hpos
 	against hscroll.  This caused window_end_pos to be wrong
@@ -2062,26 +2062,26 @@ Thu Feb 12 11:55:11 1987  Richard M. Stallman  (rms at prep)
 	* xdisp.c (display_string): mincol==-1 means no minimum.
 	* xdisp.c (display_text_line): Use -1 for mincol of minibuf promp.
 
-Wed Feb 11 19:30:54 1987  Richard M. Stallman  (rms at prep)
+1987-02-11  Richard M. Stallman  (rms at prep)
 
 	* Version 18.37 released.
 
 	* data.c (Fmake_local_variable, Fmake_variable_buffer_local):
 	Get error if arg is t or nil.  Doc improvements.
 
-Tue Feb 10 09:56:01 1987  Richard Mlynarik  (mly at prep)
+1987-02-10  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_get_default):  Add (unsigned char *) cast.
 
 	* window.c: typo.
 
-Mon Feb  9 00:06:29 1987  Richard M. Stallman  (rms at prep)
+1987-02-09  Richard M. Stallman  (rms at prep)
 
 	* process.c (change_msgs): Save/restore selected buffer
 	only over simple insertions, and over one such at a time.
 	Don't save it across sentinel invocations.
 
-Sun Feb  8 09:37:06 1987  Richard M. Stallman  (rms at prep)
+1987-02-08  Richard M. Stallman  (rms at prep)
 
 	* tparam.c (tparam): Supply code for NO_ARG_ARRAY case.
 
@@ -2118,7 +2118,7 @@ Sun Feb  8 09:37:06 1987  Richard M. Stallman  (rms at prep)
 	* alloc.c (Fgarbage_collect): After GC, clear marks
 	in the dummy buffers buffer_defaults and buffer_local_symbols.
 
-Sat Feb  7 20:12:23 1987  Richard M. Stallman  (rms at prep)
+1987-02-07  Richard M. Stallman  (rms at prep)
 
 	* window.c (Fnext_window): Restore old meaning of t as 2nd arg:
 	count minibuffer window even if not active.
@@ -2127,7 +2127,7 @@ Sat Feb  7 20:12:23 1987  Richard M. Stallman  (rms at prep)
 	* window.c (window_loop): Rewrite to work the old way.
 	The new way did not work when deleting windows.
 
-Thu Feb  5 01:56:33 1987  Richard M. Stallman  (rms at prep)
+1987-02-05  Richard M. Stallman  (rms at prep)
 
 	* m-sequent.h: Undef old definition of KERNEL_FILE so no warning.
 
@@ -2135,11 +2135,11 @@ Thu Feb  5 01:56:33 1987  Richard M. Stallman  (rms at prep)
 	after filter; sometimes setting buffer is useful in filter functions.
 
 
-Mon Feb  2 23:26:46 1987  Richard M. Stallman  (rms at prep)
+1987-02-02  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (kbd-buffer_store_char): Fix paren error.
 
-Sat Jan 31 11:06:24 1987  Richard M. Stallman  (rms at prep)
+1987-01-31  Richard M. Stallman  (rms at prep)
 
 	* window.c (window_loop): Rewrite not to pass t as 2nd arg
 	to Fnext_window by starting loop from the window after
@@ -2148,11 +2148,11 @@ Sat Jan 31 11:06:24 1987  Richard M. Stallman  (rms at prep)
 	* window.c (Fnext_window): Change meaning of t as 2nd arg.
 	It now means to ignore the minibuffer even if it's active.
 
-Thu Jan 29 19:15:26 1987  Richard M. Stallman  (rms at prep)
+1987-01-29  Richard M. Stallman  (rms at prep)
 
 	* cmds.c (Fforward_line): Correct the returned value.
 
-Wed Jan 28 03:15:48 1987  Richard M. Stallman  (rms at prep)
+1987-01-28  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (kbd_buffer_store_char):
 	Ignore meta bit while checking for C-g, if meta-flag is clear.
@@ -2170,12 +2170,12 @@ Wed Jan 28 03:15:48 1987  Richard M. Stallman  (rms at prep)
 	* m-masscomp.h: Check machine type to choose between C_ALLOCA
 	and HAVE_ALLOCA.
 
-Tue Jan 27 11:09:47 1987  Richard Mlynarik  (mly at prep)
+1987-01-27  Richard Mlynarik  (mly at prep)
 
 	* window.c (change_window_height):
 	Validate window_min_height.
 
-Mon Jan 26 13:27:23 1987  Richard M. Stallman  (rms at prep)
+1987-01-26  Richard M. Stallman  (rms at prep)
 
 	* m-ibmrt.h: LOAD_AVE_TYPE now double.
 	Now both operating systems for RT now supported.
@@ -2189,13 +2189,13 @@ Mon Jan 26 13:27:23 1987  Richard M. Stallman  (rms at prep)
 	* xdisp.c (display_string): If TRUNCATE is 0, display all the
 	way to window edge; don't stop one column short.
 
-Sat Jan 24 14:36:26 1987  Richard M. Stallman  (rms at prep)
+1987-01-24  Richard M. Stallman  (rms at prep)
 
 	* unexec.c (make_hdr): New var `bss_end' holds end-of-bss address.
 	This simplifies computation of bss size while keeping it from
 	being negative.
 
-Fri Jan 23 08:56:56 1987  Richard Mlynarik  (mly at prep)
+1987-01-23  Richard Mlynarik  (mly at prep)
 
 	* fileio.c (Fexpand_file_name):
 	Have to do checks for "//" "/~" etc even if filename is
@@ -2207,7 +2207,7 @@ Fri Jan 23 08:56:56 1987  Richard Mlynarik  (mly at prep)
 
 	* m-stride.h: Fixes from bruce@stride.com
 
-Thu Jan 22 00:01:01 1987  Richard M. Stallman  (rms at prep)
+1987-01-22  Richard M. Stallman  (rms at prep)
 
 	* eval.c (Feval, apply_lambda): When protecting a vector
 	of evaluated arguments, across the loop that evals them,
@@ -2215,11 +2215,11 @@ Thu Jan 22 00:01:01 1987  Richard M. Stallman  (rms at prep)
 	evalled so far, since the rest of the vector elements
 	are still garbage.
 
-Wed Jan 21 00:36:04 1987  Richard M. Stallman  (rms at prep)
+1987-01-21  Richard M. Stallman  (rms at prep)
 
 	* Version 18.36 released.
 
-Wed Jan 21 00:36:04 1987  Richard M. Stallman  (rms at prep)
+1987-01-21  Richard M. Stallman  (rms at prep)
 
 	* term.c (write_chars): If we find N identical chars
 	and that is too few for a Repeat operation,
@@ -2231,7 +2231,7 @@ Wed Jan 21 00:36:04 1987  Richard M. Stallman  (rms at prep)
 	* bytecode.c (Fbytecode):
 	Include bytecode pc value in stack over/underflow errors
 
-Tue Jan 20 20:46:34 1987  Richard M. Stallman  (rms at prep)
+1987-01-20  Richard M. Stallman  (rms at prep)
 
 	* lread.c (defvar_lisp_nopro): New fn like defvar_lisp
 	but doesn't call staticpro.
@@ -2243,12 +2243,12 @@ Tue Jan 20 20:46:34 1987  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c: #undef SIGIO if there's no FIONREAD.
 
-Mon Jan 19 22:01:35 1987  Richard M. Stallman  (rms at prep)
+1987-01-19  Richard M. Stallman  (rms at prep)
 
 	* indent.c (compute_motion): IBMRT needs HPOS defined
 	like celerity.
 
-Fri Jan 16 15:33:58 1987  Richard Mlynarik  (mly at prep)
+1987-01-16  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_set_{background,cursor,mouse}_color):
 	Initialise save_color.
@@ -2256,7 +2256,7 @@ Fri Jan 16 15:33:58 1987  Richard Mlynarik  (mly at prep)
 	* fileio.c, search.c, sysdep.c, filelock.c, editfns.c, process.c:
 	Delete/replace unused/conditionalised variables
 
-Thu Jan 15 22:23:01 1987  Richard M. Stallman  (rms at prep)
+1987-01-15  Richard M. Stallman  (rms at prep)
 
 	* fns.c (Fcopy_alist): Pass missing arg to concat.
 
@@ -2272,26 +2272,26 @@ Thu Jan 15 22:23:01 1987  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (kbd_buffer_get_char): Flush unused local var.
 
-Thu Jan 15 15:28:49 1987  Richard Mlynarik  (mly at prep)
+1987-01-15  Richard Mlynarik  (mly at prep)
 
 	* dispnew.c (init_display):
 	Hack X if "-d display-name" specified, even if env var DISPLAY
 	not set.
 
-Thu Jan 15 13:01:05 1987  Richard M. Stallman  (rms at prep)
+1987-01-15  Richard M. Stallman  (rms at prep)
 
 	* fns.c (Fconcat): doc fix.
 
-Thu Jan 15 09:13:20 1987  Richard Mlynarik  (mly at prep)
+1987-01-15  Richard Mlynarik  (mly at prep)
 
 	* keyboard.c (last_command): doc fix
 
-Tue Jan 13 16:27:43 1987  Richard M. Stallman  (rms at prep)
+1987-01-13  Richard M. Stallman  (rms at prep)
 
 	* process.c (create_process): Cast value of `signal' to insulate from
 	* sysdep.c (sys_suspend, select): changed value type in sysV.3.
 
-Mon Jan 12 12:33:42 1987  Richard M. Stallman  (rms at prep)
+1987-01-12  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (reset_sys_modes): Use TCSETAW to restore tty state.
 	On BSD, define TCSETAW to be TIOCSETN (so no change here on BSD).
@@ -2299,7 +2299,7 @@ Mon Jan 12 12:33:42 1987  Richard M. Stallman  (rms at prep)
 	* callproc.c (init_callproc): Don't get environment as
 	strings when dumping Emacs.
 
-Mon Jan 12 00:19:26 1987  Richard Mlynarik  (mly at prep)
+1987-01-12  Richard Mlynarik  (mly at prep)
 
 	* lread.c (Fload, load_unwind):
 	load_in_progress must be a counter, not a flag since `load' may be
@@ -2316,7 +2316,7 @@ Mon Jan 12 00:19:26 1987  Richard Mlynarik  (mly at prep)
 	* filelock.c (current_lock_file_owner_1):
 	Always close the fd even if get an error reading!!!
 
-Sun Jan 11 20:34:43 1987  Richard Mlynarik  (mly at prep)
+1987-01-11  Richard Mlynarik  (mly at prep)
 
 	* fileio.c (Fsubstitute_in_file_name, Fread_file_name_internal):
 	`Quote' "$" as "$$"  This doesn't break any existing code,
@@ -2326,16 +2326,16 @@ Sun Jan 11 20:34:43 1987  Richard Mlynarik  (mly at prep)
 	* fileio.c (Fsubstitute_in_file_name):
 	Allow substituting zero-length env vars.
 
-Sat Jan 10 10:52:46 1987  Richard M. Stallman  (rms at prep)
+1987-01-10  Richard M. Stallman  (rms at prep)
 
 	* termcap.c (tgetent): Fix syntax errors in VMS-only code.
 
-Fri Jan  9 15:00:41 1987  Richard Mlynarik  (mly at prep)
+1987-01-09  Richard Mlynarik  (mly at prep)
 
 	* xterm.c (x_term_init):
 	Give correct error message when DISPLAY not set.
 
-Thu Jan  8 11:45:51 1987  Richard Mlynarik  (mly at prep)
+1987-01-08  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_get_default):
 	Return nil, not "" on non-existent option, as documented.
@@ -2349,46 +2349,46 @@ Thu Jan  8 11:45:51 1987  Richard Mlynarik  (mly at prep)
 	"-nw" if HAVE_X_WINDOWS -- this code was never distributed
 	earlier, so there was no need to retain a compatibility kludge.
 
-Thu Jan  8 00:43:04 1987  Richard M. Stallman  (rms at prep)
+1987-01-08  Richard M. Stallman  (rms at prep)
 
 	* search.c (Freplace_match): Change declaration `char' to `int'.
 	Declaring a scalar variable `char' is nearly always wrong
 	and breaks most compilers.
 
-Wed Jan  7 13:52:12 1987  Richard M. Stallman  (rms at prep)
+1987-01-07  Richard M. Stallman  (rms at prep)
 
 	* xterm.c (flashback): Change || to | in signal mask calculation.
 
-Tue Jan  6 20:29:59 1987  Richard M. Stallman  (rms at prep)
+1987-01-06  Richard M. Stallman  (rms at prep)
 
 	* print.c (print): RTPC_REGISTER_BUG conditional.
 	* data.c (Fset): likewise.
 	* m-ibmrt.h (SIGN_EXTEND_CHAR): Flush the definition that used
 	a subroutine and really install the one that uses arithmetic.
 
-Tue Jan  6 14:29:55 1987  Richard Mlynarik  (mly at prep)
+1987-01-06  Richard Mlynarik  (mly at prep)
 
 	* keyboard.c (kbd_buffer_{read,store}_char):
 	Look at MetaFlag when reading char out of buffer rather than
 	storing into it so that buffer-local meta-flag works correctly.
 
-Tue Jan  6 13:53:52 1987  Richard M. Stallman  (rms at prep)
+1987-01-06  Richard M. Stallman  (rms at prep)
 
 	* syntax.c (Fchar_syntax, Fmodify_syntax_entry):
 	Mask specified char to 8 bits before indexing syntax table.
 
-Mon Jan  5 17:21:59 1987  Richard Mlynarik  (mly at prep)
+1987-01-05  Richard Mlynarik  (mly at prep)
 
 	* callproc.c (init_callproc):
 	Make maintain_environment stuff work yet again.
 
-Mon Jan  5 01:15:17 1987  Richard M. Stallman  (rms at prep)
+1987-01-05  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (report_file_error): Check for errno < 0.
 
 	* Version 18.35 released.
 
-Sat Jan  3 14:28:38 1987  Richard M. Stallman  (rms at prep)
+1987-01-03  Richard M. Stallman  (rms at prep)
 
 	* callproc.c: Rename Vprocess_extra_environment => Vprocess_environment.
 	* callproc.c (init_callproc): Copy Unix environment into
@@ -2426,7 +2426,7 @@ Sat Jan  3 14:28:38 1987  Richard M. Stallman  (rms at prep)
 	* indent.c (several): Fix range checks on tab_width:
 	replace && with ||.
 
-Thu Jan  1 17:08:59 1987  Richard Mlynarik  (mly at prep)
+1987-01-01  Richard Mlynarik  (mly at prep)
 
 	* indent.c (Fcurrent_column, Fmove_to_column):
 	Doc.
@@ -2438,19 +2438,19 @@ Thu Jan  1 17:08:59 1987  Richard Mlynarik  (mly at prep)
 	Make MAINTAIN_ENVIRONMENT stuff work yet again.
 	Clean up calling sequence of child_setup.
 
-Wed Dec 31 04:07:42 1986  Richard M. Stallman  (rms at prep)
+1986-12-31  Richard M. Stallman  (rms at prep)
 
 	* search.c (search_command): abort before setting point
 	if new point value is out of range.
 
 	* buffer.c (Fbuffer_enable_undo): New function.
 
-Fri Dec 26 17:47:49 1986  Richard M. Stallman  (rms at prep)
+1986-12-26  Richard M. Stallman  (rms at prep)
 
 	* casefiddle.c (casify_region): Don't upcase within word
 	for CASE_CAPITALIZE_UP.
 
-Wed Dec 24 18:13:18 1986  Richard M. Stallman  (rms at prep)
+1986-12-24  Richard M. Stallman  (rms at prep)
 
 	* window.c (save_window_save_1):
 	Don't make windows for start, pointm and mark fields
@@ -2463,11 +2463,11 @@ Wed Dec 24 18:13:18 1986  Richard M. Stallman  (rms at prep)
 	* window.c (Fsave_window_excursion):
 	Don't gcpro the saved window status.  The specpdl does it.
 
-Tue Dec 23 16:50:06 1986  Richard M. Stallman  (rms at prep)
+1986-12-23  Richard M. Stallman  (rms at prep)
 
 	* search.c: static_BM_tab should not be initialized.
 
-Mon Dec 22 02:03:51 1986  Richard M. Stallman  (rms at prep)
+1986-12-22  Richard M. Stallman  (rms at prep)
 
 	* term.c (term_init): Default Wcm.cm_tab to 0 if no `ta' string.
 
@@ -2485,7 +2485,7 @@ Mon Dec 22 02:03:51 1986  Richard M. Stallman  (rms at prep)
 	* dispnew.c (update_screen): Don't actually alter
 	cursX and cursY when putting cursor in echo area.
 
-Sun Dec 21 00:48:00 1986  Richard M. Stallman  (rms at prep)
+1986-12-21  Richard M. Stallman  (rms at prep)
 
 	* window.h: New window field window_end_valid.
 	window_end_pos is now always positive; validity info
@@ -2502,7 +2502,7 @@ Sun Dec 21 00:48:00 1986  Richard M. Stallman  (rms at prep)
 	* process.c (Faccept_process_output):
 	Pass process pointer to wait_reading_process_input.
 
-Sat Dec 20 23:55:55 1986  Richard Mlynarik  (mly at prep)
+1986-12-20  Richard Mlynarik  (mly at prep)
 
 	* keyboard.c (Fsuspend_emacs):
 	If `suspend-emacs-hook' returns t don't suspend
@@ -2510,7 +2510,7 @@ Sat Dec 20 23:55:55 1986  Richard Mlynarik  (mly at prep)
 	(including calling suspend-resume-hook if necessary.)
         Otherwise, call sys_suspend and so forth normally.
 
-Sat Dec 20 22:42:52 1986  Richard M. Stallman  (rms at prep)
+1986-12-20  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (Frename_buffer): If have auto save file but
 	no visited file, call rename-auto-save-file (a Lisp function).
@@ -2518,7 +2518,7 @@ Sat Dec 20 22:42:52 1986  Richard M. Stallman  (rms at prep)
 	* buffer.c: add lots of register declarations.
 	(list_buffers_1): combine local `mode' with `tail'.
 
-Sat Dec 20 15:47:01 1986  Richard Mlynarik  (mly at prep)
+1986-12-20  Richard Mlynarik  (mly at prep)
 
 	* xdisp.c (DoDsp and this_line_*):
 	Rename this_line_hpos -> this_line_start_hpos.
@@ -2560,13 +2560,13 @@ Sat Dec 20 15:47:01 1986  Richard Mlynarik  (mly at prep)
 	start of the echo area, but not have any echo appear until one
 	second later.
 
-Wed Dec 17 12:27:01 1986  Richard M. Stallman  (rms at prep)
+1986-12-17  Richard M. Stallman  (rms at prep)
 
 	* editfns.c: Add register declarations and a few vars for cses.
 	* editfns.c (Fchar_equal): Avoid indexing downcase_table
 	with numbers larger than 0xff.
 
-Tue Dec 16 01:05:16 1986  Richard M. Stallman  (rms at prep)
+1986-12-16  Richard M. Stallman  (rms at prep)
 
 	* alloc.c: New garbage collection technique for strings.
 
@@ -2644,7 +2644,7 @@ Tue Dec 16 01:05:16 1986  Richard M. Stallman  (rms at prep)
 	mark_object can clear the mark bit so these callers must still
 	set the mark bit again after calling mark_object on such slots.
 
-Mon Dec 15 21:25:18 1986  Richard M. Stallman  (rms at prep)
+1986-12-15  Richard M. Stallman  (rms at prep)
 
 	* process.c (create_process): TIOCNOTTY needs no 3rd arg after all.
 	* sysdep.c (set_exclusive_use): ditto for FIOCLEX.
@@ -2652,14 +2652,14 @@ Mon Dec 15 21:25:18 1986  Richard M. Stallman  (rms at prep)
 	* emacs.c (Fdump_emacs): [ALLIANT]
 	Copy _curbrk into save_curbrk, not vice versa.
 
-Sat Dec 13 02:32:47 1986  Richard M. Stallman  (rms at prep)
+1986-12-13  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (flush_pending_output): 3rd arg to TIOCFLUSH
 	now is address of word containing zero.  It matters.
 
 	* editfns.c (Fformat): Fix another error in previous bug.
 
-Fri Dec 12 10:34:02 1986  Richard M. Stallman  (rms at prep)
+1986-12-12  Richard M. Stallman  (rms at prep)
 
 	* Version 18.33 released.
 
@@ -2667,7 +2667,7 @@ Fri Dec 12 10:34:02 1986  Richard M. Stallman  (rms at prep)
 
 	* editfns.c (Fformat): Last change left `n' one too small.
 
-Thu Dec 11 17:43:44 1986  Richard M. Stallman  (rms at prep)
+1986-12-11  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (Fsuspend_emacs): Pass no args to the
 	suspend-resume-hook.  Also call a new hook, `suspend-hook',
@@ -2678,7 +2678,7 @@ Thu Dec 11 17:43:44 1986  Richard M. Stallman  (rms at prep)
 	of p_limit vs cursor will give the right results
 	and use the kind that will work.
 
-Thu Dec 11 12:17:31 1986  Richard Mlynarik  (mly at prep)
+1986-12-11  Richard Mlynarik  (mly at prep)
 
 	* emacs.c,  dispnew.c:
 	Rename inhibit_x_windows inhibit_window_system.
@@ -2690,7 +2690,7 @@ Thu Dec 11 12:17:31 1986  Richard Mlynarik  (mly at prep)
 	Move the increment of the number of args the format string wants.
 	Share code for various kinds of arguments converted to strings.
 
-Wed Dec 10 17:42:20 1986  Richard M. Stallman  (rms at prep)
+1986-12-10  Richard M. Stallman  (rms at prep)
 
 	* commands.h: Declare cursor_in_echo_area.
 	* dispnew.c (init_display): initialize it.
@@ -2707,7 +2707,7 @@ Wed Dec 10 17:42:20 1986  Richard M. Stallman  (rms at prep)
 	Add temp var `p' to help RT/PC compiler.
 	Declare printcharfun register.
 
-Tue Dec  9 10:46:18 1986  Richard Mlynarik  (mly at prep)
+1986-12-09  Richard Mlynarik  (mly at prep)
 
 	* editfns.c (Fformat):
 	`%%' doesn't take an `arg'
@@ -2716,12 +2716,12 @@ Tue Dec  9 10:46:18 1986  Richard Mlynarik  (mly at prep)
 	Fix stupid mistakes and errors.  Rename many local variables
 	and rearrange some code.
 
-Sun Dec  7 16:42:44 1986  Richard Mlynarik  (mly at prep)
+1986-12-07  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_flip_color):
 	Missing paren in DEFUN arglist.
 
-Sat Dec  6 13:17:57 1986  Richard M. Stallman  (rms at prep)
+1986-12-06  Richard M. Stallman  (rms at prep)
 
 	* Version 18.32 released.
 
@@ -2729,7 +2729,7 @@ Sat Dec  6 13:17:57 1986  Richard M. Stallman  (rms at prep)
 	Combine handle_process_output into read_process_output.
 	Check for case where read returns -1.
 
-Fri Dec  5 02:30:37 1986  Richard M. Stallman  (rms at prep)
+1986-12-05  Richard M. Stallman  (rms at prep)
 
 	* process.c (read_process_output): Read only one buffer worth
 	and return without trying to read more.  It used to loop
@@ -2785,12 +2785,12 @@ Fri Dec  5 02:30:37 1986  Richard M. Stallman  (rms at prep)
 	* editfns.c (format1): Args are ints or char *'s,
 	not Lisp_Objects.  Call them ints.
 
-Thu Dec  4 17:54:21 1986  Richard Mlynarik  (mly at prep)
+1986-12-04  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_debug):
 	Return Lisp_Object
 
-Mon Dec  1 16:10:38 1986  Richard Mlynarik  (mly at prep)
+1986-12-01  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_set_font):
 	Don't die if font is ""  (I believe this to be an X bug)
@@ -2799,12 +2799,12 @@ Mon Dec  1 16:10:38 1986  Richard Mlynarik  (mly at prep)
 	* lread.c (oblookup):
 	Don't core-dump if data in obarray is invalid
 
-Mon Dec  1 08:32:13 1986  Richard M. Stallman  (rms at prep)
+1986-12-01  Richard M. Stallman  (rms at prep)
 
 	* m-att3b.h: on 3b2, 3b5 and 3b15, #define C_OPTIMIZE_SWITCH null
 	since -O triggers compiler bug affecting push_key_description.
 
-Fri Nov 28 14:02:07 1986  Richard Mlynarik  (mly at prep)
+1986-11-28  Richard Mlynarik  (mly at prep)
 
 	* keyboard.c (read_key_sequence):
 	Delay setting up the local vars pointing to keymaps until a
@@ -2814,7 +2814,7 @@ Fri Nov 28 14:02:07 1986  Richard Mlynarik  (mly at prep)
 	* xterm.c:
 	Typo.
 
-Wed Nov 26 04:18:46 1986  Richard M. Stallman  (rms at prep)
+1986-11-26  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (get_system_name):
 	 Eliminate internal static var in USG case.
@@ -2842,7 +2842,7 @@ Wed Nov 26 04:18:46 1986  Richard M. Stallman  (rms at prep)
 	* keyboard.c (command_loop_1): Don't set those two vars.
 	This avoids clobbering them permanently when minibuffer is used.
 
-Tue Nov 25 02:52:36 1986  Richard M. Stallman  (rms at prep)
+1986-11-25  Richard M. Stallman  (rms at prep)
 
 	* callproc.c (child_setup): New arg `envlen' is length
 	of the list Vprocess_extra_environment.
@@ -2876,7 +2876,7 @@ Tue Nov 25 02:52:36 1986  Richard M. Stallman  (rms at prep)
 	Fix it by different way of computing delta1 in that case.
 	Move some variable decls to inner blocks and add "register".
 
-Mon Nov 24 14:09:52 1986  Richard M. Stallman  (rms at prep)
+1986-11-24  Richard M. Stallman  (rms at prep)
 
 	* buffer.h: `modtime' field = 0 now means no info on visited file.
 	Nonexistent visited file now represented by -1.
@@ -2922,7 +2922,7 @@ Mon Nov 24 14:09:52 1986  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region): Don't try fsync on 4.1bsd.
 
-Sun Nov 23 00:04:19 1986  Richard M. Stallman  (rms at prep)
+1986-11-23  Richard M. Stallman  (rms at prep)
 
 	* eval.c (record_unwind_protect, specbind, unbind_to, Funbind_protect):
 	struct specbind now has a new slot `func'.  An internal
@@ -2941,14 +2941,14 @@ Sun Nov 23 00:04:19 1986  Richard M. Stallman  (rms at prep)
 
 	* xterm.c (XTread_socket): Use C-x C-@ to indicate mouse click.
 
-Sat Nov 22 02:21:56 1986  Richard M. Stallman  (rms at prep)
+1986-11-22  Richard M. Stallman  (rms at prep)
 
 	* bytecode.c (Fbytecode): Turn on immediate_quit for Bnth loop.
 
 	* keymap.c (Fcurrent_global_map): New function
 	that returns the current global map.
 
-Fri Nov 21 15:42:05 1986  Richard M. Stallman  (rms at prep)
+1986-11-21  Richard M. Stallman  (rms at prep)
 
 	* emacs.c (main, Fdump_emacs): [ALLIANT] save _curbrk
 	before dumping and restore when starting dumped Emacs.
@@ -2968,7 +2968,7 @@ Fri Nov 21 15:42:05 1986  Richard M. Stallman  (rms at prep)
 	* sysdep.c (sys_creat): If vms_stmlf_recfm is nonzero,
 	create new files with rfm=stmlf.
 
-Thu Nov 20 17:07:14 1986  Richard M. Stallman  (rms at prep)
+1986-11-20  Richard M. Stallman  (rms at prep)
 
 	* eval.c (unbind_catch): Don't ref thru handlerlist if null.
 
@@ -2976,7 +2976,7 @@ Thu Nov 20 17:07:14 1986  Richard M. Stallman  (rms at prep)
 	* sysdep.c (sys_suspend): Put in USG_JOBCTRL
 	method of suspending with ptrace.
 
-Wed Nov 19 06:45:23 1986  Richard M. Stallman  (rms at prep)
+1986-11-19  Richard M. Stallman  (rms at prep)
 
 	* xterm.c (x_term_init): Delete attempt to set up
 	a handler for SIGIO.  This was normally overridden in
@@ -2986,7 +2986,7 @@ Wed Nov 19 06:45:23 1986  Richard M. Stallman  (rms at prep)
 	* indent.c (compute_motion): Fix screwy #if celerity || ATT3B
 	which is invalid.
 
-Tue Nov 18 17:59:57 1986  Richard M. Stallman  (rms at prep)
+1986-11-18  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (command_loop_1):
 	Must check to reselect buffer and flush minibuf message
@@ -2999,7 +2999,7 @@ Tue Nov 18 17:59:57 1986  Richard M. Stallman  (rms at prep)
 	* lisp.h: Make initialized global.
 	* data.c (init_data): Undo last change; not needed now.
 
-Tue Nov 18 15:19:06 1986  Richard Mlynarik  (mly at prep)
+1986-11-18  Richard Mlynarik  (mly at prep)
 
 	* emacs.c (main):
 	Giving `inhibit_x_windows' an initialisation loses;
@@ -3008,7 +3008,7 @@ Tue Nov 18 15:19:06 1986  Richard Mlynarik  (mly at prep)
 	* xfns.c (Fx_rubber_band):
 	Make interactive.
 
-Tue Nov 18 14:40:04 1986  Richard M. Stallman  (rms at prep)
+1986-11-18  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (window_change_signal):
 	New function to handle SIGWINCH, defined only if SIGWINCH is.
@@ -3018,7 +3018,7 @@ Tue Nov 18 14:40:04 1986  Richard M. Stallman  (rms at prep)
 	Test initialized, not Vpurify_flag.  Use explicit
 	conditionals to avoid the test when CANNOT_DUMP.
 
-Mon Nov 17 00:19:06 1986  Richard M. Stallman  (rms at prep)
+1986-11-17  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (Ferase_buffer): Zero the buffer's save_length.
 	Future text after erase is unrelated to past text
@@ -3029,7 +3029,7 @@ Mon Nov 17 00:19:06 1986  Richard M. Stallman  (rms at prep)
 
 	* fns.c: Prevent warning in 4.3 where param.h does #define BSD
 
-Sun Nov 16 12:56:21 1986  Richard M. Stallman  (rms at prep)
+1986-11-16  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (init_display): Set window-system to symbol x, not "X".
 	* dispnew.c (syms_of_dispnew): Initialize window-system to nil.
@@ -3051,7 +3051,7 @@ Sun Nov 16 12:56:21 1986  Richard M. Stallman  (rms at prep)
 	Now has conditional on DID_REMOTE, which is defined
 	if TIOCREMOTE is actually used.
 
-Sat Nov 15 00:53:26 1986  Richard M. Stallman  (rms at prep)
+1986-11-15  Richard M. Stallman  (rms at prep)
 
 	* Emacs version 18.30 *
 
@@ -3068,13 +3068,13 @@ Sat Nov 15 00:53:26 1986  Richard M. Stallman  (rms at prep)
 	* xdisp.c (decode_mode_spec): Flush unused arg minwidth.
 	Change call (in display_mode_element).
 
-Fri Nov 14 12:52:51 1986  Richard M. Stallman  (rms at prep)
+1986-11-14  Richard M. Stallman  (rms at prep)
 
 	* process.c (create_process): Don't get a pty
 	if the new variable Vprocess_connection_type is not t.
 	This is the Lisp variable process-connection-type.
 
-Thu Nov 13 18:46:32 1986  Richard M. Stallman  (rms at prep)
+1986-11-13  Richard M. Stallman  (rms at prep)
 
 	* crt0.c: Rename GLOBAL_START_{DOT,NO_DOT}
 	to {DOT,NODOT}_GLOBAL_START to avoid shortnames trouble.
@@ -3086,7 +3086,7 @@ Thu Nov 13 18:46:32 1986  Richard M. Stallman  (rms at prep)
 	* keyboard.c (Fcommand_execute):
 	Zero debug_on_next_call before running the command.
 
-Wed Nov 12 10:19:31 1986  Richard Mlynarik  (mly at prep)
+1986-11-12  Richard Mlynarik  (mly at prep)
 
 	* data.c (Fsequencep):
 	(sequencep nil) => t
@@ -3106,22 +3106,22 @@ Wed Nov 12 10:19:31 1986  Richard Mlynarik  (mly at prep)
 	(This is so things like asynchronous process notifications
 	can beep but not screw)
 
-Mon Nov 10 16:32:08 1986  Richard M. Stallman  (rms at prep)
+1986-11-10  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fset_file_modes): [APOLLO] must reset
 	modtime after changing the modes.
 
-Mon Nov 10 10:57:54 1986  Richard Mlynarik  (mly at prep)
+1986-11-10  Richard Mlynarik  (mly at prep)
 
 	* buffer.c (init_buffer_once):
 	There is no lisp variable corresponding to buffer-name
 
-Mon Nov 10 00:06:31 1986  Richard M. Stallman  (rms at prep)
+1986-11-10  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (display_string): Measure new line length
 	from start of line body.
 
-Sun Nov  9 00:22:04 1986  Richard M. Stallman  (rms at prep)
+1986-11-09  Richard M. Stallman  (rms at prep)
 
 	* lread.c (oblookup, map_obarray):
 	Do not use XFASTINT on `next' fields of symbols.
@@ -3155,7 +3155,7 @@ Sun Nov  9 00:22:04 1986  Richard M. Stallman  (rms at prep)
 	Also do not ignore trailing spaces in a highlighted line;
 	instead, give it more trailing spaces so it reaches the margin.
 
-Sat Nov  8 20:55:04 1986  Richard M. Stallman  (rms at prep)
+1986-11-08  Richard M. Stallman  (rms at prep)
 
 	* data.c (init_data): Don't call signal if purifying.
 	* ymakefile: Stop using gould-sigvec.s.
@@ -3163,7 +3163,7 @@ Sat Nov  8 20:55:04 1986  Richard M. Stallman  (rms at prep)
 	* unexec.c: Eliminate gould-specific code to
 	reinitialize gould-sigvec.s.
 
-Fri Nov  7 01:30:31 1986  Richard M. Stallman  (rms at prep)
+1986-11-07  Richard M. Stallman  (rms at prep)
 
 	* m-vax.h: Turn off NO_REMAP.
 
@@ -3214,17 +3214,17 @@ Fri Nov  7 01:30:31 1986  Richard M. Stallman  (rms at prep)
 	Don't decrement `end', and remove (unconditionally)
 	the lseek before writing the data segment.
 
-Thu Nov  6 10:01:52 1986  Richard M. Stallman  (rms at prep)
+1986-11-06  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (apropos1): Use Fdocumentation_property, not Fget,
 	for doc strings of variables.
 
-Wed Nov  5 18:47:41 1986  Richard Mlynarik  (mly at prep)
+1986-11-05  Richard Mlynarik  (mly at prep)
 
 	* m-att3b.h:
 	#define TEXT_START 0
 
-Wed Nov  5 12:42:38 1986  Richard M. Stallman  (rms at prep)
+1986-11-05  Richard M. Stallman  (rms at prep)
 
 	* alloc.c (Fcons, Fmake_symbol, Fmake_marker, gc_sweep):
 	The free-list pointers in symbols, conses and markers
@@ -3249,7 +3249,7 @@ Wed Nov  5 12:42:38 1986  Richard M. Stallman  (rms at prep)
 	* fileio.c (Fread_file_name_internal):
 	[VMS only] Return t if file name is null string.
 
-Tue Nov  4 14:00:34 1986  Richard M. Stallman  (rms at prep)
+1986-11-04  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (Fget_buffer_create):
 	For default-major-mode = nil case, use fundamental-mode
@@ -3278,17 +3278,17 @@ Tue Nov  4 14:00:34 1986  Richard M. Stallman  (rms at prep)
 	Was assuming exec-path was a string.  Fixed to use
 	exec-directory instead, and to validate its data type first.
 
-Tue Nov  4 10:06:24 1986  Richard Mlynarik  (mly at prep)
+1986-11-04  Richard Mlynarik  (mly at prep)
 
 	* m-isi.h => m-isi-ov.h
 
-Tue Nov  4 09:08:52 1986  Richard M. Stallman  (rms at prep)
+1986-11-04  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (init_buffer_once):
 	Avoid casts from int to Lisp_Object (which would lose
 	if NO_UNION_TYPE is not defined); use XFASTINT.
 
-Mon Nov  3 16:36:03 1986  Richard Mlynarik  (mly at prep)
+1986-11-03  Richard Mlynarik  (mly at prep)
 
 	* xterm.c (stufflines):
 	Initialise signal mask.
@@ -3296,7 +3296,7 @@ Mon Nov  3 16:36:03 1986  Richard Mlynarik  (mly at prep)
 	* xterm.h:
 	Add definition of sigmask
 
-Sat Nov  1 00:02:40 1986  Richard Mlynarik  (mly at prep)
+1986-11-01  Richard Mlynarik  (mly at prep)
 
 	* m-sun3.h:
 	#undef sun2 ? #define sun3
@@ -3310,14 +3310,14 @@ Sat Nov  1 00:02:40 1986  Richard Mlynarik  (mly at prep)
 	* fileio.c, fns.c, m-vax.h:
 	Fixes for VMS cpp. (#undef foo -> #ifdef foo ? #undef foo)
 
-Fri Oct 31 23:35:29 1986  Richard Mlynarik  (mly at prep)
+1986-10-31  Richard Mlynarik  (mly at prep)
 
 	* vmsmakefile (new file)
 
 	* crt0.c, unexec.c, m-isi.h (new file):
 	Integrated Solutions 68k port.
 
-Thu Oct 30 01:08:45 1986  Richard Mlynarik  (mly at prep)
+1986-10-30  Richard Mlynarik  (mly at prep)
 
 	* m-vax.h (USG-only changes):
 	#define NO_REMAP (I don't understand exactly why one needs to do
@@ -3337,7 +3337,7 @@ Thu Oct 30 01:08:45 1986  Richard Mlynarik  (mly at prep)
 	* filelock.c:
 	Don't get MPV if buffer-file-name isn't a string or nil.
 
-Wed Oct 29 10:18:39 1986  Richard Mlynarik  (mly at prep)
+1986-10-29  Richard Mlynarik  (mly at prep)
 
 	* keymap.c (Flookup_key, Fdefine_key):
 	Don't bomb on zero-length strings.
@@ -3352,7 +3352,7 @@ Wed Oct 29 10:18:39 1986  Richard Mlynarik  (mly at prep)
 	rm ../etc/DOC to avoid make-docfile overwriting any files which
 	were linked to it (unix sucks)
 
-Tue Oct 28 00:12:50 1986  Richard Mlynarik  (mly at prep)
+1986-10-28  Richard Mlynarik  (mly at prep)
 
 	* vmsmap.c, termcap.c, sysdep.c, config.h-dist:
 	VMS changes from Sasaki
@@ -3374,12 +3374,12 @@ Tue Oct 28 00:12:50 1986  Richard Mlynarik  (mly at prep)
 	* keymap.c (Fkeymapp, Flookup_key):
 	Add QUIT test.
 
-Mon Oct 27 18:46:08 1986  Richard Mlynarik  (mly at prep)
+1986-10-27  Richard Mlynarik  (mly at prep)
 
 	* callproc.c, fileio.c:
 	VMS changes (make environ noshare, don't call fsync)
 
-Sun Oct 26 00:28:02 1986  Richard Mlynarik  (mly at prep)
+1986-10-26  Richard Mlynarik  (mly at prep)
 
 	* sysdep.c, unexec.c, ymakefile:
 	Gould changes. (marick%cthulhu@gswd-vms.ARPA)
@@ -3395,7 +3395,7 @@ Sun Oct 26 00:28:02 1986  Richard Mlynarik  (mly at prep)
 	* unexec.c (make_hdr):
 	Typo "#ifdef A_TXT_OFFSET" should be "A_TEXT_OFFSET"	
 
-Wed Oct 22 19:06:41 1986  Richard Mlynarik  (mly at prep)
+1986-10-22  Richard Mlynarik  (mly at prep)
 
 	* keyboard.c, keymap.c:
 	Move Fexecute_extended_command from keymap.c to keyboard.c rather
@@ -3413,7 +3413,7 @@ Wed Oct 22 19:06:41 1986  Richard Mlynarik  (mly at prep)
 	* search.c (Fstring_match):
 	Do range-checking on `start' argument.
 
-Tue Oct 21 11:33:40 1986  Richard Mlynarik  (mly at prep)
+1986-10-21  Richard Mlynarik  (mly at prep)
 
 	* xterm.c, xfns.c (x_term_init, x_change_display):
 	Share command code, and make that code use
@@ -3431,18 +3431,18 @@ Tue Oct 21 11:33:40 1986  Richard Mlynarik  (mly at prep)
 	Changes for when can't take XSYMBOL of 0 and to make check_obarray
 	code work correctly.
 
-Mon Oct 20 18:05:16 1986  Richard Mlynarik  (mly at prep)
+1986-10-20  Richard Mlynarik  (mly at prep)
 
 	* m-stride.h, process.c, sysdep.c, unexec.c:
 	Stride changes.
 
-Sat Oct 18 16:35:26 1986  Richard Mlynarik  (mly at prep)
+1986-10-18  Richard Mlynarik  (mly at prep)
 
 	* buffer.c:
 	Made default-major-mode same as (default-value 'major-mode) to
 	avoid user confusion.
 
-Fri Oct 17 01:51:40 1986  Richard Mlynarik  (mly at prep)
+1986-10-17  Richard Mlynarik  (mly at prep)
 
 	* cmd.c, process.c:
 	Doc fixes from sjk 
@@ -3463,7 +3463,7 @@ Fri Oct 17 01:51:40 1986  Richard Mlynarik  (mly at prep)
 	* m-celerity.h:
 	HAVE_ALLOCA
 
-Thu Oct 16 20:01:55 1986  Richard Mlynarik  (mly at prep)
+1986-10-16  Richard Mlynarik  (mly at prep)
 
 	* m-att3b.h:
 	New file -- replaces m-3b20.h
@@ -3477,7 +3477,7 @@ Thu Oct 16 20:01:55 1986  Richard Mlynarik  (mly at prep)
 	If a formerly-nonexistent file has been created since we ``found''
 	it, say there is a discrepancy.
 
-Tue Oct 14 19:08:18 1986  Richard Mlynarik  (mly at prep)
+1986-10-14  Richard Mlynarik  (mly at prep)
 
 	* callint.c (Fprefix_numeric_value):
 	Doc typo.
@@ -3485,7 +3485,7 @@ Tue Oct 14 19:08:18 1986  Richard Mlynarik  (mly at prep)
 	* malloc.c, regex.c:
 	Nuke "#if defined..." for VMS
 
-Sun Oct 12 00:02:50 1986  Richard Mlynarik  (mly at prep)
+1986-10-12  Richard Mlynarik  (mly at prep)
 
 	* xdisp.c (many functions):
 	Rearrange the way in which the mode-line stuff is hacked:
@@ -3499,7 +3499,7 @@ Sun Oct 12 00:02:50 1986  Richard Mlynarik  (mly at prep)
 	anything (due to a bug) and wasn't even being initialised!
 	minor-mode-alist does what this thought it was doing.
 
-Sat Oct 11 15:45:35 1986  Richard Mlynarik  (mly at prep)
+1986-10-11  Richard Mlynarik  (mly at prep)
 
 	* doc.c (FSnarf_documentation):
 	In CANNOT_DUMP case wasn't treating PATH_EXEC as a path --
@@ -3508,12 +3508,12 @@ Sat Oct 11 15:45:35 1986  Richard Mlynarik  (mly at prep)
 	* lisp.h:
 	Get rid of #if defined... for benefit of vms
 
-Thu Oct  9 20:52:25 1986  Richard Mlynarik  (mly at prep)
+1986-10-09  Richard Mlynarik  (mly at prep)
 
 	* abbrev.c (Funexpand_abbrev):
 	Preserve position of point.
 
-Tue Oct  7 00:08:00 1986  Richard Mlynarik  (mly at prep)
+1986-10-07  Richard Mlynarik  (mly at prep)
 
 	* s-hpux.h:
 	#define HAVE_PTYS
@@ -3550,7 +3550,7 @@ Tue Oct  7 00:08:00 1986  Richard Mlynarik  (mly at prep)
 	Add an Fundo_boundary so that undo works to unexpand
 	abbrevs.
 
-Fri Oct  3 16:07:32 1986  Richard M. Stallman  (rms at prep)
+1986-10-03  Richard M. Stallman  (rms at prep)
 
 	* ymakefile: Make LIBS_STANDARD the last libs loaded.
 
@@ -3559,12 +3559,12 @@ Fri Oct  3 16:07:32 1986  Richard M. Stallman  (rms at prep)
 	* keyboard.c (interrupt_signal):
 	Delete suprious `)' in HAVE_X_WINDOWS case.
 
-Fri Oct  3 14:08:00 1986  Richard Mlynarik  (mly at prep)
+1986-10-03  Richard Mlynarik  (mly at prep)
 
 	* sysdep.c (sys_suspend -- fake suspend case)
 	Missing comment */ terminator
 
-Thu Oct  2 21:43:35 1986  Richard Mlynarik  (mly at prep)
+1986-10-02  Richard Mlynarik  (mly at prep)
 
 	* search.c:
 	There may be `holes' in regexp registers after a match: consider
@@ -3579,7 +3579,7 @@ Thu Oct  2 21:43:35 1986  Richard Mlynarik  (mly at prep)
 	* sysdep.c (HPUX perror):
 	Should be "perror" not "_perror" -- communication foulup, sorry.
 
-Wed Oct  1 00:00:52 1986  Richard M. Stallman  (rms at prep)
+1986-10-01  Richard M. Stallman  (rms at prep)
 
 	* marker.c (Fcopy_marker): Was stupidly failing to put
 	the new marker on the buffer's chain.  Fix to go thru Fset_marker.
@@ -3595,7 +3595,7 @@ Wed Oct  1 00:00:52 1986  Richard M. Stallman  (rms at prep)
 	* keyboard.c (interrupt_signal):
 	Turn off the double-C-g feature when running under X windows.
 
-Mon Sep 29 03:44:28 1986  Richard M. Stallman  (rms at prep)
+1986-09-29  Richard M. Stallman  (rms at prep)
 
 	* search.c: search_regs elements are now the correct character
 	numbers or string indices.  1 is not added when they are used;
@@ -3623,7 +3623,7 @@ Mon Sep 29 03:44:28 1986  Richard M. Stallman  (rms at prep)
 	* callproc.c (init_callproc): Use only first element of
 	Vexec_path to make Vexec_directory.  [mly]
 
-Sun Sep 28 19:21:37 1986  Richard M. Stallman  (rms at prep)
+1986-09-28  Richard M. Stallman  (rms at prep)
 
 	* data.c (Fsymbol_value): use assq_no_quit instead of Fassq.
 	* fns.c (assq_no_quit): Like Fassq but never quits or gets errors.
@@ -3636,7 +3636,7 @@ Sun Sep 28 19:21:37 1986  Richard M. Stallman  (rms at prep)
 	This is to catch the bug wherein DoDsp called from get_char
 	died because DesiredScreen was full of lines already.
 
-Fri Sep 26 17:01:09 1986  Richard Mlynarik  (mly at prep)
+1986-09-26  Richard Mlynarik  (mly at prep)
 
 	* regex.c (re_match_2), search.c (various):
 	The registers modified by re_{search,match}{,_2}
@@ -3650,7 +3650,7 @@ Fri Sep 26 17:01:09 1986  Richard Mlynarik  (mly at prep)
 	so they can determine if it might be an appropriate time
 	to try to make some sort of asynchronous notification.
 
-Fri Sep 26 04:08:54 1986  Richard M. Stallman  (rms at prep)
+1986-09-26  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (syms_of_keymap): Add missing defsubr
 	for Fdefine_prefix_command,
@@ -3664,14 +3664,14 @@ Fri Sep 26 04:08:54 1986  Richard M. Stallman  (rms at prep)
 	Turn Lisp variables last-abbrev and last-abbrev-text back on.
 	* abbrev.c (Flast_abbrev_expansion): Delete this function.
 
-Thu Sep 25 18:30:35 1986  Richard M. Stallman  (rms at prep)
+1986-09-25  Richard M. Stallman  (rms at prep)
 
 	* window.c (Fwindow_width): return a value one smaller
 	for partial-width windows that contain a | border.
 
 	* macros.c: Remove Fname_last_kbd_macro (moved to macros.el).
 
-Thu Sep 25 07:54:12 1986  Richard Mlynarik  (mly at prep)
+1986-09-25  Richard Mlynarik  (mly at prep)
 
 	* unexec.c:
 	Include a.out.h before getpagesize.h, since EXEC_PAGESIZE
@@ -3688,7 +3688,7 @@ Thu Sep 25 07:54:12 1986  Richard Mlynarik  (mly at prep)
 	bugs) look up bf_cur->default_directory by
 	Fsymbol_value (Qintern ("..."))
 
-Wed Sep 24 21:28:47 1986  Richard Mlynarik  (mly at prep)
+1986-09-24  Richard Mlynarik  (mly at prep)
 
 	* editfns.c (Fregion_beginning, Fregion_end):
 	Share common code (this doesn't have to be so fast that the
@@ -3713,7 +3713,7 @@ Wed Sep 24 21:28:47 1986  Richard Mlynarik  (mly at prep)
 	* editfns.c (Fset_mark)
 	Not interactive.
 
-Tue Sep 23 14:26:18 1986  Richard M. Stallman  (rms at prep)
+1986-09-23  Richard M. Stallman  (rms at prep)
 
 	* crt0.c, m-hp9000.h: rename hp9000s200 to hp9000.
 	* m-hp9000.h: New name for m-hp200.h.
@@ -3721,7 +3721,7 @@ Tue Sep 23 14:26:18 1986  Richard M. Stallman  (rms at prep)
 	if that exists; else use model.h.
 	
 
-Sun Sep 21 18:48:48 1986  Richard M. Stallman  (rms at prep)
+1986-09-21  Richard M. Stallman  (rms at prep)
 
 	* search.c (search_buffer): Fix backwards condition
 	in whether the translate table can be ignored.
@@ -3737,7 +3737,7 @@ Sun Sep 21 18:48:48 1986  Richard M. Stallman  (rms at prep)
 
 	* minibuf.c (scmp): Return correct value.
 
-Sun Sep 21 18:12:45 1986  Richard Mlynarik  (mly at prep)
+1986-09-21  Richard Mlynarik  (mly at prep)
 
 	* editfns.c (Finsert_char):
 	New function.  There are a lot of places in lisp code
@@ -3745,7 +3745,7 @@ Sun Sep 21 18:12:45 1986  Richard Mlynarik  (mly at prep)
 	This is a faster way of doing it, and doesn't cons
 	(unlike (insert (make-string n c)))
 
-Sun Sep 21 15:33:20 1986  Richard M. Stallman  (rms at prep)
+1986-09-21  Richard M. Stallman  (rms at prep)
 
 	* process.c (make_process): Code to compute # elts in
 	vector to make a Lisp_Process had several errors:
@@ -3754,7 +3754,7 @@ Sun Sep 21 15:33:20 1986  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (directory_file_name): If arg is "/", return "/".
 
-Sat Sep 20 21:08:35 1986  Richard M. Stallman  (rms at prep)
+1986-09-20  Richard M. Stallman  (rms at prep)
 
 	* minibuf.c (Fdisplay_completion_list):
 	New Lisp-callable function replaces minibuffer_completion_help_1,
@@ -3762,7 +3762,7 @@ Sat Sep 20 21:08:35 1986  Richard M. Stallman  (rms at prep)
 	may be lists of two strings, and if so the two strings
 	are printed in immediate succession.
 
-Fri Sep 19 13:06:39 1986  Richard Mlynarik  (mly at prep)
+1986-09-19  Richard Mlynarik  (mly at prep)
 
 	* minibuf.c (scmp and callers)
 	Don't be fazed by '\0' in strings.
@@ -3770,24 +3770,24 @@ Fri Sep 19 13:06:39 1986  Richard Mlynarik  (mly at prep)
 	* lisp.h, search.c, minibuf.c
 	Use downcase_table
 
-Thu Sep 18 18:32:57 1986  Richard Mlynarik  (mly at prep)
+1986-09-18  Richard Mlynarik  (mly at prep)
 
 	* ymakefile, emacs.c, callproc.c, process.c, fns.c
 	Install MAINTAIN_ENVIRONMENT conditional to call environ.c.
 
-Tue Sep 16 02:01:17 1986  Richard M. Stallman  (rms at prep)
+1986-09-16  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (where_is_in_buffer): Fix bug in checking for shadowed
 	keys: do Flookup_key only on local map, and ignore value if
 	it is a number (that means key is locally undefined).
 
-Mon Sep 15 12:33:10 1986  Richard Mlynarik  (mly at prep)
+1986-09-15  Richard Mlynarik  (mly at prep)
 
 	* buffer.c (Fbury_buffer)
 	Make this function interactive (bury current buffer)
 	Do error-checking on arg.
 
-Mon Sep 15 00:47:34 1986  Richard M. Stallman  (rms at prep)
+1986-09-15  Richard M. Stallman  (rms at prep)
 
 	* emacs.c (main): Eliminate VMS -nl switch.
 	Instead, `-map FILE' says to map data file FILE;
@@ -3799,7 +3799,7 @@ Mon Sep 15 00:47:34 1986  Richard M. Stallman  (rms at prep)
 	* emacs.c (main): Make it work to use more than one of the
 	special switches (-batch, -t, -map).
 
-Sun Sep 14 17:15:37 1986  Richard M. Stallman  (rms at prep)
+1986-09-14  Richard M. Stallman  (rms at prep)
 
 	* Renamings for VMS.
 	config.h.dist => config.h-dist
@@ -3814,7 +3814,7 @@ Sun Sep 14 17:15:37 1986  Richard M. Stallman  (rms at prep)
 	VMSBUILD gives info on how to use them.
 	README describes what this directory is for.
 
-Sat Sep 13 20:13:11 1986  Richard M. Stallman  (rms at prep)
+1986-09-13  Richard M. Stallman  (rms at prep)
 
 	* sysdep.c (reset_sys_modes):
 	Delete never-used VMS & SIGIO conditional.
@@ -3826,7 +3826,7 @@ Sat Sep 13 20:13:11 1986  Richard M. Stallman  (rms at prep)
 	which are no longer callable from Lisp.
 	They are also commented out.
 
-Fri Sep 12 00:19:37 1986  Richard Mlynarik  (mly at prep)
+1986-09-12  Richard Mlynarik  (mly at prep)
 
 	* xfns.c (Fx_rebind_key)
 	Fix typo.
@@ -3842,7 +3842,7 @@ Fri Sep 12 00:19:37 1986  Richard Mlynarik  (mly at prep)
 	Flush the last callers of defalias.  Flush defalias.
 	(Use fsets in subr.el instead)
 
-Thu Sep 11 10:15:14 1986  Richard Mlynarik  (mly at prep)
+1986-09-11  Richard Mlynarik  (mly at prep)
 
 	* emacs.c (main)
 	Under X, accept "-display" switch as synonym for "-d"
@@ -3878,12 +3878,12 @@ Thu Sep 11 10:15:14 1986  Richard Mlynarik  (mly at prep)
 	* buffer.c (Fbuffer_number):
 	delete.	
 
-Wed Sep 10 17:32:47 1986  Richard M. Stallman  (rms at prep)
+1986-09-10  Richard M. Stallman  (rms at prep)
 
 	* process.c (Fsend_{string,region}): rename as Fprocess_send...
 	and change names of Lisp function.  Old names now aliases in subr.el.
 
-Wed Sep 10 15:57:01 1986  Richard Mlynarik  (mly at prep)
+1986-09-10  Richard Mlynarik  (mly at prep)
 
 	* buffer.c
 	New struct buffer_local_symbols.
@@ -3904,7 +3904,7 @@ Wed Sep 10 15:57:01 1986  Richard Mlynarik  (mly at prep)
 	to only return files whose names contain a match for that regexp.
 	[eg ``(directory-files "/u2/emacs/" nil "\\`[^#]")'']
 
-Wed Sep 10 02:11:56 1986  Richard M. Stallman  (rms at prep)
+1986-09-10  Richard M. Stallman  (rms at prep)
 
 	* alloc.c (Fgarbage_collect): Use open code instead of Fnthcdr
 	to avoid possibility of error.
@@ -3914,11 +3914,11 @@ Wed Sep 10 02:11:56 1986  Richard M. Stallman  (rms at prep)
 	On Elxsi, the FILE address is not in the part of the address
 	space that Lisp_Object pointers can reach.  New way can't lose.
 
-Tue Sep  9 23:21:11 1986  Richard M. Stallman  (rms at prep)
+1986-09-09  Richard M. Stallman  (rms at prep)
 
 	* crt0.c: Add _start for elxsi.
 
-Sun Sep  7 12:07:46 1986  Richard Mlynarik  (mly at prep)
+1986-09-07  Richard Mlynarik  (mly at prep)
 
 	* minibuf.c (read_minibuf)
 	gc-protect the saved data!
@@ -3938,12 +3938,12 @@ Sun Sep  7 12:07:46 1986  Richard Mlynarik  (mly at prep)
 	* callint.c, fns.c, lisp.h
 	Call read_minibuf instead of read_minibuf_string.
 
-Thu Sep  4 14:02:50 1986  Richard Mlynarik  (mly at prep)
+1986-09-04  Richard Mlynarik  (mly at prep)
 
 	* fns.c (Fy_or_n_p, Fyes_or_n_p)
 	Beep if the user types an invalid response.
 
-Wed Sep  3 02:40:40 1986  Richard M. Stallman  (rms at prep)
+1986-09-03  Richard M. Stallman  (rms at prep)
 
 	* dispnew.c (update_screen):
 	Take out previous change.
@@ -3959,7 +3959,7 @@ Wed Sep  3 02:40:40 1986  Richard M. Stallman  (rms at prep)
 	* keyboard.c (get_input_pending):
 	Always do FIONREAD if interrupts_deferred.
 
-Mon Sep  1 11:03:49 1986  Richard M. Stallman  (rms at prep)
+1986-09-01  Richard M. Stallman  (rms at prep)
 
 	* xterm.c/xfns.c: Many changes from rlk,
 	including using sigblock/sigsetmask to block signals
@@ -3970,17 +3970,17 @@ Mon Sep  1 11:03:49 1986  Richard M. Stallman  (rms at prep)
 	before returning.  If observed loss of output really is
 	a kernel bug, this may make it stop.
 
-Sun Aug 31 04:14:58 1986  Richard M. Stallman  (rms at prep)
+1986-08-31  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (where_is_in_buffer):
 	Use Fequal rather than EQ to test for a match
 	if the object being searched for is a cons cell.
 
-Sat Aug 30 05:19:38 1986  Richard M. Stallman  (rms at prep)
+1986-08-30  Richard M. Stallman  (rms at prep)
 
 	* data.c (Fsetq_default): new function.
 
-Thu Aug 28 03:58:51 1986  Richard M. Stallman  (rms at prep)
+1986-08-28  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (display_mode_element):
 	Cons cell whose car is a symbol now means
@@ -3989,7 +3989,7 @@ Thu Aug 28 03:58:51 1986  Richard M. Stallman  (rms at prep)
 	or to IF_FALSE_DISPLAY if SYMBOL is unbound or has value nil.
 	* buffer.c (syms_of_buffer): update documentation for that.
 
-Mon Aug 25 01:27:31 1986  Richard M. Stallman  (rms at prep)
+1986-08-25  Richard M. Stallman  (rms at prep)
 
 	* fns.c (merge): Swap the arguments to the sort predicate
 	so as to use it to compute <= rather than <.
@@ -4024,16 +4024,16 @@ Mon Aug 25 01:27:31 1986  Richard M. Stallman  (rms at prep)
 	* editfns.c (Finsert_buffer_substring):
 	Implement inserting part of a buffer into itself.
 
-Sun Aug 24 04:03:26 1986  Richard M. Stallman  (rms at prep)
+1986-08-24  Richard M. Stallman  (rms at prep)
 
 	* xterm.c, xfns.c, sink.h: Installed latest changes from
 	Athena, and fixed up formatting conventions.
 
-Sat Aug 23 17:02:41 1986  Richard M. Stallman  (rms at prep)
+1986-08-23  Richard M. Stallman  (rms at prep)
 
 	* eval.c (unbind_catch): Restore gcprolist from the catchtag.
 
-Thu Aug 21 22:43:45 1986  Richard M. Stallman  (rms at prep)
+1986-08-21  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (barf_or_query_if_file_exists):
 	New second arg non-0 says query; do not call Finteractive_p.
@@ -4048,7 +4048,7 @@ Thu Aug 21 22:43:45 1986  Richard M. Stallman  (rms at prep)
 	when examining the stack.  This makes the right thing happen
 	if called from Fbyte_code.
 
-Thu Aug 21 10:47:36 1986  Richard Mlynarik  (mly at prep)
+1986-08-21  Richard Mlynarik  (mly at prep)
 
         * process.c (handle_process_output):
 	do a set-buffer back to original buffer
@@ -4058,7 +4058,7 @@ Thu Aug 21 10:47:36 1986  Richard Mlynarik  (mly at prep)
 	* keymap.c (where_is_in_buffer):
 	Don't blow out if buffer has no local map.
 
-Thu Aug 21 01:16:05 1986  Richard M. Stallman  (rms at prep)
+1986-08-21  Richard M. Stallman  (rms at prep)
 
 	* emacs.c (main): Eliminate references to environ.c.
 
@@ -4093,7 +4093,7 @@ Thu Aug 21 01:16:05 1986  Richard M. Stallman  (rms at prep)
 
 	* keyboard.c (debugger): Delete this function.
 
-Wed Aug 20 12:49:38 1986  Richard M. Stallman  (rms at prep)
+1986-08-20  Richard M. Stallman  (rms at prep)
 
 	* Gap motion can now quit!
 
@@ -4112,7 +4112,7 @@ Wed Aug 20 12:49:38 1986  Richard M. Stallman  (rms at prep)
 
 	* lisp.h (QUITP): New macro, nonzero if ought to quit now if poss.
 
-Wed Aug 20 00:12:25 1986  Richard M. Stallman  (rms at prep)
+1986-08-20  Richard M. Stallman  (rms at prep)
 
 	* undo.c (Fundo_more):
 	Fix bug that was setting point to `len' field, not `pos' field.
@@ -4149,7 +4149,7 @@ Wed Aug 20 00:12:25 1986  Richard M. Stallman  (rms at prep)
 	likewise RecordDelete, RecordChange and RecordChange1.
 	* casefiddle.c, editfns.c, fileio.c, insdel.c: change callers.
 
-Tue Aug 19 03:00:43 1986  Richard M. Stallman  (rms at prep)
+1986-08-19  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (display_mode_element):
 	Change the interpretation of symbols and lists in elements:
@@ -4168,13 +4168,13 @@ Tue Aug 19 03:00:43 1986  Richard M. Stallman  (rms at prep)
 	remembered modtime matches the buffer's current modtime.
 	Also handle case where length is negative in Uinsert, Uchange.
 
-Mon Aug 18 09:02:36 1986  Richard Mlynarik  (mly at prep)
+1986-08-18  Richard Mlynarik  (mly at prep)
 
 	* xdisp.c (display_mode_line):
 	XSTRING->data, not XSTRING
 	Fix another typo.
 
-Sun Aug 17 22:06:41 1986  Richard M. Stallman  (rms at prep)
+1986-08-17  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (syms_of_buffer):
 	Change doc for mode-line-format.
@@ -4185,7 +4185,7 @@ Sun Aug 17 22:06:41 1986  Richard M. Stallman  (rms at prep)
 	(Note that evaluation is not allowed; it would be unsafe.)
 	display_mode_element is the recursion point for this.
 
-Sun Aug 17 19:40:05 1986  Richard Mlynarik  (mly at prep)
+1986-08-17  Richard Mlynarik  (mly at prep)
 
 	* emacs.c (main)
 	Move init_environ up.
@@ -4196,7 +4196,7 @@ Sun Aug 17 19:40:05 1986  Richard Mlynarik  (mly at prep)
 	* environ.c
 	New function getenv replaces un*x getenv
 
-Sun Aug 17 19:04:41 1986  Richard M. Stallman  (rms at prep)
+1986-08-17  Richard M. Stallman  (rms at prep)
 
 	* window.c (Fwindow_point):
 	When WINDOW is the selected window and its buffer is selected too,
@@ -4206,7 +4206,7 @@ Sun Aug 17 19:04:41 1986  Richard M. Stallman  (rms at prep)
 	* unexec.c (write_segment):
 	If hit nonexistent page, must write zeros, not return.
 
-Sun Aug 17 14:28:48 1986  Richard Mlynarik  (mly at prep)
+1986-08-17  Richard Mlynarik  (mly at prep)
 
 	* callproc.c, process.c (Fcall_process, create_process)
 	Use `alloca' versions of environment-hacking functions
@@ -4227,7 +4227,7 @@ Sun Aug 17 14:28:48 1986  Richard Mlynarik  (mly at prep)
 	* process.c:
 	New function Fprocess_list.
 
-Sun Aug 17 05:56:29 1986  Richard M. Stallman  (rms at prep)
+1986-08-17  Richard M. Stallman  (rms at prep)
 
 	* crt0.c, alloca.s: Remove hack_sky (special for sun2)
 	and the call to it.  No longer needed since floating point
@@ -4239,7 +4239,7 @@ Sun Aug 17 05:56:29 1986  Richard M. Stallman  (rms at prep)
 	A_TEXT_OFFSET would normally be sizeof (HDR).  It has
 	other terms added in on some machines (sequent).
 
-Sat Aug 16 18:42:35 1986  Richard Mlynarik  (mly at prep)
+1986-08-16  Richard Mlynarik  (mly at prep)
 
 	* eval.c (Fmacroexpand)
 	Use car of nthcdr, not nth.
@@ -4263,14 +4263,14 @@ Sat Aug 16 18:42:35 1986  Richard Mlynarik  (mly at prep)
 	* editfns.c:
 	Move getenv to environ.c
 
-Sat Aug 16 17:25:41 1986  Richard M. Stallman  (rms at prep)
+1986-08-16  Richard M. Stallman  (rms at prep)
 
 	* xdisp.c (display_text_line):
 	* indent.c (current_column, ToCol, position_indentation):
 	* indent.c (Fmove_to_column, compute_motion):
 	Bring tab_width in range if it is very large.
 
-Fri Aug 15 03:05:00 1986  Richard M. Stallman  (rms at prep)
+1986-08-15  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region):
 	Do the fsync before the fstat; that may prevent what appear
@@ -4303,25 +4303,25 @@ Fri Aug 15 03:05:00 1986  Richard M. Stallman  (rms at prep)
 
 	* alloc.c (Fgarbage_collect): Call mark_buffer on buffer_defaults.
 
-Thu Aug 14 18:40:13 1986  Richard M. Stallman  (rms at prep)
+1986-08-14  Richard M. Stallman  (rms at prep)
 
 	* unexec.c (copy_text_and_data):
 	Write text and data separately if COFF (just as if not COFF).
 	(make-hdr): if COFF and NO_REMAP, don't alter some f_ohdr fields.
 
-Thu Aug 14 16:35:21 1986  Richard Mlynarik  (mly at prep)
+1986-08-14  Richard Mlynarik  (mly at prep)
 
 	* editfns.c (getenv)
 	Make getenv useful interactively.
 	Move defaliases to fsets in subr.el
 
-Thu Aug 14 04:45:39 1986  Richard M. Stallman  (rms at prep)
+1986-08-14  Richard M. Stallman  (rms at prep)
 
 	* unexec.c: unexec_data_start records the ultimate
 	corrected data_start from make_hdr; copy_text_and_data
 	starts writing data segment from that address.
 
-Wed Aug 13 04:45:18 1986  Richard M. Stallman  (rms at prep)
+1986-08-13  Richard M. Stallman  (rms at prep)
 
 	* buffer.c (Fkill_buffer): Combine Fdelete_buffer_internal
 	into this function.  Simplify.  Just return immediately
@@ -4346,7 +4346,7 @@ Wed Aug 13 04:45:18 1986  Richard M. Stallman  (rms at prep)
 	Rearrange: don't use comma around calls to NULL,
 	so can compile using union type.
 
-Tue Aug 12 10:45:44 1986  Richard Mlynarik  (mly at prep)
+1986-08-12  Richard Mlynarik  (mly at prep)
 
 	* buffer.c (SetBfp, syms_of_buffer)
 	Dike out debug-check-symbol code.  I believe that this bug has
@@ -4356,7 +4356,7 @@ Tue Aug 12 10:45:44 1986  Richard Mlynarik  (mly at prep)
 	! => !NULL.  Also use local variable for Lisp_object for bd
 	compilers.
 
-Mon Aug 11 12:22:05 1986  Richard Mlynarik  (mly at prep)
+1986-08-11  Richard Mlynarik  (mly at prep)
 
 	* buffer.c (Fbarf_if_buffer_read_only)
 	Include buffer in call to Fsignal.
@@ -4364,7 +4364,7 @@ Mon Aug 11 12:22:05 1986  Richard Mlynarik  (mly at prep)
 	* print.c (Fwrite_char)
 	Really default stream to standard-output.
 
-Sun Aug 10 00:18:48 1986  Richard Mlynarik  (mly at prep)
+1986-08-10  Richard Mlynarik  (mly at prep)
 
 	* eval.c (and abbrev.c, buffer.c, callint.c, cmds.c, keyboard.c, lread.c, lisp.h)
 	Allow Fapply to take an &rest arg, the last of which is spread.
@@ -4373,7 +4373,7 @@ Sun Aug 10 00:18:48 1986  Richard Mlynarik  (mly at prep)
 	that code.  Define apply1 for c code which needs it.  Define call0
 	for c code which thought it needed Fapply.
 
-Fri Aug  8 11:56:10 1986  Richard Mlynarik  (mly at prep)
+1986-08-08  Richard Mlynarik  (mly at prep)
 
 	* ymakefile
 	Don't assemble alloca.s if HAVE_ALLOCA.
@@ -4389,7 +4389,7 @@ Fri Aug  8 11:56:10 1986  Richard Mlynarik  (mly at prep)
 	* unexec.c (write_segment)
 	Rename variable `fd' to `new' for macro PERROR.
 
-Wed Jul 30 21:23:27 1986  Richard M. Stallman  (rms at prep)
+1986-07-30  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fwrite_region): add call to fsync before close.
 
@@ -4400,14 +4400,14 @@ Wed Jul 30 21:23:27 1986  Richard M. Stallman  (rms at prep)
 	Avoid doing Fset_buffer on a dead buffer.
 	Use the selected window's new current buffer in that case.
 
-Mon Jul 28 21:01:35 1986  Richard M. Stallman  (rms at prep)
+1986-07-28  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Finsert_file_contents):
 	Don't mark buffer modified if inserted a null file.
 
 	* fileio.c (Fcopy_file, e_write): Use 16k buffer size.
 
-Thu Jul 17 05:05:50 1986  Richard M. Stallman  (rms at prep)
+1986-07-17  Richard M. Stallman  (rms at prep)
 
 	* unexec.c (copy_sym): Put in missing #endif.
 
@@ -4440,7 +4440,7 @@ Thu Jul 17 05:05:50 1986  Richard M. Stallman  (rms at prep)
 	* window.c (make_window): size given to make_vector
 	was one too small.
 
-Thu Jul 10 12:19:07 1986  Richard M. Stallman  (rms at prep)
+1986-07-10  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (Fdescribe_bindings): change XSETTYPE/XSETBUFFER to
 	XSET.
@@ -4463,16 +4463,16 @@ Thu Jul 10 12:19:07 1986  Richard M. Stallman  (rms at prep)
 	* fileio.c (Fverify_visited_file_modtime):
 	  If CHECK_BUFFER changes buf, use the changed value.
 
-Mon Jul  7 13:59:16 1986  Richard M. Stallman  (rms at prep)
+1986-07-07  Richard M. Stallman  (rms at prep)
 
 	* alloc.c (mark_buffer): mark the selective_display_ellipses slot.
 
-Wed Jun 25 08:39:56 1986  Richard M. Stallman  (rms at prep)
+1986-06-25  Richard M. Stallman  (rms at prep)
 
 	* window.c (Frecenter): Fix bug in last change:
 	change applied to M-- arg ratherthan C-u by mistake.
 
-Thu Jun 19 12:32:53 1986  Richard M. Stallman  (rms at prep)
+1986-06-19  Richard M. Stallman  (rms at prep)
 
 	* ymakefile (CPP): Now defined by default as `cc -E'.
 	* Makefile: likewise.
@@ -4498,12 +4498,12 @@ Thu Jun 19 12:32:53 1986  Richard M. Stallman  (rms at prep)
 	* window.c (Fdisplay_window): Split largest window only if
 	full screen width.  The conditional was backwards.
 
-Tue Jun 17 05:49:16 1986  Richard M. Stallman  (rms at prep)
+1986-06-17  Richard M. Stallman  (rms at prep)
 
 	* process.c (Fsend_region): Previous change forgot to assign
 	anything to start1.
 
-Fri Jun 13 02:09:29 1986  Richard M. Stallman  (rms at prep)
+1986-06-13  Richard M. Stallman  (rms at prep)
 
 	* emacs.c (Fdump_emacs): Use start_of_text, not &_start,
 	as entry address for unexec.
@@ -4529,7 +4529,7 @@ Fri Jun 13 02:09:29 1986  Richard M. Stallman  (rms at prep)
 	* process.c (Fprocess_exit_status):
 	New name for Fprocess_reason.
 
-Wed Jun 11 17:01:32 1986  Richard M. Stallman  (rms at prep)
+1986-06-11  Richard M. Stallman  (rms at prep)
 
 	* abbrev.c (Fexpand_abbrev):
 	Delete the - inserted by abbrev-prefix-mark, if any.
@@ -4539,7 +4539,7 @@ Wed Jun 11 17:01:32 1986  Richard M. Stallman  (rms at prep)
 	and call ask-user-about-supercession-threat, which can
 	ask for confirmation and get an error.
 
-Tue Jun 10 00:45:11 1986  Richard M. Stallman  (rms at prep)
+1986-06-10  Richard M. Stallman  (rms at prep)
 
 	* crt0.c: Merge changes for Nu.
 
@@ -4559,7 +4559,7 @@ Tue Jun 10 00:45:11 1986  Richard M. Stallman  (rms at prep)
 	* window.c (Frecenter): With just C-u as arg,
 	recenter point but don't erase the screen.
 
-Mon Jun  9 09:27:09 1986  Richard M. Stallman  (rms at prep)
+1986-06-09  Richard M. Stallman  (rms at prep)
 
 	* process.c (Fsend_region):
 	* fileio.c (Fwrite_region):
@@ -4586,7 +4586,7 @@ Mon Jun  9 09:27:09 1986  Richard M. Stallman  (rms at prep)
 	suffixes faster than over directories.
 	load takes new fourth arg NOSUFFIXES.
 
-Sun Jun  8 16:01:48 1986  Richard M. Stallman  (rms at prep)
+1986-06-08  Richard M. Stallman  (rms at prep)
 
 	* paths.h: Remove . from load-path.
 
@@ -4595,7 +4595,7 @@ Sun Jun  8 16:01:48 1986  Richard M. Stallman  (rms at prep)
 	* keyboard.c: Introduce BUFFER_SIZE_FACTOR to make
 	some keyboard buffers 16 times as big when X windows exist.
 
-Sat Jun  7 17:08:19 1986  Richard M. Stallman  (rms at prep)
+1986-06-07  Richard M. Stallman  (rms at prep)
 
 	* eval.c (call_debugger): Don't do a debug-on-call
 	for calling the debugger.
@@ -4614,7 +4614,7 @@ Sat Jun  7 17:08:19 1986  Richard M. Stallman  (rms at prep)
 	the catch was not in effect; so ^G, or the debugger Q command,
 	would not work inside of them.
 
-Fri Jun  6 00:28:18 1986  Richard M. Stallman  (rms at prep)
+1986-06-06  Richard M. Stallman  (rms at prep)
 
 	* keymap.c (get_keymap{,_1}):
 	Create get_keymap_1 that takes arg saying whether to get error.
@@ -4670,7 +4670,7 @@ Fri Jun  6 00:28:18 1986  Richard M. Stallman  (rms at prep)
 	Don't use Frassq, Fmemq or Fdelq since their loops
 	allow quitting.  Write a spacial loop by hand.
 
-Thu Jun  5 00:13:27 1986  Richard M. Stallman  (rms at prep)
+1986-06-05  Richard M. Stallman  (rms at prep)
 
 	* process.c: Add MASSCOMP conditionals for pty and tty names.
 	New way to check pty accessibility with `access'.
@@ -4733,7 +4733,7 @@ Thu Jun  5 00:13:27 1986  Richard M. Stallman  (rms at prep)
 	Attempts to fix the bug where the prompt appears on all the
 	lines of an empty minibuffer.
 
-Wed Jun  4 20:35:49 1986  Richard M. Stallman  (rms at prep)
+1986-06-04  Richard M. Stallman  (rms at prep)
 
 	* fileio.c (Fdefine_logical_name):
 	For VMS: create a logical name translation.
@@ -4751,7 +4751,7 @@ Wed Jun  4 20:35:49 1986  Richard M. Stallman  (rms at prep)
 
 	* Merged in VMS conditionals in numerous files.
 
-Sun Jun  1 04:33:34 1986  Richard M. Stallman  (rms at prep)
+1986-06-01  Richard M. Stallman  (rms at prep)
 
 	* emacs.c (main, Fdump_emacs):
 	Use new arg to malloc_init to say what function to call for

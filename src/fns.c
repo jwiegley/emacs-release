@@ -28,16 +28,26 @@ Boston, MA 02111-1307, USA.  */
 
 #include "lisp.h"
 #include "commands.h"
+#include "charset.h"
 
 #include "buffer.h"
 #include "keyboard.h"
 #include "intervals.h"
+#include "frame.h"
+#include "window.h"
 
 #ifndef NULL
 #define NULL (void *)0
 #endif
 
+/* Nonzero enables use of dialog boxes for questions
+   asked by mouse commands.  */
+int use_dialog_box;
+
 extern Lisp_Object Flookup_key ();
+
+extern int minibuffer_auto_raise;
+extern Lisp_Object minibuf_window;
 
 Lisp_Object Qstring_lessp, Qprovide, Qrequire;
 Lisp_Object Qyes_or_no_p_history;
@@ -96,7 +106,10 @@ With argument t, set the random number seed from the current time and pid.")
 
 DEFUN ("length", Flength, Slength, 1, 1, 0,
   "Return the length of vector, list or string SEQUENCE.\n\
-A byte-code function object is also allowed.")
+A byte-code function object is also allowed.\n\
+If the string contains multibyte characters, this is not the necessarily\n\
+the number of characters in the string; it is the number of bytes.\n\
+To get the number of characters, use `chars-in-string'")
   (sequence)
      register Lisp_Object sequence;
 {
@@ -287,6 +300,28 @@ Each argument may be a list, vector or string.")
   return concat (nargs, args, Lisp_Vectorlike, 0);
 }
 
+/* Retrun a copy of a sub char table ARG.  The elements except for a
+   nested sub char table are not copied.  */
+static Lisp_Object
+copy_sub_char_table (arg)
+     Lisp_Object arg;
+{
+  Lisp_Object copy = make_sub_char_table (XCHAR_TABLE (arg)->defalt);
+  int i;
+
+  /* Copy all the contents.  */
+  bcopy (XCHAR_TABLE (arg)->contents, XCHAR_TABLE (copy)->contents,
+	 SUB_CHAR_TABLE_ORDINARY_SLOTS * sizeof (Lisp_Object));
+  /* Recursively copy any sub char-tables in the ordinary slots.  */
+  for (i = 32; i < SUB_CHAR_TABLE_ORDINARY_SLOTS; i++)
+    if (SUB_CHAR_TABLE_P (XCHAR_TABLE (arg)->contents[i]))
+      XCHAR_TABLE (copy)->contents[i]
+	= copy_sub_char_table (XCHAR_TABLE (copy)->contents[i]);
+
+  return copy;
+}
+
+
 DEFUN ("copy-sequence", Fcopy_sequence, Scopy_sequence, 1, 1, 0,
   "Return a copy of a list, vector or string.\n\
 The elements of a list or vector are not copied; they are shared\n\
@@ -298,21 +333,22 @@ with the original.")
 
   if (CHAR_TABLE_P (arg))
     {
-      int i, size;
+      int i;
       Lisp_Object copy;
 
-      /* Calculate the number of extra slots.  */
-      size = CHAR_TABLE_EXTRA_SLOTS (XCHAR_TABLE (arg));
       copy = Fmake_char_table (XCHAR_TABLE (arg)->purpose, Qnil);
       /* Copy all the slots, including the extra ones.  */
-      bcopy (XCHAR_TABLE (arg)->contents, XCHAR_TABLE (copy)->contents,
-	     (XCHAR_TABLE (arg)->size & PSEUDOVECTOR_SIZE_MASK) * sizeof (Lisp_Object));
+      bcopy (XVECTOR (arg)->contents, XVECTOR (copy)->contents,
+	     ((XCHAR_TABLE (arg)->size & PSEUDOVECTOR_SIZE_MASK)
+	      * sizeof (Lisp_Object)));
 
-      /* Recursively copy any char-tables in the ordinary slots.  */
-      for (i = 0; i < CHAR_TABLE_ORDINARY_SLOTS; i++)
-	if (CHAR_TABLE_P (XCHAR_TABLE (arg)->contents[i]))
+      /* Recursively copy any sub char tables in the ordinary slots
+         for multibyte characters.  */
+      for (i = CHAR_TABLE_SINGLE_BYTE_SLOTS;
+	   i < CHAR_TABLE_ORDINARY_SLOTS; i++)
+	if (SUB_CHAR_TABLE_P (XCHAR_TABLE (arg)->contents[i]))
 	  XCHAR_TABLE (copy)->contents[i]
-	    = Fcopy_sequence (XCHAR_TABLE (copy)->contents[i]);
+	    = copy_sub_char_table (XCHAR_TABLE (copy)->contents[i]);
 
       return copy;
     }
@@ -321,7 +357,7 @@ with the original.")
     {
       Lisp_Object val;
       int size_in_chars
-	= (XBOOL_VECTOR (arg)->size + BITS_PER_CHAR) / BITS_PER_CHAR;
+	= (XBOOL_VECTOR (arg)->size + BITS_PER_CHAR - 1) / BITS_PER_CHAR;
 
       val = Fmake_bool_vector (Flength (arg), Qnil);
       bcopy (XBOOL_VECTOR (arg)->data, XBOOL_VECTOR (val)->data,
@@ -377,7 +413,33 @@ concat (nargs, args, target_type, last_special)
     {
       this = args[argnum];
       len = Flength (this);
-      leni += XFASTINT (len);
+      if ((VECTORP (this) || CONSP (this)) && target_type == Lisp_String)
+
+	{
+	  /* We must pay attention to a multibyte character which
+             takes more than one byte in string.  */
+	  int i;
+	  Lisp_Object ch;
+
+	  if (VECTORP (this))
+	    for (i = 0; i < XFASTINT (len); i++)
+	      {
+		ch = XVECTOR (this)->contents[i];
+		if (! INTEGERP (ch))
+		  wrong_type_argument (Qintegerp, ch);
+		leni += XFASTINT (Fchar_bytes (ch));
+	      }
+	  else
+	    for (; CONSP (this); this = XCONS (this)->cdr)
+	      {
+		ch = XCONS (this)->car;
+		if (! INTEGERP (ch))
+		  wrong_type_argument (Qintegerp, ch);
+		leni += XFASTINT (Fchar_bytes (ch));
+	      }
+	}
+      else
+	leni += XFASTINT (len);
     }
 
   XSETFASTINT (len, leni);
@@ -404,7 +466,7 @@ concat (nargs, args, target_type, last_special)
     {
       Lisp_Object thislen;
       int thisleni;
-      register int thisindex = 0;
+      register unsigned int thisindex = 0;
 
       this = args[argnum];
       if (!CONSP (this))
@@ -425,7 +487,7 @@ concat (nargs, args, target_type, last_special)
              `this' is exhausted. */
 	  if (NILP (this)) break;
 	  if (CONSP (this))
-	    elt = Fcar (this), this = Fcdr (this);
+	    elt = XCONS (this)->car, this = XCONS (this)->cdr;
 	  else
 	    {
 	      if (thisindex >= thisleni) break;
@@ -434,11 +496,11 @@ concat (nargs, args, target_type, last_special)
 	      else if (BOOL_VECTOR_P (this))
 		{
 		  int size_in_chars
-		    = ((XBOOL_VECTOR (this)->size + BITS_PER_CHAR)
+		    = ((XBOOL_VECTOR (this)->size + BITS_PER_CHAR - 1)
 		       / BITS_PER_CHAR);
 		  int byte;
 		  byte = XBOOL_VECTOR (val)->data[thisindex / BITS_PER_CHAR];
-		  if (byte & (1 << thisindex))
+		  if (byte & (1 << (thisindex % BITS_PER_CHAR)))
 		    elt = Qt;
 		  else
 		    elt = Qnil;
@@ -461,14 +523,19 @@ concat (nargs, args, target_type, last_special)
 	      while (!INTEGERP (elt))
 		elt = wrong_type_argument (Qintegerp, elt);
 	      {
+		int c = XINT (elt);
+		unsigned char work[4], *str;
+		int i = CHAR_STRING (c, work, str);
+
 #ifdef MASSC_REGISTER_BUG
 		/* Even removing all "register"s doesn't disable this bug!
 		   Nothing simpler than this seems to work. */
-		unsigned char *p = & XSTRING (val)->data[toindex++];
-		*p = XINT (elt);
+		unsigned char *p = & XSTRING (val)->data[toindex];
+		bcopy (str, p, i);
 #else
-		XSTRING (val)->data[toindex++] = XINT (elt);
+		bcopy (str, & XSTRING (val)->data[toindex], i);
 #endif
+		toindex += i;
 	      }
 	    }
 	}
@@ -509,31 +576,49 @@ Elements of ALIST that are not conses are also shared.")
 DEFUN ("substring", Fsubstring, Ssubstring, 2, 3, 0,
   "Return a substring of STRING, starting at index FROM and ending before TO.\n\
 TO may be nil or omitted; then the substring runs to the end of STRING.\n\
-If FROM or TO is negative, it counts from the end.")
+If FROM or TO is negative, it counts from the end.\n\
+\n\
+This function allows vectors as well as strings.")
   (string, from, to)
      Lisp_Object string;
      register Lisp_Object from, to;
 {
   Lisp_Object res;
+  int size;
 
-  CHECK_STRING (string, 0);
+  if (! (STRINGP (string) || VECTORP (string)))
+    wrong_type_argument (Qarrayp, string);
+
   CHECK_NUMBER (from, 1);
+
+  if (STRINGP (string))
+    size = XSTRING (string)->size;
+  else
+    size = XVECTOR (string)->size;
+
   if (NILP (to))
-    to = Flength (string);
+    XSETINT (to, size);
   else
     CHECK_NUMBER (to, 2);
 
   if (XINT (from) < 0)
-    XSETINT (from, XINT (from) + XSTRING (string)->size);
+    XSETINT (from, XINT (from) + size);
   if (XINT (to) < 0)
-    XSETINT (to, XINT (to) + XSTRING (string)->size);
+    XSETINT (to, XINT (to) + size);
   if (!(0 <= XINT (from) && XINT (from) <= XINT (to)
-        && XINT (to) <= XSTRING (string)->size))
+        && XINT (to) <= size))
     args_out_of_range_3 (string, from, to);
 
-  res = make_string (XSTRING (string)->data + XINT (from),
-		     XINT (to) - XINT (from));
-  copy_text_properties (from, to, string, make_number (0), res, Qnil);
+  if (STRINGP (string))
+    {
+      res = make_string (XSTRING (string)->data + XINT (from),
+			 XINT (to) - XINT (from));
+      copy_text_properties (from, to, string, make_number (0), res, Qnil);
+    }
+  else
+    res = Fvector (XINT (to) - XINT (from),
+		   XVECTOR (string)->contents + XINT (from));
+		   
   return res;
 }
 
@@ -589,7 +674,7 @@ The value is actually the tail of LIST whose car is ELT.")
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; !NILP (tail); tail = Fcdr (tail))
+  for (tail = list; !NILP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object tem;
       tem = Fcar (tail);
@@ -608,7 +693,7 @@ The value is actually the tail of LIST whose car is ELT.")
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; !NILP (tail); tail = Fcdr (tail))
+  for (tail = list; !NILP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object tem;
       tem = Fcar (tail);
@@ -627,12 +712,12 @@ Elements of LIST that are not conses are ignored.")
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; !NILP (tail); tail = Fcdr (tail))
+  for (tail = list; !NILP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object elt, tem;
       elt = Fcar (tail);
       if (!CONSP (elt)) continue;
-      tem = Fcar (elt);
+      tem = XCONS (elt)->car;
       if (EQ (key, tem)) return elt;
       QUIT;
     }
@@ -648,12 +733,12 @@ assq_no_quit (key, list)
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; CONSP (tail); tail = Fcdr (tail))
+  for (tail = list; CONSP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object elt, tem;
       elt = Fcar (tail);
       if (!CONSP (elt)) continue;
-      tem = Fcar (elt);
+      tem = XCONS (elt)->car;
       if (EQ (key, tem)) return elt;
     }
   return Qnil;
@@ -667,12 +752,12 @@ The value is actually the element of LIST whose car equals KEY.")
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; !NILP (tail); tail = Fcdr (tail))
+  for (tail = list; !NILP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object elt, tem;
       elt = Fcar (tail);
       if (!CONSP (elt)) continue;
-      tem = Fequal (Fcar (elt), key);
+      tem = Fequal (XCONS (elt)->car, key);
       if (!NILP (tem)) return elt;
       QUIT;
     }
@@ -687,12 +772,12 @@ The value is actually the element of LIST whose cdr is ELT.")
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; !NILP (tail); tail = Fcdr (tail))
+  for (tail = list; !NILP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object elt, tem;
       elt = Fcar (tail);
       if (!CONSP (elt)) continue;
-      tem = Fcdr (elt);
+      tem = XCONS (elt)->cdr;
       if (EQ (key, tem)) return elt;
       QUIT;
     }
@@ -707,12 +792,12 @@ The value is actually the element of LIST whose cdr equals KEY.")
      Lisp_Object list;
 {
   register Lisp_Object tail;
-  for (tail = list; !NILP (tail); tail = Fcdr (tail))
+  for (tail = list; !NILP (tail); tail = XCONS (tail)->cdr)
     {
       register Lisp_Object elt, tem;
       elt = Fcar (tail);
       if (!CONSP (elt)) continue;
-      tem = Fequal (Fcdr (elt), key);
+      tem = Fequal (XCONS (elt)->cdr, key);
       if (!NILP (tem)) return elt;
       QUIT;
     }
@@ -740,13 +825,13 @@ to be sure of changing the value of `foo'.")
       if (EQ (elt, tem))
 	{
 	  if (NILP (prev))
-	    list = Fcdr (tail);
+	    list = XCONS (tail)->cdr;
 	  else
-	    Fsetcdr (prev, Fcdr (tail));
+	    Fsetcdr (prev, XCONS (tail)->cdr);
 	}
       else
 	prev = tail;
-      tail = Fcdr (tail);
+      tail = XCONS (tail)->cdr;
       QUIT;
     }
   return list;
@@ -774,13 +859,13 @@ to be sure of changing the value of `foo'.")
       if (! NILP (Fequal (elt, tem)))
 	{
 	  if (NILP (prev))
-	    list = Fcdr (tail);
+	    list = XCONS (tail)->cdr;
 	  else
-	    Fsetcdr (prev, Fcdr (tail));
+	    Fsetcdr (prev, XCONS (tail)->cdr);
 	}
       else
 	prev = tail;
-      tail = Fcdr (tail);
+      tail = XCONS (tail)->cdr;
       QUIT;
     }
   return list;
@@ -814,17 +899,13 @@ See also the function `nreverse', which is used more often.")
   (list)
      Lisp_Object list;
 {
-  Lisp_Object length;
-  register Lisp_Object *vec;
-  register Lisp_Object tail;
-  register int i;
+  Lisp_Object new;
 
-  length = Flength (list);
-  vec = (Lisp_Object *) alloca (XINT (length) * sizeof (Lisp_Object));
-  for (i = XINT (length) - 1, tail = list; i >= 0; i--, tail = Fcdr (tail))
-    vec[i] = Fcar (tail);
-
-  return Flist (XINT (length), vec);
+  for (new = Qnil; CONSP (list); list = XCONS (list)->cdr)
+    new = Fcons (XCONS (list)->car, new);
+  if (!NILP (list))
+    wrong_type_argument (Qconsp, list);
+  return new;
 }
 
 Lisp_Object merge ();
@@ -932,12 +1013,12 @@ one of the properties on the list.")
      register Lisp_Object prop;
 {
   register Lisp_Object tail;
-  for (tail = plist; !NILP (tail); tail = Fcdr (Fcdr (tail)))
+  for (tail = plist; !NILP (tail); tail = Fcdr (XCONS (tail)->cdr))
     {
       register Lisp_Object tem;
       tem = Fcar (tail);
       if (EQ (prop, tem))
-	return Fcar (Fcdr (tail));
+	return Fcar (XCONS (tail)->cdr);
     }
   return Qnil;
 }
@@ -1076,7 +1157,7 @@ internal_equal (o1, o2, depth)
 	if (BOOL_VECTOR_P (o1))
 	  {
 	    int size_in_chars
-	      = (XBOOL_VECTOR (o1)->size + BITS_PER_CHAR) / BITS_PER_CHAR;
+	      = (XBOOL_VECTOR (o1)->size + BITS_PER_CHAR - 1) / BITS_PER_CHAR;
 
 	    if (XBOOL_VECTOR (o1)->size != XBOOL_VECTOR (o2)->size)
 	      return 0;
@@ -1112,18 +1193,13 @@ internal_equal (o1, o2, depth)
       if (bcmp (XSTRING (o1)->data, XSTRING (o2)->data,
 		XSTRING (o1)->size))
 	return 0;
-#ifdef USE_TEXT_PROPERTIES
-      /* If the strings have intervals, verify they match;
-	 if not, they are unequal.  */
-      if ((XSTRING (o1)->intervals != 0 || XSTRING (o2)->intervals != 0)
-	  && ! compare_string_intervals (o1, o2))
-	return 0;
-#endif
       return 1;
     }
   return 0;
 }
 
+extern Lisp_Object Fmake_char_internal ();
+
 DEFUN ("fillarray", Ffillarray, Sfillarray, 2, 2, 0,
   "Store each element of ARRAY with ITEM.\n\
 ARRAY is a vector, string, char-table, or bool-vector.")
@@ -1160,7 +1236,7 @@ ARRAY is a vector, string, char-table, or bool-vector.")
     {
       register unsigned char *p = XBOOL_VECTOR (array)->data;
       int size_in_chars
-	= (XBOOL_VECTOR (array)->size + BITS_PER_CHAR) / BITS_PER_CHAR;
+	= (XBOOL_VECTOR (array)->size + BITS_PER_CHAR - 1) / BITS_PER_CHAR;
 
       charval = (! NILP (item) ? -1 : 0);
       for (index = 0; index < size_in_chars; index++)
@@ -1227,7 +1303,7 @@ PARENT must be either nil or another char-table.")
 
 DEFUN ("char-table-extra-slot", Fchar_table_extra_slot, Schar_table_extra_slot,
        2, 2, 0,
-  "Return the value in extra-slot number N of char-table CHAR-TABLE.")
+  "Return the value of CHAR-TABLE's extra-slot number N.")
   (char_table, n)
      Lisp_Object char_table, n;
 {
@@ -1243,7 +1319,7 @@ DEFUN ("char-table-extra-slot", Fchar_table_extra_slot, Schar_table_extra_slot,
 DEFUN ("set-char-table-extra-slot", Fset_char_table_extra_slot,
        Sset_char_table_extra_slot,
        3, 3, 0,
-  "Set extra-slot number N of CHAR-TABLE to VALUE.")
+  "Set CHAR-TABLE's extra-slot number N to VALUE.")
   (char_table, n, value)
      Lisp_Object char_table, n, value;
 {
@@ -1275,13 +1351,17 @@ or a character code.")
     return Faref (char_table, range);
   else if (VECTORP (range))
     {
-      for (i = 0; i < XVECTOR (range)->size - 1; i++)
-	char_table = Faref (char_table, XVECTOR (range)->contents[i]);
-
-      if (EQ (XVECTOR (range)->contents[i], Qnil))
-	return XCHAR_TABLE (char_table)->defalt;
+      if (XVECTOR (range)->size == 1)
+	return Faref (char_table, XVECTOR (range)->contents[0]);
       else
-	return Faref (char_table, XVECTOR (range)->contents[i]);
+	{
+	  int size = XVECTOR (range)->size;
+	  Lisp_Object *val = XVECTOR (range)->contents;
+	  Lisp_Object ch = Fmake_char_internal (size <= 0 ? Qnil : val[0],
+						size <= 1 ? Qnil : val[1],
+						size <= 2 ? Qnil : val[2]);
+	  return Faref (char_table, ch);
+	}
     }
   else
     error ("Invalid RANGE argument to `char-table-range'");
@@ -1309,73 +1389,150 @@ or a character code.")
     Faset (char_table, range, value);
   else if (VECTORP (range))
     {
-      for (i = 0; i < XVECTOR (range)->size - 1; i++)
-	char_table = Faref (char_table, XVECTOR (range)->contents[i]);
-
-      if (EQ (XVECTOR (range)->contents[i], Qnil))
-	XCHAR_TABLE (char_table)->defalt = value;
+      if (XVECTOR (range)->size == 1)
+	return Faset (char_table, XVECTOR (range)->contents[0], value);
       else
-	Faset (char_table, XVECTOR (range)->contents[i], value);
+	{
+	  int size = XVECTOR (range)->size;
+	  Lisp_Object *val = XVECTOR (range)->contents;
+	  Lisp_Object ch = Fmake_char_internal (size <= 0 ? Qnil : val[0],
+						size <= 1 ? Qnil : val[1],
+						size <= 2 ? Qnil : val[2]);
+	  return Faset (char_table, ch, value);
+	}
     }
   else
     error ("Invalid RANGE argument to `set-char-table-range'");
 
   return value;
 }
+
+DEFUN ("set-char-table-default", Fset_char_table_default,
+       Sset_char_table_default, 3, 3, 0,
+  "Set the default value in CHAR-TABLE for a generic character CHAR to VALUE.\n\
+The generic character specifies the group of characters.\n\
+See also the documentation of make-char.")
+  (char_table, ch, value)
+     Lisp_Object char_table, ch, value;
+{
+  int c, i, charset, code1, code2;
+  Lisp_Object temp;
+
+  CHECK_CHAR_TABLE (char_table, 0);
+  CHECK_NUMBER (ch, 1);
+
+  c = XINT (ch);
+  SPLIT_NON_ASCII_CHAR (c, charset, code1, code2);
+  if (! CHARSET_DEFINED_P (charset))
+    error ("Invalid character: %d", c);
+
+  if (charset == CHARSET_ASCII)
+    return (XCHAR_TABLE (char_table)->defalt = value);
+
+  /* Even if C is not a generic char, we had better behave as if a
+     generic char is specified.  */
+  if (CHARSET_DIMENSION (charset) == 1)
+    code1 = 0;
+  temp = XCHAR_TABLE (char_table)->contents[charset + 128];
+  if (!code1)
+    {
+      if (SUB_CHAR_TABLE_P (temp))
+	XCHAR_TABLE (temp)->defalt = value;
+      else
+	XCHAR_TABLE (char_table)->contents[charset + 128] = value;
+      return value;
+    }
+  char_table = temp;
+  if (! SUB_CHAR_TABLE_P (char_table))
+    char_table = (XCHAR_TABLE (char_table)->contents[charset + 128]
+	    = make_sub_char_table (temp));
+  temp = XCHAR_TABLE (char_table)->contents[code1];
+  if (SUB_CHAR_TABLE_P (temp))
+    XCHAR_TABLE (temp)->defalt = value;
+  else
+    XCHAR_TABLE (char_table)->contents[code1] = value;
+  return value;
+}
+
 
-/* Map C_FUNCTION or FUNCTION over CHARTABLE, calling it for each
+/* Map C_FUNCTION or FUNCTION over SUBTABLE, calling it for each
    character or group of characters that share a value.
    DEPTH is the current depth in the originally specified
    chartable, and INDICES contains the vector indices
-   for the levels our callers have descended.  */
+   for the levels our callers have descended.
+
+   ARG is passed to C_FUNCTION when that is called.  */
 
 void
-map_char_table (c_function, function, chartable, depth, indices)
-     Lisp_Object (*c_function) (), function, chartable, depth, *indices;
+map_char_table (c_function, function, subtable, arg, depth, indices)
+     Lisp_Object (*c_function) (), function, subtable, arg, *indices;
+     int depth;
 {
-  int i;
-  int size = CHAR_TABLE_ORDINARY_SLOTS;
+  int i, to;
 
-  /* Make INDICES longer if we are about to fill it up.  */
-  if ((depth % 10) == 9)
+  if (depth == 0)
     {
-      Lisp_Object *new_indices
-	= (Lisp_Object *) alloca ((depth += 10) * sizeof (Lisp_Object));
-      bcopy (indices, new_indices, depth * sizeof (Lisp_Object));
-      indices = new_indices;
+      /* At first, handle ASCII and 8-bit European characters.  */
+      for (i = 0; i < CHAR_TABLE_SINGLE_BYTE_SLOTS; i++)
+	{
+	  Lisp_Object elt = XCHAR_TABLE (subtable)->contents[i];
+	  if (c_function)
+	    (*c_function) (arg, make_number (i), elt);
+	  else
+	    call2 (function, make_number (i), elt);
+	}
+      to = CHAR_TABLE_ORDINARY_SLOTS;
+    }
+  else
+    {
+      i = 0;
+      to = SUB_CHAR_TABLE_ORDINARY_SLOTS;
     }
 
-  for (i = 0; i < size; i++)
+  for (; i < to; i++)
     {
-      Lisp_Object elt;
-      indices[depth] = i;
-      elt = XCHAR_TABLE (chartable)->contents[i];
-      if (CHAR_TABLE_P (elt))
-	map_char_table (c_function, function, chartable, depth + 1, indices);
-      else if (c_function)
-	(*c_function) (depth + 1, indices, elt);
-      /* Here we should handle all cases where the range is a single character
-	 by passing that character as a number.  Currently, that is
-	 all the time, but with the MULE code this will have to be changed.  */
-      else if (depth == 0)
-	call2 (function, make_number (i), elt);
+      Lisp_Object elt = XCHAR_TABLE (subtable)->contents[i];
+
+      XSETFASTINT (indices[depth], i);
+
+      if (SUB_CHAR_TABLE_P (elt))
+	{
+	  if (depth >= 3)
+	    error ("Too deep char table");
+	  map_char_table (c_function, function, elt, arg, depth + 1, indices);
+	}
       else
-	call2 (function, Fvector (depth + 1, indices), elt);
+	{
+	  int charset = XFASTINT (indices[0]) - 128, c1, c2, c;
+
+	  if (CHARSET_DEFINED_P (charset))
+	    {
+	      c1 = depth >= 1 ? XFASTINT (indices[1]) : 0;
+	      c2 = depth >= 2 ? XFASTINT (indices[2]) : 0;
+	      c = MAKE_NON_ASCII_CHAR (charset, c1, c2);
+	      if (c_function)
+		(*c_function) (arg, make_number (c), elt);
+	      else
+		call2 (function, make_number (c), elt);
+	    }
+  	}	  
     }
 }
 
 DEFUN ("map-char-table", Fmap_char_table, Smap_char_table,
   2, 2, 0,
-  "Call FUNCTION for each range of like characters in CHAR-TABLE.\n\
+  "Call FUNCTION for each (normal and generic) characters in CHAR-TABLE.\n\
 FUNCTION is called with two arguments--a key and a value.\n\
-The key is always a possible RANGE argument to `set-char-table-range'.")
+The key is always a possible IDX argument to `aref'.")
   (function, char_table)
      Lisp_Object function, char_table;
 {
-  Lisp_Object keyvec;
-  Lisp_Object *indices = (Lisp_Object *) alloca (10 * sizeof (Lisp_Object));
+  /* The depth of char table is at most 3. */
+  Lisp_Object indices[3];
 
-  map_char_table (NULL, function, char_table, 0, indices);
+  CHECK_CHAR_TABLE (char_table, 1);
+
+  map_char_table (NULL, function, char_table, char_table, 0, indices);
   return Qnil;
 }
 
@@ -1483,7 +1640,7 @@ mapcar1 (leni, vals, fn, seq)
       for (i = 0; i < leni; i++)
 	{
 	  vals[i] = call1 (fn, Fcar (tail));
-	  tail = Fcdr (tail);
+	  tail = XCONS (tail)->cdr;
 	}
     }
 
@@ -1576,6 +1733,7 @@ Also accepts Space to mean yes, or Delete to mean no.")
 
 #ifdef HAVE_MENUS
       if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event))
+	  && use_dialog_box
 	  && have_menus_p ())
 	{
 	  Lisp_Object pane, menu;
@@ -1592,6 +1750,15 @@ Also accepts Space to mean yes, or Delete to mean no.")
       cursor_in_echo_area = 1;
       choose_minibuf_frame ();
       message_nolog ("%s(y or n) ", XSTRING (xprompt)->data);
+
+      if (minibuffer_auto_raise)
+	{
+	  Lisp_Object mini_frame;
+
+	  mini_frame = WINDOW_FRAME (XWINDOW (minibuf_window));
+
+	  Fraise_frame (mini_frame);
+	}
 
       obj = read_filtered_event (1, 0, 0);
       cursor_in_echo_area = 0;
@@ -1685,6 +1852,7 @@ and can edit it until it has been confirmed.")
 
 #ifdef HAVE_MENUS
   if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event)) 
+      && use_dialog_box
       && have_menus_p ())
     {
       Lisp_Object pane, menu, obj;
@@ -1709,7 +1877,8 @@ and can edit it until it has been confirmed.")
   while (1)
     {
       ans = Fdowncase (Fread_from_minibuffer (prompt, Qnil, Qnil, Qnil,
-					      Qyes_or_no_p_history));
+					      Qyes_or_no_p_history, Qnil,
+					      Qnil));
       if (XSTRING (ans)->size == 3 && !strcmp (XSTRING (ans)->data, "yes"))
 	{
 	  UNGCPRO;
@@ -1804,12 +1973,12 @@ If FILENAME is omitted, the printname of FEATURE is used as the file name.")
       Vautoload_queue = Qt;
 
       Fload (NILP (file_name) ? Fsymbol_name (feature) : file_name,
-	     Qnil, Qt, Qnil);
+	     Qnil, Qt, Qnil, (NILP (file_name) ? Qt : Qnil));
 
       tem = Fmemq (feature, Vfeatures);
       if (NILP (tem))
 	error ("Required feature %s was not provided",
-	       XSYMBOL (feature)->name->data );
+	       XSYMBOL (feature)->name->data);
 
       /* Once loading finishes, don't undo it.  */
       Vautoload_queue = Qt;
@@ -1837,6 +2006,12 @@ syms_of_fns ()
     "A list of symbols which are the features of the executing emacs.\n\
 Used by `featurep' and `require', and altered by `provide'.");
   Vfeatures = Qnil;
+
+  DEFVAR_BOOL ("use-dialog-box", &use_dialog_box,
+    "*Non-nil means mouse commands use dialog boxes to ask questions.\n\
+This applies to y-or-n and yes-or-no questions asked by commands\n\
+invoked by mouse clicks and mouse menu items.");
+  use_dialog_box = 1;
 
   defsubr (&Sidentity);
   defsubr (&Srandom);
@@ -1877,6 +2052,7 @@ Used by `featurep' and `require', and altered by `provide'.");
   defsubr (&Sset_char_table_extra_slot);
   defsubr (&Schar_table_range);
   defsubr (&Sset_char_table_range);
+  defsubr (&Sset_char_table_default);
   defsubr (&Smap_char_table);
   defsubr (&Snconc);
   defsubr (&Smapcar);

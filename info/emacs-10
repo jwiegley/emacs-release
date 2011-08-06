@@ -1,5 +1,945 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
+
+
+File: emacs,  Node: Non-Window Terminals,  Prev: Misc X,  Up: Frames
+
+Non-Window Terminals
+====================
+
+   If your terminal does not have a window system that Emacs supports,
+then it can display only one Emacs frame at a time.  However, you can
+still create multiple Emacs frames, and switch between them.  Switching
+frames on these terminals is much like switching between different
+window configurations.
+
+   Use `C-x 5 2' to create a new frame and switch to it; use `C-x 5 o'
+to cycle through the existing frames; use `C-x 5 0' to delete the
+current frame.
+
+   Each frame has a number to distinguish it.  If your terminal can
+display only one frame at a time, the selected frame's number N appears
+near the beginning of the mode line, in the form `FN'.
+
+
+File: emacs,  Node: International,  Next: Major Modes,  Prev: Frames,  Up: Top
+
+International Character Set Support
+***********************************
+
+   Emacs supports a wide variety of international character sets,
+including European variants of the Latin alphabet, as well as Chinese,
+Devanagari (Hindi and Marathi), Ethiopian, Greek, IPA, Japanese, Korean,
+Lao, Russian, Thai, Tibetan, and Vietnamese scripts.  These features
+have been merged from the modified version of Emacs known as MULE (for
+"MULti-lingual Enhancement to GNU Emacs")
+
+* Menu:
+
+* International Intro::     Basic concepts of multibyte characters.
+* Enabling Multibyte::      Controlling whether to use multibyte characters.
+* Language Environments::   Setting things up for the language you use.
+* Input Methods::           Entering text characters not on your keyboard.
+* Select Input Method::     Specifying your choice of input methods.
+* Coding Systems::          Character set conversion when you read and
+                              write files, and so on.
+* Recognize Coding::        How Emacs figures out which conversion to use.
+* Specify Coding::          Various ways to choose which conversion to use.
+* Fontsets::                Fontsets are collections of fonts
+                              that cover the whole spectrum of characters.
+* Defining Fontsets::       Defining a new fontset.
+* Single-Byte European Support::
+                            You can pick one European character set
+                            to use without multibyte characters.
+
+
+File: emacs,  Node: International Intro,  Next: Enabling Multibyte,  Up: International
+
+Introduction to International Character Sets
+============================================
+
+   The users of these scripts have established many more-or-less
+standard coding systems for storing files.  Emacs internally uses a
+single multibyte character encoding, so that it can intermix characters
+from all these scripts in a single buffer or string.  This encoding
+represents each non-ASCII character as a sequence of bytes in the range
+0200 through 0377.  Emacs translates between the multibyte character
+encoding and various other coding systems when reading and writing
+files, when exchanging data with subprocesses, and (in some cases) in
+the `C-q' command (see below).
+
+   The command `C-h h' (`view-hello-file') displays the file
+`etc/HELLO', which shows how to say "hello" in many languages.  This
+illustrates various scripts.
+
+   Keyboards, even in the countries where these character sets are used,
+generally don't have keys for all the characters in them.  So Emacs
+supports various "input methods", typically one for each script or
+language, to make it convenient to type them.
+
+   The prefix key `C-x <RET>' is used for commands that pertain to
+multibyte characters, coding systems, and input methods.
+
+
+File: emacs,  Node: Enabling Multibyte,  Next: Language Environments,  Prev: International Intro,  Up: International
+
+Enabling Multibyte Characters
+=============================
+
+   You can enable or disable multibyte character support, either for
+Emacs as a whole, or for a single buffer.  When multibyte characters are
+disabled in a buffer, then each byte in that buffer represents a
+character, even codes 0200 through 0377.  The old features for
+supporting the European character sets, ISO Latin-1 and ISO Latin-2,
+work as they did in Emacs 19.
+
+   However, there is no need to turn off multibyte character support to
+use ISO Latin-1 or ISO Latin-2; the Emacs multibyte character set
+includes all the characters in these character sets, and Emacs can
+translate automatically to and from either of these ISO codes.
+
+   The mode line indicates whether multibyte character support is
+enabled in the current buffer.  If it is, a colon appears near the
+beginning of the mode line, preceding the place where stars appear when
+the buffer is modified.  When multibyte characters are not enabled, the
+colon does not appear.
+
+   The command `C-x <RET> m' (`toggle-enable-multibyte-characters')
+enables or disables multibyte character support for the current buffer.
+
+   To turn off multibyte character support by default, execute this
+Lisp expression:
+
+     (setq-default enable-multibyte-characters nil)
+
+   When multibyte characters are enabled, character codes 0200 (octal)
+through 0377 (octal) are not valid in the buffer.  The valid non-ASCII
+printing characters have codes that start from 0400.
+
+   If you type a self-inserting character in the invalid range, Emacs
+assumes you intended to use one of the ISO Latin-N character sets, and
+converts it to the Emacs code representing that Latin-N character.  You
+select *which* ISO Latin character set to use though your choice of
+language environment (*note Language Environments::.).
+
+   The same thing happens when you use `C-q' to enter an octal code in
+this range.
+
+
+File: emacs,  Node: Language Environments,  Next: Input Methods,  Prev: Enabling Multibyte,  Up: International
+
+Language Environments
+=====================
+
+   All supported character sets are supported in Emacs buffers whenever
+multibyte characters are enabled; there is no need to select a
+particular language in order to display its characters in an Emacs
+buffer.  However, it is important to select a "language environment" in
+order to set various defaults.  The language environment really
+represents a choice of preferred script (more or less) rather that a
+choice of language.
+
+   The language environment controls which coding systems to recognize
+when reading text (*note Recognize Coding::.).  This applies to files,
+incoming mail, netnews, and any other text you read into Emacs.  It may
+also specify the default coding system to use when you create a file.
+Each language environment also specifies a default input method.
+
+   The command to select a language environment is `M-x
+set-language-environment'.  It makes no difference which buffer is
+current when you use this command, because the effects apply globally to
+the Emacs session.  The supported language environments include:
+
+     Chinese-BIG5, Chinese-CNS, Chinese-GB, Cyrillic-Alternativnyj,
+     Cyrillic-ISO, Cyrillic-KOI8, Devanagari, English, Ethiopic, Greek,
+     Hebrew, Japanese, Korean, Lao, Latin-1, Latin-2, Latin-3, Latin-4,
+     Latin-5, Thai, Tibetan, and Vietnamese.
+
+   Some operating systems let you specify the language you are using by
+setting locale environment variables.  Emacs handles one common special
+case of this: if your locale name for character types contains the
+string `8859-N', Emacs automatically selects the corresponding language
+environment.
+
+   To display information about the effects of a certain language
+environment LANG-ENV, use the command `C-h L LANG-ENV <RET>'
+(`describe-language-environment').  This tells you which languages this
+language environment is useful for, and lists the character sets,
+coding systems, and input methods that go with it.  It also shows some
+sample text to illustrate scripts used in this language environment.
+By default, this command describes the chosen language environment.
+
+
+File: emacs,  Node: Input Methods,  Next: Select Input Method,  Prev: Language Environments,  Up: International
+
+Input Methods
+=============
+
+   An "input method" is a kind of character conversion designed
+specifically for interactive input.  In Emacs, typically each language
+has its own input method; sometimes several languages which use the same
+characters can share one input method.  A few languages support several
+input methods.
+
+   The simplest kind of input method works by mapping ASCII letters into
+another alphabet.  This is how the Greek and Russian input methods work.
+
+   A more powerful technique is composition: converting sequences of
+characters into one letter.  Many European input methods use composition
+to produce a single non-ASCII letter from a sequence that consists of a
+letter followed by accent characters.  For example, some methods convert
+the sequence `'a' into a single accented letter.
+
+   The input methods for syllabic scripts typically use mapping followed
+by composition.  The input methods for Thai and Korean work this way.
+First, letters are mapped into symbols for particular sounds or tone
+marks; then, sequences of these which make up a whole syllable are
+mapped into one syllable sign.
+
+   Chinese and Japanese require more complex methods.  In Chinese input
+methods, first you enter the phonetic spelling of a Chinese word (in
+input method `chinese-py', among others), or a sequence of portions of
+the character (input methods `chinese-4corner' and `chinese-sw', and
+others).  Since one phonetic spelling typically corresponds to many
+different Chinese characters, you must select one of the alternatives
+using special Emacs commands.  Keys such as `C-f', `C-b', `C-n', `C-p',
+and digits have special definitions in this situation, used for
+selecting among the alternatives.  <TAB> displays a buffer showing all
+the possibilities.
+
+   In Japanese input methods, first you input a whole word using
+phonetic spelling; then, after the word is in the buffer, Emacs converts
+it into one or more characters using a large dictionary.  One phonetic
+spelling corresponds to many differently written Japanese words, so you
+must select one of them; use `C-n' and `C-p' to cycle through the
+alternatives.
+
+   Sometimes it is useful to cut off input method processing so that the
+characters you have just entered will not combine with subsequent
+characters.  For example, in input method `latin-1-postfix', the
+sequence `e '' combines to form an `e' with an accent.  What if you
+want to enter them as separate characters?
+
+   One way is to type the accent twice; that is a special feature for
+entering the separate letter and accent.  For example, `e ' '' gives
+you the two characters `e''.  Another way is to type another letter
+after the `e'--something that won't combine with that--and immediately
+delete it.  For example, you could type `e e <DEL> '' to get separate
+`e' and `''.
+
+   Another method, more general but not quite as easy to type, is to use
+`C-\ C-\' between two characters to stop them from combining.  This is
+the command `C-\' (`toggle-input-method') used twice.  *Note Select
+Input Method::.
+
+   `C-\ C-\' is especially useful inside an incremental search, because
+stops waiting for more characters to combine, and starts searching for
+what you have already entered.
+
+   The variables `input-method-highlight-flag' and
+`input-method-verbose-flag' control how input methods explain what is
+happening.  If `input-method-highlight-flag' is non-`nil', the partial
+sequence is highlighted in the buffer.  If `input-method-verbose-flag'
+is non-`nil', the list of possible characters to type next is displayed
+in the echo area (but not when you are in the minibuffer).
+
+
+File: emacs,  Node: Select Input Method,  Next: Coding Systems,  Prev: Input Methods,  Up: International
+
+Selecting an Input Method
+=========================
+
+`C-\'
+     Enable or disable use of the selected input method.
+
+`C-x <RET> C-\ METHOD <RET>'
+     Select a new input method for the current buffer.
+
+`C-h I METHOD <RET>'
+`C-h C-\ METHOD <RET>'
+     Describe the input method METHOD (`describe-input-method').  By
+     default, it describes the current input method (if any).
+
+`M-x list-input-methods'
+     Display a list of all the supported input methods.
+
+   To choose an input method for the current buffer, use `C-x <RET>
+C-\' (`select-input-method').  This command reads the input method name
+with the minibuffer; the name normally starts with the language
+environment that it is meant to be used with.  The variable
+`current-input-method' records which input method is selected.
+
+   Input methods use various sequences of ASCII characters to stand for
+non-ASCII characters.  Sometimes it is useful to turn off the input
+method temporarily.  To do this, type `C-\' (`toggle-input-method').
+To reenable the input method, type `C-\' again.
+
+   If you type `C-\' and you have not yet selected an input method, it
+prompts for you to specify one.  This has the same effect as using `C-x
+<RET> C-\' to specify an input method.
+
+   Selecting a language environment specifies a default input method for
+use in various buffers.  When you have a default input method, you can
+select it in the current buffer by typing `C-\'.  The variable
+`default-input-method' specifies the default input method (`nil' means
+there is none).
+
+   Some input methods for alphabetic scripts work by (in effect)
+remapping the keyboard to emulate various keyboard layouts commonly used
+for those scripts.  How to do this remapping properly depends on your
+actual keyboard layout.  To specify which layout your keyboard has, use
+the command `M-x quail-set-keyboard-layout'.
+
+   To display a list of all the supported input methods, type `M-x
+list-input-methods'.  The list gives information about each input
+method, including the string that stands for it in the mode line.
+
+
+File: emacs,  Node: Coding Systems,  Next: Recognize Coding,  Prev: Select Input Method,  Up: International
+
+Coding Systems
+==============
+
+   Users of various languages have established many more-or-less
+standard coding systems for representing them.  Emacs does not use
+these coding systems internally; instead, it converts from various
+coding systems to its own system when reading data, and converts the
+internal coding system to other coding systems when writing data.
+Conversion is possible in reading or writing files, in sending or
+receiving from the terminal, and in exchanging data with subprocesses.
+
+   Emacs assigns a name to each coding system.  Most coding systems are
+used for one language, and the name of the coding system starts with the
+language name.  Some coding systems are used for several languages;
+their names usually start with `iso'.  There are also special coding
+systems `no-conversion', `raw-text' and `emacs-mule' which do not
+convert printing characters at all.
+
+   In addition to converting various representations of non-ASCII
+characters, a coding system can perform end-of-line conversion.  Emacs
+handles three different conventions for how to separate lines in a file:
+newline, carriage-return linefeed, and just carriage-return.
+
+`C-h C CODING <RET>'
+     Describe coding system CODING.
+
+`C-h C <RET>'
+     Describe the coding systems currently in use.
+
+`M-x list-coding-systems'
+     Display a list of all the supported coding systems.
+
+   The command `C-h C' (`describe-coding-system') displays information
+about particular coding systems.  You can specify a coding system name
+as argument; alternatively, with an empty argument, it describes the
+coding systems currently selected for various purposes, both in the
+current buffer and as the defaults, and the priority list for
+recognizing coding systems (*note Recognize Coding::.).
+
+   To display a list of all the supported coding systems, type `M-x
+list-coding-systems'.  The list gives information about each coding
+system, including the letter that stands for it in the mode line (*note
+Mode Line::.).
+
+   Each of the coding systems that appear in this list--except for
+`no-conversion', which means no conversion of any kind--specifies how
+and whether to convert printing characters, but leaves the choice of
+end-of-line conversion to be decided based on the contents of each file.
+For example, if the file appears to use carriage-return linefeed between
+lines, that end-of-line conversion will be used.
+
+   Each of the listed coding systems has three variants which specify
+exactly what to do for end-of-line conversion:
+
+`...-unix'
+     Don't do any end-of-line conversion; assume the file uses newline
+     to separate lines.  (This is the convention normally used on Unix
+     and GNU systems.)
+
+`...-dos'
+     Assume the file uses carriage-return linefeed to separate lines,
+     and do the appropriate conversion.  (This is the convention
+     normally used on Microsoft systems.)
+
+`...-mac'
+     Assume the file uses carriage-return to separate lines, and do the
+     appropriate conversion.  (This is the convention normally used on
+     the Macintosh system.)
+
+   These variant coding systems are omitted from the
+`list-coding-systems' display for brevity, since they are entirely
+predictable.  For example, the coding system `iso-latin-1' has variants
+`iso-latin-1-unix', `iso-latin-1-dos' and `iso-latin-1-mac'.
+
+   The coding system `raw-text' is good for a file which is mainly
+ASCII text, but may contain byte values above 127 which are not meant to
+encode non-ASCII characters.  With `raw-text', Emacs copies those byte
+values unchanged, and sets `enable-multibyte-characters' to `nil' in
+the current buffer so that they will be interpreted properly.
+`raw-text' handles end-of-line conversion in the usual way, based on
+the data encountered, and has the usual three variants to specify the
+kind of end-of-line conversion to use.
+
+   In contrast, the coding system `no-conversion' specifies no
+character code conversion at all--none for non-ASCII byte values and
+none for end of line.  This is useful for reading or writing binary
+files, tar files, and other files that must be examined verbatim.  It,
+too, sets `enable-multibyte-characters' to `nil'.
+
+   The easiest way to edit a file with no conversion of any kind is with
+the `M-x find-file-literally' command.  This uses `no-conversion', and
+also suppresses other Emacs features that might convert the file
+contents before you see them.  *Note Visiting::.
+
+   The coding system `emacs-mule' means that the file contains
+non-ASCII characters stored with the internal Emacs encoding.  It
+handles end-of-line conversion based on the data encountered, and has
+the usual three variants to specify the kind of end-of-line conversion.
+
+
+File: emacs,  Node: Recognize Coding,  Next: Specify Coding,  Prev: Coding Systems,  Up: International
+
+Recognizing Coding Systems
+==========================
+
+   Most of the time, Emacs can recognize which coding system to use for
+any given file-once you have specified your preferences.
+
+   Some coding systems can be recognized or distinguished by which byte
+sequences appear in the data.  However, there are coding systems that
+cannot be distinguished, not even potentially.  For example, there is no
+way to distinguish between Latin-1 and Latin-2; they use the same byte
+values with different meanings.
+
+   Emacs handles this situation by means of a priority list of coding
+systems.  Whenever Emacs reads a file, if you do not specify the coding
+system to use, Emacs checks the data against each coding system,
+starting with the first in priority and working down the list, until it
+finds a coding system that fits the data.  Then it converts the file
+contents assuming that they are represented in this coding system.
+
+   The priority list of coding systems depends on the selected language
+environment (*note Language Environments::.).  For example, if you use
+French, you probably want Emacs to prefer Latin-1 to Latin-2; if you use
+Czech, you probably want Latin-2 to be preferred.  This is one of the
+reasons to specify a language environment.
+
+   However, you can alter the priority list in detail with the command
+`M-x prefer-coding-system'.  This command reads the name of a coding
+system from the minibuffer, and adds it to the front of the priority
+list, so that it is preferred to all others.  If you use this command
+several times, each use adds one element to the front of the priority
+list.
+
+   Sometimes a file name indicates which coding system to use for the
+file.  The variable `file-coding-system-alist' specifies this
+correspondence.  There is a special function
+`modify-coding-system-alist' for adding elements to this list.  For
+example, to read and write all `.txt' using the coding system
+`china-iso-8bit', you can execute this Lisp expression:
+
+     (modify-coding-system-alist 'file "\\.txt\\'" 'china-iso-8bit)
+
+The first argument should be `file', the second argument should be a
+regular expression that determines which files this applies to, and the
+third argument says which coding system to use for these files.
+
+   You can specify the coding system for a particular file using the
+`-*-...-*-' construct at the beginning of a file, or a local variables
+list at the end (*note File Variables::.).  You do this by defining a
+value for the "variable" named `coding'.  Emacs does not really have a
+variable `coding'; instead of setting a variable, it uses the specified
+coding system for the file.  For example, `-*-mode: C; coding:
+latin-1;-*-' specifies use of the Latin-1 coding system, as well as C
+mode.
+
+   Once Emacs has chosen a coding system for a buffer, it stores that
+coding system in `buffer-file-coding-system' and uses that coding
+system, by default, for operations that write from this buffer into a
+file.  This includes the commands `save-buffer' and `write-region'.  If
+you want to write files from this buffer using a different coding
+system, you can specify a different coding system for the buffer using
+`set-buffer-file-coding-system' (*note Specify Coding::.).
+
+   When you send a message with Mail mode (*note Sending Mail::.),
+Emacs has four different ways to determine the coding system to use for
+encoding the message text.  It tries the buffer's own value of
+`buffer-file-coding-system', if that is non-`nil'.  Otherwise, it uses
+the value of `sendmail-coding-system', if that is non-`nil'.  The third
+way is to use the default coding system for new files, which is
+controlled by your choice of language environment, if that is
+non-`nil'.  If all of these three values are `nil', Emacs encodes
+outgoing mail using the Latin-1 coding system.
+
+   When you get new mail in Rmail, each message is translated
+automatically from the coding system it is written in--as if it were a
+separate file.  This uses the priority list of coding systems that you
+have specified.
+
+   For reading and saving Rmail files themselves, Emacs uses the coding
+system specified by the variable `rmail-file-coding-system'.  The
+default value is `nil', which means that Rmail files are not translated
+(they are read and written in the Emacs internal character code).
+
+
+File: emacs,  Node: Specify Coding,  Next: Fontsets,  Prev: Recognize Coding,  Up: International
+
+Specifying a Coding System
+==========================
+
+   In cases where Emacs does not automatically choose the right coding
+system, you can use these commands to specify one:
+
+`C-x <RET> f CODING <RET>'
+     Use coding system CODING for the visited file in the current
+     buffer.
+
+`C-x <RET> c CODING <RET>'
+     Specify coding system CODING for the immediately following command.
+
+`C-x <RET> k CODING <RET>'
+     Use coding system CODING for keyboard input.
+
+`C-x <RET> t CODING <RET>'
+     Use coding system CODING for terminal output.
+
+`C-x <RET> p CODING <RET>'
+     Use coding system CODING for subprocess input and output in the
+     current buffer.
+
+   The command `C-x RET f' (`set-buffer-file-coding-system') specifies
+the file coding system for the current buffer--in other words, which
+coding system to use when saving or rereading the visited file.  You
+specify which coding system using the minibuffer.  Since this command
+applies to a file you have already visited, it affects only the way the
+file is saved.
+
+   Another way to specify the coding system for a file is when you visit
+the file.  First use the command `C-x <RET> c'
+(`universal-coding-system-argument'); this command uses the minibuffer
+to read a coding system name.  After you exit the minibuffer, the
+specified coding system is used for *the immediately following command*.
+
+   So if the immediately following command is `C-x C-f', for example,
+it reads the file using that coding system (and records the coding
+system for when the file is saved).  Or if the immediately following
+command is `C-x C-w', it writes the file using that coding system.
+Other file commands affected by a specified coding system include `C-x
+C-i' and `C-x C-v', as well as the other-window variants of `C-x C-f'.
+
+   `C-x <RET> c' also affects commands that start subprocesses,
+including `M-x shell' (*note Shell::.).
+
+   However, if the immediately following command does not use the coding
+system, then `C-x <RET> c' ultimately has no effect.
+
+   An easy way to visit a file with no conversion is with the `M-x
+find-file-literally' command.  *Note Visiting::.
+
+   The variable `default-buffer-file-coding-system' specifies the
+choice of coding system to use when you create a new file.  It applies
+when you find a new file, and when you create a buffer and then save it
+in a file.  Selecting a language environment typically sets this
+variable to a good choice of default coding system for that language
+environment.
+
+   The command `C-x <RET> t' (`set-terminal-coding-system') specifies
+the coding system for terminal output.  If you specify a character code
+for terminal output, all characters output to the terminal are
+translated into that coding system.
+
+   This feature is useful for certain character-only terminals built to
+support specific languages or character sets--for example, European
+terminals that support one of the ISO Latin character sets.
+
+   By default, output to the terminal is not translated at all.
+
+   The command `C-x <RET> k' (`set-keyboard-coding-system') specifies
+the coding system for keyboard input.  Character-code translation of
+keyboard input is useful for terminals with keys that send non-ASCII
+graphic characters--for example, some terminals designed for ISO
+Latin-1 or subsets of it.
+
+   By default, keyboard input is not translated at all.
+
+   There is a similarity between using a coding system translation for
+keyboard input, and using an input method: both define sequences of
+keyboard input that translate into single characters.  However, input
+methods are designed to be convenient for interactive use by humans, and
+the sequences that are translated are typically sequences of ASCII
+printing characters.  Coding systems typically translate sequences of
+non-graphic characters.
+
+   The command `C-x <RET> p' (`set-buffer-process-coding-system')
+specifies the coding system for input and output to a subprocess.  This
+command applies to the current buffer; normally, each subprocess has its
+own buffer, and thus you can use this command to specify translation to
+and from a particular subprocess by giving the command in the
+corresponding buffer.
+
+   By default, process input and output are not translated at all.
+
+   The variable `file-name-coding-system' specifies a coding system to
+use for encoding file names.  If you set the variable to a coding
+system name (as a Lisp symbol or a string), Emacs encodes file names
+using that coding system for all file operations.  This makes it
+possible to use non-ASCII characters in file names--or, at least, those
+non-ASCII characters which the specified coding system can encode.  By
+default, this variable is `nil', which implies that you cannot use
+non-ASCII characters in file names.
+
+
+File: emacs,  Node: Fontsets,  Next: Defining Fontsets,  Prev: Specify Coding,  Up: International
+
+Fontsets
+========
+
+   A font for X Windows typically defines shapes for one alphabet or
+script.  Therefore, displaying the entire range of scripts that Emacs
+supports requires a collection of many fonts.  In Emacs, such a
+collection is called a "fontset".  A fontset is defined by a list of
+fonts, each assigned to handle a range of character codes.
+
+   Each fontset has a name, like a font.  The available X fonts are
+defined by the X server; fontsets, however, are defined within Emacs
+itself.  Once you have defined a fontset, you can use it within Emacs by
+specifying its name, anywhere that you could use a single font.  Of
+course, Emacs fontsets can use only the fonts that the X server
+supports; if certain characters appear on the screen as hollow boxes,
+this means that the fontset in use for them has no font for those
+characters.
+
+   Emacs creates two fontsets automatically: the "standard fontset" and
+the "startup fontset".  The standard fontset is most likely to have
+fonts for a wide variety of non-ASCII characters; however, this is not
+the default for Emacs to use.  (By default, Emacs tries to find a font
+which has bold and italic variants.)  You can specify use of the
+standard fontset by starting Emacs in this way:
+
+     emacs -fn fontset-standard
+
+   A fontset does not necessarily specify a font for all character
+codes.  If a fontset specifies no font for a certain character, or if it
+specifies a font that does not exist on your system, then it cannot
+display that character.  It will display an empty box instead.
+
+   The fontset height and width are determined by the ASCII characters
+(that is, by the font used for ASCII characters in that fontset).  If
+another font in the fontset has a different height, or a different
+width, then characters assigned to that font are clipped to the
+fontset's size.  If `highlight-wrong-size-font' is non-`nil', a box is
+displayed around these wrong-size characters as well.
+
+
+File: emacs,  Node: Defining Fontsets,  Next: Single-Byte European Support,  Prev: Fontsets,  Up: International
+
+Defining fontsets
+=================
+
+   Emacs creates a standard fontset automatically according to the value
+of `standard-fontset-spec'.  This fontset's name is
+
+     -*-fixed-medium-r-normal-*-16-*-*-*-*-*-fontset-standard
+
+or just `fontset-standard' for short.
+
+   Bold, italic, and bold-italic variants of the standard fontset are
+created automatically.  Their names have `bold' instead of `medium', or
+`i' instead of `r', or both.
+
+   If you specify a default ASCII font with the `Font' resource or the
+`-fn' argument, Emacs generates a fontset from it automatically.  This
+is the "startup fontset" and its name is `fontsent-startup'.  It does
+this by replacing the FOUNDRY, FAMILY, ADD_STYLE, and AVERAGE_WIDTH
+fields of the font name with `*', replacing CHARSET_REGISTRY field with
+`fontset', and replacing CHARSET_ENCODING field with `startup', then
+using the resulting string to specify a fontset.
+
+   For instance, if you start Emacs this way,
+
+     emacs -fn *courier-medium-r-normal--14-140-*-iso8859-1
+
+Emacs generates the following fontset and uses it for the initial X
+window frame:
+
+     -*-*-medium-r-normal-*-14-140-*-*-*-*-fontset-startup
+
+   With the X resource `Emacs.Font', you can specify a fontset name
+just like an actual font name.  But be careful not to specify a fontset
+name in a wildcard resource like `Emacs*Font'--that wildcard
+specification applies to various other purposes, such as menus, and
+menus cannot handle fontsets.
+
+   You can specify additional fontsets using X resources named
+`Fontset-N', where N is an integer starting from 0.  The resource value
+should have this form:
+
+     FONTPATTERN, [CHARSETNAME:FONTNAME]...
+
+FONTPATTERN should have the form of a standard X font name, except for
+the last two fields.  They should have the form `fontset-ALIAS'.
+
+   The fontset has two names, one long and one short.  The long name is
+FONTPATTERN.  The short name is `fontset-ALIAS'.  You can refer to the
+fontset by either name.
+
+   The construct `CHARSET:FONT' specifies which font to use (in this
+fontset) for one particular character set.  Here, CHARSET is the name
+of a character set, and FONT is the font to use for that character set.
+You can use this construct any number of times in defining one fontset.
+
+   For the other character sets, Emacs chooses a font based on
+FONTPATTERN.  It replaces `fontset-ALIAS' with values that describe the
+character set.  For the ASCII character font, `fontset-ALIAS' is
+replaced with `ISO8859-1'.
+
+   In addition, when several consecutive fields are wildcards, Emacs
+collapses them into a single wildcard.  This is to prevent use of
+auto-scaled fonts.  Fonts made by scaling larger fonts are not usable
+for editing, and scaling a smaller font is not useful because it is
+better to use the smaller font in its own size, which Emacs does.
+
+   Thus if FONTPATTERN is this,
+
+     -*-fixed-medium-r-normal-*-24-*-*-*-*-*-fontset-24
+
+the font specification for ASCII characters would be this:
+
+     -*-fixed-medium-r-normal-*-24-*-ISO8859-1
+
+and the font specification for Chinese GB2312 characters would be this:
+
+     -*-fixed-medium-r-normal-*-24-*-gb2312*-*
+
+   You may not have any Chinese font matching the above font
+specification.  Most X distributions include only Chinese fonts that
+have `song ti' or `fangsong ti' in FAMILY field.  In such a case,
+`Fontset-N' can be specified as below:
+
+     Emacs.Fontset-0: -*-fixed-medium-r-normal-*-24-*-*-*-*-*-fontset-24,\
+             chinese-gb2312:-*-*-medium-r-normal-*-24-*-gb2312*-*
+
+Then, the font specifications for all but Chinese GB2312 characters have
+`fixed' in the FAMILY field, and the font specification for Chinese
+GB2312 characters has a wild card `*' in the FAMILY field.
+
+   The function that processes the fontset resource value to create the
+fontset is called `create-fontset-from-fontset-spec'.  You can also
+call this function explicitly to create a fontset.
+
+   *Note Font X::, for more information about font naming in X.
+
+
+File: emacs,  Node: Single-Byte European Support,  Prev: Defining Fontsets,  Up: International
+
+Single-byte European Character Support
+======================================
+
+   The ISO 8859 Latin-N character sets define character codes in the
+range 160 to 255 to handle the accented letters and punctuation needed
+by various European languages.  If you disable multibyte characters,
+Emacs can still handle *one* of these character codes at a time.  To
+specify *which* of these codes to use, call `set-language-environment'
+and specify `Latin-N'.
+
+   Emacs can display those characters provided the terminal or font in
+use supports them.  Use the `M-x standard-display-european' command to
+enable or disable European display mode.  With a numeric argument, `M-x
+standard-display-european' enables European character display if and
+only if the argument is positive.
+
+   If your terminal does not support display of the Latin-1 character
+set, Emacs can display these characters as ASCII sequences which at
+least give you a clear idea of what the characters are.  To do this,
+load the library `iso-ascii'.  Similar libraries for other Latin-N
+character sets are possible, but we don't have them.
+
+   There are three different ways you can input single-byte Latin-N
+characters:
+
+   * If your keyboard can generate character codes 128 and up,
+     representing ISO Latin-N characters, execute the following
+     expression to enable Emacs to understand them:
+
+          (set-input-mode (car (current-input-mode))
+                          (nth 1 (current-input-mode))
+                          0)
+
+   * For Latin-1 only, you can load the library `iso-transl' to turn the
+     key `C-x 8' into a "compose character" prefix for entry of
+     non-ASCII Latin-1 printing characters.  `C-x 8' is good for
+     insertion (in the minibuffer as well as other buffers), for
+     searching, and in any other context where a key sequence is
+     allowed.  The <ALT> modifier key, if you have one, serves the same
+     purpose as `C-x 8'; use <ALT> together with an accent character to
+     modify the following letter.
+
+   * You can use ISO Accents mode.  When this minor mode is enabled, the
+     characters ``', `'', `"', `^', `/', `,' and `~' modify the
+     following letter by adding the corresponding diacritical mark to
+     it, if possible.  To enable or disable ISO Accents mode, use the
+     command `M-x iso-accents-mode'.  This command affects only the
+     current buffer.
+
+     To enter one of those accent characters while in ISO Accents mode,
+     type the character, followed by a space.  Some of those characters
+     have a corresponding "dead key" accent character in certain ISO
+     Latin character sets; to enter the "dead key" character, type the
+     corresponding ASCII character twice.  For example, in Latin-1, `'''
+     enters the Latin-1 character acute-accent (octal code 0264).
+
+     ISO Accents mode input is available whenever a key sequence is
+     expected: for ordinary insertion, for searching, for the
+     minibuffer, and for certain command arguments.
+
+     In addition to the accented letters, you can use these special
+     sequences in ISO Accents mode to enter certain other ISO Latin-1
+     characters:
+
+          `/A', `A' with ring.  `~C', `C' with cedilla.  `~D', `D' with
+          stroke.  `/E', `AE' ligature.  `/a', `a' with ring.  `~c',
+          `c' with cedilla.  `~d', `d' with stroke.  `/e', `ae'
+          ligature.  `"s', German sharp `s'.  `~<', left guillemot.
+          `~>', right guillemot.  `~!', inverted exclamation mark.
+          `~?', inverted question mark.
+
+
+File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: International,  Up: Top
+
+Major Modes
+***********
+
+   Emacs provides many alternative "major modes", each of which
+customizes Emacs for editing text of a particular sort.  The major modes
+are mutually exclusive, and each buffer has one major mode at any time.
+The mode line normally shows the name of the current major mode, in
+parentheses (*note Mode Line::.).
+
+   The least specialized major mode is called "Fundamental mode".  This
+mode has no mode-specific redefinitions or variable settings, so that
+each Emacs command behaves in its most general manner, and each option
+is in its default state.  For editing text of a specific type that
+Emacs knows about, such as Lisp code or English text, you should switch
+to the appropriate major mode, such as Lisp mode or Text mode.
+
+   Selecting a major mode changes the meanings of a few keys to become
+more specifically adapted to the language being edited.  The ones that
+are changed frequently are <TAB>, <DEL>, and `C-j'.  The prefix key
+`C-c' normally contains mode-specific commands.  In addition, the
+commands which handle comments use the mode to determine how comments
+are to be delimited.  Many major modes redefine the syntactical
+properties of characters appearing in the buffer.  *Note Syntax::.
+
+   The major modes fall into three major groups.  Lisp mode (which has
+several variants), C mode, Fortran mode and others are for specific
+programming languages.  Text mode, Nroff mode, TeX mode and Outline
+mode are for editing English text.  The remaining major modes are not
+intended for use on users' files; they are used in buffers created for
+specific purposes by Emacs, such as Dired mode for buffers made by Dired
+(*note Dired::.), Mail mode for buffers made by `C-x m' (*note Sending
+Mail::.), and Shell mode for buffers used for communicating with an
+inferior shell process (*note Interactive Shell::.).
+
+   Most programming-language major modes specify that only blank lines
+separate paragraphs.  This is to make the paragraph commands useful.
+(*Note Paragraphs::.)  They also cause Auto Fill mode to use the
+definition of <TAB> to indent the new lines it creates.  This is
+because most lines in a program are usually indented.  (*Note
+Indentation::.)
+
+* Menu:
+
+* Choosing Modes::     How major modes are specified or chosen.
+
+
+File: emacs,  Node: Choosing Modes,  Prev: Major Modes,  Up: Major Modes
+
+How Major Modes are Chosen
+==========================
+
+   You can select a major mode explicitly for the current buffer, but
+most of the time Emacs determines which mode to use based on the file
+name or on special text in the file.
+
+   Explicit selection of a new major mode is done with a `M-x' command.
+From the name of a major mode, add `-mode' to get the name of a command
+to select that mode.  Thus, you can enter Lisp mode by executing `M-x
+lisp-mode'.
+
+   When you visit a file, Emacs usually chooses the right major mode
+based on the file's name.  For example, files whose names end in `.c'
+are edited in C mode.  The correspondence between file names and major
+modes is controlled by the variable `auto-mode-alist'.  Its value is a
+list in which each element has this form,
+
+     (REGEXP . MODE-FUNCTION)
+
+or this form,
+
+     (REGEXP MODE-FUNCTION FLAG)
+
+For example, one element normally found in the list has the form
+`("\\.c\\'" . c-mode)', and it is responsible for selecting C mode for
+files whose names end in `.c'.  (Note that `\\' is needed in Lisp
+syntax to include a `\' in the string, which is needed to suppress the
+special meaning of `.' in regexps.)  If the element has the form
+`(REGEXP MODE-FUNCTION FLAG)' and FLAG is non-nil, then after calling
+FUNCTION, the suffix that matched REGEXP is discarded and the list is
+searched again for another match.
+
+   You can specify which major mode should be used for editing a certain
+file by a special sort of text in the first nonblank line of the file.
+The mode name should appear in this line both preceded and followed by
+`-*-'.  Other text may appear on the line as well.  For example,
+
+     ;-*-Lisp-*-
+
+tells Emacs to use Lisp mode.  Such an explicit specification overrides
+any defaulting based on the file name.  Note how the semicolon is used
+to make Lisp treat this line as a comment.
+
+   Another format of mode specification is
+
+     -*- mode: MODENAME;-*-
+
+which allows you to specify local variables as well, like this:
+
+     -*- mode: MODENAME; VAR: VALUE; ... -*-
+
+*Note File Variables::, for more information about this.
+
+   When a file's contents begin with `#!', it can serve as an
+executable shell command, which works by running an interpreter named on
+the file's first line.  The rest of the file is used as input to the
+interpreter.
+
+   When you visit such a file in Emacs, if the file's name does not
+specify a major mode, Emacs uses the interpreter name on the first line
+to choose a mode.  If the first line is the name of a recognized
+interpreter program, such as `perl' or `tcl', Emacs uses a mode
+appropriate for programs for that interpreter.  The variable
+`interpreter-mode-alist' specifies the correspondence between
+interpreter program names and major modes.
+
+   When you visit a file that does not specify a major mode to use, or
+when you create a new buffer with `C-x b', the variable
+`default-major-mode' specifies which major mode to use.  Normally its
+value is the symbol `fundamental-mode', which specifies Fundamental
+mode.  If `default-major-mode' is `nil', the major mode is taken from
+the previously selected buffer.
+
+   If you change the major mode of a buffer, you can go back to the
+major mode Emacs would choose automatically: use the command `M-x
+normal-mode' to do this.  This is the same function that `find-file'
+calls to choose the major mode.  It also processes the file's local
+variables list if any.
+
+   The commands `C-x C-w' and `set-visited-file-name' change to a new
+major mode if the new file name implies a mode (*note Saving::.).
+However, this does not happen if the buffer contents specify a major
+mode, and certain "special" major modes do not allow the mode to
+change.  You can turn off this mode-changing feature by setting
+`change-major-mode-with-file-name' to `nil'.
 
 
 File: emacs,  Node: Indentation,  Next: Text,  Prev: Major Modes,  Up: Top
@@ -10,15 +950,15 @@ Indentation
    This chapter describes the Emacs commands that add, remove, or
 adjust indentation.
 
-`TAB'
+`<TAB>'
      Indent current line "appropriately" in a mode-dependent fashion.
 
-`LFD'
-     Perform RET followed by TAB (`newline-and-indent').
+`C-j'
+     Perform <RET> followed by <TAB> (`newline-and-indent').
 
 `M-^'
      Merge two lines (`delete-indentation').  This would cancel out the
-     effect of LFD.
+     effect of `C-j'.
 
 `C-M-o'
      Split line at point; text on the line after point becomes a new
@@ -32,7 +972,7 @@ adjust indentation.
 `C-M-\'
      Indent several lines to same column (`indent-region').
 
-`C-x TAB'
+`C-x <TAB>'
      Shift block of lines rigidly right or left (`indent-rigidly').
 
 `M-i'
@@ -48,17 +988,17 @@ Lisp code, lines are indented according to their nesting in
 parentheses.  The same general idea is used for C code, though many
 details are different.
 
-   Whatever the language, to indent a line, use the TAB command.  Each
+   Whatever the language, to indent a line, use the <TAB> command.  Each
 major mode defines this command to perform the sort of indentation
-appropriate for the particular language.  In Lisp mode, TAB aligns the
-line according to its depth in parentheses.  No matter where in the
-line you are when you type TAB, it aligns the line as a whole.  In C
-mode, TAB implements a subtle and sophisticated indentation style that
+appropriate for the particular language.  In Lisp mode, <TAB> aligns
+the line according to its depth in parentheses.  No matter where in the
+line you are when you type <TAB>, it aligns the line as a whole.  In C
+mode, <TAB> implements a subtle and sophisticated indentation style that
 knows about many aspects of C syntax.
 
-   In Text mode, TAB runs the command `tab-to-tab-stop', which indents
-to the next tab stop column.  You can set the tab stops with `M-x
-edit-tab-stops'.
+   In Text mode, <TAB> runs the command `tab-to-tab-stop', which
+indents to the next tab stop column.  You can set the tab stops with
+`M-x edit-tab-stops'.
 
 * Menu:
 
@@ -78,10 +1018,10 @@ Indentation Commands and Techniques
 positions point at the first nonblank character on the line.
 
    To insert an indented line before the current line, do `C-a C-o
-TAB'.  To make an indented line after the current line, use `C-e LFD'.
+<TAB>'.  To make an indented line after the current line, use `C-e C-j'.
 
    If you just want to insert a tab character in the buffer, you can
-type `C-q TAB'.
+type `C-q <TAB>'.
 
    `C-M-o' (`split-line') moves the text from point to the end of the
 line vertically down, so that the current line becomes two lines.
@@ -106,9 +1046,9 @@ appears after the newline that is deleted.  *Note Fill Prefix::.
    There are also commands for changing the indentation of several lines
 at once.  `C-M-\' (`indent-region') applies to all the lines that begin
 in the region; it indents each line in the "usual" way, as if you had
-typed TAB at the beginning of the line.  A numeric argument specifies
+typed <TAB> at the beginning of the line.  A numeric argument specifies
 the column to indent to, and each line is shifted left or right so that
-its first nonblank character appears in that column.  `C-x TAB'
+its first nonblank character appears in that column.  `C-x <TAB>'
 (`indent-rigidly') moves all of the lines in the region right by its
 argument (left, for negative arguments).  The whole group of lines
 moves rigidly sideways, which is how the command gets its name.
@@ -123,1039 +1063,9 @@ deleted and the first indentation point then applicable is used.  If no
 indentation point is applicable even then, `indent-relative' runs
 `tab-to-tab-stop' (*note Tab Stops::.).
 
-   `indent-relative' is the definition of TAB in Indented Text mode.
+   `indent-relative' is the definition of <TAB> in Indented Text mode.
 *Note Text::.
 
    *Note Format Indentation::, for another way of specifying the
 indentation for part of your text.
-
-
-File: emacs,  Node: Tab Stops,  Next: Just Spaces,  Prev: Indentation Commands,  Up: Indentation
-
-Tab Stops
-=========
-
-   For typing in tables, you can use Text mode's definition of TAB,
-`tab-to-tab-stop'.  This command inserts indentation before point,
-enough to reach the next tab stop column.  If you are not in Text mode,
-this command can be found on the key `M-i'.
-
-   You can specify the tab stops used by `M-i'.  They are stored in a
-variable called `tab-stop-list', as a list of column-numbers in
-increasing order.
-
-   The convenient way to set the tab stops is with `M-x edit-tab-stops',
-which creates and selects a buffer containing a description of the tab
-stop settings.  You can edit this buffer to specify different tab
-stops, and then type `C-c C-c' to make those new tab stops take effect.
-In the tab stop buffer, `C-c C-c' runs the function
-`edit-tab-stops-note-changes' rather than its usual definition
-`save-buffer'.  `edit-tab-stops' records which buffer was current when
-you invoked it, and stores the tab stops back in that buffer; normally
-all buffers share the same tab stops and changing them in one buffer
-affects all, but if you happen to make `tab-stop-list' local in one
-buffer then `edit-tab-stops' in that buffer will edit the local
-settings.
-
-   Here is what the text representing the tab stops looks like for
-ordinary tab stops every eight columns.
-
-             :       :       :       :       :       :
-     0         1         2         3         4
-     0123456789012345678901234567890123456789012345678
-     To install changes, type C-c C-c
-
-   The first line contains a colon at each tab stop.  The remaining
-lines are present just to help you see where the colons are and know
-what to do.
-
-   Note that the tab stops that control `tab-to-tab-stop' have nothing
-to do with displaying tab characters in the buffer.  *Note Display
-Vars::, for more information on that.
-
-
-File: emacs,  Node: Just Spaces,  Prev: Tab Stops,  Up: Indentation
-
-Tabs vs. Spaces
-===============
-
-   Emacs normally uses both tabs and spaces to indent lines.  If you
-prefer, all indentation can be made from spaces only.  To request this,
-set `indent-tabs-mode' to `nil'.  This is a per-buffer variable;
-altering the variable affects only the current buffer, but there is a
-default value which you can change as well.  *Note Locals::.
-
-   There are also commands to convert tabs to spaces or vice versa,
-always preserving the columns of all nonblank text.  `M-x tabify' scans
-the region for sequences of spaces, and converts sequences of at least
-three spaces to tabs if that can be done without changing indentation.
-`M-x untabify' changes all tabs in the region to appropriate numbers of
-spaces.
-
-
-File: emacs,  Node: Text,  Next: Programs,  Prev: Indentation,  Up: Top
-
-Commands for Human Languages
-****************************
-
-   The term "text" has two widespread meanings in our area of the
-computer field.  One is data that is a sequence of characters.  Any file
-that you edit with Emacs is text, in this sense of the word.  The other
-meaning is more restrictive: a sequence of characters in a human
-language for humans to read (possibly after processing by a text
-formatter), as opposed to a program or commands for a program.
-
-   Human languages have syntactic/stylistic conventions that can be
-supported or used to advantage by editor commands: conventions involving
-words, sentences, paragraphs, and capital letters.  This chapter
-describes Emacs commands for all of these things.  There are also
-commands for "filling", which means rearranging the lines of a
-paragraph to be approximately equal in length.  The commands for moving
-over and killing words, sentences and paragraphs, while intended
-primarily for editing text, are also often useful for editing programs.
-
-   Emacs has several major modes for editing human language text.  If
-the file contains text pure and simple, use Text mode, which customizes
-Emacs in small ways for the syntactic conventions of text.  Outline mode
-provides special commands for operating on text with an outline
-structure.
-
-   For text which contains embedded commands for text formatters, Emacs
-has other major modes, each for a particular text formatter.  Thus, for
-input to TeX, you would use TeX mode.  For input to nroff, use Nroff
-mode.
-
-   Instead of using a text formatter, you can edit formatted text in
-WYSIWYG style ("what you see is what you get"), with Enriched mode.
-Then the formatting appears on the screen in Emacs while you edit.
-
-* Menu:
-
-* Words::         Moving over and killing words.
-* Sentences::     Moving over and killing sentences.
-* Paragraphs::	  Moving over paragraphs.
-* Pages::	  Moving over pages.
-* Filling::       Filling or justifying text.
-* Case::          Changing the case of text.
-* Text Mode::     The major modes for editing text files.
-* Outline Mode::  The major mode for editing outlines.
-* TeX Mode::      The major modes for editing input to the formatter TeX.
-* Nroff Mode::    The major mode for editing input to the formatter nroff.
-* Formatted Text::Editing formatted text directly in WYSIWYG fashion.
-
-
-File: emacs,  Node: Words,  Next: Sentences,  Up: Text
-
-Words
-=====
-
-   Emacs has commands for moving over or operating on words.  By
-convention, the keys for them are all Meta characters.
-
-`M-f'
-     Move forward over a word (`forward-word').
-
-`M-b'
-     Move backward over a word (`backward-word').
-
-`M-d'
-     Kill up to the end of a word (`kill-word').
-
-`M-DEL'
-     Kill back to the beginning of a word (`backward-kill-word').
-
-`M-@'
-     Mark the end of the next word (`mark-word').
-
-`M-t'
-     Transpose two words or drag a word across other words
-     (`transpose-words').
-
-   Notice how these keys form a series that parallels the
-character-based `C-f', `C-b', `C-d', `C-t' and DEL.  `M-@' is cognate
-to `C-@', which is an alias for `C-SPC'.
-
-   The commands `M-f' (`forward-word') and `M-b' (`backward-word') move
-forward and backward over words.  These Meta characters are thus
-analogous to the corresponding control characters, `C-f' and `C-b',
-which move over single characters in the text.  The analogy extends to
-numeric arguments, which serve as repeat counts.  `M-f' with a negative
-argument moves backward, and `M-b' with a negative argument moves
-forward.  Forward motion stops right after the last letter of the word,
-while backward motion stops right before the first letter.
-
-   `M-d' (`kill-word') kills the word after point.  To be precise, it
-kills everything from point to the place `M-f' would move to.  Thus, if
-point is in the middle of a word, `M-d' kills just the part after
-point.  If some punctuation comes between point and the next word, it
-is killed along with the word.  (If you wish to kill only the next word
-but not the punctuation before it, simply do `M-f' to get the end, and
-kill the word backwards with `M-DEL'.) `M-d' takes arguments just like
-`M-f'.
-
-   `M-DEL' (`backward-kill-word') kills the word before point.  It
-kills everything from point back to where `M-b' would move to.  If
-point is after the space in `FOO, BAR', then `FOO, ' is killed.  (If
-you wish to kill just `FOO', do `M-b M-d' instead of `M-DEL'.)
-
-   `M-t' (`transpose-words') exchanges the word before or containing
-point with the following word.  The delimiter characters between the
-words do not move.  For example, `FOO, BAR' transposes into `BAR, FOO'
-rather than `BAR FOO,'.  *Note Transpose::, for more on transposition
-and on arguments to transposition commands.
-
-   To operate on the next N words with an operation which applies
-between point and mark, you can either set the mark at point and then
-move over the words, or you can use the command `M-@' (`mark-word')
-which does not move point, but sets the mark where `M-f' would move to.
-`M-@' accepts a numeric argument that says how many words to scan for
-the place to put the mark.  In Transient Mark mode, this command
-activates the mark.
-
-   The word commands' understanding of syntax is completely controlled
-by the syntax table.  Any character can, for example, be declared to be
-a word delimiter.  *Note Syntax::.
-
-
-File: emacs,  Node: Sentences,  Next: Paragraphs,  Prev: Words,  Up: Text
-
-Sentences
-=========
-
-   The Emacs commands for manipulating sentences and paragraphs are
-mostly on Meta keys, so as to be like the word-handling commands.
-
-`M-a'
-     Move back to the beginning of the sentence (`backward-sentence').
-
-`M-e'
-     Move forward to the end of the sentence (`forward-sentence').
-
-`M-k'
-     Kill forward to the end of the sentence (`kill-sentence').
-
-`C-x DEL'
-     Kill back to the beginning of the sentence
-     (`backward-kill-sentence').
-
-   The commands `M-a' and `M-e' (`backward-sentence' and
-`forward-sentence') move to the beginning and end of the current
-sentence, respectively.  They were chosen to resemble `C-a' and `C-e',
-which move to the beginning and end of a line.  Unlike them, `M-a' and
-`M-e' if repeated or given numeric arguments move over successive
-sentences.
-
-   Moving backward over a sentence places point just before the first
-character of the sentence; moving forward places point right after the
-punctuation that ends the sentence.  Neither one moves over the
-whitespace at the sentence boundary.
-
-   Just as `C-a' and `C-e' have a kill command, `C-k', to go with them,
-so `M-a' and `M-e' have a corresponding kill command `M-k'
-(`kill-sentence') which kills from point to the end of the sentence.
-With minus one as an argument it kills back to the beginning of the
-sentence.  Larger arguments serve as a repeat count.  There is also a
-command, `C-x DEL' (`backward-kill-sentence'), for killing back to the
-beginning of a sentence.  This command is useful when you change your
-mind in the middle of composing text.
-
-   The sentence commands assume that you follow the American typist's
-convention of putting two spaces at the end of a sentence; they consider
-a sentence to end wherever there is a `.', `?' or `!' followed by the
-end of a line or two spaces, with any number of `)', `]', `'', or `"'
-characters allowed in between.  A sentence also begins or ends wherever
-a paragraph begins or ends.
-
-   The variable `sentence-end' controls recognition of the end of a
-sentence.  It is a regexp that matches the last few characters of a
-sentence, together with the whitespace following the sentence.  Its
-normal value is
-
-     "[.?!][]\"')]*\\($\\|\t\\|  \\)[ \t\n]*"
-
-This example is explained in the section on regexps.  *Note Regexps::.
-
-   If you want to use just one space between sentences, you should set
-`sentence-end' to this value:
-
-     "[.?!][]\"')]*\\($\\|\t\\| \\)[ \t\n]*"
-
-You should also set the variable `sentence-end-double-space' to `nil'
-so that the fill commands expect and leave just one space at the end of
-a sentence.  Note that this makes it impossible to distinguish between
-periods that end sentences and those that indicate abbreviations.
-
-
-File: emacs,  Node: Paragraphs,  Next: Pages,  Prev: Sentences,  Up: Text
-
-Paragraphs
-==========
-
-   The Emacs commands for manipulating paragraphs are also Meta keys.
-
-`M-{'
-     Move back to previous paragraph beginning (`backward-paragraph').
-
-`M-}'
-     Move forward to next paragraph end (`forward-paragraph').
-
-`M-h'
-     Put point and mark around this or next paragraph
-     (`mark-paragraph').
-
-   `M-{' moves to the beginning of the current or previous paragraph,
-while `M-}' moves to the end of the current or next paragraph.  Blank
-lines and text formatter command lines separate paragraphs and are not
-considered part of any paragraph.  Also, an indented line starts a new
-paragraph.
-
-   In major modes for programs (as opposed to Text mode), paragraphs
-begin and end only at blank lines.  This makes the paragraph commands
-continue to be useful even though there are no paragraphs per se.
-
-   When there is a fill prefix, then paragraphs are delimited by all
-lines which don't start with the fill prefix.  *Note Filling::.
-
-   When you wish to operate on a paragraph, you can use the command
-`M-h' (`mark-paragraph') to set the region around it.  Thus, for
-example, `M-h C-w' kills the paragraph around or after point.  The
-`M-h' command puts point at the beginning and mark at the end of the
-paragraph point was in.  In Transient Mark mode, it activates the mark.
-If point is between paragraphs (in a run of blank lines, or at a
-boundary), the paragraph following point is surrounded by point and
-mark.  If there are blank lines preceding the first line of the
-paragraph, one of these blank lines is included in the region.
-
-   The precise definition of a paragraph boundary is controlled by the
-variables `paragraph-separate' and `paragraph-start'.  The value of
-`paragraph-start' is a regexp that should match any line that either
-starts or separates paragraphs.  The value of `paragraph-separate' is
-another regexp that should match only lines that separate paragraphs
-without being part of any paragraph.  Lines that start a new paragraph
-and are contained in it must match only `paragraph-start', not
-`paragraph-separate'.  For example, normally `paragraph-start' is `"[
-\t\n\f]"' and `paragraph-separate' is `"[ \t\f]*$"'.
-
-   Normally it is desirable for page boundaries to separate paragraphs.
-The default values of these variables recognize the usual separator for
-pages.
-
-
-File: emacs,  Node: Pages,  Next: Filling,  Prev: Paragraphs,  Up: Text
-
-Pages
-=====
-
-   Files are often thought of as divided into "pages" by the "formfeed"
-character (ASCII control-L, octal code 014).  When you print hardcopy
-for a file, this character forces a page break; thus, each page of the
-file goes on a separate page on paper.  Most Emacs commands treat the
-page-separator character just like any other character: you can insert
-it with `C-q C-l', and delete it with DEL.  Thus, you are free to
-paginate your file or not.  However, since pages are often meaningful
-divisions of the file, Emacs provides commands to move over them and
-operate on them.
-
-`C-x ['
-     Move point to previous page boundary (`backward-page').
-
-`C-x ]'
-     Move point to next page boundary (`forward-page').
-
-`C-x C-p'
-     Put point and mark around this page (or another page)
-     (`mark-page').
-
-`C-x l'
-     Count the lines in this page (`count-lines-page').
-
-   The `C-x [' (`backward-page') command moves point to immediately
-after the previous page delimiter.  If point is already right after a
-page delimiter, it skips that one and stops at the previous one.  A
-numeric argument serves as a repeat count.  The `C-x ]' (`forward-page')
-command moves forward past the next page delimiter.
-
-   The `C-x C-p' command (`mark-page') puts point at the beginning of
-the current page and the mark at the end.  The page delimiter at the
-end is included (the mark follows it).  The page delimiter at the front
-is excluded (point follows it).  `C-x C-p C-w' is a handy way to kill a
-page to move it elsewhere.  If you move to another page delimiter with
-`C-x [' and `C-x ]', then yank the killed page, all the pages will be
-properly delimited once again.  The reason `C-x C-p' includes only the
-following page delimiter in the region is to ensure that.
-
-   A numeric argument to `C-x C-p' is used to specify which page to go
-to, relative to the current one.  Zero means the current page.  One
-means the next page, and -1 means the previous one.
-
-   The `C-x l' command (`count-lines-page') is good for deciding where
-to break a page in two.  It prints in the echo area the total number of
-lines in the current page, and then divides it up into those preceding
-the current line and those following, as in
-
-     Page has 96 (72+25) lines
-
-Notice that the sum is off by one; this is correct if point is not at
-the beginning of a line.
-
-   The variable `page-delimiter' controls where pages begin.  Its value
-is a regexp that matches the beginning of a line that separates pages.
-The normal value of this variable is `"^\f"', which matches a formfeed
-character at the beginning of a line.
-
-
-File: emacs,  Node: Filling,  Next: Case,  Prev: Pages,  Up: Text
-
-Filling Text
-============
-
-   "Filling" text means breaking it up into lines that fit a specified
-width.  Emacs does filling in two ways.  In Auto Fill mode, inserting
-text with self-inserting characters also automatically fills it.  There
-are also explicit fill commands that you can use when editing text
-leaves it unfilled.  When you edit formatted text, you can specify a
-style of filling for each portion of the text (*note Formatted Text::.).
-
-* Menu:
-
-* Auto Fill::	  Auto Fill mode breaks long lines automatically.
-* Fill Commands:: Commands to refill paragraphs and center lines.
-* Fill Prefix::	  Filling when every line is indented or in a comment, etc.
-
-
-File: emacs,  Node: Auto Fill,  Next: Fill Commands,  Up: Filling
-
-Auto Fill Mode
---------------
-
-   "Auto Fill" mode is a minor mode in which lines are broken
-automatically when they become too wide.  Breaking happens only when
-you type a SPC or RET.
-
-`M-x auto-fill-mode'
-     Enable or disable Auto Fill mode.
-
-`SPC'
-`RET'
-     In Auto Fill mode, break lines when appropriate.
-
-   `M-x auto-fill-mode' turns Auto Fill mode on if it was off, or off
-if it was on.  With a positive numeric argument it always turns Auto
-Fill mode on, and with a negative argument always turns it off.  You can
-see when Auto Fill mode is in effect by the presence of the word `Fill'
-in the mode line, inside the parentheses.  Auto Fill mode is a minor
-mode which is enabled or disabled for each buffer individually.  *Note
-Minor Modes::.
-
-   In Auto Fill mode, lines are broken automatically at spaces when
-they get longer than the desired width.  Line breaking and
-rearrangement takes place only when you type SPC or RET.  If you wish
-to insert a space or newline without permitting line-breaking, type
-`C-q SPC' or `C-q LFD' (recall that a newline is really a linefeed).
-Also, `C-o' inserts a newline without line breaking.
-
-   Auto Fill mode works well with Lisp mode, because when it makes a new
-line in Lisp mode it indents that line with TAB.  If a line ending in a
-comment gets too long, the text of the comment is split into two
-comment lines.  Optionally new comment delimiters are inserted at the
-end of the first line and the beginning of the second so that each line
-is a separate comment; the variable `comment-multi-line' controls the
-choice (*note Comments::.).
-
-   Adaptive filling (see the following section) works for Auto Filling
-as well as for explicit fill commands.  It takes a fill prefix
-automatically from the second or first line of a paragraph.
-
-   Auto Fill mode does not refill entire paragraphs; it can break lines
-but cannot merge lines.  So editing in the middle of a paragraph can
-result in a paragraph that is not correctly filled.  The easiest way to
-make the paragraph properly filled again is usually with the explicit
-fill commands.  *Note Fill Commands::.
-
-   Many users like Auto Fill mode and want to use it in all text files.
-The section on init files says how to arrange this permanently for
-yourself.  *Note Init File::.
-
-
-File: emacs,  Node: Fill Commands,  Next: Fill Prefix,  Prev: Auto Fill,  Up: Filling
-
-Explicit Fill Commands
-----------------------
-
-`M-q'
-     Fill current paragraph (`fill-paragraph').
-
-`C-x f'
-     Set the fill column (`set-fill-column').
-
-`M-x fill-region'
-     Fill each paragraph in the region (`fill-region').
-
-`M-x fill-region-as-paragraph.'
-     Fill the region, considering it as one paragraph.
-
-`M-s'
-     Center a line.
-
-   To refill a paragraph, use the command `M-q' (`fill-paragraph').
-This operates on the paragraph that point is inside, or the one after
-point if point is between paragraphs.  Refilling works by removing all
-the line-breaks, then inserting new ones where necessary.
-
-   To refill many paragraphs, use `M-x fill-region', which divides the
-region into paragraphs and fills each of them.
-
-   `M-q' and `fill-region' use the same criteria as `M-h' for finding
-paragraph boundaries (*note Paragraphs::.).  For more control, you can
-use `M-x fill-region-as-paragraph', which refills everything between
-point and mark.  This command deletes any blank lines within the
-region, so separate blocks of text end up combined into one block.
-
-   A numeric argument to `M-q' causes it to "justify" the text as well
-as filling it.  This means that extra spaces are inserted to make the
-right margin line up exactly at the fill column.  To remove the extra
-spaces, use `M-q' with no argument.  (Likewise for `fill-region'.)
-Another way to control justification, and choose other styles of
-filling, is with the `justification' text property; see *Note Format
-Justification::.
-
-   The fill commands can deduce the proper fill prefix for a paragraph
-automatically in certain cases: either whitespace or certain punctuation
-characters at the beginning of a line are treated as a fill prefix.
-They take the fill prefix from the paragraph's second line, unless the
-paragraph has just one line.  You can turn off this feature by setting
-`adaptive-fill-mode' to `nil'.
-
-   Some major modes, including Text mode, treat whitespace at the
-beginning of a line as a signal that this line starts a new paragraph.
-It would be a mistake to copy text which implies the start of a
-paragraph onto each line of the paragraph when filling it.  Therefore,
-adaptive filling does not accept a fill prefix from a line which is a
-paragraph-starter.  In particular, adaptive filling in Text mode does
-not accept a fill prefix consisting of just whitespace.
-
-   However, other modes including Indented Text mode (*note Text
-Mode::.) do not consider whitespace as a signal to start a new
-paragraph.  In these modes, adaptive filling does accept a fill prefix
-consisting of just whitespace, if the first or second line of a
-paragraph begins with whitespace.
-
-   The variable `adaptive-fill-regexp' determines what kinds of line
-beginnings can serve as a fill prefix: any characters at the start of
-the line which match this regular expression are used.
-
-   You can specify more complex ways of choosing a fill prefix
-automatically by setting the variable `adaptive-fill-function' to a
-function.  This function is called with point after the left margin of a
-line, and it should return the appropriate fill prefix based on that
-line.  If it returns `nil', that means it sees no fill prefix in that
-line.
-
-   The command `M-s' (`center-line') centers the current line within
-the current fill column.  With an argument N, it centers N lines
-individually and moves past them.
-
-   The maximum line width for filling is in the variable `fill-column'.
-Altering the value of `fill-column' makes it local to the current
-buffer; until that time, the default value is in effect.  The default
-is initially 70.  *Note Locals::.  The easiest way to set `fill-column'
-is to use the command `C-x f' (`set-fill-column').  With a numeric
-argument, it uses that as the new fill column.  With just `C-u' as
-argument, it sets `fill-column' to the current horizontal position of
-point.
-
-   Emacs commands normally consider a period followed by two spaces or
-by a newline as the end of a sentence; a period followed by just one
-space indicates an abbreviation and not the end of a sentence.  To
-preserve the distinction between these two ways of using a period, the
-fill commands do not break a line after a period followed by just one
-space.
-
-   If the variable `sentence-end-double-space' is `nil', the fill
-commands expect and leave just one space at the end of a sentence.
-Ordinarily this variable is `t', so the fill commands insist on two
-spaces for the end of a sentence, as explained above.  *Note
-Sentences::.
-
-   If the variable `colon-double-space' is non-`nil', the fill commands
-put two spaces after a colon.
-
-
-File: emacs,  Node: Fill Prefix,  Prev: Fill Commands,  Up: Filling
-
-The Fill Prefix
----------------
-
-   To fill a paragraph in which each line starts with a special marker
-(which might be a few spaces, giving an indented paragraph), use the
-"fill prefix" feature.  The fill prefix is a string which Emacs expects
-every line to start with, and which is not included in filling.
-
-`C-x .'
-     Set the fill prefix (`set-fill-prefix').
-
-`M-q'
-     Fill a paragraph using current fill prefix (`fill-paragraph').
-
-`M-x fill-individual-paragraphs'
-     Fill the region, considering each change of indentation as
-     starting a new paragraph.
-
-`M-x fill-nonuniform-paragraphs'
-     Fill the region, considering only paragraph-separator lines as
-     starting a new paragraph.
-
-   To specify a fill prefix, move to a line that starts with the desired
-prefix, put point at the end of the prefix, and give the command
-`C-x .' (`set-fill-prefix').  That's a period after the `C-x'.  To turn
-off the fill prefix, specify an empty prefix: type `C-x .' with point
-at the beginning of a line.
-
-   When a fill prefix is in effect, the fill commands remove the fill
-prefix from each line before filling and insert it on each line after
-filling.  Auto Fill mode also inserts the fill prefix automatically when
-it makes a new line.  The `C-o' command inserts the fill prefix on new
-lines it creates, when you use it at the beginning of a line (*note
-Blank Lines::.).  Conversely, the command `M-^' deletes the prefix (if
-it occurs) after the newline that it deletes (*note Indentation::.).
-
-   For example, if `fill-column' is 40 and you set the fill prefix to
-`;; ', then `M-q' in the following text
-
-     ;; This is an
-     ;; example of a paragraph
-     ;; inside a Lisp-style comment.
-
-produces this:
-
-     ;; This is an example of a paragraph
-     ;; inside a Lisp-style comment.
-
-   Lines that do not start with the fill prefix are considered to start
-paragraphs, both in `M-q' and the paragraph commands; this gives good
-results for paragraphs with hanging indentation (every line indented
-except the first one).  Lines which are blank or indented once the
-prefix is removed also separate or start paragraphs; this is what you
-want if you are writing multi-paragraph comments with a comment
-delimiter on each line.
-
-   You can use `M-x fill-individual-paragraphs' to set the fill prefix
-for each paragraph automatically.  This command divides the region into
-paragraphs, treating every change in the amount of indentation as the
-start of a new paragraph, and fills each of these paragraphs.  Thus,
-all the lines in one "paragraph" have the same amount of indentation.
-That indentation serves as the fill prefix for that paragraph.
-
-   `M-x fill-nonuniform-paragraphs' is a similar command that divides
-the region into paragraphs in a different way.  It considers only
-paragraph-separating lines (as defined by `paragraph-separate') as
-starting a new paragraph.  Since this means that the lines of one
-paragraph may have different amounts of indentation, the fill prefix
-used is the smallest amount of indentation of any of the lines of the
-paragraph.  This gives good results with styles that indent a
-paragraph's first line more or less that the rest of the paragraph.
-
-   The fill prefix is stored in the variable `fill-prefix'.  Its value
-is a string, or `nil' when there is no fill prefix.  This is a
-per-buffer variable; altering the variable affects only the current
-buffer, but there is a default value which you can change as well.
-*Note Locals::.
-
-   The `indentation' text property provides another way to control the
-amount of indentation paragraphs receive.  *Note Format Indentation::.
-
-
-File: emacs,  Node: Case,  Next: Text Mode,  Prev: Filling,  Up: Text
-
-Case Conversion Commands
-========================
-
-   Emacs has commands for converting either a single word or any
-arbitrary range of text to upper case or to lower case.
-
-`M-l'
-     Convert following word to lower case (`downcase-word').
-
-`M-u'
-     Convert following word to upper case (`upcase-word').
-
-`M-c'
-     Capitalize the following word (`capitalize-word').
-
-`C-x C-l'
-     Convert region to lower case (`downcase-region').
-
-`C-x C-u'
-     Convert region to upper case (`upcase-region').
-
-   The word conversion commands are the most useful.  `M-l'
-(`downcase-word') converts the word after point to lower case, moving
-past it.  Thus, repeating `M-l' converts successive words.  `M-u'
-(`upcase-word') converts to all capitals instead, while `M-c'
-(`capitalize-word') puts the first letter of the word into upper case
-and the rest into lower case.  All these commands convert several words
-at once if given an argument.  They are especially convenient for
-converting a large amount of text from all upper case to mixed case,
-because you can move through the text using `M-l', `M-u' or `M-c' on
-each word as appropriate, occasionally using `M-f' instead to skip a
-word.
-
-   When given a negative argument, the word case conversion commands
-apply to the appropriate number of words before point, but do not move
-point.  This is convenient when you have just typed a word in the wrong
-case: you can give the case conversion command and continue typing.
-
-   If a word case conversion command is given in the middle of a word,
-it applies only to the part of the word which follows point.  This is
-just like what `M-d' (`kill-word') does.  With a negative argument,
-case conversion applies only to the part of the word before point.
-
-   The other case conversion commands are `C-x C-u' (`upcase-region')
-and `C-x C-l' (`downcase-region'), which convert everything between
-point and mark to the specified case.  Point and mark do not move.
-
-   The region case conversion commands `upcase-region' and
-`downcase-region' are normally disabled.  This means that they ask for
-confirmation if you try to use them.  When you confirm, you may enable
-the command, which means it will not ask for confirmation again.  *Note
-Disabling::.
-
-
-File: emacs,  Node: Text Mode,  Next: Outline Mode,  Prev: Case,  Up: Text
-
-Text Mode
-=========
-
-   When you edit files of text in a human language, it's more convenient
-to use Text mode rather than Fundamental mode.  Invoke `M-x text-mode'
-to enter Text mode.  In Text mode, TAB runs the function
-`tab-to-tab-stop', which allows you to use arbitrary tab stops set with
-`M-x edit-tab-stops' (*note Tab Stops::.).  Features concerned with
-comments in programs are turned off in Text mode except when explicitly
-invoked.  The syntax table is changed so that periods are not
-considered part of a word, while apostrophes, backspaces and underlines
-are part of words.
-
-   A similar variant mode is Indented Text mode, intended for editing
-text in which most lines are indented.  This mode defines TAB to run
-`indent-relative' (*note Indentation::.), and makes Auto Fill indent
-the lines it creates.  The result is that normally a line made by Auto
-Filling, or by LFD, is indented just like the previous line.  In
-Indented Text mode, only blank lines separate paragraphs--indented
-lines continue the current paragraph.  Use `M-x indented-text-mode' to
-select this mode.
-
-   Text mode, and all the modes based on it, define `M-TAB' as the
-command `ispell-complete-word', which performs completion of the
-partial word in the buffer before point, using the spelling dictionary
-as the space of possible words.  *Note Spelling::.
-
-   Entering Text mode or Indented Text mode runs the hook
-`text-mode-hook'.  Other major modes related to Text mode also run this
-hook, followed by hooks of their own; this includes Nroff mode, TeX
-mode, Outline mode and Mail mode.  Hook functions on `text-mode-hook'
-can look at the value of `major-mode' to see which of these modes is
-actually being entered.  *Note Hooks::.
-
-   Emacs provides two other modes for editing text that is to be passed
-through a text formatter to produce fancy formatted printed output.
-*Note Nroff Mode::, for editing input to the formatter nroff.  *Note
-TeX Mode::, for editing input to the formatter TeX.
-
-   Another mode is used for editing outlines.  It allows you to view the
-text at various levels of detail.  You can view either the outline
-headings alone or both headings and text; you can also hide some of the
-headings at lower levels from view to make the high level structure more
-visible.  *Note Outline Mode::.
-
-
-File: emacs,  Node: Outline Mode,  Next: TeX Mode,  Prev: Text Mode,  Up: Text
-
-Outline Mode
-============
-
-   Outline mode is a major mode much like Text mode but intended for
-editing outlines.  It allows you to make parts of the text temporarily
-invisible so that you can see the outline structure.  Type `M-x
-outline-mode' to switch to Outline mode as the major mode of the current
-buffer.
-
-   When Outline mode makes a line invisible, the line does not appear on
-the screen.  The screen appears exactly as if the invisible line were
-deleted, except that an ellipsis (three periods in a row) appears at the
-end of the previous visible line (only one ellipsis no matter how many
-invisible lines follow).
-
-   All editing commands treat the text of the invisible line as part of
-the previous visible line.  For example, `C-n' moves onto the next
-visible line.  Killing an entire visible line, including its
-terminating newline, really kills all the following invisible lines
-along with it; yanking it all back yanks the invisible lines and they
-remain invisible.
-
-   Outline minor mode provides the same commands as the major mode,
-Outline mode, but you can use it in conjunction with other major modes.
-Type `M-x outline-minor-mode' to enable the Outline minor mode in the
-current buffer.  You can also specify this in the text of a file, with
-a file local variable of the form `mode: outline-minor' (*note File
-Variables::.).
-
-   The major mode, Outline mode, provides special key bindings on the
-`C-c' prefix.  Outline minor mode provides similar bindings with `C-c
-@' as the prefix; this is to reduce the conflicts with the major mode's
-special commands.  (The variable `outline-minor-mode-prefix' controls
-the prefix used.)
-
-   Entering Outline mode runs the hook `text-mode-hook' followed by the
-hook `outline-mode-hook' (*note Hooks::.).
-
-* Menu:
-
-* Format: Outline Format.	   What the text of an outline looks like.
-* Motion: Outline Motion.	   Special commands for moving through
-                                     outlines.
-* Visibility: Outline Visibility.  Commands to control what is visible.
-* Views: Outline Views.            Outlines and multiple views.
-
-
-File: emacs,  Node: Outline Format,  Next: Outline Motion,  Up: Outline Mode
-
-Format of Outlines
-------------------
-
-   Outline mode assumes that the lines in the buffer are of two types:
-"heading lines" and "body lines".  A heading line represents a topic in
-the outline.  Heading lines start with one or more stars; the number of
-stars determines the depth of the heading in the outline structure.
-Thus, a heading line with one star is a major topic; all the heading
-lines with two stars between it and the next one-star heading are its
-subtopics; and so on.  Any line that is not a heading line is a body
-line.  Body lines belong with the preceding heading line.  Here is an
-example:
-
-     * Food
-     
-     This is the body,
-     which says something about the topic of food.
-     
-     ** Delicious Food
-     
-     This is the body of the second-level header.
-     
-     ** Distasteful Food
-     
-     This could have
-     a body too, with
-     several lines.
-     
-     *** Dormitory Food
-     
-     * Shelter
-     
-     Another first-level topic with its header line.
-
-   A heading line together with all following body lines is called
-collectively an "entry".  A heading line together with all following
-deeper heading lines and their body lines is called a "subtree".
-
-   You can customize the criterion for distinguishing heading lines by
-setting the variable `outline-regexp'.  Any line whose beginning has a
-match for this regexp is considered a heading line.  Matches that start
-within a line (not at the left margin) do not count.  The length of the
-matching text determines the level of the heading; longer matches make
-a more deeply nested level.  Thus, for example, if a text formatter has
-commands `@chapter', `@section' and `@subsection' to divide the
-document into chapters and sections, you could make those lines count
-as heading lines by setting `outline-regexp' to
-`"@chap\\|@\\(sub\\)*section"'.  Note the trick: the two words
-`chapter' and `section' are equally long, but by defining the regexp to
-match only `chap' we ensure that the length of the text matched on a
-chapter heading is shorter, so that Outline mode will know that
-sections are contained in chapters.  This works as long as no other
-command starts with `@chap'.
-
-   It is possible to change the rule for calculating the level of a
-heading line by setting the variable `outline-level'.  The value of
-`outline-level' should be a function that takes no arguments and
-returns the level of the current heading.  Some major modes such as C,
-Nroff, and Emacs Lisp mode set this variable in order to work with
-Outline minor mode.
-
-   Outline mode makes a line invisible by changing the newline before it
-into an ASCII control-M (code 015).  Most editing commands that work on
-lines treat an invisible line as part of the previous line because,
-strictly speaking, it *is* part of that line, since there is no longer a
-newline in between.  When you save the file in Outline mode, control-M
-characters are saved as newlines, so the invisible lines become ordinary
-lines in the file.  But saving does not change the visibility status of
-a line inside Emacs.
-
-
-File: emacs,  Node: Outline Motion,  Next: Outline Visibility,  Prev: Outline Format,  Up: Outline Mode
-
-Outline Motion Commands
------------------------
-
-   Outline mode provides special motion commands that move backward and
-forward to heading lines.
-
-`C-c C-n'
-     Move point to the next visible heading line
-     (`outline-next-visible-heading').
-
-`C-c C-p'
-     Move point to the previous visible heading line
-     (`outline-previous-visible-heading').
-
-`C-c C-f'
-     Move point to the next visible heading line at the same level as
-     the one point is on (`outline-forward-same-level').
-
-`C-c C-b'
-     Move point to the previous visible heading line at the same level
-     (`outline-backward-same-level').
-
-`C-c C-u'
-     Move point up to a lower-level (more inclusive) visible heading
-     line (`outline-up-heading').
-
-   `C-c C-n' (`outline-next-visible-heading') moves down to the next
-heading line.  `C-c C-p' (`outline-previous-visible-heading') moves
-similarly backward.  Both accept numeric arguments as repeat counts.
-The names emphasize that invisible headings are skipped, but this is
-not really a special feature.  All editing commands that look for lines
-ignore the invisible lines automatically.
-
-   More powerful motion commands understand the level structure of
-headings.  `C-c C-f' (`outline-forward-same-level') and `C-c C-b'
-(`outline-backward-same-level') move from one heading line to another
-visible heading at the same depth in the outline.  `C-c C-u'
-(`outline-up-heading') moves backward to another heading that is less
-deeply nested.
-
-
-File: emacs,  Node: Outline Visibility,  Next: Outline Views,  Prev: Outline Motion,  Up: Outline Mode
-
-Outline Visibility Commands
----------------------------
-
-   The other special commands of outline mode are used to make lines
-visible or invisible.  Their names all start with `hide' or `show'.
-Most of them fall into pairs of opposites.  They are not undoable;
-instead, you can undo right past them.  Making lines visible or
-invisible is simply not recorded by the undo mechanism.
-
-`C-c C-t'
-     Make all body lines in the buffer invisible (`hide-body').
-
-`C-c C-a'
-     Make all lines in the buffer visible (`show-all').
-
-`C-c C-d'
-     Make everything under this heading invisible, not including this
-     heading itself
-     (`hide-subtree').
-
-`C-c C-s'
-     Make everything under this heading visible, including body,
-     subheadings, and their bodies (`show-subtree').
-
-`C-c C-l'
-     Make the body of this heading line, and of all its subheadings,
-     invisible (`hide-leaves').
-
-`C-c C-k'
-     Make all subheadings of this heading line, at all levels, visible
-     (`show-branches').
-
-`C-c C-i'
-     Make immediate subheadings (one level down) of this heading line
-     visible (`show-children').
-
-`C-c C-c'
-     Make this heading line's body invisible (`hide-entry').
-
-`C-c C-e'
-     Make this heading line's body visible (`show-entry').
-
-`C-c C-q'
-     Hide everything except the top N levels of heading lines
-     (`hide-sublevels').
-
-`C-c C-o'
-     Hide everything except for the heading or body that point is in,
-     plus the headings leading up from there to the top level of the
-     outline (`hide-other').
-
-   Two commands that are exact opposites are `C-c C-c' (`hide-entry')
-and `C-c C-e' (`show-entry').  They are used with point on a heading
-line, and apply only to the body lines of that heading.  Subheadings
-and their bodies are not affected.
-
-   Two more powerful opposites are `C-c C-d' (`hide-subtree') and `C-c
-C-s' (`show-subtree').  Both expect to be used when point is on a
-heading line, and both apply to all the lines of that heading's
-"subtree": its body, all its subheadings, both direct and indirect, and
-all of their bodies.  In other words, the subtree contains everything
-following this heading line, up to and not including the next heading of
-the same or higher rank.
-
-   Intermediate between a visible subtree and an invisible one is having
-all the subheadings visible but none of the body.  There are two
-commands for doing this, depending on whether you want to hide the
-bodies or make the subheadings visible.  They are `C-c C-l'
-(`hide-leaves') and `C-c C-k' (`show-branches').
-
-   A little weaker than `show-branches' is `C-c C-i' (`show-children').
-It makes just the direct subheadings visible--those one level down.
-Deeper subheadings remain invisible, if they were invisible.
-
-   Two commands have a blanket effect on the whole file.  `C-c C-t'
-(`hide-body') makes all body lines invisible, so that you see just the
-outline structure.  `C-c C-a' (`show-all') makes all lines visible.
-These commands can be thought of as a pair of opposites even though
-`C-c C-a' applies to more than just body lines.
-
-   The command `C-c C-q' (`hide-sublevels') hides all but the top level
-headings.  With a numeric argument N, it hides everything except the
-top N levels of heading lines.
-
-   The command `C-c C-o' (`hide-other') hides everything except the
-heading or body text that point is in, plus its parents (the headers
-leading up from there to top level in the outline).
-
-   You can turn off the use of ellipses at the ends of visible lines by
-setting `selective-display-ellipses' to `nil'.  Then there is no
-visible indication of the presence of invisible lines.
-
-
-File: emacs,  Node: Outline Views,  Prev: Outline Visibility,  Up: Outline Mode
-
-Viewing One Outline in Multiple Views
--------------------------------------
-
-   You can display two views of a single outline at the same time, in
-different windows, by means of an alternative implementation of Outline
-mode called `noutline'.
-
-   To do this, first load the library `noutline' with `M-x load-library
-RET noutline RET'.  This loads the alternative implementation of
-Outline mode.  It provides the same command names and key bindings as
-regular Outline mode, but it implements them differently.
-
-   Then, to display a second view of an outline buffer, you must create
-an indirect buffer using `M-x make-indirect-buffer'.  The first
-argument of this command is the existing outline buffer name, and its
-second argument is the name to use for the new indirect buffer.  *Note
-Indirect Buffers::.
-
-   Once the indirect buffer exists, you can display it in a window in
-the normal fashion, with `C-x 4 b' or other Emacs commands.  The Outline
-mode commands to show and hide parts of the text operate on each buffer
-independently; as a result, each buffer can have its own view.  If you
-want more than two views on the same outline, create additional indirect
-buffers.
-
-   In a future Emacs version, the alternative `noutline' implementation
-will probably become the principal implementation.
 

@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Calendar/Diary, Gnus, Dired, Top
 @chapter The Calendar and the Diary
@@ -22,18 +22,18 @@ and Diary,, elisp, The Emacs Lisp Reference Manual}, for customization
 information about the calendar and diary.
 
 @menu
-* Calendar Motion::       Moving through the calendar; selecting a date.
-* Scroll Calendar::       Bringing earlier or later months onto the screen.
-* Counting Days::         How many days are there between two dates?
-* General Calendar::      Exiting or recomputing the calendar.
-* TeX Calendar::          Print a calendar using TeX.
-* Holidays::              Displaying dates of holidays.
-* Sunrise/Sunset::        Displaying local times of sunrise and sunset.
-* Lunar Phases::          Displaying phases of the moon.
-* Other Calendars::       Converting dates to other calendar systems.
-* Diary::                 Displaying events from your diary.
-* Appointments::	  Reminders when it's time to do something.
-* Daylight Savings::      How to specify when daylight savings time is active.
+* Calendar Motion::     Moving through the calendar; selecting a date.
+* Scroll Calendar::     Bringing earlier or later months onto the screen.
+* Counting Days::       How many days are there between two dates?
+* General Calendar::    Exiting or recomputing the calendar.
+* LaTeX Calendar::      Print a calendar using LaTeX.
+* Holidays::            Displaying dates of holidays.
+* Sunrise/Sunset::      Displaying local times of sunrise and sunset.
+* Lunar Phases::        Displaying phases of the moon.
+* Other Calendars::     Converting dates to other calendar systems.
+* Diary::               Displaying events from your diary.
+* Appointments::	Reminders when it's time to do something.
+* Daylight Savings::    How to specify when daylight savings time is active.
 @end menu
 
 @node Calendar Motion
@@ -44,7 +44,7 @@ information about the calendar and diary.
 time such as days, weeks, months, and years.  If you move outside the
 three months originally displayed, the calendar display ``scrolls''
 automatically through time to make the selected date visible.  Moving to
-a date lets you view its holidays or diary entries, convert it to other
+a date lets you view its holidays or diary entries, or convert it to other
 calendars; moving longer time periods is also useful simply to scroll the
 calendar.
 
@@ -78,7 +78,7 @@ Move point one month backward (@code{calendar-backward-month}).
 @item C-x ]
 Move point one year forward (@code{calendar-forward-year}).
 @item C-x [
-Move point one year backward (@code{calendar-forward-year}).
+Move point one year backward (@code{calendar-backward-year}).
 @end table
 
 @kindex C-f @r{(Calendar mode)}
@@ -109,7 +109,7 @@ moves to the same day in the previous week.
   The commands for motion by months and years work like those for
 weeks, but move a larger distance.  The month commands @kbd{M-@}} and
 @kbd{M-@{} move forward or backward by an entire month's time.  The
-year commands @kbd{C-x ]} and @kbd{C-x [} move forward or backward a
+year commands @kbd{C-x ]} and @w{@kbd{C-x [}} move forward or backward a
 whole year.
 
   The easiest way to remember these commands is to consider months and
@@ -310,11 +310,11 @@ buries all buffers related to the calendar, selecting other buffers.
 (If a frame contains a dedicated calendar window, exiting from the
 calendar iconifies that frame.)
 
-@node TeX Calendar
-@section TeX Calendar
-@cindex calendar and @TeX{}
+@node LaTeX Calendar
+@section LaTeX Calendar
+@cindex calendar and La@TeX{}
 
-   The Calendar @TeX{} commands produce a buffer of LaTeX code that
+   The Calendar La@TeX{} commands produce a buffer of La@TeX{} code that
 prints as a calendar.  Depending on the command you use, the printed
 calendar covers the day, week, month or year that point is in.
 
@@ -392,6 +392,8 @@ List all holidays for the displayed three months in another window
 @item M-x holidays
 List all holidays for three months around today's date in another
 window.
+@item M-x list-holidays
+List holidays in another window for a specified range of years.
 @end table
 
 @kindex h @r{(Calendar mode)}
@@ -429,17 +431,24 @@ if you don't have a calendar window.  If you want the list of holidays
 centered around a different month, use @kbd{C-u M-x holidays}, which
 prompts for the month and year.
 
-@c ??? Delete mention of floating point?
-  The holidays known to Emacs include American holidays and the major
-Christian, Jewish, and Islamic holidays; also the solstices and
+  The holidays known to Emacs include United States holidays and the
+major Christian, Jewish, and Islamic holidays; also the solstices and
 equinoxes.
+
+@findex list-holidays
+   The command @kbd{M-x list-holidays} displays the list of holidays for
+a range of years.  This function asks you for the starting and stopping
+years, and allows you to chose all the holidays or one of several
+categories of holidays.  You can use this command even if you don't have
+a calendar window.
 
   The dates used by Emacs for holidays are based on @emph{current
 practice}, not historical fact.  Historically, for instance, the start
 of daylight savings time and even its existence have varied from year to
-year, but present American law mandates that daylight savings time
-begins on the first Sunday in April.  In an American locale, Emacs
-always uses this definition, even though it is wrong for some prior years.
+year, but present United States law mandates that daylight savings time
+begins on the first Sunday in April.  When the daylight savings rules
+are set up for the United States, Emacs always uses the present
+definition, even though it is wrong for some prior years.
 
 @node Sunrise/Sunset
 @section Times of Sunrise and Sunset
@@ -637,7 +646,7 @@ Goodman-Martinez-Thompson correlation in its calculations.
 @cindex Ethiopic calendar
   The Copts use a calendar based on the ancient Egyptian solar calendar.
 Their calendar consists of twelve 30-day months followed by an extra
-five day period.  Once every fourth year they add a leap day to this
+five-day period.  Once every fourth year they add a leap day to this
 extra period to make it six days.  The Ethiopic calendar is identical in
 structure, but has different year numbers and month names.
 
@@ -962,7 +971,7 @@ that appears.
 @findex mark-diary-entries
   To get a broader view of which days are mentioned in the diary, use
 the @kbd{m} command.  This displays the dates that have diary entries
-fall in a different face (or places a @samp{+} after these dates, if
+in a different face (or places a @samp{+} after these dates, if
 display with multiple faces is not available).  The command applies both
 to the currently visible months and to other months that subsequently
 become visible by scrolling.  To turn marking off and erase the current
@@ -975,8 +984,7 @@ marks, type @kbd{u}, which also turns off holiday marks
 the @kbd{s} command.
 
   Display of selected diary entries uses the selective display feature
-to hide entries that don't apply.  This is the same feature that Outline
-mode uses to show part of an outline (@pxref{Outline Mode}).
+to hide entries that don't apply.
 
   The diary buffer as you see it is an illusion, so simply printing the
 buffer does not print what you see on your screen.  There is a special
@@ -989,8 +997,8 @@ directly to the printer.  You can customize it like @code{lpr-region}
   The command @kbd{M-x diary} displays the diary entries for the current
 date, independently of the calendar display, and optionally for the next
 few days as well; the variable @code{number-of-diary-entries} specifies
-how many days to include.  @xref{Calendar/Diary Options,, Calendar/Diary
-Options, elisp, The Emacs Lisp Reference Manual}.
+how many days to include.  @xref{Calendar, Customizing the Calendar
+and Diary,, elisp, The Emacs Lisp Reference Manual}.
 
   If you put @code{(diary)} in your @file{.emacs} file, this
 automatically displays a window with the day's diary entries, when you
@@ -1257,7 +1265,7 @@ individually checked.  So it's a good idea to make sexp diary entries
 nonmarking (with @samp{&}) when possible.
 
   Another sophisticated kind of sexp entry, a @dfn{floating} diary entry,
-specifies a regularly-occurring event by offsets specified in days,
+specifies a regularly occurring event by offsets specified in days,
 weeks, and months.  It is comparable to a crontab entry interpreted by
 the @code{cron} utility.  Here is a nonmarking, floating diary entry
 that applies to the last Thursday in November:
@@ -1270,8 +1278,8 @@ that applies to the last Thursday in November:
 @noindent
 The 11 specifies November (the eleventh month), the 4 specifies Thursday
 (the fourth day of the week, where Sunday is numbered zero), and the
-@minus{}1 specifies ``last'' (1 would mean ``first'', 2 would mean
-``second'', @minus{}2 would mean ``second-to-last'', and so on).  The
+@minus{}1 specifies ``last'' (1 would mean ``first,'' 2 would mean
+``second,'' @minus{}2 would mean ``second-to-last,'' and so on).  The
 month can be a single month or a list of months.  Thus you could change
 the 11 above to @samp{'(1 2 3)} and have the entry apply to the last
 Thursday of January, February, and March.  If the month is @code{t}, the
@@ -1299,6 +1307,15 @@ also add the function @code{appt-make-list} to the
 
 @example
 (add-hook 'diary-hook 'appt-make-list)
+@end example
+
+@noindent
+Adding this text to your @file{.emacs} file does the whole job:
+
+@example
+(display-time)
+(add-hook 'diary-hook 'appt-make-list)
+(diary 0)
 @end example
 
   With these preparations done, when you display the diary (either with

@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @iftex
 @chapter Killing and Moving Text
@@ -9,7 +9,7 @@ ring}, from which it can be retrieved by @dfn{yanking} it.  Some systems
 use the terms ``cutting'' and ``pasting'' for these operations.
 
   The commonest way of moving or copying text within Emacs is to kill it
-and later yank elsewhere it in one or more places.  This is very safe
+and later yank it elsewhere in one or more places.  This is very safe
 because Emacs remembers several recent kills, not just the last one.  It
 is versatile, because the many commands for killing syntactic units can
 also be used for moving those units.  But there are other ways of
@@ -77,7 +77,7 @@ indentation following it (@code{delete-indentation}).
 
   The most basic delete commands are @kbd{C-d} (@code{delete-char}) and
 @key{DEL} (@code{delete-backward-char}).  @kbd{C-d} deletes the
-character after point, the one the cursor is ``on top of''.  This
+character after point, the one the cursor is ``on top of.''  This
 doesn't move point.  @key{DEL} deletes the character before the cursor,
 and moves point back.  You can delete newlines like any other characters
 in the buffer; deleting a newline joins two lines.  Actually, @kbd{C-d}
@@ -200,7 +200,7 @@ single kill ring entry as usual.
 @cindex pasting
 
   @dfn{Yanking} means reinserting text previously killed.  This is what
-some systems call ``pasting''.  The usual way to move or copy text is to
+some systems call ``pasting.''  The usual way to move or copy text is to
 kill it and then yank it elsewhere one or more times.
 
 @table @kbd
@@ -404,7 +404,7 @@ wherever point happens to be in it.
 successive uses of @code{append-to-buffer} accumulate the text in the
 specified buffer in the same order as they were copied.  Strictly
 speaking, @code{append-to-buffer} does not always append to the text
-already in the buffer---only if point in that buffer is at the end.
+already in the buffer---it appends only if point in that buffer is at the end.
 However, if @code{append-to-buffer} is the only command you use to alter
 a buffer, then point is always at the end.
 
@@ -521,9 +521,9 @@ Registers}.
 @kindex C-x r o
 @findex open-rectangle
 @findex clear-rectangle
-  There are two commands for making with blank rectangles: @kbd{M-x
-clear-rectangle} to blank out existing text, and @kbd{C-x r o}
-(@code{open-rectangle}) to insert a blank rectangle.  Clearing a
+  There are two commands you can use for making blank rectangles:
+@kbd{M-x clear-rectangle} which blanks out existing text, and @kbd{C-x r
+o} (@code{open-rectangle}) which inserts a blank rectangle.  Clearing a
 rectangle is equivalent to deleting it and then inserting a blank
 rectangle of the same size.
 

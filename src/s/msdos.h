@@ -35,7 +35,7 @@ Boston, MA 02111-1307, USA.  */
 /* #define BSD4_1 */
 /* #define BSD4_2 */
 /* #define BSD4_3 */
-/* #define BSD */
+/* #define BSD_SYSTEM */
 /* #define VMS */
 #ifndef MSDOS
 #define MSDOS
@@ -50,7 +50,7 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 #endif
 
 #define DOS_NT	/* MSDOS or WINDOWSNT */
-#undef BSD
+#undef BSD_SYSTEM
 #undef VMS
 
 /* SYSTEM_TYPE should indicate the kind of system you are using.
@@ -58,7 +58,7 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 
 #define SYSTEM_TYPE "ms-dos"
 
-#define SYMS_SYSTEM syms_of_dosfns();syms_of_msdos()
+#define SYMS_SYSTEM syms_of_dosfns();syms_of_msdos();syms_of_win16select()
 
 /* NOMULTIPLEJOBS should be defined if your system's shell
  does not have "job control" (the ability to stop a program,

@@ -101,6 +101,90 @@ This function is suitable for execution in a .emacs file."
            (displayed-year (extract-calendar-year date)))
       (list-calendar-holidays))))
 
+;;;###autoload
+(defun list-holidays (y1 y2 &optional l label)
+  "Display holidays for years Y1 to Y2 (inclusive).
+
+The optional list of holidays L defaults to `calendar-holidays'.  See the
+documentation for that variable for a description of holiday lists.
+
+The optional LABEL is used to label the buffer created."
+  (interactive
+   (let* ((start-year (calendar-read
+                       "Starting year of holidays (>0): "
+                       '(lambda (x) (> x 0))
+                       (int-to-string (extract-calendar-year
+                                       (calendar-current-date)))))
+          (end-year (calendar-read
+                       (format "Ending year (inclusive) of holidays (>=%s): "
+                               start-year)
+                       '(lambda (x) (>= x start-year))
+                       (int-to-string start-year)))
+          (completion-ignore-case t)
+          (lists
+           (list
+            (cons "All" calendar-holidays)
+            (if (fboundp 'atan)
+                (cons "Equinoxes/Solstices"
+                      (list (list 'solar-equinoxes-solstices))))
+            (if general-holidays (cons "General" general-holidays))
+            (if local-holidays (cons "Local" local-holidays))
+            (if other-holidays (cons "Other" other-holidays))
+            (if christian-holidays (cons "Christian" christian-holidays))
+            (if hebrew-holidays (cons "Hebrew" hebrew-holidays))
+            (if islamic-holidays (cons "Islamic" islamic-holidays))
+            (if oriental-holidays (cons "Oriental" oriental-holidays))
+            (if solar-holidays (cons "Solar" solar-holidays))
+            (cons "Ask" nil)))
+          (choice (capitalize
+                   (completing-read "List (TAB for choices): " lists nil t)))
+          (which (if (string-equal choice "Ask")
+                     (eval (read-variable "Enter list name: "))
+                   (cdr (assoc choice lists))))
+          (name (if (string-equal choice "Equinoxes/Solstices")
+                    choice
+                  (if (member choice '("Ask" ""))
+                      "Holidays" 
+                    (format "%s Holidays" choice)))))
+     (list start-year end-year which name)))
+  (message "Computing holidays...")
+  (let* ((holiday-buffer "*Holidays*")
+         (calendar-holidays (if l l calendar-holidays))
+         (title (or label "Holidays"))
+         (holiday-list nil)
+         (s (calendar-absolute-from-gregorian (list 2 1 y1)))
+         (e (calendar-absolute-from-gregorian (list 11 1 y2)))
+         (d s)
+         (never t)
+         (displayed-month 2)
+         (displayed-year y1))
+    (while (or never (<= d e))
+      (setq holiday-list (append holiday-list (calendar-holiday-list)))
+      (setq never nil)
+      (increment-calendar-month displayed-month displayed-year 3)
+      (setq d (calendar-absolute-from-gregorian
+               (list displayed-month 1 displayed-year))))
+    (save-excursion
+      (set-buffer (get-buffer-create holiday-buffer))
+      (setq buffer-read-only nil)
+      (calendar-set-mode-line
+       (if (= y1 y2)
+           (format "%s for %s" title y1)
+         (format "%s for %s-%s" title y1 y2)))
+      (erase-buffer)
+      (goto-char (point-min))
+      (insert
+       (mapconcat
+        '(lambda (x) (concat (calendar-date-string (car x))
+                             ": " (car (cdr x))))
+        holiday-list "\n"))
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (setq buffer-read-only t)
+      (display-buffer holiday-buffer)
+      (message "Computing holidays...done"))))
+
+
 (defun check-calendar-holidays (date)
   "Check the list of holidays for any that occur on DATE.
 The value returned is a list of strings of relevant holiday descriptions.
@@ -226,20 +310,57 @@ STRING)).  Returns nil if it is not visible in the current calendar window."
       (list (list (list month day y) string)))))
 
 (defun holiday-float (month dayname n string &optional day)
-  "Holiday on MONTH, DAYNAME (Nth occurrence, Gregorian) called STRING.
+  "Holiday on MONTH, DAYNAME (Nth occurrence) called STRING.
 If the Nth DAYNAME in MONTH is visible, the value returned is the list
 \(((MONTH DAY year) STRING)).
 
 If N<0, count backward from the end of MONTH.
 
-An optional parameter DAY means the Nth DAYNAME after/before MONTH DAY.
+An optional parameter DAY means the Nth DAYNAME on or after/before MONTH DAY.
 
 Returns nil if it is not visible in the current calendar window."
-  (let ((m displayed-month)
-        (y displayed-year))
-    (increment-calendar-month m y (- 11 month))
-    (if (> m 9)
-      (list (list (calendar-nth-named-day n dayname month y day) string)))))
+;; This is messy because the holiday may be visible, while the date on which
+;; it is based is not.  For example, the first Monday after December 30 may be
+;; visible when January is not.  For large values of |n| the problem is more
+;; grotesque.  If we didn't have to worry about such cases, we could just use
+
+;;  (let ((m displayed-month)
+;;        (y displayed-year))
+;;    (increment-calendar-month m y (- 11 month))
+;;    (if (> m 9); month in year y is visible
+;;      (list (list (calendar-nth-named-day n dayname month y day) string)))))
+
+;; which is the way the function was originally written.
+
+  (let* ((m1 displayed-month)
+         (y1 displayed-year)
+         (m2 m1)
+         (y2 y1))
+    (increment-calendar-month m1 y1 -1)
+    (increment-calendar-month m2 y2 1)
+    (let* ((d1;  first possible base date for holiday
+            (+ (calendar-nth-named-absday 1 dayname m1 y1)
+               (* -7 n)
+               (if (> n 0) 1 -7)))
+           (d2;  last possible base date for holiday
+            (+ (calendar-nth-named-absday -1 dayname m2 y2)
+               (* -7 n)
+               (if (> n 0) 7 -1)))
+           (y1 (extract-calendar-year (calendar-gregorian-from-absolute d1)))
+           (y2 (extract-calendar-year (calendar-gregorian-from-absolute d2)))
+           (y; year of base date
+            (if (or (= y1 y2) (> month 9))
+                  y1
+                y2))
+           (d; day of base date
+            (or day (if (> n 0)
+                        1
+                      (calendar-last-day-of-month month y))))
+           (date; base date for holiday
+            (calendar-absolute-from-gregorian (list month d y))))
+      (if (and (<= d1 date) (<= date d2))
+          (list (list (calendar-nth-named-day n dayname month y d)
+                      string))))))
 
 (defun holiday-sexp (sexp string)
   "Sexp holiday for dates in the calendar window.

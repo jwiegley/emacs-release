@@ -70,7 +70,7 @@ Boston, MA 02111-1307, USA.  */
 /* This is safe since we already assumed HAVE_SOCKET
    if using X windows.  */
 #undef LIBX11_SYSTEM
-#define LIBX11_SYSTEM -lpt -lnls -lnsl_s -lc_s -lsocket
+#define LIBX11_SYSTEM -lpt -lnls -lnsl -lc -lsocket
 
 #undef LIB_X11_LIB
 #define LIB_X11_LIB -lX11
@@ -100,6 +100,11 @@ Boston, MA 02111-1307, USA.  */
 
 /* We don't have -loldX, and we don't need it.  */
 #define LIB_XMENU_LIB
+
+/* Jean-Pierre Radley <jpr@jpr.com> reports in
+   <news:19970906220024.40892@jpr.com> (1997-09-07)
+   that mktime is broken in sco5 releases at least through 5.0.4.  */
+#define BROKEN_MKTIME 1
 
 /* SCO does have TIOCGWINSZ.  */
 #undef BROKEN_TIOCGWINSZ
@@ -149,8 +154,10 @@ Boston, MA 02111-1307, USA.  */
 
 #define UNEXEC unexelf.o
 
+#ifndef __GNUC__
 #define C_SWITCH_SYSTEM -belf
 #define LD_SWITCH_SYSTEM -belf
+#endif
 
 /* SCO has a working alloca in libPW */
 #define HAVE_ALLOCA

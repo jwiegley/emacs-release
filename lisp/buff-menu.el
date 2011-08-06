@@ -91,7 +91,8 @@
   (define-key Buffer-menu-mode-map "m" 'Buffer-menu-mark)
   (define-key Buffer-menu-mode-map "t" 'Buffer-menu-visit-tags-table)
   (define-key Buffer-menu-mode-map "%" 'Buffer-menu-toggle-read-only)
-  (define-key Buffer-menu-mode-map "g" 'revert-buffer)
+  (define-key Buffer-menu-mode-map "b" 'Buffer-menu-bury)
+  (define-key Buffer-menu-mode-map "g" 'Buffer-menu-revert)
   (define-key Buffer-menu-mode-map [mouse-2] 'Buffer-menu-mouse-select)
 )
 
@@ -123,7 +124,9 @@ Letters do not insert themselves; instead, they are commands.
 \\[Buffer-menu-unmark] -- remove all kinds of marks from current line.
   With prefix argument, also move up one line.
 \\[Buffer-menu-backup-unmark] -- back up a line and remove marks.
-\\[Buffer-menu-toggle-read-only] -- toggle read-only status of buffer on this line."
+\\[Buffer-menu-toggle-read-only] -- toggle read-only status of buffer on this line.
+\\[Buffer-menu-revert] -- update the list of buffers.
+\\[Buffer-menu-bury] -- bury the buffer listed on this line."
   (kill-all-local-variables)
   (use-local-map Buffer-menu-mode-map)
   (setq major-mode 'Buffer-menu-mode)
@@ -133,6 +136,11 @@ Letters do not insert themselves; instead, they are commands.
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (run-hooks 'buffer-menu-mode-hook))
+
+(defun Buffer-menu-revert ()
+  "Update the list of buffers."
+  (interactive)
+  (revert-buffer))
 
 (defun Buffer-menu-revert-function (ignore1 ignore2)
   (list-buffers))
@@ -419,6 +427,21 @@ The current window remains selected."
             (delete-char 1)
             (insert char))))))
 
+(defun Buffer-menu-bury ()
+  "Bury the buffer listed on this line."
+  (interactive)
+  (beginning-of-line)
+  (if (looking-at " [-M]")		;header lines
+      (ding)
+    (save-excursion
+      (beginning-of-line)
+      (bury-buffer (Buffer-menu-buffer t))
+      (let ((line (buffer-substring (point) (progn (forward-line 1) (point))))
+            (buffer-read-only nil))
+        (delete-region (point) (progn (forward-line -1) (point)))
+        (goto-char (point-max))
+        (insert line))
+      (message "Buried buffer moved to the end"))))
 
 
 (define-key ctl-x-map "\C-b" 'list-buffers)

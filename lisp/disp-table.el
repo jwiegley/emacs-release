@@ -176,22 +176,53 @@ X frame."
   (1- (length glyph-table)))
 
 ;;;###autoload
-(defun standard-display-european (arg)
+(defun standard-display-european (arg &optional auto)
   "Toggle display of European characters encoded with ISO 8859.
 When enabled, characters in the range of 160 to 255 display not
-as octal escapes, but as accented characters.
-With prefix argument, enable European character display iff arg is positive."
+as octal escapes, but as accented characters.  Codes 146 and 160
+display as apostrophe and space, even though they are not the ASCII
+codes for apostrophe and space.
+
+With prefix argument, enable European character display iff arg is positive.
+
+Normally, this function turns off `enable-multibyte-characters'
+for all Emacs buffers, because users who call this function
+probably want to edit European characters in single-byte mode.
+
+However, if the optional argument AUTO is non-nil, this function
+does not alter `enable-multibyte-characters'.
+AUTO also specifies, in this case, the coding system for terminal output."
   (interactive "P")
   (if (or (<= (prefix-numeric-value arg) 0)
 	  (and (null arg)
 	       (char-table-p standard-display-table)
 	       ;; Test 161, because 160 displays as a space.
 	       (equal (aref standard-display-table 161) [161])))
-      (standard-display-default 160 255)
+      (progn
+	(standard-display-default 160 255)
+	(unless (eq window-system 'x)
+	  (set-terminal-coding-system nil)))
+    ;; If the user does this explicitly,
+    ;; turn off multibyte chars for more compatibility.
+    (or auto
+	(setq-default enable-multibyte-characters nil))
     (standard-display-8bit 160 255)
+    (unless (or noninteractive (eq window-system 'x))
+      ;; Send those codes literally to a non-X terminal.
+      ;; If AUTO is nil, we are using single-byte characters,
+      ;; so it doesn't matter which one we use.
+      (set-terminal-coding-system
+       (cond ((eq auto t) 'latin-1)
+	     ((symbolp auto) (or auto 'latin-1))
+	     ((stringp auto) (intern auto)))))
     ;; Make non-line-break space display as a plain space.
     ;; Most X fonts do the wrong thing for code 160.
-    (aset standard-display-table 160 [32])))
+    (aset standard-display-table 160 [32])
+    ;; Most Windows programs send out apostrophe's as \222.  Most X fonts
+    ;; don't contain a character at that position.  Map it to the ASCII
+    ;; apostrophe.
+    (aset standard-display-table 146 [39])
+    ))
 
 (provide 'disp-table)
 

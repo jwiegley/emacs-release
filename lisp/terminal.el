@@ -45,33 +45,46 @@
 
 (require 'ehelp)
 
-(defvar terminal-escape-char ?\C-^
+(defgroup terminal nil
+  "Terminal emulator for Emacs."
+  :group 'terminals)
+
+
+(defcustom terminal-escape-char ?\C-^
   "*All characters except for this are passed verbatim through the
 terminal-emulator.  This character acts as a prefix for commands
 to the emulator program itself.  Type this character twice to send
 it through the emulator.  Type ? after typing it for a list of
 possible commands.
-This variable is local to each terminal-emulator buffer.")
+This variable is local to each terminal-emulator buffer."
+  :type 'character
+  :group 'terminal)
 
-(defvar terminal-scrolling t ;;>> Setting this to T sort-of defeats my whole aim in writing this package...
+(defcustom terminal-scrolling t ;;>> Setting this to T sort-of defeats my whole aim in writing this package...
   "*If non-nil, the terminal-emulator will losingly `scroll' when output occurs
 past the bottom of the screen.  If nil, output will win and `wrap' to the top
 of the screen.
-This variable is local to each terminal-emulator buffer.")
+This variable is local to each terminal-emulator buffer."
+  :type 'boolean
+  :group 'terminal)
 
-(defvar terminal-more-processing t
+(defcustom terminal-more-processing t
   "*If non-nil, do more-processing.
-This variable is local to each terminal-emulator buffer.")
+This variable is local to each terminal-emulator buffer."
+  :type 'boolean
+  :group 'terminal)
 
 ;; If you are the sort of loser who uses scrolling without more breaks
 ;; and expects to actually see anything, you should probably set this to
 ;; around 400
-(defvar terminal-redisplay-interval 5000
+(defcustom terminal-redisplay-interval 5000
   "*Maximum number of characters which will be processed by the
 terminal-emulator before a screen redisplay is forced.
 Set this to a large value for greater throughput,
 set it smaller for more frequent updates but overall slower
-performance.")
+performance."
+  :type 'integer
+  :group 'terminal)
 
 (defvar terminal-more-break-insertion
   "*** More break -- Press space to continue ***")
@@ -660,7 +673,7 @@ move to start of new line, clear to end of line."
   (cond ((not terminal-more-processing))
 	((< (setq te-more-count (1- te-more-count)) 0)
 	 (te-set-more-count t))
-	((eql te-more-count 0)
+	((eq te-more-count 0)
 	 ;; this doesn't return
 	 (te-more-break)))
   (if (eobp)
@@ -733,11 +746,11 @@ move to start of new line, clear to end of line."
 	     (n (min (- (te-get-char) ?\ ) line))
 	     (i 0))
 	(delete-region (- (point-max) (* n (1+ te-width))) (point-max))
-	(if (eql (point) (point-max)) (insert ?\n))
+	(if (eq (point) (point-max)) (insert ?\n))
 	(while (< i n)
 	  (setq i (1+ i))
 	  (insert-char ?\  te-width)
-	  (or (eql i line) (insert ?\n))))))
+	  (or (eq i line) (insert ?\n))))))
   (setq te-more-count -1))
 
 
@@ -755,7 +768,7 @@ move to start of new line, clear to end of line."
 	(while (< i n)
 	  (setq i (1+ i))
 	  (insert-char ?\  te-width)
-	  (or (eql i line) (insert ?\n))))))
+	  (or (eq i line) (insert ?\n))))))
   (setq te-more-count -1))
 
 ;; ^p ^a
@@ -892,7 +905,7 @@ move to start of new line, clear to end of line."
 	      start (car te-pending-output)
 	      string (car (cdr te-pending-output))
 	      char (aref string start))
-	(if (eql (setq start (1+ start)) (length string))
+	(if (eq (setq start (1+ start)) (length string))
 	    (progn (setq te-pending-output
 			   (cons 0 (cdr (cdr te-pending-output)))
 			 start 0
@@ -902,7 +915,7 @@ move to start of new line, clear to end of line."
 	(if (and (> char ?\037) (< char ?\377))
 	    (cond ((eolp)
 		   ;; unread char
-		   (if (eql start 0)
+		   (if (eq start 0)
 		       (setq te-pending-output
 			     (cons 0 (cons (make-string 1 char)
 					   (cdr te-pending-output))))
@@ -921,13 +934,13 @@ move to start of new line, clear to end of line."
 		     (setq char (point)) (end-of-line)
 		     (setq end (min end (+ start (- (point) char))))
 		     (goto-char char)
-		     (if (eql end matchpos) (setq matchpos nil))
+		     (if (eq end matchpos) (setq matchpos nil))
 		     (delete-region (point) (+ (point) (- end start)))
-		     (insert (if (and (eql start 0)
-				      (eql end (length string)))
+		     (insert (if (and (eq start 0)
+				      (eq end (length string)))
 				 string
 			         (substring string start end)))
-		     (if (eql end (length string))
+		     (if (eq end (length string))
 			 (setq te-pending-output
 			       (cons 0 (cdr (cdr te-pending-output))))
 		         (setcar te-pending-output end))
@@ -936,7 +949,7 @@ move to start of new line, clear to end of line."
 	  ;;  function we could trivially emulate different terminals
 	  ;; Who cares in any case?  (Apart from stupid losers using rlogin)
 	  (funcall
-	    (if (eql char ?\^p)
+	    (if (eq char ?\^p)
 	        (or (cdr (assq (te-get-char)
 			       '((?= . te-move-to-position)
 				 (?c . te-clear-rest-of-line)
@@ -987,7 +1000,7 @@ move to start of new line, clear to end of line."
       (let ((start (car te-pending-output))
 	    (string (car (cdr te-pending-output))))
 	(prog1 (aref string start)
-	  (if (eql (setq start (1+ start)) (length string))
+	  (if (eq (setq start (1+ start)) (length string))
 	      (setq te-pending-output (cons 0 (cdr (cdr te-pending-output))))
 	      (setcar te-pending-output start))))
     (catch 'char
@@ -996,7 +1009,7 @@ move to start of new line, clear to end of line."
 	    (progn
 	      (set-process-filter te-process
 				  (function (lambda (p s)
-                                    (or (eql (length s) 1)
+                                    (or (eq (length s) 1)
                                         (setq te-pending-output (list 1 s)))
                                     (throw 'char (aref s 0)))))
 	      (accept-process-output te-process))
@@ -1044,8 +1057,11 @@ move to start of new line, clear to end of line."
 ;; This used to have `new' in it, but that loses outside BSD
 ;; and it's apparently not needed in BSD.
 
-(defvar explicit-shell-file-name nil
-  "*If non-nil, is file name to use for explicitly requested inferior shell.")
+(defcustom explicit-shell-file-name nil
+  "*If non-nil, is file name to use for explicitly requested inferior shell."
+  :type '(choice (const :tag "None" nil)
+		 file)
+  :group 'terminal)
 
 ;;;###autoload
 (defun terminal-emulator (buffer program args &optional width height)
@@ -1155,7 +1171,7 @@ subprocess started."
 				s p)
 			       (prog1 (substring s p (match-end 1))
 				 (setq p (match-end 0))
-				 (if (eql p (length s)) (setq p nil)))
+				 (if (eq p (length s)) (setq p nil)))
 			       (prog1 (substring s p)
 				 (setq p nil)))
 			   l)))

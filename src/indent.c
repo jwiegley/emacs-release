@@ -22,6 +22,7 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 #include "lisp.h"
 #include "buffer.h"
+#include "charset.h"
 #include "indent.h"
 #include "frame.h"
 #include "window.h"
@@ -51,6 +52,10 @@ int last_known_column_point;
 int last_known_column_modified;
 
 static int current_column_1 ();
+
+/* Cache of beginning of line found by the last call of
+   current_column. */
+int current_column_bol_cache;
 
 /* Get the display table to use for the current buffer.  */
 
@@ -148,7 +153,10 @@ recompute_width_table (buf, disptab)
 static void
 width_run_cache_on_off ()
 {
-  if (NILP (current_buffer->cache_long_line_scans))
+  if (NILP (current_buffer->cache_long_line_scans)
+      /* And, for the moment, this feature doesn't work on multibyte
+         characters.  */
+      || !NILP (current_buffer->enable_multibyte_characters))
     {
       /* It should be off.  */
       if (current_buffer->width_run_cache)
@@ -200,8 +208,9 @@ skip_invisible (pos, next_boundary_p, to, window)
      int to;
      Lisp_Object window;
 {
-  Lisp_Object prop, position, end, overlay_limit, proplimit;
+  Lisp_Object prop, position, overlay_limit, proplimit;
   Lisp_Object buffer;
+  int end;
 
   XSETFASTINT (position, pos);
   XSETBUFFER (buffer, current_buffer);
@@ -231,9 +240,16 @@ skip_invisible (pos, next_boundary_p, to, window)
       /* No matter what. don't go past next overlay change.  */
       if (XFASTINT (overlay_limit) < XFASTINT (proplimit))
 	proplimit = overlay_limit;
-      end = Fnext_single_property_change (position, Qinvisible,
-					  buffer, proplimit);
-      *next_boundary_p = XFASTINT (end);
+      end = XFASTINT (Fnext_single_property_change (position, Qinvisible,
+						    buffer, proplimit));
+      /* Don't put the boundary in the middle of multibyte form if
+         there is no actual property change.  */
+      if (end == pos + 100
+	  && !NILP (current_buffer->enable_multibyte_characters)
+	  && end < ZV)
+	while (pos < end && !CHAR_HEAD_P (POS_ADDR (end)))
+	  end--;
+      *next_boundary_p = end;
     }
   /* if the `invisible' property is set, we can skip to
      the next property change */
@@ -283,27 +299,28 @@ current_column ()
   register struct Lisp_Char_Table *dp = buffer_display_table ();
   int stopchar;
 
-  if (point == last_known_column_point
+  if (PT == last_known_column_point
       && MODIFF == last_known_column_modified)
     return last_known_column;
 
-  /* If the buffer has overlays or text properties,
+  /* If the buffer has overlays, text properties, or multibyte, 
      use a more general algorithm.  */
   if (BUF_INTERVALS (current_buffer)
       || !NILP (current_buffer->overlays_before)
-      || !NILP (current_buffer->overlays_after))
-    return current_column_1 (point);
+      || !NILP (current_buffer->overlays_after)
+      || !NILP (current_buffer->enable_multibyte_characters))
+    return current_column_1 (PT);
 
   /* Scan backwards from point to the previous newline,
      counting width.  Tab characters are the only complicated case.  */
 
   /* Make a pointer for decrementing through the chars before point.  */
-  ptr = &FETCH_CHAR (point - 1) + 1;
+  ptr = POS_ADDR (PT - 1) + 1;
   /* Make a pointer to where consecutive chars leave off,
      going backwards from point.  */
-  if (point == BEGV)
+  if (PT == BEGV)
     stop = ptr;
-  else if (point <= GPT || BEGV > GPT)
+  else if (PT <= GPT || BEGV > GPT)
     stop = BEGV_ADDR;
   else
     stop = GAP_END_ADDR;
@@ -332,10 +349,12 @@ current_column ()
 	col += XVECTOR (DISP_CHAR_VECTOR (dp, c))->size;
       else if (c >= 040 && c < 0177)
 	col++;
-      else if (c == '\n')
-	break;
-      else if (c == '\r' && EQ (current_buffer->selective_display, Qt))
-	break;
+      else if (c == '\n'
+	       || (c == '\r' && EQ (current_buffer->selective_display, Qt)))
+	{
+	  ptr++;
+	  break;
+	}
       else if (c == '\t')
 	{
 	  if (tab_seen)
@@ -355,8 +374,12 @@ current_column ()
       col += post_tab;
     }
 
+  if (ptr == BEGV_ADDR)
+    current_column_bol_cache = BEGV;
+  else
+    current_column_bol_cache = PTR_CHAR_POS (ptr);
   last_known_column = col;
-  last_known_column_point = point;
+  last_known_column_point = PT;
   last_known_column_modified = MODIFF;
 
   return col;
@@ -377,8 +400,9 @@ current_column_1 (pos)
 
   /* Start the scan at the beginning of this line with column number 0.  */
   register int col = 0;
-  int scan = find_next_newline (pos, -1);
+  int scan = current_column_bol_cache = find_next_newline (pos, -1);
   int next_boundary = scan;
+  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
 
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
 
@@ -397,7 +421,7 @@ current_column_1 (pos)
 	    goto endloop;
 	}
 
-      c = FETCH_CHAR (scan);
+      c = FETCH_BYTE (scan);
       if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c)))
 	{
 	  col += XVECTOR (DISP_CHAR_VECTOR (dp, c))->size;
@@ -415,6 +439,42 @@ current_column_1 (pos)
 	  col += tab_width;
 	  col = col / tab_width * tab_width;
 	}
+      else if (multibyte && BASE_LEADING_CODE_P (c))
+	{
+	  scan--;
+	  /* Start of multi-byte form.  */
+	  if (c == LEADING_CODE_COMPOSITION)
+	    {
+	      unsigned char *ptr = POS_ADDR (scan);
+
+	      int cmpchar_id = str_cmpchar_id (ptr, next_boundary - scan);
+	      if (cmpchar_id >= 0)
+		{
+		  scan += cmpchar_table[cmpchar_id]->len,
+		  col += cmpchar_table[cmpchar_id]->width;
+		}
+	      else
+		{		/* invalid composite character */
+		  scan++;
+		  col += 4;
+		}
+	    }
+	  else
+	    {
+	      /* Here, we check that the following bytes are valid
+		 constituents of multi-byte form.  */
+	      int len = BYTES_BY_CHAR_HEAD (c), i;
+
+	      for (i = 1, scan++; i < len; i++, scan++)
+		/* We don't need range checking for PTR because there
+		   are anchors (`\0') at GAP and Z.  */
+		if (CHAR_HEAD_P (POS_ADDR (scan))) break;
+	      if (i < len)
+		col += 4, scan -= i - 1;
+	      else
+		col += WIDTH_BY_CHAR_HEAD (c);
+	    }
+	}
       else if (ctl_arrow && (c < 040 || c == 0177))
         col += 2;
       else if (c < 040 || c >= 0177)
@@ -425,7 +485,7 @@ current_column_1 (pos)
  endloop:
 
   last_known_column = col;
-  last_known_column_point = point;
+  last_known_column_point = PT;
   last_known_column_modified = MODIFF;
 
   return col;
@@ -550,7 +610,7 @@ even if that goes past COLUMN; by default, MININUM is zero.")
   Finsert_char (make_number (' '), column, Qt);
 
   last_known_column = mincol;
-  last_known_column_point = point;
+  last_known_column_point = PT;
   last_known_column_modified = MODIFF;
 
   XSETINT (column, mincol);
@@ -567,7 +627,7 @@ following any initial whitespace.")
 {
   Lisp_Object val;
 
-  XSETFASTINT (val, position_indentation (find_next_newline (point, -1)));
+  XSETFASTINT (val, position_indentation (find_next_newline (PT, -1)));
   return val;
 }
 
@@ -584,7 +644,7 @@ position_indentation (pos)
 
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
 
-  p = &FETCH_CHAR (pos);
+  p = POS_ADDR (pos);
   /* STOP records the value of P at which we will need
      to think about the gap, or about invisible text,
      or about the end of the buffer.  */
@@ -615,8 +675,8 @@ position_indentation (pos)
 	     (if STOP_POS is the position of the gap)
 	     rather than at the data after the gap.  */
 	     
-	  stop = &FETCH_CHAR (stop_pos - 1) + 1;
-	  p = &FETCH_CHAR (pos);
+	  stop = POS_ADDR (stop_pos - 1) + 1;
+	  p = POS_ADDR (pos);
 	}
       switch (*p++)
 	{
@@ -639,7 +699,7 @@ int
 indented_beyond_p (pos, column)
      int pos, column;
 {
-  while (pos > BEGV && FETCH_CHAR (pos) == '\n')
+  while (pos > BEGV && FETCH_BYTE (pos) == '\n')
     pos = find_next_newline_no_quit (pos - 1, -1);
   return (position_indentation (pos) >= column);
 }
@@ -669,6 +729,7 @@ The return value is the current column.")
   register int tab_width = XINT (current_buffer->tab_width);
   register int ctl_arrow = !NILP (current_buffer->ctl_arrow);
   register struct Lisp_Char_Table *dp = buffer_display_table ();
+  register int multibyte = !NILP (current_buffer->enable_multibyte_characters);
 
   Lisp_Object val;
   int prev_col;
@@ -680,7 +741,7 @@ The return value is the current column.")
   CHECK_NATNUM (column, 0);
   goal = XINT (column);
 
-  pos = point;
+  pos = PT;
   end = ZV;
   next_boundary = pos;
 
@@ -689,7 +750,7 @@ The return value is the current column.")
   if (col > goal)
     {
       end = pos;
-      pos = find_next_newline (pos, -1);
+      pos = current_column_bol_cache;
       col = 0;
     }
 
@@ -708,7 +769,7 @@ The return value is the current column.")
       if (col >= goal)
 	break;
 
-      c = FETCH_CHAR (pos);
+      c = FETCH_BYTE (pos);
       if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c)))
 	{
 	  col += XVECTOR (DISP_CHAR_VECTOR (dp, c))->size;
@@ -728,10 +789,50 @@ The return value is the current column.")
 	}
       else if (ctl_arrow && (c < 040 || c == 0177))
         col += 2;
-      else if (c < 040 || c >= 0177)
+      else if (c < 040 || c == 0177)
         col += 4;
-      else
+      else if (c < 0177)
 	col++;
+      else if (multibyte && BASE_LEADING_CODE_P (c))
+	{
+	  /* Start of multi-byte form.  */
+	  unsigned char *ptr;
+
+	  pos--;		/* rewind to the character head */
+	  ptr = POS_ADDR (pos);
+	  if (c == LEADING_CODE_COMPOSITION)
+	    {
+	      int cmpchar_id = str_cmpchar_id (ptr, end - pos);
+
+	      if (cmpchar_id >= 0)
+		{
+		  col += cmpchar_table[cmpchar_id]->width;
+		  pos += cmpchar_table[cmpchar_id]->len;
+		}
+	      else
+		{		/* invalid composite character */
+		  col += 4;
+		  pos++;
+		}
+	    }
+	  else
+	    {
+	      /* Here, we check that the following bytes are valid
+		 constituents of multi-byte form.  */
+	      int len = BYTES_BY_CHAR_HEAD (c), i;
+
+	      for (i = 1, ptr++; i < len; i++, ptr++)
+		/* We don't need range checking for PTR because there
+		   are anchors (`\0') both at GPT and Z.  */
+		if (CHAR_HEAD_P (ptr)) break;
+	      if (i < len)
+		col += 4, pos++;
+	      else
+		col += WIDTH_BY_CHAR_HEAD (c), pos += i;
+	    }
+	}
+      else
+	col += 4;
     }
  endloop:
 
@@ -743,9 +844,9 @@ The return value is the current column.")
     {
       int old_point;
 
-      del_range (point - 1, point);
+      del_range (PT - 1, PT);
       Findent_to (make_number (goal), Qnil);
-      old_point = point;
+      old_point = PT;
       Findent_to (make_number (col), Qnil);
       SET_PT (old_point);
       /* Set the last_known... vars consistently.  */
@@ -757,7 +858,7 @@ The return value is the current column.")
     Findent_to (make_number (col = goal), Qnil);
 
   last_known_column = col;
-  last_known_column_point = point;
+  last_known_column_point = PT;
   last_known_column_modified = MODIFF;
 
   XSETFASTINT (val, col);
@@ -794,11 +895,6 @@ struct position val_compute_motion;
    and vpos give its cartesian location.  prevhpos is the column at
    which the character before bufpos started, and contin is non-zero
    if we reached the current line by continuing the previous.
-
-   Note that FROMHPOS and TOHPOS should be expressed in real screen
-   columns, taking HSCROLL and the truncation glyph at the left margin
-   into account.  That is, beginning-of-line moves you to the hpos
-   -HSCROLL + (HSCROLL > 0).
 
    Note that FROMHPOS and TOHPOS should be expressed in real screen
    columns, taking HSCROLL and the truncation glyph at the left margin
@@ -853,7 +949,7 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
     = (INTEGERP (current_buffer->selective_display)
        ? XINT (current_buffer->selective_display)
        : !NILP (current_buffer->selective_display) ? -1 : 0);
-  int prev_vpos = vpos, prev_hpos = 0;
+  int prev_hpos = 0;
   int selective_rlen
     = (selective && dp && VECTORP (DISP_INVIS_VECTOR (dp))
        ? XVECTOR (DISP_INVIS_VECTOR (dp))->size : 0);
@@ -875,6 +971,13 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
   int next_width_run = from;
   Lisp_Object window;
 
+  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+  int wide_column = 0;		/* Set to 1 when a previous character
+				   is wide-colomn.  */
+  int prev_pos;			/* Previous buffer position.  */
+  int contin_hpos;		/* HPOS of last column of continued line.  */
+  int prev_tab_offset;		/* Previous tab offset.  */
+
   XSETBUFFER (buffer, current_buffer);
   XSETWINDOW (window, win);
 
@@ -890,21 +993,29 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
 
-  pos = from;
+  pos = prev_pos = from;
+  contin_hpos = 0;
+  prev_tab_offset = tab_offset;
   while (1)
     {
       while (pos == next_boundary)
 	{
+	  int newpos;
+
 	  /* If the caller says that the screen position came from an earlier
 	     call to compute_motion, then we've already accounted for the
 	     overlay strings at point.  This is only true the first time
 	     through, so clear the flag after testing it.  */
 	  if (!did_motion)
 	    /* We need to skip past the overlay strings.  Currently those
-	       strings must contain single-column printing characters;
+	       strings must not contain TAB;
 	       if we want to relax that restriction, something will have
 	       to be changed here.  */
-	    hpos += overlay_strings (pos, win, (char **)0);
+	    {
+	      unsigned char *ovstr;
+	      int ovlen = overlay_strings (pos, win, &ovstr);
+	      hpos += (multibyte ? strwidth (ovstr, ovlen) : ovlen);
+	    }
 	  did_motion = 0;
 
 	  if (pos >= to)
@@ -914,13 +1025,59 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 	     (but not necessarily all that there are here),
 	     and store in next_boundary the next position where
 	     we need to call skip_invisible.  */
-	  pos = skip_invisible (pos, &next_boundary, to, window);
+	  newpos = skip_invisible (pos, &next_boundary, to, window);
+
+	  if (newpos >= to)
+	    goto after_loop;
+
+	  pos = newpos;
 	}
 
       /* Handle right margin.  */
-      if (hpos >= width
-	  && (hpos > width
-	      || (pos < ZV && FETCH_CHAR (pos) != '\n')))
+      /* Note on a wide-column character.
+
+	 Characters are classified into the following three categories
+	 according to the width (columns occupied on screen).
+
+	 (1) single-column character: ex. `a'
+	 (2) multi-column character: ex. `^A', TAB, `\033'
+	 (3) wide-column character: ex. Japanese character, Chinese character
+	     (In the following example, `W_' stands for them.)
+
+	 Multi-column characters can be divided around the right margin,
+	 but wide-column characters cannot.
+
+	 NOTE:
+
+	 (*) The cursor is placed on the next character after the point.
+
+	     ----------
+	     abcdefghi\
+	     j        ^---- next after the point
+	     ^---  next char. after the point.
+	     ----------
+	              In case of sigle-column character
+
+	     ----------
+	     abcdefgh\\
+	     033     ^----  next after the point, next char. after the point.
+	     ----------
+	              In case of multi-column character
+
+	     ----------
+	     abcdefgh\\
+	     W_      ^---- next after the point
+	     ^----  next char. after the point.
+	     ----------
+	              In case of wide-column character 
+
+	 The problem here is continuation at a wide-column character.
+	 In this case, the line may shorter less than WIDTH.
+	 And we find the continuation AFTER it occurs.
+
+       */
+
+      if (hpos > width)
 	{
 	  if (hscroll
 	      || (truncate_partial_width_windows
@@ -928,31 +1085,94 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 	      || !NILP (current_buffer->truncate_lines))
 	    {
 	      /* Truncating: skip to newline.  */
-	      pos = find_before_next_newline (pos, to, 1);
+	      if (pos <= to)  /* This IF is needed because we may past TO */
+		pos = find_before_next_newline (pos, to, 1);
 	      hpos = width;
 	      /* If we just skipped next_boundary,
 		 loop around in the main while
 		 and handle it.  */
 	      if (pos >= next_boundary)
 		next_boundary = pos + 1;
+	      prev_hpos = width;
+	      prev_tab_offset = tab_offset;
 	    }
 	  else
 	    {
 	      /* Continuing.  */
-	      vpos += hpos / width;
-	      tab_offset += hpos - hpos % width;
-	      hpos %= width;
+	      /* Remember the previous value.  */
+	      prev_tab_offset = tab_offset;
+
+	      if (wide_column)
+		{
+		  hpos -= prev_hpos;
+		  tab_offset += prev_hpos;
+		}
+	      else
+		{
+		  tab_offset += width;
+		  hpos -= width;
+		}
+	      vpos++;
+	      contin_hpos = prev_hpos;
+	      prev_hpos = 0;
 	    }
 	}
 
       /* Stop if past the target buffer position or screen position.  */
-      if (pos >= to)
-	break;
-      if (vpos > tovpos || (vpos == tovpos && hpos >= tohpos))
+      if (pos > to)
+	{
+	  /* Go back to the previous position.  */
+	  pos = prev_pos;
+	  hpos = prev_hpos;
+	  tab_offset = prev_tab_offset;
+
+	  /* NOTE on contin_hpos, hpos, and prev_hpos.
+
+	     ----------
+	     abcdefgh\\
+	     W_      ^----  contin_hpos
+	     | ^-----  hpos
+	     \---- prev_hpos
+	     ----------
+	   */
+
+	  if (contin_hpos && prev_hpos == 0
+	      && contin_hpos < width && !wide_column)
+	    {
+	      /* Line breaking occurs in the middle of multi-column
+		 character.  Go back to previous line.  */
+	      hpos = contin_hpos;
+	      vpos = vpos - 1;
+	    }
+	  else if (c == '\n')
+	    /* If previous character is NEWLINE,
+	       set VPOS back to previous line */
+	    vpos = vpos - 1;
+	  break;
+	}
+
+      if (vpos > tovpos || vpos == tovpos && hpos >= tohpos)
+	{
+	  if (contin_hpos && prev_hpos == 0
+	      && ((hpos > tohpos && contin_hpos == width) || wide_column))
+	    { /* Line breaks because we can't put the character at the
+		 previous line any more.  It is not the multi-column
+		 character continued in middle.  Go back to previous
+		 buffer position, screen position, and set tab offset
+		 to previous value.  It's the beginning of the
+		 line.  */
+	      pos = prev_pos;
+	      hpos = prev_hpos;
+	      tab_offset = prev_tab_offset;
+	    }
+	  break;
+	}
+      if (pos == ZV) /* We cannot go beyond ZV.  Stop here. */
 	break;
 
-      prev_vpos = vpos;
       prev_hpos = hpos;
+      prev_pos = pos;
+      wide_column = 0;
 
       /* Consult the width run cache to see if we can avoid inspecting
          the text character-by-character.  */
@@ -1005,7 +1225,7 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
       /* We have to scan the text character-by-character.  */
       else
 	{
-	  c = FETCH_CHAR (pos);
+	  c = FETCH_BYTE (pos);
 	  pos++;
 
 	  /* Perhaps add some info to the width_run_cache.  */
@@ -1014,7 +1234,7 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 	      /* Is this character part of the current run?  If so, extend
 		 the run.  */
 	      if (pos - 1 == width_run_end
-		  && width_table[c] == width_run_width)
+		  && XFASTINT (width_table[c]) == width_run_width)
 		width_run_end = pos;
 
 	      /* The previous run is over, since this is a character at a
@@ -1030,13 +1250,14 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 				       width_run_start, width_run_end);
 
 		  /* Start recording a new width run.  */
-		  width_run_width = width_table[c];
+		  width_run_width = XFASTINT (width_table[c]);
 		  width_run_start = pos - 1;
 		  width_run_end = pos;
 		}
 	    }
 
-	  if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c)))
+	  if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c))
+	      && ! (multibyte && BASE_LEADING_CODE_P (c)))
 	    hpos += XVECTOR (DISP_CHAR_VECTOR (dp, c))->size;
 	  else if (c >= 040 && c < 0177)
 	    hpos++;
@@ -1051,21 +1272,26 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 	    {
 	      if (selective > 0 && indented_beyond_p (pos, selective))
 		{
-		  /* Skip any number of invisible lines all at once */
-		  do
-		    pos = find_before_next_newline (pos, to, 1) + 1;
-		  while (pos < to
-			 && indented_beyond_p (pos, selective));
-		  /* Allow for the " ..." that is displayed for them. */
-		  if (selective_rlen)
+		  /* If (pos == to), we don't have to take care of
+		    selective display.  */
+		  if (pos < to)
 		    {
-		      hpos += selective_rlen;
-		      if (hpos >= width)
-			hpos = width;
+		      /* Skip any number of invisible lines all at once */
+		      do
+			pos = find_before_next_newline (pos, to, 1) + 1;
+		      while (pos < to
+			     && indented_beyond_p (pos, selective));
+		      /* Allow for the " ..." that is displayed for them. */
+		      if (selective_rlen)
+			{
+			  hpos += selective_rlen;
+			  if (hpos >= width)
+			    hpos = width;
+			}
+		      --pos;
+		      /* We have skipped the invis text, but not the
+			newline after.  */
 		    }
-		  --pos;
-		  /* We have skipped the invis text, but not the
-		     newline after.  */
 		}
 	      else
 		{
@@ -1078,13 +1304,15 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 		    hpos++;
 		  tab_offset = 0;
 		}
+	      contin_hpos = 0;
 	    }
 	  else if (c == CR && selective < 0)
 	    {
 	      /* In selective display mode,
 		 everything from a ^M to the end of the line is invisible.
 		 Stop *before* the real newline.  */
-	      pos = find_before_next_newline (pos, to, 1);
+	      if (pos < to)
+		pos = find_before_next_newline (pos, to, 1);
 	      /* If we just skipped next_boundary,
 		 loop around in the main while
 		 and handle it.  */
@@ -1098,10 +1326,47 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 		    hpos = width;
 		}
 	    }
+	  else if (multibyte && BASE_LEADING_CODE_P (c))
+	    {
+	      /* Start of multi-byte form.  */
+	      unsigned char *ptr;
+	      int len, actual_len;
+
+	      pos--;		/* rewind POS */
+
+	      ptr = (((pos) >= GPT ? GAP_SIZE : 0) + (pos) + BEG_ADDR - 1);
+	      len = ((pos) >= GPT ? ZV : GPT) - (pos);
+
+	      c = STRING_CHAR_AND_LENGTH (ptr, len, actual_len);
+
+	      if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c)))
+		hpos += XVECTOR (DISP_CHAR_VECTOR (dp, c))->size;
+	      else if (actual_len == 1)
+		hpos += 4;
+	      else if (COMPOSITE_CHAR_P (c))
+		{
+		  int id = COMPOSITE_CHAR_ID (c);
+		  int width = (id < n_cmpchars) ? cmpchar_table[id]->width : 0;
+		  hpos += width;
+		  if (width > 1)
+		    wide_column = 1;
+		}
+	      else
+		{
+		  int width = WIDTH_BY_CHAR_HEAD (*ptr);
+		  hpos += width;
+		  if (width > 1)
+		    wide_column = 1;
+		}
+
+	      pos += actual_len;
+	    }
 	  else
 	    hpos += (ctl_arrow && c < 0200) ? 2 : 4;
 	}
     }
+
+ after_loop:
 
   /* Remember any final width run in the cache.  */
   if (current_buffer->width_run_cache
@@ -1114,12 +1379,11 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
   val_compute_motion.hpos = hpos;
   val_compute_motion.vpos = vpos;
   val_compute_motion.prevhpos = prev_hpos;
+  /* We alalways handle all of them here; none of them remain to do.  */
+  val_compute_motion.ovstring_chars_done = 0;
 
   /* Nonzero if have just continued a line */
-  val_compute_motion.contin
-    = (pos != from
-       && (val_compute_motion.vpos != prev_vpos)
-       && c != '\n');
+  val_compute_motion.contin = (contin_hpos && prev_hpos == 0);
 
   return &val_compute_motion;
 }
@@ -1238,12 +1502,25 @@ pos_tab_offset (w, pos)
   int col;
   int width = window_internal_width (w) - 1;
 
-  if (pos == BEGV || FETCH_CHAR (pos - 1) == '\n')
+  if (pos == BEGV)
+    return MINI_WINDOW_P (w) ? -minibuf_prompt_width : 0;
+  if (FETCH_BYTE (pos - 1) == '\n')
     return 0;
   TEMP_SET_PT (pos);
   col = current_column ();
   TEMP_SET_PT (opoint);
+  /* Modulo is no longer valid, as a line may get shorter than WIDTH
+     columns by continuation of a wide-column character.  Just return
+     COL here. */
+#if 0
+  /* In the continuation of the first line in a minibuffer we must
+     take the width of the prompt into account.  */
+  if (MINI_WINDOW_P (w) && col >= width - minibuf_prompt_width
+      && find_next_newline_no_quit (pos, -1) == BEGV)
+    return col - (col + minibuf_prompt_width) % width;
   return col - (col % width);
+#endif
+  return col;
 }
 
 
@@ -1316,8 +1593,18 @@ vmotion (from, vtarget, w)
 				 lmargin + (XFASTINT (prevline) == BEG
 					    ? start_hpos : 0),
 				 0,
-				 from, 1 << (BITS_PER_INT - 2), 0,
-				 width, hscroll, 0, w);
+				 from, 
+				 /* Don't care for VPOS...  */
+				 1 << (BITS_PER_SHORT - 1),
+				 /* ... nor HPOS.  */
+				 1 << (BITS_PER_SHORT - 1),
+				 width, hscroll,
+				 /* This compensates for start_hpos
+				    so that a tab as first character
+				    still occupies 8 columns.  */
+				 (XFASTINT (prevline) == BEG
+				  ? -start_hpos : 0),
+				 w);
 	  vpos -= pos.vpos;
 	  first = 0;
 	  from = XFASTINT (prevline);
@@ -1333,6 +1620,8 @@ vmotion (from, vtarget, w)
 	  val_vmotion.hpos = lmargin;
 	  val_vmotion.contin = 0;
 	  val_vmotion.prevhpos = 0;
+	  val_vmotion.ovstring_chars_done = 0;
+	  val_vmotion.tab_offset = 0; /* For accumulating tab offset.  */
 	  return &val_vmotion;
 	}
 
@@ -1340,7 +1629,7 @@ vmotion (from, vtarget, w)
     }
   /* Moving downward is simple, but must calculate from beg of line
      to determine hpos of starting point */
-  if (from > BEGV && FETCH_CHAR (from - 1) != '\n')
+  if (from > BEGV && FETCH_BYTE (from - 1) != '\n')
     {
       Lisp_Object propval;
 
@@ -1362,19 +1651,28 @@ vmotion (from, vtarget, w)
 			     lmargin + (XFASTINT (prevline) == BEG
 					? start_hpos : 0),
 			     0,
-			     from, 1 << (BITS_PER_INT - 2), 0,
-			     width, hscroll, 0, w);
+			     from, 
+			     /* Don't care for VPOS...  */
+			     1 << (BITS_PER_SHORT - 1),
+			     /* ... nor HPOS.  */
+			     1 << (BITS_PER_SHORT - 1),
+			     width, hscroll,
+			     (XFASTINT (prevline) == BEG ? -start_hpos : 0),
+			     w);
       did_motion = 1;
     }
   else
     {
       pos.hpos = lmargin + (from == BEG ? start_hpos : 0);
       pos.vpos = 0;
+      pos.tab_offset = 0;
       did_motion = 0;
     }
   return compute_motion (from, vpos, pos.hpos, did_motion,
-			 ZV, vtarget, - (1 << (BITS_PER_INT - 2)),
-			 width, hscroll, pos.vpos * width, w);
+			 ZV, vtarget, - (1 << (BITS_PER_SHORT - 1)),
+			 width, hscroll,
+			 pos.tab_offset - (from == BEG ? start_hpos : 0),
+			 w);
 }
 
 DEFUN ("vertical-motion", Fvertical_motion, Svertical_motion, 1, 2, 0,
@@ -1409,7 +1707,7 @@ whether or not it is currently displayed in some window.")
   else
     window = selected_window;
 
-  pos = *vmotion (point, (int) XINT (lines), XWINDOW (window));
+  pos = *vmotion (PT, (int) XINT (lines), XWINDOW (window));
 
   SET_PT (pos.bufpos);
   return make_number (pos.vpos);

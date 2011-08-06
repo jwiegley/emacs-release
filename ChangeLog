@@ -1,51 +1,446 @@
-Wed Aug 21 03:51:42 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1997-09-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
-	* Version 19.34 released.
+	* Version 20.1 released.
 
-Sun Aug 18 16:29:40 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+	* Makefile.in (install-leim): Depend on mkdir.
+	(leim): Depend on src.
+
+1997-09-13  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in: Recognize alpha* instead of just alpha.
+
+1997-09-12  Paul Eggert  <eggert@twinsun.com>
+
+	* leim-Makefile.in (mostlyclean, maintainer-clean): New targets.
+
+1997-09-12  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* update-subdirs: Use rm -f.
+
+1997-09-08  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* update-subdirs: Delete subdirs.el if this dir has no subdirs.
+	Ignore subdirs named Old.
+	
+1997-08-04  Kenneth Stailey  <kstailey@elbereth.disclosure.com>
+
+	* configure.in: Add OpenBSD clause to set $machine.
+
+1997-09-04  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist: Recompile everything after updating various Lisp files.
+	Recompile in leim as well as lisp.
+	Check in leim as well as lisp for mismatched files and too-long names.
+	
+1997-09-03  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (TAGS tags): Simply refer this to the src subdir.
+
+1997-08-30  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep): Verify ./lisp has simple.el in it
+	before trying to copy anything from it.
+
+1997-08-27  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (man/Makefile): New target.
+	(tags): Define env var EMACS and run Makefile from build dir.
+
+1997-08-27  Eli Zaretskii  <eliz@psilocin.gnu.ai.mit.edu>
+
+	* config.bat: If src/_gdbinit doesn't exist, try using
+	src/.gdbinit to create it (for building on Windows 95).
+
+1997-08-25  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep):
+	Discard extra data in tar | tar pipes.
+
+1997-08-24  NIIBE Yutaka  <gniibe@mri.co.jp>
+
+	* configure.in (x_default_search_path): Corrected
+	'${x_library}' to '${x_library}/X11'.
+
+1997-08-22  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (HAVE_MOTIF_2_1): Test for Motif 2.1,
+
+1997-08-22  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* configure.in: Support auto-configuration of both Kerberos V4 and
+ 	Kerberos V5 for movemail, including detection of V4 and V5 header
+ 	files and libraries.
+
+1997-08-16  NIIBE Yutaka  <gniibe@etl.go.jp>
+
+	* configure.in: Compute x_default_search_path
+	and substitute into makefiles.
+
+	* Makefile.in (paths-force): Store PATH_X_DEFAULTS in paths.h.
+
+1997-08-08  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep): Run list-load-path-shadows.
+
+1997-08-07  Erik Naggum  <erik@naggum.no>
+
+	* configure.in: Remove lockdir, it is no longer needed.
+	* Makefile.in (mkdir): Don't create lockdir.
+	(lockdir): Variable deleted.
+	(paths-force): Don't operate on PATH_LOCK.
+
+1997-08-06  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* leim-Makefile.in (clean, distclean): New targets.
+
+	* make-dist: Include leim/ChangeLog in leim distribution.
+
+1997-08-01  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (i*86-*-sysv4.2uw*): Set NON_GNU_CPP.
+
+1997-07-30  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (CPPFLAGS): Get this from configure, like CFLAGS.
+
+1997-07-27  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (LDFLAGS): Get this from configure, like CFLAGS.
+
+1997-07-25  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist: Update leim/leim-list.el.
+	Pass along value of $EMACS when updating lisp dir.
+
+1997-07-25  Marcus G. Daniels  <marcus@cathcart.sysc.pdx.edu>
+
+	* configure.in (doug_lea_malloc): Make __after_morecore_hook a 
+	prerequisite to the use of Doug Lea's malloc.
+
+1997-07-21  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (top_distclean): Use -f to delete contents of lock dir.
+
+	* make-dist: Use name leim/SKK-DIC, not leim/SKK.
+
+1997-07-16  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist: Arrange for the leim tar file to unpack in emacs-M.N/leim.
+
+1997-07-11  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (mips-sony-newsos6*): File news-risc.h renamed
+	to news-r6.h.
+
+1997-07-10  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* config.bat: Use `sed' instead of `cp', which might not be
+	installed.
+
+1997-07-09  Kenichi Handa  <handa@etl.go.jp>
+
+	* Makefile.in (mostlyclean): Add cleaning leim directory.
+	(clean, distclean, maintainer-clean): Likewise.
+
+1997-07-09  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist (bogosities): Check subdirs of `lisp' also.
+
+1997-07-08  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist (etc): Really avoid symlinks now.
+	(lisp): Don't delete from subdirs the things we never copy.
+
+1997-07-07  Ken'ichi Handa  <handa@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep): Correct the target name.
+	The first letter `i' was dropped by the previous change of mine.
+
+1997-07-06  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (leim/Makefile): Generate this.
+	(*-sysv4.2uw*): Recognize new alternative.
+
+	* leim-Makefile.in: Renamed from leim-Makefile.
+
+	* make-dist: Set up real-leim subdirectory,
+	with the real contents of leim; then move it to
+	a separate top-level directory.
+
+	* make-dist: Don't mention site-lisp, site-init, site-start
+	or default, when listing files hat are not compiled and should be.
+	
+	* configure.in: Create src/config.stamp at the end.
+
+1997-07-04  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (install-leim): Correct previous change.
+
+1997-07-02  Ken'ichi Handa  <handa@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (install-leim): New target.
+	(install): Depend on install-leim.
+	
+1997-07-01  Ken'ichi Handa  <handa@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (SUBDIR): Add leim.
+	(SUBDIR_MAKEFILES): Add leim/Makefile.
+	(leim/Makefile): New target.
+
+1997-07-01  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* leim-Makefile: New file.
+	* make-dist: Initialize a `leim' subdirectory with that makefile.
+
+1997-06-29  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (GNU_MALLOC_reason): Fix message text.
+
+1997-06-27  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist (lisp): Don't process subdirs that start with =.
+	(etc): Copy symlinks, as in src.
+
+1997-06-26  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (i*86-*-unixware*): New alternative.
+
+1997-06-22  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (src/config.stamp): Target renamed from src/config.h
+	and touch it explicitly.
+
+	* configure.in (mips-sony-newsos6*): New alternative.
+	(mips-*-linux-gnu*): New alternative.
+	(*-*-bsdi*): New alternative.
+	(i*86-*-bsd386, i*86-*-bsdi...): Delete old alternatives.
+
+1997-06-22  Dave Love  <d.love@dl.ac.uk>
+
+	* Makefile.in (lib-src): Depend on src/config.h (e.g. for
+ 	movemail.o).
+	(src/config.h): New target to re-configure if src/config.in
+ 	is patched.
+
+1997-06-18  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (shutdown): Check for `shutdown' function.
+
+1997-06-18  Ken'ichi Handa  <handa@psilocin.gnu.ai.mit.edu>
+
+	* update-subdirs: Include the directory "language" in subdirs.
+
+1997-06-01  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (m88k-dg-dgux4*): New alternative.
+	(alpha-*-netbsd*): New alternative.
+	(powerpcle-*-solaris2*): New alternative.
+
+1997-05-20  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist: Warn about .el files that are not compiled.
+
+1997-05-11  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (dist): Don't run update-subdirs here,
+	since make-dist now gets that done.
+
+	* make-dist: Use the new `updates' target in lisp/Makefile.
+	
+	* make-dist: Use new non-file targets in lisp/Makefile.
+
+1997-04-27  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist: Handle all subdirs of `lisp' uniformly.
+	Don't handle `term' and `language' specially.
+	Clear out umask at the beginning.
+	
+1997-04-11  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* make-dist: Use Make to update finder-inf.el and autoloads.
+	Also update cus-load.el.
+
+1997-04-09  Marcus G. Daniels  <marcus@cathcart.sysc.pdx.edu>
+
+	* configure.in (doug_lea_malloc):  First check for SYSTEM_MALLOC,
+	in case it is desirable to disable the GNU malloc features with
+	glibc.
+
+1997-04-08  Marcus G. Daniels  <marcus@cathcart.sysc.pdx.edu>
+
+	* configure.in (DOUG_LEA_MALLOC):
+	Define if malloc_{get,set}_state exist.
+
+1997-03-05  Ken'ichi Handa  <handa@etl.go.jp>
+
+	* make-dist: Make links for files under lisp/language.
+
+1997-02-20  Kenichi Handa <handa@etl.go.jp>
+
+	* update-subdirs: Exclude the directory "language" from subdirs.
+
+1997-01-26  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+
+	* configure.in: Check for rint and cbrt.
+
+1997-01-01  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* make-dist: Use $EMACS to say where to run Emacs.
+	Add --no-update option.
+	
+1996-12-30  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in (hppa1.1-hitachi-hiuxmpp): New configuration.
+
+1996-12-28  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* make-dist (copying src): Check thoroughly for symlinks
+	and copy them in all cases.  Regularize the linking of *.in
+	and *.opt and ChangeLog files.
+	(copying lib-src): Likewise.
+	Don't rm getdate.c or y.tab.*--they don't exist any more.
+	
+1996-12-18  Jonathan I. Kamens  <jik@annex-1-slip-jik.cam.ov.com>
+
+	* configure.in: Check for libmail, maillock.h and
+	touchlock (for movemail).
+
+1996-12-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (limits.h): Check for this file.
+
+1996-12-08  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (rs6000-ibm-aix4.2): New alternative.
+	(rs6000-ibm-aix4.0): New alternative.
+	(rs6000-ibm-aix4*): Assume aix 4.1 by default.
+
+1996-11-22  Ben Harris  <bjh21@cam.ac.uk>
+
+	* configure.in: Recognize vax-*-netbsd*.
+
+1996-11-06  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in (locallisppath): Add leim directory.
+
+1996-10-31  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* config.bat: Make sure `mv' supports forward slashes and -f.
+
+1996-10-28  Christian Limpach  <chris@nice.ch>
+
+	* configure.in (hppa*-next-nextstep*): * added after hppa
+	to accept hppa1.0 and hppa1.1.
+
+1996-10-05  Marcus G. Daniels  <marcus@coulee.tdb.com>
+
+	* configure.in: Provide an empty default for LD_SWITCH_X_SITE_AUX.
+	* configure.in (ld_switch_machine): Fix typo.
+
+1996-09-28  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in: Fetch LD_SWITCH_SYSTEM and LD_SWITCH_MACHINE
+	from config.h and use them in $ac_link.
+
+1996-09-28  Erik Naggum  <erik@psilocin.gnu.ai.mit.edu>
+
+	* configure.in: Create a subdir named `lisp'.
+
+1996-09-24  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in: Check for getcwd.
+
+1996-09-04  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in: Check for termios.h.  Check for setpgid. 
+
+1996-08-31  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in: Check for setrlimit.
+
+1996-08-31  Paul Eggert  <eggert@twinsun.com>
+
+	* configure.in: Check for sys/systeminfo.h, getdomainname, sysinfo.
+
+1996-08-28  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in: Check for utimes.
+
+	* configure.in: Check for com_err library, but only
+	if --with-kerberos was used.  Check for krb and des
+	only if --with-kerberos.
+
+1996-08-26  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* Makefile.in (INSTALL_STRIP): New variable.
+	(install-strip): Set INSTALL_STRIP, not INSTALL_PROGRAM.
+	(install-arch-dep): Use INSTALL_STRIP, and pass it to lib-src.
+
+1996-08-25  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in: Check for krb and des libraries.
+
+1996-08-24  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
+
+	* configure.in (*-sunos4.1.[3-9]*noshare):
+	Use sunos413, not sunos4-1-3.
+	(m88k-dg-dgux5.4R3*): Use dgux5-4-3, not dgux5-4r3.
+	(arm-acorn-riscix1.2*): Use riscix12, not riscix1-2.
+	
+1996-08-22  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Makefile.in (src/paths.h): Target deleted.
+	(paths-force): Delete all dependencies on this target
+	but don't delete the target.
+	(install): Depend on `all'.
+	(paths-force): Don't print a message.
+
+	* configure.in: Generate src/paths.h here.
+
+1996-08-18  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (NON_GCC_LINK_TEST_OPTIONS, GCC_LINK_TEST_OPTIONS):
 	New variables that affect linking only.
 	(alpha-dec-osf*): Use those instead of previous change.
 
-Thu Aug 15 14:47:29 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Install info/messages.
 
-Sun Aug 11 03:36:03 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-11  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 19.33 released.
 
-Sat Aug 10 14:50:46 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-08-10  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* configure.in (i[3456]86-sequent-ptx4*, i[3456]86-sequent-sysv4*):
 	Fix previous change.
 
-Thu Aug  8 23:00:10 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-08  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (i[3456]86-sequent-ptx4*, i[3456]86-sequent-sysv4*):
 	New alternative.
 
-Wed Aug  7 17:58:37 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-07  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (alpha-dec-osf*): Specify GCC_TEST_OPTIONS
 	and NON_GCC_TEST_OPTIONS.
 
-Tue Aug  6 00:31:20 1996  Paul Eggert  <eggert@twinsun.com>
+1996-08-06  Paul Eggert  <eggert@twinsun.com>
 
 	* configure.in (LOCALTIME_CACHE): Don't put a string literal
 	"TZ=..." in environ.
 
-Sun Aug  4 16:33:35 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-04  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* make-dist (msdos): Add is_exec.c, sigaction.c to distribution.
 
-Sat Aug  3 17:27:46 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-03  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (*-sunos4.1.[3-9]*noshare): Move this before
 	the more general *-sunos4.1.[3-9]* clause.
 
-Wed Jul 31 13:52:46 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-07-31  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 19.32 released.
 
@@ -53,28 +448,28 @@ Wed Jul 31 13:52:46 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 	Set OVERRIDE_CPPFLAG to a string of one space.
 	Fix the code that uses OVERRIDE_CPPFLAG.
 
-Tue Jul 16 18:06:01 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-07-16  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* configure.in: Undo previous change.
 
-Tue Jul 16 01:42:44 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-07-16  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* config.sub: Use `pc', not `unknown', when canonicalizing
 	the vendor for ...86.
 
-Mon Jul 15 17:09:09 1996  David Mosberger-Tang <davidm@AZStarNet.com>
+1996-07-15  David Mosberger-Tang <davidm@AZStarNet.com>
 
 	* configure.in: Check for termios.h header.
 
-Thu Jul 11 19:32:03 1996  Bill Mann  <dvmann@dvncr.praxisint.com>
+1996-07-11  Bill Mann  <dvmann@dvncr.praxisint.com>
 
 	* configure.in: Use s/usg5-4-3.h for ncr-i[3456]86-sysv4.3
 
-Sun Jul  7 18:21:21 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-07-07  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* configure.in: Split bsdos2 and bsdos2-1.
 
-Sat Jul  6 10:33:55 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-07-06  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* config.sub: If last two words are not a recognized
 	KERNEL-OS pair, use just the last word as OS, as in 19.31.
@@ -82,35 +477,35 @@ Sat Jul  6 10:33:55 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 	
 	* config.sub: If vendor unspecified with i386, use `pc' not `unknown'.
 
-Sun Jun 30 03:05:19 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-30  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (check for using Lucid widgets by default):
 	Eliminate indentation that confuses some compilers.
 
-Sat Jun 29 03:00:59 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-29  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* config.sub: Convert linux and gnu/linux to linux-gnu.
 
 	* make-dist: Don't update getdate.c.
 	Ignore =... files when checking for too-long Lisp file names.
 
-Fri Jun 28 03:00:59 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-28  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (euidaccess): Check for that, not for eaccess.
 
-Thu Jun 27 02:14:13 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-27  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (sunos4.1.[3-9]*noshare): Eliminate dash from
  	before `noshare'.
 	(mips-sgi-irix6*): Specify NON_GCC_TEST_OPTIONS.
 
-Fri Jun 21 17:36:42 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-21  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in: Rename lignux to linux-gnu in configuration names.
 	Use gnu-linux as the opsys value (s/ file name).
 	Allow i686 just like i386, i486, i586.
 
-Thu Jun 20 13:26:35 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-20  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (i*86-*-sco3.2v5): New alternative.
 	(OVERRIDE_CPPFLAG): New variable.
@@ -118,70 +513,70 @@ Thu Jun 20 13:26:35 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in: Specify vpath for .texi files.
 
-Sun Jun  9 16:52:05 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-09  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in: Always check for HAVE_X11R5.
 	Separately decide whether to use a toolkit by default.
 
-Tue Jun  4 11:34:09 1996  Bill Mann  <dvmann@dvhpux1.praxisint.com>
+1996-06-04  Bill Mann  <dvmann@dvhpux1.praxisint.com>
 
 	* configure.in: If X11R5 is missing the Xaw headers,
 	default to --with-x-toolkit=no.
 
-Fri May 31 01:37:44 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-05-31  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* configure.in (powerpc-*-solaris2*): Use ibmrs6000, not rs6000.
 
-Thu May 30 22:09:53 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-05-30  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): If cd etc makes output,
 	don't treat that as part of the tar data.
 	Check that ./lisp actually exists.
 	
-Wed May 29 10:54:17 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-05-29  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* make-dist: Check for long file names.
 
-Sat May 25 15:30:10 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-05-25  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* Version 19.31 released.
 
-Sat May 25 10:37:33 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-05-25  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* configure.in: Recognize sparc-*-lignux.
 
-Fri May  3 17:46:54 1996  Richard Stallman  <rms@delasyd.gnu.ai.mit.edu>
+1996-05-03  Richard Stallman  <rms@delasyd.gnu.ai.mit.edu>
 
 	* make-dist: Include nt/inc/arpa and nt/inc/netinet in the dist.
 	Don't include config.w95.
 
-Sun Apr 21 02:53:56 1996  Richard Stallman  <rms@delasyd.gnu.ai.mit.edu>
+1996-04-21  Richard Stallman  <rms@delasyd.gnu.ai.mit.edu>
 
 	* make-dist: Replace --no-clean-up and --no-tar options
 	with --clean-up and --tar, so that the default is useful.
 
-Mon Apr 15 19:28:14 1996  Eli Zaretskii  <eliz@is.elta.co.il>
+1996-04-15  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* config.bat: Make sure the GDB init file is called src/_gdbinit;
 	if not, tell the user to rename it and abort.
 
-Sun Apr 14 16:01:17 1996  Eli Zaretskii  <eliz@is.elta.co.il>
+1996-04-14  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* config.bat: With DJGPP v1.x, use `COFF2EXE' to produce JUNK.EXE
 	test program.
 
-Fri Apr 12 02:38:00 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-04-12  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* config.bat (djgpp_ver): Variable renamed from djgpp-ver.
 
 	* make-dist (MANIFEST): Fix previous change.
 	(msdos): Put mainmake.v2 into the dist.
 
-Wed Apr 10 06:08:48 1996  Roland McGrath  <roland@charlie-brown.gnu.ai.mit.edu>
+1996-04-10  Roland McGrath  <roland@charlie-brown.gnu.ai.mit.edu>
 
 	* make-dist: Exit if autoconf fails.
 
-Wed Apr 10 13:28:33 1996  Eli Zaretskii  <eliz@is.elta.co.il>
+1996-04-10  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* config.bat: Set djgpp-ver, and unset it at the end.
 	Add a number ofconditionals for DJGPP version 2.
@@ -189,19 +584,19 @@ Wed Apr 10 13:28:33 1996  Eli Zaretskii  <eliz@is.elta.co.il>
 	Substitute for LDFLAGS in src/Makefile.
 	Substitute for ALL_CFLAGS in lib-src/Makefile.
 
-Mon Apr  8 17:08:03 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-04-08  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (ncurses): Check this after checking fns like strerror.
 
-Mon Apr  8 00:45:19 1996  Erik Naggum  <erik@naggum.no>
+1996-04-08  Erik Naggum  <erik@naggum.no>
 
 	* make-dist (MANIFEST): Don't include lines from =files.
 
-Sun Apr  7 20:11:34 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-04-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Don't put lisp/dired.todo in the dist.
 
-Fri Apr  5 13:09:47 1996  Richard Stallman  <rms@lucy.gnu.ai.mit.edu>
+1996-04-05  Richard Stallman  <rms@lucy.gnu.ai.mit.edu>
 
 	* configure.in (HAVE_NCURSES): Look for library named ncurses.
 
@@ -209,68 +604,68 @@ Fri Apr  5 13:09:47 1996  Richard Stallman  <rms@lucy.gnu.ai.mit.edu>
 
 	* configure.in (*-*-sysv4.2*): If no /usr/ccs/lib/cpp, use /lib/cpp.
 	
-Tue Mar 26 21:47:17 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-26  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Use lignux instead of linux as value of opsys.
 
-Fri Mar 22 12:11:29 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-22  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-strip): Fix whitespace.
 	Get rid of continuation.
 
 	* config.sub: Convert linux or gnu/linux to lignux.
 
-Thu Mar 21 19:04:42 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-21  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Accept lignux in configuration name.
 
-Wed Mar 20 09:51:01 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-20  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-strip): New target.
 
-Mon Mar 18 01:51:33 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-18  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (top_distclean): Use `|| true' to ignore error in rm.
 	-f failed to do the job on Suns.
 
-Wed Mar 13 03:20:00 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-03-13  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-dep): Don't depend on install-arch-indep.
 
 	* configure.in (linux/version.h): Check for this header.
 
-Tue Mar 12 02:58:53 1996  Roland McGrath  <roland@charlie-brown.gnu.ai.mit.edu>
+1996-03-12  Roland McGrath  <roland@charlie-brown.gnu.ai.mit.edu>
 
 	* configure.in: Remove -fno-builtin hackery from -lm check.
 
-Fri Mar  8 15:31:44 1996  Roland McGrath  <roland@charlie-brown.gnu.ai.mit.edu>
+1996-03-08  Roland McGrath  <roland@charlie-brown.gnu.ai.mit.edu>
 
 	* configure.in (-lm check): If $GCC, append -fno-builtin to $CC for
  	just this test.
 
 	* configure.in (AC_PREREQ): Require version 2.8 of Autoconf.
 
-Mon Mar  4 03:54:56 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-03-04  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Check for ncurses.
 
-Wed Feb 28 21:48:07 1996  Paul Eggert  <eggert@twinsun.com>
+1996-02-28  Paul Eggert  <eggert@twinsun.com>
 
 	* configure.in (LOCALTIME_CACHE):
 	Also define if localtime mishandles unsetting TZ.
 	This works around a localtime bug in mips-dec-ultrix.
 
-Sun Feb 25 17:59:44 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-02-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist (finder-inf.el): Use finder-compile-keywords-make-dist.
 
 	* configure.in: Improve messages about X versions.
 
-Sat Feb 24 00:10:17 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-02-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (LOCALTIME_CACHE): Cope if $ac_cv_func_tzset is null.
 
-Fri Feb 23 16:39:09 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-02-23  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (HAVE_X11XTR6): Set it as a shell variable.
 	(HAVE_LIBXMU): If HAVE_X11XTR6, use -lSM and -lICE.
@@ -278,68 +673,68 @@ Fri Feb 23 16:39:09 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	* Makefile.in (install-arch-dep): Depend on install-arch-indep.
 	(install): Put install-arch-indep before install-arch-dep.
 
-Tue Feb 20 14:12:35 1996  Dave Love  <d.love@dl.ac.uk>
+1996-02-20  Dave Love  <d.love@dl.ac.uk>
 
 	* INSTALL: Clarify info about MS-DOS path handling.
 
-Mon Feb 12 13:54:35 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-02-12  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Install info/ccmode*.
 	In previous change, protect against /bin/pwd returning null string.
 
-Wed Feb  7 14:12:10 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-02-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Copy build-dir's lisp subdir
 	to lispdir.
 
-Thu Feb  1 16:36:36 1996  Paul Eggert  <eggert@twinsun.com>
+1996-02-01  Paul Eggert  <eggert@twinsun.com>
 
 	* configure.in (LD_RUN_PATH): Prepend x_libraries to this envvar.
 
-Tue Jan 30 21:22:40 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-01-30  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (HAVE_TIMEVAL): Set explicitly to `no' if test fails.
 
-Thu Jan 25 01:59:04 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-01-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (extraclean): Use ${top_distclean} to ensure
 	we delete everything distclean deletes.
 
-Tue Jan 23 12:35:24 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-01-23  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* make-dist (lwlib): Don't distribute lwlib-Xol* files.
 
-Wed Jan 17 17:02:23 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-01-17  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (HAVE_X11): Merge $LD_SWITCH_X_SITE
 	into LDFLAGS instead of into LIBS.
 
-Tue Jan 16 17:53:38 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-01-16  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (HAVE_XMU): Fix typo in previous change.
 
-Mon Jan 15 15:07:46 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-01-15  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in [Solaris]: Don't let $CC make us use /usr/ucb/cc.
 
-Wed Jan 10 15:09:50 1996  Erik Naggum  <erik@naggum.no>
+1996-01-10  Erik Naggum  <erik@naggum.no>
 
 	* configure.in (USE_X_TOOLKIT = maybe): Delete redundant `fi'.
 
-Wed Jan 10 14:41:50 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-01-10  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Ignore error if no chmod -R.
 
-Wed Jan 10 14:20:18 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-01-10  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* configure.in (HAVE_XMU): Check for libXmu.a only if using toolkit
 	and use -lXt to link it.
 
-Mon Jan  8 09:48:39 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-01-08  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* configure.in (locallisppath): Put version-specific dir first.
 
-Sun Jan  7 10:47:11 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1996-01-07  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* configure.in (hppa-*-nextstep*): New alternative.
 	(USE_X_TOOLKIT): By default, set this to "maybe";
@@ -347,98 +742,98 @@ Sun Jan  7 10:47:11 1996  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* make-dist: Recompile outdated .elc files and update all autoloads.
 
-Fri Jan  5 18:12:10 1996  Roland McGrath  <roland@churchy.gnu.ai.mit.edu>
+1996-01-05  Roland McGrath  <roland@churchy.gnu.ai.mit.edu>
 
 	* configure.in (locallisppath): Fix typo in last change: " -> '.
 
-Thu Jan  4 21:14:35 1996  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1996-01-04  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (locallisppath): Add ../emacs/VERSION/site-lisp.
 
-Wed Dec 27 08:58:41 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-12-27  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Give all files read permission.
 
-Tue Dec 26 00:07:16 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-12-26  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (hppa*-hp-hpux9shr*, hppa*-hp-hpux9*, hppa*-hp-hpux*):
 	If it is hpux 9, check for /usr/include/X11R5 and /usr/lib/x11R5.
 
-Sun Dec 24 18:10:14 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-12-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Determine HAVE_X11R6.
 	(HAVE_MENUS): Renamed from HAVE_X_MENU.
 
-Thu Dec 21 02:23:44 1995  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1995-12-21  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* configure.in: Just "solaris" now defaults to version 2.4.
 	Add sunos4.1.n-noshare as alternative.
 
-Fri Dec  1 13:07:57 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-12-01  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (mips-sgi-irix6*): Set NON_GNU_CPP.
 
-Wed Nov 29 22:44:43 1995  Erik Naggum  <erik@naggum.no>
+1995-11-29  Erik Naggum  <erik@naggum.no>
 
 	* Makefile.in (install-arch-indep): Add missing backslash.
 
-Wed Nov 29 14:44:31 1995  Karl Eichwalder  <ke@ke.Central.DE>
+1995-11-29  Karl Eichwalder  <ke@ke.Central.DE>
 
 	* Makefile.in (install-arch-indep): Don't install
 	lispdir/[Mm]akefile*, lispdir/ChangeLog, lispdir/dired.todo.
 
-Wed Nov 29 00:13:03 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-29  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Fix previous change.
 
 	* configure.in (mips-sni-sysv*): New alias for mips-siemens-sysv*.
 
-Fri Nov 24 23:40:55 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.30 released.
 
 	* make-dist (lisp): Exclude subdirs.el.
 
-Wed Nov 22 17:44:34 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-22  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist (etc): Delete *.orig and *.rej.
 
-Thu Nov 16 16:59:07 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-16  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Rename old info/dir only if exists.
 
-Wed Nov 15 16:50:17 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-15  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (hppa*-hp-hpux10*): Use s/hpux10.h.
 
-Tue Nov 14 14:39:08 1995  Geoff Voelker  <voelker@cs.washington.edu>
+1995-11-14  Geoff Voelker  <voelker@cs.washington.edu>
 
 	* make-dist (nt): Rename install, readme, and todo to
 	INSTALL, README, and TODO.
 
-Fri Nov 10 01:07:35 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-10  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist (lisp): Don't distribute site-start.
 
-Mon Nov  6 17:00:58 1995  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1995-11-06  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* make-dist: Break the hard link on alloca.c.
 
-Sat Nov  4 12:41:57 1995  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
+1995-11-04  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
 	* configure.in (LIBS): Add libsrc_libs and keep the old LIBS.
 
-Thu Nov  2 18:29:03 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-11-02  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* make-dist (src, lib-src): Don't distribute Makefile.c.
 	(etc/e): Do cleanup in $tempdir/etc/e, not $tempdir/etc.
 
-Tue Oct 31 15:57:22 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-10-31  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (mkdir): Create man1dir, not mandir.
 	(uninstall): Use man1dir, not mandir.
 
-Mon Oct 30 12:49:31 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-10-30  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (man1dir): New variable.
  	(install-arch-indep): Use man1dir.
@@ -447,99 +842,99 @@ Mon Oct 30 12:49:31 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Create lisp/MANIFEST.
 
-Sat Oct 28 17:01:41 1995  Andreas Schwab  <schwab@issan.informatik.uni-dortmund.de>
+1995-10-28  Andreas Schwab  <schwab@issan.informatik.uni-dortmund.de>
 
 	* configure.in (m68k-*-linux*): New alternative.
 
-Fri Oct 27 02:28:47 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-10-27  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Use new names config.in, paths.in, and
 	{src,lib-src}/Makefile.in.
 
-Wed Oct 25 15:23:23 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-10-25  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in: Don't bother checking for drem.
 
-Fri Oct 20 18:07:42 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-10-20  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (distclean): Delete line with just a tab in it.
 	(install-arch-indep): Delete spaces that precede tabs.
 	Delete spurious `fi' left from previous change.
 	(install): Supply `true' as command, to avoid null command.
 
-Thu Oct  5 12:35:26 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-10-05  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (--with-x-toolkit)): Add `athen' as alias for `athena'.
 
-Sat Sep 30 23:42:45 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-09-30  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (powerpc-*-solaris2): New alternative.x
 
-Tue Sep 12 13:42:33 1995  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1995-09-12  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* Makefile.in (src/paths.h, paths-force): Use paths.h.$$ instead
 	of paths.h.tmp$$, to avoid going beyond 14 characters.
 
-Sun Sep 10 11:15:55 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-09-10  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Improve error msg for invalid --with-x-toolkit value.
 
-Wed Sep  6 04:25:50 1995  Paul Eggert  <eggert@twinsun.com>
+1995-09-06  Paul Eggert  <eggert@twinsun.com>
 
 	* configure.in (LOCALTIME_CACHE): Define if tzset exists and
 	if localtime caches TZ.  Check for tzset.
 
-Fri Sep  1 12:12:02 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-09-01  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* config.bat: Simplify using new names file names src/makefile.in,
 	config.in, paths.in.  Change Echo commands not to use `.
 
-Thu Aug 31 22:39:51 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-31  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Always install the new dir file;
 	rename the previous dir file to dir.bak or dir.old.
 
-Mon Aug 14 19:13:37 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-14  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (RANLIB): Substitute this into makefiles.
 	Set it specially on solaris; set it by default on other systems.
 
 	* configure.in: Fix previous Alpha change.
 
-Sun Aug 13 01:08:48 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (i*386-*-isc4.*): Set GCC_TEST_OPTIONS and
 	NON_GCC_TEST_OPTIONS.
 
-Thu Aug 10 01:00:49 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-10  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (CFLAGS): When computing CFLAGS and REAL_CFLAGS
 	from config.h, use SPECIFIED_CFLAGS to get what the user specified.
 
 	* configure.in (alpha-*-linux*): New configuration.
 
-Sat Aug  5 01:58:56 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-05  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (m68*-next-*): Use m68k.h and nextstep.h.
 	(m68k-next-nextstep*): New alias for that.
 	(i*86-*-nextstep*): Use nextstep.h.
 	(sparc-*-nextstep*): New configuration.
 
-Wed Aug  2 22:05:03 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-08-02  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (CPP): Save original CFLAGS value in SPECIFIED_CFLAGS.
 	And get CFLAGS from config.h if SPECIFIED_CFLAGS is null.
 
-Thu Jul 27 20:34:27 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-07-27  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Handle sunos4shr by sharing; not like sunos4*.
 	Determine GETTIMEOFDAY_ONE_ARGUMENT by experiment.
 
-Tue Jul 18 11:47:04 1995  Mike Long  <mike.long@analog.com>
+1995-07-18  Mike Long  <mike.long@analog.com>
 
 	* make-dist: Fix update of finder-inf.el, and byte-compile it.
 
-Tue Jul 18 01:27:54 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-07-18  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (src/paths.h, paths-force):
 	Rename src/paths.h.in to src/paths.in.
@@ -549,30 +944,30 @@ Tue Jul 18 01:27:54 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	Use Makefile.c for intermediate file.
 	Rename src/config.h.in to src/config.in.
 
-Mon Jul 17 17:53:57 1995  Richard Stallman  <rms@gnu.ai.mit.edu>
+1995-07-17  Richard Stallman  <rms@gnu.ai.mit.edu>
 
 	* configure.in (mips-dec-ultrix*): Assume version 4.3.
 	(mips-dec-ultrix4.[12]): New alternative for old versions.
 
-Thu Jul  6 14:08:34 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-07-06  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* make-dist: Don't break intra-tree links.
 
-Thu Jul  6 01:42:51 1995  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
+1995-07-06  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
 
 	* configure.in: Put back archlibdir initialization.  Require
  	autoconf 2.4.1 or later.
 
-Sat Jul  1 00:58:41 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-07-01  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Use sunos4shr normally for Sunos 4.1.[3-9].
 	(mips-mips-riscos5*): New alternative.
 
-Thu Jun 29 20:04:21 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-29  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (uninstall, install-arch-indep): Install info/ediff*.
 
-Tue Jun 27 19:00:12 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-27  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (bindir, datadir, sharedstatedir, libexecdir)
 	(mandir, infodir, archlibdir): Initializations deleted.
@@ -580,125 +975,125 @@ Tue Jun 27 19:00:12 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	* configure.in: On hpux9, use hpux9-x11r4.h if we have X11R4.
 	On hpux9shr, use hpux9shxr4.h.
 
-Sat Jun 24 18:58:17 1995  Morten Welinder  <terra+@cs.cmu.edu>
+1995-06-24  Morten Welinder  <terra+@cs.cmu.edu>
 
 	* configure.in: Added target mips-dec-mach_bsd4.3.
 	* config.guess: Guess mips-dec-mach_bsd4.3.
 
-Sat Jun 24 14:42:51 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (mkdir): Use symbolic chmod.
 
-Thu Jun 22 07:45:40 1995  Paul Eggert  <eggert@twinsun.com>
+1995-06-22  Paul Eggert  <eggert@twinsun.com>
 
 	* configure.in: Treat SunOS 4.1.4 like SunOS 4.1.3.
 	(Likewise for SunOS 4.1.5 thorugh 4.1.9, should they ever exist.)
 
-Thu Jun 22 02:32:58 1995  Paul Eggert  <eggert@twinsun.com>
+1995-06-22  Paul Eggert  <eggert@twinsun.com>
 
 	* Makefile.in (SUBDIR_MAKEFILES):
 	Add man/Makefile, so `make distclean' removes it.
 	(top_distclean): Add config.log to the list of files to be removed.
 
-Mon Jun 19 22:50:10 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-19  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.29 released.
 
-Sat Jun 17 08:43:47 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-17  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Fix the previous change to verify that the -b
 	option really solves the problem.
 
 	* make-dist (nt): Explicitly include makefile.nt and makefile.def only.
 
-Fri Jun 16 11:26:47 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-16  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Test whether XFree86 needs -b i486-linuxaout to link.
 
-Thu Jun 15 01:12:13 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-15  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Report more clearly when there is no special
 	dir to search for X includes or libraries.
 
-Tue Jun 13 17:44:10 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-06-13  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in: Check for -lpthreads, not -lpthread.
 
-Fri Jun  9 22:09:46 1995  Geoff Voelker  <voelker@cs.washington.edu>
+1995-06-09  Geoff Voelker  <voelker@cs.washington.edu>
 
 	* make-dist: Copy new files nt/addpm.c and nt/emacs.bat.in.
 
-Thu Jun  8 23:09:14 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-06-08  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in: Check for -lpthread.
 
-Mon Jun  5 23:09:10 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-06-05  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Install info files for mh-e.
 	(uninstall): Uninstall info files for dired-x, gnus, mh-e, and sc.
 
-Thu Jun  1 20:43:53 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-06-01  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in (*-solaris2.5): New configuration.
 
 	* make-dist: Copy new files config.nt and config.w95.
 
-Tue May 30 19:24:31 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-05-30  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in: Use x_includes, not x_libraries, for -I.
 	Make bitmapdir a colon-separated list.
 
-Sat May 27 23:18:21 1995  Richard Stallman  <rms@gnu.ai.mit.edu>
+1995-05-27  Richard Stallman  <rms@gnu.ai.mit.edu>
 
 	* configure.in (hppa*-hp-hpux10*, m68k-hp-hpux10*): New configurations.
 
 	* configure.in: Allow x_libraries and x_includes to be paths.
 
-Thu May 25 11:53:13 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-05-25  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in: Fix typo.
 
-Wed May 24 16:50:02 1995  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1995-05-24  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* INSTALL: Clarify use of site-init.el.
 
-Mon May 22 18:28:23 1995  enami tsugutomo  <enami@sys.ptg.sony.co.jp>
+1995-05-22  enami tsugutomo  <enami@sys.ptg.sony.co.jp>
 
 	* configure.in: pass arg to sqrt.
 
-Thu May 18 23:52:46 1995  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1995-05-18  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* make-dist: Fix May 6 change.
 
-Wed May 17 15:42:16 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-05-17  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* vpath.sed: Delete reference to ymakefile.
 
-Tue May  9 14:10:07 1995  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
+1995-05-09  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
 
 	* configure.in: Use sqrt (more portable) instead of fmod in -lm
         check.
 
-Tue May  9 00:26:22 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-05-09  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Put nt/emacs.ico and nt/emacs.rc in dist.
 
 	* update-subdirs: Specify /bin/sh to run the script.
 
-Sat May  6 17:54:06 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-05-06  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Put src/makefile.nt in dist.
 
 	* configure.in (i[345]86-*-bsdi2*): New configuration.
 	(vax-dec-bsd386*): Deleted.
 
-Sat May  6 17:27:25 1995  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
+1995-05-06  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
 
 	* configure.in: Make sure CDPATH doesn't mess up PWD check.  Check
 	whether X bitmaps are in X11/bitmaps instead of bitmaps.  Use fmod
 	instead of logb in -lm check.
 
-Wed May  3 15:28:44 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-05-03  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (m68*-apollo-*): Renamed from m68*-apollo*.
 	Use bsd4-3.  Don't set NON_GNU_CPP.
@@ -707,110 +1102,110 @@ Wed May  3 15:28:44 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	In nt. copy various different things, but not *.cmd.
 	Fix the ln commands for the subdirs of nt.
 
-Sat Apr 29 01:47:36 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-29  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (*-sun-sunos4.1.3*): Use sunos4shr.h.
 
-Thu Apr 27 21:23:32 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-04-27  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in (*-sun-sunos4.1.3*): Use shared libraries,
 	since that's what the header file expects.
 
-Mon Apr 24 14:23:35 1995  Francesco Potorti`  (pot@cnuce.cnr.it)
+1995-04-24  Francesco Potorti`  (pot@cnuce.cnr.it)
 
 	* configure.in (m68k-motorola-sysv*): Distinguish between 68030
 	and 68040 based machines when choosing options for gnucc.
 
-Thu Apr 13 00:56:10 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (top_distclean): Delete config.cache.
 
-Fri Apr  7 14:21:11 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Delete .#* when copying subdirs.
 
 	* configure.in: Use m/ncr386.h.
 
-Thu Apr  6 17:52:31 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-06  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Undo Sep 23 change.
 
-Thu Apr  6 16:58:26 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-04-06  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* make-dist (lib-src): Don't copy *.lex; it doesn't exist anymore.
 	(man): Don't copy texindex.c and getopt.c; they're deleted.
 	(etc): Omit `e'; it's a subdirectory.
 	(etc/e): Use `../..', not `..', to reference top level.
 
-Thu Apr  6 18:00:24 1995  Simon Leinen  <simon@lia.di.epfl.ch>
+1995-04-06  Simon Leinen  <simon@lia.di.epfl.ch>
 
 	* Makefile.in (install-arch-indep, dist):
 	look for `update-subdir' in $(srcdir).
 
-Thu Apr  6 15:50:22 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-06  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Include mkinstalldirs in distribution.
 
-Wed Apr  5 16:45:13 1995  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1995-04-05  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* make-dist: Add missing close backquote.
 
-Sun Apr  2 18:14:00 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-04-02  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Don't distribute shortnames directory.
 
-Sun Mar 12 01:11:14 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-03-12  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (blessmail): Pass archlibdir to the sub-make.
 
-Sat Feb 25 22:42:47 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-02-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (m88k-motorola-sysv4*): Use usg5-4-2.
 
-Thu Feb 23 19:45:30 1995  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1995-02-23  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in (EMACS_CONFIG_OPTIONS): Use $ac_configure_args.
 
-Mon Feb 13 19:53:22 1995  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
+1995-02-13  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
 
 	* configure.in (mips-sgi-irix6): New configuration.
 
-Tue Feb  7 18:50:09 1995  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
+1995-02-07  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
 
 	* Makefile.in (maintainer-clean): Renamed from realclean.
 
-Thu Feb  2 11:18:47 1995  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
+1995-02-02  David J. MacKenzie  <djm@geech.gnu.ai.mit.edu>
 
 	* configure.in: Create a .gdbinit that sources the real one, if
 	using a different build directory.
 
-Mon Jan 23 18:33:59 1995  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1995-01-23  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* configure.in: Check for sys/select.h.
 
-Mon Jan  2 03:49:12 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-01-02  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: On sunos4.1.3 and sunus4shr, set NON_GNU_CPP.
 
-Tue Dec 27 12:55:07 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-12-27  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Handle isc 4.1 operating system.
 
-Sat Dec 10 16:50:12 1994  Richard Stallman  <rms@kepa>
+1994-12-10  Richard Stallman  <rms@kepa>
 
 	* configure.in (rs6000-ibm-aix4.1*): New alternative.
 	(rs6000-ibm-aix4*): New alternative.
 
-Tue Dec  6 18:44:31 1994  Richard Stallman  <rms@kepa>
+1994-12-06  Richard Stallman  <rms@kepa>
 
 	* configure.in: For SVR4.2, set NON_GNU_CPP if not already set.
 
-Wed Nov 30 17:13:58 1994  David J. MacKenzie  <djm@duality.gnu.ai.mit.edu>
+1994-11-30  David J. MacKenzie  <djm@duality.gnu.ai.mit.edu>
 
 	* configure.in: Don't try to make directories that are guaranteed
         to already exist.
 
-Wed Nov 23 15:16:28 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-11-23  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Generate man/Makefile from man/Makefile.in.
 	Create the man subdir.
@@ -821,80 +1216,80 @@ Wed Nov 23 15:16:28 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	Make links to it.
 	Put man/Makefile.in in dist, instead of man/Makefile.
 
-Mon Nov 21 22:17:37 1994  David J. MacKenzie  (djm@mole.gnu.ai.mit.edu)
+1994-11-21  David J. MacKenzie  (djm@mole.gnu.ai.mit.edu)
 
 	* configure.in: Add --with-pop, --with-kerberos, and
 	--with-hesiod for movemail.
 
-Thu Nov 17 10:13:02 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-11-17  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (m68*-apollo*): Use s/domain.h.
 
-Mon Nov 14 23:23:00 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-11-14  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (m68*-apollo*): Set NON_GNU_CPP.
 
-Mon Nov 14 12:06:48 1994  David J. MacKenzie  (djm@geech.gnu.ai.mit.edu)
+1994-11-14  David J. MacKenzie  (djm@geech.gnu.ai.mit.edu)
 
 	* configure.in: Don't add -I, -L, -R options for cc if their
 	arguments would be empty.
 
-Fri Nov 11 09:54:09 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-11-11  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (i860-intel-osf1*): New alternative.
 	(mips-sgi-irix5.[01]*): Distinguish from irix5*.
 	(mips-sgi-irix*): Now an alias for mips-sgi-irix5*.
 
-Wed Nov  9 16:09:31 1994  David J. MacKenzie  <djm@duality.gnu.ai.mit.edu>
+1994-11-09  David J. MacKenzie  <djm@duality.gnu.ai.mit.edu>
 
 	* configure.in: Make h_errno check not use nested functions.
 
-Wed Nov  9 06:47:46 1994  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
+1994-11-09  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Delete *.orig in copied dirs.
 
-Tue Nov  8 19:25:41 1994  Roland McGrath  <roland@churchy.gnu.ai.mit.edu>
+1994-11-08  Roland McGrath  <roland@churchy.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Avoid continued comment
         swallowing target line.
 
-Tue Nov  8 00:21:18 1994  David J. MacKenzie  (djm@churchy.gnu.ai.mit.edu)
+1994-11-08  David J. MacKenzie  (djm@churchy.gnu.ai.mit.edu)
 
 	* configure.in: Protect a character class with `changequote'.
 
-Mon Nov  7 21:50:37 1994  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
+1994-11-07  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
 	* configure.in: Accept `news' as a synonym for `newsos'.
 
-Thu Nov  3 15:23:24 1994  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1994-11-03  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* Makefile.in: Don't rm files if cd fails.
 
-Tue Nov  1 05:38:27 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-11-01  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Put nt subdir and its subdirs in the dist.
 	(lib-src): Put makefile.nt in the dist.
 	(lisp): Put makefile.nt in the dist.
 
-Sat Oct 29 08:44:36 1994  David J. MacKenzie  (djm@geech.gnu.ai.mit.edu)
+1994-10-29  David J. MacKenzie  (djm@geech.gnu.ai.mit.edu)
 
 	* configure.in: Change a stray `[' to `test'.
 
-Fri Oct 28 11:29:07 1994  David J. MacKenzie  <djm@duality.gnu.ai.mit.edu>
+1994-10-28  David J. MacKenzie  <djm@duality.gnu.ai.mit.edu>
 
 	* configure.in: Adapt for Autoconf v2.  Use the standard argument
 	parser, host type canonicalizer, X11 finder, and message
 	printing macros.  Use the new macro names.  Use `test' instead of `['.
 
-Wed Oct 26 19:18:49 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-26  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Check for getpagesize.
 
-Mon Oct 17 21:44:25 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-17  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist (msdos): Put sed* in the distribution.
 
-Mon Oct 17 03:33:32 1994  Morten Welinder  <terra@mole.gnu.ai.mit.edu>
+1994-10-17  Morten Welinder  <terra@mole.gnu.ai.mit.edu>
 
 	* config.bat: New option, `--with-x', for configuring Emacs
 	for use with the X11 system DesqView/X.
@@ -907,13 +1302,13 @@ Mon Oct 17 03:33:32 1994  Morten Welinder  <terra@mole.gnu.ai.mit.edu>
 	(lib-src): Remove temporary files.
 	(): Check that `sed', `rm', `mv', and `gcc' are available.
 
-Mon Oct 17 00:27:09 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-17  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (sharedstatedir): Substitute sharedstatedir properly.
 
 	* configure.in (bitmapdirs): Default to /usr/include/X11/bitmaps.
 
-Sun Oct 16 05:20:37 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-16  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (EMACS_CONFIGURATION): Use $canonical as value.
 
@@ -923,14 +1318,14 @@ Sun Oct 16 05:20:37 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	* Makefile.in (bitmapdir): New variable.
 	(src/paths.h, paths-force): Edit PATH_BITMAPS.
 
-Sat Oct 15 23:53:15 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-15  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Put update-subdirs and lisp/subdirs.el in the dist.
 
 	* Makefile.in (dist, install-arch-indep): Run update-subdirs.
 	* update-subdirs: New shell script.
 
-Thu Oct 13 00:02:35 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (top_distclean): Don't rm build-install.
 	(SOURCES): Delete build-install.in.
@@ -938,11 +1333,11 @@ Thu Oct 13 00:02:35 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 	* make-dist: Don't distribute build-ins.in.
 	* build-ins.in: File deleted.
 
-Wed Oct 12 19:29:05 1994  David J. MacKenzie  (djm@duality.gnu.ai.mit.edu)
+1994-10-12  David J. MacKenzie  (djm@duality.gnu.ai.mit.edu)
 
 	* Makefile.in (mkdir): Use mkinstalldirs instead of make-path.
 
-Tue Oct 11 04:05:30 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-11  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in: Use libexecdir and sharedstatedir as appropriate.
 
@@ -952,215 +1347,215 @@ Tue Oct 11 04:05:30 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Don't distribute subdirs.el.
 
-Fri Oct  7 04:38:54 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (eaccess): Check for it.
 
-Tue Oct  4 05:00:42 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-04  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (mktime): Check for it.
 
-Sun Oct  2 07:30:52 1994  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
+1994-10-02  Paul Reilly  <pmr@geech.gnu.ai.mit.edu>
 
 	* configure.in (motif): Add support for usage and option checking.
 
-Sat Sep 24 20:36:04 1994  Richard Stallman  <rms@churchy.gnu.ai.mit.edu>
+1994-09-24  Richard Stallman  <rms@churchy.gnu.ai.mit.edu>
 
 	* configure.in (utimes): Check for it.
 
-Fri Sep 23 21:54:03 1994  Richard Stallman  <rms@churchy.gnu.ai.mit.edu>
+1994-09-23  Richard Stallman  <rms@churchy.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Don't do mkdir here.
 
-Wed Sep 21 17:56:10 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-21  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (arm-acorn-riscix1.1*, arm-acorn-riscix1.2*):
 	riscix.h renamed to acorn.h.
 
-Wed Sep 21 17:51:58 1994  Michael Ben-Gershon (mybg@cs.huji.ac.il)
+1994-09-21  Michael Ben-Gershon (mybg@cs.huji.ac.il)
 
 	* configure.in (arm-acorn-riscix1.1*, arm-acorn-riscix1.2*):
 	New configurations.
 
-Wed Sep 21 12:59:04 1994  David J. MacKenzie  (djm@geech.gnu.ai.mit.edu)
+1994-09-21  David J. MacKenzie  (djm@geech.gnu.ai.mit.edu)
 
 	* configure.in: Remove trailing slashes from srcdir.
 
-Wed Sep 21 05:28:03 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-21  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (i[345]86-sequent-ptx*): Handle
 
-Tue Sep 20 18:16:15 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-20  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (paths-force): Depend on src/paths.h
 
-Mon Sep 19 14:13:58 1994  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1994-09-19  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* configure.in (config_options): Save all arguments, not just some.
 
-Sun Sep 18 14:40:00 1994  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
+1994-09-18  Karl Heuer  <kwzh@hal.gnu.ai.mit.edu>
 
 	* Makefile.in (install-arch-indep): Copy DOC-*, not DOC*
 
 	* configure.in: Add AC_AIX.
 	Add checks to set HAVE_STRUCT_UTIMBUF, HAVE_TIMEVAL, HAVE_SELECT.
 
-Sun Sep 18 04:18:20 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-18  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (parsing options): Simplify sed command to delete -'s.
 
-Fri Sep 16 22:06:49 1994  Karl Heuer  <kwzh@churchy.gnu.ai.mit.edu>
+1994-09-16  Karl Heuer  <kwzh@churchy.gnu.ai.mit.edu>
 
 	* configure.in (config_options): New shell variable.
 	Pass its value to C code in EMACS_CONFIG_OPTIONS.
 
-Fri Sep 16 19:35:47 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-16  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (alpha-dec-osf*): New target.
 
 	* Makefile.in: Use just one FRC target.
 
-Thu Sep 15 20:02:04 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-15  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (removenullpaths, paths-force):
 	Use name paths.h.tmp$$, which depends on the pid.
 
-Wed Sep 14 23:42:03 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-14  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (removenullpaths, paths-force):
 	Put paths.h.tmp in top-level dir, not in src.
 
-Sun Sep 11 14:56:01 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-11  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.27 released.
 
-Wed Sep  7 03:53:50 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.26 released.
 
-Sun Sep  4 03:02:15 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-04  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Check for lrand48, not rand48.
 
-Sat Sep  3 18:44:55 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-03  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (powerpc-ibm-aix3.1*, powerpc-ibm-aix3.2.5)
 	(powerpc-ibm-aix*): New aliases.
 
-Sun Aug 21 14:02:00 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-21  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist (src/m, src/s): Put *.inp in distribution.
 
-Fri Aug 19 20:01:09 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-19  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Accept i586 and i486 along with i386.
 
-Mon Aug 15 05:18:12 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-15  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Do compute unexec, LIBX, system_malloc, etc
 	even if CPP env var was set by the user.
 
 	* configure.in (i[34]86-*-*): For SCO 3.2v4, fix NON_GNU_CPP value.
 
-Sun Aug 14 00:10:08 1994  Jonathan I. Kamens  (jik@gza-client1.aktis.com)
+1994-08-14  Jonathan I. Kamens  (jik@gza-client1.aktis.com)
 
 	* Makefile.in: Uninstall "$(EMACS)", not "emacs".
 
-Sat Aug 13 16:34:59 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (i[34]86-*-*): For SCO 3.2v4, set NON_GNU_CPP.
 
-Tue Aug  9 23:20:18 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-08-09  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Check more specifically for i*86-sun-sunos.
 
-Wed Aug  3 21:53:58 PDT 1994  Caveh Jalali  (caveh@eng.sun.com)
+1994-08-03  Caveh Jalali  (caveh@eng.sun.com)
 
 	* configure.in: Handle solaris 2.4.
 
-Wed Jul 27 13:34:18 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-07-27  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (rand48): Check for it.
 
-Tue Jul 26 15:52:58 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-07-26  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* make-dist: Update the info files.
 
-Mon Jul 25 16:35:16 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-07-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in: Make "checking..." messages' style consistent.
 	(HAVE_H_ERRNO): New test.
 
-Sun Jul 24 16:18:09 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-07-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* configure.in (i860-*-sysv4*): Set NON_GNU_CC and NON_GNU_CPP.
 
-Tue Jul 12 00:03:39 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-07-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (CFLAGS): If the envvar was specified, use that.
 	And set REAL_CFLAGS from it too.
 
-Mon Jul 11 16:28:51 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-07-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Update finder-inf.el.
 
-Thu Jul  7 12:57:42 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-07-07  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist (msdos): Include sed4.inp in dist.
 
 	* Makefile.in (libsrc_libs): Var deleted.
 
-Wed Jul  6 22:39:26 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-07-06  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (mkdir, removenullpaths): Put g in sed replace commands.
 
-Sun Jun 26 12:26:40 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-26  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (mips-sony-newsos4*): New alias.
 
-Thu Jun 23 15:21:14 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-23  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (*-convex-bsd*): Set NON_GNU_CPP.
 	(*-convex-convexos*): Accept this as alias.
 
-Sun Jun 19 11:40:01 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Get CFLAGS both with and without THIS_IS_CONFIGURE,
 	for two different uses.
 
-Wed Jun 15 22:30:18 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Define THIS_IS_CONFIGURE when extracting CFLAGS etc.
 
-Tue Jun 14 10:51:06 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-14  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Put ./BUGS into the distrib.
 
-Mon Jun 13 17:12:32 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle 386 running Solaris 2.
 
-Mon Jun  6 04:46:27 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-06  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (mips-siemens-sysv*): Use cpp, not cc -E.
 
-Sun Jun  5 06:44:16 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-05  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (mips-sony-newsos*): Use news-risc.h.
 
 	* configure.in: Accept bsdi as opsys, like bsd386.
 
-Wed Jun  1 20:03:31 1994  Morten Welinder  (terra@diku.dk)
+1994-06-01  Morten Welinder  (terra@diku.dk)
 
 	* config.bat (src/paths.h): Use sed script msdos/sed4.inp.
 
-Mon May 30 04:33:36 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.25 released.
 
 	* make-dist (shortversion): Don't assume another period follows.
 
-Fri May 27 01:45:34 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (install-arch-indep): Use /bin/pwd uniformly, not pwd.
 	(uninstall): Use /bin/pwd.
@@ -1176,99 +1571,99 @@ Fri May 27 01:45:34 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	* configure.in (*-sun-sunos4*): Set GCC_TEST_OPTIONS,
 	NON_GCC_TEST_OPTIONS.
 
-Thu May 26 05:04:55 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-26  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Don't insist on subversions for irix.
 
-Tue May 24 00:03:58 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-24  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (hppa*-hp-hpux9shr): Move alternative up.
 
 	* configure.in (i[34]86-next-*): New alternative.
 
-Mon May 23 03:07:50 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-23  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.24 released.
 
 	* configure.in: New config hppa*-hp-hpux9shr*.
 
-Sun May 22 18:30:22 1994  Morten Welinder  (terra@tyr.diku.dk)
+1994-05-22  Morten Welinder  (terra@tyr.diku.dk)
 
 	* config.bat: Doc fix.
 
-Sat May 21 03:17:49 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (mostlyclean, clean, distclean, realclean)
 	(extraclean): Don't act on man subdir if it doesn't exist.
 
-Fri May 20 18:03:56 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-20  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (GCC_TEST_OPTIONS, NON_GCC_TEST_OPTIONS): New vars.
 	Use them to set up CC.
 	(*-sun-sunos4.1.3): Set them.
 
-Thu May 19 11:54:43 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (lib-src): Don't depend on src/paths.h.
 
-Wed May 18 01:35:38 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-18  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* build-ins.in (copydests): Get rid of spurious `-'s.
 
 	* configure.in: Define EMACS_CONFIGURATION instead of CONFIGURATION.
 
-Tue May 17 00:41:00 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.23 released.
 
 	* configure.in [HAVE_X11]: Merge $C_SWITCH_X_SITE into CFLAGS
 	for the Xlib and Xt checks; then restore old CFLAGS.
 
-Sun May 15 01:20:57 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (HAVE_X11XTR6): Add newline before #if.
 	Add newline after #endif.
 
-Fri May 13 17:01:41 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (HAVE_X11XTR6): Arrange to define it.
 
-Thu May 12 06:51:21 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (install): Depend on blessmail.
 
-Thu May 12 03:35:55 1994  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
+1994-05-12  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
 
 	* configure.in (mips-siemens-sysv*): Put quotes around value
 	containing blanks.
 
-Wed May 11 22:20:51 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (TAGS): Use the makefile in src subdir.
 
-Tue May 10 16:50:14 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-05-10  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in (opsys): Recognize `gnu'.
 
-Tue May 10 16:08:30 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-10  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (using NON_GNU_CPP): Fix test for CPP already set.
 
-Mon May  9 10:24:59 1994  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
+1994-05-09  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
 
 	* configure.in: Remove AC_LANG_C call.  Not needed with Autoconf
 	 version > 1.8.
 
-Sun May  8 07:35:11 1994  Morten Welinder  (terra@diku.dk)
+1994-05-08  Morten Welinder  (terra@diku.dk)
 
 	* config.bat: Forcibly remove "# " style comments from makefiles.
 
-Sun May  8 15:50:34 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-08  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (uninstall): When processing lispdir and etcdir,
 	do nothing unless it exists and is a directory.
 
-Fri May  6 19:21:54 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-06  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (install-arch-indep): Do install info/dired-x*.
 	Merge code in from install-doc.
@@ -1277,7 +1672,7 @@ Fri May  6 19:21:54 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (run_in_place): Don't use pwd for archlibdir and docdir.
 
-Wed May  4 15:40:03 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-04  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (making src/Makefile and lib-src/Makefile):
 	Split off the autoconf substitutions and don't pass them thru cpp.
@@ -1288,12 +1683,12 @@ Wed May  4 15:40:03 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	* configure.in: Recognize m88k-dg-dgux5.4.3* and m88k-dg-dgux5.4.2*.
 	Use lower case names for the s files.
 
-Fri May  3 12:01:09 1994  Morten Welinder  (terra@diku.dk)
+1994-05-03  Morten Welinder  (terra@diku.dk)
 
 	* config.bat: Added possibility for different file name
 	transscriptions in lib-src.
 
-Tue May  3 04:17:46 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-03  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (lib-src): Undo previous change.
 	(blessmail): New target to run maybe-blessmail in lib-src.
@@ -1301,19 +1696,19 @@ Tue May  3 04:17:46 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (lib-src): Depend on src.
 
-Sat Apr 30 15:28:58 1994  Paul Reilly  (pmr@churchy.gnu.ai.mit.edu)
+1994-04-30  Paul Reilly  (pmr@churchy.gnu.ai.mit.edu)
 
 	* configure.in (m88k-dg-dgux5.4R3): Use dgux5-4R3.
 	(m88k-dg-dgux5.4R2): dgux5.4R2.
 
-Fri Apr 29 15:25:39 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (window_system): Restore accidentally deleted code
 	that uses AC_FIND_X.
 
 	* make-dist: Distribute config.bat.
 
-Fri Apr 29 00:38:09 1994  Morten Welinder  (terra@diku.dk)
+1994-04-29  Morten Welinder  (terra@diku.dk)
 
 	* config.bat: Corrected the configuration of lib-src
 	to keep up with configure.  Add note about dos version 3
@@ -1326,14 +1721,14 @@ Fri Apr 29 00:38:09 1994  Morten Welinder  (terra@diku.dk)
 	the X11 emulator that exists.  At this time it won't work,
 	and several files are missing.
 
-Thu Apr 28 00:13:00 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-28  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Use m/hp800.h in place of m/hp9000s800.h.
 	Don't look for -lresolv.
 
 	* Makefile.in (lib-src): Depend on src/paths.h.
 
-Wed Apr 27 01:12:44 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Restore deleted AC_SUBST of `configuration'.
 	Improve error message for bad --with-x-toolkit value.
@@ -1341,58 +1736,58 @@ Wed Apr 27 01:12:44 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	* configure.in: Define CONFIGURATION in src/config.h
 	rather than substituting in src/Makefile.in.
 
-Tue Apr 26 18:05:01 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-04-26  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* Makefile.in (install-doc): New target.
 	(install-arch-dep): Depend on install-doc.
 	(mkdir): Create docdir.
 
-Fri Apr 22 21:39:24 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-22  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Test for libresolv.a.
 	Substitute machfile and opsysfile.
 
-Fri Apr 22 21:03:11 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-04-22  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* Makefile.in (.PHONY, install): Kill reference to obsolete do-install.
 	(install-arch-dep): Install under the name $(EMACS).
 
-Thu Apr 21 02:06:52 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (version): Use entire value of emacs-version.
 	(mips-siemens-sysv*): New alternative.
 
-Tue Apr 19 19:12:35 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (install-arch-indep): Don't install dired-x*.
 
-Mon Apr 18 20:39:12 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-04-18  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* configure.in (src/Makefile, lib-src/Makefile): Delete ^L.
 	Fix definition of $undefs.
 
-Sun Apr 17 20:02:17 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (window_system): Obey --with-x11=no and --with-x10=no.
 
 	* configure.in (lib-src/Makefile.in): Use src, not lib-src, in -I.
 
-Sat Apr 16 15:02:02 1994  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
+1994-04-16  David J. MacKenzie  (djm@nutrimat.gnu.ai.mit.edu)
 
 	* configure.in: Call AC_LANG_C, if it's defined, after AC_PREPARE.
 
-Sat Apr 16 00:22:39 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (lib-src/Makefile.in): Make this from Makefile.in.in
 	and run it thru cpp, as with src/Makefile.in.
 
 	* configure.in: Use AC_SET_MAKE.
 
-Fri Apr 15 21:08:30 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (i[34]86-ncr-sysv*): Use usg5-4-2.
 
-Wed Apr 13 13:51:27 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (MAKE): Don't just assign it--use @SET_MAKE@.
 
@@ -1402,135 +1797,135 @@ Wed Apr 13 13:51:27 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	(include libsrc_libs): Include config.h, and specify -I for srcdir.
 	Get rid of temp file foofoo1.
 
-Wed Apr 13 13:12:30 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-04-13  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* configure.in (CFLAGS): Use shell syntax, not Makefile.
 
-Tue Apr 12 11:23:19 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (window_system): If no X, set USE_X_TOOLKIT=no.
 	(printing the choices): State choice of toolkit.
 	(libsrc_libs): Recalculate after writing config.h;
 	then update lib-src/Makefile.
 
-Mon Apr 11 21:55:23 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Add sunos4shr as alternative for suns.
 	Conditionals testing for null $CC were backwards.
 
-Sun Apr 10 05:08:40 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-10  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist (msdos): Don't link patch1.  Link sed*.inp, not sed.in*.
 
-Sat Apr  9 17:42:22 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-09  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle -isc4.0*.
 
-Wed Mar 30 23:39:00 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-03-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (esix5): Set NON_GNU_CPP.
 
-Thu Mar 24 18:41:36 1994  Roland McGrath  (roland@mole.gnu.ai.mit.edu)
+1994-03-24  Roland McGrath  (roland@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (thisdir): Nonsensical variable removed.
 	(install-arch-indep): Set shell var thisdir=`pwd` before cd and cd
 	back to $thisdir, rather than the directory `this_dir'.
 
-Thu Mar 17 19:31:18 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-03-17  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* Makefile.in (install-arch-indep): Add missing backslash after a
 	`then'.
 
-Mon Mar 14 17:06:48 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-03-14  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (thisdir): New variable.
 	(install-arch-indep): Go back to thisdir to run INSTALL_DATA.
 
-Tue Mar  8 17:37:19 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-03-08  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* configure.in: Add freebsd.
 
-Tue Mar  8 01:52:10 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-03-08  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in: Check for fpathconf.
 
-Wed Mar  2 00:56:50 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-03-02  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* configure.in (with_x_toolkit): Fix typo in previous change.
 
-Tue Mar  1 22:21:55 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-03-01  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* configure.in: New s-file for rs60000-ibm-aix3.2.5.
 
-Sat Feb 26 17:04:11 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-26  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (with_x_toolkit): Don't allow motif or open-look.
 
-Thu Feb 24 16:16:10 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-02-24  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* configure.in: Fix value of docdir.
 	* Makefile.in (install-arch-indep): Install DOC* in docdir.
 
-Thu Feb 24 15:41:16 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-24  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (*-sysv4.1): Set NON_GNU_CPP.
 
-Tue Feb 22 19:05:02 1994  Karl Heuer  (kwzh@geech.gnu.ai.mit.edu)
+1994-02-22  Karl Heuer  (kwzh@geech.gnu.ai.mit.edu)
 
 	* configure.in: New variable docdir to control where the docstring
 	file goes.
 	Makefile.in: Use it to initialize PATH_DOC in paths.h.
 
-Tue Feb 22 16:52:54 1994  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
+1994-02-22  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
 
 	* configure.in: When --run-in-place, don't inherit archlibdir.
 
-Sat Feb 19 22:23:11 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (install-arch-dep, install-arch-indep):
 	New targets split up former do-install rule.
 	(do-install): Target deleted.
 
-Wed Feb 16 21:16:54 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (mips-sony-newsos*): New configuration.
 
-Mon Feb 14 11:38:35 1994  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
+1994-02-14  Frederic Pierresteguy  (fp@mole.gnu.ai.mit.edu)
 
 	* configure.in (rs6000-bull-bosx*): Added support for BULL dpx20.
 
-Fri Feb 11 21:27:09 1994  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
+1994-02-11  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
 
 	* configure.in: Fix misspelled symbol LD_SWITCH_X_SITE_AUX.
 
-Fri Feb 11 16:29:11 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Don't initialize CC.
 
-Thu Feb 10 21:48:39 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-02-10  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in (creating src/Makefile): Also generate -U switches
 	for symbols in the $configuration value.
 
 	* configure.in: Check for sys_siglist being declared in system header.
 
-Thu Feb 10 14:32:21 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-10  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (creating src/Makefile): Delete blank lines
 	along with lines of whitespace.
 	(m68k-motorola-sysv*, m68000-motorola-sysv*): Compute proper CC value.
 
-Wed Feb  9 16:02:00 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-09  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Get, use, and substitute C_SWITCH_MACHINE
 	like C_SWITCH_SYSTEM.
 	(m68*-motorola-sysv*): Set CC.  Require cpu type to be m68k or m68000.
 
-Fri Feb  4 15:21:29 1994  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
+1994-02-04  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
 
 	* configure.in (drem): Check for this function.
 
-Thu Feb  3 00:53:53 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-03  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (Using NON_GNU_CPP): Don't lose if it has spaces.
 	If CPP was inherited from environment, don't use NON_GNU_CPP.
@@ -1538,33 +1933,33 @@ Thu Feb  3 00:53:53 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	(handling with_gcc): Use explicit if in the `no' case.
 	(cc_specified): New variable; if set, don't use NON_GNU_CC.
 
-Wed Feb  2 17:34:19 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-02-02  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (mips-mips-riscos4*): Set NON_GNU_CPP.
 
-Tue Feb  1 18:16:09 1994  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
+1994-02-01  Karl Heuer  (kwzh@mole.gnu.ai.mit.edu)
 
 	* configure.in: Check whether fmod exists.
 
-Mon Jan 31 18:57:56 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-01-31  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* make-dist: Distribute {src,lisp}/ChangeLog.? instead of
 	{src,lisp}/OChangeLog.
 
-Sat Jan 22 18:18:23 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-01-22  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in: Restore Jan 8 and Jan 16 changes.  The -U hack is
 	necessary for proper operation.  This code works with the current
 	released version of Autoconf.
 
-Fri Jan 21 01:36:39 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (with_x_toolkit): Treat values athena and lucid alike.
 	(USE_X_TOOLKIT): Define it for all values except `no'.
 
 	* configure.in: Undo first Jan 8 change and Jan 16 change.
 
-Tue Jan 18 18:47:51 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-18  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle --with-x-toolkit.  Produce lwlib/Makefile.
 	Substitute USE_X_TOOLKIT as both C macro and Make variable.
@@ -1580,28 +1975,28 @@ Tue Jan 18 18:47:51 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* lwlib: New subdirectory.
 
-Mon Jan 17 17:17:14 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: If CPP has a value that is a directory,
 	discard the value.
 
-Sun Jan 16 04:58:47 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-01-16  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in (srcdir_undefs): Add g flag to sed substitution to
 	remove -U[0-9]*.
 
-Sat Jan 15 10:14:44 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (do-install): Install the dired-x info files.
 
 	* configure.in: Provide for variable LD_SWITCH_X_SITE_AUX.
 	(See src/s/sol2.h.)
 
-Wed Jan 12 23:43:08 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (m68k-harris-cxux*, m88k-harris-cxux*): New configs.
 
-Sat Jan  8 16:37:36 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1994-01-08  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in (creating src/Makefile): Put code inside 2nd arg to
 	AC_OUTPUT as it should be; hopefully noone will again see fit to
@@ -1617,50 +2012,50 @@ Sat Jan  8 16:37:36 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in: Check for strerror.
 
-Fri Jan  7 00:55:28 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-07  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Test for bcmp.
 
-Thu Jan  6 07:36:28 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-06  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist (tempdir): Put subdir msdos into the distribution.
 
-Fri Jan  7 22:20:15 1993  Morten Welinder  (terra@diku.dk)
+1993-01-07  Morten Welinder  (terra@diku.dk)
 
 	* config.bat: New file.
 
-Sun Jan  2 13:54:12 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-02  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (${SUBDIR} target): Pass down LDFLAGS and CPPFLAGS.
 
-Sat Jan  1 12:11:53 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-01  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (m68*-next-*): Don't care about which os is specified.
 	(i[34]86-*-*): Check for *-nextstop*.
 
-Fri Dec 24 20:43:03 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-12-24  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Check for setsid.
 
-Fri Dec 17 13:11:44 1993  Richard Stallman  (rms@srarc2)
+1993-12-17  Richard Stallman  (rms@srarc2)
 
 	* configure.in (*-sun-solaris*): Add special case for Solaris 2.3.
 
-Wed Dec 15 14:03:05 1993  Richard Stallman  (rms@srarc2)
+1993-12-15  Richard Stallman  (rms@srarc2)
 
 	* Makefile.in (mkdir): Make only the lockdir writable.
 
 	* configure.in (i860-*-sysv4): Renamed from i860-*-sysvr4.
 
-Sat Dec 11 15:56:10 1993  Richard Stallman  (rms@srarc2)
+1993-12-11  Richard Stallman  (rms@srarc2)
 
 	* Makefile.in (libdir): Use @libdir@.
 
-Wed Dec  8 22:30:27 1993  Richard Stallman  (rms@srarc2)
+1993-12-08  Richard Stallman  (rms@srarc2)
 
 	* Makefile.in (install): Add empty command.
 
-Sat Dec  4 14:15:50 1993  Richard Stallman  (rms@srarc2)
+1993-12-04  Richard Stallman  (rms@srarc2)
 
 	* make-dist: Put man/getopt.c in the dist.
 
@@ -1668,7 +2063,7 @@ Sat Dec  4 14:15:50 1993  Richard Stallman  (rms@srarc2)
 
 	* Makefile.in (install): Depend on ${SUBDIR}, not `all'.
 
-Fri Dec  3 16:41:58 1993  Richard Stallman  (rms@srarc2)
+1993-12-03  Richard Stallman  (rms@srarc2)
 
 	* configure.in (solaris): Set NON_GNU_CPP instead of CPP.
 	Set it for all solaris versions.
@@ -1676,23 +2071,23 @@ Fri Dec  3 16:41:58 1993  Richard Stallman  (rms@srarc2)
 	(after checking for GCC): If not GCC, and NON_GNU_CPP is set, set CPP.
 	Likewise for NON_GNU_CC and CC.
 
-Wed Dec  1 22:59:18 1993  Richard Stallman  (rms@srarc2)
+1993-12-01  Richard Stallman  (rms@srarc2)
 
 	* configure.in (mips-mips-riscos4*): Assign variable CC.
 	(checking ${with_gcc}): If "no", don't override CC if already set.
 	(CC): Initialize it as empty.
 
-Tue Nov 30 14:54:34 1993  Richard Stallman  (rms at srarc2)
+1993-11-30  Richard Stallman  (rms at srarc2)
 
 	* configure.in (Suns): Set CPP if *-solaris2.3*.
 
-Sat Nov 27 04:14:28 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.22 released.
 
 	* Makefile.in (do-install): Use umask 022 in copying etc and lisp dirs.
 
-Thu Nov 25 16:46:48 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-25  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: When breaking links, use cp -p.
 	Copy install.sh into distribution.
@@ -1700,35 +2095,35 @@ Thu Nov 25 16:46:48 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	don't leave the staging dir make-dist.tmp... in existence.
 	* install.sh: New file.
 
-Sun Nov 21 04:01:46 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (i[34]86-ncr-sysv*): New specific alternative.
 
-Sat Nov 20 01:03:10 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-20  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (version): When --run-in-place, exclude
 	${datadir}/emacs/site-lisp from locallisppath.
 
-Thu Nov 18 00:56:48 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-18  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Delete jumk.c before writing it.
 
-Tue Nov 16 00:56:51 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.21 released.
 
 	* Makefile.in (mkdir): Ignore error from chmod.
 
-Mon Nov 15 05:11:55 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Don't put lisp/forms.README in the distribution.
 
-Sat Nov 13 04:37:15 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (creating src/Makefile): Before running cpp,
 	discard all lines that start with `# Generated' or /**/#.
 
-Thu Nov 11 09:52:37 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.20 released.
 
@@ -1737,12 +2132,12 @@ Thu Nov 11 09:52:37 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* build-ins.in: Renamed from build-install.in.
 
-Wed Nov 10 16:02:03 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-10  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Don't try to link *.texinfo--there are none now.
 	When running make in lib-src, specify YACC var value.
 
-Sun Oct  3 15:55:17 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1993-10-03  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in (extrasub): Add vpath patterns for %.[yls].
 
@@ -1761,7 +2156,7 @@ Sun Oct  3 15:55:17 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 	before moving it.
 	* Makefile.in (VPATH): Define to @srcdir@.
 
-Tue Sep 28 03:25:46 1993  Brian Fox  (bfox@cubit)
+1993-09-28  Brian Fox  (bfox@cubit)
 
 	* configure.in: Don't copy ${srcdir}/src/Makefile.in; that file
 	doesn't exist.  Just copy src/Makefile.in instead.  Touch
@@ -1770,7 +2165,7 @@ Tue Sep 28 03:25:46 1993  Brian Fox  (bfox@cubit)
 	* INSTALL: Update documentation to match new configuration
 	mechanism.
 
-Mon Sep 27 08:51:38 1993  Brian Fox  (bfox@ai.mit.edu)
+1993-09-27  Brian Fox  (bfox@ai.mit.edu)
 
 	* configure.in: Allow any of the path or directory Makefile
 	variables to be set with flags to configure.  Create all Makefiles
@@ -1781,57 +2176,57 @@ Mon Sep 27 08:51:38 1993  Brian Fox  (bfox@ai.mit.edu)
 	  If these files are out of date, simply have config.status
 	  rebuild them; don't rebuild them explicitly.
 
-Sat Sep 25 12:00:38 1993  Brian Fox  (bfox@ai.mit.edu)
+1993-09-25  Brian Fox  (bfox@ai.mit.edu)
 
 	* build-install.in: Change src/xemacs to src/emacs.  We no longer
 	create src/xemacs, so the file wouldn't be found.
 
 	* make-dist: Remove `src/ymakefile', add `src/Makefile.in.in'.
 
-Fri Sep 24 03:07:35 1993  Brian Fox  (bfox@albert.gnu.ai.mit.edu)
+1993-09-24  Brian Fox  (bfox@albert.gnu.ai.mit.edu)
 
 	* configure.in: Avoid forcing the search of /usr/include before
 	fixed include files by resetting C_SWITCH_X_SITE if it is
 	"-I/usr/include".
 
-Mon Sep 20 09:47:59 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-09-20  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (@rip_paths@locallisppath):
 	Delete ${datadir}/emacs/site-lisp.
 
-Sun Sep 15 19:54:04 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1993-09-15  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in:
 	Use AC_QUOTE_SQUOTE twice to properly quote vpath_sed value.
 	Remove ${extra_output} from AC_OUTPUT call.
 
-Fri Sep 17 13:22:22 1993  Brian Fox  (bfox@inferno)
+1993-09-17  Brian Fox  (bfox@inferno)
 
 	* make-dist: Quote backquotes found in strings to be echoed.
 
 	* configure.in: Use "sh -c pwd" when we want to avoid having the
 	shell fix up the value of $PWD.
 
-Mon Sep 13 21:06:16 1993  Brian Fox  (bfox@inferno)
+1993-09-13  Brian Fox  (bfox@inferno)
 
 	* Makefile.in (do-install): Don't abort if ln or chmod at the end
 	of the installation fail.  Suggested by Karl Berry.
 
-Mon Aug 30 07:41:04 1993  Brian Fox  (bfox@inferno)
+1993-08-30  Brian Fox  (bfox@inferno)
 
 	* Makefile.in (*clean): Use "$(MAKE) $(MAKEFLAGS)" wherever "make"
 	was used.  Set MAKEFLAGS from MFLAGS.
 
-Thu Sep 16 16:08:11 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-09-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Test for res_init in libc.
 
-Mon Sep 13 11:56:01 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-09-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: In the file ${tempcname}, use configure___
 	instead of @configure@.
 
-Sun Sep 12 10:51:49 1993  Roland McGrath  (roland@sugar-bombs.gnu.ai.mit.edu)
+1993-09-12  Roland McGrath  (roland@sugar-bombs.gnu.ai.mit.edu)
 
 	* make-dist: Dist vpath.sed
 
@@ -1844,7 +2239,7 @@ Sun Sep 12 10:51:49 1993  Roland McGrath  (roland@sugar-bombs.gnu.ai.mit.edu)
 	issue warning that GNU make is required,
 	and set vpath_sed to use vpath.sed script.
 
-Fri Sep 10 01:18:13 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1993-09-10  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in: Remove check for $srcdir being configured.  This
 	pretty much works now.
@@ -1856,22 +2251,22 @@ Fri Sep 10 01:18:13 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 	realclean, unlock, relock): Use `$(MAKE)' in place of plain
 	`make'.
 
-Sat Aug 14 01:31:37 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-14  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.19 released.
 
 	* configure.in (i386-*-sunos4): Assume Sunos 4.0.
 
-Fri Aug 13 18:17:24 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Check for XScreenNumberOfScreen.
 
-Thu Aug 12 01:01:44 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Add * to end of all configuration alternatives.
 	(m68*-sony-newsos3*): New alternative.
 
-Wed Aug 11 00:12:45 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Include getdate.c in distribution.
 
@@ -1886,38 +2281,38 @@ Wed Aug 11 00:12:45 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	(m68*-tektronix-bsd*): Fix typo in tek4300.
 	(AC_HAVE_FUNCS): Add ftime.
 
-Tue Aug 10 17:30:07 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-10  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (m88k-tektronix-sysv3*): Added the missing *.
 	Use tekxd88, not tekXD88.
 
-Tue Aug 10 14:16:57 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+1993-08-10  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
 
 	* configure.in: Check for -lm.  Then can check for frexp and logb.
 
-Sun Aug  8 13:42:49 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-08  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.18 released.
 
 	* make-dist (src): Don't put gnu-hp300 in dist.
 	(src, lisp): Include OChangeLog in dist.
 
-Sun Aug  8 01:52:55 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-08-08  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Test for presence of logb and frexp functions.
 
-Thu Aug  5 17:10:03 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-05  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (machine): Add i370-ibm-aix*.
 
-Tue Aug  3 02:55:17 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-08-03  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in (function checks): Test for mkdir and rmdir.
 
 	* configure.in (function checks): Don't test for random and bcopy
 	only when we're building with X; look for them all the time.
 
-Fri Jul 30 21:07:00 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-30  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Test for availability of bcopy functions, searching
 	the X libraries if we're using X.
@@ -1929,7 +2324,7 @@ Fri Jul 30 21:07:00 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* configure.in: Test for the availablility of the
 	XScreenResourceString function.
 
-Fri Jul 30 20:54:58 1993  David J. MacKenzie  (djm@frob.eng.umd.edu)
+1993-07-30  David J. MacKenzie  (djm@frob.eng.umd.edu)
 
 	* configure.in: If we found X on our own, set C_SWITCH_X_SITE and
 	LD_SWITCH_X_SITE and assume --with-x11.
@@ -1940,20 +2335,20 @@ Fri Jul 30 20:54:58 1993  David J. MacKenzie  (djm@frob.eng.umd.edu)
 
 	* configure.in: Remove any trailing slashes in prefix and exec_prefix.
 
-Tue Jul 27 19:43:41 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-27  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist: Include lisp/dired.todo in the distribution.
 
-Fri Jul 23 15:51:24 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-07-23  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Add code to set HAVE_INET_SOCKETS.
 
-Wed Jul 21 18:05:58 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-07-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: If we do find x_includes and x_libraries
 	via AC_FIND_X, set C_SWITCH_X_SITE and LD_SWITCH_X_SITE.
 
-Mon Jul 19 15:19:23 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-07-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Include src/gnu-hp300 in the dist.
 
@@ -1962,7 +2357,7 @@ Mon Jul 19 15:19:23 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	for Makefile.in for file naming.
 	(testing x_includes and x_libraries): Use =, not ==.
 
-Sat Jul 17 19:53:06 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-07-17  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Version 19.17 released.
 
@@ -1972,45 +2367,45 @@ Sat Jul 17 19:53:06 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	preprocessor inserts spaces between tokens if it doesn't get the
 	-Xs flag requested in src/s/sol2.h.
 
-Mon Jul 12 14:43:38 1993  Frederic Pierresteguy  (F.Pierresteguy@frcl.bull.fr)
+1993-07-12  Frederic Pierresteguy  (F.Pierresteguy@frcl.bull.fr)
 
 	* configure.in (m68k-bull-sysv3): new config.
 
-Sat Jul 10 01:17:31 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-10  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Use the autoconf AC_FIND_X macro to try to find
 	the X Windows libraries.
 
-Wed Jul  7 05:57:15 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-07  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist (tempdir): Don't create lisp/forms-mode directory in
 	the distribution.  Those files aren't kept in their own
 	subdirectory any more.
 
-Tue Jul  6 11:05:14 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-06  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Version 19.16 released.
 
-Wed Jun 23 21:52:34 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-23  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Add --verbose flag.
 
-Sat Jun 19 17:14:27 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-19  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* version 19.15 released.
 
-Fri Jun 18 11:59:35 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-06-18  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (top_distclean): Use -f switch when cleaning out
 	lock dir; it might be empty.
 
 	* configure.in: Only check for -lXbsd once.
 
-Thu Jun 17 19:29:56 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-17  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Version 19.14 released.
 
-Thu Jun 17 00:53:41 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-17  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: If using gzip, create distribution with '.gz' extension.
 
@@ -2019,7 +2414,7 @@ Thu Jun 17 00:53:41 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Look for the closedir function.
 
-Wed Jun 16 16:48:35 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-16  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in (CPP): Autoconf sets this to a shell variable
 	reference, which doesn't work when it's edited into a makefile.
@@ -2056,40 +2451,40 @@ Wed Jun 16 16:48:35 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	C_SWITCH_X_SITE's -L and -I switches in quotes, so the
 	preprocessor won't fiddle with them.
 
-Sun Jun 13 04:23:31 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (TAGS): cd to src to run etags.
 
-Sat Jun 12 05:54:23 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-12  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in (version): Check the X libraries for XrmSetDatabase
 	and random, and see if we have -lXbsd.
 
-Fri Jun 11 02:35:54 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-11  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Pass "-Isrc" to the CPP we run to examine the
 	s/*.h and m/*.h files.  Martin Tomes
 	<mt00@controls.eurotherm.co.uk> says ISC Unix 3.0.1 needs it.
 
-Thu Jun 10 19:03:24 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-10  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Move i386-prime-sysv* and i386-sequent-bsd*
 	above the general i386 alternative.
 
-Thu Jun 10 01:45:45 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-10  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Recognize configuration name for Data General
 	AViiON machines.
 
 	* configure.in: Use AC_LONG_FILE_NAMES.
 
-Wed Jun  9 00:05:06 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-09  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Test for bison.
 	* Makefile.in (YACC): New variable.
 	(lib-src/Makefile.in): Edit YACC into the makefile.
 
-Tue Jun  8 02:42:18 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-06-08  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Version 19.13 released.
 
@@ -2100,28 +2495,28 @@ Tue Jun  8 02:42:18 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in: Remove extra ;; from hpux cases.
 
-Mon Jun  7 23:55:41 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-06-07  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in: Check to see if the system has -ldnet.
 
-Tue Jun  8 00:22:46 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-08  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Add clauses to distribute lisp/forms-mode.
 
-Mon Jun  7 13:53:54 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-07  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in (machine): Fix the versions in hpux version number test.
 	Do not guess based on cpu type.  Do check for explicit system version.
 
-Thu Jun  3 16:42:57 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-03  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Do NOT look for `unknown' as company name.
 
-Wed Jun  2 12:10:09 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-02  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Fix typo in message.
 
-Tue Jun  1 00:08:05 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-01  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.12 released.
 
@@ -2133,7 +2528,7 @@ Tue Jun  1 00:08:05 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle 386bsd.
 
-Mon May 31 00:23:47 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-31  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Update getdate.c.
 
@@ -2150,7 +2545,7 @@ Mon May 31 00:23:47 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle AIX versions 1.2, 1.3.
 
-Sun May 30 15:37:57 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-30  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Use s/bsd4-3.h for mips-mips-riscos4, and add
 	the configuration name mips-mips-usg* to represent USG systems.
@@ -2164,30 +2559,30 @@ Sun May 30 15:37:57 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	of a directory; cd might fail, and have pwd print out the current
 	directory.
 
-Sun May 30 14:55:24 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: When looking for sources, use '.', not `.`.  Also '..'.
 
-Sun May 30 14:23:50 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-30  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Complain if srcdir points at an already-configured
 	tree.
 
-Sun May 30 00:15:27 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.10 released.
 
-Sat May 29 16:52:24 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-29  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Makefile.in: Use Makefile comments, not C comments.
 
 	* configure.in: Add case for the Tektronix XD88.
 
-Sat May 29 16:30:13 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle sysv4.2 and sysvr4.2.
 
-Sat May 29 15:30:00 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-29  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Traverse the argument list without destroying it;
 	don't use shift.  It turns out that "set - ${saved_arguments}"
@@ -2201,17 +2596,17 @@ Sat May 29 15:30:00 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	targets to be executed even if make remembers that it has already
 	stisfied FRC.
 
-Sat May 29 02:09:15 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (do-install): Delete redundant code to copy etc twice.
 
 	* configure.in (romp): Handle various version numbers with aos and bsd.
 
-Fri May 28 17:02:59 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-28  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Fix message text.
 
-Fri May 28 00:31:48 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-28  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist: Make a `site-lisp' directory in the distribution,
 	instead of a `local-lisp' directory, which hasn't been the
@@ -2232,11 +2627,11 @@ Fri May 28 00:31:48 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* configure.in: Include ${srcdir} in the printed report, to help
 	people notice if it's an automounter path.
 
-Thu May 27 23:23:58 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-27  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in (prefix): Don't run pwd on srcdir unnecessarily.
 
-Thu May 27 18:01:54 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (do-install): Delete the dest dir, not the source dir,
 	when they are different.  Add  `shift' command.
@@ -2245,11 +2640,11 @@ Thu May 27 18:01:54 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Delete spurious paren outputting short_usage.
 
-Thu May 27 02:35:32 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-27  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Version 19.9 released.
 
-Wed May 26 14:23:27 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-26  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Makefile.in (${SUBDIR}): Pass the value of the make variable to
 	subdirectory makes.
@@ -2275,11 +2670,11 @@ Wed May 26 14:23:27 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	(do-install): Copy the build tree's etc directory only after
 	making sure it's not also the source tree's etc directory.
 
-Wed May 26 13:43:01 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-26  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Handle sunos4.1.3 specially.
 
-Tue May 25 12:47:10 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-25  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (INSTALL): Add definition.
 
@@ -2287,11 +2682,11 @@ Tue May 25 12:47:10 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	At the end, use `set --', not `set -'.
 	Delete spurious `.h' in hpux alternatives.
 
-Tue May 25 05:15:14 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-25  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Version 19.8 released.
 
-Tue May 25 00:55:45 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-25  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: When looking for source in the same directory as
 	the configure script, make the path thus discovered absolute.
@@ -2306,7 +2701,7 @@ Tue May 25 00:55:45 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	* configure.in: Check to see if the source lives in the same
 	directory as the configure script.
 
-Mon May 24 12:14:41 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-24  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Makefile.in (install): Split this into `install' and
 	`do-install', to give people more control over exactly what gets
@@ -2342,12 +2737,12 @@ Mon May 24 12:14:41 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	* configure.in: Distinguish between hp800's and hp700's by calling
 	"uname -m".
 
-Mon May 24 00:12:26 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-24  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
         * configure.in: Recognize configuration names for i860 boxes
 	running SYSV.
 
-Sun May 23 00:37:44 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-23  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Distinguish between hp800's and hp700's by the
 	version of HP/UX they run, since that's something people are more
@@ -2379,11 +2774,11 @@ Sun May 23 00:37:44 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* Makefile.in (install): Don't assume that the files in the `info'
 	subdirectory match  *.info.  They don't have that prefix.
 
-Sat May 22 22:53:24 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-22  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Add case for version 5 of Esix.
 
-Sat May 22 17:24:06 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-22  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
         * Version 19.7 released.
 
@@ -2396,12 +2791,12 @@ Sat May 22 17:24:06 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	Emacs as stated in lisp/version.el.  Edit that version number into
 	the README file.
 
-Fri May 21 17:32:41 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-21  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Remove the hack of AC_DEFINE; use
 	AC_DEFINE_UNQUOTED.
 
-Thu May 20 01:24:24 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-20  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Don't distribute precomp.com, compile.com, or
 	link.com from ./src; they're in ./vms now.
@@ -2409,23 +2804,23 @@ Thu May 20 01:24:24 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	Some time-handling patches from Paul Eggert:
 	* configure.in: Add AC_TIMEZONE.
 
-Wed May 19 20:56:26 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-19  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure.in: Recognize Linux as a valid operating system for
 	the i386.
 
-Tue May 18 16:31:50 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-18  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Distribute some VMS files we got from Richard Levitte.
 
 	* Makefile.in (oldXMenu/Makefile): Take oldXMenu/Makefile.in as
 	the source for the sed command, not oldXMenu/Makefile.
 
-Mon May 17 19:33:55 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-05-17  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* INSTALL: Don't claim the srcdir option doesn't work.
 
-Sun May 16 18:41:27 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-05-16  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in: Include remarks saying what order the autoconf
 	tests should go in, and remind people to change config.h.in
@@ -2433,7 +2828,7 @@ Sun May 16 18:41:27 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Distribute oldXMenu/Makefile.in, not oldXMenu/Makefile.
 
-Sat May 15 16:47:50 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-15  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (oldXMenu/Makefile): Make this depend on
 	${srcdir}/oldXMenu/Makefile.in, not itself.
@@ -2471,22 +2866,22 @@ Sat May 15 16:47:50 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* configure.in: Use the AC_TIME_WITH_SYS_TIME macro, for
 	lib-src/getdate.y and src/systime.h.
 
-Sat May 15 00:12:26 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-15  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* make-dist: Make links in info subdir.
 
-Thu May 13 15:28:19 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-05-13  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in: Call AC_STDC_HEADERS.
 
-Mon May 10 15:19:03 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-10  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Sidestep autoconf's quoting of the second argument
 	of AC_DEFINE, so we can specify the value to put there.  It would
 	be nice if autoconf provided some way to specify computed values
 	for macros.
 
-Sun May  9 17:30:48 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-05-09  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (DEFS): Deleted; since we're using AC_CONFIG_HEADER,
 	this is always just -DHAVE_CONFIG_H.
@@ -2506,7 +2901,7 @@ Sun May  9 17:30:48 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* configure.in: When scanning the machine and system description
 	#include files, write their names to conftest.c properly.
 
-Fri May  7 00:57:13 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-05-07  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in: In configuration name case for Apallos running
 	Domainios, set opsys, not opsysfile.
@@ -2522,14 +2917,14 @@ Fri May  7 00:57:13 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* Makefile.in (LN_S): New variable.
 	(src/Makefile): Edit the value of LN_S into this makefile.
 
-Thu May  6 14:03:16 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-06  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure.in: Support *-sco3.2v4* as opsystem.
 
 	* make-dist: Don't include calc directory.
 	Exclude many files in the man directory; copy a few.
 
-Tue May  4 10:15:32 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-04  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Use AC_HAVE_HEADERS to test for sys/time.h, and
 	call AC_STRUCT_TM to see what's in time.h.
@@ -2537,7 +2932,7 @@ Tue May  4 10:15:32 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* configure.in: Employ quoting stupidity to get the value of CPP
 	to expand properly.
 
-Tue Apr 27 13:00:28 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-27  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in: Use the AC_PROG_CPP macro, and then use the CPP
 	variable to scan the machine and system description files.
@@ -2545,7 +2940,7 @@ Tue Apr 27 13:00:28 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* configure.in: Use the AC_HAVE_HEADERS to check for sys/timeb.h,
 	so that getdate.y builds correctly.
 
-Mon Apr 26 19:11:45 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-26  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure.in (tempcname): Change this to "conftest.c", so it will
 	work properly on systems with short filenames; this is the name
@@ -2558,12 +2953,12 @@ Mon Apr 26 19:11:45 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* Makefile.in (ALLOCA): New variable, to be set by ./configure.
 	(lib-src/Makefile): Edit the value of ALLOCA into lib-src/Makefile.
 
-Sat Apr 24 23:41:48 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-24  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Distribute configure, as well as configure.in.
 	Oversight.
 
-Fri Apr 23 17:32:12 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-23  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (install): Print out the name of the directory we're
 	copying, so people can have some idea of whether we're making
@@ -2573,7 +2968,7 @@ Fri Apr 23 17:32:12 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	Don't forget to re-create the COPYDESTS directories after we clear
 	them out.
 
-Tue Apr 13 00:58:01 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-13  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in: Add autoconf cookies so that the configure
 	script can comment out sections of path variable definitions to
@@ -2585,7 +2980,7 @@ Tue Apr 13 00:58:01 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* configure.in: Add a clause to the big configuration name case
 	for the NeXT machine.
 
-Mon Apr 12 22:20:30 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-12  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (install, install.sysv, install.xenix, install.aix):
 	Make sure that each source directory exists, and is different from
@@ -2594,12 +2989,12 @@ Mon Apr 12 22:20:30 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Distribute configure.in, instead of configure.
 
-Sat Apr 10 04:29:06 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-04-10  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure.in: Don't set CC to "gcc -O" if the user specifies
 	`--with-gcc'.  Add -O to DEFS if GCC is set.
 
-Fri Apr  9 07:20:40 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-09  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (clean mostlyclean): Missing right paren.
 
@@ -2633,7 +3028,7 @@ Fri Apr  9 07:20:40 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* Makefile.in (src/paths.h, lib-src/Makefile, src/Makefile): Don't
 	echo the move-if-change command.
 
-Thu Apr  8 05:29:14 1993  Jim Blandy  (jimb@churchy.gnu.ai.mit.edu)
+1993-04-08  Jim Blandy  (jimb@churchy.gnu.ai.mit.edu)
 
 	* make-dist: Distribute lib-src/rcs-checkin.
 
@@ -2644,7 +3039,7 @@ Thu Apr  8 05:29:14 1993  Jim Blandy  (jimb@churchy.gnu.ai.mit.edu)
 	in ${tempparent}.
 	Erase the whole ${tempparent} tree, not just ${tempdir}.
 
-Tue Mar 30 15:32:59 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-03-30  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (src/paths.h): Don't echo the huge sed command we
 	use to build paths.h.
@@ -2653,7 +3048,7 @@ Tue Mar 30 15:32:59 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* configure: Extend test for working `const' keyword to handle AIX
 	3.2 cc.
 
-Wed Mar 24 20:12:05 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-03-24  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist: Distribute lisp/term/ChangeLog.
 
@@ -2678,7 +3073,7 @@ Wed Mar 24 20:12:05 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure: Fix syntax errors in code handling XFree386.
 
-Tue Mar 23 00:29:52 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-03-23  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* configure: Add special code to detect XFree386, and tell
 	config.h about it.
@@ -2692,25 +3087,25 @@ Tue Mar 23 00:29:52 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	places.  Implement them by setting C_SWITCH_X_SITE and
 	LD_SWITCH_X_SITE in src/config.h.
 
-Mon Mar 22 14:57:04 1993  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
+1993-03-22  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
 
 	* make-dist: Don't distribute etc/Old files.
 
 	* GETTING.GNU.SOFTWARE, PROBLEMS: Registered into RCS with their
 	  backups.
 
-Sat Mar 20 13:11:55 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-03-20  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist: Fix typo.
 
-Fri Mar 19 08:08:04 1993  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
+1993-03-19  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
 
 	* make-dist: Corrected typo, fixed it to discard = and TAGS files
 	in some cases where it should but didn't seen to.
 
 	* Makefile.in: Added unlock and relock productions.
 
-Thu Mar 18 23:12:47 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-03-18  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist: Add a --compress option to force make-dist to use
 	compress.
@@ -2720,25 +3115,25 @@ Thu Mar 18 23:12:47 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* configure: Recognize rs6000-ibm-aix32 and rs6000-ibm-aix, and
 	make rs6000-ibm-aix default to -aix32.
 
-Wed Mar 17 13:23:14 1993  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
+1993-03-17  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
 
 	* Makefile.in: Added `Developer's configuration' section.
 
-Wed Mar 17 08:30:52 1993  Eric S. Raymond  (eric@mole.gnu.ai.mit.edu)
+1993-03-17  Eric S. Raymond  (eric@mole.gnu.ai.mit.edu)
 
 	* Makefile.in: Add commented-out variable settings for developer's
 	  configuration.
 
-Sun Mar 14 20:16:21 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-03-14  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Distribute `src/bitmaps' too.
 
-Sun Mar 14 17:16:53 1993  Charles Hannum  (mycroft@hal.gnu.ai.mit.edu)
+1993-03-14  Charles Hannum  (mycroft@hal.gnu.ai.mit.edu)
 
 	* configure: Recognize rs6000-ibm-aix32 and rs6000-ibm-aix, and
 	make rs6000-ibm-aix default to -aix32.
 
-Tue Mar  9 11:05:00 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-03-09  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure: Recognize strings like "sysvr0" or "sysvr1" as System V.
 
@@ -2750,22 +3145,22 @@ Tue Mar  9 11:05:00 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure: Doc fix.
 
-Thu Mar  4 09:42:29 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-03-04  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* configure: Handle isc3.0 correctly.
 
-Thu Feb 25 00:31:33 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-02-25  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Don't try to copy the COPYING notice into
 	external-lisp; we're not distributing that directory any more.
 
-Wed Feb 24 17:25:27 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-02-24  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (install, install.aix, install.xenix, install.sysv):
 	Remove CVS subdirectories from the installed directory trees, as
 	well as RCS directories.
 
-Tue Feb 23 06:54:11 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-02-23  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Only copy gmalloc.c if we couldn't link it.
 	Don't try to copy man/{README,Makefile} unless they actually exist.
@@ -2774,7 +3169,7 @@ Tue Feb 23 06:54:11 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	We're not sure whether we're even going to distribute the
 	directory yet.
 
-Wed Feb 17 20:19:06 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-02-17  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Don't distribute the external-lisp directory anymore.
 	* INSTALL: Remove all references to external-lisp.
@@ -2802,52 +3197,52 @@ Wed Feb 17 20:19:06 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* INSTALL: Describe external-lisp and the new externallispdir
 	variable.
 
-Sun Feb 14 08:47:04 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-02-14  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure (progname): New option `--with-gcc'.  Make it clearer
 	how we are trying to guess whether or not we have GCC.
 	* INSTALL: Document the `--with-gcc' option, and improve
 	description of `--with-x' options.
 
-Sat Feb  6 19:55:48 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-02-06  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (COPYDIR, COPYDESTS): Remove ${srcdir}/info and
 	${infodir} from these variables; we have written out explicit code
 	to install the info files.
 
-Mon Jan 25 23:27:53 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-01-25  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* make-dist: Don't distributed the RCS files in the etc directory.
 
-Sun Jan 24 20:48:02 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-01-24  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in: Some makes can't handle comments in the middle of
 	commands; move them to before the whole rule.
 
-Sat Jan 16 00:37:46 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-01-16  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* README: Mention what Emacs is.
 
-Thu Jan 14 12:27:38 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-01-14  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Include `./lisp/calc-2.02' in the distribution.
 	Add `./cpp' and `./man' back into the distribution.
 
-Wed Jan 13 17:20:01 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-01-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in: Define MAKE, and use where appropriate.
 
-Thu Jan  7 04:37:46 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-01-07  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Remember that the authoritative COPYING notice is
 	`etc/COPYING', not `../etc/COPYING'.
 
-Sun Dec 20 23:59:43 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-12-20  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Make sure that the COPYING notices in each directory
 	are copies, not symlinks.
 
-Sat Dec 19 06:46:05 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-12-19  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* INSTALL: The build process produces an executable called `emacs'
 	now.  Change references.
@@ -2860,11 +3255,11 @@ Sat Dec 19 06:46:05 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	shells which might try to interpret it themselves are probably
 	Bourne-compatible.
 
-Mon Dec 14 07:09:36 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-12-14  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* INSTALL: Improvements suggested by David Mackenzie.
 
-Sat Dec 12 00:31:46 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-12-12  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Makefile.in (install, install.sysv, install.xenix, install.aix):
 	Don't try to copy the info files if there aren't any; the
@@ -2902,7 +3297,7 @@ Sat Dec 12 00:31:46 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	job of extraclean.
 	(extraclean): Like distclean, but deletes backup and autosave files.
 
-Thu Dec 10 21:10:40 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-12-10  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	Make path specification conform to GNU coding standards.
 	* configure (long_usage): Remove all traces of old arguments from
@@ -2982,7 +3377,7 @@ Thu Dec 10 21:10:40 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* make-dist: Don't bother creating an arch-lib directory; that's
 	only for installation now.
 
-Fri Nov 20 06:15:14 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-11-20  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure: Use GCC-style configuration names, using config.sub.
 	Change the usage and help messages.
@@ -2996,12 +3391,12 @@ Fri Nov 20 06:15:14 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	can't be linked.  Place the code which copies them near the code
 	which links the rest of the files around them.
 
-Sun Nov 15 20:59:55 1992  Jim Blandy  (jimb@apple-gunkies.gnu.ai.mit.edu)
+1992-11-15  Jim Blandy  (jimb@apple-gunkies.gnu.ai.mit.edu)
 
 	* make-dist: Don't bother to distribute src/*.com, or
 	src/vmsbuild; those have all been moved to `../vms'.
 
-Sat Nov  7 15:11:39 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1992-11-07  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Don't forget that the way to avoid filenames starting
 	with `=' is to use the pattern `[a-zA-Z0-9]*.h', not
@@ -3009,30 +3404,30 @@ Sat Nov  7 15:11:39 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	couldn't make hard links to, since we have two already, and
 	perhaps more to come.
 
-Wed Nov  4 15:09:07 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-11-04  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure: When editing parameters into lib-src/Makefile, change
 	the definition of CONFIG_CFLAGS instead of CFLAGS itself; CFLAGS
 	needs some other flags too.
 
-Tue Nov  3 05:42:55 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-11-03  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure: Remove spurious echo of the configuration name.
 
 	* make-dist: Don't distribute files in src/m and src/s whose names
 	begin with `='.
 
-Tue Oct 27 04:06:30 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-10-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure: Update GNU_MALLOC and REL_ALLOC in config.h.
 	Also LISP_FLOAT_TYPE.
 
-Mon Oct 26 19:55:01 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1992-10-26  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Copy config.sub, since it's a symbolic link to a file
 	on another file system.
 
-Sat Oct 17 17:04:24 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-10-17  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* make-dist: Include lib-src/makedoc.com and emacs.csh in the
 	distribution.
@@ -3040,7 +3435,7 @@ Sat Oct 17 17:04:24 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* config.sub: New file, to help us recognize configuration names.
 	* make-dist: Include it in the distribution.
 
-Mon Sep 14 17:43:50 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-09-14  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* configure: Convert `-' to `_' in specified option names.
 	Accept options with --.  Delete --highpri and --have-x-menu options.
@@ -3048,45 +3443,45 @@ Mon Sep 14 17:43:50 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	Don't mention options --gnu-malloc, --rel-alloc
 	or --lisp-float-type in help message.
 
-Sun Sep 13 06:30:52 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-09-13  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
         * make-dist: Include the `vms' subdirectory in the distribution.
 
-Thu Sep 10 16:14:21 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-09-10  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Remove lines starting with "# DIST: " when building
 	lib-src/Makefile and src/Makefile.  This allows us to mark the
 	"Makefile.in" files with explanatory comments which won't also get
 	stuck in the Makefiles.
 
-Sat Sep  5 07:10:43 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-09-05  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: Don't use the '+' operator in the sed regular
 	expression that extracts the version number from lisp/version.el;
 	Ultrix sed doesn't seem support the operator.  Just double the
 	operand and use *.
 
-Tue Sep  1 15:56:14 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-09-01  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* Makefile.in: Doc fix.
 
-Mon Aug 31 00:25:44 1992  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1992-08-31  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* configure: Rewrite sed command to remove at most one ./ prefix;
 	Ultrix's sed doesn't allow us to apply the * operator to a \( \)
 	group.
 
-Tue Aug 25 18:57:41 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-08-25  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (src/paths.h): Use sed, not /bin/sed.
 
-Tue Aug 18 16:02:22 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-08-18  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: Go ahead and build a new TAGS file, unless the
 	--newer option was specified.  Don't try to delete a TAGS file
 	from etc; it's not kept there, and shouldn't be deleted anyway.
 
-Fri Aug 14 12:54:25 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-08-14  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: If the lisp directory contains a default.el, don't
 	distribute it.
@@ -3095,29 +3490,29 @@ Fri Aug 14 12:54:25 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	return handler, make a copy of it, not a symbolic link to it; that
 	way, it will work on systems that don't have symbolic links.
 
-Fri Aug 14 12:31:45 1992  Eric S. Raymond  (eric@mole.gnu.ai.mit.edu)
+1992-08-14  Eric S. Raymond  (eric@mole.gnu.ai.mit.edu)
 
 	* make-dist: taught it about vcdiff and rcs2log, added --newer
 	option for generating incremental distributions.  Stopped it from
 	generating a TAGS file into the distribution; that sucker is
 	*big*, and easily enough generated with the toplevel makefile.
 
-Thu Aug 13 13:02:31 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-08-13  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: When writing config.status, don't prefix progname
 	with a '.'; it might be absolute.
 
-Wed Aug  5 13:54:39 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-08-05  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Choose to use X11 if either /usr/lib/libX11.a or
 	/usr/include/X11 exist, not only if both exist.
 
-Mon Jul 27 17:41:50 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1992-07-27  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Make the new external-lisp directory a duplicate of
 	the external-lisp directory, not the lisp directory.
 
-Tue Jul  7 14:47:31 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1992-07-07  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Makefile.in (clean, mostlyclean): Don't bother trying to `make
 	clean' in arch-lib; it doesn't even have a Makefile.
@@ -3127,7 +3522,7 @@ Tue Jul  7 14:47:31 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	and the installed directory, which shouldn't, cd to `${emacsdir}',
 	not `${DESTDIR}${LIBDIR}'.
 
-Tue Jun 30 05:05:29 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-06-30  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: Be sure to delete the .c and .h files that YACC and
 	BISON create from getdate.y.
@@ -3139,12 +3534,12 @@ Tue Jun 30 05:05:29 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	invoked in the right directory to indicate which files it was
 	looking for.
 
-Mon Jun 29 16:24:41 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-06-29  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Add comments explaining why we can't translate
 	character ranges or control characters in `tr'.
 
-Wed Jun 24 00:18:54 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-06-24  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: When generating the configuration message, we used to
 	build the message from the start so that each line began with "# "
@@ -3164,7 +3559,7 @@ Wed Jun 24 00:18:54 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	clear that the ordinary build process will not try to install
 	things.
 
-Wed Jun 10 19:20:27 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1992-06-10  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* make-dist: Change messages to say that we are 'making links to
 	X', rather than 'copying X'.  And put `' quotes around file names.
@@ -3181,7 +3576,7 @@ Wed Jun 10 19:20:27 1992  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 	only such file was for simula.el, which has been superceded by a
 	version which doesn't have a separate .defns file.
 
-Thu May 28 09:51:46 1992  Ken Raeburn  (Raeburn@Cygnus.COM)
+1992-05-28  Ken Raeburn  (Raeburn@Cygnus.COM)
 
 	* make-dist: Don't distribute configured versions of config.h.in,
 	paths.h.in, Makefile.in in src.
@@ -3190,17 +3585,17 @@ Thu May 28 09:51:46 1992  Ken Raeburn  (Raeburn@Cygnus.COM)
 	trying to make final targets writeable first, since it won't
 	matter to move-if-change.
 
-Tue May 19 18:33:04 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-05-19  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* Makefile.in (mkdir, lockdir): Don't put dashes in front of the
 	mkdir and chmod in the center of all the conditionals.  GNU Make
 	will strip these out, but other makes won't.
 
-Mon May 18 03:14:40 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-05-18  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: Include move-if-change in list of files to distribute.
 
-Mon May  4 20:46:16 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-05-04  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Remove any "." elements from the program name.
 
@@ -3209,20 +3604,20 @@ Mon May  4 20:46:16 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Use move-if-change to move in the new src/config.h.
 
-Wed Apr 29 23:13:25 1992  Ken Raeburn  (Raeburn@Cygnus.COM)
+1992-04-29  Ken Raeburn  (Raeburn@Cygnus.COM)
 
         * move-if-change: New file, copied from gcc release.
         * Makefile.in (src/paths.h): Use it, and put the "sed" output into
         a temp file, so we don't update paths.h if an error occurs or if
         it doesn't need changing.
 
-Tue Apr 28 17:00:07 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-28  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* Makefile.in (src/paths.h): Do not install a value for the
 	PATH_SUPERLOCK value; that macro doesn't exist anymore.
 	* build-install.in: Same thing.
 
-Fri Apr 24 02:10:56 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-24  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: Check the flag called "make_tar", not "make_dir"; the
 	latter, being a typo, is always false, resulting in a program
@@ -3240,7 +3635,7 @@ Fri Apr 24 02:10:56 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: Doc fix.
 
-Mon Apr 20 09:54:48 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-20  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Instead of grepping /usr/include/signal.h for a
 	signal declaration, run /usr/include/signal.h or
@@ -3267,13 +3662,13 @@ Mon Apr 20 09:54:48 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	conform with the similar section from Makefile.in.  Copied section
 	which builds src/paths.h from src/paths.h.in from the Makefile.
 
-Sun Apr 19 05:29:03 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-19  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Write config.status to pass its command-line
 	arguments on to configure, so that people can use it to recreate
 	an old configuration, with minor changes.
 
-Thu Apr 16 22:49:13 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-16  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Don't rely on option variables being unset if their
 	values are the empty string.  In particular, when producing the
@@ -3288,7 +3683,7 @@ Thu Apr 16 22:49:13 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	generates text (type definitions or external declarations, say),
 	we won't try to eval it.
 
-Sat Apr 11 16:00:52 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-11  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* make-dist: New shell script.
 
@@ -3302,7 +3697,7 @@ Sat Apr 11 16:00:52 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	* configure, Makefile, build-install: Changed filenames like
 	FOO-dist to FOO.in.
 
-Wed Apr  8 00:58:46 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-08  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* Makefile, build-install: Renamed to Makefile.in and
 	build-install.in; the configure script will edit these to produce
@@ -3311,7 +3706,7 @@ Wed Apr  8 00:58:46 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	lib-src/Makefile, and src/Makefile from their *.in counterparts,
 	instead of editing them in place.
 
-Tue Apr  7 16:44:54 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-07  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* Makefile: Re-arranged so that the undumped Emacs will search
 	../lisp *after* the site's local elisp files.
@@ -3330,11 +3725,11 @@ Tue Apr  7 16:44:54 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	the macros' names.  In particular, check for SYSTEM_MALLOC in this
 	way.
 
-Fri Apr  3 22:25:50 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-04-03  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (install): Don't use -s in install.  (Keep the symbols.)
 
-Thu Apr  2 01:54:22 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-04-02  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* configure: Make the config.status file an executable shell
 	script which will recreate the same configuration.  Include the
@@ -3365,7 +3760,7 @@ Thu Apr  2 01:54:22 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	Allow the installed locations to be in several different
 	directories.
 
-Tue Mar 31 10:25:57 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-03-31  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* Makefile (src/paths.h): Instead of using a single sed command to
 	edit both the PATH_LOCK and PATH_SUPERLOCK macros, edit the two
@@ -3385,29 +3780,29 @@ Tue Mar 31 10:25:57 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 	* config.emacs: Changed default value for datadir to ../etc.
 	* INSTALL, README: Adjusted.
 
-Wed Mar 18 15:54:58 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-03-18  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* config.emacs: Guess the value for LOADLIBES in lib-src/Makefile
 	by running CPP on the appropriate s/*.h and m/*.h files.
 
-Mon Mar 16 17:38:50 1992  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
+1992-03-16  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
 	* config.emacs: Make sure to set the "exit on error" flag once
 	we've removed config.status; errors should abort the configuration.
 
-Sat Feb 15 17:23:07 1992  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
+1992-02-15  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
 
 	* config.emacs: Added -distribute option, so that the Makefile
 	paths are in their proper form.  I don't know why this matters.
 
-Fri Feb 14 13:58:57 1992  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
+1992-02-14  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
 
 	* local-lisp: New directory, empty in the distribution, for people
 	to put local elisp code in.
 	* config.emacs: Include it in the default load path.
 	* README: Document it.
 
-Thu Jan 30 10:26:45 1992  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
+1992-01-30  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
 
 	* config.emacs: Guess the type of signal handling functions based
 	on the contents of /usr/include/signal.h.
@@ -3424,11 +3819,11 @@ Thu Jan 30 10:26:45 1992  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
 
 	* config.emacs: Doc fix.
 
-Mon Jan 27 16:29:53 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-01-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
         * Makefile (install): Remove `B' from tar xf command.
 
-Mon Jan 13 12:00:14 1992  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
+1992-01-13  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
 
 	* config.emacs: Removed support for the `maintain-environment'
 	option; the only important difference between this and its absence
@@ -3438,7 +3833,7 @@ Mon Jan 13 12:00:14 1992  Jim Blandy  (jimb at pogo.cs.oberlin.edu)
 	* config.emacs: Fix arguments to sed when processing boolean
 	arguments.
 
-Thu Dec  5 14:39:44 1991  Jim Blandy  (jimb at pogo.gnu.ai.mit.edu)
+1991-12-05  Jim Blandy  (jimb at pogo.gnu.ai.mit.edu)
 
 	* config.emacs: New file, to help automate the installation
         process.
@@ -3460,34 +3855,34 @@ Thu Dec  5 14:39:44 1991  Jim Blandy  (jimb at pogo.gnu.ai.mit.edu)
 
 	* vms: New subdirectory for all the VMS stuff.
 
-Tue Dec  3 22:06:59 1991  Jim Blandy  (jimb at pogo.gnu.ai.mit.edu)
+1991-12-03  Jim Blandy  (jimb at pogo.gnu.ai.mit.edu)
 
 	* Makefile (LISPPATH): New variable.
 	(src/paths.h): Define PATH_LOADSEARCH according to LISPPATH.
 
-Fri Sep 28 22:36:32 1990  Richard Stallman  (rms at mole.ai.mit.edu)
+1990-09-28  Richard Stallman  (rms at mole.ai.mit.edu)
 
 	* Makefile (install, install.sysv, install.xenix):
 	Install wakeup instead of loadst.  No need for setuid or setgid.
 
-Tue Aug  7 13:19:35 1990  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1990-08-07  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* Makefile (clean): Clean etc if that's not the installation dir.
 
-Thu Apr 26 13:36:18 1990  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1990-04-26  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* Makefile (paths.h): Make sed alter each name in the path.
 
-Tue Aug 30 13:43:43 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-30  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* Makefile (install.sysv): Use cpio, not tar.
 
-Wed Aug  3 19:20:13 1988  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
+1988-08-03  Richard Stallman  (rms at sugar-bombs.ai.mit.edu)
 
 	* Makefile (lockdir): Rename `lock' target.
 	Depend on it from install*, not from `all'.
 
-Mon May 16 02:08:08 1988  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
+1988-05-16  Richard Stallman  (rms at frosted-flakes.ai.mit.edu)
 
 	* Makefile: Changed LIBDIR and BINDIR back to /usr/local/{emacs,bin}
 	to match build-install and paths.h.

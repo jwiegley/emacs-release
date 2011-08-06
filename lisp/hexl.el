@@ -53,25 +53,40 @@
 ;; vars here
 ;;
 
-(defvar hexl-program "hexl"
+(defgroup hexl nil
+  "Edit a file in a hex dump format using the hexl filter."
+  :group 'data)
+
+
+(defcustom hexl-program "hexl"
   "The program that will hexlify and dehexlify its stdin.
 `hexl-program' will always be concatenated with `hexl-options'
-and \"-de\" when dehexlifying a buffer.")
+and \"-de\" when dehexlifying a buffer."
+  :type 'string
+  :group 'hexl)
 
-(defvar hexl-iso ""
+(defcustom hexl-iso ""
   "If your emacs can handle ISO characters, this should be set to
-\"-iso\" otherwise it should be \"\".")
+\"-iso\" otherwise it should be \"\"."
+  :type 'string
+  :group 'hexl)
 
-(defvar hexl-options (format "-hex %s" hexl-iso)
-  "Options to hexl-program that suit your needs.")
+(defcustom hexl-options (format "-hex %s" hexl-iso)
+  "Options to hexl-program that suit your needs."
+  :type 'string
+  :group 'hexl)
 
-(defvar hexlify-command
+(defcustom hexlify-command
   (format "%s%s %s" exec-directory hexl-program hexl-options)
-  "The command to use to hexlify a buffer.")
+  "The command to use to hexlify a buffer."
+  :type 'string
+  :group 'hexl)
 
-(defvar dehexlify-command
+(defcustom dehexlify-command
   (format "%s%s -de %s" exec-directory hexl-program hexl-options)
-  "The command to use to unhexlify a buffer.")
+  "The command to use to unhexlify a buffer."
+  :type 'string
+  :group 'hexl)
 
 (defvar hexl-max-address 0
   "Maximum offset into hexl buffer.")
@@ -86,6 +101,8 @@ and \"-de\" when dehexlifying a buffer.")
 (defvar hexl-mode-old-syntax-table)
 
 ;; routines
+
+(put 'hexl-mode 'mode-class 'special)
 
 ;;;###autoload
 (defun hexl-mode (&optional arg)
@@ -238,8 +255,7 @@ You can use \\[hexl-find-file] to visit a file in hexl-mode.
 				   (set-buffer name)
 				   (dehexlify-buffer)
 				   ;; Prevent infinite recursion.
-				   (let ((hexl-in-save-buffer t)
-					 (buffer-file-type t)) ; for ms-dos
+				   (let ((hexl-in-save-buffer t))
 				     (save-buffer))
 				   (setq modified (buffer-modified-p))
 				   (delete-region (point-min) (point-max))
@@ -256,9 +272,7 @@ You can use \\[hexl-find-file] to visit a file in hexl-mode.
   "Edit file FILENAME in hexl-mode.
 Switch to a buffer visiting file FILENAME, creating one in none exists."
   (interactive "fFilename: ")
-  (if (or (eq system-type 'ms-dos) (eq system-type 'windows-nt))
-      (find-file-binary filename)
-    (find-file filename))
+  (find-file-literally filename)
   (if (not (eq major-mode 'hexl-mode))
       (hexl-mode)))
 
@@ -324,7 +338,7 @@ Ask the user for confirmation."
 Signal error if ADDRESS out of range."
   (interactive "nAddress: ")
   (if (or (< address 0) (> address hexl-max-address))
-	  (error "Out of hexl region."))
+	  (error "Out of hexl region"))
   (goto-char (hexl-address-to-marker address)))
 
 (defun hexl-goto-hex-address (hex-address)
@@ -564,7 +578,18 @@ This discards the buffer's undo information."
 	   (error "Aborted")))
   (setq buffer-undo-list nil)
   (let ((binary-process-output nil) ; for Ms-Dos
-	(binary-process-input t)
+	(binary-process-input buffer-file-type)
+	;; If the buffer was read with EOL conversions, be sure to use the
+	;; same conversions when passing the region to the `hexl' program.
+	(coding-system-for-write
+	 (let ((eol-type (coding-system-eol-type buffer-file-coding-system)))
+	   (cond ((eq eol-type 1)
+		  'raw-text-dos)
+		 ((eq eol-type 2)
+		  'raw-text-mac)
+		 ((eq eol-type 0)
+		  'raw-text-unix)
+		 (t 'no-conversion))))
 	(buffer-undo-list t))
     (shell-command-on-region (point-min) (point-max) hexlify-command t)))
 
@@ -576,8 +601,9 @@ This discards the buffer's undo information."
        (or (y-or-n-p "Converting from hexl format discards undo info; ok? ")
 	   (error "Aborted")))
   (setq buffer-undo-list nil)
-  (let ((binary-process-output t) ; for Ms-Dos
+  (let ((binary-process-output buffer-file-type) ; for Ms-Dos
 	(binary-process-input nil)
+	(coding-system-for-read 'raw-text)
 	(buffer-undo-list t))
     (shell-command-on-region (point-min) (point-max) dehexlify-command t)))
 
@@ -598,13 +624,13 @@ This discards the buffer's undo information."
     (let ((ch (logior character 32)))
       (if (and (>= ch ?a) (<= ch ?f))
 	  (- ch (- ?a 10))
-	(error "Invalid hex digit `%c'." ch)))))
+	(error "Invalid hex digit `%c'" ch)))))
 
 (defun hexl-oct-char-to-integer (character)
   "Take a char and return its value as if it was a octal digit."
   (if (and (>= character ?0) (<= character ?7))
       (- character ?0)
-    (error "Invalid octal digit `%c'." character)))
+    (error "Invalid octal digit `%c'" character)))
 
 (defun hexl-printable-character (ch)
   "Return a displayable string for character CH."
@@ -658,7 +684,7 @@ This discards the buffer's undo information."
   (interactive "p")
   (let ((num (hexl-hex-string-to-integer (read-string "Hex number: "))))
     (if (or (> num 255) (< num 0))
-	(error "Hex number out of range.")
+	(error "Hex number out of range")
       (hexl-insert-char num arg))))
 
 (defun hexl-insert-decimal-char (arg)
@@ -666,7 +692,7 @@ This discards the buffer's undo information."
   (interactive "p")
   (let ((num (string-to-int (read-string "Decimal Number: "))))
     (if (or (> num 255) (< num 0))
-	(error "Decimal number out of range.")
+	(error "Decimal number out of range")
       (hexl-insert-char num arg))))
 
 (defun hexl-insert-octal-char (arg)
@@ -674,7 +700,7 @@ This discards the buffer's undo information."
   (interactive "p")
   (let ((num (hexl-octal-string-to-integer (read-string "Octal Number: "))))
     (if (or (> num 255) (< num 0))
-	(error "Decimal number out of range.")
+	(error "Decimal number out of range")
       (hexl-insert-char num arg))))
 
 ;; startup stuff.
@@ -785,5 +811,7 @@ This discards the buffer's undo information."
   (define-key hexl-mode-map "\C-x\C-p" 'undefined)
   (define-key hexl-mode-map "\C-x\C-s" 'hexl-save-buffer)
   (define-key hexl-mode-map "\C-x\C-t" 'undefined))
+
+(provide 'hexl)
 
 ;;; hexl.el ends here

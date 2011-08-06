@@ -1,5 +1,127 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
+
+
+File: emacs,  Node: Earlier Kills,  Prev: Appending Kills,  Up: Yanking
+
+Yanking Earlier Kills
+---------------------
+
+   To recover killed text that is no longer the most recent kill, use
+the `M-y' command (`yank-pop').  It takes the text previously yanked
+and replaces it with the text from an earlier kill.  So, to recover the
+text of the next-to-the-last kill, first use `C-y' to yank the last
+kill, and then use `M-y' to replace it with the previous kill.  `M-y'
+is allowed only after a `C-y' or another `M-y'.
+
+   You can understand `M-y' in terms of a "last yank" pointer which
+points at an entry in the kill ring.  Each time you kill, the "last
+yank" pointer moves to the newly made entry at the front of the ring.
+`C-y' yanks the entry which the "last yank" pointer points to.  `M-y'
+moves the "last yank" pointer to a different entry, and the text in the
+buffer changes to match.  Enough `M-y' commands can move the pointer to
+any entry in the ring, so you can get any entry into the buffer.
+Eventually the pointer reaches the end of the ring; the next `M-y'
+moves it to the first entry again.
+
+   `M-y' moves the "last yank" pointer around the ring, but it does not
+change the order of the entries in the ring, which always runs from the
+most recent kill at the front to the oldest one still remembered.
+
+   `M-y' can take a numeric argument, which tells it how many entries
+to advance the "last yank" pointer by.  A negative argument moves the
+pointer toward the front of the ring; from the front of the ring, it
+moves "around" to the last entry and continues forward from there.
+
+   Once the text you are looking for is brought into the buffer, you can
+stop doing `M-y' commands and it will stay there.  It's just a copy of
+the kill ring entry, so editing it in the buffer does not change what's
+in the ring.  As long as no new killing is done, the "last yank"
+pointer remains at the same place in the kill ring, so repeating `C-y'
+will yank another copy of the same previous kill.
+
+   If you know how many `M-y' commands it would take to find the text
+you want, you can yank that text in one step using `C-y' with a numeric
+argument.  `C-y' with an argument restores the text the specified
+number of entries back in the kill ring.  Thus, `C-u 2 C-y' gets the
+next to the last block of killed text.  It is equivalent to `C-y M-y'.
+`C-y' with a numeric argument starts counting from the "last yank"
+pointer, and sets the "last yank" pointer to the entry that it yanks.
+
+   The length of the kill ring is controlled by the variable
+`kill-ring-max'; no more than that many blocks of killed text are saved.
+
+   The actual contents of the kill ring are stored in a variable named
+`kill-ring'; you can view the entire contents of the kill ring with the
+command `C-h v kill-ring'.
+
+
+File: emacs,  Node: Accumulating Text,  Next: Rectangles,  Prev: Yanking,  Up: Top
+
+Accumulating Text
+=================
+
+   Usually we copy or move text by killing it and yanking it, but there
+are other methods convenient for copying one block of text in many
+places, or for copying many scattered blocks of text into one place.  To
+copy one block to many places, store it in a register (*note
+Registers::.).  Here we describe the commands to accumulate scattered
+pieces of text into a buffer or into a file.
+
+`M-x append-to-buffer'
+     Append region to contents of specified buffer.
+
+`M-x prepend-to-buffer'
+     Prepend region to contents of specified buffer.
+
+`M-x copy-to-buffer'
+     Copy region into specified buffer, deleting that buffer's old
+     contents.
+
+`M-x insert-buffer'
+     Insert contents of specified buffer into current buffer at point.
+
+`M-x append-to-file'
+     Append region to contents of specified file, at the end.
+
+   To accumulate text into a buffer, use `M-x append-to-buffer'.  This
+reads a buffer name, them inserts a copy of the region into the buffer
+specified.  If you specify a nonexistent buffer, `append-to-buffer'
+creates the buffer.  The text is inserted wherever point is in that
+buffer.  If you have been using the buffer for editing, the copied text
+goes into the middle of the text of the buffer, wherever point happens
+to be in it.
+
+   Point in that buffer is left at the end of the copied text, so
+successive uses of `append-to-buffer' accumulate the text in the
+specified buffer in the same order as they were copied.  Strictly
+speaking, `append-to-buffer' does not always append to the text already
+in the buffer--it appends only if point in that buffer is at the end.
+However, if `append-to-buffer' is the only command you use to alter a
+buffer, then point is always at the end.
+
+   `M-x prepend-to-buffer' is just like `append-to-buffer' except that
+point in the other buffer is left before the copied text, so successive
+prependings add text in reverse order.  `M-x copy-to-buffer' is similar
+except that any existing text in the other buffer is deleted, so the
+buffer is left containing just the text newly copied into it.
+
+   To retrieve the accumulated text from another buffer, use `M-x
+insert-buffer'; this too takes BUFFERNAME as an argument.  It inserts a
+copy of the text in buffer BUFFERNAME into the selected buffer.  You
+can alternatively select the other buffer for editing, then optionally
+move text from it by killing.  *Note Buffers::, for background
+information on buffers.
+
+   Instead of accumulating text within Emacs, in a buffer, you can
+append text directly into a file with `M-x append-to-file', which takes
+FILENAME as an argument.  It adds the text of the region to the end of
+the specified file.  The file is changed immediately on disk.
+
+   You should use `append-to-file' only with files that are *not* being
+visited in Emacs.  Using it on a file that you are editing in Emacs
+would change the file behind Emacs's back, which can lead to losing
+some of your editing.
 
 
 File: emacs,  Node: Rectangles,  Next: Registers,  Prev: Accumulating Text,  Up: Top
@@ -47,7 +169,7 @@ a line.
 `M-x clear-rectangle'
      Clear the region-rectangle by replacing its contents with spaces.
 
-`M-x string-rectangle RET STRING RET'
+`M-x string-rectangle <RET> STRING <RET>'
      Insert STRING on each line of the region-rectangle.
 
    The rectangle operations fall into two classes: commands deleting and
@@ -83,11 +205,11 @@ Two-Column::, for another way to edit multi-column text.
    You can also copy rectangles into and out of registers with `C-x r r
 R' and `C-x r i R'.  *Note Rectangle Registers: RegRect.
 
-   There are two commands for making with blank rectangles: `M-x
-clear-rectangle' to blank out existing text, and `C-x r o'
-(`open-rectangle') to insert a blank rectangle.  Clearing a rectangle
-is equivalent to deleting it and then inserting a blank rectangle of
-the same size.
+   There are two commands you can use for making blank rectangles: `M-x
+clear-rectangle' which blanks out existing text, and `C-x r o'
+(`open-rectangle') which inserts a blank rectangle.  Clearing a
+rectangle is equivalent to deleting it and then inserting a blank
+rectangle of the same size.
 
    The command `M-x string-rectangle' is similar to `C-x r o', but it
 inserts a specified string instead of blanks.  You specify the string
@@ -115,7 +237,7 @@ or a file name, but only one thing at any given time.  Whatever you
 store in a register remains there until you store something else in that
 register.  To see what a register R contains, use `M-x view-register'.
 
-`M-x view-register RET R'
+`M-x view-register <RET> R'
      Display a description of what register R contains.
 
 * Menu:
@@ -137,19 +259,24 @@ Saving Positions in Registers
 back there later.  Moving to a saved position switches to that buffer
 and moves point to that place in it.
 
-`C-x r SPC R'
+`C-x r <SPC> R'
      Save position of point in register R (`point-to-register').
 
 `C-x r j R'
      Jump to the position saved in register R (`jump-to-register').
 
    To save the current position of point in a register, choose a name R
-and type `C-x r SPC R'.  The register R retains the position thus saved
-until you store something else in that register.
+and type `C-x r <SPC> R'.  The register R retains the position thus
+saved until you store something else in that register.
 
    The command `C-x r j R' moves point to the position recorded in
 register R.  The register is not affected; it continues to record the
 same position.  You can jump to the saved position any number of times.
+
+   If you use `C-x r j' to go to a saved position, but the buffer it
+was saved from has been killed, `C-x r j' tries to create the buffer
+again by visiting the same file.  Of course, this works only for buffers
+that were visiting files.
 
 
 File: emacs,  Node: RegText,  Next: RegRect,  Prev: RegPos,  Up: Registers
@@ -260,13 +387,13 @@ they persist automatically from one Emacs session to the next.  The
 prototypical use of bookmarks is to record "where you were reading" in
 various files.
 
-`C-x r m RET'
+`C-x r m <RET>'
      Set the bookmark for the visited file, at point.
 
-`C-x r m BOOKMARK RET'
+`C-x r m BOOKMARK <RET>'
      Set the bookmark named BOOKMARK at point (`bookmark-set').
 
-`C-x r b BOOKMARK RET'
+`C-x r b BOOKMARK <RET>'
      Jump to the bookmark named BOOKMARK (`bookmark-jump').
 
 `C-x r l'
@@ -309,23 +436,23 @@ position.
 
    Here are some additional commands for working with bookmarks:
 
-`M-x bookmark-load RET FILENAME RET'
+`M-x bookmark-load <RET> FILENAME <RET>'
      Load a file named FILENAME that contains a list of bookmark
      values.  You can use this command, as well as `bookmark-write', to
      work with other files of bookmark values in addition to your
      default bookmark file.
 
-`M-x bookmark-write RET FILENAME RET'
+`M-x bookmark-write <RET> FILENAME <RET>'
      Save all the current bookmark values in the file FILENAME.
 
-`M-x bookmark-delete RET BOOKMARK RET'
+`M-x bookmark-delete <RET> BOOKMARK <RET>'
      Delete the bookmark named BOOKMARK.
 
-`M-x bookmark-insert-location RET BOOKMARK RET'
+`M-x bookmark-insert-location <RET> BOOKMARK <RET>'
      Insert in the buffer the name of the file that bookmark BOOKMARK
      points to.
 
-`M-x bookmark-insert RET BOOKMARK RET'
+`M-x bookmark-insert <RET> BOOKMARK <RET>'
      Insert in the buffer the *contents* of the file that bookmark
      BOOKMARK points to.
 
@@ -336,50 +463,18 @@ Controlling the Display
 ***********************
 
    Since only part of a large buffer fits in the window, Emacs tries to
-show the part that is likely to be interesting.  The display control
-commands allow you to specify which part of the text you want to see.
-
-`C-l'
-     Clear screen and redisplay, scrolling the selected window to center
-     point vertically within it (`recenter').
-
-`C-v'
-     Scroll forward (a windowful or a specified number of lines)
-     (`scroll-up').
-
-`NEXT'
-     Likewise, scroll forward.
-
-`M-v'
-     Scroll backward (`scroll-down').
-
-`PRIOR'
-     Likewise, scroll backward.
-
-`ARG C-l'
-     Scroll so point is on screen line ARG (`recenter').
-
-`C-x <'
-     Scroll text in current window to the left (`scroll-left').
-
-`C-x >'
-     Scroll to the right (`scroll-right').
-
-`C-x $'
-     Make deeply indented lines invisible (`set-selective-display').
-
-   The names of all scroll commands are based on the direction that the
-text moves in the window.  Thus, the command to scrolling forward is
-called `scroll-up', since the text moves up.
+show a part that is likely to be interesting.  Display-control commands
+allow you to specify which part of the text you want to see, and how to
+display it.
 
 * Menu:
 
 * Scrolling::	           Moving text up and down in a window.
 * Horizontal Scrolling::   Moving text left and right in a window.
-* Selective Display::      Hiding lines with lots of indentation.
-* European Display::	   Displaying (and entering) European characters.
 * Follow Mode::            Follow mode lets two windows scroll as one.
+* Selective Display::      Hiding lines with lots of indentation.
 * Optional Mode Line::     Optional mode line display features.
+* Text Display::           How text characters are normally displayed.
 * Display Vars::           Information on variables for customizing display.
 
 
@@ -409,13 +504,13 @@ commands in this section.
      Scroll forward (a windowful or a specified number of lines)
      (`scroll-up').
 
-`NEXT'
+`<NEXT>'
      Likewise, scroll forward.
 
 `M-v'
      Scroll backward (`scroll-down').
 
-`PRIOR'
+`<PRIOR>'
      Likewise, scroll backward.
 
 `ARG C-l'
@@ -436,7 +531,11 @@ argument shows you that many more lines at the bottom of the window,
 moving the text and point up together as `C-l' might.  `C-v' with a
 negative argument shows you more lines at the top of the window.  `M-v'
 (`scroll-down') is like `C-v', but moves in the opposite direction.
-The function keys NEXT and PRIOR are equivalent to `C-v' and `M-v'.
+The function keys <NEXT> and <PRIOR> are equivalent to `C-v' and `M-v'.
+
+   The names of scroll commands are based on the direction that the text
+moves in the window.  Thus, the command to scroll forward is called
+`scroll-up' because it moves the text upward on the screen.
 
    To read the buffer a windowful at a time, use `C-v' with no argument.
 It takes the last two lines at the bottom of the window and puts them at
@@ -445,7 +544,15 @@ visible.  If point was in the text scrolled off the top, it moves to the
 new top of the window.  `M-v' with no argument moves backward with
 overlap similarly.  The number of lines of overlap across a `C-v' or
 `M-v' is controlled by the variable `next-screen-context-lines'; by
-default, it is two.
+default, it is 2.
+
+   Some users like the full-screen scroll commands to keep point at the
+same screen position.  To enable this behavior, set the variable
+`scroll-preserve-screen-position' to a non-`nil' value.  This mode is
+convenient for browsing through a file by scrolling by screenfuls; if
+you come back to the screen where you started, point goes back to its
+starting value.  However, this mode is inconvenient when you move to
+the next screen in order to move point to the text there.
 
    Another way to do scrolling is with `C-l' with a numeric argument.
 `C-l' does not clear the screen when given an argument; it only scrolls
@@ -464,17 +571,27 @@ screen.  For example, in a Lisp file, this command tries to get the
 entire current defun onto the screen if possible.
 
    Scrolling happens automatically if point has moved out of the visible
-portion of the text when it is time to display.  Usually the scrolling
-is done so as to put point vertically centered within the window.
-However, if the variable `scroll-step' has a nonzero value, an attempt
-is made to scroll the buffer by that many lines; if that is enough to
-bring point back into visibility, that is what is done.
+portion of the text when it is time to display.  Normally, automatic
+scrolling centers point vertically within the window.  However, if you
+set `scroll-conservatively' to a small number N, then if you move point
+just a little off the screen--less than N lines--then Emacs scrolls the
+text just far enough to bring point back on screen.  By default,
+`scroll-conservatively' is 0.
+
+   The variable `scroll-margin' restricts how close point can come to
+the top or bottom of a window.  Its value is a number of screen lines;
+if point comes within that many lines of the top or bottom of the
+window, Emacs recenters the window.  By default, `scroll-margin' is 0.
 
 
-File: emacs,  Node: Horizontal Scrolling,  Next: Selective Display,  Prev: Scrolling,  Up: Display
+File: emacs,  Node: Horizontal Scrolling,  Next: Follow Mode,  Prev: Scrolling,  Up: Display
 
 Horizontal Scrolling
 ====================
+
+   "Horizontal scrolling" means shifting all the lines sideways within
+a window--so that some of the text near the left margin is not
+displayed at all.
 
 `C-x <'
      Scroll text in current window to the left (`scroll-left').
@@ -482,12 +599,9 @@ Horizontal Scrolling
 `C-x >'
      Scroll to the right (`scroll-right').
 
-   The text in a window can also be scrolled horizontally.  This means
-that each line of text is shifted sideways in the window, and one or
-more characters at the beginning of each line are not displayed at all.
-When a window has been scrolled horizontally in this way, text lines
-are truncated rather than continued (*note Continuation Lines::.), with
-a `$' appearing in the first column when there is text truncated to the
+   When a window has been scrolled horizontally, text lines are
+truncated rather than continued (*note Continuation Lines::.), with a
+`$' appearing in the first column when there is text truncated to the
 left, and in the last column when there is text truncated to the right.
 
    The command `C-x <' (`scroll-left') scrolls the selected window to
@@ -501,10 +615,31 @@ cannot be scrolled any farther to the right once it is displayed
 normally (with each line starting at the window's left margin);
 attempting to do so has no effect.  This means that you don't have to
 calculate the argument precisely for `C-x >'; any sufficiently large
-argument will restore normally display.
+argument will restore the normal display.
+
+   You can request automatic horizontal scrolling by enabling Hscroll
+mode.  When this mode is enabled, Emacs scrolls a window horizontally
+whenever that is necessary to keep point visible and not too far from
+the left or right edge.  The command to enable or disable this mode is
+`M-x hscroll-mode'.
 
 
-File: emacs,  Node: Selective Display,  Next: European Display,  Prev: Horizontal Scrolling,  Up: Display
+File: emacs,  Node: Follow Mode,  Next: Selective Display,  Prev: Horizontal Scrolling,  Up: Display
+
+Follow Mode
+===========
+
+   "Follow mode" is a minor mode that makes two windows showing the
+same buffer scroll as one tall "virtual window."  To use Follow mode,
+go to a frame with just one window, split it into two side-by-side
+windows using `C-x 3', and then type `M-x follow-mode'.  From then on,
+you can edit the buffer in either of the two windows, or scroll either
+one; the other window follows it.
+
+   To turn off Follow mode, type `M-x follow-mode' a second time.
+
+
+File: emacs,  Node: Selective Display,  Next: Optional Mode Line,  Prev: Follow Mode,  Up: Display
 
 Selective Display
 =================
@@ -537,131 +672,7 @@ lines.  Then there is no visible indication of the hidden lines.  This
 variable becomes local automatically when set.
 
 
-File: emacs,  Node: European Display,  Next: Follow Mode,  Prev: Selective Display,  Up: Display
-
-European Character Set Display
-==============================
-
-   Some European languages use accented letters and other special
-symbols.  The ISO 8859 Latin-1 character set defines character codes for
-many European languages in the range 160 to 255.
-
-   Emacs can display those characters according to Latin-1, provided the
-terminal or font in use supports them.  The `M-x
-standard-display-european' command toggles European character display
-mode.  With a numeric argument, `M-x standard-display-european' enables
-European character display if and only if the argument is positive.
-Load the library `iso-syntax' to specify the correct syntactic
-properties and case conversion table for the Latin-1 character set.
-
-   If your terminal does not support display of the Latin-1 character
-set, Emacs can display these characters as ASCII sequences which at
-least give you a clear idea of what the characters are.  To do this,
-load the library `iso-ascii'.
-
-   Some operating systems let you specify the language you are using by
-setting a locale.  Emacs handles one common special case of this: if
-your locale name for character types contains the string `8859-1' or
-`88591', Emacs automatically enables European character display mode
-and its syntax.
-
-   There are three different ways you can enter Latin-1 characters:
-
-   * If your keyboard can generate character codes 128 and up,
-     representing ISO Latin-1 characters, execute the following
-     expression to enable Emacs to understand them:
-
-          (set-input-mode (car (current-input-mode))
-                          (nth 1 (current-input-mode))
-                          0)
-
-   * You can load the library `iso-transl' to turn the key `C-x 8' into
-     a "compose character" prefix for entry of the extra ISO Latin-1
-     printing characters.  `C-x 8' is good for insertion (in the
-     minibuffer as well as other buffers), for searching, and in any
-     other context where a key sequence is allowed.  The ALT modifier
-     key, if you have one, serves the same purpose as `C-x 8'; use ALT
-     together with an accent character to modify the following letter.
-
-   * You can use ISO Accents mode.  This minor mode is convenient if you
-     enter non-ASCII ISO Latin-1 characters often.  When this minor
-     mode is enabled, the characters ``', `'', `"', `^', `/' and `~'
-     modify the following letter by adding the corresponding
-     diacritical mark to it, if possible.  To enable or disable ISO
-     Accents mode, use the command `M-x iso-accents-mode'.  This
-     command affects only the current buffer.
-
-     To enter one of those six special characters while in ISO Accents
-     mode, type the character, followed by a space.  Some of those
-     characters have a corresponding "dead key" accent character in the
-     ISO Latin-1 character set; to enter that character, type the
-     corresponding ASCII character twice.  For example, `''' enters the
-     Latin-1 character acute-accent (character code 0264).
-
-     ISO Accents mode input is available whenever a key sequence is
-     expected: for ordinary insertion, for searching, for the
-     minibuffer, and for certain command arguments.
-
-     In addition to the accented letters, you can use these special
-     sequences in ISO Accents mode to enter certain other ISO Latin-1
-     characters:
-
-    `/A'
-          `A' with ring.
-
-    `~C'
-          `C' with cedilla.
-
-    `~D'
-          `D' with stroke.
-
-    `/E'
-          `AE' ligature.
-
-    `/a'
-          `a' with ring.
-
-    `~c'
-          `c' with cedilla.
-
-    `~d'
-          `d' with stroke.
-
-    `/e'
-          `ae' ligature.
-
-    `"s'
-          German sharp `s'.
-
-    `~<'
-          Left guillemot.
-
-    `~>'
-          Right guillemot.
-
-    `~!'
-          Inverted exclamation mark.
-
-    `~?'
-          Inverted question mark.
-
-
-File: emacs,  Node: Follow Mode,  Next: Optional Mode Line,  Prev: European Display,  Up: Display
-
-Follow Mode
-===========
-
-   "Follow mode" is a minor mode which makes two windows showing the
-same buffer scroll as one tall "virtual window."  To use Follow mode,
-go to a frame with just one window, split it into two side-by-side
-windows using `C-x 3', and then type `M-x follow-mode'.  From then on,
-you can edit the buffer in either of the two windows, or scroll either
-one; the other window follows it.
-
-   To turn off Follow mode, type `M-x follow-mode' a second time.
-
-
-File: emacs,  Node: Optional Mode Line,  Next: Display Vars,  Prev: Follow Mode,  Up: Display
+File: emacs,  Node: Optional Mode Line,  Next: Text Display,  Prev: Selective Display,  Up: Display
 
 Optional Mode Line Features
 ===========================
@@ -694,13 +705,40 @@ name, before the mode names and their parentheses.  It looks like this:
 Here HH and MM are the hour and minute, followed always by `am' or
 `pm'.  L.LL is the average number of running processes in the whole
 system recently.  (Some fields may be missing if your operating system
-cannot support them.)
+cannot support them.)  If you prefer time display in 24-hour format,
+set the variable `display-time-24hr-format' to `t'.
 
    The word `Mail' appears after the load level if there is mail for
 you that you have not read yet.
 
 
-File: emacs,  Node: Display Vars,  Prev: Optional Mode Line,  Up: Display
+File: emacs,  Node: Text Display,  Next: Display Vars,  Prev: Optional Mode Line,  Up: Display
+
+How Text Is Displayed
+=====================
+
+   ASCII printing characters (octal codes 040 through 0176) in Emacs
+buffers are displayed with their graphics.  So are non-ASCII multibyte
+printing characters (octal codes above 0400).
+
+   Some ASCII control characters are displayed in special ways.  The
+newline character (octal code 012) is displayed by starting a new line.
+The tab character (octal code 011) is displayed by moving to the next
+tab stop column (normally every 8 columns).
+
+   Other ASCII control characters are normally displayed as a caret
+(`^') followed by the non-control version of the character; thus,
+control-A is displayed as `^A'.
+
+   Non-ASCII characters 0200 through 0377 are displayed with octal
+escape sequences; thus, character code 0243 (octal) is displayed as
+`\243'.  However, if you enable European display, most of these
+characters become non-ASCII printing characters, and are displayed using
+their graphics (assuming your terminal supports them).  *Note
+Single-Byte European Support::.
+
+
+File: emacs,  Node: Display Vars,  Prev: Text Display,  Up: Display
 
 Variables Controlling Display
 =============================
@@ -739,7 +777,7 @@ required to cause echoing to start, or zero meaning don't echo at all.
 *Note Echo Area::.
 
    If the variable `ctl-arrow' is `nil', control characters in the
-buffer are displayed with octal escape sequences, all except newline
+buffer are displayed with octal escape sequences, except for newline
 and tab.  Altering the value of `ctl-arrow' makes it local to the
 current buffer; until that time, the default value is in effect.  The
 default is initially `t'.  *Note Display Tables: (elisp)Display Tables.
@@ -749,9 +787,9 @@ which extends to the next display tab stop position, and display tab
 stops come at intervals equal to eight spaces.  The number of spaces
 per tab is controlled by the variable `tab-width', which is made local
 by changing it, just like `ctl-arrow'.  Note that how the tab character
-in the buffer is displayed has nothing to do with the definition of TAB
-as a command.  The variable `tab-width' must have an integer value
-between 1 and 1000, inclusive.
+in the buffer is displayed has nothing to do with the definition of
+<TAB> as a command.  The variable `tab-width' must have an integer
+value between 1 and 1000, inclusive.
 
    If the variable `truncate-lines' is non-`nil', then each line of
 text gets just one screen line for display; if the text line is too
@@ -768,14 +806,17 @@ full width of the screen or frame, regardless of the value of
 `truncate-lines'.  For information about side-by-side windows, see
 *Note Split Window::.  See also *Note Display: (elisp)Display.
 
-   The variable `baud-rate' holds the the output speed of the terminal,
-as far as Emacs knows.  Setting this variable does not change the speed
-of actual data transmission, but the value is used for calculations
-such as padding.  It also affects decisions about whether to scroll
-part of the screen or redraw it instead--even when using a window
-system.  (We designed it this way, despite the fact that a window
-system has no true "output speed", to give you a way to tune these
-decisions.)
+   The variable `baud-rate' holds the output speed of the terminal, as
+far as Emacs knows.  Setting this variable does not change the speed of
+actual data transmission, but the value is used for calculations such
+as padding.  It also affects decisions about whether to scroll part of
+the screen or redraw it instead--even when using a window system.  (We
+designed it this way, despite the fact that a window system has no true
+"output speed," to give you a way to tune these decisions.)
+
+   You can customize the way any particular character code is displayed
+by means of a display table.  *Note Display Tables: (elisp)Display
+Tables.
 
 
 File: emacs,  Node: Search,  Next: Fixit,  Prev: Display,  Up: Top
@@ -816,7 +857,7 @@ character of the search string.  As you type in the search string, Emacs
 shows you where the string (as you have typed it so far) would be
 found.  When you have typed enough characters to identify the place you
 want, you can stop.  Depending on what you plan to do next, you may or
-may not need to terminate the search explicitly with RET.
+may not need to terminate the search explicitly with <RET>.
 
 `C-s'
      Incremental search forward (`isearch-forward').
@@ -829,35 +870,38 @@ keyboard and positions the cursor at the first occurrence of the
 characters that you have typed.  If you type `C-s' and then `F', the
 cursor moves right after the first `F'.  Type an `O', and see the
 cursor move to after the first `FO'.  After another `O', the cursor is
-after the first `FOO' after the place where you started the search.
-Meanwhile, the search string `FOO' has been echoed in the echo area.
+after the first `FOO' after the place where you started the search.  At
+each step, the buffer text that matches the search string is
+highlighted, if the terminal can do that; at each step, the current
+search string is updated in the echo area.
 
    If you make a mistake in typing the search string, you can cancel
-characters with DEL.  Each DEL cancels the last character of search
+characters with <DEL>.  Each <DEL> cancels the last character of search
 string.  This does not happen until Emacs is ready to read another
 input character; first it must either find, or fail to find, the
 character you want to erase.  If you do not want to wait for this to
 happen, use `C-g' as described below.
 
    When you are satisfied with the place you have reached, you can type
-RET, which stops searching, leaving the cursor where the search brought
-it.  Also, any command not specially meaningful in searches stops the
-searching and is then executed.  Thus, typing `C-a' would exit the
-search and then move to the beginning of the line.  RET is necessary
-only if the next command you want to type is a printing character, DEL,
-RET, or another control character that is special within searches
-(`C-q', `C-w', `C-r', `C-s', `C-y', `M-y', `M-r', or `M-s').
+<RET>, which stops searching, leaving the cursor where the search
+brought it.  Also, any command not specially meaningful in searches
+stops the searching and is then executed.  Thus, typing `C-a' would
+exit the search and then move to the beginning of the line.  <RET> is
+necessary only if the next command you want to type is a printing
+character, <DEL>, <RET>, or another control character that is special
+within searches (`C-q', `C-w', `C-r', `C-s', `C-y', `M-y', `M-r', or
+`M-s').
 
    Sometimes you search for `FOO' and find it, but not the one you
 expected to find.  There was a second `FOO' that you forgot about,
-before the one you were looking for.  In this event, type another `C-s'
+before the one you were aiming for.  In this event, type another `C-s'
 to move to the next occurrence of the search string.  This can be done
 any number of times.  If you overshoot, you can cancel some `C-s'
-characters with DEL.
+characters with <DEL>.
 
    After you exit a search, you can search for the same string again by
 typing just `C-s C-s': the first `C-s' is the key that invokes
-incremental search, and the second `C-s' means "search again".
+incremental search, and the second `C-s' means "search again."
 
    To reuse earlier search strings, use the "search ring".  The
 commands `M-p' and `M-n' move through the ring to pick a search string
@@ -871,8 +915,8 @@ your string as it could.  Thus, if you search for `FOOT', and there is
 no `FOOT', you might see the cursor after the `FOO' in `FOOL'.  At this
 point there are several things you can do.  If your string was
 mistyped, you can rub some of it out and correct it.  If you like the
-place you have found, you can type RET or some other Emacs command to
-"accept what the search offered".  Or you can type `C-g', which removes
+place you have found, you can type <RET> or some other Emacs command to
+"accept what the search offered."  Or you can type `C-g', which removes
 from the search string the characters that could not be found (the `T'
 in `FOOT'), leaving those that were found (the `FOO' in `FOOT').  A
 second `C-g' at that point cancels the search entirely, returning point
@@ -901,23 +945,25 @@ which have not been found are discarded from the search string.  With
 them gone, the search is now successful and waiting for more input, so
 a second `C-g' will cancel the entire search.
 
-   To search for a newline, type LFD (also known as `C-j').  To search
-for another control character such as control-S or carriage return, you
-must quote it by typing `C-q' first.  This function of `C-q' is
-analogous to its meaning as an Emacs command: it causes the following
-character to be treated the way a graphic character would normally be
-treated in the same context.  You can also specify a character by its
-octal code: enter `C-q' followed by three octal digits.
+   To search for a newline, type `C-j'.  To search for another control
+character, such as control-S or carriage return, you must quote it by
+typing `C-q' first.  This function of `C-q' is analogous to its use for
+insertion (*note Inserting Text::.): it causes the following character
+to be treated the way any "ordinary" character is treated in the same
+context.  You can also specify a character by its octal code: enter
+`C-q' followed by a sequence of octal digits.
 
    You can change to searching backwards with `C-r'.  If a search fails
 because the place you started was too late in the file, you should do
 this.  Repeated `C-r' keeps looking for more occurrences backwards.  A
 `C-s' starts going forwards again.  `C-r' in a search can be canceled
-with DEL.
+with <DEL>.
 
    If you know initially that you want to search backwards, you can use
 `C-r' instead of `C-s' to start the search, because `C-r' as a key runs
-a command (`isearch-backward') to search backward.
+a command (`isearch-backward') to search backward.  A backward search
+finds matches that are entirely before the starting point, just as a
+forward search finds matches that begin after it.
 
    The characters `C-y' and `C-w' can be used in incremental search to
 grab text from the buffer into the search string.  This makes it
@@ -927,7 +973,7 @@ point over that word.  Another `C-s' to repeat the search will then
 search for a string including that word.  `C-y' is similar to `C-w' but
 copies all the rest of the current line into the search string.  Both
 `C-y' and `C-w' convert the text they copy to lower case if the search
-is current not case-sensitive; this is so the search remains
+is currently not case-sensitive; this is so the search remains
 case-insensitive.
 
    The character `M-y' copies text from the kill ring into the search
@@ -942,7 +988,7 @@ activating it, and does so only if the mark is not already active.
    To customize the special characters that incremental search
 understands, alter their bindings in the keymap `isearch-mode-map'.
 For a list of bindings, look at the documentation of `isearch-mode' with
-`C-h f isearch-mode RET'.
+`C-h f isearch-mode <RET>'.
 
 Slow Terminal Incremental Search
 --------------------------------
@@ -963,8 +1009,8 @@ rate is less than or equal to the value of the variable
 `search-slow-speed', initially 1200.
 
    The number of lines to use in slow terminal search display is
-controlled by the variable `search-slow-window-lines'.  1 is its normal
-value.
+controlled by the variable `search-slow-window-lines'.  Its normal
+value is 1.
 
 
 File: emacs,  Node: Nonincremental Search,  Next: Word Search,  Prev: Incremental Search,  Up: Search
@@ -975,23 +1021,23 @@ Nonincremental Search
    Emacs also has conventional nonincremental search commands, which
 require you to type the entire search string before searching begins.
 
-`C-s RET STRING RET'
+`C-s <RET> STRING <RET>'
      Search for STRING.
 
-`C-r RET STRING RET'
+`C-r <RET> STRING <RET>'
      Search backward for STRING.
 
-   To do a nonincremental search, first type `C-s RET'.  This enters
+   To do a nonincremental search, first type `C-s <RET>'.  This enters
 the minibuffer to read the search string; terminate the string with
-RET, and then the search takes place.  If the string is not found, the
-search command gets an error.
+<RET>, and then the search takes place.  If the string is not found,
+the search command gets an error.
 
-   The way `C-s RET' works is that the `C-s' invokes incremental
+   The way `C-s <RET>' works is that the `C-s' invokes incremental
 search, which is specially programmed to invoke nonincremental search
 if the argument you give it is empty.  (Such an empty argument would
-otherwise be useless.)  `C-r RET' also works this way.
+otherwise be useless.)  `C-r <RET>' also works this way.
 
-   However, nonincremental searches performed using `C-s RET' do not
+   However, nonincremental searches performed using `C-s <RET>' do not
 call `search-forward' right away.  The first thing done is to see if
 the next character is `C-w', which requests a word search.  *Note Word
 Search::.
@@ -1019,64 +1065,24 @@ formatter.  If you edit while looking at the printed, formatted version,
 you can't tell where the line breaks are in the source file.  With word
 search, you can search without having to know them.
 
-`C-s RET C-w WORDS RET'
+`C-s <RET> C-w WORDS <RET>'
      Search for WORDS, ignoring details of punctuation.
 
-`C-r RET C-w WORDS RET'
+`C-r <RET> C-w WORDS <RET>'
      Search backward for WORDS, ignoring details of punctuation.
 
    Word search is a special case of nonincremental search and is invoked
-with `C-s RET C-w'.  This is followed by the search string, which must
-always be terminated with RET.  Being nonincremental, this search does
-not start until the argument is terminated.  It works by constructing a
-regular expression and searching for that; see *Note Regexp Search::.
+with `C-s <RET> C-w'.  This is followed by the search string, which
+must always be terminated with <RET>.  Being nonincremental, this
+search does not start until the argument is terminated.  It works by
+constructing a regular expression and searching for that; see *Note
+Regexp Search::.
 
-   Use `C-r RET C-w' to do backward word search.
+   Use `C-r <RET> C-w' to do backward word search.
 
    Forward and backward word searches are implemented by the commands
 `word-search-forward' and `word-search-backward'.  These commands may
 be bound to keys in the usual manner.  The feature that you can get to
 them via the incremental search commands exists for historical reasons,
 and to avoid the need to find suitable key sequences for them.
-
-
-File: emacs,  Node: Regexp Search,  Next: Regexps,  Prev: Word Search,  Up: Search
-
-Regular Expression Search
-=========================
-
-   A "regular expression" ("regexp", for short) is a pattern that
-denotes a class of alternative strings to match, possibly infinitely
-many.  In GNU Emacs, you can search for the next match for a regexp
-either incrementally or not.
-
-   Incremental search for a regexp is done by typing `C-M-s'
-(`isearch-forward-regexp').  This command reads a search string
-incrementally just like `C-s', but it treats the search string as a
-regexp rather than looking for an exact match against the text in the
-buffer.  Each time you add text to the search string, you make the
-regexp longer, and the new regexp is searched for.  To search backward
-in the buffer, use `C-M-r' (`isearch-backward-regexp').
-
-   All of the control characters that do special things within an
-ordinary incremental search have the same function in incremental regexp
-search.  Typing `C-s' or `C-r' immediately after starting the search
-retrieves the last incremental search regexp used; that is to say,
-incremental regexp and non-regexp searches have independent defaults.
-They also have separate search rings that you can access with `M-p' and
-`M-n'.
-
-   If you type SPC in incremental regexp search, it matches any
-sequence of whitespace characters, including newlines.  If you want to
-match just a space, type `C-q SPC'.
-
-   Note that adding characters to the regexp in an incremental regexp
-search can make the cursor move back and start again.  For example, if
-you have searched for `foo' and you add `\|bar', the cursor backs up in
-case the first `bar' precedes the first `foo'.
-
-   Nonincremental search for a regexp is done by the functions
-`re-search-forward' and `re-search-backward'.  You can invoke these
-with `M-x', or bind them to keys, or invoke them by way of incremental
-regexp search with `C-M-s RET' and `C-M-r RET'.
 

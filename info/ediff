@@ -1,4 +1,4 @@
-This is Info file ../info/ediff, produced by Makeinfo-1.63 from the
+This is Info file ../info/ediff, produced by Makeinfo-1.64 from the
 input file ediff.texi.
 
    This file documents Ediff, a comprehensive visual interface to Unix
@@ -11,32 +11,35 @@ preserved on all copies.
 
 Indirect:
 ediff-1: 356
-ediff-2: 48394
+ediff-2: 48880
+ediff-3: 94868
 
 Tag Table:
 (Indirect)
 Node: Top356
-Node: Introduction933
-Node: Major Entry Points3235
-Node: Commands9224
-Node: Registry of Ediff Sessions16254
-Node: Session Groups17799
-Node: Remote and Compressed Files21355
-Node: Customization22584
-Node: Hooks24531
-Node: Quick Help28702
-Node: Window and Frame Configuration29664
-Node: Selective Browsing35840
-Node: Highlighting Difference Regions39896
-Node: Narrowing44168
-Node: Refinement of Difference Regions45455
-Node: Patch and Diff Programs48394
-Node: Merging and diff350570
-Node: Support for Version Control58262
-Node: Customizing the Mode Line59929
-Node: Miscellaneous60774
-Node: Notes on Heavy-duty Customization65608
-Node: Credits68175
-Node: Index71455
+Node: Introduction960
+Node: Major Entry Points3344
+Node: Session Commands11469
+Node: Quick Help Commands12985
+Node: Other Session Commands30263
+Node: Registry of Ediff Sessions33052
+Node: Session Groups34605
+Node: Remote and Compressed Files39823
+Node: Customization41054
+Node: Hooks43004
+Node: Quick Help Customization47876
+Node: Window and Frame Configuration48880
+Node: Selective Browsing55124
+Node: Highlighting Difference Regions59283
+Node: Narrowing64184
+Node: Refinement of Difference Regions65457
+Node: Patch and Diff Programs68378
+Node: Merging and diff372418
+Node: Support for Version Control81038
+Node: Customizing the Mode Line82705
+Node: Miscellaneous83550
+Node: Notes on Heavy-duty Customization88498
+Node: Credits91065
+Node: Index94868
 
 End Tag Table

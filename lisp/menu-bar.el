@@ -3,6 +3,7 @@
 ;; Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
 
 ;; Author: RMS
+;; Maintainer: FSF
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
@@ -28,11 +29,14 @@
 
 ;;; User options:
 
-(defvar buffers-menu-max-size 10
+(defcustom buffers-menu-max-size 10
   "*Maximum number of entries which may appear on the Buffers menu.
 If this is 10, then only the ten most-recently-selected buffers are shown.
 If this is nil, then all buffers are shown.
-A large number or nil slows down menu responsiveness.")
+A large number or nil slows down menu responsiveness."
+  :type '(choice integer
+		 (const :tag "All" nil))
+  :group 'mouse)
 
 ;; Don't clobber an existing menu-bar keymap, to preserve any menu-bar key
 ;; definitions made in loaddefs.el.
@@ -60,7 +64,15 @@ A large number or nil slows down menu responsiveness.")
 
 (defvar vc-menu-map (make-sparse-keymap "Version Control"))
 
+(define-key menu-bar-tools-menu [gdb] '("Debugger..." . gdb))
+(define-key menu-bar-tools-menu [compile] '("Compile..." . compile))
+(define-key menu-bar-tools-menu [grep] '("Search Files..." . grep))
+
+(define-key menu-bar-tools-menu [separator-1]
+  '("--"))
+
 (define-key menu-bar-tools-menu [calendar] '("Display Calendar" . calendar))
+(define-key menu-bar-tools-menu [compose-mail] '("Send Mail" . compose-mail))
 (define-key menu-bar-tools-menu [rmail] '("Read Mail" . rmail))
 (define-key menu-bar-tools-menu [gnus] '("Read Net News" . gnus))
 
@@ -73,6 +85,8 @@ A large number or nil slows down menu responsiveness.")
 (define-key menu-bar-tools-menu [separator-compare]
   '("--"))
 
+(define-key menu-bar-tools-menu [ediff-misc]
+  '("Ediff Miscellanea" . menu-bar-ediff-misc-menu))
 (define-key menu-bar-tools-menu [epatch]
   '("Apply Patch" . menu-bar-epatch-menu))
 (define-key menu-bar-tools-menu [ediff-merge]
@@ -116,7 +130,7 @@ A large number or nil slows down menu responsiveness.")
       (define-key menu-bar-files-menu [make-frame-on-display]
 	'("Open New Display..." . make-frame-on-display))
       (define-key menu-bar-files-menu [make-frame]
-	'("Make New Frame" . make-frame))))
+	'("Make New Frame" . make-frame-command))))
 
 (define-key menu-bar-files-menu [separator-buffers]
   '("--"))
@@ -169,21 +183,29 @@ A large number or nil slows down menu responsiveness.")
 (defun nonincremental-repeat-search-forward ()
   "Search forward for the previous search string."
   (interactive)
+  (if (null search-ring)
+      (error "No previous search"))
   (search-forward (car search-ring)))
 
 (defun nonincremental-repeat-search-backward ()
   "Search backward for the previous search string."
   (interactive)
+  (if (null search-ring)
+      (error "No previous search"))
   (search-backward (car search-ring)))
 
 (defun nonincremental-repeat-re-search-forward ()
   "Search forward for the previous regular expression."
   (interactive)
+  (if (null regexp-search-ring)
+      (error "No previous search"))
   (re-search-forward (car regexp-search-ring)))
 
 (defun nonincremental-repeat-re-search-backward ()
   "Search backward for the previous regular expression."
   (interactive)
+  (if (null regexp-search-ring)
+      (error "No previous search"))
   (re-search-backward (car regexp-search-ring)))
 
 (define-key menu-bar-search-menu [query-replace-regexp]
@@ -308,6 +330,90 @@ Do the same for the keys of the same name."
   (define-key global-map [copy] 'clipboard-kill-ring-save)
   (define-key global-map [paste] 'clipboard-yank))
 
+
+;;; Menu support
+
+(defvar menu-bar-custom-menu (make-sparse-keymap "Customize"))
+
+(define-key menu-bar-custom-menu [customize-apropos-groups]
+  '("Apropos Groups..." . customize-apropos-groups))
+(define-key menu-bar-custom-menu [customize-apropos-faces]
+  '("Apropos Faces..." . customize-apropos-faces))
+(define-key menu-bar-custom-menu [customize-apropos-options]
+  '("Apropos Options..." . customize-apropos-options))
+(define-key menu-bar-custom-menu [customize-apropos]
+  '("Apropos..." . customize-apropos))
+(define-key menu-bar-custom-menu [separator-2]
+  '("--"))
+(define-key menu-bar-custom-menu [customize-group]
+  '("Specific Group..." . customize-group))
+(define-key menu-bar-custom-menu [customize-face]
+  '("Specific Face..." . customize-face))
+(define-key menu-bar-custom-menu [customize-option]
+  '("Specific Option..." . customize-option))
+(define-key menu-bar-custom-menu [separator-3]
+  '("--"))
+(define-key menu-bar-custom-menu [customize-browse]
+  '("Browse Customization Groups" . customize-browse))
+(define-key menu-bar-custom-menu [customize]
+  '("Top-level Customization Group" . customize))
+
+;; Options menu
+(defvar menu-bar-options-menu (make-sparse-keymap "Global Options"))
+
+(defmacro menu-bar-make-toggle (name variable doc message &rest body)
+  `(progn
+     (defun ,name ()
+       ,(concat doc ".")
+       (interactive)
+       (if ,(if body `(progn . ,body)
+	      `(setq ,variable (not ,variable)))
+	   (message ,message "enabled")
+	 (message ,message "disabled")))
+     '(,doc . ,name)))
+
+(define-key menu-bar-options-menu [debug-on-quit]
+  (menu-bar-make-toggle toggle-debug-on-quit debug-on-quit
+			"Toggle Debug on Quit" "Debug on Quit %s"))
+(define-key menu-bar-options-menu [debug-on-error]
+  (menu-bar-make-toggle toggle-debug-on-error debug-on-error
+			"Toggle Debug on Error" "Debug on Error %s"))
+(define-key menu-bar-options-menu [options-separator]
+  '("--"))
+(define-key menu-bar-options-menu [save-place]
+  (menu-bar-make-toggle toggle-save-place-globally save-place
+			"Toggle Saving Place in Files between Sessions"
+			"Saving place in files %s"
+			(setq-default save-place (not (default-value save-place)))))
+(define-key menu-bar-options-menu [uniquify]
+  (menu-bar-make-toggle toggle-uniquify-buffer-names uniquify-buffer-name-style
+			"Toggle Directory Names in Buffer Names"
+			"Directory name in buffer names (uniquify) %s"
+			(require 'uniquify)
+			(setq uniquify-buffer-name-style
+			      (if (not uniquify-buffer-name-style)
+				  'forward))))
+(define-key menu-bar-options-menu [transient-mark-mode]
+  (menu-bar-make-toggle toggle-transient-mark-mode transient-mark-mode
+			"Toggle Transient Mark Mode (highlights region)"
+			"Transient Mark mode %s"))
+(define-key menu-bar-options-menu [toggle-auto-compression]
+  '("Toggle Automatic File De/compression" . auto-compression-mode))
+(define-key menu-bar-options-menu [auto-fill-mode]
+  '("Toggle Auto Fill (word wrap) in Text modes"
+    . toggle-text-mode-auto-fill))
+(define-key menu-bar-options-menu [toggle-global-lazy-font-lock-mode]
+  (menu-bar-make-toggle toggle-global-lazy-font-lock-mode nil
+			"Toggle Global Font Lock (highlights syntax)"
+			"Global Font Lock mode %s"
+			;; Make sure a support mode is used;
+			;; otherwise Font Lock will be too slow.
+			(require 'font-lock)
+			(if (not global-font-lock-mode)
+			    (or font-lock-support-mode
+				(setq font-lock-support-mode 'lazy-lock-mode)))
+			(global-font-lock-mode)))
+
 (define-key menu-bar-help-menu [emacs-version]
   '("Show Version" . emacs-version))
 (define-key menu-bar-help-menu [report-emacs-bug]
@@ -330,9 +436,13 @@ Do the same for the keys of the same name."
   '("Command Apropos..." . command-apropos))
 (define-key menu-bar-help-menu [describe-mode]
   '("Describe Mode" . describe-mode))
-(define-key menu-bar-help-menu [info] '("Browse Manuals" . info))
+(define-key menu-bar-help-menu [info] '("Info (Browse Manuals)" . info))
 (define-key menu-bar-help-menu [emacs-faq] '("Emacs FAQ" . view-emacs-FAQ))
 (define-key menu-bar-help-menu [emacs-news] '("Emacs News" . view-emacs-news))
+(define-key menu-bar-help-menu [options-menu]
+  (cons "Options" menu-bar-options-menu))
+(define-key menu-bar-help-menu [customize-menu]
+  (cons "Customize" menu-bar-custom-menu))
 
 (defun kill-this-buffer ()	; for the menubar
   "Kills the current buffer."
@@ -346,26 +456,26 @@ Do the same for the keys of the same name."
       (or (string-match "^ " (buffer-name (car buffers)))
 	  (setq count (1+ count)))
       (setq buffers (cdr buffers)))
-    (and (not (window-minibuffer-p (selected-window)))
+    (and (not (window-minibuffer-p (frame-selected-window menu-updating-frame)))
 	 (> count 1))))
 
 (put 'kill-this-buffer 'menu-enable '(kill-this-buffer-enabled-p))
 
 (put 'save-buffer 'menu-enable
      '(and (buffer-modified-p)
-	   (not (window-minibuffer-p (selected-window)))))
+	   (not (window-minibuffer-p (frame-selected-window menu-updating-frame)))))
 
 (put 'write-file 'menu-enable
-     '(not (window-minibuffer-p (selected-window))))
+     '(not (window-minibuffer-p (frame-selected-window menu-updating-frame))))
 
 (put 'find-file 'menu-enable
-     '(not (window-minibuffer-p (selected-window))))
+     '(not (window-minibuffer-p (frame-selected-window menu-updating-frame))))
 
 (put 'dired 'menu-enable
-     '(not (window-minibuffer-p (selected-window))))
+     '(not (window-minibuffer-p (frame-selected-window menu-updating-frame))))
 
 (put 'insert-file 'menu-enable
-     '(not (window-minibuffer-p (selected-window))))
+     '(not (window-minibuffer-p (frame-selected-window menu-updating-frame))))
 
 (put 'revert-buffer 'menu-enable
      '(or revert-buffer-function revert-buffer-insert-file-contents-function
@@ -394,8 +504,10 @@ Do the same for the keys of the same name."
 		    pending-undo-list)
 	     buffer-undo-list)))
 
-(defvar yank-menu-length 20
-  "*Maximum length to display in the yank-menu.")
+(defcustom yank-menu-length 20
+  "*Maximum length to display in the yank-menu."
+  :type 'integer
+  :group 'mouse)
 
 (defun menu-bar-update-yank-menu (string old)
   (let ((front (car (cdr yank-menu)))
@@ -477,6 +589,7 @@ Do the same for the keys of the same name."
        (frame-or-buffer-changed-p)
        (let ((buffers (buffer-list))
 	     (frames (frame-list))
+	     (maxlen 0)
 	     buffers-menu frames-menu)
 	 ;; If requested, list only the N most recently selected buffers.
 	 (if (and (integerp buffers-menu-max-size)
@@ -491,7 +604,6 @@ Do the same for the keys of the same name."
 			     (mapcar 'list buffers))
 			    tail
 			    (menu-bar-update-buffers-maxbuf 0)
-			    (maxlen 0)
 			    alist
 			    head)
 		       ;; Put into each element of buffer-list
@@ -564,26 +676,26 @@ Do the same for the keys of the same name."
 
 	 ;; Make a Frames menu if we have more than one frame.
 	 (if (cdr frames)
-	     (setq frames-menu
-		   (cons "Select Frame"
-			 (mapcar '(lambda (frame)
-				    (nconc (list frame
-						 (cdr (assq 'name
-							    (frame-parameters frame)))
-						 (cons nil nil))
-					   'menu-bar-select-frame))
-				 frames))))
+	     (let ((name (concat (make-string (max (- (/ maxlen 2) 3) 0)
+					      ?\ )
+				 "Frames"))
+		   (frames-menu
+		    (cons 'keymap
+			  (cons "Select Frame"
+				(mapcar '(lambda (frame)
+					   (nconc (list frame
+							(cdr (assq 'name
+								   (frame-parameters frame)))
+							(cons nil nil))
+						  'menu-bar-select-frame))
+					frames)))))
+	       ;; Put it underneath the Buffers menu.
+	       (setq buffers-menu (cons (cons 'frames (cons name frames-menu))
+					buffers-menu))))
 	 (if buffers-menu
 	     (setq buffers-menu (cons 'keymap buffers-menu)))
-	 (if frames-menu
-	     (setq frames-menu (cons 'keymap frames-menu)))
 	 (define-key (current-global-map) [menu-bar buffer]
-	   (cons "Buffers"
-		 (if (and buffers-menu frames-menu)
-		     (list 'keymap "Buffers and Frames"
-			   (cons 'buffers (cons "Buffers" buffers-menu))
-			   (cons 'frames (cons "Frames" frames-menu)))
-		   (or buffers-menu frames-menu 'undefined)))))))
+	   (cons "Buffers" buffers-menu)))))
 
 (add-hook 'menu-bar-update-hook 'menu-bar-update-buffers)
 

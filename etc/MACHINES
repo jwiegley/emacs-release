@@ -70,7 +70,15 @@ Alliant FX/2800 (i860-alliant-bsd)
 
 Alpha (DEC) running OSF/1 (alpha-dec-osf1, alpha-dec-linux-gnu)
 
-  Patches merged in 19.29.  Note that the X11 libraries on GNU/Linux systems
+  For OSF/1 (aka Digital Unix) version 4.0, update 386,
+  it is reported that you need to run configure this way:
+
+      configure --x-includes=/usr/include --x-libraries=/usr/shlib
+
+  For 4.0 revision 564, and 4.0A and 4.0B, Emacs 20 seems to work
+  with no special configuration options.
+
+  Note that the X11 libraries on GNU/Linux systems
   for the Alpha are said to have bugs that prevent Emacs from working with X
   (as of November 1995).
 
@@ -230,6 +238,16 @@ Data General Aviion (m88k-dg-dgux)
 
   System versions other than DGUX 5.4R3.00 have not been tested.
 
+  DGUX 5.4R3.10 works with 19.29 and 19.30.
+  
+  DGUX R4.11 for m88k didn't work with 19.30 or 19.31 under some
+  circumstances because some of the stdio internals have changed.  The
+  s/dgux4.h file shipped with 19.32 works around the problems and allows
+  emacs to work interactively.  Emacs doesn't work in batch mode under
+  this version of the OS yet, I'm still working on this problem.
+  Contact me (Roderick Schertler <roderick@ibcinc.com>) if you're able
+  to work out what's going wrong.
+
 DECstation (mips-dec-ultrix or mips-dec-osf)
 
   This machine is the older Mips-based DECstation.
@@ -336,6 +354,10 @@ Harris Night Hawk (m68k-harris-cxux or m88k-harris-cxux)
   If you have GCC ported and want to build with it, you probably need to
   change things (like compiler switches) defined in the s/cxux.h file.
 
+  If you have X11R6 installed in /usr/lib, configure will fail to find
+  it and may find X11R5 instead.  To work around this problem, use
+  --x-libraries=/usr/lib when you run configure.
+
   With CX/UX 7.0 and later releases, you need to build after setting the
   SDE_TARGET environment variable to COFF (a port using ELF and shared
   libraries has not yet been done).
@@ -359,8 +381,10 @@ Hewlett-Packard 9000 series 200 or 300 (m68k-hp-bsd or m68k-hp-hpux
 
   Version 19 works under BSD.  The 19.26 pretest was reported
   to work on HPUX 9.  19.31 works on HPUX 10.01, but there are
-  some problems on 10.10 which have not been resolved.
-
+  some problems on 10.10 which have not been resolved.  Emacs 19.34
+  works on HPUX 10.20 provided you compile with GCC; with the HP C
+  compiler, subprocess commands do not work.
+  
   On HPUX 9, Emacs sometimes crashes with SIGBUS or SIGSEGV after you
   delete a frame.  We think this is due to a bug in the X libraries
   provided by HP.  With the alternative X libraries in
@@ -401,14 +425,21 @@ HP 9000 series 500: not supported.
 HP 9000 series 700 or 800 (Spectrum) (hppa1.0-hp-hpux or hppa1.1-hp-hpux
 				      or ...hpux9shr, or ...-nextstep)
 
-  19.26 is believed to work on HPUX 9 provided you compile with GCC.
-  As of version 19.16, Emacs was reported to build (using GCC) and run
-  on HP 9000/700 series machines running HP/UX versions 8.07 and 9.01.
+  Use hppa1.1 for the 700 series and hppa1.0 for the 800
+  series machines.  (Emacs may not actually care which one you use.)
 
   Support for NextSTEP was added in 19.31.
 
-  Use hppa1.1 for the 700 series and hppa1.0 for the 800
-  series machines.  (Emacs may not actually care which one you use.)
+  Emacs 20 may work on HPUX 10.  You need patch PHSS_6202 to install
+  the Xaw and Xmu libraries.  On HPUX 10.20 you may need to compile with GCC;
+  when Emacs was compiled with HP's C compiler, HP92453-01 A.10.32.03,
+  the subprocess features failed to work.
+
+  19.26 is believed to work on HPUX 9 provided you compile with GCC.
+  As of version 19.16, Emacs was reported to build (using GCC) and run
+  on HP 9000/700 series machines running HP/UX versions 8.07 and 9.01.
+  The HP compiler is known to fail on some versions if you use +O3,
+  but it may work with lower optimization levels.
 
   Use hppa1.1-hp-hpux9shr to use shared libraries on HPUX version 9.
   You may need to create the X libraries libXaw.a and libXmu.a from
@@ -471,6 +502,19 @@ High Level Hardware Orion 1/05 (clipper-highlevel-bsd)
 
   C compiler has a bug; it loops compiling eval.c.
   Compile it by hand without optimization.
+
+HITACHI SR2001/SR2201 series (hppa1.1-hitachi-hiuxmpp)
+
+  These machines are based on PA architecture running HI-UX/MPP
+  (based on OSF1. `MPP' stands for `Massively Parallel Processor').
+  
+  Emacs 19.34 is believed to work; its pretest was tested
+  both on SR2001 (output of `uname -rv' is `00-01-BB 0') and 
+  SR2201 (`02-00 0').
+  
+  The machine description file is `src/m/sr2k.h' is based on 
+  `src/m/hp800.h'. The system description file is `src/s/hiuxmpp.h'
+  based on `src/s/osf1.h'. Note that this system doesn't use COFF.   
 
 IBM PS/2 (i386-ibm-aix1.1 or i386-ibm-aix1.2)
 
@@ -872,6 +916,14 @@ Siemens Nixdorf RM600 and RM400 (mips-siemens-sysv4)
     LIBW= /usr/lib/libXaw.a
     LIBXT= $(LIBW) -lXmu /usr/lib/libXt.a $(LIBXTR6) -lXext
 
+  In addition, `--with-x-toolkit=motif' works only
+  if the Motif library and the Toolkit library are linked statically.
+  To do this, edit `src/Makefile' after the `configure' run
+  and modify the lines with `-lXm' and `-lXt' as follows:
+
+    LIBW= /usr/lib/libXm.a /usr/ccs/lib/libgen.a
+    LIBXT= $(LIBW) -lXmu /usr/lib/libXt.a $(LIBXTR6) -lXext
+
 SONY News (m68k-sony-bsd4.2 or m68k-sony-bsd4.3)
 
   18.52 worked.  Use m68k-sony-bsd4.3 for system release 3.
@@ -905,8 +957,18 @@ Stride (m68k-stride-sysv)
 Sun 3, Sun 4 (sparc), Sun 386 (m68k-sun-sunos, sparc-sun-sunos, i386-sun-sunos,
 			       sparc-sun-sunos4.1.3noshr, sparc-sun-solaris2.*,
 			       i386-sun-solaris2.*)
-  
-  19.32 works on Solaris 2.4 and 2.5.  It works ok Sunos 4.1.x
+
+  19.32 works on Solaris 2.4 and 2.5.  On Solaris 2.5
+  you may need one of these patches to prevent Emacs from crashing
+  when it starts up:
+        103093-03: [README] SunOS 5.5: kernel patch (2140557 bytes) 
+        102832-01: [README] OpenWindows 3.5: Xview Jumbo Patch (4181613 bytes) 
+	103242-04: [README] SunOS 5.5: linker patch (595363 bytes)
+
+  There are reports that using SunSoft cc with -xO4 -xdepend produces
+  bad code for some part of Emacs.
+
+  Emacs works ok Sunos 4.1.x
   provided you completely replace your C shared library
   using one of the SunOS 4.1.x jumbo replacement patches from Sun.
   Here are the patch numbers for Sunos 4.1.3:

@@ -33,14 +33,14 @@ what you give them.   Help stamp out software-hoarding!  */
  * Modified heavily since then.
  *
  * Synopsis:
- *	unexec (new_name, a_name, data_start, bss_start, entry_address)
- *	char *new_name, *a_name;
+ *	unexec (new_name, old_name, data_start, bss_start, entry_address)
+ *	char *new_name, *old_name;
  *	unsigned data_start, bss_start, entry_address;
  *
  * Takes a snapshot of the program and makes an a.out format file in the
  * file named by the string argument new_name.
- * If a_name is non-NULL, the symbol table will be taken from the given file.
- * On some machines, an existing a_name file is required.
+ * If old_name is non-NULL, the symbol table will be taken from the given file.
+ * On some machines, an existing old_name file is required.
  *
  * The boundaries within the a.out file may be adjusted with the data_start
  * and bss_start arguments.  Either or both may be given as 0 for defaults.
@@ -420,8 +420,74 @@ Filesz      Memsz       Flags       Align
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#if !defined (__NetBSD__) && !defined (__OpenBSD__)
 #include <elf.h>
+#endif
 #include <sys/mman.h>
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+#include <sys/elf_mips.h>
+#include <sym.h>
+#endif /* __sony_news && _SYSTYPE_SYSV */
+
+#if defined (__alpha__) && !defined (__NetBSD__) && !defined (__OpenBSD__)
+#include <sym.h>	/* get COFF debugging symbol table declaration */
+#endif
+
+#ifdef __NetBSD__
+/*
+ * NetBSD does not have normal-looking user-land ELF support.
+ */
+# ifdef __alpha__
+#  define ELFSIZE	64
+# else
+#  define ELFSIZE	32
+# endif
+# include <sys/exec_elf.h>
+
+# define PT_LOAD	Elf_pt_load
+# define SHT_SYMTAB	Elf_sht_symtab
+# define SHT_DYNSYM	Elf_sht_dynsym
+# define SHT_NULL	Elf_sht_null
+# define SHT_NOBITS	Elf_sht_nobits
+# define SHT_REL	Elf_sht_rel
+# define SHT_RELA	Elf_sht_rela
+
+# define SHN_UNDEF	Elf_eshn_undefined
+# define SHN_ABS	Elf_eshn_absolute
+# define SHN_COMMON	Elf_eshn_common
+
+/*
+ * The magic of picking the right size types is handled by the ELFSIZE
+ * definition above.
+ */
+# ifdef __STDC__
+#  define ElfW(type)    Elf_##type
+# else
+#  define ElfW(type)    Elf_/**/type
+# endif
+
+# ifdef __alpha__
+#  include <sys/exec_ecoff.h>
+#  define HDRR		struct ecoff_symhdr
+#  define pHDRR		HDRR *
+# endif
+#endif /* __NetBSD__ */
+
+#ifdef __OpenBSD__
+# include <sys/exec_elf.h>
+#endif
+
+#if __GNU_LIBRARY__ - 0 >= 6
+# include <link.h>	/* get ElfW etc */
+#endif
+
+#ifndef ElfW
+# ifdef __STDC__
+#  define ElfW(type)	Elf32_##type
+# else
+#  define ElfW(type)	Elf32_/**/type
+# endif
+#endif
 
 #ifndef emacs
 #define fatal(a, b, c) fprintf (stderr, a, b, c), exit (1)
@@ -462,13 +528,13 @@ extern void fatal (char *, ...);
    */
 
 #define OLD_SECTION_H(n) \
-     (*(Elf32_Shdr *) ((byte *) old_section_h + old_file_h->e_shentsize * (n)))
+     (*(ElfW(Shdr) *) ((byte *) old_section_h + old_file_h->e_shentsize * (n)))
 #define NEW_SECTION_H(n) \
-     (*(Elf32_Shdr *) ((byte *) new_section_h + new_file_h->e_shentsize * (n)))
+     (*(ElfW(Shdr) *) ((byte *) new_section_h + new_file_h->e_shentsize * (n)))
 #define OLD_PROGRAM_H(n) \
-     (*(Elf32_Phdr *) ((byte *) old_program_h + old_file_h->e_phentsize * (n)))
+     (*(ElfW(Phdr) *) ((byte *) old_program_h + old_file_h->e_phentsize * (n)))
 #define NEW_PROGRAM_H(n) \
-     (*(Elf32_Phdr *) ((byte *) new_program_h + new_file_h->e_phentsize * (n)))
+     (*(ElfW(Phdr) *) ((byte *) new_program_h + new_file_h->e_phentsize * (n)))
 
 #define PATCH_INDEX(n) \
   do { \
@@ -510,19 +576,22 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   /* Pointers to the file, program and section headers for the old and new
    * files.
    */
-  Elf32_Ehdr *old_file_h, *new_file_h;
-  Elf32_Phdr *old_program_h, *new_program_h;
-  Elf32_Shdr *old_section_h, *new_section_h;
+  ElfW(Ehdr) *old_file_h, *new_file_h;
+  ElfW(Phdr) *old_program_h, *new_program_h;
+  ElfW(Shdr) *old_section_h, *new_section_h;
 
   /* Point to the section name table in the old file */
   char *old_section_names;
 
-  Elf32_Addr old_bss_addr, new_bss_addr;
-  Elf32_Word old_bss_size, new_data2_size;
-  Elf32_Off  new_data2_offset;
-  Elf32_Addr new_data2_addr;
+  ElfW(Addr) old_bss_addr, new_bss_addr;
+  ElfW(Word) old_bss_size, new_data2_size;
+  ElfW(Off)  new_data2_offset;
+  ElfW(Addr) new_data2_addr;
 
   int n, nn, old_bss_index, old_data_index, new_data2_index;
+#if defined ( __sony_news) && defined (_SYSTYPE_SYSV)
+  int old_sbss_index, old_mdebug_index;
+#endif /* __sony_news && _SYSTYPE_SYSV */
   struct stat stat_buf;
 
   /* Open the old file & map it into the address space. */
@@ -535,7 +604,8 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   if (fstat (old_file, &stat_buf) == -1)
     fatal ("Can't fstat (%s): errno %d\n", old_name, errno);
 
-  old_base = mmap (0, stat_buf.st_size, PROT_READ, MAP_SHARED, old_file, 0);
+  old_base = mmap ((caddr_t) 0, stat_buf.st_size, PROT_READ, MAP_SHARED,
+		   old_file, 0);
 
   if (old_base == (caddr_t) -1)
     fatal ("Can't mmap (%s): errno %d\n", old_name, errno);
@@ -547,9 +617,9 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 
   /* Get pointers to headers & section names */
 
-  old_file_h = (Elf32_Ehdr *) old_base;
-  old_program_h = (Elf32_Phdr *) ((byte *) old_base + old_file_h->e_phoff);
-  old_section_h = (Elf32_Shdr *) ((byte *) old_base + old_file_h->e_shoff);
+  old_file_h = (ElfW(Ehdr) *) old_base;
+  old_program_h = (ElfW(Phdr) *) ((byte *) old_base + old_file_h->e_phoff);
+  old_section_h = (ElfW(Shdr) *) ((byte *) old_base + old_file_h->e_shoff);
   old_section_names = (char *) old_base
     + OLD_SECTION_H (old_file_h->e_shstrndx).sh_offset;
 
@@ -571,16 +641,61 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   if (old_bss_index == old_file_h->e_shnum)
     fatal ("Can't find .bss in %s.\n", old_name, 0);
 
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+  for (old_sbss_index = 1; old_sbss_index < (int) old_file_h->e_shnum;
+       old_sbss_index++)
+    {
+#ifdef DEBUG
+      fprintf (stderr, "Looking for .sbss - found %s\n",
+	       old_section_names + OLD_SECTION_H (old_sbss_index).sh_name);
+#endif
+      if (!strcmp (old_section_names + OLD_SECTION_H (old_sbss_index).sh_name,
+		   ".sbss"))
+	break;
+    }
+  if (old_sbss_index == old_file_h->e_shnum)
+    {
+      old_bss_addr = OLD_SECTION_H(old_bss_index).sh_addr;
+      old_bss_size = OLD_SECTION_H(old_bss_index).sh_size;
+      new_data2_offset = OLD_SECTION_H(old_bss_index).sh_offset;
+      new_data2_index = old_bss_index;
+    }
+  else
+    {
+      old_bss_addr = OLD_SECTION_H(old_sbss_index).sh_addr;
+      old_bss_size = OLD_SECTION_H(old_bss_index).sh_size
+	+ OLD_SECTION_H(old_sbss_index).sh_size;
+      new_data2_offset = OLD_SECTION_H(old_sbss_index).sh_offset;
+      new_data2_index = old_sbss_index;
+    }
+
+  for (old_mdebug_index = 1; old_mdebug_index < (int) old_file_h->e_shnum;
+       old_mdebug_index++)
+    {
+#ifdef DEBUG
+      fprintf (stderr, "Looking for .mdebug - found %s\n",
+	       old_section_names + OLD_SECTION_H (old_mdebug_index).sh_name);
+#endif
+      if (!strcmp (old_section_names + OLD_SECTION_H (old_mdebug_index).sh_name,
+		   ".mdebug"))
+	break;
+    }
+    if (old_mdebug_index == old_file_h->e_shnum)
+	old_mdebug_index = 0;
+#else /* not (__sony_news && _SYSTYPE_SYSV) */	    
   old_bss_addr = OLD_SECTION_H (old_bss_index).sh_addr;
   old_bss_size = OLD_SECTION_H (old_bss_index).sh_size;
-#if defined(emacs) || !defined(DEBUG)
-  new_bss_addr = (Elf32_Addr) sbrk (0);
+#endif /* not (__sony_news && _SYSTYPE_SYSV) */	    
+#if defined (emacs) || !defined (DEBUG)
+  new_bss_addr = (ElfW(Addr)) sbrk (0);
 #else
   new_bss_addr = old_bss_addr + old_bss_size + 0x1234;
 #endif
   new_data2_addr = old_bss_addr;
   new_data2_size = new_bss_addr - old_bss_addr;
+#if !defined (__sony_news) || !defined (_SYSTYPE_SYSV)
   new_data2_offset = OLD_SECTION_H (old_bss_index).sh_offset;
+#endif /*  not (__sony_news && _SYSTYPE_SYSV) */
 
 #ifdef DEBUG
   fprintf (stderr, "old_bss_index %d\n", old_bss_index);
@@ -610,19 +725,19 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
     fatal ("Can't ftruncate (%s): errno %d\n", new_name, errno);
 
 #ifdef UNEXEC_USE_MAP_PRIVATE
-  new_base = mmap (0, new_file_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
-		   new_file, 0);
+  new_base = mmap ((caddr_t) 0, new_file_size, PROT_READ | PROT_WRITE,
+		   MAP_PRIVATE, new_file, 0);
 #else
-  new_base = mmap (0, new_file_size, PROT_READ | PROT_WRITE, MAP_SHARED,
-		   new_file, 0);
+  new_base = mmap ((caddr_t) 0, new_file_size, PROT_READ | PROT_WRITE,
+		   MAP_SHARED, new_file, 0);
 #endif
 
   if (new_base == (caddr_t) -1)
     fatal ("Can't mmap (%s): errno %d\n", new_name, errno);
 
-  new_file_h = (Elf32_Ehdr *) new_base;
-  new_program_h = (Elf32_Phdr *) ((byte *) new_base + old_file_h->e_phoff);
-  new_section_h = (Elf32_Shdr *)
+  new_file_h = (ElfW(Ehdr) *) new_base;
+  new_program_h = (ElfW(Phdr) *) ((byte *) new_base + old_file_h->e_phoff);
+  new_section_h = (ElfW(Shdr) *)
     ((byte *) new_base + old_file_h->e_shoff + new_data2_size);
 
   /* Make our new file, program and section headers as copies of the
@@ -665,8 +780,14 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
       if ((OLD_SECTION_H (old_bss_index)).sh_addralign > alignment)
 	alignment = OLD_SECTION_H (old_bss_index).sh_addralign;
 
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+      if (NEW_PROGRAM_H (n).p_vaddr + NEW_PROGRAM_H (n).p_filesz
+	  > round_up (old_bss_addr, alignment))
+	fatal ("Program segment above .bss in %s\n", old_name, 0);
+#else /* not (__sony_news && _SYSTYPE_SYSV) */
       if (NEW_PROGRAM_H (n).p_vaddr + NEW_PROGRAM_H (n).p_filesz > old_bss_addr)
 	fatal ("Program segment above .bss in %s\n", old_name, 0);
+#endif /* not (__sony_news && _SYSTYPE_SYSV) */
 
       if (NEW_PROGRAM_H (n).p_type == PT_LOAD
 	  && (round_up ((NEW_PROGRAM_H (n)).p_vaddr
@@ -712,8 +833,17 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   for (n = 1, nn = 1; n < (int) old_file_h->e_shnum; n++, nn++)
     {
       caddr_t src;
-      /* If it is bss section, insert the new data2 section before it. */
-      if (n == old_bss_index)
+      int temp_index;
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+      /* If it is (s)bss section, insert the new data2 section before it.  */
+      /* new_data2_index is the index of either old_sbss or old_bss, that was
+	 chosen as a section for new_data2.   */
+      temp_index = new_data2_index;
+#else /* not (__sony_news && _SYSTYPE_SYSV) */
+      /* If it is bss section, insert the new data2 section before it.  */
+      temp_index = old_bss_index;
+#endif /* not (__sony_news && _SYSTYPE_SYSV) */
+      if (n == temp_index)
 	{
 	  /* Steal the data section header for this data2 section. */
 	  memcpy (&NEW_SECTION_H (nn), &OLD_SECTION_H (old_data_index),
@@ -736,10 +866,14 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 
       memcpy (&NEW_SECTION_H (nn), &OLD_SECTION_H (n),
 	      old_file_h->e_shentsize);
-
-      /* The new bss section's size is zero, and its file offset and virtual
-	 address should be off by NEW_DATA2_SIZE. */
-      if (n == old_bss_index)
+      
+      if (n == old_bss_index
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+	  /* The new bss and sbss section's size is zero, and its file offset
+	     and virtual address should be off by NEW_DATA2_SIZE.  */
+	  || n == old_sbss_index
+#endif /* __sony_news and _SYSTYPE_SYSV */
+	  )
 	{
 	  /* NN should be `old_bss_index + 1' at this point. */
 	  NEW_SECTION_H (nn).sh_offset += new_data2_size;
@@ -799,6 +933,18 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	 ".data" in the strings table) get copied from the current process
 	 instead of the old file.  */
       if (!strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".data")
+#ifdef _nec_ews_svr4				/* hir, 1994.6.13 */
+	  || !strcmp ((old_section_names + NEW_SECTION_H(n).sh_name),
+		      ".sdata")
+#endif
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+	  || !strcmp ((old_section_names + NEW_SECTION_H (n).sh_name),
+		      ".sdata")
+	  || !strcmp ((old_section_names + NEW_SECTION_H (n).sh_name),
+		      ".lit4")
+	  || !strcmp ((old_section_names + NEW_SECTION_H (n).sh_name),
+		      ".lit8")
+#endif /* __sony_news && _SYSTYPE_SYSV */
 	  || !strcmp ((old_section_names + NEW_SECTION_H (n).sh_name),
 		      ".data1"))
 	src = (caddr_t) OLD_SECTION_H (n).sh_addr;
@@ -808,13 +954,57 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
       memcpy (NEW_SECTION_H (nn).sh_offset + new_base, src,
 	      NEW_SECTION_H (nn).sh_size);
 
+#ifdef __alpha__
+      /* Update Alpha COFF symbol table: */
+      if (strcmp (old_section_names + OLD_SECTION_H (n).sh_name, ".mdebug")
+	  == 0)
+	{
+	  pHDRR symhdr = (pHDRR) (NEW_SECTION_H (nn).sh_offset + new_base);
+
+	  symhdr->cbLineOffset += new_data2_size;
+	  symhdr->cbDnOffset += new_data2_size;
+	  symhdr->cbPdOffset += new_data2_size;
+	  symhdr->cbSymOffset += new_data2_size;
+	  symhdr->cbOptOffset += new_data2_size;
+	  symhdr->cbAuxOffset += new_data2_size;
+	  symhdr->cbSsOffset += new_data2_size;
+	  symhdr->cbSsExtOffset += new_data2_size;
+	  symhdr->cbFdOffset += new_data2_size;
+	  symhdr->cbRfdOffset += new_data2_size;
+	  symhdr->cbExtOffset += new_data2_size;
+	}
+#endif /* __alpha__ */
+
+#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+      if (NEW_SECTION_H (nn).sh_type == SHT_MIPS_DEBUG && old_mdebug_index) 
+        {
+	  int diff = NEW_SECTION_H(nn).sh_offset 
+	 	- OLD_SECTION_H(old_mdebug_index).sh_offset;
+	  HDRR *phdr = (HDRR *)(NEW_SECTION_H (nn).sh_offset + new_base);
+
+	  if (diff)
+	    {
+	      phdr->cbLineOffset += diff;
+	      phdr->cbDnOffset   += diff;
+	      phdr->cbPdOffset   += diff;
+	      phdr->cbSymOffset  += diff;
+	      phdr->cbOptOffset  += diff;
+	      phdr->cbAuxOffset  += diff;
+	      phdr->cbSsOffset   += diff;
+	      phdr->cbSsExtOffset += diff;
+	      phdr->cbFdOffset   += diff;
+	      phdr->cbRfdOffset  += diff;
+	      phdr->cbExtOffset  += diff;
+	    }
+	}
+#endif /* __sony_news && _SYSTYPE_SYSV */
       /* If it is the symbol table, its st_shndx field needs to be patched.  */
       if (NEW_SECTION_H (nn).sh_type == SHT_SYMTAB
 	  || NEW_SECTION_H (nn).sh_type == SHT_DYNSYM)
 	{
-	  Elf32_Shdr *spt = &NEW_SECTION_H (nn);
+	  ElfW(Shdr) *spt = &NEW_SECTION_H (nn);
 	  unsigned int num = spt->sh_size / spt->sh_entsize;
-	  Elf32_Sym * sym = (Elf32_Sym *) (NEW_SECTION_H (nn).sh_offset +
+	  ElfW(Sym) * sym = (ElfW(Sym) *) (NEW_SECTION_H (nn).sh_offset +
 					   new_base);
 	  for (; num--; sym++)
 	    {
@@ -832,7 +1022,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   for (n = new_file_h->e_shnum - 1; n; n--)
     {
       byte *symnames;
-      Elf32_Sym *symp, *symendp;
+      ElfW(Sym) *symp, *symendp;
 
       if (NEW_SECTION_H (n).sh_type != SHT_DYNSYM
 	  && NEW_SECTION_H (n).sh_type != SHT_SYMTAB)
@@ -840,8 +1030,8 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 
       symnames = ((byte *) new_base
 		  + NEW_SECTION_H (NEW_SECTION_H (n).sh_link).sh_offset);
-      symp = (Elf32_Sym *) (NEW_SECTION_H (n).sh_offset + new_base);
-      symendp = (Elf32_Sym *) ((byte *)symp + NEW_SECTION_H (n).sh_size);
+      symp = (ElfW(Sym) *) (NEW_SECTION_H (n).sh_offset + new_base);
+      symendp = (ElfW(Sym) *) ((byte *)symp + NEW_SECTION_H (n).sh_size);
 
       for (; symp < symendp; symp ++)
 	if (strcmp ((char *) (symnames + symp->st_name), "_end") == 0
@@ -853,7 +1043,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
      that it can undo relocations performed by the runtime linker.  */
   for (n = new_file_h->e_shnum - 1; n; n--)
     {
-      Elf32_Shdr section = NEW_SECTION_H (n);
+      ElfW(Shdr) section = NEW_SECTION_H (n);
       switch (section.sh_type) {
       default:
 	break;
@@ -867,14 +1057,21 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	    || !strcmp ((old_section_names + NEW_SECTION_H (nn).sh_name),
 			".data1"))
 	  {
-	    Elf32_Addr offset = NEW_SECTION_H (nn).sh_addr -
+	    ElfW(Addr) offset = NEW_SECTION_H (nn).sh_addr -
 	      NEW_SECTION_H (nn).sh_offset;
 	    caddr_t reloc = old_base + section.sh_offset, end;
 	    for (end = reloc + section.sh_size; reloc < end;
 		 reloc += section.sh_entsize)
 	      {
-		Elf32_Addr addr = ((Elf32_Rel *) reloc)->r_offset - offset;
-		memcpy (new_base + addr, old_base + addr, 4);
+		ElfW(Addr) addr = ((ElfW(Rel) *) reloc)->r_offset - offset;
+#ifdef __alpha__
+		/* The Alpha ELF binutils currently have a bug that
+		   sometimes results in relocs that contain all
+		   zeroes.  Work around this for now...  */
+		if (((ElfW(Rel) *) reloc)->r_offset == 0)
+		    continue;
+#endif
+		memcpy (new_base + addr, old_base + addr, sizeof(ElfW(Addr)));
 	      }
 	  }
 	break;

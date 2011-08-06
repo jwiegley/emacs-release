@@ -405,7 +405,7 @@ Given a count @var{n}, @var{n}-th occurrence will be searched.
 @node Marking, Region Commands, Counts, Differences from Vi
 @subsection Marking
 
-Typing an @kbd{m} followed by a lower case character @var{ch} marks the
+Typing an @kbd{m} followed by a lower-case character @var{ch} marks the
 point to the register named @var{ch} as in Vi.  In addition to these, we
 have following key bindings for marking.
 
@@ -505,11 +505,11 @@ Currently, @var{ch} can be one of @kbd{c}, @kbd{C}, @kbd{g}, @kbd{q} and
 @kbd{s}.@refill
 @item # c
 @kindex 0432 @kbd{# c} (@code{downcase-region})
-Change upper case characters in the region to lower case
+Change upper-case characters in the region to lower case
 (@code{downcase-region}).
 @item # C
 @kindex 0431 @kbd{# C} (@code{upcase-region})
-Change lower case characters in the region to upper case. For instance,
+Change lower-case characters in the region to upper case. For instance,
 @kbd{# C 3 w} will capitalize 3 words from the current point
 (@code{upcase-region}).
 @item # g
@@ -567,7 +567,7 @@ in the current window, while @kbd{S} selects buffer in another window.
 These keys will exit from vi mode and return to emacs mode temporarily.
 If you type @kbd{C} (@kbd{X}), Emacs will be in emacs mode and will believe
 that you have typed @kbd{C-c} (@kbd{C-x}, resp.) in emacs mode. Moreover,
-if the following character you type is an upper case letter, then Emacs
+if the following character you type is an upper-case letter, then Emacs
 will believe that you have typed the corresponding control character.
 You will be in vi mode again after the command is executed.  For example,
 typing @kbd{X S} in vi mode is the same as typing @kbd{C-x C-s} in emacs
@@ -759,7 +759,7 @@ move to the beginning of the buffer and you will still be in vi mode.
 @kindex 103 @kbd{C} (@code{vip-ctl-c-equivalent})
 @kindex 1300 @kbd{X} (@code{vip-ctl-x-equivalent})
 Typing one of these keys have the effect of typing the corresponding
-control character in emacs mode.  Moreover, if you type an upper case
+control character in emacs mode.  Moreover, if you type an upper-case
 character following it, that character will also be translated to the
 corresponding control character.  Thus typing @kbd{X W} in vi mode is the
 same as typing @kbd{C-x C-w} in emacs mode.  You will be in vi mode again
@@ -997,8 +997,8 @@ The following commands are used to mark positions in the buffer.
 @table @kbd
 @item m @var{ch}
 @kindex 155 @kbd{m} (@code{vip-mark-point})
-Store current point in the register @var{ch}.  @var{ch} must be a lower
-case character between @kbd{a} and @kbd{z}.
+Store current point in the register @var{ch}.  @var{ch} must be a
+lower-case ASCII letter.
 @item m <
 Set mark at the beginning of current buffer.
 @item m >
@@ -1162,14 +1162,14 @@ the first non-white character.  Without a count, go to the end of the buffer
 Exchange point and mark (@code{vip-goto-mark}).
 @item ` @var{ch}
 Move point to the position stored in the register @var{ch}.  @var{ch} must
-be a lower case letter.
+be a lower-case letter.
 @item ' '
 @kindex 047 @kbd{'} (@code{vip-goto-mark-and-skip-white})
 Exchange point and mark, and then move point to the first non-white
 character on the line (@code{vip-goto-mark-and-skip-white}).
 @item ' @var{ch}
 Move point to the position stored in the register @var{ch} and skip to the
-first non-white character on the line.  @var{ch} must be a lower case letter.
+first non-white character on the line.  @var{ch} must be a lower-case letter.
 @item %
 @kindex 045 @kbd{%} (@code{vip-paren-match})
 Move point to the matching parenthesis if point is looking at @kbd{(},
@@ -1332,10 +1332,10 @@ Thus, @kbd{3 d w} will delete three words.
 @kindex 042 @kbd{"} (@code{vip-command-argument})
 It is also possible to save the deleted text into a register you specify.
 For example, you can say @kbd{" t 3 d w} to delete three words and save it
-to register @kbd{t}.  The name of a register is a lower case letter between
-@kbd{a} and @kbd{z}.  If you give an upper case letter as an argument to
+to register @kbd{t}.  The name of a register is a lower-case letter between
+@kbd{a} and @kbd{z}.  If you give an upper-case letter as an argument to
 a delete command, then the deleted text will be appended to the content of
-the register having the corresponding lower case letter as its name.  So,
+the register having the corresponding lower-case letter as its name.  So,
 @kbd{" T d w} will delete a word and append it to register @kbd{t}.  Other
 modifying commands also accept a register name as their argument, and we
 will not repeat similar explanations.
@@ -1564,8 +1564,8 @@ Set mark and push previous mark on mark ring (@code{set-mark-command}).
 @item TAB
 @kindex 011 @kbd{TAB} (@code{indent-for-tab-command})
 Indent line for current major mode (@code{indent-for-tab-command}).
-@item LFD
-@kindex 012 @kbd{LFD} (@code{newline-and-indent})
+@item C-j
+@kindex 012 @kbd{C-j} (@code{newline-and-indent})
 Insert a newline, then indent according to mode (@code{newline-and-indent}).
 @item C-k
 @kindex 013 @kbd{C-k} (@code{kill-line})
@@ -1744,7 +1744,7 @@ Place a copy of specified lines after @var{addr}.  If @var{addr} is
 @kbd{0}, it will be placed before the first line.
 @item (.,.@:) d[elete] @var{register} @var{count} @var{flags}
 Delete specified lines.  Text will be saved in a named @var{register} if a
-lower case letter is given, and appended to a register if a capital letter is
+lower-case letter is given, and appended to a register if a capital letter is
 given. 
 @item e[dit] !@: +@var{addr} @var{file}
 @itemx e[x] !@: +@var{addr} @var{file}
@@ -1765,7 +1765,7 @@ Join specified lines into a line.  Without @kbd{!}, a space character will
 be inserted at each junction.
 @item (.@:) k @var{ch}
 @itemx (.@:) mar[k] @var{ch}
-Mark specified line by a lower case character @var{ch}.  Then the
+Mark specified line by a lower-case character @var{ch}.  Then the
 addressing form @kbd{'}@var{ch} will refer to this line.  No white space is
 required between @kbd{k} and @var{ch}.  A white space is necessary between
 @kbd{mark} and @var{ch}, however.

@@ -1,4 +1,4 @@
-;;; gud.el --- Grand Unified Debugger mode for gdb, sdb, dbx, or xdb under Emacs
+;;; gud.el --- Grand Unified Debugger mode for gdb, sdb, dbx, xdb or perldb
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -44,8 +44,16 @@
 ;; ======================================================================
 ;; GUD commands must be visible in C buffers visited by GUD
 
-(defvar gud-key-prefix "\C-x\C-a"
-  "Prefix of all GUD commands valid in C buffers.")
+(defgroup gud nil
+  "Grand Unified Debugger mode for gdb, sdb, dbx, xdb or perldb under Emacs."
+  :group 'unix
+  :group 'tools)
+
+
+(defcustom gud-key-prefix "\C-x\C-a"
+  "Prefix of all GUD commands valid in C buffers."
+  :type 'string
+  :group 'gud)
 
 (global-set-key (concat gud-key-prefix "\C-l") 'gud-refresh)
 (define-key ctl-x-map " " 'gud-break)	;; backward compatibility hack
@@ -172,8 +180,11 @@ we're in the GUD buffer)."
   (cons "-fullname" args))
 
 (defvar gud-gdb-marker-regexp
-  (concat "\032\032\\([^" path-separator "\n]*\\)" path-separator
-	  "\\([0-9]*\\)" path-separator ".*\n"))
+  ;; This used to use path-separator instead of ":";
+  ;; however, we found that on both Windows 32 and MSDOS
+  ;; a colon is correct here.
+  (concat "\032\032\\(.:?[^" ":" "\n]*\\)" ":"
+	  "\\([0-9]*\\)" ":" ".*\n"))
 
 ;; There's no guarantee that Emacs will hand the filter the entire
 ;; marker at once; it could be broken up across several strings.  We
@@ -226,21 +237,6 @@ we're in the GUD buffer)."
 	    gud-marker-acc ""))
 
     output))
-
-(defun gud-new-keymap (map)
-  "Return a new keymap which inherits from MAP and has name `Gud'."
-  (nconc (make-sparse-keymap "Gud") map))
-
-(defun gud-make-debug-menu ()
-  "Make sure the current local map has a [menu-bar debug] submap.
-If it doesn't, replace it with a new map that inherits it,
-and create such a submap in that new map."
-  (if (and (current-local-map)
-	   (lookup-key (current-local-map) [menu-bar debug]))
-      nil
-    (use-local-map (gud-new-keymap (current-local-map)))
-    (define-key (current-local-map) [menu-bar debug]
-      (cons "Gud" (gud-new-keymap gud-menu-map)))))
 
 (defun gud-gdb-find-file (f)
   (save-excursion
@@ -507,13 +503,17 @@ and source-file directory for your debugger."
 ;;; History of argument lists passed to dbx.
 (defvar gud-dbx-history nil)
 
-(defvar gud-dbx-directories nil
+(defcustom gud-dbx-directories nil
   "*A list of directories that dbx should search for source code.
 If nil, only source files in the program directory
 will be known to dbx.
 
 The file names should be absolute, or relative to the directory
-containing the executable being debugged.")
+containing the executable being debugged."
+  :type '(choice (const :tag "Current Directory" nil)
+		 (repeat :value ("")
+			 directory))
+  :group 'gud)
 
 (defun gud-dbx-massage-args (file args)
   (nconc (let ((directories gud-dbx-directories)
@@ -731,6 +731,57 @@ a better solution in 6.1 upwards.")
 	  (setq result (substring result 0 (match-beginning 0))))))
     (or result "")))
 
+(defvar gud-dgux-p (string-match "-dgux" system-configuration)
+  "Non-nil means to assume the interface approriate for DG/UX dbx.
+This was tested using R4.11.")
+
+;; There are a couple of differences between DG's dbx output and normal
+;; dbx output which make it nontrivial to integrate this into the
+;; standard dbx-marker-filter (mainly, there are a different number of
+;; backreferences).  The markers look like:
+;;
+;;     (0) Stopped at line 10, routine main(argc=1, argv=0xeffff0e0), file t.c
+;;
+;; from breakpoints (the `(0)' there isn't constant, it's the breakpoint
+;; number), and
+;;
+;;     Stopped at line 13, routine main(argc=1, argv=0xeffff0e0), file t.c
+;;
+;; from signals and
+;;
+;;     Frame 21, line 974, routine command_loop(), file keyboard.c
+;;
+;; from up/down/where.
+
+(defun gud-dguxdbx-marker-filter (string)
+  (setq gud-marker-acc (if gud-marker-acc
+			   (concat gud-marker-acc string)
+			 string))
+  (let ((re (concat "^\\(\\(([0-9]+) \\)?Stopped at\\|Frame [0-9]+,\\)"
+		    " line \\([0-9]+\\), routine .*, file \\([^ \t\n]+\\)"))
+	start)
+    ;; Process all complete markers in this chunk.
+    (while (string-match re gud-marker-acc start)
+      (setq gud-last-frame
+	    (cons
+	     (substring gud-marker-acc (match-beginning 4) (match-end 4))
+	     (string-to-int (substring gud-marker-acc
+				       (match-beginning 3) (match-end 3))))
+	    start (match-end 0)))
+
+    ;; Search for the last incomplete line in this chunk
+    (while (string-match "\n" gud-marker-acc start)
+      (setq start (match-end 0)))
+
+    ;; If the incomplete line APPEARS to begin with another marker, keep it
+    ;; in the accumulator.  Otherwise, clear the accumulator to avoid an
+    ;; unnecessary concat during the next call.
+    (setq gud-marker-acc 
+	  (if (string-match "Stopped\\|Frame" gud-marker-acc start)
+	      (substring gud-marker-acc (match-beginning 0))
+	    nil)))
+  string)
+
 (defun gud-dbx-find-file (f)
   (save-excursion
     (let ((realf (gud-dbx-file-name f)))
@@ -763,6 +814,9 @@ and source-file directory for your debugger."
    (gud-irix-p
     (gud-common-init command-line 'gud-dbx-massage-args
 		     'gud-irixdbx-marker-filter 'gud-dbx-find-file))
+   (gud-dgux-p
+    (gud-common-init command-line 'gud-dbx-massage-args
+		     'gud-dguxdbx-marker-filter 'gud-dbx-find-file))
    (t
     (gud-common-init command-line 'gud-dbx-massage-args
 		     'gud-dbx-marker-filter 'gud-dbx-find-file)))
@@ -814,13 +868,17 @@ and source-file directory for your debugger."
 ;;; History of argument lists passed to xdb.
 (defvar gud-xdb-history nil)
 
-(defvar gud-xdb-directories nil
+(defcustom gud-xdb-directories nil
   "*A list of directories that xdb should search for source code.
 If nil, only source files in the program directory
 will be known to xdb.
 
 The file names should be absolute, or relative to the directory
-containing the executable being debugged.")
+containing the executable being debugged."
+  :type '(choice (const :tag "Current Directory" nil)
+		 (repeat :value ("")
+			 directory))
+  :group 'gud)
 
 (defun gud-xdb-massage-args (file args)
   (nconc (let ((directories gud-xdb-directories)
@@ -928,7 +986,13 @@ directories if your program contains sources from more than one directory."
 (defvar gud-perldb-history nil)
 
 (defun gud-perldb-massage-args (file args)
-  (cons "-d" (cons (car args) (cons "-emacs" (cdr args)))))
+  (cond ((equal (car args) "-e") 
+	 (cons "-d" 
+	       (cons (car args) 
+		     (cons (nth 1 args) 
+			   (cons "--" (cons "-emacs" (cdr (cdr args))))))))
+	(t
+	 (cons "-d" (cons (car args) (cons "-emacs" (cdr args)))))))
 
 ;; There's no guarantee that Emacs will hand the filter the entire
 ;; marker at once; it could be broken up across several strings.  We
@@ -943,7 +1007,7 @@ directories if your program contains sources from more than one directory."
   (let ((output ""))
 
     ;; Process all the complete markers in this chunk.
-    (while (string-match "\032\032\\([^:\n]*\\):\\([0-9]*\\):.*\n"
+    (while (string-match "\032\032\\(\\([a-zA-Z]:\\)?[^:\n]*\\):\\([0-9]*\\):.*\n"
 			 gud-marker-acc)
       (setq
 
@@ -951,8 +1015,8 @@ directories if your program contains sources from more than one directory."
        gud-last-frame
        (cons (substring gud-marker-acc (match-beginning 1) (match-end 1))
 	     (string-to-int (substring gud-marker-acc
-				       (match-beginning 2)
-				       (match-end 2))))
+				       (match-beginning 3)
+				       (match-end 3))))
 
        ;; Append any text before the marker to the output we're going
        ;; to return - we don't include the marker in this text.
@@ -989,8 +1053,10 @@ directories if your program contains sources from more than one directory."
       (gud-make-debug-menu)
       buf)))
 
-(defvar perldb-command-name "perl"
-  "File name for executing Perl.")
+(defcustom perldb-command-name "perl"
+  "File name for executing Perl."
+  :type 'string
+  :group 'gud)
 
 ;;;###autoload
 (defun perldb (command-line)
@@ -1001,7 +1067,11 @@ and source-file directory for your debugger."
    (list (read-from-minibuffer "Run perldb (like this): "
 			       (if (consp gud-perldb-history)
 				   (car gud-perldb-history)
-				 (concat perldb-command-name " "))
+				 (concat perldb-command-name
+					 " "
+					 (or (buffer-file-name)
+					     "-e 0")
+					 " "))
 			       nil nil
 			       '(gud-perldb-history . 1))))
 
@@ -1018,7 +1088,7 @@ and source-file directory for your debugger."
 ;  (gud-def gud-down   "down %p"      ">" "Down N stack frames (numeric arg).")
   (gud-def gud-print  "%e"           "\C-p" "Evaluate perl expression at point.")
 
-  (setq comint-prompt-regexp "^  DB<[0-9]+> ")
+  (setq comint-prompt-regexp "^  DB<+[0-9]+>+ ")
   (setq paragraph-start comint-prompt-regexp)
   (run-hooks 'perldb-mode-hook)
   )
@@ -1071,6 +1141,8 @@ and source-file directory for your debugger."
 (defvar gud-delete-prompt-marker nil)
 
 
+(put 'gud-mode 'mode-class 'special)
+
 (defun gud-mode ()
   "Major mode for interacting with an inferior debugger process.
 
@@ -1136,6 +1208,9 @@ comint mode, which see."
   (make-local-variable 'gud-last-frame)
   (setq gud-last-frame nil)
   (make-local-variable 'comint-prompt-regexp)
+  ;; Don't put repeated commands in command history many times.
+  (make-local-variable 'comint-input-ignoredups)
+  (setq comint-input-ignoredups t)
   (make-local-variable 'paragraph-start)
   (make-local-variable 'gud-delete-prompt-marker)
   (setq gud-delete-prompt-marker (make-marker))
@@ -1355,7 +1430,8 @@ Obeying it means displaying in another window the specified file and line."
 	    (or (eq (current-buffer) gud-comint-buffer)
 		(set-buffer gud-comint-buffer))
 	    (gud-find-file true-file)))
-	 (window (and buffer (display-buffer buffer)))
+	 (window (and buffer (or (get-buffer-window buffer)
+				 (display-buffer buffer))))
 	 (pos))
     (if buffer
 	(progn
@@ -1403,7 +1479,7 @@ Obeying it means displaying in another window the specified file and line."
 					      (1+ (count-lines 1 (point)))))
 			(cdr frame))))
 	 ((eq key ?e)
-	  (setq subst (find-c-expr)))
+	  (setq subst (gud-find-c-expr)))
 	 ((eq key ?a)
 	  (setq subst (gud-read-address)))
 	 ((eq key ?p)
@@ -1463,6 +1539,22 @@ Obeying it means displaying in another window the specified file and line."
   (or gud-last-frame (setq gud-last-frame gud-last-last-frame))
   (gud-display-frame))
 
+
+(defun gud-new-keymap (map)
+  "Return a new keymap which inherits from MAP and has name `Gud'."
+  (nconc (make-sparse-keymap "Gud") map))
+
+(defun gud-make-debug-menu ()
+  "Make sure the current local map has a [menu-bar debug] submap.
+If it doesn't, replace it with a new map that inherits it,
+and create such a submap in that new map."
+  (if (and (current-local-map)
+	   (lookup-key (current-local-map) [menu-bar debug]))
+      nil
+    (use-local-map (gud-new-keymap (current-local-map)))
+    (define-key (current-local-map) [menu-bar debug]
+      (cons "Gud" (gud-new-keymap gud-menu-map)))))
+
 ;;; Code for parsing expressions out of C code.  The single entry point is
 ;;; find-c-expr, which tries to return an lvalue expression from around point.
 ;;;
@@ -1470,94 +1562,102 @@ Obeying it means displaying in another window the specified file and line."
 ;;; Debby Ayers <ayers@asc.slb.com>,
 ;;; Rich Schaefer <schaefer@asc.slb.com> Schlumberger, Austin, Tx.
 
-(defun find-c-expr ()
+(defun gud-find-c-expr ()
   "Returns the C expr that surrounds point."
   (interactive)
   (save-excursion
-    (let ((p) (expr) (test-expr))
+    (let (p expr test-expr)
       (setq p (point))
-      (setq expr (expr-cur))
-      (setq test-expr (expr-prev))
-      (while (expr-compound test-expr expr)
-	(setq expr (cons (car test-expr) (cdr expr)))
-	(goto-char (car expr))
-	(setq test-expr (expr-prev)))
+      (setq expr (gud-innermost-expr))
+      (setq test-expr (gud-prev-expr))
+      (while (and test-expr (gud-expr-compound test-expr expr))
+	(let ((prev-expr expr))
+	  (setq expr (cons (car test-expr) (cdr expr)))
+	  (goto-char (car expr))
+	  (setq test-expr (gud-prev-expr))
+	  ;; If we just pasted on the condition of an if or while,
+	  ;; throw it away again.
+	  (if (member (buffer-substring (car test-expr) (cdr test-expr))
+		      '("if" "while" "for"))
+	      (setq test-expr nil
+		    expr prev-expr))))
       (goto-char p)
-      (setq test-expr (expr-next))
-      (while (expr-compound expr test-expr)
+      (setq test-expr (gud-next-expr))
+      (while (gud-expr-compound expr test-expr)
 	(setq expr (cons (car expr) (cdr test-expr)))
-	(setq test-expr (expr-next))
+	(setq test-expr (gud-next-expr))
 	)
       (buffer-substring (car expr) (cdr expr)))))
 
-(defun expr-cur ()
-  "Returns the expr that point is in; point is set to beginning of expr.
+(defun gud-innermost-expr ()
+  "Returns the smallest expr that point is in; move point to beginning of it.
 The expr is represented as a cons cell, where the car specifies the point in
 the current buffer that marks the beginning of the expr and the cdr specifies 
 the character after the end of the expr."
-  (let ((p (point)) (begin) (end))
-    (expr-backward-sexp)
+  (let ((p (point)) begin end)
+    (gud-backward-sexp)
     (setq begin (point))
-    (expr-forward-sexp)
+    (gud-forward-sexp)
     (setq end (point))
     (if (>= p end) 
 	(progn
 	 (setq begin p)
 	 (goto-char p)
-	 (expr-forward-sexp)
-	 (setq end (point))
-	 )
+	 (gud-forward-sexp)
+	 (setq end (point)))
       )
     (goto-char begin)
     (cons begin end)))
 
-(defun expr-backward-sexp ()
+(defun gud-backward-sexp ()
   "Version of `backward-sexp' that catches errors."
   (condition-case nil
       (backward-sexp)
     (error t)))
 
-(defun expr-forward-sexp ()
+(defun gud-forward-sexp ()
   "Version of `forward-sexp' that catches errors."
   (condition-case nil
      (forward-sexp)
     (error t)))
 
-(defun expr-prev ()
+(defun gud-prev-expr ()
   "Returns the previous expr, point is set to beginning of that expr.
 The expr is represented as a cons cell, where the car specifies the point in
 the current buffer that marks the beginning of the expr and the cdr specifies 
 the character after the end of the expr"
   (let ((begin) (end))
-    (expr-backward-sexp)
+    (gud-backward-sexp)
     (setq begin (point))
-    (expr-forward-sexp)
+    (gud-forward-sexp)
     (setq end (point))
     (goto-char begin)
     (cons begin end)))
 
-(defun expr-next ()
+(defun gud-next-expr ()
   "Returns the following expr, point is set to beginning of that expr.
 The expr is represented as a cons cell, where the car specifies the point in
 the current buffer that marks the beginning of the expr and the cdr specifies 
 the character after the end of the expr."
   (let ((begin) (end))
-    (expr-forward-sexp)
-    (expr-forward-sexp)
+    (gud-forward-sexp)
+    (gud-forward-sexp)
     (setq end (point))
-    (expr-backward-sexp)
+    (gud-backward-sexp)
     (setq begin (point))
     (cons begin end)))
 
-(defun expr-compound-sep (span-start span-end)
-  "Returns '.' for '->' & '.', returns ' ' for white space,
-returns '?' for other punctuation."
-  (let ((result ? )
+(defun gud-expr-compound-sep (span-start span-end)
+  "Scan from SPAN-START to SPAN-END for punctuation characters.
+If `->' is found, return `?.'.  If `.' is found, return `?.'.
+If any other punctuation is found, return `??'.
+If no punctuation is found, return `? '."
+  (let ((result ?\ )
 	(syntax))
     (while (< span-start span-end)
       (setq syntax (char-syntax (char-after span-start)))
       (cond
-       ((= syntax ? ) t)
+       ((= syntax ?\ ) t)
        ((= syntax ?.) (setq syntax (char-after span-start))
 	(cond 
 	 ((= syntax ?.) (setq result ?.))
@@ -1569,8 +1669,8 @@ returns '?' for other punctuation."
       (setq span-start (+ span-start 1)))
     result))
 
-(defun expr-compound (first second)
-  "Non-nil if concatenating FIRST and SECOND makes a single C token.
+(defun gud-expr-compound (first second)
+  "Non-nil if concatenating FIRST and SECOND makes a single C expression.
 The two exprs are represented as a cons cells, where the car 
 specifies the point in the current buffer that marks the beginning of the 
 expr and the cdr specifies the character after the end of the expr.
@@ -1584,21 +1684,20 @@ Link exprs of the form:
   (let ((span-start (cdr first))
 	(span-end (car second))
 	(syntax))
-    (setq syntax (expr-compound-sep span-start span-end))
+    (setq syntax (gud-expr-compound-sep span-start span-end))
     (cond
      ((= (car first) (car second)) nil)
      ((= (cdr first) (cdr second)) nil)
      ((= syntax ?.) t)
-     ((= syntax ? )
+     ((= syntax ?\ )
 	 (setq span-start (char-after (- span-start 1)))
 	 (setq span-end (char-after span-end))
 	 (cond
-	  ((= span-start ?) ) t )
-	  ((= span-start ?] ) t )
-          ((= span-end ?( ) t )
-	  ((= span-end ?[ ) t )
-	  (t nil))
-	 )
+	  ((= span-start ?)) t)
+	  ((= span-start ?]) t)
+          ((= span-end ?() t)
+	  ((= span-end ?[) t)
+	  (t nil)))
      (t nil))))
 
 (provide 'gud)

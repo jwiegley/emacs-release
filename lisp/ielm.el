@@ -3,6 +3,7 @@
 ;; Copyright (C) 1994 Free Software Foundation, Inc.
 
 ;; Author: David Smith <maa036@lancaster.ac.uk>
+;; Maintainer: FSF
 ;; Created: 25 Feb 1994
 ;; Keywords: lisp
 
@@ -34,7 +35,7 @@
 ;;
 ;;   (autoload 'ielm "ielm" "Start an inferior Emacs Lisp session" t)
 ;;
-;; For completion to work, the comint.el from FSF Emacs 19.23 is
+;; For completion to work, the comint.el from Emacs 19.23 is
 ;; required.  If you do not have it, or if you are running Lemacs,
 ;; also add the following code to your .emacs:
 ;;
@@ -59,26 +60,39 @@
 
 ;;; User variables
 
-(defvar ielm-noisy t
-  "*If non-nil, IELM will beep on error.")
+(defgroup ielm nil
+  "Interaction mode for Emacs Lisp."
+  :group 'lisp)
+
+
+(defcustom ielm-noisy t
+  "*If non-nil, IELM will beep on error."
+  :type 'boolean
+  :group 'ielm)
 
 (defvar ielm-prompt "ELISP> "
   "Prompt used in IELM.")
 
-(defvar ielm-dynamic-return t
+(defcustom ielm-dynamic-return t
   "*Controls whether \\<ielm-map>\\[ielm-return] has intelligent behaviour in IELM.
 If non-nil, \\[ielm-return] evaluates input for complete sexps, or inserts a newline
-and indents for incomplete sexps.  If nil, always inserts newlines.")
+and indents for incomplete sexps.  If nil, always inserts newlines."
+  :type 'boolean
+  :group 'ielm)
 
-(defvar ielm-dynamic-multiline-inputs t
+(defcustom ielm-dynamic-multiline-inputs t
   "*Force multiline inputs to start from column zero?
 If non-nil, after entering the first line of an incomplete sexp, a newline
 will be inserted after the prompt, moving the input to the next line.
 This gives more frame width for large indented sexps, and allows functions
-such as `edebug-defun' to work with such inputs.")
+such as `edebug-defun' to work with such inputs."
+  :type 'boolean
+  :group 'ielm)
 
-(defvar ielm-mode-hook nil
-  "*Hooks to be run when IELM (`inferior-emacs-lisp-mode') is started.")
+(defcustom ielm-mode-hook nil
+  "*Hooks to be run when IELM (`inferior-emacs-lisp-mode') is started."
+  :type 'hook
+  :group 'ielm)
 
 ;;; System variables
 
@@ -87,11 +101,7 @@ such as `edebug-defun' to work with such inputs.")
 This variable is buffer-local.")
 
 (defvar ielm-header 
-  (concat
-   "*** Welcome to IELM version "
-   (substring "$Revision: 1.7 $" 11 -2)
-   " ***  Type (describe-mode) for help.\n"
-   "IELM has ABSOLUTELY NO WARRANTY; type (describe-no-warranty) for details.\n")
+  "*** Welcome to IELM ***  Type (describe-mode) for help.\n"
   "Message to display when IELM is started.")
 
 (defvar ielm-map nil)
@@ -111,7 +121,6 @@ This variable is buffer-local.")
   ;; These bindings are from shared-lisp-mode-map -- can you inherit
   ;; from more than one keymap??
   (define-key ielm-map "\e\C-q" 'indent-sexp)      
-  (define-key ielm-map "\eq" 'lisp-fill-paragraph) 
   (define-key ielm-map "\177" 'backward-delete-char-untabify)
   ;; Some convenience bindings for setting the working buffer
   (define-key ielm-map "\C-c\C-b" 'ielm-change-working-buffer)
@@ -213,6 +222,8 @@ simply inserts a newline."
 		(newline 1)))
 	  (newline-and-indent)))
     (newline)))
+
+(defvar ielm-input)
 
 (defun ielm-input-sender (proc input)
   ;; Just sets the variable ielm-input, which is in the scope of 
@@ -358,6 +369,8 @@ simply inserts a newline."
 
 ;;; Major mode
 
+(put 'inferior-emacs-lisp-mode 'mode-class 'special)
+
 (defun inferior-emacs-lisp-mode nil
   "Major mode for interactively evaluating Emacs Lisp expressions.
 Uses the interface provided by `comint-mode' (which see).
@@ -406,6 +419,9 @@ Customised bindings may be defined in `ielm-map', which currently contains:
   (setq comint-dynamic-complete-functions 
 	'(ielm-tab comint-replace-by-expanded-history ielm-complete-filename ielm-complete-symbol))
   (setq comint-get-old-input 'ielm-get-old-input)
+  (make-local-variable 'comint-completion-addsuffix)
+  (setq comint-completion-addsuffix
+	(cons (char-to-string directory-sep-char) ""))
 
   (setq major-mode 'inferior-emacs-lisp-mode)
   (setq mode-name "IELM")
@@ -416,6 +432,8 @@ Customised bindings may be defined in `ielm-map', which currently contains:
   (make-local-variable 'ielm-working-buffer)
   (setq ielm-working-buffer (current-buffer))
   (setq indent-line-function 'ielm-indent-line)
+  (make-local-variable 'fill-paragraph-function)
+  (setq fill-paragraph-function 'lisp-fill-paragraph)
 
   ;; Value holders
   (setq : nil)
@@ -467,5 +485,7 @@ Switches to the buffer `*ielm*', or creates it if it does not exist."
       (set-buffer (get-buffer-create "*ielm*"))
       (inferior-emacs-lisp-mode)))
   (pop-to-buffer "*ielm*"))
+
+(provide 'ielm)
 
 ;;; ielm.el ends here

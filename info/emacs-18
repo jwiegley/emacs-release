@@ -1,1071 +1,1258 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
 
 
-File: emacs,  Node: Special Diary Entries,  Prev: Adding to Diary,  Up: Diary
+File: emacs,  Node: Shell Commands in Dired,  Next: Transforming File Names,  Prev: Operating on Files,  Up: Dired
 
-Special Diary Entries
----------------------
-
-   In addition to entries based on calendar dates, the diary file can
-contain "sexp entries" for regular events such as anniversaries.  These
-entries are based on Lisp expressions (sexps) that Emacs evaluates as
-it scans the diary file.  Instead of a date, a sexp entry contains `%%'
-followed by a Lisp expression which must begin and end with
-parentheses.  The Lisp expression determines which dates the entry
-applies to.
-
-   Calendar mode provides commands to insert certain commonly used sexp
-entries:
-
-`i a'
-     Add an anniversary diary entry for the selected date
-     (`insert-anniversary-diary-entry').
-
-`i b'
-     Add a block diary entry for the current region
-     (`insert-block-diary-entry').
-
-`i c'
-     Add a cyclic diary entry starting at the date
-     (`insert-cyclic-diary-entry').
-
-   If you want to make a diary entry that applies to the anniversary of
-a specific date, move point to that date and use the `i a' command.
-This displays the end of your diary file in another window and inserts
-the anniversary description; you can then type the rest of the diary
-entry.  The entry looks like this:
-
-     %%(diary-anniversary 10 31 1948) Arthur's birthday
-
-This entry applies to October 31 in any year after 1948; `10 31 1948'
-specifies the date.  (If you are using the European calendar style, the
-month and day are interchanged.)  The reason this expression requires a
-beginning year is that advanced diary functions can use it to calculate
-the number of elapsed years.
-
-   A "block" diary entry applies to a specified range of consecutive
-dates.  Here is a block diary entry that applies to all dates from June
-24, 1990 through July 10, 1990:
-
-     %%(diary-block 6 24 1990 7 10 1990) Vacation
-
-The `6 24 1990' indicates the starting date and the `7 10 1990'
-indicates the stopping date.  (Again, if you are using the European
-calendar style, the month and day are interchanged.)
-
-   To insert a block entry, place point and the mark on the two dates
-that begin and end the range, and type `i b'.  This command displays
-the end of your diary file in another window and inserts the block
-description; you can then type the diary entry.
-
-   "Cyclic" diary entries repeat after a fixed interval of days.  To
-create one, select the starting date and use the `i c' command.  The
-command prompts for the length of interval, then inserts the entry,
-which looks like this:
-
-     %%(diary-cyclic 50 3 1 1990) Renew medication
-
-This entry applies to March 1, 1990 and every 50th day following; `3 1
-1990' specifies the starting date.  (If you are using the European
-calendar style, the month and day are interchanged.)
-
-   All three of these commands make marking diary entries.  To insert a
-nonmarking entry, give a numeric argument to the command.  For example,
-`C-u i a' makes a nonmarking anniversary diary entry.
-
-   Marking sexp diary entries in the calendar is *extremely*
-time-consuming, since every date visible in the calendar window must be
-individually checked.  So it's a good idea to make sexp diary entries
-nonmarking (with `&') when possible.
-
-   Another sophisticated kind of sexp entry, a "floating" diary entry,
-specifies a regularly-occurring event by offsets specified in days,
-weeks, and months.  It is comparable to a crontab entry interpreted by
-the `cron' utility.  Here is a nonmarking, floating diary entry that
-applies to the last Thursday in November:
-
-     &%%(diary-float 11 4 -1) American Thanksgiving
-
-The 11 specifies November (the eleventh month), the 4 specifies Thursday
-(the fourth day of the week, where Sunday is numbered zero), and the -1
-specifies "last" (1 would mean "first", 2 would mean "second", -2 would
-mean "second-to-last", and so on).  The month can be a single month or
-a list of months.  Thus you could change the 11 above to `'(1 2 3)' and
-have the entry apply to the last Thursday of January, February, and
-March.  If the month is `t', the entry applies to all months of the
-year.
-
-   Most generally, sexp diary entries can perform arbitrary
-computations to determine when they apply.  *Note Sexp Diary Entries:
-(elisp)Sexp Diary Entries.
-
-
-File: emacs,  Node: Appointments,  Next: Daylight Savings,  Prev: Diary,  Up: Calendar/Diary
-
-Appointments
-============
-
-   If you have a diary entry for an appointment, and that diary entry
-begins with a recognizable time of day, Emacs can warn you, several
-minutes beforehand, that that appointment is pending.  Emacs alerts you
-to the appointment by displaying a message in the mode line.
-
-   To enable appointment notification, you must enable the time display
-feature of Emacs, `M-x display-time' (*note Mode Line::.).  You must
-also add the function `appt-make-list' to the `diary-hook', like this:
-
-     (add-hook 'diary-hook 'appt-make-list)
-
-   With these preparations done, when you display the diary (either with
-the `d' command in the calendar window or with the `M-x diary'
-command), it sets up an appointment list of all the diary entries found
-with recognizable times of day, and reminds you just before each of
-them.
-
-   For example, suppose the diary file contains these lines:
-
-     Monday
-       9:30am Coffee break
-      12:00pm Lunch
-
-Then on Mondays, after you have displayed the diary, you will be
-reminded at 9:20am about your coffee break and at 11:50am about lunch.
-
-   You can write times in am/pm style (with `12:00am' standing for
-midnight and `12:00pm' standing for noon), or 24-hour European/military
-style.  You need not be consistent; your diary file can have a mixture
-of the two styles.
-
-   Emacs updates the appointments list automatically just after
-midnight.  This also displays the next day's diary entries in the diary
-buffer, unless you set `appt-display-diary' to `nil'.
-
-   You can also use the appointment notification facility like an alarm
-clock.  The command `M-x appt-add' adds entries to the appointment list
-without affecting your diary file.  You delete entries from the
-appointment list with `M-x appt-delete'.
-
-   You can turn off the appointment notification feature at any time by
-setting `appt-issue-message' to `nil'.
-
-
-File: emacs,  Node: Daylight Savings,  Prev: Appointments,  Up: Calendar/Diary
-
-Daylight Savings Time
-=====================
-
-   Emacs understands the difference between standard time and daylight
-savings time--the times given for sunrise, sunset, solstices,
-equinoxes, and the phases of the moon take that into account.  The rules
-for daylight savings time vary from place to place and have also varied
-historically from year to year.  To do the job properly, Emacs needs to
-know which rules to use.
-
-   Some operating systems keep track of the rules that apply to the
-place where you are; on these systems, Emacs gets the information it
-needs from the system automatically.  If some or all of this
-information is missing, Emacs fills in the gaps with the rules
-currently used in Cambridge, Massachusetts.  If the resulting rules are
-not what you want, you can tell Emacs the rules to use by setting
-certain variables.
-
-   These values should be Lisp expressions that refer to the variable
-`year', and evaluate to the Gregorian date on which daylight savings
-time starts or (respectively) ends, in the form of a list `(MONTH DAY
-YEAR)'.  The values should be `nil' if your area does not use daylight
-savings time.
-
-   Emacs uses these expressions to determine the starting date of
-daylight savings time for the holiday list and for correcting times of
-day in the solar and lunar calculations.
-
-   The values for Cambridge, Massachusetts are as follows:
-
-     (calendar-nth-named-day 1 0 4 year)
-     (calendar-nth-named-day -1 0 10 year)
-
-That is, the first 0th day (Sunday) of the fourth month (April) in the
-year specified by `year', and the last Sunday of the tenth month
-(October) of that year.  If daylight savings time were changed to start
-on October 1, you would set `calendar-daylight-savings-starts' to this:
-
-     (list 10 1 year)
-
-   If there is no daylight savings time at your location, or if you want
-all times in standard time, set `calendar-daylight-savings-starts' and
-`calendar-daylight-savings-ends' to `nil'.
-
-   The variable `calendar-daylight-time-offset' specifies the
-difference between daylight savings time and standard time, measured in
-minutes.  The value for Cambridge, Massachusetts is 60.
-
-   The two variables `calendar-daylight-savings-starts-time' and
-`calendar-daylight-savings-ends-time' specify the number of minutes
-after midnight local time when the transition to and from daylight
-savings time should occur.  For Cambridge, Massachusetts both variables'
-values are 120.
-
-
-File: emacs,  Node: Gnus,  Next: Shell,  Prev: Calendar/Diary,  Up: Top
-
-Gnus
-====
-
-   Gnus is an Emacs package primarily designed for reading and posting
-Usenet news.  It can also be used to read and respond to messages from a
-number of other sources--mail, remote directories, digests, and so on.
-
-   Here we introduce Gnus and describe several basic features.  For
-full details, see *Note Gnus: (gnus)Top.
-
-   To start Gnus, type `M-x gnus RET'.
-
-* Menu:
-
-* Buffers of Gnus::	   The group, summary and article buffers.
-* Gnus Startup::	   What you should know about starting Gnus.
-* Summary of Gnus::	   A short description of the basic Gnus commands.
-
-
-File: emacs,  Node: Buffers of Gnus,  Next: Gnus Startup,  Up: Gnus
-
-Gnus Buffers
-------------
-
-   As opposed to most normal Emacs packages, Gnus uses a number of
-different buffers to display information and to receive commands.  The
-three buffers users spend most of their time in are the "group buffer",
-the "summary buffer" and the "article buffer".
-
-   The "group buffer" contains a list of groups.  This is the first
-buffer Gnus displays when it starts up.  It normally displays only the
-groups to which you subscribe and that contain unread articles.  Use
-this buffer to select a specific group.
-
-   The "summary buffer" lists one line for each article in a single
-group.  By default, the author, the subject and the line number are
-displayed for each article, but this is customizable, like most aspects
-of Gnus display.  The summary buffer is created when you select a group
-in the group buffer, and is killed when you exit the group.  Use this
-buffer to select an article.
-
-   The "article buffer" displays the article.  In normal Gnus usage,
-you don't select this buffer--all useful article-oriented commands work
-in the summary buffer.  But you can select the article buffer, and
-execute all Gnus commands from that buffer, if you want to.
-
-
-File: emacs,  Node: Gnus Startup,  Next: Summary of Gnus,  Prev: Buffers of Gnus,  Up: Gnus
-
-When Gnus Starts Up
--------------------
-
-   At startup, Gnus reads your `.newsrc' news initialization file and
-attempts to communicate with the local news server, which is a
-repository of news articles.  The news server need not be the same
-computer you are logged in on.
-
-   If you start Gnus and connect to the server, but do not see any
-newsgroups listed in the group buffer, type `L' or `A k' to get a
-listing of all the groups.  Then type `u' to toggle subscription to
-groups.
-
-   The first time you start Gnus, Gnus subscribes you to a few selected
-groups.  All other groups start out as "killed groups" for you; you can
-list them with `A k'.  All new groups that subsequently come to exist
-at the news server become "zombie groups" for you; type `A z' to list
-them.  You can subscribe to a group shown in these lists using the `u'
-command.
-
-   When you quit Gnus with `q', it automatically records in your
-`.newsrc' and `.newsrc.eld' initialization files the subscribed or
-unsubscribed status of all groups.  You should normally not edit these
-files manually, but you may if you know how.
-
-
-File: emacs,  Node: Summary of Gnus,  Prev: Gnus Startup,  Up: Gnus
-
-Summary of Gnus Commands
-------------------------
-
-   Reading news is a two step process:
-
-  1. Choose a group in the group buffer.
-
-  2. Select articles from the summary buffer.  Each article selected is
-     displayed in the article buffer in a large window, below the
-     summary buffer in its small window.
-
-   Each Gnus buffer has its own special commands; however, the meanings
-of any given key in the various Gnus buffers are usually analogous, even
-if not identical.  Here are commands for the group and summary buffers:
-
-`q'
-     In the group buffer, update your `.newsrc' initialization file and
-     quit Gnus.
-
-     In the summary buffer, exit the current group and return to the
-     group buffer.  Thus, typing `q' twice quits Gnus.
-
-`L'
-     In the group buffer, list all the groups available on your news
-     server (except those you have killed).  This may be a long list!
-
-`l'
-     In the group buffer, list only the groups to which you subscribe
-     and which contain unread articles.
-
-`u'
-     In the group buffer, unsubscribe from (or subscribe to) the group
-     listed in the line that point is on.  When you quit Gnus by typing
-     `q', Gnus lists in your `.newsrc' file which groups you have
-     subscribed to.  The next time you start Gnus, you won't see this
-     group, because Gnus normally displays only subscribed-to groups.
-
-`C-k'
-     In the group buffer, "kill" the current line's group--don't even
-     list it in `.newsrc' from now on.  This affects future Gnus
-     sessions as well as the present session.
-
-     When you quit Gnus by typing `q', Gnus writes information in the
-     file `.newsrc' describing all newsgroups except those you have
-     "killed."
-
-`SPC'
-     In the group buffer, select the group on the line under the cursor
-     and display the first unread article in that group.
-
-     In the summary buffer,
-
-        * Select the article on the line under the cursor if none is
-          selected.
-
-        * Scroll the text of the selected article (if there is one).
-
-        * Select the next unread article if at the end of the current
-          article.
-
-     Thus, you can move through all the articles by repeatedly typing
-     SPC.
-
-`DEL'
-     In the group buffer, move point to the previous group containing
-     unread articles.
-
-     In the summary buffer, scroll the text of the article backwards.
-
-`n'
-     Move point to the next unread group, or select the next unread
-     article.
-
-`p'
-     Move point to the previous unread group, or select the previous
-     unread article.
-
-`C-n'
-`C-p'
-     Move point to the next or previous item, even if it is marked as
-     read.  This does not select the article or group on that line.
-
-`s'
-     In the summary buffer, do an incremental search of the current
-     text in the article buffer, just as if you switched to the article
-     buffer and typed `C-s'.
-
-`M-s REGEXP RET'
-     In the summary buffer, search forward for articles containing a
-     match for REGEXP.
-
-
-File: emacs,  Node: Shell,  Next: Emacs Server,  Prev: Gnus,  Up: Top
-
-Running Shell Commands from Emacs
-=================================
-
-   Emacs has commands for passing single command lines to inferior shell
-processes; it can also run a shell interactively with input and output
-to an Emacs buffer named `*shell*'.
-
-`M-! CMD RET'
-     Run the shell command line CMD and display the output
-     (`shell-command').
-
-`M-| CMD RET'
-     Run the shell command line CMD with region contents as input;
-     optionally replace the region with the output
-     (`shell-command-on-region').
-
-`M-x shell'
-     Run a subshell with input and output through an Emacs buffer.  You
-     can then give commands interactively.
-
-* Menu:
-
-* Single Shell::           How to run one shell command and return.
-* Interactive Shell::      Permanent shell taking input via Emacs.
-* Shell Mode::             Special Emacs commands used with permanent shell.
-* History: Shell History.  Repeating previous commands in a shell buffer.
-* Options: Shell Options.  Options for customizing Shell mode.
-* Remote Host::            Connecting to another computer.
-
-
-File: emacs,  Node: Single Shell,  Next: Interactive Shell,  Up: Shell
-
-Single Shell Commands
----------------------
-
-   `M-!' (`shell-command') reads a line of text using the minibuffer
-and executes it as a shell command in a subshell made just for that
-command.  Standard input for the command comes from the null device.
-If the shell command produces any output, the output goes into an Emacs
-buffer named `*Shell Command Output*', which is displayed in another
-window but not selected.  A numeric argument, as in `M-1 M-!', directs
-this command to insert any output into the current buffer.  In that
-case, point is left before the output and the mark is set after the
-output.
-
-   If the shell command line ends in `&', it runs asynchronously.
-
-   `M-|' (`shell-command-on-region') is like `M-!' but passes the
-contents of the region as the standard input to the shell command,
-instead of no input.  If a numeric argument is used, meaning insert the
-output in the current buffer, then the old region is deleted first and
-the output replaces it as the contents of the region.
-
-   Both `M-!' and `M-|' use `shell-file-name' to specify the shell to
-use.  This variable is initialized based on your `SHELL' environment
-variable when Emacs is started.  If the file name does not specify a
-directory, the directories in the list `exec-path' are searched; this
-list is initialized based on the environment variable `PATH' when Emacs
-is started.  Your `.emacs' file can override either or both of these
-default initializations.
-
-   Both `M-!' and `M-|' wait for the shell command to complete.  To
-stop waiting, type `C-g' to quit; that terminates the shell command
-with the signal `SIGINT'--the same signal that `C-c' normally generates
-in the shell.  Emacs waits until the command actually terminates.  If
-the shell command doesn't stop (because it ignores the `SIGINT'
-signal), type `C-g' again; this sends the command a `SIGKILL' signal
-which is impossible to ignore.
-
-
-File: emacs,  Node: Interactive Shell,  Next: Shell Mode,  Prev: Single Shell,  Up: Shell
-
-Interactive Inferior Shell
---------------------------
-
-   To run a subshell interactively, putting its typescript in an Emacs
-buffer, use `M-x shell'.  This creates (or reuses) a buffer named
-`*shell*' and runs a subshell with input coming from and output going
-to that buffer.  That is to say, any "terminal output" from the subshell
-goes into the buffer, advancing point, and any "terminal input" for the
-subshell comes from text in the buffer.  To give input to the subshell,
-go to the end of the buffer and type the input, terminated by RET.
-
-   Emacs does not wait for the subshell to do anything.  You can switch
-windows or buffers and edit them while the shell is waiting, or while
-it is running a command.  Output from the subshell waits until Emacs
-has time to process it; this happens whenever Emacs is waiting for
-keyboard input or for time to elapse.
-
-   To make multiple subshells, rename the buffer `*shell*' to something
-different using `M-x rename-uniquely'.  Then type `M-x shell' again to
-create a new buffer `*shell*' with its own subshell.  If you rename
-this buffer as well, you can create a third one, and so on.  All the
-subshells run independently and in parallel.
-
-   The file name used to load the subshell is the value of the variable
-`explicit-shell-file-name', if that is non-`nil'.  Otherwise, the
-environment variable `ESHELL' is used, or the environment variable
-`SHELL' if there is no `ESHELL'.  If the file name specified is
-relative, the directories in the list `exec-path' are searched; this
-list is initialized based on the environment variable `PATH' when Emacs
-is started.  Your `.emacs' file can override either or both of these
-default initializations.
-
-   As soon as the subshell is started, it is sent as input the contents
-of the file `~/.emacs_SHELLNAME', if that file exists, where SHELLNAME
-is the name of the file that the shell was loaded from.  For example,
-if you use bash, the file sent to it is `~/.emacs_bash'.
-
-   `cd', `pushd' and `popd' commands given to the inferior shell are
-watched by Emacs so it can keep the `*shell*' buffer's default
-directory the same as the shell's working directory.  These commands
-are recognized syntactically by examining lines of input that are sent.
-If you use aliases for these commands, you can tell Emacs to recognize
-them also.  For example, if the value of the variable
-`shell-pushd-regexp' matches the beginning of a shell command line,
-that line is regarded as a `pushd' command.  Change this variable when
-you add aliases for `pushd'.  Likewise, `shell-popd-regexp' and
-`shell-cd-regexp' are used to recognize commands with the meaning of
-`popd' and `cd'.  These commands are recognized only at the beginning
-of a shell command line.
-
-   If Emacs gets an error while trying to handle what it believes is a
-`cd', `pushd' or `popd' command, it runs the hook
-`shell-set-directory-error-hook' (*note Hooks::.).
-
-   If Emacs does not properly track changes in the current directory of
-the subshell, use the command `M-x dirs' to ask the shell what its
-current directory is.  This command works for shells that support the
-most common command syntax; it may not work for unusual shells.
-
-
-File: emacs,  Node: Shell Mode,  Next: Shell History,  Prev: Interactive Shell,  Up: Shell
-
-Shell Mode
-----------
-
-   Shell buffers use Shell mode, which defines several special keys
-attached to the `C-c' prefix.  They are chosen to resemble the usual
-editing and job control characters present in shells that are not under
-Emacs, except that you must type `C-c' first.  Here is a complete list
-of the special key bindings of Shell mode:
-
-`RET'
-     At end of buffer send line as input; otherwise, copy current line
-     to end of buffer and send it (`comint-send-input').  When a line is
-     copied, any text at the beginning of the line that matches the
-     variable `shell-prompt-pattern' is left out; this variable's value
-     should be a regexp string that matches the prompts that your shell
-     uses.
-
-`TAB'
-     Complete the command name or file name before point in the shell
-     buffer (`comint-dynamic-complete').  TAB also completes history
-     references (*note History References::.) and environment variable
-     names.
-
-     The variable `shell-completion-fignore' specifies a list of file
-     name extensions to ignore in Shell mode completion.  The default
-     setting ignores file names ending in `~', `#' or `%'.  Other
-     related Comint modes use the variable `comint-completion-fignore'
-     instead.
-
-`M-?'
-     Display temporarily a list of the possible completions of the file
-     name before point in the shell buffer
-     (`comint-dynamic-list-filename-completions').
-
-`C-d'
-     Either delete a character or send EOF
-     (`comint-delchar-or-maybe-eof').  Typed at the end of the shell
-     buffer, `C-d' sends EOF to the subshell.  Typed at any other
-     position in the buffer, `C-d' deletes a character as usual.
-
-`C-c C-a'
-     Move to the beginning of the line, but after the prompt if any
-     (`comint-bol').
-
-`C-c C-u'
-     Kill all text pending at end of buffer to be sent as input
-     (`comint-kill-input').
-
-`C-c C-w'
-     Kill a word before point (`backward-kill-word').
-
-`C-c C-c'
-     Interrupt the shell or its current subjob if any
-     (`comint-interrupt-subjob').
-
-`C-c C-z'
-     Stop the shell or its current subjob if any (`comint-stop-subjob').
-
-`C-c C-\'
-     Send quit signal to the shell or its current subjob if any
-     (`comint-quit-subjob').
-
-`C-c C-o'
-     Kill the last batch of output from a shell command
-     (`comint-kill-output').  This is useful if a shell command spews
-     out lots of output that just gets in the way.
-
-`C-c C-r'
-`C-M-l'
-     Scroll to display the beginning of the last batch of output at the
-     top of the window; also move the cursor there
-     (`comint-show-output').
-
-`C-c C-e'
-     Scroll to put the end of the buffer at the bottom of the window
-     (`comint-show-maximum-output').
-
-`C-c C-f'
-     Move forward across one shell command, but not beyond the current
-     line (`shell-forward-command').  The variable
-     `shell-command-regexp' specifies how to recognize the end of a
-     command.
-
-`C-c C-b'
-     Move backward across one shell command, but not beyond the current
-     line (`shell-backward-command').
-
-`C-c C-l'
-     Display the buffer's history of shell commands in another window
-     (`comint-dynamic-list-input-ring').
-
-`M-x dirs'
-     Ask the shell what its current directory is, so that Emacs can
-     agree with the shell.
-
-`M-x send-invisible RET TEXT RET'
-     Send TEXT as input to the shell, after reading it without echoing.
-     This is useful when a shell command runs a program that asks for
-     a password.
-
-     Alternatively, you can arrange for Emacs to notice password prompts
-     and turn off echoing for them, as follows:
-
-          (add-hook 'comint-output-filter-functions
-                    'comint-watch-for-password-prompt)
-
-`M-x comint-continue-subjob'
-     Continue the shell process.  This is useful if you accidentally
-     suspend the shell process.(1)
-
-`M-x comint-strip-ctrl-m'
-     Discard all control-m characters from the current group of shell
-     output.  The most convenient way to use this command is to make it
-     run automatically when you get output from the subshell.  To do
-     that, evaluate this Lisp expression:
-
-          (add-hook 'comint-output-filter-functions
-                    'comint-strip-ctrl-m)
-
-`M-x comint-truncate-buffer'
-     This command truncates the shell buffer to a certain maximum
-     number of lines, specified by the variable
-     `comint-buffer-maximum-size'.  Here's how to do this automatically
-     each time you get output from the subshell:
-
-          (add-hook 'comint-output-filter-functions
-                    'comint-truncate-buffer)
-
-   Shell mode also customizes the paragraph commands so that only shell
-prompts start new paragraphs.  Thus, a paragraph consists of an input
-command plus the output that follows it in the buffer.
-
-   Shell mode is a derivative of Comint mode, a general purpose mode for
-communicating with interactive subprocesses.  Most of the features of
-Shell mode actually come from Comint mode, as you can see from the
-command names listed above.  The special features of Shell mode in
-particular include the choice of regular expression for detecting
-prompts, the directory tracking feature, and a few user commands.
-
-   Other Emacs features that use variants of Comint mode include GUD
-(*note Debuggers::.) and `M-x run-lisp' (*note External Lisp::.).
-
-   You can use `M-x comint-run' to execute any program of your choice
-in a subprocess using unmodified Comint mode--without the
-specializations of Shell mode.
-
-   ---------- Footnotes ----------
-
-   (1)  You should not suspend the shell process.  Suspending a subjob
-of the shell is a completely different matter--that is normal practice,
-but you must use the shell to continue the subjob; this command won't
-do it.
-
-
-File: emacs,  Node: Shell History,  Next: Shell Options,  Prev: Shell Mode,  Up: Shell
-
-Shell Command History
----------------------
-
-   Shell buffers support three ways of repeating earlier commands.  You
-can use the same keys used in the minibuffer; these work much as they do
-in the minibuffer, inserting text from prior commands while point
-remains always at the end of the buffer.  You can move through the
-buffer to previous inputs in their original place, then resubmit them or
-copy them to the end.  Or you can use a `!'-style history reference.
-
-* Menu:
-
-* Ring: Shell Ring.             Fetching commands from the history list.
-* Copy: Shell History Copying.  Moving to a command and then copying it.
-* History References::          Expanding `!'-style history references.
-
-
-File: emacs,  Node: Shell Ring,  Next: Shell History Copying,  Up: Shell History
-
-Shell History Ring
-..................
-
-`M-p'
-     Fetch the next earlier old shell command.
-
-`M-n'
-     Fetch the next later old shell command.
-
-`M-r REGEXP RET'
-`M-s REGEXP RET'
-     Search backwards or forwards for old shell commands that match
-     REGEXP.
-
-   Shell buffers provide a history of previously entered shell
-commands.  To reuse shell commands from the history, use the editing
-commands `M-p', `M-n', `M-r' and `M-s'.  These work just like the
-minibuffer history commands except that they operate on the text at the
-end of the shell buffer, where you would normally insert text to send
-to the shell.
-
-   `M-p' fetches an earlier shell command to the end of the shell
-buffer.  Successive use of `M-p' fetches successively earlier shell
-commands, each replacing any text that was already present as potential
-shell input.  `M-n' does likewise except that it finds successively
-more recent shell commands from the buffer.
-
-   The history search commands `M-r' and `M-s' read a regular
-expression and search through the history for a matching command.  Aside
-from the choice of which command to fetch, they work just like `M-p'
-and `M-r'.  If you enter an empty regexp, these commands reuse the same
-regexp used last time.
-
-   When you find the previous input you want, you can resubmit it by
-typing RET, or you can edit it first and then resubmit it if you wish.
-
-   These commands get the text of previous shell commands from a special
-history list, not from the shell buffer itself.  Thus, editing the shell
-buffer, or even killing large parts of it, does not affect the history
-that these commands access.
-
-   Some shells store their command histories in files so that you can
-refer to previous commands from previous shell sessions.  Emacs reads
-the command history file for your chosen shell, to initialize its own
-command history.  The file name is `~/.bash_history' for bash,
-`~/.sh_history' for ksh, and `~/.history' for other shells.
-
-
-File: emacs,  Node: Shell History Copying,  Next: History References,  Prev: Shell Ring,  Up: Shell History
-
-Shell History Copying
-.....................
-
-`C-c C-p'
-     Move point to the previous prompt (`comint-previous-prompt').
-
-`C-c C-n'
-     Move point to the following prompt (`comint-next-prompt').
-
-`C-c RET'
-     Copy the input command which point is in, inserting the copy at
-     the end of the buffer (`comint-copy-old-input').  This is useful
-     if you move point back to a previous command.  After you copy the
-     command, you can submit the copy as input with RET.  If you wish,
-     you can edit the copy before resubmitting it.
-
-   Moving to a previous input and then copying it with `C-c RET'
-produces the same results--the same buffer contents--that you would get
-by using `M-p' enough times to fetch that previous input from the
-history list.  However, `C-c RET' copies the text from the buffer,
-which can be different from what is in the history list if you edit the
-input text in the buffer after it has been sent.
-
-
-File: emacs,  Node: History References,  Prev: Shell History Copying,  Up: Shell History
-
-Shell History References
-........................
-
-   Various shells including csh and bash support "history references"
-that begin with `!' and `^'.  Shell mode can understand these
-constructs and perform the history substitution for you.  If you insert
-a history reference and type TAB, this searches the input history for a
-matching command, performs substitution if necessary, and places the
-result in the buffer in place of the history reference.  For example,
-you can fetch the most recent command beginning with `mv' with `! m v
-TAB'.  You can edit the command if you wish, and then resubmit the
-command to the shell by typing RET.
-
-   History references take effect only following a shell prompt.  The
-variable `shell-prompt-pattern' specifies how to recognize a shell
-prompt.  Comint modes in general use the variable
-`comint-prompt-regexp' to specify how to find a prompt; Shell mode uses
-`shell-prompt-pattern' to set up the local value of
-`comint-prompt-regexp'.
-
-   Shell mode can optionally expand history references in the buffer
-when you send them to the shell.  To request this, set the variable
-`comint-input-autoexpand' to `input'.
-
-   You can make SPC perform history expansion by binding SPC to the
-command `comint-magic-space'.
-
-
-File: emacs,  Node: Shell Options,  Next: Remote Host,  Prev: Shell History,  Up: Shell
-
-Shell Mode Options
-------------------
-
-   If the variable `comint-scroll-to-bottom-on-input' is non-`nil',
-insertion and yank commands scroll the selected window to the bottom
-before inserting.
-
-   If `comint-scroll-show-maximum-output' is non-`nil', then scrolling
-due to arrival of output tries to place the last line of text at the
-bottom line of the window, so as to show as much useful text as
-possible.  (This mimics the scrolling behavior of many terminals.) The
-default is `nil'.
-
-   By setting `comint-scroll-to-bottom-on-output', you can opt for
-having point jump to the end of the buffer whenever output arrives--no
-matter where in the buffer point was before.  If the value is `this',
-point jumps in the selected window.  If the value is `all', point jumps
-in each window that shows the comint buffer.  If the value is `other',
-point jumps in all nonselected windows that show the current buffer.
-The default value is `nil', which means point does not jump to the end.
-
-   The variable `comint-input-ignoredups' controls whether successive
-identical inputs are stored in the input history.  A non-`nil' value
-means to omit an input that is the same as the previous input.  The
-default is `nil', which means to store each input even if it is equal
-to the previous input.
-
-   Three variables customize file name completion.  The variable
-`comint-completion-addsuffix' controls whether completion inserts a
-space or a slash to indicate a fully completed file or directory name
-(non-`nil' means do insert a space or slash).
-`comint-completion-recexact', if non-`nil', directs TAB to choose the
-shortest possible completion if the usual Emacs completion algorithm
-cannot add even a single character.  `comint-completion-autolist', if
-non-`nil', says to list all the possible completions whenever
-completion is not exact.
-
-   The command `comint-dynamic-complete-variable' does variable name
-completion using the environment variables as set within Emacs.  The
-variables controlling file name completion apply to variable name
-completion too.  This command is normally available through the menu
-bar.
-
-   Command completion normally considers only executable files.  If you
-set `shell-command-execonly' to `nil', it considers nonexecutable files
-as well.
-
-   You can configure the behavior of `pushd'.  Variables control
-whether `pushd' behaves like `cd' if no argument is given
-(`shell-pushd-tohome'), pop rather than rotate with a numeric argument
-(`shell-pushd-dextract'), and only add directories to the directory
-stack if they are not already on it (`shell-pushd-dunique').  The
-values you choose should match the underlying shell, of course.
-
-
-File: emacs,  Node: Remote Host,  Prev: Shell Options,  Up: Shell
-
-Remote Host Shell
------------------
-
-   Emacs provides two commands for logging in to another computer and
-communicating with it through an Emacs buffer.
-
-`M-x telnet RET HOSTNAME RET'
-     Set up a Telnet connection to the computer named HOSTNAME.
-
-`M-x rlogin RET HOSTNAME RET'
-     Set up an Rlogin connection to the computer named HOSTNAME.
-
-   Use `M-x telnet' to set up a Telnet connection to another computer.
-(Telnet is the standard Internet protocol for remote login.) It reads
-the host name of the other computer as an argument with the minibuffer.
-Once the connection is established, talking to the other computer
-works like talking to a subshell: you can edit input with the usual
-Emacs commands, and send it a line at a time by typing RET.  The output
-is inserted in the Telnet buffer interspersed with the input.
-
-   Use `M-x rlogin' to set up an Rlogin connection.  Rlogin is another
-remote login communication protocol, essentially much like the Telnet
-protocol but incompatible with it, and supported only by certain
-systems.  Rlogin's advantages are that you can arrange not to have to
-give your user name and password when communicating between two machines
-you frequently use, and that you can make an 8-bit-clean connection.
-(To do that in Emacs, set `rlogin-explicit-args' to `("-8")' before you
-run Rlogin.)
-
-   `M-x rlogin' sets up the default file directory of the Emacs buffer
-to access the remote host via FTP (*note File Names::.), and it tracks
-the shell commands that change the current directory just like Shell
-mode.
-
-   There are two ways of doing directory tracking in an Rlogin
-buffer--either with remote directory names `/HOST:DIR/' or with local
-names (that works if the "remote" machine shares file systems with your
-machine of origin).  You can use the command
-`rlogin-directory-tracking-mode' to switch modes.  No argument means
-use remote directory names, a positive argument means use local names,
-and a negative argument means turn off directory tracking.
-
-
-File: emacs,  Node: Emacs Server,  Next: Hardcopy,  Prev: Shell,  Up: Top
-
-Using Emacs as a Server
+Shell Commands in Dired
 =======================
 
-   Various programs such as `mail' can invoke your choice of editor to
-edit a particular piece of text, such as a message that you are
-sending.  By convention, most of these programs use the environment
-variable `EDITOR' to specify which editor to run.  If you set `EDITOR'
-to `emacs', they invoke Emacs--but in an inconvenient fashion, by
-starting a new, separate Emacs process.  This is inconvenient because
-it takes time and because the new Emacs process doesn't share the
-buffers in the existing Emacs process.
+   The dired command `!' (`dired-do-shell-command') reads a shell
+command string in the minibuffer and runs that shell command on all the
+specified files.  There are two ways of applying a shell command to
+multiple files:
 
-   You can arrange to use your existing Emacs process as the editor for
-programs like `mail' by using the Emacs client and Emacs server
-programs.  Here is how.
+   * If you use `*' in the shell command, then it runs just once, with
+     the list of file names substituted for the `*'.  The order of file
+     names is the order of appearance in the Dired buffer.
 
-   First, the preparation.  Within Emacs, call the function
-`server-start'.  (Your `.emacs' file can do this automatically if you
-add the expression `(server-start)' to it.)  Then, outside Emacs, set
-the `EDITOR' environment variable to `emacsclient'.  (Note that some
-programs use a different environment variable; for example, to make TeX
-use `emacsclient', you should set the `TEXEDIT' environment variable to
-`emacsclient +%d %s'.)
+     Thus, `! tar cf foo.tar * <RET>' runs `tar' on the entire list of
+     file names, putting them into one tar file `foo.tar'.
 
-   Then, whenever any program invokes your specified `EDITOR' program,
-the effect is to send a message to your principal Emacs telling it to
-visit a file.  (That's what the program `emacsclient' does.) Emacs
-displays the buffer immediately and you can immediately begin editing
-it.
+   * If the command string doesn't contain `*', then it runs once *for
+     each file*, with the file name added at the end.
 
-   When you've finished editing that buffer, type `C-x #'
-(`server-edit').  This saves the file and sends a message back to the
-`emacsclient' program telling it to exit.  The programs that use
-`EDITOR' wait for the "editor" (actually, `emacsclient') to exit.  `C-x
-#' also checks for other pending external requests to edit various
-files, and selects the next such file.
+     For example, `! uudecode <RET>' runs `uudecode' on each file.
 
-   You can switch to a server buffer manually if you wish; you don't
-have to arrive at it with `C-x #'.  But `C-x #' is the only way to say
-that you are "finished" with one.
+   What if you want to run the shell command once for each file but with
+the file name inserted in the middle?  Or if you want to use the file
+names in a more complicated fashion?  Use a shell loop.  For example,
+this shell command would run `uuencode' on each of the specified files,
+writing the output into a corresponding `.uu' file:
 
-   If you set the variable `server-window' to a window or a frame, `C-x
-#' displays the server buffer in that window or in that frame.
+     for file in *; uuencode $file $file >$file.uu; done
 
-   While `mail' or another application is waiting for `emacsclient' to
-finish, `emacsclient' does not read terminal input.  So the terminal
-that `mail' was using is effectively blocked for the duration.  In
-order to edit with your principal Emacs, you need to be able to use it
-without using that terminal.  There are two ways to do this:
+   The working directory for the shell command is the top-level
+directory of the Dired buffer.
 
-   * Using a window system, run `mail' and the principal Emacs in two
-     separate windows.  While `mail' is waiting for `emacsclient', the
-     window where it was running is blocked, but you can use Emacs by
-     switching windows.
-
-   * Use Shell mode in Emacs to run the other program such as `mail';
-     then, `emacsclient' blocks only the subshell under Emacs, and you
-     can still use Emacs to edit the file.
-
-   Some programs write temporary files for you to edit.  After you edit
-the temporary file, the program reads it back and deletes it.  If the
-Emacs server is later asked to edit the same file name, it should assume
-this has nothing to do with the previous occasion for that file name.
-The server accomplishes this by killing the temporary file's buffer when
-you finish with the file.  Use the variable `server-temp-file-regexp'
-to specify which files are temporary in this sense; its value should be
-a regular expression that matches file names that are temporary.
+   The `!' command does not attempt to update the Dired buffer to show
+new or modified files, because it doesn't really understand shell
+commands, and does not know what files the shell command changed.  Use
+the `g' command to update the Dired buffer (*note Dired Updating::.).
 
 
-File: emacs,  Node: Hardcopy,  Next: Postscript,  Prev: Emacs Server,  Up: Top
+File: emacs,  Node: Transforming File Names,  Next: Comparison in Dired,  Prev: Shell Commands in Dired,  Up: Dired
 
-Hardcopy Output
-===============
+Transforming File Names in Dired
+================================
 
-   The Emacs commands for making hardcopy let you print either an entire
-buffer or just part of one, either with or without page headers.  See
-also the hardcopy commands of Dired (*note Misc File Ops::.) and the
-diary (*note Diary Commands::.).
+   Here are commands that alter file names in a systematic way:
 
-`M-x print-buffer'
-     Print hardcopy of current buffer with page headings containing the
-     file name and page number.
+`% u'
+     Rename each of the selected files to an upper-case name
+     (`dired-upcase').  If the old file names are `Foo' and `bar', the
+     new names are `FOO' and `BAR'.
 
-`M-x lpr-buffer'
-     Print hardcopy of current buffer without page headings.
+`% l'
+     Rename each of the selected files to a lower-case name
+     (`dired-downcase').  If the old file names are `Foo' and `bar',
+     the new names are `foo' and `bar'.
 
-`M-x print-region'
-     Like `print-buffer' but print only the current region.
+`% R FROM <RET> TO <RET>'
+`% C FROM <RET> TO <RET>'
+`% H FROM <RET> TO <RET>'
+`% S FROM <RET> TO <RET>'
+     These four commands rename, copy, make hard links and make soft
+     links, in each case computing the new name by regular-expression
+     substitution from the name of the old file.
 
-`M-x lpr-region'
-     Like `lpr-buffer' but print only the current region.
+   The four regular-expression substitution commands effectively perform
+a search-and-replace on the selected file names in the Dired buffer.
+They read two arguments: a regular expression FROM, and a substitution
+pattern TO.
 
-   The hardcopy commands (aside from the Postscript commands) pass extra
-switches to the `lpr' program based on the value of the variable
-`lpr-switches'.  Its value should be a list of strings, each string an
-option starting with `-'.  For example, to use a printer named
-`nearme', set `lpr-switches' like this:
+   The commands match each "old" file name against the regular
+expression FROM, and then replace the matching part with TO.  You can
+use `\&' and `\DIGIT' in TO to refer to all or part of what the pattern
+matched in the old file name, as in `query-replace-regexp' (*note Query
+Replace::.).  If the regular expression matches more than once in a
+file name, only the first match is replaced.
 
-     (setq lpr-switches '("-Pnearme"))
+   For example, `% R ^.*$ <RET> x-\& <RET>' renames each selected file
+by prepending `x-' to its name.  The inverse of this, removing `x-'
+from the front of each file name, is also possible: one method is `% R
+^x-\(.*\)$ <RET> \1 <RET>'; another is `% R ^x- <RET> <RET>'.  (Use `^'
+and `$' to anchor matches that should span the whole filename.)
 
-   The variable `lpr-command' specifies the name of the printer program
-to run; the default value depends on your operating system type.  On
-most systems, the default is `"lpr"'.  The variable
-`lpr-headers-switches' similarly specifies the extra switches to use to
-make page headers.  The variable `lpr-add-switches' controls whether to
-supply `-T' and `-J' options (suitable for `lpr') to the printer
-program: `nil' means don't add them.  `lpr-add-switches' should be
-`nil' if your printer program is not compatible with `lpr'.
+   Normally, the replacement process does not consider the files'
+directory names; it operates on the file name within the directory.  If
+you specify a numeric argument of zero, then replacement affects the
+entire absolute file name including directory name.
+
+   Often you will want to apply the command to all files matching the
+same REGEXP that you use in the command.  To do this, mark those files
+with `% m REGEXP <RET>', then use the same regular expression in the
+command to operate on the files.  To make this easier, the `%' commands
+to operate on files use the last regular expression specified in any
+`%' command as a default.
 
 
-File: emacs,  Node: Postscript,  Next: Sorting,  Prev: Hardcopy,  Up: Top
+File: emacs,  Node: Comparison in Dired,  Next: Subdirectories in Dired,  Prev: Transforming File Names,  Up: Dired
 
-Postscript Hardcopy
-===================
+File Comparison with Dired
+==========================
 
-   These commands convert buffer contents to Postscript, either
-printing it or leaving it in another Emacs buffer.
+   Here are two Dired commands that compare specified files using
+`diff'.
 
-`M-x ps-print-buffer'
-     Print hardcopy of the current buffer in Postscript form.
+`='
+     Compare the current file (the file at point) with another file
+     (the file at the mark) using the `diff' program (`dired-diff').
+     The file at the mark is the first argument of `diff', and the file
+     at point is the second argument.
 
-`M-x ps-print-region'
-     Print hardcopy of the current region in Postscript form.
+`M-='
+     Compare the current file with its latest backup file
+     (`dired-backup-diff').  If the current file is itself a backup,
+     compare it with the file it is a backup of; this way, you can
+     compare a file with any backup version of your choice.
 
-`M-x ps-print-buffer-with-faces'
-     Print hardcopy of the current buffer in Postscript form, showing
-     the faces used in the text by means of Postscript features.
+     The backup file is the first file given to `diff'.
 
-`M-x ps-print-region-with-faces'
-     Print hardcopy of the current region in Postscript form, showing
-     the faces used in the text.
+
+File: emacs,  Node: Subdirectories in Dired,  Next: Subdirectory Motion,  Prev: Comparison in Dired,  Up: Dired
 
-`M-x ps-spool-buffer'
-     Generate Postscript for the current buffer text.
+Subdirectories in Dired
+=======================
 
-`M-x ps-spool-region'
-     Generate Postscript for the current region.
+   A Dired buffer displays just one directory in the normal case; but
+you can optionally include its subdirectories as well.
 
-`M-x ps-spool-buffer-with-faces'
-     Generate Postscript for the current buffer, showing the faces used.
+   The simplest way to include multiple directories in one Dired buffer
+is to specify the options `-lR' for running `ls'.  (If you give a
+numeric argument when you run Dired, then you can specify these options
+in the minibuffer.)  That produces a recursive directory listing showing
+all subdirectories at all levels.
 
-`M-x ps-spool-region-with-faces'
-     Generate Postscript for the current region, showing the faces used.
+   But usually all the subdirectories are too many; usually you will
+prefer to include specific subdirectories only.  You can do this with
+the `i' command:
 
-   The Postscript commands, `ps-print-buffer' and `ps-print-region',
-print buffer contents in Postscript form.  One command prints the
-entire buffer; the other, just the region.  The corresponding
-`-with-faces' commands, `ps-print-buffer-with-faces' and
-`ps-print-region-with-faces', use Postscript features to show the faces
-(fonts and colors) in the text properties of the text being printed.
+`i'
+     Insert the contents of a subdirectory later in the buffer.
 
-   If you are using a color display, you can print a buffer of program
-code with color highlighting by turning on Font-Lock mode in that
-buffer, and using `ps-print-buffer-with-faces'.
+   Use the `i' (`dired-maybe-insert-subdir') command on a line that
+describes a file which is a directory.  It inserts the contents of that
+directory into the same Dired buffer, and moves there.  Inserted
+subdirectory contents follow the top-level directory of the Dired
+buffer, just as they do in `ls -lR' output.
 
-   All four of the commands above use the variables `ps-lpr-command'
-and `ps-lpr-switches' to specify how to print the output.
-`ps-lpr-command' specifies the command name to run, and
-`ps-lpr-switches' specifies command line options to use.  If you don't
-set these variables yourself, they take their initial values from
-`lpr-command' and `lpr-switches'.
+   If the subdirectory's contents are already present in the buffer, the
+`i' command just moves to it.
 
-   The variable `ps-print-header' controls whether these commands add
-header lines to each page--set it to `nil' to turn headers off.  You
-can turn off color processing by setting `ps-print-color-p' to `nil'.
-Many other customization variables for these commands are defined and
-described in the Lisp file `ps-print.el'.
+   In either case, `i' sets the Emacs mark before moving, so `C-u
+C-<SPC>' takes you back to the old position in the buffer (the line
+describing that subdirectory).
 
-   The commands whose names have `spool' instead of `print' generate
-the Postscript output in an Emacs buffer instead of sending it to the
-printer.
+   Use the `l' command (`dired-do-redisplay') to update the
+subdirectory's contents.  Use `k' to delete the subdirectory.  *Note
+Dired Updating::.
+
+
+File: emacs,  Node: Subdirectory Motion,  Next: Hiding Subdirectories,  Prev: Subdirectories in Dired,  Up: Dired
+
+Moving Over Subdirectories
+==========================
+
+   When a Dired buffer lists subdirectories, you can use the page motion
+commands `C-x [' and `C-x ]' to move by entire directories.
+
+   The following commands move across, up and down in the tree of
+directories within one Dired buffer.  They move to "directory header
+lines", which are the lines that give a directory's name, at the
+beginning of the directory's contents.
+
+`C-M-n'
+     Go to next subdirectory header line, regardless of level
+     (`dired-next-subdir').
+
+`C-M-p'
+     Go to previous subdirectory header line, regardless of level
+     (`dired-prev-subdir').
+
+`C-M-u'
+     Go up to the parent directory's header line (`dired-tree-up').
+
+`C-M-d'
+     Go down in the directory tree, to the first subdirectory's header
+     line (`dired-tree-down').
+
+
+File: emacs,  Node: Hiding Subdirectories,  Next: Dired Updating,  Prev: Subdirectory Motion,  Up: Dired
+
+Hiding Subdirectories
+=====================
+
+   "Hiding" a subdirectory means to make it invisible, except for its
+header line, via selective display (*note Selective Display::.).
+
+`$'
+     Hide or reveal the subdirectory that point is in, and move point
+     to the next subdirectory (`dired-hide-subdir').  A numeric
+     argument serves as a repeat count.
+
+`M-$'
+     Hide all subdirectories in this Dired buffer, leaving only their
+     header lines (`dired-hide-all').  Or, if any subdirectory is
+     currently hidden, make all subdirectories visible again.  You can
+     use this command to get an overview in very deep directory trees
+     or to move quickly to subdirectories far away.
+
+   Ordinary Dired commands never consider files inside a hidden
+subdirectory.  For example, the commands to operate on marked files
+ignore files in hidden directories even if they are marked.  Thus you
+can use hiding to temporarily exclude subdirectories from operations
+without having to remove the markers.
+
+   The subdirectory hiding commands toggle; that is, they hide what was
+visible, and show what was hidden.
+
+
+File: emacs,  Node: Dired Updating,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired
+
+Updating the Dired Buffer
+=========================
+
+   This section describes commands to update the Dired buffer to reflect
+outside (non-Dired) changes in the directories and files, and to delete
+part of the Dired buffer.
+
+`g'
+     Update the entire contents of the Dired buffer (`revert-buffer').
+
+`l'
+     Update the specified files (`dired-do-redisplay').
+
+`k'
+     Delete the specified *file lines*--not the files, just the lines
+     (`dired-do-kill-lines').
+
+`s'
+     Toggle between alphabetical order and date/time order
+     (`dired-sort-toggle-or-edit').
+
+`C-u s SWITCHES <RET>'
+     Refresh the Dired buffer using SWITCHES as
+     `dired-listing-switches'.
+
+   Type `g' (`revert-buffer') to update the contents of the Dired
+buffer, based on changes in the files and directories listed.  This
+preserves all marks except for those on files that have vanished.
+Hidden subdirectories are updated but remain hidden.
+
+   To update only some of the files, type `l' (`dired-do-redisplay').
+This command applies to the next N files, or to the marked files if
+any, or to the current file.  Updating them means reading their current
+status from the file system and changing the buffer to reflect it
+properly.
+
+   If you use `l' on a subdirectory header line, it updates the
+contents of the corresponding subdirectory.
+
+   To delete the specified *file lines*--not the files, just the
+lines--type `k' (`dired-do-kill-lines').  This command applies to the
+next N files, or to the marked files if any, or to the current file.
+
+   If you kill the line for a file that is a directory, the directory's
+contents are also deleted from the buffer.  Typing `C-u k' on the
+header line for a subdirectory is another way to delete a subdirectory
+from the Dired buffer.
+
+   The `g' command brings back any individual lines that you have
+killed in this way, but not subdirectories--you must use `i' to
+reinsert each subdirectory.
+
+   The files in a Dired buffers are normally in listed alphabetical
+order by file names.  Alternatively Dired can sort them by date/time.
+The Dired command `s' (`dired-sort-toggle-or-edit') switches between
+these two sorting modes.  The mode line in a Dired buffer indicates
+which way it is currently sorted--by name, or by date.
+
+   `C-u s SWITCHES <RET>' lets you specify a new value for
+`dired-listing-switches'.
+
+
+File: emacs,  Node: Dired and Find,  Prev: Dired Updating,  Up: Dired
+
+Dired and `find'
+================
+
+   You can select a set of files for display in a Dired buffer more
+flexibly by using the `find' utility to choose the files.
+
+   To search for files with names matching a wildcard pattern use `M-x
+find-name-dired'.  It reads arguments DIRECTORY and PATTERN, and
+chooses all the files in DIRECTORY or its subdirectories whose
+individual names match PATTERN.
+
+   The files thus chosen are displayed in a Dired buffer in which the
+ordinary Dired commands are available.
+
+   If you want to test the contents of files, rather than their names,
+use `M-x find-grep-dired'.  This command reads two minibuffer
+arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
+or its subdirectories that contain a match for REGEXP.  It works by
+running the programs `find' and `grep'.  See also `M-x grep-find', in
+*Note Compilation::.
+
+   The most general command in this series is `M-x find-dired', which
+lets you specify any condition that `find' can test.  It takes two
+minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
+DIRECTORY, passing FIND-ARGS to tell `find' what condition to test.  To
+use this command, you need to know how to use `find'.
+
+   The format of listing produced by these commands is controlled by the
+variable `find-ls-option', whose default value specifies using options
+`-ldi' for `ls'.  If your listings are corrupted, you may need to
+change the value of this variable.
+
+
+File: emacs,  Node: Calendar/Diary,  Next: Gnus,  Prev: Dired,  Up: Top
+
+The Calendar and the Diary
+**************************
+
+   Emacs provides the functions of a desk calendar, with a diary of
+planned or past events.  To enter the calendar, type `M-x calendar';
+this displays a three-month calendar centered on the current month, with
+point on the current date.  With a numeric argument, as in `C-u M-x
+calendar', it prompts you for the month and year to be the center of the
+three-month calendar.  The calendar uses its own buffer, whose major
+mode is Calendar mode.
+
+   `Mouse-2' in the calendar brings up a menu of operations on a
+particular date; `C-Mouse-3' brings up a menu of commonly used calendar
+features that are independent of any particular date.  To exit the
+calendar, type `q'.  *Note Customizing the Calendar and Diary:
+(elisp)Calendar, for customization information about the calendar and
+diary.
+
+* Menu:
+
+* Calendar Motion::     Moving through the calendar; selecting a date.
+* Scroll Calendar::     Bringing earlier or later months onto the screen.
+* Counting Days::       How many days are there between two dates?
+* General Calendar::    Exiting or recomputing the calendar.
+* LaTeX Calendar::      Print a calendar using LaTeX.
+* Holidays::            Displaying dates of holidays.
+* Sunrise/Sunset::      Displaying local times of sunrise and sunset.
+* Lunar Phases::        Displaying phases of the moon.
+* Other Calendars::     Converting dates to other calendar systems.
+* Diary::               Displaying events from your diary.
+* Appointments::	Reminders when it's time to do something.
+* Daylight Savings::    How to specify when daylight savings time is active.
+
+
+File: emacs,  Node: Calendar Motion,  Next: Scroll Calendar,  Up: Calendar/Diary
+
+Movement in the Calendar
+========================
+
+   Calendar mode lets you move through the calendar in logical units of
+time such as days, weeks, months, and years.  If you move outside the
+three months originally displayed, the calendar display "scrolls"
+automatically through time to make the selected date visible.  Moving to
+a date lets you view its holidays or diary entries, or convert it to
+other calendars; moving longer time periods is also useful simply to
+scroll the calendar.
+
+* Menu:
+
+* Calendar Unit Motion::      Moving by days, weeks, months, and years.
+* Move to Beginning or End::  Moving to start/end of weeks, months, and years.
+* Specified Dates::           Moving to the current date or another
+                                specific date.
+
+
+File: emacs,  Node: Calendar Unit Motion,  Next: Move to Beginning or End,  Up: Calendar Motion
+
+Motion by Standard Lengths of Time
+----------------------------------
+
+   The commands for movement in the calendar buffer parallel the
+commands for movement in text.  You can move forward and backward by
+days, weeks, months, and years.
+
+`C-f'
+     Move point one day forward (`calendar-forward-day').
+
+`C-b'
+     Move point one day backward (`calendar-backward-day').
+
+`C-n'
+     Move point one week forward (`calendar-forward-week').
+
+`C-p'
+     Move point one week backward (`calendar-backward-week').
+
+`M-}'
+     Move point one month forward (`calendar-forward-month').
+
+`M-{'
+     Move point one month backward (`calendar-backward-month').
+
+`C-x ]'
+     Move point one year forward (`calendar-forward-year').
+
+`C-x ['
+     Move point one year backward (`calendar-backward-year').
+
+   The day and week commands are natural analogues of the usual Emacs
+commands for moving by characters and by lines.  Just as `C-n' usually
+moves to the same column in the following line, in Calendar mode it
+moves to the same day in the following week.  And `C-p' moves to the
+same day in the previous week.
+
+   The arrow keys are equivalent to `C-f', `C-b', `C-n' and `C-p', just
+as they normally are in other modes.
+
+   The commands for motion by months and years work like those for
+weeks, but move a larger distance.  The month commands `M-}' and `M-{'
+move forward or backward by an entire month's time.  The year commands
+`C-x ]' and `C-x [' move forward or backward a whole year.
+
+   The easiest way to remember these commands is to consider months and
+years analogous to paragraphs and pages of text, respectively.  But the
+commands themselves are not quite analogous.  The ordinary Emacs
+paragraph commands move to the beginning or end of a paragraph, whereas
+these month and year commands move by an entire month or an entire
+year, which usually involves skipping across the end of a month or year.
+
+   All these commands accept a numeric argument as a repeat count.  For
+convenience, the digit keys and the minus sign specify numeric
+arguments in Calendar mode even without the Meta modifier.  For example,
+`100 C-f' moves point 100 days forward from its present location.
+
+
+File: emacs,  Node: Move to Beginning or End,  Next: Specified Dates,  Prev: Calendar Unit Motion,  Up: Calendar Motion
+
+Beginning or End of Week, Month or Year
+---------------------------------------
+
+   A week (or month, or year) is not just a quantity of days; we think
+of weeks (months, years) as starting on particular dates.  So Calendar
+mode provides commands to move to the beginning or end of a week, month
+or year:
+
+`C-a'
+     Move point to start of week (`calendar-beginning-of-week').
+
+`C-e'
+     Move point to end of week (`calendar-end-of-week').
+
+`M-a'
+     Move point to start of month (`calendar-beginning-of-month').
+
+`M-e'
+     Move point to end of month (`calendar-end-of-month').
+
+`M-<'
+     Move point to start of year (`calendar-beginning-of-year').
+
+`M->'
+     Move point to end of year (`calendar-end-of-year').
+
+   These commands also take numeric arguments as repeat counts, with the
+repeat count indicating how many weeks, months, or years to move
+backward or forward.
+
+   By default, weeks begin on Sunday.  To make them begin on Monday
+instead, set the variable `calendar-week-start-day' to 1.
+
+
+File: emacs,  Node: Specified Dates,  Prev: Move to Beginning or End,  Up: Calendar Motion
+
+Specified Dates
+---------------
+
+   Calendar mode provides commands for moving to a particular date
+specified in various ways.
+
+`g d'
+     Move point to specified date (`calendar-goto-date').
+
+`o'
+     Center calendar around specified month (`calendar-other-month').
+
+`.'
+     Move point to today's date (`calendar-goto-today').
+
+   `g d' (`calendar-goto-date') prompts for a year, a month, and a day
+of the month, and then moves to that date.  Because the calendar
+includes all dates from the beginning of the current era, you must type
+the year in its entirety; that is, type `1990', not `90'.
+
+   `o' (`calendar-other-month') prompts for a month and year, then
+centers the three-month calendar around that month.
+
+   You can return to today's date with `.'  (`calendar-goto-today').
+
+
+File: emacs,  Node: Scroll Calendar,  Next: Counting Days,  Prev: Calendar Motion,  Up: Calendar/Diary
+
+Scrolling in the Calendar
+=========================
+
+   The calendar display scrolls automatically through time when you
+move out of the visible portion.  You can also scroll it manually.
+Imagine that the calendar window contains a long strip of paper with
+the months on it.  Scrolling it means moving the strip so that new
+months become visible in the window.
+
+`C-x <'
+     Scroll calendar one month forward (`scroll-calendar-left').
+
+`C-x >'
+     Scroll calendar one month backward (`scroll-calendar-right').
+
+`C-v'
+`<NEXT>'
+     Scroll calendar three months forward
+     (`scroll-calendar-left-three-months').
+
+`M-v'
+`<PRIOR>'
+     Scroll calendar three months backward
+     (`scroll-calendar-right-three-months').
+
+   The most basic calendar scroll commands scroll by one month at a
+time.  This means that there are two months of overlap between the
+display before the command and the display after.  `C-x <' scrolls the
+calendar contents one month to the left; that is, it moves the display
+forward in time.  `C-x >' scrolls the contents to the right, which
+moves backwards in time.
+
+   The commands `C-v' and `M-v' scroll the calendar by an entire
+"screenful"--three months--in analogy with the usual meaning of these
+commands.  `C-v' makes later dates visible and `M-v' makes earlier
+dates visible.  These commands take a numeric argument as a repeat
+count; in particular, since `C-u' multiplies the next command by four,
+typing `C-u C-v' scrolls the calendar forward by a year and typing `C-u
+M-v' scrolls the calendar backward by a year.
+
+   The function keys <NEXT> and <PRIOR> are equivalent to `C-v' and
+`M-v', just as they are in other modes.
+
+
+File: emacs,  Node: Counting Days,  Next: General Calendar,  Prev: Scroll Calendar,  Up: Calendar/Diary
+
+Counting Days
+=============
+
+`M-='
+     Display the number of days in the current region
+     (`calendar-count-days-region').
+
+   To determine the number of days in the region, type `M-='
+(`calendar-count-days-region').  The numbers of days printed is
+*inclusive*; that is, it includes the days specified by mark and point.
+
+
+File: emacs,  Node: General Calendar,  Next: LaTeX Calendar,  Prev: Counting Days,  Up: Calendar/Diary
+
+Miscellaneous Calendar Commands
+===============================
+
+`p d'
+     Display day-in-year (`calendar-print-day-of-year').
+
+`C-c C-l'
+     Regenerate the calendar window (`redraw-calendar').
+
+`SPC'
+     Scroll the next window (`scroll-other-window').
+
+`q'
+     Exit from calendar (`exit-calendar').
+
+   To print the number of days elapsed since the start of the year, or
+the number of days remaining in the year, type the `p d' command
+(`calendar-print-day-of-year').  This displays both of those numbers in
+the echo area.  The number of days elapsed includes the selected date.
+The number of days remaining does not include that date.
+
+   If the calendar window text gets corrupted, type `C-c C-l'
+(`redraw-calendar') to redraw it.  (This can only happen if you use
+non-Calendar-mode editing commands.)
+
+   In Calendar mode, you can use `SPC' (`scroll-other-window') to
+scroll the other window.  This is handy when you display a list of
+holidays or diary entries in another window.
+
+   To exit from the calendar, type `q' (`exit-calendar').  This buries
+all buffers related to the calendar, selecting other buffers.  (If a
+frame contains a dedicated calendar window, exiting from the calendar
+iconifies that frame.)
+
+
+File: emacs,  Node: LaTeX Calendar,  Next: Holidays,  Prev: General Calendar,  Up: Calendar/Diary
+
+LaTeX Calendar
+==============
+
+   The Calendar LaTeX commands produce a buffer of LaTeX code that
+prints as a calendar.  Depending on the command you use, the printed
+calendar covers the day, week, month or year that point is in.
+
+`t m'
+     Generate a one-month calendar (`cal-tex-cursor-month').
+
+`t M'
+     Generate a sideways-printing one-month calendar
+     (`cal-tex-cursor-month-landscape').
+
+`t d'
+     Generate a one-day calendar (`cal-tex-cursor-day').
+
+`t w 1'
+     Generate a one-page calendar for one week (`cal-tex-cursor-week').
+
+`t w 2'
+     Generate a two-page calendar for one week (`cal-tex-cursor-week2').
+
+`t w 3'
+     Generate an ISO-style calendar for one week
+     (`cal-tex-cursor-week-iso').
+
+`t w 4'
+     Generate a calendar for one Monday-starting week
+     (`cal-tex-cursor-week-monday').
+
+`t f w'
+     Generate a Filofax-style two-weeks-at-a-glance calendar
+     (`cal-tex-cursor-filofax-2week').
+
+`t f W'
+     Generate a Filofax-style one-week-at-a-glance calendar
+     (`cal-tex-cursor-filofax-week').
+
+`t y'
+     Generate a calendar for one year (`cal-tex-cursor-year').
+
+`t Y'
+     Generate a sideways-printing calendar for one year
+     (`cal-tex-cursor-landscape-year').
+
+`t f y'
+     Generate a Filofax-style calendar for one year
+     (`cal-tex-cursor-filofax-year').
+
+   Some of these commands print the calendar sideways (in "landscape
+mode"), so it can be wider than it is long.  Some of them use Filofax
+paper size (3.75in x 6.75in).  All of these commands accept a prefix
+argument which specifies how many days, weeks, months or years to print
+(starting always with the selected one).
+
+   If the variable `cal-tex-holidays' is non-`nil' (the default), then
+the printed calendars show the holidays in `calendar-holidays'.  If the
+variable `cal-tex-diary' is non-`nil' (the default is `nil'), diary
+entries are included also (in weekly and monthly calendars only).
+
+
+File: emacs,  Node: Holidays,  Next: Sunrise/Sunset,  Prev: LaTeX Calendar,  Up: Calendar/Diary
+
+Holidays
+========
+
+   The Emacs calendar knows about all major and many minor holidays,
+and can display them.
+
+`h'
+     Display holidays for the selected date
+     (`calendar-cursor-holidays').
+
+`Mouse-2 Holidays'
+     Display any holidays for the date you click on.
+
+`x'
+     Mark holidays in the calendar window (`mark-calendar-holidays').
+
+`u'
+     Unmark calendar window (`calendar-unmark').
+
+`a'
+     List all holidays for the displayed three months in another window
+     (`list-calendar-holidays').
+
+`M-x holidays'
+     List all holidays for three months around today's date in another
+     window.
+
+`M-x list-holidays'
+     List holidays in another window for a specified range of years.
+
+   To see if any holidays fall on a given date, position point on that
+date in the calendar window and use the `h' command.  Alternatively,
+click on that date with `Mouse-2' and then choose `Holidays' from the
+menu that appears.  Either way, this displays the holidays for that
+date, in the echo area if they fit there, otherwise in a separate
+window.
+
+   To view the distribution of holidays for all the dates shown in the
+calendar, use the `x' command.  This displays the dates that are
+holidays in a different face (or places a `*' after these dates, if
+display with multiple faces is not available).  The command applies both
+to the currently visible months and to other months that subsequently
+become visible by scrolling.  To turn marking off and erase the current
+marks, type `u', which also erases any diary marks (*note Diary::.).
+
+   To get even more detailed information, use the `a' command, which
+displays a separate buffer containing a list of all holidays in the
+current three-month range.  You can use <SPC> in the calendar window to
+scroll that list.
+
+   The command `M-x holidays' displays the list of holidays for the
+current month and the preceding and succeeding months; this works even
+if you don't have a calendar window.  If you want the list of holidays
+centered around a different month, use `C-u M-x holidays', which
+prompts for the month and year.
+
+   The holidays known to Emacs include United States holidays and the
+major Christian, Jewish, and Islamic holidays; also the solstices and
+equinoxes.
+
+   The command `M-x list-holidays' displays the list of holidays for a
+range of years.  This function asks you for the starting and stopping
+years, and allows you to chose all the holidays or one of several
+categories of holidays.  You can use this command even if you don't have
+a calendar window.
+
+   The dates used by Emacs for holidays are based on *current
+practice*, not historical fact.  Historically, for instance, the start
+of daylight savings time and even its existence have varied from year to
+year, but present United States law mandates that daylight savings time
+begins on the first Sunday in April.  When the daylight savings rules
+are set up for the United States, Emacs always uses the present
+definition, even though it is wrong for some prior years.
+
+
+File: emacs,  Node: Sunrise/Sunset,  Next: Lunar Phases,  Prev: Holidays,  Up: Calendar/Diary
+
+Times of Sunrise and Sunset
+===========================
+
+   Special calendar commands can tell you, to within a minute or two,
+the times of sunrise and sunset for any date.
+
+`S'
+     Display times of sunrise and sunset for the selected date
+     (`calendar-sunrise-sunset').
+
+`Mouse-2 Sunrise/Sunset'
+     Display times of sunrise and sunset for the date you click on.
+
+`M-x sunrise-sunset'
+     Display times of sunrise and sunset for today's date.
+
+`C-u M-x sunrise-sunset'
+     Display times of sunrise and sunset for a specified date.
+
+   Within the calendar, to display the *local times* of sunrise and
+sunset in the echo area, move point to the date you want, and type `S'.
+Alternatively, click `Mouse-2' on the date, then choose
+`Sunrise/Sunset' from the menu that appears.  The command `M-x
+sunrise-sunset' is available outside the calendar to display this
+information for today's date or a specified date.  To specify a date
+other than today, use `C-u M-x sunrise-sunset', which prompts for the
+year, month, and day.
+
+   You can display the times of sunrise and sunset for any location and
+any date with `C-u C-u M-x sunrise-sunset'.  This asks you for a
+longitude, latitude, number of minutes difference from Coordinated
+Universal Time, and date, and then tells you the times of sunrise and
+sunset for that location on that date.
+
+   Because the times of sunrise and sunset depend on the location on
+earth, you need to tell Emacs your latitude, longitude, and location
+name before using these commands.  Here is an example of what to set:
+
+     (setq calendar-latitude 40.1)
+     (setq calendar-longitude -88.2)
+     (setq calendar-location-name "Urbana, IL")
+
+Use one decimal place in the values of `calendar-latitude' and
+`calendar-longitude'.
+
+   Your time zone also affects the local time of sunrise and sunset.
+Emacs usually gets time zone information from the operating system, but
+if these values are not what you want (or if the operating system does
+not supply them), you must set them yourself.  Here is an example:
+
+     (setq calendar-time-zone -360)
+     (setq calendar-standard-time-zone-name "CST")
+     (setq calendar-daylight-time-zone-name "CDT")
+
+The value of `calendar-time-zone' is the number of minutes difference
+between your local standard time and Coordinated Universal Time
+(Greenwich time).  The values of `calendar-standard-time-zone-name' and
+`calendar-daylight-time-zone-name' are the abbreviations used in your
+time zone.  Emacs displays the times of sunrise and sunset *corrected
+for daylight savings time*.  *Note Daylight Savings::, for how daylight
+savings time is determined.
+
+   As a user, you might find it convenient to set the calendar location
+variables for your usual physical location in your `.emacs' file.  And
+when you install Emacs on a machine, you can create a `default.el' file
+which sets them properly for the typical location of most users of that
+machine.  *Note Init File::.
+
+
+File: emacs,  Node: Lunar Phases,  Next: Other Calendars,  Prev: Sunrise/Sunset,  Up: Calendar/Diary
+
+Phases of the Moon
+==================
+
+   These calendar commands display the dates and times of the phases of
+the moon (new moon, first quarter, full moon, last quarter).  This
+feature is useful for debugging problems that "depend on the phase of
+the moon."
+
+`M'
+     Display the dates and times for all the quarters of the moon for
+     the three-month period shown (`calendar-phases-of-moon').
+
+`M-x phases-of-moon'
+     Display dates and times of the quarters of the moon for three
+     months around today's date.
+
+   Within the calendar, use the `M' command to display a separate
+buffer of the phases of the moon for the current three-month range.  The
+dates and times listed are accurate to within a few minutes.
+
+   Outside the calendar, use the command `M-x phases-of-moon' to
+display the list of the phases of the moon for the current month and the
+preceding and succeeding months.  For information about a different
+month, use `C-u M-x phases-of-moon', which prompts for the month and
+year.
+
+   The dates and times given for the phases of the moon are given in
+local time (corrected for daylight savings, when appropriate); but if
+the variable `calendar-time-zone' is void, Coordinated Universal Time
+(the Greenwich time zone) is used.  *Note Daylight Savings::.
+
+
+File: emacs,  Node: Other Calendars,  Next: Diary,  Prev: Lunar Phases,  Up: Calendar/Diary
+
+Conversion To and From Other Calendars
+======================================
+
+   The Emacs calendar displayed is *always* the Gregorian calendar,
+sometimes called the "new style" calendar, which is used in most of the
+world today.  However, this calendar did not exist before the sixteenth
+century and was not widely used before the eighteenth century; it did
+not fully displace the Julian calendar and gain universal acceptance
+until the early twentieth century.  The Emacs calendar can display any
+month since January, year 1 of the current era, but the calendar
+displayed is the Gregorian, even for a date at which the Gregorian
+calendar did not exist.
+
+   While Emacs cannot display other calendars, it can convert dates to
+and from several other calendars.
+
+* Menu:
+
+* Calendar Systems::	   The calendars Emacs understands
+			     (aside from Gregorian).
+* To Other Calendar::	   Converting the selected date to various calendars.
+* From Other Calendar::	   Moving to a date specified in another calendar.
+* Mayan Calendar::	   Moving to a date specified in a Mayan calendar.
+
+
+File: emacs,  Node: Calendar Systems,  Next: To Other Calendar,  Up: Other Calendars
+
+Supported Calendar Systems
+--------------------------
+
+   The ISO commercial calendar is used largely in Europe.
+
+   The Julian calendar, named after Julius Caesar, was the one used in
+Europe throughout medieval times, and in many countries up until the
+nineteenth century.
+
+   Astronomers use a simple counting of days elapsed since noon, Monday,
+January 1, 4713 B.C. on the Julian calendar.  The number of days elapsed
+is called the *Julian day number* or the *Astronomical day number*.
+
+   The Hebrew calendar is used by tradition in the Jewish religion.  The
+Emacs calendar program uses the Hebrew calendar to determine the dates
+of Jewish holidays.  Hebrew calendar dates begin and end at sunset.
+
+   The Islamic calendar is used in many predominantly Islamic countries.
+Emacs uses it to determine the dates of Islamic holidays.  There is no
+universal agreement in the Islamic world about the calendar; Emacs uses
+a widely accepted version, but the precise dates of Islamic holidays
+often depend on proclamation by religious authorities, not on
+calculations.  As a consequence, the actual dates of observance can vary
+slightly from the dates computed by Emacs.  Islamic calendar dates begin
+and end at sunset.
+
+   The French Revolutionary calendar was created by the Jacobins after
+the 1789 revolution, to represent a more secular and nature-based view
+of the annual cycle, and to install a 10-day week in a rationalization
+measure similar to the metric system.  The French government officially
+abandoned this calendar at the end of 1805.
+
+   The Maya of Central America used three separate, overlapping calendar
+systems, the *long count*, the *tzolkin*, and the *haab*.  Emacs knows
+about all three of these calendars.  Experts dispute the exact
+correlation between the Mayan calendar and our calendar; Emacs uses the
+Goodman-Martinez-Thompson correlation in its calculations.
+
+   The Copts use a calendar based on the ancient Egyptian solar
+calendar.  Their calendar consists of twelve 30-day months followed by
+an extra five-day period.  Once every fourth year they add a leap day
+to this extra period to make it six days.  The Ethiopic calendar is
+identical in structure, but has different year numbers and month names.
+
+   The Persians use a solar calendar based on a design of Omar Khayyam.
+Their calendar consists of twelve months of which the first six have 31
+days, the next five have 30 days, and the last has 29 in ordinary years
+and 30 in leap years.  Leap years occur in a complicated pattern every
+four or five years.
+
+   The Chinese calendar is a complicated system of lunar months arranged
+into solar years.  The years go in cycles of sixty, each year containing
+either twelve months in an ordinary year or thirteen months in a leap
+year; each month has either 29 or 30 days.  Years, ordinary months, and
+days are named by combining one of ten "celestial stems" with one of
+twelve "terrestrial branches" for a total of sixty names that are
+repeated in a cycle of sixty.
+
+
+File: emacs,  Node: To Other Calendar,  Next: From Other Calendar,  Prev: Calendar Systems,  Up: Other Calendars
+
+Converting To Other Calendars
+-----------------------------
+
+   The following commands describe the selected date (the date at point)
+in various other calendar systems:
+
+`Mouse-2  Other Calendars'
+     Display the date that you click on, expressed in various other
+     calendars.
+
+`p c'
+     Display ISO commercial calendar equivalent for selected day
+     (`calendar-print-iso-date').
+
+`p j'
+     Display Julian date for selected day
+     (`calendar-print-julian-date').
+
+`p a'
+     Display astronomical (Julian) day number for selected day
+     (`calendar-print-astro-day-number').
+
+`p h'
+     Display Hebrew date for selected day
+     (`calendar-print-hebrew-date').
+
+`p i'
+     Display Islamic date for selected day
+     (`calendar-print-islamic-date').
+
+`p f'
+     Display French Revolutionary date for selected day
+     (`calendar-print-french-date').
+
+`p C'
+     Display Chinese date for selected day
+     (`calendar-print-chinese-date').
+
+`p k'
+     Display Coptic date for selected day
+     (`calendar-print-coptic-date').
+
+`p e'
+     Display Ethiopic date for selected day
+     (`calendar-print-ethiopic-date').
+
+`p p'
+     Display Persian date for selected day
+     (`calendar-print-persian-date').
+
+`p m'
+     Display Mayan date for selected day (`calendar-print-mayan-date').
+
+   If you are using X, the easiest way to translate a date into other
+calendars is to click on it with `Mouse-2', then choose `Other
+Calendars' from the menu that appears.  This displays the equivalent
+forms of the date in all the calendars Emacs understands, in the form of
+a menu.  (Choosing an alternative from this menu doesn't actually do
+anything--the menu is used only for display.)
+
+   Put point on the desired date of the Gregorian calendar, then type
+the appropriate keys.  The `p' is a mnemonic for "print" since Emacs
+"prints" the equivalent date in the echo area.
+
+
+File: emacs,  Node: From Other Calendar,  Next: Mayan Calendar,  Prev: To Other Calendar,  Up: Other Calendars
+
+Converting From Other Calendars
+-------------------------------
+
+   You can use the other supported calendars to specify a date to move
+to.  This section describes the commands for doing this using calendars
+other than Mayan; for the Mayan calendar, see the following section.
+
+`g c'
+     Move to a date specified in the ISO commercial calendar
+     (`calendar-goto-iso-date').
+
+`g j'
+     Move to a date specified in the Julian calendar
+     (`calendar-goto-julian-date').
+
+`g a'
+     Move to a date specified in astronomical (Julian) day number
+     (`calendar-goto-astro-day-number').
+
+`g h'
+     Move to a date specified in the Hebrew calendar
+     (`calendar-goto-hebrew-date').
+
+`g i'
+     Move to a date specified in the Islamic calendar
+     (`calendar-goto-islamic-date').
+
+`g f'
+     Move to a date specified in the French Revolutionary calendar
+     (`calendar-goto-french-date').
+
+`g C'
+     Move to a date specified in the Chinese calendar
+     (`calendar-goto-chinese-date').
+
+`g p'
+     Move to a date specified in the Persian calendar
+     (`calendar-goto-persian-date').
+
+`g k'
+     Move to a date specified in the Coptic calendar
+     (`calendar-goto-coptic-date').
+
+`g e'
+     Move to a date specified in the Ethiopic calendar
+     (`calendar-goto-ethiopic-date').
+
+   These commands ask you for a date on the other calendar, move point
+to the Gregorian calendar date equivalent to that date, and display the
+other calendar's date in the echo area.  Emacs uses strict completion
+(*note Completion::.) whenever it asks you to type a month name, so you
+don't have to worry about the spelling of Hebrew, Islamic, or French
+names.
+
+   One common question concerning the Hebrew calendar is the computation
+of the anniversary of a date of death, called a "yahrzeit."  The Emacs
+calendar includes a facility for such calculations.  If you are in the
+calendar, the command `M-x list-yahrzeit-dates' asks you for a range of
+years and then displays a list of the yahrzeit dates for those years
+for the date given by point.  If you are not in the calendar, this
+command first asks you for the date of death and the range of years,
+and then displays the list of yahrzeit dates.
+
+
+File: emacs,  Node: Mayan Calendar,  Prev: From Other Calendar,  Up: Other Calendars
+
+Converting from the Mayan Calendar
+----------------------------------
+
+   Here are the commands to select dates based on the Mayan calendar:
+
+`g m l'
+     Move to a date specified by the long count calendar
+     (`calendar-goto-mayan-long-count-date').
+
+`g m n t'
+     Move to the next occurrence of a place in the tzolkin calendar
+     (`calendar-next-tzolkin-date').
+
+`g m p t'
+     Move to the previous occurrence of a place in the tzolkin calendar
+     (`calendar-previous-tzolkin-date').
+
+`g m n h'
+     Move to the next occurrence of a place in the haab calendar
+     (`calendar-next-haab-date').
+
+`g m p h'
+     Move to the previous occurrence of a place in the haab calendar
+     (`calendar-previous-haab-date').
+
+`g m n c'
+     Move to the next occurrence of a place in the calendar round
+     (`calendar-next-calendar-round-date').
+
+`g m p c'
+     Move to the previous occurrence of a place in the calendar round
+     (`calendar-previous-calendar-round-date').
+
+   To understand these commands, you need to understand the Mayan
+calendars.  The "long count" is a counting of days with these units:
+
+     1 kin = 1 day   1 uinal = 20 kin   1 tun = 18 uinal
+     1 katun = 20 tun   1 baktun = 20 katun
+
+Thus, the long count date 12.16.11.16.6 means 12 baktun, 16 katun, 11
+tun, 16 uinal, and 6 kin.  The Emacs calendar can handle Mayan long
+count dates as early as 7.17.18.13.1, but no earlier.  When you use the
+`g m l' command, type the Mayan long count date with the baktun, katun,
+tun, uinal, and kin separated by periods.
+
+   The Mayan tzolkin calendar is a cycle of 260 days formed by a pair of
+independent cycles of 13 and 20 days.  Since this cycle repeats
+endlessly, Emacs provides commands to move backward and forward to the
+previous or next point in the cycle.  Type `g m p t' to go to the
+previous tzolkin date; Emacs asks you for a tzolkin date and moves point
+to the previous occurrence of that date.  Similarly, type `g m n t' to
+go to the next occurrence of a tzolkin date.
+
+   The Mayan haab calendar is a cycle of 365 days arranged as 18 months
+of 20 days each, followed a 5-day monthless period.  Like the tzolkin
+cycle, this cycle repeats endlessly, and there are commands to move
+backward and forward to the previous or next point in the cycle.  Type
+`g m p h' to go to the previous haab date; Emacs asks you for a haab
+date and moves point to the previous occurrence of that date.
+Similarly, type `g m n h' to go to the next occurrence of a haab date.
+
+   The Maya also used the combination of the tzolkin date and the haab
+date.  This combination is a cycle of about 52 years called a *calendar
+round*.  If you type `g m p c', Emacs asks you for both a haab and a
+tzolkin date and then moves point to the previous occurrence of that
+combination.  Use `g m n c' to move point to the next occurrence of a
+combination.  These commands signal an error if the haab/tzolkin date
+combination you have typed is impossible.
+
+   Emacs uses strict completion (*note Strict Completion::.) whenever it
+asks you to type a Mayan name, so you don't have to worry about
+spelling.
+
+
+File: emacs,  Node: Diary,  Next: Appointments,  Prev: Other Calendars,  Up: Calendar/Diary
+
+The Diary
+=========
+
+   The Emacs diary keeps track of appointments or other events on a
+daily basis, in conjunction with the calendar.  To use the diary
+feature, you must first create a "diary file" containing a list of
+events and their dates.  Then Emacs can automatically pick out and
+display the events for today, for the immediate future, or for any
+specified date.
+
+   By default, Emacs uses `~/diary' as the diary file.  This is the
+same file that the `calendar' utility uses.  A sample `~/diary' file is:
+
+     12/22/1988  Twentieth wedding anniversary!!
+     &1/1.       Happy New Year!
+     10/22       Ruth's birthday.
+     * 21, *:    Payday
+     Tuesday--weekly meeting with grad students at 10am
+              Supowit, Shen, Bitner, and Kapoor to attend.
+     1/13/89     Friday the thirteenth!!
+     &thu 4pm    squash game with Lloyd.
+     mar 16      Dad's birthday
+     April 15, 1989 Income tax due.
+     &* 15       time cards due.
+
+This example uses extra spaces to align the event descriptions of most
+of the entries.  Such formatting is purely a matter of taste.
+
+   Although you probably will start by creating a diary manually, Emacs
+provides a number of commands to let you view, add, and change diary
+entries.
+
+* Menu:
+
+* Diary Commands::         Viewing diary entries and associated calendar dates.
+* Format of Diary File::   Entering events in your diary.
+* Date Formats::	   Various ways you can specify dates.
+* Adding to Diary::	   Commands to create diary entries.
+* Special Diary Entries::  Anniversaries, blocks of dates, cyclic entries, etc.
+
+
+File: emacs,  Node: Diary Commands,  Next: Format of Diary File,  Up: Diary
+
+Commands Displaying Diary Entries
+---------------------------------
+
+   Once you have created a `~/diary' file, you can use the calendar to
+view it.  You can also view today's events outside of Calendar mode.
+
+`d'
+     Display all diary entries for the selected date
+     (`view-diary-entries').
+
+`Mouse-2 Diary'
+     Display all diary entries for the date you click on.
+
+`s'
+     Display the entire diary file (`show-all-diary-entries').
+
+`m'
+     Mark all visible dates that have diary entries
+     (`mark-diary-entries').
+
+`u'
+     Unmark the calendar window (`calendar-unmark').
+
+`M-x print-diary-entries'
+     Print hard copy of the diary display as it appears.
+
+`M-x diary'
+     Display all diary entries for today's date.
+
+   Displaying the diary entries with `d' shows in a separate window the
+diary entries for the selected date in the calendar.  The mode line of
+the new window shows the date of the diary entries and any holidays
+that fall on that date.  If you specify a numeric argument with `d', it
+shows all the diary entries for that many successive days.  Thus, `2 d'
+displays all the entries for the selected date and for the following
+day.
+
+   Another way to display the diary entries for a date is to click
+`Mouse-2' on the date, and then choose `Diary' from the menu that
+appears.
+
+   To get a broader view of which days are mentioned in the diary, use
+the `m' command.  This displays the dates that have diary entries in a
+different face (or places a `+' after these dates, if display with
+multiple faces is not available).  The command applies both to the
+currently visible months and to other months that subsequently become
+visible by scrolling.  To turn marking off and erase the current marks,
+type `u', which also turns off holiday marks (*note Holidays::.).
+
+   To see the full diary file, rather than just some of the entries, use
+the `s' command.
+
+   Display of selected diary entries uses the selective display feature
+to hide entries that don't apply.
+
+   The diary buffer as you see it is an illusion, so simply printing the
+buffer does not print what you see on your screen.  There is a special
+command to print hard copy of the diary buffer *as it appears*; this
+command is `M-x print-diary-entries'.  It sends the data directly to
+the printer.  You can customize it like `lpr-region' (*note
+Hardcopy::.).
+
+   The command `M-x diary' displays the diary entries for the current
+date, independently of the calendar display, and optionally for the next
+few days as well; the variable `number-of-diary-entries' specifies how
+many days to include.  *Note Customizing the Calendar and Diary:
+(elisp)Calendar.
+
+   If you put `(diary)' in your `.emacs' file, this automatically
+displays a window with the day's diary entries, when you enter Emacs.
+The mode line of the displayed window shows the date and any holidays
+that fall on that date.
 

@@ -27,6 +27,7 @@ Boston, MA 02111-1307, USA.  */
 #include <sys/mman.h>
 #include <stdio.h>
 #include <varargs.h>
+#if !defined (__NetBSD__) && !defined (__OpenBSD__)
 #include <filehdr.h>
 #include <aouthdr.h>
 #include <scnhdr.h>
@@ -35,6 +36,46 @@ Boston, MA 02111-1307, USA.  */
 # include <reloc.h>
 # include <elf_abi.h>
 #endif
+#else /* __NetBSD__ or __OpenBSD__ */
+/*
+ * NetBSD/Alpha does not have 'normal' user-land ECOFF support because
+ * there's no desire to support ECOFF as the executable format in the
+ * long term.
+ */
+#include <sys/exec_ecoff.h>
+
+/* Structures, constants, etc., that NetBSD defines strangely. */
+#define	filehdr		ecoff_filehdr
+#define	aouthdr		ecoff_aouthdr
+#define	scnhdr		ecoff_scnhdr
+#define	HDRR		struct ecoff_symhdr
+#define	pHDRR		HDRR *
+#define	cbHDRR		sizeof(HDRR)
+#ifdef __OpenBSD__
+#define	ALPHAMAGIC	ECOFF_MAGIC_NATIVE_ALPHA
+#else
+#define	ALPHAMAGIC	ECOFF_MAGIC_NETBSD_ALPHA
+#endif
+#define	ZMAGIC		ECOFF_ZMAGIC
+
+/* Misc. constants that NetBSD doesn't define at all. */
+#define	ALPHAUMAGIC	0617
+#define	_MIPS_NSCNS_MAX	35
+#define	STYP_TEXT	0x00000020
+#define	STYP_DATA	0x00000040
+#define	STYP_BSS	0x00000080
+#define	STYP_RDATA	0x00000100
+#define	STYP_SDATA	0x00000200
+#define	STYP_SBSS	0x00000400
+#define	STYP_INIT	0x80000000
+#define	_TEXT		".text"
+#define	_DATA		".data"
+#define	_BSS		".bss"
+#define	_INIT		".init"
+#define	_RDATA		".rdata"
+#define	_SDATA		".sdata"
+#define	_SBSS		".sbss"
+#endif /* __NetBSD__ || __OpenBSD__ */
 
 static void fatal_unexec ();
 static void mark_x ();
@@ -149,7 +190,7 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
   if (nhdr.fhdr.f_opthdr != sizeof (nhdr.aout))
     {
       fprintf (stderr, "unexec: input a.out header is %d bytes, not %d.\n",
-	       nhdr.fhdr.f_opthdr, sizeof (nhdr.aout));
+	       nhdr.fhdr.f_opthdr, (int)sizeof (nhdr.aout));
       exit (1);
     }
   if (nhdr.aout.magic != ZMAGIC)
@@ -361,8 +402,9 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
 	 stat.st_size - ohdr.fhdr.f_symptr - cbHDRR,
 	 "writing symbol table of %s", new_name);
 
-#ifndef __linux__
-  update_dynamic_symbols (oldptr, new_name, new, nhdr.aout);
+#ifdef _REL_DYN
+  if (rel_dyn_section)
+    update_dynamic_symbols (oldptr, new_name, new, nhdr.aout);
 #endif
 
 #undef symhdr
@@ -378,15 +420,14 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
 
 
 
-
-#ifndef __linux__
-
 update_dynamic_symbols (old, new_name, new, aout)
      char *old;			/* Pointer to old executable */
      char *new_name;            /* Name of new executable */
      int new;			/* File descriptor for new executable */
      struct aouthdr aout;	/* a.out info from the file header */
 {
+#if !defined (__linux__) && !defined (__NetBSD__) && !defined (__OpenBSD__)
+
   typedef struct dynrel_info {
     char * addr;
     unsigned type:8;
@@ -428,7 +469,7 @@ update_dynamic_symbols (old, new_name, new, aout)
          4. len is the size of the object reference in bytes --
             currently only 4 (long) and 8 (quad) are supported.
 	    */
-      register unsigned long reladdr = rd_base[i].addr - old_data_scnhdr.s_vaddr;
+      register unsigned long reladdr = (long)rd_base[i].addr - old_data_scnhdr.s_vaddr;
       char * oldref = old + old_data_scnhdr.s_scnptr + reladdr;
       unsigned long newref = aout.tsize + reladdr;
       int len;
@@ -455,9 +496,8 @@ update_dynamic_symbols (old, new_name, new, aout)
 
   }
 
+#endif /* not __linux__ and not __NetBSD__ and not __OpenBSD__ */
 }
-
-#endif /* !__linux__ */
 
 
 /*

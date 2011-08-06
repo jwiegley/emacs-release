@@ -105,8 +105,9 @@ NOTE-END */
 #define LOAD_AVE_CVT(x) ((int) (((double) (x)) * 100.0 / FSCALE))
 
 /* J.W.Hawtin@lut.ac.uk say Solaris 2.4 as well as Solaris 2.1 on X86
-   requires -lkvm as well */
-#define LIBS_MACHINE -lkvm
+   requires -lkvm as well.
+   And handa@etl.gov.jp says that -lkvm needs -llelf, at least on 2.5.  */
+#define LIBS_MACHINE -lkvm -lelf
 
 #ifndef SOLARIS2_4
 /* J.W.hawtin@lut.ac.uk says Solaris 2.1 on the X86 has FSCALE defined in a
@@ -194,15 +195,20 @@ NOTE-END */
 #endif /* not USG5_4 */
 #endif /* LIB_STANDARD */
 
+/* Paul Abrahams <abrahams@acm.org> says that
+   Unixware does not have alloca when using cc.  */
+#if ! (defined (USG5_4) && ! defined (SOLARIS2) && ! defined (__GNUC__))
 #define HAVE_ALLOCA
+#endif
+
 #define NO_REMAP 
 #define TEXT_START 0
 #endif /* USG */
 #endif /* not XENIX */
 
-#ifdef BSD
+#ifdef BSD_SYSTEM
 #define HAVE_ALLOCA
-#endif /* BSD */
+#endif /* BSD_SYSTEM */
 
 /* If compiling with GCC, let GCC implement alloca.  */
 #if defined(__GNUC__) && !defined(alloca)

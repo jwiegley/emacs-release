@@ -1,5 +1,5 @@
-This is Info file ../info/cl, produced by Makeinfo-1.64 from the input
-file cl.texi.
+This is Info file ../info/cl, produced by Makeinfo version 1.68 from
+the input file cl.texi.
 
    This file documents the GNU Emacs Common Lisp emulation package.
 
@@ -136,7 +136,7 @@ form you use is purely a matter of style.
 
      This clause type is taken from older versions of the `loop' macro,
      and is not present in modern Common Lisp.  The `using (sequence
-     ...)' term of the older macros is not supported.
+     ...)'  term of the older macros is not supported.
 
 `for VAR being the elements of-ref SEQUENCE'
      This clause iterates over a sequence, with VAR a `setf'-able

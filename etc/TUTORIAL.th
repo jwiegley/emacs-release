@@ -1,0 +1,696 @@
+		      ==============================
+		      GNUEMACS ,T@RIR0-Uh10;Xh19(B (Mule) ,T`0:Wi1M'05i19(B
+		      ==============================
+
+,TKARB`K05X1(B:       ,T`M!JRC)0:Q1:`0:Wi1M'05i1909Ui1(B 0,T6Y1!`0"U1B90"Vi19b4B0BV14K0EQ1!07Uh10Gh1R(B ",TEM'`0Eh19`EB04U1!0Gh1R`0CU1B90CYi1(B"
+               ,T:CC07Q1407Uh1`0CTh1A05i1904i1GB(B ">>" ,T(P0AU1$S0JQh1'0Gh1R(B 0,T5h1Md;(Pc0Ki17SMPdC(B
+
+     ,Tb4B07Qh1Gd;(B ,T!RC0;i1M9$S0JQh1'c0Ki10!Q1:(B Mule ,T7Sd04i1b4Bc0*i1(B 0,T;Xh1A$M9b7CE(B (0,T;Xh1A07Uh1:9K09i1R0JQ1A0<Q1J(B ,T`0"U1B9d0Gi1(B
+0,TGh1R(B CTRL ,TK0CW1M(B CTL) ,TK0CW1M(B 0,T;Xh1A(B META (,Tb4B;!05T1(B ,TKARB06V1'0;Xh1A(B ESC)  ,Tc907Uh109Ui1(B ,T`CR(Pc0*i10JQ1-0EQ1!I03l105h1Md;(B
+0,T9Ui1(B ,Ta79!RC`0"U1B9`05g1A(B ,Tf(B 0,TGh1R(B CONTROL ,TK0CW1M(B META
+
+C-<0,T5Q1G0MQ1!IC(B>     ,TKARB06V1'(B ,Tc0Ki1!40;Xh1A$M9b7CE0$i1R'd0Gi1(B ,Ta0Ei1G!40;Xh1A(B <0,T5Q1G0MQ1!IC(B>   0,T5Q1GM0Bh1R'`0*h19(B C-f
+               ,TKARB06V1'(B ,Tc0Ki1!40;Xh1A$M9b7CE0$i1R'd0Gi1(B ,Ta0Ei1G!40;Xh1A(B f
+<<Blank lines inserted here by startup of help-with-tutorial>>
+       >> ,T5M909Ui1"Mc0Ki1EM'!4(B C-v (View Next Screen 0,T4Y1K09i1R05h1Md;(B) 0,T4Y1(B  ,T`0>Wh1M`0EWh1M9d;0Mh1R9K09i1R(B
+          0,T5h1Md;(B
+          0,T5h1M(R!09Ui1`0;g1905i19d;(B  0,T7X1!$0CQi1'07Uh10Mh1R9K09i1RK09Vh1'(B ,Tf(B ,T(:"Mc0Ki17Sc97S9M'`04U1BG0!Q19(B ,T`0>Wh1M`0EWh1M9d;(B
+          0,T4Y1K09i1R05h1Md;(B
+
+ESC <0,T5Q1G0MQ1!IC(B>   ,TKARB06V1'(B ,Tc0Ki1!40;Xh1A(B ESC ,Ta0Ei1G;0Eh1MB(B ,TK0EQ1'(R!09Qi190(V1'!40;Xh1A(B <0,T5Q1G0MQ1!IC(B> ,T5RA(B
+
+,TKARB`K05X1(B:       <0,T5Q1G0MQ1!IC(B> ,Td0Ah10Gh1R`0;g1905Q1GcK0-h1K0CW1M05Q1G`0Eg1!(B ,T(Pc0Ki1$GRAKARB`K0AW1M90!Q19`0AWh1M06Y1!c0*i1c9(B
+               ,T$S0JQh1'(B   0,T6i1RKR!0AU10;Xh1A(B META ,Tc0Ki1!4(B 0,T!g1(PJRARC6c0*i1!RC!4(B M-<0,T5Q1G0MQ1!IC(B> ,Ta79(B
+               ,T!RC(B ESC <0,T5Q1G0MQ1!IC(B> ,Td04i1(B  (0,T$W1Mc0Ki1!40;Xh1A(B META 0,T$i1R'd0Gi1(B ,Ta0Ei1G0(V1'!4(B <0,T5Q1G0MQ1!IC(B>)
+
+0,T"i1MJS0$Q1-(B:        ,T`GER(P`0ET1!c0*i1(B Emacs ,Tc0Ki1!4(B C-x C-c  ,TK0CW1Mc9!C03U107Uh10JQh1'(B Emacs ,T(R!(B csh
+               0,T!g1JRARC6c0*i1(B suspend (,TK0BX140*Qh1G$CRG(B) ,Td04i1(B  ,T!RC(B suspend Emacs ,T7Sd04i1b4B(B
+               ,T!4(B C-z
+
+     0,T5h1M(R!09Ui1(B  ,T"Mc0Ki10;i1M9$S0JQh1'(B C-v 0,T7X1!(B ,Tf(B ,T$0CQi1'07Uh10Mh1R9(:K09Vh1'K09i1R(B
+
+     ,T@RBc9K09i1R07Uh1a0Ei1G0!Q1:K09i1R06Q14d;(B ,T(P0AU1`09Wi1MKR0+i1S0!Q19M0BYh1:R':CC07Q14(B  0,T7Uh1`0;g19`0*h1909Ui1(B 0,T!g1`0>Wh1Mc0Ki1JRARC60CYi1(B
+,Td04i10Gh1R(B ,T`09Wi1MKR07Uh1aJ4'M0BYh109Qi19(B 0,T5h1M`09Wh1M'0!Q19M0BYh1(B
+
+
+     0,T!h1M90MWh19(B ,T(S`0;g19(P05i1M'0CYi10GT108U1!RCbB!0Bi1RB5SaK09h1'd;AR(B ,T@RBc9a0?i1A0"i1M0AY1E`0JU1B0!h1M9(B  ,T5RA07Uh1:M!d;(B
+,Ta0Ei1G(B 0,T!g10$W1M(B C-v ,Tc0*i1JSK0CQ1:`0EWh1M9d;0"i1R'K09i1R(B  0,T6i1R(P`0EWh1M9!0EQ1:07Uh1`0!h1R(B 0,T!g1c0Ki1!4(B ESC v
+
+      >> ,TEM'c0*i1(B ESC v ,TaEP(B C-v ,T`0>Wh1M`0EWh1M9d;AR04Y1(B 0,TJQ1!JM'JRA$0CQi1'(B
+
+,TJ0CX1;(B
+===
+     ,T$S0JQh1'(B ,TJSK0CQ1:`0EWh1M9d;AR07U1EPK09i1R@RBc9a0?i1A0"i1M0AY1E(B 0,T$W1M(B
+
+     C-v     ,T`0EWh1M9d;0"i1R'K09i1R(B ,TK09Vh1'K09i1R(M(B
+     ESC v   ,T`0EWh1M9d;0"i1R'K0EQ1'(B ,TK09Vh1'K09i1R(M(B
+     C-l     ,T`0"U1B9K09i1R(McK0Ah1(B ,TaEPc9"3P`04U1BG0!Q19(B 0,T!g1c0Ki1`0EWh1M95SaK09h1'"M'`$M0Cl1`+M0Cl1(B (cursor)
+             ,Td;M0BYh15C'!ER'(M(B
+
+       >> ,T"Mc0Ki10JQ1'`!504Y10Gh1R(B ,Tc9"3P09Ui1`$M0Cl1`+M0Cl1M0BYh107Uh1dK9(B ,T>0Ci1MA07Qi1'(S0"i1M$GRA07Uh1M0BYh1CM:0"i1R'"M'(B
+          ,T`$M0Cl1`+M0Cl104i1GB(B  ,Ta0Ei1GEM'!4(B C-l 0,T4Y1(B   ,T5CG(JM:04Y10Gh1R(B ,T`$M0Cl1`+M0Cl1`0EWh1M9d;M0BYh107Uh1dK9(B
+          0,T"i1M$GRA07Uh1M0BYh1CM:0"i1R'`;0EUh1B9d;M0Bh1R'dC(B
+
+0,TGT108U1bB!0Bi1RB`$M0Cl1`+M0Cl10"Qi190>Wi190R9(B
+=======================
+
+     ,T5M909Ui1(B ,T`CR0!g10CYi10GT108U1bB!0Bi1RBd;ARa::07U1EPK09i1Ra0Ei1G(B  0,T5h1Md;(B 0,T!g1AR`0CU1B90CYi10GT108U1bB!0Bi1RBd;07Uh15SaK09h1'c4(B
+,T5SaK09h1'K09Vh1'@RBc9K09i1R`04U1BG0!Q19(B 0,T+Vh1'JRARC67Sd04i1KERB0GT108U1(B  0,TGT108U1K09Vh1'0!g10$W1Mc0Ki1c0*i1$S0JQh1'(B ,Td;:CC07Q140!h1M9K09i1R(B
+(previous) ,Td;:CC07Q1405h1Md;(B (next) ,Td;04i1R9K09i1R(B (forward) ,Td;04i1R9K0EQ1'(B (backward)  ,T$S0JQh1'(B
+,T`K0Eh1R09Ui1(B 0,T6Y1!05Qi1'd0Gi107Uh1(B C-p C-n C-f ,TaEP(B C-b ,T5RAES04Q1:(B  0,T+Vh1'(P7Sc0Ki1bB!0Bi1RBd;ARd04i1(B ,Tb4B`07U1B:0!Q1:(B
+,T5SaK09h1'0;Q1(0(X10:Q19(B  ,TJ0CX1;`0"U1B9`0;g19a<9@R>d04i104Q1'09Ui1(B
+
+
+			      ,T:CC07Q1407Uh1a0Ei1G(B C-p
+                                    :
+                                    :
+   0,T5Q1G0MQ1!IC04i1R9K0EQ1'(B C-b  ....  ,T5SaK09h1'`$M0Cl1`+M0Cl10;Q1(0(X10:Q19(B  ....   0,T5Q1G0MQ1!IC04i1R9K09i1R(B C-f
+                                    :
+                                    :
+			      ,T:CC07Q1405h1Md;(B C-n
+
+
+     ,T$S0JQh1'`K0Eh1R09Ui1(B ,T`MRAR(R!05Q1G0MQ1!IC05Q1GaC!"M'(B ,T$S0Gh1R(B Previous Next Backward Forward
+0,T+Vh1'(P0*h1GBc0Ki1(Sd04i1d0Ah1BR!(B  ,T$S0JQh1'`K0Eh1R09Ui1`0;g19$S0JQh1'JSK0CQ1:!RCbB!0Bi1RB0"Qi190>Wi190R9(B 0,T+Vh1'05i1M'c0*i1M0BYh1`JAM(B
+
+       >> ,TEM'!4(B C-n 0,T4Y1KERB(B ,Tf(B ,T$0CQi1'(B  ,T`0>Wh1M`0EWh1M9`$M0Cl1`+M0Cl1AR0BQ1':CC07Q1409Ui1(B (,T:CC07Q1407Uh1!S0EQ1'0Mh1R9(B
+          ,TM0BYh109Ui1(B)
+
+       >> ,TEM'!4(B C-f 0,T4Y1KERB(B ,Tf(B ,T$0CQi1'(B  ,T`0>Wh1M`0EWh1M9`$M0Cl1`+M0Cl1d;0BQ1'5C'!ER'"M':CC07Q14(B ,Ta0Ei1GEM'(B
+          ,T!4(B C-p ,T`0EWh1M90"Vi190"i1R':904Y1(B  0,TJQ1'`!504Y104i1GB0Gh1R(B ,T5SaK09h1'"M'`$M0Cl1`+M0Cl1`;0EUh1B9d;M0Bh1R'dC(B
+
+       >> ,TEM'!4(B C-b ,T"3P07Uh1M0BYh107Uh15SaK09h1'K09i1R0JX14"M':CC07Q1404Y1(B  0,TJQ1'`!504Y104i1GB0Gh1R(B ,T`$M0Cl1`+M0Cl1`$0EWh1M9(B
+          ,Td;M0Bh1R'dC(B  ,T(R!09Qi19c0Ki1!4(B C-b 0,TMU1!JM'JRA$0CQi1'(B  ,Ta0Ei1G!4(B C-f ,T`0>Wh1M`0EWh1M9d;0BQ1'07i1RB0JX14(B
+          ,T"M':CC07Q1404Y1(B  ,T`$M0Cl1`+M0Cl1(P`0;g19M0Bh1R'dC(B 0,T6i1R!4(9`EB07i1RB:CC07Q14d;(B
+
+
+     ,T`GER07Uh1`0EWh1M9`$M0Cl1`+M0Cl1(B ,T(9`EB:CC07Q14aC!0JX14K0CW1M:CC07Q1407i1RB0JX14"M'K09i1Rd;(B  ,T`$M0Cl1`+M0Cl1(P(B
+,T`0EWh1M9d;0BQ1':CC07Q1405h1Md;c907T1H7R'09Qi19(B ,Tf(B  ,TaEP;0CQ1:c0Ki1`$M0Cl1`+M0Cl1!0EQ1:ARM0BYh1:9K09i1R(M`JAM(B
+
+       >> ,TEM'!4(B C-n ,T`0>Wh1M`0EWh1M9`$M0Cl1`+M0Cl1c0Ki1`EB:CC07Q140Eh1R'0JX14"M'K09i1R(M04Y1(B  ,Ta0Ei1G0JQ1'`!504Y10Gh1R(B
+          ,T`0!T14MPdC0"Vi19(B ,TaEP5SaK09h1'"M'`$M0Cl1`+M0Cl1`;0EUh1B9d;M0Bh1R'dC(B
+
+     0,T6i1R0CYi10JV1!0Gh1R!RC"0BQ1:d;07U1EP05Q1G0MQ1!IC09Qi190MW14MR40BW14BR4(B  0,T!g1JRARC6c0*i1!RC`0EWh1M9`$M0Cl1`+M0Cl1d;07U1EP$S(B
+,Td04i1(B  ,T!4(B ESC f ,T`0>Wh1Mc0Ki1`0EWh1M9d;0"i1R'K09i1RK09Vh1'$S(B ,TaEP(B ESC b ,T`0>Wh1Mc0Ki1`0EWh1M9d;0"i1R'K0EQ1'K09Vh1'$S(B
+
+,TKARB`K05X1(B:        ,TJSK0CQ1:@RIRd7B(B  0,TBQ1'd0Ah1JRARC6a0:h1'aB!5SaK09h1'"M'$Sd04i106Y1!05i1M'(B  0,T(V1'd0Ah1(B
+                ,TJRARC6c0*i1JM'$S0JQh1'09Ui1d04i1(B
+
+       >> ,TEM'!4(B ESC f ,TaEP(B ESC b ,TEM'04Y1KERB(B ,Tf(B ,T$0CQi1'(B  ,TaEPEM'c0*i10Ch1GA0!Q1:(B C-f 0,T!Q1:(B C-b 0,T4Y1(B
+          0,T4i1GB(B
+
+     ,T(P0JQ1'`!5`0Kg19d04i10Gh1R(B ESC f ,TaEP(B ESC b 0,TAU10CY1;a::$0Ei1RB$0EV1'0!Q1:(B C-f ,TaEP(B C-b  ,Tb4B0Jh1G9cK0-h1(B
+ESC <0,T5Q1G0MQ1!IC(B> ,T(Pc0*i1`0!Uh1BG0!Q1:!RC0(Q14!RC0"i1M$GRA(B  0,TJh1G9(B C-<0,T5Q1G0MQ1!IC(B> ,T(Pc0*i10!Q1:0JTh1'07Uh1`0;g190>Wi190R9AR!(B
+,T!0Gh1R(B (,T`0*h19(B 0,T5Q1G0MQ1!IC(B ,TK0CW1M(B ,T:CC07Q14(B)
+
+     C-a 0,T!Q1:(B C-e ,T`0;g19$S0JQh1'09h1R(P0CYi1d0Gi1(B  ,T`>CRP0$h1M90"i1R'JP4G!04U107U1`04U1BG(B  C-a ,Tc0*i1JSK0CQ1:`0EWh1M9(B
+,T`$M0Cl1`+M0Cl1d;07Uh15SaK09h1'K09i1R0JX14"M':CC07Q14(B  C-e ,TJSK0CQ1:`0EWh1M9d;07Uh15SaK09h1'07i1RB0JX14"M':CC07Q14(B
+
+
+       >> ,TEM'!4(B C-a 0,T4Y1JM'$0CQi1'(B  ,TK0EQ1'(R!09Qi19c0Ki1!4(B C-e 0,T4Y1JM'$0CQi1'(B  ,Ta0Ei1GEM'0JQ1'`!504Y10Gh1R(B ,T!RC(B
+          ,T!4$S0JQh1'09Ui1AR!!0Gh1RJM'$0CQi1'(B ,T(Pd0Ah10*h1GBc0Ki1`0EWh1M9`$M0Cl1`+M0Cl1d;dK9d04i1AR!!0Gh1R09Qi190MU1!(B
+
+     0,TBQ1'0AU10MU1!JM'$S0JQh1'(B ,TJSK0CQ1:!RC`0EWh1M9`$M0Cl1`+M0Cl1a::0'h1RB(B ,Tf(B 0,T$W1M(B ,T$S0JQh1'(B ESC < ,TJSK0CQ1:!RC`0EWh1M9(B
+,T`$M0Cl1`+M0Cl1d;07Uh15SaK09h1'aC!0JX14"M'a0?i1A0"i1M0AY1E(B ,TaEP$S0JQh1'(B ESC > ,TJSK0CQ1:!RC`0EWh1M9d;5SaK09h1'07i1RB0JX14(B
+
+     ,T`CR`0CU1B!5SaK09h1'"M'0"i1M$GRA(B 0,T7Uh10AU1`$M0Cl1`+M0Cl1M0BYh10Gh1R(B "0,T(X14(B (point)"  ,TK0CW1M0>Y140MU1!M0Bh1R'K09Vh1'd04i1(B
+0,TGh1R(B ,T`$M0Cl1`+M0Cl1(B ,T`0;g190JTh1'07Uh1:M!c0Ki1`CR0CYi10Gh1R(B 0,T(X14(B ,TM0BYh15C'dK9"M'K09i1R(M(B
+
+     ,TJ0CX1;$S0JQh1'JSK0CQ1:!RC`$0EWh1M9d;AR(B 0,T+Vh1'CGA!RC`$0EWh1M907Uh1c9K09h1GB"M'$S(B ,TK09h1GB"M':CC07Q14d0Gi104i1GB(B
+,Td04i104Q1'09Ui1(B
+
+     C-f     ,Td;0"i1R'K09i1RK09Vh1'05Q1G0MQ1!IC(B
+     C-b     ,T!0EQ1:0"i1R'K0EQ1'K09Vh1'05Q1G0MQ1!IC(B
+
+     ESC f   ,Td;0"i1R'K09i1RK09Vh1'$S(B
+     ESC b   ,T!0EQ1:0"i1R'K0EQ1'K09Vh1'$S(B
+
+     C-n     ,T`0EWh1M9d;:CC07Q1405h1Md;(B
+     C-p     ,T`0EWh1M9d;:CC07Q1407Uh1a0Ei1G(B
+
+     ESC ]   ,T`0EWh1M9d;5SaK09h1'07i1RB0JX14"M'0Bh1MK09i1R(B (paragraph)
+     ESC [   ,T`0EWh1M9d;5SaK09h1'aC!0JX14"M'0Bh1MK09i1R(B
+
+     C-a     ,T`0EWh1M9d;5SaK09h1'aC!0JX14"M':CC07Q14(B
+     C-e     ,T`0EWh1M9d;5SaK09h1'07i1RB0JX14"M':CC07Q14(B
+
+     ESC <   ,T`0EWh1M9d;5SaK09h1'aC!0JX14"M'a0?i1A0"i1M0AY1E(B
+     ESC >   ,T`0EWh1M9d;5SaK09h1'07i1RB0JX14"M'a0?i1A0"i1M0AY1E(B
+
+       >> ,TEM'c0*i1$S0JQh1'a05h1EP$S0JQh1'04Y1(B  ,T$S0JQh1'`K0Eh1R09Ui1`0;g19$S0JQh1'07Uh1c0*i10!Q190:h1MB0JX14(B  ,T$S0JQh1'JM'$S0JQh1'K0EQ1'(B
+          ,T(P`0EWh1M9`$M0Cl1`+M0Cl1(B ,Td;0BQ1'07Uh107Uh10$h1M90"i1R'd!E(B  ,Tc0Ki1EM'c0*i1$S0JQh1'(B C-v ,TaEP(B ESC v ,T`0>Wh1M(B
+          ,T`0EWh1M9`$M0Cl1`+M0Cl1!0EQ1:AR07Uh15C'09Ui1(B
+
+     ,TJSK0CQ1:$S0JQh1'0MWh19(B ,Tf(B ,T"M'(B Emacs 0,T!g1`0*h190!Q19(B  ,T$S0JQh1'`K0Eh1R09Ui1(PJRARC6`0>Th1A05Q1G`0EW1M!(B (argument) 
+,T`0>Wh1M!SK94(B ,T(S9G9$0CQi1'(B ,Tc9!RC;0/T10:Q105T1'R9d04i1(B   ,T!RC!SK94(S9G9$0CQi1'(B ,T7Sd04i1b4B!4(B C-u ,Ta0Ei1G5RA(B
+0,T4i1GB(S9G9$0CQi1'07Uh105i1M'!RC0!h1M9(B ,Ta0Ei1G0(V1'0$h1MB!4$S0JQh1'5RA(B
+
+     0,T5Q1GM0Bh1R'`0*h19(B  ,T$S0JQh1'(B C-u 8 C-f ,TKARB06V1'(B ,Tc0Ki1`0EWh1M9d;0"i1R'K09i1R(B 8 0,T5Q1G0MQ1!IC(B
+
+       >> ,Tc0Ki1EM'!SK94(S9G9$0CQi1'07Uh1`KARPJAJSK0CQ1:$S0JQh1'(B C-n ,TK0CW1M(B C-p ,T`0>Wh1M`0EWh1M9`$M0Cl1`+M0Cl1(B
+          ,Tc0Ki1ARM0BYh1c!0Ei1:CC07Q1409Ui1c0Ki1AR!07Uh10JX14`07h1R07Uh1(P7Sd04i1(B ,Tc9!RC`0EWh1M9`$M0Cl1`+M0Cl1$0CQi1'`04U1BG(B
+
+     ,TJSK0CQ1:(B C-v ,TaEP(B ESC v ,T(Pd04i1<Ea5!05h1R'd;0JQ1!`0Eg1!09i1MB(B  ,Tc9!C03U109Ui1(B ,T(P`0;g19!RC`0EWh1M9K09i1R(M(B
+0,T"Vi19E'(B ,T5RA(S9G9:CC07Q14a79(B
+
+       >> ,TEM'!4(B C-u 3 C-v 0,T4Y1(B
+
+     ,T`0EWh1M9!0EQ1:07Uh1`0!h1Rd04i1b4B(B C-u 3 ESC v
+
+,T$S0JQh1'B!`0ET1!(B
+=========
+
+     ,T$S0JQh1'(B C-g ,Tc0*i1JSK0CQ1:0JQh1'B!`0ET1!$S0JQh1'05h1R'(B ,Tf(B 0,T7Uh105i1M'!RC!RC0;i1M90"i1M0AY1E`0>Th1A`05T1A(B  0,T5Q1GM0Bh1R'`0*h19(B
+,TCPK0Gh1R'07Uh1c0Jh105Q1G`0EW1M!(B (argument) ,TM0BYh1(B ,TK0CW1MCPK0Gh1R'$S0JQh1'07Uh105i1M'!RC!40;Xh1AAR!!0Gh1R(B 2 0,T;Xh1A0"Vi19d;(B  0,T6i1R(B
+,TKR!05i1M'!RCB!`0ET1!(B 0,T!g1c0Ki1!4(B C-g
+
+       >> ,TEM'!SK94(S9G9$0CQi1'c0Ki1`0;g19(B 100 ,Tb4B!RC!4(B C-u 100 ,Ta0Ei1G!4(B C-g 0,T4Y1(B  ,TK0EQ1'(R!09Qi19(B
+          ,Tc0Ki1EM'!4(B C-f 0,T4Y1(B ,Ta0Ei1G0JQ1'`!504Y10Gh1R`$M0Cl1`+M0Cl1`0EWh1M9d;0!Uh105Q1G0MQ1!IC(B  ,TK0CW1M5M907Uh1>ER4d;!4(B
+          ESC ,Tb4Bd0Ah105Qi1'c((B  0,T!g1JRARC6!4(B C-g ,TB!`0ET1!d04i1(B
+
+0,T"i1M0<T14>ER4(B (Error)
+================
+
+     ,Tc9:R'$0CQi1'(B ,TMR((P0AU1!RC0JQh1';0/T10:Q105T1'R9:R'M0Bh1R'(B 0,T7Uh1(B Emacs ,TBMA0CQ1:d0Ah1d04i1`0!T140"Vi19(B  0,T5Q1GM0Bh1R'`0*h19(B
+,T!RC!4$S0JQh1'$M9b7CE:R'$S0JQh1'(B 0,T7Uh1d0Ah1d04i1!SK94d0Gi1c9(B Emacs 0,T!g1(P7Sc0Ki1(B Emacs 0,TJh1'`0JU1B'`05W1M9(B
+,TaEPaJ4'<E07Uh1:CC07Q140Eh1R'0JX14"M'(M(B ,T:M!0Gh1R0<T14>ER4M0Bh1R'dC(B
+
+     ,T$S0JQh1':R'$S0JQh1'07Uh1`0"U1B9d0Gi1c9`M!JRC)0:Q1:09Ui1(B ,TMR(c0*i1d0Ah1d04i10!Q1:(B Emacs ,T:R'0CXh19(B (version) 0,T+Vh1'(P(B
+,T7Sc0Ki10AU1!RCaJ4'<E0"i1M0<T14>ER4(B (error) 0,T"Vi19(B   ,Tc9!C03U109Ui1(B ,T"Mc0Ki1!40;Xh1AMPdC0!g1d04i1(B ,T`0>Wh1M`0EWh1M9d;0BQ1'0Jh1G9(B
+0,T5h1Md;(B
+
+0,TGT19b40Gl1(B (Window)
+==============
+
+     Emacs ,TJRARC6`0;T140GT19b40Gl1d04i1>0Ci1MA0!Q19KERB0GT19b40Gl1(B ,TaEPc0*i10GT19b40Gl1`K0Eh1R09Qi19aJ4'<E0"i1M$GRA(B
+0,T5h1R'(B ,Tf(B ,T5RA05i1M'!RCd04i1(B  0,T!h1M90MWh19(B 0,T!g1$GC(P7S$GRA0CYi10(Q1!0!Q1:$S0JQh1'(B 0,T7Uh1c0*i1JSK0CQ1:!RCE:0GT19b40Gl10Jh1G9`0!T19(B
+,Tc9`GER07Uh1aJ4'<E0EQ1>08l1"M'$S0JQh1':R'$S0JQh1'(B ,TK0CW1M(B Help ,TMM!`0JU1B0!h1M9(B
+
+     C-x 1             ,T7Sc0Ki1`0;g190GT19b40Gl1`04U1BG(B
+
+     ,T$S0JQh1'(B C-x 1 ,Tc0*i1JSK0CQ1:E:0GT19b40Gl10MWh19(B  ,Ta0Ei1G"BRB0GT19b40Gl107Uh10AU1`$M0Cl1`+M0Cl1M0BYh1(B  ,Tc0Ki1`05g1A(M`0;g19(B
+0,TGT19b40Gl1`04U1BG(B
+
+       >> ,Tc0Ki1`0EWh1M9`$M0Cl1`+M0Cl1AR07Uh1:CC07Q1409Ui1(B  ,Ta0Ei1G!4(B C-u 0 C-l
+
+       >> ,TEM'!4(B C-h k C-f 0,T4Y1(B  ,Ta0Ei1G0JQ1'`!504Y10Gh1R0GT19b40Gl109Ui1`;0EUh1B9d;M0Bh1R'dC(B ,T`0AWh1M0AU10GT19b40Gl1cK0Ah10+Vh1'(B
+          ,TM08T1:RB0GT108U1c0*i1$S0JQh1'(B C-f ,T;CR!/0"Vi19(B
+
+       >> ,TEM'!4(B C-x 1 ,T`0>Wh1ME:0GT19b40Gl107Uh1b<0Eh10"Vi19ARcK0Ah1(B ,TMM!(B
+
+,T!RCa7C!(B (insert) ,TaEP(B ,T!RCE:(B (delete)
+===================================
+
+     ,T:9(B Emacs ,T`CR(PJRARC60>T1A0>l105Q1G0MQ1!IC`0"i1Rd;d04i1`EB(B ,T`0AWh1M05i1M'!RC0>T1A0>l10"i1M$GRA(B  Emacs ,T(P(B
+0,T6W1M0Gh1R05Q1GK09Q1'0JW1M07Uh1AM'`0Kg19d04i107X1!05Q1G(B (,T`0*h19(B 'A' '7' '*' ',T!(B' ,TaEP0MWh19(B ,Tf(B) ,T`0;g190"i1M$GRA07Uh105i1M'!RC(P(B
+,Ta7C!(B (insert) ,T`0"i1Rd;5C'(B ,Tf(B  ,T`0AWh1M(P(::CC07Q14(B ,Tc0Ki1!4(B <Return> ,T`0>Wh1M`05T1A0MQ1!IC0"Vi19:CC07Q14cK0Ah1(B
+(linefeed character) ,Ta7C!`0"i1Rd;(B
+
+     ,Tc0Ki1!4(B <Delete> ,T`0AWh1M05i1M'!RC(PE:05Q1G0MQ1!IC07Uh1`0>Th1'0>T1A0>l1`0"i1Rd;(B  <Delete> ,TKARB06V1'0;Xh1A`0"U1B9(B
+,T:90<T1GK09i1Rd0Gi10Gh1R(B "Delete"  ,TK0CW1M:R'07U1MR((P`0"U1B9d0Gi1(B "Rubout" 0,T!g1d04i1(B   ,Tb4B07Qh1Gd;(B <Delete>
+,Tc0*i1JSK0CQ1:E:05Q1G0MQ1!IC07Uh1M0BYh10!h1M9K09i1R5SaK09h1'`$M0Cl1`+M0Cl10;Q1(0(X10:Q19(B
+
+       >> ,TEM'0>T1A0>l105Q1G0MQ1!IC`0"i1Rd;KERB(B ,Tf(B 0,T5Q1G(B  ,Ta0Ei1Gc0*i1(B <Delete> ,TE:05Q1G0MQ1!IC`K0Eh1R09Qi1907Ti1'(B
+
+       >> ,TEM'0>T1A0>l10"i1M$GRAE'd;c0Ki1`0!T19"M:"GR(B (right margin)  ,T`GER07Uh10>T1A0>l10"i1M$GRA`0"i1Rd;(B
+          ,TBRG`0!T19$GRA!0Gi1R'"M'K09Vh1':CC07Q14(B  ,T:CC07Q1409Qi190!g1(P(B "0,T6Y1!05h1M(B" ,Tc0Ki1BRG`0!T19K09Vh1'K09i1R(M(B
+	  ,Tb4Bc0Jh1`$0CWh1M'KARB(B '\' ,Td0Gi107Uh1"M:"GR0JX14(B ,T`0>Wh1M:M!c0Ki10CYi10Gh1R:CC07Q1409Ui10BQ1'0AU105h1M(B  Emacs ,T(P(B
+	  ,T`0EWh1M9(B (scroll) ,TK09i1R(M`0>Wh1Mc0Ki1`0Kg195SaK09h1'07Uh1!S0EQ1'a0!i1d"M0BYh1d04i1M0Bh1R'0*Q14`(9(B  0,T6i1RKR!(B
+	  ,T"M:"GRK0CW1M"M:0+i1RB"M'0AU1`$0CWh1M'KARB(B '\' ,TM0BYh1(B 0,T!g1`0;g19!RC:M!c0Ki10CYi10Gh1R(B ,T:CC07Q1409Qi190BQ1'0AU105h1M(B
+	  ,Td;c907T1H7R'09Qi19(B ,Tf(B
+
+     ,TEM';0/T10:Q105T104Y1`EB(B ,T$'(P0*h1GBc0Ki1`0"i1Rc(0'h1RB!0Gh1R!RCM08T1:RB04i1GB05Q1GK09Q1'0JW1M(B
+
+       >> ,Tc0Ki1"0BQ1:`$M0Cl1`+M0Cl1d;d0Gi1:9:CC07Q140+Vh1'06Y1!05h1Mc0Ki1BRG`0!T19K09Vh1'K09i1R(M(B 0,T7Uh1`0>Th1'0;i1M9`0"i1Rd;`0AWh1M(B
+          0,TJQ1!$0CYh109Ui1(B  ,Ta0Ei1Gc0*i1(B C-d ,TE:0"i1M$GRAMM!:R'0Jh1G9(B ,T(9$GRABRG"M'0"i1M$GRAM0BYh1@RBc9K09Vh1'(B
+	  ,T:CC07Q14(B  0,TJQ1'`!504Y10Gh1R`$0CWh1M'KARB(B '\' ,T(PKRBd;(B
+
+       >> ,Tc0Ki1`0EWh1M9`$M0Cl1`+M0Cl1d;d0Gi107Uh15SaK09h1'aC!0JX14"M':CC07Q14(B ,Ta0Ei1G!4(B <Delete> 0,T4Y1(B  ,T!RC7S(B
+          ,Ta::09Ui1(B ,T(P7Sc0Ki10JQ1-0EQ1!I03l10$Qh19CPK0Gh1R':CC07Q1406Y1!E:MM!d;(B  ,T:CC07Q1409Qi190!g1(P06Y1!`MRd;05h1M0!Q1:(B
+	  ,T:CC07Q140!h1M9K09i1R09Qi19(B ,TCGA0!Q19`0;g19:CC07Q14BRG:CC07Q14`04U1BG(B ,TaEPMR((P0AU10JQ1-0EQ1!I03l105h1M:CC07Q14(B
+	  ,T;CR!/0"Vi19(B
+
+       >> ,Tc0Ki1!4(B <Return> ,T`0>Wh1M`0>Th1A(B 0,T5Q1G0MQ1!IC0"Vi19:CC07Q14cK0Ah1(B ,T!0EQ1:d;M0Bh1R'`04T1A(B
+
+     ,T$S0JQh1'0Jh1G9cK0-h1"M'(B Emacs ,T(PJRARC6!SK94(S9G9$0CQi1'07Uh105i1M'!RCc0Ki1;0/T10:Q105T1d04i1(B  ,TCGA07Qi1'!RC(B
+,Ta7C!(B (insert) 0,T5Q1G0MQ1!IC04i1GB(B
+
+
+       >> ,TEM'0;i1M9$S0JQh1'(B C-u 8 * 0,T4Y1(B  0,TJQ1'`!504Y10Gh1R`0!T14MPdC0"Vi19(B
+
+     0,T6i1R05i1M'!RC(P`0>Th1A:CC07Q140Gh1R'(B ,Tf(B (blank line) ,TCPK0Gh1R'JM':CC07Q14(B  ,Tc0Ki1`0EWh1M9d;07Uh15SaK09h1'(B
+,TaC!0JX14"M':CC07Q1407Uh1JM'(B  ,Ta0Ei1G!4(B C-o
+
+       >> ,Tc0Ki1`0EWh1M9d;07Uh15SaK09h1'aC!0JX14"M':CC07Q14c40!g1d04i1(B  ,Ta0Ei1GEM'!4(B C-o 0,T4Y1(B
+
+     0,T6V1'5C'09Ui1(B  ,T`CR0!g1d04i1`0CU1B90GT108U10>Wi190R9JSK0CQ1:!RC0;i1M90"i1M$GRA(B ,TaEP!RCa0!i107Uh10<T14a0Ei1G(B  ,T9M!(R!(P(B
+,TE:d04i107U1EP05Q1G0MQ1!ICa0Ei1G(B  0,TBQ1'0AU1$S0JQh1'0+Vh1'JRARC6c0*i1E:d04i1c9`0;g19$S(B ,Tf(B ,TK0CW1M`0;g19:CC07Q14(B ,Tf(B 0,TMU1!04i1GB(B  ,TJ0CX1;(B
+,T$S0JQh1'JSK0CQ1:!RCE:d04i104Q1'09Ui1(B
+
+     <Delete>       ,TE:05Q1G0MQ1!IC07Uh1M0BYh1K09i1R`$M0Cl1`+M0Cl1(B
+     C-d            ,TE:05Q1G0MQ1!IC07Uh1M0BYh107Uh1`$M0Cl1`+M0Cl1(B
+
+     ESC <Delete>   ,TE:$S07Uh1M0BYh1K09i1R`$M0Cl1`+M0Cl1(B
+     ESC d          ,TE:$S05Qi1'a05h15SaK09h1'07Uh1`$M0Cl1`+M0Cl1M0BYh1(B
+
+     C-k            ,TE::CC07Q1405Qi1'a05h15SaK09h1'07Uh1`$M0Cl1`+M0Cl1M0BYh1(B
+
+     ,Tc9:R'$0CQi1'(B ,T`CRMR(05i1M'!RC(P`MR0Jh1G907Uh1E:d;!0EQ1:0$W19AR(B   ,Tb;Ca!CA(B Emacs ,T(P(S0Jh1G907Uh1E:(B
+,TMM!d0Gi1(B ,T`GER07Uh1E:0"i1M$GRAc9K09h1GB07Uh1AR!!0Gh1RK09Vh1'05Q1G0MQ1!IC(B   ,Tc0Ki1c0*i1$S0JQh1'(B C-y ,T`GER07Uh105i1M'!RC(P`MR(B
+0,T"i1M$GRA!0EQ1:0$W19(B  0,TJTh1'07Uh1$GCCP0GQ1'0!g10$W1M(B C-y ,Td0Ah1c0*h1c0*i1d04i1`0>U1B'a0$h15SaK09h1'07Uh1E:0"i1M$GRAMM!`07h1R09Qi19(B  ,Ta05h1(P(B
+,Tc0*i10!Q1:5SaK09h1'c40!g1d04i1(B  C-y ,T`0;g19$S0JQh1'JSK0CQ1:a7C!0"i1M$GRA07Uh1`0!g1:d0Gi1(B ,TE'c95SaK09h1'07Uh10AU1`$M0Cl1`+M0Cl1M0BYh1(B
+,T`CRJRARC6c0*i1$GRAJRARC609Ui1c9!RC`$0EWh1M90Bi1RB0"i1M$GRAd04i1(B
+
+     ,T$S0JQh1'JSK0CQ1:!RCE:0AU1M0BYh1JM'a::0$W1M(B ,T$S0JQh1'(B "Delete" 0,T!Q1:(B ,T$S0JQh1'(B "Kill"  ,T$S0JQh1'(B "Kill"
+,T(P`0!g1:0Jh1G9E:MM!d0Gi1(B ,Ta05h1$S0JQh1'(B "Delete" ,T(Pd0Ah1`0!g1:(B  ,Ta05h106i1RKR!c0*i1$S0JQh1'09Ui1KERB(B ,Tf(B ,T$0CQi1'(B  0,T!g1(P`0!g1:(B
+0,TJh1G907Uh1E:MM!d0Gi1c0Ki1(B
+
+      >> ,Tc0Ki1!4(B C-n 0,TJQ1!JM'JRA$0CQi1'(B ,T`0>Wh1M`0EWh1M9d;0BQ1'07Uh107Uh1`KARPJA:9K09i1R(M(B ,Ta0Ei1GEM'!4(B C-k ,T`0>Wh1M(B
+         ,TE::CC07Q1409Qi19MM!04Y1(B
+
+     ,T`0AWh1M!4(B C-k ,T$0CQi1'aC!(B 0,T"i1M$GRAc9:CC07Q1409Qi19(P06Y1!E:MM!(B  ,TaEP`0AWh1M!40MU1!(B C-k 0,TMU1!$0CQi1'(B ,T:CC07Q14(B
+0,T9Qi19`M'07Qi1':CC07Q140!g1(P06Y1!E:MM!d;04i1GB(B  ,Ta05h106i1R!SK94(S9G9$0CQi1'c0Ki10!Q1:$S0JQh1'(B C-k 0,T!g1(PKARB06V1'(B ,Tc0Ki1E:(B
+,T:CC07Q14MM!(B (0,T7Qi1'`09Wi1MKRaEP05Q1G:CC07Q14(B) ,T`0;g19(S9G9:CC07Q14(B ,T`07h1R0!Q1:(S9G9$0CQi1'07Uh1!SK94(B
+
+     ,T:CC07Q1407Uh1`0>Th1'E:MM!d;(B ,T(P06Y1!`0!g1:d0Gi1(B ,TaEPJRARC69S!0EQ1:0$W19ARd04i1(B ,Tb4Bc0*i1$S0JQh1'(B C-y
+
+       >> ,TEM'!4(B C-y 0,T4Y1(B
+
+     0,T"i1M$GRA07Uh106Y1!E:MM!(B ,Tb4B!RC!4(B C-k ,TKERB(B ,Tf(B ,T$0CQi1'(B  ,T(P06Y1!`0!g1:CG:CGAd0Gi1(B ,TaEPJRARC69S(B
+,T!0EQ1:AR07Qi1'KA4d04i1c9$0CQi1'`04U1BG(B ,Tb4B!RC!4(B C-y
+
+       >> ,TEM'!4(B C-k 0,T4Y1KERB(B ,Tf(B ,T$0CQi1'(B
+
+       >> ,T$S0JQh1'JSK0CQ1:`0CU1B!0"i1M$GRA!0EQ1:AR(B 0,T$W1M(B C-y   0,T!h1M90MWh19c0Ki1`0EWh1M9`$M0Cl1`+M0Cl1E'd;0"i1R'0Eh1R'(B
+          0,TJQ1!JM'JRA:CC07Q14(B  ,Ta0Ei1GEM'!4(B C-y 0,T4Y1(B 0,T!g1(PJRARC60$Q14EM!(B (copy) 0,T"i1M$GRAd04i1(B
+
+     0,T6i1R5M909Ui1`0!g1:0"i1M$GRAMPdC:R'M0Bh1R'd0Gi1(B  ,Ta0Ei1GE:0"i1M$GRA0MWh19`0>Th1A`0"i1Rd;0MU1!(B ,T(P`0!T14MPdC0"Vi19(B
+,T<E0EQ1>08l10$W1M(B C-y ,T(P`0CU1B!0$W19d04i1a0$h1`0>U1B'0"i1M$GRA07Uh1E:MM!$0CQi1'0Eh1R0JX14`07h1R09Qi19(B
+
+
+       >> ,TEM'E::CC07Q1404Y1K09Vh1':CC07Q14(B  ,Ta0Ei1G`0EWh1M9`$M0Cl1`+M0Cl1d;07Uh10MWh19(B  ,Ta0Ei1GE::CC07Q14MM!04Y10MU1!K09Vh1'(B
+          ,T:CC07Q14(B  ,TEM'!4(B C-y 0,T4Y1(B ,Ta0Ei1G0JQ1'`!504Y10Gh1R(Pd04i1a0$h1`0>U1B':CC07Q1407Uh1JM'0$W19`07h1R09Qi19(B
+
+,T!RC0MQ1904Y1(B (UNDO)
+=============
+
+     ,T`GER07Uh1a0!i1d"0"i1M$GRA:R'M0Bh1R'(B ,Ta0Ei1G05i1M'!RC(P`;0EUh1B9!0EQ1:c0Ki1`0;g19M0Bh1R'`04T1A(B  0,T!g1JRARC67Sd04i107X1!(B
+,T`0AWh1M04i1GB$S0JQh1'(B C-x u   ,Tb4B;!05T1(B ,T(Pc0*i1JSK0CQ1:B!`0ET1!$S0JQh1'(B 0,T7Uh10;i1M9`0"i1Rd;b4Bd0Ah105Qi1'c((B  ,TJRARC6c0*i1(B
+,T$S0JQh1'09Ui10!Uh1$0CQi1'0!g1d04i15RA05i1M'!RC(B
+
+       >> ,TEM'E::CC07Q1409Ui1MM!04Y1(B 0,T4i1GB$S0JQh1'(B C-k ,Ta0Ei1G`0CU1B!!0EQ1:0$W19AR04i1GB(B C-x u
+
+     ,T$S0JQh1'(B C-_ 0,T!g1`0;g19$S0JQh1'0MQ1904Y10MU1!0MQ19K09Vh1'(B  ,T$GRAJRARC6`K0AW1M90!Q1:$S0JQh1'(B C-x u
+
+     ,TJRARC6!SK94(S9G9$0CQi1'c0Ki1$S0JQh1'(B C-_ ,TaEP(B C-x u ,Td04i1(B
+
+
+,Ta0?i1A0"i1M0AY1E(B (File)
+==============
+
+     ,T`CR(S`0;g1905i1M'`0!g1:0CQ1!IR(B (save) 0,T"i1M$GRA07Uh1a0!i1d"d0Gi1c9a0?i1A0"i1M0AY1E(B  0,T6i1R05i1M'!RC(Pc0Ki10JTh1'07Uh1(B
+,Ta0!i1d"`;0EUh1B9d;M0Bh1R'6RGC(B  ,Td0Ah1`0*h1909Qi19(B 0,TJTh1'07Uh1a0!i1d"d;0!g1(PKRBd;(B 0,T7Q1907U107Uh1`0ET1!!RCc0*i1(B Emacs
+
+     ,Ta0?i1A0"i1M0AY1E07Uh1AM'`0Kg19M0BYh1(B 0,T$W1M0JTh1'07Uh10:Q1907V1!0JTh1'07Uh1!S0EQ1'a0!i1d"M0BYh1(B  ,TK0CW1M0>Y140'h1RB(B ,Tf(B 0,T!g10$W1Ma0?i1A0"i1M0AY1E07Uh1AM'`0Kg19(B
+,TM0BYh10$W1M05Q1Ga0?i1A0"i1M0AY1E07Uh1!S0EQ1'a0!i1d"M0BYh1(B
+
+     ,Ta05h1(9!0Gh1Ra0?i1A0"i1M0AY1E(P06Y1!`0!g1:0CQ1!IR(B (save) ,TE'd;(B  ,Ta0?i1A0"i1M0AY1E07Uh106Y1!a0!i1d"M0BYh1(B ,T(Pd0Ah106Y1!`0"U1B907Q1:(B
+,TE'd;M0Bh1R'`04g14"R4(B  0,TMQ1909Ui1`0>Wh1M`0;g19!RC0;i1M'0!Q19!RC`0"U1B907Q1:a0?i1A0"i1M0AY1E07Uh1a0!i1d"d;a::$0CVh1'(B ,Tf(B ,T!ER'(B ,Tf(B
+,Tb4Bd0Ah1d04i105Qi1'c((B
+
+     ,T9M!(R!09Ui1(B ,T`0>Wh1M`0;g19!RC0;i1M'0!Q19!RC`0!g1:0CQ1!IR(B (save) 0,TJTh1'07Uh1a0!i1d"0<T14d;b4Bd0Ah105Qi1'c((B  Emacs
+,T(P`;0EUh1B90*Wh1Ma0?i1A0"i1M0AY1E05i19)0:Q1:`0!g1:d0Gi1c0Ki1(B 0,T!h1M9!RC`0!g1:0CQ1!IR(B
+
+,TKARB`K05X1(B:       Emacs 0,TBQ1'0AU1!RC0;i1M'0!Q190MX10:Q105T1`K05X107Uh1$R4d0Ah106V1'(B ,Tb4B!RC`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E07Uh1!S0EQ1'(B
+               ,Ta0!i1d"M0BYh1`0;g19CPBP(B ,Tf(B ,Tb4Bc0*i10*Wh1Ma0?i1A0"i1M0AY1E05h1R'0!Q19(B  0,T4i1GB0GT108U109Ui1(B ,T(P7Sc0Ki1JRARC6E4(B
+               ,T$GRA`0JU1BKRB07Uh1MR(`0!T140"Vi19d04i1(B  ,Tc0Ki109i1MB07Uh10JX14`07h1R07Uh1(P7Sd04i1(B
+
+     ,T5C'0Jh1G90Eh1R'"M'(M(B ,T(P0AU1:CC07Q14bKA4(B (mode line) ,Tc90EQ1!I3P0"i1R'0Eh1R'aJ4'M0BYh1(B
+
+
+(0,T5Q1GM0Bh1R'(B) [--]J:--**-Mule: TUTORIAL.th    (Fundamental) ---55%--------------
+
+
+     ,T)0:Q1:JS`9R"M'(B Tutorial ,T"M'(B Emacs 0,T7Uh1!S0EQ1'0Mh1R9M0BYh109Ui10*Wh1M(B TUTORIAL.th  ,T`GER07Uh10JQh1'c0Ki1KR(B
+,Ta0?i1A0"i1M0AY1EK0CW1M(B find-file (0,T$i19KRa0?i1A0"i1M0AY1E(B ,Ta0Ei1G0Mh1R9`0"i1RARc90:Q1?`?M0Cl1(B) 0,T!g1(PaJ4'0*Wh1Ma0?i1A0"i1M0AY1Ed0Gi1(B
+,T5C'0Jh1G9(B TUTORIAL.th  0,T5Q1GM0Bh1R'`0*h19(B 0,T6i1R0JQh1'c0Ki1KRa0?i1A0"i1M0AY1E0*Wh1M(B new-file  ,T:CC07Q14bKA40!g1(PaJ4'(B
+,T<E0Gh1R(B "Mule: new-file"
+
+,TKARB`K05X1(B:       ,T(P0AU1$SM08T1:RB`0>Th1A`05T1A`0!Uh1BG0!Q1::CC07Q14bKA4(B (mode line) ,Tc95M9K0EQ1'(B
+
+     ,T$S0JQh1'c0Ki1KRa0?i1A0"i1M0AY1E(B ,TaEP$S0JQh1'c0Ki1`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E(B 0,TAU10EQ1!I3Pa5!05h1R'(R!$S0JQh1'07Uh10<h1R9(B ,Tf(B ,TAR(B
+,T5C'07Uh1(B ,T;CP!M:d;04i1GB(B 2 0,T5Q1G0MQ1!IC(B 0,T$W1M05i1M'!4$S0JQh1':R'M0Bh1R'(B ,T5RAK0EQ1'$S0JQh1'(B C-x 0,T+Vh1'KARB06V1'$S0JQh1'(B
+,T`0!Uh1BG0!Q1:a0?i1A0"i1M0AY1E(B
+
+     ,TaEP0MU1!0(X14K09Vh1'(B ,Ta05h1a5!05h1R'(R!$S0JQh1'07Uh10<h1R9AR0$W1M(B ,T`GER0JQh1'c0Ki10$i19KRa0?i1A0"i1M0AY1E(B ,T`CR(P06Y1!(B Emacs
+,T6RA0*Wh1M"M'a0?i1A0"i1M0AY1E09Qi19(B ,Tf(B  ,T`CR`0CU1B!$S0JQh1'`K0Eh1R09Qi190Gh1R(B ,T$S0JQh1';CP`@707Uh16RA05Q1G`0EW1M!(B (argument)
+,T(R!`7M0Cl10AT109Q1E(B
+
+,TKARB`K05X1(B:       ,Tc907Uh109Ui1(B 0,T5Q1G`0EW1M!(B (argument) 0,T$W1M0*Wh1Ma0?i1A0"i1M0AY1E(B
+
+                    C-x C-f   0,TJQh1'c0Ki1KR(B (find) ,Ta0?i1A0"i1M0AY1E(B
+
+     ,Ta0Ei1G(B Emacs ,T(P6RA0*Wh1M"M'a0?i1A0"i1M0AY1E(B ,Tb4B;CR!/0"Vi1907Uh10Jh1G90Eh1R'"M'(M(B  ,T`CR`0CU1B!0Jh1G907Uh1c0Ki10;i1M9(B
+0,T*Wh1Ma0?i1A0"i1M0AY1E09Qi190Gh1R(B 0,TAT109T10:Q1?`?M0Cl1(B (mini buffer)  0,TAT109T10:Q1?`?M0Cl1(P06Y1!c0*i1'R9c90EQ1!I3P09Ui1(B  0,TAT109T10:Q1?`?M0Cl1(B
+,T(PKA4K09i1R07Uh1aEPKRBd;(B ,TK0EQ1'(R!07Uh10;i1M90*Wh1Ma0?i1A0"i1M0AY1E(B ,Ta0Ei1G!40;Xh1A(B <Return> 
+
+       >> ,TEM'!4(B C-x C-f ,Ta0Ei1G5RA04i1GB(B C-g 0,T4Y1(B  ,T`0;g19!RC0JQh1'B!`0ET1!`09Wi1MKRc90AT109T10:Q1?`?M0Cl1(B ,TK0CW1M(B
+          ,TB!`0ET1!$S0JQh1'(B C-x C-f  0,T4Q1'09Qi19(B Emacs ,T(Pd0Ah10$i19KRa0?i1A0"i1M0AY1Ec4(B ,Tf(B
+
+     ,T$CRG09Ui1(B ,TAREM'`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E04Y1(B  ,T`GER07Uh105i1M'!RC`0!g1:0CQ1!IR0JTh1'07Uh1a0!i1d"AR(906V1'5M909Ui1(B 0,T!g1c0Ki1c0*i1(B
+,T$S0JQh1'04Q1'09Ui1(B
+
+     C-x C-s   ,T`0!g1:0CQ1!IR(B (save) ,Ta0?i1A0"i1M0AY1E(B
+
+     ,Ta0Ei1G`09Wi1MKR07Uh1M0BYh1c9(B Emacs 0,T!g1(P06Y1!`0"U1B9E'd;07Uh1a0?i1A0"i1M0AY1E(B  ,T`GER`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E(B ,Ta0?i1A0"i1M0AY1E(B
+0,T5i19)0:Q1:(Pd0Ah10JY1-KRBd;(B ,Ta05h1(P06Y1!`0!g1:d0Gi1c90*Wh1McK0Ah1(B  0,T+Vh1'd04i1AR(R!0*Wh1M`0!h1R07Uh105h1M07i1RB04i1GB(B '~'
+
+     ,TK0EQ1'(R!07Uh1`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E`J0Cg1(a0Ei1G(B  Emacs 0,T!g1(PaJ4'0*Wh1Ma0?i1A0"i1M0AY1E07Uh1`0!g1:c0Ki104Y1(B
+
+       >> ,TEM'!4(B C-x C-x ,T`0>Wh1M`0!g1:0CQ1!IRJS`9R"M'(B Tutorial 0,T9Ui104Y1(B  0,T!g1(P`0Kg190Gh1R(B 0,T7Uh10Jh1G90Eh1R'(B
+          ,T"M'(M(B 0,TAU10"i1M$GRA0Gh1R(B "Wrote ...../TUTORIAL.th" ,T;CR!/0"Vi19(B
+
+     ,T`GER07Uh1(PJ0Ci1R'a0?i1A0"i1M0AY1EcK0Ah1(B  0,T!g1c0Ki17SCRG0!Q1:0Gh1R(P0$i19KR(B (find-file) ,Ta0?i1A0"i1M0AY1E`0!h1R0+Vh1'0AU1(B
+,TM0BYh10!h1M9K09i1R09Ui1a0Ei1G(B  ,Ta0Ei1G0>T1A0>l10"i1M$GRAE'd;c9a0?i1A0"i1M0AY1E07Uh1KR`(M(B
+
+     ,TaEP`GER07Uh10JQh1'`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E`07h1R09Qi19(B  0,T$W1M5M907Uh1(B Emacs ,T(P`0!g1:`09Wi1MKR07Uh1a0!i1d"AR07Qi1'KA4(B ,TE'(B
+,Tc9a0?i1A0"i1M0AY1E`0;g19$0CQi1'aC!(B
+
+
+0,T:Q1?`?M0Cl1(B (Buffer)
+===============
+
+     0,T6i1RKR!0JQh1'c0Ki1KRa0?i1A0"i1M0AY1E0MQ1907Uh1JM'(B 0,T4i1GB$S0JQh1'(B C-x C-f  ,T`09Wi1MKR"M'a0?i1A0"i1M0AY1EaC!(B 0,T!g1(P0BQ1'$'(B
+0,T6Y1!`0!g1:0CQ1!IRM0BYh1c9(B Emacs  0,TJTh1'07Uh1`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E07Uh10Mh1R9`0"i1RAR(B 0,T+Vh1'M0BYh1@RBc9(B Emacs ,T`0CU1B!0Gh1R(B
+0,T:Q1?`?M0Cl1(B (Buffer)  ,T`GER07Uh10Mh1R9a0?i1A0"i1M0AY1EcK0Ah1`0"i1RAR(B Emacs 0,T!g1(PJ0Ci1R'0:Q1?`?M0Cl1cK0Ah1(B 0,T"Vi19AR@RBc9(B
+
+     0,T6i1R05i1M'!RC(P04Y1CRB!RC"M'0:Q1?`?M0Cl1(B 0,T7Uh106Y1!`0!g1:0CQ1!IRM0BYh1@RBc9(B Emacs  0,T!g1c0Ki1!4$S0JQh1'(B
+
+     C-x C-b
+
+       >> ,TEM'!4(B C-x C-b 0,T4Y1(B  0,TJQ1'`!504Y10Gh1Ra05h1EP0:Q1?`?M0Cl10AU10*Wh1M0Gh1RMPdC(B  ,TaEP06Y1!05Qi1'0*Wh1Md0Gi10Gh1R(B
+          ,TM0Bh1R'dC(B ,Tc9(B Emacs
+
+     0,TAU1:R'0:Q1?`?M0Cl1(B 0,T7Uh1d0Ah10AU10$Yh10!Q1:a0?i1A0"i1M0AY1E(0CT1'(B ,Tf(B  0,T5Q1GM0Bh1R'`0*h19(B ,Td0Ah10AU1a0?i1A0"i1M0AY1E07Uh10AU10*Wh1M0Gh1R(B "*Buffer
+List*" ,TM0BYh1(0CT1'(B ,Tf(B  ,Ta05h1`0;g190:Q1?`?M0Cl107Uh1J0Ci1R'0"Vi19AR`0>Wh1MaJ4'CRB!RC0:Q1?`?M0Cl1(B ,Tb4B$S0JQh1'(B C-x C-b
+
+     0,T"i1M$GRA07X1!0"i1M$GRA07Uh1;CR!/M0BYh1c90GT19b40Gl1"M'(B Emacs 0,T9Qi19(B ,T(PM0BYh1c90:Q1?`?M0Cl1c40:Q1?`?M0Cl1K09Vh1'`JAM(B
+
+       >> ,TEM'!4(B C-x 1 ,T`0>Wh1ME:CRB!RC0:Q1?`?M0Cl1MM!04Y1(B
+
+     ,T!RC`0CU1B!a0?i1A0"i1M0AY1E0MWh190"Vi19ARa0!i1d"(B ,T5M907Uh1!S0EQ1'a0!i1d"a0?i1A0"i1M0AY1EK09Vh1'M0BYh109Qi19(B  ,T(Pd0Ah17Sc0Ki1a0?i1A0"i1M0AY1E(B
+,TaC!06Y1!`0!g1:0CQ1!IR(B  0,TJTh1'07Uh1a0!i1d"d;c9a0?i1A0"i1M0AY1EaC!(P06Y1!0:Q1907V1!d0Gi1c90:Q1?`?M0Cl1"M'a0?i1A0"i1M0AY1E09Qi19(B ,T`07h1R09Qi19(B
+
+     ,T!RCJ0Ci1R'0:Q1?`?M0Cl1cK0Ah10"Vi19(B ,TJSK0CQ1:a0!i1d"a0?i1A0"i1M0AY1E0MQ1907Uh1JM'(B ,Ta0Ei1Ga0!i1MPdC:R'M0Bh1R'c90:Q1?`?M0Cl109Qi19(B
+,T(Pd0Ah10AU1<Ec4(B ,Tf(B 0,T5h1M0:Q1?`?M0Cl1"M'a0?i1A0"i1M0AY1E0MQ1907Uh1K09Vh1'07Qi1'0JTi19(B  0,T(X1409Ui17Sc0Ki1JRARC6`0!g1:a0?i1A0"i1M0AY1EaC!d0Gi1`0>Wh1M(B
+,Ta0!i1d"c95M9K0EQ1'(B
+
+     ,Ta05h1`GER07Uh105i1M'!RC(P`0!g1:0CQ1!IR(B (save) 0,T:Q1?`?M0Cl1E'd;c9a0?i1A0"i1M0AY1E(B 0,T4i1GB$S0JQh1'(B C-x C-s 0,T9Qi19(B
+,T(P05i1M'J0GT170+l1d;0BQ1'0:Q1?`?M0Cl107Uh105i1M'!RC(P`0!g1:(B 0,T4i1GB$S0JQh1'(B C-x C-f 0,T+Vh1'0$h1M90"i1R'0BXh1'BR!(B  ,T`CR0AU1$S0JQh1'0+Vh1'(B
+,Tc0*i1JSK0CQ1:!RC09Ui1b4B`)>RP(B 0,T$W1M(B
+
+     C-x s   ,T`0!g1:0CQ1!IR(B (save) 0,T7X1!0:Q1?`?M0Cl107Uh10AU1M0BYh1(B
+
+     C-x s ,T(P`0!g1:0CQ1!IR07X1!0:Q1?`?M0Cl107Uh106Y1!a0!i1d"`09Wi1MKRd;(B ,TE'c9a0?i1A0"i1M0AY1E(B ,Tb4B(P6RA0!h1M90Gh1R(Pc0Ki1(B
+,T`0!g1:0:Q1?`?M0Cl109Ui1dKA(B y ,TK0CW1M(B n 0,T!Q1:0:Q1?`?M0Cl1a05h1EP0:Q1?`?M0Cl1(B  ,T$S6RA(P;CR!/c90Jh1G90Eh1R'"M'K09i1R(M(B 0,T4Q1'(B
+0,T5Q1GM0Bh1R'09Ui1(B
+
+             Save file  /usr/private/yours/TUTORIAL.th? (y or n)
+
+
+
+,T!RC"BRB$S0JQh1'(B (extension)
+=======================
+
+     ,Tc9b;Ca!CA(B Editor 0,T9Ui1(B 0,TAU1(S9G9$S0JQh1'AR!!0Gh1R(B ,T(S9G9$S0JQh1'0+Vh1'JRARC6!4d04i1b4B0;Xh1A$M9b7CE(B
+,TK0CW1M0;Xh1A(B META ,Td04i1KA4(B  ,T$S0JQh1'"BRB(B (eXtend) 0,TAU1d0Gi1`0>Wh1Mc0Ki1JRARC6c0*i1$S0JQh1'`K0Eh1R09Ui1d04i1KA4(B 0,TAU1M0BYh1(B 2
+,Ta::(B 0,T4Q1'09Ui1(B
+
+     C-x     ,T"BRB`0>Th1A04i1GB05Q1G0MQ1!IC(B ,TJSK0CQ1:!405Q1G0MQ1!IC5RA`0"i1Rd;(B 1 0,T5Q1G(B
+     ESC x   ,T"BRB`0>Th1A04i1GB0*Wh1M$S0JQh1'(B ,TJSK0CQ1:!40*Wh1M$S0JQh1'5RA`0"i1Rd;07Qi1'KA4(B
+
+     ,T$S0JQh1';CP`@709Ui1(B 0,T!g1`0;g19$S0JQh1'07Uh10AU1;CPbB*09l1(B  ,Ta05h10Jh1G9cK0-h1(P06Y1!`0CU1B!c0*i1(B 0,T9i1MB$0CQi1'!0Gh1R$S0JQh1'07Qh1Gd;(B
+0,T5Q1GM0Bh1R'`0*h19(B ,T$S0JQh1'KRa0?i1A0"i1M0AY1E(B (find) C-x C-f  ,T$S0JQh1'`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E(B (save) C-x C-s
+,T$S0JQh1'(B C-x C-c (,T`0ET1!(B Editor) 0,T5h1R'0!g1`0;g19K09Vh1'c9$S0JQh1'`K0Eh1R09Ui1(B
+
+     ,T$S0JQh1'(B C-z ,T`0;g19$S0JQh1'07Uh1c0*i1c9c9!RCMM!(R!(B Emacs 0,T$h1M90"i1R'0:h1MB(B  ,T$S0JQh1'09Ui1(Pd0Ah1B!`0ET1!(B
+Emacs ,T`EB07U1`04U1BG(B ,Ta05h1(PK0BX14(B Emacs ,Td0Gi10*Qh1G$CRG(B ,T`0>Wh1Mc0Ki1JRARC6!0EQ1:d;c0*i1(B csh ,Td04i10MU1!(B  ,T!RC!4(B
+C-z 0,T(V1'`0;g19!RCK0BX14(B Emacs ,Td0Gi10*Qh1G$CRG`07h1R09Qi19(B ,T(Pd0Ah17S$GRA`0JU1BKRBc0Ki10!Q1:`09Wi1MKR07Uh1a0!i1d"d;(B
+
+,TKARB`K05X1(B:       ,Ta05h170Gh1R(B ,Tc9!C03U107Uh1c0*i1:9(B X-window ,TK0CW1Mc0*i1(B sh ,TM0BYh1(B 0,T!g1(Pd0Ah10AU1$GRAJRARC609Ui1(B
+
+
+     ,T$S0JQh1';CP`@7(B C-x 0,TAU1AR!ARBKERB$S0JQh1'(B  ,T$S0JQh1'07Uh1M08T1:RBd;a0Ei1G0AU104Q1'09Ui1(B
+
+     C-x C-f   ,TKRa0?i1A0"i1M0AY1E(B (find) ,TJSK0CQ1:a0!i1d"(B
+     C-x C-s   ,T`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E(B (save)
+     C-x C-b   ,TaJ4'CRB!RC0:Q1?`?M0Cl1(B (buffer list)
+     C-x C-c   ,T`0ET1!!RCc0*i1(B Editor ,TaEP`0!g1:0CQ1!IRa0?i1A0"i1M0AY1Eb4B0MQ15b90AQ105T1(B  ,Ta05h106i1RKR!0AU1a0?i1A(B
+               0,T"i1M0AY1E:R'0MQ1906Y1!a0!i1d"(B  0,T!g1c0Ki16RA0Gh1R(P`0!g1:0CQ1!IRa0?i1A0"i1M0AY1E09Qi19dKA(B  ,Tb4B07Qh1Gd;(B
+               ,T!RCMM!(R!(B Emacs ,T7Sd04i1b4B$S0JQh1'(B C-x C-s C-x C-c 0,T$W1Mc0Ki1`0!g1:0CQ1!IR(B
+               0,T!h1M9a0Ei1G0(V1'`0ET1!(B
+
+     ,T$S0JQh1'"BRB`0>Th1Aa::0*Wh1M09Qi19(B ,Tc0*i1JSK0CQ1:$S0JQh1'07Uh1d0Ah10$h1MBd04i1c0*i1(B ,TK0CW1M$S0JQh1'07Uh1c0*i1`)>RP0!Q1:bKA40>T1`HI:R'(B
+,TbKA4(B  0,T5Q1GM0Bh1R'`0*h19(B ,T$S0JQh1'(B "command-apropos" 0,T+Vh1'(P6RA(B 0,T$U10Bl1`0GT10Cl14(B (keyword) ,Ta0Ei1GaJ4'<E(B
+,T$S0JQh1'07X1!$S0JQh1'07Uh10AU10*Wh1M`0!Uh1BG0"i1M'0!Q1:0!Q1:0$U10Bl1`0GT10Cl1409Qi19(B  ,T`GER(P0JQh1'$S0JQh1'09Ui1(B 0,T!g1c0Ki1!4(B ESC x ,Ta0Ei1G(P0AU105Q1G0MQ1!IC(B
+"M-x" ,T;CR!/0"Vi1907Uh10Jh1G90Eh1R'"M'(M(B  ,T(R!09Qi190!g1c0Ki1c0Jh10*Wh1M$S0JQh1'07Uh105i1M'!RC(B (,Tc9!C03U109Ui10$W1M(B
+"command-apropos")  ,T`0AWh1M0;i1M90"i1M0AY1Ed;06V1'(B "command-a" ,Ta0Ei1G!4(B SPACE BAR 0,TJh1G907Uh1`K0EW1M"M'(B
+0,T*Wh1M$S0JQh1'0!g1(P06Y1!`05T1A`05g1A(B (completion) ,Tc0Ki1`M'b4B0MQ15b90AQ105T1(B   ,TK0EQ1'(R!09Qi19(B ,T(P06Y1!6RA0$U10Bl1`0GT10Cl14(B 0,T!g1c0Ki1(B
+,T!4JRB0MQ1!"CP(B (string) 0,T7Uh105i1M'!RC0CYi1E'd;(B  0,T5i1M'd0Ah1c0Jh10$U10Bl1`0GT10Cl14MPdC`EB(B 0,T!g1(Pd04i1$S0JQh1'07Qi1'KA407Uh10AU1M0BYh1(B
+
+       >> ,TEM'!4(B ESC x ,T5RA04i1GB(B "command-apropos<Return>" ,TK0CW1M(B
+          "command-a<Space><Return>"  ,TK0EQ1'(R!09Qi190!g1!4(B "kanji<Return>" 0,T4Y1(B
+
+     ,Tc0Ki1!4(B C-x 1 ,T`GER05i1M'!RC(PE:(B "0,TGT19b40Gl1(B" 0,T7Uh1b<0Eh10"Vi19ARcK0Ah1(B 
+
+,T:CC07Q14bKA4(B (Mode Line)
+=====================
+
+     ,T`GER07Uh10>T1A0>l1$S0JQh1'`0"i1Rd;0*i1R(B ,Tf(B Emacs ,T(PaJ4'0JTh1'07Uh10>T1A0>l1E'd;5C':CC07Q140Eh1R'0JX14"M'(M0+Vh1'`0CU1B!(B
+0,TGh1R(B echo area  ,T:CC07Q140+Vh1'M0BYh106Q140"Vi19ARK09Vh1':CC07Q14(B ,T`0CU1B!0Gh1R:CC07Q14bKA4(B (mode line)  ,T:CC07Q14(B
+,TbKA40AU10EQ1!I3P04Q1'09Ui1(B
+
+
+ [--]J:--**-Mule: TUTORIAL.th   (Fundamental) ---NN%--------------
+
+
+,TKARB`K05X1(B:       ,T5C'0Jh1G9(B NN ,T"M'(B NN% ,T(P0AU105Q1G`E"c0Jh1M0BYh1(B  ,T:CC07Q14bKA407Uh1aJ4'M0BYh1MR((Pa5!05h1R'(B
+               ,Td;(R!05Q1GM0Bh1R'0:i1R'(B ,Ta05h10!g1d0Ah1`0;g19dC(B  0,T5Q1GM0Bh1R'`0*h19(B ,TMR((P0AU1`GERK0CW1M(B uptime
+               ,TaJ4'<EM0BYh1(B  0,TMQ1909Ui1`0;g19$GRAJRARC6"M'b;Ca!CA(B display-time
+
+     ,T:CC07Q1409Ui10AU10"i1M0AY1E07Uh1`0;g19;CPbB*09l1M0BYh1KERBM0Bh1R'(B
+
+
+     0,T"i1M0AY1EaC!0$W1M(B 0,T*Wh1Ma0?i1A0"i1M0AY1E07Uh1!S0EQ1'0Mh1R9M0BYh1(B   0,T5Q1G`E"(B NN% ,T(PaJ4'c0Ki10CYi10Gh1R!S0EQ1'aJ4'<E0Jh1G9dK9(B
+,T"M'a0?i1A0"i1M0AY1EM0BYh1(B ,Tb4B0$T14`0;g19`;M0Cl1`+905l1(B   0,T6i1R`0;g190Jh1G9:90JX14"M'a0?i1A0"i1M0AY1EM0BYh10!g1(P0AU10"i1M$GRA0Gh1R(B
+--Top-- ,TaJ4'M0BYh1(B  0,T6i1R`0;g190Jh1G90Eh1R'0JX140!g1(P0AU10"i1M$GRA0Gh1R(B --Bot--  0,T6i1RKR!JRARC6aJ4'a0?i1A0"i1M0AY1E(B
+0,T7Qi1'KA4:9K09i1R(Md04i1(B 0,T!g1(P0AU10"i1M$GRA0Gh1R(B --All-- ,TaJ4'M0BYh1(B
+
+     ,T@RBc9G'`0Eg1:"M':CC07Q14bKA4(B ,T(PaJ4'c0Ki10CYi10Gh1R5M909Ui1M0BYh1c9bKA4(B (mode) ,TMPdC(B  ,Tc905Q1GM0Bh1R'(B
+0,T"i1R':90$W1M(B ,TM0BYh1c9bKA4(B Fundamental 0,T+Vh1'`0;g19bKA4`0CTh1A05i19(B (default)  ,TbKA409Ui1`0;g19K09Vh1'c9bKA4(B
+,TK0EQ1!(B (Major Mode)
+
+     Emacs 0,TAU1bKA4K0EQ1!(B (Major Mode) ,TJSK0CQ1:!RCb;Ca!CA@RIR(B ,TK0CW1M!RCa0!i10"i1M$GRA(B ,T`0*h19(B
+Lisp mode Text mode ,TaEPbKA40MWh19(B ,Tf(B 0,TMU1!KERBbKA4(B  ,Tb4B;!05T1(B Emacs ,T(PM0BYh1c9bKA4K0EQ1!(B
+,TbKA4c4bKA4K09Vh1'`JAM(B
+
+     ,T$S0JQh1':R'$S0JQh1'(P0AU1>D05T1!CCA07Uh1a5!05h1R'0!Q19b4B0JTi19`0*T1'(B ,T`0AWh1MM0BYh1c9bKA4K0EQ1!07Uh105h1R'0!Q19(B   0,T5Q1GM0Bh1R'(B
+,T`0*h19(B ,T`GERb;Ca!CA@RIR(B ,T(P0AU1$S0JQh1'JSK0CQ1:J0Ci1R'(B ,TKARB`K05X1(B (comment) ,TM0BYh1(B  ,T`09Wh1M'(R!0GT108U1c0Jh1(B
+,TKARB`K05X1"M'@RIRa05h1EP@RIRa5!05h1R'0!Q19(B   ,T$S0JQh1'09Ui10!g1(Pa5!05h1R'0!Q19d;c9a05h1EPbKA4K0EQ1!(B  ,T`0>Wh1Mc0Ki1(B
+,TJRARC6c0Jh1KARB`K05X1c9a05h1EP@RIRd04i1M0Bh1R'06Y1!05i1M'(B
+
+     ,T$S0JQh1'JSK0CQ1:!RC`;0EUh1B9bKA4c0Ki1`0;g19bKA4K0EQ1!0MWh19(B 0,T$W1M$S0JQh1'"BRB(B (extend) 0,T+Vh1'0*Wh1M$S0JQh1'`0;g190*Wh1M(B
+,TbKA4(B 0,T5Q1GM0Bh1R'`0*h19(B ,T$S0JQh1'(B M-x fundamental-mode 0,T$W1M$S0JQh1'JSK0CQ1:`;0EUh1B9bKA4`0;g19bKA4(B 
+Fundamental
+
+     ,T`GER07Uh1(Pa0!i1d"a0?i1A0"i1M0AY1E@RIR0MQ1'!DI(B 0,T!g1c0Ki1c0*i1(B Text mode
+
+       >> ,TEM'0;i1M9$S0JQh1'(B M-x text-mode<Return>
+
+     0,T6i1R05i1M'!RCKR0"i1M0AY1E`0>Th1A`0!Uh1BG0!Q1:bKA4K0EQ1!07Uh1c0*i1M0BYh1c90;Q1(0(X10:Q19(B 0,T!g1c0Ki10;i1M9$S0JQh1'(B C-h m
+
+       >> ,Tc0Ki1!4(B C-h m ,T`0>Wh1M0HV1!IR0"i1Ma5!05h1R'CPK0Gh1R'(B Text mode 0,T!Q1:(B Fundamental mode
+
+       >> ,Tc0Ki1!4(B C-x 1 ,T`0>Wh1ME:`M!JRCMM!(R!(M(B
+
+     ,T5C'0Jh1G90+i1RB"M':CC07Q14bKA4(B ,T(P0AU10JQ1-0EQ1!I03l1(B '[--]' ,T`0>Wh1MaJ4'bKA4JSK0CQ1:!RC0;i1M90"i1M0AY1E(B
+(input mode) ,TM0BYh1(B   0,TJQ1-0EQ1!I03l1(B [--] ,TKARB06V1'JRARC60;i1M90"i1M0AY1Ed04i104i1GB05Q1G0MQ1!IC@RIR0MQ1'!DI(B
+(English alphabets)  ,T!0CX13R0Mh1R90$Yh10AW1M"M'(B "Tamago" ,TJSK0CQ1:CRBEP`0MU1B4"M'0GT108U1c0*i1(B
+
+     ,TaEP5C'04i1R9"GR"M'0JQ1-0EQ1!I03l109Qi19(B ,T(P0AU1`$0CWh1M'KARBaJ4'J6R9P"M'(B flag ,T"M'CP::C0KQ1J(B
+(coding-system) ,TM0BYh1(B   Mule ,TJRARC6!SK94CP::C0KQ1JaB!`)>RPJSK0CQ1:(B ,T!RC`0!g1:0Mh1R9a0?i1A0"i1M0AY1E(B
+,T!RC0;i1M90"i1M0AY1E(R!0$U10Bl1:M0Cl14(B ,T!RCaJ4'<EMM!7R'(M(B ,Td04i10MT1JCP(R!0!Q19(B  ,Ta05h1b4B;!05T1(PaJ4'`)>RP(B
+0,TJQ1-0EQ1!I03l10*h1GB(S(B (mnemonic) ,T"M'CP::C0KQ1JJSK0CQ1:!RC`0!g1:0Mh1R9a0?i1A0"i1M0AY1E(B ,T`07h1R09Qi19(B
+
+       >> ,T5CG(04Y10Gh1R0AU10JQ1-0EQ1!I03l1(B ,T$0Ei1RB$0EV1'0!Q1:(B "J:" "S:" "E:" ,TaJ4'M0BYh107Uh1:CC07Q14bKA4K0CW1Md0Ah1(B
+
+     0,T5Q1G0MQ1!IC05Q1GaC!0$W1M(B 0,TJQ1-0EQ1!I03l10*h1GB(S(B (mnemonic) ,T"M'CP::C0KQ1J07Uh1c0*i1M0BYh1(B  0,T5Q1G(B ':' ,TaJ4'c0Ki10CYi1(B
+0,TGh1R0AU105Q1G0MQ1!IC"M'@RIR0MWh19(B ,T9M!(R!@RIR0MQ1'!DIaJ4'M0BYh1(B (,T`0*h19(B ,T@RIR0(U19(B ,T@RIR0-Uh10;Xh19(B ,T`0;g1905i19(B)  0,T5Q1G(B J
+,TKARB06V1'(B ,TC0KQ1J07Uh1c0*i10!Q1:(B JUNET 0,T$W1M(B ,TC0KQ1J(B JIS  0,T5Q1G(B S ,TKARB06V1'(B Shift-JIS ,TaEP(B 0,T5Q1G(B E ,TKARB06V1'(B
+,TC0KQ1J(B EUC ,T@RIR0-Uh10;Xh19(B   ,T(PJ0EQ1:`;0EUh1B9(B (toggle) ,T!RCaJ4'<E@RIR9R9R*R05T1d04i1b4B(B C-x C-k t
+
+     0,T5Q1GM0Bh1R'0"i1R'0Eh1R'(B 0,T$W1M!RCJ0EQ1:`;0EUh1B9d0Ah1c0Ki1aJ4'@RIR9R9R*R05T1(B ,Ta0Ei1GJ0EQ1:!0EQ1:0MU1!$0CQi1'K09Vh1'(B
+
+       >> ,TEM'0;i1M9$S0JQh1'(B C-x C-k t 0,T4Y1JM'$0CQi1'(B
+
+     0,T6i1R`7M0Cl10AT109Q1E07Uh1c0*i1M0BYh10AU10;Xh1A(B META ,TaEPbKA407Uh1c0*i1M0BYh1`0;g19C0KQ1J(B JIS  ,T`CR0!g1(PJRARC6c0*i10;Xh1A(B META
+,Ta79!RC!40;Xh1A(B ESCAPE ,Td04i1(B  0,TGT108U1c0*i1(P`K0AW1M90!Q1:!RCc0*i10;Xh1A$M9b7CE(B 0,T$W1Mc0Ki1!40;Xh1A(B META 0,T$i1R'd0Gi1a0Ei1G0(V1'(B
+,T!405Q1G0MQ1!IC5RA(B  M-<0,T5Q1G0MQ1!IC(B> ,T(P7SK09i1R07Uh1`K0AW1M90!Q1:(B ESC <0,T5Q1G0MQ1!IC(B>  0,T9Qh190$W1M(B 0,T7X1!M0Bh1R'07Uh1M08T1:RBAR(B
+,T(906V1'0(X1409Ui1(B ,T(P0BQ1'$'0AU1<E`K0AW1M9`04T1A(B ,TK0EQ1'(R!`;0EUh1B9(B ESC <0,T5Q1G0MQ1!IC(B> ,Tc0Ki1`0;g19(B M-<0,T5Q1G0MQ1!IC(B>  ,Ta05h10"i1M(B
+,T$GCCP0GQ1'0!g10$W1M(B 0,T;Xh1A(B META ,T(Pd0Ah1JRARC6c0*i1d04i10!Q1:C0KQ1J(B Shift-JIS ,TaEP(B EUC
+
+     ,T!RC`;0EUh1B9CP::C0KQ1J(P0AU1<Ea0$h1`0>U1B'0!Q1:a05h1EP0:Q1?`?M0Cl1`07h1R09Qi19(B  ,TJRARC604Y1$S0JQh1'`0!Uh1BG0!Q1:CP::C0KQ1J(B
+,Td04i1b4B$S0JQh1'(B C-h a coding-system <Return>
+
+       >> ,Tc0Ki10;i1M9$S0JQh1'(B C-h a coding-system <Return> ,Ta0Ei1G0Mh1R9CRBEP`0MU1B4"M'$S0JQh1'(B 
+	  set-display-coding-system set-file-coding-system ,TaEP(B
+	  set-process-coding-system ,T(R!`M!JRC07Uh1;CR!/0"Vi19(B
+
+,T!RC0$i19KR(B (search)
+================
+
+     Emacs ,TJRARC60$i19KRJRB0MQ1!"CP(B (string) ,T@RBc9a0?i1A0"i1M0AY1Ed;7R'0"i1R'K09i1RK0CW1M0"i1R'K0EQ1'd04i1(B
+0,T6i1R05i1M'!RC0$i19KRd;7R'0"i1R'K09i1R"M'5SaK09h1'`$M0Cl1`+M0Cl1(B (cursor) 0,T!g1c0Ki1!4(B C-s  0,T6i1R05i1M'!RC0$i19KR(B
+,Td;7R'0"i1R'K0EQ1'"M'5SaK09h1'`$M0Cl1`+M0Cl1(B  0,T!g1c0Ki1!4(B C-r  ,TK0EQ1'(R!09Qi19(P0AU10"i1M$GRA0Gh1R(B "I-search:"
+,T;CR!/0"Vi195C'(B echo area  ,TB!`0ET1!!RC0$i19KRd04i104i1GB!RC!4(B ESC
+
+
+       >> ,T!4(B C-s ,T`0>Wh1M`0CTh1A!RC0$i19KR(B  ,Ta0Ei1G!405Q1G0MQ1!IC"M'$S0Gh1R(B "cursor" ,TE'd;07U1EP05Q1GM0Bh1R'(B
+          0,T*i1R(B ,Ta0Ei1G0JQ1'`!504Y10Gh1R`$M0Cl1`+M0Cl1"0BQ1:d;M0Bh1R'dC(B
+
+       >> ,TEM'!4(B C-s 0,T4Y10MU1!K09Vh1'$0CQi1'`0>Wh1M0$i19KR$S0Gh1R(B "cursor" 0,T5Q1G05h1Md;(B
+
+       >> ,T!4(B <Delete> 0,T4Y1(B 4 ,T$0CQi1'(B ,Ta0Ei1G0JQ1'`!504Y10Gh1R!RC`$0EWh1M907Uh1"M'`$M0Cl1`+M0Cl1(B
+
+       >> ,T!4(B ESC ,T`0>Wh1MB!`0ET1!!RC0$i19KR(B
+
+     ,T!RC0$i19KR(P`0CTh1A0"Vi1907Q1907U1(B ,Tc9CPK0Gh1R'07Uh10>T1A0>l1JRB0MQ1!"CP07Uh105i1M'!RC(P0$i19KR(B ,T`0"i1Rd;`0>U1B':R'0Jh1G9(B
+0,T6i1R05i1M'!RC(P0$i19KR05Q1G05h1Md;(B 0,T!g1c0Ki1!4(B C-s 0,TMU1!K09Vh1'$0CQi1'(B  0,T6i1RKR!0$i19KRJRB0MQ1!"CP07Uh10;i1M9`0"i1Rd;d0Ah1>:(B 0,T!g1(B
+,T(P0AU10"i1M$GRA;CR!/0"Vi19(B  ,Tc0Ki1!4(B C-g ,T`0>Wh1MB!`0ET1!(B
+
+     ,TCPK0Gh1R'07Uh10$i19KRM0BYh1(B  0,T6i1R!4(B <Delete> 0,T5Q1G0MQ1!IC05Q1G0JX1407i1RBc9JRB0MQ1!"CP0!g1(P06Y1!E:d;(B  ,Ta0Ei1G(B
+,T`$M0Cl1`+M0Cl10!g1(P!0EQ1:d;5SaK09h1'0!h1M9K09i1R(B   0,T5Q1GM0Bh1R'`0*h19(B 0,T6i1R!4(B "cu" 0,T!g1(P0$i19KRd;06V1'5SaK09h1'07Uh10AU1$S0Gh1R(B
+"cu"  ,Ta05h106i1R!4(B <Delete> ,Tc90(Q1'KGP09Ui1(B 0,T5Q1G(B 'u' ,Tc9(B search line 0,T!g1(PKRBd;(B ,Ta0Ei1G`$M0Cl1`+M0Cl1(B
+,T(P"0BQ1:!0EQ1:d;07Uh15SaK09h1'07Uh10AU105Q1G(B 'c' ,TM0BYh1(B
+
+     0,T6i1R!405Q1G0MQ1!IC$M9b7CE(B (control character) 0,T5Q1G0MWh19(B ,T9M!`K09W1M(R!(B C-s ,TK0CW1M(B C-r
+,T!RC0$i19KR0!g1(P0JTi190JX14E'(B
+
+     ,T$S0JQh1'(B C-s ,T(P0$i19KRJRB0MQ1!"CP07Uh105i1M'!RC(B ,Td;7R'0"i1R'K09i1R"M'5SaK09h1'`$M0Cl1`+M0Cl1(B  0,T6i1R05i1M'!RC(B
+0,T$i19KRd;7R'07T1HK0EQ1'(B  0,T!g1c0Ki1!4(B C-r  0,T9Qh190$W1M(B ,TJRARC6c0*i1(B C-s ,TaEP(B C-r ,TJ0EQ1:0!Q19`0>Wh1M0$i19KRd;d04i1c907Qi1'(B
+,TJM'07T1H7R'(B  C-s ,TaEP(B C-r ,T7SK09i1R07Uh1`K0AW1M90!Q1907X1!;CP!RC(B ,T(P05h1R'0!Q190!g15C'07T1H7R'!RC0$i19KR`07h1R09Qi19(B
+
+Recursive Editing Level
+
+     ,T:R'07U1(B ,T`CRMR((PK0EX14`0"i1Rd;M0BYh1c9J6R9P07Uh1`0CU1B!0Gh1R(B Recursive Editing Level ,Td04i1b4B(B
+,Td0Ah105Qi1'c((B  ,Tc9bKA409Ui1(B ,T`$0CWh1M'KARBG'`0Eg1:(B '()' 0,T7Uh1aJ4'0*Wh1MbKA4K0EQ1!(B (major mode) ,TM0BYh1(P0AU1G'`0Eg1:(B
+'[]' 0,TEi1MA(B ,T`0>Th1A0"Vi190MU1!K09Vh1'0*Qi19(B  0,T5Q1GM0Bh1R'`0*h19(B 0,T6i1R`04T1A`0;g19(B (Fundamental) ,TM0BYh1(B 0,T!g1(P`;0EUh1B9`0;g19(B
+[(Fundamental)] ,Ta79(B
+
+,TKARB`K05X1(B:       ,T`CR(Pd0Ah1M08T1:RB`0!Uh1BG0!Q1:(B Recursive Editing Level ,Tc907Uh109Ui1(B
+
+     ,Tc0Ki1!4(B M-x top-level <Return> ,T`0>Wh1M07Uh1(PMM!(R!(B Recursive Editing Level
+
+       >> ,TEM'!404Y1(B ,T5C'0Jh1G90Eh1R'"M'(M(P0AU10"i1M$GRA0Gh1R(B "Back to top level" ,T;CR!/0"Vi19(B
+
+     ,T`09Wh1M'(R!(B ,T`CRM0BYh1c9CP04Q1::90JX14(B (top level) ,TM0BYh1a0Ei1G(B  ,T$S0JQh1'09Ui10(V1'd0Ah10AU1<Ec4(B ,Tf(B
+
+     ,Td0Ah1JRARC6c0*i1(B ,T$S0JQh1'(B C-g ,T`0>Wh1M07Uh1(PMM!(R!(B Recursive Editing Level ,Td04i1(B
+
+
+Help
+====
+
+     Emacs 0,TAU1$GRAJRARC607Uh10AU1;CPbB*09l1(B ,TAR!ARBKERBM0Bh1R'(B 0,T+Vh1'd0Ah1JRARC6M08T1:RBd04i1KA4c907Uh109Ui1(B
+,Ta05h1`CR(PJRARC6`0CU1B!c0*i1(B <HELP> ,T`0>Wh1M07Uh1(P`0CU1B90CYi1$GRAJRARC6`K0Eh1R09Ui1(B ,Td04i1b4B!RC!4(B C-h 0,T+Vh1'(P(B
+0,T*h1GBc0Ki1`CRd04i10CQ1:0CYi10"i1M0AY1E`0>Th1A`05T1AKERBM0Bh1R'(B
+
+     0,TGT108U1c0*i10$W1Mc0Ki1!4(B C-h ,Ta0Ei1G5RA04i1GB05Q1G`0EW1M!(B (option) 0,TMU1!K09Vh1'05Q1G0MQ1!IC(B  0,T6i1Rd0Ah10CYi10Gh1R(P05i1M'c0*i1(B
+0,T5Q1G`0EW1M!MPdC(B 0,T!g1c0Ki1!4(B C-h ?  ,Ta0Ei1G(P0AU1$SM08T1:RB`0!Uh1BG0!Q1:05Q1G`0EW1M!;CR!/0"Vi19(B  ,Td04i1KR!`;0EUh1B9c((P(B
+,Td0Ah1`0CU1B!(B HELP ,TK0EQ1'(R!!4(B C-h 0,T!g1c0Ki1!4(B C-g ,T`0>Wh1MB!`0ET1!d04i1(B
+
+     ,T$S0JQh1'(B HELP 0,T>Wi190R907Uh10JX140MQ19K09Vh1'0!g10$W1M(B C-h c ,Ta0Ei1G5RA04i1GB!RC!4$S0JQh1':R'$S0JQh1'(B  0,T+Vh1'(Pc0Ki1$S(B
+,TM08T1:RB0JQi19(B ,Tf(B ,T`0!Uh1BG0!Q1:$S0JQh1'09Qi19(B
+
+       >> ,TEM'!4(B C-h c C-p 0,T4Y1(B  0,T+Vh1'(Pc0Ki10"i1M$GRA0Gh1R(B
+          "C-p runs the command previous-line"
+
+     ,T$S0JQh1'09Ui1(P0*h1GB0CWi1M0?Wi19$GRA(S(B ,T`0!Uh1BG0!Q1:$S0JQh1'07Uh1`$B0<h1R95Ra0Ei1G(B ,Ta05h1(Sd0Ah1d04i1(B ,Td04i1`0;g19M0Bh1R'04U1(B  ,T$S0JQh1'(B
+0,T7Uh10AU1AR!!0Gh1RK09Vh1'05Q1G0MQ1!IC(B ,T`0*h19(B C-x C-s 0,T!g1JRARC6!45RAK0EQ1'(B C-h c ,Td04i1(B
+
+     0,T6i1RKR!05i1M'!RC0CYi1CRBEP`0MU1B4AR!!0Gh1R09Ui1(B  0,T!g1c0Ki1c0*i1(B k ,Ta7905Q1G(B c
+
+       >> ,TEM'!4(B C-h k C-p 0,T4Y1(B
+
+     0,T!g1(P0AU10GT19b40Gl1`0>Th1Ac9(B Emacs 0,TMU1!K09Vh1'0MQ19(B ,T`0>Wh1MaJ4'CRBEP`0MU1B4"M'$S0JQh1'09Qi19(B  ,T`0AWh1M0Mh1R9(:a0Ei1G(B
+0,T!g1c0Ki1!4(B C-x 1 ,T`0>Th1AE:0GT19b40Gl1MM!(B
+
+     0,T5Q1G`0EW1M!0MWh1907Uh10AU1;CPbB*09l1(B 0,TAU104Q1'09Ui1(B
+
+    C-h f      ,Tc0Ki1c0Jh10*Wh1M"M'$S0JQh1'(B ,T`0>Wh1MaJ4'CRBEP`0MU1B4`0!Uh1BG0!Q1:$S0JQh1'09Qi19(B
+
+       >> ,Tc0Ki1!4(B C-h f previous-line ,Ta0Ei1G5RA04i1GB(B <Return> ,T`0>Wh1MaJ4'CRBEP`0MU1B4`0!Uh1BG(B
+          0,T!Q1:$S0JQh1'0+Vh1'`0CU1B!c0*i1d04i1(R!!RC!4(B C-p
+
+    C-h a      ,Ta0Ei1G5RA04i1GB0$U10Bl1`0GT10Cl14(B (keyword) ,T`0>Wh1MaJ4'$S0JQh1'07X1!$S0JQh1'(B 0,T7Uh10AU10$U10Bl1`0GT10Cl14(B ,TCGAM0BYh1(B
+               ,T$S0JQh1'`K0Eh1R09Ui1JRARC6`0CU1B!c0*i1d04i1b4B!RC!4(B ESC x
+
+       >> ,TEM'!4(B C-h a file ,Ta0Ei1G5RA04i1GB(B <Return> ,T`0>Wh1MaJ4'0*Wh1M$S0JQh1'07X1!$S0JQh1'07Uh10AU1$S0Gh1R(B
+          "file" ,TCGAM0BYh1(B  0,T+Vh1'(P0AU1(B find-file ,TaEP(B write-file 0,T7Uh1`0CU1B!c0*i1d04i1b4B!RC!4(B
+          C-x C-f ,TaEP(B C-x C-w ,TCGAM0BYh104i1GB(B
+
+0,T7i1RB0JX1409Ui1(B
+======
+
+,TM0Bh1R0EW1A(B:         ,T$S0JQh1'JSK0CQ1:!RC`0ET1!(B Emacs 0,T$W1M(B C-x C-c
+
+
+     ,T`M!JRC)0:Q1:`0:Wi1M'05i1909Ui1(B  0,T5Qi1'c(`0"U1B90"Vi19JSK0CQ1:0<Yi107Uh1`0CTh1A0KQ14cK0Ah1(B ,Tb4B`)>RP(B  0,T6i1RKR!0AU10(X14dK907Uh1d0Ah1(B
+,T`0"i1Rc((B 0,T!g1M0Bh1R0AQ1Ga05h1b7I05Q1G`M'(B  ,Ta05h1"Mc0Ki1bB9$GRA0<T14AR0BQ1'0<Yi1`0"U1B9a79(B
+
+
+     ,TK0EQ1'(R!c0*i1(B EMACS 0,T4Y10JQ1!JM'JRA0GQ19(B 0,T!g1$'(P0*T19d;`M'(B  ,Tc95M9aC!(B ,TMR((P0AU10(X1407Uh10CYi10JV1!0JQ1:J9aEP(B
+,Td0Ah1`0"i1Rc(M0BYh10:i1R'(B  ,Ta05h10JTh1'09Ui10Bh1MA`0!T140"Vi19`JAM(B ,T`GERa05h1`0CTh1Ac0*i1(B Editor ,TcK0Ah1c4(B ,Tf(B 0,T!g15RA(B  ,Tb4B`)>RP(B
+,TM0Bh1R'0BTh1'0!Q1:(B EMACS ,T`09Wh1M'(R!`0;g19b;Ca!CA07Uh10AU1$GRAJRARC6KER!KERBAR!(B   0,TMQ1907Uh1(0CT1'a0Ei1G(B EMACS
+,T7Sd04i107X1!0JTh1'07X1!M0Bh1R'(B
+
+
+
+,T"M"M:0$X13(B
+=======
+     ,T`M!JRC)0:Q1:09Ui1(B 0,T4Q14a;E'AR(R!(B "MicroEMACS (kemacs) ,T@RIR0-Uh10;Xh19(B ,T`0:Wi1M'05i19(B" 0,T+Vh1'd04i1AR(R!(B
+JUNET ,T`0>Wh1Mc0Ki1c0*i1`0;g19(B Tutorial ,TJSK0CQ1:(B GNUEmacs (Nemacs)
+
+     ,T`M!JRC09Ui1(B 0,T4Q14a;E'AR(R!(B "JOVE Tutorial" (19 ,TA!CR$A(B 86) ,T"M'(B Jonathan Payne
+     0,T+Vh1'04Q14a;E'AR(R!`M!JRC"M'(B Steve Zimmerman ,Ta0Kh1'(B CCA-UNIX 0,T+Vh1'04Q14a;E'(B (0,TMU1!07U1(B) ,TAR(B
+     ,T(R!`M!JRC(B "Teach-Emacs" ,T)0:Q1:`0:Wi1M'05i19(B (31 0,T5X1ER$A(B 85) ,T"M'(B MIT
+
+     Update - February 1986 by Dana Hoggatt.
+
+     Update - December 1986 by Kim Leburg.
+
+     Update/Translate - July 1987 by SANETO Takanori
+
+,T"M"M:0$X13`0;g190>T1`HI(B
+==============
+
+     0,T$X13(B SANETO Takanori (,T+R`9b5P(B ,T7R!Rb90CT1(B) 0,T<Yi1a;E@RIR0-Uh10;Xh19)0:Q1:aC!0JX14(B  ,T`M!JRC)0:Q1:09Ui1(B
+,T`0"U1B904i1GB(B GMW + Wnn + Nemacs  ,T"MaJ4'$GRA"M:0$X13(B ,Ta04h10<Yi107Uh1J0Ci1R'b;Ca!CA0JX140GT1`HI`K0Eh1R09Ui10"Vi19(B
+,TaEP"M"M:0$X13(B 0,T$X13(B Fujiwara Shoko 0,T7Uh1c0Ki1$GRA0*h1GB`K0EW1Mc9!RCa;E(B ,T!RC0;i1M90"i1M0AY1E(B ,TaEPM0Bh1R'0MWh190MU1!(B
+,TKERB(B ,Tf(B ,TM0Bh1R'(B
+
+
+
+
+,T"M0CQ1:0<T14*M:(B ,T!RCa;E07Uh10<T14>ER4(B 0,T"i1M0AY1E`07g1((B ,TaEP0MWh19(B ,Tf(B ,Td0Gi1a05h1`0>U1B'0<Yi1`04U1BG(B
+
+                        0,T+X10+Y10!T1(B 0,TNT1bCb90:X1(B@sra.co.jp
+
+
+Update/Add - December 1987 by Hironobu Suzuki
+Update/Add - November 1989 by Ken'ichi Handa
+Update/Add - January  1990 by Shigeki Yoshida
+Update/Add - March    1992 by Kenichi HANDA
+
+Translated into Thai
+          - September 1994 by Manop Wongsaisuwan

@@ -34,7 +34,9 @@ INSTALL_DIR     = C:\emacs
 
 # Define MSVCNT11 to be nonzero if you are using the MSVCNT 1.1 environment.
 # MSVCNT11	= 1
+!ifndef MSVCNT11
 MSVCNT11        = 0
+!endif
 
 #
 # END CONFIGURATION
@@ -58,7 +60,7 @@ MSVCNT11        = 0
 # We're on Windows NT
 CPU		= $(PROCESSOR_ARCHITECTURE)
 CONFIG_H	= config.nt
-OS_TYPE		= winnt
+OS_TYPE		= windowsnt
 ! if "$(PROCESSOR_ARCHITECTURE)" == "x86"
 ARCH		= i386
 CPU		= i386
@@ -82,11 +84,11 @@ ARCH		= ppc
 ARCH		= i386
 CPU		= i386
 CONFIG_H	= config.nt
-OS_TYPE		= win95
+OS_TYPE		= windows95
 !endif
 
 # Include ntwin32.mak.  So far, this file seems to be supported by every
-# Microsoft compiler on NT and Win95 and properly defines the executable
+# Microsoft compiler on NT and Windows 95 and properly defines the executable
 # names and libraries necessary to build Emacs.  I do not have access 
 # to any other vendor compilers, so I do not know if they supply this 
 # file, too.  For now I'll assume that they do.
@@ -119,22 +121,26 @@ libc		= libc.lib
 !if $(MSVCNT11)
 BASE_LIBS	= $(libc) $(baselibs) oldnames.lib
 !else
-BASE_LIBS	= $(libc) $(baselibs)
+BASE_LIBS	= $(libc) $(baselibs) -nodefaultlib:oldnames.lib
 !endif
 
 # We want any debugging info in the executable.
 !if "$(LINK)" == "link32"
 SYS_LDFLAGS	= 
 !else
-SYS_LDFLAGS	= -pdb:none -release -incremental:no -version:3.10
+SYS_LDFLAGS	= -release -incremental:no -version:3.10
 !endif
 
 INC             = -I.
-CFLAGS_COMMON	= -nologo $(INC) $(ARCH_CFLAGS) $(LOCAL_FLAGS) -DWIN32_LEAN_AND_MEAN -D$(ARCH)
+!if "$(BUILD_TYPE)" == "spd"
+CFLAGS_COMMON	= -nologo $(INC) $(ARCH_CFLAGS) $(LOCAL_FLAGS) -DWIN32_LEAN_AND_MEAN -D$(ARCH) -Fd$(BLD)\vc.pdb
+!else
+CFLAGS_COMMON	= -nologo $(INC) $(ARCH_CFLAGS) $(LOCAL_FLAGS) -DWIN32_LEAN_AND_MEAN -D$(ARCH) -Fd$(BLD)\vc.pdb -DEMACSDEBUG
+!endif
 !if $(MSVCNT11)
 CFLAGS          = $(CFLAGS_COMMON) -D_CRTAPI1=_cdecl
 !else
-CFLAGS          = $(CFLAGS_COMMON) 
+CFLAGS          = $(CFLAGS_COMMON) -D_CRTAPI1=_cdecl
 !endif
 !ifdef NTGUI
 CFLAGS          = $(CFLAGS) -DHAVE_NTGUI=1
@@ -153,7 +159,7 @@ $(BLD):         $(OBJDIR)
 CP		= copy
 CP_DIR		= xcopy /f/r/i/e/d
 
-!if "$(OS_TYPE)" == "win95"
+!if "$(OS_TYPE)" == "windows95"
 DEL		= deltree /y
 DEL_TREE	= deltree /y
 !else
@@ -170,7 +176,7 @@ ADDPM		= ..\nt\$(BLD)\addpm.exe
 
 !if "$(ARCH)" == "i386"
 !if "$(BUILD_TYPE)" == "spd"
-ARCH_CFLAGS     = -nologo -D_X86_=1 -c -Zel -W2 -H63 -O2b2 -G5d -Zi
+ARCH_CFLAGS     = -nologo -D_X86_=1 -c -Zel -W2 -H63 -Oxsb2 -G5dF -Zi
 !else
 ARCH_CFLAGS     = -nologo -D_X86_=1 -c -Zel -W2 -H63 -G3d -Zi -Od
 !endif
@@ -183,7 +189,11 @@ ARCH_LDFLAGS	= -align:0x1000 $(SYS_LDFLAGS)
 
 !else
 !if "$(ARCH)" == "alpha"
-ARCH_CFLAGS     = -D_ALPHA_=1 -c -Ze -Zi -W2 -D__stdcall= -D__cdecl=
+!if "$(BUILD_TYPE)" == "spd"
+ARCH_CFLAGS     = -D_ALPHA_=1 -c -Ze -Zi -W2 -Od -D__stdcall= -D__cdecl=
+!else
+ARCH_CFLAGS     = -D_ALPHA_=1 -c -Ze -Zi -W2 -O1 -D__stdcall= -D__cdecl=
+!endif
 ARCH_LDFLAGS	= -align:0x2000 $(SYS_LDFLAGS)
 
 !else

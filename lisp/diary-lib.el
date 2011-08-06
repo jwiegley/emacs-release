@@ -239,9 +239,11 @@ These hooks have the following distinct roles:
         (message "Preparing diary...")
         (save-excursion
           (let ((diary-buffer (find-buffer-visiting d-file)))
-            (set-buffer (if diary-buffer
-                            diary-buffer
-                         (find-file-noselect d-file t))))
+	    (if (not diary-buffer)
+		(set-buffer (find-file-noselect d-file t))
+	      (set-buffer diary-buffer)
+	      (or (verify-visited-file-modtime diary-buffer)
+		  (revert-buffer t t))))
           (setq selective-display t)
           (setq selective-display-ellipses nil)
           (setq old-diary-syntax-table (syntax-table))
@@ -880,29 +882,28 @@ A value of 0 in any position of the pattern is a wildcard."
 For example, returns 1325 for 1:25pm.  Returns -9999 if no time is recognized.
 The recognized forms are XXXX or X:XX or XX:XX (military time), XXam or XXpm,
 and XX:XXam or XX:XXpm."
-  (cond ((string-match;; Military time  
-          "^[ \t]*\\([0-9]?[0-9]\\):?\\([0-9][0-9]\\)\\(\\>\\|[^ap]\\)" s)
-         (+ (* 100 (string-to-int
-                    (substring s (match-beginning 1) (match-end 1))))
-            (string-to-int (substring s (match-beginning 2) (match-end 2)))))
-        ((string-match;; Hour only  XXam or XXpm
-          "^[ \t]*\\([0-9]?[0-9]\\)\\([ap]\\)m\\>" s)
-         (+ (* 100 (% (string-to-int
-                         (substring s (match-beginning 1) (match-end 1)))
-                        12))
-            (if (string-equal "a"
-                              (substring s (match-beginning 2) (match-end 2)))
-                0 1200)))
-        ((string-match;; Hour and minute  XX:XXam or XX:XXpm
-          "^[ \t]*\\([0-9]?[0-9]\\):\\([0-9][0-9]\\)\\([ap]\\)m\\>" s)
-         (+ (* 100 (% (string-to-int
-                         (substring s (match-beginning 1) (match-end 1)))
-                        12))
-            (string-to-int (substring s (match-beginning 2) (match-end 2)))
-            (if (string-equal "a"
-                              (substring s (match-beginning 3) (match-end 3)))
-                0 1200)))
-        (t -9999)));; Unrecognizable
+  (let ((case-fold-search nil))
+    (cond ((string-match;; Military time  
+	    "^[ \t]*\\([0-9]?[0-9]\\):?\\([0-9][0-9]\\)\\(\\>\\|[^ap]\\)" s)
+	   (+ (* 100 (string-to-int
+		      (substring s (match-beginning 1) (match-end 1))))
+	      (string-to-int (substring s (match-beginning 2) (match-end 2)))))
+	  ((string-match;; Hour only  XXam or XXpm
+	    "^[ \t]*\\([0-9]?[0-9]\\)\\([ap]\\)m\\>" s)
+	   (+ (* 100 (% (string-to-int
+			   (substring s (match-beginning 1) (match-end 1)))
+			  12))
+	      (if (equal ?a (downcase (aref s (match-beginning 2))))
+		  0 1200)))
+	  ((string-match;; Hour and minute  XX:XXam or XX:XXpm
+	    "^[ \t]*\\([0-9]?[0-9]\\):\\([0-9][0-9]\\)\\([ap]\\)m\\>" s)
+	   (+ (* 100 (% (string-to-int
+			   (substring s (match-beginning 1) (match-end 1)))
+			  12))
+	      (string-to-int (substring s (match-beginning 2) (match-end 2)))
+	      (if (equal ?a (downcase (aref s (match-beginning 3))))
+		  0 1200)))
+	  (t -9999))));; Unrecognizable
 
 (defun list-sexp-diary-entries (date)
   "Add sexp entries for DATE from the diary file to `diary-entries-list'.
@@ -938,12 +939,14 @@ A number of built-in functions are available for this type of diary entry:
                   can be lists of integers, the constant t, or an integer.
                   The constant t means all values.
 
-      %%(diary-float MONTH DAYNAME N) text
+      %%(diary-float MONTH DAYNAME N &optional DAY) text
                   Entry will appear on the Nth DAYNAME of MONTH.
                   (DAYNAME=0 means Sunday, 1 means Monday, and so on;
                   if N is negative it counts backward from the end of
                   the month.  MONTH can be a list of months, a single
-                  month, or t to specify all months.
+                  month, or t to specify all months. Optional DAY means
+                  Nth DAYNAME of MONTH on or after/before DAY.  DAY defaults
+                  to 1 if N>0 and the last day of the month if N<0.
 
       %%(diary-block M1 D1 Y1 M2 D2 Y2) text
                   Entry will appear on dates between M1/D1/Y1 and M2/D2/Y2,
@@ -1164,19 +1167,63 @@ D1, M1, Y1, D2, M2, Y2 if `european-calendar-style' is t."
     (if (and (<= date1 d) (<= d date2))
         entry)))
 
-(defun diary-float (month dayname n)
+(defun diary-float (month dayname n &optional day)
   "Floating diary entry--entry applies if date is the nth dayname of month.
 Parameters are MONTH, DAYNAME, N.  MONTH can be a list of months, the constant
 t, or an integer.  The constant t means all months.  If N is negative, count
-backward from the end of the month."
-  (let ((m (extract-calendar-month date))
-        (y (extract-calendar-year date)))
-    (if (and
-         (or (and (listp month) (memq m month))
-             (equal m month)
-             (eq month t))
-         (calendar-date-equal date (calendar-nth-named-day n dayname m y)))
-        entry)))
+backward from the end of the month.
+
+An optional parameter DAY means the Nth DAYNAME on or after/before MONTH DAY."
+;; This is messy because the diary entry may apply, but the date on which it
+;; is based can be in a different month/year.  For example, asking for the
+;; first Monday after December 30.  For large values of |n| the problem is
+;; more grotesque.
+  (and (= dayname (calendar-day-of-week date))
+       (let* ((m (extract-calendar-month date))
+              (d (extract-calendar-day date))
+              (y (extract-calendar-year date))
+              (limit; last (n>0) or first (n<0) possible base date for entry
+               (calendar-nth-named-absday (- n) dayname m y d))
+              (last-abs (if (> n 0) limit (+ limit 6)))
+              (first-abs (if (> n 0) (- limit 6) limit))
+              (last (calendar-gregorian-from-absolute last-abs))
+              (first (calendar-gregorian-from-absolute first-abs))
+              ; m1, d1 is first possible base date
+              (m1 (extract-calendar-month first))
+              (d1 (extract-calendar-day first))
+              (y1 (extract-calendar-year first))
+              ; m2, d2 is last possible base date
+              (m2 (extract-calendar-month last))
+              (d2 (extract-calendar-day last))
+              (y2 (extract-calendar-year last)))
+	 (if (or (and (= m1 m2)		; only possible base dates in one month
+		      (or (and (listp month) (memq m1 month))
+			  (eq month t)
+			  (= m1 month))
+		      (let ((d (or day (if (> n 0)
+					   1
+					 (calendar-last-day-of-month m1 y1)))))
+			(and (<= d1 d) (<= d d2))))
+		 ;; only possible base dates straddle two months
+		 (and (< m1 m2)
+		      (or
+		       ;; m1, d1 works is a base date
+		       (and
+			(or (and (listp month) (memq m1 month))
+			    (eq month t)
+			    (= m1 month))
+			(<= d1 (or day (if (> n 0)
+					   1
+					 (calendar-last-day-of-month m1 y1)))))
+		       ;; m2, d2 works is a base date
+		       (and (or (and (listp month) (memq m2 month))
+				(eq month t)
+				(= m2 month))
+			    (<= (or day (if (> n 0)
+					    1
+					  (calendar-last-day-of-month m2 y2)))
+				d2)))))
+	     entry))))
 
 (defun diary-anniversary (month day year)
   "Anniversary diary entry.
@@ -1231,7 +1278,7 @@ ending of that number (that is, `st', `nd', `rd' or `th', as appropriate."
   "Day of year and number of days remaining in the year of date diary entry."
   (calendar-day-of-year-string date))
 
-(defvar diary-remind-message
+(defcustom diary-remind-message
   '("Reminder: Only "
     (if (= 0 (% days 7))
         (concat (int-to-string (/ days 7)) (if (= 7 days) " week" " weeks"))
@@ -1243,7 +1290,9 @@ display.
  
 Used by the function `diary-remind', a pseudo-pattern is a list of
 expressions that can involve the keywords `days' (a number), `date' (a list of
-month, day, year), and `diary-entry' (a string).")
+month, day, year), and `diary-entry' (a string)."
+  :type 'sexp
+  :group 'diary)
 
 (defun diary-remind (sexp days &optional marking)
   "Provide a reminder of a diary entry.

@@ -1,6 +1,6 @@
 ;;; frame.el --- multi-frame management independent of window systems.
 
-;; Copyright (C) 1993, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 1996, 1997 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -29,10 +29,10 @@
 The window system startup file should set this to its frame creation
 function, which should take an alist of parameters as its argument.")
 
-;;; The initial value given here for this must ask for a minibuffer.
-;;; There must always exist a frame with a minibuffer, and after we
-;;; delete the terminal frame, this will be the only frame.
-(defvar initial-frame-alist '((minibuffer . t))
+;;; The initial value given here for used to ask for a minibuffer.
+;;; But that's not necessary, because the default is to have one.
+;;; By not specifying it here, we let an X resource specify it.
+(defvar initial-frame-alist nil
   "Alist of frame parameters for creating the initial X window frame.
 You can set this in your `.emacs' file; for example,
  (setq initial-frame-alist '((top . 1) (left . 1) (width . 80) (height . 55)))
@@ -72,7 +72,7 @@ These supersede the values given in `default-frame-alist'.")
       (function (lambda ()
 		  (make-frame pop-up-frame-alist))))
 
-(defvar special-display-frame-alist
+(defcustom special-display-frame-alist
   '((height . 14) (width . 80) (unsplittable . t))
   "*Alist of frame parameters used when creating special frames.
 Special frames are used for buffers whose names are in
@@ -80,7 +80,11 @@ Special frames are used for buffers whose names are in
 one of the regular expressions in `special-display-regexps'.
 This variable can be set in your init file, like this:
   (setq special-display-frame-alist '((width . 80) (height . 20)))
-These supersede the values given in `default-frame-alist'.")
+These supersede the values given in `default-frame-alist'."
+  :type '(repeat (cons :format "%v"
+			 (symbol :tag "Parameter")
+			 (sexp :tag "Value")))
+  :group 'frames)
 
 ;; Display BUFFER in its own frame, reusing an existing window if any.
 ;; Return the window chosen.
@@ -165,19 +169,13 @@ These supersede the values given in `default-frame-alist'.")
 	    (progn
 	      (setq frame-initial-frame-alist
 		    (append initial-frame-alist default-frame-alist))
-	      ;; Record these with their default values
-	      ;; if they don't have any values explicitly.
-	      (or (assq 'vertical-scroll-bars frame-initial-frame-alist)
-		  (setq frame-initial-frame-alist
-			(cons '(vertical-scroll-bars . t)
-			      frame-initial-frame-alist)))
 	      (or (assq 'horizontal-scroll-bars frame-initial-frame-alist)
 		  (setq frame-initial-frame-alist
 			(cons '(horizontal-scroll-bars . t)
 			      frame-initial-frame-alist)))
 	      (setq default-minibuffer-frame
 		    (setq frame-initial-frame
-			  (make-frame initial-frame-alist)))
+			  (make-frame frame-initial-frame-alist)))
 	      ;; Delete any specifications for window geometry parameters
 	      ;; so that we won't reapply them in frame-notice-user-settings.
 	      ;; It would be wrong to reapply them then,
@@ -425,37 +423,41 @@ The optional second argument PARAMETERS specifies additional frame parameters."
       (make-frame)
     (select-frame (make-frame))))
 
+(defvar before-make-frame-hook nil
+  "Functions to run before a frame is created.")
+
+(defvar after-make-frame-functions nil
+  "Functions to run after a frame is created.
+The functions are run with one arg, the newly created frame.")
+
 ;; Alias, kept temporarily.
 (defalias 'new-frame 'make-frame)
+
 (defun make-frame (&optional parameters)
-  "Create a new frame, displaying the current buffer.
+  "Return a newly created frame displaying the current buffer.
+Optional argument PARAMETERS is an alist of parameters for the new frame.
+Each element of PARAMETERS should have the form (NAME . VALUE), for example:
 
-Optional argument PARAMETERS is an alist of parameters for the new
-frame.  Specifically, PARAMETERS is a list of pairs, each having
-the form (NAME . VALUE).
+ (name . STRING)	The frame should be named STRING.
 
-Here are some of the parameters allowed (not a complete list):
+ (width . NUMBER)	The frame should be NUMBER characters in width.
+ (height . NUMBER)	The frame should be NUMBER text lines high.
 
-\(name . STRING)	- The frame should be named STRING.
+You cannot specify either `width' or `height', you must use neither or both.
 
-\(height . NUMBER) - The frame should be NUMBER text lines high.  If
-	this parameter is present, the width parameter must also be
-	given.
+ (minibuffer . t)	The frame should have a minibuffer.
+ (minibuffer . nil)	The frame should have no minibuffer.
+ (minibuffer . only)	The frame should contain only a minibuffer.
+ (minibuffer . WINDOW)	The frame should use WINDOW as its minibuffer window.
 
-\(width . NUMBER) - The frame should be NUMBER characters in width.
-	If this parameter is present, the height parameter must also
-	be given.
-
-\(minibuffer . t) - the frame should have a minibuffer
-\(minibuffer . nil) - the frame should have no minibuffer
-\(minibuffer . only) - the frame should contain only a minibuffer
-\(minibuffer . WINDOW) - the frame should use WINDOW as its minibuffer window."
+Before the frame is created (via `frame-creation-function'), functions on the
+hook `before-make-frame-hook' are run.  After the frame is created, functions
+on `after-make-frame-functions' are run with one arg, the newly created frame."
   (interactive)
-  (let ((nframe))
-    (run-hooks 'before-make-frame-hook)
-    (setq nframe (funcall frame-creation-function parameters))
-    (run-hooks 'after-make-frame-hook)
-    nframe))
+  (run-hooks 'before-make-frame-hook)
+  (let ((frame (funcall frame-creation-function parameters)))
+    (run-hook-with-args 'after-make-frame-functions frame)
+    frame))
 
 (defun filtered-frame-list (predicate)
   "Return a list of all live frames which satisfy PREDICATE."
@@ -514,9 +516,10 @@ A negative ARG moves in the opposite order."
       (setq arg (1+ arg)))
     (raise-frame frame)
     (select-frame frame)
-    (set-mouse-position (selected-frame) (1- (frame-width)) 0)
-    (if (fboundp 'unfocus-frame)
-	(unfocus-frame))))
+    ;; Ensure, if possible, that frame gets input focus.
+    (if (eq window-system 'w32)
+	(w32-focus-frame frame)
+      (set-mouse-position (selected-frame) (1- (frame-width)) 0))))
 
 ;;;; Frame configurations
 
@@ -575,6 +578,11 @@ is given and non-nil, the unwanted frames are iconified instead."
 ;;;; Convenience functions for accessing and interactively changing
 ;;;; frame parameters.
 
+(defun frame-parameter (frame parameter)
+  "Return FRAME's value for parameter PARAMETER.
+If FRAME is omitted, describe the currently selected frame."
+  (cdr (assq parameter (frame-parameters frame))))
+
 (defun frame-height (&optional frame)
   "Return number of lines available for display on FRAME.
 If FRAME is omitted, describe the currently selected frame."
@@ -585,9 +593,11 @@ If FRAME is omitted, describe the currently selected frame."
 If FRAME is omitted, describe the currently selected frame."
   (cdr (assq 'width (frame-parameters frame))))
 
-(defun set-default-font (font-name)
+(defalias 'set-default-font 'set-frame-font)
+(defun set-frame-font (font-name)
   "Set the font of the selected frame to FONT.
-When called interactively, prompt for the name of the font to use."
+When called interactively, prompt for the name of the font to use.
+To get the frame's current default font, use `frame-parameters'."
   (interactive "sFont name: ")
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'font font-name)))
@@ -596,7 +606,8 @@ When called interactively, prompt for the name of the font to use."
 
 (defun set-background-color (color-name)
   "Set the background color of the selected frame to COLOR.
-When called interactively, prompt for the name of the color to use."
+When called interactively, prompt for the name of the color to use.
+To get the frame's current background color, use `frame-parameters'."
   (interactive "sColor: ")
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'background-color color-name)))
@@ -604,7 +615,8 @@ When called interactively, prompt for the name of the color to use."
 
 (defun set-foreground-color (color-name)
   "Set the foreground color of the selected frame to COLOR.
-When called interactively, prompt for the name of the color to use."
+When called interactively, prompt for the name of the color to use.
+To get the frame's current foreground color, use `frame-parameters'."
   (interactive "sColor: ")
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'foreground-color color-name)))
@@ -612,21 +624,24 @@ When called interactively, prompt for the name of the color to use."
 
 (defun set-cursor-color (color-name)
   "Set the text cursor color of the selected frame to COLOR.
-When called interactively, prompt for the name of the color to use."
+When called interactively, prompt for the name of the color to use.
+To get the frame's current cursor color, use `frame-parameters'."
   (interactive "sColor: ")
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'cursor-color color-name))))
 
 (defun set-mouse-color (color-name)
   "Set the color of the mouse pointer of the selected frame to COLOR.
-When called interactively, prompt for the name of the color to use."
+When called interactively, prompt for the name of the color to use.
+To get the frame's current mouse color, use `frame-parameters'."
   (interactive "sColor: ")
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'mouse-color color-name))))
 
 (defun set-border-color (color-name)
   "Set the color of the border of the selected frame to COLOR.
-When called interactively, prompt for the name of the color to use."
+When called interactively, prompt for the name of the color to use.
+To get the frame's current border color, use `frame-parameters'."
   (interactive "sColor: ")
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'border-color color-name))))
@@ -660,26 +675,6 @@ that is beyond the control of Emacs and this command has no effect on it."
 		-1 1)))
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'auto-lower (> arg 0)))))
-
-(defun toggle-scroll-bar (arg)
-  "Toggle whether or not the selected frame has vertical scroll bars.
-With arg, turn vertical scroll bars on if and only if arg is positive."
-  (interactive "P")
-  (if (null arg)
-      (setq arg
-	    (if (cdr (assq 'vertical-scroll-bars
-			   (frame-parameters (selected-frame))))
-		-1 1)))
-  (modify-frame-parameters (selected-frame)
-			   (list (cons 'vertical-scroll-bars (> arg 0)))))
-
-(defun toggle-horizontal-scroll-bar (arg)
-  "Toggle whether or not the selected frame has horizontal scroll bars.
-With arg, turn horizontal scroll bars on if and only if arg is positive.
-Horizontal scroll bars aren't implemented yet."
-  (interactive "P")
-  (error "Horizontal scroll bars aren't implemented yet"))
-
 
 ;;;; Aliases for backward compatibility with Emacs 18.
 (defalias 'screen-height 'frame-height)
@@ -698,7 +693,7 @@ should use `set-frame-width instead'."
 Optional second arg non-nil means that redisplay should use LINES lines\n\
 but that the idea of the actual height of the screen should not be changed.\n\
 This function is provided only for compatibility with Emacs 18; new code\n\
-should use `set-frame-width' instead."
+should use `set-frame-height' instead."
   (set-frame-height (selected-frame) lines pretend))
 
 (make-obsolete 'screen-height 'frame-height)
@@ -708,10 +703,6 @@ should use `set-frame-width' instead."
 
 
 ;;;; Key bindings
-(defvar ctl-x-5-map (make-sparse-keymap)
-  "Keymap for frame commands.")
-(defalias 'ctl-x-5-prefix ctl-x-5-map)
-(define-key ctl-x-map "5" 'ctl-x-5-prefix)
 
 (define-key ctl-x-5-map "2" 'make-frame-command)
 (define-key ctl-x-5-map "0" 'delete-frame)

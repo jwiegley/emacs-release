@@ -75,7 +75,7 @@ Goto End
 Echo Checking whether 'mv' is available...
 rm -f junk.1 junk.2
 echo foo >junk.1
-mv junk.1 junk.2
+mv junk.1 ./junk.2
 If Exist junk.2 Goto mvOk
 Echo To configure 'Emacs' you need to have 'mv'!
 rm -f junk.1
@@ -129,7 +129,7 @@ rm -f paths.tmp
 
 rem   Create "config.h"
 rm -f config.h2 config.tmp
-cp config.in config.tmp
+sed -e '' config.in > config.tmp
 if "%X11%" == "" goto src4
 sed -f ../msdos/sed2x.inp <config.in >config.tmp
 :src4
@@ -197,6 +197,7 @@ rem   ----------------------------------------------------------------------
 Echo Configuring the main directory...
 If "%DJGPP_VER%" == "1" goto mainv1
 Echo Looking for the GDB init file...
+If not Exist src\_gdbinit If Exist src\.gdbinit update src/.gdbinit src/_gdbinit
 If Exist src\_gdbinit goto gdbinitOk
 Echo ERROR:
 Echo I cannot find the GDB init file.  It was called ".gdbinit" in

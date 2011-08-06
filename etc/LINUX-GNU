@@ -34,8 +34,8 @@ the idea.
 By 1992, we had found or written all of the essential major components
 of the system except the kernel, which we were writing.  (This kernel
 consists of the Mach microkernel plus the GNU HURD.  Currently it is
-running but not ready for users.  We are hoping for an alpha release
-soon.)
+running but not ready for users.  The first test release was made in
+1996.)
 
 Then the Linux kernel became available.  Linux is a free
 Unix-compatible kernel initially written by Linus Torvalds.  It was

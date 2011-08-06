@@ -1,13 +1,13 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
-@node Major Modes, Indentation, Frames, Top
+@node Major Modes, Indentation, International, Top
 @chapter Major Modes
 @cindex major modes
 @cindex mode, major
 @kindex TAB @r{(and major modes)}
 @kindex DEL @r{(and major modes)}
-@kindex LFD @r{(and major modes)}
+@kindex C-j @r{(and major modes)}
 
   Emacs provides many alternative @dfn{major modes}, each of which
 customizes Emacs for editing text of a particular sort.  The major modes
@@ -23,8 +23,8 @@ that Emacs knows about, such as Lisp code or English text, you should
 switch to the appropriate major mode, such as Lisp mode or Text mode.
 
   Selecting a major mode changes the meanings of a few keys to become
-more specifically adapted to the language being edited.  The ones which
-are changed frequently are @key{TAB}, @key{DEL}, and @key{LFD}.  The
+more specifically adapted to the language being edited.  The ones that
+are changed frequently are @key{TAB}, @key{DEL}, and @kbd{C-j}.  The
 prefix key @kbd{C-c} normally contains mode-specific commands.  In
 addition, the commands which handle comments use the mode to determine
 how comments are to be delimited.  Many major modes redefine the
@@ -37,12 +37,12 @@ programming languages.  Text mode, Nroff mode, @TeX{} mode and Outline
 mode are for editing English text.  The remaining major modes are not
 intended for use on users' files; they are used in buffers created for
 specific purposes by Emacs, such as Dired mode for buffers made by Dired
-(@pxref{Dired}), and Mail mode for buffers made by @kbd{C-x m}
+(@pxref{Dired}), Mail mode for buffers made by @kbd{C-x m}
 (@pxref{Sending Mail}), and Shell mode for buffers used for
 communicating with an inferior shell process (@pxref{Interactive
 Shell}).
 
-  Most programming language major modes specify that only blank lines
+  Most programming-language major modes specify that only blank lines
 separate paragraphs.  This is to make the paragraph commands useful.
 (@xref{Paragraphs}.)  They also cause Auto Fill mode to use the
 definition of @key{TAB} to indent the new lines it creates.  This is
@@ -86,14 +86,14 @@ or this form,
 
 @noindent
 For example, one element normally found in the list has the form
-@code{(@t{"\\.c\\'"} . c-mode)}, and it is responsible for selecting C mode
-for files whose names end in @file{.c}.  (Note that @samp{\\} is needed in
-Lisp syntax to include a @samp{\} in the string, which is needed to
-suppress the special meaning of @samp{.} in regexps.)  If the element has
-the form @code{(@var{regexp} @var{mode-function} @var{flag})} and
-@var{flag} is non-nil, then after calling @var{function}, the suffix that
-matched @var{regexp} is deleted and the list is searched again for another
-match.
+@code{(@t{"\\.c\\'"} . c-mode)}, and it is responsible for selecting C
+mode for files whose names end in @file{.c}.  (Note that @samp{\\} is
+needed in Lisp syntax to include a @samp{\} in the string, which is
+needed to suppress the special meaning of @samp{.} in regexps.)  If the
+element has the form @code{(@var{regexp} @var{mode-function}
+@var{flag})} and @var{flag} is non-nil, then after calling
+@var{function}, the suffix that matched @var{regexp} is discarded and
+the list is searched again for another match.
 
   You can specify which major mode should be used for editing a certain
 file by a special sort of text in the first nonblank line of the file.  The
@@ -112,7 +112,7 @@ to make Lisp treat this line as a comment.
   Another format of mode specification is
 
 @example
--*-Mode: @var{modename};-*-
+-*- mode: @var{modename};-*-
 @end example
 
 @noindent
@@ -154,3 +154,10 @@ normal-mode} to do this.  This is the same function that
 @code{find-file} calls to choose the major mode.  It also processes
 the file's local variables list if any.
 
+@vindex change-major-mode-with-file-name
+  The commands @kbd{C-x C-w} and @code{set-visited-file-name} change to
+a new major mode if the new file name implies a mode (@pxref{Saving}).
+However, this does not happen if the buffer contents specify a major
+mode, and certain ``special'' major modes do not allow the mode to
+change.  You can turn off this mode-changing feature by setting
+@code{change-major-mode-with-file-name} to @code{nil}.

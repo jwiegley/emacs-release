@@ -83,6 +83,8 @@ archlibdir=@archlibdir@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
+# By default, we uphold the dignity of our programs.
+INSTALL_STRIP =
 
 # ========================== Lists of Files ===========================
 
@@ -122,14 +124,6 @@ SOURCES = COPYING ChangeLog Makefile.in README emacs.csh \
 # MAILHOST		A string, the host name of the default POP
 #			mail host for the site.
 MOVE_FLAGS=
-
-# Additional libraries for movemail:
-# For KERBEROS
-# MOVE_LIBS= -lkrb -ldes -lcom_err
-# For KERBEROS + KRB5
-# MOVE_LIBS= -lkrb5 -lcrypto -lisode -lcom_err
-# Add "-lhesiod" if HESIOD is defined.
-MOVE_LIBS=
 
 # ========================== start of cpp stuff =======================
 /* From here on, comments must be done in C syntax.  */
@@ -187,6 +181,41 @@ MOVE_LIBS=
 #define BLESSMAIL
 #endif
 
+#ifdef KERBEROS
+# ifdef HAVE_LIBKRB
+	KRB4LIB = -lkrb
+# else
+#  ifdef HAVE_LIBKRB4
+	KRB4LIB = -lkrb4
+#  endif
+# endif
+# ifdef HAVE_LIBDES
+	DESLIB = -ldes
+# else
+#  ifdef HAVE_LIBDES425
+	DESLIB = -ldes425
+#  endif
+# endif
+# ifdef HAVE_LIBKRB5
+	KRB5LIB = -lkrb5
+# endif
+# ifdef HAVE_LIBCRYPTO
+	CRYPTOLIB = -lcrypto
+# endif
+# ifdef HAVE_LIBCOM_ERR
+	COM_ERRLIB = -lcom_err
+# endif
+#endif /* KERBEROS
+
+/* If HESIOD is defined, set this to "-lhesiod". */
+HESIODLIB=
+
+MOVE_LIBS=$(KRB4LIB) $(DESLIB) $(KRB5LIB) $(CRYPTOLIB) $(COM_ERRLIB) $(HESIODLIB)
+
+#ifdef HAVE_LIBMAIL
+LIBMAIL=-lmail
+#endif
+
 LOADLIBES=LIBS_SYSTEM LIBS_MACHINE LIB_STANDARD_LIBSRC
 
 /* We need to #define emacs to get the right versions of some files.
@@ -216,7 +245,7 @@ all: ${DONT_INSTALL} ${UTILITIES} ${INSTALLABLES}
 
 #ifdef MOVEMAIL_NEEDS_BLESSING
 blessmail:
-	../src/emacs -batch -l ../lisp/blessmail.el
+	../src/emacs -batch -l $(srcdir)/../lisp/mail/blessmail.el
 	chmod +x blessmail
 #endif
 
@@ -241,7 +270,7 @@ ${archlibdir}: all
 	$(top_srcdir)/mkinstalldirs ${archlibdir}
 	if [ `(cd ${archlibdir} && /bin/pwd)` != `/bin/pwd` ]; then \
 	  for file in ${UTILITIES}; do \
-	    $(INSTALL_PROGRAM) $$file ${archlibdir}/$$file ; \
+	    $(INSTALL_PROGRAM) $(INSTALL_STRIP) $$file ${archlibdir}/$$file ; \
 	  done ; \
         fi
         if [ `(cd ${archlibdir} && /bin/pwd)` \
@@ -329,12 +358,12 @@ regex.o: ../src/regex.c ../src/regex.h ../src/config.h
 	${CC} -c ${BASE_CFLAGS} -DCONFIG_BROKETS -DINHIBIT_STRING_HEADER ${srcdir}/../src/regex.c
 
 etags: ${srcdir}/etags.c $(GETOPTDEPS) $(REGEXPDEPS) ../src/config.h
-	$(CC) ${ALL_CFLAGS} -DVERSION="\"${version}\"" -DETAGS_REGEXPS ${srcdir}/etags.c $(GETOPTOBJS) $(REGEXPOBJ) $(LOADLIBES) -o etags
+	$(CC) ${ALL_CFLAGS} -DVERSION="\"${version}\"" ${srcdir}/etags.c $(GETOPTOBJS) $(REGEXPOBJ) $(LOADLIBES) -o etags
 
 /* We depend on etags to assure that parallel makes don't write two
    etags.o files on top of each other.  */
 ctags: etags
-	$(CC) ${ALL_CFLAGS} -DCTAGS -DVERSION="\"${version}\"" -DETAGS_REGEXPS ${srcdir}/etags.c $(GETOPTOBJS) $(REGEXPOBJ) $(LOADLIBES) -o ctags
+	$(CC) ${ALL_CFLAGS} -DCTAGS -DVERSION="\"${version}\"" ${srcdir}/etags.c $(GETOPTOBJS) $(REGEXPOBJ) $(LOADLIBES) -o ctags
 
 profile: ${srcdir}/profile.c
 	$(CC) ${ALL_CFLAGS} ${srcdir}/profile.c $(LOADLIBES) -o profile
@@ -351,8 +380,8 @@ sorted-doc: ${srcdir}/sorted-doc.c ${ALLOCA}
 b2m: ${srcdir}/b2m.c ../src/config.h
 	$(CC) ${ALL_CFLAGS} ${srcdir}/b2m.c $(LOADLIBES) -o b2m 
 
-movemail: movemail.o pop.o
-	$(CC) ${LINK_CFLAGS} ${MOVE_FLAGS} movemail.o pop.o $(LOADLIBES) $(MOVE_LIBS) -o movemail
+movemail: movemail.o pop.o $(GETOPTDEPS)
+	$(CC) ${LINK_CFLAGS} ${MOVE_FLAGS} movemail.o pop.o $(GETOPTOBJS) $(LOADLIBES) $(LIBMAIL) $(MOVE_LIBS) -o movemail
 
 movemail.o: ${srcdir}/movemail.c ../src/config.h
 	$(CC) -c ${CPP_CFLAGS} -Demacs ${MOVE_FLAGS} ${srcdir}/movemail.c
@@ -372,8 +401,10 @@ yow: ${srcdir}/yow.c ../src/paths.h
 emacsserver: ${srcdir}/emacsserver.c ../src/config.h
 	$(CC) ${ALL_CFLAGS} ${srcdir}/emacsserver.c $(LOADLIBES) -o emacsserver
 
-emacsclient: ${srcdir}/emacsclient.c ../src/config.h
-	$(CC) ${ALL_CFLAGS} ${srcdir}/emacsclient.c $(LOADLIBES) -o emacsclient
+emacsclient: ${srcdir}/emacsclient.c ../src/config.h $(GETOPTDEPS)
+	$(CC) ${ALL_CFLAGS} ${srcdir}/emacsclient.c $(GETOPTOBJS)  \
+	   -DVERSION=`sed -n -e '/(defconst emacs-version/ s/^[^"]*\("[^"]*"\).*/\1/p' ${srcdir}/../lisp/version.el` \
+	   $(LOADLIBES) -o emacsclient
 
 hexl: ${srcdir}/hexl.c
 	$(CC) ${ALL_CFLAGS} ${srcdir}/hexl.c $(LOADLIBES) -o hexl

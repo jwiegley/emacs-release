@@ -1,217 +1,218 @@
 \initial {#}
-\entry {\code {\kbd {#}}}{22}
-\entry {\code {\kbd {#c{\tt\less}move{\tt\gtr}}}}{22, 58}
-\entry {\code {\kbd {#C{\tt\less}move{\tt\gtr}}}}{22, 58}
-\entry {\code {\kbd {#g{\tt\less}move{\tt\gtr}}}}{22, 59, 64}
-\entry {\code {\kbd {#q{\tt\less}move{\tt\gtr}}}}{22}
-\entry {\code {\kbd {#q{\tt\less}move{\tt\gtr} }}}{58}
-\entry {\code {\kbd {#s{\tt\less}move{\tt\gtr}}}}{22}
+\entry {\code {\kbd {#}}}{17}
+\entry {\code {\kbd {#c<move>}}}{18, 49}
+\entry {\code {\kbd {#C<move>}}}{18, 49}
+\entry {\code {\kbd {#g<move>}}}{18, 50, 55}
+\entry {\code {\kbd {#q<move>}}}{18}
+\entry {\code {\kbd {#q<move> }}}{49}
+\entry {\code {\kbd {#s<move>}}}{18}
 \initial {$}
-\entry {\code {\kbd {$}}}{54}
+\entry {\code {\kbd {$}}}{46}
 \initial {%}
-\entry {\code {\kbd {%}}}{54, 59}
+\entry {\code {\kbd {%}}}{46, 50}
 \initial {&}
-\entry {\code {\kbd {&}}}{58, 59}
+\entry {\code {\kbd {&}}}{49, 50}
 \initial {'}
-\entry {\code {\kbd {''}}}{54, 55}
-\entry {\code {\kbd {'{\tt\less}a-z{\tt\gtr}}}}{54, 55}
+\entry {\code {\kbd {''}}}{46}
+\entry {\code {\kbd {'<a-z>}}}{46}
 \initial {(}
-\entry {\code {\kbd {(}}}{54}
+\entry {\code {\kbd {(}}}{46}
 \initial {)}
-\entry {\code {\kbd {)}}}{54}
+\entry {\code {\kbd {)}}}{46}
 \initial {*}
-\entry {\code {\kbd {*}}}{22, 64}
+\entry {\code {\kbd {*}}}{18, 55}
 \initial {,}
-\entry {\code {\kbd {,}}}{54}
+\entry {\code {\kbd {,}}}{46}
 \initial {-}
-\entry {\code {\kbd {-}}}{54}
+\entry {\code {\kbd {-}}}{46}
 \initial {.}
-\entry {\code {\kbd {.}}}{56, 60}
+\entry {\code {\kbd {.}}}{47, 51}
 \initial {/}
-\entry {\code {\kbd {/{\tt\less}cr{\tt\gtr}}}}{54}
-\entry {\code {\kbd {/{\tt\less}string{\tt\gtr}}}}{54, 59}
+\entry {\code {\kbd {/<cr>}}}{46}
+\entry {\code {\kbd {/<string>}}}{46, 50}
 \initial {;}
-\entry {\code {\kbd {;}}}{54}
+\entry {\code {\kbd {;}}}{46}
 \initial {=}
-\entry {\code {\kbd {={\tt\less}move{\tt\gtr}}}}{58}
+\entry {\code {\kbd {=<move>}}}{49}
 \initial {?}
-\entry {\code {\kbd {?{\tt\less}cr{\tt\gtr}}}}{54}
-\entry {\code {\kbd {?{\tt\less}string{\tt\gtr}}}}{54, 59}
+\entry {\code {\kbd {?<cr>}}}{46}
+\entry {\code {\kbd {?<string>}}}{46, 50}
+\initial {@}
+\entry {\code {\kbd {@!}}}{18}
+\entry {\code {\kbd {@!<a-z>}}}{55}
+\entry {\code {\kbd {@#}}}{18, 55}
+\entry {\code {\kbd {@@}}}{55}
+\entry {\code {\kbd {@<a-z>}}}{18, 55}
 \initial {[}
-\entry {\code {\kbd {[[}}}{54}
-\entry {\code {\kbd {[]}}}{23, 54}
-\entry {\code {\kbd {[{\tt\less}a-z{\tt\gtr}}}}{23, 54, 56, 60, 64}
+\entry {\code {\kbd {[[}}}{46}
+\entry {\code {\kbd {[]}}}{18, 46}
+\entry {\code {\kbd {[<a-z>}}}{18, 46, 47, 51, 55}
 \initial {]}
-\entry {\code {\kbd {]]}}}{54}
-\entry {\code {\kbd {]{\tt\less}a-z{\tt\gtr}}}}{23, 54, 56, 60, 64}
+\entry {\code {\kbd {]]}}}{46}
+\entry {\code {\kbd {]<a-z>}}}{18, 46, 47, 51, 55}
 \initial {`}
-\entry {\code {\kbd {``}}}{54, 55}
-\entry {\code {\kbd {`{\tt\less}a-z{\tt\gtr}}}}{54, 55}
-\initial {{\_}}
-\entry {\code {\kbd {{\_}}}}{9, 23, 66}
-\initial {{\tt\char'042}}
-\entry {\code {\kbd {{\tt\char'042}{\tt\less}a-z{\tt\gtr}y{\tt\less}move{\tt\gtr}}}}{60}
-\entry {\code {\kbd {{\tt\char'042}{\tt\less}A-Z{\tt\gtr}y{\tt\less}move{\tt\gtr}}}}{60}
-\entry {\code {\kbd {{\tt\char'042}{\tt\less}a-z1-9{\tt\gtr}p}}}{56, 60}
-\entry {\code {\kbd {{\tt\char'042}{\tt\less}a-z1-9{\tt\gtr}P}}}{56, 60}
-\initial {{\tt\char'100}}
-\entry {\code {\kbd {{\tt\char'100}!}}}{23}
-\entry {\code {\kbd {{\tt\char'100}!{\tt\less}a-z{\tt\gtr}}}}{64}
-\entry {\code {\kbd {{\tt\char'100}#}}}{23, 64}
-\entry {\code {\kbd {{\tt\char'100}{\tt\char'100}}}}{64}
-\entry {\code {\kbd {{\tt\char'100}{\tt\less}a-z{\tt\gtr}}}}{23, 64}
-\initial {{\tt\char'173}}
-\entry {\code {\kbd {{\tt\char'173}}}}{54}
-\initial {{\tt\char'174}}
-\entry {\code {\kbd {{\tt\char'174}}}}{54}
-\initial {{\tt\char'175}}
-\entry {\code {\kbd {{\tt\char'175}}}}{54}
-\initial {{\tt\char'176}}
-\entry {\code {\kbd {{\tt\char'176}}}}{58}
-\initial {{\tt\char43}}
-\entry {\code {\kbd {{\tt\char43}}}}{54}
+\entry {\code {\kbd {``}}}{46}
+\entry {\code {\kbd {`<a-z>}}}{46}
+\initial {{\tt\char '042}}
+\entry {\code {\kbd {"<a-z>y<move>}}}{51}
+\entry {\code {\kbd {"<A-Z>y<move>}}}{51}
+\entry {\code {\kbd {"<a-z1-9>p}}}{47, 51}
+\entry {\code {\kbd {"<a-z1-9>P}}}{47, 51}
+\initial {{\tt\char '173}}
+\entry {\code {\kbd {{\tt\char '173}}}}{46}
+\initial {{\tt\char '174}}
+\entry {\code {\kbd {|}}}{46}
+\initial {{\tt\char '175}}
+\entry {\code {\kbd {{\tt\char '175}}}}{46}
+\initial {{\tt\char '176}}
+\entry {\code {\kbd {~}}}{49}
+\initial {{\tt\char 43}}
+\entry {\code {\kbd {+}}}{46}
 \initial {{\tt\gtr}}
-\entry {\code {\kbd {{\tt\gtr}{\tt\gtr}}}}{56}
-\entry {\code {\kbd {{\tt\gtr}{\tt\less}move{\tt\gtr}}}}{56}
+\entry {\code {\kbd {>>}}}{47}
+\entry {\code {\kbd {><move>}}}{47}
 \initial {{\tt\hat}}
-\entry {\code {\kbd {{\tt\hat}}}}{54}
+\entry {\code {\kbd {^}}}{46}
 \initial {{\tt\indexbackslash }}
-\entry {\code {\kbd {{\tt\indexbackslash }}}}{22}
+\entry {\code {\kbd {{\tt\rawbackslashxx }}}}{17}
+\entry {\code {\kbd {{\tt\rawbackslashxx }&}}}{49}
 \initial {{\tt\less}}
-\entry {\code {\kbd {{\tt\less}{\tt\less}}}}{57}
-\entry {\code {\kbd {{\tt\less}{\tt\less}move{\tt\gtr}}}}{57}
-\entry {\code {{\tt\less}a-z{\tt\gtr}}}{50}
-\entry {\code {{\tt\less}address{\tt\gtr}}}{50}
-\entry {\code {{\tt\less}args{\tt\gtr}}}{51}
-\entry {\code {{\tt\less}cmd{\tt\gtr}}}{51}
-\entry {\code {\kbd {{\tt\less}cr{\tt\gtr}}}}{54}
-\entry {\code {\kbd {{\tt\less}lf{\tt\gtr}}}}{54}
-\entry {\code {{\tt\less}move{\tt\gtr}}}{50}
-\entry {\code {\kbd {{\tt\less}sp{\tt\gtr}}}}{54}
+\entry {\code {\kbd {<<}}}{48}
+\entry {\code {\kbd {<<move>}}}{48}
+\entry {\code {<a-z>}}{42}
+\entry {\code {<address>}}{42}
+\entry {\code {<args>}}{43}
+\entry {\code {<cmd>}}{43}
+\entry {\code {\kbd {<cr>}}}{46}
+\entry {\code {\kbd {<lf>}}}{46}
+\entry {\code {<move>}}{42}
+\entry {\code {\kbd {<sp>}}}{46}
 \initial {0}
-\entry {\code {\kbd {0}}}{54}
+\entry {\code {\kbd {0}}}{46}
 \initial {A}
-\entry {\code {\kbd {a}}}{56}
-\entry {\code {\kbd {A}}}{56}
+\entry {\code {\kbd {a}}}{47}
+\entry {\code {\kbd {A}}}{47}
 \initial {B}
-\entry {\code {\kbd {b}}}{54}
-\entry {\code {\kbd {B}}}{54}
+\entry {\code {\kbd {b}}}{46}
+\entry {\code {\kbd {B}}}{46}
 \initial {C}
-\entry {\code {\kbd {C}}}{58}
-\entry {\code {\kbd {C-]}}}{9, 23}
-\entry {\code {\kbd {C-{\tt\hat}}}}{63}
-\entry {\code {\kbd {C-b}}}{61}
-\entry {\code {\kbd {C-c}}}{8, 22}
-\entry {\code {\kbd {C-c /}}}{9, 23, 54}
-\entry {\code {\kbd {C-c g}}}{23}
-\entry {\code {\kbd {C-c M-n}}}{23, 56, 58}
-\entry {\code {\kbd {C-c M-p}}}{23, 56, 58}
-\entry {\code {\kbd {C-d}}}{61}
-\entry {\code {\kbd {C-e}}}{61}
-\entry {\code {\kbd {C-f}}}{61}
-\entry {\code {\kbd {C-g}}}{9, 23, 61}
-\entry {\code {\kbd {C-h}}}{54}
-\entry {\code {\kbd {C-l}}}{61}
-\entry {\code {\kbd {C-n}}}{54}
-\entry {\code {\kbd {C-p}}}{54}
-\entry {\code {\kbd {C-u}}}{57, 61}
-\entry {\code {\kbd {C-v}}}{22, 57}
-\entry {\code {\kbd {C-w}}}{57}
-\entry {\code {\kbd {C-x}}}{8, 22}
-\entry {\code {\kbd {C-x0}}}{66}
-\entry {\code {\kbd {C-x1}}}{66}
-\entry {\code {\kbd {C-x2}}}{66}
-\entry {\code {\kbd {C-xC-f}}}{66}
-\entry {\code {\kbd {C-xo}}}{66}
-\entry {\code {\kbd {C-y}}}{61, 66}
-\entry {\code {\kbd {C-z}}}{6, 8, 66}
-\entry {\code {\kbd {c{\tt\less}move{\tt\gtr}}}}{58}
-\entry {\code {\kbd {cc}}}{58}
+\entry {\code {\kbd {C}}}{49}
+\entry {\code {\kbd {C-]}}}{7, 18}
+\entry {\code {\kbd {C-^}}}{54}
+\entry {\code {\kbd {C-{\tt\rawbackslashxx }}}}{7, 58}
+\entry {\code {\kbd {C-b}}}{52}
+\entry {\code {\kbd {C-c}}}{7, 17}
+\entry {\code {\kbd {C-c /}}}{8, 19, 46}
+\entry {\code {\kbd {C-c g}}}{18}
+\entry {\code {\kbd {C-c M-n}}}{19, 47, 49}
+\entry {\code {\kbd {C-c M-p}}}{19, 47, 49}
+\entry {\code {\kbd {C-c{\tt\rawbackslashxx }}}}{58}
+\entry {\code {\kbd {C-d}}}{52}
+\entry {\code {\kbd {C-e}}}{52}
+\entry {\code {\kbd {C-f}}}{52}
+\entry {\code {\kbd {C-g}}}{7, 18, 52}
+\entry {\code {\kbd {C-h}}}{46}
+\entry {\code {\kbd {C-l}}}{52}
+\entry {\code {\kbd {C-n}}}{46}
+\entry {\code {\kbd {C-p}}}{46}
+\entry {\code {\kbd {C-u}}}{48, 52}
+\entry {\code {\kbd {C-v}}}{17, 48}
+\entry {\code {\kbd {C-w}}}{48}
+\entry {\code {\kbd {C-x}}}{7, 17}
+\entry {\code {\kbd {C-x0}}}{58}
+\entry {\code {\kbd {C-x1}}}{58}
+\entry {\code {\kbd {C-x2}}}{58}
+\entry {\code {\kbd {C-xC-f}}}{58}
+\entry {\code {\kbd {C-xo}}}{58}
+\entry {\code {\kbd {C-y}}}{52, 58}
+\entry {\code {\kbd {C-z}}}{5, 6, 58}
+\entry {\code {\kbd {c<move>}}}{49}
+\entry {\code {\kbd {cc}}}{49}
 \initial {D}
-\entry {\code {\kbd {D}}}{57}
-\entry {\code {\kbd {d{\tt\less}move{\tt\gtr}}}}{57}
-\entry {\code {\kbd {dd}}}{57}
+\entry {\code {\kbd {D}}}{48}
+\entry {\code {\kbd {d<move>}}}{48}
+\entry {\code {\kbd {dd}}}{48}
 \initial {E}
-\entry {\code {\kbd {e}}}{54}
-\entry {\code {\kbd {E}}}{54}
-\entry {\code {\kbd {ESC}}}{6}
+\entry {\code {\kbd {e}}}{46}
+\entry {\code {\kbd {E}}}{46}
+\entry {\code {\key {ESC}}}{5}
 \initial {F}
-\entry {\code {\kbd {f{\tt\less}char{\tt\gtr}}}}{54}
-\entry {\code {\kbd {F{\tt\less}char{\tt\gtr}}}}{54}
+\entry {\code {\kbd {f<char>}}}{46}
+\entry {\code {\kbd {F<char>}}}{46}
 \initial {G}
-\entry {\code {\kbd {G}}}{54}
-\entry {\code {\kbd {g{\tt\less}move{\tt\gtr}}}}{59}
+\entry {\code {\kbd {G}}}{46}
+\entry {\code {\kbd {g<move>}}}{50}
 \initial {H}
-\entry {\code {\kbd {h}}}{54}
-\entry {\code {\kbd {H}}}{54}
+\entry {\code {\kbd {h}}}{46}
+\entry {\code {\kbd {H}}}{46}
 \initial {I}
-\entry {\code {\kbd {i}}}{6, 56}
+\entry {\code {\kbd {i}}}{5, 47}
 \initial {J}
-\entry {\code {\kbd {j}}}{54}
-\entry {\code {\kbd {J}}}{58}
+\entry {\code {\kbd {j}}}{46}
+\entry {\code {\kbd {J}}}{49}
 \initial {K}
-\entry {\code {\kbd {k}}}{54}
+\entry {\code {\kbd {k}}}{46}
 \initial {L}
-\entry {\code {\kbd {l}}}{54}
-\entry {\code {\kbd {L}}}{54}
+\entry {\code {\kbd {l}}}{46}
+\entry {\code {\kbd {L}}}{46}
 \initial {M}
-\entry {\code {\kbd {M}}}{54}
-\entry {\code {\kbd {m,}}}{55}
-\entry {\code {\kbd {M-n}}}{23}
-\entry {\code {\kbd {M-p}}}{23}
-\entry {\code {\kbd {M-y}}}{66}
-\entry {\code {\kbd {m.}}}{55}
-\entry {\code {\kbd {m{\tt\gtr}}}}{55}
-\entry {\code {\kbd {m{\tt\less}}}}{55}
-\entry {\code {\kbd {m{\tt\less}a-z{\tt\gtr}}}}{54, 55, 60}
-\entry {\code {\kbd {meta button1up}}}{67}
-\entry {\code {\kbd {meta button2up}}}{67}
-\entry {\code {\kbd {meta shift button1up}}}{43}
-\entry {\code {\kbd {meta shift button2up}}}{43}
+\entry {\code {\kbd {M}}}{46}
+\entry {\code {\kbd {m,}}}{46}
+\entry {\code {\kbd {M-n}}}{19}
+\entry {\code {\kbd {M-p}}}{19}
+\entry {\code {\kbd {M-y}}}{58}
+\entry {\code {\kbd {m.}}}{46}
+\entry {\code {\kbd {m>}}}{46}
+\entry {\code {\kbd {m<}}}{46}
+\entry {\code {\kbd {m<a-z>}}}{46, 51}
+\entry {\code {\kbd {meta button1up}}}{58}
+\entry {\code {\kbd {meta button2up}}}{58}
+\entry {\code {\kbd {meta shift button1up}}}{36}
+\entry {\code {\kbd {meta shift button2up}}}{36}
 \initial {N}
-\entry {\code {\kbd {n}}}{54, 59}
-\entry {\code {\kbd {N}}}{54, 59}
+\entry {\code {\kbd {n}}}{46, 50}
+\entry {\code {\kbd {N}}}{46, 50}
 \initial {O}
-\entry {\code {\kbd {o}}}{56}
-\entry {\code {\kbd {O}}}{56}
+\entry {\code {\kbd {o}}}{47}
+\entry {\code {\kbd {O}}}{47}
 \initial {P}
-\entry {\code {\kbd {p}}}{56, 60}
-\entry {\code {\kbd {P}}}{56, 60}
+\entry {\code {\kbd {p}}}{47, 51}
+\entry {\code {\kbd {P}}}{47, 51}
 \initial {Q}
-\entry {\code {\kbd {Q}}}{22, 59}
+\entry {\code {\kbd {Q}}}{17, 50}
 \initial {R}
-\entry {\code {\kbd {R}}}{58}
-\entry {\code {\kbd {r{\tt\less}char{\tt\gtr}}}}{58}
+\entry {\code {\kbd {R}}}{49}
+\entry {\code {\kbd {r<char>}}}{49}
 \initial {S}
-\entry {\code {\kbd {s}}}{58}
-\entry {\code {\kbd {S}}}{58}
-\entry {\code {\kbd {S-mouse-1}}}{43, 67}
-\entry {\code {\kbd {S-mouse-2}}}{43, 67}
+\entry {\code {\kbd {s}}}{49}
+\entry {\code {\kbd {S}}}{49}
+\entry {\code {\kbd {S-mouse-1}}}{36, 58}
+\entry {\code {\kbd {S-mouse-2}}}{36, 58}
 \initial {T}
-\entry {\code {\kbd {t{\tt\less}char{\tt\gtr}}}}{54}
-\entry {\code {\kbd {T{\tt\less}char{\tt\gtr}}}}{54}
+\entry {\code {\kbd {t<char>}}}{46}
+\entry {\code {\kbd {T<char>}}}{46}
 \initial {U}
-\entry {\code {\kbd {u}}}{9, 60}
-\entry {\code {\kbd {U}}}{60}
+\entry {\code {\kbd {u}}}{7, 51}
+\entry {\code {\kbd {U}}}{51}
 \initial {V}
-\entry {\code {\kbd {v}}}{22, 63}
-\entry {\code {\kbd {V}}}{22, 63}
+\entry {\code {\kbd {v}}}{17, 54}
+\entry {\code {\kbd {V}}}{17, 54}
 \initial {W}
-\entry {\code {\kbd {w}}}{54}
-\entry {\code {\kbd {W}}}{54}
+\entry {\code {\kbd {w}}}{46}
+\entry {\code {\kbd {W}}}{46}
 \initial {X}
-\entry {\code {\kbd {x}}}{57}
-\entry {\code {\kbd {X}}}{57}
+\entry {\code {\kbd {x}}}{48}
+\entry {\code {\kbd {X}}}{48}
 \initial {Y}
-\entry {\code {\kbd {Y}}}{60}
-\entry {\code {\kbd {y{\tt\less}move{\tt\gtr}}}}{60}
-\entry {\code {\kbd {yank}}}{60}
-\entry {\code {\kbd {yy}}}{60}
+\entry {\code {\kbd {Y}}}{51}
+\entry {\code {\kbd {y<move>}}}{51}
+\entry {\code {\kbd {yank}}}{51}
+\entry {\code {\kbd {yy}}}{51}
 \initial {Z}
-\entry {\code {\kbd {z-}}}{61}
-\entry {\code {\kbd {z.}}}{61}
-\entry {\code {\kbd {z{\tt\less}cr{\tt\gtr}}}}{61}
-\entry {\code {\kbd {zH}}}{61}
-\entry {\code {\kbd {zL}}}{61}
-\entry {\code {\kbd {zM}}}{61}
-\entry {\code {\kbd {ZZ}}}{63}
+\entry {\code {\kbd {z-}}}{52}
+\entry {\code {\kbd {z.}}}{52}
+\entry {\code {\kbd {z<cr>}}}{52}
+\entry {\code {\kbd {zH}}}{52}
+\entry {\code {\kbd {zL}}}{52}
+\entry {\code {\kbd {zM}}}{52}
+\entry {\code {\kbd {ZZ}}}{54}

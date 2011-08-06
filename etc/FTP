@@ -1,5 +1,5 @@
 								-*- text -*-
-How to get GNU Software by Internet FTP or by UUCP.  Last updated 11 June 95.
+How to get GNU Software by Internet FTP or by UUCP.  Last updated 1997-08-11
 
 * Please send improvements to this file to gnu@prep.ai.mit.edu.
 
@@ -32,13 +32,12 @@ byte).
 
 If you are on the Internet (see also "** Alternative Internet FTP
 Sources" below), you can at present copy the latest distribution
-version of GNU Emacs from the file /pub/gnu/emacs-M.N.tar on host
-prep.ai.mit.edu (or the file /pub/gnu/emacs-M.N.tar.gz which has been
-run through gzip after tar).  M and N stand for version numbers; look
+version of GNU Emacs from the file /pub/gnu/emacs-M.N.tar.gz on host
+prep.ai.mit.edu.  M and N stand for version numbers; look
 at a listing of the directory through ftp to see what version is
-available.  These files are about 11 and 4 megabytes long,
-respectively.  After you unpack the distribution, be sure to look at
-the files README and INSTALL.
+available.  This gzip'd file is about 12 megabytes long; it expands
+to about 45 megabytes.  After you unpack the distribution, be sure
+to look at the files README and INSTALL.
 
 Because of difficulties in transferring large files, sometimes a split
 version of the tar file is created.  This would be in a directory
@@ -58,7 +57,7 @@ Some ftp'ers have found it necessary for successful file transfer:
 
 Files of differences from previous widely distributed GNU Emacs
 versions to the present version are also available on prep.ai.mit.edu
-under names of the form emacs.diff-OO.OO-NN.NN in directory /pub/gnu.
+under names of the form emacs-OO.OO-NN.NN.diff in directory /pub/gnu.
 These are made with diff -rc2.  Sometimes there are versions
 compressed with gzip of these difference files as well; their names
 have .gz appended.
@@ -87,7 +86,7 @@ anonymous, pass guest.  The 00README.txt file gives details.
 
 Other GNU software is available on prep.ai.mit.edu under directory
 /pub/gnu.  diff files to convert between versions (like those used for
-GNU Emacs), exist for some of these programs.  Some programs have misc
+GNU Emacs) exist for some of these programs.  Some programs have misc
 support files as well.  Have a look on prep to see which ones.
 Compressed versions of the tar or diff files are often available
 (indicated by a .gz suffix and made with the `gzip' program).  Some of
@@ -99,7 +98,7 @@ on prep.ai.mit.edu with a brief description explaining what
 each one can be used for.
 
 More information about these programs can typically be found in the
-GNU Bulletin.  To receive a copy, write to gnu@prep.ai.mit.edu.
+GNU's Bulletin.  To receive a copy, write to gnu@prep.ai.mit.edu.
 
 ** Scheme and How to FTP It
 
@@ -120,7 +119,7 @@ manuals.
 TeX is freely redistributable.  You can get it by ftp, tape, or CD/ROM.
 
 *** For FTP instructions, retrieve the file
-ftp.cs.umb.edu:pub/tex/unixtex.ftp. (We don't include it here because it
+ftp.cs.umb.edu/pub/tex/unixtex.ftp. (We don't include it here because it
 changes relatively frequently.  Sorry.)
 
 *** For TeX on a single tape (4mm DAT or QIC-24), ordering information is
@@ -137,69 +136,106 @@ directory for more information.
 
 ** Alternative Internet FTP Sources
 
+A possibly more up-to-date list of GNU FTP sites is at URL
+        http://www.gnu.ai.mit.edu/order/ftp.html
+
 Please do NOT use a site outside your country, until you have checked
 all sites inside your country, and then your continent.  Trans-ocean
 TCP/IP links are very expensive and usually very low speed.
 
-The administrators of louie.udel.edu maintains copies of GNU Emacs.
+The administrators of louie.udel.edu maintain copies of GNU Emacs.
 The files are available via anonymous ftp under directory ~ftp/gnu.
 
 Emacs and other GNU programs may be available via anonymous ftp from
-these US sites: ftp.kpc.com/pub/mirror/gnu (Silicon Valley, CA)
+these US sites:
+
+ftp.kpc.com/pub/mirror/gnu (Silicon Valley, CA)
 ftp.hawaii.edu/mirrors/gnu, f.ms.uky.edu/pub3/gnu,
 ftp.digex.net/pub/gnu (Internet address 164.109.10.23, nightly full
-mirror, ran by mcguire@digex.net), wuarchive.wustl.edu/systems/gnu,
+mirror, run by mcguire@digex.net), wuarchive.wustl.edu/systems/gnu,
 uiarchive.cso.uiuc.edu/pub/gnu (Internet address 128.174.5.14, nightly
-full mirror, ran by ftpadmin@uiuc.edu),
+full mirror, run by ftpadmin@uiuc.edu),
 ftp.cs.columbia.edu/archives/gnu/prep, jaguar.utah.edu/gnustuff,
 gatekeeper.dec.com/pub/GNU, labrea.stanford.edu,
-archive.cis.ohio-state.edu, and ftp.uu.net/archive/systems/gnu.
+archive.cis.ohio-state.edu/pub/gnu, and
+ftp.uu.net/archive/systems/gnu.
 
-And these foreign sites: ftp.cs.ubc.ca/mirror2/gnu (Western Canada,
-daily full mirror, ran by ftp-admin@cs.ubc.ca),
-ftp.inf.utfsm.cl/pub/gnu (Chile 146.83.198.3 nightly full mirror, ran
-by ftp@inf.utfsm.cl), ftp.unicamp.br/pub/gnu (Brazil manual mirror,
-ran by oliva@dcc.unicamp.br), archie.au/gnu (Australia ran by
-gnu@archie.au (archie.oz or archie.oz.au for ACSnet)),
-ftp.technion.ac.il/pub/unsupported/gnu (Israel, daily full mirror, ran
-by ftp-admin), ftp.sun.ac.za/pub/gnu (South Africa),
-ftp.etsimo.uniovi.es/pub/gnu (Spain), ftp.mcc.ac.uk/pub/gnu
-(130.88.203.12 daily full mirror, ran by root@ftp.mcc.ac.uk),
-unix.hensa.ac.uk/mirrors/uunet/systems/gnu, ftp.warwick.ac.uk
-(137.205.192.14 daily full mirror, ran by unixhelp@warwick.ac.uk),
-ftp.informatik.tu-muenchen.de, ftp.informatik.rwth-aachen.de (Germany,
-ran by sunsite@sunsite.informatik.rwth-aachen.de), germany.eu.net
-(Germany, ran by archive-admin@germany.eu.net), isy.liu.se (Sweden,
-ran by ftpadm@isy.liu.se), ftp.stacken.kth.se or
-ftp.luth.se/pub/unix/gnu (Sweden), ftp.sunet.se/pub/gnu (Sweden
-130.238.127.3 daily mirror, ran by archive@ftp.sunet.se (also mirrors
-the Mailing List Archives) ftp.nl.net (Netherlands),
-ftp.win.tue.nl/pub/gnu (Netherlands 131.155.70.100 daily mirror, ran
-by ftp@win.tue.nl), ftp.funet.fi/pub/gnu (Finland 128.214.6.100, ran
-by gnu-adm), ftp.denet.dk (Denmark), ugle.unit.no (Norway
-129.241.1.97), ftp.eunet.ch or nic.switch.ch/mirror/gnu (Switzerland),
-irisa.irisa.fr/pub/gnu or ftp.univ-lyon1.fr:pub/gnu (ran by
-ftpmaint@ftp.univ-lyon1.fr) (France), ftp.ieunet.ie:pub/gnu (Ireland
-192.111.39.1 weekly mirror, ran by archive@ieunet.ie), archive.eu.net
-(Europe 192.16.202.1), cair-archive.kaist.ac.kr/pub/gnu (Korea
-143.248.11.171, ran by ftpkeeper@cair-archive.kaist.ac.kr),
+And these foreign sites:
+
+Africa:
+
+ftp.sun.ac.za/pub/gnu (South Africa).
+
+The Americas:
+
+ftp.unicamp.br/pub/gnu (Brazil manual mirror, run by oliva@dcc.unicamp.br),
+ftp.cs.ubc.ca/mirror2/gnu (Canada, daily full mirror, run by
+  ftp-admin@cs.ubc.ca),
+ftp.inf.utfsm.cl/pub/gnu (Chile 146.83.198.3 nightly full mirror, run
+  by ftp@inf.utfsm.cl),
+sunsite.ulatina.ac.cr (Costa Rica 163.178.60.9
+  run by jonathan@mantra.ulatina.ac.cr).
+
+Asia:
+
+cair-archive.kaist.ac.kr/pub/gnu (Korea 143.248.186.3, run by
+  ftpkeeper@cair-archive.kaist.ac.kr), 
 ftp.nectec.or.th/pub/mirrors/gnu (Thailand 192.150.251.32 daily
-mirror, ran by ftp@nwg.nectec.or.th),
-tron.um.u-tokyo.ac.jp/pub/GNU/prep (Japan - ran by
-ftp-admin@tron.um.u-tokyo.ac.jp) or ftp.cs.titech.ac.jp (Japan, ran by
-ftp-admin@cs.titech.ac.jp - nemacs, the japanese port of GNU Emacs, is
-under ~ftp/JAPAN).
+  mirror, run by ftp@nwg.nectec.or.th),
+tron.um.u-tokyo.ac.jp/pub/GNU/prep (Japan - run by
+  ftp-admin@tron.um.u-tokyo.ac.jp)
+ftp.cs.titech.ac.jp (Japan, run by ftp-admin@cs.titech.ac.jp).
+
+Australia:
+
+archie.au/gnu (Australia run by gnu@archie.au (archie.oz or
+  archie.oz.au for ACSnet)),
+ftp.progsoc.uts.edu.au/pub/gnu (Australia, run by
+  ftp@progsoc.uts.edu.au).
+
+Europe:
+
+ftp.fi.muni.cz/pub/gnu/ (Czech Republic),
+ftp.etsimo.uniovi.es/pub/gnu (Spain),
+ftp.mcc.ac.uk/pub/gnu (130.88.203.12 daily full mirror, run by
+  root@ftp.mcc.ac.uk),
+unix.hensa.ac.uk/mirrors/uunet/systems/gnu,
+ftp.warwick.ac.uk (137.205.192.14 daily full mirror, run by
+  unixhelp@warwick.ac.uk),
+ftp.informatik.tu-muenchen.de,
+ftp.informatik.rwth-aachen.de (Germany, run by
+  sunsite@sunsite.informatik.rwth-aachen.de),
+ftp.germany.eu.net (Germany, run by archive-admin@germany.eu.net),
+isy.liu.se (Sweden, run by ftpadm@isy.liu.se),
+ftp.stacken.kth.se or ftp.luth.se/pub/unix/gnu (Sweden),
+ftp.sunet.se/pub/gnu (Sweden 130.238.127.3 daily mirror, run by
+  archive@ftp.sunet.se (also mirrors the Mailing List Archives),
+ftp.nl.net (Netherlands),
+ftp.win.tue.nl/pub/gnu (Netherlands 131.155.70.100 daily mirror, run
+  by ftp@win.tue.nl),
+ftp.funet.fi/pub/gnu (Finland 128.214.6.100, run by gnu-adm@ftp.funet.fi),
+ftp.ntua.gr/pub/gnu (Greece, run by Y.Adamopoulos@noc.ntua.gr),
+ftp.denet.dk (Denmark),
+ugle.unit.no (Norway 129.241.1.97),
+ftp.eunet.ch (Switzerland),
+sunsite.cnlab-switch.ch/mirror/gnu (Switzerland 193.5.24.1 two*E1
+  daily mirror,run by archive@sunsite.cnlab-switch.ch),
+ftp.irisa.fr/pub/gnu (France, run by Hugues.Leroy@irisa.fr)
+ftp.univ-lyon1.fr/pub/gnu (France, run by ftpmaint@ftp.univ-lyon1.fr),
+ftp.ieunet.ie/pub/gnu (Ireland 192.111.39.1 weekly mirror, run by
+  archive@ieunet.ie),
+archive.eu.net (Europe 192.16.202.1).
 
 * Getting GNU software in Great Britain
 
 jpo@cs.nott.ac.uk is willing to distribute those GNU sources he has
 available.  The smaller items are available from the info-server (send
-to info-server@cs.nott.ac.uk) the larger items by negotiation.  Due to
+to info-server@cs.nott.ac.uk); the larger items by negotiation.  Due to
 communication costs this service is only available within the UK.
 
 BattenIG@computer-science.birmingham.ac.uk (aka
 I.G.Batten@fulcrum.bt.co.uk) is also willing to distribute those GNU
-sources he has.  He can also write tapes in qic-21 and qic-24 formats.
+sources he has.
 
 lmjm@doc.ic.ac.uk is willing to distribute those GNU sources he has
 along with comp.sources.unix, comp.sources.x, X windows et al.  The
@@ -207,8 +243,7 @@ archive, on src.doc.ic.ac.uk in directory /gnu, is available via ftp
 over the Internet (on 146.169.3.7), ftam over IXI, HTTP, FSP, Gopher,
 ftpmail, NFS, Lanmanger over IP, telnet, and uucp.  Due to
 communication costs this service is only available within the UK.
-Mail to info-server@doc.ic.ac.uk for details.  He can also write sun
-cartridge or exabyte tapes.
+Mail to info-server@doc.ic.ac.uk for details.
 
 UK sites with just anonymous FTP access are in the above list.
 
@@ -233,7 +268,7 @@ If you like the software developed and distributed by the Free
 Software Foundation, please express your satisfaction with a donation.
 Your donations will help to support the Foundation and make our future
 efforts successful, including a complete development and operating
-system, called GNU (Gnu's Not Un*x), which will run Un*x user
+system, called GNU (Gnu's Not Unix), which will run Unix user
 programs.  For more information on GNU and the Foundation, contact us
 at the above address.
 

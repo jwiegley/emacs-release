@@ -1,17 +1,17 @@
 \initial {B}
 \entry {\code {begin}}{6}
 \initial {C}
-\entry {\code {C-c {\tt\gtr}}}{5}
-\entry {\code {C-c {\tt\less}}}{5}
+\entry {\code {C-c >}}{5}
+\entry {\code {C-c <}}{5}
 \entry {\code {C-c C-k}}{5}
 \entry {\code {C-c C-l}}{5}
 \entry {\code {C-c C-n}}{5}
 \entry {\code {C-c C-o}}{5}
 \entry {\code {C-c C-p}}{5}
 \entry {\code {C-c C-q}}{5}
-\entry {\code {C-c C-r \var {regexp} \key {RET}}}{6}
+\entry {\code {C-c C-r \var {regexp} \key {RET}}}{5}
 \entry {\code {C-c C-s \var {regexp} \key {RET}}}{5}
-\entry {\code {C-c \key {TAB}}}{5}
+\entry {\code {C-c TAB}}{5}
 \entry {\code {C-x C-s}}{6}
 \entry {control file}{9}
 \initial {E}
@@ -43,10 +43,10 @@
 \entry {\code {forms-prev-field}}{6}
 \entry {\code {forms-prev-record}}{5}
 \entry {\code {forms-print}}{6}
-\entry {\code {forms-read-file-filter}}{7, 10}
+\entry {\code {forms-read-file-filter}}{7, 9}
 \entry {\code {forms-read-only}}{9}
 \entry {\code {forms-save-buffer}}{6}
-\entry {\code {forms-search-backward}}{6}
+\entry {\code {forms-search-backward}}{5}
 \entry {\code {forms-search-forward}}{5}
 \entry {\code {forms-toggle-read-only}}{5}
 \entry {\code {forms-version}}{15}
@@ -61,4 +61,4 @@
 \initial {S}
 \entry {\code {S-Tab}}{6}
 \initial {T}
-\entry {\code {\key {TAB}}}{5}
+\entry {\code {TAB}}{5}

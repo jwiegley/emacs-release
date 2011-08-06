@@ -70,6 +70,37 @@ fire each time Emacs is idle for that many seconds."
   (aset timer 4 repeat)
   timer)
 
+(defun timer-next-integral-multiple-of-time (time secs)
+  "Yield the next value after TIME that is an integral multiple of SECS.
+More precisely, the next value, after TIME, that is an integral multiple
+of SECS seconds since the epoch.  SECS may be a fraction."
+  (let ((time-base (ash 1 16)))
+    (if (fboundp 'atan)
+	;; Use floating point, taking care to not lose precision.
+	(let* ((float-time-base (float time-base))
+	       (million 1000000.0)
+	       (time-usec (+ (* million
+				(+ (* float-time-base (nth 0 time))
+				   (nth 1 time)))
+			     (nth 2 time)))
+	       (secs-usec (* million secs))
+	       (mod-usec (mod time-usec secs-usec))
+	       (next-usec (+ (- time-usec mod-usec) secs-usec))
+	       (time-base-million (* float-time-base million)))
+	  (list (floor next-usec time-base-million)
+		(floor (mod next-usec time-base-million) million)
+		(floor (mod next-usec million))))
+      ;; Floating point is not supported.
+      ;; Use integer arithmetic, avoiding overflow if possible.
+      (let* ((mod-sec (mod (+ (* (mod time-base secs)
+				 (mod (nth 0 time) secs))
+			      (nth 1 time))
+			   secs))
+	     (next-1-sec (+ (- (nth 1 time) mod-sec) secs)))
+	(list (+ (nth 0 time) (floor next-1-sec time-base))
+	      (mod next-1-sec time-base)
+	      0)))))
+
 (defun timer-relative-time (time secs &optional usecs)
   "Advance TIME by SECS seconds and optionally USECS microseconds.
 SECS may be a fraction."
@@ -180,7 +211,9 @@ fire repeatedly that many seconds apart."
 	nil)
     (error "Invalid or uninitialized timer")))
 
+;;;###autoload
 (defalias 'disable-timeout 'cancel-timer)
+;;;###autoload
 (defun cancel-timer (timer)
   "Remove TIMER from the list of active timers."
   (or (timerp timer)
@@ -189,6 +222,7 @@ fire repeatedly that many seconds apart."
   (setq timer-idle-list (delq timer timer-idle-list))
   nil)
 
+;;;###autoload
 (defun cancel-function-timers (function)
   "Cancel all timers scheduled by `run-at-time' which would run FUNCTION."
   (interactive "aCancel timers of function: ")
@@ -203,39 +237,54 @@ fire repeatedly that many seconds apart."
           (setq timer-idle-list (delq (car tail) timer-idle-list)))
       (setq tail (cdr tail)))))
 
-;; Set up the common handler for all timer events.  Since the event has
-;; the timer as parameter we can still distinguish.  Note that using
-;; special-event-map ensures that event timer events that arrive in the
-;; middle of a key sequence being entered are still handled correctly.
-(define-key special-event-map [timer-event] 'timer-event-handler)
-
 ;; Record the last few events, for debugging.
 (defvar timer-event-last-2 nil)
 (defvar timer-event-last-1 nil)
 (defvar timer-event-last nil)
 
-(defun timer-event-handler (event)
-  "Call the handler for the timer in the event EVENT."
-  (interactive "e")
+(defvar timer-max-repeats 10
+  "*Maximum number of times to repeat a timer, if real time jumps.")
+
+(defun timer-until (timer time)
+  "Calculate number of seconds from when TIMER will run, until TIME.
+TIMER is a timer, and stands for the time when its next repeat is scheduled.
+TIME is a time-list."
+  (let ((high (- (car time) (aref timer 1)))
+	(low (- (nth 1 time) (aref timer 2))))
+    (+ low (* high 65536))))
+  
+(defun timer-event-handler (timer)
+  "Call the handler for the timer TIMER.
+This function is called, by name, directly by the C code."
   (setq timer-event-last-2 timer-event-last-1)
   (setq timer-event-last-1 timer-event-last)
-  (setq timer-event-last (cons event (copy-sequence event)))
-  (let ((inhibit-quit t)
-	(timer (car-safe (cdr-safe event))))
+  (setq timer-event-last timer)
+  (let ((inhibit-quit t))
     (if (timerp timer)
 	(progn
 	  ;; Delete from queue.
 	  (cancel-timer timer)
-	  ;; Run handler
-	  (condition-case nil
-	      (apply (aref timer 5) (aref timer 6))
-	    (error nil))
 	  ;; Re-schedule if requested.
 	  (if (aref timer 4)
 	      (if (aref timer 7)
 		  (timer-activate-when-idle timer)
 		(timer-inc-time timer (aref timer 4) 0)
-		(timer-activate timer))))
+		;; If real time has jumped forward,
+		;; perhaps because Emacs was suspended for a long time,
+		;; limit how many times things get repeated.
+		(if (and (numberp timer-max-repeats)
+			 (< 0 (timer-until timer (current-time))))
+		    (let ((repeats (/ (timer-until timer (current-time))
+				      (aref timer 4))))
+		      (if (> repeats timer-max-repeats)
+			  (timer-inc-time timer (* (aref timer 4) repeats)))))
+		(timer-activate timer)))
+	  ;; Run handler.
+	  ;; We do this after rescheduling so that the handler function
+	  ;; can cancel its own timer successfully with cancel-timer.
+	  (condition-case nil
+	      (apply (aref timer 5) (aref timer 6))
+	    (error nil)))
       (error "Bogus timer event"))))
 
 ;; This function is incompatible with the one in levents.el.
@@ -245,19 +294,28 @@ fire repeatedly that many seconds apart."
 
 ;;;###autoload
 (defun run-at-time (time repeat function &rest args)
-  "Perform an action after a delay of SECS seconds.
+  "Perform an action at time TIME.
 Repeat the action every REPEAT seconds, if REPEAT is non-nil.
 TIME should be a string like \"11:23pm\", nil meaning now, a number of seconds
-from now, or a value from `encode-time'.
+from now, a value from `current-time', or t (with non-nil REPEAT)
+meaning the next integral multiple of REPEAT.
 REPEAT may be an integer or floating point number.
 The action is to call FUNCTION with arguments ARGS.
 
 This function returns a timer object which you can use in `cancel-timer'."
   (interactive "sRun at time: \nNRepeat interval: \naFunction: ")
 
+  (or (null repeat)
+      (and (numberp repeat) (< 0 repeat))
+      (error "Invalid repetition interval"))
+
   ;; Special case: nil means "now" and is useful when repeating.
   (if (null time)
       (setq time (current-time)))
+
+  ;; Special case: t means the next integral multiple of REPEAT.
+  (if (and (eq time t) repeat)
+      (setq time (timer-next-integral-multiple-of-time (current-time) repeat)))
 
   ;; Handle numbers as relative times in seconds.
   (if (numberp time)
@@ -284,10 +342,6 @@ This function returns a timer object which you can use in `cancel-timer'."
 
   (or (consp time)
       (error "Invalid time format"))
-
-  (or (null repeat)
-      (numberp repeat)
-      (error "Invalid repetition interval"))
 
   (let ((timer (timer-create)))
     (timer-set-time timer time repeat)

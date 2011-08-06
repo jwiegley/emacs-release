@@ -1,1110 +1,1012 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
 
 
-File: emacs,  Node: Basic Kbd Macro,  Next: Save Kbd Macro,  Up: Keyboard Macros
+File: emacs,  Node: Hardcopy,  Next: Postscript,  Prev: Emacs Server,  Up: Top
 
-Basic Use
----------
+Hardcopy Output
+===============
 
-   To start defining a keyboard macro, type the `C-x (' command
-(`start-kbd-macro').  From then on, your keys continue to be executed,
-but also become part of the definition of the macro.  `Def' appears in
-the mode line to remind you of what is going on.  When you are
-finished, the `C-x )' command (`end-kbd-macro') terminates the
-definition (without becoming part of it!).  For example,
+   The Emacs commands for making hardcopy let you print either an entire
+buffer or just part of one, either with or without page headers.  See
+also the hardcopy commands of Dired (*note Misc File Ops::.)  and the
+diary (*note Diary Commands::.).
 
-     C-x ( M-f foo C-x )
+`M-x print-buffer'
+     Print hardcopy of current buffer with page headings containing the
+     file name and page number.
 
-defines a macro to move forward a word and then insert `foo'.
+`M-x lpr-buffer'
+     Print hardcopy of current buffer without page headings.
 
-   The macro thus defined can be invoked again with the `C-x e' command
-(`call-last-kbd-macro'), which may be given a repeat count as a numeric
-argument to execute the macro many times.  `C-x )' can also be given a
-repeat count as an argument, in which case it repeats the macro that
-many times right after defining it, but defining the macro counts as
-the first repetition (since it is executed as you define it).
-Therefore, giving `C-x )' an argument of 4 executes the macro
-immediately 3 additional times.  An argument of zero to `C-x e' or `C-x
-)' means repeat the macro indefinitely (until it gets an error or you
-type `C-g').
+`M-x print-region'
+     Like `print-buffer' but print only the current region.
 
-   If you wish to repeat an operation at regularly spaced places in the
-text, define a macro and include as part of the macro the commands to
-move to the next place you want to use it.  For example, if you want to
-change each line, you should position point at the start of a line, and
-define a macro to change that line and leave point at the start of the
-next line.  Then repeating the macro will operate on successive lines.
+`M-x lpr-region'
+     Like `lpr-buffer' but print only the current region.
 
-   After you have terminated the definition of a keyboard macro, you
-can add to the end of its definition by typing `C-u C-x ('.  This is
-equivalent to plain `C-x (' followed by retyping the whole definition
-so far.  As a consequence it re-executes the macro as previously
-defined.
+   The hardcopy commands (aside from the Postscript commands) pass extra
+switches to the `lpr' program based on the value of the variable
+`lpr-switches'.  Its value should be a list of strings, each string an
+option starting with `-'.  For example, to use a printer named
+`nearme', set `lpr-switches' like this:
 
-   You can use function keys in a keyboard macro, just like keyboard
-keys.  You can even use mouse events, but be careful about that: when
-the macro replays the mouse event, it uses the original mouse position
-of that event, the position that the mouse had while you were defining
-the macro.  The effect of this may be hard to predict.  (Using the
-current mouse position would be even less predictable.)
+     (setq lpr-switches '("-Pnearme"))
 
-   One thing that doesn't always work well in a keyboard macro is the
-command `C-M-c' (`exit-recursive-edit').  When this command exits a
-recursive edit that started within the macro, it works as you'd expect.
-But if it exits a recursive edit that started before you invoked the
-keyboard macro, it also necessarily exits the keyboard macro as part of
-the process.
-
-   You can edit a keyboard macro already defined by typing `C-x C-k'
-(`edit-kbd-macro').  Follow that with the keyboard input that you would
-use to invoke the macro--`C-x e' or `M-x NAME' or some other key
-sequence.  This formats the macro definition in a buffer and enters a
-specialized major mode for editing it.  Type `C-h m' once in that
-buffer to display details of how to edit the macro.  When you are
-finished editing, type `C-c C-c'.
-
-   The command `M-x apply-macro-to-region-lines' repeats the last
-defined keyboard macro on each complete line within the current region.
-It does this line by line, by moving point to the beginning of the line
-and then executing the macro.
+   The variable `lpr-command' specifies the name of the printer program
+to run; the default value depends on your operating system type.  On
+most systems, the default is `"lpr"'.  The variable
+`lpr-headers-switches' similarly specifies the extra switches to use to
+make page headers.  The variable `lpr-add-switches' controls whether to
+supply `-T' and `-J' options (suitable for `lpr') to the printer
+program: `nil' means don't add them.  `lpr-add-switches' should be
+`nil' if your printer program is not compatible with `lpr'.
 
 
-File: emacs,  Node: Save Kbd Macro,  Next: Kbd Macro Query,  Prev: Basic Kbd Macro,  Up: Keyboard Macros
+File: emacs,  Node: Postscript,  Next: Postscript Variables,  Prev: Hardcopy,  Up: Top
 
-Naming and Saving Keyboard Macros
----------------------------------
+Postscript Hardcopy
+===================
 
-   If you wish to save a keyboard macro for longer than until you
-define the next one, you must give it a name using `M-x
-name-last-kbd-macro'.  This reads a name as an argument using the
-minibuffer and defines that name to execute the macro.  The macro name
-is a Lisp symbol, and defining it in this way makes it a valid command
-name for calling with `M-x' or for binding a key to with
-`global-set-key' (*note Keymaps::.).  If you specify a name that has a
-prior definition other than another keyboard macro, an error message is
-printed and nothing is changed.
+   These commands convert buffer contents to Postscript, either
+printing it or leaving it in another Emacs buffer.
 
-   Once a macro has a command name, you can save its definition in a
-file.  Then it can be used in another editing session.  First, visit
-the file you want to save the definition in.  Then use this command:
+`M-x ps-print-buffer'
+     Print hardcopy of the current buffer in Postscript form.
 
-     M-x insert-kbd-macro RET MACRONAME RET
+`M-x ps-print-region'
+     Print hardcopy of the current region in Postscript form.
 
-This inserts some Lisp code that, when executed later, will define the
-same macro with the same definition it has now.  (You need not
-understand Lisp code to do this, because `insert-kbd-macro' writes the
-Lisp code for you.)  Then save the file.  You can load the file later
-with `load-file' (*note Lisp Libraries::.).  If the file you save in is
-your init file `~/.emacs' (*note Init File::.) then the macro will be
-defined each time you run Emacs.
+`M-x ps-print-buffer-with-faces'
+     Print hardcopy of the current buffer in Postscript form, showing
+     the faces used in the text by means of Postscript features.
 
-   If you give `insert-kbd-macro' a numeric argument, it makes
-additional Lisp code to record the keys (if any) that you have bound to
-the keyboard macro, so that the macro will be reassigned the same keys
-when you load the file.
+`M-x ps-print-region-with-faces'
+     Print hardcopy of the current region in Postscript form, showing
+     the faces used in the text.
 
-
-File: emacs,  Node: Kbd Macro Query,  Prev: Save Kbd Macro,  Up: Keyboard Macros
+`M-x ps-spool-buffer'
+     Generate Postscript for the current buffer text.
 
-Executing Macros with Variations
---------------------------------
+`M-x ps-spool-region'
+     Generate Postscript for the current region.
 
-   Using `C-x q' (`kbd-macro-query'), you can get an effect similar to
-that of `query-replace', where the macro asks you each time around
-whether to make a change.  While defining the macro, type `C-x q' at
-the point where you want the query to occur.  During macro definition,
-the `C-x q' does nothing, but when you run the macro later, `C-x q'
-asks you interactively whether to continue.
+`M-x ps-spool-buffer-with-faces'
+     Generate Postscript for the current buffer, showing the faces used.
 
-   The valid responses when `C-x q' asks are SPC (or `y'), DEL (or
-`n'), RET (or `q'), `C-l' and `C-r'.  The answers are the same as in
-`query-replace', though not all of the `query-replace' options are
-meaningful.
+`M-x ps-spool-region-with-faces'
+     Generate Postscript for the current region, showing the faces used.
 
-   These responses include SPC to continue, and DEL to skip the
-remainder of this repetition of the macro and start right away with the
-next repetition.  RET means to skip the remainder of this repetition
-and cancel further repetitions.  `C-l' redraws the screen and asks you
-again for a character to say what to do.
+   The Postscript commands, `ps-print-buffer' and `ps-print-region',
+print buffer contents in Postscript form.  One command prints the
+entire buffer; the other, just the region.  The corresponding
+`-with-faces' commands, `ps-print-buffer-with-faces' and
+`ps-print-region-with-faces', use Postscript features to show the faces
+(fonts and colors) in the text properties of the text being printed.
 
-   `C-r' enters a recursive editing level, in which you can perform
-editing which is not part of the macro.  When you exit the recursive
-edit using `C-M-c', you are asked again how to continue with the
-keyboard macro.  If you type a SPC at this time, the rest of the macro
-definition is executed.  It is up to you to leave point and the text in
-a state such that the rest of the macro will do what you want.
+   If you are using a color display, you can print a buffer of program
+code with color highlighting by turning on Font-Lock mode in that
+buffer, and using `ps-print-buffer-with-faces'.
 
-   `C-u C-x q', which is `C-x q' with a numeric argument, performs a
-completely different function.  It enters a recursive edit reading
-input from the keyboard, both when you type it during the definition of
-the macro, and when it is executed from the macro.  During definition,
-the editing you do inside the recursive edit does not become part of
-the macro.  During macro execution, the recursive edit gives you a
-chance to do some particularized editing on each repetition.  *Note
-Recursive Edit::.
+   The commands whose names have `spool' instead of `print' generate
+the Postscript output in an Emacs buffer instead of sending it to the
+printer.
+
+   The following section describes variables for customizing these
+commands.
 
 
-File: emacs,  Node: Key Bindings,  Next: Keyboard Translations,  Prev: Keyboard Macros,  Up: Customization
+File: emacs,  Node: Postscript Variables,  Next: Sorting,  Prev: Postscript,  Up: Top
 
-Customizing Key Bindings
-========================
+Variables for Postscript Hardcopy
+=================================
 
-   This section describes "key bindings" which map keys to commands,
-and the "keymaps" which record key bindings.  It also explains how to
-customize key bindings.
+   All the Postscript hardcopy commands use the variables
+`ps-lpr-command' and `ps-lpr-switches' to specify how to print the
+output.  `ps-lpr-command' specifies the command name to run, and
+`ps-lpr-switches' specifies command line options to use.  If you don't
+set these variables yourself, they take their initial values from
+`lpr-command' and `lpr-switches'.
 
-   Recall that a command is a Lisp function whose definition provides
-for interactive use.  Like every Lisp function, a command has a function
-name which usually consists of lower case letters and hyphens.
+   The variable `ps-print-header' controls whether these commands add
+header lines to each page--set it to `nil' to turn headers off.  You
+can turn off color processing by setting `ps-print-color-p' to `nil'.
 
-* Menu:
+   The variable `ps-paper-type' specifies which size of paper to format
+for; legitimate values include `a4', `a3', `a4small', `b4', `b5',
+`executive', `ledger', `legal', `letter', `letter-small', `statement',
+`tabloid'.  The default is `letter'.  You can define additional paper
+sizes by changing the variable `ps-page-dimensions-database'.
 
-* Keymaps::          Generalities.  The global keymap.
-* Prefix Keymaps::   Keymaps for prefix keys.
-* Local Keymaps::    Major and minor modes have their own keymaps.
-* Minibuffer Maps::  The minibuffer uses its own local keymaps.
-* Rebinding::        How to redefine one key's meaning conveniently.
-* Init Rebinding::   Rebinding keys with your init file, `.emacs'.
-* Function Keys::    Rebinding terminal function keys.
-* Named ASCII Chars::Distinguishing TAB from `C-i', and so on.
-* Mouse Buttons::    Rebinding mouse buttons in Emacs.
-* Disabling::        Disabling a command means confirmation is required
-                       before it can be executed.  This is done to protect
-                       beginners from surprises.
+   The variable `ps-landscape-mode' specifies the orientation of
+printing on the page.  The default is `nil', which stands for
+"portrait" mode.  Any non-`nil' value specifies "landscape" mode.
 
-
-File: emacs,  Node: Keymaps,  Next: Prefix Keymaps,  Up: Key Bindings
+   The variable `ps-number-of-columns' specifies the number of columns;
+it takes effect in both landscape and portrait mode.  The default is 1.
 
-Keymaps
--------
+   The variable `ps-font-family' specifies which font family to use for
+printing ordinary text.  Legitimate values include `Courier',
+`Helvetica', `NewCenturySchlbk', `Palatino' and `Times'.  The variable
+`ps-font-size' specifies the size of the font for ordinary text.  It
+defaults to 8.5 points.
 
-   The bindings between key sequences and command functions are recorded
-in data structures called "keymaps".  Emacs has many of these, each
-used on particular occasions.
-
-   Recall that a "key sequence" ("key", for short) is a sequence of
-"input events" that have a meaning as a unit.  Input events include
-characters, function keys and mouse buttons--all the inputs that you
-can send to the computer with your terminal.  A key sequence gets its
-meaning from its "binding", which says what command it runs.  The
-function of keymaps is to record these bindings.
-
-   The "global" keymap is the most important keymap because it is
-always in effect.  The global keymap defines keys for Fundamental mode;
-most of these definitions are common to most or all major modes.  Each
-major or minor mode can have its own keymap which overrides the global
-definitions of some keys.
-
-   For example, a self-inserting character such as `g' is
-self-inserting because the global keymap binds it to the command
-`self-insert-command'.  The standard Emacs editing characters such as
-`C-a' also get their standard meanings from the global keymap.
-Commands to rebind keys, such as `M-x global-set-key', actually work by
-storing the new binding in the proper place in the global map.  *Note
-Rebinding::.
-
-   Meta characters work differently; Emacs translates each Meta
-character into a pair of characters starting with ESC.  When you type
-the character `M-a' in a key sequence, Emacs replaces it with `ESC a'.
-A meta key comes in as a single input event, but becomes two events for
-purposes of key bindings.  The reason for this is historical, and we
-might change it someday.
-
-   Most modern keyboards have function keys as well as character keys.
-Function keys send input events just as character keys do, and keymaps
-can have bindings for them.
-
-   On many terminals, typing a function key actually sends the computer
-a sequence of characters; the precise details of the sequence depends on
-which function key and on the model of terminal you are using.  (Often
-the sequence starts with `ESC ['.)  If Emacs understands your terminal
-type properly, it recognizes the character sequences forming function
-keys wherever they occur in a key sequence (not just at the beginning).
-Thus, for most purposes, you can pretend the function keys reach Emacs
-directly and ignore their encoding as character sequences.
-
-   Mouse buttons also produce input events.  These events come with
-other data--the window and position where you pressed or released the
-button, and a time stamp.  But only the choice of button matters for key
-bindings; the other data matters only if a command looks at it.
-(Commands designed for mouse invocation usually do look at the other
-data.)
-
-   A keymap records definitions for single events.  Interpreting a key
-sequence of multiple events involves a chain of keymaps.  The first
-keymap gives a definition for the first event; this definition is
-another keymap, which is used to look up the second event in the
-sequence, and so on.
-
-   Key sequences can mix function keys and characters.  For example,
-`C-x SELECT' makes sense.  If you make SELECT a prefix key, then
-`SELECT C-n' makes sense.  You can even mix mouse events with keyboard
-events, but we recommend against it, because such sequences are
-inconvenient to type in.
-
-   As a user, you can redefine any key; but it might be best to stick to
-key sequences that consist of `C-c' followed by a letter.  These keys
-are "reserved for users,", so they won't conflict with any properly
-designed Emacs extension.  If you redefine some other key, your
-definition may be overridden by certain extensions or major modes which
-redefine the same key.
+   Many other customization variables for these commands are defined and
+described in the Lisp file `ps-print.el'.
 
 
-File: emacs,  Node: Prefix Keymaps,  Next: Local Keymaps,  Prev: Keymaps,  Up: Key Bindings
+File: emacs,  Node: Sorting,  Next: Narrowing,  Prev: Postscript Variables,  Up: Top
 
-Prefix Keymaps
---------------
+Sorting Text
+============
 
-   A prefix key such as `C-x' or ESC has its own keymap, which holds
-the definition for the event that immediately follows that prefix.
+   Emacs provides several commands for sorting text in the buffer.  All
+operate on the contents of the region (the text between point and the
+mark).  They divide the text of the region into many "sort records",
+identify a "sort key" for each record, and then reorder the records
+into the order determined by the sort keys.  The records are ordered so
+that their keys are in alphabetical order, or, for numeric sorting, in
+numeric order.  In alphabetic sorting, all upper-case letters `A'
+through `Z' come before lower-case `a', in accord with the ASCII
+character sequence.
 
-   The definition of a prefix key is usually the keymap to use for
-looking up the following event.  The definition can also be a Lisp
-symbol whose function definition is the following keymap; the effect is
-the same, but it provides a command name for the prefix key that can be
-used as a description of what the prefix key is for.  Thus, the binding
-of `C-x' is the symbol `Ctl-X-Prefix', whose function definition is the
-keymap for `C-x' commands.  The definitions of `C-c', `C-x', `C-h' and
-ESC as prefix keys appear in the global map, so these prefix keys are
-always available.
+   The various sort commands differ in how they divide the text into
+sort records and in which part of each record is used as the sort key.
+Most of the commands make each line a separate sort record, but some
+commands use paragraphs or pages as sort records.  Most of the sort
+commands use each entire sort record as its own sort key, but some use
+only a portion of the record as the sort key.
 
-   Aside from ordinary prefix keys, there is a fictitious "prefix key"
-which represents the menu bar; see *Note Menu Bar: (elisp)Menu Bar, for
-special information about menu bar key bindings.  Mouse button events
-that invoke pop-up menus are also prefix keys; see *Note Menu Keymaps:
-(elisp)Menu Keymaps, for more details.
+`M-x sort-lines'
+     Divide the region into lines, and sort by comparing the entire
+     text of a line.  A numeric argument means sort into descending
+     order.
 
-   Some prefix keymaps are stored in variables with names:
+`M-x sort-paragraphs'
+     Divide the region into paragraphs, and sort by comparing the entire
+     text of a paragraph (except for leading blank lines).  A numeric
+     argument means sort into descending order.
 
-   * `ctl-x-map' is the variable name for the map used for characters
-     that follow `C-x'.
+`M-x sort-pages'
+     Divide the region into pages, and sort by comparing the entire
+     text of a page (except for leading blank lines).  A numeric
+     argument means sort into descending order.
 
-   * `help-map' is for characters that follow `C-h'.
+`M-x sort-fields'
+     Divide the region into lines, and sort by comparing the contents of
+     one field in each line.  Fields are defined as separated by
+     whitespace, so the first run of consecutive non-whitespace
+     characters in a line constitutes field 1, the second such run
+     constitutes field 2, etc.
 
-   * `esc-map' is for characters that follow ESC.  Thus, all Meta
-     characters are actually defined by this map.
+     Specify which field to sort by with a numeric argument: 1 to sort
+     by field 1, etc.  A negative argument means count fields from the
+     right instead of from the left; thus, minus 1 means sort by the
+     last field.  If several lines have identical contents in the field
+     being sorted, they keep same relative order that they had in the
+     original buffer.
 
-   * `ctl-x-4-map' is for characters that follow `C-x 4'.
+     A negative argument means count fields from the right (from the
+     end of the line).
 
-   * `mode-specific-map' is for characters that follow `C-c'.
+`M-x sort-numeric-fields'
+     Like `M-x sort-fields' except the specified field is converted to
+     an integer for each line, and the numbers are compared.  `10'
+     comes before `2' when considered as text, but after it when
+     considered as a number.
 
-
-File: emacs,  Node: Local Keymaps,  Next: Minibuffer Maps,  Prev: Prefix Keymaps,  Up: Key Bindings
+`M-x sort-columns'
+     Like `M-x sort-fields' except that the text within each line used
+     for comparison comes from a fixed range of columns.  See below for
+     an explanation.
 
-Local Keymaps
--------------
+`M-x reverse-region'
+     Reverse the order of the lines in the region.  This is useful for
+     sorting into descending order by fields or columns, since those
+     sort commands do not have a feature for doing that.
 
-   So far we have explained the ins and outs of the global map.  Major
-modes customize Emacs by providing their own key bindings in "local
-keymaps".  For example, C mode overrides TAB to make it indent the
-current line for C code.  Portions of text in the buffer can specify
-their own keymaps to substitute for the keymap of the buffer's major
-mode.
+   For example, if the buffer contains this:
 
-   Minor modes can also have local keymaps.  Whenever a minor mode is
-in effect, the definitions in its keymap override both the major mode's
-local keymap and the global keymap.
+     On systems where clash detection (locking of files being edited) is
+     implemented, Emacs also checks the first time you modify a buffer
+     whether the file has changed on disk since it was last visited or
+     saved.  If it has, you are asked to confirm that you want to change
+     the buffer.
 
-   The local keymaps for Lisp mode and several other major modes always
-exist even when not in use.  These are kept in variables named
-`lisp-mode-map' and so on.  For major modes less often used, the local
-keymap is normally constructed only when the mode is used for the first
-time in a session.  This is to save space.  If you wish to change one
-of these keymaps, you must use the major mode's "mode hook"--see below.
+applying `M-x sort-lines' to the entire buffer produces this:
 
-   All minor mode keymaps are created in advance.  There is no way to
-defer their creation until the first time the minor mode is enabled.
+     On systems where clash detection (locking of files being edited) is
+     implemented, Emacs also checks the first time you modify a buffer
+     saved.  If it has, you are asked to confirm that you want to change
+     the buffer.
+     whether the file has changed on disk since it was last visited or
 
-   A local keymap can locally redefine a key as a prefix key by defining
-it as a prefix keymap.  If the key is also defined globally as a prefix,
-then its local and global definitions (both keymaps) effectively
-combine: both of them are used to look up the event that follows the
-prefix key.  Thus, if the mode's local keymap defines `C-c' as another
-keymap, and that keymap defines `C-z' as a command, this provides a
-local meaning for `C-c C-z'.  This does not affect other sequences that
-start with `C-c'; if those sequences don't have their own local
-bindings, their global bindings remain in effect.
+where the upper-case `O' sorts before all lower-case letters.  If you
+use `C-u 2 M-x sort-fields' instead, you get this:
 
-   Another way to think of this is that Emacs handles a multi-event key
-sequence by looking in several keymaps, one by one, for a binding of the
-whole key sequence.  First it checks the minor mode keymaps for minor
-modes that are enabled, then it checks the major mode's keymap, and then
-it checks the global keymap.  This is not precisely how key lookup
-works, but it's good enough for understanding ordinary circumstances.
+     implemented, Emacs also checks the first time you modify a buffer
+     saved.  If it has, you are asked to confirm that you want to change
+     the buffer.
+     On systems where clash detection (locking of files being edited) is
+     whether the file has changed on disk since it was last visited or
 
-   To change the local bindings of a major mode, you must change the
-mode's local keymap.  Normally you must wait until the first time the
-mode is used, because most major modes don't create their keymaps until
-then.  If you want to specify something in your `~/.emacs' file to
-change a major mode's bindings, you must use the mode's mode hook to
-delay the change until the mode is first used.
+where the sort keys were `Emacs', `If', `buffer', `systems' and `the'.
 
-   For example, the command `texinfo-mode' to select Texinfo mode runs
-the hook `texinfo-mode-hook'.  Here's how you can use the hook to add
-local bindings (not very useful, we admit) for `C-c n' and `C-c p' in
-Texinfo mode:
+   `M-x sort-columns' requires more explanation.  You specify the
+columns by putting point at one of the columns and the mark at the other
+column.  Because this means you cannot put point or the mark at the
+beginning of the first line of the text you want to sort, this command
+uses an unusual definition of `region': all of the line point is in is
+considered part of the region, and so is all of the line the mark is in,
+as well as all the lines in between.
 
-     (add-hook 'texinfo-mode-hook
-               '(lambda ()
-                  (define-key texinfo-mode-map
-                              "\C-cp"
-                              'backward-paragraph)
-                  (define-key texinfo-mode-map
-                              "\C-cn"
-                              'forward-paragraph)
-                  ))
+   For example, to sort a table by information found in columns 10 to
+15, you could put the mark on column 10 in the first line of the table,
+and point on column 15 in the last line of the table, and then run
+`sort-columns'.  Equivalently, you could run it with the mark on column
+15 in the first line and point on column 10 in the last line.
 
-   *Note Hooks::.
+   This can be thought of as sorting the rectangle specified by point
+and the mark, except that the text on each line to the left or right of
+the rectangle moves along with the text inside the rectangle.  *Note
+Rectangles::.
 
-
-File: emacs,  Node: Minibuffer Maps,  Next: Rebinding,  Prev: Local Keymaps,  Up: Key Bindings
-
-Minibuffer Keymaps
-------------------
-
-   The minibuffer has its own set of local keymaps; they contain various
-completion and exit commands.
-
-   * `minibuffer-local-map' is used for ordinary input (no completion).
-
-   * `minibuffer-local-ns-map' is similar, except that SPC exits just
-     like RET.  This is used mainly for Mocklisp compatibility.
-
-   * `minibuffer-local-completion-map' is for permissive completion.
-
-   * `minibuffer-local-must-match-map' is for strict completion and for
-     cautious completion.
+   Many of the sort commands ignore case differences when comparing, if
+`sort-fold-case' is non-`nil'.
 
 
-File: emacs,  Node: Rebinding,  Next: Init Rebinding,  Prev: Minibuffer Maps,  Up: Key Bindings
+File: emacs,  Node: Narrowing,  Next: Two-Column,  Prev: Sorting,  Up: Top
 
-Changing Key Bindings Interactively
------------------------------------
+Narrowing
+=========
 
-   The way to redefine an Emacs key is to change its entry in a keymap.
-You can change the global keymap, in which case the change is effective
-in all major modes (except those that have their own overriding local
-definitions for the same key).  Or you can change the current buffer's
-local map, which affects all buffers using the same major mode.
+   "Narrowing" means focusing in on some portion of the buffer, making
+the rest temporarily inaccessible.  The portion which you can still get
+to is called the "accessible portion".  Canceling the narrowing, which
+makes the entire buffer once again accessible, is called "widening".
+The amount of narrowing in effect in a buffer at any time is called the
+buffer's "restriction".
 
-`M-x global-set-key RET KEY CMD RET'
-     Define KEY globally to run CMD.
+   Narrowing can make it easier to concentrate on a single subroutine or
+paragraph by eliminating clutter.  It can also be used to restrict the
+range of operation of a replace command or repeating keyboard macro.
 
-`M-x local-set-key RET KEY CMD RET'
-     Define KEY locally (in the major mode now in effect) to run CMD.
+`C-x n n'
+     Narrow down to between point and mark (`narrow-to-region').
 
-`M-x global-unset-key RET KEY'
-     Make KEY undefined in the global map.
+`C-x n w'
+     Widen to make the entire buffer accessible again (`widen').
 
-`M-x local-unset-key RET KEY'
-     Make KEY undefined locally (in the major mode now in effect).
+`C-x n p'
+     Narrow down to the current page (`narrow-to-page').
 
-   For example, suppose you like to execute commands in a subshell
-within an Emacs buffer, instead of suspending Emacs and executing
-commands in your login shell.  Normally, `C-z' is bound to the function
-`suspend-emacs' (when not using the X Window System), but you can
-change `C-z' to invoke an interactive subshell within Emacs, by binding
-it to `shell' as follows:
+`C-x n d'
+     Narrow down to the current defun (`narrow-to-defun').
 
-     M-x global-set-key RET C-z shell RET
+   When you have narrowed down to a part of the buffer, that part
+appears to be all there is.  You can't see the rest, you can't move
+into it (motion commands won't go outside the accessible part), you
+can't change it in any way.  However, it is not gone, and if you save
+the file all the inaccessible text will be saved.  The word `Narrow'
+appears in the mode line whenever narrowing is in effect.
 
-`global-set-key' reads the command name after the key.   After you
-press the key, a message like this appears so that you can confirm that
-you are binding the key you want:
+   The primary narrowing command is `C-x n n' (`narrow-to-region').  It
+sets the current buffer's restrictions so that the text in the current
+region remains accessible but all text before the region or after the
+region is inaccessible.  Point and mark do not change.
 
-     Set key C-z to command:
+   Alternatively, use `C-x n p' (`narrow-to-page') to narrow down to
+the current page.  *Note Pages::, for the definition of a page.  `C-x n
+d' (`narrow-to-defun') narrows down to the defun containing point
+(*note Defuns::.).
 
-   You can redefine function keys and mouse events in the same way; just
-type the function key or click the mouse when it's time to specify the
-key to rebind.
+   The way to cancel narrowing is to widen with `C-x n w' (`widen').
+This makes all text in the buffer accessible again.
 
-   You can rebind a key that contains more than one event in the same
-way.  Emacs keeps reading the key to rebind until it is a complete key
-(that is, not a prefix key).  Thus, if you type `C-f' for KEY, that's
-the end; the minibuffer is entered immediately to read CMD.  But if you
-type `C-x', another character is read; if that is `4', another
-character is read, and so on.  For example,
+   You can get information on what part of the buffer you are narrowed
+down to using the `C-x =' command.  *Note Position Info::.
 
-     M-x global-set-key RET C-x 4 $ spell-other-window RET
-
-redefines `C-x 4 $' to run the (fictitious) command
-`spell-other-window'.
-
-   The two-character keys consisting of `C-c' followed by a letter are
-reserved for user customizations.  Lisp programs are not supposed to
-define these keys, so the bindings you make for them will be available
-in all major modes and will never get in the way of anything.
-
-   You can remove the global definition of a key with
-`global-unset-key'.  This makes the key "undefined"; if you type it,
-Emacs will just beep.  Similarly, `local-unset-key' makes a key
-undefined in the current major mode keymap, which makes the global
-definition (or lack of one) come back into effect in that major mode.
-
-   If you have redefined (or undefined) a key and you subsequently wish
-to retract the change, undefining the key will not do the job--you need
-to redefine the key with its standard definition.  To find the name of
-the standard definition of a key, go to a Fundamental mode buffer and
-use `C-h c'.  The documentation of keys in this manual also lists their
-command names.
-
-   If you want to prevent yourself from invoking a command by mistake,
-it is better to disable the command than to undefine the key.  A
-disabled command is less work to invoke when you really want to.  *Note
-Disabling::.
+   Because narrowing can easily confuse users who do not understand it,
+`narrow-to-region' is normally a disabled command.  Attempting to use
+this command asks for confirmation and gives you the option of enabling
+it; if you enable the command, confirmation will no longer be required
+for it.  *Note Disabling::.
 
 
-File: emacs,  Node: Init Rebinding,  Next: Function Keys,  Prev: Rebinding,  Up: Key Bindings
+File: emacs,  Node: Two-Column,  Next: Editing Binary Files,  Prev: Narrowing,  Up: Top
 
-Rebinding Keys in Your Init File
---------------------------------
+Two-Column Editing
+==================
 
-   If you have a set of key bindings that you like to use all the time,
-you can specify them in your `.emacs' file by using their Lisp syntax.
+   Two-column mode lets you conveniently edit two side-by-side columns
+of text.  It uses two side-by-side windows, each showing its own buffer.
 
-   The simplest method for doing this works for ASCII characters and
-Meta-modified ASCII characters only.  This method uses a string to
-represent the key sequence you want to rebind.  For example, here's how
-to bind `C-z' to `shell':
+   There are three ways to enter two-column mode:
 
-     (global-set-key "\C-z" 'shell)
+`<F2> 2' or `C-x 6 2'
+     Enter two-column mode with the current buffer on the left, and on
+     the right, a buffer whose name is based on the current buffer's
+     name (`2C-two-columns').  If the right-hand buffer doesn't already
+     exist, it starts out empty; the current buffer's contents are not
+     changed.
 
-This example uses a string constant containing one character, `C-z'.
-The single-quote before the command name, `shell', marks it as a
-constant symbol rather than a variable.  If you omit the quote, Emacs
-would try to evaluate `shell' immediately as a variable.  This probably
-causes an error; it certainly isn't what you want.
+     This command is appropriate when the current buffer is empty or
+     contains just one column and you want to add another column.
 
-   Here is another example that binds a key sequence two characters
-long:
+`<F2> s' or `C-x 6 s'
+     Split the current buffer, which contains two-column text, into two
+     buffers, and display them side by side (`2C-split').  The current
+     buffer becomes the left-hand buffer, but the text in the right-hand
+     column is moved into the right-hand buffer.  The current column
+     specifies the split point.  Splitting starts with the current line
+     and continues to the end of the buffer.
 
-     (global-set-key "\C-xl" 'make-symbolic-link)
+     This command is appropriate when you have a buffer that already
+     contains two-column text, and you wish to separate the columns
+     temporarily.
 
-   When the key sequence includes function keys or mouse button events,
-or non-ASCII characters such as `C-=' or `H-a', you must use the more
-general method of rebinding, which uses a vector to specify the key
-sequence.
+`<F2> b BUFFER <RET>'
+`C-x 6 b BUFFER <RET>'
+     Enter two-column mode using the current buffer as the left-hand
+     buffer, and using buffer BUFFER as the right-hand buffer
+     (`2C-associate-buffer').
 
-   The way to write a vector in Emacs Lisp is with square brackets
-around the vector elements.  Use spaces to separate the elements.  If an
-element is a symbol, simply write the symbol's name--no other
-delimiters or punctuation are needed.  If a vector element is a
-character, write it as a Lisp character constant: `?' followed by the
-character as it would appear in a string.
+   `<F2> s' or `C-x 6 s' looks for a column separator, which is a
+string that appears on each line between the two columns.  You can
+specify the width of the separator with a numeric argument to <<F2> s>;
+that many characters, before point, constitute the separator string.
+By default, the width is 1, so the column separator is the character
+before point.
 
-   Here are examples of using vectors to rebind `C-=' (a control
-character outside of ASCII), `H-a' (a Hyper character; ASCII doesn't
-have Hyper at all); f7 (a function key), and `C-Mouse-1' (a
-keyboard-modified mouse button):
+   When a line has the separator at the proper place, `<F2> s' puts the
+text after the separator into the right-hand buffer, and deletes the
+separator.  Lines that don't have the column separator at the proper
+place remain unsplit; they stay in the left-hand buffer, and the
+right-hand buffer gets an empty line to correspond.  (This is the way
+to write a line that "spans both columns while in two-column mode":
+write it in the left-hand buffer, and put an empty line in the
+right-hand buffer.)
 
-     (global-set-key [?\C-=] 'make-symbolic-link)
-     (global-set-key [?\H-a] 'make-symbolic-link)
-     (global-set-key [f7] 'make-symbolic-link)
-     (global-set-key [C-mouse-1] 'make-symbolic-link)
+   The command `C-x 6 <RET>' or `<F2> <RET>' (`2C-newline') inserts a
+newline in each of the two buffers at corresponding positions.  This is
+the easiest way to add a new line to the two-column text while editing
+it in split buffers.
 
-   You can use a vector for the simple cases too.  Here's how to rewrite
-the first two examples, above, to use vectors:
+   When you have edited both buffers as you wish, merge them with `<F2>
+1' or `C-x 6 1' (`2C-merge').  This copies the text from the right-hand
+buffer as a second column in the other buffer.  To go back to
+two-column editing, use `<F2> s'.
 
-     (global-set-key [?\C-z] 'shell)
-     
-     (global-set-key [?\C-x ?l] 'make-symbolic-link)
-
-
-File: emacs,  Node: Function Keys,  Next: Named ASCII Chars,  Prev: Init Rebinding,  Up: Key Bindings
-
-Rebinding Function Keys
------------------------
-
-   Key sequences can contain function keys as well as ordinary
-characters.  Just as Lisp characters (actually integers) represent
-keyboard characters, Lisp symbols represent function keys.  If the
-function key has a word as its label, then that word is also the name of
-the corresponding Lisp symbol.  Here are the conventional Lisp names for
-common function keys:
-
-`left', `up', `right', `down'
-     Cursor arrow keys.
-
-`begin', `end', `home', `next', `prior'
-     Other cursor repositioning keys.
-
-`select', `print', `execute', `backtab'
-`insert', `undo', `redo', `clearline'
-`insertline', `deleteline', `insertchar', `deletechar',
-     Miscellaneous function keys.
-
-`f1', `f2', ... `f35'
-     Numbered function keys (across the top of the keyboard).
-
-`kp-add', `kp-subtract', `kp-multiply', `kp-divide'
-`kp-backtab', `kp-space', `kp-tab', `kp-enter'
-`kp-separator', `kp-decimal', `kp-equal'
-     Keypad keys (to the right of the regular keyboard), with names or
-     punctuation.
-
-`kp-0', `kp-1', ... `kp-9'
-     Keypad keys with digits.
-
-`kp-f1', `kp-f2', `kp-f3', `kp-f4'
-     Keypad PF keys.
-
-   These names are conventional, but some systems (especially when using
-X windows) may use different names.  To make certain what symbol is used
-for a given function key on your terminal, type `C-h c' followed by
-that key.
-
-   A key sequence which contains function key symbols (or anything but
-ASCII characters) must be a vector rather than a string.  The vector
-syntax uses spaces between the elements, and square brackets around the
-whole vector.  Thus, to bind function key `f1' to the command `rmail',
-write the following:
-
-     (global-set-key [f1] 'rmail)
-
-To bind the right-arrow key to the command `forward-char', you can use
-this expression:
-
-     (global-set-key [right] 'forward-char)
-
-This uses the Lisp syntax for a vector containing the symbol `right'.
-(This binding is present in Emacs by default.)
-
-   *Note Init Rebinding::, for more information about using vectors for
-rebinding.
-
-   You can mix function keys and characters in a key sequence.  This
-example binds `C-x NEXT' to the command `forward-page'.
-
-     (global-set-key [?\C-x next] 'forward-page)
-
-where `?\C-x' is the Lisp character constant for the character `C-x'.
-The vector element `next' is a symbol and therefore does not take a
-question mark.
-
-   You can use the modifier keys CTRL, META, HYPER, SUPER, ALT and
-SHIFT with function keys.  To represent these modifiers, add the
-strings `C-', `M-', `H-', `s-', `A-' and `S-' at the front of the
-symbol name.  Thus, here is how to make `Hyper-Meta-RIGHT' move forward
-a word:
-
-     (global-set-key [H-M-right] 'forward-word)
+   Use `<F2> d' or `C-x 6 d' to dissociate the two buffers, leaving
+each as it stands (`2C-dissociate').  If the other buffer, the one not
+current when you type `<F2> d', is empty, `<F2> d' kills it.
 
 
-File: emacs,  Node: Named ASCII Chars,  Next: Mouse Buttons,  Prev: Function Keys,  Up: Key Bindings
+File: emacs,  Node: Editing Binary Files,  Next: Saving Emacs Sessions,  Prev: Two-Column,  Up: Top
 
-Named ASCII Control Characters
-------------------------------
+Editing Binary Files
+====================
 
-   TAB, RET, BS, LFD, ESC and DEL started out as names for certain
-ASCII control characters, used so often that they have special keys of
-their own.  Later, users found it convenient to distinguish in Emacs
-between these keys and the "same" control characters typed with the
-CTRL key.
+   There is a special major mode for editing binary files: Hexl mode.
+To use it, use `M-x hexl-find-file' instead of `C-x C-f' to visit the
+file.  This command converts the file's contents to hexadecimal and
+lets you edit the translation.  When you save the file, it is converted
+automatically back to binary.
 
-   Emacs 19 distinguishes these two kinds of input, when used with the X
-Window System.  It treats the "special" keys as function keys named
-`tab', `return', `backspace', `linefeed', `escape', and `delete'.
-These function keys translate automatically into the corresponding
-ASCII characters *if* they have no bindings of their own.  As a result,
-neither users nor Lisp programs need to pay attention to the
-distinction unless they care to.
+   You can also use `M-x hexl-mode' to translate an existing buffer
+into hex.  This is useful if you visit a file normally and then discover
+it is a binary file.
 
-   If you do not want to distinguish between (for example) TAB and
-`C-i', make just one binding, for the ASCII character TAB (octal code
-011).  If you do want to distinguish, make one binding for this ASCII
-character, and another for the "function key" `tab'.
+   Ordinary text characters overwrite in Hexl mode.  This is to reduce
+the risk of accidentally spoiling the alignment of data in the file.
+There are special commands for insertion.  Here is a list of the
+commands of Hexl mode:
 
-   With an ordinary ASCII terminal, there is no way to distinguish
-between TAB and `C-i' (and likewise for other such pairs), because the
-terminal sends the same character in both cases.
+`C-M-d'
+     Insert a byte with a code typed in decimal.
 
-
-File: emacs,  Node: Mouse Buttons,  Next: Disabling,  Prev: Named ASCII Chars,  Up: Key Bindings
+`C-M-o'
+     Insert a byte with a code typed in octal.
 
-Rebinding Mouse Buttons
------------------------
+`C-M-x'
+     Insert a byte with a code typed in hex.
 
-   Emacs uses Lisp symbols to designate mouse buttons, too.  The
-ordinary mouse events in Emacs are "click" events; these happen when you
-press a button and release it without moving the mouse.  You can also
-get "drag" events, when you move the mouse while holding the button
-down.  Drag events happen when you finally let go of the button.
+`C-x ['
+     Move to the beginning of a 1k-byte "page."
 
-   The symbols for basic click events are `mouse-1' for the leftmost
-button, `mouse-2' for the next, and so on.  Here is how you can
-redefine the second mouse button to split the current window:
+`C-x ]'
+     Move to the end of a 1k-byte "page."
 
-     (global-set-key [mouse-2] 'split-window-vertically)
+`M-g'
+     Move to an address specified in hex.
 
-   The symbols for drag events are similar, but have the prefix `drag-'
-before the word `mouse'.  For example, dragging the first button
-generates a `drag-mouse-1' event.
+`M-j'
+     Move to an address specified in decimal.
 
-   You can also define bindings for events that occur when a mouse
-button is pressed down.  These events start with `down-' instead of
-`drag-'.  Such events are generated only if they have key bindings.
-When you get a button-down event, a corresponding click or drag event
-will always follow.
-
-   If you wish, you can distinguish single, double, and triple clicks.
-A double click means clicking a mouse button twice in approximately the
-same place.  The first click generates an ordinary click event.  The
-second click, if it comes soon enough, generates a double-click event
-instead.  The event type for a double click event starts with
-`double-': for example, `double-mouse-3'.
-
-   This means that you can give a special meaning to the second click at
-the same place, but it must act on the assumption that the ordinary
-single click definition has run when the first click was received.
-
-   This constrains what you can do with double clicks, but user
-interface designers say that this constraint ought to be followed in
-any case.  A double click should do something similar to the single
-click, only "more so".  The command for the double-click event should
-perform the extra work for the double click.
-
-   If a double-click event has no binding, it changes to the
-corresponding single-click event.  Thus, if you don't define a
-particular double click specially, it executes the single-click command
-twice.
-
-   Emacs also supports triple-click events whose names start with
-`triple-'.  Emacs does not distinguish quadruple clicks as event types;
-clicks beyond the third generate additional triple-click events.
-However, the full number of clicks is recorded in the event list, so you
-can distinguish if you really want to.  We don't recommend distinct
-meanings for more than three clicks, but sometimes it is useful for
-subsequent clicks to cycle through the same set of three meanings, so
-that four clicks are equivalent to one click, five are equivalent to
-two, and six are equivalent to three.
-
-   Emacs also records multiple presses in drag and button-down events.
-For example, when you press a button twice, then move the mouse while
-holding the button, Emacs gets a `double-drag-' event.  And at the
-moment when you press it down for the second time, Emacs gets a
-`double-down-' event (which is ignored, like all button-down events, if
-it has no binding).
-
-   The variable `double-click-time' specifies how long may elapse
-between clicks that are recognized as a pair.  Its value is measured in
-milliseconds.  If the value is `nil', double clicks are not detected at
-all.  If the value is `t', then there is no time limit.
-
-   The symbols for mouse events also indicate the status of the modifier
-keys, with the usual prefixes `C-', `M-', `H-', `s-', `A-' and `S-'.
-These always precede `double-' or `triple-', which always precede
-`drag-' or `down-'.
-
-   A frame includes areas that don't show text from the buffer, such as
-the mode line and the scroll bar.  You can tell whether a mouse button
-comes from a special area of the screen by means of dummy "prefix
-keys."  For example, if you click the mouse in the mode line, you get
-the prefix key `mode-line' before the ordinary mouse-button symbol.
-Thus, here is how to define the command for clicking the first button in
-a mode line to run `scroll-up':
-
-     (global-set-key [mode-line mouse-1] 'scroll-up)
-
-   Here is the complete list of these dummy prefix keys and their
-meanings:
-
-`mode-line'
-     The mouse was in the mode line of a window.
-
-`vertical-line'
-     The mouse was in the vertical line separating side-by-side
-     windows.  (If you use scroll bars, they appear in place of these
-     vertical lines.)
-
-`vertical-scroll-bar'
-     The mouse was in a vertical scroll bar.  (This is the only kind of
-     scroll bar Emacs currently supports.)
-
-   You can put more than one mouse button in a key sequence, but it
-isn't usual to do so.
+`C-c C-c'
+     Leave Hexl mode, going back to the major mode this buffer had
+     before you invoked `hexl-mode'.
 
 
-File: emacs,  Node: Disabling,  Prev: Mouse Buttons,  Up: Key Bindings
+File: emacs,  Node: Saving Emacs Sessions,  Next: Recursive Edit,  Prev: Editing Binary Files,  Up: Top
 
-Disabling Commands
-------------------
-
-   Disabling a command marks the command as requiring confirmation
-before it can be executed.  The purpose of disabling a command is to
-prevent beginning users from executing it by accident and being
-confused.
-
-   An attempt to invoke a disabled command interactively in Emacs
-displays a window containing the command's name, its documentation, and
-some instructions on what to do immediately; then Emacs asks for input
-saying whether to execute the command as requested, enable it and
-execute it, or cancel.  If you decide to enable the command, you are
-asked whether to do this permanently or just for the current session.
-Enabling permanently works by automatically editing your `.emacs' file.
-
-   The direct mechanism for disabling a command is to put a non-`nil'
-`disabled' property on the Lisp symbol for the command.  Here is the
-Lisp program to do this:
-
-     (put 'delete-region 'disabled t)
-
-   If the value of the `disabled' property is a string, that string is
-included in the message printed when the command is used:
-
-     (put 'delete-region 'disabled
-          "It's better to use `kill-region' instead.\n")
-
-   You can make a command disabled either by editing the `.emacs' file
-directly or with the command `M-x disable-command', which edits the
-`.emacs' file for you.  Likewise, `M-x enable-command' edits `.emacs'
-to enable a command permanently.  *Note Init File::.
-
-   Whether a command is disabled is independent of what key is used to
-invoke it; disabling also applies if the command is invoked using
-`M-x'.  Disabling a command has no effect on calling it as a function
-from Lisp programs.
-
-
-File: emacs,  Node: Keyboard Translations,  Next: Syntax,  Prev: Key Bindings,  Up: Customization
-
-Keyboard Translations
+Saving Emacs Sessions
 =====================
 
-   Some keyboards do not make it convenient to send all the special
-characters that Emacs uses.  The most common problem case is the DEL
-character.  Some keyboards provide no convenient way to type this very
-important character--usually because they were designed to expect the
-character `C-h' to be used for deletion.  On these keyboard, if you
-press the key normally used for deletion, Emacs handles the `C-h' as a
-prefix character and offers you a list of help options, which is not
-what you want.
+   You can use the Desktop library to save the state of Emacs from one
+session to another.  Saving the state means that Emacs starts up with
+the same set of buffers, major modes, buffer positions, and so on that
+the previous Emacs session had.
 
-   You can work around this problem within Emacs by setting up keyboard
-translations to turn `C-h' into DEL and DEL into `C-h', as follows:
+   To use Desktop, you should first add these lines at the end of your
+`.emacs' file:
 
-     ;; Translate `C-h' to DEL.
-     (keyboard-translate ?\C-h ?\C-?)
-     
-     ;; Translate DEL to `C-h'.
-     (keyboard-translate ?\C-? ?\C-h)
+     (load "desktop")
+     (desktop-load-default)
+     (desktop-read)
 
-   Keyboard translations are not the same as key bindings in keymaps
-(*note Keymaps::.).  Emacs contains numerous keymaps that apply in
-different situations, but there is only one set of keyboard
-translations, and it applies to every character that Emacs reads from
-the terminal.  Keyboard translations take place at the lowest level of
-input processing; the keys that are looked up in keymaps contain the
-characters that result from keyboard translation.
+The first time you save the state of the Emacs session, you must do it
+manually, with the command `M-x desktop-save'.  Once you have done
+that, exiting Emacs will save the state again--not only the present
+Emacs session, but also subsequent sessions.  You can also save the
+state at any time, without exiting Emacs, by typing `M-x desktop-save'
+again.
 
-   Under X, the keyboard key named DELETE is a function key and is
-distinct from the ASCII character named DEL.  *Note Named ASCII
-Chars::.  Keyboard translations affect only ASCII character input, not
-function keys; thus, the above example used under X does not affect the
-DELETE key.  However, the translation above isn't necessary under X,
-because Emacs can also distinguish between the BACKSPACE key and `C-h';
-and it normally treats BACKSPACE as DEL.
+   In order for Emacs to recover the state from a previous session, you
+must start it with the same current directory as you used when you
+started the previous session.
 
-   For full information about how to use keyboard translations, see
-*Note Translating Input: (elisp)Translating Input.
+   The variable `desktop-files-not-to-save' controls which files are
+excluded from state saving.  Its value is a regular expression that
+matches the files to exclude.  By default, remote (ftp-accessed) files
+are excluded; this is because visiting them again in the subsequent
+session would be slow.  If you want to include these files in state
+saving, set `desktop-files-not-to-save' to `"^$"'.  *Note Remote
+Files::.
 
 
-File: emacs,  Node: Syntax,  Next: Init File,  Prev: Keyboard Translations,  Up: Customization
+File: emacs,  Node: Recursive Edit,  Next: Emulation,  Prev: Saving Emacs Sessions,  Up: Top
 
-The Syntax Table
+Recursive Editing Levels
+========================
+
+   A "recursive edit" is a situation in which you are using Emacs
+commands to perform arbitrary editing while in the middle of another
+Emacs command.  For example, when you type `C-r' inside of a
+`query-replace', you enter a recursive edit in which you can change the
+current buffer.  On exiting from the recursive edit, you go back to the
+`query-replace'.
+
+   "Exiting" the recursive edit means returning to the unfinished
+command, which continues execution.  The command to exit is `C-M-c'
+(`exit-recursive-edit').
+
+   You can also "abort" the recursive edit.  This is like exiting, but
+also quits the unfinished command immediately.  Use the command `C-]'
+(`abort-recursive-edit') to do this.  *Note Quitting::.
+
+   The mode line shows you when you are in a recursive edit by
+displaying square brackets around the parentheses that always surround
+the major and minor mode names.  Every window's mode line shows this,
+in the same way, since being in a recursive edit is true of Emacs as a
+whole rather than any particular window or buffer.
+
+   It is possible to be in recursive edits within recursive edits.  For
+example, after typing `C-r' in a `query-replace', you may type a
+command that enters the debugger.  This begins a recursive editing level
+for the debugger, within the recursive editing level for `C-r'.  Mode
+lines display a pair of square brackets for each recursive editing
+level currently in progress.
+
+   Exiting the inner recursive edit (such as, with the debugger `c'
+command) resumes the command running in the next level up.  When that
+command finishes, you can then use `C-M-c' to exit another recursive
+editing level, and so on.  Exiting applies to the innermost level only.
+Aborting also gets out of only one level of recursive edit; it returns
+immediately to the command level of the previous recursive edit.  If you
+wish, you can then abort the next recursive editing level.
+
+   Alternatively, the command `M-x top-level' aborts all levels of
+recursive edits, returning immediately to the top-level command reader.
+
+   The text being edited inside the recursive edit need not be the same
+text that you were editing at top level.  It depends on what the
+recursive edit is for.  If the command that invokes the recursive edit
+selects a different buffer first, that is the buffer you will edit
+recursively.  In any case, you can switch buffers within the recursive
+edit in the normal manner (as long as the buffer-switching keys have
+not been rebound).  You could probably do all the rest of your editing
+inside the recursive edit, visiting files and all.  But this could have
+surprising effects (such as stack overflow) from time to time.  So
+remember to exit or abort the recursive edit when you no longer need it.
+
+   In general, we try to minimize the use of recursive editing levels in
+GNU Emacs.  This is because they constrain you to "go back" in a
+particular order-from the innermost level toward the top level.  When
+possible, we present different activities in separate buffers so that
+you can switch between them as you please.  Some commands switch to a
+new major mode which provides a command to switch back.  These
+approaches give you more flexibility to go back to unfinished tasks in
+the order you choose.
+
+
+File: emacs,  Node: Emulation,  Next: Dissociated Press,  Prev: Recursive Edit,  Up: Top
+
+Emulation
+=========
+
+   GNU Emacs can be programmed to emulate (more or less) most other
+editors.  Standard facilities can emulate these:
+
+EDT (DEC VMS editor)
+     Turn on EDT emulation with `M-x edt-emulation-on'.  `M-x
+     edt-emulation-off' restores normal Emacs command bindings.
+
+     Most of the EDT emulation commands are keypad keys, and most
+     standard Emacs key bindings are still available.  The EDT
+     emulation rebindings are done in the global keymap, so there is no
+     problem switching buffers or major modes while in EDT emulation.
+
+vi (Berkeley editor)
+     Viper is the newest emulator for vi.  It implements several levels
+     of emulation; level 1 is closest to vi itself, while level 5
+     departs somewhat from strict emulation to take advantage of the
+     capabilities of Emacs.  To invoke Viper, type `M-x viper-mode'; it
+     will guide you the rest of the way and ask for the emulation level.
+
+vi (another emulator)
+     `M-x vi-mode' enters a major mode that replaces the previously
+     established major mode.  All of the vi commands that, in real vi,
+     enter "input" mode are programmed instead to return to the
+     previous major mode.  Thus, ordinary Emacs serves as vi's "input"
+     mode.
+
+     Because vi emulation works through major modes, it does not work
+     to switch buffers during emulation.  Return to normal Emacs first.
+
+     If you plan to use vi emulation much, you probably want to bind a
+     key to the `vi-mode' command.
+
+vi (alternate emulator)
+     `M-x vip-mode' invokes another vi emulator, said to resemble real
+     vi more thoroughly than `M-x vi-mode'.  "Input" mode in this
+     emulator is changed from ordinary Emacs so you can use <ESC> to go
+     back to emulated vi command mode.  To get from emulated vi command
+     mode back to ordinary Emacs, type `C-z'.
+
+     This emulation does not work through major modes, and it is
+     possible to switch buffers in various ways within the emulator.
+     It is not so necessary to assign a key to the command `vip-mode' as
+     it is with `vi-mode' because terminating insert mode does not use
+     it.
+
+     For full information, see the long comment at the beginning of the
+     source file, which is `lisp/vip.el' in the Emacs distribution.
+
+
+File: emacs,  Node: Dissociated Press,  Next: Amusements,  Prev: Emulation,  Up: Top
+
+Dissociated Press
+=================
+
+   `M-x dissociated-press' is a command for scrambling a file of text
+either word by word or character by character.  Starting from a buffer
+of straight English, it produces extremely amusing output.  The input
+comes from the current Emacs buffer.  Dissociated Press writes its
+output in a buffer named `*Dissociation*', and redisplays that buffer
+after every couple of lines (approximately) so you can read the output
+as it comes out.
+
+   Dissociated Press asks every so often whether to continue generating
+output.  Answer `n' to stop it.  You can also stop at any time by
+typing `C-g'.  The dissociation output remains in the `*Dissociation*'
+buffer for you to copy elsewhere if you wish.
+
+   Dissociated Press operates by jumping at random from one point in the
+buffer to another.  In order to produce plausible output rather than
+gibberish, it insists on a certain amount of overlap between the end of
+one run of consecutive words or characters and the start of the next.
+That is, if it has just printed out `president' and then decides to jump
+to a different point in the file, it might spot the `ent' in `pentagon'
+and continue from there, producing `presidentagon'.(1)  Long sample
+texts produce the best results.
+
+   A positive argument to `M-x dissociated-press' tells it to operate
+character by character, and specifies the number of overlap characters.
+A negative argument tells it to operate word by word and specifies the
+number of overlap words.  In this mode, whole words are treated as the
+elements to be permuted, rather than characters.  No argument is
+equivalent to an argument of two.  For your againformation, the output
+goes only into the buffer `*Dissociation*'.  The buffer you start with
+is not changed.
+
+   Dissociated Press produces nearly the same results as a Markov chain
+based on a frequency table constructed from the sample text.  It is,
+however, an independent, ignoriginal invention.  Dissociated Press
+techniquitously copies several consecutive characters from the sample
+between random choices, whereas a Markov chain would choose randomly for
+each word or character.  This makes for more plausible sounding results,
+and runs faster.
+
+   It is a mustatement that too much use of Dissociated Press can be a
+developediment to your real work.  Sometimes to the point of outragedy.
+And keep dissociwords out of your documentation, if you want it to be
+well userenced and properbose.  Have fun.  Your buggestions are welcome.
+
+   ---------- Footnotes ----------
+
+   (1) This dissociword actually appeared during the Vietnam War, when
+it was very appropriate.
+
+
+File: emacs,  Node: Amusements,  Next: Customization,  Prev: Dissociated Press,  Up: Top
+
+Other Amusements
 ================
 
-   All the Emacs commands which parse words or balance parentheses are
-controlled by the "syntax table".  The syntax table says which
-characters are opening delimiters, which are parts of words, which are
-string quotes, and so on.  Each major mode has its own syntax table
-(though sometimes related major modes use the same one) which it
-installs in each buffer that uses that major mode.  The syntax table
-installed in the current buffer is the one that all commands use, so we
-call it "the" syntax table.  A syntax table is a Lisp object, a vector
-of length 256 whose elements are numbers.
+   If you are a little bit bored, you can try `M-x hanoi'.  If you are
+considerably bored, give it a numeric argument.  If you are very very
+bored, try an argument of 9.  Sit back and watch.
 
-   To display a description of the contents of the current syntax table,
-type `C-h s' (`describe-syntax').  The description of each character
-includes both the string you would have to give to
-`modify-syntax-entry' to set up that character's current syntax, and
-some English to explain that string if necessary.
+   If you want a little more personal involvement, try `M-x gomoku',
+which plays the game Go Moku with you.
 
-   For full information on the syntax table, see *Note Syntax Tables:
-(elisp)Syntax Tables.
+   `M-x blackbox' and `M-x mpuz' are two kinds of puzzles.  `blackbox'
+challenges you to determine the location of objects inside a box by
+tomography.  `mpuz' displays a multiplication puzzle with letters
+standing for digits in a code that you must guess--to guess a value,
+type a letter and then the digit you think it stands for.
+
+   `M-x dunnet' runs an adventure-style exploration game, which is a
+bigger sort of puzzle.
+
+   When you are frustrated, try the famous Eliza program.  Just do `M-x
+doctor'.  End each input by typing `RET' twice.
+
+   When you are feeling strange, type `M-x yow'.
 
 
-File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
+File: emacs,  Node: Customization,  Next: Quitting,  Prev: Amusements,  Up: Top
 
-The Init File, `~/.emacs'
-=========================
+Customization
+*************
 
-   When Emacs is started, it normally loads a Lisp program from the file
-`.emacs' in your home directory.  We call this file your "init file"
-because it specifies how to initialize Emacs for you.  You can use the
-command line switches `-q' and `-u' to tell Emacs whether to load an
-init file, and which one (*note Entering Emacs::.).
+   This chapter talks about various topics relevant to adapting the
+behavior of Emacs in minor ways.  See `The Emacs Lisp Reference Manual'
+for how to make more far-reaching changes.
 
-   There can also be a "default init file", which is the library named
-`default.el', found via the standard search path for libraries.  The
-Emacs distribution contains no such library; your site may create one
-for local customizations.  If this library exists, it is loaded
-whenever you start Emacs (except when you specify `-q').  But your init
-file, if any, is loaded first; if it sets `inhibit-default-init'
-non-`nil', then `default' is not loaded.
-
-   Your site may also have a "site startup file"; this is named
-`site-start.el', if it exists.  Emacs loads this library before it
-loads your init file.  To inhibit loading of this library, use the
-option `-no-site-file'.
-
-   If you have a large amount of code in your `.emacs' file, you should
-move it into another file such as `~/SOMETHING.el', byte-compile it,
-and make your `.emacs' file load it with `(load "~/SOMETHING")'.  *Note
-Byte Compilation: (elisp)Byte Compilation, for more information about
-compiling Emacs Lisp programs.
+   All kinds of customization affect only the particular Emacs session
+that you do them in.  They are completely lost when you kill the Emacs
+session, and have no effect on other Emacs sessions you may run at the
+same time or later.  The only way an Emacs session can affect anything
+outside of it is by writing a file; in particular, the only way to make
+a customization "permanent" is to put something in your `.emacs' file
+or other appropriate file to do the customization in each session.
+*Note Init File::.
 
 * Menu:
 
-* Init Syntax::	     Syntax of constants in Emacs Lisp.
-* Init Examples::    How to do some things with an init file.
-* Terminal Init::    Each terminal type can have an init file.
-* Find Init::	     How Emacs finds the init file.
+* Minor Modes::		Each minor mode is one feature you can turn on
+			  independently of any others.
+* Variables::		Many Emacs commands examine Emacs variables
+			  to decide what to do; by setting variables,
+			  you can control their functioning.
+* Keyboard Macros::	A keyboard macro records a sequence of
+			  keystrokes to be replayed with a single
+			  command.
+* Key Bindings::	The keymaps say what command each key runs.
+			  By changing them, you can "redefine keys".
+* Keyboard Translations::
+                        If your keyboard passes an undesired code
+			   for a key, you can tell Emacs to
+			   substitute another code.
+* Syntax::		The syntax table controls how words and
+			   expressions are parsed.
+* Init File::		How to write common customizations in the
+			  `.emacs' file.
 
 
-File: emacs,  Node: Init Syntax,  Next: Init Examples,  Up: Init File
+File: emacs,  Node: Minor Modes,  Next: Variables,  Up: Customization
 
-Init File Syntax
-----------------
+Minor Modes
+===========
 
-   The `.emacs' file contains one or more Lisp function call
-expressions.  Each of these consists of a function name followed by
-arguments, all surrounded by parentheses.  For example, `(setq
-fill-column 60)' calls the function `setq' to set the variable
-`fill-column' (*note Filling::.) to 60.
+   Minor modes are optional features which you can turn on or off.  For
+example, Auto Fill mode is a minor mode in which <SPC> breaks lines
+between words as you type.  All the minor modes are independent of each
+other and of the selected major mode.  Most minor modes say in the mode
+line when they are on; for example, `Fill' in the mode line means that
+Auto Fill mode is on.
 
-   The second argument to `setq' is an expression for the new value of
-the variable.  This can be a constant, a variable, or a function call
-expression.  In `.emacs', constants are used most of the time.  They
-can be:
+   Append `-mode' to the name of a minor mode to get the name of a
+command function that turns the mode on or off.  Thus, the command to
+enable or disable Auto Fill mode is called `M-x auto-fill-mode'.  These
+commands are usually invoked with `M-x', but you can bind keys to them
+if you wish.  With no argument, the function turns the mode on if it was
+off and off if it was on.  This is known as "toggling".  A positive
+argument always turns the mode on, and an explicit zero argument or a
+negative argument always turns it off.
 
-Numbers:
-     Numbers are written in decimal, with an optional initial minus
-     sign.
+   Enabling or disabling some minor modes applies only to the current
+buffer; each buffer is independent of the other buffers.  Therefore, you
+can enable the mode in particular buffers and disable it in others.  The
+per-buffer minor modes include Auto Fill mode, Auto Save mode, Font-Lock
+mode, Hscroll mode, ISO Accents mode, Outline minor mode, Overwrite
+mode, and Binary Overwrite mode.
 
-Strings:
-     Lisp string syntax is the same as C string syntax with a few extra
-     features.  Use a double-quote character to begin and end a string
-     constant.
+   Auto Fill mode allows you to enter filled text without breaking lines
+explicitly.  Emacs inserts newlines as necessary to prevent lines from
+becoming too long.  *Note Filling::.
 
-     In a string, you can include newlines and special characters
-     literally.  But often it is cleaner to use backslash sequences for
-     them: `\n' for newline, `\b' for backspace, `\r' for carriage
-     return, `\t' for tab, `\f' for formfeed (control-L), `\e' for
-     escape, `\\' for a backslash, `\"' for a double-quote, or `\OOO'
-     for the character whose octal code is OOO.  Backslash and
-     double-quote are the only characters for which backslash sequences
-     are mandatory.
+   Auto Save mode causes the contents of a buffer to be saved
+periodically to reduce the amount of work you can lose in case of a
+system crash.  *Note Auto Save::.
 
-     `\C-' can be used as a prefix for a control character, as in
-     `\C-s' for ASCII control-S, and `\M-' can be used as a prefix for
-     a Meta character, as in `\M-a' for `Meta-A' or `\M-\C-a' for
-     `Control-Meta-A'.
+   Enriched mode enables editing and saving of formatted text.  *Note
+Formatted Text::.
 
-Characters:
-     Lisp character constant syntax consists of a `?' followed by
-     either a character or an escape sequence starting with `\'.
-     Examples: `?x', `?\n', `?\"', `?\)'.  Note that strings and
-     characters are not interchangeable in Lisp; some contexts require
-     one and some contexts require the other.
+   Font-Lock mode automatically highlights certain textual units found
+in programs, such as comments, strings, and function names being
+defined.  This requires a window system that can display multiple fonts.
+*Note Faces::.
 
-True:
-     `t' stands for `true'.
+   Hscroll mode performs horizontal scrolling automatically to keep
+point on the screen.  *Note Horizontal Scrolling::.
 
-False:
-     `nil' stands for `false'.
+   ISO Accents mode makes the characters ``', `'', `"', `^', `/' and
+`~' combine with the following letter, to produce an accented letter in
+the ISO Latin-1 character set.  *Note Single-Byte European Support::.
 
-Other Lisp objects:
-     Write a single-quote (') followed by the Lisp object you want.
+   Outline minor mode provides the same facilities as the major mode
+called Outline mode; but since it is a minor mode instead, you can
+combine it with any major mode.  *Note Outline Mode::.
 
-
-File: emacs,  Node: Init Examples,  Next: Terminal Init,  Prev: Init Syntax,  Up: Init File
+   Overwrite mode causes ordinary printing characters to replace
+existing text instead of shoving it to the right.  For example, if
+point is in front of the `B' in `FOOBAR', then in Overwrite mode typing
+a `G' changes it to `FOOGAR', instead of producing `FOOGBAR' as usual.
+In Overwrite mode, the command `C-q' inserts the next character
+whatever it may be, even if it is a digit--this gives you a way to
+insert a character instead of replacing an existing character.
 
-Init File Examples
-------------------
+   Binary Overwrite mode is a variant of Overwrite mode for editing
+binary files; it treats newlines and tabs like other characters, so that
+they overwrite other characters and can be overwritten by them.
 
-   Here are some examples of doing certain commonly desired things with
-Lisp expressions:
+   The following minor modes normally apply to all buffers at once.
+Since each is enabled or disabled by the value of a variable, you *can*
+set them differently for particular buffers, by explicitly making the
+corresponding variables local in those buffers.  *Note Locals::.
 
-   * Make TAB in C mode just insert a tab if point is in the middle of a
-     line.
+   Abbrev mode allows you to define abbreviations that automatically
+expand as you type them.  For example, `amd' might expand to `abbrev
+mode'.  *Note Abbrevs::, for full information.
 
-          (setq c-tab-always-indent nil)
+   Icomplete mode displays an indication of available completions when
+you are in the minibuffer and completion is active.  *Note Completion
+Options::.
 
-     Here we have a variable whose value is normally `t' for `true' and
-     the alternative is `nil' for `false'.
+   Line Number mode enables continuous display in the mode line of the
+line number of point.  *Note Mode Line::.
 
-   * Make searches case sensitive by default (in all buffers that do not
-     override this).
+   Resize-Minibuffer mode makes the minibuffer expand as necessary to
+hold the text that you put in it.  *Note Minibuffer Edit::.
 
-          (setq-default case-fold-search nil)
+   Scroll Bar mode gives each window a scroll bar (*note Scroll
+Bars::.).  Menu Bar mode gives each frame a menu bar (*note Menu
+Bars::.).  Both of these modes are enabled by default when you use the
+X Window System.
 
-     This sets the default value, which is effective in all buffers
-     that do not have local values for the variable.  Setting
-     `case-fold-search' with `setq' affects only the current buffer's
-     local value, which is not what you probably want to do in an init
-     file.
+   In Transient Mark mode, every change in the buffer contents
+"deactivates" the mark, so that commands that operate on the region
+will get an error.  This means you must either set the mark, or
+explicitly "reactivate" it, before each command that uses the region.
+The advantage of Transient Mark mode is that Emacs can display the
+region highlighted (currently only when using X).  *Note Setting Mark::.
 
-   * Specify your own email address, if Emacs can't figure it out
-     correctly.
+   For most minor modes, the command name is also the name of a variable
+which directly controls the mode.  The mode is enabled whenever this
+variable's value is non-`nil', and the minor-mode command works by
+setting the variable.  For example, the command `outline-minor-mode'
+works by setting the value of `outline-minor-mode' as a variable; it is
+this variable that directly turns Outline minor mode on and off.  To
+check whether a given minor mode works this way, use `C-h v' to ask for
+documentation on the variable name.
 
-          (setq user-mail-address "coon@yoyodyne.com")
-
-     Various Emacs packages that need your own email address use the
-     value of `user-mail-address'.
-
-   * Make Text mode the default mode for new buffers.
-
-          (setq default-major-mode 'text-mode)
-
-     Note that `text-mode' is used because it is the command for
-     entering Text mode.  The single-quote before it makes the symbol a
-     constant; otherwise, `text-mode' would be treated as a variable
-     name.
-
-   * Turn on Auto Fill mode automatically in Text mode and related
-     modes.
-
-          (add-hook 'text-mode-hook
-            '(lambda () (auto-fill-mode 1)))
-
-     This shows how to add a hook function to a normal hook variable
-     (*note Hooks::.).  The function we supply is a list starting with
-     `lambda', with a single-quote in front of it to make it a list
-     constant rather than an expression.
-
-     It's beyond the scope of this manual to explain Lisp functions,
-     but for this example it is enough to know that the effect is to
-     execute `(auto-fill-mode 1)' when Text mode is entered.  You can
-     replace that with any other expression that you like, or with
-     several expressions in a row.
-
-     Emacs comes with a function named `turn-on-auto-fill' whose
-     definition is `(lambda () (auto-fill-mode 1))'.  Thus, a simpler
-     way to write the above example is as follows:
-
-          (add-hook 'text-mode-hook 'turn-on-auto-fill)
-
-   * Load the installed Lisp library named `foo' (actually a file
-     `foo.elc' or `foo.el' in a standard Emacs directory).
-
-          (load "foo")
-
-     When the argument to `load' is a relative file name, not starting
-     with `/' or `~', `load' searches the directories in `load-path'
-     (*note Lisp Libraries::.).
-
-   * Load the compiled Lisp file `foo.elc' from your home directory.
-
-          (load "~/foo.elc")
-
-     Here an absolute file name is used, so no searching is done.
-
-   * Rebind the key `C-x l' to run the function `make-symbolic-link'.
-
-          (global-set-key "\C-xl" 'make-symbolic-link)
-
-     or
-
-          (define-key global-map "\C-xl" 'make-symbolic-link)
-
-     Note once again the single-quote used to refer to the symbol
-     `make-symbolic-link' instead of its value as a variable.
-
-   * Do the same thing for Lisp mode only.
-
-          (define-key lisp-mode-map "\C-xl" 'make-symbolic-link)
-
-   * Redefine all keys which now run `next-line' in Fundamental mode so
-     that they run `forward-line' instead.
-
-          (substitute-key-definition 'next-line 'forward-line
-                                     global-map)
-
-   * Make `C-x C-v' undefined.
-
-          (global-unset-key "\C-x\C-v")
-
-     One reason to undefine a key is so that you can make it a prefix.
-     Simply defining `C-x C-v ANYTHING' will make `C-x C-v' a prefix,
-     but `C-x C-v' must first be freed of its usual non-prefix
-     definition.
-
-   * Make `$' have the syntax of punctuation in Text mode.  Note the
-     use of a character constant for `$'.
-
-          (modify-syntax-entry ?\$ "." text-mode-syntax-table)
-
-   * Enable the use of the command `eval-expression' without
-     confirmation.
-
-          (put 'eval-expression 'disabled nil)
+   These minor-mode variables provide a good way for Lisp programs to
+turn minor modes on and off; they are also useful in a file's local
+variables list.  But please think twice before setting minor modes with
+a local variables list, because most minor modes are matter of user
+preference--other users editing the same file might not want the same
+minor modes you prefer.
 
 
-File: emacs,  Node: Terminal Init,  Next: Find Init,  Prev: Init Examples,  Up: Init File
+File: emacs,  Node: Variables,  Next: Keyboard Macros,  Prev: Minor Modes,  Up: Customization
 
-Terminal-specific Initialization
---------------------------------
+Variables
+=========
 
-   Each terminal type can have a Lisp library to be loaded into Emacs
-when it is run on that type of terminal.  For a terminal type named
-TERMTYPE, the library is called `term/TERMTYPE' and it is found by
-searching the directories `load-path' as usual and trying the suffixes
-`.elc' and `.el'.  Normally it appears in the subdirectory `term' of
-the directory where most Emacs libraries are kept.
+   A "variable" is a Lisp symbol which has a value.  The symbol's name
+is also called the name of the variable.  A variable name can contain
+any characters that can appear in a file, but conventionally variable
+names consist of words separated by hyphens.  A variable can have a
+documentation string which describes what kind of value it should have
+and how the value will be used.
 
-   The usual purpose of the terminal-specific library is to map the
-escape sequences used by the terminal's function keys onto more
-meaningful names, using `function-key-map'.  See the file
-`term/lk201.el' for an example of how this is done.  Many function keys
-are mapped automatically according to the information in the Termcap
-data base; the terminal-specific library needs to map only the function
-keys that Termcap does not specify.
+   Lisp allows any variable to have any kind of value, but most
+variables that Emacs uses require a value of a certain type.  Often the
+value should always be a string, or should always be a number.
+Sometimes we say that a certain feature is turned on if a variable is
+"non-`nil'," meaning that if the variable's value is `nil', the feature
+is off, but the feature is on for *any* other value.  The conventional
+value to use to turn on the feature--since you have to pick one
+particular value when you set the variable--is `t'.
 
-   When the terminal type contains a hyphen, only the part of the name
-before the first hyphen is significant in choosing the library name.
-Thus, terminal types `aaa-48' and `aaa-30-rv' both use the library
-`term/aaa'.  The code in the library can use `(getenv "TERM")' to find
-the full terminal type name.
+   Emacs uses many Lisp variables for internal record keeping, as any
+Lisp program must, but the most interesting variables for you are the
+ones that exist for the sake of customization.  Emacs does not (usually)
+change the values of these variables; instead, you set the values, and
+thereby alter and control the behavior of certain Emacs commands.  These
+variables are called "user options".  Most user options are documented
+in this manual, and appear in the Variable Index (*note Variable
+Index::.).
 
-   The library's name is constructed by concatenating the value of the
-variable `term-file-prefix' and the terminal type.  Your `.emacs' file
-can prevent the loading of the terminal-specific library by setting
-`term-file-prefix' to `nil'.
+   One example of a variable which is a user option is `fill-column',
+which specifies the position of the right margin (as a number of
+characters from the left margin) to be used by the fill commands (*note
+Filling::.).
 
-   Emacs runs the hook `term-setup-hook' at the end of initialization,
-after both your `.emacs' file and any terminal-specific library have
-been read in.  Add hook functions to this hook if you wish to override
-part of any of the terminal-specific libraries and to define
-initializations for terminals that do not have a library.  *Note
-Hooks::.
+* Menu:
+
+* Examining::	        Examining or setting one variable's value.
+* Easy Customization::
+                        Convenient and easy customization of variables.
+* Hooks::	        Hook variables let you specify programs for parts
+		          of Emacs to run on particular occasions.
+* Locals::	        Per-buffer values of variables.
+* File Variables::      How files can specify variable values.
 
 
-File: emacs,  Node: Find Init,  Prev: Terminal Init,  Up: Init File
+File: emacs,  Node: Examining,  Next: Easy Customization,  Up: Variables
 
-How Emacs Finds Your Init File
-------------------------------
+Examining and Setting Variables
+-------------------------------
 
-   Normally Emacs uses the environment variable `HOME' to find
-`.emacs'; that's what `~' means in a file name.  But if you have done
-`su', Emacs tries to find your own `.emacs', not that of the user you
-are currently pretending to be.  The idea is that you should get your
-own editor customizations even if you are running as the super user.
+`C-h v VAR <RET>'
+     Display the value and documentation of variable VAR
+     (`describe-variable').
 
-   More precisely, Emacs first determines which user's init file to use.
-It gets the user name from the environment variables `LOGNAME' and
-`USER'; if neither of those exists, it uses effective user-ID.  If that
-user name matches the real user-ID, then Emacs uses `HOME'; otherwise,
-it looks up the home directory corresponding to that user name in the
-system's data base of users.
+`M-x set-variable <RET> VAR <RET> VALUE <RET>'
+     Change the value of variable VAR to VALUE.
+
+   To examine the value of a single variable, use `C-h v'
+(`describe-variable'), which reads a variable name using the
+minibuffer, with completion.  It displays both the value and the
+documentation of the variable.  For example,
+
+     C-h v fill-column <RET>
+
+displays something like this:
+
+     fill-column's value is 75
+     
+     Documentation:
+     *Column beyond which automatic line-wrapping should happen.
+     Automatically becomes buffer-local when set in any fashion.
+
+The star at the beginning of the documentation indicates that this
+variable is a user option.  `C-h v' is not restricted to user options;
+it allows any variable name.
+
+   The most convenient way to set a specific user option is with `M-x
+set-variable'.  This reads the variable name with the minibuffer (with
+completion), and then reads a Lisp expression for the new value using
+the minibuffer a second time.  For example,
+
+     M-x set-variable <RET> fill-column <RET> 75 <RET>
+
+sets `fill-column' to 75.
+
+   `M-x set-variable' is limited to user option variables, but you can
+set any variable with a Lisp expression, using the function `setq'.
+Here is a `setq' expression to set `fill-column':
+
+     (setq fill-column 75)
+
+   To execute an expression like this one, go to the `*scratch*'
+buffer, type in the expression, and then type `C-j'.  *Note Lisp
+Interaction::.
+
+   Setting variables, like all means of customizing Emacs except where
+otherwise stated, affects only the current Emacs session.
+
+
+File: emacs,  Node: Easy Customization,  Next: Hooks,  Prev: Examining,  Up: Variables
+
+Easy Customization Interface
+----------------------------
+
+   A convenient way to find the user option variables that you want to
+change, and then change them, is with `M-x customize'.  This command
+creates a "customization buffer" with which you can browse through the
+Emacs user options in a logically organized structure, then edit and
+set their values.  You can also use the customization buffer to save
+settings permanently.  (Not all Emacs user options are included in this
+structure as of yet, but we are adding the rest.)
+
+* Menu:
+
+* Groups: Customization Groups.
+                             How options are classified in a structure.
+* Changing an Option::       How to edit a value and set an option.
+* Face Customization::       How to edit the attributes of a face.
+* Specific Customization::   Making a customization buffer for specific
+                                options, faces, or groups.
+
+
+File: emacs,  Node: Customization Groups,  Next: Changing an Option,  Up: Easy Customization
+
+Customization Groups
+....................
+
+   For customization purposes, user options are organized into "groups"
+to help you find them.  Groups are collected into bigger groups, all
+the way up to a master group called `Emacs'.
+
+   `M-x customize' creates a customization buffer that shows the
+top-level `Emacs' group and the second-level groups immediately under
+it.  It looks like this, in part:
+
+     /- Emacs group: ---------------------------------------------------\
+           [State]: visible group members are all at standard settings.
+        Customization of the One True Editor.
+        See also [Manual].
+     
+     Editing group: [Go to Group]
+     Basic text editing facilities.
+     
+     External group: [Go to Group]
+     Interfacing to external utilities.
+     
+     MORE SECOND-LEVEL GROUPS
+     
+     \- Emacs group end ------------------------------------------------/
+
+This says that the buffer displays the contents of the `Emacs' group.
+The other groups are listed because they are its contents.  But they
+are listed differently, without indentation and dashes, because *their*
+contents are not included.  Each group has a single-line documentation
+string; the `Emacs' group also has a `[State]' line.
+
+   Most of the text in the customization buffer is read-only, but it
+typically includes some "editable fields" that you can edit.  There are
+also "active fields"; this means a field that does something when you
+"invoke" it.  To invoke an active field, either click on it with
+`Mouse-1', or move point to it and type <RET>.
+
+   For example, the phrase `[Go to Group]' that appears in a
+second-level group is an active field.  Invoking the `[Go to Group]'
+field for a group creates a new customization buffer, which shows that
+group and its contents.  This field is a kind of hypertext link to
+another group.
+
+   The `Emacs' group does not include any user options itself, but
+other groups do.  By examining various groups, you will eventually find
+the options and faces that belong to the feature you are interested in
+customizing.  Then you can use the customization buffer to set them.
+
+   You can view the structure of customization groups on a larger scale
+with `M-x customize-browse'.  This command creates a special kind of
+customization buffer which shows only the names of the groups (and
+options and faces), and their structure.
+
+   In this buffer, you can show the contents of a group by invoking
+`[+]'.  When the group contents are visible, this button changes to
+`[-]'; invoking that hides the group contents.
+
+   Each group, option or face name in this buffer has an active field
+which says `[Group]', `[Option]' or `[Face]'.  Invoking that active
+field creates an ordinary customization buffer showing just that group
+and its contents, just that option, or just that face.  This is the way
+to set values in it.
 

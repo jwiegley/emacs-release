@@ -1,5 +1,182 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
+
+
+File: emacs,  Node: Split Window,  Next: Other Window,  Prev: Basic Window,  Up: Windows
+
+Splitting Windows
+=================
+
+`C-x 2'
+     Split the selected window into two windows, one above the other
+     (`split-window-vertically').
+
+`C-x 3'
+     Split the selected window into two windows positioned side by side
+     (`split-window-horizontally').
+
+`C-Mouse-2'
+     In the mode line or scroll bar of a window, split that window.
+
+   The command `C-x 2' (`split-window-vertically') breaks the selected
+window into two windows, one above the other.  Both windows start out
+displaying the same buffer, with the same value of point.  By default
+the two windows each get half the height of the window that was split; a
+numeric argument specifies how many lines to give to the top window.
+
+   `C-x 3' (`split-window-horizontally') breaks the selected window
+into two side-by-side windows.  A numeric argument specifies how many
+columns to give the one on the left.  A line of vertical bars separates
+the two windows.  Windows that are not the full width of the screen
+have mode lines, but they are truncated.  On terminals where Emacs does
+not support highlighting, truncated mode lines sometimes do not appear
+in inverse video.
+
+   You can split a window horizontally or vertically by clicking
+`C-Mouse-2' in the mode line or the scroll bar.  The line of splitting
+goes through the place where you click: if you click on the mode line,
+the new scroll bar goes above the spot; if you click in the scroll bar,
+the mode line of the split window is side by side with your click.
+
+   When a window is less than the full width, text lines too long to
+fit are frequent.  Continuing all those lines might be confusing.  The
+variable `truncate-partial-width-windows' can be set non-`nil' to force
+truncation in all windows less than the full width of the screen,
+independent of the buffer being displayed and its value for
+`truncate-lines'.  *Note Continuation Lines::.
+
+   Horizontal scrolling is often used in side-by-side windows.  *Note
+Display::.
+
+   If `split-window-keep-point' is non-nil, `C-x 2' tries to avoid
+shifting any text on the screen by putting point in whichever window
+happens to contain the screen line the cursor is already on.  The
+default is that `split-window-keep-point' is non-nil on slow terminals.
+
+
+File: emacs,  Node: Other Window,  Next: Pop Up Window,  Prev: Split Window,  Up: Windows
+
+Using Other Windows
+===================
+
+`C-x o'
+     Select another window (`other-window').  That is `o', not zero.
+
+`C-M-v'
+     Scroll the next window (`scroll-other-window').
+
+`M-x compare-windows'
+     Find next place where the text in the selected window does not
+     match the text in the next window.
+
+`Mouse-1'
+     `Mouse-1', in a window's mode line, selects that window but does
+     not move point in it (`mouse-select-region').
+
+   To select a different window, click with `Mouse-1' on its mode line.
+With the keyboard, you can switch windows by typing `C-x o'
+(`other-window').  That is an `o', for `other', not a zero.  When there
+are more than two windows, this command moves through all the windows
+in a cyclic order, generally top to bottom and left to right.  After
+the rightmost and bottommost window, it goes back to the one at the
+upper left corner.  A numeric argument means to move several steps in
+the cyclic order of windows.  A negative argument moves around the
+cycle in the opposite order.  When the minibuffer is active, the
+minibuffer is the last window in the cycle; you can switch from the
+minibuffer window to one of the other windows, and later switch back and
+finish supplying the minibuffer argument that is requested.  *Note
+Minibuffer Edit::.
+
+   The usual scrolling commands (*note Display::.) apply to the selected
+window only, but there is one command to scroll the next window.
+`C-M-v' (`scroll-other-window') scrolls the window that `C-x o' would
+select.  It takes arguments, positive and negative, like `C-v'.  (In
+the minibuffer, `C-M-v' scrolls the window that contains the minibuffer
+help display, if any, rather than the next window in the standard
+cyclic order.)
+
+   The command `M-x compare-windows' lets you compare two files or
+buffers visible in two windows, by moving through them to the next
+mismatch.  *Note Comparing Files::, for details.
+
+
+File: emacs,  Node: Pop Up Window,  Next: Force Same Window,  Prev: Other Window,  Up: Windows
+
+Displaying in Another Window
+============================
+
+   `C-x 4' is a prefix key for commands that select another window
+(splitting the window if there is only one) and select a buffer in that
+window.  Different `C-x 4' commands have different ways of finding the
+buffer to select.
+
+`C-x 4 b BUFNAME <RET>'
+     Select buffer BUFNAME in another window.  This runs
+     `switch-to-buffer-other-window'.
+
+`C-x 4 C-o BUFNAME <RET>'
+     Display buffer BUFNAME in another window, but don't select that
+     buffer or that window.  This runs `display-buffer'.
+
+`C-x 4 f FILENAME <RET>'
+     Visit file FILENAME and select its buffer in another window.  This
+     runs `find-file-other-window'.  *Note Visiting::.
+
+`C-x 4 d DIRECTORY <RET>'
+     Select a Dired buffer for directory DIRECTORY in another window.
+     This runs `dired-other-window'.  *Note Dired::.
+
+`C-x 4 m'
+     Start composing a mail message in another window.  This runs
+     `mail-other-window'; its same-window analogue is `C-x m' (*note
+     Sending Mail::.).
+
+`C-x 4 .'
+     Find a tag in the current tags table, in another window.  This runs
+     `find-tag-other-window', the multiple-window variant of `M-.'
+     (*note Tags::.).
+
+`C-x 4 r FILENAME <RET>'
+     Visit file FILENAME read-only, and select its buffer in another
+     window.  This runs `find-file-read-only-other-window'.  *Note
+     Visiting::.
+
+
+File: emacs,  Node: Force Same Window,  Next: Change Window,  Prev: Pop Up Window,  Up: Windows
+
+Forcing Display in the Same Window
+==================================
+
+   Certain Emacs commands switch to a specific buffer with special
+contents.  For example, `M-x shell' switches to a buffer named
+`*Shell*'.  By convention, all these commands are written to pop up the
+buffer in a separate window.  But you can specify that certain of these
+buffers should appear in the selected window.
+
+   If you add a buffer name to the list `same-window-buffer-names', the
+effect is that such commands display that particular buffer by
+switching to it in the selected window.  For example, if you add the
+element `"*grep*"' to the list, the `grep' command will display its
+output buffer in the selected window.
+
+   The default value of `same-window-buffer-names' is not `nil'.  It
+specifies the buffers `*info*', `*mail*' and `*shell*'.  This is why
+`M-x shell' normally switches to the `*shell*' buffer in the selected
+window.  If you delete this element from the value of
+`same-window-buffer-names', the behavior of `M-x shell' will change--it
+will pop up the buffer in another window instead.
+
+   You can specify these buffers more generally with the variable
+`same-window-regexps'.  Set it to a list of regular expressions; then
+any buffer whose name matches one of those regular expressions is
+displayed by switching to it in the selected window.  (Once again, this
+applies only to buffers that normally get displayed for you in a
+separate window.)  The default value of this variable specifies Telnet
+and rlogin buffers.
+
+   An analogous feature lets you specify buffers which should be
+displayed in their own individual frames.  *Note Special Buffer
+Frames::.
 
 
 File: emacs,  Node: Change Window,  Prev: Force Same Window,  Up: Windows
@@ -8,17 +185,30 @@ Deleting and Rearranging Windows
 ================================
 
 `C-x 0'
-     Delete the selected window (`delete-window').  That is a zero.
+     Delete the selected window (`delete-window').  The last character
+     in this key sequence is a zero.
 
 `C-x 1'
      Delete all windows in the selected frame except the selected window
      (`delete-other-windows').
+
+`C-x 4 0'
+     Delete the selected window and kill the buffer that was showing in
+     it (`kill-buffer-and-window').  The last character in this key
+     sequence is a zero.
 
 `C-x ^'
      Make selected window taller (`enlarge-window').
 
 `C-x }'
      Make selected window wider (`enlarge-window-horizontally').
+
+`C-x -'
+     Shrink this window if its buffer doesn't need so many lines
+     (`shrink-window-if-larger-than-buffer').
+
+`C-x +'
+     Make all windows the same height (`balance-windows').
 
 `Drag-Mouse-1'
      Dragging a window's mode line up or down with `Mouse-1' changes
@@ -40,14 +230,17 @@ only restoring a window configuration can bring it back.  Deleting the
 window has no effect on the buffer it used to display; the buffer
 continues to exist, and you can select it in any window with `C-x b'.
 
-   `C-x 1' (`delete-other-windows') is more powerful than `C-x 0'; it
-deletes all the windows except the selected one (and the minibuffer);
-the selected window expands to use the whole frame except for the echo
-area.
+   `C-x 4 0' (`kill-buffer-and-window') is a stronger command than `C-x
+0'; it kills the current buffer and then deletes the selected window.
+
+   `C-x 1' (`delete-other-windows') is more powerful in a different
+way; it deletes all the windows except the selected one (and the
+minibuffer); the selected window expands to use the whole frame except
+for the echo area.
 
    You can also delete a window by clicking on its mode line with
-`Mouse-2', and expand a window to fill its frame by clicking on its
-mode line with `Mouse-3'.
+`Mouse-2', and delete all the windows in a frame except one window by
+clicking on that window's mode line with `Mouse-3'.
 
    The easiest way to adjust window heights is with a mouse.  If you
 press `Mouse-1' on a mode line, you can drag that mode line up or down,
@@ -58,18 +251,27 @@ use `C-x ^' (`enlarge-window').  It makes the currently selected window
 get one line bigger, or as many lines as is specified with a numeric
 argument.  With a negative argument, it makes the selected window
 smaller.  `C-x }' (`enlarge-window-horizontally') makes the selected
-window wider by the specified number of columns.  The extra screen
-space given to a window comes from one of its neighbors, if that is
-possible.  If this makes any window too small, it is deleted and its
+window wider by the specified number of columns.
+
+   When you make a window bigger, the space comes from one of its
+neighbors.  If this makes any window too small, it is deleted and its
 space is given to an adjacent window.  The minimum size is specified by
 the variables `window-min-height' and `window-min-width'.
+
+   The command `C-x -' (`shrink-window-if-larger-than-buffer') reduces
+the height of the selected window, if it is taller than necessary to
+show the whole text of the buffer it is displaying.  It gives the extra
+lines to other windows in the frame.
+
+   You can also use `C-x +' (`balance-windows') to even out the heights
+of all the windows in the selected frame.
 
    *Note Minibuffer Edit::, for information about the Resize-Minibuffer
 mode, which automatically changes the size of the minibuffer window to
 fit the text in the minibuffer.
 
 
-File: emacs,  Node: Frames,  Next: Major Modes,  Prev: Windows,  Up: Top
+File: emacs,  Node: Frames,  Next: International,  Prev: Windows,  Up: Top
 
 Frames and X Windows
 ********************
@@ -92,25 +294,28 @@ terminates all the frames.  To delete just one frame, use `C-x 5 0'.
 subdivisions that Emacs implements, and never use it to refer to a
 frame.
 
+   Emacs compiled for MS-DOS emulates some aspects of the window system
+so that you can use many of the features described in this chapter.
+*Note MS-DOS Input::, for more information.
+
 * Menu:
 
-* Mouse Commands::     Moving, cutting, and pasting, with the mouse.
-* Secondary Selection::Cutting without altering point and mark.
-* Mouse References::   Using the mouse to select an item from a list.
-* Menu Mouse Clicks::  Mouse clicks that bring up menus.
-* Mode Line Mouse::    Mouse clicks on the mode line.
-* Creating Frames::    Creating additional Emacs frames with various contents.
-* Multiple Displays::  How one Emacs job can talk to several displays.
+* Mouse Commands::      Moving, cutting, and pasting, with the mouse.
+* Secondary Selection:: Cutting without altering point and mark.
+* Mouse References::    Using the mouse to select an item from a list.
+* Menu Mouse Clicks::   Mouse clicks that bring up menus.
+* Mode Line Mouse::     Mouse clicks on the mode line.
+* Creating Frames::     Creating additional Emacs frames with various contents.
+* Multiple Displays::   How one Emacs job can talk to several displays.
 * Special Buffer Frames::  You can make certain buffers have their own frames.
-* Frame Parameters::   Changing the colors and other modes of frames.
-* Scroll Bars::	       How to enable and disable scroll bars; how to use them.
-* Menu Bars::	       Enabling and disabling the menu bar.
-* Faces::	       How to change the display style using faces.
-* Modifying Faces::    How to change what a particular face looks like.
-* Font Lock::          Minor mode for syntactic highlighting using faces.
-* Support Modes::      Font Lock support modes make Font Lock faster.
-* Misc X::	       Iconifying and deleting frames.	Region highlighting.
-* Non-Window Terminals::  Multiple frames on terminals that only show one.
+* Frame Parameters::    Changing the colors and other modes of frames.
+* Scroll Bars::	        How to enable and disable scroll bars; how to use them.
+* Menu Bars::	        Enabling and disabling the menu bar.
+* Faces::	        How to change the display style using faces.
+* Font Lock::           Minor mode for syntactic highlighting using faces.
+* Support Modes::       Font Lock support modes make Font Lock faster.
+* Misc X::	        Iconifying and deleting frames.	Region highlighting.
+* Non-Window Terminals::  Multiple frames on terminals that show only one.
 
 
 File: emacs,  Node: Mouse Commands,  Next: Secondary Selection,  Up: Frames
@@ -121,6 +326,12 @@ Mouse Commands for Editing
    The mouse commands for selecting and copying a region are mostly
 compatible with the `xterm' program.  You can use the same mouse
 commands for copying between Emacs and other X client programs.
+
+   If you select a region with any of these mouse commands, and then
+immediately afterward type the <DELETE> function key, it deletes the
+region that you selected.  The <BACKSPACE> function key and the ASCII
+character <DEL> do not do this; if you type any other key in between
+the mouse command and <DELETE>, it does not do this.
 
 `Mouse-1'
      Move point to where you click (`mouse-set-point').  This is
@@ -191,15 +402,13 @@ commands for copying between Emacs and other X client programs.
      character is the beginning or the end of it).
 
 `Double-Drag-Mouse-1'
-     This key selects a region made up of the words that you drag
-     across.
+     This key selects a region made up of the words you drag across.
 
 `Triple-Mouse-1'
-     This key sets the region around the line which you click on.
+     This key sets the region around the line you click on.
 
 `Triple-Drag-Mouse-1'
-     This key selects a region made up of the lines that you drag
-     across.
+     This key selects a region made up of the lines you drag across.
 
    The simplest way to kill text with the mouse is to press `Mouse-1'
 at one end, then press `Mouse-3' twice at the other end.  *Note
@@ -212,7 +421,7 @@ there and press `Mouse-2'.  *Note Yanking::.  However, if
 `mouse-yank-at-point' is non-`nil', `Mouse-2' yanks at point.  Then it
 does not matter precisely where you click; all that matters is which
 window you click on.  The default value is `nil'.  This variable also
-effects yanking the secondary selection.
+affects yanking the secondary selection.
 
    To copy text to another X window, kill it or save it in the kill
 ring.  Under X, this also sets the "primary selection".  Then use the
@@ -222,6 +431,8 @@ insert the text from the selection.
    To copy text from another X window, use the "cut" or "copy" command
 of the program operating the other window, to select the text you want.
 Then yank it in Emacs with `C-y' or `Mouse-2'.
+
+   These cutting and pasting commands also work on MS-Windows.
 
    When Emacs puts text into the kill ring, or rotates text to the front
 of the kill ring, it sets the "primary selection" in the X server.
@@ -268,7 +479,7 @@ without setting point or the mark.
 
 `M-Mouse-2'
      Insert the secondary selection where you click
-     (`mouse-kill-secondary').  This places point at the end of the
+     (`mouse-yank-secondary').  This places point at the end of the
      yanked text.
 
    Double or triple clicking of `M-Mouse-1' operates on words and
@@ -293,7 +504,7 @@ them define `Mouse-2' specially, as a command to use or view the item
 you click on.
 
    For example, if you click `Mouse-2' on a file name in a Dired
-buffer, you visit the that file.  If you click `Mouse-2' on an error
+buffer, you visit that file.  If you click `Mouse-2' on an error
 message in the `*Compilation*' buffer, you go to the source code for
 that error message.  If you click `Mouse-2' on a completion in the
 `*Completions*' buffer, you choose that completion.
@@ -307,7 +518,8 @@ File: emacs,  Node: Menu Mouse Clicks,  Next: Mode Line Mouse,  Prev: Mouse Refe
 Mouse Clicks for Menus
 ======================
 
-   Mouse clicks modified with the CONTROL and SHIFT keys bring up menus.
+   Mouse clicks modified with the <CTRL> and <SHIFT> keys bring up
+menus.
 
 `C-Mouse-1'
      This menu is for selecting a buffer.
@@ -318,15 +530,15 @@ Mouse Clicks for Menus
 
 `C-Mouse-3'
      This menu is mode-specific.  For most modes, this menu has the same
-     items as all the mode-specific menu bar menus put together.  Some
+     items as all the mode-specific menu-bar menus put together.  Some
      modes may specify a different menu for this button.(1)
 
 `S-mouse-1'
-     This menu is for specifying the frame's default font.
+     This menu is for specifying the frame's principal font.
 
    ---------- Footnotes ----------
 
-   (1)  Some systems use `Mouse-3' for a mode-specific menu.  We took a
+   (1) Some systems use `Mouse-3' for a mode-specific menu.  We took a
 survey of users, and found they preferred to keep `Mouse-3' for
 selecting and killing regions.  Hence the decision to use `C-Mouse-3'
 for this menu.
@@ -377,15 +589,15 @@ buffer to select:
 `C-x 5 2'
      Create a new frame (`make-frame').
 
-`C-x 5 b BUFNAME RET'
+`C-x 5 b BUFNAME <RET>'
      Select buffer BUFNAME in another window.  This runs
      `switch-to-buffer-other-frame'.
 
-`C-x 5 f FILENAME RET'
+`C-x 5 f FILENAME <RET>'
      Visit file FILENAME and select its buffer in another frame.  This
      runs `find-file-other-frame'.  *Note Visiting::.
 
-`C-x 5 d DIRECTORY RET'
+`C-x 5 d DIRECTORY <RET>'
      Select a Dired buffer for directory DIRECTORY in another frame.
      This runs `dired-other-frame'.  *Note Dired::.
 
@@ -399,7 +611,7 @@ buffer to select:
      `find-tag-other-frame', the multiple-frame variant of `M-.'.
      *Note Tags::.
 
-`C-x 5 r FILENAME RET'
+`C-x 5 r FILENAME <RET>'
      Visit file FILENAME read-only, and select its buffer in another
      frame.  This runs `find-file-read-only-other-frame'.  *Note
      Visiting::.
@@ -422,7 +634,7 @@ Initially, Emacs uses just one display--the one specified with the
 Initial Options::.).  To connect to another display, use the command
 `make-frame-on-display':
 
-`M-x make-frame-on-display RET DISPLAY RET'
+`M-x make-frame-on-display <RET> DISPLAY <RET>'
      Create a new frame on display DISPLAY.
 
    A single X server can handle more than one screen.  When you open
@@ -490,6 +702,13 @@ where FUNCTION is a symbol.  Then the frame is constructed by calling
 FUNCTION; its first argument is the buffer, and its remaining arguments
 are ARGS.
 
+   An analogous feature lets you specify buffers which should be
+displayed in the selected window.  *Note Force Same Window::.  The
+same-window feature takes precedence over the special-frame feature;
+therefore, if you add a buffer name to `special-display-buffer-names'
+and it has no effect, check to see whether that feature is also in use
+for the same buffer name.
+
 
 File: emacs,  Node: Frame Parameters,  Next: Scroll Bars,  Prev: Special Buffer Frames,  Up: Frames
 
@@ -499,22 +718,22 @@ Setting Frame Parameters
    This section describes commands for altering the display style and
 window management behavior of the selected frame.
 
-`M-x set-foreground-color RET COLOR RET'
+`M-x set-foreground-color <RET> COLOR <RET>'
      Specify color COLOR for the foreground of the selected frame.
 
-`M-x set-background-color RET COLOR RET'
+`M-x set-background-color <RET> COLOR <RET>'
      Specify color COLOR for the background of the selected frame.
      This changes the foreground color of the `modeline' face also, so
      that it remains in inverse video compared with the default.
 
-`M-x set-cursor-color RET COLOR RET'
+`M-x set-cursor-color <RET> COLOR <RET>'
      Specify color COLOR for the cursor of the selected frame.
 
-`M-x set-mouse-color RET COLOR RET'
+`M-x set-mouse-color <RET> COLOR <RET>'
      Specify color COLOR for the mouse cursor when it is over the
      selected frame.
 
-`M-x set-border-color RET COLOR RET'
+`M-x set-border-color <RET> COLOR <RET>'
      Specify color COLOR for the border of the selected frame.
 
 `M-x list-colors-display'
@@ -534,18 +753,20 @@ window management behavior of the selected frame.
 
 `M-x auto-lower-mode'
      Toggle whether or not the selected frame should auto-lower.
-     Auto-lower means that every time you move the mouse off of the
-     frame, the frame moves to the bottom of the stack of X windows.
+     Auto-lower means that every time you move the mouse off the frame,
+     the frame moves to the bottom of the stack of X windows.
 
      The command `auto-lower-mode' has no effect on auto-lower
      implemented by the X window manager.  To control that, you must use
      the appropriate window manager features.
 
-`M-x set-default-font RET FONT RET'
-     Specify font FONT as the default for the selected frame.  *Note
-     Font X::, for ways to list the available fonts on your system.
+`M-x set-frame-font <RET> FONT <RET>'
+     Specify font FONT as the principal font for the selected frame.
+     The principal font is used for all text displayed in the frame,
+     except when a face specifies a different font to use.  *Note Font
+     X::, for ways to list the available fonts on your system.
 
-     You can also set a frame's default font through a pop-up menu.
+     You can also set a frame's principal font through a pop-up menu.
      Press `S-Mouse-1' to activate this menu.
 
    In Emacs versions that use an X toolkit, the color-setting and
@@ -564,7 +785,7 @@ File: emacs,  Node: Scroll Bars,  Next: Menu Bars,  Prev: Frame Parameters,  Up:
 Scroll Bars
 ===========
 
-   When using X, Emacs normally makes a "scroll bar" at the right of
+   When using X, Emacs normally makes a "scroll bar" at the left of
 each Emacs window.  The scroll bar runs the height of the window, and
 shows a moving rectangular inner box which represents the portion of the
 buffer currently displayed.  The entire height of the scroll bar
@@ -603,36 +824,20 @@ File: emacs,  Node: Menu Bars,  Next: Faces,  Prev: Scroll Bars,  Up: Frames
 Menu Bars
 =========
 
-   By default, each Emacs frame has a menu bar at the top which you can
-use to perform certain common operations.  There's no need to describe
-them in detail here, as you can more easily see for yourself; also, we
-may change them and add to them in subsequent Emacs versions.
-
-   When you are using a window system, you can use the mouse to choose a
-command from the menu bar.  On text-only terminals, you can use the menu
-bar by typing `M-`' (`tmm-menubar').  This enters a mode in which you
-can select a menu item from the keyboard.  Either type the initial of
-the item you want, or use the left and right arrow keys to choose an
-item and use RET to finalize the choice.
-
-   Each of the operations in the menu bar is bound to an ordinary Emacs
-command which you can invoke equally well with `M-x' or with its own
-key bindings.  The menu lists one equivalent key binding (if the command
-has any) at the right margin.  To see the command's name and
-documentation, type `C-h k' and then select the menu bar item you are
-interested in.
-
    You can turn display of menu bars on or off with `M-x
 menu-bar-mode'.  With no argument, this command toggles Menu Bar mode, a
 minor mode.  With an argument, the command turns Menu Bar mode on if the
 argument is positive, off if the argument is not positive.  You can use
 the X resource `menuBarLines' to control the initial setting of Menu
 Bar mode.  *Note Resources X::.  Expert users often turn off the menu
-bar, especially on text-only terminals where this makes one additional
+bar, especially on text-only terminals, where this makes one additional
 line available for text.
 
+   *Note Menu Bar:: for information on how to invoke commands with the
+menu bar.
+
 
-File: emacs,  Node: Faces,  Next: Modifying Faces,  Prev: Menu Bars,  Up: Frames
+File: emacs,  Node: Faces,  Next: Font Lock,  Prev: Menu Bars,  Up: Frames
 
 Using Multiple Typefaces
 ========================
@@ -658,6 +863,10 @@ itself.
 commands and menus for specifying faces.  *Note Format Faces::, for how
 to specify the font for text in the buffer.  *Note Format Colors::, for
 how to specify the foreground and background color.
+
+   To alter the appearance of a face, use the customization buffer.
+*Note Face Customization::.  You can also use X resources to specify
+attributes of particular faces (*note Resources X::.).
 
    To see what faces are currently defined, and what they look like,
 type `M-x list-faces-display'.  It's possible for a given face to look
@@ -702,9 +911,9 @@ faces:
    When Transient Mark mode is enabled, the text of the region is
 highlighted when the mark is active.  This uses the face named
 `region'; you can control the style of highlighting by changing the
-style of this face (*note Modifying Faces::.).  *Note Transient Mark::,
-for more information about Transient Mark mode and activation and
-deactivation of the mark.
+style of this face (*note Face Customization::.).  *Note Transient
+Mark::, for more information about Transient Mark mode and activation
+and deactivation of the mark.
 
    One easy way to use faces is to turn on Font Lock mode.  This minor
 mode, which is always local to a particular buffer, arranges to choose
@@ -719,71 +928,7 @@ your screen using the command `ps-print-buffer-with-faces'.  *Note
 Postscript::.
 
 
-File: emacs,  Node: Modifying Faces,  Next: Font Lock,  Prev: Faces,  Up: Frames
-
-Modifying Faces
-===============
-
-   Here are the commands for changing the font of a face:
-
-`M-x set-face-font RET FACE RET FONT RET'
-     Change face FACE to use font FONT.  *Note Font X::, for more
-     information about font naming under X.
-
-`M-x make-face-bold RET FACE RET'
-     Convert face FACE to use a bold version of its current font.
-
-`M-x make-face-italic RET FACE RET'
-     Convert face FACE to use a italic version of its current font.
-
-`M-x make-face-bold-italic RET FACE RET'
-     Convert face FACE to use a bold-italic version of its current font.
-
-`M-x make-face-unbold RET FACE RET'
-     Convert face FACE to use a non-bold version of its current font.
-
-`M-x make-face-unitalic RET FACE RET'
-     Convert face FACE to use a non-italic version of its current font.
-
-   Here are the commands for setting the colors and underline flag of a
-face:
-
-`M-x set-face-foreground RET FACE RET COLOR RET'
-     Use color COLOR for the foreground of characters in face FACE.
-
-`M-x set-face-background RET FACE RET COLOR RET'
-     Use color COLOR for the background of characters in face FACE.
-
-     On a black-and-white display, the colors you can use for the
-     background are `black', `white', `gray', `gray1' and `gray3'.
-     Emacs supports the gray colors by using background stipple
-     patterns instead of a color.
-
-`M-x set-face-stipple RET FACE RET PATTERN RET'
-     Use stipple pattern PATTERN for the background of characters in
-     face FACE.
-
-`M-x list-colors-display'
-     Display the defined color names and show what the colors look like.
-
-`M-x set-face-underline-p RET FACE RET FLAG RET'
-     Specify whether to underline characters in face FACE.
-
-`M-x invert-face RET FACE RET'
-     Swap the foreground and background colors of face FACE.
-
-`M-x modify-face RET FACE RET ATTRIBUTES...'
-     Change various attributes of face FACE.  This command prompts for
-     all the attribute of the face, one attribute at a time.  For the
-     color and stipple attributes, the attribute's current value is the
-     default--type just RET if you don't want to change that attribute.
-     Type `none' if you want to clear out the attribute.
-
-   You can also use X resources to specify attributes of particular
-faces.  *Note Resources X::.
-
-
-File: emacs,  Node: Font Lock,  Next: Support Modes,  Prev: Modifying Faces,  Up: Frames
+File: emacs,  Node: Font Lock,  Next: Support Modes,  Prev: Faces,  Up: Frames
 
 Font Lock mode
 ==============
@@ -811,38 +956,64 @@ it, use the function `global-font-lock-mode', like this:
    In Font Lock mode, when you edit the text, the highlighting updates
 automatically in the line that you changed.  Most changes don't affect
 the highlighting of subsequent lines, but occasionally they do.  To
-rehighlight a range of lines, use the command `C-M-g'
+rehighlight a range of lines, use the command `M-g M-g'
 (`font-lock-fontify-block').
 
-   In certain major modes, `C-M-g' refontifies the entire current
+   In certain major modes, `M-g M-g' refontifies the entire current
 function.  (The variable `font-lock-mark-block-function' controls how
-to find the current function.)  In other major modes, `C-M-g'
+to find the current function.)  In other major modes, `M-g M-g'
 refontifies 16 lines above and below point.
 
-   With a prefix argument N, `C-M-g' refontifies N lines above and
+   With a prefix argument N, `M-g M-g' refontifies N lines above and
 below point, regardless of the mode.
 
    To get the full benefit of Font Lock mode, you need to choose a
 default font which has bold, italic, and bold-italic variants; or else
-you need to have a color or grayscale screen.  The variable
-`font-lock-display-type' specifies whether Font Lock mode should use
-font styles, colors, or shades of gray to distinguish the various kinds
-of text.  Emacs chooses the default value according to the
-characteristics of your display.
+you need to have a color or gray-scale screen.
 
    The variable `font-lock-maximum-decoration' specifies the preferred
-level of fontification for modes that provide multiple levels.  The
-normal default is 1; larger numbers request more fontification, and
-some modes support levels as high as 3.  These variables can also
-specify different numbers for particular major modes; for example, to
-use level 3 for C/C++ modes, and the default level otherwise, use this:
+level of fontification, for modes that provide multiple levels.  Level
+1 is the least amount of fontification; some modes support levels as
+high as 3.  The normal default is "as high as possible."  You can
+specify an integer, which applies to all modes, or you can specify
+different numbers for particular major modes; for example, to use level
+1 for C/C++ modes, and the default level otherwise, use this:
 
      (setq font-lock-maximum-decoration
-           '((c-mode . 3) (c++-mode . 3)))
+           '((c-mode . 1) (c++-mode . 1)))
 
    Fontification can be too slow for large buffers, so you can suppress
 it.  The variable `font-lock-maximum-size' specifies a buffer size,
 beyond which buffer fontification is suppressed.
+
+   Comment and string fontification (or "syntactic" fontification)
+relies on analysis of the syntactic structure of the buffer text.  For
+the purposes of speed, some modes including C mode and Lisp mode rely on
+a special convention: an open-parenthesis in the leftmost column always
+defines the beginning of a defun, and is thus always outside any string
+or comment.  (*Note Defuns::.)  If you don't follow this convention,
+then Font Lock mode can misfontify the text after an open-parenthesis in
+the leftmost column that is inside a string or comment.
+
+   The variable `font-lock-beginning-of-syntax-function' (always
+buffer-local) specifies how Font Lock mode can find a position
+guaranteed to be outside any comment or string.  In modes which use the
+leftmost column parenthesis convention, the default value of the
+variable is `beginning-of-defun'--that tells Font Lock mode to use the
+convention.  If you set this variable to `nil', Font Lock no longer
+relies on the convention.  This avoids incorrect results, but the price
+is that, in some cases, fontification for a changed text must rescan
+buffer text from the beginning of the buffer.
+
+   Font Lock highlighting patterns already exist for many modes, but you
+may want to fontify additional patterns.  You can use the function
+`font-lock-add-keywords', to add your own highlighting patterns for a
+particular mode.  For example, to highlight `FIXME:' words in C
+comments, use this:
+
+     (font-lock-add-keywords
+      'c-mode
+      '(("\\<\\(FIXME\\):" 1 font-lock-warning-face t)))
 
 
 File: emacs,  Node: Support Modes,  Next: Misc X,  Prev: Font Lock,  Up: Frames
@@ -856,9 +1027,9 @@ use two different methods of speeding up Font Lock mode.
 
 * Menu:
 
-* Fast Lock Mode::     Saving font information in files.
-* Lazy Lock Mode::     Fontifying only text that is actually displayed.
-* Fast or Lazy::       Which support mode is best for you?
+* Fast Lock Mode::      Saving font information in files.
+* Lazy Lock Mode::      Fontifying only text that is actually displayed.
+* Fast or Lazy::        Which support mode is best for you?
 
 
 File: emacs,  Node: Fast Lock Mode,  Next: Lazy Lock Mode,  Up: Support Modes
@@ -921,13 +1092,20 @@ than that are fontified all at once, as in plain Font Lock mode.
    When you alter the buffer, Lazy Lock mode defers fontification of the
 text you changed.  The variable `lazy-lock-defer-time' specifies how
 many seconds Emacs must be idle before it starts fontifying your
-changes.  If the value is `nil', then changes are fontified
-immediately, as in plain Font Lock mode.
+changes.  If the value is 0, then changes are fontified immediately, as
+in plain Font Lock mode.
 
    Lazy Lock mode normally fontifies newly visible portions of the
 buffer before they are first displayed.  However, if the value of
-`lazy-lock-defer-driven' is non-`nil', newly visible text is fontified
-only when Emacs is idle for `lazy-lock-defer-time' seconds.
+`lazy-lock-defer-on-scrolling' is non-`nil', newly visible text is
+fontified only when Emacs is idle for `lazy-lock-defer-time' seconds.
+
+   In some modes, including C mode and Emacs Lisp mode, changes in one
+line's contents can alter the context for subsequent lines, and thus
+change how they ought to be fontified.  Ordinarily, you must type `M-g
+M-g' to refontify the subsequent lines.  However, if you set the
+variable `lazy-lock-defer-contextually' to non-`nil', Lay Lock mode
+does this automatically, after `lazy-lock-defer-time' seconds.
 
    When Emacs is idle for a long time, Lazy Lock fontifies additional
 portions of the buffer, not yet displayed, in case you will display them
@@ -948,9 +1126,9 @@ Fast Lock or Lazy Lock?
    Here is a simple guide to help you choose one of the Font Lock
 support modes.
 
-   * Fast Lock mode only intervenes during file visiting and buffer
+   * Fast Lock mode intervenes only during file visiting and buffer
      killing (and related events); therefore buffer editing and window
-     scrolling are no faster or slower than plain Font Lock mode.
+     scrolling are no faster or slower than in plain Font Lock mode.
 
    * Fast Lock mode is slower at reading a cache file than Lazy Lock
      mode is at fontifying a window; therefore Fast Lock mode is slower
@@ -991,177 +1169,19 @@ Miscellaneous X Window Features
    The following commands let you create, delete and operate on frames:
 
 `C-z'
-     To iconify the selected Emacs frame, type `C-z'
-     (`iconify-or-deiconify-frame').  The normal meaning of `C-z', to
-     suspend Emacs, is not useful under a window system, so it has a
-     different binding in that case.
+     Iconify the selected Emacs frame (`iconify-or-deiconify-frame').
+     The normal meaning of `C-z', to suspend Emacs, is not useful under
+     a window system, so it has a different binding in that case.
 
      If you type this command on an Emacs frame's icon, it deiconifies
      the frame.
 
 `C-x 5 0'
-     To delete the selected frame, type `C-x 5 0' (`delete-frame').
-     This is not allowed if there is only one frame.
+     Delete the selected frame (`delete-frame').  This is not allowed if
+     there is only one frame.
 
 `C-x 5 o'
      Select another frame, raise it, and warp the mouse to it so that it
      stays selected.  If you repeat this command, it cycles through all
      the frames on your terminal.
-
-`M-x transient-mark-mode'
-     Under X Windows, when Transient Mark mode is enabled, Emacs
-     highlights the region when the mark is active.  This feature is
-     the main motive for using Transient Mark mode.  To toggle the
-     state of this mode, use the command `M-x transient-mark-mode'.
-     *Note Mark::.
-
-
-File: emacs,  Node: Non-Window Terminals,  Prev: Misc X,  Up: Frames
-
-Non-Window Terminals
-====================
-
-   If your terminal does not have a window system that Emacs supports,
-then it can display only one Emacs frame at a time.  However, you can
-still create multiple Emacs frames, and switch between them.  Switching
-frames on these terminals is much like switching between different
-window configurations.
-
-   Use `C-x 5 2' to create a new frame and switch to it; use `C-x 5 o'
-to cycle through the existing frames; use `C-x 5 0' to delete the
-current frame.
-
-   Each frame has a number to distinguish it.  The selected frame's
-number appears in the mode line after `Emacs', except when frame 1 is
-selected.
-
-
-File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: Frames,  Up: Top
-
-Major Modes
-***********
-
-   Emacs provides many alternative "major modes", each of which
-customizes Emacs for editing text of a particular sort.  The major modes
-are mutually exclusive, and each buffer has one major mode at any time.
-The mode line normally shows the name of the current major mode, in
-parentheses (*note Mode Line::.).
-
-   The least specialized major mode is called "Fundamental mode".  This
-mode has no mode-specific redefinitions or variable settings, so that
-each Emacs command behaves in its most general manner, and each option
-is in its default state.  For editing text of a specific type that
-Emacs knows about, such as Lisp code or English text, you should switch
-to the appropriate major mode, such as Lisp mode or Text mode.
-
-   Selecting a major mode changes the meanings of a few keys to become
-more specifically adapted to the language being edited.  The ones which
-are changed frequently are TAB, DEL, and LFD.  The prefix key `C-c'
-normally contains mode-specific commands.  In addition, the commands
-which handle comments use the mode to determine how comments are to be
-delimited.  Many major modes redefine the syntactical properties of
-characters appearing in the buffer.  *Note Syntax::.
-
-   The major modes fall into three major groups.  Lisp mode (which has
-several variants), C mode, Fortran mode and others are for specific
-programming languages.  Text mode, Nroff mode, TeX mode and Outline
-mode are for editing English text.  The remaining major modes are not
-intended for use on users' files; they are used in buffers created for
-specific purposes by Emacs, such as Dired mode for buffers made by Dired
-(*note Dired::.), and Mail mode for buffers made by `C-x m' (*note
-Sending Mail::.), and Shell mode for buffers used for communicating
-with an inferior shell process (*note Interactive Shell::.).
-
-   Most programming language major modes specify that only blank lines
-separate paragraphs.  This is to make the paragraph commands useful.
-(*Note Paragraphs::.)  They also cause Auto Fill mode to use the
-definition of TAB to indent the new lines it creates.  This is because
-most lines in a program are usually indented.  (*Note Indentation::.)
-
-* Menu:
-
-* Choosing Modes::     How major modes are specified or chosen.
-
-
-File: emacs,  Node: Choosing Modes,  Prev: Major Modes,  Up: Major Modes
-
-How Major Modes are Chosen
-==========================
-
-   You can select a major mode explicitly for the current buffer, but
-most of the time Emacs determines which mode to use based on the file
-name or on special text in the file.
-
-   Explicit selection of a new major mode is done with a `M-x' command.
-From the name of a major mode, add `-mode' to get the name of a command
-to select that mode.  Thus, you can enter Lisp mode by executing `M-x
-lisp-mode'.
-
-   When you visit a file, Emacs usually chooses the right major mode
-based on the file's name.  For example, files whose names end in `.c'
-are edited in C mode.  The correspondence between file names and major
-modes is controlled by the variable `auto-mode-alist'.  Its value is a
-list in which each element has this form,
-
-     (REGEXP . MODE-FUNCTION)
-
-or this form,
-
-     (REGEXP MODE-FUNCTION FLAG)
-
-For example, one element normally found in the list has the form
-`("\\.c\\'" . c-mode)', and it is responsible for selecting C mode for
-files whose names end in `.c'.  (Note that `\\' is needed in Lisp
-syntax to include a `\' in the string, which is needed to suppress the
-special meaning of `.' in regexps.)  If the element has the form
-`(REGEXP MODE-FUNCTION FLAG)' and FLAG is non-nil, then after calling
-FUNCTION, the suffix that matched REGEXP is deleted and the list is
-searched again for another match.
-
-   You can specify which major mode should be used for editing a certain
-file by a special sort of text in the first nonblank line of the file.
-The mode name should appear in this line both preceded and followed by
-`-*-'.  Other text may appear on the line as well.  For example,
-
-     ;-*-Lisp-*-
-
-tells Emacs to use Lisp mode.  Such an explicit specification overrides
-any defaulting based on the file name.  Note how the semicolon is used
-to make Lisp treat this line as a comment.
-
-   Another format of mode specification is
-
-     -*-Mode: MODENAME;-*-
-
-which allows you to specify local variables as well, like this:
-
-     -*- mode: MODENAME; VAR: VALUE; ... -*-
-
-*Note File Variables::, for more information about this.
-
-   When a file's contents begin with `#!', it can serve as an
-executable shell command, which works by running an interpreter named on
-the file's first line.  The rest of the file is used as input to the
-interpreter.
-
-   When you visit such a file in Emacs, if the file's name does not
-specify a major mode, Emacs uses the interpreter name on the first line
-to choose a mode.  If the first line is the name of a recognized
-interpreter program, such as `perl' or `tcl', Emacs uses a mode
-appropriate for programs for that interpreter.  The variable
-`interpreter-mode-alist' specifies the correspondence between
-interpreter program names and major modes.
-
-   When you visit a file that does not specify a major mode to use, or
-when you create a new buffer with `C-x b', the variable
-`default-major-mode' specifies which major mode to use.  Normally its
-value is the symbol `fundamental-mode', which specifies Fundamental
-mode.  If `default-major-mode' is `nil', the major mode is taken from
-the previously selected buffer.
-
-   If you change the major mode of a buffer, you can go back to the
-major mode Emacs would choose automatically: use the command `M-x
-normal-mode' to do this.  This is the same function that `find-file'
-calls to choose the major mode.  It also processes the file's local
-variables list if any.
 

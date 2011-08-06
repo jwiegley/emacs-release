@@ -22,11 +22,6 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; LCD Archive Entry:
-;; shadowfile|Boris Goldowsky|boris@gnu.ai.mit.edu|
-;; Helps you keep identical copies of files in multiple places.|
-;; $Date: 1996/01/25 01:16:55 $ |$Revision: 1.8 $|~/misc/shadowfile.el.Z|
-
 ;; Commentary:
 
 ;;  This package helps you to keep identical copies of files in more than one

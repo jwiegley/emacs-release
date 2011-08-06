@@ -28,10 +28,9 @@ AC_CONFIG_HEADER(src/config.h:src/config.in)
 
 lispdir='${datadir}/emacs/${version}/lisp'
 locallisppath='${datadir}/emacs/${version}/site-lisp:'\
-'${datadir}/emacs/site-lisp'
+'${datadir}/emacs/site-lisp:${datadir}/emacs/${version}/leim'
 lisppath='${locallisppath}:${lispdir}'
 etcdir='${datadir}/emacs/${version}/etc'
-lockdir='${sharedstatedir}/emacs/lock'
 archlibdir='${libexecdir}/emacs/${version}/${configuration}'
 docdir='${datadir}/emacs/${version}/etc'
 
@@ -43,6 +42,15 @@ AC_ARG_WITH(pop,
 AC_ARG_WITH(kerberos,
 [  --with-kerberos         support Kerberos-authenticated POP],
 [AC_DEFINE(KERBEROS)])
+AC_ARG_WITH(kerberos5,
+[  --with-kerberos5         support Kerberos version 5 authenticated POP],
+[if test "${with_kerberos5+set}" = set; then
+  if test "${with_kerberos+set}" != set; then
+    with_kerberos=yes
+    AC_DEFINE(KERBEROS)
+  fi
+fi
+AC_DEFINE(KERBEROS5)])
 AC_ARG_WITH(hesiod,
 [  --with-hesiod           support Hesiod to get the POP server host],
 [AC_DEFINE(HESIOD)])
@@ -155,6 +163,7 @@ case "${canonical}" in
   *-*-netbsd* )
     opsys=netbsd
     case "${canonical}" in
+      alpha*-*-netbsd*)	machine=alpha ;;
       i[3456]86-*-netbsd*) machine=intel386 ;;
       m68k-*-netbsd*)
 			# This is somewhat bogus.
@@ -162,6 +171,21 @@ case "${canonical}" in
       mips-*-netbsd*)	machine=pmax ;;
       ns32k-*-netbsd*)	machine=ns32000 ;;
       sparc-*-netbsd*)	machine=sparc ;;
+      vax-*-netbsd*)	machine=vax ;;
+    esac
+  ;;
+
+  ## OpenBSD ports
+  *-*-openbsd* )
+    opsys=openbsd
+    case "${canonical}" in
+      alpha*-*-openbsd*)	machine=alpha ;;
+      i386-*-openbsd*)	machine=intel386 ;;
+      m68k-*-openbsd*)  machine=hp9000s300 ;;
+      mipsel-*-openbsd*) machine=pmax ;;
+      ns32k-*-openbsd*)	machine=ns32000 ;;
+      sparc-*-openbsd*)	machine=sparc ;;
+      vax-*-netbsd*)	machine=vax ;;
     esac
   ;;
 
@@ -170,7 +194,25 @@ case "${canonical}" in
     machine=acorn opsys=riscix1-1
   ;;
   arm-acorn-riscix1.2* | arm-acorn-riscix )
-    machine=acorn opsys=riscix1-2
+    ## This name is riscix12 instead of riscix1.2
+    ## to avoid a file name conflict on MSDOS.
+    machine=acorn opsys=riscix12
+  ;;
+
+  ## BSDI ports
+  *-*-bsdi* )
+    opsys=bsdi
+    case "${canonical}" in
+      i[345]86-*-bsdi*) machine=intel386 ;;
+      sparc-*-bsdi*)  machine=sparc ;;
+      powerpc-*-bsdi*)  machine=powerpc ;;
+    esac
+    case "${canonical}" in
+      *-*-bsd386* | *-*-bsdi1* )	opsys=bsd386 ;;
+      *-*-bsdi2.0* )		opsys=bsdos2 ;;
+      *-*-bsdi2* )		opsys=bsdos2-1 ;;
+      *-*-bsdi3* )		opsys=bsdos3 ;;
+    esac
   ;;
 
   ## Alliant machines
@@ -187,14 +229,14 @@ case "${canonical}" in
   ;;
 
   ## Alpha (DEC) machines.
-  alpha-dec-osf* )
+  alpha*-dec-osf* )
     machine=alpha opsys=osf1
     # This is needed to find X11R6.1 libraries for certain tests.
     NON_GCC_LINK_TEST_OPTIONS=-Wl,-rpath,/usr/X11R6/lib
     GCC_LINK_TEST_OPTIONS=-Wl,-rpath,/usr/X11R6/lib
   ;;
 
-  alpha-*-linux-gnu* )
+  alpha*-*-linux-gnu* )
     machine=alpha opsys=gnu-linux
   ;;
 
@@ -275,8 +317,17 @@ case "${canonical}" in
   ;;
 
   ## Data General AViiON Machines
+  ## DG changed naming conventions with the release of 5.4.4.10, they
+  ## dropped the initial 5.4 but left the intervening R.  Because of the
+  ## R this shouldn't conflict with older versions of the OS (which I
+  ## think were named like dgux4.*).
+  m88k-dg-dguxR4.* | m88k-dg-dgux4* )
+    machine=aviion opsys=dgux4
+  ;;
   m88k-dg-dgux5.4R3* | m88k-dg-dgux5.4.3* )
-    machine=aviion opsys=dgux5-4r3
+    ## This name is dgux5-4-3 instead of dgux5-4r3
+    ## to avoid a file name conflict on MSDOS.
+    machine=aviion opsys=dgux5-4-3
   ;;
   m88k-dg-dgux5.4R2* | m88k-dg-dgux5.4.2* )
     machine=aviion opsys=dgux5-4r2
@@ -379,7 +430,10 @@ case "${canonical}" in
     machine=nh6000 opsys=powerunix
     NON_GNU_CPP="cc -Xo -E -P"
   ;;
-
+  ## SR2001/SR2201 running HI-UX/MPP
+  hppa1.1-hitachi-hiuxmpp* )
+    machine=sr2k opsys=hiuxmpp
+  ;;
   ## Honeywell XPS100
   xps*-honeywell-sysv* )
     machine=xps100 opsys=usg5-2
@@ -431,7 +485,7 @@ case "${canonical}" in
       *) machine=hp800 opsys=hpux ;;
     esac
   ;;
-  hppa-*-nextstep* )
+  hppa*-*-nextstep* )
     machine=hp800 opsys=nextstep
   ;;
 
@@ -462,8 +516,14 @@ case "${canonical}" in
   rs6000-ibm-aix4.1* | powerpc-ibm-aix4.1*  )
     machine=ibmrs6000 opsys=aix4-1
   ;;
-  rs6000-ibm-aix4* | powerpc-ibm-aix4*  )
+  rs6000-ibm-aix4.2* | powerpc-ibm-aix4.2*  )
+    machine=ibmrs6000 opsys=aix4-2
+  ;;
+  rs6000-ibm-aix4.0* | powerpc-ibm-aix4.0*  )
     machine=ibmrs6000 opsys=aix4
+  ;;
+  rs6000-ibm-aix4* | powerpc-ibm-aix4*  )
+    machine=ibmrs6000 opsys=aix4-1
   ;;
   rs6000-ibm-aix* | powerpc-ibm-aix* )
     machine=ibmrs6000 opsys=aix3-2
@@ -624,6 +684,12 @@ case "${canonical}" in
     machine=plexus opsys=usg5-2
   ;;
 
+  ## PowerPC reference platform
+  powerpcle-*-solaris2* )
+    machine=prep
+    opsys=sol2-5
+  ;;
+
   ## Pyramid machines
   ## I don't really have any idea what sort of processor the Pyramid has,
   ## so I'm assuming it is its own architecture.
@@ -686,6 +752,9 @@ case "${canonical}" in
   mips-sony-bsd* | mips-sony-newsos4* | mips-sony-news4*)
     machine=news-risc opsys=bsd4-3
   ;;
+  mips-sony-newsos6* )
+    machine=news-r6 opsys=newsos6
+  ;;
   mips-sony-news* )
     machine=news-risc opsys=newsos5
   ;;
@@ -709,6 +778,7 @@ case "${canonical}" in
       m68* )		machine=sun3 ;;
       i[3456]86-sun-sunos[34]* )	machine=sun386 ;;
       i[3456]86-*-* )     machine=intel386 ;;
+      powerpcle* )      machine=powerpcle ;;
       powerpc* | rs6000* )  machine=ibmrs6000 ;;
       sparc* )		machine=sparc ;;
       * )		unported=yes ;;
@@ -718,7 +788,9 @@ case "${canonical}" in
       i[3456]86-*-sunos4	  ) opsys=sunos4-0 ;;
       *-sunos4.0*	  ) opsys=sunos4-0 ;;
       *-sunos4.1.[3-9]*noshare )
-		opsys=sunos4-1-3
+		## This name is sunos413 instead of sunos4-1-3
+		## to avoid a file name conflict on MSDOS.
+		opsys=sunos413
 		NON_GNU_CPP=/usr/lib/cpp
 		NON_GCC_TEST_OPTIONS=-Bstatic
 		GCC_TEST_OPTIONS=-static
@@ -861,9 +933,7 @@ case "${canonical}" in
 				# /lib/cpp does not accept it.
 				OVERRIDE_CPPFLAGS=" "
 				;;
-      *-bsd386* | *-bsdi1* )	opsys=bsd386 ;;
-      *-bsdi2.0* )		opsys=bsdos2 ;;
-      *-bsdi2* )		opsys=bsdos2-1 ;;
+      *-sysv4.2uw* )	  	opsys=unixware; NON_GNU_CPP=/lib/cpp ;;
       *-386bsd* )	        opsys=386bsd ;;
       *-freebsd* )	        opsys=freebsd ;;
       *-nextstep* )             opsys=nextstep ;;
@@ -871,9 +941,14 @@ case "${canonical}" in
     esac
   ;;
 
-  ## Linux/68k-based GNU system
+  ## m68k Linux-based GNU system
   m68k-*-linux-gnu* )
     machine=m68k opsys=gnu-linux
+  ;;
+
+  ## Mips Linux-based GNU system
+  mips-*-linux-gnu* )
+    machine=mips opsys=gnu-linux
   ;;
 
   * )
@@ -897,6 +972,7 @@ if test x"${opsys}" = x; then
     *-sysv2 | *-sysvr2 )		opsys=usg5-2 ;;
     *-sysv2.2 | *-sysvr2.2 )		opsys=usg5-2-2 ;;
     *-sysv3* | *-sysvr3* )		opsys=usg5-3 ;;
+    *-sysv4.2uw* )			opsys=unixware ;;
     *-sysv4.1* | *-sysvr4.1* )
 	NON_GNU_CPP=/usr/lib/cpp
 	opsys=usg5-4 ;;
@@ -999,7 +1075,7 @@ dnl checks for Unix variants
 AC_AIX
 
 dnl checks for header files
-AC_CHECK_HEADERS(sys/select.h sys/timeb.h sys/time.h unistd.h utime.h linux/version.h)
+AC_CHECK_HEADERS(sys/select.h sys/timeb.h sys/time.h unistd.h utime.h linux/version.h sys/systeminfo.h termios.h limits.h)
 AC_HEADER_STDC
 AC_HEADER_TIME
 AC_DECL_SYS_SIGLIST
@@ -1068,6 +1144,18 @@ fi
 if test "${x_libraries}" != NONE && test -n "${x_libraries}"; then
   LD_SWITCH_X_SITE=-L`echo ${x_libraries} | sed -e "s/:/ -L/g"`
   LD_SWITCH_X_SITE_AUX=-R`echo ${x_libraries} | sed -e "s/:/ -R/g"`
+  x_default_search_path=""
+  for x_library in `echo ${x_libraries} | sed -e "s/:/ /g"`; do
+    x_search_path="${x_library}/X11/%L/%T/%N%C%S:\
+${x_library}/X11/%L/%T/%N%C%S:${x_libary}/X11/%l/%T/%N%C%S:\
+${x_library}/X11/%T/%N%C%S:${x_library}/X11/%L/%T/%N%S:\
+${x_library}/X11/%l/%T/%N%S:${x_library}/X11/%T/%N%S"
+    if test x"${x_default_search_path}" = x; then
+      x_default_search_path=${x_search_path}
+    else
+      x_default_search_path="${x_search_path}:${x_default_search_path}"
+    fi
+  done
 fi
 if test "${x_includes}" != NONE && test -n "${x_includes}"; then
   C_SWITCH_X_SITE=-I`echo ${x_includes} | sed -e "s/:/ -I/g"`
@@ -1206,6 +1294,21 @@ configure___ system_malloc=no
 #define C_OPTIMIZE_SWITCH -O
 #endif
 
+#ifndef LD_SWITCH_MACHINE
+#define LD_SWITCH_MACHINE
+#endif
+
+#ifndef LD_SWITCH_SYSTEM
+#define LD_SWITCH_SYSTEM
+#endif
+
+#ifndef LD_SWITCH_X_SITE_AUX
+#define LD_SWITCH_X_SITE_AUX
+#endif  
+
+configure___ ld_switch_system=LD_SWITCH_SYSTEM
+configure___ ld_switch_machine=LD_SWITCH_MACHINE
+
 #ifdef THIS_IS_CONFIGURE
 
 /* Get the CFLAGS for tests in configure.  */
@@ -1242,16 +1345,33 @@ fi
 changequote([, ])dnl
 rm ${tempcname}
 
+ac_link="$ac_link $ld_switch_machine $ld_switch_system"
+
 ### Compute the unexec source name from the object name.
 UNEXEC_SRC="`echo ${unexec} | sed 's/\.o/.c/'`"
 
 # Do the opsystem or machine files prohibit the use of the GNU malloc?
 # Assume not, until told otherwise.
 GNU_MALLOC=yes
+doug_lea_malloc=yes
+AC_CHECK_FUNC(malloc_get_state, ,doug_lea_malloc=no)
+AC_CHECK_FUNC(malloc_set_state, ,doug_lea_malloc=no)
+AC_MSG_CHECKING(whether __after_morecore_hook exists)
+AC_TRY_LINK([extern void (* __after_morecore_hook)();],[__after_morecore_hook = 0],
+  [AC_MSG_RESULT(yes)],
+  [AC_MSG_RESULT(no)
+   doug_lea_malloc=no])
 if test "${system_malloc}" = "yes"; then
   GNU_MALLOC=no
   GNU_MALLOC_reason="
-  (The GNU allocators don't work with this system configuration.)"
+    (The GNU allocators don't work with this system configuration.)"
+fi
+if test "$doug_lea_malloc" = "yes" ; then
+  if test "$GNU_MALLOC" = yes ; then
+    GNU_MALLOC_reason="
+      (Using Doug Lea's new malloc from the GNU C Library.)"
+  fi
+  AC_DEFINE(DOUG_LEA_MALLOC)
 fi
 
 if test x"${REL_ALLOC}" = x; then
@@ -1418,6 +1538,21 @@ dnl tranle@intellicorp.com says libXmu.a can need XtMalloc in libXt.a to link.
   LIBS="$OLDLIBS"
 fi
 
+if test "${USE_X_TOOLKIT}" = "MOTIF"; then
+  AC_MSG_CHECKING(for Motif version 2.1)
+  AC_TRY_COMPILE([#include <Xm/Xm.h>],
+    [#if XmVERSION > 2 || (XmVERSION == 2 && XmREVISION >= 1)
+int x = 5;
+#else
+Motif version prior to 2.1.
+#endif],
+    [AC_MSG_RESULT(yes)
+     HAVE_MOTIF_2_1=yes
+     AC_DEFINE(HAVE_MOTIF_2_1)],
+    [AC_MSG_RESULT(no)
+     HAVE_MOTIF_2_1=no])
+fi
+
 # If netdb.h doesn't declare h_errno, we must declare it by hand.
 AC_MSG_CHECKING(whether netdb declares h_errno)
 AC_TRY_LINK([#include <netdb.h>],
@@ -1432,15 +1567,48 @@ AC_FUNC_ALLOCA
 # On HPUX 9.01, -lm does not contain logb, so check for sqrt.
 AC_CHECK_LIB(m, sqrt)
 
-AC_CHECK_FUNCS(gettimeofday gethostname dup2 rename closedir mkdir rmdir \
-random lrand48 bcopy bcmp logb frexp fmod ftime res_init setsid \
-strerror fpathconf select mktime euidaccess getpagesize tzset setlocale)
+# Check for mail-locking functions in a "mail" library
+AC_CHECK_LIB(mail, maillock,
+	     AC_DEFINE(HAVE_LIBMAIL)
+	     AC_CHECK_FUNCS(touchlock)
+	     AC_CHECK_HEADERS(maillock.h))
+
+AC_CHECK_FUNCS(gettimeofday gethostname getdomainname dup2 \
+rename closedir mkdir rmdir sysinfo \
+random lrand48 bcopy bcmp logb frexp fmod rint cbrt ftime res_init setsid \
+strerror fpathconf select mktime euidaccess getpagesize tzset setlocale \
+utimes setrlimit setpgid getcwd shutdown)
 
 # Check this now, so that we will NOT find the above functions in ncurses.
 # That is because we have not set up to link ncurses in lib-src.
 # It's better to believe a function is not available
 # than to expect to find it in ncurses.
 AC_CHECK_LIB(ncurses, tparm)
+
+# These tell us which Kerberos-related libraries to use.
+if test "${with_kerberos+set}" = set; then
+  if test "${with_kerberos5+set}" != set; then
+    AC_CHECK_LIB(krb, krb_get_cred,,
+		 AC_CHECK_LIB(krb4, krb_get_cred))
+    AC_CHECK_LIB(des, des_cbc_encrypt,,
+		 AC_CHECK_LIB(des425, des_cbc_encrypt))
+  fi
+  AC_CHECK_LIB(krb5, krb5_init_context)
+  AC_CHECK_LIB(crypto, mit_des_cbc_encrypt)
+  AC_CHECK_LIB(com_err, com_err)
+
+  if test "${with_kerberos5+set}" = set; then
+    AC_CHECK_HEADERS(krb5.h)
+  else
+    AC_CHECK_HEADERS(des.h,,
+		     AC_CHECK_HEADERS(kerberosIV/des.h,,
+				      AC_CHECK_HEADERS(kerberos/des.h)))
+    AC_CHECK_HEADERS(krb.h,,
+		     AC_CHECK_HEADERS(kerberosIV/krb.h,,
+				      AC_CHECK_HEADERS(kerberos/krb.h)))
+  fi
+  AC_CHECK_HEADERS(com_err.h)
+fi
 
 AC_MSG_CHECKING(whether localtime caches TZ)
 AC_CACHE_VAL(emacs_cv_localtime_cache,
@@ -1558,8 +1726,8 @@ AC_SUBST(infodir)
 AC_SUBST(lispdir)
 AC_SUBST(locallisppath)
 AC_SUBST(lisppath)
+AC_SUBST(x_default_search_path)
 AC_SUBST(etcdir)
-AC_SUBST(lockdir)
 AC_SUBST(archlibdir)
 AC_SUBST(docdir)
 AC_SUBST(bitmapdir)
@@ -1643,10 +1811,11 @@ test "${exec_prefix}" != NONE &&
 changequote([, ])dnl
 
 AC_OUTPUT(Makefile lib-src/Makefile.c:lib-src/Makefile.in oldXMenu/Makefile \
-	man/Makefile lwlib/Makefile src/Makefile.c:src/Makefile.in, [
+	man/Makefile lwlib/Makefile src/Makefile.c:src/Makefile.in \
+	leim/Makefile, [
 
 ### Make the necessary directories, if they don't exist.
-for dir in cpp etc ; do
+for dir in cpp etc lisp ; do
   test -d ${dir} || mkdir ${dir}
 done
 
@@ -1666,6 +1835,9 @@ sed -e 's/[^a-zA-Z0-9_]/ /g' -e 's/^/ /' -e 's/  *$//' \
     -e 's/  */ -U/g' -e 's/-U[0-9][^ ]*//g' \
 `"
 changequote([, ])dnl
+
+echo creating src/paths.h
+make paths-force
 
 echo creating lib-src/Makefile
 ( cd lib-src
@@ -1703,5 +1875,8 @@ if test ! -f src/.gdbinit && test -f $top_srcdir/src/.gdbinit; then
   echo creating src/.gdbinit
   echo source $top_srcdir/src/.gdbinit > src/.gdbinit
 fi
+
+# This is how we know whether to re-run configure in certain cases.
+touch src/config.stamp
 
 ], [CPP="$CPP" CPPFLAGS="$CPPFLAGS"])

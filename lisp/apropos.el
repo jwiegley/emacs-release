@@ -57,39 +57,59 @@
 
 ;;; Code:
 
+(defgroup apropos nil
+  "Apropos commands for users and programmers"
+  :group 'Help
+  :prefix "apropos")
+
 ;; I see a degradation of maybe 10-20% only.
-(defvar apropos-do-all nil
+(defcustom apropos-do-all nil
   "*Whether the apropos commands should do more.
-Slows them down more or less.  Set this non-nil if you have a fast machine.")
+
+Slows them down more or less.  Set this non-nil if you have a fast machine."
+  :group 'apropos
+  :type 'boolean)
 
 
-(defvar apropos-symbol-face (if window-system 'bold)
-  "*Face for symbol name in apropos output or `nil'.  
-This looks good, but slows down the commands several times.")
+(defcustom apropos-symbol-face (if window-system 'bold)
+  "*Face for symbol name in apropos output or `nil'.
+This looks good, but slows down the commands several times."
+  :group 'apropos
+  :type 'face)
 
-(defvar apropos-keybinding-face (if window-system 'underline)
+(defcustom apropos-keybinding-face (if window-system 'underline)
   "*Face for keybinding display in apropos output or `nil'.  
-This looks good, but slows down the commands several times.")
+This looks good, but slows down the commands several times."
+  :group 'apropos
+  :type 'face)
 
-(defvar apropos-label-face (if window-system 'italic)
+(defcustom apropos-label-face (if window-system 'italic)
   "*Face for label (Command, Variable ...) in apropos output or `nil'.
 If this is `nil' no mouse highlighting occurs.
 This looks good, but slows down the commands several times.
 When this is a face name, as it is initially, it gets transformed to a
-text-property list for efficiency.")
+text-property list for efficiency."
+  :group 'apropos
+  :type 'face)
 
-(defvar apropos-property-face (if window-system 'bold-italic)
+(defcustom apropos-property-face (if window-system 'bold-italic)
   "*Face for property name in apropos output or `nil'.  
-This looks good, but slows down the commands several times.")
+This looks good, but slows down the commands several times."
+  :group 'apropos
+  :type 'face)
 
-(defvar apropos-match-face (if window-system 'secondary-selection)
+(defcustom apropos-match-face (if window-system 'secondary-selection)
   "*Face for matching part in apropos-documentation/value output or `nil'.  
-This looks good, but slows down the commands several times.")
+This looks good, but slows down the commands several times."
+  :group 'apropos
+  :type 'face)
 
 
 (defvar apropos-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-m" 'apropos-follow)
+    (define-key map " "      'scroll-up)
+    (define-key map "\177"   'scroll-down)
     (define-key map [mouse-2] 'apropos-mouse-follow)
     (define-key map [down-mouse-2] nil)
     map)
@@ -179,28 +199,47 @@ Returns list of symbols and documentation found."
 			       (lambda (symbol)
 				 (or (fboundp symbol)
 				     (boundp symbol)
+				     (facep symbol)
 				     (symbol-plist symbol))))))
   (apropos-print
    (or do-all apropos-do-all)
    (lambda (p)
-     (let (symbol doc)
+     (let (symbol doc properties)
        (while p
 	 (setcar p (list
 		    (setq symbol (car p))
-		    (if (fboundp symbol)
-			(if (setq doc (documentation symbol t))
-			    (substring doc 0 (string-match "\n" doc))
-			  "(not documented)"))
-		    (if (boundp symbol)
-			(if (setq doc (documentation-property
-				       symbol 'variable-documentation t))
-			    (substring doc 0
-				       (string-match "\n" doc))
-			  "(not documented)"))
-		    (if (setq doc (symbol-plist symbol))
-			(if (eq (/ (length doc) 2) 1)
-			    (format "1 property (%s)" (car doc))
-			  (concat (/ (length doc) 2) " properties")))))
+		    (when (fboundp symbol)
+		      (if (setq doc (documentation symbol t))
+			  (substring doc 0 (string-match "\n" doc))
+			"(not documented)"))
+		    (when (boundp symbol)
+		      (if (setq doc (documentation-property
+				     symbol 'variable-documentation t))
+			  (substring doc 0 (string-match "\n" doc))
+			"(not documented)"))
+		    (when (setq properties (symbol-plist symbol))
+		      (setq doc (list (car properties)))
+		      (while (setq properties (cdr (cdr properties)))
+			(setq doc (cons (car properties) doc)))
+		      (mapconcat #'symbol-name (nreverse doc) " "))
+		    (when (get symbol 'widget-type)
+		      (if (setq doc (documentation-property
+				     symbol 'widget-documentation t))
+			  (substring doc 0
+				     (string-match "\n" doc))
+			"(not documented)"))
+		    (when (facep symbol)
+		      (if (setq doc (documentation-property
+				     symbol 'face-documentation t))
+			  (substring doc 0
+				     (string-match "\n" doc))
+			"(not documented)"))
+		    (when (get symbol 'custom-group)
+		      (if (setq doc (documentation-property
+				     symbol 'group-documentation t))
+			  (substring doc 0
+				     (string-match "\n" doc))
+			"(not documented)"))))
 	 (setq p (cdr p)))))
    nil))
 
@@ -493,7 +532,6 @@ found."
 					      key))
 		       key)
 		     item ", "))
-		 (insert "Type ")
 		 (insert "M-x")
 		 (put-text-property (- (point) 3) (point)
 				    'face apropos-keybinding-face)
@@ -516,8 +554,14 @@ found."
 				   "Macro"
 				 "Function"))
 			     do-keys)
-	  (apropos-print-doc 'describe-variable 2
-			     "Variable" do-keys)
+	  (if (get symbol 'custom-type)
+	      (apropos-print-doc 'customize-variable-other-window 2
+				 "User Option" do-keys)
+	    (apropos-print-doc 'describe-variable 2
+			       "Variable" do-keys))
+	  (apropos-print-doc 'customize-group-other-window 6 "Group" do-keys)
+	  (apropos-print-doc 'customize-face-other-window 5 "Face" do-keys)
+	  (apropos-print-doc 'widget-browse-other-window 4 "Widget" do-keys)
 	  (apropos-print-doc 'apropos-describe-plist 3
 			     "Plist" nil)))))
   (prog1 apropos-accumulator
@@ -598,5 +642,7 @@ found."
     (insert (apropos-format-plist symbol "\n  "))
     (princ ")")
     (print-help-return-message)))
+
+(provide 'apropos)
 
 ;;; apropos.el ends here

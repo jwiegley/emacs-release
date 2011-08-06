@@ -4,6 +4,7 @@
 
 ;; Author: Charlie Martin <crm@cs.duke.edu>
 ;; Adapted-By: Daniel.Pfeiffer@Informatik.START.dbp.de, fax (+49 69) 7588-2389
+;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
@@ -251,5 +252,7 @@ or if CONDITION had no actions, after all other CONDITIONs."
 	  (nconc auto-insert-alist (list (cons key action)))
 	(setq auto-insert-alist (cons (cons key action)
 				      auto-insert-alist))))))
+
+(provide 'autoinsert)
 
 ;;; autoinsert.el ends here

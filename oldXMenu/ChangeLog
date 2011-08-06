@@ -1,16 +1,16 @@
-Wed Aug 21 03:51:42 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1997-09-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
-	* Version 19.34 released.
+	* Version 20.1 released.
 
-Sun Aug 11 03:36:03 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-08-11  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 19.33 released.
 
-Wed Jul 31 13:52:46 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-07-31  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 19.32 released.
 
-Wed Jun 12 13:35:36 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+1996-06-12  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Internal.c (_XMRefreshSelection): Check for type SEPARATOR.
 	* InsSel.c (XMenuInsertSelection): Use SEPARATOR if nec.
@@ -18,236 +18,236 @@ Wed Jun 12 13:35:36 1996  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* XMenu.h: New alternative SEPARATOR.
 
-Sat May 25 15:30:10 1996  Karl Heuer  <kwzh@gnu.ai.mit.edu>
+1996-05-25  Karl Heuer  <kwzh@gnu.ai.mit.edu>
 
 	* Version 19.31 released.
 
-Fri Nov 24 23:42:45 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-24  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.30 released.
 
-Mon Nov 13 00:16:30 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-11-13  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (ALL_CFLAGS): Add some -I options.
 
 	* Activate.c, AddPane.c, AddSel.c, Create.c, InsPane.c, InsSel.c:
 	* Internal.c, XCrAssoc.c, XMakeAssoc.c: Include config.h.
 
-Mon Jun 19 22:50:41 1995  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1995-06-19  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.29 released.
 
-Tue Feb  7 18:50:09 1995  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
+1995-02-07  Richard Stallman  <rms@pogo.gnu.ai.mit.edu>
 
 	* Makefile.in (maintainer-clean): Renamed from realclean.
 
-Tue Oct 25 18:49:26 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-10-25  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Makefile.in (ALL_CFLAGS): Reorder the switches more rationally.
 
-Mon Oct 24 14:39:54 1994  Jim Wilson  (wilson@chestnut.cygnus.com)
+1994-10-24  Jim Wilson  (wilson@chestnut.cygnus.com)
 
 	* Makefile.in (ALL_CFLAGS): Add C_SWITCH_X_MACHINE.
 
-Sun Sep 11 14:56:01 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-11  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.27 released.
 
-Wed Sep  7 03:54:08 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-09-07  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Version 19.26 released.
 
-Sat Jul 23 20:52:38 1994  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
+1994-07-23  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
 	* Error.c (XMenuError): Make `message' static.
 
-Tue Jun 28 14:53:31 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-06-28  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Create.c (XAllocDisplayColor): New function.
 	Use it throughout in place of XAllocNamedColor.
 
-Mon May 30 04:33:36 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.25 released.
 
-Mon May 23 03:32:01 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-23  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.24 released.
 
-Tue May 17 19:30:30 1994  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
+1994-05-17  Karl Heuer  (kwzh@hal.gnu.ai.mit.edu)
 
 	* Create.c (XMenuCreate): Declare `data' as char*.
 
-Mon May 16 03:25:22 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-05-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.23 released.
 
-Tue Apr 12 11:57:11 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-04-12  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Create.c (XMenuCreate): Declare `data' as unsigned char*.
 
-Mon Jan  3 02:17:53 1994  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1994-01-03  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* XMakeAssoc.c (XMakeAssoc): Use xmalloc.
 	(_XIOErrorFunction): Decl deleted.
 
-Sat Nov 27 04:42:08 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.22 released.
 
-Fri Nov 26 02:34:08 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-26  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Activate.c (XMenuActivate):
 	Call XSetWindowBackground and _XMRefreshPane.
 
-Tue Nov 16 06:14:38 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-16  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.21 released.
 
-Sat Nov 13 03:50:01 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (libXMenu11.a): Tell make not to worry if ranlib fails.
 	Tell user too, in case make doesn't pay attention.
 
-Thu Nov 11 10:30:55 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-11-11  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.20 released.
 
-Mon Oct 25 02:25:19 1993  Brian Fox  (bfox@albert.gnu.ai.mit.edu)
+1993-10-25  Brian Fox  (bfox@albert.gnu.ai.mit.edu)
 
 	* Makefile.in (ALL_CFLAGS): Add C_SWITCH_X_SYSTEM.
 
-Mon Sep 27 08:43:43 1993  Brian Fox  (bfox@valhalla)
+1993-09-27  Brian Fox  (bfox@valhalla)
 
 	* Makefile.in (CPP, LN_S, C_SWITCH_X_SITE, CC, CFLAGS): Allow
 	`configure' to supply the values for these variables.
 
-Sun Sep 26 10:07:11 1993  Brian Fox  (bfox@ai.mit.edu)
+1993-09-26  Brian Fox  (bfox@ai.mit.edu)
 
 	* Makefile.in (VPATH, srcdir): Now that `configure' creates the
 	Makefiles, do not append the current directory to the value of
 	`srcdir' or `VPATH'.
 
-Sat Aug 14 00:23:11 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-14  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.19 released.
 
-Sun Aug  8 01:15:30 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-08-08  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.18 released.
 
-Fri Jul 30 16:12:43 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-07-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Internal.c (_XMWinQueInit): Use explicit loop, not bzero.
 
-Tue Jul 27 04:27:10 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-07-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (ALL_CFLAGS): Use all 6 C_SWITCH_... vars.
 
 	Among them, put the ..._SITE vars last.
 
-Sun Jul 18 02:38:03 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-07-18  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Version 19.17 released.
 
-Wed Jul  7 03:13:22 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-07  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in: Write out the dependencies for the object files;
 	otherwise, VPATH won't work.
 
 	* Makefile.in: Re-arrange, to put `all' target at the top.
 
-Tue Jul  6 11:05:14 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-07-06  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Version 19.16 released.
 
-Sat Jun 19 17:14:27 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-19  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* version 19.15 released.
 
-Fri Jun 18 12:31:02 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-06-18  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (ALL_CFLAGS): Always #define EMACS_BITMAP_FILES.
 	This should make it work under any circumstances.
 
 	* Makefile.in (mostlyclean): Use rm -f.
 
-Thu Jun 17 19:29:56 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-17  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Version 19.14 released.
 
-Thu Jun 17 15:03:22 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-06-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile.in (ALL_CFLAGS): Include C_SWITCH_MACHINE, and CPPFLAGS.
 	Put CFLAGS last.
 
-Wed Jun 16 11:53:18 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-16  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
         Bring mumbleclean targets into conformance with GNU coding standards.
 	* Makefile.in (mostlyclean, realclean): New targets.
 
-Tue Jun  8 08:29:27 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-06-08  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Version 19.13 released.
 
-Sun May 30 00:15:27 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-30  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Version 19.10 released.
 
-Sat May 29 02:18:00 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Create.c: Handle EMACS_BITMAP_FILES.
 	Use new names of renamed bitmap files.
 
-Fri May 28 01:56:50 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-28  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* AddPane.c, AddSel.c, DelPane.c, DelSel.c, InsPane.c, InsSel.c,
 	XDelAssoc.c, XMakeAssoc.c, XMenu.h, insque.c: Changed all uses of
 	insque and remque to emacs_insque and emacs_remque, so we can
 	safely include insque.c in the library on all systems.
 
-Thu May 27 23:34:44 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-27  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (.c.o): Use $< instead of ${srcdir}/$*.c; the latter
 	only works with GNU Make.
 
-Thu May 27 09:22:39 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Create.c (XMenuCreate): Use classes PaneFont and SelectionFont.
 
-Thu May 27 02:35:32 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-27  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Version 19.9 released.
 
-Thu May 27 01:17:08 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-05-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Create.c (XMenuCreate): Use x_get_resource_string, not XGetDefault.
 
-Mon May 24 12:14:41 1993  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
+1993-05-24  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
 	* Version 19.8 released.
 
-Sun May 23 17:47:43 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-23  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in (C_SWITCH_X_SITE): New variable, so that the
 	configuration process can correctly implement the --x-includes
 	option.
 
-Sat May 22 23:48:24 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-22  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Create.c (XMenuCreate): Initialize the menu's pixmaps to None,
 	not NULL.
 
-Sat May 22 19:37:01 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-22  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
         * Version 19.7 released.
 
-Sat May 15 17:26:01 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-05-15  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile.in: Renamed from Makefile, so that the top-level
 	makefile can edit it.
 
-Tue Apr 13 02:38:44 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-04-13  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* XLookAssoc.c, XMakeAssoc: VMS needs <X11/Xresource.h>, not
 	<X11/Xos.h>.
@@ -255,7 +255,7 @@ Tue Apr 13 02:38:44 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* XCrAssoc.c: #include <errno.h>, not "errno.h".
 	(XCreateAssocTable): Doc fix.
 
-Wed Mar 24 20:49:08 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
+1993-03-24  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
 	* Makefile (.c.o): Include C_SWITCH_SITE and C_SWITCH_SYSTEM in
 	the options to the C compiler.
@@ -270,16 +270,16 @@ Wed Mar 24 20:49:08 1993  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 	* Create.c: On VMS, we have to look for the bitmap files in
 	`./src/bitmaps', not <X11/bitmaps>.
 
-Sun Mar 14 13:47:06 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-03-14  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (.c.o): Don't rm the .o files.
 
-Sat Mar 13 16:11:48 1993  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1993-03-13  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Activate.c (XMenuActivate): If `active' field is negative,
 	don't allow selecting a string.
 
-Tue Mar  9 12:52:13 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
+1993-03-09  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 
 	* Create.c (XMenuCreate): New variable `root', holding the
 	display's default root window, so we don't have to write out
@@ -314,14 +314,14 @@ Tue Mar  9 12:52:13 1993  Jim Blandy  (jimb@totoro.cs.oberlin.edu)
 	* XDestAssoc.c (XDestroyAssocTable): Use free instead of Xfree.
 	* XDelAssoc.c (XDeleteAssoc): Same.
 
-Sun Oct 18 17:46:43 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-10-18  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* XMakeAssoc.c (XMakeAssoc): Use malloc, not Xmalloc.
 	* XCrAssoc.c (XCreateAssocTable): Use malloc and calloc directly.
 	* XDelAssoc.c (XDeleteAssoc): Use free, not Xfree.
 	* XDestAssoc.c (XDestroyAssocTable): Likewise.
 
-Sat Oct 17 17:35:03 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-10-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* XDelAssoc.c, XLookAssoc.c, XCrAssoc.c, XDestAssoc.c, XMakeAssoc.c:
 	Use Xlib.h, not Xlibint.h.
@@ -329,56 +329,56 @@ Sat Oct 17 17:35:03 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 	* XMakeAssoc.c, XCrAssoc.c: Include errno.h.  Declare errno.
 	* XMakeAssoc.c (_XIOErrorFunction): Declared.
 
-Sat Sep 19 03:44:41 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-09-19  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* XDelAssoc.c, XLookAssoc.c, XCrAssoc.c, XDestAssoc.c, XMakeAssoc.c:
 	Specify dir X11/ when including Xlibint.h.
 
-Thu Sep 17 18:46:54 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-09-17  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* XDelAssoc.c, XLookAssoc.c, XCrAssoc.c, XDestAssoc.c, XMakeAssoc.c:
 	New files.
 
 	* Makefile (SRCS, OBJS): Compile those files.
 
-Fri Jan 31 23:45:10 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-01-31  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (clean): Delete object files and library.
 	(distclean): New target.
 
-Wed Jan 29 14:38:32 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-01-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (libXMenu11.a): Put `-' on ranlib line.
 
-Mon Jan 27 15:25:35 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-01-27  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (EXTRA): New variable.
 	(libXMenu11.a): Use that.
 
 	* insque.c: New file.
 
-Sun Jan 26 00:43:25 1992  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
+1992-01-26  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
 	* Makefile (CC): Assignment commented out.
 
-Sat Nov 16 06:27:39 1991  Noah Friedman  (friedman at nutrimat)
+1991-11-16  Noah Friedman  (friedman at nutrimat)
 
         * copyright.h: New file (copied from X11R4 distribution)
         * All files: Replaced occurrences of #include <X11/copyright.h>
           with #include "copyright.h"
 
-Fri Oct 25 00:03:06 1991  Richard Stallman  (rms at mole.gnu.ai.mit.edu)
+1991-10-25  Richard Stallman  (rms at mole.gnu.ai.mit.edu)
 
 	* XMenu.h (enum _xmmode): Remove spurious comma.
 
 	* X10.h: New file.
 	* XMenu.h, XMenuInt.h: Include X10.h from this dir.
 
-Tue Nov 13 17:17:59 1990  Richard Stallman  (rms at mole.ai.mit.edu)
+1990-11-13  Richard Stallman  (rms at mole.ai.mit.edu)
 
 	* XMenu.h (struct _xmenu): Use unsigned long for colors.
 
-Mon Nov 12 18:55:06 1990  Richard Stallman  (rms at mole.ai.mit.edu)
+1990-11-12  Richard Stallman  (rms at mole.ai.mit.edu)
 
 	* Internal.c: Declare argument `display' in some functions.
 

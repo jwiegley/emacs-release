@@ -2,8 +2,9 @@
 
 #define IRIX5
 
-/* We want BSD style signals. */
-#define _BSD_SIGNALS
+#undef sigsetmask  /* use sys_sigsetmask */
+#undef _longjmp /* use system versions, not conservative aliases */
+#undef _setjmp 
 
 #define SETPGRP_RELEASES_CTTY
 
@@ -122,3 +123,7 @@ char *_getpty();
 #ifdef __GNUC__
 #define C_DEBUG_SWITCH
 #endif
+
+/* Prevent the variable ospeed from being defined by -lcurses
+   because it defines it with too few bytes.  */
+#define ospeed ospeed_

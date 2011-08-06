@@ -3,6 +3,7 @@
 ;; Copyright (C) 1988 Free Software Foundation, Inc.
 
 ;; Author: Jeff Norden <jeff@colgate.csnet>
+;; Maintainer: FSF
 ;; Created: 15 Feb 1988
 ;; Keywords: comm
 
@@ -145,5 +146,7 @@ command `kermit | tr -d '\\015''."
   "Cancel a previous kermit-clean-shell-on command."
   (interactive)
   (set-process-filter (get-buffer-process (current-buffer)) nil))
+
+(provide 'kermit)
 
 ;;; kermit.el ends here

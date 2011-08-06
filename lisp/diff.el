@@ -31,12 +31,21 @@
 
 (require 'compile)
 
-;;; This is duplicated in vc.el.
-(defvar diff-switches "-c"
-  "*A string or list of strings specifying switches to be be passed to diff.")
+(defgroup diff nil
+  "Comparing files with `diff'."
+  :group 'tools)
 
-(defvar diff-command "diff"
-  "*The command to use to run diff.")
+;;;###autoload
+(defcustom diff-switches "-c"
+  "*A string or list of strings specifying switches to be be passed to diff."
+  :type '(choice string (repeat string))
+  :group 'diff)
+
+;;;###autoload
+(defcustom diff-command "diff"
+  "*The command to use to run diff."
+  :type 'string
+  :group 'diff)
 
 (defvar diff-regexp-alist
   '(
@@ -160,6 +169,21 @@ is nil, REGEXP matches only half a section.")
     (message "Parsing differences...done"))
   (setq compilation-error-list (nreverse compilation-error-list)))
 
+(defun diff-process-setup ()
+  "Set up \`compilation-exit-message-function' for \`diff'."
+  ;; Avoid frightening people with "abnormally terminated"
+  ;; if diff finds differences.
+  (set (make-local-variable 'compilation-exit-message-function)
+       (lambda (status code msg)
+	 (cond ((not (eq status 'exit))
+		(cons msg code))
+	       ((zerop code)
+		'("finished (no differences)\n" . "no differences"))
+	       ((= code 1)
+		'("finished\n" . "differences found"))
+	       (t
+		(cons msg code))))))
+
 ;;;###autoload
 (defun diff (old new &optional switches)
   "Find and display the differences between OLD and NEW files.
@@ -197,8 +221,9 @@ With prefix arg, prompt for diff switches."
   (let ((old-alt (file-local-copy old))
 	(new-alt (file-local-copy new))
 	buf)
-    (unwind-protect
-	(let ((command
+    (save-excursion
+	(let ((compilation-process-setup-function 'diff-process-setup)
+	      (command
 	       (mapconcat 'identity
 			  (append (list diff-command)
 				  ;; Use explicitly specified switches
@@ -220,19 +245,7 @@ With prefix arg, prompt for diff switches."
 		(compile-internal command
 				  "No more differences" "Diff"
 				  'diff-parse-differences))
-	  (pop-to-buffer buf)
-	  ;; Avoid frightening people with "abnormally terminated"
-	  ;; if diff finds differences.
-	  (set (make-local-variable 'compilation-exit-message-function)
-	       (lambda (status code msg)
-		 (cond ((not (eq status 'exit))
-			(cons msg code))
-		       ((zerop code)
-			'("finished (no differences)\n" . "no differences"))
-		       ((= code 1)
-			'("finished\n" . "differences found"))
-		       (t
-			(cons msg code)))))
+	  (set-buffer buf)
 	  (set (make-local-variable 'diff-old-file) old)
 	  (set (make-local-variable 'diff-new-file) new)
 	  (set (make-local-variable 'diff-old-temp-file) old-alt)
@@ -243,6 +256,10 @@ With prefix arg, prompt for diff switches."
 			       (delete-file diff-old-temp-file))
 			   (if diff-new-temp-file
 			       (delete-file diff-new-temp-file)))))
+	  ;; When async processes aren't available, the compilation finish
+	  ;; function doesn't get chance to run.  Invoke it by hand.
+	  (or (fboundp 'start-process)
+	      (funcall compilation-finish-function nil nil))
 	  buf))))
 
 ;;;###autoload
@@ -288,11 +305,11 @@ The backup file is the first file given to `diff'."
 	      (base-versions (concat (file-name-sans-versions
 				      (file-name-nondirectory backupname))
 				     ".~"))
-	      (bv-length (length base-versions)))
+	      ;; This is a fluid var for backup-extract-version.
+	      (backup-extract-version-start (length base-versions)))
 	 (concat dir
 		 (car (sort
 		       (file-name-all-completions base-versions dir)
-		       ;; bv-length is a fluid var for backup-extract-version:
 		       (function
 			(lambda (fn1 fn2)
 			  (> (backup-extract-version fn1)

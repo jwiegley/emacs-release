@@ -1,5 +1,5 @@
-This is Info file ../info/gnus, produced by Makeinfo-1.63 from the
-input file gnus.texi.
+This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
+the input file gnus.texi.
 
    This file documents Gnus, the GNU Emacs newsreader.
 
@@ -19,1243 +19,1353 @@ manual into another language, under the above conditions for modified
 versions.
 
 
-File: gnus,  Node: Terminology,  Next: Customization,  Prev: History,  Up: Appendices
+File: gnus,  Node: Kill Files,  Next: Converting Kill Files,  Prev: Global Score Files,  Up: Scoring
 
-Terminology
+Kill Files
+==========
+
+   Gnus still supports those pesky old kill files.  In fact, the kill
+file entries can now be expiring, which is something I wrote before
+Daniel Quinlan thought of doing score files, so I've left the code in
+there.
+
+   In short, kill processing is a lot slower (and I do mean *a lot*)
+than score processing, so it might be a good idea to rewrite your kill
+files into score files.
+
+   Anyway, a kill file is a normal `emacs-lisp' file.  You can put any
+forms into this file, which means that you can use kill files as some
+sort of primitive hook function to be run on group entry, even though
+that isn't a very good idea.
+
+   Normal kill files look like this:
+
+     (gnus-kill "From" "Lars Ingebrigtsen")
+     (gnus-kill "Subject" "ding")
+     (gnus-expunge "X")
+
+   This will mark every article written by me as read, and remove them
+from the summary buffer.  Very useful, you'll agree.
+
+   Other programs use a totally different kill file syntax.  If Gnus
+encounters what looks like a `rn' kill file, it will take a stab at
+interpreting it.
+
+   Two summary functions for editing a GNUS kill file:
+
+`M-k'
+     Edit this group's kill file (`gnus-summary-edit-local-kill').
+
+`M-K'
+     Edit the general kill file (`gnus-summary-edit-global-kill').
+
+   Two group mode functions for editing the kill files:
+
+`M-k'
+     Edit this group's kill file (`gnus-group-edit-local-kill').
+
+`M-K'
+     Edit the general kill file (`gnus-group-edit-global-kill').
+
+   Kill file variables:
+
+`gnus-kill-file-name'
+     A kill file for the group `soc.motss' is normally called
+     `soc.motss.KILL'.  The suffix appended to the group name to get
+     this file name is detailed by the `gnus-kill-file-name' variable.
+     The "global" kill file (not in the score file sense of "global", of
+     course) is called just `KILL'.
+
+`gnus-kill-save-kill-file'
+     If this variable is non-`nil', Gnus will save the kill file after
+     processing, which is necessary if you use expiring kills.
+
+`gnus-apply-kill-hook'
+     A hook called to apply kill files to a group.  It is
+     `(gnus-apply-kill-file)' by default.  If you want to ignore the
+     kill file if you have a score file for the same group, you can set
+     this hook to `(gnus-apply-kill-file-unless-scored)'.  If you don't
+     want kill files to be processed, you should set this variable to
+     `nil'.
+
+`gnus-kill-file-mode-hook'
+     A hook called in kill-file mode buffers.
+
+
+File: gnus,  Node: Converting Kill Files,  Next: GroupLens,  Prev: Kill Files,  Up: Scoring
+
+Converting Kill Files
+=====================
+
+   If you have loads of old kill files, you may want to convert them
+into score files.  If they are "regular", you can use the
+`gnus-kill-to-score.el' package; if not, you'll have to do it by hand.
+
+   The kill to score conversion package isn't included in Gnus by
+default.  You can fetch it from
+`http://www.ifi.uio.no/~larsi/ding-other/gnus-kill-to-score'.
+
+   If your old kill files are very complex--if they contain more
+non-`gnus-kill' forms than not, you'll have to convert them by hand.
+Or just let them be as they are.  Gnus will still use them as before.
+
+
+File: gnus,  Node: GroupLens,  Next: Advanced Scoring,  Prev: Converting Kill Files,  Up: Scoring
+
+GroupLens
+=========
+
+   GroupLens is a collaborative filtering system that helps you work
+together with other people to find the quality news articles out of the
+huge volume of news articles generated every day.
+
+   To accomplish this the GroupLens system combines your opinions about
+articles you have already read with the opinions of others who have done
+likewise and gives you a personalized prediction for each unread news
+article.  Think of GroupLens as a matchmaker.  GroupLens watches how you
+rate articles, and finds other people that rate articles the same way.
+Once it has found for you some people you agree with it tells you, in
+the form of a prediction, what they thought of the article.  You can use
+this prediction to help you decide whether or not you want to read the
+article.
+
+* Menu:
+
+* Using GroupLens::          How to make Gnus use GroupLens.
+* Rating Articles::          Letting GroupLens know how you rate articles.
+* Displaying Predictions::   Displaying predictions given by GroupLens.
+* GroupLens Variables::      Customizing GroupLens.
+
+
+File: gnus,  Node: Using GroupLens,  Next: Rating Articles,  Up: GroupLens
+
+Using GroupLens
+---------------
+
+   To use GroupLens you must register a pseudonym with your local Better
+Bit Bureau (BBB).  `http://www.cs.umn.edu/Research/GroupLens/bbb.html'
+is the only better bit in town is at the moment.
+
+   Once you have registered you'll need to set a couple of variables.
+
+`gnus-use-grouplens'
+     Setting this variable to a non-`nil' value will make Gnus hook into
+     all the relevant GroupLens functions.
+
+`grouplens-pseudonym'
+     This variable should be set to the pseudonym you got when
+     registering with the Better Bit Bureau.
+
+`grouplens-newsgroups'
+     A list of groups that you want to get GroupLens predictions for.
+
+   Thats the minimum of what you need to get up and running with
+GroupLens.  Once you've registered, GroupLens will start giving you
+scores for articles based on the average of what other people think.
+But, to get the real benefit of GroupLens you need to start rating
+articles yourself.  Then the scores GroupLens gives you will be
+personalized for you, based on how the people you usually agree with
+have already rated.
+
+
+File: gnus,  Node: Rating Articles,  Next: Displaying Predictions,  Prev: Using GroupLens,  Up: GroupLens
+
+Rating Articles
+---------------
+
+   In GroupLens, an article is rated on a scale from 1 to 5, inclusive.
+Where 1 means something like this article is a waste of bandwidth and 5
+means that the article was really good.  The basic question to ask
+yourself is, "on a scale from 1 to 5 would I like to see more articles
+like this one?"
+
+   There are four ways to enter a rating for an article in GroupLens.
+
+`r'
+     This function will prompt you for a rating on a scale of one to
+     five.
+
+`k'
+     This function will prompt you for a rating, and rate all the
+     articles in the thread.  This is really useful for some of those
+     long running giant threads in rec.humor.
+
+   The next two commands, `n' and `,' take a numerical prefix to be the
+score of the article you're reading.
+
+`1-5 n'
+     Rate the article and go to the next unread article.
+
+`1-5 ,'
+     Rate the article and go to the next unread article with the
+     highest score.
+
+   If you want to give the current article a score of 4 and then go to
+the next article, just type `4 n'.
+
+
+File: gnus,  Node: Displaying Predictions,  Next: GroupLens Variables,  Prev: Rating Articles,  Up: GroupLens
+
+Displaying Predictions
+----------------------
+
+   GroupLens makes a prediction for you about how much you will like a
+news article.  The predictions from GroupLens are on a scale from 1 to
+5, where 1 is the worst and 5 is the best.  You can use the predictions
+from GroupLens in one of three ways controlled by the variable
+`gnus-grouplens-override-scoring'.
+
+   There are three ways to display predictions in grouplens.  You may
+choose to have the GroupLens scores contribute to, or override the
+regular gnus scoring mechanism. override is the default; however, some
+people prefer to see the Gnus scores plus the grouplens scores.  To get
+the separate scoring behavior you need to set
+`gnus-grouplens-override-scoring' to `'separate'.  To have the
+GroupLens predictions combined with the grouplens scores set it to
+`'override' and to combine the scores set
+`gnus-grouplens-override-scoring' to `'combine'.  When you use the
+combine option you will also want to set the values for
+`grouplens-prediction-offset' and `grouplens-score-scale-factor'.
+
+   In either case, GroupLens gives you a few choices for how you would
+like to see your predictions displayed.  The display of predictions is
+controlled by the `grouplens-prediction-display' variable.
+
+   The following are legal values for that variable.
+
+`prediction-spot'
+     The higher the prediction, the further to the right an `*' is
+     displayed.
+
+`confidence-interval'
+     A numeric confidence interval.
+
+`prediction-bar'
+     The higher the prediction, the longer the bar.
+
+`confidence-bar'
+     Numerical confidence.
+
+`confidence-spot'
+     The spot gets bigger with more confidence.
+
+`prediction-num'
+     Plain-old numeric value.
+
+`confidence-plus-minus'
+     Prediction +/i confidence.
+
+
+File: gnus,  Node: GroupLens Variables,  Prev: Displaying Predictions,  Up: GroupLens
+
+GroupLens Variables
+-------------------
+
+`gnus-summary-grouplens-line-format'
+     The summary line format used in summary buffers that are GroupLens
+     enhanced.  It accepts the same specs as the normal summary line
+     format (*note Summary Buffer Lines::.).  The default is
+     `%U%R%z%l%I%(%[%4L: %-20,20n%]%) %s\n'.
+
+`grouplens-bbb-host'
+     Host running the bbbd server.  `grouplens.cs.umn.edu' is the
+     default.
+
+`grouplens-bbb-port'
+     Port of the host running the bbbd server.  The default is 9000.
+
+`grouplens-score-offset'
+     Offset the prediction by this value.  In other words, subtract the
+     prediction value by this number to arrive at the effective score.
+     The default is 0.
+
+`grouplens-score-scale-factor'
+     This variable allows the user to magnify the effect of GroupLens
+     scores.  The scale factor is applied after the offset.  The
+     default is 1.
+
+
+File: gnus,  Node: Advanced Scoring,  Next: Score Decays,  Prev: GroupLens,  Up: Scoring
+
+Advanced Scoring
+================
+
+   Scoring on Subjects and From headers is nice enough, but what if
+you're really interested in what a person has to say only when she's
+talking about a particular subject?  Or what about if you really don't
+want to read what person A has to say when she's following up to person
+B, but want to read what she says when she's following up to person C?
+
+   By using advanced scoring rules you may create arbitrarily complex
+scoring patterns.
+
+* Menu:
+
+* Advanced Scoring Syntax::     A definition.
+* Advanced Scoring Examples::   What they look like.
+* Advanced Scoring Tips::       Getting the most out of it.
+
+
+File: gnus,  Node: Advanced Scoring Syntax,  Next: Advanced Scoring Examples,  Up: Advanced Scoring
+
+Advanced Scoring Syntax
+-----------------------
+
+   Ordinary scoring rules have a string as the first element in the
+rule.  Advanced scoring rules have a list as the first element.  The
+second element is the score to be applied if the first element
+evaluated to a non-`nil' value.
+
+   These lists may consist of three logical operators, one redirection
+operator, and various match operators.
+
+   Logical operators:
+
+`&'
+`and'
+     This logical operator will evaluate each of its arguments until it
+     finds one that evaluates to `false', and then it'll stop.  If all
+     arguments evaluate to `true' values, then this operator will return
+     `true'.
+
+`|'
+`or'
+     This logical operator will evaluate each of its arguments until it
+     finds one that evaluates to `true'.  If no arguments are `true',
+     then this operator will return `false'.
+
+`!'
+`not'
+`¬'
+     This logical operator only takes a single argument.  It returns the
+     inverse of the value of its argument.
+
+   There is an "indirection operator" that will make its arguments
+apply to the ancestors of the current article being scored.  For
+instance, `1-' will make score rules apply to the parent of the current
+article.  `2-' will make score fules apply to the grandparent of the
+current article.  Alternatively, you can write `^^', where the number
+of `^'s (carets) say how far back into the ancestry you want to go.
+
+   Finally, we have the match operators.  These are the ones that do the
+real work.  Match operators are header name strings followed by a match
+and a match type.  A typical match operator looks like `("from" "Lars
+Ingebrigtsen" s)'.  The header names are the same as when using simple
+scoring, and the match types are also the same.
+
+
+File: gnus,  Node: Advanced Scoring Examples,  Next: Advanced Scoring Tips,  Prev: Advanced Scoring Syntax,  Up: Advanced Scoring
+
+Advanced Scoring Examples
+-------------------------
+
+   Let's say you want to increase the score of articles written by Lars
+when he's talking about Gnus:
+
+     ((&
+       ("from" "Lars Ingebrigtsen")
+       ("subject" "Gnus"))
+      1000)
+
+   Quite simple, huh?
+
+   When he writes long articles, he sometimes has something nice to say:
+
+     ((&
+       ("from" "Lars Ingebrigtsen")
+       (|
+        ("subject" "Gnus")
+        ("lines" 100 >)))
+      1000)
+
+   However, when he responds to things written by Reig Eigil Logge, you
+really don't want to read what he's written:
+
+     ((&
+       ("from" "Lars Ingebrigtsen")
+       (1- ("from" "Reig Eigir Logge")))
+      -100000)
+
+   Everybody that follows up Redmondo when he writes about disappearing
+socks should have their scores raised, but only when they talk about
+white socks.  However, when Lars talks about socks, it's usually not
+very interesting:
+
+     ((&
+       (1-
+        (&
+         ("from" "redmondo@.*no" r)
+         ("body" "disappearing.*socks" t)))
+       (! ("from" "Lars Ingebrigtsen"))
+       ("body" "white.*socks"))
+      1000)
+
+   The possibilities are endless.
+
+
+File: gnus,  Node: Advanced Scoring Tips,  Prev: Advanced Scoring Examples,  Up: Advanced Scoring
+
+Advanced Scoring Tips
+---------------------
+
+   The `&' and `|' logical operators do short-circuit logic.  That is,
+they stop processing their arguments when it's clear what the result of
+the operation will be.  For instance, if one of the arguments of an `&'
+evaluates to `false', there's no point in evaluating the rest of the
+arguments.  This means that you should put slow matches (`body',
+`header') last and quick matches (`from', `subject') first.
+
+   The indirection arguments (`1-' and so on) will make their arguments
+work on previous generations of the thread.  If you say something like:
+
+     ...
+     (1-
+      (1-
+       ("from" "lars")))
+     ...
+
+   Then that means "score on the from header of the grandparent of the
+current article".  An indirection is quite fast, but it's better to say:
+
+     (1-
+      (&
+       ("from" "Lars")
+       ("subject" "Gnus")))
+
+   than it is to say:
+
+     (&
+      (1- ("from" "Lars"))
+      (1- ("subject" "Gnus")))
+
+
+File: gnus,  Node: Score Decays,  Prev: Advanced Scoring,  Up: Scoring
+
+Score Decays
+============
+
+   You may find that your scores have a tendency to grow without
+bounds, especially if you're using adaptive scoring.  If scores get too
+big, they lose all meaning--they simply max out and it's difficult to
+use them in any sensible way.
+
+   Gnus provides a mechanism for decaying scores to help with this
+problem.  When score files are loaded and `gnus-decay-scores' is
+non-`nil', Gnus will run the score files through the decaying mechanism
+thereby lowering the scores of all non-permanent score rules.  The
+decay itself if performed by the `gnus-score-decay-function' function,
+which is `gnus-decay-score' by default.  Here's the definition of that
+function:
+
+     (defun gnus-decay-score (score)
+       (floor
+        (- score
+           (* (if (< score 0) 1 -1)
+              (min score
+                   (max gnus-score-decay-constant
+                        (* (abs score)
+                           gnus-score-decay-scale)))))))
+
+   `gnus-score-decay-constant' is 3 by default and
+`gnus-score-decay-scale' is 0.05.  This should cause the following:
+
+  1. Scores between -3 and 3 will be set to 0 when this function is
+     called.
+
+  2. Scores with magnitudes between 3 and 60 will be shrunk by 3.
+
+  3. Scores with magnitudes greater than 60 will be shrunk by 5% of the
+     score.
+
+   If you don't like this decay function, write your own.  It is called
+with the score to be decayed as its only parameter, and it should return
+the new score, which should be an integer.
+
+   Gnus will try to decay scores once a day.  If you haven't run Gnus
+for four days, Gnus will decay the scores four times, for instance.
+
+
+File: gnus,  Node: Various,  Next: The End,  Prev: Scoring,  Up: Top
+
+Various
+*******
+
+* Menu:
+
+* Process/Prefix::             A convention used by many treatment commands.
+* Interactive::                Making Gnus ask you many questions.
+* Formatting Variables::       You can specify what buffers should look like.
+* Windows Configuration::      Configuring the Gnus buffer windows.
+* Compilation::                How to speed Gnus up.
+* Mode Lines::                 Displaying information in the mode lines.
+* Highlighting and Menus::     Making buffers look all nice and cozy.
+* Buttons::                    Get tendonitis in ten easy steps!
+* Daemons::                    Gnus can do things behind your back.
+* NoCeM::                      How to avoid spam and other fatty foods.
+* Picons::                     How to display pictures of what your reading.
+* Undo::                       Some actions can be undone.
+* Moderation::                 What to do if you're a moderator.
+* XEmacs Enhancements::        There are more pictures and stuff under XEmacs.
+* Fuzzy Matching::             What's the big fuzz?
+* Thwarting Email Spam::       A how-to on avoiding unsolited commercial email.
+* Various Various::            Things that are really various.
+
+
+File: gnus,  Node: Process/Prefix,  Next: Interactive,  Up: Various
+
+Process/Prefix
+==============
+
+   Many functions, among them functions for moving, decoding and saving
+articles, use what is known as the "Process/Prefix convention".
+
+   This is a method for figuring out what articles that the user wants
+the command to be performed on.
+
+   It goes like this:
+
+   If the numeric prefix is N, perform the operation on the next N
+articles, starting with the current one.  If the numeric prefix is
+negative, perform the operation on the previous N articles, starting
+with the current one.
+
+   If `transient-mark-mode' in non-`nil' and the region is active, all
+articles in the region will be worked upon.
+
+   If there is no numeric prefix, but some articles are marked with the
+process mark, perform the operation on the articles that are marked with
+the process mark.
+
+   If there is neither a numeric prefix nor any articles marked with the
+process mark, just perform the operation on the current article.
+
+   Quite simple, really, but it needs to be made clear so that surprises
+are avoided.
+
+   Commands that react to the process mark will push the current list of
+process marked articles onto a stack and will then clear all process
+marked articles.  You can restore the previous configuration with the
+`M P y' command (*note Setting Process Marks::.).
+
+   One thing that seems to shock & horrify lots of people is that, for
+instance, `3 d' does exactly the same as `d' `d' `d'.  Since each `d'
+(which marks the current article as read) by default goes to the next
+unread article after marking, this means that `3 d' will mark the next
+three unread articles as read, no matter what the summary buffer looks
+like.  Set `gnus-summary-goto-unread' to `nil' for a more
+straightforward action.
+
+
+File: gnus,  Node: Interactive,  Next: Formatting Variables,  Prev: Process/Prefix,  Up: Various
+
+Interactive
 ===========
 
-"news"
-     This is what you are supposed to use this thing for--reading news.
-     News is generally fetched from a nearby NNTP server, and is
-     generally publicly available to everybody.  If you post news, the
-     entire world is likely to read just what you have written, and
-     they'll all snigger mischievously.  Behind your back.
+`gnus-novice-user'
+     If this variable is non-`nil', you are either a newcomer to the
+     World of Usenet, or you are very cautious, which is a nice thing
+     to be, really.  You will be given questions of the type "Are you
+     sure you want to do this?" before doing anything dangerous.  This
+     is `t' by default.
 
-"mail"
-     Everything that's delivered to you personally is mail.  Some
-     news/mail readers (like Gnus) blur the distinction between mail
-     and news, but there is a difference.  Mail is private.  News is
-     public.  Mailing is not posting, and replying is not following up.
+`gnus-expert-user'
+     If this variable is non-`nil', you will never ever be asked any
+     questions by Gnus.  It will simply assume you know what you're
+     doing, no matter how strange.
 
-"reply"
-     Send a mail to the person who has written what you are reading.
+`gnus-interactive-catchup'
+     Require confirmation before catching up a group if non-`nil'.  It
+     is `t' by default.
 
-"follow up"
-     Post an article to the current newsgroup responding to the article
-     you are reading.
-
-"backend"
-     Gnus gets fed articles from a number of backends, both news and
-     mail backends.  Gnus does not handle the underlying media, so to
-     speak--this is all done by the backends.
-
-"native"
-     Gnus will always use one method (and backend) as the "native", or
-     default, way of getting news.
-
-"foreign"
-     You can also have any number of foreign groups active at the same
-     time.  These are groups that use different backends for getting
-     news.
-
-"secondary"
-     Secondary backends are somewhere half-way between being native and
-     being foreign, but they mostly act like they are native.
-
-"article"
-     A nessage that has been posted as news.
-
-"mail message"
-     A message that has been mailed.
-
-"message"
-     A mail message or news article
-
-"head"
-     The top part of a message, where administrative information (etc.)
-     is put.
-
-"body"
-     The rest of an article.  Everything that is not in the head is in
-     the body.
-
-"header"
-     A line from the head of an article.
-
-"headers"
-     A collection of such lines, or a collection of heads.  Or even a
-     collection of NOV lines.
-
-"NOV"
-     When Gnus enters a group, it asks the backend for the headers of
-     all unread articles in the group.  Most servers support the News
-     OverView format, which is more compact and much faster to read and
-     parse than the normal HEAD format.
-
-"level"
-     Each group is subscribed at some "level" or other (1-9).  The ones
-     that have a lower level are "more" subscribed than the groups with
-     a higher level.  In fact, groups on levels 1-5 are considered
-     "subscribed"; 6-7 are "unsubscribed"; 8 are "zombies"; and 9 are
-     "killed".  Commands for listing groups and scanning for new
-     articles will all use the numeric prefix as "working level".
-
-"killed groups"
-     No information on killed groups is stored or updated, which makes
-     killed groups much easier to handle than subscribed groups.
-
-"zombie groups"
-     Just like killed groups, only slightly less dead.
-
-"active file"
-     The news server has to keep track of what articles it carries, and
-     what groups exist.  All this information in stored in the active
-     file, which is rather large, as you might surmise.
-
-"bogus groups"
-     A group that exists in the `.newsrc' file, but isn't known to the
-     server (i. e.,  it isn't in the active file), is a *bogus group*.
-     This means that the group probably doesn't exist (any more).
-
-"server"
-     A machine than one can connect to and get news (or mail) from.
-
-"select method"
-     A structure that specifies the backend, the server and the virtual
-     server parameters.
-
-"virtual server"
-     A named select method.  Since a select methods defines all there
-     is to know about connecting to a (physical) server, taking the who
-     things as a whole is a virtual server.
+`gnus-interactive-exit'
+     Require confirmation before exiting Gnus.  This variable is `t' by
+     default.
 
 
-File: gnus,  Node: Customization,  Next: Troubleshooting,  Prev: Terminology,  Up: Appendices
+File: gnus,  Node: Formatting Variables,  Next: Windows Configuration,  Prev: Interactive,  Up: Various
 
-Customization
-=============
+Formatting Variables
+====================
 
-   All variables are properly documented elsewhere in this manual.  This
-section is designed to give general pointers on how to customize Gnus
-for some quite common situations.
+   Throughout this manual you've probably noticed lots of variables that
+are called things like `gnus-group-line-format' and
+`gnus-summary-mode-line-format'.  These control how Gnus is to output
+lines in the various buffers.  There's quite a lot of them.
+Fortunately, they all use the same syntax, so there's not that much to
+be annoyed by.
+
+   Here's an example format spec (from the group buffer): `%M%S%5y:
+%(%g%)\n'.  We see that it is indeed extremely ugly, and that there are
+lots of percentages everywhere.
 
 * Menu:
 
-* Slow/Expensive Connection:: You run a local Emacs and get the news elsewhere.
-* Slow Terminal Connection::  You run a remote Emacs.
-* Little Disk Space::         You feel that having large setup files is icky.
-* Slow Machine::              You feel like buying a faster machine.
+* Formatting Basics::     A formatting variable is basically a format string.
+* Advanced Formatting::   Modifying output in various ways.
+* User-Defined Specs::    Having Gnus call your own functions.
+* Formatting Fonts::      Making the formatting look colorful and nice.
+
+   Currently Gnus uses the following formatting variables:
+`gnus-group-line-format', `gnus-summary-line-format',
+`gnus-server-line-format', `gnus-topic-line-format',
+`gnus-group-mode-line-format', `gnus-summary-mode-line-format',
+`gnus-article-mode-line-format', `gnus-server-mode-line-format', and
+`gnus-summary-pick-line-format'.
+
+   All these format variables can also be arbitrary elisp forms.  In
+that case, they will be `eval'ed to insert the required lines.
+
+   Gnus includes a command to help you while creating your own format
+specs.  `M-x gnus-update-format' will `eval' the current form, update
+the spec in question and pop you to a buffer where you can examine the
+resulting lisp code to be run to generate the line.
 
 
-File: gnus,  Node: Slow/Expensive Connection,  Next: Slow Terminal Connection,  Up: Customization
+File: gnus,  Node: Formatting Basics,  Next: Advanced Formatting,  Up: Formatting Variables
 
-Slow/Expensive NNTP Connection
-------------------------------
-
-   If you run Emacs on a machine locally, and get your news from a
-machine over some very thin strings, you want to cut down on the amount
-of data Gnus has to get from the NNTP server.
-
-`gnus-read-active-file'
-     Set this to `nil', which will inhibit Gnus from requesting the
-     entire active file from the server.  This file is often v.  large.
-     You also have to set `gnus-check-new-news' and
-     `gnus-check-bogus-newsgroups' to `nil' to make sure that Gnus
-     doesn't suddenly decide to fetch the active file anyway.
-
-`gnus-nov-is-evil'
-     This one has to be `nil'.  If not, grabbing article headers from
-     the NNTP server will not be very fast.  Not all NNTP servers
-     support XOVER; Gnus will detect this by itself.
-
-
-File: gnus,  Node: Slow Terminal Connection,  Next: Little Disk Space,  Prev: Slow/Expensive Connection,  Up: Customization
-
-Slow Terminal Connection
-------------------------
-
-   Let's say you use your home computer for dialing up the system that
-runs Emacs and Gnus.  If your modem is slow, you want to reduce the
-amount of data that is sent over the wires as much as possible.
-
-`gnus-auto-center-summary'
-     Set this to `nil' to inhibit Gnus from re-centering the summary
-     buffer all the time.  If it is `vertical', do only vertical
-     re-centering.  If it is neither `nil' nor `vertical', do both
-     horizontal and vertical recentering.
-
-`gnus-visible-headers'
-     Cut down on the headers that are included in the articles to the
-     minimum.  You can, in fact, make do without them altogether--most
-     of the useful data is in the summary buffer, anyway.  Set this
-     variable to `^NEVVVVER' or `From:', or whatever you feel you need.
-
-`gnus-article-display-hook'
-     Set this hook to all the available hiding commands:
-          (setq gnus-article-display-hook
-                '(gnus-article-hide-headers gnus-article-hide-signature
-                  gnus-article-hide-citation))
-
-`gnus-use-full-window'
-     By setting this to `nil', you can make all the windows smaller.
-     While this doesn't really cut down much generally, it means that
-     you have to see smaller portions of articles before deciding that
-     you didn't want to read them anyway.
-
-`gnus-thread-hide-subtree'
-     If this is non-`nil', all threads in the summary buffer will be
-     hidden initially.
-
-`gnus-updated-mode-lines'
-     If this is `nil', Gnus will not put information in the buffer mode
-     lines, which might save some time.
-
-
-File: gnus,  Node: Little Disk Space,  Next: Slow Machine,  Prev: Slow Terminal Connection,  Up: Customization
-
-Little Disk Space
+Formatting Basics
 -----------------
 
-   The startup files can get rather large, so you may want to cut their
-sizes a bit if you are running out of space.
+   Each `%' element will be replaced by some string or other when the
+buffer in question is generated.  `%5y' means "insert the `y' spec, and
+pad with spaces to get a 5-character field".
 
-`gnus-save-newsrc-file'
-     If this is `nil', Gnus will never save `.newsrc'--it will only
-     save `.newsrc.eld'.  This means that you will not be able to use
-     any other newsreaders than Gnus.  This variable is `t' by default.
+   As with normal C and Emacs Lisp formatting strings, the numerical
+modifier between the `%' and the formatting type character will "pad"
+the output so that it is always at least that long.  `%5y' will make
+the field always (at least) five characters wide by padding with spaces
+to the left.  If you say `%-5y', it will pad to the right instead.
 
-`gnus-save-killed-list'
-     If this is `nil', Gnus will not save the list of dead groups.  You
-     should also set `gnus-check-new-newsgroups' to `ask-server' and
-     `gnus-check-bogus-newsgroups' to `nil' if you set this variable to
-     `nil'.  This variable is `t' by default.
+   You may also wish to limit the length of the field to protect against
+particularly wide values.  For that you can say `%4,6y', which means
+that the field will never be more than 6 characters wide and never less
+than 4 characters wide.
 
 
-File: gnus,  Node: Slow Machine,  Prev: Little Disk Space,  Up: Customization
+File: gnus,  Node: Advanced Formatting,  Next: User-Defined Specs,  Prev: Formatting Basics,  Up: Formatting Variables
 
-Slow Machine
+Advanced Formatting
+-------------------
+
+   It is frequently useful to post-process the fields in some way.
+Padding, limiting, cutting off parts and suppressing certain values can
+be achieved by using "tilde modifiers".  A typical tilde spec might
+look like `%~(cut 3)~(ignore "0")y'.
+
+   These are the legal modifiers:
+
+`pad'
+`pad-left'
+     Pad the field to the left with spaces until it reaches the required
+     length.
+
+`pad-right'
+     Pad the field to the right with spaces until it reaches the
+     required length.
+
+`max'
+`max-left'
+     Cut off characters from the left until it reaches the specified
+     length.
+
+`max-right'
+     Cut off characters from the right until it reaches the specified
+     length.
+
+`cut'
+`cut-left'
+     Cut off the specified number of characters from the left.
+
+`cut-right'
+     Cut off the specified number of characters from the right.
+
+`ignore'
+     Return an empty string if the field is equal to the specified
+     value.
+
+`form'
+     Use the specified form as the field value when the `@' spec is
+     used.
+
+   Let's take an example.  The `%o' spec in the summary mode lines will
+return a date in compact ISO8601 format--`19960809T230410'.  This is
+quite a mouthful, so we want to shave off the century number and the
+time, leaving us with a six-character date.  That would be `%~(cut-left
+2)~(max-right 6)~(pad 6)o'.  (Cutting is done before maxing, and we
+need the padding to ensure that the date is never less than 6
+characters to make it look nice in columns.)
+
+   Ignoring is done first; then cutting; then maxing; and then as the
+very last operation, padding.
+
+   If you use lots of these advanced thingies, you'll find that Gnus
+gets quite slow.  This can be helped enormously by running `M-x
+gnus-compile' when you are satisfied with the look of your lines.
+*Note Compilation::.
+
+
+File: gnus,  Node: User-Defined Specs,  Next: Formatting Fonts,  Prev: Advanced Formatting,  Up: Formatting Variables
+
+User-Defined Specs
+------------------
+
+   All the specs allow for inserting user defined specifiers--`u'.  The
+next character in the format string should be a letter.  Gnus will call
+the function `gnus-user-format-function-'`X', where `X' is the letter
+following `%u'.  The function will be passed a single parameter--what
+the parameter means depends on what buffer it's being called from.  The
+function should return a string, which will be inserted into the buffer
+just like information from any other specifier.  This function may also
+be called with dummy values, so it should protect against that.
+
+   You can also use tilde modifiers (*note Advanced Formatting::. to
+achieve much the same without defining new functions.  Here's an
+example: `%~(form (count-lines (point-min) (point)))@'.  The form given
+here will be evaluated to yield the current line number, and then
+inserted.
+
+
+File: gnus,  Node: Formatting Fonts,  Prev: User-Defined Specs,  Up: Formatting Variables
+
+Formatting Fonts
+----------------
+
+   There are specs for highlighting, and these are shared by all the
+format variables.  Text inside the `%(' and `%)' specifiers will get
+the special `mouse-face' property set, which means that it will be
+highlighted (with `gnus-mouse-face') when you put the mouse pointer
+over it.
+
+   Text inside the `%[' and `%]' specifiers will have their normal
+faces set using `gnus-face-0', which is `bold' by default.  If you say
+`%1[' instead, you'll get `gnus-face-1' instead, and so on.  Create as
+many faces as you wish.  The same goes for the `mouse-face' specs--you
+can say `%3(hello%)' to have `hello' mouse-highlighted with
+`gnus-mouse-face-3'.
+
+   Here's an alternative recipe for the group buffer:
+
+     ;; Create three face types.
+     (setq gnus-face-1 'bold)
+     (setq gnus-face-3 'italic)
+     
+     ;; We want the article count to be in
+     ;; a bold and green face.  So we create
+     ;; a new face called `my-green-bold'.
+     (copy-face 'bold 'my-green-bold)
+     ;; Set the color.
+     (set-face-foreground 'my-green-bold "ForestGreen")
+     (setq gnus-face-2 'my-green-bold)
+     
+     ;; Set the new & fancy format.
+     (setq gnus-group-line-format
+           "%M%S%3{%5y%}%2[:%] %(%1{%g%}%)\n")
+
+   I'm sure you'll be able to use this scheme to create totally
+unreadable and extremely vulgar displays.  Have fun!
+
+   Note that the `%(' specs (and friends) do not make any sense on the
+mode-line variables.
+
+
+File: gnus,  Node: Windows Configuration,  Next: Compilation,  Prev: Formatting Variables,  Up: Various
+
+Windows Configuration
+=====================
+
+   No, there's nothing here about X, so be quiet.
+
+   If `gnus-use-full-window' non-`nil', Gnus will delete all other
+windows and occupy the entire Emacs screen by itself.  It is `t' by
+default.
+
+   `gnus-buffer-configuration' describes how much space each Gnus
+buffer should be given.  Here's an excerpt of this variable:
+
+     ((group (vertical 1.0 (group 1.0 point)
+                           (if gnus-carpal (group-carpal 4))))
+      (article (vertical 1.0 (summary 0.25 point)
+                             (article 1.0))))
+
+   This is an alist.  The "key" is a symbol that names some action or
+other.  For instance, when displaying the group buffer, the window
+configuration function will use `group' as the key.  A full list of
+possible names is listed below.
+
+   The "value" (i.e., the "split") says how much space each buffer
+should occupy.  To take the `article' split as an example -
+
+     (article (vertical 1.0 (summary 0.25 point)
+                            (article 1.0)))
+
+   This "split" says that the summary buffer should occupy 25% of upper
+half of the screen, and that it is placed over the article buffer.  As
+you may have noticed, 100% + 25% is actually 125% (yup, I saw y'all
+reaching for that calculator there).  However, the special number `1.0'
+is used to signal that this buffer should soak up all the rest of the
+space available after the rest of the buffers have taken whatever they
+need.  There should be only one buffer with the `1.0' size spec per
+split.
+
+   Point will be put in the buffer that has the optional third element
+`point'.
+
+   Here's a more complicated example:
+
+     (article (vertical 1.0 (group 4)
+                            (summary 0.25 point)
+                            (if gnus-carpal (summary-carpal 4))
+                            (article 1.0)))
+
+   If the size spec is an integer instead of a floating point number,
+then that number will be used to say how many lines a buffer should
+occupy, not a percentage.
+
+   If the "split" looks like something that can be `eval'ed (to be
+precise--if the `car' of the split is a function or a subr), this split
+will be `eval'ed.  If the result is non-`nil', it will be used as a
+split.  This means that there will be three buffers if `gnus-carpal' is
+`nil', and four buffers if `gnus-carpal' is non-`nil'.
+
+   Not complicated enough for you?  Well, try this on for size:
+
+     (article (horizontal 1.0
+                  (vertical 0.5
+                      (group 1.0)
+                      (gnus-carpal 4))
+                  (vertical 1.0
+                      (summary 0.25 point)
+                      (summary-carpal 4)
+                      (article 1.0))))
+
+   Whoops.  Two buffers with the mystery 100% tag.  And what's that
+`horizontal' thingie?
+
+   If the first element in one of the split is `horizontal', Gnus will
+split the window horizontally, giving you two windows side-by-side.
+Inside each of these strips you may carry on all you like in the normal
+fashion.  The number following `horizontal' says what percentage of the
+screen is to be given to this strip.
+
+   For each split, there *must* be one element that has the 100% tag.
+The splitting is never accurate, and this buffer will eat any leftover
+lines from the splits.
+
+   To be slightly more formal, here's a definition of what a legal split
+may look like:
+
+     split       = frame | horizontal | vertical | buffer | form
+     frame       = "(frame " size *split ")"
+     horizontal  = "(horizontal " size *split ")"
+     vertical    = "(vertical " size *split ")"
+     buffer      = "(" buffer-name " " size *[ "point" ] ")"
+     size        = number | frame-params
+     buffer-name = group | article | summary ...
+
+   The limitations are that the `frame' split can only appear as the
+top-level split.  FORM should be an Emacs Lisp form that should return
+a valid split.  We see that each split is fully recursive, and may
+contain any number of `vertical' and `horizontal' splits.
+
+   Finding the right sizes can be a bit complicated.  No window may be
+less than `gnus-window-min-height' (default 1) characters high, and all
+windows must be at least `gnus-window-min-width' (default 1) characters
+wide.  Gnus will try to enforce this before applying the splits.  If
+you want to use the normal Emacs window width/height limit, you can
+just set these two variables to `nil'.
+
+   If you're not familiar with Emacs terminology, `horizontal' and
+`vertical' splits may work the opposite way of what you'd expect.
+Windows inside a `horizontal' split are shown side-by-side, and windows
+within a `vertical' split are shown above each other.
+
+   If you want to experiment with window placement, a good tip is to
+call `gnus-configure-frame' directly with a split.  This is the function
+that does all the real work when splitting buffers.  Below is a pretty
+nonsensical configuration with 5 windows; two for the group buffer and
+three for the article buffer.  (I said it was nonsensical.)  If you
+`eval' the statement below, you can get an idea of how that would look
+straight away, without going through the normal Gnus channels.  Play
+with it until you're satisfied, and then use `gnus-add-configuration'
+to add your new creation to the buffer configuration list.
+
+     (gnus-configure-frame
+      '(horizontal 1.0
+         (vertical 10
+           (group 1.0)
+           (article 0.3 point))
+         (vertical 1.0
+           (article 1.0)
+           (horizontal 4
+             (group 1.0)
+             (article 10)))))
+
+   You might want to have several frames as well.  No prob--just use the
+`frame' split:
+
+     (gnus-configure-frame
+      '(frame 1.0
+              (vertical 1.0
+                        (summary 0.25 point)
+                        (article 1.0))
+              (vertical ((height . 5) (width . 15)
+                         (user-position . t)
+                         (left . -1) (top . 1))
+                        (picon 1.0))))
+
+   This split will result in the familiar summary/article window
+configuration in the first (or "main") frame, while a small additional
+frame will be created where picons will be shown.  As you can see,
+instead of the normal `1.0' top-level spec, each additional split
+should have a frame parameter alist as the size spec.  *Note Frame
+Parameters: (elisp)Frame Parameters.
+
+   Here's a list of all possible keys for `gnus-buffer-configuration':
+
+   `group', `summary', `article', `server', `browse', `message',
+`pick', `info', `summary-faq', `edit-group', `edit-server',
+`edit-score', `post', `reply', `forward', `reply-yank', `mail-bounce',
+`draft', `pipe', `bug', `compose-bounce'.
+
+   Note that the `message' key is used for both `gnus-group-mail' and
+`gnus-summary-mail-other-window'.  If it is desirable to distinguish
+between the two, something like this might be used:
+
+     (message (horizontal 1.0
+                          (vertical 1.0 (message 1.0 point))
+                          (vertical 0.24
+                                    (if (buffer-live-p gnus-summary-buffer)
+                                        '(summary 0.5))
+                                    (group 1.0)))))
+
+   Since the `gnus-buffer-configuration' variable is so long and
+complicated, there's a function you can use to ease changing the config
+of a single setting: `gnus-add-configuration'.  If, for instance, you
+want to change the `article' setting, you could say:
+
+     (gnus-add-configuration
+      '(article (vertical 1.0
+                    (group 4)
+                    (summary .25 point)
+                    (article 1.0))))
+
+   You'd typically stick these `gnus-add-configuration' calls in your
+`.gnus.el' file or in some startup hook--they should be run after Gnus
+has been loaded.
+
+   If all windows mentioned in the configuration are already visible,
+Gnus won't change the window configuration.  If you always want to
+force the "right" window configuration, you can set
+`gnus-always-force-window-configuration' to non-`nil'.
+
+
+File: gnus,  Node: Compilation,  Next: Mode Lines,  Prev: Windows Configuration,  Up: Various
+
+Compilation
+===========
+
+   Remember all those line format specification variables?
+`gnus-summary-line-format', `gnus-group-line-format', and so on.  Now,
+Gnus will of course heed whatever these variables are, but,
+unfortunately, changing them will mean a quite significant slow-down.
+(The default values of these variables have byte-compiled functions
+associated with them, while the user-generated versions do not, of
+course.)
+
+   To help with this, you can run `M-x gnus-compile' after you've
+fiddled around with the variables and feel that you're (kind of)
+satisfied.  This will result in the new specs being byte-compiled, and
+you'll get top speed again.  Gnus will save these compiled specs in the
+`.newsrc.eld' file.  (User-defined functions aren't compiled by this
+function, though--you should compile them yourself by sticking them
+into the `.gnus.el' file and byte-compiling that file.)
+
+
+File: gnus,  Node: Mode Lines,  Next: Highlighting and Menus,  Prev: Compilation,  Up: Various
+
+Mode Lines
+==========
+
+   `gnus-updated-mode-lines' says what buffers should keep their mode
+lines updated.  It is a list of symbols.  Supported symbols include
+`group', `article', `summary', `server', `browse', and `tree'.  If the
+corresponding symbol is present, Gnus will keep that mode line updated
+with information that may be pertinent.  If this variable is `nil',
+screen refresh may be quicker.
+
+   By default, Gnus displays information on the current article in the
+mode lines of the summary and article buffers.  The information Gnus
+wishes to display (e.g. the subject of the article) is often longer
+than the mode lines, and therefore have to be cut off at some point.
+The `gnus-mode-non-string-length' variable says how long the other
+elements on the line is (i.e., the non-info part).  If you put
+additional elements on the mode line (e.g. a clock), you should modify
+this variable:
+
+     (add-hook 'display-time-hook
+               (lambda () (setq gnus-mode-non-string-length
+                                (+ 21
+                                   (if line-number-mode 5 0)
+                                   (if column-number-mode 4 0)
+                                   (length display-time-string)))))
+
+   If this variable is `nil' (which is the default), the mode line
+strings won't be chopped off, and they won't be padded either.  Note
+that the default is unlikely to be desirable, as even the percentage
+complete in the buffer may be crowded off the mode line; the user
+should configure this variable appropriately for their configuration.
+
+
+File: gnus,  Node: Highlighting and Menus,  Next: Buttons,  Prev: Mode Lines,  Up: Various
+
+Highlighting and Menus
+======================
+
+   The `gnus-visual' variable controls most of the prettifying Gnus
+aspects.  If `nil', Gnus won't attempt to create menus or use fancy
+colors or fonts.  This will also inhibit loading the `gnus-vis.el' file.
+
+   This variable can be a list of visual properties that are enabled.
+The following elements are legal, and are all included by default:
+
+`group-highlight'
+     Do highlights in the group buffer.
+
+`summary-highlight'
+     Do highlights in the summary buffer.
+
+`article-highlight'
+     Do highlights in the article buffer.
+
+`highlight'
+     Turn on highlighting in all buffers.
+
+`group-menu'
+     Create menus in the group buffer.
+
+`summary-menu'
+     Create menus in the summary buffers.
+
+`article-menu'
+     Create menus in the article buffer.
+
+`browse-menu'
+     Create menus in the browse buffer.
+
+`server-menu'
+     Create menus in the server buffer.
+
+`score-menu'
+     Create menus in the score buffers.
+
+`menu'
+     Create menus in all buffers.
+
+   So if you only want highlighting in the article buffer and menus in
+all buffers, you could say something like:
+
+     (setq gnus-visual '(article-highlight menu))
+
+   If you want only highlighting and no menus whatsoever, you'd say:
+
+     (setq gnus-visual '(highlight))
+
+   If `gnus-visual' is `t', highlighting and menus will be used in all
+Gnus buffers.
+
+   Other general variables that influence the look of all buffers
+include:
+
+`gnus-mouse-face'
+     This is the face (i.e., font) used for mouse highlighting in Gnus.
+     No mouse highlights will be done if `gnus-visual' is `nil'.
+
+   There are hooks associated with the creation of all the different
+menus:
+
+`gnus-article-menu-hook'
+     Hook called after creating the article mode menu.
+
+`gnus-group-menu-hook'
+     Hook called after creating the group mode menu.
+
+`gnus-summary-menu-hook'
+     Hook called after creating the summary mode menu.
+
+`gnus-server-menu-hook'
+     Hook called after creating the server mode menu.
+
+`gnus-browse-menu-hook'
+     Hook called after creating the browse mode menu.
+
+`gnus-score-menu-hook'
+     Hook called after creating the score mode menu.
+
+
+File: gnus,  Node: Buttons,  Next: Daemons,  Prev: Highlighting and Menus,  Up: Various
+
+Buttons
+=======
+
+   Those new-fangled "mouse" contraptions is very popular with the
+young, hep kids who don't want to learn the proper way to do things
+these days.  Why, I remember way back in the summer of '89, when I was
+using Emacs on a Tops 20 system.  Three hundred users on one single
+machine, and every user was running Simula compilers.  Bah!
+
+   Right.
+
+   Well, you can make Gnus display bufferfuls of buttons you can click
+to do anything by setting `gnus-carpal' to `t'.  Pretty simple, really.
+Tell the chiropractor I sent you.
+
+`gnus-carpal-mode-hook'
+     Hook run in all carpal mode buffers.
+
+`gnus-carpal-button-face'
+     Face used on buttons.
+
+`gnus-carpal-header-face'
+     Face used on carpal buffer headers.
+
+`gnus-carpal-group-buffer-buttons'
+     Buttons in the group buffer.
+
+`gnus-carpal-summary-buffer-buttons'
+     Buttons in the summary buffer.
+
+`gnus-carpal-server-buffer-buttons'
+     Buttons in the server buffer.
+
+`gnus-carpal-browse-buffer-buttons'
+     Buttons in the browse buffer.
+
+   All the `buttons' variables are lists.  The elements in these list
+is either a cons cell where the car contains a text to be displayed and
+the cdr contains a function symbol, or a simple string.
+
+
+File: gnus,  Node: Daemons,  Next: NoCeM,  Prev: Buttons,  Up: Various
+
+Daemons
+=======
+
+   Gnus, being larger than any program ever written (allegedly), does
+lots of strange stuff that you may wish to have done while you're not
+present.  For instance, you may want it to check for new mail once in a
+while.  Or you may want it to close down all connections to all servers
+when you leave Emacs idle.  And stuff like that.
+
+   Gnus will let you do stuff like that by defining various "handlers".
+Each handler consists of three elements:  A FUNCTION, a TIME, and an
+IDLE parameter.
+
+   Here's an example of a handler that closes connections when Emacs has
+been idle for thirty minutes:
+
+     (gnus-demon-close-connections nil 30)
+
+   Here's a handler that scans for PGP headers every hour when Emacs is
+idle:
+
+     (gnus-demon-scan-pgp 60 t)
+
+   This TIME parameter and than IDLE parameter works together in a
+strange, but wonderful fashion.  Basically, if IDLE is `nil', then the
+function will be called every TIME minutes.
+
+   If IDLE is `t', then the function will be called after TIME minutes
+only if Emacs is idle.  So if Emacs is never idle, the function will
+never be called.  But once Emacs goes idle, the function will be called
+every TIME minutes.
+
+   If IDLE is a number and TIME is a number, the function will be
+called every TIME minutes only when Emacs has been idle for IDLE
+minutes.
+
+   If IDLE is a number and TIME is `nil', the function will be called
+once every time Emacs has been idle for IDLE minutes.
+
+   And if TIME is a string, it should look like `07:31', and the
+function will then be called once every day somewhere near that time.
+Modified by the IDLE parameter, of course.
+
+   (When I say "minute" here, I really mean `gnus-demon-timestep'
+seconds.  This is 60 by default.  If you change that variable, all the
+timings in the handlers will be affected.)
+
+   To set the whole thing in motion, though, you have to set
+`gnus-use-demon' to `t'.
+
+   So, if you want to add a handler, you could put something like this
+in your `.gnus' file:
+
+     (gnus-demon-add-handler 'gnus-demon-close-connections nil 30)
+
+   Some ready-made functions to do this has been created:
+`gnus-demon-add-nocem', `gnus-demon-add-disconnection',
+`gnus-demon-add-rescan', and `gnus-demon-add-scanmail'.  Just put those
+functions in your `.gnus' if you want those abilities.
+
+   If you add handlers to `gnus-demon-handlers' directly, you should
+run `gnus-demon-init' to make the changes take hold.  To cancel all
+daemons, you can use the `gnus-demon-cancel' function.
+
+   Note that adding daemons can be pretty naughty if you overdo it.
+Adding functions that scan all news and mail from all servers every two
+seconds is a sure-fire way of getting booted off any respectable
+system.  So behave.
+
+
+File: gnus,  Node: NoCeM,  Next: Picons,  Prev: Daemons,  Up: Various
+
+NoCeM
+=====
+
+   "Spamming" is posting the same article lots and lots of times.
+Spamming is bad.  Spamming is evil.
+
+   Spamming is usually canceled within a day or so by various
+anti-spamming agencies.  These agencies usually also send out "NoCeM"
+messages.  NoCeM is pronounced "no see-'em", and means what the name
+implies--these are messages that make the offending articles, like, go
+away.
+
+   What use are these NoCeM messages if the articles are canceled
+anyway?  Some sites do not honor cancel messages and some sites just
+honor cancels from a select few people.  Then you may wish to make use
+of the NoCeM messages, which are distributed in the `alt.nocem.misc'
+newsgroup.
+
+   Gnus can read and parse the messages in this group automatically, and
+this will make spam disappear.
+
+   There are some variables to customize, of course:
+
+`gnus-use-nocem'
+     Set this variable to `t' to set the ball rolling.  It is `nil' by
+     default.
+
+`gnus-nocem-groups'
+     Gnus will look for NoCeM messages in the groups in this list.  The
+     default is `("news.lists.filters" "news.admin.net-abuse.bulletins"
+     "alt.nocem.misc" "news.admin.net-abuse.announce")'.
+
+`gnus-nocem-issuers'
+     There are many people issuing NoCeM messages.  This list says what
+     people you want to listen to.  The default is `("Automoose-1"
+     "clewis@ferret.ocunix.on.ca;" "jem@xpat.com;"
+     "red@redpoll.mrfs.oh.us (Richard E. Depew)")'; fine, upstanding
+     citizens all of them.
+
+     Known despammers that you can put in this list include:
+
+    `clewis@ferret.ocunix.on.ca;'
+          Chris Lewis--Major Canadian despammer who has probably
+          canceled more usenet abuse than anybody else.
+
+    `Automoose-1'
+          The CancelMoose[tm] on autopilot.  The CancelMoose[tm] is
+          reputed to be Norwegian, and was the person(s) who invented
+          NoCeM.
+
+    `jem@xpat.com;'
+          John Milburn--despammer located in Korea who is getting very
+          busy these days.
+
+    `red@redpoll.mrfs.oh.us (Richard E. Depew)'
+          Richard E. Depew--lone American despammer.  He mostly cancels
+          binary postings to non-binary groups and removes spews
+          (regurgitated articles).
+
+     You do not have to heed NoCeM messages from all these people--just
+     the ones you want to listen to.
+
+`gnus-nocem-verifyer'
+     This should be a function for verifying that the NoCeM issuer is
+     who she says she is.  The default is `mc-verify', which is a
+     Mailcrypt function.  If this is too slow and you don't care for
+     verification (which may be dangerous), you can set this variable
+     to `nil'.
+
+     If you want signed NoCeM messages to be verified and unsigned
+     messages not to be verified (but used anyway), you could do
+     something like:
+
+          (setq gnus-nocem-verifyer 'my-gnus-mc-verify)
+          
+          (defun my-gnus-mc-verify ()
+            (not (eq 'forged
+                     (ignore-errors
+                       (if (mc-verify)
+                           t
+                         'forged)))))
+
+     This might be dangerous, though.
+
+`gnus-nocem-directory'
+     This is where Gnus will store its NoCeM cache files.  The default
+     is `~/News/NoCeM/'.
+
+`gnus-nocem-expiry-wait'
+     The number of days before removing old NoCeM entries from the
+     cache.  The default is 15.  If you make it shorter Gnus will be
+     faster, but you might then see old spam.
+
+
+File: gnus,  Node: Picons,  Next: Undo,  Prev: NoCeM,  Up: Various
+
+Picons
+======
+
+   So...  You want to slow down your news reader even more!  This is a
+good way to do so.  Its also a great way to impress people staring over
+your shoulder as you read news.
+
+* Menu:
+
+* Picon Basics::           What are picons and How do I get them.
+* Picon Requirements::     Don't go further if you aren't using XEmacs.
+* Easy Picons::            Displaying Picons--the easy way.
+* Hard Picons::            The way you should do it.  You'll learn something.
+* Picon Configuration::    Other variables you can trash/tweak/munge/play with.
+
+
+File: gnus,  Node: Picon Basics,  Next: Picon Requirements,  Up: Picons
+
+Picon Basics
 ------------
 
-   If you have a slow machine, or are just really impatient, there are a
-few things you can do to make Gnus run faster.
+   What are Picons?  To quote directly from the Picons Web site:
 
-   Set`gnus-check-new-newsgroups' and `gnus-check-bogus-newsgroups' to
-`nil' to make startup faster.
+     "Picons" is short for "personal icons".  They're small,
+     constrained images used to represent users and domains on the net,
+     organized into databases so that the appropriate image for a given
+     e-mail address can be found.  Besides users and domains, there are
+     picon databases for Usenet newsgroups and weather forecasts.  The
+     picons are in either monochrome `XBM' format or color `XPM' and
+     `GIF' formats.
 
-   Set `gnus-show-threads', `gnus-use-cross-reference' and
-`gnus-nov-is-evil' to `nil' to make entering and exiting the summary
-buffer faster.
+   For instructions on obtaining and installing the picons databases,
+point your Web browser at
+`http://www.cs.indiana.edu/picons/ftp/index.html'.
 
-   Set `gnus-article-display-hook' to `nil' to make article processing
-a bit faster.
-
-
-File: gnus,  Node: Troubleshooting,  Next: A Programmers Guide to Gnus,  Prev: Customization,  Up: Appendices
-
-Troubleshooting
-===============
-
-   Gnus works *so* well straight out of the box--I can't imagine any
-problems, really.
-
-   Ahem.
-
-  1. Make sure your computer is switched on.
-
-  2. Make sure that you really load the current Gnus version.  If you
-     have been running GNUS, you need to exit Emacs and start it up
-     again before Gnus will work.
-
-  3. Try doing an `M-x gnus-version'.  If you get something that looks
-     like `Gnus v5.46; nntp 4.0' you have the right files loaded.  If,
-     on the other hand, you get something like `NNTP 3.x' or `nntp
-     flee', you have some old `.el' files lying around.  Delete these.
-
-  4. Read the help group (`G h' in the group buffer) for a FAQ and a
-     how-to.
-
-   If all else fails, report the problem as a bug.
-
-   If you find a bug in Gnus, you can report it with the `M-x gnus-bug'
-command. `M-x set-variable RET debug-on-error RET t RET', and send me
-the backtrace.  I will fix bugs, but I can only fix them if you send me
-a precise description as to how to reproduce the bug.
-
-   You really can never be too detailed in a bug report.  Always use the
-`M-x gnus-bug' command when you make bug reports, even if it creates a
-10Kb mail each time you use it, and even if you have sent me your
-environment 500 times before.  I don't care.  I want the full info each
-time.
-
-   It is also important to remember that I have no memory whatsoever.
-If you send a bug report, and I send you a reply, and then you send back
-just "No, it's not! Moron!", I will have no idea what you are insulting
-me about.  Always over-explain everything.  It's much easier for all of
-us--if I don't have all the information I need, I will just mail you
-and ask for more info, and everything takes more time.
-
-   If the problem you're seeing is very visual, and you can't quite
-explain it, copy the Emacs window to a file (with `xwd', for instance),
-put it somewhere it can be reached, and include the URL of the picture
-in the bug report.a
-
-   If you just need help, you are better off asking on
-`gnu.emacs.gnus'.  I'm not very helpful.
-
-   You can also ask on the ding mailing list--`ding@ifi.uio.no'.  Write
-to `ding-request@ifi.uio.no' to subscribe.
+   Gnus expects picons to be installed into a location pointed to by
+`gnus-picons-database'.
 
 
-File: gnus,  Node: A Programmers Guide to Gnus,  Next: Emacs for Heathens,  Prev: Troubleshooting,  Up: Appendices
+File: gnus,  Node: Picon Requirements,  Next: Easy Picons,  Prev: Picon Basics,  Up: Picons
 
-A Programmer's Guide to Gnus
-============================
+Picon Requirements
+------------------
 
-   It is my hope that other people will figure out smart stuff that Gnus
-can do, and that other people will write those smart things as well.  To
-facilitate that I thought it would be a good idea to describe the inner
-workings of Gnus.  And some of the not-so-inner workings, while I'm at
-it.
+   To use have Gnus display Picons for you, you must be running XEmacs
+19.13 or greater since all other versions of Emacs aren't yet able to
+display images.
 
-   You can never expect the internals of a program not to change, but I
-will be defining (in some details) the interface between Gnus and its
-backends (this is written in stone), the format of the score files
-(ditto), data structures (some are less likely to change than others)
-and general method of operations.
+   Additionally, you must have `xpm' support compiled into XEmacs.
 
-* Menu:
-
-* Backend Interface::        How Gnus communicates with the servers.
-* Score File Syntax::        A BNF definition of the score file standard.
-* Headers::                  How Gnus stores headers internally.
-* Ranges::                   A handy format for storing mucho numbers.
-* Group Info::               The group info format.
-* Emacs/XEmacs Code::        Gnus can be run under all modern Emacsen.
-* Various File Formats::     Formats of files that Gnus use.
-
-
-File: gnus,  Node: Backend Interface,  Next: Score File Syntax,  Up: A Programmers Guide to Gnus
-
-Backend Interface
------------------
-
-   Gnus doesn't know anything about NNTP, spools, mail or virtual
-groups.  It only knows how to talk to "virtual servers".  A virtual
-server is a "backend" and some "backend variables".  As examples of the
-first, we have `nntp', `nnspool' and `nnmbox'.  As examples of the
-latter we have `nntp-port-number' and `nnmbox-directory'.
-
-   When Gnus asks for information from a backend--say `nntp'--on
-something, it will normally include a virtual server name in the
-function parameters.  (If not, the backend should use the "current"
-virtual server.)  For instance, `nntp-request-list' takes a virtual
-server as its only (optional) parameter.  If this virtual server hasn't
-been opened, the function should fail.
-
-   Note that a virtual server name has no relation to some physical
-server name.  Take this example:
-
-     (nntp "odd-one"
-           (nntp-address "ifi.uio.no")
-           (nntp-port-number 4324))
-
-   Here the virtual server name is `odd-one' while the name of the
-physical server is `ifi.uio.no'.
-
-   The backends should be able to switch between several virtual
-servers.  The standard backends implement this by keeping an alist of
-virtual server environments that it pulls down/pushes up when needed.
-
-   There are two groups of interface functions: "required functions",
-which must be present, and "optional functions", which Gnus will always
-check whether are present before attempting to call.
-
-   All these functions are expected to return data in the buffer
-`nntp-server-buffer' (` *nntpd*'), which is somewhat unfortunately
-named, but we'll have to live with it.  When I talk about "resulting
-data", I always refer to the data in that buffer.  When I talk about
-"return value", I talk about the function value returned by the
-function call.
-
-   Some backends could be said to be "server-forming" backends, and
-some might be said to not be.  The latter are backends that generally
-only operate on one group at a time, and have no concept of "server" -
-they have a group, and they deliver info on that group and nothing more.
-
-   In the examples and definitions I will refer to the imaginary backend
-`nnchoke'.
-
-* Menu:
-
-* Required Backend Functions::        Functions that must be implemented.
-* Optional Backend Functions::        Functions that need not be implemented.
-* Writing New Backends::              Extending old backends.
-
-
-File: gnus,  Node: Required Backend Functions,  Next: Optional Backend Functions,  Up: Backend Interface
-
-Required Backend Functions
-..........................
-
-`(nnchoke-retrieve-headers ARTICLES &optional GROUP SERVER FETCH-OLD)'
-     ARTICLES is either a range of article numbers or a list of
-     `Message-ID's.  Current backends do not fully support either--only
-     sequences (lists) of article numbers, and most backends do not
-     support retrieval of `Message-ID's.  But they should try for both.
-
-     The result data should either be HEADs or NOV lines, and the result
-     value should either be `headers' or `nov' to reflect this.  This
-     might later be expanded to `various', which will be a mixture of
-     HEADs and NOV lines, but this is currently not supported by Gnus.
-
-     If FETCH-OLD is non-`nil' it says to try to fetch "extra headers,
-     in some meaning of the word.  This is generally done by fetching
-     (at most) FETCH-OLD extra headers less than the smallest article
-     number in `articles', and fill in the gaps as well.  The presence
-     of this parameter can be ignored if the backend finds it
-     cumbersome to follow the request.  If this is non-`nil' and not a
-     number, do maximum fetches.
-
-     Here's an example HEAD:
-
-          221 1056 Article retrieved.
-          Path: ifi.uio.no!sturles
-          From: sturles@ifi.uio.no (Sturle Sunde)
-          Newsgroups: ifi.discussion
-          Subject: Re: Something very droll
-          Date: 27 Oct 1994 14:02:57 +0100
-          Organization: Dept. of Informatics, University of Oslo, Norway
-          Lines: 26
-          Message-ID: <38o8e1$a0o@holmenkollen.ifi.uio.no>
-          References: <38jdmq$4qu@visbur.ifi.uio.no>
-          NNTP-Posting-Host: holmenkollen.ifi.uio.no
-          .
-
-     So a `headers' return value would imply that there's a number of
-     these in the data buffer.
-
-     Here's a BNF definition of such a buffer:
-
-          headers        = *head
-          head           = error / valid-head
-          error-message  = [ "4" / "5" ] 2number " " <error message> eol
-          valid-head     = valid-message *header "." eol
-          valid-message  = "221 " <number> " Article retrieved." eol
-          header         = <text> eol
-
-     If the return value is `nov', the data buffer should contain
-     "network overview database" lines.  These are basically fields
-     separated by tabs.
-
-          nov-buffer = *nov-line
-          nov-line   = 8*9 [ field <TAB> ] eol
-          field      = <text except TAB>
-
-     For a closer explanation what should be in those fields, *note
-     Headers::..
-
-`(nnchoke-open-server SERVER &optional DEFINITIONS)'
-     SERVER is here the virtual server name.  DEFINITIONS is a list of
-     `(VARIABLE VALUE)' pairs that defines this virtual server.
-
-     If the server can't be opened, no error should be signaled.  The
-     backend may then choose to refuse further attempts at connecting
-     to this server.  In fact, it should do so.
-
-     If the server is opened already, this function should return a
-     non-`nil' value.  There should be no data returned.
-
-`(nnchoke-close-server &optional SERVER)'
-     Close connection to SERVER and free all resources connected to it.
-     Return `nil' if the server couldn't be closed for some reason.
-
-     There should be no data returned.
-
-`(nnchoke-request-close)'
-     Close connection to all servers and free all resources that the
-     backend have reserved.  All buffers that have been created by that
-     backend should be killed.  (Not the `nntp-server-buffer', though.)
-     This function is generally only called when Gnus is shutting down.
-
-     There should be no data returned.
-
-`(nnchoke-server-opened &optional SERVER)'
-     If SERVER is the current virtual server, and the connection to the
-     physical server is alive, then this function should return a
-     non-`nil' vlue.  This function should under no circumstances
-     attempt to reconnect to a server that is has lost connection to.
-
-     There should be no data returned.
-
-`(nnchoke-status-message &optional SERVER)'
-     This function should return the last error message from SERVER.
-
-     There should be no data returned.
-
-`(nnchoke-request-article ARTICLE &optional GROUP SERVER TO-BUFFER)'
-     The result data from this function should be the article specified
-     by ARTICLE.  This might either be a `Message-ID' or a number.  It
-     is optional whether to implement retrieval by `Message-ID', but it
-     would be nice if that were possible.
-
-     If TO-BUFFER is non-`nil', the result data should be returned in
-     this buffer instead of the normal data buffer.  This is to make it
-     possible to avoid copying large amounts of data from one buffer to
-     another, and Gnus mainly request articles to be inserted directly
-     into its article buffer.
-
-     If it is at all possible, this function should return a cons cell
-     where the car is the group name the article was fetched from, and
-     the cdr is the article number.  This will enable Gnus to find out
-     what the real group and article numbers are when fetching articles
-     by `Message-ID'.  If this isn't possible, `t' should be returned
-     on successful article retrievement.
-
-`(nnchoke-open-group GROUP &optional SERVER)'
-     Make GROUP the current group.
-
-     There should be no data returned by this function.
-
-`(nnchoke-request-group GROUP &optional SERVER)'
-     Get data on GROUP.  This function also has the side effect of
-     making GROUP the current group.
-
-     Here's an example of some result data and a definition of the same:
-
-          211 56 1000 1059 ifi.discussion
-
-     The first number is the status, which should be `211'.  Next is the
-     total number of articles in the group, the lowest article number,
-     the highest article number, and finally the group name.  Note that
-     the total number of articles may be less than one might think
-     while just considering the highest and lowest article numbers, but
-     some articles may have been canceled.  Gnus just discards the
-     total-number, so whether one should take the bother to generate it
-     properly (if that is a problem) is left as an exercise to the
-     reader.
-
-          group-status = [ error / info ] eol
-          error        = [ "4" / "5" ] 2<number> " " <Error message>
-          info         = "211 " 3* [ <number> " " ] <string>
-
-`(nnchoke-close-group GROUP &optional SERVER)'
-     Close GROUP and free any resources connected to it.  This will be
-     a no-op on most backends.
-
-     There should be no data returned.
-
-`(nnchoke-request-list &optional SERVER)'
-     Return a list of all groups available on SERVER.  And that means
-     *all*.
-
-     Here's an example from a server that only carries two groups:
-
-          ifi.test 0000002200 0000002000 y
-          ifi.discussion 3324 3300 n
-
-     On each line we have a group name, then the highest article number
-     in that group, the lowest article number, and finally a flag.
-
-          active-file = *active-line
-          active-line = name " " <number> " " <number> " " flags eol
-          name        = <string>
-          flags       = "n" / "y" / "m" / "x" / "j" / "=" name
-
-     The flag says whether the group is read-only (`n'), is moderated
-     (`m'), is dead (`x'), is aliased to some other group
-     (`=other-group' or none of the above (`y').
-
-`(nnchoke-request-post &optional SERVER)'
-     This function should post the current buffer.  It might return
-     whether the posting was successful or not, but that's not
-     required.  If, for instance, the posting is done asynchronously,
-     it has generally not been completed by the time this function
-     concludes.  In that case, this function should set up some kind of
-     sentinel to beep the user loud and clear if the posting could not
-     be completed.
-
-     There should be no result data from this function.
-
-
-File: gnus,  Node: Optional Backend Functions,  Next: Writing New Backends,  Prev: Required Backend Functions,  Up: Backend Interface
-
-Optional Backend Functions
-..........................
-
-`(nnchoke-retrieve-groups GROUPS &optional SERVER)'
-     GROUPS is a list of groups, and this function should request data
-     on all those groups.  How it does it is of no concern to Gnus, but
-     it should attempt to do this in a speedy fashion.
-
-     The return value of this function can be either `active' or
-     `group', which says what the format of the result data is.  The
-     former is in the same format as the data from
-     `nnchoke-request-list', while the latter is a buffer full of lines
-     in the same format as `nnchoke-request-group' gives.
-
-          group-buffer = *active-line / *group-status
-
-`(nnchoke-request-update-info GROUP INFO &optional SERVER)'
-     A Gnus group info (*note Group Info::.) is handed to the backend
-     for alterations.  This comes in handy if the backend really
-     carries all the information (as is the case with virtual an imap
-     groups).  This function may alter the info in any manner it sees
-     fit, and should return the (altered) group info.  This function
-     may alter the group info destructively, so no copying is needed
-     before boogeying.
-
-     There should be no result data from this function.
-
-`(nnchoke-request-type GROUP &optional ARTICLE)'
-     When the user issues commands for "sending news" (`F' in the
-     summary buffer, for instance), Gnus has to know whether the
-     article the user is following up is news or mail.  This function
-     should return `news' if ARTICLE in GROUP is news, `mail' if it is
-     mail and `unknown' if the type can't be decided.  (The ARTICLE
-     parameter is necessary in `nnvirtual' groups which might very well
-     combine mail groups and news groups.)
-
-     There should be no result data from this function.
-
-`(nnchoke-request-update-mark GROUP ARTICLE MARK)'
-     If the user tries to set a mark that the backend doesn't like, this
-     function may change the mark.  Gnus will use whatever this function
-     returns as the mark for ARTICLE instead of the original MARK.  If
-     the backend doesn't care, it must return the original MARK, and
-     not `nil' or any other type of garbage.
-
-     The only use for this that I can see is what `nnvirtual' does with
-     it--if a component group is auto-expirable, marking an article as
-     read in the virtual group should result in the article being
-     marked as expirable.
-
-     There should be no result data from this function.
-
-`(nnchoke-request-scan &optional GROUP SERVER)'
-     This function may be called at any time (by Gnus or anything else)
-     to request that the backend check for incoming articles, in one
-     way or another.  A mail backend will typically read the spool file
-     or query the POP server when this function is invoked.  The GROUP
-     doesn't have to be heeded--if the backend decides that it is too
-     much work just scanning for a single group, it may do a total scan
-     of all groups.  It would be nice, however, to keep things local if
-     that's practical.
-
-     There should be no result data from this function.
-
-`(nnchoke-request-asynchronous GROUP &optional SERVER ARTICLES)'
-     This is a request to fetch articles asynchronously later.
-     ARTICLES is an alist of (ARTICLE-NUMBER LINE-NUMBER).  One would
-     generally expect that if one later fetches article number 4, for
-     instance, some sort of asynchronous fetching of the articles after
-     4 (which might be 5, 6, 7 or 11, 3, 909 depending on the order in
-     that alist) would be fetched asynchronously, but that is left up
-     to the backend.  Gnus doesn't care.
-
-     There should be no result data from this function.
-
-`(nnchoke-request-group-description GROUP &optional SERVER)'
-     The result data from this function should be a description of
-     GROUP.
-
-          description-line = name <TAB> description eol
-          name             = <string>
-          description      = <text>
-
-`(nnchoke-request-list-newsgroups &optional SERVER)'
-     The result data from this function should be the description of all
-     groups available on the server.
-
-          description-buffer = *description-line
-
-`(nnchoke-request-newgroups DATE &optional SERVER)'
-     The result data from this function should be all groups that were
-     created after `date', which is in normal human-readable date
-     format.  The data should be in the active buffer format.
-
-`(nnchoke-request-create-group GROUP &optional SERVER)'
-     This function should create an empty group with name GROUP.
-
-     There should be no return data.
-
-`(nnchoke-request-expire-articles ARTICLES &optional GROUP SERVER FORCE)'
-     This function should run the expiry process on all articles in the
-     ARTICLES range (which is currently a simple list of article
-     numbers.)  It is left up to the backend to decide how old articles
-     should be before they are removed by this function.  If FORCE is
-     non-`nil', all ARTICLES should be deleted, no matter how new they
-     are.
-
-     This function should return a list of articles that it did not/was
-     not able to delete.
-
-     There should be no result data returned.
-
-`(nnchoke-request-move-article ARTICLE GROUP SERVER ACCEPT-FORM'
-     &optional LAST)
-
-     This function should move ARTICLE (which is a number) from GROUP
-     by calling ACCEPT-FORM.
-
-     This function should ready the article in question for moving by
-     removing any header lines it has added to the article, and
-     generally should "tidy up" the article.  Then it should `eval'
-     ACCEPT-FORM in the buffer where the "tidy" article is.  This will
-     do the actual copying.  If this `eval' returns a non-`nil' value,
-     the article should be removed.
-
-     If LAST is `nil', that means that there is a high likelihood that
-     there will be more requests issued shortly, so that allows some
-     optimizations.
-
-     The function should return a cons where the car is the group name
-     and the cdr is the article number that the article was entered as.
-
-     There should be no data returned.
-
-`(nnchoke-request-accept-article GROUP &optional SERVER LAST)'
-     This function takes the current buffer and inserts it into GROUP.
-     If LAST in `nil', that means that there will be more calls to this
-     function in short order.
-
-     The function should return a cons where the car is the group name
-     and the cdr is the article number that the article was entered as.
-
-     There should be no data returned.
-
-`(nnchoke-request-replace-article ARTICLE GROUP BUFFER)'
-     This function should remove ARTICLE (which is a number) from GROUP
-     and insert BUFFER there instead.
-
-     There should be no data returned.
-
-`(nnchoke-request-delete-group GROUP FORCE &optional SERVER)'
-     This function should delete GROUP.  If FORCE, it should really
-     delete all the articles in the group, and then delete the group
-     itself.  (If there is such a thing as "the group itself".)
-
-     There should be no data returned.
-
-`(nnchoke-request-rename-group GROUP NEW-NAME &optional SERVER)'
-     This function should rename GROUP into NEW-NAME.  All articles
-     that are in GROUP should move to NEW-NAME.
-
-     There should be no data returned.
-
-
-File: gnus,  Node: Writing New Backends,  Prev: Optional Backend Functions,  Up: Backend Interface
-
-Writing New Backends
-....................
-
-   The various backends share many similarities.  `nnml' is just like
-`nnspool', but it allows you to edit the articles on the server.
-`nnmh' is just like `nnml', but it doesn't use an active file, and it
-doesn't maintain overview databases.  `nndir' is just like `nnml', but
-it has no concept of "groups", and it doesn't allow editing articles.
-
-   It would make sense if it were possible to "inherit" functions from
-backends when writing new backends.  And, indeed, you can do that if you
-want to.  (You don't have to if you don't want to, of course.)
-
-   All the backends declare their public variables and functions by
-using a package called `nnoo'.
-
-   To inherit functions from other backends (and allow other backends to
-inherit functions from the current backend), you should use the
-following macros: following.
-
-`nnoo-declare'
-     This macro declares the first parameter to be a child of the
-     subsequent parameters.  For instance:
-
-          (nnoo-declare nndir
-            nnml nnmh)
-
-     `nndir' has here declared that it intends to inherit functions from
-     both `nnml' and `nnmh'.
-
-`defvoo'
-     This macro is equivalent to `defvar', but registers the variable as
-     a public server variable.  Most state-oriented variables should be
-     declared with `defvoo' instead of `defvar'.
-
-     In addition to the normal `defvar' parameters, it takes a list of
-     variables in the parent backends to map the variable to when
-     executing a function in those backends.
-
-          (defvoo nndir-directory nil
-            "Where nndir will look for groups."
-            nnml-current-directory nnmh-current-directory)
-
-     This means that `nnml-current-directory' will be set to
-     `nndir-directory' when an `nnml' function is called on behalf of
-     `nndir'.  (The same with `nnmh'.)
-
-`nnoo-define-basics'
-     This macro defines some common functions that almost all backends
-     should have.
-
-          (nnoo-define-basics nndir)
-
-`deffoo'
-     This macro is just like `defun' and takes the same parameters.  In
-     addition to doing the normal `defun' things, it registers the
-     function as being public so that other backends can inherit it.
-
-`nnoo-map-functions'
-     This macro allows mapping of functions from the current backend to
-     functions from the parent backends.
-
-          (nnoo-map-functions nndir
-            (nnml-retrieve-headers 0 nndir-current-group 0 0)
-            (nnmh-request-article 0 nndir-current-group 0 0))
-
-     This means that when `nndir-retrieve-headers' is called, the first,
-     third, and fourth parameters will be passed on to
-     `nnml-retrieve-headers', while the second parameter is set to the
-     value of `nndir-current-group'.
-
-`nnoo-import'
-     This macro allows importing functions from backends.  It should be
-     the last thing in the source file, since it will only define
-     functions that haven't already been defined.
-
-          (nnoo-import nndir
-            (nnmh
-             nnmh-request-list
-             nnmh-request-newgroups)
-            (nnml))
-
-     This means that calls to `nndir-request-list' should just be passed
-     on to `nnmh-request-list', while all public functions from `nnml'
-     that haven't been defined in `nndir' yet should be defined now.
-
-   Below is a slightly shortened version of the `nndir' backend.
-
-     ;;; nndir.el --- single directory newsgroup access for Gnus
-     ;; Copyright (C) 1995,96 Free Software Foundation, Inc.
-     
-     ;;; Code:
-     
-     (require 'nnheader)
-     (require 'nnmh)
-     (require 'nnml)
-     (require 'nnoo)
-     (eval-when-compile (require 'cl))
-     
-     (nnoo-declare nndir
-       nnml nnmh)
-     
-     (defvoo nndir-directory nil
-       "Where nndir will look for groups."
-       nnml-current-directory nnmh-current-directory)
-     
-     (defvoo nndir-nov-is-evil nil
-       "*Non-nil means that nndir will never retrieve NOV headers."
-       nnml-nov-is-evil)
-     
-     (defvoo nndir-current-group "" nil nnml-current-group nnmh-current-group)
-     (defvoo nndir-top-directory nil nil nnml-directory nnmh-directory)
-     (defvoo nndir-get-new-mail nil nil nnml-get-new-mail nnmh-get-new-mail)
-     
-     (defvoo nndir-status-string "" nil nnmh-status-string)
-     (defconst nndir-version "nndir 1.0")
-     
-     ;;; Interface functions.
-     
-     (nnoo-define-basics nndir)
-     
-     (deffoo nndir-open-server (server &optional defs)
-       (setq nndir-directory
-     	(or (cadr (assq 'nndir-directory defs))
-     	    server))
-       (unless (assq 'nndir-directory defs)
-         (push `(nndir-directory ,server) defs))
-       (push `(nndir-current-group
-     	  ,(file-name-nondirectory (directory-file-name nndir-directory)))
-     	defs)
-       (push `(nndir-top-directory
-     	  ,(file-name-directory (directory-file-name nndir-directory)))
-     	defs)
-       (nnoo-change-server 'nndir server defs))
-     
-     (nnoo-map-functions nndir
-       (nnml-retrieve-headers 0 nndir-current-group 0 0)
-       (nnmh-request-article 0 nndir-current-group 0 0)
-       (nnmh-request-group nndir-current-group 0 0)
-       (nnmh-close-group nndir-current-group 0))
-     
-     (nnoo-import nndir
-       (nnmh
-        nnmh-status-message
-        nnmh-request-list
-        nnmh-request-newgroups))
-     
-     (provide 'nndir)
-
-
-File: gnus,  Node: Score File Syntax,  Next: Headers,  Prev: Backend Interface,  Up: A Programmers Guide to Gnus
-
-Score File Syntax
------------------
-
-   Score files are meant to be easily parsable, but yet extremely
-mallable.   It was decided that something that had the same read syntax
-as an Emacs Lisp list would fit that spec.
-
-   Here's a typical score file:
-
-     (("summary"
-       ("win95" -10000 nil s)
-       ("Gnus"))
-      ("from"
-       ("Lars" -1000))
-      (mark -100))
-
-   BNF definition of a score file:
-
-     score-file       = "" / "(" *element ")"
-     element          = rule / atom
-     rule             = string-rule / number-rule / date-rule
-     string-rule      = "(" quote string-header quote space *string-match ")"
-     number-rule      = "(" quote number-header quote space *number-match ")"
-     date-rule        = "(" quote date-header quote space *date-match ")"
-     quote            = <ascii 34>
-     string-header    = "subject" / "from" / "references" / "message-id" /
-                        "xref" / "body" / "head" / "all" / "followup"
-     number-header    = "lines" / "chars"
-     date-header      = "date"
-     string-match     = "(" quote <string> quote [ "" / [ space score [ "" /
-                        space date [ "" / [ space string-match-t ] ] ] ] ] ")"
-     score            = "nil" / <integer>
-     date             = "nil" / <natural number>
-     string-match-t   = "nil" / "s" / "substring" / "S" / "Substring" /
-                        "r" / "regex" / "R" / "Regex" /
-                        "e" / "exact" / "E" / "Exact" /
-                        "f" / "fuzzy" / "F" / "Fuzzy"
-     number-match     = "(" <integer> [ "" / [ space score [ "" /
-                        space date [ "" / [ space number-match-t ] ] ] ] ] ")"
-     number-match-t   = "nil" / "=" / "<" / ">" / ">=" / "<="
-     date-match       = "(" quote <string> quote [ "" / [ space score [ "" /
-                        space date [ "" / [ space date-match-t ] ] ] ] ")"
-     date-match-t     = "nil" / "at" / "before" / "after"
-     atom             = "(" [ required-atom / optional-atom ] ")"
-     required-atom    = mark / expunge / mark-and-expunge / files /
-                        exclude-files / read-only / touched
-     optional-atom    = adapt / local / eval
-     mark             = "mark" space nil-or-number
-     nil-or-number    = "nil" / <integer>
-     expunge          = "expunge" space nil-or-number
-     mark-and-expunge = "mark-and-expunge" space nil-or-number
-     files            = "files" *[ space <string> ]
-     exclude-files    = "exclude-files" *[ space <string> ]
-     read-only        = "read-only" [ space "nil" / space "t" ]
-     adapt            = "adapt" [ space "nil" / space "t" / space adapt-rule ]
-     adapt-rule       = "(" *[ <string> *[ "(" <string> <integer> ")" ] ")"
-     local            = "local" *[ space "(" <string> space <form> ")" ]
-     eval             = "eval" space <form>
-     space            = *[ " " / <TAB> / <NEWLINE> ]
-
-   Any unrecognized elements in a score file should be ignored, but not
-discarded.
-
-   As you can see, white space is needed, but the type and amount of
-white space is irrelevant.  This means that formatting of the score
-file is left up to the programmer--if it's simpler to just spew it all
-out on one looong line, then that's ok.
-
-   The meaning of the various atoms are explained elsewhere in this
-manual.
-
-
-File: gnus,  Node: Headers,  Next: Ranges,  Prev: Score File Syntax,  Up: A Programmers Guide to Gnus
-
-Headers
--------
-
-   Gnus uses internally a format for storing article headers that
-corresponds to the NOV format in a mysterious fashion.  One could
-almost suspect that the author looked at the NOV specification and just
-shamelessly *stole* the entire thing, and one would be right.
-
-   "Header" is a severely overloaded term.  "Header" is used in RFC1036
-to talk about lines in the head of an article (eg., `From').  It is
-used by many people as a synonym for "head"--"the header and the body".
-(That should be avoided, in my opinion.)  And Gnus uses a format
-internally that it calls "header", which is what I'm talking about
-here.  This is a 9-element vector, basically, with each header (ouch)
-having one slot.
-
-   These slots are, in order: `number', `subject', `from', `date',
-`id', `references', `chars', `lines', `xref'.  There are macros for
-accessing and setting these slots - they all have predictable names
-beginning with `mail-header-' and `mail-header-set-', respectively.
-
-   The `xref' slot is really a `misc' slot.  Any extra info will be put
-in there.
-
-
-File: gnus,  Node: Ranges,  Next: Group Info,  Prev: Headers,  Up: A Programmers Guide to Gnus
-
-Ranges
-------
-
-   GNUS introduced a concept that I found so useful that I've started
-using it a lot and have elaborated on it greatly.
-
-   The question is simple: If you have a large amount of objects that
-are identified by numbers (say, articles, to take a *wild* example)
-that you want to callify as being "included", a normal sequence isn't
-very useful.  (A 200,000 length sequence is a bit long-winded.)
-
-   The solution is as simple as the question: You just collapse the
-sequence.
-
-     (1 2 3 4 5 6 10 11 12)
-
-   is transformed into
-
-     ((1 . 6) (10 . 12))
-
-   To avoid having those nasty `(13 . 13)' elements to denote a
-lonesome object, a `13' is a valid element:
-
-     ((1 . 6) 7 (10 . 12))
-
-   This means that comparing two ranges to find out whether they are
-equal is slightly tricky:
-
-     ((1 . 5) 7 8 (10 . 12))
-
-   and
-
-     ((1 . 5) (7 . 8) (10 . 12))
-
-   are equal.  In fact, any non-descending list is a range:
-
-     (1 2 3 4 5)
-
-   is a perfectly valid range, although a pretty long-winded one.  This
-is also legal:
-
-     (1 . 5)
-
-   and is equal to the previous range.
-
-   Here's a BNF definition of ranges.  Of course, one must remember the
-semantic requirement that the numbers are non-descending.  (Any number
-of repetition of the same number is allowed, but apt to disappear in
-range handling.)
-
-     range           = simple-range / normal-range
-     simple-range    = "(" number " . " number ")"
-     normal-range    = "(" start-contents ")"
-     contents        = "" / simple-range *[ " " contents ] /
-                       number *[ " " contents ]
-
-   Gnus currently uses ranges to keep track of read articles and article
-marks.  I plan on implementing a number of range operators in C if The
-Powers That Be are willing to let me.  (I haven't asked yet, because I
-need to do some more thinking on what operators I need to make life
-totally range-based without ever having to convert back to normal
-sequences.)
-
-
-File: gnus,  Node: Group Info,  Next: Emacs/XEmacs Code,  Prev: Ranges,  Up: A Programmers Guide to Gnus
-
-Group Info
-----------
-
-   Gnus stores all permanent info on groups in a "group info" list.
-This list is from three to six elements (or more) long and exhaustively
-describes the group.
-
-   Here are two example group infos; one is a very simple group while
-the second is a more complex one:
-
-     ("no.group" 5 (1 . 54324))
-     
-     ("nnml:my.mail" 3 ((1 . 5) 9 (20 . 55))
-                     ((tick (15 . 19)) (replied 3 6 (19 . 3)))
-                     (nnml "")
-                     (auto-expire (to-address "ding@ifi.uio.no")))
-
-   The first element is the group name as Gnus knows the group; the
-second is the group level; the third is the read articles in range
-format; the fourth is a list of article marks lists; the fifth is the
-select method; and the sixth contains the group parameters.
-
-   Here's a BNF definition of the group info format:
-
-     info          = "(" group space level space read
-                     [ "" / [ space marks-list [ "" / [ space method [ "" /
-                     space parameters ] ] ] ] ] ")"
-     group         = quote <string> quote
-     level         = <integer in the range of 1 to inf>
-     read          = range
-     marks-lists   = nil / "(" *marks ")"
-     marks         = "(" <string> range ")"
-     method        = "(" <string> *elisp-forms ")"
-     parameters    = "(" *elisp-forms ")"
-
-   Actually that `marks' rule is a fib.  A `marks' is a `<string>'
-consed on to a `range', but that's a bitch to say in pseudo-BNF.
-
-
-File: gnus,  Node: Emacs/XEmacs Code,  Next: Various File Formats,  Prev: Group Info,  Up: A Programmers Guide to Gnus
-
-Emacs/XEmacs Code
------------------
-
-   While Gnus runs under Emacs, XEmacs and Mule, I decided that one of
-the platforms must be the primary one.  I chose Emacs.  Not because I
-don't like XEmacs or Mule, but because it comes first alphabetically.
-
-   This means that Gnus will byte-compile under Emacs with nary a
-warning, while XEmacs will pump out gigabytes of warnings while
-byte-compiling.  As I use byte-compilation warnings to help me root out
-trivial errors in Gnus, that's very useful.
-
-   I've also consistently used Emacs function interfaces, but have used
-Gnusey aliases for the functions.  To take an example:  Emacs defines a
-`run-at-time' function while XEmacs defines a `start-itimer' function.
-I then define a function called `gnus-run-at-time' that takes the same
-parameters as the Emacs `run-at-time'.  When running Gnus under Emacs,
-the former function is just an alias for the latter.  However, when
-running under XEmacs, the former is an alias for the following function:
-
-     (defun gnus-xmas-run-at-time (time repeat function &rest args)
-       (start-itimer
-        "gnus-run-at-time"
-        `(lambda ()
-           (,function ,@args))
-        time repeat))
-
-   This sort of thing has been done for bunches of functions.  Gnus does
-not redefine any native Emacs functions while running under XEmacs - it
-does this `defalias' thing with Gnus equivalents instead.  Cleaner all
-over.
-
-   Of course, I could have chosen XEmacs as my native platform and done
-mapping functions the other way around.  But I didn't.  The performance
-hit these indirections impose on Gnus under XEmacs should be slight.
-
-
-File: gnus,  Node: Various File Formats,  Prev: Emacs/XEmacs Code,  Up: A Programmers Guide to Gnus
-
-Various File Formats
---------------------
-
-* Menu:
-
-* Active File Format::      Information on articles and groups available.
-* Newsgroups File Format::  Group descriptions.
-
-
-File: gnus,  Node: Active File Format,  Next: Newsgroups File Format,  Up: Various File Formats
-
-Active File Format
-..................
-
-   The active file lists all groups that are available on the server in
-question.  It also lists the highest and lowest current article numbers
-in each group.
-
-   Here's an excerpt from a typical active file:
-
-     soc.motss 296030 293865 y
-     alt.binaries.pictures.fractals 3922 3913 n
-     comp.sources.unix 1605 1593 m
-     comp.binaries.ibm.pc 5097 5089 y
-     no.general 1000 900 y
-
-   Here's a pseudo-BNF definition of this file:
-
-     active      = *group-line
-     group-line  = group space high-number space low-number space flag <NEWLINE>
-     group       = <non-white-space string>
-     space       = " "
-     high-number = <non-negative integer>
-     low-number  = <positive integer>
-     flag        = "y" / "n" / "m" / "j" / "x" / "=" group
-
-
-File: gnus,  Node: Newsgroups File Format,  Prev: Active File Format,  Up: Various File Formats
-
-Newsgroups File Format
-......................
-
-   The newsgroups file lists groups along with their descriptions.  Not
-all groups on the server have to be listed,  and not all groups in the
-file have to exist on the server.  The file is meant purely as
-information to the user.
-
-   The format is quite simple; a group name, a tab, and the description.
-Here's the definition:
-
-     newsgroups    = *line
-     line          = group tab description <NEWLINE>
-     group         = <non-white-space string>
-     tab           = <TAB>
-     description   = <string>
-
-
-File: gnus,  Node: Emacs for Heathens,  Next: Frequently Asked Questions,  Prev: A Programmers Guide to Gnus,  Up: Appendices
-
-Emacs for Heathens
-==================
-
-   Believe it or not, but some people who use Gnus haven't really used
-Emacs much before they embarked on their journey on the Gnus Love Boat.
-If you are one of those unfortunates whom "`M-C-a'", "kill the region",
-and "set `gnus-flargblossen' to an alist where the key is a regexp that
-is used for matching on the group name" are magical phrases with little
-or no meaning, then this appendix is for you.  If you are already
-familiar with Emacs, just ignore this and go fondle your cat instead.
-
-* Menu:
-
-* Keystrokes::      Entering text and executing commands.
-* Emacs Lisp::      The built-in Emacs programming language.
-
-
-File: gnus,  Node: Keystrokes,  Next: Emacs Lisp,  Up: Emacs for Heathens
-
-Keystrokes
-----------
-
-   * Q: What is an experienced Emacs user?
-
-   * A: A person who wishes that the terminal had pedals.
-
-   Yes, when you use Emacs, you are apt to use the control key, the
-shift key and the meta key a lot.  This is very annoying to some people
-(notably `vi'le users), and the rest of us just love the hell out of
-it.  Just give up and submit.  Emacs really does stand for
-"Escape-Meta-Alt-Control-Shift", and not "Editing Macros", as you may
-have heard from other disreputable sources (like the Emacs author).
-
-   The shift key is normally located near your pinky fingers, and are
-normally used to get capital letters and stuff.  You probably use it all
-the time.  The control key is normally marked "CTRL" or something like
-that.  The meta key is, funnily enough, never marked as such on any
-keyboards.  The one I'm currently at has a key that's marked "Alt",
-which is the meta key on this keyboard.  It's usually located somewhere
-to the left hand side of the keyboard, usually on the bottom row.
-
-   Now, us Emacs people doesn't say "press the meta-control-m key",
-because that's just too inconvenient.  We say "press the `M-C-m' key".
-`M-' is the prefix that means "meta" and "C-" is the prefix that means
-"control".  So "press `C-k'" means "press down the control key, and
-hold it down while you press `k'".  "Press `M-C-k'" means "press down
-and hold down the meta key and the control key and then press `k'".
-Simple, ay?
-
-   This is somewhat complicated by the fact that not all keyboards have
-a meta key.  In that case you can use the "escape" key.  Then `M-k'
-means "press escape, release escape, press `k'".  That's much more work
-than if you have a meta key, so if that's the case, I respectfully
-suggest you get a real keyboard with a meta key.  You can't live without
-it.
+   If you want to display faces from `X-Face' headers, you must have
+the `netpbm' utilities installed, or munge the
+`gnus-picons-convert-x-face' variable to use something else.
 

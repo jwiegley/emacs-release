@@ -3,6 +3,7 @@
 ;; Copyright (C) 1987 Free Software Foundation, Inc.
 
 ;; Author: Jeff Peck <peck@sun.com>
+;; Maintainer: none
 ;; Keywords: hardware
 
 ;; This file is part of GNU Emacs.
@@ -56,7 +57,7 @@
 
 ;;; Code:
 
-(require 'sun-mouse)
+(require 'term/sun-mouse)
 
 (defconst cursor-pause-milliseconds 300
   "*Number of milliseconds to display alternate cursor (usually the mark)")

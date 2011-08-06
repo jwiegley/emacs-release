@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(defconst emacs-version "19.34" "\
+(defconst emacs-version "20.1" "\
 Version numbers of this version of Emacs.")
 
 (defconst emacs-major-version
@@ -51,7 +51,9 @@ Don't use this function in programs to choose actions according
 to the system configuration; look at `system-configuration' instead."
   (interactive "P")
   (let ((version-string 
-         (format "GNU Emacs %s (%s%s) of %s on %s"
+         (format (if (not (interactive-p))
+		     "GNU Emacs %s (%s%s)\n of %s on %s"
+		   "GNU Emacs %s (%s%s) of %s on %s")
                  emacs-version
 		 system-configuration
 		 (cond ((featurep 'motif) ", Motif")

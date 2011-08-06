@@ -1,8 +1,8 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1996 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node MS-DOS, Manifesto, Antinews, Top
-@appendix MS-DOS Issues
+@appendix Emacs and MS-DOS 
 @cindex MS-DOG
 @cindex MS-DOS peculiarities
 
@@ -23,17 +23,17 @@ sections at the end of this chapter which apply specifically for Windows
 NT and 95.
 
 @menu
-* Keyboard and Mouse on MS-DOS::
-* Display on MS-DOS::
-* File Names on MS-DOS::
-* Text and Binary::
-* Printing and MS-DOS::
-* Subprocesses on MS-DOS::
-* Windows Subprocesses::
-* System Menu on Windows::
+* Input: MS-DOS Input.         Keyboard and mouse usage on MS-DOS.
+* Display: MS-DOS Display.     Fonts, frames and display size on MS-DOS.
+* Files: MS-DOS File Names.    File name conventions on MS-DOS.
+* Text and Binary::            Text files on MS-DOS use CRLF to separate lines.
+* Printing: MS-DOS Printing.   How to specify the printer on MS-DOS.
+* Processes: MS-DOS Processes. Running subprocesses on MS-DOS.
+* Windows Processes::          Running subprocesses on Windows.
+* Windows System Menu::        Controlling what the ALT key does.
 @end menu
 
-@node Keyboard and Mouse on MS-DOS
+@node MS-DOS Input
 @section Keyboard and Mouse on MS-DOS
 
 @cindex Meta (under MS-DOS)
@@ -41,40 +41,73 @@ NT and 95.
 @cindex Super (under MS-DOS)
 @vindex dos-super-key
 @vindex dos-hyper-key
-  The PC keyboard maps use the left @key{Alt} key as the @key{META}
-key.  You have two choices for emulating the @key{SUPER} and
-@key{HYPER} keys: either the right @key{CONTROL} key or the right
-@key{ALT} key by setting the variables @code{dos-hyper-key} and
-@code{dos-super-key} to 1 or 2 respectively.
+  The PC keyboard maps use the left @key{ALT} key as the @key{META} key.
+You have two choices for emulating the @key{SUPER} and @key{HYPER} keys:
+choose either the right @key{CTRL} key or the right @key{ALT} key by
+setting the variables @code{dos-hyper-key} and @code{dos-super-key} to 1
+or 2 respectively.  If neither @code{dos-super-key} nor
+@code{dos-hyper-key} is 1, then by default the right @key{ALT} key is
+also mapped to the @key{META} key.  However, if the MS-DOS international
+keyboard support program @file{KEYB.COM} is installed, Emacs will
+@emph{not} map the right @key{ALT} to @key{META}, since it is used for
+accessing characters like @kbd{~} and @kbd{@@} on non-US keyboard
+layouts; in this case, you may only use the left @key{ALT} as @key{META}
+key.
 
-@kindex LFD (MS-DOS)
+@kindex C-j @r{(MS-DOS)}
 @vindex dos-keypad-mode
-  The variable @code{dos-keypad-mode} is a flag variable which controls
-what key codes are returned by keys in the numeric keypad.  There is
-no dedicated @key{LFD} key; use @kbd{C-j} instead.  You can also
-define the @key{kp-enter} key to act as @key{LFD}, by putting the
+  The variable @code{dos-keypad-mode} is a flag variable that controls
+what key codes are returned by keys in the numeric keypad.  You can also
+define the keypad @key{ENTER} key to act like @kbd{C-j}, by putting the
 following line into your @file{_emacs} file:
 
 @smallexample
-;; Make the Enter key from the Numeric keypad act as LFD.
+;; Make the Enter key from the Numeric keypad act as C-j.
 (define-key function-key-map [kp-enter] [?\C-j])
 @end smallexample
 
-@kindex DEL (MS-DOS)
-@kindex BS (MS-DOS)
-  The key which is called @key{DEL} in Emacs (because that's how it is
+@kindex DEL @r{(MS-DOS)}
+@kindex BS @r{(MS-DOS)}
+  The key that is called @key{DEL} in Emacs (because that's how it is
 designated on most workstations) is known as @key{BS} (backspace) on a
 PC.  That is why the PC-specific terminal initialization remaps the
 @key{BS} key to act as @key{DEL}; the @key{DEL} key is remapped to act
 as @kbd{C-d} for the same reasons.
 
+@kindex C-g @r{(MS-DOS)}
+@kindex C-BREAK @r{(MS-DOS)}
+@cindex quitting on MS-DOS
+  Emacs built for MS-DOS recognizes @kbd{C-@key{BREAK}} as a quit
+character, just like @kbd{C-g}.  This is because Emacs cannot detect
+that you have typed @kbd{C-g} until it is ready for more input.  As a
+consequence, you cannot use @kbd{C-g} to stop a running command
+(@pxref{Quitting}).  By contrast, @kbd{C-@key{BREAK}} @emph{is} detected
+soon as you type it (as @kbd{C-g} is on other systems), so it can be
+used to stop a running command.
+
 @cindex mouse support under MS-DOS
   Emacs on MS-DOS supports a mouse (on the default terminal only).
 The mouse commands work as documented, including those that use menus
-and the menu bar (@pxref{Menu Bars}).  Scroll bars don't work in
+and the menu bar (@pxref{Menu Bar}).  Scroll bars don't work in
 MS-DOS Emacs.  PC mice usually have only two buttons; these act as
 @kbd{Mouse-1} and @kbd{Mouse-2}, but if you press both of them
 together, that has the effect of @kbd{Mouse-3}.
+
+@cindex Windows clipboard support
+  Emacs built for MS-DOS supports clipboard operations when it runs on
+Windows.  Commands that put text on the kill ring, or yank text from the
+ring, check the Windows clipboard first, just as Emacs does on X Windows
+(@pxref{Mouse Commands}).  Only the primary selection and the cut buffer
+are supported by MS-DOS Emacs on Windows; the secondary selection always
+appears as empty.
+
+  Due to the way clipboard access is implemented by Windows, the
+length of text you can put into the clipboard is limited by the amount
+of free DOS memory that is available to Emacs.  Usually, up to 620KB of
+text can be put into the clipboard, but this limit depends on the system
+configuration and is lower if you run Emacs as a subprocess of
+another program.  If the killed text does not fit, Emacs prints a
+message saying so, and does not put the text into the clipboard.
 
 @vindex dos-display-scancodes
   The variable @code{dos-display-scancodes}, when non-@code{nil},
@@ -82,19 +115,19 @@ directs Emacs to display the ASCII value and the keyboard scan code of
 each keystroke; this feature serves as a complement to the
 @code{view-lossage} command, for debugging.
 
-@node Display on MS-DOS
+@node MS-DOS Display
 @section Display on MS-DOS
 @cindex faces under MS-DOS
 @cindex fonts, emulating under MS-DOS
 
   Display on MS-DOS cannot use multiple fonts, but it does support
 multiple faces, each of which can specify a foreground and a background
-color.  Therefore, you can get the full functionality of Emacs
-packages which use fonts (such as @code{font-lock}, Enriched Text
-mode, and others) by defining the relevant faces to use different
-colors.  Use the @code{list-colors-display} and
-@code{list-faces-display} commands (@pxref{Modifying Faces}) to see
-what colors and faces are available and what they look like.
+color.  Therefore, you can get the full functionality of Emacs packages
+that use fonts (such as @code{font-lock}, Enriched Text mode, and
+others) by defining the relevant faces to use different colors.  Use the
+@code{list-colors-display} command (@pxref{Frame Parameters}) and the
+@code{list-faces-display} command (@pxref{Faces}) to see what colors and
+faces are available and what they look like.
 
 @cindex frames on MS-DOS
   Multiple frames (@pxref{Frames}) are supported on MS-DOS, but they all
@@ -115,7 +148,7 @@ to the default 80x25 screen size.
 25 or 43/50 rows.  However, if your video adapter has special video
 modes that will switch the display to other sizes, you can have Emacs
 support those too.  When you ask Emacs to switch the frame to @var{n}
-rows by @var{m} cols dimensions, it checks if there is a variable called
+rows by @var{m} columns dimensions, it checks if there is a variable called
 @code{screen-dimensions-@var{n}x@var{m}}, and if so, uses its value
 (which must be an integer) as the video mode to switch to.  (Emacs
 switches to that video mode by calling the BIOS @code{Set Video Mode}
@@ -148,7 +181,7 @@ VGA supports 44x80 dimensions and you define a variable
   Changing frame dimensions on MS-DOS has the effect of changing all the
 other frames to the new dimensions.
 
-@node File Names on MS-DOS
+@node MS-DOS File Names
 @section File Names on MS-DOS
 @cindex file names under MS-DOS
 @cindex init file, default name under MS-DOS
@@ -205,37 +238,94 @@ override the above default behavior.
 @section Text Files and Binary Files
 @cindex text and binary files on MS-DOS
 
-@vindex file-name-buffer-file-type-alist
-  Emacs on MS-DOS distinguishes between text and binary files.  This
-distinction is not part of MS-DOS; it is made by Emacs only.  Emacs
-treats files of human-readable text (including program source code) as
-text files, and treats executable programs, compressed archives, etc.,
-as binary files.  Emacs uses the file name to decide whether to treat
-a file as text or binary: the variable
-@code{file-name-buffer-file-type-alist} defines the file name patterns
-which denote binary files.
+  GNU Emacs uses newline characters to separate text lines.  This is the
+convention used on Unix, on which GNU Emacs was developed, and on GNU
+systems since they are modeled on Unix.
 
-  Emacs reads and writes binary files verbatim.  Text files use a two
-character sequence to end a line: carriage-return (control-m) followed
-by newline (control-j).  When you visit a text file, Emacs strips off
-these control-m characters; when you write a text file to disk, Emacs
-puts them back in.  Thus, the text appears within Emacs with just a
-newline character at the end of each line.
-
-  You can tell whether Emacs considers the visited file as text or
-binary based on the mode line (@pxref{Mode Line}).  Text files have a
-@samp{T:} marker prefixed to the major mode name; binary files have a
-@samp{B:} prefix.
+  MS-DOS and MS-Windows normally use carriage-return linefeed, a
+two-character sequence, to separate text lines.  (Linefeed is the same
+character as newline.)  Therefore, convenient editing of typical files
+with Emacs requires conversion of these end-of-line sequences.  And that
+is what Emacs normally does: it converts carriage-return linefeed into
+newline when reading files, and converts newline into carriage-return
+linefeed when writing files.  The same mechanism that handles conversion
+of international character codes does this conversion also
+(@pxref{Coding Systems}).
 
 @cindex cursor location, under MS-DOS
 @cindex point location, under MS-DOS
-@findex what-cursor-position (@r{MS-DOS})
-  One consequence of this special format-conversion of text files is
-that character positions as reported by Emacs (@pxref{Position Info})
-do not agree with the file size information known to the operating
+  One consequence of this special format-conversion of most files is
+that character positions as reported by Emacs (@pxref{Position Info}) do
+not agree with the file size information known to the operating system.
+
+@vindex file-name-buffer-file-type-alist
+  Some kinds of files should not be converted, because their contents are
+not really text.  Therefore, Emacs on MS-DOS distinguishes certain files
+as @dfn{binary files}, and reads and writes them verbatim.  (This
+distinction is not part of MS-DOS; it is made by Emacs only.)  These
+include executable programs, compressed archives, etc.  Emacs uses the
+file name to decide whether to treat a file as binary: the variable
+@code{file-name-buffer-file-type-alist} defines the file-name patterns
+that indicate binary files.
+
+  In addition, if Emacs recognizes from a file's contents that it uses
+newline rather than carriage-return linefeed as its line separator, it
+does not perform conversion when reading or writing that file.  Thus,
+you can read and edit files from Unix or GNU systems on MS-DOS with no
+special effort.
+
+@findex find-file-text
+@findex find-file-binary
+  You can visit a file and specify whether to treat a file as text or
+binary using the commands @code{find-file-text} and
+@code{find-file-binary}.  End-of-line conversion is part of the general
+coding system conversion mechanism, so another way to control whether to
+treat a file as text or binary is with the commands for specifying a
+coding system (@pxref{Specify Coding}).
+
+  The mode line indicates whether end-of-line translation was used for
+the current buffer.  Normally a colon appears after the coding system
+letter near the beginning of the mode line.  If MS-DOS end-of-line
+translation is in use for the buffer, this character changes to a
+backslash.
+
+@cindex untranslated file system
+@findex add-untranslated-filesystem
+  When you use NFS or Samba to access file systems that reside on
+computers using Unix or GNU systems, Emacs should not perform
+end-of-line translation on any files in these file systems--not even
+when you create a new file.  To request this, designate these file
+systems as @dfn{untranslated} file systems by calling the function
+@code{add-untranslated-filesystem}.  It takes one argument: the file
+system name, including a drive letter and optionally a directory.  For
+example,
+
+@example
+(add-untranslated-filesystem "Z:")
+@end example
+
+@noindent
+designates drive Z as an untranslated file system, and
+
+@example
+(add-untranslated-filesystem "Z:\\foo")
+@end example
+
+@noindent
+designates directory @file{\foo} on drive Z as an untranslated file
 system.
 
-@node Printing and MS-DOS
+  Most often you would use @code{add-untranslated-filesystem} in your
+@file{_emacs} file, or in @file{site-start.el} so that all the users at
+your site get the benefit of it.
+
+@findex remove-untranslated-filesystem
+  To countermand the effect of @code{add-untranslated-filesystem}, use
+the function @code{remove-untranslated-filesystem}.  This function takes
+one argument, which should be a string just like the one that was used
+previously with @code{add-untranslated-filesystem}.
+
+@node MS-DOS Printing
 @section Printing and MS-DOS
 
   Printing commands, such as @code{lpr-buffer} (@pxref{Hardcopy}) and
@@ -261,9 +351,9 @@ the default directory of the current buffer, so if the file name in
 each one in the directory of the buffer from which the printing was
 done.
 
-@findex print-buffer, under MS-DOS
-@findex print-region, under MS-DOS
-@vindex lpr-headers-switches, under MS-DOS
+@findex print-buffer @r{(MS-DOS)}
+@findex print-region @r{(MS-DOS)}
+@vindex lpr-headers-switches @r{(MS-DOS)}
   The commands @code{print-buffer} and @code{print-region} call the
 @code{pr} program, or use special switches to the @code{lpr} program, to
 produce headers on each printed page.  MS-DOS doesn't normally have
@@ -276,27 +366,21 @@ do have a suitable @code{pr} program (e.g., from GNU Textutils), set
 @code{pr} to produce the page headers, and print the resulting output as
 specified by @code{dos-printer}.
 
-@vindex print-region-function under MS-DOS
+@vindex print-region-function @r{(MS-DOS)}
 @cindex lpr usage under MS-DOS
-@vindex lpr-command, under MS-DOS
-@vindex lpr-switches, under MS-DOS
+@vindex lpr-command @r{(MS-DOS)}
+@vindex lpr-switches @r{(MS-DOS)}
   Finally, if you do have an @code{lpr} work-alike, you can set
 @code{print-region-function} to @code{nil}.  Then Emacs uses @code{lpr}
 for printing, as on other systems.  (If the name of the program isn't
 @code{lpr}, set the @code{lpr-command} variable to specify where to find
 it.)
 
-@findex ps-print-buffer, under MS-DOS
-@findex ps-print-buffer-with-faces, under MS-DOS
-@findex ps-print-region, under MS-DOS
-@findex ps-print-region-with-faces, under MS-DOS
-@findex ps-spool-buffer, under MS-DOS
-@findex ps-spool-buffer-with-faces, under MS-DOS
-@findex ps-spool-region, under MS-DOS
-@findex ps-spool-region-with-faces, under MS-DOS
+@findex ps-print-buffer @r{(MS-DOS)}
+@findex ps-spool-buffer @r{(MS-DOS)}
 @vindex dos-ps-printer
-@vindex ps-lpr-command, under MS-DOS
-@vindex ps-lpr-switches, under MS-DOS
+@vindex ps-lpr-command @r{(MS-DOS)}
+@vindex ps-lpr-switches @r{(MS-DOS)}
   A separate variable, @code{dos-ps-printer}, defines how PostScript
 files should be printed.  If its value is a string, it is used as the
 name of the device (or file) to which PostScript output is sent, just as
@@ -307,7 +391,7 @@ value of @code{dos-ps-printer} is not a string, then the variables
 @code{ps-lpr-command} and @code{ps-lpr-switches} (@pxref{Postscript})
 control how to print PostScript files.  Thus, if you have a
 non-PostScript printer, you can set these variables to the name and the
-switches appropriate for a PostScript interpreter program (e.g.,
+switches appropriate for a PostScript interpreter program (such as
 Ghostscript).
 
   For example, to use Ghostscript for printing on an Epson printer
@@ -328,14 +412,14 @@ connected to @samp{LPT2} port, put this on your @file{.emacs} file:
 (This assumes that Ghostscript is installed in the @file{"c:/gs"}
 directory.)
 
-@node Subprocesses on MS-DOS
+@node MS-DOS Processes
 @section Subprocesses on MS-DOS
 
 @cindex compilation under MS-DOS
 @cindex inferior processes under MS-DOS
-@findex compile (@r{MS-DOS})
-@findex grep (@r{MS-DOS})
-  Because MS-DOS is a single-process ``operating system'',
+@findex compile @r{(MS-DOS)}
+@findex grep @r{(MS-DOS)}
+  Because MS-DOS is a single-process ``operating system,''
 asynchronous subprocesses are not available.  In particular, Shell
 mode and its variants do not work.  Most Emacs features that use
 asynchronous subprocesses also don't work on MS-DOS, including
@@ -351,7 +435,7 @@ grep process finishes.
 @cindex printing under MS-DOS
   Printing commands, such as @code{lpr-buffer} (@pxref{Hardcopy}) and
 @code{ps-print-buffer} (@pxref{Postscript}), work in MS-DOS by sending
-the output to one of the printer ports.  @xref{Printing and MS-DOS}.
+the output to one of the printer ports.  @xref{MS-DOS Printing}.
 
   When you run a subprocess synchronously on MS-DOS, make sure the
 program terminates and does not try to read keyboard input.  If the
@@ -364,7 +448,7 @@ login, etc., don't work either, unless network access is built into
 MS-DOS with some network redirector.
 
 @cindex directory listing on MS-DOS
-@vindex dired-listing-switches (@r{MS-DOS})
+@vindex dired-listing-switches @r{(MS-DOS)}
   Dired on MS-DOS uses the @code{ls-lisp} package where other
 platforms use the system @code{ls} command.  Therefore, Dired on
 MS-DOS supports only some of the possible options you can mention in
@@ -372,8 +456,8 @@ the @code{dired-listing-switches} variable.  The options that work are
 @samp{-A}, @samp{-a}, @samp{-c}, @samp{-i}, @samp{-r}, @samp{-S},
 @samp{-s}, @samp{-t}, and @samp{-u}.
 
-@node Windows Subprocesses
-@section Subprocesses on Windows 95 and Windows NT
+@node Windows Processes
+@section Subprocesses on Windows 95 and NT
 
 Subprocesses, both synchronous and asynchronous, work fine on both
 Windows 95 and Windows NT as long as you run only 32-bit Windows
@@ -391,7 +475,7 @@ If you run just one DOS application subprocess, the subprocess should
 work as expected as long as it is ``well-behaved'' and does not perform
 direct screen access or other unusual actions.  If you have a CPU
 monitor application, your machine will appear to be 100% busy even when
-the DOS application is idle, but this is only an artefact of the way CPU
+the DOS application is idle, but this is only an artifact of the way CPU
 monitors measure processor load.
 
 You must terminate the DOS application before you start any other DOS
@@ -418,7 +502,7 @@ system.  Instead, type @kbd{CTL-ALT-@key{DEL}} and then choose
 @code{Shutdown}.  That usually works, although it may take a few minutes
 to do its job.
 
-@node System Menu on Windows
+@node Windows System Menu
 @section Using the System Menu on Windows
 
 Emacs normally turns off the Windows feature that tapping the @key{ALT}
@@ -428,7 +512,7 @@ serves as @key{META} in Emacs.  When using Emacs, users often press the
 effect of bringing up the Windows menu, it alters the meaning of
 subsequent commands.  Many users find this frustrating. 
 
-@vindex win32-pass-alt-to-system
+@vindex w32-pass-alt-to-system
 You can reenable Windows's default handling of tapping the @key{ALT} key
-by setting @code{win32-pass-alt-to-system} to a non-@code{nil} value.
+by setting @code{w32-pass-alt-to-system} to a non-@code{nil} value.
 

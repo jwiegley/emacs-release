@@ -18,12 +18,26 @@ along with GNU Emacs; see the file COPYING.  If not, write to
 the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#include <config.h>
+
 /* Define these variables that serve as global parameters to termcap,
    so that we do not need to conditionalize the places in Emacs
    that set them.  */
 
 char *UP, *BC, PC;
+
+#if defined (HAVE_LIBNCURSES) && ! defined (NCURSES_OSPEED_T)
 short ospeed;
+#else
+#if defined (HAVE_TERMIOS_H) && defined (LINUX)
+#include <termios.h>
+/* HJL's version of libc is said to need this on the Alpha.
+   On the other hand, DEC OSF1 on the Alpha needs ospeed to be a short.  */
+speed_t ospeed;
+#else
+short ospeed;
+#endif
+#endif
 
 static buffer[512];
 

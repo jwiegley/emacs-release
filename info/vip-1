@@ -1,5 +1,5 @@
-This is Info file ../info/vip, produced by Makeinfo-1.55 from the input
-file vip.texi.
+This is Info file ../info/vip, produced by Makeinfo version 1.68 from
+the input file vip.texi.
 
 Distribution
 ************
@@ -74,20 +74,20 @@ Basic Concepts
 are explained in more detail in the GNU Emacs Manual.
 
    Conceptually, a "buffer" is just a string of ASCII characters and two
-special characters PNT ("point") and MRK ("mark") such that the
-character PNT occurs exactly once and MRK occurs at most once.  The
-"text" of a buffer is obtained by deleting the occurrences of PNT and
-MRK.  If, in a buffer, there is a character following PNT then we say
-that point is "looking at" the character; otherwise we say that point
-is "at the end of buffer".  PNT and MRK are used to indicate positions
-in a buffer and they are not part of the text of the buffer.  If a
-buffer contains a MRK then the text between MRK and PNT is called the
-"region" of the buffer.
+special characters <PNT> ("point") and <MRK> ("mark") such that the
+character <PNT> occurs exactly once and <MRK> occurs at most once.  The
+"text" of a buffer is obtained by deleting the occurrences of <PNT> and
+<MRK>.  If, in a buffer, there is a character following <PNT> then we
+say that point is "looking at" the character; otherwise we say that
+point is "at the end of buffer".  <PNT> and <MRK> are used to indicate
+positions in a buffer and they are not part of the text of the buffer.
+If a buffer contains a <MRK> then the text between <MRK> and <PNT> is
+called the "region" of the buffer.
 
    Emacs provides (multiple) "windows" on the screen, and you can see
 the content of a buffer through the window associated with the buffer.
 The cursor of the screen is always positioned on the character after
-PNT.
+<PNT>.
 
    A "keymap" is a table that records the bindings between characters
 and command functions.  There is the "global keymap" common to all the
@@ -137,8 +137,8 @@ called and you will be in "vi mode".  (Some major modes may locally bind
 `C-z' to some special functions.  In such cases, you can call
 `vip-change-mode-to-vi' by `execute-extended-command' which is invoked
 by `M-x'.  Here `M-x' means `Meta-x', and if your terminal does not
-have a META key you can enter it by typing `ESC x'.  The same effect
-can also be achieve by typing `M-x vip-mode'.)
+have a <META> key you can enter it by typing `<ESC> x'.  The same
+effect can also be achieve by typing `M-x vip-mode'.)
 
    You can observe the change of mode by looking at the "mode line".
 For instance, if the mode line is:
@@ -162,7 +162,7 @@ command keys like `i', `a', `o' ... etc.
    In insert mode, the mode line will look like this:
      -----Insert *scratch*              (Lisp Interaction)----All------------
 
-You can exit from insert mode by hitting ESC key as you do in Vi.
+You can exit from insert mode by hitting <ESC> key as you do in Vi.
 
    That VIP has three modes may seem very complicated, but in fact it
 is not so.  VIP is implemented so that you can do most editing
@@ -214,7 +214,7 @@ Insert Mode
 except for the following 4 keys.  So, you can move around in the buffer
 and change its content while you are in insert mode.
 
-`ESC'
+`<ESC>'
      This key will take you back to vi mode.
 
 `C-h'
@@ -224,7 +224,7 @@ and change its content while you are in insert mode.
      Delete previous word.
 
 `C-z'
-     Typing this key has the same effect as typing ESC in emacs mode.
+     Typing this key has the same effect as typing <ESC> in emacs mode.
      Thus typing `C-z x' in insert mode will have the same effect as
      typing `ESC x' in emacs mode.
 
@@ -277,8 +277,8 @@ Changing
 slightly differently.  Thus, if point is at the beginning of a word
 `foo' and you wished to change it to `bar' by typing `c w', then VIP
 will prompt you for a new word in the minibuffer by the prompt `foo =>
-'.  You can then enter `bar' followed by RET or ESC to complete the
-command.  Before you enter RET or ESC you can abort the command by
+'.  You can then enter `bar' followed by <RET> or <ESC> to complete the
+command.  Before you enter <RET> or <ESC> you can abort the command by
 typing `C-g'.  In general, you can abort a partially formed command by
 typing `C-g'.
 
@@ -291,12 +291,12 @@ Searching
    As in Vi, searching is done by `/' and `?'.  The string will be
 searched literally by default.  To invoke a regular expression search,
 first execute the search command `/' (or `?') with empty search string.
-(I.e, type `/' followed by RET.) A search for empty string will toggle
-the search mode between vanilla search and regular expression search.
-You cannot give an offset to the search string.  (It is a limitation.)
-By default, search will wrap around the buffer as in Vi.  You can
-change this by rebinding the variable `vip-search-wrap-around'.  *Note
-Customization::, for how to do this.
+(I.e, type `/' followed by <RET>.)  A search for empty string will
+toggle the search mode between vanilla search and regular expression
+search.  You cannot give an offset to the search string.  (It is a
+limitation.)  By default, search will wrap around the buffer as in Vi.
+You can change this by rebinding the variable `vip-search-wrap-around'.
+*Note Customization::, for how to do this.
 
 
 File: vip,  Node: z Command,  Next: Counts,  Prev: Searching,  Up: Differences from Vi
@@ -304,7 +304,7 @@ File: vip,  Node: z Command,  Next: Counts,  Prev: Searching,  Up: Differences f
 z Command
 ---------
 
-   For those of you who cannot remember which of `z' followed by RET,
+   For those of you who cannot remember which of `z' followed by <RET>,
 `.' and `-' do what.  You can also use `z' followed by `H', `M' and `L'
 to place the current line in the Home (Middle, and Last) line of the
 window.
@@ -325,7 +325,7 @@ Counts
 `o'
 `O'
      Given counts, that many copies of text will be inserted. Thus `o a
-     b c ESC' will insert 3 lines of `abc' below the current line.
+     b c <ESC>' will insert 3 lines of `abc' below the current line.
 
 `/'
 `?'
@@ -337,7 +337,7 @@ File: vip,  Node: Marking,  Next: Region Commands,  Prev: Counts,  Up: Differenc
 Marking
 -------
 
-   Typing an `m' followed by a lower case character CH marks the point
+   Typing an `m' followed by a lower-case character CH marks the point
 to the register named CH as in Vi.  In addition to these, we have
 following key bindings for marking.
 
@@ -395,7 +395,7 @@ Some New Commands
 
 `C-c'
 `C-x'
-`ESC'
+`<ESC>'
      These keys will exit from vi mode and return to emacs mode
      temporarily.  If you hit one of these keys, Emacs will be in emacs
      mode and will believe that you hit that key in emacs mode. For
@@ -434,11 +434,11 @@ Some New Commands
      follows.  Currently, CH can be one of `c', `C', `g', `q' and `s'.
 
 `# c'
-     Change upper case characters in the region to lower case
+     Change upper-case characters in the region to lower case
      (`downcase-region').
 
 `# C'
-     Change lower case characters in the region to upper case. For
+     Change lower-case characters in the region to upper case. For
      instance, `# C 3 w' will capitalize 3 words from the current point
      (`upcase-region').
 
@@ -475,7 +475,7 @@ Bindings::, for details.
      to abort a command (this is for compatibility with emacs mode.)
 
 `SPC'
-`RET'
+`<RET>'
      Now these keys will scroll up and down the text of current window.
      Convenient for viewing the text.
 
@@ -484,7 +484,7 @@ Bindings::, for details.
      They are used to switch to a specified buffer.  Useful for
      switching to already existing buffer since buffer name completion
      is provided.  Also a default buffer will be given as part of the
-     prompt, to which you can switch by just typing RET key.  `s' is
+     prompt, to which you can switch by just typing <RET> key.  `s' is
      used to select buffer in the current window, while `S' selects
      buffer in another window.
 
@@ -493,8 +493,8 @@ Bindings::, for details.
      These keys will exit from vi mode and return to emacs mode
      temporarily.  If you type `C' (`X'), Emacs will be in emacs mode
      and will believe that you have typed `C-c' (`C-x', resp.) in emacs
-     mode. Moreover, if the following character you type is an upper
-     case letter, then Emacs will believe that you have typed the
+     mode. Moreover, if the following character you type is an
+     upper-case letter, then Emacs will believe that you have typed the
      corresponding control character.  You will be in vi mode again
      after the command is executed.  For example, typing `X S' in vi
      mode is the same as typing `C-x C-s' in emacs mode.  You get the
@@ -658,16 +658,16 @@ functions are the same in any of emacs, vi and insert mode.
      Clear the screen and reprint everything (`recenter').
 
    In Emacs many commands are bound to the key strokes that start with
-`C-x', `C-c' and ESC.  These commands can be accessed from vi mode as
+`C-x', `C-c' and <ESC>.  These commands can be accessed from vi mode as
 easily as from emacs mode.
 
 `C-x'
 `C-c'
-`ESC'
+`<ESC>'
      Typing one of these keys have the same effect as typing it in
      emacs mode.  Appropriate command will be executed according as the
      keys you type after it.  You will be in vi mode again after the
-     execution of the command.  For instance, if you type `ESC <' (in
+     execution of the command.  For instance, if you type `<ESC> <' (in
      vi mode) then the cursor will move to the beginning of the buffer
      and you will still be in vi mode.
 
@@ -675,7 +675,7 @@ easily as from emacs mode.
 `X'
      Typing one of these keys have the effect of typing the
      corresponding control character in emacs mode.  Moreover, if you
-     type an upper case character following it, that character will
+     type an upper-case character following it, that character will
      also be translated to the corresponding control character.  Thus
      typing `X W' in vi mode is the same as typing `C-x C-w' in emacs
      mode.  You will be in vi mode again after the execution of a
@@ -724,10 +724,10 @@ it means that the file associated with the buffer is write protected.
 `X 3'
      Show current buffer in two windows.
 
-`s BUFFER RET'
+`s BUFFER <RET>'
      Select or create a buffer named BUFFER (`vip-switch-to-buffer').
 
-`S BUFFER RET'
+`S BUFFER <RET>'
      Similar but select a buffer named BUFFER in another window
      (`vip-switch-to-buffer-other-window').
 
@@ -741,11 +741,11 @@ it means that the file associated with the buffer is write protected.
 
    As "buffer name completion" is provided, you have only to type in
 initial substring of the buffer name which is sufficient to identify it
-among names of existing buffers.  After that, if you hit TAB the rest
+among names of existing buffers.  After that, if you hit <TAB> the rest
 of the buffer name will be supplied by the system, and you can confirm
-it by RET.  The default buffer name to switch to will also be prompted,
-and you can select it by giving a simple RET.  See GNU Emacs Manual for
-details of completion.
+it by <RET>.  The default buffer name to switch to will also be
+prompted, and you can select it by giving a simple <RET>.  See GNU
+Emacs Manual for details of completion.
 
 
 File: vip,  Node: Files,  Next: Viewing the Buffer,  Prev: Buffers and Windows,  Up: Vi Commands
@@ -756,10 +756,10 @@ Files
    We have the following commands related to files.  They are used to
 visit, save and insert files.
 
-`v FILE RET'
+`v FILE <RET>'
      Visit specified file in the current window (`vip-find-file').
 
-`V FILE RET'
+`V FILE <RET>'
      Visit specified file in another window
      (`vip-find-file-other-window').
 
@@ -768,10 +768,10 @@ visit, save and insert files.
      file is associated with the buffer, the name of the file to write
      out the content of the buffer will be asked in the minibuffer.
 
-`X W FILE RET'
+`X W FILE <RET>'
      Write current buffer into a specified file.
 
-`X I FILE RET'
+`X I FILE <RET>'
      Insert a specified file at point.
 
 `g'
@@ -790,7 +790,7 @@ minibuffer.
      visit file: /usr/masahiko/lisp/
 
 If you wish to visit, say, `vip.el' in this directory, then you can
-just type `vip.el' followed by RET.  If the file `vip.el' already
+just type `vip.el' followed by <RET>.  If the file `vip.el' already
 exists in the directory, Emacs will visit that file, and if not, the
 file will be created.  Emacs will use the file name (`vip.el', in this
 case) as the name of the buffer visiting the file.  In order to make
@@ -798,13 +798,13 @@ the buffer name unique, Emacs may append `<2>', `<3>' etc., to the
 buffer name.  As the "file name completion" is provided here, you can
 sometime save typing.  For instance, suppose there is only one file in
 the default directory whose name starts with `v', that is `vip.el'.
-Then if you just type `v TAB' then it will be completed to `vip.el'.
-Thus, in this case, you just have to type `v v TAB RET' to visit
+Then if you just type `v <TAB>' then it will be completed to `vip.el'.
+Thus, in this case, you just have to type `v v <TAB> <RET>' to visit
 `/usr/masahiko/lisp/vip.el'.  Continuing the example, let us now
 suppose that you wished to visit the file
 `/usr/masahiko/man/vip.texinfo'.  Then to the same prompt which you get
 after you typed `v', you can enter `/usr/masahiko/man/vip.texinfo' or
-`../man/vip.texinfo' followed by RET.
+`../man/vip.texinfo' followed by <RET>.
 
    Use `V' instead of `v', if you wish to visit a file in another
 window.
@@ -832,12 +832,12 @@ buffer.  These command do not change the content of the buffer.  The
 following commands are useful for viewing the content of the current
 buffer.
 
-`SPC'
+`<SPC>'
 `C-f'
      Scroll text of current window upward almost full screen.  You can
      go forward in the buffer by this command (`vip-scroll').
 
-`RET'
+`<RET>'
 `C-b'
      Scroll text of current window downward almost full screen.  You
      can go backward in the buffer by this command (`vip-scroll-back').
@@ -858,13 +858,13 @@ buffer.
      Scroll text of current window downward by one line
      (`vip-scroll-up-one').
 
-You can repeat these commands by giving a count.  Thus, `2 SPC' has the
-same effect as `SPC SPC'.
+You can repeat these commands by giving a count.  Thus, `2 <SPC>' has
+the same effect as `<SPC> <SPC>'.
 
    The following commands reposition point in the window.
 
 `z H'
-`z RET'
+`z <RET>'
      Put point on the top (home) line in the window.  So the current
      line becomes the top line in the window.  Given a count N, point
      will be placed in the N-th line from top (`vip-line-to-top').
@@ -893,8 +893,8 @@ Mark Commands
    The following commands are used to mark positions in the buffer.
 
 `m CH'
-     Store current point in the register CH.  CH must be a lower case
-     character between `a' and `z'.
+     Store current point in the register CH.  CH must be a lower-case
+     ASCII letter.
 
 `m <'
      Set mark at the beginning of current buffer.
@@ -1048,7 +1048,7 @@ A count repeats the effect for these commands.
 
 `` CH'
      Move point to the position stored in the register CH.  CH must be
-     a lower case letter.
+     a lower-case letter.
 
 `' ''
      Exchange point and mark, and then move point to the first non-white
@@ -1056,8 +1056,8 @@ A count repeats the effect for these commands.
 
 `' CH'
      Move point to the position stored in the register CH and skip to
-     the first non-white character on the line.  CH must be a lower
-     case letter.
+     the first non-white character on the line.  CH must be a
+     lower-case letter.
 
 `%'
      Move point to the matching parenthesis if point is looking at `(',
@@ -1102,7 +1102,7 @@ Searching and Replacing
 
    Following commands are available for searching and replacing.
 
-`/ STRING RET'
+`/ STRING <RET>'
      Search the first occurrence of the string STRING forward starting
      from point.  Given a count N, the N-th occurrence of STRING will
      be searched.  If the variable `vip-re-search' has value `t' then
@@ -1111,7 +1111,7 @@ Searching and Replacing
      as STRING then the search mode will change from vanilla search to
      regular expression search and vice versa (`vip-search-forward').
 
-`? STRING RET'
+`? STRING <RET>'
      Same as `/', except that search is done backward
      (`vip-search-backward').
 
@@ -1167,10 +1167,10 @@ command which is given to the commands as their argument.
 
    We classify motion commands into "point commands" and "line
 commands".  The point commands are as follows:
-     `h', `l', `0', `^', `$', `w', `W', `b', `B', `e', `E', `(', `)', `/', `?', ``', `f', `F', `t', `T', `%', `;', `,'
+     h, l, 0, ^, $, w, W, b, B, e, E, (, ), /, ?, `, f, F, t, T, %, ;, ,
 
 The line commands are as follows:
-     `j', `k', `+', `-', `H', `M', `L', `{', `}', `G', `''
+     j, k, +, -, H, M, L, {, }, G, '
 
 If a point command is given as an argument to a modifying command, the
 region determined by the point command will be affected by the modifying
@@ -1207,10 +1207,10 @@ command.  Thus, `3 d w' will delete three words.
 
    It is also possible to save the deleted text into a register you
 specify.  For example, you can say `" t 3 d w' to delete three words
-and save it to register `t'.  The name of a register is a lower case
-letter between `a' and `z'.  If you give an upper case letter as an
+and save it to register `t'.  The name of a register is a lower-case
+letter between `a' and `z'.  If you give an upper-case letter as an
 argument to a delete command, then the deleted text will be appended to
-the content of the register having the corresponding lower case letter
+the content of the register having the corresponding lower-case letter
 as its name.  So, `" T d w' will delete a word and append it to
 register `t'.  Other modifying commands also accept a register name as
 their argument, and we will not repeat similar explanations.
@@ -1233,7 +1233,7 @@ their argument, and we will not repeat similar explanations.
      Delete a character after point.  Given N, delete N characters
      (`vip-delete-char').
 
-`DEL'
+`<DEL>'
      Delete a character before point.  Given N, delete N characters
      (`vip-delete-backward-char').
 
@@ -1318,7 +1318,7 @@ Change Commands
 For example, if point is at the beginning of a word `foo' and you wish
 to change it to `bar', you can type `c w'.  Then, as `w' is a point
 command, you will get the prompt `foo =>' in the minibuffer, for which
-you can type `b a r RET' to complete the change command.
+you can type `b a r <RET>' to complete the change command.
 
 `c c'
      Change a line.  Given a count, that many lines are changed.
@@ -1418,7 +1418,7 @@ in the global keymap.  See GNU Emacs Manual for details.
 `TAB'
      Indent line for current major mode (`indent-for-tab-command').
 
-`LFD'
+`C-j'
      Insert a newline, then indent according to mode
      (`newline-and-indent').
 

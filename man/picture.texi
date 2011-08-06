@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Picture, Sending Mail, Abbrevs, Top
 @chapter Editing Pictures
@@ -103,7 +103,7 @@ buffer.
   To do actual insertion, you must use special commands.  @kbd{C-o}
 (@code{picture-open-line}) creates a blank line after the current line;
 it never splits a line.  @kbd{C-M-o}, @code{split-line}, makes sense in
-Picture mode, so it is not changed.  @key{LFD}
+Picture mode, so it is not changed.  @kbd{C-j}
 (@code{picture-duplicate-line}) inserts below the current line another
 line with the same contents.@refill
 

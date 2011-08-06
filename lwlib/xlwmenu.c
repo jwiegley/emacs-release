@@ -644,6 +644,9 @@ display_menu (mw, level, just_compute_p, highlighted_pos, hit, hit_return,
   int horizontal_p = mw->menu.horizontal && (level == 0);
   int highlighted_p;
   int just_compute_this_one_p;
+  /* This is set nonzero if the element containing HIGHLIGHTED_POS
+     is disabled, so that we do not return any subsequent element either.  */
+  int no_return = 0;
 
   if (level >= mw->menu.old_depth)
     abort ();
@@ -688,8 +691,14 @@ display_menu (mw, level, just_compute_p, highlighted_pos, hit, hit_return,
       if (hit
 	  && !*hit_return
 	  && (horizontal_p ? hit->x < where.x : hit->y < where.y)
-	  && !all_dashes_p (val->name))
-	*hit_return = val;
+	  && !all_dashes_p (val->name)
+	  && !no_return)
+	{
+	  if (val->enabled)
+	    *hit_return = val;
+	  else
+	    no_return = 1;
+	}
 
       if (horizontal_p)
 	where.y = 0;
@@ -781,6 +790,9 @@ fit_to_screen (mw, ws, previous_ws, horizontal_p)
 {
   unsigned int screen_width = WidthOfScreen (XtScreen (mw));
   unsigned int screen_height = HeightOfScreen (XtScreen (mw));
+  /* 1 if we are unable to avoid an overlap between
+     this menu and the parent menu in the X dimension.  */
+  int horizontal_overlap = 0;
 
   if (ws->x < 0)
     ws->x = 0;
@@ -791,8 +803,24 @@ fit_to_screen (mw, ws, previous_ws, horizontal_p)
       else
 	ws->x = screen_width - ws->width;
       if (ws->x < 0)
-        ws->x = 0;
+	{
+	  ws->x = 0;
+	  horizontal_overlap = 1;
+	}
     }
+  /* If we overlap in X, try to avoid overlap in Y.  */
+  if (horizontal_overlap
+      && ws->y < previous_ws->y + previous_ws->height
+      && previous_ws->y < ws->y + ws->height)
+    {
+      /* Put this menu right below or right above PREVIOUS_WS
+	 if there's room.  */
+      if (previous_ws->y + previous_ws->height + ws->height < screen_height)
+	ws->y = previous_ws->y + previous_ws->height;
+      else if (previous_ws->y - ws->height > 0)
+	ws->y = previous_ws->y - ws->height;
+    }
+
   if (ws->y < 0)
     ws->y = 0;
   else if (ws->y + ws->height > screen_height)
@@ -855,18 +883,18 @@ remap_menubar (mw)
   display_menu (mw, last_same, new_selection == old_selection,
 		&selection_position, NULL, NULL, old_selection, new_selection);
 
-  /* Now popup the new menus */
-  for (i = last_same + 1; i < new_depth && new_stack [i]->contents; i++)
+  /* Now place the new menus.  */
+  for (i = last_same + 1; i < new_depth && new_stack[i]->contents; i++)
     {
-      window_state* previous_ws = &windows [i - 1];
-      window_state* ws = &windows [i];
+      window_state *previous_ws = &windows[i - 1];
+      window_state *ws = &windows[i];
 
-      ws->x =
-	previous_ws->x + selection_position.x + mw->menu.shadow_thickness;
+      ws->x
+	= previous_ws->x + selection_position.x + mw->menu.shadow_thickness;
       if (!mw->menu.horizontal || i > 1)
 	ws->x += mw->menu.shadow_thickness;
-      ws->y =
-	previous_ws->y + selection_position.y + mw->menu.shadow_thickness;
+      ws->y
+	= previous_ws->y + selection_position.y + mw->menu.shadow_thickness;
 
       size_menu (mw, i);
 
@@ -881,8 +909,8 @@ remap_menubar (mw)
 
   /* unmap the menus that popped down */
   for (i = new_depth - 1; i < old_depth; i++)
-    if (i >= new_depth || !new_stack [i]->contents)
-      XUnmapWindow (XtDisplay (mw), windows [i].window);
+    if (i >= new_depth || !new_stack[i]->contents)
+      XUnmapWindow (XtDisplay (mw), windows[i].window);
 }
 
 static Boolean
@@ -1516,6 +1544,7 @@ pop_up_menu (mw, event)
   int		borderwidth = mw->menu.shadow_thickness;
   Screen*	screen = XtScreen (mw);
   Display       *display = XtDisplay (mw);
+  int count;
 
   next_release_must_exit = 0;
 
@@ -1560,7 +1589,7 @@ pop_up_menu (mw, event)
     }
 
 #ifdef emacs
-  x_catch_errors (display);
+  count = x_catch_errors (display);
 #endif
   XtGrabPointer ((Widget)mw, False,
 		 (PointerMotionMask
@@ -1577,7 +1606,7 @@ pop_up_menu (mw, event)
       pointer_grabbed = 0;
       XtUngrabPointer ((Widget)mw, event->time);
     }
-  x_uncatch_errors (display);
+  x_uncatch_errors (display, count);
 #endif
 
   handle_motion_event (mw, (XMotionEvent*)event);

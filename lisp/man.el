@@ -1,6 +1,6 @@
 ;;; man.el --- browse UNIX manual pages
 
-;; Copyright (C) 1993, 1994, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 1996, 1997 Free Software Foundation, Inc.
 
 ;; Author:		Barry A. Warsaw <bwarsaw@cen.com>
 ;; Keywords:		help
@@ -98,10 +98,16 @@
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ;; empty defvars (keep the compiler quiet)
 
+(defgroup man nil
+  "Browse UNIX manual pages."
+  :prefix "Man-"
+  :group 'help)
+
+
 (defvar Man-notify)
 (defvar Man-current-page)
 (defvar Man-page-list)
-(defvar Man-filter-list nil
+(defcustom Man-filter-list nil
   "*Manpage cleaning filter command phrases.
 This variable contains a list of the following form:
 
@@ -111,7 +117,11 @@ Each phrase-string is concatenated onto the command-string to form a
 command filter.  The (standard) output (and standard error) of the Un*x
 man command is piped through each command filter in the order the
 commands appear in the association list.  The final output is placed in
-the manpage buffer.")
+the manpage buffer."
+  :type '(repeat (list (string :tag "Command String")
+		       (repeat :inline t
+			       (string :tag "Phrase String"))))
+  :group 'man)
 
 (defvar Man-original-frame)
 (defvar Man-arguments)
@@ -126,17 +136,23 @@ the manpage buffer.")
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ;; user variables
 
-(defvar Man-fontify-manpage-flag t
-  "*Make up the manpage with fonts.")
+(defcustom Man-fontify-manpage-flag t
+  "*Make up the manpage with fonts."
+  :type 'boolean
+  :group 'man)
 
-(defvar Man-overstrike-face 'bold
-  "*Face to use when fontifying overstrike.")
+(defcustom Man-overstrike-face 'bold
+  "*Face to use when fontifying overstrike."
+  :type 'face
+  :group 'man)
 
-(defvar Man-underline-face 'underline
-  "*Face to use when fontifying underlining.")
+(defcustom Man-underline-face 'underline
+  "*Face to use when fontifying underlining."
+  :type 'face
+  :group 'man)
 
 ;; Use the value of the obsolete user option Man-notify, if set.
-(defvar Man-notify-method (if (boundp 'Man-notify) Man-notify 'friendly)
+(defcustom Man-notify-method (if (boundp 'Man-notify) Man-notify 'friendly)
   "*Selects the behavior when manpage is ready.
 This variable may have one of the following values, where (sf) means
 that the frames are switched, so the manpage is displayed in the frame
@@ -151,23 +167,33 @@ polite     -- don't display manpage, but prints message and beep when ready
 quiet      -- like `polite', but don't beep
 meek       -- make no indication that the manpage is ready
 
-Any other value of `Man-notify-method' is equivalent to `meek'.")
+Any other value of `Man-notify-method' is equivalent to `meek'."
+  :type '(radio (const newframe) (const pushy) (const bully)
+		(const aggressive) (const friendly)
+		(const polite) (const quiet) (const meek))
+  :group 'man)
 
-(defvar Man-frame-parameters nil
-  "*Frame parameter list for creating a new frame for a manual page.")
+(defcustom Man-frame-parameters nil
+  "*Frame parameter list for creating a new frame for a manual page."
+  :type 'sexp
+  :group 'man)
 
-(defvar Man-downcase-section-letters-flag t
+(defcustom Man-downcase-section-letters-flag t
   "*Letters in sections are converted to lower case.
 Some Un*x man commands can't handle uppercase letters in sections, for
 example \"man 2V chmod\", but they are often displayed in the manpage
 with the upper case letter.  When this variable is t, the section
 letter (e.g., \"2V\") is converted to lowercase (e.g., \"2v\") before
-being sent to the man background process.")
+being sent to the man background process."
+  :type 'boolean
+  :group 'man)
 
-(defvar Man-circular-pages-flag t
-  "*If t, the manpage list is treated as circular for traversal.")
+(defcustom Man-circular-pages-flag t
+  "*If t, the manpage list is treated as circular for traversal."
+  :type 'boolean
+  :group 'man)
 
-(defvar Man-section-translations-alist
+(defcustom Man-section-translations-alist
   (list
    '("3C++" . "3")
    ;; Some systems have a real 3x man section, so let's comment this.
@@ -178,7 +204,10 @@ being sent to the man background process.")
 Some manpages (e.g. the Sun C++ 2.1 manpages) have section numbers in
 their references which Un*x `man' does not recognize.  This
 association list is used to translate those sections, when found, to
-the associated section number.")
+the associated section number."
+  :type '(repeat (cons (string :tag "Bogus Section")
+		       (string :tag "Real Section")))
+  :group 'man)
 
 (defvar manual-program "man"
   "The name of the program that produces man pages.")
@@ -290,6 +319,13 @@ This regular expression should start with a `^' character.")
 /\e\\[[0-9][0-9]*m/ s///g"
   "Script for berkeley-like sed to nuke backspaces and ANSI codes from manpages.")
 
+(defvar man-mode-syntax-table
+  (let ((table (copy-syntax-table (standard-syntax-table))))
+    (modify-syntax-entry ?. "w" table)
+    (modify-syntax-entry ?_ "w" table)
+    table)
+  "Syntax table used in Man mode buffers.")
+
 (if Man-mode-map
     nil
   (setq Man-mode-map (make-keymap))
@@ -309,6 +345,7 @@ This regular expression should start with a `^' character.")
   (define-key Man-mode-map "k"    'Man-kill)
   (define-key Man-mode-map "q"    'Man-quit)
   (define-key Man-mode-map "m"    'man)
+  (define-key Man-mode-map "\r"   'man-follow)
   (define-key Man-mode-map "?"    'describe-mode)
   )
 
@@ -354,7 +391,7 @@ This is necessary if one wants to dump man.el with emacs."
 	   "-e '/^[ \t]*Page[ \t][0-9]*.*(printed[ \t][0-9\\/]*)$/d'"
 	   "-e '/^Printed[ \t][0-9].*[0-9]$/d'"
 	   "-e '/^[ \t]*X[ \t]Version[ \t]1[01].*Release[ \t][0-9]/d'"
-	   "-e '/^[A-za-z].*Last[ \t]change:/d'"
+	   "-e '/^[A-Za-z].*Last[ \t]change:/d'"
 	   "-e '/^Sun[ \t]Release[ \t][0-9].*[0-9]$/d'"
 	   "-e '/[ \t]*Copyright [0-9]* UNIX System Laboratories, Inc.$/d'"
 	   "-e '/^[ \t]*Rev\\..*Page [0-9][0-9]*$/d'"
@@ -397,7 +434,14 @@ that string instead of from the current buffer."
 
 (defsubst Man-build-man-command ()
   "Builds the entire background manpage and cleaning command."
-  (let ((command (concat manual-program " " Man-switches " %s 2>/dev/null"))
+  (let ((command (concat manual-program " " Man-switches
+			 ; Stock MS-DOS shells cannot redirect stderr;
+			 ; `call-process' below sends it to /dev/null,
+			 ; so we don't need `2>' even with DOS shells
+			 ; which do support stderr redirection.
+			 (if (not (fboundp 'start-process))
+			     " %s"
+			   " %s 2>/dev/null")))
 	(flist Man-filter-list))
     (while (and flist (car flist))
       (let ((pcom (car (car flist)))
@@ -455,31 +499,23 @@ and the Man-section-translations-alist variables)."
   "Make a guess at a default manual entry.
 This guess is based on the text surrounding the cursor, and the
 default section number is selected from `Man-auto-section-alist'."
-  (let (default-title)
+  (let (word)
     (save-excursion
-      
       ;; Default man entry title is any word the cursor is on, or if
-      ;; cursor not on a word, then nearest preceding word.  Cannot
-      ;; use the current-word function because it skips the dots.
-      (if (not (looking-at "[-a-zA-Z_.]"))
-	  (skip-chars-backward "^a-zA-Z"))
-      (skip-chars-backward "-(a-zA-Z_0-9_.")
-      (if (looking-at "(") (forward-char 1))
-      (setq default-title
-	    (buffer-substring
-	     (point)
-	     (progn (skip-chars-forward "-a-zA-Z0-9_.") (point))))
-      
+      ;; cursor not on a word, then nearest preceding word.
+      (setq word (current-word))
+      (if (string-match "[._]+$" word)
+	  (setq word (substring word 0 (match-beginning 0))))
       ;; If looking at something like ioctl(2) or brc(1M), include the
       ;; section number in the returned value.  Remove text properties.
-      (let ((result (concat
-		     default-title
-		     (if (looking-at
-			  (concat "[ \t]*([ \t]*\\("
-				  Man-section-regexp "\\)[ \t]*)"))
-			 (format "(%s)" (Man-match-substring 1))))))
-	(set-text-properties 0 (length result) nil result)
-	result))))
+      (forward-word 1)
+      ;; Use `format' here to clear any text props from `word'.
+      (format "%s%s"
+	      word
+	      (if (looking-at
+		   (concat "[ \t]*([ \t]*\\(" Man-section-regexp "\\)[ \t]*)"))
+		  (format "(%s)" (Man-match-substring 1))
+		"")))))
 
 
 ;; ======================================================================
@@ -516,6 +552,14 @@ If a buffer already exists for this man page, it will display immediately."
 
   (Man-getpage-in-background man-args))
 
+;;;###autoload
+(defun man-follow (man-args)
+  "Get a Un*x manual page of the item under point and put it in a buffer."
+  (interactive (list (Man-default-man-entry)))
+  (if (or (not man-args)
+	  (string= man-args ""))
+      (error "No item under point")
+    (man man-args)))
 
 (defun Man-getpage-in-background (topic)
   "Uses TOPIC to build and fire off the manpage and cleaning command."
@@ -534,10 +578,24 @@ If a buffer already exists for this man page, it will display immediately."
       (let ((process-environment (copy-sequence process-environment)))
 	;; Prevent any attempt to use display terminal fanciness.
 	(setenv "TERM" "dumb")
-	(set-process-sentinel
-	 (start-process manual-program buffer "sh" "-c"
-			(format (Man-build-man-command) man-args))
-	 'Man-bgproc-sentinel)))))
+	(if (fboundp 'start-process)
+	    (set-process-sentinel
+	     (start-process manual-program buffer "sh" "-c"
+			    (format (Man-build-man-command) man-args))
+	     'Man-bgproc-sentinel)
+	  (progn
+	    (let ((exit-status
+		   (call-process shell-file-name nil (list buffer nil) nil "-c"
+				 (format (Man-build-man-command) man-args)))
+		  (msg ""))
+	      (or (and (numberp exit-status)
+		       (= exit-status 0))
+		  (and (numberp exit-status)
+		       (setq msg
+			     (format "exited abnormally with code %d"
+				     exit-status)))
+		  (setq msg exit-status))
+	      (Man-bgproc-sentinel bufname msg))))))))
 
 (defun Man-notify-when-ready (man-buffer)
   "Notify the user when MAN-BUFFER is ready.
@@ -647,13 +705,20 @@ Same for the ANSI bold and normal escape sequences."
   (message "%s man page cleaned up" Man-arguments))
 
 (defun Man-bgproc-sentinel (process msg)
-  "Manpage background process sentinel."
-  (let ((Man-buffer (process-buffer process))
+  "Manpage background process sentinel.
+When manpage command is run asynchronously, PROCESS is the process 
+object for the manpage command; when manpage command is run
+synchronously, PROCESS is the name of the buffer where the manpage
+command is run.  Second argument MSG is the exit message of the
+manpage command."
+  (let ((Man-buffer (if (stringp process) (get-buffer process)
+		      (process-buffer process)))
 	(delete-buff nil)
 	(err-mess nil))
 
     (if (null (buffer-name Man-buffer)) ;; deleted buffer
-	(set-process-buffer process nil)
+	(or (stringp process)
+	    (set-process-buffer process nil))
 
       (save-excursion
 	(set-buffer Man-buffer)
@@ -665,26 +730,29 @@ Same for the ANSI bold and normal escape sequences."
 						  (progn
 						    (end-of-line) (point)))
 		       delete-buff t))
-		((not (and (eq (process-status process) 'exit)
-			   (= (process-exit-status process) 0)))
-		 (setq err-mess
-		       (concat (buffer-name Man-buffer)
-			       ": process "
-			       (let ((eos (1- (length msg))))
-				 (if (= (aref msg eos) ?\n)
-				     (substring msg 0 eos) msg))))
-		 (goto-char (point-max))
-		 (insert (format "\nprocess %s" msg))
+		((or (stringp process)
+		     (not (and (eq (process-status process) 'exit)
+			       (= (process-exit-status process) 0))))
+		 (or (zerop (length msg))
+		     (progn
+		       (setq err-mess
+			     (concat (buffer-name Man-buffer)
+				     ": process "
+				     (let ((eos (1- (length msg))))
+				       (if (= (aref msg eos) ?\n)
+					   (substring msg 0 eos) msg))))
+		       (goto-char (point-max))
+		       (insert (format "\nprocess %s" msg))))
 		 ))
-	  (if delete-buff
-	      (kill-buffer Man-buffer)
-	    (if Man-fontify-manpage-flag
-		(Man-fontify-manpage)
-	      (Man-cleanup-manpage))
-	    (run-hooks 'Man-cooked-hook)
-	    (Man-mode)
-	    (set-buffer-modified-p nil)
-	    ))
+        (if delete-buff
+            (kill-buffer Man-buffer)
+          (if Man-fontify-manpage-flag
+              (Man-fontify-manpage)
+            (Man-cleanup-manpage))
+          (run-hooks 'Man-cooked-hook)
+          (Man-mode)
+          (set-buffer-modified-p nil)
+          ))
 	;; Restore case-fold-search before calling
 	;; Man-notify-when-ready because it may switch buffers.
 
@@ -748,6 +816,7 @@ The following key bindings are currently in effect in the buffer:
   (buffer-disable-undo (current-buffer))
   (auto-fill-mode -1)
   (use-local-map Man-mode-map)
+  (set-syntax-table man-mode-syntax-table)
   (Man-build-page-list)
   (Man-strip-page-headers)
   (Man-unindent)

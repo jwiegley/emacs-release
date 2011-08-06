@@ -22,7 +22,7 @@
 #						  9-6-94
 !include makefile.def
 
-ALL		= $(BLD)\addpm.exe $(BLD)\runemacs.exe
+ALL		= $(BLD)\addpm.exe $(BLD)\runemacs.exe $(BLD)\cmdproxy.exe
 !if $(MSVCNT11)
 TRES		= $(BLD)\emacs.res
 !else
@@ -37,6 +37,12 @@ $(BLD)\addpm.obj: addpm.c
 $(BLD)\addpm.exe: $(BLD)\addpm.obj
 		  $(LINK) -out:$@ -subsystem:console -entry:mainCRTStartup \
 		  $(SYS_LDFLAGS) $** $(BASE_LIBS) $(ADVAPI32) user32.lib
+
+cmdproxy:	  $(BLD) $(BLD)\cmdproxy.exe
+$(BLD)\cmdproxy.obj: cmdproxy.c
+$(BLD)\cmdproxy.exe: $(BLD)\cmdproxy.obj
+		  $(LINK) -out:$@ -subsystem:console -entry:mainCRTStartup \
+		  $(SYS_LDFLAGS) $** $(BASE_LIBS) user32.lib
 
 #
 # The resource file.  NT 3.10 requires the use of cvtres; even though
@@ -78,11 +84,17 @@ emacs.bat:	emacs.bat.in
 		echo set emacs_dir=$(INSTALL_DIR)>> emacs.bat
 		type emacs.bat.in >> emacs.bat
 
+debug.bat:	debug.bat.in
+		echo @echo off > debug.bat
+		echo REM !!! Warning: This file automatically generated !!! >> debug.bat
+		echo set emacs_dir=$(INSTALL_DIR)>> debug.bat
+		type debug.bat.in >> debug.bat
+
 #
 # Build and install emacs in INSTALL_DIR
 #
 INSTALL_CMD	= $(MAKE) -f makefile.nt install
-install:	all emacs.bat
+install:	all emacs.bat debug.bat
 		- mkdir $(INSTALL_DIR)
 		cd ..\lib-src
 		$(INSTALL_CMD)
@@ -92,7 +104,9 @@ install:	all emacs.bat
 		$(INSTALL_CMD)
 		cd ..\nt		
 		- $(CP) emacs.bat $(INSTALL_DIR)\bin
+		- $(CP) debug.bat $(INSTALL_DIR)\bin
 		- $(CP) $(BLD)\addpm.exe $(INSTALL_DIR)\bin
+		- $(CP) $(BLD)\cmdproxy.exe $(INSTALL_DIR)\bin
 		- $(CP) $(BLD)\runemacs.exe $(INSTALL_DIR)\bin
 		- $(ADDPM) $(INSTALL_DIR)
 		- $(DEL) ..\same-dir.tst
@@ -111,6 +125,7 @@ fast_install:
 		$(CP) ..\lib-src\DOC $(INSTALL_DIR)\etc
 		- mkdir $(INSTALL_DIR)\bin
 		- $(CP) emacs.bat $(INSTALL_DIR)\bin
+		- $(CP) debug.bat $(INSTALL_DIR)\bin
 		- $(CP) $(BLD)\addpm.exe $(INSTALL_DIR)\bin
 		- $(CP) $(BLD)\runemacs.exe $(INSTALL_DIR)\bin
 		- $(DEL) ..\same-dir.tst
@@ -131,6 +146,7 @@ real_install:
 		- mkdir $(INSTALL_DIR)\info
 		- mkdir $(INSTALL_DIR)\lock
 		- mkdir $(INSTALL_DIR)\data
+		- mkdir $(INSTALL_DIR)\site-lisp
 		if not exist ..\same-dir.tst $(CP_DIR) ..\etc $(INSTALL_DIR)\etc
 		if not exist ..\same-dir.tst $(CP_DIR) ..\info $(INSTALL_DIR)\info
 		- $(DEL) ..\same-dir.tst
@@ -146,6 +162,7 @@ clean:;		- $(DEL) *~ *.pdb
 		- $(DEL_TREE) ..\bin
 		- $(DEL) ..\etc\DOC ..\etc\DOC-X
 		- $(DEL) emacs.bat
+		- $(DEL) debug.bat
 		cd ..\lib-src
 		$(CLEAN_CMD)
 		cd ..\src

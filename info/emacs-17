@@ -1,1190 +1,1159 @@
-This is Info file ../info/emacs, produced by Makeinfo-1.63 from the
-input file emacs.texi.
+This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
+the input file emacs.texi.
 
 
-File: emacs,  Node: Dired Updating,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired
+File: emacs,  Node: Rmail Files,  Next: Rmail Output,  Prev: Rmail Inbox,  Up: Rmail
 
-Updating the Dired Buffer
-=========================
+Multiple Rmail Files
+====================
 
-   This section describes commands to update the Dired buffer to reflect
-outside (non-Dired) changes in the directories and files, and to delete
-part of the Dired buffer.
+   Rmail operates by default on your "primary Rmail file", which is
+named `~/RMAIL' and receives your incoming mail from your system inbox
+file.  But you can also have other Rmail files and edit them with
+Rmail.  These files can receive mail through their own inboxes, or you
+can move messages into them with explicit Rmail commands (*note Rmail
+Output::.).
+
+`i FILE <RET>'
+     Read FILE into Emacs and run Rmail on it (`rmail-input').
+
+`M-x set-rmail-inbox-list <RET> FILES <RET>'
+     Specify inbox file names for current Rmail file to get mail from.
 
 `g'
-     Update the entire contents of the Dired buffer (`revert-buffer').
+     Merge new mail from current Rmail file's inboxes
+     (`rmail-get-new-mail').
 
-`l'
-     Update the specified files (`dired-do-redisplay').
+`C-u g FILE <RET>'
+     Merge new mail from inbox file FILE.
 
-`k'
-     Delete the specified *file lines*--not the files, just the lines
-     (`dired-do-kill-lines').
+   To run Rmail on a file other than your primary Rmail file, you may
+use the `i' (`rmail-input') command in Rmail.  This visits the file in
+Rmail mode.  You can use `M-x rmail-input' even when not in Rmail.
 
-`s'
-     Toggle between sorting by file name and sorting by date/time
-     (`dired-sort-toggle-or-edit').
+   The file you read with `i' should normally be a valid Rmail file.
+If it is not, Rmail tries to decompose it into a stream of messages in
+various known formats.  If it succeeds, it converts the whole file to an
+Rmail file.  If you specify a file name that doesn't exist, `i'
+initializes a new buffer for creating a new Rmail file.
 
-`C-u s SWITCHES RET'
-     Refresh the Dired buffer using SWITCHES as
-     `dired-listing-switches'.
+   You can also select an Rmail file from a menu.  Choose first the menu
+bar Classify item, then from the Classify menu choose the Input Rmail
+File item; then choose the Rmail file you want.  The variables
+`rmail-secondary-file-directory' and `rmail-secondary-file-regexp'
+specify which files to offer in the menu: the first variable says which
+directory to find them in; the second says which files in that
+directory to offer (all those that match the regular expression).
+These variables also apply to choosing a file for output (*note Rmail
+Output::.).
 
-   Type `g' (`revert-buffer') to update the contents of the Dired
-buffer, based on changes in the files and directories listed.  This
-preserves all marks except for those on files that have vanished.
-Hidden subdirectories are updated but remain hidden.
+   Each Rmail file can contain a list of inbox file names; you can
+specify this list with `M-x set-rmail-inbox-list <RET> FILES <RET>'.
+The argument can contain any number of file names, separated by commas.
+It can also be empty, which specifies that this file should have no
+inboxes.  Once a list of inboxes is specified, the Rmail file remembers
+it permanently until you specify a different list.
 
-   To update only some of the files, type `l' (`dired-do-redisplay').
-This command applies to the next N files, or to the marked files if
-any, or to the current file.  Updating them means reading their current
-status from the file system and changing the buffer to reflect it
-properly.
+   As a special exception, if your primary Rmail file does not specify
+any inbox files, it uses your standard system inbox.
 
-   If you use `l' on a subdirectory header line, it updates the
-contents of the corresponding subdirectory.
+   The `g' command (`rmail-get-new-mail') merges mail into the current
+Rmail file from its specified inboxes.  If the Rmail file has no
+inboxes, `g' does nothing.  The command `M-x rmail' also merges new
+mail into your primary Rmail file.
 
-   To delete the specified *file lines*--not the files, just the
-lines--type `k' (`dired-do-kill-lines').  This command applies to the
-next N files, or to the marked files if any, or to the current file.
-
-   If you kill the line for a file that is a directory, the directory's
-contents are also deleted from the buffer.  Typing `C-u k' on the
-header line for a subdirectory is another way to delete a subdirectory
-from the Dired buffer.
-
-   The `g' command brings back any individual lines that you have
-killed in this way, but not subdirectories--you must use `i' to
-reinsert each subdirectory.
-
-   The files in a Dired buffers are normally in listed alphabetical
-order by file names.  Alternatively Dired can sort them by date/time.
-The Dired command `s' (`dired-sort-toggle-or-edit') switches between
-these two sorting modes.  The mode line in a Dired buffer indicates
-which way it is currently sorted--by name, or by date.
-
-   `C-u s SWITCHES RET' lets you specify a new value for
-`dired-listing-switches'.
+   To merge mail from a file that is not the usual inbox, give the `g'
+key a numeric argument, as in `C-u g'.  Then it reads a file name and
+merges mail from that file.  The inbox file is not deleted or changed
+in any way when `g' with an argument is used.  This is, therefore, a
+general way of merging one file of messages into another.
 
 
-File: emacs,  Node: Dired and Find,  Prev: Dired Updating,  Up: Dired
+File: emacs,  Node: Rmail Output,  Next: Rmail Labels,  Prev: Rmail Files,  Up: Rmail
 
-Dired and `find'
+Copying Messages Out to Files
+=============================
+
+   These commands copy messages from an Rmail file into another file.
+
+`o FILE <RET>'
+     Append a copy of the current message to the file FILE, using Rmail
+     file format by default (`rmail-output-to-rmail-file').
+
+`C-o FILE <RET>'
+     Append a copy of the current message to the file FILE, using
+     system inbox file format by default (`rmail-output').
+
+`w FILE <RET>'
+     Output just the message body to the file FILE, taking the default
+     file name from the message `Subject' header.
+
+   The commands `o' and `C-o' copy the current message into a specified
+file.  This file may be an Rmail file or it may be in system inbox
+format; the output commands ascertain the file's format and write the
+copied message in that format.
+
+   The `o' and `C-o' commands differ in two ways: each has its own
+separate default file name, and each specifies a choice of format to
+use when the file does not already exist.  The `o' command uses Rmail
+format when it creates a new file, while `C-o' uses system inbox format
+for a new file.  The default file name for `o' is the file name used
+last with `o', and the default file name for `C-o' is the file name
+used last with `C-o'.
+
+   If the output file is an Rmail file currently visited in an Emacs
+buffer, the output commands copy the message into that buffer.  It is
+up to you to save the buffer eventually in its file.
+
+   Sometimes you may receive a message whose body holds the contents of
+a file.  You can save the body to a file (excluding the message header)
+with the `w' command (`rmail-output-body-to-file').  Often these
+messages contain the intended file name in the `Subject' field, so the
+`w' command uses the `Subject' field as the default for the output file
+name.  However, the file name is read using the minibuffer, so you can
+specify a different name if you wish.
+
+   You can also output a message to an Rmail file chosen with a menu.
+Choose first the menu bar Classify item, then from the Classify menu
+choose the Output Rmail Menu item; then choose the Rmail file you want.
+This outputs the current message to that file, like the `o' command.
+The variables `rmail-secondary-file-directory' and
+`rmail-secondary-file-regexp' specify which files to offer in the menu:
+the first variable says which directory to find them in; the second
+says which files in that directory to offer (all those that match the
+regular expression).
+
+   Copying a message gives the original copy of the message the `filed'
+attribute, so that `filed' appears in the mode line when such a message
+is current.  If you like to keep just a single copy of every mail
+message, set the variable `rmail-delete-after-output' to `t'; then the
+`o' and `C-o' commands delete the original message after copying it.
+(You can undelete the original afterward if you wish.)
+
+   Copying messages into files in system inbox format uses the header
+fields that are displayed in Rmail at the time.  Thus, if you use the
+`t' command to view the entire header and then copy the message, the
+entire header is copied.  *Note Rmail Display::.
+
+   The variable `rmail-output-file-alist' lets you specify intelligent
+defaults for the output file, based on the contents of the current
+message.  The value should be a list whose elements have this form:
+
+     (REGEXP . NAME-EXP)
+
+If there's a match for REGEXP in the current message, then the default
+file name for output is NAME-EXP.  If multiple elements match the
+message, the first matching element decides the default file name.  The
+subexpression NAME-EXP may be a string constant giving the file name to
+use, or more generally it may be any Lisp expression that returns a
+file name as a string.  `rmail-output-file-alist' applies to both `o'
+and `C-o'.
+
+
+File: emacs,  Node: Rmail Labels,  Next: Rmail Attributes,  Prev: Rmail Output,  Up: Rmail
+
+Labels
+======
+
+   Each message can have various "labels" assigned to it as a means of
+classification.  Each label has a name; different names are different
+labels.  Any given label is either present or absent on a particular
+message.  A few label names have standard meanings and are given to
+messages automatically by Rmail when appropriate; these special labels
+are called "attributes".  (*Note Rmail Attributes::.)  All other labels
+are assigned only by users.
+
+`a LABEL <RET>'
+     Assign the label LABEL to the current message (`rmail-add-label').
+
+`k LABEL <RET>'
+     Remove the label LABEL from the current message
+     (`rmail-kill-label').
+
+`C-M-n LABELS <RET>'
+     Move to the next message that has one of the labels LABELS
+     (`rmail-next-labeled-message').
+
+`C-M-p LABELS <RET>'
+     Move to the previous message that has one of the labels LABELS
+     (`rmail-previous-labeled-message').
+
+`C-M-l LABELS <RET>'
+     Make a summary of all messages containing any of the labels LABELS
+     (`rmail-summary-by-labels').
+
+   The `a' (`rmail-add-label') and `k' (`rmail-kill-label') commands
+allow you to assign or remove any label on the current message.  If the
+LABEL argument is empty, it means to assign or remove the same label
+most recently assigned or removed.
+
+   Once you have given messages labels to classify them as you wish,
+there are two ways to use the labels: in moving and in summaries.
+
+   The command `C-M-n LABELS <RET>' (`rmail-next-labeled-message')
+moves to the next message that has one of the labels LABELS.  The
+argument LABELS specifies one or more label names, separated by commas.
+`C-M-p' (`rmail-previous-labeled-message') is similar, but moves
+backwards to previous messages.  A numeric argument to either command
+serves as a repeat count.
+
+   The command `C-M-l LABELS <RET>' (`rmail-summary-by-labels')
+displays a summary containing only the messages that have at least one
+of a specified set of labels.  The argument LABELS is one or more label
+names, separated by commas.  *Note Rmail Summary::, for information on
+summaries.
+
+   If the LABELS argument to `C-M-n', `C-M-p' or `C-M-l' is empty, it
+means to use the last set of labels specified for any of these commands.
+
+
+File: emacs,  Node: Rmail Attributes,  Next: Rmail Reply,  Prev: Rmail Labels,  Up: Rmail
+
+Rmail Attributes
 ================
 
-   You can select a set of files for display in a Dired buffer more
-flexibly by using the `find' utility to choose the files.
+   Some labels such as `deleted' and `filed' have built-in meanings and
+are assigned to or removed from messages automatically at appropriate
+times; these labels are called "attributes".  Here is a list of Rmail
+attributes:
 
-   To search for files with names matching a wildcard pattern use `M-x
-find-name-dired'.  It reads arguments DIRECTORY and PATTERN, and
-chooses all the files in DIRECTORY or its subdirectories whose
-individual names match PATTERN.
+`unseen'
+     Means the message has never been current.  Assigned to messages
+     when they come from an inbox file, and removed when a message is
+     made current.  When you start Rmail, it initially shows the first
+     message that has this attribute.
 
-   The files thus chosen are displayed in a Dired buffer in which the
-ordinary Dired commands are available.
+`deleted'
+     Means the message is deleted.  Assigned by deletion commands and
+     removed by undeletion commands (*note Rmail Deletion::.).
 
-   If you want to test the contents of files, rather than their names,
-use `M-x find-grep-dired'.  This command reads two minibuffer
-arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
-or its subdirectories that contain a match for REGEXP.  It works by
-running the programs `find' and `grep'.
+`filed'
+     Means the message has been copied to some other file.  Assigned by
+     the file output commands (*note Rmail Files::.).
 
-   The most general command in this series is `M-x find-dired', which
-lets you specify any condition that `find' can test.  It takes two
-minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
-DIRECTORY, passing FIND-ARGS to tell `find' what condition to test.  To
-use this command, you need to know how to use `find'.
+`answered'
+     Means you have mailed an answer to the message.  Assigned by the
+     `r' command (`rmail-reply').  *Note Rmail Reply::.
 
-   The format of listing produced by these commands is controlled by the
-variable `find-ls-option', whose default value specifies using options
-`-ldi' for `ls'.  If your listings are corrupted, you may need to
-change the value of this variable.
+`forwarded'
+     Means you have forwarded the message.  Assigned by the `f' command
+     (`rmail-forward').  *Note Rmail Reply::.
 
-
-File: emacs,  Node: Calendar/Diary,  Next: Gnus,  Prev: Dired,  Up: Top
+`edited'
+     Means you have edited the text of the message within Rmail.  *Note
+     Rmail Editing::.
 
-The Calendar and the Diary
-**************************
+`resent'
+     Means you have resent the message.  Assigned by the command `M-x
+     rmail-resend'.  *Note Rmail Reply::.
 
-   Emacs provides the functions of a desk calendar, with a diary of
-planned or past events.  To enter the calendar, type `M-x calendar';
-this displays a three-month calendar centered on the current month, with
-point on the current date.  With a numeric argument, as in `C-u M-x
-calendar', it prompts you for the month and year to be the center of the
-three-month calendar.  The calendar uses its own buffer, whose major
-mode is Calendar mode.
-
-   `Mouse-2' in the calendar brings up a menu of operations on a
-particular date; `C-Mouse-3' brings up a menu of commonly used calendar
-features that are independent of any particular date.  To exit the
-calendar, type `q'.  *Note Customizing the Calendar and Diary:
-(elisp)Calendar, for customization information about the calendar and
-diary.
-
-* Menu:
-
-* Calendar Motion::       Moving through the calendar; selecting a date.
-* Scroll Calendar::       Bringing earlier or later months onto the screen.
-* Counting Days::         How many days are there between two dates?
-* General Calendar::      Exiting or recomputing the calendar.
-* TeX Calendar::          Print a calendar using TeX.
-* Holidays::              Displaying dates of holidays.
-* Sunrise/Sunset::        Displaying local times of sunrise and sunset.
-* Lunar Phases::          Displaying phases of the moon.
-* Other Calendars::       Converting dates to other calendar systems.
-* Diary::                 Displaying events from your diary.
-* Appointments::	  Reminders when it's time to do something.
-* Daylight Savings::      How to specify when daylight savings time is active.
+   All other labels are assigned or removed only by the user, and have
+no standard meaning.
 
 
-File: emacs,  Node: Calendar Motion,  Next: Scroll Calendar,  Up: Calendar/Diary
-
-Movement in the Calendar
-========================
-
-   Calendar mode lets you move through the calendar in logical units of
-time such as days, weeks, months, and years.  If you move outside the
-three months originally displayed, the calendar display "scrolls"
-automatically through time to make the selected date visible.  Moving to
-a date lets you view its holidays or diary entries, convert it to other
-calendars; moving longer time periods is also useful simply to scroll
-the calendar.
-
-* Menu:
-
-* Calendar Unit Motion::      Moving by days, weeks, months, and years.
-* Move to Beginning or End::  Moving to start/end of weeks, months, and years.
-* Specified Dates::           Moving to the current date or another
-                                specific date.
-
-
-File: emacs,  Node: Calendar Unit Motion,  Next: Move to Beginning or End,  Up: Calendar Motion
-
-Motion by Standard Lengths of Time
-----------------------------------
-
-   The commands for movement in the calendar buffer parallel the
-commands for movement in text.  You can move forward and backward by
-days, weeks, months, and years.
-
-`C-f'
-     Move point one day forward (`calendar-forward-day').
-
-`C-b'
-     Move point one day backward (`calendar-backward-day').
-
-`C-n'
-     Move point one week forward (`calendar-forward-week').
-
-`C-p'
-     Move point one week backward (`calendar-backward-week').
-
-`M-}'
-     Move point one month forward (`calendar-forward-month').
-
-`M-{'
-     Move point one month backward (`calendar-backward-month').
-
-`C-x ]'
-     Move point one year forward (`calendar-forward-year').
-
-`C-x ['
-     Move point one year backward (`calendar-forward-year').
-
-   The day and week commands are natural analogues of the usual Emacs
-commands for moving by characters and by lines.  Just as `C-n' usually
-moves to the same column in the following line, in Calendar mode it
-moves to the same day in the following week.  And `C-p' moves to the
-same day in the previous week.
-
-   The arrow keys are equivalent to `C-f', `C-b', `C-n' and `C-p', just
-as they normally are in other modes.
-
-   The commands for motion by months and years work like those for
-weeks, but move a larger distance.  The month commands `M-}' and `M-{'
-move forward or backward by an entire month's time.  The year commands
-`C-x ]' and `C-x [' move forward or backward a whole year.
-
-   The easiest way to remember these commands is to consider months and
-years analogous to paragraphs and pages of text, respectively.  But the
-commands themselves are not quite analogous.  The ordinary Emacs
-paragraph commands move to the beginning or end of a paragraph, whereas
-these month and year commands move by an entire month or an entire
-year, which usually involves skipping across the end of a month or year.
-
-   All these commands accept a numeric argument as a repeat count.  For
-convenience, the digit keys and the minus sign specify numeric
-arguments in Calendar mode even without the Meta modifier.  For example,
-`100 C-f' moves point 100 days forward from its present location.
-
-
-File: emacs,  Node: Move to Beginning or End,  Next: Specified Dates,  Prev: Calendar Unit Motion,  Up: Calendar Motion
-
-Beginning or End of Week, Month or Year
----------------------------------------
-
-   A week (or month, or year) is not just a quantity of days; we think
-of weeks (months, years) as starting on particular dates.  So Calendar
-mode provides commands to move to the beginning or end of a week, month
-or year:
-
-`C-a'
-     Move point to start of week (`calendar-beginning-of-week').
-
-`C-e'
-     Move point to end of week (`calendar-end-of-week').
-
-`M-a'
-     Move point to start of month (`calendar-beginning-of-month').
-
-`M-e'
-     Move point to end of month (`calendar-end-of-month').
-
-`M-<'
-     Move point to start of year (`calendar-beginning-of-year').
-
-`M->'
-     Move point to end of year (`calendar-end-of-year').
-
-   These commands also take numeric arguments as repeat counts, with the
-repeat count indicating how many weeks, months, or years to move
-backward or forward.
-
-   By default, weeks begin on Sunday.  To make them begin on Monday
-instead, set the variable `calendar-week-start-day' to 1.
-
-
-File: emacs,  Node: Specified Dates,  Prev: Move to Beginning or End,  Up: Calendar Motion
-
-Specified Dates
----------------
-
-   Calendar mode provides commands for moving to a particular date
-specified in various ways.
-
-`g d'
-     Move point to specified date (`calendar-goto-date').
-
-`o'
-     Center calendar around specified month (`calendar-other-month').
-
-`.'
-     Move point to today's date (`calendar-goto-today').
-
-   `g d' (`calendar-goto-date') prompts for a year, a month, and a day
-of the month, and then moves to that date.  Because the calendar
-includes all dates from the beginning of the current era, you must type
-the year in its entirety; that is, type `1990', not `90'.
-
-   `o' (`calendar-other-month') prompts for a month and year, then
-centers the three-month calendar around that month.
-
-   You can return to today's date with `.' (`calendar-goto-today').
-
-
-File: emacs,  Node: Scroll Calendar,  Next: Counting Days,  Prev: Calendar Motion,  Up: Calendar/Diary
-
-Scrolling in the Calendar
-=========================
-
-   The calendar display scrolls automatically through time when you
-move out of the visible portion.  You can also scroll it manually.
-Imagine that the calendar window contains a long strip of paper with
-the months on it.  Scrolling it means moving the strip so that new
-months become visible in the window.
-
-`C-x <'
-     Scroll calendar one month forward (`scroll-calendar-left').
-
-`C-x >'
-     Scroll calendar one month backward (`scroll-calendar-right').
-
-`C-v'
-`NEXT'
-     Scroll calendar three months forward
-     (`scroll-calendar-left-three-months').
-
-`M-v'
-`PRIOR'
-     Scroll calendar three months backward
-     (`scroll-calendar-right-three-months').
-
-   The most basic calendar scroll commands scroll by one month at a
-time.  This means that there are two months of overlap between the
-display before the command and the display after.  `C-x <' scrolls the
-calendar contents one month to the left; that is, it moves the display
-forward in time.  `C-x >' scrolls the contents to the right, which
-moves backwards in time.
-
-   The commands `C-v' and `M-v' scroll the calendar by an entire
-"screenful"--three months--in analogy with the usual meaning of these
-commands.  `C-v' makes later dates visible and `M-v' makes earlier
-dates visible.  These commands take a numeric argument as a repeat
-count; in particular, since `C-u' multiplies the next command by four,
-typing `C-u C-v' scrolls the calendar forward by a year and typing `C-u
-M-v' scrolls the calendar backward by a year.
-
-   The function keys NEXT and PRIOR are equivalent to `C-v' and `M-v',
-just as they are in other modes.
-
-
-File: emacs,  Node: Counting Days,  Next: General Calendar,  Prev: Scroll Calendar,  Up: Calendar/Diary
-
-Counting Days
-=============
-
-`M-='
-     Display the number of days in the current region
-     (`calendar-count-days-region').
-
-   To determine the number of days in the region, type `M-='
-(`calendar-count-days-region').  The numbers of days printed is
-*inclusive*; that is, it includes the days specified by mark and point.
-
-
-File: emacs,  Node: General Calendar,  Next: TeX Calendar,  Prev: Counting Days,  Up: Calendar/Diary
-
-Miscellaneous Calendar Commands
-===============================
-
-`p d'
-     Display day-in-year (`calendar-print-day-of-year').
-
-`C-c C-l'
-     Regenerate the calendar window (`redraw-calendar').
-
-`SPC'
-     Scroll the next window (`scroll-other-window').
-
-`q'
-     Exit from calendar (`exit-calendar').
-
-   To print the number of days elapsed since the start of the year, or
-the number of days remaining in the year, type the `p d' command
-(`calendar-print-day-of-year').  This displays both of those numbers in
-the echo area.  The number of days elapsed includes the selected date.
-The number of days remaining does not include that date.
-
-   If the calendar window text gets corrupted, type `C-c C-l'
-(`redraw-calendar') to redraw it.  (This can only happen if you use
-non-Calendar-mode editing commands.)
-
-   In Calendar mode, you can use `SPC' (`scroll-other-window') to
-scroll the other window.  This is handy when you display a list of
-holidays or diary entries in another window.
-
-   To exit from the calendar, type `q' (`exit-calendar').  This buries
-all buffers related to the calendar, selecting other buffers.  (If a
-frame contains a dedicated calendar window, exiting from the calendar
-iconifies that frame.)
-
-
-File: emacs,  Node: TeX Calendar,  Next: Holidays,  Prev: General Calendar,  Up: Calendar/Diary
-
-TeX Calendar
-============
-
-   The Calendar TeX commands produce a buffer of LaTeX code that prints
-as a calendar.  Depending on the command you use, the printed calendar
-covers the day, week, month or year that point is in.
-
-`t m'
-     Generate a one-month calendar (`cal-tex-cursor-month').
-
-`t M'
-     Generate a sideways-printing one-month calendar
-     (`cal-tex-cursor-month-landscape').
-
-`t d'
-     Generate a one-day calendar (`cal-tex-cursor-day').
-
-`t w 1'
-     Generate a one-page calendar for one week (`cal-tex-cursor-week').
-
-`t w 2'
-     Generate a two-page calendar for one week (`cal-tex-cursor-week2').
-
-`t w 3'
-     Generate an ISO-style calendar for one week
-     (`cal-tex-cursor-week-iso').
-
-`t w 4'
-     Generate a calendar for one Monday-starting week
-     (`cal-tex-cursor-week-monday').
-
-`t f w'
-     Generate a Filofax-style two-weeks-at-a-glance calendar
-     (`cal-tex-cursor-filofax-2week').
-
-`t f W'
-     Generate a Filofax-style one-week-at-a-glance calendar
-     (`cal-tex-cursor-filofax-week').
-
-`t y'
-     Generate a calendar for one year (`cal-tex-cursor-year').
-
-`t Y'
-     Generate a sideways-printing calendar for one year
-     (`cal-tex-cursor-landscape-year').
-
-`t f y'
-     Generate a Filofax-style calendar for one year
-     (`cal-tex-cursor-filofax-year').
-
-   Some of these commands print the calendar sideways (in "landscape
-mode"), so it can be wider than it is long.  Some of them use Filofax
-paper size (3.75in x 6.75in).  All of these commands accept a prefix
-argument which specifies how many days, weeks, months or years to print
-(starting always with the selected one).
-
-   If the variable `cal-tex-holidays' is non-`nil' (the default), then
-the printed calendars show the holidays in `calendar-holidays'.  If the
-variable `cal-tex-diary' is non-`nil' (the default is `nil'), diary
-entries are included also (in weekly and monthly calendars only).
-
-
-File: emacs,  Node: Holidays,  Next: Sunrise/Sunset,  Prev: TeX Calendar,  Up: Calendar/Diary
-
-Holidays
-========
-
-   The Emacs calendar knows about all major and many minor holidays,
-and can display them.
-
-`h'
-     Display holidays for the selected date
-     (`calendar-cursor-holidays').
-
-`Mouse-2 Holidays'
-     Display any holidays for the date you click on.
-
-`x'
-     Mark holidays in the calendar window (`mark-calendar-holidays').
-
-`u'
-     Unmark calendar window (`calendar-unmark').
-
-`a'
-     List all holidays for the displayed three months in another window
-     (`list-calendar-holidays').
-
-`M-x holidays'
-     List all holidays for three months around today's date in another
-     window.
-
-   To see if any holidays fall on a given date, position point on that
-date in the calendar window and use the `h' command.  Alternatively,
-click on that date with `Mouse-2' and then choose `Holidays' from the
-menu that appears.  Either way, this displays the holidays for that
-date, in the echo area if they fit there, otherwise in a separate
-window.
-
-   To view the distribution of holidays for all the dates shown in the
-calendar, use the `x' command.  This displays the dates that are
-holidays in a different face (or places a `*' after these dates, if
-display with multiple faces is not available).  The command applies both
-to the currently visible months and to other months that subsequently
-become visible by scrolling.  To turn marking off and erase the current
-marks, type `u', which also erases any diary marks (*note Diary::.).
-
-   To get even more detailed information, use the `a' command, which
-displays a separate buffer containing a list of all holidays in the
-current three-month range.  You can use SPC in the calendar window to
-scroll that list.
-
-   The command `M-x holidays' displays the list of holidays for the
-current month and the preceding and succeeding months; this works even
-if you don't have a calendar window.  If you want the list of holidays
-centered around a different month, use `C-u M-x holidays', which
-prompts for the month and year.
-
-   The holidays known to Emacs include American holidays and the major
-Christian, Jewish, and Islamic holidays; also the solstices and
-equinoxes.
-
-   The dates used by Emacs for holidays are based on *current
-practice*, not historical fact.  Historically, for instance, the start
-of daylight savings time and even its existence have varied from year to
-year, but present American law mandates that daylight savings time
-begins on the first Sunday in April.  In an American locale, Emacs
-always uses this definition, even though it is wrong for some prior
-years.
-
-
-File: emacs,  Node: Sunrise/Sunset,  Next: Lunar Phases,  Prev: Holidays,  Up: Calendar/Diary
-
-Times of Sunrise and Sunset
-===========================
-
-   Special calendar commands can tell you, to within a minute or two,
-the times of sunrise and sunset for any date.
-
-`S'
-     Display times of sunrise and sunset for the selected date
-     (`calendar-sunrise-sunset').
-
-`Mouse-2 Sunrise/Sunset'
-     Display times of sunrise and sunset for the date you click on.
-
-`M-x sunrise-sunset'
-     Display times of sunrise and sunset for today's date.
-
-`C-u M-x sunrise-sunset'
-     Display times of sunrise and sunset for a specified date.
-
-   Within the calendar, to display the *local times* of sunrise and
-sunset in the echo area, move point to the date you want, and type `S'.
-Alternatively, click `Mouse-2' on the date, then choose
-`Sunrise/Sunset' from the menu that appears.  The command `M-x
-sunrise-sunset' is available outside the calendar to display this
-information for today's date or a specified date.  To specify a date
-other than today, use `C-u M-x sunrise-sunset', which prompts for the
-year, month, and day.
-
-   You can display the times of sunrise and sunset for any location and
-any date with `C-u C-u M-x sunrise-sunset'.  This asks you for a
-longitude, latitude, number of minutes difference from Coordinated
-Universal Time, and date, and then tells you the times of sunrise and
-sunset for that location on that date.
-
-   Because the times of sunrise and sunset depend on the location on
-earth, you need to tell Emacs your latitude, longitude, and location
-name before using these commands.  Here is an example of what to set:
-
-     (setq calendar-latitude 40.1)
-     (setq calendar-longitude -88.2)
-     (setq calendar-location-name "Urbana, IL")
-
-Use one decimal place in the values of `calendar-latitude' and
-`calendar-longitude'.
-
-   Your time zone also affects the local time of sunrise and sunset.
-Emacs usually gets time zone information from the operating system, but
-if these values are not what you want (or if the operating system does
-not supply them), you must set them yourself.  Here is an example:
-
-     (setq calendar-time-zone -360)
-     (setq calendar-standard-time-zone-name "CST")
-     (setq calendar-daylight-time-zone-name "CDT")
-
-The value of `calendar-time-zone' is the number of minutes difference
-between your local standard time and Coordinated Universal Time
-(Greenwich time).  The values of `calendar-standard-time-zone-name' and
-`calendar-daylight-time-zone-name' are the abbreviations used in your
-time zone.  Emacs displays the times of sunrise and sunset *corrected
-for daylight savings time*.  *Note Daylight Savings::, for how daylight
-savings time is determined.
-
-   As a user, you might find it convenient to set the calendar location
-variables for your usual physical location in your `.emacs' file.  And
-when you install Emacs on a machine, you can create a `default.el' file
-which sets them properly for the typical location of most users of that
-machine.  *Note Init File::.
-
-
-File: emacs,  Node: Lunar Phases,  Next: Other Calendars,  Prev: Sunrise/Sunset,  Up: Calendar/Diary
-
-Phases of the Moon
-==================
-
-   These calendar commands display the dates and times of the phases of
-the moon (new moon, first quarter, full moon, last quarter).  This
-feature is useful for debugging problems that "depend on the phase of
-the moon."
-
-`M'
-     Display the dates and times for all the quarters of the moon for
-     the three-month period shown (`calendar-phases-of-moon').
-
-`M-x phases-of-moon'
-     Display dates and times of the quarters of the moon for three
-     months around today's date.
-
-   Within the calendar, use the `M' command to display a separate
-buffer of the phases of the moon for the current three-month range.  The
-dates and times listed are accurate to within a few minutes.
-
-   Outside the calendar, use the command `M-x phases-of-moon' to
-display the list of the phases of the moon for the current month and the
-preceding and succeeding months.  For information about a different
-month, use `C-u M-x phases-of-moon', which prompts for the month and
-year.
-
-   The dates and times given for the phases of the moon are given in
-local time (corrected for daylight savings, when appropriate); but if
-the variable `calendar-time-zone' is void, Coordinated Universal Time
-(the Greenwich time zone) is used.  *Note Daylight Savings::.
-
-
-File: emacs,  Node: Other Calendars,  Next: Diary,  Prev: Lunar Phases,  Up: Calendar/Diary
-
-Conversion To and From Other Calendars
-======================================
-
-   The Emacs calendar displayed is *always* the Gregorian calendar,
-sometimes called the "new style" calendar, which is used in most of the
-world today.  However, this calendar did not exist before the sixteenth
-century and was not widely used before the eighteenth century; it did
-not fully displace the Julian calendar and gain universal acceptance
-until the early twentieth century.  The Emacs calendar can display any
-month since January, year 1 of the current era, but the calendar
-displayed is the Gregorian, even for a date at which the Gregorian
-calendar did not exist.
-
-   While Emacs cannot display other calendars, it can convert dates to
-and from several other calendars.
-
-* Menu:
-
-* Calendar Systems::	   The calendars Emacs understands
-			     (aside from Gregorian).
-* To Other Calendar::	   Converting the selected date to various calendars.
-* From Other Calendar::	   Moving to a date specified in another calendar.
-* Mayan Calendar::	   Moving to a date specified in a Mayan calendar.
-
-
-File: emacs,  Node: Calendar Systems,  Next: To Other Calendar,  Up: Other Calendars
-
-Supported Calendar Systems
---------------------------
-
-   The ISO commercial calendar is used largely in Europe.
-
-   The Julian calendar, named after Julius Caesar, was the one used in
-Europe throughout medieval times, and in many countries up until the
-nineteenth century.
-
-   Astronomers use a simple counting of days elapsed since noon, Monday,
-January 1, 4713 B.C. on the Julian calendar.  The number of days elapsed
-is called the *Julian day number* or the *Astronomical day number*.
-
-   The Hebrew calendar is used by tradition in the Jewish religion.  The
-Emacs calendar program uses the Hebrew calendar to determine the dates
-of Jewish holidays.  Hebrew calendar dates begin and end at sunset.
-
-   The Islamic calendar is used in many predominantly Islamic countries.
-Emacs uses it to determine the dates of Islamic holidays.  There is no
-universal agreement in the Islamic world about the calendar; Emacs uses
-a widely accepted version, but the precise dates of Islamic holidays
-often depend on proclamation by religious authorities, not on
-calculations.  As a consequence, the actual dates of observance can vary
-slightly from the dates computed by Emacs.  Islamic calendar dates begin
-and end at sunset.
-
-   The French Revolutionary calendar was created by the Jacobins after
-the 1789 revolution, to represent a more secular and nature-based view
-of the annual cycle, and to install a 10-day week in a rationalization
-measure similar to the metric system.  The French government officially
-abandoned this calendar at the end of 1805.
-
-   The Maya of Central America used three separate, overlapping calendar
-systems, the *long count*, the *tzolkin*, and the *haab*.  Emacs knows
-about all three of these calendars.  Experts dispute the exact
-correlation between the Mayan calendar and our calendar; Emacs uses the
-Goodman-Martinez-Thompson correlation in its calculations.
-
-   The Copts use a calendar based on the ancient Egyptian solar
-calendar.  Their calendar consists of twelve 30-day months followed by
-an extra five day period.  Once every fourth year they add a leap day
-to this extra period to make it six days.  The Ethiopic calendar is
-identical in structure, but has different year numbers and month names.
-
-   The Persians use a solar calendar based on a design of Omar Khayyam.
-Their calendar consists of twelve months of which the first six have 31
-days, the next five have 30 days, and the last has 29 in ordinary years
-and 30 in leap years.  Leap years occur in a complicated pattern every
-four or five years.
-
-   The Chinese calendar is a complicated system of lunar months arranged
-into solar years.  The years go in cycles of sixty, each year containing
-either twelve months in an ordinary year or thirteen months in a leap
-year; each month has either 29 or 30 days.  Years, ordinary months, and
-days are named by combining one of ten "celestial stems" with one of
-twelve "terrestrial branches" for a total of sixty names that are
-repeated in a cycle of sixty.
-
-
-File: emacs,  Node: To Other Calendar,  Next: From Other Calendar,  Prev: Calendar Systems,  Up: Other Calendars
-
-Converting To Other Calendars
------------------------------
-
-   The following commands describe the selected date (the date at point)
-in various other calendar systems:
-
-`Mouse-2  Other Calendars'
-     Display the date that you click on, expressed in various other
-     calendars.
-
-`p c'
-     Display ISO commercial calendar equivalent for selected day
-     (`calendar-print-iso-date').
-
-`p j'
-     Display Julian date for selected day
-     (`calendar-print-julian-date').
-
-`p a'
-     Display astronomical (Julian) day number for selected day
-     (`calendar-print-astro-day-number').
-
-`p h'
-     Display Hebrew date for selected day
-     (`calendar-print-hebrew-date').
-
-`p i'
-     Display Islamic date for selected day
-     (`calendar-print-islamic-date').
-
-`p f'
-     Display French Revolutionary date for selected day
-     (`calendar-print-french-date').
-
-`p C'
-     Display Chinese date for selected day
-     (`calendar-print-chinese-date').
-
-`p k'
-     Display Coptic date for selected day
-     (`calendar-print-coptic-date').
-
-`p e'
-     Display Ethiopic date for selected day
-     (`calendar-print-ethiopic-date').
-
-`p p'
-     Display Persian date for selected day
-     (`calendar-print-persian-date').
-
-`p m'
-     Display Mayan date for selected day (`calendar-print-mayan-date').
-
-   If you are using X, the easiest way to translate a date into other
-calendars is to click on it with `Mouse-2', then choose `Other
-Calendars' from the menu that appears.  This displays the equivalent
-forms of the date in all the calendars Emacs understands, in the form of
-a menu.  (Choosing an alternative from this menu doesn't actually do
-anything--the menu is used only for display.)
-
-   Put point on the desired date of the Gregorian calendar, then type
-the appropriate keys.  The `p' is a mnemonic for "print" since Emacs
-"prints" the equivalent date in the echo area.
-
-
-File: emacs,  Node: From Other Calendar,  Next: Mayan Calendar,  Prev: To Other Calendar,  Up: Other Calendars
-
-Converting From Other Calendars
--------------------------------
-
-   You can use the other supported calendars to specify a date to move
-to.  This section describes the commands for doing this using calendars
-other than Mayan; for the Mayan calendar, see the following section.
-
-`g c'
-     Move to a date specified in the ISO commercial calendar
-     (`calendar-goto-iso-date').
-
-`g j'
-     Move to a date specified in the Julian calendar
-     (`calendar-goto-julian-date').
-
-`g a'
-     Move to a date specified in astronomical (Julian) day number
-     (`calendar-goto-astro-day-number').
-
-`g h'
-     Move to a date specified in the Hebrew calendar
-     (`calendar-goto-hebrew-date').
-
-`g i'
-     Move to a date specified in the Islamic calendar
-     (`calendar-goto-islamic-date').
-
-`g f'
-     Move to a date specified in the French Revolutionary calendar
-     (`calendar-goto-french-date').
-
-`g C'
-     Move to a date specified in the Chinese calendar
-     (`calendar-goto-chinese-date').
-
-`g p'
-     Move to a date specified in the Persian calendar
-     (`calendar-goto-persian-date').
-
-`g k'
-     Move to a date specified in the Coptic calendar
-     (`calendar-goto-coptic-date').
-
-`g e'
-     Move to a date specified in the Ethiopic calendar
-     (`calendar-goto-ethiopic-date').
-
-   These commands ask you for a date on the other calendar, move point
-to the Gregorian calendar date equivalent to that date, and display the
-other calendar's date in the echo area.  Emacs uses strict completion
-(*note Completion::.) whenever it asks you to type a month name, so you
-don't have to worry about the spelling of Hebrew, Islamic, or French
-names.
-
-   One common question concerning the Hebrew calendar is the computation
-of the anniversary of a date of death, called a "yahrzeit."  The Emacs
-calendar includes a facility for such calculations.  If you are in the
-calendar, the command `M-x list-yahrzeit-dates' asks you for a range of
-years and then displays a list of the yahrzeit dates for those years
-for the date given by point.  If you are not in the calendar, this
-command first asks you for the date of death and the range of years,
-and then displays the list of yahrzeit dates.
-
-
-File: emacs,  Node: Mayan Calendar,  Prev: From Other Calendar,  Up: Other Calendars
-
-Converting from the Mayan Calendar
-----------------------------------
-
-   Here are the commands to select dates based on the Mayan calendar:
-
-`g m l'
-     Move to a date specified by the long count calendar
-     (`calendar-goto-mayan-long-count-date').
-
-`g m n t'
-     Move to the next occurrence of a place in the tzolkin calendar
-     (`calendar-next-tzolkin-date').
-
-`g m p t'
-     Move to the previous occurrence of a place in the tzolkin calendar
-     (`calendar-previous-tzolkin-date').
-
-`g m n h'
-     Move to the next occurrence of a place in the haab calendar
-     (`calendar-next-haab-date').
-
-`g m p h'
-     Move to the previous occurrence of a place in the haab calendar
-     (`calendar-previous-haab-date').
-
-`g m n c'
-     Move to the next occurrence of a place in the calendar round
-     (`calendar-next-calendar-round-date').
-
-`g m p c'
-     Move to the previous occurrence of a place in the calendar round
-     (`calendar-previous-calendar-round-date').
-
-   To understand these commands, you need to understand the Mayan
-calendars.  The "long count" is a counting of days with these units:
-
-     1 kin = 1 day   1 uinal = 20 kin   1 tun = 18 uinal
-     1 katun = 20 tun   1 baktun = 20 katun
-
-Thus, the long count date 12.16.11.16.6 means 12 baktun, 16 katun, 11
-tun, 16 uinal, and 6 kin.  The Emacs calendar can handle Mayan long
-count dates as early as 7.17.18.13.1, but no earlier.  When you use the
-`g m l' command, type the Mayan long count date with the baktun, katun,
-tun, uinal, and kin separated by periods.
-
-   The Mayan tzolkin calendar is a cycle of 260 days formed by a pair of
-independent cycles of 13 and 20 days.  Since this cycle repeats
-endlessly, Emacs provides commands to move backward and forward to the
-previous or next point in the cycle.  Type `g m p t' to go to the
-previous tzolkin date; Emacs asks you for a tzolkin date and moves point
-to the previous occurrence of that date.  Similarly, type `g m n t' to
-go to the next occurrence of a tzolkin date.
-
-   The Mayan haab calendar is a cycle of 365 days arranged as 18 months
-of 20 days each, followed a 5-day monthless period.  Like the tzolkin
-cycle, this cycle repeats endlessly, and there are commands to move
-backward and forward to the previous or next point in the cycle.  Type
-`g m p h' to go to the previous haab date; Emacs asks you for a haab
-date and moves point to the previous occurrence of that date.
-Similarly, type `g m n h' to go to the next occurrence of a haab date.
-
-   The Maya also used the combination of the tzolkin date and the haab
-date.  This combination is a cycle of about 52 years called a *calendar
-round*.  If you type `g m p c', Emacs asks you for both a haab and a
-tzolkin date and then moves point to the previous occurrence of that
-combination.  Use `g m n c' to move point to the next occurrence of a
-combination.  These commands signal an error if the haab/tzolkin date
-combination you have typed is impossible.
-
-   Emacs uses strict completion (*note Strict Completion::.) whenever it
-asks you to type a Mayan name, so you don't have to worry about
-spelling.
-
-
-File: emacs,  Node: Diary,  Next: Appointments,  Prev: Other Calendars,  Up: Calendar/Diary
-
-The Diary
-=========
-
-   The Emacs diary keeps track of appointments or other events on a
-daily basis, in conjunction with the calendar.  To use the diary
-feature, you must first create a "diary file" containing a list of
-events and their dates.  Then Emacs can automatically pick out and
-display the events for today, for the immediate future, or for any
-specified date.
-
-   By default, Emacs uses `~/diary' as the diary file.  This is the
-same file that the `calendar' utility uses.  A sample `~/diary' file is:
-
-     12/22/1988  Twentieth wedding anniversary!!
-     &1/1.       Happy New Year!
-     10/22       Ruth's birthday.
-     * 21, *:    Payday
-     Tuesday--weekly meeting with grad students at 10am
-              Supowit, Shen, Bitner, and Kapoor to attend.
-     1/13/89     Friday the thirteenth!!
-     &thu 4pm    squash game with Lloyd.
-     mar 16      Dad's birthday
-     April 15, 1989 Income tax due.
-     &* 15       time cards due.
-
-This example uses extra spaces to align the event descriptions of most
-of the entries.  Such formatting is purely a matter of taste.
-
-   Although you probably will start by creating a diary manually, Emacs
-provides a number of commands to let you view, add, and change diary
-entries.
-
-* Menu:
-
-* Diary Commands::         Viewing diary entries and associated calendar dates.
-* Format of Diary File::   Entering events in your diary.
-* Date Formats::	   Various ways you can specify dates.
-* Adding to Diary::	   Commands to create diary entries.
-* Special Diary Entries::  Anniversaries, blocks of dates, cyclic entries, etc.
-
-
-File: emacs,  Node: Diary Commands,  Next: Format of Diary File,  Up: Diary
-
-Commands Displaying Diary Entries
----------------------------------
-
-   Once you have created a `~/diary' file, you can use the calendar to
-view it.  You can also view today's events outside of Calendar mode.
-
-`d'
-     Display all diary entries for the selected date
-     (`view-diary-entries').
-
-`Mouse-2 Diary'
-     Display all diary entries for the date you click on.
-
-`s'
-     Display the entire diary file (`show-all-diary-entries').
+File: emacs,  Node: Rmail Reply,  Next: Rmail Summary,  Prev: Rmail Attributes,  Up: Rmail
+
+Sending Replies
+===============
+
+   Rmail has several commands that use Mail mode to send outgoing mail.
+*Note Sending Mail::, for information on using Mail mode, including
+certain features meant to work with Rmail.  What this section documents
+are the special commands of Rmail for entering Mail mode.  Note that the
+usual keys for sending mail--`C-x m', `C-x 4 m', and `C-x 5 m'--are
+available in Rmail mode and work just as they usually do.
 
 `m'
-     Mark all visible dates that have diary entries
-     (`mark-diary-entries').
+     Send a message (`rmail-mail').
+
+`c'
+     Continue editing the already started outgoing message
+     (`rmail-continue').
+
+`r'
+     Send a reply to the current Rmail message (`rmail-reply').
+
+`f'
+     Forward the current message to other users (`rmail-forward').
+
+`C-u f'
+     Resend the current message to other users (`rmail-resend').
+
+`M-m'
+     Try sending a bounced message a second time
+     (`rmail-retry-failure').
+
+   The most common reason to send a message while in Rmail is to reply
+to the message you are reading.  To do this, type `r' (`rmail-reply').
+This displays the `*mail*' buffer in another window, much like `C-x 4
+m', but preinitializes the `Subject', `To', `CC' and `In-reply-to'
+header fields based on the message you are replying to.  The `To' field
+starts out as the address of the person who sent the message you
+received, and the `CC' field starts out with all the other recipients
+of that message.
+
+   You can exclude certain recipients from being placed automatically in
+the `CC', using the variable `rmail-dont-reply-to-names'.  Its value
+should be a regular expression (as a string); any recipient that the
+regular expression matches, is excluded from the `CC' field.  The
+default value matches your own name, and any name starting with
+`info-'.  (Those names are excluded because there is a convention of
+using them for large mailing lists to broadcast announcements.)
+
+   To omit the `CC' field completely for a particular reply, enter the
+reply command with a numeric argument: `C-u r' or `1 r'.
+
+   Once the `*mail*' buffer has been initialized, editing and sending
+the mail goes as usual (*note Sending Mail::.).  You can edit the
+presupplied header fields if they are not right for you.  You can also
+use the commands of Mail mode (*note Mail Mode::.), including `C-c C-y'
+which yanks in the message that you are replying to.  You can switch to
+the Rmail buffer, select a different message there, switch back, and
+yank the new current message.
+
+   Sometimes a message does not reach its destination.  Mailers usually
+send the failed message back to you, enclosed in a "failure message".
+The Rmail command `M-m' (`rmail-retry-failure') prepares to send the
+same message a second time: it sets up a `*mail*' buffer with the same
+text and header fields as before.  If you type `C-c C-c' right away,
+you send the message again exactly the same as the first time.
+Alternatively, you can edit the text or headers and then send it.  The
+variable `rmail-retry-ignored-headers', in the same format as
+`rmail-ignored-headers' (*note Rmail Display::.), controls which
+headers are stripped from the failed message when retrying it; it
+defaults to nil.
+
+   Another frequent reason to send mail in Rmail is to "forward" the
+current message to other users.  `f' (`rmail-forward') makes this easy
+by preinitializing the `*mail*' buffer with the current message as the
+text, and a subject designating a forwarded message.  All you have to
+do is fill in the recipients and send.  When you forward a message,
+recipients get a message which is "from" you, and which has the
+original message in its contents.
+
+   Forwarding a message encloses it between two delimiter lines.  It
+also modifies every line that starts with a dash, by inserting `- ' at
+the start of the line.  When you receive a forwarded message, if it
+contains something besides ordinary text--for example, program source
+code--you might find it useful to undo that transformation.  You can do
+this by selecting the forwarded message and typing `M-x
+unforward-rmail-message'.  This command extracts the original forwarded
+message, deleting the inserted `- ' strings, and inserts it into the
+Rmail file as a separate message immediately following the current one.
+
+   "Resending" is an alternative similar to forwarding; the difference
+is that resending sends a message that is "from" the original sender,
+just as it reached you--with a few added header fields `Resent-from'
+and `Resent-to' to indicate that it came via you.  To resend a message
+in Rmail, use `C-u f'.  (`f' runs `rmail-forward', which is programmed
+to invoke `rmail-resend' if you provide a numeric argument.)
+
+   The `m' (`rmail-mail') command is used to start editing an outgoing
+message that is not a reply.  It leaves the header fields empty.  Its
+only difference from `C-x 4 m' is that it makes the Rmail buffer
+accessible for `C-c C-y', just as `r' does.  Thus, `m' can be used to
+reply to or forward a message; it can do anything `r' or `f' can do.
+
+   The `c' (`rmail-continue') command resumes editing the `*mail*'
+buffer, to finish editing an outgoing message you were already
+composing, or to alter a message you have sent.
+
+   If you set the variable `rmail-mail-new-frame' to a non-`nil' value,
+then all the Rmail commands to start sending a message create a new
+frame to edit it in.  This frame is deleted when you send the message,
+or when you use the `Don't Send' item in the `Mail' menu.
+
+   All the Rmail commands to send a message use the mail-composition
+method that you have chosen (*note Mail Methods::.).
+
+
+File: emacs,  Node: Rmail Summary,  Next: Rmail Sorting,  Prev: Rmail Reply,  Up: Rmail
+
+Summaries
+=========
+
+   A "summary" is a buffer containing one line per message to give you
+an overview of the mail in an Rmail file.  Each line shows the message
+number, the sender, the labels, and the subject.  Almost all Rmail
+commands are valid in the summary buffer also; these apply to the
+message described by the current line of the summary.  Moving point in
+the summary buffer selects messages as you move to their summary lines.
+
+   A summary buffer applies to a single Rmail file only; if you are
+editing multiple Rmail files, each one can have its own summary buffer.
+The summary buffer name is made by appending `-summary' to the Rmail
+buffer's name.  Normally only one summary buffer is displayed at a time.
+
+* Menu:
+
+* Rmail Make Summary::	     Making various sorts of summaries.
+* Rmail Summary Edit::	     Manipulating messages from the summary.
+
+
+File: emacs,  Node: Rmail Make Summary,  Next: Rmail Summary Edit,  Up: Rmail Summary
+
+Making Summaries
+----------------
+
+   Here are the commands to create a summary for the current Rmail file.
+Once the Rmail file has a summary buffer, changes in the Rmail file
+(such as deleting or expunging messages, and getting new mail)
+automatically update the summary.
+
+`h'
+`C-M-h'
+     Summarize all messages (`rmail-summary').
+
+`l LABELS <RET>'
+`C-M-l LABELS <RET>'
+     Summarize message that have one or more of the specified labels
+     (`rmail-summary-by-labels').
+
+`C-M-r RCPTS <RET>'
+     Summarize messages that have one or more of the specified
+     recipients (`rmail-summary-by-recipients').
+
+`C-M-t TOPIC <RET>'
+     Summarize messages that have a match for the specified regexp
+     TOPIC in their subjects (`rmail-summary-by-topic').
+
+   The `h' or `C-M-h' (`rmail-summary') command fills the summary buffer
+for the current Rmail file with a summary of all the messages in the
+file.  It then displays and selects the summary buffer in another
+window.
+
+   `C-M-l LABELS <RET>' (`rmail-summary-by-labels') makes a partial
+summary mentioning only the messages that have one or more of the
+labels LABELS.  LABELS should contain label names separated by commas.
+
+   `C-M-r RCPTS <RET>' (`rmail-summary-by-recipients') makes a partial
+summary mentioning only the messages that have one or more of the
+recipients RCPTS.  RCPTS should contain mailing addresses separated by
+commas.
+
+   `C-M-t TOPIC <RET>' (`rmail-summary-by-topic') makes a partial
+summary mentioning only the messages whose subjects have a match for
+the regular expression TOPIC.
+
+   Note that there is only one summary buffer for any Rmail file;
+making one kind of summary discards any previously made summary.
+
+   The variable `rmail-summary-window-size' says how many lines to use
+for the summary window.  The variable `rmail-summary-line-count-flag'
+controls whether the summary line for a message should include the line
+count of the message.
+
+
+File: emacs,  Node: Rmail Summary Edit,  Prev: Rmail Make Summary,  Up: Rmail Summary
+
+Editing in Summaries
+--------------------
+
+   You can use the Rmail summary buffer to do almost anything you can do
+in the Rmail buffer itself.  In fact, once you have a summary buffer,
+there's no need to switch back to the Rmail buffer.
+
+   You can select and display various messages in the Rmail buffer, from
+the summary buffer, just by moving point in the summary buffer to
+different lines.  It doesn't matter what Emacs command you use to move
+point; whichever line point is on at the end of the command, that
+message is selected in the Rmail buffer.
+
+   Almost all Rmail commands work in the summary buffer as well as in
+the Rmail buffer.  Thus, `d' in the summary buffer deletes the current
+message, `u' undeletes, and `x' expunges.  `o' and `C-o' output the
+current message to a file; `r' starts a reply to it.  You can scroll
+the current message while remaining in the summary buffer using <SPC>
+and <DEL>.
+
+   The Rmail commands to move between messages also work in the summary
+buffer, but with a twist: they move through the set of messages included
+in the summary.  They also ensure the Rmail buffer appears on the screen
+(unlike cursor motion commands, which update the contents of the Rmail
+buffer but don't display it in a window unless it already appears).
+Here is a list of these commands:
+
+`n'
+     Move to next line, skipping lines saying `deleted', and select its
+     message.
+
+`p'
+     Move to previous line, skipping lines saying `deleted', and select
+     its message.
+
+`M-n'
+     Move to next line and select its message.
+
+`M-p'
+     Move to previous line and select its message.
+
+`>'
+     Move to the last line, and select its message.
+
+`<'
+     Move to the first line, and select its message.
+
+`M-s PATTERN <RET>'
+     Search through messages for PATTERN starting with the current
+     message; select the message found, and move point in the summary
+     buffer to that message's line.
+
+   Deletion, undeletion, and getting new mail, and even selection of a
+different message all update the summary buffer when you do them in the
+Rmail buffer.  If the variable `rmail-redisplay-summary' is non-`nil',
+these actions also bring the summary buffer back onto the screen.
+
+   When you are finished using the summary, type `w'
+(`rmail-summary-wipe') to delete the summary buffer's window.  You can
+also exit Rmail while in the summary: `q' (`rmail-summary-quit')
+deletes the summary window, then exits from Rmail by saving the Rmail
+file and switching to another buffer.
+
+
+File: emacs,  Node: Rmail Sorting,  Next: Rmail Display,  Prev: Rmail Summary,  Up: Rmail
+
+Sorting the Rmail File
+======================
+
+`M-x rmail-sort-by-date'
+     Sort messages of current Rmail file by date.
+
+`M-x rmail-sort-by-subject'
+     Sort messages of current Rmail file by subject.
+
+`M-x rmail-sort-by-author'
+     Sort messages of current Rmail file by author's name.
+
+`M-x rmail-sort-by-recipient'
+     Sort messages of current Rmail file by recipient's names.
+
+`M-x rmail-sort-by-correspondent'
+     Sort messages of current Rmail file by the name of the other
+     correspondent.
+
+`M-x rmail-sort-by-lines'
+     Sort messages of current Rmail file by size (number of lines).
+
+`M-x rmail-sort-by-keywords <RET> LABELS <RET>'
+     Sort messages of current Rmail file by labels.  The argument
+     LABELS should be a comma-separated list of labels.  The order of
+     these labels specifies the order of messages; messages with the
+     first label come first, messages with the second label come
+     second, and so on.  Messages which have none of these labels come
+     last.
+
+   The Rmail sort commands perform a *stable sort*: if there is no
+reason to prefer either one of two messages, their order remains
+unchanged.  You can use this to sort by more than one criterion.  For
+example, if you use `rmail-sort-by-date' and then
+`rmail-sort-by-author', messages from the same author appear in order
+by date.
+
+   With a numeric argument, all these commands reverse the order of
+comparison.  This means they sort messages from newest to oldest, from
+biggest to smallest, or in reverse alphabetical order.
+
+
+File: emacs,  Node: Rmail Display,  Next: Rmail Editing,  Prev: Rmail Sorting,  Up: Rmail
+
+Display of Messages
+===================
+
+   Rmail reformats the header of each message before displaying it for
+the first time.  Reformatting hides uninteresting header fields to
+reduce clutter.  You can use the `t' command to show the entire header
+or to repeat the header reformatting operation.
+
+`t'
+     Toggle display of complete header (`rmail-toggle-header').
+
+   Reformatting the header involves deleting most header fields, on the
+grounds that they are not interesting.  The variable
+`rmail-ignored-headers' holds a regular expression that specifies which
+header fields to hide in this way--if it matches the beginning of a
+header field, that whole field is hidden.
+
+   Rmail saves the complete original header before reformatting; to see
+it, use the `t' command (`rmail-toggle-header').  This discards the
+reformatted headers of the current message and displays it with the
+original header.  Repeating `t' reformats the message again.  Selecting
+the message again also reformats.
+
+   One consequence of this is that if you edit the reformatted header
+(using `e'; *note Rmail Editing::.), subsequent use of `t' will discard
+your edits.  On the other hand, if you use `e' after `t', to edit the
+original (unreformatted) header, those changes are permanent.
+
+   When the `t' command has a prefix argument, a positive argument
+means to show the reformatted header, and a zero or negative argument
+means to show the full header.
+
+   When used with a window system that supports multiple fonts, Rmail
+highlights certain header fields that are especially interesting--by
+default, the `From' and `Subject' fields.  The variable
+`rmail-highlighted-headers' holds a regular expression that specifies
+the header fields to highlight; if it matches the beginning of a header
+field, that whole field is highlighted.
+
+   If you specify unusual colors for your text foreground and
+background, the colors used for highlighting may not go well with them.
+If so, specify different colors for the `highlight' face.  That is
+worth doing because the `highlight' face is used for other kinds of
+highlighting as well.  *Note Faces::, for how to do this.
+
+   To turn off highlighting entirely in Rmail, set
+`rmail-highlighted-headers' to `nil'.
+
+
+File: emacs,  Node: Rmail Editing,  Next: Rmail Digest,  Prev: Rmail Display,  Up: Rmail
+
+Editing Within a Message
+========================
+
+   Most of the usual Emacs commands are available in Rmail mode, though
+a few, such as `C-M-n' and `C-M-h', are redefined by Rmail for other
+purposes.  However, the Rmail buffer is normally read only, and most of
+the letters are redefined as Rmail commands.  If you want to edit the
+text of a message, you must use the Rmail command `e'.
+
+`e'
+     Edit the current message as ordinary text.
+
+   The `e' command (`rmail-edit-current-message') switches from Rmail
+mode into Rmail Edit mode, another major mode which is nearly the same
+as Text mode.  The mode line indicates this change.
+
+   In Rmail Edit mode, letters insert themselves as usual and the Rmail
+commands are not available.  When you are finished editing the message
+and are ready to go back to Rmail, type `C-c C-c', which switches back
+to Rmail mode.  Alternatively, you can return to Rmail mode but cancel
+all the editing that you have done, by typing `C-c C-]'.
+
+   Entering Rmail Edit mode runs the hook `text-mode-hook'; then it
+runs the hook `rmail-edit-mode-hook' (*note Hooks::.).  It adds the
+attribute `edited' to the message.
+
+
+File: emacs,  Node: Rmail Digest,  Next: Out of Rmail,  Prev: Rmail Editing,  Up: Rmail
+
+Digest Messages
+===============
+
+   A "digest message" is a message which exists to contain and carry
+several other messages.  Digests are used on some moderated mailing
+lists; all the messages that arrive for the list during a period of time
+such as one day are put inside a single digest which is then sent to the
+subscribers.  Transmitting the single digest uses much less computer
+time than transmitting the individual messages even though the total
+size is the same, because the per-message overhead in network mail
+transmission is considerable.
+
+   When you receive a digest message, the most convenient way to read
+it is to "undigestify" it: to turn it back into many individual
+messages.  Then you can read and delete the individual messages as it
+suits you.
+
+   To do this, select the digest message and type the command `M-x
+undigestify-rmail-message'.  This extracts the submessages as separate
+Rmail messages, and inserts them following the digest.  The digest
+message itself is flagged as deleted.
+
+
+File: emacs,  Node: Out of Rmail,  Next: Rmail Rot13,  Prev: Rmail Digest,  Up: Rmail
+
+Converting an Rmail File to Inbox Format
+========================================
+
+   The command `M-x unrmail' converts a file in Rmail format to inbox
+format (also known as the system mailbox format), so that you can use it
+with other mail-editing tools.  You must specify two arguments, the name
+of the Rmail file and the name to use for the converted file.  `M-x
+unrmail' does not alter the Rmail file itself.
+
+
+File: emacs,  Node: Rmail Rot13,  Next: Movemail,  Prev: Out of Rmail,  Up: Rmail
+
+Reading Rot13 Messages
+======================
+
+   Mailing list messages that might offend some readers are sometimes
+encoded in a simple code called "rot13"--so named because it rotates
+the alphabet by 13 letters.  This code is not for secrecy, as it
+provides none; rather, it enables those who might be offended to avoid
+ever seeing the real text of the message.
+
+   To view a buffer using the rot13 code, use the command `M-x
+rot13-other-window'.  This displays the current buffer in another window
+which applies the code when displaying the text.
+
+
+File: emacs,  Node: Movemail,  Prev: Rmail Rot13,  Up: Rmail
+
+`movemail' and POP
+==================
+
+   When getting new mail, Rmail first copies the new mail from the inbox
+file to the Rmail file; then it saves the Rmail file; then it truncates
+the inbox file.  This way, a system crash may cause duplication of mail
+between the inbox and the Rmail file, but cannot lose mail.  If
+`rmail-preserve-inbox' is non-`nil', then Rmail will copy new mail from
+the inbox file to the Rmail file without truncating the inbox file.
+You may wish to set this, for example, on a portable computer you use
+to check your mail via POP while traveling, so that your mail will
+remain on the server and you can save it later on your workstation.
+
+   In some cases, Rmail copies the new mail from the inbox file
+indirectly.  First it runs the `movemail' program to move the mail from
+the inbox to an intermediate file called `~/.newmail-INBOXNAME'.  Then
+Rmail merges the new mail from that file, saves the Rmail file, and
+only then deletes the intermediate file.  If there is a crash at the
+wrong time, this file continues to exist, and Rmail will use it again
+the next time it gets new mail from that inbox.
+
+   If Rmail is unable to convert the data in `~/.newmail-INBOXNAME'
+into Babyl format, it renames the file to `~/RMAILOSE.N' (N is an
+integer chosen to make the name unique) so that Rmail will not have
+trouble with the data again.  You should look at the file, find
+whatever message confuses Rmail (probably one that includes the
+control-underscore character, octal code 037), and delete it.  Then you
+can use `1 g' to get new mail from the corrected file.
+
+   Some sites use a method called POP for accessing users' inbox data
+instead of storing the data in inbox files.  `movemail' can work with
+POP if you compile it with the macro `MAIL_USE_POP' defined.
+`movemail' only works with POP3, not with older versions of POP.
+
+   Assuming you have compiled and installed `movemail' appropriately,
+you can specify a POP inbox with a "file name" of the form
+`po:USERNAME'.  `movemail' handles such a name by opening a connection
+to the POP server.  The `MAILHOST' environment variable specifies the
+machine to look for the server on.
+
+   Accessing mail via POP may require a password.  If the variable
+`rmail-pop-password' is non-`nil', it specifies the password to use for
+POP.  Alternatively, if `rmail-pop-password-required' is non-`nil',
+then Rmail asks you for the password to use.
+
+
+File: emacs,  Node: Dired,  Next: Calendar/Diary,  Prev: Rmail,  Up: Top
+
+Dired, the Directory Editor
+***************************
+
+   Dired makes an Emacs buffer containing a listing of a directory, and
+optionally some of its subdirectories as well.  You can use the normal
+Emacs commands to move around in this buffer, and special Dired commands
+to operate on the files listed.
+
+* Menu:
+
+* Enter: Dired Enter.         How to invoke Dired.
+* Commands: Dired Commands.   Commands in the Dired buffer.
+* Deletion: Dired Deletion.   Deleting files with Dired.
+* Flagging Many Files::       Flagging files based on their names.
+* Visit: Dired Visiting.      Other file operations through Dired.
+* Marks vs Flags::	      Flagging for deletion vs marking.
+* Operating on Files::	      How to copy, rename, print, compress, etc.
+			        either one file or several files.
+* Shell Commands in Dired::   Running a shell command on the marked files.
+* Transforming File Names::   Using patterns to rename multiple files.
+* Comparison in Dired::	      Running `diff' by way of Dired.
+* Subdirectories in Dired::   Adding subdirectories to the Dired buffer.
+* Subdirectory Motion::	      Moving across subdirectories, and up and down.
+* Hiding Subdirectories::     Making subdirectories visible or invisible.
+* Updating: Dired Updating.   Discarding lines for files of no interest.
+* Find: Dired and Find.	      Using `find' to choose the files for Dired.
+
+
+File: emacs,  Node: Dired Enter,  Next: Dired Commands,  Up: Dired
+
+Entering Dired
+==============
+
+   To invoke Dired, do `C-x d' or `M-x dired'.  The command reads a
+directory name or wildcard file name pattern as a minibuffer argument
+to specify which files to list.  Where `dired' differs from
+`list-directory' is in putting the buffer into Dired mode so that the
+special commands of Dired are available.
+
+   The variable `dired-listing-switches' specifies the options to give
+to `ls' for listing directory; this string *must* contain `-l'.  If you
+use a numeric prefix argument with the `dired' command, you can specify
+the `ls' switches with the minibuffer after you finish entering the
+directory specification.
+
+   To display the Dired buffer in another window rather than in the
+selected window, use `C-x 4 d' (`dired-other-window)' instead of `C-x
+d'.  `C-x 5 d' (`dired-other-frame') uses a separate frame to display
+the Dired buffer.
+
+
+File: emacs,  Node: Dired Commands,  Next: Dired Deletion,  Prev: Dired Enter,  Up: Dired
+
+Commands in the Dired Buffer
+============================
+
+   The Dired buffer is "read-only," and inserting text in it is not
+useful, so ordinary printing characters such as `d' and `x' are used
+for special Dired commands.  Some Dired commands "mark" or "flag" the
+"current file" (that is, the file on the current line); other commands
+operate on the marked files or on the flagged files.
+
+   All the usual Emacs cursor motion commands are available in Dired
+buffers.  Some special-purpose cursor motion commands are also
+provided.  The keys `C-n' and `C-p' are redefined to put the cursor at
+the beginning of the file name on the line, rather than at the
+beginning of the line.
+
+   For extra convenience, <SPC> and `n' in Dired are equivalent to
+`C-n'.  `p' is equivalent to `C-p'.  (Moving by lines is so common in
+Dired that it deserves to be easy to type.)  <DEL> (move up and unflag)
+is often useful simply for moving up.
+
+
+File: emacs,  Node: Dired Deletion,  Next: Flagging Many Files,  Prev: Dired Commands,  Up: Dired
+
+Deleting Files with Dired
+=========================
+
+   The primary use of Dired is to "flag" files for deletion and then
+delete the files previously flagged.
+
+`d'
+     Flag this file for deletion.
 
 `u'
-     Unmark the calendar window (`calendar-unmark').
+     Remove deletion flag on this line.
 
-`M-x print-diary-entries'
-     Print hard copy of the diary display as it appears.
+`<DEL>'
+     Move point to previous line and remove the deletion flag on that
+     line.
 
-`M-x diary'
-     Display all diary entries for today's date.
+`x'
+     Delete the files that are flagged for deletion.
 
-   Displaying the diary entries with `d' shows in a separate window the
-diary entries for the selected date in the calendar.  The mode line of
-the new window shows the date of the diary entries and any holidays
-that fall on that date.  If you specify a numeric argument with `d', it
-shows all the diary entries for that many successive days.  Thus, `2 d'
-displays all the entries for the selected date and for the following
-day.
+   You can flag a file for deletion by moving to the line describing the
+file and typing `d'.  The deletion flag is visible as a `D' at the
+beginning of the line.  This command moves point to the next line, so
+that repeated `d' commands flag successive files.  A numeric argument
+serves as a repeat count.
 
-   Another way to display the diary entries for a date is to click
-`Mouse-2' on the date, and then choose `Diary' from the menu that
-appears.
+   The files are flagged for deletion rather than deleted immediately to
+reduce the danger of deleting a file accidentally.  Until you direct
+Dired to expunge the flagged files, you can remove deletion flags using
+the commands `u' and <DEL>.  `u' works just like `d', but removes flags
+rather than making flags.  <DEL> moves upward, removing flags; it is
+like `u' with argument -1.
 
-   To get a broader view of which days are mentioned in the diary, use
-the `m' command.  This displays the dates that have diary entries fall
-in a different face (or places a `+' after these dates, if display with
-multiple faces is not available).  The command applies both to the
-currently visible months and to other months that subsequently become
-visible by scrolling.  To turn marking off and erase the current marks,
-type `u', which also turns off holiday marks (*note Holidays::.).
+   To delete the flagged files, type `x' (`dired-expunge').  This
+command first displays a list of all the file names flagged for
+deletion, and requests confirmation with `yes'.  If you confirm, Dired
+deletes the flagged files, then deletes their lines from the text of
+the Dired buffer.  The shortened Dired buffer remains selected.
 
-   To see the full diary file, rather than just some of the entries, use
-the `s' command.
-
-   Display of selected diary entries uses the selective display feature
-to hide entries that don't apply.  This is the same feature that Outline
-mode uses to show part of an outline (*note Outline Mode::.).
-
-   The diary buffer as you see it is an illusion, so simply printing the
-buffer does not print what you see on your screen.  There is a special
-command to print hard copy of the diary buffer *as it appears*; this
-command is `M-x print-diary-entries'.  It sends the data directly to
-the printer.  You can customize it like `lpr-region' (*note
-Hardcopy::.).
-
-   The command `M-x diary' displays the diary entries for the current
-date, independently of the calendar display, and optionally for the next
-few days as well; the variable `number-of-diary-entries' specifies how
-many days to include.  *Note Calendar/Diary Options:
-(elisp)Calendar/Diary Options.
-
-   If you put `(diary)' in your `.emacs' file, this automatically
-displays a window with the day's diary entries, when you enter Emacs.
-The mode line of the displayed window shows the date and any holidays
-that fall on that date.
+   If you answer `no' or quit with `C-g' when asked to confirm, you
+return immediately to Dired, with the deletion flags still present in
+the buffer, and no files actually deleted.
 
 
-File: emacs,  Node: Format of Diary File,  Next: Date Formats,  Prev: Diary Commands,  Up: Diary
+File: emacs,  Node: Flagging Many Files,  Next: Dired Visiting,  Prev: Dired Deletion,  Up: Dired
 
-The Diary File
---------------
+Flagging Many Files
+===================
 
-   Your "diary file" is a file that records events associated with
-particular dates.  The name of the diary file is specified by the
-variable `diary-file'; `~/diary' is the default.  The `calendar'
-utility program supports a subset of the format allowed by the Emacs
-diary facilities, so you can use that utility to view the diary file,
-with reasonable results aside from the entries it cannot understand.
+`#'
+     Flag all auto-save files (files whose names start and end with `#')
+     for deletion (*note Auto Save::.).
 
-   Each entry in the diary file describes one event and consists of one
-or more lines.  An entry always begins with a date specification at the
-left margin.  The rest of the entry is simply text to describe the
-event.  If the entry has more than one line, then the lines after the
-first must begin with whitespace to indicate they continue a previous
-entry.  Lines that do not begin with valid dates and do not continue a
-preceding entry are ignored.
+`~'
+     Flag all backup files (files whose names end with `~') for deletion
+     (*note Backup::.).
 
-   You can inhibit the marking of certain diary entries in the calendar
-window; to do this, insert an ampersand (`&') at the beginning of the
-entry, before the date.  This has no effect on display of the entry in
-the diary window; it affects only marks on dates in the calendar
-window.  Nonmarking entries are especially useful for generic entries
-that would otherwise mark many different dates.
+`&'
+     Flag for deletion all files with certain kinds of names, names that
+     suggest you could easily create the files again.
 
-   If the first line of a diary entry consists only of the date or day
-name with no following blanks or punctuation, then the diary window
-display doesn't include that line; only the continuation lines appear.
-For example, this entry:
+`. (Period)'
+     Flag excess numeric backup files for deletion.  The oldest and
+     newest few backup files of any one file are exempt; the middle
+     ones are flagged.
 
-     02/11/1989
-           Bill B. visits Princeton today
-           2pm Cognitive Studies Committee meeting
-           2:30-5:30 Liz at Lawrenceville
-           4:00pm Dentist appt
-           7:30pm Dinner at George's
-           8:00-10:00pm concert
+`% d REGEXP <RET>'
+     Flag for deletion all files whose names match the regular
+     expression REGEXP (`dired-flag-files-regexp').
 
-appears in the diary window without the date line at the beginning.
-This style of entry looks neater when you display just a single day's
-entries, but can cause confusion if you ask for more than one day's
-entries.
+   The `#', `~', `&', and `.' commands flag many files for deletion,
+based on their file names.  These commands are useful precisely because
+they do not themselves delete any files; you can remove the deletion
+flags from any flagged files that you really wish to keep.
 
-   You can edit the diary entries as they appear in the window, but it
-is important to remember that the buffer displayed contains the *entire*
-diary file, with portions of it concealed from view.  This means, for
-instance, that the `C-f' (`forward-char') command can put point at what
-appears to be the end of the line, but what is in reality the middle of
-some concealed line.
+   `&' flags files whose names match the regular expression specified
+by the variable `dired-garbage-files-regexp'.  By default, this matches
+certain files produced by TeX, and the `.orig' and `.rej' files
+produced by `patch'.
 
-   *Be careful when editing the diary entries!*  Inserting additional
-lines or adding/deleting characters in the middle of a visible line
-cannot cause problems, but editing at the end of a line may not do what
-you expect.  Deleting a line may delete other invisible entries that
-follow it.  Before editing the diary, it is best to display the entire
-file with `s' (`show-all-diary-entries').
+   `#' flags for deletion all files whose names look like auto-save
+files (*note Auto Save::.)--that is, files whose names begin and end
+with `#'.  `~' flags for deletion all files whose names say they are
+backup files (*note Backup::.)--that is, whose names end in `~'.
 
-
-File: emacs,  Node: Date Formats,  Next: Adding to Diary,  Prev: Format of Diary File,  Up: Diary
+   `.' (Period) flags just some of the backup files for deletion: all
+but the oldest few and newest few backups of any one file.  Normally
+`dired-kept-versions' (*not* `kept-new-versions'; that applies only
+when saving) specifies the number of newest versions of each file to
+keep, and `kept-old-versions' specifies the number of oldest versions
+to keep.
 
-Date Formats
-------------
+   Period with a positive numeric argument, as in `C-u 3 .', specifies
+the number of newest versions to keep, overriding
+`dired-kept-versions'.  A negative numeric argument overrides
+`kept-old-versions', using minus the value of the argument to specify
+the number of oldest versions of each file to keep.
 
-   Here are some sample diary entries, illustrating different ways of
-formatting a date.  The examples all show dates in American order
-(month, day, year), but Calendar mode supports European order (day,
-month, year) as an option.
-
-     4/20/93  Switch-over to new tabulation system
-     apr. 25  Start tabulating annual results
-     4/30  Results for April are due
-     */25  Monthly cycle finishes
-     Friday  Don't leave without backing up files
-
-   The first entry appears only once, on April 20, 1993.  The second and
-third appear every year on the specified dates, and the fourth uses a
-wildcard (asterisk) for the month, so it appears on the 25th of every
-month.  The final entry appears every week on Friday.
-
-   You can use just numbers to express a date, as in `MONTH/DAY' or
-`MONTH/DAY/YEAR'.  This must be followed by a nondigit.  In the date
-itself, MONTH and DAY are numbers of one or two digits.  The optional
-YEAR is also a number, and may be abbreviated to the last two digits;
-that is, you can use `11/12/1989' or `11/12/89'.
-
-   Dates can also have the form `MONTHNAME DAY' or `MONTHNAME DAY,
-YEAR', where the month's name can be spelled in full or abbreviated to
-three characters (with or without a period).  Case is not significant.
-
-   A date may be "generic"; that is, partially unspecified.  Then the
-entry applies to all dates that match the specification.  If the date
-does not contain a year, it is generic and applies to any year.
-Alternatively, MONTH, DAY, or YEAR can be a `*'; this matches any
-month, day, or year, respectively.  Thus, a diary entry `3/*/*' matches
-any day in March of any year; so does `march *'.
-
-   If you prefer the European style of writing dates--in which the day
-comes before the month--type `M-x european-calendar' while in the
-calendar, or set the variable `european-calendar-style' to `t' *before*
-using any calendar or diary command.  This mode interprets all dates in
-the diary in the European manner, and also uses European style for
-displaying diary dates.  (Note that there is no comma after the
-MONTHNAME in the European style.)  To go back to the (default) American
-style of writing dates, type `M-x american-calendar'.
-
-   You can use the name of a day of the week as a generic date which
-applies to any date falling on that day of the week.  You can abbreviate
-the day of the week to three letters (with or without a period) or spell
-it in full; case is not significant.
+   The `% d' command flags all files whose names match a specified
+regular expression (`dired-flag-files-regexp').  Only the non-directory
+part of the file name is used in matching.  You can use `^' and `$' to
+anchor matches.  You can exclude subdirectories by hiding them (*note
+Hiding Subdirectories::.).
 
 
-File: emacs,  Node: Adding to Diary,  Next: Special Diary Entries,  Prev: Date Formats,  Up: Diary
+File: emacs,  Node: Dired Visiting,  Next: Marks vs Flags,  Prev: Flagging Many Files,  Up: Dired
 
-Commands to Add to the Diary
-----------------------------
+Visiting Files in Dired
+=======================
 
-   While in the calendar, there are several commands to create diary
-entries:
+   There are several Dired commands for visiting or examining the files
+listed in the Dired buffer.  All of them apply to the current line's
+file; if that file is really a directory, these commands invoke Dired on
+that subdirectory (making a separate Dired buffer).
 
-`i d'
-     Add a diary entry for the selected date (`insert-diary-entry').
+`f'
+     Visit the file described on the current line, like typing `C-x C-f'
+     and supplying that file name (`dired-find-file').  *Note
+     Visiting::.
 
-`i w'
-     Add a diary entry for the selected day of the week
-     (`insert-weekly-diary-entry').
+`<RET>'
+     Equivalent to `f'.
 
-`i m'
-     Add a diary entry for the selected day of the month
-     (`insert-monthly-diary-entry').
+`o'
+     Like `f', but uses another window to display the file's buffer
+     (`dired-find-file-other-window').  The Dired buffer remains visible
+     in the first window.  This is like using `C-x 4 C-f' to visit the
+     file.  *Note Windows::.
 
-`i y'
-     Add a diary entry for the selected day of the year
-     (`insert-yearly-diary-entry').
+`C-o'
+     Visit the file described on the current line, and display the
+     buffer in another window, but do not select that window
+     (`dired-display-file').
 
-   You can make a diary entry for a specific date by selecting that date
-in the calendar window and typing the `i d' command.  This command
-displays the end of your diary file in another window and inserts the
-date; you can then type the rest of the diary entry.
+`Mouse-2'
+     Visit the file named by the line you click on
+     (`dired-mouse-find-file-other-window').  This uses another window
+     to display the file, like the `o' command.
 
-   If you want to make a diary entry that applies to a specific day of
-the week, select that day of the week (any occurrence will do) and type
-`i w'.  This inserts the day-of-week as a generic date; you can then
-type the rest of the diary entry.  You can make a monthly diary entry in
-the same fashion.  Select the day of the month, use the `i m' command,
-and type rest of the entry.  Similarly, you can insert a yearly diary
-entry with the `i y' command.
+`v'
+     View the file described on the current line, using `M-x view-file'
+     (`dired-view-file').
 
-   All of the above commands make marking diary entries by default.  To
-make a nonmarking diary entry, give a numeric argument to the command.
-For example, `C-u i w' makes a nonmarking weekly diary entry.
+     Viewing a file is like visiting it, but is slanted toward moving
+     around in the file conveniently and does not allow changing the
+     file.  *Note View File: Misc File Ops.
 
-   When you modify the diary file, be sure to save the file before
-exiting Emacs.
+
+File: emacs,  Node: Marks vs Flags,  Next: Operating on Files,  Prev: Dired Visiting,  Up: Dired
+
+Dired Marks vs. Flags
+=====================
+
+   Instead of flagging a file with `D', you can "mark" the file with
+some other character (usually `*').  Most Dired commands to operate on
+files, aside from "expunge" (`x'), look for files marked with `*'.
+
+   Here are some commands for marking with `*' (and also for
+unmarking).  (*Note Dired Deletion::, for commands to flag and unflag
+files.)
+
+`m'
+`* m'
+     Mark the current file with `*' (`dired-mark').  With a numeric
+     argument N, mark the next N files starting with the current file.
+     (If N is negative, mark the previous -N files.)
+
+`* *'
+     Mark all executable files with `*' (`dired-mark-executables').
+     With a numeric argument, unmark all those files.
+
+`* @'
+     Mark all symbolic links with `*' (`dired-mark-symlinks').  With a
+     numeric argument, unmark all those files.
+
+`* /'
+     Mark with `*' all files which are actually directories, except for
+     `.' and `..' (`dired-mark-directories').  With a numeric argument,
+     unmark all those files.
+
+`u'
+`* u'
+     Remove any mark on this line (`dired-unmark').
+
+`<DEL>'
+`* <DEL>'
+     Move point to previous line and remove any mark on that line
+     (`dired-unmark-backward').
+
+`* ! MARKCHAR'
+     Remove all marks from all the files in this Dired buffer
+     (`dired-unmark-all-files-no-query').
+
+`* ? MARKCHAR'
+     Remove all marks that use the character MARKCHAR
+     (`dired-unmark-all-files').  The argument is a single
+     character--do not use <RET> to terminate it.
+
+     With a numeric argument, this command queries about each marked
+     file, asking whether to remove its mark.  You can answer `y'
+     meaning yes, `n' meaning no, or `!' to remove the marks from the
+     remaining files without asking about them.
+
+`* c OLD NEW'
+     Replace all marks that use the character OLD with marks that use
+     the character NEW (`dired-change-marks').  This command is the
+     primary way to create or use marks other than `*' or `D'.  The
+     arguments are single characters--do not use <RET> to terminate
+     them.
+
+     You can use almost any character as a mark character by means of
+     this command, to distinguish various classes of files.  If OLD is a
+     space (` '), then the command operates on all unmarked files; if
+     NEW is a space, then the command unmarks the files it acts on.
+
+     To illustrate the power of this command, here is how to put `*'
+     marks on all the files that are unmarked, while unmarking all
+     those that have `*' marks:
+
+          * c * t  * c SPC *  * c t SPC
+
+`% m REGEXP <RET>'
+`* % REGEXP <RET>'
+     Mark (with `*') all files whose names match the regular expression
+     REGEXP (`dired-mark-files-regexp').  This command is like `% d',
+     except that it marks files with `*' instead of flagging with `D'.
+     *Note Flagging Many Files::.
+
+     Only the non-directory part of the file name is used in matching.
+     Use `^' and `$' to anchor matches.  Exclude subdirectories by
+     hiding them (*note Hiding Subdirectories::.).
+
+
+File: emacs,  Node: Operating on Files,  Next: Shell Commands in Dired,  Prev: Marks vs Flags,  Up: Dired
+
+Operating on Files
+==================
+
+   This section describes the basic Dired commands to operate on one
+file or several files.  All of these commands are capital letters; all
+of them use the minibuffer, either to read an argument or to ask for
+confirmation, before they act.  All use the following convention to
+decide which files to manipulate:
+
+   * If you give the command a numeric prefix argument N, it operates
+     on the next N files, starting with the current file.  (If N is
+     negative, the command operates on the -N files preceding the
+     current line.)
+
+   * Otherwise, if some files are marked with `*', the command operates
+     on all those files.
+
+   * Otherwise, the command operates on the current file only.
+
+   Here are the file-manipulating commands that operate on files in this
+way.  (Some other Dired commands, such as `!' and the `%' commands,
+also use these conventions to decide which files to work on.)
+
+`C NEW <RET>'
+     Copy the specified files (`dired-do-copy').  The argument NEW is
+     the directory to copy into, or (if copying a single file) the new
+     name.
+
+     If `dired-copy-preserve-time' is non-`nil', then copying with this
+     command sets the modification time of the new file to be the same
+     as that of the old file.
+
+`R NEW <RET>'
+     Rename the specified files (`dired-do-rename').  The argument NEW
+     is the directory to rename into, or (if renaming a single file)
+     the new name.
+
+     Dired automatically changes the visited file name of buffers
+     associated with renamed files so that they refer to the new names.
+
+`H NEW <RET>'
+     Make hard links to the specified files (`dired-do-hardlink').  The
+     argument NEW is the directory to make the links in, or (if making
+     just one link) the name to give the link.
+
+`S NEW <RET>'
+     Make symbolic links to the specified files (`dired-do-symlink').
+     The argument NEW is the directory to make the links in, or (if
+     making just one link) the name to give the link.
+
+`M MODESPEC <RET>'
+     Change the mode (also called "permission bits") of the specified
+     files (`dired-do-chmod').  This uses the `chmod' program, so
+     MODESPEC can be any argument that `chmod' can handle.
+
+`G NEWGROUP <RET>'
+     Change the group of the specified files to NEWGROUP
+     (`dired-do-chgrp').
+
+`O NEWOWNER <RET>'
+     Change the owner of the specified files to NEWOWNER
+     (`dired-do-chown').  (On most systems, only the superuser can do
+     this.)
+
+     The variable `dired-chown-program' specifies the name of the
+     program to use to do the work (different systems put `chown' in
+     different places).
+
+`P COMMAND <RET>'
+     Print the specified files (`dired-do-print').  You must specify the
+     command to print them with, but the minibuffer starts out with a
+     suitable guess made using the variables `lpr-command' and
+     `lpr-switches' (the same variables that `lpr-file' uses; *note
+     Hardcopy::.).
+
+`Z'
+     Compress the specified files (`dired-do-compress').  If the file
+     appears to be a compressed file already, it is uncompressed
+     instead.
+
+`L'
+     Load the specified Emacs Lisp files (`dired-do-load').  *Note Lisp
+     Libraries::.
+
+`B'
+     Byte compile the specified Emacs Lisp files
+     (`dired-do-byte-compile').  *Note Byte Compilation: (elisp)Byte
+     Compilation.
+
+`A REGEXP <RET>'
+     Search all the specified files for the regular expression REGEXP
+     (`dired-do-search').
+
+     This command is a variant of `tags-search'.  The search stops at
+     the first match it finds; use `M-,' to resume the search and find
+     the next match.  *Note Tags Search::.
+
+`Q FROM <RET> TO <RET>'
+     Perform `query-replace-regexp' on each of the specified files,
+     replacing matches for FROM (a regular expression) with the string
+     TO (`dired-do-query-replace').
+
+     This command is a variant of `tags-query-replace'.  If you exit the
+     query replace loop, you can use `M-,' to resume the scan and
+     replace more matches.  *Note Tags Search::.
+
+   One special file-operation command is `+'
+(`dired-create-directory').  This command reads a directory name and
+creates the directory if it does not already exist.
 

@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1985, 86, 87, 93, 94, 95, 1997 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @iftex
 @chapter Miscellaneous Commands
@@ -9,8 +9,8 @@ else: reading netnews, running shell commands and shell subprocesses,
 using a single shared Emacs for utilities that expect to run an editor
 as a subprocess, printing hardcopy, sorting text, narrowing display to
 part of the buffer, editing double-column files and binary files, saving
-an Emacs session for later resumption, emulating other editors, various
-diversions and amusements.
+an Emacs session for later resumption, emulating other editors, and
+various diversions and amusements.
 
 @end iftex
 @node Gnus, Shell, Calendar/Diary, Top
@@ -35,9 +35,9 @@ manual.
 To start Gnus, type @kbd{M-x gnus @key{RET}}.
 
 @menu
-* Buffers of Gnus::	   The group, summary and article buffers.
-* Gnus Startup::	   What you should know about starting Gnus.
-* Summary of Gnus::	   A short description of the basic Gnus commands.
+* Buffers of Gnus::	The group, summary, and article buffers.
+* Gnus Startup::	What you should know about starting Gnus.
+* Summary of Gnus::	A short description of the basic Gnus commands.
 @end menu
 
 @node Buffers of Gnus
@@ -373,6 +373,9 @@ terminates.  If the shell command doesn't stop (because it ignores the
 @code{SIGINT} signal), type @kbd{C-g} again; this sends the command a
 @code{SIGKILL} signal which is impossible to ignore.
 
+  To specify a coding system for @kbd{M-!} or @kbd{M-|}, use the command
+@kbd{C-x @key{RET} c} immediately beforehand.  @xref{Specify Coding}.
+
 @node Interactive Shell
 @subsection Interactive Inferior Shell
 
@@ -409,6 +412,11 @@ searched; this list is initialized based on the environment variable
 @code{PATH} when Emacs is started.  Your @file{.emacs} file can override
 either or both of these default initializations.
 
+  To specify a coding system for the shell, you can use the command
+@kbd{C-x @key{RET} c} immediately before @kbd{M-x shell}.  You can also
+specify a coding system after starting the shell by using @kbd{C-x
+@key{RET} p} in the shell buffer.  @xref{Specify Coding}.
+
   As soon as the subshell is started, it is sent as input the contents
 of the file @file{~/.emacs_@var{shellname}}, if that file exists, where
 @var{shellname} is the name of the file that the shell was loaded from.
@@ -442,6 +450,13 @@ the subshell, use the command @kbd{M-x dirs} to ask the shell what its
 current directory is.  This command works for shells that support the
 most common command syntax; it may not work for unusual shells.
 
+  You can also use @kbd{M-x dirtrack} to use an alternative and
+more aggressive method of tracking changes in the current directory.
+
+  Emacs defines the environment variable @code{EMACS} in the subshell,
+with value @code{t}.  A shell script can check this variable to
+determine whether it has been run from an Emacs subshell.
+
 @node Shell Mode
 @subsection Shell Mode
 @cindex Shell mode
@@ -453,10 +468,9 @@ editing and job control characters present in shells that are not under
 Emacs, except that you must type @kbd{C-c} first.  Here is a complete list
 of the special key bindings of Shell mode:
 
-@vindex shell-prompt-pattern
 @table @kbd
 @item @key{RET}
-@kindex @key{RET} @r{(Shell mode)}
+@kindex RET @r{(Shell mode)}
 @findex comint-send-input
 At end of buffer send line as input; otherwise, copy current line to end
 of buffer and send it (@code{comint-send-input}).  When a line is
@@ -465,7 +479,7 @@ copied, any text at the beginning of the line that matches the variable
 a regexp string that matches the prompts that your shell uses.
 
 @item @key{TAB}
-@kindex @key{TAB} @r{(Shell mode)}
+@kindex TAB @r{(Shell mode)}
 @findex comint-dynamic-complete
 Complete the command name or file name before point in the shell buffer
 (@code{comint-dynamic-complete}).  @key{TAB} also completes history
@@ -596,7 +610,7 @@ this command won't do it.}
 
 @item M-x comint-strip-ctrl-m
 @findex comint-strip-ctrl-m
-Discard all control-m characters from the current group of shell output.
+Discard all control-M characters from the current group of shell output.
 The most convenient way to use this command is to make it run
 automatically when you get output from the subshell.  To do that,
 evaluate this Lisp expression:
@@ -625,7 +639,7 @@ command plus the output that follows it in the buffer.
 
 @cindex Comint mode
 @cindex mode, Comint
-  Shell mode is a derivative of Comint mode, a general purpose mode for
+  Shell mode is a derivative of Comint mode, a general-purpose mode for
 communicating with interactive subprocesses.  Most of the features of
 Shell mode actually come from Comint mode, as you can see from the
 command names listed above.  The special features of Shell mode in
@@ -728,7 +742,7 @@ Move point to the previous prompt (@code{comint-previous-prompt}).
 @item C-c C-n
 Move point to the following prompt (@code{comint-next-prompt}).
 
-@kindex C-c @key{RET} @r{(Shell mode)}
+@kindex C-c RET @r{(Shell mode)}
 @findex comint-copy-old-input
 @item C-c @key{RET}
 Copy the input command which point is in, inserting the copy at the end
@@ -823,9 +837,9 @@ algorithm cannot add even a single character.
 the possible completions whenever completion is not exact.
 
 @findex comint-dynamic-complete-variable
-  The command @code{comint-dynamic-complete-variable} does variable name
+  The command @code{comint-dynamic-complete-variable} does variable-name
 completion using the environment variables as set within Emacs.  The
-variables controlling file name completion apply to variable name
+variables controlling file name completion apply to variable-name
 completion too.  This command is normally available through the menu
 bar.
 
@@ -884,7 +898,7 @@ before you run Rlogin.)
 
   @kbd{M-x rlogin} sets up the default file directory of the Emacs
 buffer to access the remote host via FTP (@pxref{File Names}), and it
-tracks the shell commands that change the current directory just like
+tracks the shell commands that change the current directory, just like
 Shell mode.
 
 @findex rlogin-directory-tracking-mode
@@ -900,9 +914,8 @@ off directory tracking.
 @node Emacs Server, Hardcopy, Shell, Top
 @section Using Emacs as a Server
 @pindex emacsclient
-@pindex server
 @cindex Emacs as a server
-@cindex server (using Emacs as)
+@cindex server, using Emacs as
 @cindex @code{EDITOR} environment variable
 
   Various programs such as @code{mail} can invoke your choice of editor
@@ -918,7 +931,7 @@ doesn't share the buffers in the existing Emacs process.
 programs like @code{mail} by using the Emacs client and Emacs server
 programs.  Here is how.
 
-@cindex TEXEDIT environment variable
+@cindex @code{TEXEDIT} environment variable
   First, the preparation.  Within Emacs, call the function
 @code{server-start}.  (Your @file{.emacs} file can do this automatically
 if you add the expression @code{(server-start)} to it.)  Then, outside
@@ -981,6 +994,10 @@ you finish with the file.  Use the variable
 this sense; its value should be a regular expression that matches file
 names that are temporary.
 
+  If you run @code{emacsclient} with the option @samp{--no-wait}, it
+returns immediately without waiting for you to ``finish'' the buffer in
+Emacs.
+
 @node Hardcopy, Postscript, Emacs Server, Top
 @section Hardcopy Output
 @cindex hardcopy
@@ -1030,7 +1047,7 @@ whether to supply @samp{-T} and @samp{-J} options (suitable for
 @code{lpr-add-switches} should be @code{nil} if your printer program is
 not compatible with @code{lpr}.
 
-@node Postscript, Sorting, Hardcopy, Top
+@node Postscript, Postscript Variables, Hardcopy, Top
 @section Postscript Hardcopy
 
   These commands convert buffer contents to Postscript,
@@ -1073,24 +1090,6 @@ properties of the text being printed.
 code with color highlighting by turning on Font-Lock mode in that
 buffer, and using @code{ps-print-buffer-with-faces}.
 
-@vindex ps-lpr-command
-@vindex ps-lpr-switches
-  All four of the commands above use the variables @code{ps-lpr-command}
-and @code{ps-lpr-switches} to specify how to print the output.
-@code{ps-lpr-command} specifies the command name to run, and
-@code{ps-lpr-switches} specifies command line options to use.  If you
-don't set these variables yourself, they take their initial values from
-@code{lpr-command} and @code{lpr-switches}.
-
-@vindex ps-print-header
-@vindex ps-print-color-p
-  The variable @code{ps-print-header} controls whether these commands
-add header lines to each page---set it to @code{nil} to turn headers
-off.  You can turn off color processing by setting
-@code{ps-print-color-p} to @code{nil}.  Many other customization
-variables for these commands are defined and described in the Lisp file
-@file{ps-print.el}.
-
 @findex ps-spool-region
 @findex ps-spool-buffer
 @findex ps-spool-region-with-faces
@@ -1099,7 +1098,63 @@ variables for these commands are defined and described in the Lisp file
 generate the Postscript output in an Emacs buffer instead of sending
 it to the printer.
 
-@node Sorting, Narrowing, Postscript, Top
+@ifinfo
+  The following section describes variables for customizing these commands.
+@end ifinfo
+
+@node Postscript Variables, Sorting, Postscript, Top
+@section Variables for Postscript Hardcopy
+
+@vindex ps-lpr-command
+@vindex ps-lpr-switches
+  All the Postscript hardcopy commands use the variables
+@code{ps-lpr-command} and @code{ps-lpr-switches} to specify how to print
+the output.  @code{ps-lpr-command} specifies the command name to run,
+and @code{ps-lpr-switches} specifies command line options to use.  If
+you don't set these variables yourself, they take their initial values
+from @code{lpr-command} and @code{lpr-switches}.
+
+@vindex ps-print-header
+@vindex ps-print-color-p
+  The variable @code{ps-print-header} controls whether these commands
+add header lines to each page---set it to @code{nil} to turn headers
+off.  You can turn off color processing by setting
+@code{ps-print-color-p} to @code{nil}.
+
+@vindex ps-paper-type
+@vindex ps-page-dimensions-database
+  The variable @code{ps-paper-type} specifies which size of paper to
+format for; legitimate values include @code{a4}, @code{a3},
+@code{a4small}, @code{b4}, @code{b5}, @code{executive}, @code{ledger},
+@code{legal}, @code{letter}, @code{letter-small}, @code{statement},
+@code{tabloid}.  The default is @code{letter}.  You can define
+additional paper sizes by changing the variable
+@code{ps-page-dimensions-database}.
+
+@vindex ps-landscape-mode
+  The variable @code{ps-landscape-mode} specifies the orientation of
+printing on the page.  The default is @code{nil}, which stands for
+``portrait'' mode.  Any non-@code{nil} value specifies ``landscape''
+mode.
+
+@vindex ps-number-of-columns
+  The variable @code{ps-number-of-columns} specifies the number of
+columns; it takes effect in both landscape and portrait mode.  The
+default is 1.
+
+@vindex ps-font-family
+@vindex ps-font-size
+@vindex ps-font-info-database
+  The variable @code{ps-font-family} specifies which font family to use
+for printing ordinary text.  Legitimate values include @code{Courier},
+@code{Helvetica}, @code{NewCenturySchlbk}, @code{Palatino} and
+@code{Times}.  The variable @code{ps-font-size} specifies the size of
+the font for ordinary text.  It defaults to 8.5 points.
+
+  Many other customization variables for these commands are defined and
+described in the Lisp file @file{ps-print.el}.
+
+@node Sorting, Narrowing, Postscript Variables, Top
 @section Sorting Text
 @cindex sorting
 
@@ -1109,8 +1164,8 @@ mark).  They divide the text of the region into many @dfn{sort records},
 identify a @dfn{sort key} for each record, and then reorder the records
 into the order determined by the sort keys.  The records are ordered so
 that their keys are in alphabetical order, or, for numeric sorting, in
-numeric order.  In alphabetic sorting, all upper case letters `A' through
-`Z' come before lower case `a', in accord with the ASCII character
+numeric order.  In alphabetic sorting, all upper-case letters `A' through
+`Z' come before lower-case `a', in accord with the ASCII character
 sequence.
 
   The various sort commands differ in how they divide the text into sort
@@ -1195,7 +1250,7 @@ whether the file has changed on disk since it was last visited or
 @end smallexample
 
 @noindent
-where the upper case @samp{O} sorts before all lower case letters.  If
+where the upper-case @samp{O} sorts before all lower-case letters.  If
 you use @kbd{C-u 2 M-x sort-fields} instead, you get this:
 
 @smallexample
@@ -1214,10 +1269,10 @@ where the sort keys were @samp{Emacs}, @samp{If}, @samp{buffer},
   @kbd{M-x sort-columns} requires more explanation.  You specify the
 columns by putting point at one of the columns and the mark at the other
 column.  Because this means you cannot put point or the mark at the
-beginning of the first line to sort, this command uses an unusual
-definition of `region': all of the line point is in is considered part
-of the region, and so is all of the line the mark is in, as well as all
-the lines in between.
+beginning of the first line of the text you want to sort, this command
+uses an unusual definition of `region': all of the line point is in is
+considered part of the region, and so is all of the line the mark is in,
+as well as all the lines in between.
 
   For example, to sort a table by information found in columns 10 to 15,
 you could put the mark on column 10 in the first line of the table, and
@@ -1260,6 +1315,8 @@ Narrow down to between point and mark (@code{narrow-to-region}).
 Widen to make the entire buffer accessible again (@code{widen}).
 @item C-x n p
 Narrow down to the current page (@code{narrow-to-page}).
+@item C-x n d
+Narrow down to the current defun (@code{narrow-to-defun}).
 @end table
 
   When you have narrowed down to a part of the buffer, that part appears
@@ -1278,8 +1335,12 @@ is inaccessible.  Point and mark do not change.
 
 @kindex C-x n p
 @findex narrow-to-page
+@kindex C-x n d
+@findex narrow-to-defun
   Alternatively, use @kbd{C-x n p} (@code{narrow-to-page}) to narrow
 down to the current page.  @xref{Pages}, for the definition of a page.
+@kbd{C-x n d} (@code{narrow-to-defun}) narrows down to the defun
+containing point (@pxref{Defuns}).
 
 @kindex C-x n w
 @findex widen
@@ -1308,8 +1369,8 @@ buffer.
   There are three ways to enter two-column mode:
 
 @table @asis
-@item @kbd{f2 2} or @kbd{C-x 6 2}
-@kindex f2 2
+@item @kbd{@key{F2} 2} or @kbd{C-x 6 2}
+@kindex F2 2
 @kindex C-x 6 2
 @findex 2C-two-columns
 Enter two-column mode with the current buffer on the left, and on the
@@ -1321,8 +1382,8 @@ changed.
 This command is appropriate when the current buffer is empty or contains
 just one column and you want to add another column.
 
-@item @kbd{f2 s} or @kbd{C-x 6 s}
-@kindex f2 s
+@item @kbd{@key{F2} s} or @kbd{C-x 6 s}
+@kindex F2 s
 @kindex C-x 6 s
 @findex 2C-split
 Split the current buffer, which contains two-column text, into two
@@ -1335,9 +1396,9 @@ continues to the end of the buffer.
 This command is appropriate when you have a buffer that already contains
 two-column text, and you wish to separate the columns temporarily.
 
-@item @kbd{f2 b @var{buffer} @key{RET}}
+@item @kbd{@key{F2} b @var{buffer} @key{RET}}
 @itemx @kbd{C-x 6 b @var{buffer} @key{RET}}
-@kindex f2 b
+@kindex F2 b
 @kindex C-x 6 b
 @findex 2C-associate-buffer
 Enter two-column mode using the current buffer as the left-hand buffer,
@@ -1345,50 +1406,51 @@ and using buffer @var{buffer} as the right-hand buffer
 (@code{2C-associate-buffer}).
 @end table
 
-  @kbd{f2 s} or @kbd{C-x 6 s} looks for a column separator which is a
-string that appears on each line between the two columns.  You can
-specify the width of the separator with a numeric argument to @kbd{f2
-s}; that many characters, before point, constitute the separator string.
-By default, the width is 1, so the column separator is the character
-before point.
+  @kbd{@key{F2} s} or @kbd{C-x 6 s} looks for a column separator, which
+is a string that appears on each line between the two columns.  You can
+specify the width of the separator with a numeric argument to
+@key{@key{F2} s}; that many characters, before point, constitute the
+separator string.  By default, the width is 1, so the column separator
+is the character before point.
 
-  When a line has the separator at the proper place, @kbd{f2 s} puts the
-text after the separator into the right-hand buffer, and deletes the
-separator.  Lines that don't have the column separator at the proper
-place remain unsplit; they stay in the left-hand buffer, and the
-right-hand buffer gets an empty line to correspond.  (This is the way to
-write a line which ``spans both columns while in two-column mode'':
-write it in the left-hand buffer, and put an empty line in the
+  When a line has the separator at the proper place, @kbd{@key{F2} s}
+puts the text after the separator into the right-hand buffer, and
+deletes the separator.  Lines that don't have the column separator at
+the proper place remain unsplit; they stay in the left-hand buffer, and
+the right-hand buffer gets an empty line to correspond.  (This is the
+way to write a line that ``spans both columns while in two-column
+mode'': write it in the left-hand buffer, and put an empty line in the
 right-hand buffer.)
 
-@kindex f2 @key{RET}
-@kindex C-x 6 @key{RET}
+@kindex F2 RET
+@kindex C-x 6 RET
 @findex 2C-newline
-  The command @kbd{C-x 6 @key{RET}} or @kbd{f2 @key{RET}}
+  The command @kbd{C-x 6 @key{RET}} or @kbd{@key{F2} @key{RET}}
 (@code{2C-newline}) inserts a newline in each of the two buffers at
 corresponding positions.  This is the easiest way to add a new line to
 the two-column text while editing it in split buffers.
 
-@kindex f2 1
+@kindex F2 1
 @kindex C-x 6 1
 @findex 2C-merge
-  When you have edited both buffers as you wish, merge them with @kbd{f2
-1} or @kbd{C-x 6 1} (@code{2C-merge}).  This copies the text from the
-right-hand buffer as a second column in the other buffer.  To go back to
-two-column editing, use @kbd{f2 s}.
+  When you have edited both buffers as you wish, merge them with
+@kbd{@key{F2} 1} or @kbd{C-x 6 1} (@code{2C-merge}).  This copies the
+text from the right-hand buffer as a second column in the other buffer.
+To go back to two-column editing, use @kbd{@key{F2} s}.
 
-@kindex f2 d
+@kindex F2 d
 @kindex C-x 6 d
 @findex 2C-dissociate
-  Use @kbd{f2 d} or @kbd{C-x 6 d} to disassociate the two buffers,
+  Use @kbd{@key{F2} d} or @kbd{C-x 6 d} to dissociate the two buffers,
 leaving each as it stands (@code{2C-dissociate}).  If the other buffer,
-the one not current when you type @kbd{f2 d}, is empty, @kbd{f2 d} kills
-it.
+the one not current when you type @kbd{@key{F2} d}, is empty,
+@kbd{@key{F2} d} kills it.
 
 @node Editing Binary Files, Saving Emacs Sessions, Two-Column, Top
 @section Editing Binary Files
 
 @cindex Hexl mode
+@cindex mode, Hexl
 @cindex editing binary files
   There is a special major mode for editing binary files: Hexl mode.  To
 use it, use @kbd{M-x hexl-find-file} instead of @kbd{C-x C-f} to visit
@@ -1417,10 +1479,10 @@ Insert a byte with a code typed in octal.
 Insert a byte with a code typed in hex.
 
 @item C-x [
-Move to the beginning of a 1k-byte ``page''.
+Move to the beginning of a 1k-byte ``page.''
 
 @item C-x ]
-Move to the end of a 1k-byte ``page''.
+Move to the end of a 1k-byte ``page.''
 
 @item M-g
 Move to an address specified in hex.
@@ -1472,6 +1534,7 @@ matches the files to exclude.  By default, remote (ftp-accessed) files
 are excluded; this is because visiting them again in the subsequent
 session would be slow.  If you want to include these files in state
 saving, set @code{desktop-files-not-to-save} to @code{"^$"}.
+@xref{Remote Files}.
 
 @node Recursive Edit, Emulation, Saving Emacs Sessions, Top
 @section Recursive Editing Levels
@@ -1518,7 +1581,7 @@ immediately to the command level of the previous recursive edit.  If you
 wish, you can then abort the next recursive editing level.
 
   Alternatively, the command @kbd{M-x top-level} aborts all levels of
-recursive edits, returning immediately to the top level command reader.
+recursive edits, returning immediately to the top-level command reader.
 
   The text being edited inside the recursive edit need not be the same text
 that you were editing at top level.  It depends on what the recursive edit

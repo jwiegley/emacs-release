@@ -23,12 +23,20 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 #include "lisp.h"
 #include "buffer.h"
+#include "charset.h"
 
 Lisp_Object Qcase_table_p, Qcase_table;
 Lisp_Object Vascii_downcase_table, Vascii_upcase_table;
 Lisp_Object Vascii_canon_table, Vascii_eqv_table;
 
-static void compute_trt_inverse ();
+/* Used as a temporary in DOWNCASE and other macros in lisp.h.  No
+   need to mark it, since it is used only very temporarily.  */
+int case_temp1;
+Lisp_Object case_temp2;
+
+static void set_canon ();
+static void set_identity ();
+static void shuffle ();
 
 DEFUN ("case-table-p", Fcase_table_p, Scase_table_p, 1, 1, 0,
   "Return t iff OBJECT is a case table.\n\
@@ -119,6 +127,7 @@ set_case_table (table, standard)
      int standard;
 {
   Lisp_Object up, canon, eqv;
+  Lisp_Object indices[3];
 
   check_case_table (table);
 
@@ -129,30 +138,23 @@ set_case_table (table, standard)
   if (NILP (up))
     {
       up = Fmake_char_table (Qcase_table, Qnil);
-      compute_trt_inverse (XCHAR_TABLE (table), XCHAR_TABLE (up));
+      map_char_table (set_identity, Qnil, table, up, 0, indices);
+      map_char_table (shuffle, Qnil, table, up, 0, indices);
       XCHAR_TABLE (table)->extras[0] = up;
     }
 
   if (NILP (canon))
     {
-      register int i;
-      Lisp_Object *upvec = XCHAR_TABLE (up)->contents;
-      Lisp_Object *downvec = XCHAR_TABLE (table)->contents;
-
       canon = Fmake_char_table (Qcase_table, Qnil);
-
-      /* Set up the CANON vector; for each character,
-	 this sequence of upcasing and downcasing ought to
-	 get the "preferred" lowercase equivalent.  */
-      for (i = 0; i < 256; i++)
-	XCHAR_TABLE (canon)->contents[i] = downvec[upvec[downvec[i]]];
       XCHAR_TABLE (table)->extras[1] = canon;
+      map_char_table (set_canon, Qnil, table, table, 0, indices);
     }
 
   if (NILP (eqv))
     {
       eqv = Fmake_char_table (Qcase_table, Qnil);
-      compute_trt_inverse (XCHAR_TABLE (canon), XCHAR_TABLE (eqv));
+      map_char_table (set_identity, Qnil, canon, eqv, 0, indices);
+      map_char_table (shuffle, Qnil, canon, eqv, 0, indices);
       XCHAR_TABLE (table)->extras[2] = eqv;
     }
 
@@ -169,30 +171,48 @@ set_case_table (table, standard)
   return table;
 }
 
-/* Given a translate table TRT, store the inverse mapping into INVERSE.
-   Since TRT is not one-to-one, INVERSE is not a simple mapping.
-   Instead, it divides the space of characters into equivalence classes.
-   All characters in a given class form one circular list, chained through
-   the elements of INVERSE.  */
+/* The following functions are called in map_char_table.  */
+
+/*  Set CANON char-table element for C to a translated ELT by UP and
+   DOWN char-tables.  This is done only when ELT is a character.  The
+   char-tables CANON, UP, and DOWN are in CASE_TABLE.  */
 
 static void
-compute_trt_inverse (trt, inverse)
-     struct Lisp_Char_Table *trt, *inverse;
+set_canon (case_table, c, elt)
+     Lisp_Object case_table, c, elt;
 {
-  register int i = 0400;
-  register unsigned char c, q;
+  Lisp_Object up = XCHAR_TABLE (case_table)->extras[0];
+  Lisp_Object canon = XCHAR_TABLE (case_table)->extras[1];
 
-  while (i--)
-    inverse->contents[i] = i;
-  i = 0400;
-  while (i--)
+  if (NATNUMP (elt))
+    Faset (canon, c, Faref (case_table, Faref (up, elt)));
+}
+
+/* Set elements of char-table TABLE for C to C itself.  This is done
+   only when ELT is a character.  This is called in map_char_table.  */
+
+static void
+set_identity (table, c, elt)
+     Lisp_Object table, c, elt;
+{
+  if (NATNUMP (elt))
+    Faset (table, c, c);
+}
+
+/* Permute the elements of TABLE (which is initially an identity
+   mapping) so that it has one cycle for each equivalence class
+   induced by the translation table on which map_char_table is
+   operated.  */
+
+static void
+shuffle (table, c, elt)
+     Lisp_Object table, c, elt;
+{
+  if (NATNUMP (elt) && !EQ (c, elt))
     {
-      if ((q = trt->contents[i]) != (unsigned char) i)
-	{
-	  c = inverse->contents[q];
-	  inverse->contents[q] = i;
-	  inverse->contents[i] = c;
-	}
+      Lisp_Object tem = Faref (table, elt);
+      Faset (table, elt, c);
+      Faset (table, c, tem);
     }
 }
 
@@ -214,22 +234,24 @@ init_casetab_once ()
 
   down = Fmake_char_table (Qcase_table, Qnil);
   Vascii_downcase_table = down;
+  XCHAR_TABLE (down)->purpose = Qcase_table;
 
-  for (i = 0; i < 256; i++)
-    XCHAR_TABLE (down)->contents[i] = (i >= 'A' && i <= 'Z') ? i + 040 : i;
+  for (i = 0; i < CHAR_TABLE_SINGLE_BYTE_SLOTS; i++)
+    XSETFASTINT (XCHAR_TABLE (down)->contents[i],
+		 (i >= 'A' && i <= 'Z') ? i + ('a' - 'A') : i);
 
   XCHAR_TABLE (down)->extras[1] = Fcopy_sequence (down);
 
   up = Fmake_char_table (Qcase_table, Qnil);
   XCHAR_TABLE (down)->extras[0] = up;
 
-  for (i = 0; i < 256; i++)
-    XCHAR_TABLE (up)->contents[i]
-      = ((i >= 'A' && i <= 'Z')
-	 ? i + ('a' - 'A')
-	 : ((i >= 'a' && i <= 'z')
-	    ? i + ('A' - 'a')
-	    : i));
+  for (i = 0; i < CHAR_TABLE_SINGLE_BYTE_SLOTS; i++)
+    XSETFASTINT (XCHAR_TABLE (up)->contents[i],
+		 ((i >= 'A' && i <= 'Z')
+		  ? i + ('a' - 'A')
+		  : ((i >= 'a' && i <= 'z')
+		     ? i + ('A' - 'a')
+		     : i)));
 
   XCHAR_TABLE (down)->extras[2] = Fcopy_sequence (up);
 }
@@ -239,7 +261,10 @@ syms_of_casetab ()
   Qcase_table_p = intern ("case-table-p");
   staticpro (&Qcase_table_p);
 
+  staticpro (&Vascii_canon_table);
   staticpro (&Vascii_downcase_table);
+  staticpro (&Vascii_eqv_table);
+  staticpro (&Vascii_upcase_table);
 
   defsubr (&Scase_table_p);
   defsubr (&Scurrent_case_table);

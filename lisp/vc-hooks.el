@@ -2,10 +2,8 @@
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
 
-;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
-;; Modified by:
-;;   Per Cederqvist <ceder@lysator.liu.se>
-;;   Andre Spiegel <spiegel@berlin.informatik.uni-stuttgart.de>
+;; Author:     Eric S. Raymond <esr@snark.thyrsus.com>
+;; Maintainer: Andre Spiegel <spiegel@inf.fu-berlin.de>
 
 ;; This file is part of GNU Emacs.
 
@@ -60,7 +58,8 @@ to use --brief and sets this variable to remember whether it worked.")
     vc-find-cvs-master)
   "*Where to look for version-control master files.
 The first pair corresponding to a given back end is used as a template
-when creating new masters.")
+when creating new masters.
+Setting this variable to nil turns off use of VC entirely.")
 
 (defvar vc-make-backup-files nil
   "*If non-nil, backups of registered files are made as with other files.
@@ -289,7 +288,7 @@ See also variable `vc-consult-headers'.")
       (vc-parse-buffer 
        (list '("^\001d D \\([^ ]+\\)" 1)
 	     (list (concat "^\001d D \\([^ ]+\\) .* " 
-			   (regexp-quote (user-login-name)) " ") 1))
+			   (regexp-quote (vc-user-login-name)) " ") 1))
        file
        '(vc-latest-version vc-your-latest-version)))
 
@@ -358,6 +357,7 @@ See also variable `vc-consult-headers'.")
                                                           'needs-checkout)
 	     ((string-match "Unresolved Conflict" status) 'unresolved-conflict)
 	     ((string-match "Locally Added"       status) 'locally-added)
+	     ((string-match "New file!"           status) 'locally-added)
 	     (t 'unknown)
 	     ))))))))
     (if (get-buffer "*vc-info*")
@@ -514,7 +514,16 @@ For CVS, the full name of CVS/Entries is returned."
 		(vc-file-getprop file 'vc-checkout-model))))
     ((eq (vc-backend file) 'CVS)
      (vc-file-setprop file 'vc-checkout-model
-		      (if (getenv "CVSREAD") 'manual 'implicit))))))
+      (cond
+       ((getenv "CVSREAD") 'manual)
+       ;; If the file is not writeable, this is probably because the
+       ;; file is being "watched" by other developers.  Use "manual"
+       ;; checkout in this case.  (If vc-mistrust-permissions was t,
+       ;; we actually shouldn't trust this, but there is no other way
+       ;; to learn this from CVS at the moment (version 1.9).)
+       ((string-match "r-..-..-." (nth 8 (file-attributes file)))
+        'manual)
+       (t 'implicit)))))))
 
 ;;; properties indicating the locking state
 
@@ -564,24 +573,22 @@ For CVS, the full name of CVS/Entries is returned."
 	       (vc-file-setprop file 'vc-locking-user 'none))
 	      ((and (= (nth 2 attributes) (user-uid))
 		    (string-match ".rw..-..-." (nth 8 attributes)))
-	       (vc-file-setprop file 'vc-locking-user (user-login-name)))
+	       (vc-file-setprop file 'vc-locking-user (vc-user-login-name)))
 	      (nil)))))
 
+(defun vc-user-login-name (&optional uid)
+  ;; Return the name under which the user is logged in, as a string.
+  ;; (With optional argument UID, return the name of that user.)
+  ;; This function does the same as `user-login-name', but unlike
+  ;; that, it never returns nil.  If a UID cannot be resolved, that
+  ;; UID is returned as a string.
+  (or (user-login-name uid)
+      (and uid (number-to-string uid))
+      (number-to-string (user-uid))))
+
 (defun vc-file-owner (file)
-  ;; The expression below should return the username of the owner
-  ;; of the file.  It doesn't.  It returns the username if it is
-  ;; you, or otherwise the UID of the owner of the file.  The
-  ;; return value from this function is only used by
-  ;; vc-dired-reformat-line, and it does the proper thing if a UID
-  ;; is returned.
-  ;; The *proper* way to fix this would be to implement a built-in
-  ;; function in Emacs, say, (username UID), that returns the
-  ;; username of a given UID.
-  ;; The result of this hack is that vc-directory will print the
-  ;; name of the owner of the file for any files that are
-  ;; modified.
-  (let ((uid (nth 2 (file-attributes file))))
-    (if (= uid (user-uid)) (user-login-name) uid)))
+  ;; Return who owns FILE (user name, as a string).
+  (vc-user-login-name (nth 2 (file-attributes file))))
 
 (defun vc-rcs-lock-from-diff (file)
   ;; Diff the file against the master version.  If differences are found,
@@ -604,8 +611,7 @@ For CVS, the full name of CVS/Entries is returned."
 
 (defun vc-locking-user (file)
   ;; Return the name of the person currently holding a lock on FILE.
-  ;; Return nil if there is no such person.  (Sometimes, not the name
-  ;; of the locking user but his uid will be returned.)
+  ;; Return nil if there is no such person.
   ;;   Under CVS, a file is considered locked if it has been modified since
   ;; it was checked out.
   ;;   The property is cached.  It is only looked up if it is currently nil.
@@ -625,10 +631,7 @@ For CVS, the full name of CVS/Entries is returned."
 	    (and (equal (vc-file-getprop file 'vc-checkout-time)
 			(nth 5 (file-attributes file)))
 		 (vc-file-setprop file 'vc-locking-user 'none))
-	    (let ((locker (vc-file-owner file)))
-	      (vc-file-setprop file 'vc-locking-user
-			       (if (stringp locker) locker
-				 (format "%d" locker))))))
+	    (vc-file-setprop file 'vc-locking-user (vc-file-owner file))))
 
        ((eq (vc-backend file) 'RCS)
 	(let (p-lock)
@@ -702,7 +705,7 @@ For CVS, the full name of CVS/Entries is returned."
 	     (list (concat "^\\([0-9]+\\.[0-9.]+\\)\n"
 			   "date[ \t]+\\([0-9.]+\\);[ \t]+"
 			   "author[ \t]+"
-			   (regexp-quote (user-login-name)) ";") 1 2))
+			   (regexp-quote (vc-user-login-name)) ";") 1 2))
        file
        '(vc-latest-version vc-your-latest-version))
       (if (get-buffer "*vc-info*")
@@ -778,22 +781,37 @@ For CVS, the full name of CVS/Entries is returned."
   (if (and vc-handle-cvs
 	   (file-directory-p (concat dirname "CVS/"))
 	   (file-readable-p (concat dirname "CVS/Entries")))
-      (let (buffer time (fold case-fold-search)
-	    (file (concat dirname basename)))
+      (let ((file (concat dirname basename))
+            ;; make sure that the file name is searched 
+            ;; case-sensitively
+            (case-fold-search nil)
+            buffer)
 	(unwind-protect
 	    (save-excursion
 	      (setq buffer (set-buffer (get-buffer-create "*vc-info*")))
 	      (vc-insert-file (concat dirname "CVS/Entries"))
 	      (goto-char (point-min))
-	      ;; make sure the file name is searched 
-	      ;; case-sensitively
-	      (setq case-fold-search nil)
 	      (cond
+	       ;; entry for a "locally added" file (not yet committed)
+	       ((re-search-forward
+		 (concat "^/" (regexp-quote basename) "/0/") nil t)
+		(vc-file-setprop file 'vc-checkout-time 0)
+		(vc-file-setprop file 'vc-workfile-version "0")
+		(throw 'found (cons (concat dirname "CVS/Entries") 'CVS)))
+	       ;; normal entry
 	       ((re-search-forward
 		 (concat "^/" (regexp-quote basename) 
-			 "/\\([^/]*\\)/[^ /]* \\([A-Z][a-z][a-z]\\) *\\([0-9]*\\) \\([0-9]*\\):\\([0-9]*\\):\\([0-9]*\\) \\([0-9]*\\)")
+                         ;; revision
+                         "/\\([^/]*\\)" 
+                         ;; timestamp
+                         "/[A-Z][a-z][a-z]"       ;; week day (irrelevant)
+                         " \\([A-Z][a-z][a-z]\\)" ;; month name
+                         " *\\([0-9]*\\)"         ;; day of month
+                         " \\([0-9]*\\):\\([0-9]*\\):\\([0-9]*\\)"  ;; hms
+                         " \\([0-9]*\\)"          ;; year
+                         ;; optional conflict field
+                         "\\(+[^/]*\\)?/")
 		 nil t)
-		(setq case-fold-search fold)  ;; restore the old value
 		;; We found it.  Store away version number now that we 
 		;; are anyhow so close to finding it.
 		(vc-file-setprop file
@@ -818,8 +836,22 @@ For CVS, the full name of CVS/Entries is returned."
 		      (vc-file-setprop file 'vc-checkout-time mtime)
 		    (vc-file-setprop file 'vc-checkout-time 0)))
 		(throw 'found (cons (concat dirname "CVS/Entries") 'CVS)))
-	       (t (setq case-fold-search fold)  ;; restore the old value
-		  nil)))
+               ;; entry with arbitrary text as timestamp
+               ;; (this means we should consider it modified)
+	       ((re-search-forward
+		 (concat "^/" (regexp-quote basename) 
+                         ;; revision
+                         "/\\([^/]*\\)" 
+                         ;; timestamp (arbitrary text)
+                         "/[^/]*"
+                         ;; optional conflict field
+                         "\\(+[^/]*\\)?/")
+		 nil t)
+		;; We found it.  Store away version number now that we 
+		;; are anyhow so close to finding it.
+		(vc-file-setprop file 'vc-workfile-version (match-string 1))
+                (vc-file-setprop file 'vc-checkout-time 0))
+	       (t nil)))
 	  (kill-buffer buffer)))))
 
 (defun vc-buffer-backend ()
@@ -834,7 +866,9 @@ If the buffer is visiting a file registered with version control,
 then check the file in or out.  Otherwise, just change the read-only flag
 of the buffer.  With prefix argument, ask for version number."
   (interactive "P")
-  (if (vc-backend (buffer-file-name))
+  (if (or (and (boundp 'vc-dired-mode) vc-dired-mode)
+          ;; use boundp because vc.el might not be loaded
+          (vc-backend (buffer-file-name)))
       (vc-next-action verbose)
     (toggle-read-only)))
 (define-key global-map "\C-x\C-q" 'vc-toggle-read-only)
@@ -861,7 +895,7 @@ of the buffer.  With prefix argument, ask for version number."
 	     t)
 	 (not (vc-locking-user file))
 	 (eq (vc-checkout-model file) 'implicit)
-	 (vc-file-setprop file 'vc-locking-user (user-login-name))
+	 (vc-file-setprop file 'vc-locking-user (vc-user-login-name))
 	 (or (and (eq (vc-backend file) 'CVS) 
 		  (vc-file-setprop file 'vc-cvs-status nil))
 	     t)
@@ -884,7 +918,7 @@ control system name."
     (and vc-type 
 	 (equal file (buffer-file-name))
 	 (vc-locking-user file)
-	 (not (string= (user-login-name) (vc-locking-user file)))
+	 (not (string= (vc-user-login-name) (vc-locking-user file)))
 	 (setq buffer-read-only t))
     ;; If the user is root, and the file is not owner-writable,
     ;; then pretend that we can't write it
@@ -922,9 +956,7 @@ control system name."
 	   " @@")
 	  ((not locker)
 	   (concat "-" rev))
-	  ((if (stringp locker)
-	       (string= locker (user-login-name))
-	     (= locker (user-uid)))
+	  ((string= locker (vc-user-login-name))
 	   (concat ":" rev))
 	  (t 
 	   (concat ":" locker ":" rev)))))
@@ -1024,6 +1056,7 @@ Returns t if checkout was successful, nil otherwise."
       (define-key vc-prefix-map "a" 'vc-update-change-log)
       (define-key vc-prefix-map "c" 'vc-cancel-version)
       (define-key vc-prefix-map "d" 'vc-directory)
+      (define-key vc-prefix-map "g" 'vc-annotate)
       (define-key vc-prefix-map "h" 'vc-insert-headers)
       (define-key vc-prefix-map "i" 'vc-register)
       (define-key vc-prefix-map "l" 'vc-print-log)
@@ -1040,8 +1073,13 @@ Returns t if checkout was successful, nil otherwise."
     ()
   ;;(define-key vc-menu-map [show-files]
   ;;  '("Show Files under VC" . (vc-directory t)))
+  (define-key vc-menu-map [vc-retrieve-snapshot]
+    '("Retrieve Snapshot" . vc-retrieve-snapshot))
+  (define-key vc-menu-map [vc-create-snapshot]
+    '("Create Snapshot" . vc-create-snapshot))
   (define-key vc-menu-map [vc-directory] '("Show Locked Files" . vc-directory))
   (define-key vc-menu-map [separator1] '("----"))
+  (define-key vc-menu-map [vc-annotate] '("Annotate" . vc-annotate))
   (define-key vc-menu-map [vc-rename-file] '("Rename File" . vc-rename-file))
   (define-key vc-menu-map [vc-version-other-window]
     '("Show Other Version" . vc-version-other-window))
@@ -1055,11 +1093,11 @@ Returns t if checkout was successful, nil otherwise."
     '("Revert to Last Version" . vc-revert-buffer))
   (define-key vc-menu-map [vc-insert-header]
     '("Insert Header" . vc-insert-headers))
-  (define-key vc-menu-map [vc-menu-check-in] '("Check In" . vc-next-action))
-  (define-key vc-menu-map [vc-check-out] '("Check Out" . vc-toggle-read-only))
+  (define-key vc-menu-map [vc-next-action] '("Check In/Out" . vc-next-action))
   (define-key vc-menu-map [vc-register] '("Register" . vc-register)))
 
 (put 'vc-rename-file 'menu-enable 'vc-mode)
+(put 'vc-annotate 'menu-enable '(eq (vc-buffer-backend) 'CVS))
 (put 'vc-version-other-window 'menu-enable 'vc-mode)
 (put 'vc-diff 'menu-enable 'vc-mode)
 (put 'vc-update-change-log 'menu-enable
@@ -1069,7 +1107,6 @@ Returns t if checkout was successful, nil otherwise."
 (put 'vc-revert-buffer 'menu-enable 'vc-mode)
 (put 'vc-insert-headers 'menu-enable 'vc-mode)
 (put 'vc-next-action 'menu-enable 'vc-mode)
-(put 'vc-toggle-read-only 'menu-enable 'vc-mode)
 (put 'vc-register 'menu-enable '(and buffer-file-name (not vc-mode)))
 
 (provide 'vc-hooks)

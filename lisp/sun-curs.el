@@ -3,6 +3,7 @@
 ;; Copyright (C) 1987 Free Software Foundation, Inc.
 
 ;; Author: Jeff Peck <peck@sun.com>
+;; Maintainer: none
 ;; Keywords: hardware
 
 ;; This file is part of GNU Emacs.
@@ -32,7 +33,8 @@
 
 (require 'cl)
 
-(defvar sc::cursors nil "List of known cursors")
+(eval-and-compile
+  (defvar sc::cursors nil "List of known cursors"))
 
 (defmacro defcursor (name x y string)
   (if (not (memq name sc::cursors)) 

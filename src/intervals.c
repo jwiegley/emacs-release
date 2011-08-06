@@ -1,5 +1,5 @@
 /* Code for doing intervals.
-   Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -85,7 +85,7 @@ create_root_interval (parent)
       XSTRING (parent)->intervals = new;
     }
 
-  new->parent = (INTERVAL) parent;
+  new->parent = (INTERVAL) XFASTINT (parent);
   new->position = 1;
 
   return new;
@@ -411,7 +411,7 @@ balance_possible_root_interval (interval)
   if (interval->parent == NULL_INTERVAL)
     return interval;
 
-  parent = (Lisp_Object) (interval->parent);
+  XSETFASTINT (parent, (EMACS_INT) interval->parent);
   interval = balance_an_interval (interval);
 
   if (BUFFERP (parent))
@@ -549,7 +549,7 @@ split_interval_left (interval, offset)
    is updated in the interval found.  Other functions (e.g., next_interval)
    will update this cache based on the result of find_interval.  */
 
-INLINE INTERVAL
+INTERVAL
 find_interval (tree, position)
      register INTERVAL tree;
      register int position;
@@ -670,6 +670,45 @@ previous_interval (interval)
 
   return NULL_INTERVAL;
 }
+
+/* Find the interval containing POS given some non-NULL INTERVAL
+   in the same tree. */
+INTERVAL
+update_interval (i, pos)
+     register INTERVAL i;
+     int pos;
+{
+  if (NULL_INTERVAL_P (i))
+    return NULL_INTERVAL;
+
+  while (1) 
+    {
+      if (pos < i->position) 
+	{
+	  /* Move left. */
+	  if (pos >= i->position - TOTAL_LENGTH (i->left))
+	    i = i->left;		/* Move to the left child */
+	  else if (NULL_PARENT (i)) 
+	    error ("Point before start of properties");
+	  else  i = i->parent;
+	  continue;
+	}
+      else if (pos >= INTERVAL_LAST_POS (i))
+	{
+	  /* Move right. */
+	  if (pos < INTERVAL_LAST_POS (i) + TOTAL_LENGTH (i->right))
+	    i = i->right;		/* Move to the right child */
+	  else if (NULL_PARENT (i)) 
+	    error ("Point after end of properties");
+	  else 
+	    i = i->parent;
+	  continue;
+	}
+      else 
+	return i;
+    }
+}
+
 
 #if 0
 /* Traverse a path down the interval tree TREE to the interval
@@ -769,11 +808,43 @@ adjust_intervals_for_insertion (tree, position, length)
      So split this interval at the insertion point.  */
   if (! (position == i->position || eobp)
       && END_NONSTICKY_P (i)
-      && ! FRONT_STICKY_P (i))
+      && FRONT_NONSTICKY_P (i))
     {
-      temp = split_interval_right (i, position - i->position);
-      copy_properties (i, temp);
-      i = temp;
+      Lisp_Object tail;
+      Lisp_Object front, rear;
+
+      front = textget (i->plist, Qfront_sticky);
+      rear  = textget (i->plist, Qrear_nonsticky);
+
+      /* Does any actual property pose an actual problem?  */
+      for (tail = i->plist; ! NILP (tail); tail = Fcdr (Fcdr (tail)))
+	{
+	  Lisp_Object prop;
+	  prop = XCONS (tail)->car;
+
+	  /* Is this particular property rear-sticky?
+	     Note, if REAR isn't a cons, it must be non-nil,
+	     which means that all properties are rear-nonsticky.  */
+	  if (CONSP (rear) && NILP (Fmemq (prop, rear)))
+	    continue;
+
+	  /* Is this particular property front-sticky?
+	     Note, if FRONT isn't a cons, it must be nil,
+	     which means that all properties are front-nonsticky.  */
+	  if (CONSP (front) && ! NILP (Fmemq (prop, front)))
+	    continue;
+
+	  /* PROP isn't sticky on either side => it is a real problem.  */
+	  break;
+	}
+
+      /* If any property is a real problem, split the interval.  */
+      if (! NILP (tail))
+	{
+	  temp = split_interval_right (i, position - i->position);
+	  copy_properties (i, temp);
+	  i = temp;
+	}
     }
 
   /* If we are positioned between intervals, check the stickiness of
@@ -898,8 +969,9 @@ merge_properties_sticky (pleft, pright)
 {
   register Lisp_Object props, front, rear;
   Lisp_Object lfront, lrear, rfront, rrear;
-  register Lisp_Object tail1, tail2, sym, lval, rval;
+  register Lisp_Object tail1, tail2, sym, lval, rval, cat;
   int use_left, use_right;
+  int lpresent;
 
   props = Qnil;
   front = Qnil;
@@ -922,21 +994,27 @@ merge_properties_sticky (pleft, pright)
       for (tail2 = pleft; ! NILP (tail2); tail2 = Fcdr (Fcdr (tail2)))
 	if (EQ (sym, Fcar (tail2)))
 	  break;
-      lval = (NILP (tail2) ? Qnil : Fcar( Fcdr (tail2)));
 
-      use_left = ! TMEM (sym, lrear);
+      /* Indicate whether the property is explicitly defined on the left.
+	 (We know it is defined explicitly on the right
+	 because otherwise we don't get here.)  */
+      lpresent = ! NILP (tail2);
+      lval = (NILP (tail2) ? Qnil : Fcar (Fcdr (tail2)));
+
+      use_left = ! TMEM (sym, lrear) && lpresent;
       use_right = TMEM (sym, rfront);
       if (use_left && use_right)
 	{
-	  use_left = ! NILP (lval);
-	  use_right = ! NILP (rval);
+	  if (NILP (lval))
+	    use_left = 0;
+	  else if (NILP (rval))
+	    use_right = 0;
 	}
       if (use_left)
 	{
 	  /* We build props as (value sym ...) rather than (sym value ...)
 	     because we plan to nreverse it when we're done.  */
-	  if (! NILP (lval))
-	    props = Fcons (lval, Fcons (sym, props));
+	  props = Fcons (lval, Fcons (sym, props));
 	  if (TMEM (sym, lfront))
 	    front = Fcons (sym, front);
 	  if (TMEM (sym, lrear))
@@ -944,8 +1022,7 @@ merge_properties_sticky (pleft, pright)
 	}
       else if (use_right)
 	{
-	  if (! NILP (rval))
-	    props = Fcons (rval, Fcons (sym, props));
+	  props = Fcons (rval, Fcons (sym, props));
 	  if (TMEM (sym, rfront))
 	    front = Fcons (sym, front);
 	  if (TMEM (sym, rrear))
@@ -974,8 +1051,7 @@ merge_properties_sticky (pleft, pright)
       /* Since rval is known to be nil in this loop, the test simplifies.  */
       if (! TMEM (sym, lrear))
 	{
-	  if (! NILP (lval))
-	    props = Fcons (lval, Fcons (sym, props));
+	  props = Fcons (lval, Fcons (sym, props));
 	  if (TMEM (sym, lfront))
 	    front = Fcons (sym, front);
 	}
@@ -991,7 +1067,14 @@ merge_properties_sticky (pleft, pright)
   props = Fnreverse (props);
   if (! NILP (rear))
     props = Fcons (Qrear_nonsticky, Fcons (Fnreverse (rear), props));
-  if (! NILP (front))
+
+  cat = textget (props, Qcategory);
+  if (! NILP (front)
+      && 
+      /* If we have inherited a front-stick category property that is t,
+	 we don't need to set up a detailed one.  */
+      ! (! NILP (cat) && SYMBOLP (cat)
+	 && EQ (Fget (cat, Qfront_sticky), Qt)))
     props = Fcons (Qfront_sticky, Fcons (Fnreverse (front), props));
   return props;
 }
@@ -1047,10 +1130,10 @@ delete_interval (i)
   if (ROOT_INTERVAL_P (i))
     {
       Lisp_Object owner;
-      owner = (Lisp_Object) i->parent;
+      XSETFASTINT (owner, (EMACS_INT) i->parent);
       parent = delete_node (i);
       if (! NULL_INTERVAL_P (parent))
-	parent->parent = (INTERVAL) owner;
+	parent->parent = (INTERVAL) XFASTINT (owner);
 
       if (BUFFERP (owner))
 	BUF_INTERVALS (XBUFFER (owner)) = parent;
@@ -1588,8 +1671,10 @@ set_point (position, buffer)
   register INTERVAL to, from, toprev, fromprev, target;
   int buffer_point;
   register Lisp_Object obj;
-  int backwards = (position < BUF_PT (buffer)) ? 1 : 0;
   int old_position = BUF_PT (buffer);
+  int backwards = (position < old_position ? 1 : 0);
+  int have_overlays;
+  int original_position;
 
   buffer->point_before_scroll = Qnil;
 
@@ -1599,12 +1684,16 @@ set_point (position, buffer)
   /* Check this now, before checking if the buffer has any intervals.
      That way, we can catch conditions which break this sanity check
      whether or not there are intervals in the buffer.  */
-  if (position > BUF_Z (buffer) || position < BUF_BEG (buffer))
+  if (position > BUF_ZV (buffer) || position < BUF_BEGV (buffer))
     abort ();
 
-  if (NULL_INTERVAL_P (BUF_INTERVALS (buffer)))
+  have_overlays = (! NILP (buffer->overlays_before)
+		   || ! NILP (buffer->overlays_after));
+
+  /* If we have no text properties and overlays,
+     then we can do it quickly.  */
+  if (NULL_INTERVAL_P (BUF_INTERVALS (buffer)) && ! have_overlays)
     {
-      
       BUF_PT (buffer) = position;
       return;
     }
@@ -1615,7 +1704,7 @@ set_point (position, buffer)
   to = find_interval (BUF_INTERVALS (buffer), position);
   if (position == BUF_BEGV (buffer))
     toprev = 0;
-  else if (to->position == position)
+  else if (to && to->position == position)
     toprev = previous_interval (to);
   else
     toprev = to;
@@ -1631,7 +1720,7 @@ set_point (position, buffer)
   from = find_interval (BUF_INTERVALS (buffer), buffer_point);
   if (buffer_point == BUF_BEGV (buffer))
     fromprev = 0;
-  else if (from->position == BUF_PT (buffer))
+  else if (from && from->position == BUF_PT (buffer))
     fromprev = previous_interval (from);
   else if (buffer_point != BUF_PT (buffer))
     fromprev = from, from = 0;
@@ -1639,64 +1728,74 @@ set_point (position, buffer)
     fromprev = from;
 
   /* Moving within an interval.  */
-  if (to == from && toprev == fromprev && INTERVAL_VISIBLE_P (to))
+  if (to == from && toprev == fromprev && INTERVAL_VISIBLE_P (to)
+      && ! have_overlays)
     {
       BUF_PT (buffer) = position;
       return;
     }
 
+  original_position = position;
+
   /* If the new position is between two intangible characters
      with the same intangible property value,
      move forward or backward until a change in that property.  */
-  if (NILP (Vinhibit_point_motion_hooks) && ! NULL_INTERVAL_P (to)
-      && ! NULL_INTERVAL_P (toprev))
+  if (NILP (Vinhibit_point_motion_hooks)
+      && ((! NULL_INTERVAL_P (to) && ! NULL_INTERVAL_P (toprev))
+	  || have_overlays)
+      /* Intangibility never stops us from positioning at the beginning
+	 or end of the buffer, so don't bother checking in that case.  */
+      && position != BEGV && position != ZV)
     {
+      Lisp_Object intangible_propval;
+      Lisp_Object pos;
+
+      XSETINT (pos, position);
+
       if (backwards)
 	{
-	  Lisp_Object intangible_propval;
-	  intangible_propval = textget (to->plist, Qintangible);
+	  intangible_propval = Fget_char_property (make_number (position),
+						   Qintangible, Qnil);
 
 	  /* If following char is intangible,
 	     skip back over all chars with matching intangible property.  */
 	  if (! NILP (intangible_propval))
-	    while (to == toprev
-		   || ((! NULL_INTERVAL_P (toprev)
-			&& EQ (textget (toprev->plist, Qintangible),
-			       intangible_propval))))
-	      {
-		to = toprev;
-		toprev = previous_interval (toprev);
-		if (NULL_INTERVAL_P (toprev))
-		  position = BUF_BEGV (buffer);
-		else
-		  /* This is the only line that's not
-		     dual to the following loop.
-		     That's because we want the position
-		     at the end of TOPREV.  */
-		  position = to->position;
-	      }
+	    while (XINT (pos) > BUF_BEGV (buffer)
+		   && EQ (Fget_char_property (make_number (XINT (pos) - 1),
+					      Qintangible, Qnil),
+			  intangible_propval))
+	      pos = Fprevious_char_property_change (pos, Qnil);
 	}
       else
 	{
-	  Lisp_Object intangible_propval;
-	  intangible_propval = textget (toprev->plist, Qintangible);
+	  intangible_propval = Fget_char_property (make_number (position - 1),
+						   Qintangible, Qnil);
 
-	  /* If previous char is intangible,
-	     skip fwd over all chars with matching intangible property.  */
+	  /* If following char is intangible,
+	     skip back over all chars with matching intangible property.  */
 	  if (! NILP (intangible_propval))
-	    while (to == toprev
-		   || ((! NULL_INTERVAL_P (to)
-			&& EQ (textget (to->plist, Qintangible),
-			       intangible_propval))))
-	      {
-		toprev = to;
-		to = next_interval (to);
-		if (NULL_INTERVAL_P (to))
-		  position = BUF_ZV (buffer);
-		else
-		  position = to->position;
-	      }
+	    while (XINT (pos) < BUF_ZV (buffer)
+		   && EQ (Fget_char_property (pos, Qintangible, Qnil),
+			  intangible_propval))
+	      pos = Fnext_char_property_change (pos, Qnil);
+
 	}
+
+      position = XINT (pos);
+    }
+
+  if (position != original_position)
+    {
+      /* Set TO to the interval containing the char after POSITION,
+	 and TOPREV to the interval containing the char before POSITION.
+	 Either one may be null.  They may be equal.  */
+      to = find_interval (BUF_INTERVALS (buffer), position);
+      if (position == BUF_BEGV (buffer))
+	toprev = 0;
+      else if (to && to->position == position)
+	toprev = previous_interval (to);
+      else
+	toprev = to;
     }
 
   /* Here TO is the interval after the stopping point
@@ -1733,14 +1832,18 @@ set_point (position, buffer)
 	enter_before = Qnil;
 
       if (! EQ (leave_before, enter_before) && !NILP (leave_before))
-	call2 (leave_before, old_position, position);
+	call2 (leave_before, make_number (old_position),
+	       make_number (position));
       if (! EQ (leave_after, enter_after) && !NILP (leave_after))
-	call2 (leave_after, old_position, position);
+	call2 (leave_after, make_number (old_position),
+	       make_number (position));
 
       if (! EQ (enter_before, leave_before) && !NILP (enter_before))
-	call2 (enter_before, old_position, position);
+	call2 (enter_before, make_number (old_position),
+	       make_number (position));
       if (! EQ (enter_after, leave_after) && !NILP (enter_after))
-	call2 (enter_after, old_position, position);
+	call2 (enter_after, make_number (old_position),
+	       make_number (position));
     }
 }
 
@@ -1752,6 +1855,62 @@ temp_set_point (position, buffer)
      struct buffer *buffer;
 {
   BUF_PT (buffer) = position;
+}
+
+/* Move point to POSITION, unless POSITION is inside an intangible
+   segment that reaches all the way to point.  */
+
+void
+move_if_not_intangible (position)
+     int position;
+{
+  Lisp_Object pos;
+  Lisp_Object intangible_propval;
+
+  XSETINT (pos, position);
+
+  if (! NILP (Vinhibit_point_motion_hooks))
+    /* If intangible is inhibited, always move point to POSITION.  */
+    ;
+  else if (PT < position && XINT (pos) < ZV)
+    {
+      /* We want to move forward, so check the text before POSITION.  */
+
+      intangible_propval = Fget_char_property (pos,
+					       Qintangible, Qnil);
+
+      /* If following char is intangible,
+	 skip back over all chars with matching intangible property.  */
+      if (! NILP (intangible_propval))
+	while (XINT (pos) > BEGV
+	       && EQ (Fget_char_property (make_number (XINT (pos) - 1),
+					  Qintangible, Qnil),
+		      intangible_propval))
+	  pos = Fprevious_char_property_change (pos, Qnil);
+    }
+  else if (XINT (pos) > BEGV)
+    {
+      /* We want to move backward, so check the text after POSITION.  */
+
+      intangible_propval = Fget_char_property (make_number (XINT (pos) - 1),
+					       Qintangible, Qnil);
+
+      /* If following char is intangible,
+	 skip back over all chars with matching intangible property.  */
+      if (! NILP (intangible_propval))
+	while (XINT (pos) < ZV
+	       && EQ (Fget_char_property (pos, Qintangible, Qnil),
+		      intangible_propval))
+	  pos = Fnext_char_property_change (pos, Qnil);
+
+    }
+
+  /* If the whole stretch between PT and POSITION isn't intangible, 
+     try moving to POSITION (which means we actually move farther
+     if POSITION is inside of intangible text).  */
+
+  if (XINT (pos) != PT)
+    SET_PT (position);
 }
 
 /* Return the proper local map for position POSITION in BUFFER.
@@ -1789,6 +1948,9 @@ get_local_map (position, buffer)
   BUF_ZV (buffer) = old_zv;
 
   /* Use the local map only if it is valid.  */
+  /* Do allow symbols that are defined as keymaps.  */
+  if (SYMBOLP (prop) && !NILP (prop))
+    prop = Findirect_function (prop);
   if (!NILP (prop)
       && (tem = Fkeymapp (prop), !NILP (tem)))
     return prop;
@@ -1843,15 +2005,16 @@ copy_intervals (tree, start, length)
 
 INLINE void
 copy_intervals_to_string (string, buffer, position, length)
-     Lisp_Object string, buffer;
+     Lisp_Object string;
+     struct buffer *buffer;
      int position, length;
 {
-  INTERVAL interval_copy = copy_intervals (BUF_INTERVALS (XBUFFER (buffer)),
+  INTERVAL interval_copy = copy_intervals (BUF_INTERVALS (buffer),
 					   position, length);
   if (NULL_INTERVAL_P (interval_copy))
     return;
 
-  interval_copy->parent = (INTERVAL) string;
+  interval_copy->parent = (INTERVAL) XFASTINT (string);
   XSTRING (string)->intervals = interval_copy;
 }
 

@@ -38,7 +38,11 @@ gives the option (or options) to `find' that produce the desired output.
 LS-SWITCHES is a list of `ls' switches to tell dired how to parse the output.")
 
 ;;;###autoload
-(defvar find-grep-options (if (eq system-type 'berkeley-unix) "-s" "-q")
+(defvar find-grep-options
+  (if (or (eq system-type 'berkeley-unix)
+	  (string-match "solaris2" system-configuration)
+	  (string-match "irix" system-configuration))
+      "-s" "-q")
   "*Option to grep to be as silent as possible.
 On Berkeley systems, this is `-s'; on Posix, and with GNU grep, `-q' does it.
 On other systems, the closest you can come is to use `-l'.")
@@ -54,7 +58,10 @@ On other systems, the closest you can come is to use `-l'.")
   "Run `find' and go into dired-mode on a buffer of the output.
 The command run (after changing into DIR) is
 
-    find . \\( ARGS \\) -ls"
+    find . \\( ARGS \\) -ls
+
+except that the variable `find-ls-option' specifies what to use
+as the final argument."
   (interactive (list (read-file-name "Run find in directory: " nil "" t)
 		     (read-string "Run find (with args): " find-args
 				  '(find-args-history . 1))))
@@ -136,8 +143,11 @@ Thus ARG can also contain additional grep options."
   (interactive "DFind-grep (directory): \nsFind-grep (grep regexp): ")
   ;; find -exec doesn't allow shell i/o redirections in the command,
   ;; or we could use `grep -l >/dev/null'
+  ;; We use -type f, not ! -type d, to avoid getting screwed
+  ;; by FIFOs and devices.  I'm not sure what's best to do
+  ;; about symlinks, so as far as I know this is not wrong.
   (find-dired dir
-	      (concat "! -type d -exec grep " find-grep-options " "
+	      (concat "-type f -exec grep " find-grep-options " "
 		      args " {} \\\; ")))
 
 (defun find-dired-filter (proc string)

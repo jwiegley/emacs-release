@@ -30,6 +30,7 @@ NOTE-END
 */
 
 #define BITS_PER_LONG 64
+#define BITS_PER_EMACS_INT 64
 
 /* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
    is the most significant byte.  */
@@ -152,9 +153,13 @@ NOTE-END
 # endif
 #endif
 
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+#define ORDINARY_LINK
+#endif
+
 #ifdef __ELF__
 #undef UNEXEC
-#define UNEXEC unexelf1.o
+#define UNEXEC unexelf.o
 #endif
 
 #ifndef __ELF__
@@ -234,7 +239,11 @@ NOTE-END
 
 #ifndef NOT_C_CODE
 /* We need these because pointers are larger than the default ints.  */
+#if !defined(__NetBSD__) && !defined(__OpenBSD__)
 #include <alloca.h>
+#else
+#include <stdlib.h>
+#endif
 
 /* Hack alert!  For reasons unknown to mankind the string.h file insists
    on defining bcopy etc. as taking char pointers as arguments.  With
@@ -286,7 +295,7 @@ extern void r_alloc_free ();
     {							\
       int dummy;					\
       SIGMASKTYPE mask;					\
-      mask = sigblockx (SIGCHLD);			\
+      mask = sigblock (sigmask (SIGCHLD));		\
       if (-1 == openpty (&fd, &dummy, pty_name, 0, 0))	\
 	fd = -1;					\
       sigsetmask (mask);				\
@@ -299,10 +308,14 @@ extern void r_alloc_free ();
    termio and struct termios are mutually incompatible.  */
 #define NO_TERMIO
 
-#ifdef LINUX
+#if defined (LINUX) || defined (__NetBSD__) || defined (__OpenBSD__)
 # define TEXT_END ({ extern int _etext; &_etext; })
 # ifndef __ELF__
 #  define COFF
 #  define DATA_END ({ extern int _EDATA; &_EDATA; })
 # endif /* notdef __ELF__ */
+#endif
+
+#if (defined (__NetBSD__) || defined (__OpenBSD__)) && defined (__ELF__)
+#define HAVE_TEXT_START
 #endif

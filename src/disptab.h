@@ -22,7 +22,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define DISP_TABLE_P(obj)						    \
   (CHAR_TABLE_P (obj)							    \
-   && XCHAR_TABLE (obj)->purpose == Qdisplay_table			    \
+   && EQ (XCHAR_TABLE (obj)->purpose, Qdisplay_table)			    \
    && CHAR_TABLE_EXTRA_SLOTS (XCHAR_TABLE (obj)) == DISP_TABLE_EXTRA_SLOTS)
 
 #define DISP_TABLE_EXTRA_SLOTS 6
@@ -33,7 +33,10 @@ Boston, MA 02111-1307, USA.  */
 #define DISP_INVIS_VECTOR(dp) ((dp)->extras[4])
 #define DISP_BORDER_GLYPH(dp) ((dp)->extras[5])
 
-#define DISP_CHAR_VECTOR(dp, c) ((dp)->contents[c])
+extern Lisp_Object disp_char_vector ();
+
+#define DISP_CHAR_VECTOR(dp, c) \
+  (SINGLE_BYTE_CHAR_P(c) ? (dp)->contents[c] : disp_char_vector ((dp), (c)))
 
 /* Defined in window.c.  */
 extern struct Lisp_Char_Table *window_display_table ();
@@ -76,10 +79,14 @@ extern Lisp_Object Vglyph_table;
 
 /* Follow all aliases for G in the glyph table given by (BASE,
    LENGTH), and set G to the final glyph.  */
-#define GLYPH_FOLLOW_ALIASES(base, length, g)				\
-  while (GLYPH_ALIAS_P ((base), (length), (g)))				\
-    (g) = GLYPH_ALIAS ((base), (g));
-  
+#define GLYPH_FOLLOW_ALIASES(base, length, g)		\
+  do {							\
+    while (GLYPH_ALIAS_P ((base), (length), (g)))	\
+      (g) = GLYPH_ALIAS ((base), (g));			\
+    if (!GLYPH_CHAR_VALID_P (FAST_GLYPH_CHAR (g)))	\
+      g = FAST_MAKE_GLYPH (' ', FAST_GLYPH_FACE (g));	\
+  } while (0)
+
 /* Assuming that GLYPH_SIMPLE_P (BASE, LEN, G) is 0,
    return the length and the address of the character-sequence
    used for outputting GLYPH G.  */

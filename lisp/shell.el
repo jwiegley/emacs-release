@@ -1,9 +1,10 @@
 ;;; shell.el --- specialized comint.el for running the shell.
 
-;; Copyright (C) 1988, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1988, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
-;; Author: Olin Shivers <shivers@cs.cmu.edu>
-;; Maintainer: Simon Marshall <simon@gnu.ai.mit.edu>
+;; Author: Olin Shivers <shivers@cs.cmu.edu> then
+;;	Simon Marshall <simon@gnu.ai.mit.edu>
+;; Maintainer: FSF
 ;; Keywords: processes
 
 ;; This file is part of GNU Emacs.
@@ -106,6 +107,19 @@
 
 ;;; Customization and Buffer Variables
 
+(defgroup shell nil
+  "Running shell from within Emacs buffers"
+  :group 'processes
+  :group 'unix)
+
+(defgroup shell-directories nil
+  "Directory support in shell mode"
+  :group 'shell)
+
+(defgroup shell-faces nil
+  "Faces in shell buffers"
+  :group 'shell)
+
 ;;;###autoload
 (defvar shell-prompt-pattern "^[^#$%>\n]*[#$%>] *"
   "Regexp to match prompts in the inferior shell.
@@ -119,13 +133,15 @@ on lines which don't start with a prompt.
 
 This is a fine thing to set in your `.emacs' file.")
 
-(defvar shell-completion-fignore nil
+(defcustom shell-completion-fignore nil
   "*List of suffixes to be disregarded during file/command completion.
 This variable is used to initialize `comint-completion-fignore' in the shell
 buffer.  The default is nil, for compatibility with most shells.
 Some people like (\"~\" \"#\" \"%\").
 
-This is a fine thing to set in your `.emacs' file.")  
+This is a fine thing to set in your `.emacs' file."
+  :type '(repeat (string :tag "Suffix"))
+  :group 'shell)
 
 (defvar shell-delimiter-argument-list '(?\| ?& ?< ?> ?\( ?\) ?\;)
   "List of characters to recognise as separate arguments.
@@ -166,57 +182,80 @@ shell buffer.
 
 This is a fine thing to set in your `.emacs' file.")
 
-(defvar shell-command-regexp "[^;&|\n]+"
+(defcustom shell-command-regexp "[^;&|\n]+"
   "*Regexp to match a single command within a pipeline.
-This is used for directory tracking and does not do a perfect job.")
+This is used for directory tracking and does not do a perfect job."
+  :type 'regexp
+  :group 'shell)
 
-(defvar shell-completion-execonly t
+(defcustom shell-completion-execonly t
   "*If non-nil, use executable files only for completion candidates.
 This mirrors the optional behavior of tcsh.
 
-Detecting executability of files may slow command completion considerably.")
+Detecting executability of files may slow command completion considerably."
+  :type 'boolean
+  :group 'shell)
 
-(defvar shell-popd-regexp "popd"
-  "*Regexp to match subshell commands equivalent to popd.")
+(defcustom shell-popd-regexp "popd"
+  "*Regexp to match subshell commands equivalent to popd."
+  :type 'regexp
+  :group 'shell-directories)
 
-(defvar shell-pushd-regexp "pushd"
-  "*Regexp to match subshell commands equivalent to pushd.")
+(defcustom shell-pushd-regexp "pushd"
+  "*Regexp to match subshell commands equivalent to pushd."
+  :type 'regexp
+  :group 'shell-directories)
 
-(defvar shell-pushd-tohome nil
+(defcustom shell-pushd-tohome nil
   "*If non-nil, make pushd with no arg behave as \"pushd ~\" (like cd).
-This mirrors the optional behavior of tcsh.")
+This mirrors the optional behavior of tcsh."
+  :type 'boolean
+  :group 'shell-directories)
 
-(defvar shell-pushd-dextract nil
+(defcustom shell-pushd-dextract nil
   "*If non-nil, make \"pushd +n\" pop the nth dir to the stack top.
-This mirrors the optional behavior of tcsh.")
+This mirrors the optional behavior of tcsh."
+  :type 'boolean
+  :group 'shell-directories)
 
-(defvar shell-pushd-dunique nil
+(defcustom shell-pushd-dunique nil
   "*If non-nil, make pushd only add unique directories to the stack.
-This mirrors the optional behavior of tcsh.")
+This mirrors the optional behavior of tcsh."
+  :type 'boolean
+  :group 'shell-directories)
 
-(defvar shell-cd-regexp "cd"
-  "*Regexp to match subshell commands equivalent to cd.")
+(defcustom shell-cd-regexp "cd"
+  "*Regexp to match subshell commands equivalent to cd."
+  :type 'regexp
+  :group 'shell-directories)
 
-(defvar shell-chdrive-regexp
+(defcustom shell-chdrive-regexp
   (if (memq system-type '(ms-dos windows-nt)) 
       ; NetWare allows the five chars between upper and lower alphabetics.
       "[]a-zA-Z^_`\\[\\\\]:"
     nil)
-  "*If non-nil, is regexp used to track drive changes.")
+  "*If non-nil, is regexp used to track drive changes."
+  :type '(choice regexp
+		 (const nil))
+  :group 'shell-directories)
 
-(defvar explicit-shell-file-name nil
-  "*If non-nil, is file name to use for explicitly requested inferior shell.")
+(defcustom explicit-shell-file-name nil
+  "*If non-nil, is file name to use for explicitly requested inferior shell."
+  :type '(choice (const :tag "None" nil) file)
+  :group 'shell)
 
-(defvar explicit-csh-args
+(defcustom explicit-csh-args
   (if (eq system-type 'hpux)
       ;; -T persuades HP's csh not to think it is smarter
       ;; than us about what terminal modes to use.
       '("-i" "-T")
     '("-i"))
   "*Args passed to inferior shell by M-x shell, if the shell is csh.
-Value is a list of strings, which may be nil.")
+Value is a list of strings, which may be nil."
+  :type '(repeat (string :tag "Argument"))
+  :group 'shell)
 
-(defvar shell-input-autoexpand 'history
+(defcustom shell-input-autoexpand 'history
   "*If non-nil, expand input command history references on completion.
 This mirrors the optional behavior of tcsh (its autoexpand and histlit).
 
@@ -226,7 +265,9 @@ into the buffer's input ring.  See also `comint-magic-space' and
 `comint-dynamic-complete'.
 
 This variable supplies a default for `comint-input-autoexpand',
-for Shell mode only.")
+for Shell mode only."
+  :type '(choice (const nil) (const input) (const history))
+  :type 'shell)
 
 (defvar shell-dirstack nil
   "List of directories saved by pushd in this buffer's shell.
@@ -260,17 +301,21 @@ Thus, this does not include the shell's current directory.")
 			      shell-replace-by-expanded-directory)
 	 'complete-expand)))
 
-(defvar shell-mode-hook '()
-  "*Hook for customising Shell mode.")
+(defcustom shell-mode-hook '()
+  "*Hook for customising Shell mode."
+  :type 'hook
+  :group 'shell)
 
 (defvar shell-font-lock-keywords
-  (list (cons shell-prompt-pattern 'font-lock-keyword-face)
-	'("[ \t]\\([+-][^ \t\n]+\\)" 1 font-lock-comment-face)
-	'("^[^ \t\n]+:.*" . font-lock-string-face)
-	'("^\\[[1-9][0-9]*\\]" . font-lock-string-face))
+  '((eval . (cons shell-prompt-pattern 'font-lock-warning-face))
+    ("[ \t]\\([+-][^ \t\n]+\\)" 1 font-lock-comment-face)
+    ("^[^ \t\n]+:.*" . font-lock-string-face)
+    ("^\\[[1-9][0-9]*\\]" . font-lock-string-face))
   "Additional expressions to highlight in Shell mode.")
 
 ;;; Basic Procedures
+
+(put 'shell-mode 'mode-class 'special)
 
 (defun shell-mode ()
   "Major mode for interacting with an inferior shell.
@@ -341,11 +386,14 @@ buffer."
   (setq font-lock-defaults '(shell-font-lock-keywords t))
   (make-local-variable 'shell-dirstack)
   (setq shell-dirstack nil)
+  (make-local-variable 'shell-last-dir)
   (setq shell-last-dir nil)
   (make-local-variable 'shell-dirtrackp)
   (setq shell-dirtrackp t)
   (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t)
   (setq comint-input-autoexpand shell-input-autoexpand)
+  ;; This is not really correct, since the shell buffer does not really
+  ;; edit this directory.  But it is useful in the buffer list and menus.
   (make-local-variable 'list-buffers-directory)
   (setq list-buffers-directory (expand-file-name default-directory))
   ;; shell-dependent assignments.
@@ -357,7 +405,8 @@ buffer."
 		    ((string-equal shell "ksh") "~/.sh_history")
 		    (t "~/.history"))))
     (if (or (equal comint-input-ring-file-name "")
-	    (equal (file-truename comint-input-ring-file-name) "/dev/null"))
+	    (equal (file-truename comint-input-ring-file-name)
+		   (file-truename "/dev/null")))
 	(setq comint-input-ring-file-name nil))
     (setq shell-dirstack-query
 	  (cond ((string-equal shell "sh") "pwd")
@@ -380,6 +429,13 @@ If a file `~/.emacs_SHELLNAME' exists, it is given as initial input
 The buffer is put in Shell mode, giving commands for sending input
 and controlling the subjobs of the shell.  See `shell-mode'.
 See also the variable `shell-prompt-pattern'.
+
+To specify a coding system for converting non-ASCII characters
+in the input and output to the shell, use \\[universal-coding-system-argument]
+before \\[shell].  You can also specify this with \\[set-buffer-process-coding-system]
+in the shell buffer, after you start the shell.
+The default comes from `process-coding-system-alist' and
+`default-process-coding-system'.
 
 The shell file name (sans directories) is used to make a symbol name
 such as `explicit-csh-args'.  If that symbol is a variable,
@@ -675,6 +731,37 @@ command again."
 	(setq msg (concat msg (directory-file-name dir) " "))
 	(setq ds (cdr ds))))
     (message "%s" msg)))
+
+;; This was mostly copied from shell-resync-dirs.
+(defun shell-snarf-envar (var)
+  "Return as a string the shell's value of environment variable VAR."
+  (let* ((cmd (format "printenv '%s'\n" var))
+	 (proc (get-buffer-process (current-buffer)))
+	 (pmark (process-mark proc)))
+    (goto-char pmark)
+    (insert cmd)
+    (sit-for 0)				; force redisplay
+    (comint-send-string proc cmd)
+    (set-marker pmark (point))
+    (let ((pt (point)))			; wait for 1 line
+      ;; This extra newline prevents the user's pending input from spoofing us.
+      (insert "\n") (backward-char 1)
+      (while (not (looking-at ".+\n"))
+	(accept-process-output proc)
+	(goto-char pt)))
+    (goto-char pmark) (delete-char 1)	; remove the extra newline
+    (buffer-substring (match-beginning 0) (1- (match-end 0)))))
+
+(defun shell-copy-environment-variable (variable)
+  "Copy the environment variable VARIABLE from the subshell to Emacs.
+This command reads the value of the specified environment variable
+in the shell, and sets the same environment variable in Emacs
+\(what `getenv' in Emacvs would return) to that value.
+That value will affect any new subprocesses that you subsequently start
+from Emacs."
+  (interactive (list (read-envvar-name "\
+Copy Shell environment variable to Emacs: ")))
+  (setenv variable (shell-snarf-envar variable)))
 
 (defun shell-forward-command (&optional arg)
   "Move forward across ARG shell command(s).  Does not cross lines.

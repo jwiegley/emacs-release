@@ -37,6 +37,8 @@
 
 ;;; Code:
 
+(require 'calendar)
+
 (define-key calendar-mode-map [menu-bar edit] 'undefined)
 (define-key calendar-mode-map [menu-bar search] 'undefined)
 
@@ -90,6 +92,12 @@
   '("Unmark" . calendar-unmark))
 (define-key calendar-mode-map [menu-bar holidays mark]
   '("Mark" . mark-calendar-holidays))
+(define-key calendar-mode-map [menu-bar holidays previous-year]
+  '("Previous year" . cal-menu-list-holidays-previous-year))
+(define-key calendar-mode-map [menu-bar holidays following-year]
+  '("Following year" . cal-menu-list-holidays-following-year))
+(define-key calendar-mode-map [menu-bar holidays year]
+  '("Year" . cal-menu-list-holidays-year))
 (define-key calendar-mode-map [menu-bar holidays 3-mon]
   '("3 Months" . list-calendar-holidays))
 (define-key calendar-mode-map [menu-bar holidays 1-day]
@@ -167,50 +175,23 @@
 (define-key calendar-mode-map [menu-bar scroll fwd-1]
   '("Forward 1 Month" . scroll-calendar-left))
 
-(put 'calendar-forward-day 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-backward-day 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-forward-week 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-backward-week 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-forward-month 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-backward-month 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-forward-year 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-backward-year 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-beginning-of-year 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-end-of-year 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-beginning-of-month 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-end-of-month 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-end-of-week 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-beginning-of-week 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-mouse-print-dates 'menu-enable '(calendar-event-to-date))
-(put 'calendar-sunrise-sunset 'menu-enable '(calendar-event-to-date))
-(put 'calendar-cursor-holidays 'menu-enable '(calendar-cursor-to-date))
-(put 'view-diary-entries 'menu-enable '(calendar-cursor-to-date))
-(put 'view-other-diary-entries 'menu-enable '(calendar-cursor-to-date))
-(put 'calendar-mouse-insert-hebrew-diary-entry
-     'menu-enable
-     '(calendar-cursor-to-date))
-(put 'calendar-mouse-insert-islamic-diary-entry
-     'menu-enable
-     '(calendar-cursor-to-date))
-(put 'insert-cyclic-diary-entry 'menu-enable '(calendar-cursor-to-date))
-(put 'insert-block-diary-entry 'menu-enable '(calendar-cursor-to-date))
-(put 'insert-anniversary-diary-entry 'menu-enable '(calendar-cursor-to-date))
-(put 'insert-yearly-diary-entry 'menu-enable '(calendar-cursor-to-date))
-(put 'insert-monthly-diary-entry 'menu-enable '(calendar-cursor-to-date))
-(put 'insert-weekly-diary-entry 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-day 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-week 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-week2 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-week-iso 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-week-monday 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-filofax-2week
-     'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-filofax-week 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-month 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-month-landscape 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-year 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-filofax-year 'menu-enable '(calendar-cursor-to-date))
-(put 'cal-tex-cursor-year-landscape 'menu-enable '(calendar-cursor-to-date))
+(defun cal-menu-list-holidays-year ()
+  "Display a list of the holidays of the selected date's year."
+  (interactive)
+  (let ((year (extract-calendar-year (calendar-cursor-to-date))))
+    (list-holidays year year)))
+
+(defun cal-menu-list-holidays-following-year ()
+  "Display a list of the holidays of the following year."
+  (interactive)
+  (let ((year (1+ (extract-calendar-year (calendar-cursor-to-date)))))
+    (list-holidays year year)))
+
+(defun cal-menu-list-holidays-previous-year ()
+  "Display a list of the holidays of the previous year."
+  (interactive)
+  (let ((year (1- (extract-calendar-year (calendar-cursor-to-date)))))
+    (list-holidays year year)))
 
 (defun calendar-event-to-date (&optional error)
   "Date of last event.
