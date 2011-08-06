@@ -1,6 +1,6 @@
 /* Asynchronous timers.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -175,9 +175,9 @@ cancel_atimer (timer)
       for (t = *list, prev = NULL; t && t != timer; prev = t, t = t->next)
 	;
 
-      /* If it is, take it off the its list, and put in on the
-	 free-list.  We don't bother to arrange for setting a
-	 different alarm time, since a too early one doesn't hurt.  */
+      /* If it is, take it off its list, and put in on the free-list.
+	 We don't bother to arrange for setting a different alarm time,
+	 since a too early one doesn't hurt.  */
       if (t)
 	{
 	  if (prev)

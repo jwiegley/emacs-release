@@ -1,7 +1,7 @@
 ;;; man.el --- browse UNIX manual pages -*- coding: iso-8859-1 -*-
 
 ;; Copyright (C) 1993, 1994, 1996, 1997, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw <bwarsaw@cen.com>
 ;; Maintainer: FSF
@@ -309,7 +309,7 @@ This regexp should not start with a `^' character.")
   "Regular expression describing references to normal files.")
 
 ;; This includes the section as an optional part to catch hyphenated
-;; refernces to manpages.
+;; references to manpages.
 (defvar Man-hyphenated-reference-regexp
   (concat "\\(" Man-name-regexp "\\)\\((\\(" Man-section-regexp "\\))\\)?")
   "Regular expression describing a reference in the SEE ALSO section.")
@@ -754,6 +754,9 @@ POS defaults to `point'."
   (cond
    ((eq action 'lambda)
     (not (string-match "([^)]*\\'" string)))
+   ((equal string "-k")
+    ;; Let SPC (minibuffer-complete-word) insert the space.
+    (complete-with-action action '("-k ") string pred))
    (t
     (let ((table (cdr Man-completion-cache))
           (section nil)

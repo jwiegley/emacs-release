@@ -1,8 +1,8 @@
-This is ../../info/ada-mode, produced by makeinfo version 4.11 from
+This is ../../info/ada-mode, produced by makeinfo version 4.13 from
 ada-mode.texi.
 
 Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,16 +16,16 @@ Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs editing modes
 START-INFO-DIR-ENTRY
-* Ada mode: (ada-mode). Emacs mode for editing and compiling Ada code.
+* Ada mode: (ada-mode).         Emacs mode for editing and compiling Ada code.
 END-INFO-DIR-ENTRY
 
 
 File: ada-mode,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2002,34 +2002,34 @@ Index
 
 
 Tag Table:
-Node: Top990
-Node: Overview2797
-Node: Installation4100
-Node: Customization5223
-Node: Non-standard file names6125
-Node: Other compiler7617
-Node: Other customization8115
-Node: Compiling Executing8763
-Node: Compile commands9429
-Node: Compiler errors12161
-Node: Project files13035
-Node: Project File Overview13733
-Node: GUI Editor16030
-Node: Project file variables16500
-Node: Compiling Examples23573
-Node: No project files24366
-Node: Set compiler options29047
-Node: Set source search path31007
-Node: Use GNAT project file33279
-Node: Use multiple GNAT project files35457
-Node: Moving Through Ada Code37341
-Node: Identifier completion39292
-Node: Automatic Smart Indentation40849
-Node: Formatting Parameter Lists43661
-Node: Automatic Casing44062
-Node: Statement Templates47301
-Node: Comment Handling48764
-Node: GNU Free Documentation License49290
-Node: Index74463
+Node: Top1018
+Node: Overview2831
+Node: Installation4134
+Node: Customization5257
+Node: Non-standard file names6159
+Node: Other compiler7651
+Node: Other customization8149
+Node: Compiling Executing8797
+Node: Compile commands9463
+Node: Compiler errors12195
+Node: Project files13069
+Node: Project File Overview13767
+Node: GUI Editor16064
+Node: Project file variables16534
+Node: Compiling Examples23607
+Node: No project files24400
+Node: Set compiler options29081
+Node: Set source search path31041
+Node: Use GNAT project file33313
+Node: Use multiple GNAT project files35491
+Node: Moving Through Ada Code37375
+Node: Identifier completion39326
+Node: Automatic Smart Indentation40883
+Node: Formatting Parameter Lists43695
+Node: Automatic Casing44096
+Node: Statement Templates47335
+Node: Comment Handling48798
+Node: GNU Free Documentation License49324
+Node: Index74497
 
 End Tag Table

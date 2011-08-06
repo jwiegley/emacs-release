@@ -1,9 +1,9 @@
-This is ../../info/cl, produced by makeinfo version 4.11 from cl.texi.
+This is ../../info/cl, produced by makeinfo version 4.13 from cl.texi.
 
 This file documents the GNU Emacs Common Lisp emulation package.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010  Free Software Foundation, Inc.
+2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -17,9 +17,9 @@ This file documents the GNU Emacs Common Lisp emulation package.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs lisp libraries
 START-INFO-DIR-ENTRY
-* CL: (cl).		Partial Common Lisp support for Emacs Lisp.
+* CL: (cl).                     Partial Common Lisp support for Emacs Lisp.
 END-INFO-DIR-ENTRY
 
 
@@ -36,7 +36,7 @@ does assume a basic familiarity with Emacs Lisp.
    This file documents the GNU Emacs Common Lisp emulation package.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010  Free Software Foundation, Inc.
+2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -146,18 +146,9 @@ the beginning:
 
      (require 'cl)
 
-If you want to ensure that the new (Gillespie) version of "CL" is the
-one that is present, add an additional `(require 'cl-19)' call:
-
-     (require 'cl)
-     (require 'cl-19)
-
-The second call will fail (with "`cl-19.el' not found") if the old
-`cl.el' package was in use.
-
-   It is safe to arrange to load "CL" at all times, e.g., in your
-`.emacs' file.  But it's a good idea, for portability, to `(require
-'cl)' in your code even if you do this.
+It is safe to arrange to load "CL" at all times, e.g., in your `.emacs'
+file.  But it's a good idea, for portability, to `(require 'cl)' in
+your code even if you do this.
 
 
 File: cl,  Node: Organization,  Next: Installation,  Prev: Usage,  Up: Overview
@@ -197,10 +188,11 @@ functions and macros in the other three files.  All you have to do is
 files when they are needed.
 
    There is another file, `cl-compat.el', which defines some routines
-from the older `cl.el' package that are no longer present in the new
-package.  This includes internal routines like `setelt' and
+from the older `cl.el' package that are not otherwise present in the
+new package.  This includes internal routines like `setelt' and
 `zip-lists', deprecated features like `defkeyword', and an emulation of
-the old-style multiple-values feature.  *Note Old CL Compatibility::.
+the old-style multiple-values feature.  This file is obsolete and
+should not be used in new code.  *Note Old CL Compatibility::.
 
 
 File: cl,  Node: Installation,  Next: Naming Conventions,  Prev: Organization,  Up: Overview
@@ -208,26 +200,14 @@ File: cl,  Node: Installation,  Next: Naming Conventions,  Prev: Organization,  
 2.3 Installation
 ================
 
-Installation of the "CL" package is simple:  Just put the byte-compiled
-files `cl.elc', `cl-extra.elc', `cl-seq.elc', `cl-macs.elc', and
-`cl-compat.elc' into a directory on your `load-path'.
+The "CL" package is distributed with Emacs, so there is no need to
+install anything.
 
-   There are no special requirements to compile this package: The files
-do not have to be loaded before they are compiled, nor do they need to
-be compiled in any particular order.
-
-   You may choose to put the files into your main `lisp/' directory,
-replacing the original `cl.el' file there.  Or, you could put them into
-a directory that comes before `lisp/' on your `load-path' so that the
-old `cl.el' is effectively hidden.
-
-   Also, format the `cl.texinfo' file and put the resulting Info files
-in the `info/' directory or another suitable place.
-
-   You may instead wish to leave this package's components all in their
-own directory, and then add this directory to your `load-path' and
-`Info-directory-list'.  Add the directory to the front of the list so
-the old "CL" package and its documentation are hidden.
+   If you do need to install it, just put the byte-compiled files
+`cl.elc', `cl-extra.elc', `cl-seq.elc', `cl-macs.elc', and (if
+necessary) `cl-compat.elc' into a directory on your `load-path'.  Also,
+format the `cl.texi' file and put the resulting Info files into a
+directory in your `Info-directory-list'.
 
 
 File: cl,  Node: Naming Conventions,  Prev: Installation,  Up: Overview
@@ -2181,14 +2161,17 @@ form you use is purely a matter of style.
      either a buffer or a string.
 
 `for VAR being the frames'
-     This clause iterates over all frames, i.e., X window system windows
-     open on Emacs files.  The clause `screens' is a synonym for
-     `frames'.  The frames are visited in `next-frame' order starting
-     from `selected-frame'.
+     This clause iterates over all Emacs frames. The clause `screens' is
+     a synonym for `frames'.  The frames are visited in `next-frame'
+     order starting from `selected-frame'.
 
 `for VAR being the windows [of FRAME]'
      This clause iterates over the windows (in the Emacs sense) of the
-     current frame, or of the specified FRAME.
+     current frame, or of the specified FRAME.  It visits windows in
+     `next-window' order starting from `selected-window' (or
+     `frame-selected-window' if you specify FRAME).  This clause treats
+     the minibuffer window in the same way as `next-window' does.  For
+     greater flexibility, consider using `walk-windows' instead.
 
 `for VAR being the buffers'
      This clause iterates over all buffers in Emacs.  It is equivalent
@@ -4449,8 +4432,9 @@ C.1 The `cl-compat' package
 ===========================
 
 The "CL" package includes emulations of some features of the old
-`cl.el', in the form of a compatibility package `cl-compat'.  To use
-it, put `(require 'cl-compat)' in your program.
+`cl.el', in the form of a compatibility package `cl-compat'.  This file
+is obsolete and may be removed in future, so it should not be used in
+new code.
 
    The old package defined a number of internal routines without `cl-'
 prefixes or other annotations.  Call to these routines may have crept
@@ -5399,69 +5383,69 @@ Variable Index
 
 
 Tag Table:
-Node: Top1027
-Node: Overview3271
-Node: Usage6094
-Node: Organization6747
-Node: Installation8573
-Node: Naming Conventions9713
-Node: Program Structure11408
-Node: Argument Lists11825
-Node: Time of Evaluation20975
-Node: Predicates26843
-Node: Type Predicates27152
-Node: Equality Predicates32117
-Node: Control Structure33369
-Node: Assignment34154
-Node: Generalized Variables35399
-Node: Basic Setf36709
-Node: Modify Macros43895
-Node: Customizing Setf51123
-Node: Variable Bindings58424
-Node: Dynamic Bindings59008
-Node: Lexical Bindings59906
-Node: Function Bindings64008
-Node: Macro Bindings67395
-Node: Conditionals70317
-Node: Blocks and Exits72907
-Node: Iteration75921
-Node: Loop Facility81487
-Node: Loop Basics82417
-Node: Loop Examples85025
-Node: For Clauses87291
-Node: Iteration Clauses98596
-Node: Accumulation Clauses100449
-Node: Other Clauses102800
-Node: Multiple Values108876
-Node: Macros110774
-Node: Declarations113994
-Node: Symbols122354
-Node: Property Lists122653
-Node: Creating Symbols125861
-Node: Numbers127919
-Node: Predicates on Numbers128366
-Node: Numerical Functions129403
-Node: Random Numbers133101
-Node: Implementation Parameters135817
-Node: Sequences139094
-Node: Sequence Basics139768
-Node: Mapping over Sequences143327
-Node: Sequence Functions149267
-Node: Searching Sequences154789
-Node: Sorting Sequences157836
-Node: Lists160492
-Node: List Functions160909
-Node: Substitution of Expressions164208
-Node: Lists as Sets166103
-Node: Association Lists169876
-Node: Structures171331
-Node: Assertions186035
-Node: Efficiency Concerns188981
-Node: Common Lisp Compatibility194001
-Node: Old CL Compatibility196849
-Node: Porting Common Lisp201225
-Node: GNU Free Documentation License210381
-Node: Function Index235560
-Node: Variable Index250150
+Node: Top1067
+Node: Overview3317
+Node: Usage6140
+Node: Organization6517
+Node: Installation8406
+Node: Naming Conventions8932
+Node: Program Structure10627
+Node: Argument Lists11044
+Node: Time of Evaluation20194
+Node: Predicates26062
+Node: Type Predicates26371
+Node: Equality Predicates31336
+Node: Control Structure32588
+Node: Assignment33373
+Node: Generalized Variables34618
+Node: Basic Setf35928
+Node: Modify Macros43114
+Node: Customizing Setf50342
+Node: Variable Bindings57643
+Node: Dynamic Bindings58227
+Node: Lexical Bindings59125
+Node: Function Bindings63227
+Node: Macro Bindings66614
+Node: Conditionals69536
+Node: Blocks and Exits72126
+Node: Iteration75140
+Node: Loop Facility80706
+Node: Loop Basics81636
+Node: Loop Examples84244
+Node: For Clauses86510
+Node: Iteration Clauses98055
+Node: Accumulation Clauses99908
+Node: Other Clauses102259
+Node: Multiple Values108335
+Node: Macros110233
+Node: Declarations113453
+Node: Symbols121813
+Node: Property Lists122112
+Node: Creating Symbols125320
+Node: Numbers127378
+Node: Predicates on Numbers127825
+Node: Numerical Functions128862
+Node: Random Numbers132560
+Node: Implementation Parameters135276
+Node: Sequences138553
+Node: Sequence Basics139227
+Node: Mapping over Sequences142786
+Node: Sequence Functions148726
+Node: Searching Sequences154248
+Node: Sorting Sequences157295
+Node: Lists159951
+Node: List Functions160368
+Node: Substitution of Expressions163667
+Node: Lists as Sets165562
+Node: Association Lists169335
+Node: Structures170790
+Node: Assertions185494
+Node: Efficiency Concerns188440
+Node: Common Lisp Compatibility193460
+Node: Old CL Compatibility196308
+Node: Porting Common Lisp200719
+Node: GNU Free Documentation License209875
+Node: Function Index235054
+Node: Variable Index249644
 
 End Tag Table

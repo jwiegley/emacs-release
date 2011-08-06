@@ -1,6 +1,6 @@
 ;;; dcl-mode.el --- major mode for editing DCL command files
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;; Free Software Foundation, Inc.
 
 ;; Author: Odd Gripenstam <gripenstamol@decus.se>
@@ -409,7 +409,7 @@ A list of regexps that will trigger a reindent if the last letter
 is defined as dcl-electric-character.
 
 E.g.: if this list contains `endif', the key `f' is defined as
-dcl-electric-character and the you have just typed the `f' in
+dcl-electric-character and you have just typed the `f' in
 `endif', the line will be reindented."
   :type '(repeat regexp)
   :group 'dcl)

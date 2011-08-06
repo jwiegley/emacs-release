@@ -1,7 +1,7 @@
 ;;; allout.el --- extensive outline mode for use alone and with other modes
 
 ;; Copyright (C) 1992, 1993, 1994, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Ken Manheimer <ken dot manheimer at gmail dot com>
 ;; Maintainer: Ken Manheimer <ken dot manheimer at gmail dot com>
@@ -217,7 +217,7 @@ The types of elements in the layout specification are:
          -- positive numbers open to the relative depth indicated by the
             number, but do not force already opened subtopics to be closed.
          -- 0 means to close topic -- hide all subitems.
- :   -- repeat spec -- apply the preceeding element to all siblings at
+ :   -- repeat spec -- apply the preceding element to all siblings at
         current level, *up to* those siblings that would be covered by specs
         following the `:' on the list.  Ie, apply to all topics at level but
         trailing ones accounted for by trailing specs.  (Only the first of
@@ -3173,7 +3173,7 @@ situation."
                  nil)
         ;; rationale: if any intervening items were at a lower depth, we
         ;; would now be on the first offspring at the target depth -- ie,
-        ;; the preceeding item (per the search direction) must be at a
+        ;; the preceding item (per the search direction) must be at a
         ;; lesser depth.  that's all we need to check.
         (if backward (allout-next-heading) (allout-previous-heading))
         (if (< allout-recent-depth target-depth)
@@ -4276,7 +4276,7 @@ With a negative argument, the item is shifted out using
 
 With an argument greater than one, shift-in the item but not its
 offspring, making the item into a sibling of its former children,
-and a child of sibling that formerly preceeded it.
+and a child of sibling that formerly preceded it.
 
 You are not allowed to shift the first offspring of a topic
 inwards, because that would yield a \"containment
@@ -5394,7 +5394,7 @@ header and body.  The elements of that list are:
 
       (goto-char start)
       (beginning-of-line)
-      ;; Goto initial topic, and register preceeding stuff, if any:
+      ;; Goto initial topic, and register preceding stuff, if any:
       (if (> (allout-goto-prefix-doublechecked) start)
 	  ;; First topic follows beginning point -- register preliminary stuff:
 	  (setq result (list (list 0 "" nil

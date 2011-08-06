@@ -1,10 +1,10 @@
-This is ../../info/forms, produced by makeinfo version 4.11 from
+This is ../../info/forms, produced by makeinfo version 4.13 from
 forms.texi.
 
 This file documents Forms mode, a form-editing major mode for GNU Emacs.
 
    Copyright (C) 1989, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -18,10 +18,10 @@ This file documents Forms mode, a form-editing major mode for GNU Emacs.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* Forms: (forms).	Emacs package for editing data bases
-			  by filling in forms.
+* Forms: (forms).               Emacs package for editing data bases
+                                  by filling in forms.
 END-INFO-DIR-ENTRY
 
 
@@ -45,7 +45,7 @@ it.
 Emacs.
 
    Copyright (C) 1989, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1365,19 +1365,19 @@ Index
 
 
 Tag Table:
-Node: Top1070
-Node: Forms Example3394
-Node: Entering and Exiting Forms Mode4594
-Node: Forms Commands6804
-Node: Data File Format10606
-Node: Control File Format11946
-Node: Format Description16575
-Node: Modifying Forms Contents19908
-Node: Miscellaneous21786
-Node: Error Messages23325
-Node: Long Example27569
-Node: Credits30651
-Node: GNU Free Documentation License31425
-Node: Index56593
+Node: Top1133
+Node: Forms Example3463
+Node: Entering and Exiting Forms Mode4663
+Node: Forms Commands6873
+Node: Data File Format10675
+Node: Control File Format12015
+Node: Format Description16644
+Node: Modifying Forms Contents19977
+Node: Miscellaneous21855
+Node: Error Messages23394
+Node: Long Example27638
+Node: Credits30720
+Node: GNU Free Documentation License31494
+Node: Index56662
 
 End Tag Table

@@ -1,7 +1,7 @@
 ;;; replace.el --- replace commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -1402,7 +1402,7 @@ N     (match-string N)           (where N is a string of digits)
 #&    (string-to-number (match-string 0))
 #     replace-count
 
-Note that these symbols must be preceeded by a backslash in order to
+Note that these symbols must be preceded by a backslash in order to
 type them using Lisp syntax."
   (while (consp n)
     (cond
@@ -1893,7 +1893,9 @@ make, or the user didn't cancel the call."
       (let ((isearch-string string)
 	    (isearch-regexp regexp)
 	    (search-whitespace-regexp nil)
-	    (isearch-case-fold-search case-fold))
+	    (isearch-case-fold-search case-fold)
+	    (isearch-forward t)
+	    (isearch-error nil))
 	(isearch-lazy-highlight-new-loop range-beg range-end))))
 
 (defun replace-dehighlight ()

@@ -1,12 +1,12 @@
-This is ../../info/emacs, produced by makeinfo version 4.11 from
+This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.2.
+updated for Emacs version 23.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,8 +23,551 @@ Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacs: (emacs).	The extensible self-documenting text editor.
+* Emacs: (emacs).       The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Manifesto,  Prev: Microsoft Windows,  Up: Top
+
+The GNU Manifesto
+*****************
+
+     The GNU Manifesto which appears below was written by Richard
+     Stallman at the beginning of the GNU project, to ask for
+     participation and support.  For the first few years, it was
+     updated in minor ways to account for developments, but now it
+     seems best to leave it unchanged as most people have seen it.
+
+     Since that time, we have learned about certain common
+     misunderstandings that different wording could help avoid.
+     Footnotes added in 1993 help clarify these points.
+
+     For up-to-date information about available GNU software, please see
+     our web site, `http://www.gnu.org'.  For software tasks and other
+     ways to contribute, see `http://www.gnu.org/help'.
+
+What's GNU?  Gnu's Not Unix!
+============================
+
+GNU, which stands for Gnu's Not Unix, is the name for the complete
+Unix-compatible software system which I am writing so that I can give it
+away free to everyone who can use it.(1) Several other volunteers are
+helping me.  Contributions of time, money, programs and equipment are
+greatly needed.
+
+   So far we have an Emacs text editor with Lisp for writing editor
+commands, a source level debugger, a yacc-compatible parser generator,
+a linker, and around 35 utilities.  A shell (command interpreter) is
+nearly completed.  A new portable optimizing C compiler has compiled
+itself and may be released this year.  An initial kernel exists but
+many more features are needed to emulate Unix.  When the kernel and
+compiler are finished, it will be possible to distribute a GNU system
+suitable for program development.  We will use TeX as our text
+formatter, but an nroff is being worked on.  We will use the free,
+portable X window system as well.  After this we will add a portable
+Common Lisp, an Empire game, a spreadsheet, and hundreds of other
+things, plus on-line documentation.  We hope to supply, eventually,
+everything useful that normally comes with a Unix system, and more.
+
+   GNU will be able to run Unix programs, but will not be identical to
+Unix.  We will make all improvements that are convenient, based on our
+experience with other operating systems.  In particular, we plan to
+have longer file names, file version numbers, a crashproof file system,
+file name completion perhaps, terminal-independent display support, and
+perhaps eventually a Lisp-based window system through which several
+Lisp programs and ordinary Unix programs can share a screen.  Both C
+and Lisp will be available as system programming languages.  We will
+try to support UUCP, MIT Chaosnet, and Internet protocols for
+communication.
+
+   GNU is aimed initially at machines in the 68000/16000 class with
+virtual memory, because they are the easiest machines to make it run
+on.  The extra effort to make it run on smaller machines will be left
+to someone who wants to use it on them.
+
+   To avoid horrible confusion, please pronounce the `G' in the word
+`GNU' when it is the name of this project.
+
+Why I Must Write GNU
+====================
+
+I consider that the golden rule requires that if I like a program I must
+share it with other people who like it.  Software sellers want to divide
+the users and conquer them, making each user agree not to share with
+others.  I refuse to break solidarity with other users in this way.  I
+cannot in good conscience sign a nondisclosure agreement or a software
+license agreement.  For years I worked within the Artificial
+Intelligence Lab to resist such tendencies and other inhospitalities,
+but eventually they had gone too far: I could not remain in an
+institution where such things are done for me against my will.
+
+   So that I can continue to use computers without dishonor, I have
+decided to put together a sufficient body of free software so that I
+will be able to get along without any software that is not free.  I
+have resigned from the AI lab to deny MIT any legal excuse to prevent
+me from giving GNU away.
+
+Why GNU Will Be Compatible with Unix
+====================================
+
+Unix is not my ideal system, but it is not too bad.  The essential
+features of Unix seem to be good ones, and I think I can fill in what
+Unix lacks without spoiling them.  And a system compatible with Unix
+would be convenient for many other people to adopt.
+
+How GNU Will Be Available
+=========================
+
+GNU is not in the public domain.  Everyone will be permitted to modify
+and redistribute GNU, but no distributor will be allowed to restrict its
+further redistribution.  That is to say, proprietary modifications will
+not be allowed.  I want to make sure that all versions of GNU remain
+free.
+
+Why Many Other Programmers Want to Help
+=======================================
+
+I have found many other programmers who are excited about GNU and want
+to help.
+
+   Many programmers are unhappy about the commercialization of system
+software.  It may enable them to make more money, but it requires them
+to feel in conflict with other programmers in general rather than feel
+as comrades.  The fundamental act of friendship among programmers is the
+sharing of programs; marketing arrangements now typically used
+essentially forbid programmers to treat others as friends.  The
+purchaser of software must choose between friendship and obeying the
+law.  Naturally, many decide that friendship is more important.  But
+those who believe in law often do not feel at ease with either choice.
+They become cynical and think that programming is just a way of making
+money.
+
+   By working on and using GNU rather than proprietary programs, we can
+be hospitable to everyone and obey the law.  In addition, GNU serves as
+an example to inspire and a banner to rally others to join us in
+sharing.  This can give us a feeling of harmony which is impossible if
+we use software that is not free.  For about half the programmers I
+talk to, this is an important happiness that money cannot replace.
+
+How You Can Contribute
+======================
+
+I am asking computer manufacturers for donations of machines and money.
+I'm asking individuals for donations of programs and work.
+
+   One consequence you can expect if you donate machines is that GNU
+will run on them at an early date.  The machines should be complete,
+ready to use systems, approved for use in a residential area, and not
+in need of sophisticated cooling or power.
+
+   I have found very many programmers eager to contribute part-time
+work for GNU.  For most projects, such part-time distributed work would
+be very hard to coordinate; the independently-written parts would not
+work together.  But for the particular task of replacing Unix, this
+problem is absent.  A complete Unix system contains hundreds of utility
+programs, each of which is documented separately.  Most interface
+specifications are fixed by Unix compatibility.  If each contributor
+can write a compatible replacement for a single Unix utility, and make
+it work properly in place of the original on a Unix system, then these
+utilities will work right when put together.  Even allowing for Murphy
+to create a few unexpected problems, assembling these components will
+be a feasible task.  (The kernel will require closer communication and
+will be worked on by a small, tight group.)
+
+   If I get donations of money, I may be able to hire a few people full
+or part time.  The salary won't be high by programmers' standards, but
+I'm looking for people for whom building community spirit is as
+important as making money.  I view this as a way of enabling dedicated
+people to devote their full energies to working on GNU by sparing them
+the need to make a living in another way.
+
+Why All Computer Users Will Benefit
+===================================
+
+Once GNU is written, everyone will be able to obtain good system
+software free, just like air.(2)
+
+   This means much more than just saving everyone the price of a Unix
+license.  It means that much wasteful duplication of system programming
+effort will be avoided.  This effort can go instead into advancing the
+state of the art.
+
+   Complete system sources will be available to everyone.  As a result,
+a user who needs changes in the system will always be free to make them
+himself, or hire any available programmer or company to make them for
+him.  Users will no longer be at the mercy of one programmer or company
+which owns the sources and is in sole position to make changes.
+
+   Schools will be able to provide a much more educational environment
+by encouraging all students to study and improve the system code.
+Harvard's computer lab used to have the policy that no program could be
+installed on the system if its sources were not on public display, and
+upheld it by actually refusing to install certain programs.  I was very
+much inspired by this.
+
+   Finally, the overhead of considering who owns the system software
+and what one is or is not entitled to do with it will be lifted.
+
+   Arrangements to make people pay for using a program, including
+licensing of copies, always incur a tremendous cost to society through
+the cumbersome mechanisms necessary to figure out how much (that is,
+which programs) a person must pay for.  And only a police state can
+force everyone to obey them.  Consider a space station where air must
+be manufactured at great cost: charging each breather per liter of air
+may be fair, but wearing the metered gas mask all day and all night is
+intolerable even if everyone can afford to pay the air bill.  And the
+TV cameras everywhere to see if you ever take the mask off are
+outrageous.  It's better to support the air plant with a head tax and
+chuck the masks.
+
+   Copying all or parts of a program is as natural to a programmer as
+breathing, and as productive.  It ought to be as free.
+
+Some Easily Rebutted Objections to GNU's Goals
+==============================================
+
+     "Nobody will use it if it is free, because that means they can't
+     rely on any support."
+
+     "You have to charge for the program to pay for providing the
+     support."
+
+   If people would rather pay for GNU plus service than get GNU free
+without service, a company to provide just service to people who have
+obtained GNU free ought to be profitable.(3)
+
+   We must distinguish between support in the form of real programming
+work and mere handholding.  The former is something one cannot rely on
+from a software vendor.  If your problem is not shared by enough
+people, the vendor will tell you to get lost.
+
+   If your business needs to be able to rely on support, the only way
+is to have all the necessary sources and tools.  Then you can hire any
+available person to fix your problem; you are not at the mercy of any
+individual.  With Unix, the price of sources puts this out of
+consideration for most businesses.  With GNU this will be easy.  It is
+still possible for there to be no available competent person, but this
+problem cannot be blamed on distribution arrangements.  GNU does not
+eliminate all the world's problems, only some of them.
+
+   Meanwhile, the users who know nothing about computers need
+handholding: doing things for them which they could easily do
+themselves but don't know how.
+
+   Such services could be provided by companies that sell just
+hand-holding and repair service.  If it is true that users would rather
+spend money and get a product with service, they will also be willing
+to buy the service having got the product free.  The service companies
+will compete in quality and price; users will not be tied to any
+particular one.  Meanwhile, those of us who don't need the service
+should be able to use the program without paying for the service.
+
+     "You cannot reach many people without advertising, and you must
+     charge for the program to support that."
+
+     "It's no use advertising a program people can get free."
+
+   There are various forms of free or very cheap publicity that can be
+used to inform numbers of computer users about something like GNU.  But
+it may be true that one can reach more microcomputer users with
+advertising.  If this is really so, a business which advertises the
+service of copying and mailing GNU for a fee ought to be successful
+enough to pay for its advertising and more.  This way, only the users
+who benefit from the advertising pay for it.
+
+   On the other hand, if many people get GNU from their friends, and
+such companies don't succeed, this will show that advertising was not
+really necessary to spread GNU.  Why is it that free market advocates
+don't want to let the free market decide this?(4)
+
+     "My company needs a proprietary operating system to get a
+     competitive edge."
+
+   GNU will remove operating system software from the realm of
+competition.  You will not be able to get an edge in this area, but
+neither will your competitors be able to get an edge over you.  You and
+they will compete in other areas, while benefiting mutually in this
+one.  If your business is selling an operating system, you will not
+like GNU, but that's tough on you.  If your business is something else,
+GNU can save you from being pushed into the expensive business of
+selling operating systems.
+
+   I would like to see GNU development supported by gifts from many
+manufacturers and users, reducing the cost to each.(5)
+
+     "Don't programmers deserve a reward for their creativity?"
+
+   If anything deserves a reward, it is social contribution.
+Creativity can be a social contribution, but only in so far as society
+is free to use the results.  If programmers deserve to be rewarded for
+creating innovative programs, by the same token they deserve to be
+punished if they restrict the use of these programs.
+
+     "Shouldn't a programmer be able to ask for a reward for his
+     creativity?"
+
+   There is nothing wrong with wanting pay for work, or seeking to
+maximize one's income, as long as one does not use means that are
+destructive.  But the means customary in the field of software today
+are based on destruction.
+
+   Extracting money from users of a program by restricting their use of
+it is destructive because the restrictions reduce the amount and the
+ways that the program can be used.  This reduces the amount of wealth
+that humanity derives from the program.  When there is a deliberate
+choice to restrict, the harmful consequences are deliberate destruction.
+
+   The reason a good citizen does not use such destructive means to
+become wealthier is that, if everyone did so, we would all become
+poorer from the mutual destructiveness.  This is Kantian ethics; or,
+the Golden Rule.  Since I do not like the consequences that result if
+everyone hoards information, I am required to consider it wrong for one
+to do so.  Specifically, the desire to be rewarded for one's creativity
+does not justify depriving the world in general of all or part of that
+creativity.
+
+     "Won't programmers starve?"
+
+   I could answer that nobody is forced to be a programmer.  Most of us
+cannot manage to get any money for standing on the street and making
+faces.  But we are not, as a result, condemned to spend our lives
+standing on the street making faces, and starving.  We do something
+else.
+
+   But that is the wrong answer because it accepts the questioner's
+implicit assumption: that without ownership of software, programmers
+cannot possibly be paid a cent.  Supposedly it is all or nothing.
+
+   The real reason programmers will not starve is that it will still be
+possible for them to get paid for programming; just not paid as much as
+now.
+
+   Restricting copying is not the only basis for business in software.
+It is the most common basis because it brings in the most money.  If it
+were prohibited, or rejected by the customer, software business would
+move to other bases of organization which are now used less often.
+There are always numerous ways to organize any kind of business.
+
+   Probably programming will not be as lucrative on the new basis as it
+is now.  But that is not an argument against the change.  It is not
+considered an injustice that sales clerks make the salaries that they
+now do.  If programmers made the same, that would not be an injustice
+either.  (In practice they would still make considerably more than
+that.)
+
+     "Don't people have a right to control how their creativity is
+     used?"
+
+   "Control over the use of one's ideas" really constitutes control over
+other people's lives; and it is usually used to make their lives more
+difficult.
+
+   People who have studied the issue of intellectual property rights(6)
+carefully (such as lawyers) say that there is no intrinsic right to
+intellectual property.  The kinds of supposed intellectual property
+rights that the government recognizes were created by specific acts of
+legislation for specific purposes.
+
+   For example, the patent system was established to encourage
+inventors to disclose the details of their inventions.  Its purpose was
+to help society rather than to help inventors.  At the time, the life
+span of 17 years for a patent was short compared with the rate of
+advance of the state of the art.  Since patents are an issue only among
+manufacturers, for whom the cost and effort of a license agreement are
+small compared with setting up production, the patents often do not do
+much harm.  They do not obstruct most individuals who use patented
+products.
+
+   The idea of copyright did not exist in ancient times, when authors
+frequently copied other authors at length in works of non-fiction.  This
+practice was useful, and is the only way many authors' works have
+survived even in part.  The copyright system was created expressly for
+the purpose of encouraging authorship.  In the domain for which it was
+invented--books, which could be copied economically only on a printing
+press--it did little harm, and did not obstruct most of the individuals
+who read the books.
+
+   All intellectual property rights are just licenses granted by society
+because it was thought, rightly or wrongly, that society as a whole
+would benefit by granting them.  But in any particular situation, we
+have to ask: are we really better off granting such license?  What kind
+of act are we licensing a person to do?
+
+   The case of programs today is very different from that of books a
+hundred years ago.  The fact that the easiest way to copy a program is
+from one neighbor to another, the fact that a program has both source
+code and object code which are distinct, and the fact that a program is
+used rather than read and enjoyed, combine to create a situation in
+which a person who enforces a copyright is harming society as a whole
+both materially and spiritually; in which a person should not do so
+regardless of whether the law enables him to.
+
+     "Competition makes things get done better."
+
+   The paradigm of competition is a race: by rewarding the winner, we
+encourage everyone to run faster.  When capitalism really works this
+way, it does a good job; but its defenders are wrong in assuming it
+always works this way.  If the runners forget why the reward is offered
+and become intent on winning, no matter how, they may find other
+strategies--such as, attacking other runners.  If the runners get into
+a fist fight, they will all finish late.
+
+   Proprietary and secret software is the moral equivalent of runners
+in a fist fight.  Sad to say, the only referee we've got does not seem
+to object to fights; he just regulates them ("For every ten yards you
+run, you can fire one shot").  He really ought to break them up, and
+penalize runners for even trying to fight.
+
+     "Won't everyone stop programming without a monetary incentive?"
+
+   Actually, many people will program with absolutely no monetary
+incentive.  Programming has an irresistible fascination for some
+people, usually the people who are best at it.  There is no shortage of
+professional musicians who keep at it even though they have no hope of
+making a living that way.
+
+   But really this question, though commonly asked, is not appropriate
+to the situation.  Pay for programmers will not disappear, only become
+less.  So the right question is, will anyone program with a reduced
+monetary incentive?  My experience shows that they will.
+
+   For more than ten years, many of the world's best programmers worked
+at the Artificial Intelligence Lab for far less money than they could
+have had anywhere else.  They got many kinds of non-monetary rewards:
+fame and appreciation, for example.  And creativity is also fun, a
+reward in itself.
+
+   Then most of them left when offered a chance to do the same
+interesting work for a lot of money.
+
+   What the facts show is that people will program for reasons other
+than riches; but if given a chance to make a lot of money as well, they
+will come to expect and demand it.  Low-paying organizations do poorly
+in competition with high-paying ones, but they do not have to do badly
+if the high-paying ones are banned.
+
+     "We need the programmers desperately.  If they demand that we stop
+     helping our neighbors, we have to obey."
+
+   You're never so desperate that you have to obey this sort of demand.
+Remember: millions for defense, but not a cent for tribute!
+
+     "Programmers need to make a living somehow."
+
+   In the short run, this is true.  However, there are plenty of ways
+that programmers could make a living without selling the right to use a
+program.  This way is customary now because it brings programmers and
+businessmen the most money, not because it is the only way to make a
+living.  It is easy to find other ways if you want to find them.  Here
+are a number of examples.
+
+   A manufacturer introducing a new computer will pay for the porting of
+operating systems onto the new hardware.
+
+   The sale of teaching, hand-holding and maintenance services could
+also employ programmers.
+
+   People with new ideas could distribute programs as freeware(7),
+asking for donations from satisfied users, or selling hand-holding
+services.  I have met people who are already working this way
+successfully.
+
+   Users with related needs can form users' groups, and pay dues.  A
+group would contract with programming companies to write programs that
+the group's members would like to use.
+
+   All sorts of development can be funded with a Software Tax:
+
+     Suppose everyone who buys a computer has to pay x percent of the
+     price as a software tax.  The government gives this to an agency
+     like the NSF to spend on software development.
+
+     But if the computer buyer makes a donation to software development
+     himself, he can take a credit against the tax.  He can donate to
+     the project of his own choosing--often, chosen because he hopes to
+     use the results when it is done.  He can take a credit for any
+     amount of donation up to the total tax he had to pay.
+
+     The total tax rate could be decided by a vote of the payers of the
+     tax, weighted according to the amount they will be taxed on.
+
+     The consequences:
+
+        * The computer-using community supports software development.
+
+        * This community decides what level of support is needed.
+
+        * Users who care which projects their share is spent on can
+          choose this for themselves.
+
+   In the long run, making programs free is a step toward the
+post-scarcity world, where nobody will have to work very hard just to
+make a living.  People will be free to devote themselves to activities
+that are fun, such as programming, after spending the necessary ten
+hours a week on required tasks such as legislation, family counseling,
+robot repair and asteroid prospecting.  There will be no need to be
+able to make a living from programming.
+
+   We have already greatly reduced the amount of work that the whole
+society must do for its actual productivity, but only a little of this
+has translated itself into leisure for workers because much
+nonproductive activity is required to accompany productive activity.
+The main causes of this are bureaucracy and isometric struggles against
+competition.  Free software will greatly reduce these drains in the
+area of software production.  We must do this, in order for technical
+gains in productivity to translate into less work for us.
+
+   ---------- Footnotes ----------
+
+   (1) The wording here was careless.  The intention was that nobody
+would have to pay for _permission_ to use the GNU system.  But the
+words don't make this clear, and people often interpret them as saying
+that copies of GNU should always be distributed at little or no charge.
+That was never the intent; later on, the manifesto mentions the
+possibility of companies providing the service of distribution for a
+profit.  Subsequently I have learned to distinguish carefully between
+"free" in the sense of freedom and "free" in the sense of price.  Free
+software is software that users have the freedom to distribute and
+change.  Some users may obtain copies at no charge, while others pay to
+obtain copies--and if the funds help support improving the software, so
+much the better.  The important thing is that everyone who has a copy
+has the freedom to cooperate with others in using it.
+
+   (2) This is another place I failed to distinguish carefully between
+the two different meanings of "free."  The statement as it stands is
+not false--you can get copies of GNU software at no charge, from your
+friends or over the net.  But it does suggest the wrong idea.
+
+   (3) Several such companies now exist.
+
+   (4) The Free Software Foundation raises most of its funds from a
+distribution service, although it is a charity rather than a company.
+If _no one_ chooses to obtain copies by ordering from the FSF, it will
+be unable to do its work.  But this does not mean that proprietary
+restrictions are justified to force every user to pay.  If a small
+fraction of all the users order copies from the FSF, that is sufficient
+to keep the FSF afloat.  So we ask users to choose to support us in
+this way.  Have you done your part?
+
+   (5) A group of computer companies recently pooled funds to support
+maintenance of the GNU C Compiler.
+
+   (6) In the 80s I had not yet realized how confusing it was to speak
+of "the issue" of "intellectual property."  That term is obviously
+biased; more subtle is the fact that it lumps together various
+disparate laws which raise very different issues.  Nowadays I urge
+people to reject the term "intellectual property" entirely, lest it
+lead others to suppose that those laws form one coherent issue.  The
+way to be clear is to discuss patents, copyrights, and trademarks
+separately.  See `http://www.gnu.org/philosophy/not-ipr.xhtml' for more
+explanation of how this term spreads confusion and bias.
+
+   (7) Subsequently we have discovered the need to distinguish between
+"free software" and "freeware".  The term "freeware" means software you
+are free to redistribute, but usually you are not free to study and
+change the source code, so most of it is not free software.  See
+`http://www.gnu.org/philosophy/words-to-avoid.html' for more
+explanation.
 
 
 File: emacs,  Node: Glossary,  Next: Key Index,  Prev: Intro,  Up: Top
@@ -2926,7 +3469,7 @@ Key (Character) Index
 * C-u C-c C-w (Fortran mode):            Fortran Columns.     (line  57)
 * C-u C-SPC:                             Mark Ring.           (line  27)
 * C-u C-x C-x:                           Persistent Mark.     (line  60)
-* C-u C-x v =:                           Old Revisions.       (line  41)
+* C-u C-x v =:                           Old Revisions.       (line  45)
 * C-u M-;:                               Comment Commands.    (line  59)
 * C-u TAB:                               Multi-line Indent.   (line  39)
 * C-v:                                   Scrolling.           (line  81)
@@ -3120,10 +3663,10 @@ Key (Character) Index
                                                               (line  74)
 * C-x v c:                               VC Undo.             (line  25)
 * C-x v d:                               VC Directory Mode.   (line   6)
-* C-x v g:                               Old Revisions.       (line  81)
+* C-x v g:                               Old Revisions.       (line  85)
 * C-x v h:                               Version Headers.     (line  29)
 * C-x v i:                               Registering.         (line   6)
-* C-x v l:                               VC Change Log.       (line  13)
+* C-x v l:                               VC Change Log.       (line  21)
 * C-x v m:                               Merging.             (line  16)
 * C-x v r:                               Making Revision Tags.
                                                               (line  13)
@@ -3413,7 +3956,7 @@ Key (Character) Index
                                                               (line  23)
 * T (Dired):                             Operating on Files.  (line  94)
 * t (Dired):                             Marks vs Flags.      (line  76)
-* t (Rmail):                             Rmail Display.       (line  27)
+* t (Rmail):                             Rmail Display.       (line  12)
 * TAB:                                   Completion Commands. (line  29)
 * TAB (and major modes):                 Major Modes.         (line   6)
 * TAB (completion):                      Completion Example.  (line   6)
@@ -3431,7 +3974,7 @@ Key (Character) Index
 * u (Rmail):                             Rmail Deletion.      (line  44)
 * UP:                                    Moving Point.        (line  16)
 * v (Dired):                             Dired Visiting.      (line  38)
-* v (Rmail):                             Rmail Display.       (line  55)
+* v (Rmail):                             Rmail Display.       (line  56)
 * w (Dired):                             Misc Dired Features. (line  18)
 * w (Rmail):                             Rmail Output.        (line  32)
 * x (Calendar mode):                     Holidays.            (line  40)
@@ -3532,1521 +4075,4 @@ Command-Line Options Index
 * -t:                                    Initial Options.     (line  19)
 * -u:                                    Initial Options.     (line 114)
 * -vb:                                   Misc X.              (line   7)
-
-
-File: emacs,  Node: Command Index,  Next: Variable Index,  Prev: Option Index,  Up: Top
-
-Command and Function Index
-**************************
-
- [index ]
-* Menu:
-
-* 2C-associate-buffer:                   Two-Column.          (line  35)
-* 2C-dissociate:                         Two-Column.          (line  65)
-* 2C-merge:                              Two-Column.          (line  60)
-* 2C-newline:                            Two-Column.          (line  55)
-* 2C-split:                              Two-Column.          (line  22)
-* 2C-two-columns:                        Two-Column.          (line  12)
-* 5x5:                                   Amusements.          (line  13)
-* abbrev-mode:                           Abbrev Concepts.     (line  13)
-* abbrev-prefix-mark:                    Expanding Abbrevs.   (line  32)
-* abort-recursive-edit:                  Quitting.            (line  70)
-* add-change-log-entry-other-window:     Change Log Commands. (line   6)
-* add-change-log-entry-other-window, in Diff mode: Diff Mode. (line 106)
-* add-dir-local-variable:                Directory Variables. (line  47)
-* add-file-local-variable:               Specifying File Variables.
-                                                              (line  72)
-* add-file-local-variable-prop-line:     Specifying File Variables.
-                                                              (line  18)
-* add-global-abbrev:                     Defining Abbrevs.    (line  31)
-* add-hook:                              Hooks.               (line  37)
-* add-mode-abbrev:                       Defining Abbrevs.    (line  43)
-* add-name-to-file:                      Misc File Ops.       (line  71)
-* add-untranslated-filesystem:           Text and Binary.     (line  50)
-* append-next-kill:                      Appending Kills.     (line  38)
-* append-to-buffer:                      Accumulating Text.   (line   6)
-* append-to-file:                        Accumulating Text.   (line   6)
-* append-to-register:                    RegText.             (line  31)
-* apply-macro-to-region-lines:           Basic Keyboard Macro.
-                                                              (line  82)
-* appt-activate:                         Appointments.        (line  21)
-* appt-add:                              Appointments.        (line  52)
-* appt-delete:                           Appointments.        (line  52)
-* apropos:                               Apropos.             (line  72)
-* apropos-command:                       Apropos.             (line  31)
-* apropos-documentation:                 Apropos.             (line  81)
-* apropos-value:                         Apropos.             (line  84)
-* apropos-variable:                      Apropos.             (line  77)
-* ask-user-about-lock:                   Interlocking.        (line  18)
-* auto-compression-mode:                 Compressed Files.    (line  17)
-* auto-fill-mode:                        Auto Fill.           (line  17)
-* auto-lower-mode:                       Frame Parameters.    (line  19)
-* auto-raise-mode:                       Frame Parameters.    (line   9)
-* auto-revert-mode:                      Reverting.           (line  34)
-* auto-revert-tail-mode:                 Reverting.           (line  34)
-* auto-save-mode:                        Auto Save Control.   (line   6)
-* back-to-indentation:                   Indentation Commands.
-                                                              (line   6)
-* backward-char:                         Moving Point.        (line  16)
-* backward-kill-sentence:                Sentences.           (line  40)
-* backward-kill-word:                    Words.               (line  50)
-* backward-list:                         Moving by Parens.    (line  31)
-* backward-page:                         Pages.               (line  28)
-* backward-paragraph:                    Paragraphs.          (line   6)
-* backward-sentence:                     Sentences.           (line  22)
-* backward-sexp:                         Expressions.         (line  37)
-* backward-text-line:                    Nroff Mode.          (line  14)
-* backward-up-list:                      Moving by Parens.    (line  35)
-* backward-word:                         Words.               (line  32)
-* balance-windows:                       Change Window.       (line  70)
-* beginning-of-buffer:                   Moving Point.        (line  16)
-* beginning-of-defun:                    Moving by Defuns.    (line  19)
-* beginning-of-visual-line:              Visual Line Mode.    (line  23)
-* bibtex-mode:                           TeX Mode.            (line   6)
-* binary-overwrite-mode:                 Minor Modes.         (line  75)
-* blackbox:                              Amusements.          (line  13)
-* blink-cursor-mode:                     Cursor Display.      (line   6)
-* bookmark-delete:                       Bookmarks.           (line  69)
-* bookmark-insert:                       Bookmarks.           (line  76)
-* bookmark-insert-location:              Bookmarks.           (line  72)
-* bookmark-jump:                         Bookmarks.           (line  19)
-* bookmark-load:                         Bookmarks.           (line  60)
-* bookmark-save:                         Bookmarks.           (line  25)
-* bookmark-set:                          Bookmarks.           (line  16)
-* bookmark-write:                        Bookmarks.           (line  66)
-* browse-url <1>:                        Browse-URL.          (line   6)
-* browse-url:                            Help Mode.           (line  38)
-* browse-url-at-mouse:                   Browse-URL.          (line   6)
-* browse-url-at-point:                   Browse-URL.          (line   6)
-* bs-show:                               Buffer Menus.        (line   6)
-* buffer-menu:                           Several Buffers.     (line  18)
-* buffer-menu-other-window:              Several Buffers.     (line  18)
-* c-backslash-region:                    Other C Commands.    (line  57)
-* c-backward-conditional:                Motion in C.         (line  30)
-* c-beginning-of-defun:                  Motion in C.         (line  11)
-* c-beginning-of-statement:              Motion in C.         (line  40)
-* c-context-line-break:                  Other C Commands.    (line  19)
-* c-electric-backspace:                  Program Modes.       (line  33)
-* c-end-of-defun:                        Motion in C.         (line  11)
-* c-end-of-statement:                    Motion in C.         (line  49)
-* c-fill-paragraph:                      Other C Commands.    (line  39)
-* c-forward-conditional:                 Motion in C.         (line  35)
-* c-hungry-delete-backwards:             Hungry Delete.       (line  14)
-* c-hungry-delete-forward:               Hungry Delete.       (line  20)
-* c-indent-command <1>:                  C Indent.            (line  18)
-* c-indent-command:                      Basic Indent.        (line  16)
-* c-indent-defun:                        C Indent.            (line   9)
-* c-indent-exp:                          C Indent.            (line  13)
-* c-macro-expand:                        Other C Commands.    (line  45)
-* c-mark-function:                       Moving by Defuns.    (line  32)
-* c-set-style:                           Custom C Indent.     (line  26)
-* c-show-syntactic-information:          Other C Commands.    (line  76)
-* c-toggle-auto-newline:                 Electric C.          (line  29)
-* c-toggle-electric-state:               Electric C.          (line  19)
-* c-toggle-hungry-state:                 Hungry Delete.       (line  30)
-* c-up-conditional:                      Motion in C.         (line  20)
-* calendar:                              Calendar/Diary.      (line   6)
-* calendar-astro-goto-day-number:        From Other Calendar. (line  10)
-* calendar-astro-print-day-number:       To Other Calendar.   (line  23)
-* calendar-backward-day:                 Calendar Unit Motion.
-                                                              (line  34)
-* calendar-backward-month:               Calendar Unit Motion.
-                                                              (line  43)
-* calendar-backward-week:                Calendar Unit Motion.
-                                                              (line  34)
-* calendar-bahai-goto-date:              From Other Calendar. (line  10)
-* calendar-bahai-print-date:             To Other Calendar.   (line  39)
-* calendar-beginning-of-month:           Move to Beginning or End.
-                                                              (line  15)
-* calendar-beginning-of-week:            Move to Beginning or End.
-                                                              (line  11)
-* calendar-beginning-of-year:            Move to Beginning or End.
-                                                              (line  21)
-* calendar-chinese-goto-date:            From Other Calendar. (line  10)
-* calendar-chinese-print-date:           To Other Calendar.   (line  42)
-* calendar-coptic-goto-date:             From Other Calendar. (line  10)
-* calendar-coptic-print-date:            To Other Calendar.   (line  46)
-* calendar-count-days-region:            Counting Days.       (line  10)
-* calendar-cursor-holidays:              Holidays.            (line  33)
-* calendar-end-of-month:                 Move to Beginning or End.
-                                                              (line  18)
-* calendar-end-of-week:                  Move to Beginning or End.
-                                                              (line  12)
-* calendar-end-of-year:                  Move to Beginning or End.
-                                                              (line  24)
-* calendar-ethiopic-goto-date:           From Other Calendar. (line  10)
-* calendar-ethiopic-print-date:          To Other Calendar.   (line  50)
-* calendar-forward-day:                  Calendar Unit Motion.
-                                                              (line  34)
-* calendar-forward-month:                Calendar Unit Motion.
-                                                              (line  43)
-* calendar-forward-week:                 Calendar Unit Motion.
-                                                              (line  34)
-* calendar-forward-year:                 Calendar Unit Motion.
-                                                              (line  43)
-* calendar-french-goto-date:             From Other Calendar. (line  10)
-* calendar-french-print-date:            To Other Calendar.   (line  35)
-* calendar-goto-date:                    Specified Dates.     (line  24)
-* calendar-goto-day-of-year:             Specified Dates.     (line  29)
-* calendar-goto-today:                   Specified Dates.     (line  37)
-* calendar-hebrew-goto-date:             From Other Calendar. (line  10)
-* calendar-hebrew-list-yahrzeits:        From Other Calendar. (line  65)
-* calendar-hebrew-print-date:            To Other Calendar.   (line  27)
-* calendar-islamic-goto-date:            From Other Calendar. (line  10)
-* calendar-islamic-print-date:           To Other Calendar.   (line  31)
-* calendar-iso-goto-date:                From Other Calendar. (line  10)
-* calendar-iso-goto-week <1>:            From Other Calendar. (line  10)
-* calendar-iso-goto-week:                Specified Dates.     (line  29)
-* calendar-iso-print-date:               To Other Calendar.   (line  15)
-* calendar-julian-goto-date:             From Other Calendar. (line  10)
-* calendar-julian-print-date:            To Other Calendar.   (line  19)
-* calendar-list-holidays:                Holidays.            (line  50)
-* calendar-lunar-phases:                 Lunar Phases.        (line  19)
-* calendar-mark-holidays:                Holidays.            (line  40)
-* calendar-mark-today:                   Calendar Customizing.
-                                                              (line  39)
-* calendar-mayan-goto-long-count-date:   Mayan Calendar.      (line  42)
-* calendar-mayan-next-calendar-round-date: Mayan Calendar.    (line  64)
-* calendar-mayan-next-haab-date:         Mayan Calendar.      (line  56)
-* calendar-mayan-next-tzolkin-date:      Mayan Calendar.      (line  48)
-* calendar-mayan-previous-haab-date:     Mayan Calendar.      (line  56)
-* calendar-mayan-previous-tzolkin-date:  Mayan Calendar.      (line  48)
-* calendar-mayan-print-date:             To Other Calendar.   (line  58)
-* calendar-other-month:                  Specified Dates.     (line  34)
-* calendar-persian-goto-date:            From Other Calendar. (line  10)
-* calendar-persian-print-date:           To Other Calendar.   (line  54)
-* calendar-print-day-of-year:            General Calendar.    (line  21)
-* calendar-print-other-dates:            To Other Calendar.   (line  11)
-* calendar-redraw:                       General Calendar.    (line  27)
-* calendar-scroll-left:                  Scroll Calendar.     (line  28)
-* calendar-scroll-left-three-months:     Scroll Calendar.     (line  34)
-* calendar-scroll-right:                 Scroll Calendar.     (line  28)
-* calendar-scroll-right-three-months:    Scroll Calendar.     (line  34)
-* calendar-set-date-style:               Date Formats.        (line  43)
-* calendar-star-date:                    Calendar Customizing.
-                                                              (line  33)
-* calendar-sunrise-sunset:               Sunrise/Sunset.      (line  25)
-* calendar-unmark:                       Holidays.            (line  40)
-* capitalize-word:                       Case.                (line  24)
-* cd:                                    File Names.          (line  42)
-* center-line:                           Fill Commands.       (line  46)
-* change-log-merge:                      Change Log Commands. (line  43)
-* change-log-mode:                       Change Log Commands. (line  31)
-* check-parens:                          Parentheses.         (line   6)
-* choose-completion:                     Completion Commands. (line  79)
-* clean-buffer-list:                     Kill Buffer.         (line  49)
-* clear-rectangle:                       Rectangles.          (line  91)
-* clipboard-kill-region:                 Clipboard.           (line  13)
-* clipboard-kill-ring-save:              Clipboard.           (line  16)
-* clipboard-yank:                        Clipboard.           (line  20)
-* clone-indirect-buffer:                 Indirect Buffers.    (line  12)
-* clone-indirect-buffer-other-window:    Indirect Buffers.    (line  19)
-* column-number-mode:                    Optional Mode Line.  (line  23)
-* comint-bol-or-process-mark:            Shell Mode.          (line  43)
-* comint-continue-subjob:                Shell Mode.          (line 131)
-* comint-copy-old-input:                 Shell History Copying.
-                                                              (line  12)
-* comint-delchar-or-maybe-eof:           Shell Mode.          (line  37)
-* comint-delete-output:                  Shell Mode.          (line  83)
-* comint-dynamic-complete:               Shell Mode.          (line  20)
-* comint-dynamic-list-filename...:       Shell Mode.          (line  32)
-* comint-dynamic-list-input-ring:        Shell Ring.          (line  24)
-* comint-get-next-from-history:          Shell Ring.          (line  18)
-* comint-history-isearch-backward-regexp: Shell Ring.         (line  14)
-* comint-input-previous-argument:        Shell Ring.          (line  21)
-* comint-interrupt-subjob:               Shell Mode.          (line  68)
-* comint-kill-input:                     Shell Mode.          (line  60)
-* comint-magic-space:                    History References.  (line  17)
-* comint-next-input:                     Shell Ring.          (line  10)
-* comint-next-prompt:                    Shell History Copying.
-                                                              (line   9)
-* comint-previous-input:                 Shell Ring.          (line   6)
-* comint-previous-prompt:                Shell History Copying.
-                                                              (line   6)
-* comint-quit-subjob:                    Shell Mode.          (line  78)
-* comint-run:                            Shell Mode.          (line 161)
-* comint-send-input:                     Shell Mode.          (line  13)
-* comint-show-maximum-output:            Shell Mode.          (line 101)
-* comint-show-output:                    Shell Mode.          (line  96)
-* comint-stop-subjob:                    Shell Mode.          (line  73)
-* comint-strip-ctrl-m:                   Shell Mode.          (line 135)
-* comint-truncate-buffer:                Shell Mode.          (line 144)
-* comint-write-output:                   Shell Mode.          (line  89)
-* comment-dwim:                          Comment Commands.    (line  27)
-* comment-indent-new-line:               Multi-Line Comments. (line   6)
-* comment-kill:                          Comment Commands.    (line  59)
-* comment-region:                        Multi-Line Comments. (line  14)
-* comment-set-column:                    Options for Comments.
-                                                              (line   6)
-* compare-windows:                       Comparing Files.     (line  26)
-* compilation-next-error:                Compilation Mode.    (line 103)
-* compilation-next-file:                 Compilation Mode.    (line 103)
-* compilation-previous-error:            Compilation Mode.    (line 103)
-* compilation-previous-file:             Compilation Mode.    (line 103)
-* compile:                               Compilation.         (line  22)
-* compile (MS-DOS):                      MS-DOS Processes.    (line   6)
-* compile-goto-error:                    Compilation Mode.    (line  48)
-* complete-symbol:                       Symbol Completion.   (line  25)
-* compose-mail:                          Sending Mail.        (line   6)
-* compose-mail-other-frame:              Sending Mail.        (line  27)
-* compose-mail-other-window:             Sending Mail.        (line  27)
-* copy-dir-locals-to-file-locals:        Specifying File Variables.
-                                                              (line  72)
-* copy-dir-locals-to-file-locals-prop-line: Specifying File Variables.
-                                                              (line  18)
-* copy-directory:                        Misc File Ops.       (line  78)
-* copy-file:                             Misc File Ops.       (line  78)
-* copy-file-locals-to-dir-locals:        Directory Variables. (line  47)
-* copy-rectangle-to-register:            RegRect.             (line  10)
-* copy-to-buffer:                        Accumulating Text.   (line   6)
-* copy-to-register:                      RegText.             (line  23)
-* count-lines-page:                      Pages.               (line  49)
-* count-lines-region:                    Position Info.       (line  50)
-* count-text-lines:                      Nroff Mode.          (line  14)
-* cpp-highlight-buffer:                  Other C Commands.    (line  67)
-* create-fontset-from-fontset-spec:      Defining Fontsets.   (line 104)
-* crisp-mode:                            Emulation.           (line  10)
-* cua-mode:                              CUA Bindings.        (line   6)
-* customize:                             Easy Customization.  (line  12)
-* customize-apropos:                     Specific Customization.
-                                                              (line  56)
-* customize-browse:                      Browsing Custom.     (line   6)
-* customize-changed:                     Specific Customization.
-                                                              (line  63)
-* customize-create-theme:                Custom Themes.       (line  11)
-* customize-face:                        Specific Customization.
-                                                              (line  46)
-* customize-group:                       Specific Customization.
-                                                              (line  50)
-* customize-option:                      Specific Customization.
-                                                              (line  36)
-* customize-saved:                       Specific Customization.
-                                                              (line  71)
-* customize-unsaved:                     Specific Customization.
-                                                              (line  71)
-* cwarn-mode:                            Other C Commands.    (line  82)
-* dabbrev-completion:                    Dynamic Abbrevs.     (line  12)
-* dabbrev-expand:                        Dynamic Abbrevs.     (line  12)
-* dbx:                                   Starting GUD.        (line  20)
-* debug_print:                           Checklist.           (line 220)
-* decipher:                              Amusements.          (line  20)
-* default-value:                         Locals.              (line  70)
-* define-abbrevs:                        Saving Abbrevs.      (line  49)
-* define-global-abbrev:                  Defining Abbrevs.    (line  56)
-* define-key:                            Init Rebinding.      (line  78)
-* define-mode-abbrev:                    Defining Abbrevs.    (line  56)
-* delete-backward-char:                  Deletion.            (line   6)
-* delete-blank-lines:                    Blank Lines.         (line  16)
-* delete-char:                           Deletion.            (line   6)
-* delete-dir-local-variable:             Directory Variables. (line  47)
-* delete-file:                           Misc File Ops.       (line  40)
-* delete-file-local-variable:            Specifying File Variables.
-                                                              (line  72)
-* delete-file-local-variable-prop-line:  Specifying File Variables.
-                                                              (line  18)
-* delete-frame:                          Frame Commands.      (line  13)
-* delete-horizontal-space:               Deletion.            (line  35)
-* delete-indentation:                    Indentation Commands.
-                                                              (line  24)
-* delete-other-frames:                   Frame Commands.      (line  22)
-* delete-other-windows:                  Change Window.       (line  46)
-* delete-rectangle:                      Rectangles.          (line  61)
-* delete-selection-mode <1>:             Mouse Commands.      (line  97)
-* delete-selection-mode:                 Using Region.        (line  43)
-* delete-trailing-whitespace:            Useless Whitespace.  (line  22)
-* delete-whitespace-rectangle:           Rectangles.          (line  97)
-* delete-window:                         Change Window.       (line  35)
-* describe-bindings:                     Misc Help.           (line  42)
-* describe-categories:                   Regexp Backslash.    (line 140)
-* describe-character-set:                Charsets.            (line  24)
-* describe-coding-system:                Coding Systems.      (line  42)
-* describe-copying:                      Help Files.          (line  13)
-* describe-distribution:                 Help Files.          (line  13)
-* describe-function:                     Name Help.           (line   6)
-* describe-gnu-project:                  Help Files.          (line  13)
-* describe-input-method:                 Select Input Method. (line  14)
-* describe-key:                          Key Help.            (line  12)
-* describe-key-briefly:                  Key Help.            (line   6)
-* describe-language-environment:         Language Environments.
-                                                              (line  76)
-* describe-mode:                         Misc Help.           (line  37)
-* describe-no-warranty:                  Help Files.          (line  13)
-* describe-syntax:                       Syntax.              (line  18)
-* describe-text-properties:              Editing Format Info. (line  25)
-* describe-variable:                     Name Help.           (line  40)
-* desktop-change-dir:                    Saving Emacs Sessions.
-                                                              (line  20)
-* desktop-clear:                         Saving Emacs Sessions.
-                                                              (line  40)
-* desktop-revert:                        Saving Emacs Sessions.
-                                                              (line  20)
-* desktop-save:                          Saving Emacs Sessions.
-                                                              (line  11)
-* diary:                                 Displaying the Diary.
-                                                              (line  65)
-* diary-anniversary <1>:                 Sexp Diary Entries.  (line  16)
-* diary-anniversary:                     Special Diary Entries.
-                                                              (line  35)
-* diary-astro-day-number:                Sexp Diary Entries.  (line 116)
-* diary-bahai-date:                      Sexp Diary Entries.  (line 116)
-* diary-bahai-insert-entry:              Non-Gregorian Diary. (line  72)
-* diary-bahai-insert-monthly-entry:      Non-Gregorian Diary. (line  72)
-* diary-bahai-insert-yearly-entry:       Non-Gregorian Diary. (line  72)
-* diary-bahai-list-entries:              Non-Gregorian Diary. (line  13)
-* diary-bahai-mark-entries:              Non-Gregorian Diary. (line  13)
-* diary-block:                           Special Diary Entries.
-                                                              (line  47)
-* diary-chinese-date:                    Sexp Diary Entries.  (line 116)
-* diary-coptic-date:                     Sexp Diary Entries.  (line 116)
-* diary-cyclic <1>:                      Sexp Diary Entries.  (line  35)
-* diary-cyclic:                          Special Diary Entries.
-                                                              (line  64)
-* diary-date:                            Sexp Diary Entries.  (line  53)
-* diary-day-of-year:                     Sexp Diary Entries.  (line 116)
-* diary-ethiopic-date:                   Sexp Diary Entries.  (line 116)
-* diary-fancy-display:                   Diary Display.       (line   6)
-* diary-float <1>:                       Sexp Diary Entries.  (line  65)
-* diary-float:                           Special Diary Entries.
-                                                              (line  86)
-* diary-french-date:                     Sexp Diary Entries.  (line 116)
-* diary-hebrew-date:                     Sexp Diary Entries.  (line 116)
-* diary-hebrew-insert-entry:             Non-Gregorian Diary. (line  72)
-* diary-hebrew-insert-monthly-entry:     Non-Gregorian Diary. (line  72)
-* diary-hebrew-insert-yearly-entry:      Non-Gregorian Diary. (line  72)
-* diary-hebrew-list-entries:             Non-Gregorian Diary. (line  13)
-* diary-hebrew-mark-entries:             Non-Gregorian Diary. (line  13)
-* diary-hebrew-omer:                     Sexp Diary Entries.  (line 176)
-* diary-hebrew-parasha:                  Sexp Diary Entries.  (line 176)
-* diary-hebrew-rosh-hodesh:              Sexp Diary Entries.  (line 176)
-* diary-hebrew-sabbath-candles:          Sexp Diary Entries.  (line 176)
-* diary-hebrew-yahrzeit:                 Sexp Diary Entries.  (line 176)
-* diary-include-other-diary-files:       Fancy Diary Display. (line  28)
-* diary-insert-anniversary-entry:        Special Diary Entries.
-                                                              (line  29)
-* diary-insert-block-entry:              Special Diary Entries.
-                                                              (line  54)
-* diary-insert-cyclic-entry:             Special Diary Entries.
-                                                              (line  59)
-* diary-insert-entry:                    Adding to Diary.     (line  27)
-* diary-insert-monthly-entry:            Adding to Diary.     (line  32)
-* diary-insert-weekly-entry:             Adding to Diary.     (line  32)
-* diary-insert-yearly-entry:             Adding to Diary.     (line  32)
-* diary-islamic-date:                    Sexp Diary Entries.  (line 116)
-* diary-islamic-insert-entry:            Non-Gregorian Diary. (line  72)
-* diary-islamic-insert-monthly-entry:    Non-Gregorian Diary. (line  72)
-* diary-islamic-insert-yearly-entry:     Non-Gregorian Diary. (line  72)
-* diary-islamic-list-entries:            Non-Gregorian Diary. (line  13)
-* diary-islamic-mark-entries:            Non-Gregorian Diary. (line  13)
-* diary-iso-date:                        Sexp Diary Entries.  (line 116)
-* diary-julian-date:                     Sexp Diary Entries.  (line 116)
-* diary-lunar-phases:                    Sexp Diary Entries.  (line 116)
-* diary-mail-entries:                    Displaying the Diary.
-                                                              (line  73)
-* diary-mark-entries:                    Displaying the Diary.
-                                                              (line  51)
-* diary-mark-included-diary-files:       Fancy Diary Display. (line  28)
-* diary-mayan-date:                      Sexp Diary Entries.  (line 116)
-* diary-persian-date:                    Sexp Diary Entries.  (line 116)
-* diary-print-entries:                   Diary Display.       (line  37)
-* diary-remind:                          Sexp Diary Entries.  (line  48)
-* diary-show-all-entries:                Displaying the Diary.
-                                                              (line  62)
-* diary-simple-display:                  Diary Display.       (line   6)
-* diary-sort-entries:                    Fancy Diary Display. (line  11)
-* diary-sunrise-sunset:                  Sexp Diary Entries.  (line 116)
-* diary-view-entries:                    Displaying the Diary.
-                                                              (line  36)
-* diff:                                  Comparing Files.     (line   6)
-* diff-add-change-log-entries-other-window: Diff Mode.        (line 106)
-* diff-apply-hunk:                       Diff Mode.           (line  56)
-* diff-backup:                           Comparing Files.     (line  17)
-* diff-buffer-with-file:                 Comparing Files.     (line  22)
-* diff-context->unified:                 Diff Mode.           (line  96)
-* diff-ediff-patch:                      Diff Mode.           (line  69)
-* diff-file-kill:                        Diff Mode.           (line  52)
-* diff-file-next:                        Diff Mode.           (line  41)
-* diff-file-prev:                        Diff Mode.           (line  45)
-* diff-goto-source:                      Diff Mode.           (line  65)
-* diff-hunk-kill:                        Diff Mode.           (line  49)
-* diff-hunk-next:                        Diff Mode.           (line  35)
-* diff-hunk-prev:                        Diff Mode.           (line  38)
-* diff-mode:                             Diff Mode.           (line   6)
-* diff-refine-hunk:                      Diff Mode.           (line  60)
-* diff-restrict-view:                    Diff Mode.           (line  73)
-* diff-reverse-direction:                Diff Mode.           (line  79)
-* diff-show-trailing-whitespaces:        Diff Mode.           (line 116)
-* diff-split-hunk:                       Diff Mode.           (line  83)
-* diff-unified->context:                 Diff Mode.           (line  91)
-* digit-argument:                        Arguments.           (line  15)
-* dir-locals-set-class-variables:        Directory Variables. (line  54)
-* dir-locals-set-directory-class:        Directory Variables. (line  54)
-* dired:                                 Dired Enter.         (line   6)
-* dired-at-point:                        FFAP.                (line   6)
-* dired-backup-diff:                     Comparison in Dired. (line  18)
-* dired-change-marks:                    Marks vs Flags.      (line  81)
-* dired-clean-directory:                 Flagging Many Files. (line  38)
-* dired-compare-directories:             Misc Dired Features. (line  39)
-* dired-copy-filename-as-kill:           Misc Dired Features. (line  18)
-* dired-create-directory:                Misc Dired Features. (line   6)
-* dired-diff:                            Comparison in Dired. (line  11)
-* dired-display-file:                    Dired Visiting.      (line  27)
-* dired-do-byte-compile:                 Operating on Files.  (line 114)
-* dired-do-chgrp:                        Operating on Files.  (line  81)
-* dired-do-chmod:                        Operating on Files.  (line  76)
-* dired-do-chown:                        Operating on Files.  (line  85)
-* dired-do-compress:                     Operating on Files.  (line 106)
-* dired-do-copy:                         Operating on Files.  (line  34)
-* dired-do-copy-regexp:                  Transforming File Names.
-                                                              (line  33)
-* dired-do-delete:                       Operating on Files.  (line  48)
-* dired-do-flagged-delete:               Dired Deletion.      (line  36)
-* dired-do-hardlink:                     Operating on Files.  (line  64)
-* dired-do-hardlink-regexp:              Transforming File Names.
-                                                              (line  34)
-* dired-do-kill-lines:                   Dired Updating.      (line  51)
-* dired-do-load:                         Operating on Files.  (line 110)
-* dired-do-print:                        Operating on Files.  (line  99)
-* dired-do-query-replace-regexp:         Operating on Files.  (line 127)
-* dired-do-redisplay:                    Dired Updating.      (line  34)
-* dired-do-rename:                       Operating on Files.  (line  55)
-* dired-do-rename-regexp:                Transforming File Names.
-                                                              (line  32)
-* dired-do-search:                       Operating on Files.  (line 119)
-* dired-do-shell-command:                Shell Commands in Dired.
-                                                              (line   6)
-* dired-do-symlink:                      Operating on Files.  (line  70)
-* dired-do-symlink-regexp:               Transforming File Names.
-                                                              (line  35)
-* dired-do-touch:                        Operating on Files.  (line  94)
-* dired-downcase:                        Transforming File Names.
-                                                              (line  27)
-* dired-find-file:                       Dired Visiting.      (line  12)
-* dired-find-file-other-window:          Dired Visiting.      (line  21)
-* dired-flag-auto-save-files:            Flagging Many Files. (line  30)
-* dired-flag-backup-files:               Flagging Many Files. (line  34)
-* dired-flag-file-deletion:              Dired Deletion.      (line  22)
-* dired-flag-files-regexp:               Flagging Many Files. (line  57)
-* dired-flag-garbage-files:              Flagging Many Files. (line  51)
-* dired-goto-file:                       Dired Navigation.    (line  16)
-* dired-hide-all:                        Hiding Subdirectories.
-                                                              (line  15)
-* dired-hide-subdir:                     Hiding Subdirectories.
-                                                              (line  10)
-* dired-mark:                            Marks vs Flags.      (line  17)
-* dired-mark-directories:                Marks vs Flags.      (line  30)
-* dired-mark-executables:                Marks vs Flags.      (line  22)
-* dired-mark-files-containing-regexp:    Marks vs Flags.      (line 112)
-* dired-mark-files-regexp:               Marks vs Flags.      (line 103)
-* dired-mark-subdir-files:               Marks vs Flags.      (line  35)
-* dired-mark-symlinks:                   Marks vs Flags.      (line  26)
-* dired-maybe-insert-subdir:             Subdirectories in Dired.
-                                                              (line  18)
-* dired-mouse-find-file-other-window:    Dired Visiting.      (line  33)
-* dired-next-dirline:                    Subdirectory Motion. (line  35)
-* dired-next-marked-file:                Marks vs Flags.      (line  67)
-* dired-next-subdir:                     Subdirectory Motion. (line  15)
-* dired-other-frame:                     Dired Enter.         (line  29)
-* dired-other-window:                    Dired Enter.         (line  29)
-* dired-prev-dirline:                    Subdirectory Motion. (line  30)
-* dired-prev-marked-file:                Marks vs Flags.      (line  72)
-* dired-prev-subdir:                     Subdirectory Motion. (line  19)
-* dired-sort-toggle-or-edit:             Dired Updating.      (line  67)
-* dired-toggle-marks:                    Marks vs Flags.      (line  76)
-* dired-tree-down:                       Subdirectory Motion. (line  26)
-* dired-tree-up:                         Subdirectory Motion. (line  23)
-* dired-undo:                            Marks vs Flags.      (line 120)
-* dired-unmark:                          Marks vs Flags.      (line  40)
-* dired-unmark-all-files:                Marks vs Flags.      (line  54)
-* dired-unmark-all-marks:                Marks vs Flags.      (line  49)
-* dired-unmark-backward:                 Marks vs Flags.      (line  44)
-* dired-up-directory:                    Dired Visiting.      (line  45)
-* dired-upcase:                          Transforming File Names.
-                                                              (line  21)
-* dired-view-file:                       Dired Visiting.      (line  38)
-* dirs:                                  Directory Tracking.  (line  20)
-* dirtrack-mode:                         Directory Tracking.  (line  25)
-* disable-command:                       Disabling.           (line  33)
-* disable-theme:                         Custom Themes.       (line  47)
-* display-battery-mode:                  Optional Mode Line.  (line  72)
-* display-local-help:                    Help Echo.           (line  14)
-* display-time:                          Optional Mode Line.  (line  48)
-* dissociated-press:                     Dissociated Press.   (line   6)
-* do-auto-save:                          Auto Save Control.   (line  37)
-* doc-view-clear-cache:                  Conversion.          (line   6)
-* doc-view-enlarge:                      Document View.       (line  28)
-* doc-view-first-page:                   Navigation.          (line  25)
-* doc-view-goto-page:                    Navigation.          (line  25)
-* doc-view-kill-proc:                    Conversion.          (line  10)
-* doc-view-kill-proc-and-buffer:         Conversion.          (line  10)
-* doc-view-last-page:                    Navigation.          (line  25)
-* doc-view-mode:                         Document View.       (line   6)
-* doc-view-next-page:                    Navigation.          (line  16)
-* doc-view-previous-page:                Navigation.          (line  16)
-* doc-view-reset-slice:                  Slicing.             (line  22)
-* doc-view-scroll-down-or-previous-page: Navigation.          (line  20)
-* doc-view-scroll-up-or-next-page:       Navigation.          (line  20)
-* doc-view-search:                       Searching.           (line  10)
-* doc-view-search-backward:              Searching.           (line  10)
-* doc-view-set-slice:                    Slicing.             (line  10)
-* doc-view-set-slice-using-mouse:        Slicing.             (line  10)
-* doc-view-show-tooltip:                 Searching.           (line  10)
-* doc-view-shrink:                       Document View.       (line  28)
-* doc-view-toggle-display:               Document View.       (line  12)
-* doctex-mode:                           TeX Mode.            (line   6)
-* doctor:                                Total Frustration.   (line  13)
-* down-list:                             Moving by Parens.    (line  42)
-* downcase-region:                       Case.                (line  47)
-* downcase-word:                         Case.                (line  24)
-* dunnet:                                Amusements.          (line  23)
-* edit-abbrevs:                          Editing Abbrevs.     (line  42)
-* edit-kbd-macro:                        Edit Keyboard Macro. (line  22)
-* edit-tab-stops <1>:                    Tab Stops.           (line  10)
-* edit-tab-stops:                        Indentation.         (line  72)
-* edit-tab-stops-note-changes:           Tab Stops.           (line  10)
-* edt-emulation-off:                     Emulation.           (line  18)
-* edt-emulation-on:                      Emulation.           (line  18)
-* eldoc-mode:                            Lisp Doc.            (line  16)
-* electric-nroff-mode:                   Nroff Mode.          (line  25)
-* emacs-lisp-mode:                       Lisp Eval.           (line   6)
-* emacs-version:                         Understanding Bug Reporting.
-                                                              (line   6)
-* emerge-auto-advance-mode:              Submodes of Emerge.  (line  31)
-* emerge-buffers:                        Overview of Emerge.  (line  15)
-* emerge-buffers-with-ancestor:          Overview of Emerge.  (line  18)
-* emerge-files:                          Overview of Emerge.  (line   9)
-* emerge-files-with-ancestor:            Overview of Emerge.  (line  12)
-* emerge-skip-prefers-mode:              Submodes of Emerge.  (line  31)
-* enable-command:                        Disabling.           (line  33)
-* enable-theme:                          Custom Themes.       (line  47)
-* end-of-buffer:                         Moving Point.        (line  16)
-* end-of-defun:                          Moving by Defuns.    (line  19)
-* end-of-visual-line:                    Visual Line Mode.    (line  23)
-* enlarge-window:                        Change Window.       (line  51)
-* enlarge-window-horizontally:           Change Window.       (line  51)
-* enriched-mode:                         Requesting Formatted Text.
-                                                              (line  11)
-* eval-buffer:                           Lisp Eval.           (line  73)
-* eval-defun:                            Lisp Eval.           (line  44)
-* eval-expression:                       Lisp Eval.           (line  38)
-* eval-last-sexp:                        Lisp Eval.           (line  58)
-* eval-print-last-sexp:                  Lisp Interaction.    (line  10)
-* eval-region:                           Lisp Eval.           (line  73)
-* exchange-point-and-mark:               Setting Mark.        (line  38)
-* execute-extended-command:              M-x.                 (line  57)
-* exit-calendar:                         General Calendar.    (line  36)
-* exit-recursive-edit:                   Recursive Edit.      (line  12)
-* expand-abbrev:                         Expanding Abbrevs.   (line  26)
-* expand-region-abbrevs:                 Expanding Abbrevs.   (line  59)
-* f90-beginning-of-block:                Fortran Motion.      (line  44)
-* f90-end-of-block:                      Fortran Motion.      (line  36)
-* f90-mode:                              Fortran.             (line   6)
-* f90-next-block:                        Fortran Motion.      (line  23)
-* f90-next-statement:                    Fortran Motion.      (line  13)
-* f90-previous-block:                    Fortran Motion.      (line  31)
-* f90-previous-statement:                Fortran Motion.      (line  17)
-* facemenu-remove-all:                   Editing Format Info. (line  21)
-* facemenu-remove-face-props:            Editing Format Info. (line  17)
-* facemenu-set-background:               Format Colors.       (line  28)
-* facemenu-set-bold:                     Format Faces.        (line  18)
-* facemenu-set-bold-italic:              Format Faces.        (line  26)
-* facemenu-set-default:                  Format Faces.        (line  15)
-* facemenu-set-face:                     Format Faces.        (line  34)
-* facemenu-set-foreground:               Format Colors.       (line  28)
-* facemenu-set-italic:                   Format Faces.        (line  22)
-* facemenu-set-underline:                Format Faces.        (line  30)
-* ff-find-related-file:                  Other C Commands.    (line 107)
-* ffap:                                  FFAP.                (line   6)
-* ffap-menu:                             FFAP.                (line   6)
-* ffap-mode:                             FFAP.                (line  18)
-* ffap-next:                             FFAP.                (line   6)
-* file-cache-add-directory:              File Name Cache.     (line  17)
-* file-cache-minibuffer-complete:        File Name Cache.     (line   6)
-* file-name-shadow-mode:                 Minibuffer File.     (line  32)
-* filesets-add-buffer:                   Filesets.            (line  13)
-* filesets-init:                         Filesets.            (line   6)
-* filesets-remove-buffer:                Filesets.            (line  13)
-* fill-individual-paragraphs:            Fill Prefix.         (line  63)
-* fill-nonuniform-paragraphs:            Fill Prefix.         (line  70)
-* fill-paragraph:                        Fill Commands.       (line  21)
-* fill-region:                           Fill Commands.       (line  28)
-* fill-region-as-paragraph:              Fill Commands.       (line  31)
-* find-alternate-file:                   Visiting.            (line 123)
-* find-dired:                            Dired and Find.      (line  27)
-* find-file:                             Visiting.            (line  52)
-* find-file-at-point:                    FFAP.                (line   6)
-* find-file-literally:                   Visiting.            (line 178)
-* find-file-other-frame:                 Visiting.            (line 161)
-* find-file-other-window:                Visiting.            (line 153)
-* find-file-read-only:                   Visiting.            (line 149)
-* find-file-read-only-other-frame:       Creating Frames.     (line  43)
-* find-grep:                             Grep Searching.      (line  53)
-* find-grep-dired:                       Dired and Find.      (line  17)
-* find-name-dired:                       Dired and Find.      (line   9)
-* find-tag:                              Find Tag.            (line  35)
-* find-tag-other-frame:                  Find Tag.            (line  56)
-* find-tag-other-window:                 Find Tag.            (line  56)
-* find-tag-regexp:                       Find Tag.            (line  76)
-* finder-by-keyword:                     Library Keywords.    (line   6)
-* flush-lines:                           Other Repeating Search.
-                                                              (line  12)
-* flyspell-mode:                         Spelling.            (line 169)
-* flyspell-prog-mode:                    Spelling.            (line 183)
-* foldout-exit-fold:                     Foldout.             (line  39)
-* foldout-zoom-subtree:                  Foldout.             (line  16)
-* follow-mode:                           Follow Mode.         (line   6)
-* font-lock-add-keywords:                Font Lock.           (line  82)
-* font-lock-mode:                        Font Lock.           (line  15)
-* font-lock-remove-keywords:             Font Lock.           (line  93)
-* format-find-file:                      Forcing Enriched Mode.
-                                                              (line  28)
-* fortran-beginning-of-block:            Fortran Motion.      (line  44)
-* fortran-column-ruler:                  Fortran Columns.     (line  33)
-* fortran-comment-region:                Fortran Comments.    (line  80)
-* fortran-end-of-block:                  Fortran Motion.      (line  36)
-* fortran-indent-subprogram:             ForIndent Commands.  (line  21)
-* fortran-join-line:                     ForIndent Commands.  (line  30)
-* fortran-mode:                          Fortran.             (line   6)
-* fortran-next-statement:                Fortran Motion.      (line  13)
-* fortran-previous-statement:            Fortran Motion.      (line  17)
-* fortran-split-line:                    ForIndent Commands.  (line  25)
-* fortran-strip-sequence-nos:            Fortran Columns.     (line  62)
-* fortran-window-create:                 Fortran Columns.     (line  57)
-* fortran-window-create-momentarily:     Fortran Columns.     (line  52)
-* fortune-to-signature:                  Mail Amusements.     (line  19)
-* forward-char:                          Moving Point.        (line  16)
-* forward-list:                          Moving by Parens.    (line  31)
-* forward-page:                          Pages.               (line  28)
-* forward-paragraph:                     Paragraphs.          (line   6)
-* forward-sentence:                      Sentences.           (line  22)
-* forward-sexp:                          Expressions.         (line  37)
-* forward-text-line:                     Nroff Mode.          (line  14)
-* forward-word:                          Words.               (line  32)
-* frame-configuration-to-register:       RegConfig.           (line   6)
-* fringe-mode:                           Fringes.             (line  24)
-* gdb:                                   Starting GUD.        (line  10)
-* gdb-delete-breakpoint:                 Breakpoints Buffer.  (line  19)
-* gdb-edit-value:                        Watch Expressions.   (line  28)
-* gdb-frames-select:                     Stack Buffer.        (line  10)
-* gdb-goto-breakpoint:                   Breakpoints Buffer.  (line  22)
-* gdb-many-windows:                      GDB-UI Layout.       (line  31)
-* gdb-restore-windows:                   GDB-UI Layout.       (line  27)
-* gdb-threads-select:                    Other GDB-UI Buffers.
-                                                              (line  46)
-* gdb-toggle-breakpoint:                 Breakpoints Buffer.  (line  12)
-* gdb-var-delete:                        Watch Expressions.   (line  25)
-* getenv:                                Environment.         (line  19)
-* glasses-mode:                          Glasses.             (line   6)
-* global-auto-revert-mode:               Reverting.           (line  34)
-* global-cwarn-mode:                     Other C Commands.    (line  82)
-* global-font-lock-mode:                 Font Lock.           (line  20)
-* global-hl-line-mode:                   Cursor Display.      (line  34)
-* global-set-key:                        Rebinding.           (line  16)
-* global-unset-key:                      Rebinding.           (line  16)
-* global-visual-line-mode:               Visual Line Mode.    (line  13)
-* gnus:                                  Gnus.                (line  12)
-* gnus-group-exit:                       Summary of Gnus.     (line  18)
-* gnus-group-kill-group:                 Summary of Gnus.     (line  40)
-* gnus-group-list-all-groups:            Summary of Gnus.     (line  25)
-* gnus-group-list-groups:                Summary of Gnus.     (line  29)
-* gnus-group-next-group:                 Summary of Gnus.     (line  80)
-* gnus-group-next-unread-group:          Summary of Gnus.     (line  72)
-* gnus-group-prev-group:                 Summary of Gnus.     (line  80)
-* gnus-group-prev-unread-group:          Summary of Gnus.     (line  76)
-* gnus-group-read-group:                 Summary of Gnus.     (line  49)
-* gnus-group-unsubscribe-current-group:  Summary of Gnus.     (line  33)
-* gnus-summary-isearch-article:          Summary of Gnus.     (line  85)
-* gnus-summary-next-subject:             Summary of Gnus.     (line  80)
-* gnus-summary-next-unread-article:      Summary of Gnus.     (line  72)
-* gnus-summary-prev-page:                Summary of Gnus.     (line  70)
-* gnus-summary-prev-subject:             Summary of Gnus.     (line  80)
-* gnus-summary-prev-unread-article:      Summary of Gnus.     (line  76)
-* gnus-summary-search-article-forward:   Summary of Gnus.     (line  90)
-* gomoku:                                Amusements.          (line   6)
-* goto-address-mode:                     Goto Address mode.   (line   6)
-* goto-char:                             Moving Point.        (line  16)
-* goto-followup-to:                      Header Editing.      (line  38)
-* goto-line <1>:                         Select Buffer.       (line  91)
-* goto-line:                             Moving Point.        (line  16)
-* goto-reply-to:                         Header Editing.      (line  38)
-* gpm-mouse-mode:                        Text-Only Mouse.     (line  16)
-* grep:                                  Grep Searching.      (line  29)
-* grep (MS-DOS):                         MS-DOS Processes.    (line   6)
-* grep-find:                             Grep Searching.      (line  53)
-* gud-cont:                              Commands of GUD.     (line  63)
-* gud-def:                               GUD Customization.   (line  18)
-* gud-down:                              Commands of GUD.     (line  86)
-* gud-finish:                            Commands of GUD.     (line  98)
-* gud-gdb:                               Starting GUD.        (line  15)
-* gud-gdb-complete-command:              Commands of GUD.     (line 113)
-* gud-jump:                              Commands of GUD.     (line 104)
-* gud-next:                              Commands of GUD.     (line  48)
-* gud-print:                             Commands of GUD.     (line  57)
-* gud-refresh:                           Commands of GUD.     (line  36)
-* gud-remove:                            Commands of GUD.     (line  69)
-* gud-step:                              Commands of GUD.     (line  42)
-* gud-stepi:                             Commands of GUD.     (line  53)
-* gud-tbreak:                            Commands of GUD.     (line  75)
-* gud-until:                             Commands of GUD.     (line  91)
-* gud-up:                                Commands of GUD.     (line  81)
-* gud-watch:                             Watch Expressions.   (line   6)
-* handwrite:                             PostScript.          (line  82)
-* hanoi:                                 Amusements.          (line   6)
-* help-command:                          Help.                (line   6)
-* help-for-help:                         Help.                (line  13)
-* help-next-ref:                         Help Mode.           (line  42)
-* help-previous-ref:                     Help Mode.           (line  42)
-* help-with-tutorial:                    Basic.               (line   6)
-* hi-lock-find-patterns:                 Highlight Interactively.
-                                                              (line  65)
-* hi-lock-mode:                          Highlight Interactively.
-                                                              (line  11)
-* hi-lock-write-interactive-patterns:    Highlight Interactively.
-                                                              (line  54)
-* hide-body:                             Outline Visibility.  (line  80)
-* hide-entry:                            Outline Visibility.  (line  58)
-* hide-ifdef-mode:                       Other C Commands.    (line  99)
-* hide-leaves:                           Outline Visibility.  (line  70)
-* hide-other:                            Outline Visibility.  (line  92)
-* hide-sublevels:                        Outline Visibility.  (line  88)
-* hide-subtree:                          Outline Visibility.  (line  63)
-* highlight-changes-mode:                Highlight Interactively.
-                                                              (line   6)
-* highlight-lines-matching-regexp:       Highlight Interactively.
-                                                              (line  50)
-* highlight-regexp:                      Highlight Interactively.
-                                                              (line  25)
-* hl-line-mode:                          Cursor Display.      (line  34)
-* holidays:                              Holidays.            (line  55)
-* how-many:                              Other Repeating Search.
-                                                              (line  12)
-* hs-hide-all:                           Hideshow.            (line  16)
-* hs-hide-block:                         Hideshow.            (line  16)
-* hs-hide-level:                         Hideshow.            (line  16)
-* hs-minor-mode:                         Hideshow.            (line   6)
-* hs-show-all:                           Hideshow.            (line  16)
-* hs-show-block:                         Hideshow.            (line  16)
-* hs-show-region:                        Hideshow.            (line  16)
-* html-mode:                             HTML Mode.           (line   6)
-* htmlfontify-buffer:                    Printing.            (line  11)
-* icalendar-export-file, icalendar-export-region: Importing Diary.
-                                                              (line  37)
-* icalendar-import-buffer:               Importing Diary.     (line  20)
-* icalendar-import-file:                 Importing Diary.     (line  27)
-* icomplete-mode:                        Completion Options.  (line  49)
-* ielm:                                  Lisp Interaction.    (line  27)
-* image-dired-display-thumbs:            Image-Dired.         (line  10)
-* image-mode:                            File Conveniences.   (line  20)
-* image-toggle-display:                  File Conveniences.   (line  20)
-* imenu:                                 Imenu.               (line  11)
-* imenu-add-menubar-index:               Imenu.               (line  16)
-* increase-left-margin:                  Format Indentation.  (line  15)
-* increment-register:                    RegNumbers.          (line  14)
-* indent-code-rigidly:                   Multi-line Indent.   (line  49)
-* indent-for-tab-command:                Basic Indent.        (line  16)
-* indent-line-function:                  Basic Indent.        (line  16)
-* indent-pp-sexp:                        Multi-line Indent.   (line  26)
-* indent-region:                         Indentation Commands.
-                                                              (line  37)
-* indent-relative:                       Indentation Commands.
-                                                              (line  50)
-* indent-rigidly:                        Indentation Commands.
-                                                              (line  37)
-* info:                                  Misc Help.           (line   6)
-* Info-goto-emacs-command-node:          Name Help.           (line  55)
-* Info-goto-emacs-key-command-node:      Key Help.            (line  16)
-* info-lookup-file:                      Info Lookup.         (line   6)
-* info-lookup-symbol <1>:                Info Lookup.         (line   6)
-* info-lookup-symbol:                    Misc Help.           (line  22)
-* insert-abbrevs:                        Saving Abbrevs.      (line  49)
-* insert-file:                           Misc File Ops.       (line  22)
-* insert-file-literally:                 Misc File Ops.       (line  28)
-* insert-kbd-macro:                      Save Keyboard Macro. (line  46)
-* insert-register:                       RegText.             (line  38)
-* inverse-add-global-abbrev:             Defining Abbrevs.    (line  49)
-* inverse-add-mode-abbrev:               Defining Abbrevs.    (line  49)
-* isearch-backward:                      Basic Isearch.       (line  48)
-* isearch-backward-regexp:               Regexp Search.       (line  19)
-* isearch-forward:                       Basic Isearch.       (line  12)
-* isearch-forward-regexp:                Regexp Search.       (line  19)
-* isearch-forward-word:                  Word Search.         (line  26)
-* isearch-toggle-input-method:           Special Isearch.     (line  32)
-* isearch-toggle-specified-input-method: Special Isearch.     (line  32)
-* iso-gtex2iso:                          TeX Misc.            (line  11)
-* iso-iso2gtex:                          TeX Misc.            (line  11)
-* iso-iso2tex:                           TeX Misc.            (line  11)
-* iso-tex2iso:                           TeX Misc.            (line  11)
-* ispell:                                Spelling.            (line  56)
-* ispell-buffer:                         Spelling.            (line  56)
-* ispell-complete-word:                  Spelling.            (line 133)
-* ispell-kill-ispell:                    Spelling.            (line 142)
-* ispell-message:                        Mail Misc.           (line  30)
-* ispell-region:                         Spelling.            (line  56)
-* ispell-word:                           Spelling.            (line  49)
-* iswitchb-mode:                         Iswitchb.            (line   6)
-* jdb:                                   Starting GUD.        (line  47)
-* jump-to-register:                      RegPos.              (line  19)
-* just-one-space:                        Deletion.            (line  35)
-* kbd:                                   Init Rebinding.      (line  10)
-* kbd-macro-query:                       Keyboard Macro Query.
-                                                              (line  14)
-* keep-lines:                            Other Repeating Search.
-                                                              (line  12)
-* keyboard-escape-quit:                  Quitting.            (line  78)
-* keyboard-quit:                         Quitting.            (line  50)
-* kill-all-abbrevs:                      Defining Abbrevs.    (line  65)
-* kill-buffer:                           Kill Buffer.         (line  21)
-* kill-buffer-and-window:                Change Window.       (line  43)
-* kill-compilation:                      Compilation.         (line  72)
-* kill-emacs:                            Exiting.             (line  38)
-* kill-line:                             Killing by Lines.    (line  12)
-* kill-local-variable:                   Locals.              (line  51)
-* kill-matching-buffers:                 Kill Buffer.         (line  34)
-* kill-rectangle:                        Rectangles.          (line  61)
-* kill-region:                           Other Kill Commands. (line   6)
-* kill-ring-save:                        Other Kill Commands. (line  39)
-* kill-sentence:                         Sentences.           (line  33)
-* kill-sexp:                             Expressions.         (line  54)
-* kill-some-buffers:                     Kill Buffer.         (line  29)
-* kill-whole-line:                       Killing by Lines.    (line  35)
-* kill-word:                             Words.               (line  41)
-* kmacro-add-counter:                    Keyboard Macro Counter.
-                                                              (line  65)
-* kmacro-bind-to-key:                    Save Keyboard Macro. (line  28)
-* kmacro-cycle-ring-next:                Keyboard Macro Ring. (line  43)
-* kmacro-cycle-ring-previous:            Keyboard Macro Ring. (line  43)
-* kmacro-edit-lossage:                   Edit Keyboard Macro. (line  27)
-* kmacro-edit-macro:                     Edit Keyboard Macro. (line  16)
-* kmacro-end-and-call-macro:             Basic Keyboard Macro.
-                                                              (line  25)
-* kmacro-end-macro:                      Basic Keyboard Macro.
-                                                              (line  87)
-* kmacro-end-or-call-macro:              Basic Keyboard Macro.
-                                                              (line  25)
-* kmacro-end-or-call-macro-repeat:       Keyboard Macro Ring. (line  33)
-* kmacro-insert-counter:                 Keyboard Macro Counter.
-                                                              (line  31)
-* kmacro-name-last-macro:                Save Keyboard Macro. (line  17)
-* kmacro-set-counter:                    Keyboard Macro Counter.
-                                                              (line  57)
-* kmacro-set-format:                     Keyboard Macro Counter.
-                                                              (line  71)
-* kmacro-start-macro:                    Basic Keyboard Macro.
-                                                              (line  87)
-* kmacro-start-macro-or-insert-counter:  Basic Keyboard Macro.
-                                                              (line  25)
-* kmacro-step-edit-macro:                Keyboard Macro Step-Edit.
-                                                              (line   6)
-* latex-mode:                            TeX Mode.            (line   6)
-* lgrep:                                 Grep Searching.      (line  59)
-* life:                                  Amusements.          (line  30)
-* line-number-mode:                      Optional Mode Line.  (line  18)
-* linum-mode:                            Minor Modes.         (line  59)
-* lisp-complete-symbol:                  Symbol Completion.   (line  36)
-* lisp-eval-defun:                       External Lisp.       (line  31)
-* lisp-interaction-mode:                 Lisp Interaction.    (line  23)
-* lisp-mode:                             External Lisp.       (line  27)
-* list-abbrevs:                          Editing Abbrevs.     (line  13)
-* list-bookmarks:                        Bookmarks.           (line  22)
-* list-buffers:                          List Buffers.        (line   9)
-* list-character-sets:                   Charsets.            (line  31)
-* list-charset-chars:                    Charsets.            (line  24)
-* list-coding-systems:                   Coding Systems.      (line  50)
-* list-colors-display:                   Colors.              (line   6)
-* list-command-history:                  Repetition.          (line  12)
-* list-directory:                        Directories.         (line  26)
-* list-faces-display:                    Standard Faces.      (line   6)
-* list-holidays:                         Holidays.            (line  67)
-* list-input-methods:                    Select Input Method. (line  85)
-* list-matching-lines:                   Other Repeating Search.
-                                                              (line  12)
-* list-tags:                             List Tags.           (line  12)
-* lm:                                    Amusements.          (line  26)
-* load:                                  Lisp Libraries.      (line  22)
-* load-file:                             Lisp Libraries.      (line  16)
-* load-library:                          Lisp Libraries.      (line  22)
-* load-theme:                            Custom Themes.       (line  47)
-* local-set-key:                         Rebinding.           (line  16)
-* local-unset-key:                       Rebinding.           (line  16)
-* locate:                                Dired and Find.      (line  38)
-* locate-with-filter:                    Dired and Find.      (line  38)
-* log-edit-insert-changelog:             Log Buffer.          (line  19)
-* log-edit-show-diff:                    Log Buffer.          (line  12)
-* log-edit-show-files:                   Log Buffer.          (line  12)
-* longlines-auto-wrap:                   Longlines.           (line  29)
-* longlines-mode:                        Longlines.           (line  19)
-* longlines-show-hard-newlines:          Longlines.           (line  42)
-* lpr-buffer:                            Printing.            (line  31)
-* lpr-region:                            Printing.            (line  31)
-* lunar-phases:                          Lunar Phases.        (line  23)
-* mail-abbrev-insert-alias:              Mail Aliases.        (line  44)
-* mail-attach-file:                      Mail Misc.           (line   6)
-* mail-fill-yanked-message:              Citing Mail.         (line  24)
-* mail-text:                             Header Editing.      (line  43)
-* make-frame-command:                    Creating Frames.     (line  18)
-* make-frame-on-display:                 Multiple Displays.   (line  11)
-* make-indirect-buffer:                  Indirect Buffers.    (line  10)
-* make-local-variable:                   Locals.              (line  22)
-* make-symbolic-link:                    Misc File Ops.       (line  82)
-* make-variable-buffer-local:            Locals.              (line  27)
-* Man-fontify-manpage:                   Man Page.            (line  42)
-* manual-entry:                          Man Page.            (line  12)
-* mark-defun:                            Moving by Defuns.    (line  19)
-* mark-page:                             Pages.               (line  34)
-* mark-paragraph:                        Paragraphs.          (line  36)
-* mark-sexp <1>:                         Expressions.         (line  68)
-* mark-sexp:                             Marking Objects.     (line  33)
-* mark-whole-buffer:                     Marking Objects.     (line  38)
-* mark-word <1>:                         Words.               (line  61)
-* mark-word:                             Marking Objects.     (line  33)
-* menu-bar-mode:                         Menu Bars.           (line   6)
-* menu-bar-open:                         Menu Bar.            (line  10)
-* message-goto-bcc:                      Header Editing.      (line  38)
-* message-goto-cc:                       Header Editing.      (line  38)
-* message-goto-fcc:                      Header Editing.      (line  38)
-* message-goto-subject:                  Header Editing.      (line  38)
-* message-goto-to:                       Header Editing.      (line  38)
-* message-insert-signature:              Mail Signature.      (line  20)
-* message-send:                          Mail Sending.        (line  16)
-* message-send-and-exit:                 Mail Sending.        (line  22)
-* message-tab:                           Header Editing.      (line  46)
-* message-yank-original:                 Citing Mail.         (line  13)
-* message-yank-prefix:                   Citing Mail.         (line  13)
-* minibuffer-complete:                   Completion Commands. (line  10)
-* minibuffer-complete-word:              Completion Commands. (line  56)
-* mode, thumbs:                          File Conveniences.   (line  28)
-* mode25:                                MS-DOS Display.      (line  43)
-* mode4350:                              MS-DOS Display.      (line  43)
-* modify-face:                           Face Customization.  (line  55)
-* morse-region:                          Amusements.          (line  32)
-* mouse-avoidance-mode:                  Mouse Avoidance.     (line  39)
-* mouse-buffer-menu:                     Buffer Menus.        (line  16)
-* mouse-choose-completion:               Completion Commands. (line  66)
-* mouse-save-then-kill:                  Mouse Commands.      (line  61)
-* mouse-secondary-save-then-kill:        Secondary Selection. (line  26)
-* mouse-set-point:                       Mouse Commands.      (line  23)
-* mouse-set-region:                      Mouse Commands.      (line  37)
-* mouse-set-secondary:                   Secondary Selection. (line  11)
-* mouse-start-secondary:                 Secondary Selection. (line  22)
-* mouse-wheel-mode:                      Wheeled Mice.        (line   6)
-* mouse-yank-at-click:                   Mouse Commands.      (line  52)
-* mouse-yank-secondary:                  Secondary Selection. (line  33)
-* move-beginning-of-line:                Moving Point.        (line  16)
-* move-end-of-line:                      Moving Point.        (line  16)
-* move-to-window-line:                   Moving Point.        (line  16)
-* mpuz:                                  Amusements.          (line  13)
-* msb-mode:                              Buffer Menus.        (line  16)
-* msdos-set-mouse-buttons:               MS-DOS Mouse.        (line  18)
-* multi-occur:                           Other Repeating Search.
-                                                              (line  12)
-* multi-occur-in-matching-buffers:       Other Repeating Search.
-                                                              (line  12)
-* narrow-to-defun:                       Narrowing.           (line  41)
-* narrow-to-page:                        Narrowing.           (line  41)
-* narrow-to-region:                      Narrowing.           (line  36)
-* negative-argument:                     Arguments.           (line  15)
-* newline-and-indent:                    Basic Indent.        (line  30)
-* next-buffer:                           Select Buffer.       (line  60)
-* next-completion:                       Completion Commands. (line  85)
-* next-error:                            Compilation Mode.    (line  56)
-* next-error-follow-minor-mode:          Compilation Mode.    (line 110)
-* next-history-element:                  Minibuffer History.  (line  29)
-* next-line:                             Moving Point.        (line  16)
-* next-logical-line:                     Visual Line Mode.    (line  23)
-* next-matching-history-element:         Minibuffer History.  (line  51)
-* normal-erase-is-backspace-mode:        DEL Does Not Delete. (line  34)
-* normal-mode:                           Choosing Modes.      (line 132)
-* not-modified:                          Save Commands.       (line  78)
-* nroff-mode:                            Nroff Mode.          (line   6)
-* number-to-register:                    RegNumbers.          (line  11)
-* nxml-mode <1>:                         HTML Mode.           (line  69)
-* nxml-mode:                             Text.                (line  22)
-* occur:                                 Other Repeating Search.
-                                                              (line  12)
-* open-dribble-file:                     Checklist.           (line  78)
-* open-line:                             Blank Lines.         (line  16)
-* open-rectangle:                        Rectangles.          (line  91)
-* open-termscript:                       Checklist.           (line  87)
-* other-frame:                           Frame Commands.      (line  17)
-* other-window:                          Other Window.        (line  20)
-* outline-backward-same-level:           Outline Motion.      (line  36)
-* outline-forward-same-level:            Outline Motion.      (line  36)
-* outline-minor-mode:                    Outline Mode.        (line   6)
-* outline-mode:                          Outline Mode.        (line   6)
-* outline-next-visible-heading:          Outline Motion.      (line  29)
-* outline-previous-visible-heading:      Outline Motion.      (line  29)
-* outline-up-heading:                    Outline Motion.      (line  36)
-* overwrite-mode:                        Minor Modes.         (line  65)
-* paragraph-indent-minor-mode:           Text Mode.           (line  26)
-* paragraph-indent-text-mode:            Text Mode.           (line  26)
-* pdb:                                   Starting GUD.        (line  50)
-* perldb:                                Starting GUD.        (line  43)
-* picture-backward-clear-column:         Basic Picture.       (line  27)
-* picture-backward-column:               Basic Picture.       (line   6)
-* picture-clear-column:                  Basic Picture.       (line  27)
-* picture-clear-line:                    Basic Picture.       (line  27)
-* picture-clear-rectangle:               Rectangles in Picture.
-                                                              (line  27)
-* picture-clear-rectangle-to-register:   Rectangles in Picture.
-                                                              (line  27)
-* picture-forward-column:                Basic Picture.       (line   6)
-* picture-mode:                          Picture Mode.        (line   6)
-* picture-motion:                        Insert in Picture.   (line  48)
-* picture-motion-reverse:                Insert in Picture.   (line  48)
-* picture-move-down:                     Basic Picture.       (line   6)
-* picture-move-up:                       Basic Picture.       (line   6)
-* picture-movement-down:                 Insert in Picture.   (line   6)
-* picture-movement-left:                 Insert in Picture.   (line   6)
-* picture-movement-ne:                   Insert in Picture.   (line   6)
-* picture-movement-nw:                   Insert in Picture.   (line   6)
-* picture-movement-right:                Insert in Picture.   (line   6)
-* picture-movement-se:                   Insert in Picture.   (line   6)
-* picture-movement-sw:                   Insert in Picture.   (line   6)
-* picture-movement-up:                   Insert in Picture.   (line   6)
-* picture-newline:                       Basic Picture.       (line  20)
-* picture-open-line:                     Basic Picture.       (line  37)
-* picture-set-tab-stops:                 Tabs in Picture.     (line  25)
-* picture-tab:                           Tabs in Picture.     (line  20)
-* picture-tab-search:                    Tabs in Picture.     (line   6)
-* picture-yank-rectangle:                Rectangles in Picture.
-                                                              (line  38)
-* picture-yank-rectangle-from-register:  Rectangles in Picture.
-                                                              (line  38)
-* plain-tex-mode:                        TeX Mode.            (line   6)
-* point-to-register:                     RegPos.              (line  14)
-* pong:                                  Amusements.          (line  35)
-* pop-global-mark:                       Global Mark Ring.    (line  11)
-* pop-tag-mark:                          Find Tag.            (line  67)
-* pr-interface:                          Printing Package.    (line  15)
-* prefer-coding-system:                  Recognize Coding.    (line  31)
-* prepend-to-buffer:                     Accumulating Text.   (line   6)
-* prepend-to-register:                   RegText.             (line  31)
-* previous-buffer:                       Select Buffer.       (line  60)
-* previous-completion:                   Completion Commands. (line  90)
-* previous-history-element:              Minibuffer History.  (line  29)
-* previous-line:                         Moving Point.        (line  16)
-* previous-logical-line:                 Visual Line Mode.    (line  23)
-* previous-matching-history-element:     Minibuffer History.  (line  51)
-* print-buffer:                          Printing.            (line  31)
-* print-buffer (MS-DOS):                 Windows Printing.    (line  66)
-* print-region:                          Printing.            (line  31)
-* print-region (MS-DOS):                 Windows Printing.    (line  66)
-* ps-despool:                            PostScript.          (line  71)
-* ps-print-buffer:                       PostScript.          (line  43)
-* ps-print-buffer (MS-DOS):              Windows Printing.    (line  86)
-* ps-print-buffer-with-faces:            PostScript.          (line  43)
-* ps-print-region:                       PostScript.          (line  43)
-* ps-print-region-with-faces:            PostScript.          (line  43)
-* ps-spool-buffer:                       PostScript.          (line  64)
-* ps-spool-buffer (MS-DOS):              Windows Printing.    (line  86)
-* ps-spool-buffer-with-faces:            PostScript.          (line  64)
-* ps-spool-region:                       PostScript.          (line  64)
-* ps-spool-region-with-faces:            PostScript.          (line  64)
-* pwd:                                   File Names.          (line  42)
-* quail-set-keyboard-layout:             Select Input Method. (line  73)
-* quail-show-key:                        Select Input Method. (line  79)
-* query-replace:                         Query Replace.       (line  14)
-* query-replace-regexp:                  Query Replace.       (line  24)
-* quietly-read-abbrev-file:              Saving Abbrevs.      (line  30)
-* quoted-insert:                         Inserting Text.      (line  26)
-* re-search-backward:                    Regexp Search.       (line  57)
-* re-search-forward:                     Regexp Search.       (line  57)
-* read-abbrev-file:                      Saving Abbrevs.      (line  30)
-* recenter-top-bottom:                   Scrolling.           (line  40)
-* recentf-edit-list:                     File Conveniences.   (line  10)
-* recentf-mode:                          File Conveniences.   (line  10)
-* recentf-save-list:                     File Conveniences.   (line  10)
-* recode-file-name:                      File Name Coding.    (line  35)
-* recode-region:                         Text Coding.         (line  71)
-* recompile:                             Compilation.         (line  61)
-* recover-file:                          Recover.             (line   6)
-* recover-session:                       Recover.             (line  22)
-* remove-hook:                           Hooks.               (line  69)
-* remove-untranslated-filesystem:        Text and Binary.     (line  71)
-* rename-buffer:                         Misc Buffer.         (line  35)
-* rename-file:                           Misc File Ops.       (line  57)
-* rename-uniquely:                       Misc Buffer.         (line  40)
-* repeat:                                Repeating.           (line  12)
-* repeat-complex-command:                Repetition.          (line  20)
-* replace-regexp:                        Regexp Replace.      (line   6)
-* replace-string:                        Unconditional Replace.
-                                                              (line   6)
-* report-emacs-bug:                      Checklist.           (line  25)
-* reposition-window:                     Scrolling.           (line 117)
-* reveal-mode:                           Outline Visibility.  (line  97)
-* revert-buffer:                         Reverting.           (line   6)
-* revert-buffer (Dired):                 Dired Updating.      (line  29)
-* revert-buffer-with-coding-system:      Text Coding.         (line  67)
-* rgrep:                                 Grep Searching.      (line  59)
-* rmail:                                 Rmail.               (line   6)
-* rmail-add-label:                       Rmail Labels.        (line  34)
-* rmail-beginning-of-message:            Rmail Scrolling.     (line  27)
-* rmail-bury:                            Rmail Basics.        (line  35)
-* rmail-continue:                        Rmail Reply.         (line 106)
-* rmail-delete-backward:                 Rmail Deletion.      (line  29)
-* rmail-delete-forward:                  Rmail Deletion.      (line  29)
-* rmail-edit-current-message:            Rmail Editing.       (line  15)
-* rmail-end-of-message:                  Rmail Scrolling.     (line  27)
-* rmail-expunge:                         Rmail Deletion.      (line  44)
-* rmail-expunge-and-save:                Rmail Basics.        (line  28)
-* rmail-first-message:                   Rmail Motion.        (line  90)
-* rmail-forward:                         Rmail Reply.         (line  75)
-* rmail-get-new-mail:                    Rmail Files.         (line  54)
-* rmail-input:                           Rmail Files.         (line  25)
-* rmail-kill-label:                      Rmail Labels.        (line  34)
-* rmail-last-message:                    Rmail Motion.        (line  90)
-* rmail-mail:                            Rmail Reply.         (line 100)
-* rmail-mime:                            Rmail Display.       (line  55)
-* rmail-mode:                            Rmail.               (line   6)
-* rmail-next-labeled-message:            Rmail Labels.        (line  43)
-* rmail-next-message:                    Rmail Motion.        (line  55)
-* rmail-next-same-subject:               Rmail Motion.        (line  83)
-* rmail-next-undeleted-message:          Rmail Motion.        (line  55)
-* rmail-output:                          Rmail Output.        (line  20)
-* rmail-output-as-seen:                  Rmail Output.        (line  20)
-* rmail-output-body-to-file:             Rmail Output.        (line  32)
-* rmail-previous-labeled-message:        Rmail Labels.        (line  43)
-* rmail-previous-message:                Rmail Motion.        (line  55)
-* rmail-previous-same-subject:           Rmail Motion.        (line  83)
-* rmail-previous-undeleted-message:      Rmail Motion.        (line  55)
-* rmail-quit:                            Rmail Basics.        (line  35)
-* rmail-redecode-body:                   Rmail Coding.        (line  24)
-* rmail-reply:                           Rmail Reply.         (line  33)
-* rmail-resend:                          Rmail Reply.         (line  93)
-* rmail-retry-failure:                   Rmail Reply.         (line  64)
-* rmail-search:                          Rmail Motion.        (line  68)
-* rmail-show-message:                    Rmail Motion.        (line  90)
-* rmail-sort-by-author:                  Rmail Sorting.       (line  14)
-* rmail-sort-by-correspondent:           Rmail Sorting.       (line  22)
-* rmail-sort-by-date:                    Rmail Sorting.       (line   6)
-* rmail-sort-by-labels:                  Rmail Sorting.       (line  31)
-* rmail-sort-by-lines:                   Rmail Sorting.       (line  27)
-* rmail-sort-by-recipient:               Rmail Sorting.       (line  18)
-* rmail-sort-by-subject:                 Rmail Sorting.       (line  10)
-* rmail-summary:                         Rmail Make Summary.  (line  36)
-* rmail-summary-bury:                    Rmail Summary Edit.  (line 102)
-* rmail-summary-by-labels:               Rmail Make Summary.  (line  41)
-* rmail-summary-by-recipients:           Rmail Make Summary.  (line  45)
-* rmail-summary-by-regexp:               Rmail Make Summary.  (line  58)
-* rmail-summary-by-senders:              Rmail Make Summary.  (line  62)
-* rmail-summary-by-topic:                Rmail Make Summary.  (line  52)
-* rmail-summary-quit:                    Rmail Summary Edit.  (line 102)
-* rmail-summary-undelete-many:           Rmail Summary Edit.  (line  28)
-* rmail-summary-wipe:                    Rmail Summary Edit.  (line 102)
-* rmail-toggle-header:                   Rmail Display.       (line  27)
-* rmail-undelete-previous-message:       Rmail Deletion.      (line  44)
-* rot13-other-window:                    Rmail Rot13.         (line  12)
-* run-lisp:                              External Lisp.       (line  12)
-* save-buffer:                           Save Commands.       (line  26)
-* save-buffers-kill-terminal:            Exiting.             (line  13)
-* save-some-buffers:                     Save Commands.       (line  42)
-* scroll-all-mode:                       Emulation.           (line  10)
-* scroll-bar-mode:                       Scroll Bars.         (line  30)
-* scroll-down:                           Scrolling.           (line  81)
-* scroll-left:                           Horizontal Scrolling.
-                                                              (line  39)
-* scroll-other-window:                   Other Window.        (line  34)
-* scroll-right:                          Horizontal Scrolling.
-                                                              (line  39)
-* scroll-up:                             Scrolling.           (line  81)
-* sdb:                                   Starting GUD.        (line  31)
-* search-backward:                       Nonincremental Search.
-                                                              (line  26)
-* search-forward:                        Nonincremental Search.
-                                                              (line  26)
-* select-frame-by-name:                  Non-Window Terminals.
-                                                              (line  19)
-* send-invisible:                        Shell Mode.          (line 119)
-* serial-term:                           Serial Terminal.     (line   6)
-* server-edit:                           Invoking emacsclient.
-                                                              (line  31)
-* server-start:                          Emacs Server.        (line  19)
-* set-buffer-file-coding-system:         Text Coding.         (line  23)
-* set-buffer-process-coding-system:      Communication Coding.
-                                                              (line  44)
-* set-face-background:                   Faces.               (line  34)
-* set-face-foreground:                   Faces.               (line  34)
-* set-file-modes:                        Misc File Ops.       (line  93)
-* set-file-name-coding-system:           File Name Coding.    (line  13)
-* set-fill-column:                       Fill Commands.       (line  51)
-* set-fill-prefix:                       Fill Prefix.         (line  27)
-* set-fontset-font:                      Modifying Fontsets.  (line   6)
-* set-frame-name:                        Non-Window Terminals.
-                                                              (line  19)
-* set-fringe-style:                      Fringes.             (line  24)
-* set-goal-column:                       Moving Point.        (line 104)
-* set-input-method:                      Select Input Method. (line  22)
-* set-justification-center:              Format Justification.
-                                                              (line  51)
-* set-justification-full:                Format Justification.
-                                                              (line  48)
-* set-justification-left:                Format Justification.
-                                                              (line  44)
-* set-justification-none:                Format Justification.
-                                                              (line  55)
-* set-justification-right:               Format Justification.
-                                                              (line  45)
-* set-keyboard-coding-system:            Terminal Coding.     (line  27)
-* set-language-environment:              Language Environments.
-                                                              (line  20)
-* set-left-margin:                       Format Indentation.  (line  52)
-* set-locale-environment:                Language Environments.
-                                                              (line  47)
-* set-mark-command:                      Setting Mark.        (line  28)
-* set-next-selection-coding-system:      Communication Coding.
-                                                              (line  24)
-* set-right-margin:                      Format Indentation.  (line  52)
-* set-selection-coding-system:           Communication Coding.
-                                                              (line  24)
-* set-selective-display:                 Selective Display.   (line   6)
-* set-terminal-coding-system:            Terminal Coding.     (line  12)
-* set-variable:                          Examining.           (line  41)
-* set-visited-file-name:                 Save Commands.       (line  91)
-* setenv:                                Environment.         (line  19)
-* setq-default:                          Locals.              (line  57)
-* sgml-attributes:                       HTML Mode.           (line  27)
-* sgml-close-tag:                        HTML Mode.           (line  52)
-* sgml-delete-tag:                       HTML Mode.           (line  42)
-* sgml-mode:                             HTML Mode.           (line   6)
-* sgml-name-8bit-mode:                   HTML Mode.           (line  57)
-* sgml-name-char:                        HTML Mode.           (line  11)
-* sgml-skip-tag-backward:                HTML Mode.           (line  36)
-* sgml-skip-tag-forward:                 HTML Mode.           (line  31)
-* sgml-tag:                              HTML Mode.           (line  15)
-* sgml-tag-help:                         HTML Mode.           (line  48)
-* sgml-tags-invisible:                   HTML Mode.           (line  66)
-* sgml-validate:                         HTML Mode.           (line  62)
-* shadow-initialize:                     File Shadowing.      (line   6)
-* shell:                                 Interactive Shell.   (line   6)
-* shell-backward-command:                Shell Mode.          (line 111)
-* shell-command:                         Single Shell.        (line   6)
-* shell-command-on-region:               Single Shell.        (line  35)
-* shell-forward-command:                 Shell Mode.          (line 105)
-* shell-pushd-dextract:                  Shell Options.       (line  47)
-* shell-pushd-dunique:                   Shell Options.       (line  47)
-* shell-pushd-tohome:                    Shell Options.       (line  47)
-* show-all:                              Outline Visibility.  (line  80)
-* show-branches:                         Outline Visibility.  (line  70)
-* show-children:                         Outline Visibility.  (line  76)
-* show-entry:                            Outline Visibility.  (line  58)
-* show-paren-mode:                       Matching.            (line  33)
-* show-subtree:                          Outline Visibility.  (line  63)
-* shrink-window-if-larger-than-buffer:   Change Window.       (line  65)
-* size-indication-mode:                  Optional Mode Line.  (line   6)
-* slitex-mode:                           TeX Mode.            (line   6)
-* smerge-mode:                           Comparing Files.     (line  46)
-* snake:                                 Amusements.          (line  46)
-* solitaire:                             Amusements.          (line  38)
-* sort-columns:                          Sorting.             (line  96)
-* sort-fields:                           Sorting.             (line  22)
-* sort-lines:                            Sorting.             (line  22)
-* sort-numeric-fields:                   Sorting.             (line  22)
-* sort-pages:                            Sorting.             (line  22)
-* sort-paragraphs:                       Sorting.             (line  22)
-* split-line:                            Indentation Commands.
-                                                              (line  17)
-* split-window-horizontally:             Split Window.        (line  23)
-* split-window-vertically:               Split Window.        (line  17)
-* spook:                                 Mail Amusements.     (line   6)
-* standard-display-8bit:                 Unibyte Mode.        (line  39)
-* string-insert-rectangle:               Rectangles.          (line 109)
-* string-rectangle:                      Rectangles.          (line 103)
-* studlify-region:                       Amusements.          (line  41)
-* substitute-key-definition:             Init Examples.       (line 132)
-* subword-mode:                          Other C Commands.    (line   8)
-* sunrise-sunset:                        Sunrise/Sunset.      (line  25)
-* suspend-frame <1>:                     Frame Commands.      (line   9)
-* suspend-frame:                         Exiting.             (line  48)
-* switch-to-buffer:                      Select Buffer.       (line  28)
-* switch-to-buffer-other-frame:          Select Buffer.       (line  74)
-* switch-to-buffer-other-window:         Select Buffer.       (line  66)
-* switch-to-completions:                 Completion Commands. (line  71)
-* tab-to-tab-stop <1>:                   Tab Stops.           (line   6)
-* tab-to-tab-stop:                       Indentation.         (line  72)
-* tabify:                                Just Spaces.         (line  18)
-* table-backward-cell:                   Cell Commands.       (line   6)
-* table-capture:                         Table Conversion.    (line   6)
-* table-delete-row:                      Row Commands.        (line  14)
-* table-fixed-width-mode:                Fixed Width Mode.    (line   6)
-* table-forward-cell:                    Cell Commands.       (line   6)
-* table-generate-source:                 Table Misc.          (line  10)
-* table-heighten-cell:                   Cell Commands.       (line  40)
-* table-insert:                          Table Creation.      (line   6)
-* table-insert-column:                   Column Commands.     (line   6)
-* table-insert-row:                      Row Commands.        (line   6)
-* table-insert-sequence:                 Table Misc.          (line   6)
-* table-justify:                         Cell Justification.  (line  10)
-* table-narrow-cell:                     Cell Commands.       (line  47)
-* table-query-dimension:                 Measuring Tables.    (line   6)
-* table-recognize:                       Table Recognition.   (line   6)
-* table-recognize-cell:                  Table Recognition.   (line  30)
-* table-recognize-region:                Table Recognition.   (line  20)
-* table-recognize-table:                 Table Recognition.   (line  24)
-* table-release:                         Table Conversion.    (line  34)
-* table-shorten-cell:                    Cell Commands.       (line  41)
-* table-span-cell:                       Cell Commands.       (line  13)
-* table-split-cell:                      Cell Commands.       (line  18)
-* table-split-cell-horizontally:         Cell Commands.       (line  28)
-* table-split-cell-vertically:           Cell Commands.       (line  24)
-* table-unrecognize:                     Table Recognition.   (line   6)
-* table-unrecognize-cell:                Table Recognition.   (line  33)
-* table-unrecognize-region:              Table Recognition.   (line  21)
-* table-unrecognize-table:               Table Recognition.   (line  27)
-* table-widen-cell:                      Cell Commands.       (line  44)
-* tags-apropos:                          List Tags.           (line  22)
-* tags-loop-continue:                    Tags Search.         (line  31)
-* tags-query-replace:                    Tags Search.         (line  36)
-* tags-search:                           Tags Search.         (line  25)
-* term:                                  Terminal emulator.   (line   6)
-* term-char-mode:                        Term Mode.           (line  13)
-* term-line-mode:                        Term Mode.           (line  16)
-* term-pager-toggle:                     Paging in Term.      (line   9)
-* tetris:                                Amusements.          (line  46)
-* tex-bibtex-file:                       TeX Print.           (line 138)
-* tex-buffer:                            TeX Print.           (line  46)
-* tex-close-latex-block:                 LaTeX Editing.       (line  28)
-* tex-compile:                           TeX Print.           (line 148)
-* tex-file:                              TeX Print.           (line 109)
-* tex-insert-braces:                     TeX Editing.         (line  51)
-* tex-insert-quote:                      TeX Editing.         (line  25)
-* tex-kill-job:                          TeX Print.           (line  77)
-* tex-latex-block:                       LaTeX Editing.       (line  17)
-* tex-mode:                              TeX Mode.            (line   6)
-* tex-print:                             TeX Print.           (line  46)
-* tex-recenter-output-buffer:            TeX Print.           (line  77)
-* tex-region:                            TeX Print.           (line  87)
-* tex-show-print-queue:                  TeX Print.           (line  46)
-* tex-terminate-paragraph:               TeX Editing.         (line  58)
-* tex-validate-region:                   TeX Editing.         (line  58)
-* tex-view:                              TeX Print.           (line  46)
-* text-mode:                             Text Mode.           (line   6)
-* text-scale-adjust:                     Temporary Face Changes.
-                                                              (line   8)
-* text-scale-decrease:                   Temporary Face Changes.
-                                                              (line  20)
-* text-scale-increase:                   Temporary Face Changes.
-                                                              (line  20)
-* text-scale-mode:                       Temporary Face Changes.
-                                                              (line  29)
-* text-scale-set:                        Temporary Face Changes.
-                                                              (line  25)
-* thumbs-mode:                           File Conveniences.   (line  28)
-* time-stamp:                            Time Stamps.         (line  17)
-* timeclock-change:                      Time Intervals.      (line   9)
-* timeclock-in:                          Time Intervals.      (line   9)
-* timeclock-modeline-display:            Time Intervals.      (line  20)
-* timeclock-out:                         Time Intervals.      (line   9)
-* timeclock-reread-log:                  Time Intervals.      (line  32)
-* timeclock-when-to-leave:               Time Intervals.      (line   9)
-* timeclock-workday-remaining:           Time Intervals.      (line   9)
-* tmm-menubar:                           Menu Bar.            (line  10)
-* toggle-debug-on-error:                 Checklist.           (line 160)
-* toggle-enable-multibyte-characters:    Enabling Multibyte.  (line  48)
-* toggle-gdb-all-registers:              Other GDB-UI Buffers.
-                                                              (line  31)
-* toggle-input-method:                   Select Input Method. (line  28)
-* toggle-read-only:                      Misc Buffer.         (line  25)
-* toggle-scroll-bar:                     Scroll Bars.         (line  41)
-* toggle-truncate-lines:                 Line Truncation.     (line  15)
-* tool-bar-mode:                         Tool Bars.           (line  19)
-* tooltip-mode:                          Tooltips.            (line  15)
-* top-level:                             Quitting.            (line  88)
-* tpu-edt-on:                            Emulation.           (line  28)
-* transient-mark-mode:                   Persistent Mark.     (line  19)
-* transpose-chars:                       Transpose.           (line  18)
-* transpose-lines:                       Transpose.           (line  31)
-* transpose-sexps:                       Expressions.         (line  58)
-* transpose-words:                       Transpose.           (line  31)
-* tty-suppress-bold-inverse-default-colors: Display Custom.   (line  57)
-* turn-on-flyspell:                      Spelling.            (line 174)
-* turn-on-font-lock:                     Font Lock.           (line  30)
-* ucs-insert:                            Inserting Text.      (line  59)
-* undigestify-rmail-message:             Rmail Digest.        (line  15)
-* undo:                                  Undo.                (line  21)
-* undo-only:                             Undo.                (line  29)
-* unexpand-abbrev:                       Expanding Abbrevs.   (line  50)
-* unforward-rmail-message:               Rmail Reply.         (line  83)
-* unhighlight-regexp:                    Highlight Interactively.
-                                                              (line  38)
-* universal-argument:                    Arguments.           (line  41)
-* universal-coding-system-argument:      Text Coding.         (line  36)
-* unmorse-region:                        Amusements.          (line  32)
-* untabify:                              Just Spaces.         (line  18)
-* up-list:                               TeX Editing.         (line  51)
-* upcase-region:                         Case.                (line  47)
-* upcase-word:                           Case.                (line  24)
-* variable-pitch-mode:                   Temporary Face Changes.
-                                                              (line  33)
-* vc-annotate:                           Old Revisions.       (line  81)
-* vc-create-tag:                         Making Revision Tags.
-                                                              (line   9)
-* vc-diff:                               Old Revisions.       (line  35)
-* vc-dir:                                VC Directory Mode.   (line   6)
-* vc-insert-headers:                     Version Headers.     (line  29)
-* vc-merge:                              Merging.             (line  16)
-* vc-next-action:                        Basic VC Editing.    (line  23)
-* vc-print-log:                          VC Change Log.       (line  13)
-* vc-print-root-log:                     VC Change Log.       (line  23)
-* vc-register:                           Registering.         (line   6)
-* vc-rename-file:                        Renaming and VC.     (line   6)
-* vc-retrieve-tag:                       Making Revision Tags.
-                                                              (line  13)
-* vc-revert-buffer:                      VC Undo.             (line  14)
-* vc-revision-other-window:              Old Revisions.       (line  28)
-* vc-rollback:                           VC Undo.             (line  25)
-* vc-switch-backend:                     Local Version Control.
-                                                              (line  74)
-* vc-update-change-log:                  Change Logs and VC.  (line  11)
-* vi-mode:                               Emulation.           (line  40)
-* view-buffer:                           Misc Buffer.         (line  52)
-* view-echo-area-messages:               Misc Help.           (line  33)
-* view-emacs-debugging:                  Help Files.          (line  13)
-* view-emacs-FAQ:                        Help Files.          (line  13)
-* view-emacs-news:                       Help Files.          (line  13)
-* view-emacs-problems:                   Help Files.          (line  13)
-* view-emacs-todo:                       Help Files.          (line  13)
-* view-external-packages:                Help Files.          (line  13)
-* view-file:                             Misc File Ops.       (line   9)
-* view-hello-file:                       International Chars. (line  18)
-* view-lossage:                          Misc Help.           (line  28)
-* view-order-manuals:                    Help Files.          (line  13)
-* view-register:                         Registers.           (line  16)
-* vip-mode:                              Emulation.           (line  53)
-* viper-mode:                            Emulation.           (line  32)
-* visit-tags-table:                      Select Tags Table.   (line   6)
-* visual-line-mode:                      Visual Line Mode.    (line  13)
-* w32-register-hot-key:                  Windows Keyboard.    (line  26)
-* w32-shell-execute:                     Windows Processes.   (line  57)
-* w32-unregister-hot-key:                Windows Keyboard.    (line  26)
-* wdired-change-to-wdired-mode:          Wdired.              (line   6)
-* wdired-finish-edit:                    Wdired.              (line  12)
-* what-cursor-position <1>:              International Chars. (line  35)
-* what-cursor-position:                  Position Info.       (line  54)
-* what-line:                             Position Info.       (line  38)
-* what-page:                             Position Info.       (line  38)
-* where-is:                              Key Help.            (line  25)
-* which-function-mode:                   Which Function.      (line   9)
-* widen:                                 Narrowing.           (line  46)
-* widget-backward:                       Changing a Variable. (line 103)
-* widget-complete:                       Changing a Variable. (line  49)
-* widget-forward:                        Changing a Variable. (line 103)
-* windmove-default-keybindings:          Window Convenience.  (line  14)
-* windmove-right:                        Window Convenience.  (line  14)
-* window-configuration-to-register:      RegConfig.           (line   6)
-* winner-mode:                           Window Convenience.  (line   6)
-* woman:                                 Man Page.            (line  46)
-* word-search-backward:                  Word Search.         (line  34)
-* word-search-forward:                   Word Search.         (line  34)
-* wordstar-mode:                         Emulation.           (line  68)
-* write-abbrev-file:                     Saving Abbrevs.      (line  24)
-* write-file:                            Save Commands.       (line  99)
-* write-region:                          Misc File Ops.       (line  33)
-* xdb:                                   Starting GUD.        (line  26)
-* yank:                                  Kill Ring.           (line  15)
-* yank-pop:                              Earlier Kills.       (line   6)
-* yank-rectangle:                        Rectangles.          (line  75)
-* yow:                                   Amusements.          (line   6)
-* zap-to-char:                           Other Kill Commands. (line  49)
-* zone:                                  Amusements.          (line  54)
-* zrgrep:                                Grep Searching.      (line  59)
 

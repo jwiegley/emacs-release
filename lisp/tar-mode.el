@@ -1,7 +1,7 @@
 ;;; tar-mode.el --- simple editing of tar files from GNU emacs
 
 ;; Copyright (C) 1990, 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
@@ -286,7 +286,8 @@ write-date, checksum, link-type, and link-name."
             (let* ((size (tar-parse-octal-integer
                           string tar-size-offset tar-time-offset))
                    ;; -1 so as to strip the terminating 0 byte.
-                   (name (buffer-substring pos (+ pos size -1)))
+		   (name (decode-coding-string 
+			  (buffer-substring pos (+ pos size -1)) coding))
                    (descriptor (tar-header-block-tokenize
                                 (+ pos (tar-roundup-512 size))
 				coding)))

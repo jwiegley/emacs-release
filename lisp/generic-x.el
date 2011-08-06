@@ -1,7 +1,7 @@
 ;;; generic-x.el --- A collection of generic modes
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author:  Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Tue Oct 08 1996
@@ -508,8 +508,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
      '("^[ \t]*\\(:\\sw+\\)"         1 font-lock-function-name-face t)
      '("\\(%\\sw+%\\)"               1 font-lock-variable-name-face t)
      '("\\(%[0-9]\\)"                1 font-lock-variable-name-face t)
-     '("\\(/[^/ \"\t\n]+\\)"         1 font-lock-type-face)
-     '("[\t ]+\\([+-][^\t\n\" ]+\\)" 1 font-lock-type-face)
+     '("[\t ]+\\([+-/][^\t\n\" ]+\\)" 1 font-lock-type-face)
      '("[ \t\n|]\\<\\([gG][oO][tT][oO]\\)\\>[ \t]*\\(\\sw+\\)?"
        (1 font-lock-keyword-face)
        (2 font-lock-function-name-face nil t))

@@ -1,3 +1,27 @@
+2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 23.3 released.
+
+2011-02-23  Juanma Barranquero  <lekktu@gmail.com>
+
+	* org.el (org-maybe-keyword-time-regexp):
+	* org-icalendar.el (org-icalendar-store-UID):
+	* org-agenda.el (org-agenda-scheduled-leaders)
+	(org-agenda-deadline-leaders, org-agenda-filter-preset):
+	* org-table.el (org-table-current-line-types)
+	(org-table-current-begin-line, org-table-current-begin-pos):
+	(org-table-current-field-formula):
+	Fix typos in docstrings.
+
+2010-10-22  Juanma Barranquero  <lekktu@gmail.com>
+
+	* org-exp.el (org-export-visible): Fix typo in docstring.
+
+2010-10-12  Juanma Barranquero  <lekktu@gmail.com>
+
+	* org-agenda.el (org-prefix-category-length)
+	(org-prefix-category-max-length): Fix typos in docstrings.
+
 2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.2 released.
@@ -5,7 +29,7 @@
 2010-02-15  Chong Yidong  <cyd@stupidchicken.com>
 
 	* org-freemind.el (org-freemind-from-org-mode-node)
-	(org-freemind-from-org-mode, )
+	(org-freemind-from-org-mode)
 	(org-freemind-from-org-sparse-tree, org-freemind-to-org-mode):
 	Pass arg to called-interactively-p.
 
@@ -5186,7 +5210,7 @@
 
 2008-10-26  James TD Smith  <ahktenzero@mohorovi.cc>
 
-	* org.el (org-add-log-setup): Only skip drawers if the are
+	* org.el (org-add-log-setup): Only skip drawers if they are
 	immediately after the scheduling keywords.
 
 	* org-clock.el (org-clock-in-switch-to-state): Allow this to be a
@@ -6282,7 +6306,7 @@
 ;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 2008, 2009, 2010  Free Software Foundation, Inc.
+    Copyright (C) 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

@@ -9,7 +9,7 @@
 ;;;;;;  math-read-preprocess-string calcDigit-edit calcDigit-algebraic
 ;;;;;;  calc-alg-digit-entry calc-do-alg-entry calc-alg-entry calc-algebraic-entry
 ;;;;;;  calc-auto-algebraic-entry calc-do-calc-eval calc-do-quick-calc)
-;;;;;;  "calc-aent" "calc-aent.el" "fb0f4776cfb7ea4ec58d40fe149138cc")
+;;;;;;  "calc-aent" "calc-aent.el" "0f1610de4eda4db18a910d686f24c68a")
 ;;; Generated autoloads from calc-aent.el
 
 (autoload 'calc-do-quick-calc "calc-aent" "\
@@ -110,7 +110,7 @@ Not documented
 ;;;***
 
 ;;;### (autoloads (calc-do-embedded-activate) "calc-embed" "calc-embed.el"
-;;;;;;  "9c66a87f37a0f55953a085a7fe833556")
+;;;;;;  "5872924617da7e190bfba4d1adf19256")
 ;;; Generated autoloads from calc-embed.el
 
 (autoload 'calc-do-embedded-activate "calc-embed" "\
@@ -132,7 +132,7 @@ Not documented
 ;;;;;;  math-constp calc-record-why calc-do-handle-whys calc-help
 ;;;;;;  calc-info-summary calc-tutorial calc-info-goto-node calc-info
 ;;;;;;  another-calc calc-other-window calc-big-or-small calc-dispatch-help)
-;;;;;;  "calc-misc" "calc-misc.el" "054000fb424cdcea1f935453d29fe9ee")
+;;;;;;  "calc-misc" "calc-misc.el" "454e6a1a2b72d843f6e160bdffaa792b")
 ;;; Generated autoloads from calc-misc.el
 
 (autoload 'calc-dispatch-help "calc-misc" "\
@@ -443,7 +443,7 @@ Prompts for bug subject.  Leaves you in a mail buffer.
 
 ;;;***
 
-;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "7e3d1b98556086e7a08231afd44f4c12")
+;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "3ac94ca192104a806b9cf5218ad84426")
 ;;; Generated autoloads from calc-yank.el
 
 (autoload 'calc-yank "calc-yank" "\

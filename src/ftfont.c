@@ -1,6 +1,6 @@
 /* ftfont.c -- FreeType font driver.
-   Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
-   Copyright (C) 2006, 2007, 2008, 2009, 2010
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H13PRO009
 
@@ -88,7 +88,7 @@ static Lisp_Object ftfont_lookup_cache P_ ((Lisp_Object,
 					    enum ftfont_cache_for));
 
 static void ftfont_filter_properties P_ ((Lisp_Object font, Lisp_Object alist));
-                                                
+
 Lisp_Object ftfont_font_format P_ ((FcPattern *, Lisp_Object));
 
 #define SYMBOL_FcChar8(SYM) (FcChar8 *) SDATA (SYMBOL_NAME (SYM))
@@ -264,7 +264,7 @@ ftfont_pattern_entity (p, extra)
   else
     {
       /* As this font is not scalable, parhaps this is a BDF or PCF
-	 font. */ 
+	 font. */
       FT_Face ft_face;
 
       ASET (entity, FONT_ADSTYLE_INDEX, get_adstyle_property (p));
@@ -1262,7 +1262,11 @@ ftfont_open (f, entity, pixel_size)
     spacing = XINT (AREF (entity, FONT_SPACING_INDEX));
   else
     spacing = FC_PROPORTIONAL;
-  if (spacing != FC_PROPORTIONAL)
+  if (spacing != FC_PROPORTIONAL
+#ifdef FC_DUAL
+      && spacing != FC_DUAL
+#endif	/* FC_DUAL */
+      )
     font->min_width = font->average_width = font->space_width
       = (scalable ? ft_face->max_advance_width * size / upEM
 	 : ft_face->size->metrics.max_advance >> 6);
@@ -1578,8 +1582,8 @@ ftfont_otf_capability (font)
 
 #ifdef HAVE_M17N_FLT
 
-#if ((LIBOTF_MAJOR_VERSION > 1) || (LIBOTF_RELEASE_NUMBER >= 10) \
-     && (M17NLIB_MAJOR_VERSION > 1) || (M17NLIB_MINOR_VERSION >= 6))
+#if (((LIBOTF_MAJOR_VERSION > 1) || (LIBOTF_RELEASE_NUMBER >= 10))	\
+     && ((M17NLIB_MAJOR_VERSION > 1) || (M17NLIB_MINOR_VERSION >= 6)))
 /* We can use the new feature of libotf and m17n-flt to handle the
    character encoding scheme introduced in Unicode 5.1 and 5.2 for
    some Agian scripts.  */
@@ -2113,7 +2117,7 @@ ftfont_drive_otf (font, spec, in, from, to, out, adjustment)
   return to;
 }
 
-static int 
+static int
 ftfont_try_otf (MFLTFont *font, MFLTOtfSpec *spec,
 		MFLTGlyphString *in, int from, int to)
 {
@@ -2681,42 +2685,7 @@ ftfont_filter_properties (font, alist)
      Lisp_Object font;
      Lisp_Object alist;
 {
-  Lisp_Object it;
-  int i;
-
-  /* Set boolean values to Qt or Qnil */
-  for (i = 0; ftfont_booleans[i] != NULL; ++i)
-    for (it = alist; ! NILP (it); it = XCDR (it))
-      {
-        Lisp_Object key = XCAR (XCAR (it));
-        Lisp_Object val = XCDR (XCAR (it));
-        char *keystr = SDATA (SYMBOL_NAME (key));
-
-        if (strcmp (ftfont_booleans[i], keystr) == 0)
-          {
-            char *str = SYMBOLP (val) ? SDATA (SYMBOL_NAME (val)) : NULL;
-            if (INTEGERP (val)) str = XINT (val) != 0 ? "true" : "false";
-            if (str == NULL) str = "true";
-
-            val = Qt;
-            if (strcmp ("false", str) == 0 || strcmp ("False", str) == 0
-                || strcmp ("FALSE", str) == 0 || strcmp ("FcFalse", str) == 0
-                || strcmp ("off", str) == 0 || strcmp ("OFF", str) == 0
-                || strcmp ("Off", str) == 0)
-              val = Qnil;
-            Ffont_put (font, key, val);
-          }
-      }
-
-  for (i = 0; ftfont_non_booleans[i] != NULL; ++i)
-    for (it = alist; ! NILP (it); it = XCDR (it))
-      {
-        Lisp_Object key = XCAR (XCAR (it));
-        Lisp_Object val = XCDR (XCAR (it));
-        char *keystr = SDATA (SYMBOL_NAME (key));
-        if (strcmp (ftfont_non_booleans[i], keystr) == 0)
-          Ffont_put (font, key, val);
-      }
+  font_filter_properties (font, alist, ftfont_booleans, ftfont_non_booleans);
 }
 
 

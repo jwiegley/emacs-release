@@ -1,7 +1,7 @@
 ;;; semantic/fw.el --- Framework for Semantic
 
 ;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;; 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;; 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 
@@ -309,6 +309,17 @@ FILE, NOWARN, RAWFILE, and WILDCARDS are passed into `find-file-noselect'"
 	  (find-file-noselect file nowarn rawfile)
 	(find-file-noselect file nowarn rawfile wildcards)))
     ))
+
+;;; Database restriction settings
+;;
+(defmacro semanticdb-without-unloaded-file-searches (forms)
+  "Execute FORMS with `unloaded' removed from the current throttle."
+  `(let ((semanticdb-find-default-throttle
+	  (if (featurep 'semantic/db-find)
+	      (remq 'unloaded semanticdb-find-default-throttle)
+	    nil)))
+     ,forms))
+(put 'semanticdb-without-unloaded-file-searches 'lisp-indent-function 1)
 
 
 ;; ;;; Editor goodies ;-)

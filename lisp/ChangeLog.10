@@ -20591,7 +20591,7 @@
 
 	* viper-cmd.el (viper-change-state): Got rid of make-local-hook.
 	(viper-special-read-and-insert-char): Make C-m work right in the r
-	comand.
+	command.
 	(viper-buffer-search-enable): Fixed format string.
 
 	* viper-ex.el (ex-token-alist): Use ex-set-visited-file-name
@@ -23535,7 +23535,7 @@ See ChangeLog.9 for earlier changes.
 ;; End:
 
     Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006,
-      2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+      2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

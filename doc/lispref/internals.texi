@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1998, 1999, 2001, 2002, 2003,
-@c   2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+@c   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/internals
 @node GNU Emacs Internals, Standard Errors, Tips, Top
@@ -761,22 +761,22 @@ If they are on the border between WINDOW and its right sibling,\n\
 @group
   switch (coordinates_in_window (XWINDOW (window), &x, &y))
     @{
-    case 0:			/* NOT in window at all. */
+    case 0:                     /* NOT in window at all. */
       return Qnil;
 @end group
 
 @group
-    case 1:			/* In text part of window. */
+    case 1:                     /* In text part of window. */
       return Fcons (make_number (x), make_number (y));
 @end group
 
 @group
-    case 2:			/* In mode line of window. */
+    case 2:                     /* In mode line of window. */
       return Qmode_line;
 @end group
 
 @group
-    case 3:			/* On right border of window.  */
+    case 3:                     /* On right border of window.  */
       return Qvertical_line;
 @end group
 

@@ -1,8 +1,8 @@
-This is ../../info/widget, produced by makeinfo version 4.11 from
+This is ../../info/widget, produced by makeinfo version 4.13 from
 widget.texi.
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010  Free Software Foundation, Inc.
+2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,10 +16,10 @@ Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs lisp libraries
 START-INFO-DIR-ENTRY
-* Widget: (widget).      The "widget" package used by the Emacs Customization
-                           facility.
+* Widget: (widget).             The "widget" package used by the Emacs
+                                  Customization facility.
 END-INFO-DIR-ENTRY
 
 
@@ -29,7 +29,7 @@ The Emacs Widget Library
 ************************
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010  Free Software Foundation, Inc.
+2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -332,71 +332,71 @@ Interface::).
        (remove-overlays)
        (widget-insert "Here is some documentation.\n\n")
        (widget-create 'editable-field
-     		 :size 13
-     		 :format "Name: %v " ; Text after the field!
-     		 "My Name")
+                      :size 13
+                      :format "Name: %v " ; Text after the field!
+                      "My Name")
        (widget-create 'menu-choice
-     		 :tag "Choose"
-     		 :value "This"
-     		 :help-echo "Choose me, please!"
-     		 :notify (lambda (widget &rest ignore)
-     			   (message "%s is a good choice!"
-     				    (widget-value widget)))
-     		 '(item :tag "This option" :value "This")
-     		 '(choice-item "That option")
-     		 '(editable-field :menu-tag "No option" "Thus option"))
+                      :tag "Choose"
+                      :value "This"
+                      :help-echo "Choose me, please!"
+                      :notify (lambda (widget &rest ignore)
+                                (message "%s is a good choice!"
+                                         (widget-value widget)))
+                      '(item :tag "This option" :value "This")
+                      '(choice-item "That option")
+                      '(editable-field :menu-tag "No option" "Thus option"))
        (widget-create 'editable-field
-     		 :format "Address: %v"
-     		 "Some Place\nIn some City\nSome country.")
+                      :format "Address: %v"
+                      "Some Place\nIn some City\nSome country.")
        (widget-insert "\nSee also ")
        (widget-create 'link
-     		 :notify (lambda (&rest ignore)
-     			   (widget-value-set widget-example-repeat
-     					     '("En" "To" "Tre"))
-     			   (widget-setup))
-     		 "other work")
+                      :notify (lambda (&rest ignore)
+                                (widget-value-set widget-example-repeat
+                                                  '("En" "To" "Tre"))
+                                (widget-setup))
+                      "other work")
        (widget-insert
          " for more information.\n\nNumbers: count to three below\n")
        (setq widget-example-repeat
-     	(widget-create 'editable-list
-     		       :entry-format "%i %d %v"
-     		       :notify (lambda (widget &rest ignore)
-     				 (let ((old (widget-get widget
-     							':example-length))
-     				       (new (length (widget-value widget))))
-     				   (unless (eq old new)
-     				     (widget-put widget ':example-length new)
-     				     (message "You can count to %d." new))))
-     		       :value '("One" "Eh, two?" "Five!")
-     		       '(editable-field :value "three")))
+             (widget-create 'editable-list
+                            :entry-format "%i %d %v"
+                            :notify (lambda (widget &rest ignore)
+                                      (let ((old (widget-get widget
+                                                             ':example-length))
+                                            (new (length (widget-value widget))))
+                                        (unless (eq old new)
+                                          (widget-put widget ':example-length new)
+                                          (message "You can count to %d." new))))
+                            :value '("One" "Eh, two?" "Five!")
+                            '(editable-field :value "three")))
        (widget-insert "\n\nSelect multiple:\n\n")
        (widget-create 'checkbox t)
        (widget-insert " This\n")
        (widget-create 'checkbox nil)
        (widget-insert " That\n")
        (widget-create 'checkbox
-     		 :notify (lambda (&rest ignore) (message "Tickle"))
-     		 t)
+                      :notify (lambda (&rest ignore) (message "Tickle"))
+                      t)
        (widget-insert " Thus\n\nSelect one:\n\n")
        (widget-create 'radio-button-choice
-     		 :value "One"
-     		 :notify (lambda (widget &rest ignore)
-     			   (message "You selected %s"
-     				    (widget-value widget)))
-     		 '(item "One") '(item "Another One.") '(item "A Final One."))
+                      :value "One"
+                      :notify (lambda (widget &rest ignore)
+                                (message "You selected %s"
+                                         (widget-value widget)))
+                      '(item "One") '(item "Another One.") '(item "A Final One."))
        (widget-insert "\n")
        (widget-create 'push-button
-     		 :notify (lambda (&rest ignore)
-     			   (if (= (length (widget-value widget-example-repeat))
-     				  3)
-     			       (message "Congratulation!")
-     			     (error "Three was the count!")))
-     		 "Apply Form")
+                      :notify (lambda (&rest ignore)
+                                (if (= (length (widget-value widget-example-repeat))
+                                       3)
+                                    (message "Congratulation!")
+                                  (error "Three was the count!")))
+                      "Apply Form")
        (widget-insert " ")
        (widget-create 'push-button
-     		 :notify (lambda (&rest ignore)
-     			   (widget-example))
-     		 "Reset Form")
+                      :notify (lambda (&rest ignore)
+                                (widget-example))
+                      "Reset Form")
        (widget-insert "\n")
        (use-local-map widget-keymap)
        (widget-setup))
@@ -2304,39 +2304,39 @@ variables, and widgets described in this manual.
 
 
 Tag Table:
-Node: Top1024
-Node: Introduction2209
-Node: User Interface5280
-Node: Programming Example11001
-Node: Setting Up the Buffer14347
-Node: Basic Types16066
-Node: link22690
-Node: url-link23198
-Node: info-link23502
-Node: push-button23784
-Node: editable-field24351
-Node: text25739
-Node: menu-choice26028
-Node: radio-button-choice26876
-Node: item28458
-Node: choice-item28838
-Node: toggle29328
-Node: checkbox30075
-Node: checklist30374
-Node: editable-list31809
-Node: group32983
-Node: Sexp Types33263
-Node: constants33607
-Node: generic34675
-Node: atoms35225
-Node: composite37146
-Node: Widget Properties40126
-Node: Defining New Widgets43179
-Node: Widget Browser49207
-Node: Widget Minor Mode50060
-Node: Utilities50609
-Node: Widget Wishlist51092
-Node: GNU Free Documentation License52349
-Node: Index77519
+Node: Top1059
+Node: Introduction2250
+Node: User Interface5321
+Node: Programming Example11042
+Node: Setting Up the Buffer15249
+Node: Basic Types16968
+Node: link23592
+Node: url-link24100
+Node: info-link24404
+Node: push-button24686
+Node: editable-field25253
+Node: text26641
+Node: menu-choice26930
+Node: radio-button-choice27778
+Node: item29360
+Node: choice-item29740
+Node: toggle30230
+Node: checkbox30977
+Node: checklist31276
+Node: editable-list32711
+Node: group33885
+Node: Sexp Types34165
+Node: constants34509
+Node: generic35577
+Node: atoms36127
+Node: composite38048
+Node: Widget Properties41028
+Node: Defining New Widgets44081
+Node: Widget Browser50109
+Node: Widget Minor Mode50962
+Node: Utilities51511
+Node: Widget Wishlist51994
+Node: GNU Free Documentation License53251
+Node: Index78421
 
 End Tag Table

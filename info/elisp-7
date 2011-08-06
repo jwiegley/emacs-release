@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,10 +21,888 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Excursions,  Next: Narrowing,  Prev: Motion,  Up: Positions
+
+30.3 Excursions
+===============
+
+It is often useful to move point "temporarily" within a localized
+portion of the program, or to switch buffers temporarily.  This is
+called an "excursion", and it is done with the `save-excursion' special
+form.  This construct initially remembers the identity of the current
+buffer, and its values of point and the mark, and restores them after
+the completion of the excursion.
+
+   The forms for saving and restoring the configuration of windows are
+described elsewhere (see *note Window Configurations::, and *note Frame
+Configurations::).  When only the identity of the current buffer needs
+to be saved and restored, it is preferable to use `save-current-buffer'
+instead.
+
+ -- Special Form: save-excursion body...
+     The `save-excursion' special form saves the identity of the current
+     buffer and the values of point and the mark in it, evaluates BODY,
+     and finally restores the buffer and its saved values of point and
+     the mark.  All three saved values are restored even in case of an
+     abnormal exit via `throw' or error (*note Nonlocal Exits::).
+
+     The `save-excursion' special form is the standard way to move
+     point within one part of a program and avoid affecting the rest of
+     the program.  It is used more than 4000 times in the Lisp sources
+     of Emacs.
+
+     `save-excursion' does not save the values of point and the mark for
+     other buffers, so changes in other buffers remain in effect after
+     `save-excursion' exits.
+
+     Likewise, `save-excursion' does not restore window-buffer
+     correspondences altered by functions such as `switch-to-buffer'.
+     One way to restore these correspondences, and the selected window,
+     is to use `save-window-excursion' inside `save-excursion' (*note
+     Window Configurations::).
+
+     The value returned by `save-excursion' is the result of the last
+     form in BODY, or `nil' if no body forms were given.
+
+          (save-excursion FORMS)
+          ==
+          (let ((old-buf (current-buffer))
+                (old-pnt (point-marker))
+                (old-mark (copy-marker (mark-marker))))
+            (unwind-protect
+                (progn FORMS)
+              (set-buffer old-buf)
+              (goto-char old-pnt)
+              (set-marker (mark-marker) old-mark)))
+
+   *Warning:* Ordinary insertion of text adjacent to the saved point
+value relocates the saved value, just as it relocates all markers.
+More precisely, the saved value is a marker with insertion type `nil'.
+*Note Marker Insertion Types::.  Therefore, when the saved point value
+is restored, it normally comes before the inserted text.
+
+   Although `save-excursion' saves the location of the mark, it does
+not prevent functions which modify the buffer from setting
+`deactivate-mark', and thus causing the deactivation of the mark after
+the command finishes.  *Note The Mark::.
+
+
+File: elisp,  Node: Narrowing,  Prev: Excursions,  Up: Positions
+
+30.4 Narrowing
+==============
+
+"Narrowing" means limiting the text addressable by Emacs editing
+commands to a limited range of characters in a buffer.  The text that
+remains addressable is called the "accessible portion" of the buffer.
+
+   Narrowing is specified with two buffer positions which become the
+beginning and end of the accessible portion.  For most editing commands
+and most Emacs primitives, these positions replace the values of the
+beginning and end of the buffer.  While narrowing is in effect, no text
+outside the accessible portion is displayed, and point cannot move
+outside the accessible portion.
+
+   Values such as positions or line numbers, which usually count from
+the beginning of the buffer, do so despite narrowing, but the functions
+which use them refuse to operate on text that is inaccessible.
+
+   The commands for saving buffers are unaffected by narrowing; they
+save the entire buffer regardless of any narrowing.
+
+   If you need to display in a single buffer several very different
+types of text, consider using an alternative facility described in
+*note Swapping Text::.
+
+ -- Command: narrow-to-region start end
+     This function sets the accessible portion of the current buffer to
+     start at START and end at END.  Both arguments should be character
+     positions.
+
+     In an interactive call, START and END are set to the bounds of the
+     current region (point and the mark, with the smallest first).
+
+ -- Command: narrow-to-page &optional move-count
+     This function sets the accessible portion of the current buffer to
+     include just the current page.  An optional first argument
+     MOVE-COUNT non-`nil' means to move forward or backward by
+     MOVE-COUNT pages and then narrow to one page.  The variable
+     `page-delimiter' specifies where pages start and end (*note
+     Standard Regexps::).
+
+     In an interactive call, MOVE-COUNT is set to the numeric prefix
+     argument.
+
+ -- Command: widen
+     This function cancels any narrowing in the current buffer, so that
+     the entire contents are accessible.  This is called "widening".
+     It is equivalent to the following expression:
+
+          (narrow-to-region 1 (1+ (buffer-size)))
+
+ -- Special Form: save-restriction body...
+     This special form saves the current bounds of the accessible
+     portion, evaluates the BODY forms, and finally restores the saved
+     bounds, thus restoring the same state of narrowing (or absence
+     thereof) formerly in effect.  The state of narrowing is restored
+     even in the event of an abnormal exit via `throw' or error (*note
+     Nonlocal Exits::).  Therefore, this construct is a clean way to
+     narrow a buffer temporarily.
+
+     The value returned by `save-restriction' is that returned by the
+     last form in BODY, or `nil' if no body forms were given.
+
+     *Caution:* it is easy to make a mistake when using the
+     `save-restriction' construct.  Read the entire description here
+     before you try it.
+
+     If BODY changes the current buffer, `save-restriction' still
+     restores the restrictions on the original buffer (the buffer whose
+     restrictions it saved from), but it does not restore the identity
+     of the current buffer.
+
+     `save-restriction' does _not_ restore point and the mark; use
+     `save-excursion' for that.  If you use both `save-restriction' and
+     `save-excursion' together, `save-excursion' should come first (on
+     the outside).  Otherwise, the old point value would be restored
+     with temporary narrowing still in effect.  If the old point value
+     were outside the limits of the temporary narrowing, this would
+     fail to restore it accurately.
+
+     Here is a simple example of correct use of `save-restriction':
+
+          ---------- Buffer: foo ----------
+          This is the contents of foo
+          This is the contents of foo
+          This is the contents of foo-!-
+          ---------- Buffer: foo ----------
+
+          (save-excursion
+            (save-restriction
+              (goto-char 1)
+              (forward-line 2)
+              (narrow-to-region 1 (point))
+              (goto-char (point-min))
+              (replace-string "foo" "bar")))
+
+          ---------- Buffer: foo ----------
+          This is the contents of bar
+          This is the contents of bar
+          This is the contents of foo-!-
+          ---------- Buffer: foo ----------
+
+
+File: elisp,  Node: Markers,  Next: Text,  Prev: Positions,  Up: Top
+
+31 Markers
+**********
+
+A "marker" is a Lisp object used to specify a position in a buffer
+relative to the surrounding text.  A marker changes its offset from the
+beginning of the buffer automatically whenever text is inserted or
+deleted, so that it stays with the two characters on either side of it.
+
+* Menu:
+
+* Overview of Markers::      The components of a marker, and how it relocates.
+* Predicates on Markers::    Testing whether an object is a marker.
+* Creating Markers::         Making empty markers or markers at certain places.
+* Information from Markers:: Finding the marker's buffer or character position.
+* Marker Insertion Types::   Two ways a marker can relocate when you
+                               insert where it points.
+* Moving Markers::           Moving the marker to a new buffer or position.
+* The Mark::                 How "the mark" is implemented with a marker.
+* The Region::               How to access "the region".
+
+
+File: elisp,  Node: Overview of Markers,  Next: Predicates on Markers,  Up: Markers
+
+31.1 Overview of Markers
+========================
+
+A marker specifies a buffer and a position in that buffer.  The marker
+can be used to represent a position in the functions that require one,
+just as an integer could be used.  In that case, the marker's buffer is
+normally ignored.  Of course, a marker used in this way usually points
+to a position in the buffer that the function operates on, but that is
+entirely the programmer's responsibility.  *Note Positions::, for a
+complete description of positions.
+
+   A marker has three attributes: the marker position, the marker
+buffer, and the insertion type.  The marker position is an integer that
+is equivalent (at a given time) to the marker as a position in that
+buffer.  But the marker's position value can change often during the
+life of the marker.  Insertion and deletion of text in the buffer
+relocate the marker.  The idea is that a marker positioned between two
+characters remains between those two characters despite insertion and
+deletion elsewhere in the buffer.  Relocation changes the integer
+equivalent of the marker.
+
+   Deleting text around a marker's position leaves the marker between
+the characters immediately before and after the deleted text.  Inserting
+text at the position of a marker normally leaves the marker either in
+front of or after the new text, depending on the marker's "insertion
+type" (*note Marker Insertion Types::)--unless the insertion is done
+with `insert-before-markers' (*note Insertion::).
+
+   Insertion and deletion in a buffer must check all the markers and
+relocate them if necessary.  This slows processing in a buffer with a
+large number of markers.  For this reason, it is a good idea to make a
+marker point nowhere if you are sure you don't need it any more.
+Unreferenced markers are garbage collected eventually, but until then
+will continue to use time if they do point somewhere.
+
+   Because it is common to perform arithmetic operations on a marker
+position, most of the arithmetic operations (including `+' and `-')
+accept markers as arguments.  In such cases, the marker stands for its
+current position.
+
+   Here are examples of creating markers, setting markers, and moving
+point to markers:
+
+     ;; Make a new marker that initially does not point anywhere:
+     (setq m1 (make-marker))
+          => #<marker in no buffer>
+
+     ;; Set `m1' to point between the 99th and 100th characters
+     ;;   in the current buffer:
+     (set-marker m1 100)
+          => #<marker at 100 in markers.texi>
+
+     ;; Now insert one character at the beginning of the buffer:
+     (goto-char (point-min))
+          => 1
+     (insert "Q")
+          => nil
+
+     ;; `m1' is updated appropriately.
+     m1
+          => #<marker at 101 in markers.texi>
+
+     ;; Two markers that point to the same position
+     ;;   are not `eq', but they are `equal'.
+     (setq m2 (copy-marker m1))
+          => #<marker at 101 in markers.texi>
+     (eq m1 m2)
+          => nil
+     (equal m1 m2)
+          => t
+
+     ;; When you are finished using a marker, make it point nowhere.
+     (set-marker m1 nil)
+          => #<marker in no buffer>
+
+
+File: elisp,  Node: Predicates on Markers,  Next: Creating Markers,  Prev: Overview of Markers,  Up: Markers
+
+31.2 Predicates on Markers
+==========================
+
+You can test an object to see whether it is a marker, or whether it is
+either an integer or a marker.  The latter test is useful in connection
+with the arithmetic functions that work with both markers and integers.
+
+ -- Function: markerp object
+     This function returns `t' if OBJECT is a marker, `nil' otherwise.
+     Note that integers are not markers, even though many functions
+     will accept either a marker or an integer.
+
+ -- Function: integer-or-marker-p object
+     This function returns `t' if OBJECT is an integer or a marker,
+     `nil' otherwise.
+
+ -- Function: number-or-marker-p object
+     This function returns `t' if OBJECT is a number (either integer or
+     floating point) or a marker, `nil' otherwise.
+
+
+File: elisp,  Node: Creating Markers,  Next: Information from Markers,  Prev: Predicates on Markers,  Up: Markers
+
+31.3 Functions that Create Markers
+==================================
+
+When you create a new marker, you can make it point nowhere, or point
+to the present position of point, or to the beginning or end of the
+accessible portion of the buffer, or to the same place as another given
+marker.
+
+   The next four functions all return markers with insertion type
+`nil'.  *Note Marker Insertion Types::.
+
+ -- Function: make-marker
+     This function returns a newly created marker that does not point
+     anywhere.
+
+          (make-marker)
+               => #<marker in no buffer>
+
+ -- Function: point-marker
+     This function returns a new marker that points to the present
+     position of point in the current buffer.  *Note Point::.  For an
+     example, see `copy-marker', below.
+
+ -- Function: point-min-marker
+     This function returns a new marker that points to the beginning of
+     the accessible portion of the buffer.  This will be the beginning
+     of the buffer unless narrowing is in effect.  *Note Narrowing::.
+
+ -- Function: point-max-marker
+     This function returns a new marker that points to the end of the
+     accessible portion of the buffer.  This will be the end of the
+     buffer unless narrowing is in effect.  *Note Narrowing::.
+
+     Here are examples of this function and `point-min-marker', shown in
+     a buffer containing a version of the source file for the text of
+     this chapter.
+
+          (point-min-marker)
+               => #<marker at 1 in markers.texi>
+          (point-max-marker)
+               => #<marker at 15573 in markers.texi>
+
+          (narrow-to-region 100 200)
+               => nil
+          (point-min-marker)
+               => #<marker at 100 in markers.texi>
+          (point-max-marker)
+               => #<marker at 200 in markers.texi>
+
+ -- Function: copy-marker marker-or-integer &optional insertion-type
+     If passed a marker as its argument, `copy-marker' returns a new
+     marker that points to the same place and the same buffer as does
+     MARKER-OR-INTEGER.  If passed an integer as its argument,
+     `copy-marker' returns a new marker that points to position
+     MARKER-OR-INTEGER in the current buffer.
+
+     The new marker's insertion type is specified by the argument
+     INSERTION-TYPE.  *Note Marker Insertion Types::.
+
+     If passed an integer argument less than 1, `copy-marker' returns a
+     new marker that points to the beginning of the current buffer.  If
+     passed an integer argument greater than the length of the buffer,
+     `copy-marker' returns a new marker that points to the end of the
+     buffer.
+
+          (copy-marker 0)
+               => #<marker at 1 in markers.texi>
+
+          (copy-marker 20000)
+               => #<marker at 7572 in markers.texi>
+
+     An error is signaled if MARKER is neither a marker nor an integer.
+
+   Two distinct markers are considered `equal' (even though not `eq')
+to each other if they have the same position and buffer, or if they
+both point nowhere.
+
+     (setq p (point-marker))
+          => #<marker at 2139 in markers.texi>
+
+     (setq q (copy-marker p))
+          => #<marker at 2139 in markers.texi>
+
+     (eq p q)
+          => nil
+
+     (equal p q)
+          => t
+
+
+File: elisp,  Node: Information from Markers,  Next: Marker Insertion Types,  Prev: Creating Markers,  Up: Markers
+
+31.4 Information from Markers
+=============================
+
+This section describes the functions for accessing the components of a
+marker object.
+
+ -- Function: marker-position marker
+     This function returns the position that MARKER points to, or `nil'
+     if it points nowhere.
+
+ -- Function: marker-buffer marker
+     This function returns the buffer that MARKER points into, or `nil'
+     if it points nowhere.
+
+          (setq m (make-marker))
+               => #<marker in no buffer>
+          (marker-position m)
+               => nil
+          (marker-buffer m)
+               => nil
+
+          (set-marker m 3770 (current-buffer))
+               => #<marker at 3770 in markers.texi>
+          (marker-buffer m)
+               => #<buffer markers.texi>
+          (marker-position m)
+               => 3770
+
+ -- Function: buffer-has-markers-at position
+     This function returns `t' if one or more markers point at position
+     POSITION in the current buffer.
+
+
+File: elisp,  Node: Marker Insertion Types,  Next: Moving Markers,  Prev: Information from Markers,  Up: Markers
+
+31.5 Marker Insertion Types
+===========================
+
+When you insert text directly at the place where a marker points, there
+are two possible ways to relocate that marker: it can point before the
+inserted text, or point after it.  You can specify which one a given
+marker should do by setting its "insertion type".  Note that use of
+`insert-before-markers' ignores markers' insertion types, always
+relocating a marker to point after the inserted text.
+
+ -- Function: set-marker-insertion-type marker type
+     This function sets the insertion type of marker MARKER to TYPE.
+     If TYPE is `t', MARKER will advance when text is inserted at its
+     position.  If TYPE is `nil', MARKER does not advance when text is
+     inserted there.
+
+ -- Function: marker-insertion-type marker
+     This function reports the current insertion type of MARKER.
+
+   Most functions that create markers, without an argument allowing to
+specify the insertion type, create them with insertion type `nil'.
+Also, the mark has, by default, insertion type `nil'.
+
+
+File: elisp,  Node: Moving Markers,  Next: The Mark,  Prev: Marker Insertion Types,  Up: Markers
+
+31.6 Moving Marker Positions
+============================
+
+This section describes how to change the position of an existing
+marker.  When you do this, be sure you know whether the marker is used
+outside of your program, and, if so, what effects will result from
+moving it--otherwise, confusing things may happen in other parts of
+Emacs.
+
+ -- Function: set-marker marker position &optional buffer
+     This function moves MARKER to POSITION in BUFFER.  If BUFFER is
+     not provided, it defaults to the current buffer.
+
+     If POSITION is less than 1, `set-marker' moves MARKER to the
+     beginning of the buffer.  If POSITION is greater than the size of
+     the buffer, `set-marker' moves marker to the end of the buffer.
+     If POSITION is `nil' or a marker that points nowhere, then MARKER
+     is set to point nowhere.
+
+     The value returned is MARKER.
+
+          (setq m (point-marker))
+               => #<marker at 4714 in markers.texi>
+          (set-marker m 55)
+               => #<marker at 55 in markers.texi>
+          (setq b (get-buffer "foo"))
+               => #<buffer foo>
+          (set-marker m 0 b)
+               => #<marker at 1 in foo>
+
+ -- Function: move-marker marker position &optional buffer
+     This is another name for `set-marker'.
+
+
+File: elisp,  Node: The Mark,  Next: The Region,  Prev: Moving Markers,  Up: Markers
+
+31.7 The Mark
+=============
+
+Each buffer has a special marker, which is designated "the mark".  When
+a buffer is newly created, this marker exists but does not point
+anywhere; this means that the mark "doesn't exist" in that buffer yet.
+Subsequent commands can set the mark.
+
+   The mark specifies a position to bound a range of text for many
+commands, such as `kill-region' and `indent-rigidly'.  These commands
+typically act on the text between point and the mark, which is called
+the "region".  If you are writing a command that operates on the
+region, don't examine the mark directly; instead, use `interactive'
+with the `r' specification.  This provides the values of point and the
+mark as arguments to the command in an interactive call, but permits
+other Lisp programs to specify arguments explicitly.  *Note Interactive
+Codes::.
+
+   Some commands set the mark as a side-effect.  Commands should do
+this only if it has a potential use to the user, and never for their
+own internal purposes.  For example, the `replace-regexp' command sets
+the mark to the value of point before doing any replacements, because
+this enables the user to move back there conveniently after the replace
+is finished.
+
+   Once the mark "exists" in a buffer, it normally never ceases to
+exist.  However, it may become "inactive", if Transient Mark mode is
+enabled.  The buffer-local variable `mark-active', if non-`nil', means
+that the mark is active.  A command can call the function
+`deactivate-mark' to deactivate the mark directly, or it can request
+deactivation of the mark upon return to the editor command loop by
+setting the variable `deactivate-mark' to a non-`nil' value.
+
+   If Transient Mode is enabled, certain editing commands that normally
+apply to text near point, apply instead to the region when the mark is
+active.  This is the main motivation for using Transient Mark mode.
+(Another is that this enables highlighting of the region when the mark
+is active.  *Note Display::.)
+
+   In addition to the mark, each buffer has a "mark ring" which is a
+list of markers containing previous values of the mark.  When editing
+commands change the mark, they should normally save the old value of the
+mark on the mark ring.  The variable `mark-ring-max' specifies the
+maximum number of entries in the mark ring; once the list becomes this
+long, adding a new element deletes the last element.
+
+   There is also a separate global mark ring, but that is used only in a
+few particular user-level commands, and is not relevant to Lisp
+programming.  So we do not describe it here.
+
+ -- Function: mark &optional force
+     This function returns the current buffer's mark position as an
+     integer, or `nil' if no mark has ever been set in this buffer.
+
+     If Transient Mark mode is enabled, and `mark-even-if-inactive' is
+     `nil', `mark' signals an error if the mark is inactive.  However,
+     if FORCE is non-`nil', then `mark' disregards inactivity of the
+     mark, and returns the mark position (or `nil') anyway.
+
+ -- Function: mark-marker
+     This function returns the marker that represents the current
+     buffer's mark.  It is not a copy, it is the marker used
+     internally.  Therefore, changing this marker's position will
+     directly affect the buffer's mark.  Don't do that unless that is
+     the effect you want.
+
+          (setq m (mark-marker))
+               => #<marker at 3420 in markers.texi>
+          (set-marker m 100)
+               => #<marker at 100 in markers.texi>
+          (mark-marker)
+               => #<marker at 100 in markers.texi>
+
+     Like any marker, this marker can be set to point at any buffer you
+     like.  If you make it point at any buffer other than the one of
+     which it is the mark, it will yield perfectly consistent, but
+     rather odd, results.  We recommend that you not do it!
+
+ -- Function: set-mark position
+     This function sets the mark to POSITION, and activates the mark.
+     The old value of the mark is _not_ pushed onto the mark ring.
+
+     *Please note:* Use this function only if you want the user to see
+     that the mark has moved, and you want the previous mark position to
+     be lost.  Normally, when a new mark is set, the old one should go
+     on the `mark-ring'.  For this reason, most applications should use
+     `push-mark' and `pop-mark', not `set-mark'.
+
+     Novice Emacs Lisp programmers often try to use the mark for the
+     wrong purposes.  The mark saves a location for the user's
+     convenience.  An editing command should not alter the mark unless
+     altering the mark is part of the user-level functionality of the
+     command.  (And, in that case, this effect should be documented.)
+     To remember a location for internal use in the Lisp program, store
+     it in a Lisp variable.  For example:
+
+          (let ((beg (point)))
+            (forward-line 1)
+            (delete-region beg (point))).
+
+ -- Function: push-mark &optional position nomsg activate
+     This function sets the current buffer's mark to POSITION, and
+     pushes a copy of the previous mark onto `mark-ring'.  If POSITION
+     is `nil', then the value of point is used.  `push-mark' returns
+     `nil'.
+
+     The function `push-mark' normally _does not_ activate the mark.
+     To do that, specify `t' for the argument ACTIVATE.
+
+     A `Mark set' message is displayed unless NOMSG is non-`nil'.
+
+ -- Function: pop-mark
+     This function pops off the top element of `mark-ring' and makes
+     that mark become the buffer's actual mark.  This does not move
+     point in the buffer, and it does nothing if `mark-ring' is empty.
+     It deactivates the mark.
+
+     The return value is not meaningful.
+
+ -- User Option: transient-mark-mode
+     This variable, if non-`nil', enables Transient Mark mode.  In
+     Transient Mark mode, every buffer-modifying primitive sets
+     `deactivate-mark'.  As a consequence, most commands that modify
+     the buffer also deactivate the mark.
+
+     When Transient Mark mode is enabled and the mark is active, many
+     commands that normally apply to the text near point instead apply
+     to the region.  Such commands should use the function
+     `use-region-p' to test whether they should operate on the region.
+     *Note The Region::.
+
+     Lisp programs can set `transient-mark-mode' to non-`nil', non-`t'
+     values to enable Transient Mark mode temporarily.  If the value is
+     `lambda', Transient Mark mode is automatically turned off after
+     any action, such as buffer modification, that would normally
+     deactivate the mark.  If the value is `(only . OLDVAL)', then
+     `transient-mark-mode' is set to the value OLDVAL after any
+     subsequent command that moves point and is not shift-translated
+     (*note shift-translation: Key Sequence Input.), or after any other
+     action that would normally deactivate the mark.
+
+ -- User Option: mark-even-if-inactive
+     If this is non-`nil', Lisp programs and the Emacs user can use the
+     mark even when it is inactive.  This option affects the behavior of
+     Transient Mark mode.  When the option is non-`nil', deactivation of
+     the mark turns off region highlighting, but commands that use the
+     mark behave as if the mark were still active.
+
+ -- Variable: deactivate-mark
+     If an editor command sets this variable non-`nil', then the editor
+     command loop deactivates the mark after the command returns (if
+     Transient Mark mode is enabled).  All the primitives that change
+     the buffer set `deactivate-mark', to deactivate the mark when the
+     command is finished.
+
+     To write Lisp code that modifies the buffer without causing
+     deactivation of the mark at the end of the command, bind
+     `deactivate-mark' to `nil' around the code that does the
+     modification.  For example:
+
+          (let (deactivate-mark)
+            (insert " "))
+
+ -- Function: deactivate-mark &optional force
+     If Transient Mark mode is enabled or FORCE is non-`nil', this
+     function deactivates the mark and runs the normal hook
+     `deactivate-mark-hook'.  Otherwise, it does nothing.
+
+ -- Variable: mark-active
+     The mark is active when this variable is non-`nil'.  This variable
+     is always buffer-local in each buffer.  Do _not_ use the value of
+     this variable to decide whether a command that normally operates
+     on text near point should operate on the region instead.  Use the
+     function `use-region-p' for that (*note The Region::).
+
+ -- Variable: activate-mark-hook
+ -- Variable: deactivate-mark-hook
+     These normal hooks are run, respectively, when the mark becomes
+     active and when it becomes inactive.  The hook
+     `activate-mark-hook' is also run at the end of a command if the
+     mark is active and it is possible that the region may have changed.
+
+ -- Function: handle-shift-selection
+     This function implements the "shift-selection" behavior of
+     point-motion commands.  *Note Shift Selection: (emacs)Shift
+     Selection.  It is called automatically by the Emacs command loop
+     whenever a command with a `^' character in its `interactive' spec
+     is invoked, before the command itself is executed (*note ^:
+     Interactive Codes.).
+
+     If `shift-select-mode' is non-`nil' and the current command was
+     invoked via shift translation (*note shift-translation: Key
+     Sequence Input.), this function sets the mark and temporarily
+     activates the region, unless the region was already temporarily
+     activated in this way.  Otherwise, if the region has been activated
+     temporarily, it deactivates the mark and restores the variable
+     `transient-mark-mode' to its earlier value.
+
+ -- Variable: mark-ring
+     The value of this buffer-local variable is the list of saved former
+     marks of the current buffer, most recent first.
+
+          mark-ring
+          => (#<marker at 11050 in markers.texi>
+              #<marker at 10832 in markers.texi>
+              ...)
+
+ -- User Option: mark-ring-max
+     The value of this variable is the maximum size of `mark-ring'.  If
+     more marks than this are pushed onto the `mark-ring', `push-mark'
+     discards an old mark when it adds a new one.
+
+
+File: elisp,  Node: The Region,  Prev: The Mark,  Up: Markers
+
+31.8 The Region
+===============
+
+The text between point and the mark is known as "the region".  Various
+functions operate on text delimited by point and the mark, but only
+those functions specifically related to the region itself are described
+here.
+
+   The next two functions signal an error if the mark does not point
+anywhere.  If Transient Mark mode is enabled and
+`mark-even-if-inactive' is `nil', they also signal an error if the mark
+is inactive.
+
+ -- Function: region-beginning
+     This function returns the position of the beginning of the region
+     (as an integer).  This is the position of either point or the mark,
+     whichever is smaller.
+
+ -- Function: region-end
+     This function returns the position of the end of the region (as an
+     integer).  This is the position of either point or the mark,
+     whichever is larger.
+
+   Few programs need to use the `region-beginning' and `region-end'
+functions.  A command designed to operate on a region should normally
+use `interactive' with the `r' specification to find the beginning and
+end of the region.  This lets other Lisp programs specify the bounds
+explicitly as arguments.  (*Note Interactive Codes::.)
+
+ -- Function: use-region-p
+     This function returns `t' if Transient Mark mode is enabled, the
+     mark is active, and there's a valid region in the buffer.  Commands
+     that operate on the region (instead of on text near point) when
+     there's an active mark should use this to test whether to do that.
+
+
+File: elisp,  Node: Text,  Next: Non-ASCII Characters,  Prev: Markers,  Up: Top
+
+32 Text
+*******
+
+This chapter describes the functions that deal with the text in a
+buffer.  Most examine, insert, or delete text in the current buffer,
+often operating at point or on text adjacent to point.  Many are
+interactive.  All the functions that change the text provide for undoing
+the changes (*note Undo::).
+
+   Many text-related functions operate on a region of text defined by
+two buffer positions passed in arguments named START and END.  These
+arguments should be either markers (*note Markers::) or numeric
+character positions (*note Positions::).  The order of these arguments
+does not matter; it is all right for START to be the end of the region
+and END the beginning.  For example, `(delete-region 1 10)' and
+`(delete-region 10 1)' are equivalent.  An `args-out-of-range' error is
+signaled if either START or END is outside the accessible portion of
+the buffer.  In an interactive call, point and the mark are used for
+these arguments.
+
+   Throughout this chapter, "text" refers to the characters in the
+buffer, together with their properties (when relevant).  Keep in mind
+that point is always between two characters, and the cursor appears on
+the character after point.
+
+* Menu:
+
+* Near Point::       Examining text in the vicinity of point.
+* Buffer Contents::  Examining text in a general fashion.
+* Comparing Text::   Comparing substrings of buffers.
+* Insertion::        Adding new text to a buffer.
+* Commands for Insertion::  User-level commands to insert text.
+* Deletion::         Removing text from a buffer.
+* User-Level Deletion::     User-level commands to delete text.
+* The Kill Ring::    Where removed text sometimes is saved for later use.
+* Undo::             Undoing changes to the text of a buffer.
+* Maintaining Undo:: How to enable and disable undo information.
+                        How to control how much information is kept.
+* Filling::          Functions for explicit filling.
+* Margins::          How to specify margins for filling commands.
+* Adaptive Fill::    Adaptive Fill mode chooses a fill prefix from context.
+* Auto Filling::     How auto-fill mode is implemented to break lines.
+* Sorting::          Functions for sorting parts of the buffer.
+* Columns::          Computing horizontal positions, and using them.
+* Indentation::      Functions to insert or adjust indentation.
+* Case Changes::     Case conversion of parts of the buffer.
+* Text Properties::  Assigning Lisp property lists to text characters.
+* Substitution::     Replacing a given character wherever it appears.
+* Transposition::    Swapping two portions of a buffer.
+* Registers::        How registers are implemented.  Accessing the text or
+                       position stored in a register.
+* Base 64::          Conversion to or from base 64 encoding.
+* MD5 Checksum::     Compute the MD5 "message digest"/"checksum".
+* Atomic Changes::   Installing several buffer changes "atomically".
+* Change Hooks::     Supplying functions to be run when text is changed.
+
+
+File: elisp,  Node: Near Point,  Next: Buffer Contents,  Up: Text
+
+32.1 Examining Text Near Point
+==============================
+
+Many functions are provided to look at the characters around point.
+Several simple functions are described here.  See also `looking-at' in
+*note Regexp Search::.
+
+   In the following four functions, "beginning" or "end" of buffer
+refers to the beginning or end of the accessible portion.
+
+ -- Function: char-after &optional position
+     This function returns the character in the current buffer at (i.e.,
+     immediately after) position POSITION.  If POSITION is out of range
+     for this purpose, either before the beginning of the buffer, or at
+     or beyond the end, then the value is `nil'.  The default for
+     POSITION is point.
+
+     In the following example, assume that the first character in the
+     buffer is `@':
+
+          (string (char-after 1))
+               => "@"
+
+ -- Function: char-before &optional position
+     This function returns the character in the current buffer
+     immediately before position POSITION.  If POSITION is out of range
+     for this purpose, either at or before the beginning of the buffer,
+     or beyond the end, then the value is `nil'.  The default for
+     POSITION is point.
+
+ -- Function: following-char
+     This function returns the character following point in the current
+     buffer.  This is similar to `(char-after (point))'.  However, if
+     point is at the end of the buffer, then `following-char' returns 0.
+
+     Remember that point is always between characters, and the cursor
+     normally appears over the character following point.  Therefore,
+     the character returned by `following-char' is the character the
+     cursor is over.
+
+     In this example, point is between the `a' and the `c'.
+
+          ---------- Buffer: foo ----------
+          Gentlemen may cry ``Pea-!-ce! Peace!,''
+          but there is no peace.
+          ---------- Buffer: foo ----------
+
+          (string (preceding-char))
+               => "a"
+          (string (following-char))
+               => "c"
+
+ -- Function: preceding-char
+     This function returns the character preceding point in the current
+     buffer.  See above, under `following-char', for an example.  If
+     point is at the beginning of the buffer, `preceding-char' returns
+     0.
+
+ -- Function: bobp
+     This function returns `t' if point is at the beginning of the
+     buffer.  If narrowing is in effect, this means the beginning of the
+     accessible portion of the text.  See also `point-min' in *note
+     Point::.
+
+ -- Function: eobp
+     This function returns `t' if point is at the end of the buffer.
+     If narrowing is in effect, this means the end of accessible
+     portion of the text.  See also `point-max' in *Note Point::.
+
+ -- Function: bolp
+     This function returns `t' if point is at the beginning of a line.
+     *Note Text Lines::.  The beginning of the buffer (or of its
+     accessible portion) always counts as the beginning of a line.
+
+ -- Function: eolp
+     This function returns `t' if point is at the end of a line.  The
+     end of the buffer (or of its accessible portion) is always
+     considered the end of a line.
 
 
 File: elisp,  Node: Buffer Contents,  Next: Comparing Text,  Prev: Near Point,  Up: Text
@@ -615,7 +1493,7 @@ would be difficult to change the terminology now.
 * Kill Functions::         Functions that kill text.
 * Yanking::                How yanking is done.
 * Yank Commands::          Commands that access the kill ring.
-* Low-Level Kill Ring::	   Functions and variables for kill ring access.
+* Low-Level Kill Ring::    Functions and variables for kill ring access.
 * Internals of Kill Ring:: Variables that hold kill ring data.
 
 
@@ -658,7 +1536,7 @@ element.  It determines automatically (using `last-command') whether
 the previous command was a kill command, and if so appends the killed
 text to the most recent entry.
 
- -- Command: kill-region start end &optional yank-handler
+ -- Command: kill-region start end
      This function kills the text in the region defined by START and
      END.  The text is deleted but saved in the kill ring, along with
      its text properties.  The value is always `nil'.
@@ -670,12 +1548,6 @@ text to the most recent entry.
      buffer.  This is convenient because it lets the user use a series
      of kill commands to copy text from a read-only buffer into the
      kill ring.
-
-     If YANK-HANDLER is non-`nil', this puts that value onto the string
-     of killed text, as a `yank-handler' text property.  *Note
-     Yanking::.  Note that if YANK-HANDLER is `nil', any `yank-handler'
-     properties present on the killed text are copied onto the kill
-     ring, like other text properties.
 
  -- User Option: kill-read-only-ok
      If this option is non-`nil', `kill-region' does not signal an
@@ -691,9 +1563,8 @@ text to the most recent entry.
      subsequent kill command does not append to the same kill ring
      entry.
 
-     Don't call `copy-region-as-kill' in Lisp programs unless you aim to
-     support Emacs 18.  For newer Emacs versions, it is better to use
-     `kill-new' or `kill-append' instead.  *Note Low-Level Kill Ring::.
+     In Lisp programs, it is better to use `kill-new' or `kill-append'
+     instead of this command.  *Note Low-Level Kill Ring::.
 
 
 File: elisp,  Node: Yanking,  Next: Yank Commands,  Prev: Kill Functions,  Up: The Kill Ring
@@ -826,9 +1697,9 @@ File: elisp,  Node: Low-Level Kill Ring,  Next: Internals of Kill Ring,  Prev: Y
 --------------------------
 
 These functions and variables provide access to the kill ring at a
-lower level, but still convenient for use in Lisp programs, because they
-take care of interaction with window system selections (*note Window
-System Selections::).
+lower level, but are still convenient for use in Lisp programs, because
+they take care of interaction with window system selections (*note
+Window System Selections::).
 
  -- Function: current-kill n &optional do-not-move
      The function `current-kill' rotates the yanking pointer, which
@@ -852,7 +1723,7 @@ System Selections::).
      value for N specially: it returns the entry pointed at by the
      yanking pointer and does not move the yanking pointer.
 
- -- Function: kill-new string &optional replace yank-handler
+ -- Function: kill-new string &optional replace
      This function pushes the text STRING onto the kill ring and makes
      the yanking pointer point to it.  It discards the oldest entry if
      appropriate.  It also invokes the value of
@@ -862,23 +1733,12 @@ System Selections::).
      element of the kill ring with STRING, rather than pushing STRING
      onto the kill ring.
 
-     If YANK-HANDLER is non-`nil', this puts that value onto the string
-     of killed text, as a `yank-handler' property.  *Note Yanking::.
-     Note that if YANK-HANDLER is `nil', then `kill-new' copies any
-     `yank-handler' properties present on STRING onto the kill ring, as
-     it does with other text properties.
-
- -- Function: kill-append string before-p &optional yank-handler
+ -- Function: kill-append string before-p
      This function appends the text STRING to the first entry in the
      kill ring and makes the yanking pointer point to the combined
      entry.  Normally STRING goes at the end of the entry, but if
      BEFORE-P is non-`nil', it goes at the beginning.  This function
      also invokes the value of `interprogram-cut-function' (see below).
-     This handles YANK-HANDLER just like `kill-new', except that if
-     YANK-HANDLER is different from the `yank-handler' property of the
-     first entry of the kill ring, `kill-append' pushes the
-     concatenated string onto the kill ring, instead of replacing the
-     original first entry with it.
 
  -- Variable: interprogram-paste-function
      This variable provides a way of transferring killed text from other
@@ -1070,14 +1930,17 @@ the variable `buffer-undo-list'.
      command stops at such a boundary, and successive undo commands undo
      to earlier and earlier boundaries.  This function returns `nil'.
 
-     The editor command loop automatically creates an undo boundary
-     before each key sequence is executed.  Thus, each undo normally
-     undoes the effects of one command.  Self-inserting input
-     characters are an exception.  The command loop makes a boundary
-     for the first such character; the next 19 consecutive
-     self-inserting input characters do not make boundaries, and then
-     the 20th does, and so on as long as self-inserting characters
-     continue.
+     The editor command loop automatically calls `undo-boundary' just
+     before executing each key sequence, so that each undo normally
+     undoes the effects of one command.  As an exception, the command
+     `self-insert-command', which produces self-inserting input
+     characters (*note Commands for Insertion::), may remove the
+     boundary inserted by the command loop: a boundary is accepted for
+     the first such character, the next 19 consecutive self-inserting
+     input characters do not have boundaries, and then the 20th does;
+     and so on as long as the self-inserting characters continue.
+     Hence, sequences of consecutive character insertions can be undone
+     as a group.
 
      All buffer modifications add a boundary whenever the previous
      undoable change was made in some other buffer.  This is to ensure
@@ -1927,11 +2790,12 @@ functions in this section return unpredictable values.
  -- Variable: indent-line-function
      This variable's value is the function to be used by <TAB> (and
      various commands) to indent the current line.  The command
-     `indent-according-to-mode' does no more than call this function.
+     `indent-according-to-mode' does little more than call this
+     function.
 
      In Lisp mode, the value is the symbol `lisp-indent-line'; in C
      mode, `c-indent-line'; in Fortran mode, `fortran-indent-line'.
-     The default value is `indent-relative'.
+     The default value is `indent-relative'.  *Note Auto-Indentation::.
 
  -- Command: indent-according-to-mode
      This command calls the function in `indent-line-function' to
@@ -2262,9 +3126,9 @@ along with the characters; this includes such diverse functions as
 * Menu:
 
 * Examining Properties::   Looking at the properties of one character.
-* Changing Properties::	   Setting the properties of a range of text.
-* Property Search::	   Searching for where a property changes value.
-* Special Properties::	   Particular properties with special meanings.
+* Changing Properties::    Setting the properties of a range of text.
+* Property Search::        Searching for where a property changes value.
+* Special Properties::     Particular properties with special meanings.
 * Format Properties::      Properties for representing formatting of text.
 * Sticky Properties::      How inserted text gets properties from
                              neighboring text.
@@ -2274,8 +3138,8 @@ along with the characters; this includes such diverse functions as
                              do something when you click on them.
 * Fields::                 The `field' property defines
                              fields within the buffer.
-* Not Intervals::	   Why text properties do not use
-			     Lisp-visible text intervals.
+* Not Intervals::          Why text properties do not use
+                             Lisp-visible text intervals.
 
 
 File: elisp,  Node: Examining Properties,  Next: Changing Properties,  Up: Text Properties
@@ -2668,7 +3532,7 @@ each Emacs command.  *Note Adjusting Point::.
      when Font Lock mode is enabled.  When Font Lock mode is disabled,
      `font-lock-face' has no effect.
 
-     The `font-lock-mode' property is useful for special modes that
+     The `font-lock-face' property is useful for special modes that
      implement their own highlighting.  *Note Precalculated
      Fontification::.
 
@@ -4010,6 +4874,11 @@ created string with no text properties.
      contains a non-ASCII character.  If STRING is a unibyte string, it
      is returned unchanged.  Use this function for STRING arguments
      that contain only ASCII and eight-bit characters.
+
+ -- Function: byte-to-string byte
+     This function returns a unibyte string containing a single byte of
+     character data, CHARACTER.  It signals a error if CHARACTER is not
+     an integer between 0 and 255.
 
  -- Function: multibyte-char-to-unibyte char
      This converts the multibyte character CHAR to a unibyte character,
@@ -5564,7 +6433,7 @@ portions of it.
 * POSIX Regexps::         Searching POSIX-style for the longest match.
 * Match Data::            Finding out which part of the text matched,
                             after a string or regexp search.
-* Search and Replace::	  Commands that loop, searching and replacing.
+* Search and Replace::    Commands that loop, searching and replacing.
 * Standard Regexps::      Useful regexps for finding sentences, pages,...
 
    The `skip-chars...' functions also perform a kind of searching.
@@ -5735,863 +6604,4 @@ functions used in Lisp code.
 
      This variable is used by passing it as an argument to the function
      `replace-match'.  *Note Replacing Match::.
-
-
-File: elisp,  Node: Regular Expressions,  Next: Regexp Search,  Prev: Searching and Case,  Up: Searching and Matching
-
-34.3 Regular Expressions
-========================
-
-A "regular expression", or "regexp" for short, is a pattern that
-denotes a (possibly infinite) set of strings.  Searching for matches for
-a regexp is a very powerful operation.  This section explains how to
-write regexps; the following section says how to search for them.
-
-   For convenient interactive development of regular expressions, you
-can use the `M-x re-builder' command.  It provides a convenient
-interface for creating regular expressions, by giving immediate visual
-feedback in a separate buffer.  As you edit the regexp, all its matches
-in the target buffer are highlighted.  Each parenthesized
-sub-expression of the regexp is shown in a distinct face, which makes
-it easier to verify even very complex regexps.
-
-* Menu:
-
-* Syntax of Regexps::       Rules for writing regular expressions.
-* Regexp Example::          Illustrates regular expression syntax.
-* Regexp Functions::        Functions for operating on regular expressions.
-
-
-File: elisp,  Node: Syntax of Regexps,  Next: Regexp Example,  Up: Regular Expressions
-
-34.3.1 Syntax of Regular Expressions
-------------------------------------
-
-Regular expressions have a syntax in which a few characters are special
-constructs and the rest are "ordinary".  An ordinary character is a
-simple regular expression that matches that character and nothing else.
-The special characters are `.', `*', `+', `?', `[', `^', `$', and `\';
-no new special characters will be defined in the future.  The character
-`]' is special if it ends a character alternative (see later).  The
-character `-' is special inside a character alternative.  A `[:' and
-balancing `:]' enclose a character class inside a character
-alternative.  Any other character appearing in a regular expression is
-ordinary, unless a `\' precedes it.
-
-   For example, `f' is not a special character, so it is ordinary, and
-therefore `f' is a regular expression that matches the string `f' and
-no other string.  (It does _not_ match the string `fg', but it does
-match a _part_ of that string.)  Likewise, `o' is a regular expression
-that matches only `o'.
-
-   Any two regular expressions A and B can be concatenated.  The result
-is a regular expression that matches a string if A matches some amount
-of the beginning of that string and B matches the rest of the string.
-
-   As a simple example, we can concatenate the regular expressions `f'
-and `o' to get the regular expression `fo', which matches only the
-string `fo'.  Still trivial.  To do something more powerful, you need
-to use one of the special regular expression constructs.
-
-* Menu:
-
-* Regexp Special::      Special characters in regular expressions.
-* Char Classes::        Character classes used in regular expressions.
-* Regexp Backslash::    Backslash-sequences in regular expressions.
-
-
-File: elisp,  Node: Regexp Special,  Next: Char Classes,  Up: Syntax of Regexps
-
-34.3.1.1 Special Characters in Regular Expressions
-..................................................
-
-Here is a list of the characters that are special in a regular
-expression.
-
-`.' (Period)
-     is a special character that matches any single character except a
-     newline.  Using concatenation, we can make regular expressions
-     like `a.b', which matches any three-character string that begins
-     with `a' and ends with `b'.
-
-`*'
-     is not a construct by itself; it is a postfix operator that means
-     to match the preceding regular expression repetitively as many
-     times as possible.  Thus, `o*' matches any number of `o's
-     (including no `o's).
-
-     `*' always applies to the _smallest_ possible preceding
-     expression.  Thus, `fo*' has a repeating `o', not a repeating
-     `fo'.  It matches `f', `fo', `foo', and so on.
-
-     The matcher processes a `*' construct by matching, immediately, as
-     many repetitions as can be found.  Then it continues with the rest
-     of the pattern.  If that fails, backtracking occurs, discarding
-     some of the matches of the `*'-modified construct in the hope that
-     that will make it possible to match the rest of the pattern.  For
-     example, in matching `ca*ar' against the string `caaar', the `a*'
-     first tries to match all three `a's; but the rest of the pattern is
-     `ar' and there is only `r' left to match, so this try fails.  The
-     next alternative is for `a*' to match only two `a's.  With this
-     choice, the rest of the regexp matches successfully.
-
-     *Warning:* Nested repetition operators can run for an indefinitely
-     long time, if they lead to ambiguous matching.  For example,
-     trying to match the regular expression `\(x+y*\)*a' against the
-     string `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxz' could take hours
-     before it ultimately fails.  Emacs must try each way of grouping
-     the `x's before concluding that none of them can work.  Even
-     worse, `\(x*\)*' can match the null string in infinitely many
-     ways, so it causes an infinite loop.  To avoid these problems,
-     check nested repetitions carefully, to make sure that they do not
-     cause combinatorial explosions in backtracking.
-
-`+'
-     is a postfix operator, similar to `*' except that it must match
-     the preceding expression at least once.  So, for example, `ca+r'
-     matches the strings `car' and `caaaar' but not the string `cr',
-     whereas `ca*r' matches all three strings.
-
-`?'
-     is a postfix operator, similar to `*' except that it must match the
-     preceding expression either once or not at all.  For example,
-     `ca?r' matches `car' or `cr'; nothing else.
-
-`*?', `+?', `??'
-     These are "non-greedy" variants of the operators `*', `+' and `?'.
-     Where those operators match the largest possible substring
-     (consistent with matching the entire containing expression), the
-     non-greedy variants match the smallest possible substring
-     (consistent with matching the entire containing expression).
-
-     For example, the regular expression `c[ad]*a' when applied to the
-     string `cdaaada' matches the whole string; but the regular
-     expression `c[ad]*?a', applied to that same string, matches just
-     `cda'.  (The smallest possible match here for `[ad]*?' that
-     permits the whole expression to match is `d'.)
-
-`[ ... ]'
-     is a "character alternative", which begins with `[' and is
-     terminated by `]'.  In the simplest case, the characters between
-     the two brackets are what this character alternative can match.
-
-     Thus, `[ad]' matches either one `a' or one `d', and `[ad]*'
-     matches any string composed of just `a's and `d's (including the
-     empty string), from which it follows that `c[ad]*r' matches `cr',
-     `car', `cdr', `caddaar', etc.
-
-     You can also include character ranges in a character alternative,
-     by writing the starting and ending characters with a `-' between
-     them.  Thus, `[a-z]' matches any lower-case ASCII letter.  Ranges
-     may be intermixed freely with individual characters, as in
-     `[a-z$%.]', which matches any lower case ASCII letter or `$', `%'
-     or period.
-
-     Note that the usual regexp special characters are not special
-     inside a character alternative.  A completely different set of
-     characters is special inside character alternatives: `]', `-' and
-     `^'.
-
-     To include a `]' in a character alternative, you must make it the
-     first character.  For example, `[]a]' matches `]' or `a'.  To
-     include a `-', write `-' as the first or last character of the
-     character alternative, or put it after a range.  Thus, `[]-]'
-     matches both `]' and `-'.
-
-     To include `^' in a character alternative, put it anywhere but at
-     the beginning.
-
-     The beginning and end of a range of multibyte characters must be in
-     the same character set (*note Character Sets::).  Thus,
-     `"[\x8e0-\x97c]"' is invalid because character 0x8e0 (`a' with
-     grave accent) is in the Emacs character set for Latin-1 but the
-     character 0x97c (`u' with diaeresis) is in the Emacs character set
-     for Latin-2.  (We use Lisp string syntax to write that example,
-     and a few others in the next few paragraphs, in order to include
-     hex escape sequences in them.)
-
-     If a range starts with a unibyte character C and ends with a
-     multibyte character C2, the range is divided into two parts: one
-     is `C..?\377', the other is `C1..C2', where C1 is the first
-     character of the charset to which C2 belongs.
-
-     You cannot always match all non-ASCII characters with the regular
-     expression `"[\200-\377]"'.  This works when searching a unibyte
-     buffer or string (*note Text Representations::), but not in a
-     multibyte buffer or string, because many non-ASCII characters have
-     codes above octal 0377.  However, the regular expression
-     `"[^\000-\177]"' does match all non-ASCII characters (see below
-     regarding `^'), in both multibyte and unibyte representations,
-     because only the ASCII characters are excluded.
-
-     A character alternative can also specify named character classes
-     (*note Char Classes::).  This is a POSIX feature whose syntax is
-     `[:CLASS:]'.  Using a character class is equivalent to mentioning
-     each of the characters in that class; but the latter is not
-     feasible in practice, since some classes include thousands of
-     different characters.
-
-`[^ ... ]'
-     `[^' begins a "complemented character alternative".  This matches
-     any character except the ones specified.  Thus, `[^a-z0-9A-Z]'
-     matches all characters _except_ letters and digits.
-
-     `^' is not special in a character alternative unless it is the
-     first character.  The character following the `^' is treated as if
-     it were first (in other words, `-' and `]' are not special there).
-
-     A complemented character alternative can match a newline, unless
-     newline is mentioned as one of the characters not to match.  This
-     is in contrast to the handling of regexps in programs such as
-     `grep'.
-
-`^'
-     When matching a buffer, `^' matches the empty string, but only at
-     the beginning of a line in the text being matched (or the
-     beginning of the accessible portion of the buffer).  Otherwise it
-     fails to match anything.  Thus, `^foo' matches a `foo' that occurs
-     at the beginning of a line.
-
-     When matching a string instead of a buffer, `^' matches at the
-     beginning of the string or after a newline character.
-
-     For historical compatibility reasons, `^' can be used only at the
-     beginning of the regular expression, or after `\(', `\(?:' or `\|'.
-
-`$'
-     is similar to `^' but matches only at the end of a line (or the
-     end of the accessible portion of the buffer).  Thus, `x+$' matches
-     a string of one `x' or more at the end of a line.
-
-     When matching a string instead of a buffer, `$' matches at the end
-     of the string or before a newline character.
-
-     For historical compatibility reasons, `$' can be used only at the
-     end of the regular expression, or before `\)' or `\|'.
-
-`\'
-     has two functions: it quotes the special characters (including
-     `\'), and it introduces additional special constructs.
-
-     Because `\' quotes special characters, `\$' is a regular
-     expression that matches only `$', and `\[' is a regular expression
-     that matches only `[', and so on.
-
-     Note that `\' also has special meaning in the read syntax of Lisp
-     strings (*note String Type::), and must be quoted with `\'.  For
-     example, the regular expression that matches the `\' character is
-     `\\'.  To write a Lisp string that contains the characters `\\',
-     Lisp syntax requires you to quote each `\' with another `\'.
-     Therefore, the read syntax for a regular expression matching `\'
-     is `"\\\\"'.
-
-   *Please note:* For historical compatibility, special characters are
-treated as ordinary ones if they are in contexts where their special
-meanings make no sense.  For example, `*foo' treats `*' as ordinary
-since there is no preceding expression on which the `*' can act.  It is
-poor practice to depend on this behavior; quote the special character
-anyway, regardless of where it appears.
-
-   As a `\' is not special inside a character alternative, it can never
-remove the special meaning of `-' or `]'.  So you should not quote
-these characters when they have no special meaning either.  This would
-not clarify anything, since backslashes can legitimately precede these
-characters where they _have_ special meaning, as in `[^\]' (`"[^\\]"'
-for Lisp string syntax), which matches any single character except a
-backslash.
-
-   In practice, most `]' that occur in regular expressions close a
-character alternative and hence are special.  However, occasionally a
-regular expression may try to match a complex pattern of literal `['
-and `]'.  In such situations, it sometimes may be necessary to
-carefully parse the regexp from the start to determine which square
-brackets enclose a character alternative.  For example, `[^][]]'
-consists of the complemented character alternative `[^][]' (which
-matches any single character that is not a square bracket), followed by
-a literal `]'.
-
-   The exact rules are that at the beginning of a regexp, `[' is
-special and `]' not.  This lasts until the first unquoted `[', after
-which we are in a character alternative; `[' is no longer special
-(except when it starts a character class) but `]' is special, unless it
-immediately follows the special `[' or that `[' followed by a `^'.
-This lasts until the next special `]' that does not end a character
-class.  This ends the character alternative and restores the ordinary
-syntax of regular expressions; an unquoted `[' is special again and a
-`]' not.
-
-
-File: elisp,  Node: Char Classes,  Next: Regexp Backslash,  Prev: Regexp Special,  Up: Syntax of Regexps
-
-34.3.1.2 Character Classes
-..........................
-
-Here is a table of the classes you can use in a character alternative,
-and what they mean:
-
-`[:ascii:]'
-     This matches any ASCII character (codes 0-127).
-
-`[:alnum:]'
-     This matches any letter or digit.  (At present, for multibyte
-     characters, it matches anything that has word syntax.)
-
-`[:alpha:]'
-     This matches any letter.  (At present, for multibyte characters, it
-     matches anything that has word syntax.)
-
-`[:blank:]'
-     This matches space and tab only.
-
-`[:cntrl:]'
-     This matches any ASCII control character.
-
-`[:digit:]'
-     This matches `0' through `9'.  Thus, `[-+[:digit:]]' matches any
-     digit, as well as `+' and `-'.
-
-`[:graph:]'
-     This matches graphic characters--everything except ASCII control
-     characters, space, and the delete character.
-
-`[:lower:]'
-     This matches any lower-case letter, as determined by the current
-     case table (*note Case Tables::).  If `case-fold-search' is
-     non-`nil', this also matches any upper-case letter.
-
-`[:multibyte:]'
-     This matches any multibyte character (*note Text
-     Representations::).
-
-`[:nonascii:]'
-     This matches any non-ASCII character.
-
-`[:print:]'
-     This matches printing characters--everything except ASCII control
-     characters and the delete character.
-
-`[:punct:]'
-     This matches any punctuation character.  (At present, for multibyte
-     characters, it matches anything that has non-word syntax.)
-
-`[:space:]'
-     This matches any character that has whitespace syntax (*note
-     Syntax Class Table::).
-
-`[:unibyte:]'
-     This matches any unibyte character (*note Text Representations::).
-
-`[:upper:]'
-     This matches any upper-case letter, as determined by the current
-     case table (*note Case Tables::).  If `case-fold-search' is
-     non-`nil', this also matches any lower-case letter.
-
-`[:word:]'
-     This matches any character that has word syntax (*note Syntax
-     Class Table::).
-
-`[:xdigit:]'
-     This matches the hexadecimal digits: `0' through `9', `a' through
-     `f' and `A' through `F'.
-
-
-File: elisp,  Node: Regexp Backslash,  Prev: Char Classes,  Up: Syntax of Regexps
-
-34.3.1.3 Backslash Constructs in Regular Expressions
-....................................................
-
-For the most part, `\' followed by any character matches only that
-character.  However, there are several exceptions: certain
-two-character sequences starting with `\' that have special meanings.
-(The character after the `\' in such a sequence is always ordinary when
-used on its own.)  Here is a table of the special `\' constructs.
-
-`\|'
-     specifies an alternative.  Two regular expressions A and B with
-     `\|' in between form an expression that matches anything that
-     either A or B matches.
-
-     Thus, `foo\|bar' matches either `foo' or `bar' but no other string.
-
-     `\|' applies to the largest possible surrounding expressions.
-     Only a surrounding `\( ... \)' grouping can limit the grouping
-     power of `\|'.
-
-     If you need full backtracking capability to handle multiple uses of
-     `\|', use the POSIX regular expression functions (*note POSIX
-     Regexps::).
-
-`\{M\}'
-     is a postfix operator that repeats the previous pattern exactly M
-     times.  Thus, `x\{5\}' matches the string `xxxxx' and nothing
-     else.  `c[ad]\{3\}r' matches string such as `caaar', `cdddr',
-     `cadar', and so on.
-
-`\{M,N\}'
-     is a more general postfix operator that specifies repetition with a
-     minimum of M repeats and a maximum of N repeats.  If M is omitted,
-     the minimum is 0; if N is omitted, there is no maximum.
-
-     For example, `c[ad]\{1,2\}r' matches the strings `car', `cdr',
-     `caar', `cadr', `cdar', and `cddr', and nothing else.
-     `\{0,1\}' or `\{,1\}' is equivalent to `?'.
-     `\{0,\}' or `\{,\}' is equivalent to `*'.
-     `\{1,\}' is equivalent to `+'.
-
-`\( ... \)'
-     is a grouping construct that serves three purposes:
-
-       1. To enclose a set of `\|' alternatives for other operations.
-          Thus, the regular expression `\(foo\|bar\)x' matches either
-          `foox' or `barx'.
-
-       2. To enclose a complicated expression for the postfix operators
-          `*', `+' and `?' to operate on.  Thus, `ba\(na\)*' matches
-          `ba', `bana', `banana', `bananana', etc., with any number
-          (zero or more) of `na' strings.
-
-       3. To record a matched substring for future reference with
-          `\DIGIT' (see below).
-
-     This last application is not a consequence of the idea of a
-     parenthetical grouping; it is a separate feature that was assigned
-     as a second meaning to the same `\( ... \)' construct because, in
-     practice, there was usually no conflict between the two meanings.
-     But occasionally there is a conflict, and that led to the
-     introduction of shy groups.
-
-`\(?: ... \)'
-     is the "shy group" construct.  A shy group serves the first two
-     purposes of an ordinary group (controlling the nesting of other
-     operators), but it does not get a number, so you cannot refer back
-     to its value with `\DIGIT'.  Shy groups are particularly useful
-     for mechanically-constructed regular expressions, because they can
-     be added automatically without altering the numbering of ordinary,
-     non-shy groups.
-
-     Shy groups are also called "non-capturing" or "unnumbered groups".
-
-`\(?NUM: ... \)'
-     is the "explicitly numbered group" construct.  Normal groups get
-     their number implicitly, based on their position, which can be
-     inconvenient.  This construct allows you to force a particular
-     group number.  There is no particular restriction on the numbering,
-     e.g. you can have several groups with the same number in which case
-     the last one to match (i.e. the rightmost match) will win.
-     Implicitly numbered groups always get the smallest integer larger
-     than the one of any previous group.
-
-`\DIGIT'
-     matches the same text that matched the DIGITth occurrence of a
-     grouping (`\( ... \)') construct.
-
-     In other words, after the end of a group, the matcher remembers the
-     beginning and end of the text matched by that group.  Later on in
-     the regular expression you can use `\' followed by DIGIT to match
-     that same text, whatever it may have been.
-
-     The strings matching the first nine grouping constructs appearing
-     in the entire regular expression passed to a search or matching
-     function are assigned numbers 1 through 9 in the order that the
-     open parentheses appear in the regular expression.  So you can use
-     `\1' through `\9' to refer to the text matched by the
-     corresponding grouping constructs.
-
-     For example, `\(.*\)\1' matches any newline-free string that is
-     composed of two identical halves.  The `\(.*\)' matches the first
-     half, which may be anything, but the `\1' that follows must match
-     the same exact text.
-
-     If a `\( ... \)' construct matches more than once (which can
-     happen, for instance, if it is followed by `*'), only the last
-     match is recorded.
-
-     If a particular grouping construct in the regular expression was
-     never matched--for instance, if it appears inside of an
-     alternative that wasn't used, or inside of a repetition that
-     repeated zero times--then the corresponding `\DIGIT' construct
-     never matches anything.  To use an artificial example,
-     `\(foo\(b*\)\|lose\)\2' cannot match `lose': the second
-     alternative inside the larger group matches it, but then `\2' is
-     undefined and can't match anything.  But it can match `foobb',
-     because the first alternative matches `foob' and `\2' matches `b'.
-
-`\w'
-     matches any word-constituent character.  The editor syntax table
-     determines which characters these are.  *Note Syntax Tables::.
-
-`\W'
-     matches any character that is not a word constituent.
-
-`\sCODE'
-     matches any character whose syntax is CODE.  Here CODE is a
-     character that represents a syntax code: thus, `w' for word
-     constituent, `-' for whitespace, `(' for open parenthesis, etc.
-     To represent whitespace syntax, use either `-' or a space
-     character.  *Note Syntax Class Table::, for a list of syntax codes
-     and the characters that stand for them.
-
-`\SCODE'
-     matches any character whose syntax is not CODE.
-
-`\cC'
-     matches any character whose category is C.  Here C is a character
-     that represents a category: thus, `c' for Chinese characters or
-     `g' for Greek characters in the standard category table.
-
-`\CC'
-     matches any character whose category is not C.
-
-   The following regular expression constructs match the empty
-string--that is, they don't use up any characters--but whether they
-match depends on the context.  For all, the beginning and end of the
-accessible portion of the buffer are treated as if they were the actual
-beginning and end of the buffer.
-
-`\`'
-     matches the empty string, but only at the beginning of the buffer
-     or string being matched against.
-
-`\''
-     matches the empty string, but only at the end of the buffer or
-     string being matched against.
-
-`\='
-     matches the empty string, but only at point.  (This construct is
-     not defined when matching against a string.)
-
-`\b'
-     matches the empty string, but only at the beginning or end of a
-     word.  Thus, `\bfoo\b' matches any occurrence of `foo' as a
-     separate word.  `\bballs?\b' matches `ball' or `balls' as a
-     separate word.
-
-     `\b' matches at the beginning or end of the buffer (or string)
-     regardless of what text appears next to it.
-
-`\B'
-     matches the empty string, but _not_ at the beginning or end of a
-     word, nor at the beginning or end of the buffer (or string).
-
-`\<'
-     matches the empty string, but only at the beginning of a word.
-     `\<' matches at the beginning of the buffer (or string) only if a
-     word-constituent character follows.
-
-`\>'
-     matches the empty string, but only at the end of a word.  `\>'
-     matches at the end of the buffer (or string) only if the contents
-     end with a word-constituent character.
-
-`\_<'
-     matches the empty string, but only at the beginning of a symbol.  A
-     symbol is a sequence of one or more word or symbol constituent
-     characters.  `\_<' matches at the beginning of the buffer (or
-     string) only if a symbol-constituent character follows.
-
-`\_>'
-     matches the empty string, but only at the end of a symbol.  `\_>'
-     matches at the end of the buffer (or string) only if the contents
-     end with a symbol-constituent character.
-
-   Not every string is a valid regular expression.  For example, a
-string that ends inside a character alternative without terminating `]'
-is invalid, and so is a string that ends with a single `\'.  If an
-invalid regular expression is passed to any of the search functions, an
-`invalid-regexp' error is signaled.
-
-
-File: elisp,  Node: Regexp Example,  Next: Regexp Functions,  Prev: Syntax of Regexps,  Up: Regular Expressions
-
-34.3.2 Complex Regexp Example
------------------------------
-
-Here is a complicated regexp which was formerly used by Emacs to
-recognize the end of a sentence together with any whitespace that
-follows.  (Nowadays Emacs uses a similar but more complex default
-regexp constructed by the function `sentence-end'.  *Note Standard
-Regexps::.)
-
-   First, we show the regexp as a string in Lisp syntax to distinguish
-spaces from tab characters.  The string constant begins and ends with a
-double-quote.  `\"' stands for a double-quote as part of the string,
-`\\' for a backslash as part of the string, `\t' for a tab and `\n' for
-a newline.
-
-     "[.?!][]\"')}]*\\($\\| $\\|\t\\|  \\)[ \t\n]*"
-
-In contrast, if you evaluate this string, you will see the following:
-
-     "[.?!][]\"')}]*\\($\\| $\\|\t\\|  \\)[ \t\n]*"
-          => "[.?!][]\"')}]*\\($\\| $\\|  \\|  \\)[
-     ]*"
-
-In this output, tab and newline appear as themselves.
-
-   This regular expression contains four parts in succession and can be
-deciphered as follows:
-
-`[.?!]'
-     The first part of the pattern is a character alternative that
-     matches any one of three characters: period, question mark, and
-     exclamation mark.  The match must begin with one of these three
-     characters.  (This is one point where the new default regexp used
-     by Emacs differs from the old.  The new value also allows some
-     non-ASCII characters that end a sentence without any following
-     whitespace.)
-
-`[]\"')}]*'
-     The second part of the pattern matches any closing braces and
-     quotation marks, zero or more of them, that may follow the period,
-     question mark or exclamation mark.  The `\"' is Lisp syntax for a
-     double-quote in a string.  The `*' at the end indicates that the
-     immediately preceding regular expression (a character alternative,
-     in this case) may be repeated zero or more times.
-
-`\\($\\| $\\|\t\\|  \\)'
-     The third part of the pattern matches the whitespace that follows
-     the end of a sentence: the end of a line (optionally with a
-     space), or a tab, or two spaces.  The double backslashes mark the
-     parentheses and vertical bars as regular expression syntax; the
-     parentheses delimit a group and the vertical bars separate
-     alternatives.  The dollar sign is used to match the end of a line.
-
-`[ \t\n]*'
-     Finally, the last part of the pattern matches any additional
-     whitespace beyond the minimum needed to end a sentence.
-
-
-File: elisp,  Node: Regexp Functions,  Prev: Regexp Example,  Up: Regular Expressions
-
-34.3.3 Regular Expression Functions
------------------------------------
-
-These functions operate on regular expressions.
-
- -- Function: regexp-quote string
-     This function returns a regular expression whose only exact match
-     is STRING.  Using this regular expression in `looking-at' will
-     succeed only if the next characters in the buffer are STRING;
-     using it in a search function will succeed if the text being
-     searched contains STRING.
-
-     This allows you to request an exact string match or search when
-     calling a function that wants a regular expression.
-
-          (regexp-quote "^The cat$")
-               => "\\^The cat\\$"
-
-     One use of `regexp-quote' is to combine an exact string match with
-     context described as a regular expression.  For example, this
-     searches for the string that is the value of STRING, surrounded by
-     whitespace:
-
-          (re-search-forward
-           (concat "\\s-" (regexp-quote string) "\\s-"))
-
- -- Function: regexp-opt strings &optional paren
-     This function returns an efficient regular expression that will
-     match any of the strings in the list STRINGS.  This is useful when
-     you need to make matching or searching as fast as possible--for
-     example, for Font Lock mode.
-
-     If the optional argument PAREN is non-`nil', then the returned
-     regular expression is always enclosed by at least one
-     parentheses-grouping construct.  If PAREN is `words', then that
-     construct is additionally surrounded by `\<' and `\>'.
-
-     This simplified definition of `regexp-opt' produces a regular
-     expression which is equivalent to the actual value (but not as
-     efficient):
-
-          (defun regexp-opt (strings paren)
-            (let ((open-paren (if paren "\\(" ""))
-                  (close-paren (if paren "\\)" "")))
-              (concat open-paren
-                      (mapconcat 'regexp-quote strings "\\|")
-                      close-paren)))
-
- -- Function: regexp-opt-depth regexp
-     This function returns the total number of grouping constructs
-     (parenthesized expressions) in REGEXP.  This does not include shy
-     groups (*note Regexp Backslash::).
-
-
-File: elisp,  Node: Regexp Search,  Next: POSIX Regexps,  Prev: Regular Expressions,  Up: Searching and Matching
-
-34.4 Regular Expression Searching
-=================================
-
-In GNU Emacs, you can search for the next match for a regular
-expression either incrementally or not.  For incremental search
-commands, see *note Regular Expression Search: (emacs)Regexp Search.
-Here we describe only the search functions useful in programs.  The
-principal one is `re-search-forward'.
-
-   These search functions convert the regular expression to multibyte if
-the buffer is multibyte; they convert the regular expression to unibyte
-if the buffer is unibyte.  *Note Text Representations::.
-
- -- Command: re-search-forward regexp &optional limit noerror repeat
-     This function searches forward in the current buffer for a string
-     of text that is matched by the regular expression REGEXP.  The
-     function skips over any amount of text that is not matched by
-     REGEXP, and leaves point at the end of the first match found.  It
-     returns the new value of point.
-
-     If LIMIT is non-`nil', it must be a position in the current
-     buffer.  It specifies the upper bound to the search.  No match
-     extending after that position is accepted.
-
-     If REPEAT is supplied, it must be a positive number; the search is
-     repeated that many times; each repetition starts at the end of the
-     previous match.  If all these successive searches succeed, the
-     search succeeds, moving point and returning its new value.
-     Otherwise the search fails.  What `re-search-forward' does when
-     the search fails depends on the value of NOERROR:
-
-    `nil'
-          Signal a `search-failed' error.
-
-    `t'
-          Do nothing and return `nil'.
-
-    anything else
-          Move point to LIMIT (or the end of the accessible portion of
-          the buffer) and return `nil'.
-
-     In the following example, point is initially before the `T'.
-     Evaluating the search call moves point to the end of that line
-     (between the `t' of `hat' and the newline).
-
-          ---------- Buffer: foo ----------
-          I read "-!-The cat in the hat
-          comes back" twice.
-          ---------- Buffer: foo ----------
-
-          (re-search-forward "[a-z]+" nil t 5)
-               => 27
-
-          ---------- Buffer: foo ----------
-          I read "The cat in the hat-!-
-          comes back" twice.
-          ---------- Buffer: foo ----------
-
- -- Command: re-search-backward regexp &optional limit noerror repeat
-     This function searches backward in the current buffer for a string
-     of text that is matched by the regular expression REGEXP, leaving
-     point at the beginning of the first text found.
-
-     This function is analogous to `re-search-forward', but they are not
-     simple mirror images.  `re-search-forward' finds the match whose
-     beginning is as close as possible to the starting point.  If
-     `re-search-backward' were a perfect mirror image, it would find the
-     match whose end is as close as possible.  However, in fact it
-     finds the match whose beginning is as close as possible (and yet
-     ends before the starting point).  The reason for this is that
-     matching a regular expression at a given spot always works from
-     beginning to end, and starts at a specified beginning position.
-
-     A true mirror-image of `re-search-forward' would require a special
-     feature for matching regular expressions from end to beginning.
-     It's not worth the trouble of implementing that.
-
- -- Function: string-match regexp string &optional start
-     This function returns the index of the start of the first match for
-     the regular expression REGEXP in STRING, or `nil' if there is no
-     match.  If START is non-`nil', the search starts at that index in
-     STRING.
-
-     For example,
-
-          (string-match
-           "quick" "The quick brown fox jumped quickly.")
-               => 4
-          (string-match
-           "quick" "The quick brown fox jumped quickly." 8)
-               => 27
-
-     The index of the first character of the string is 0, the index of
-     the second character is 1, and so on.
-
-     After this function returns, the index of the first character
-     beyond the match is available as `(match-end 0)'.  *Note Match
-     Data::.
-
-          (string-match
-           "quick" "The quick brown fox jumped quickly." 8)
-               => 27
-
-          (match-end 0)
-               => 32
-
- -- Function: string-match-p regexp string &optional start
-     This predicate function does what `string-match' does, but it
-     avoids modifying the match data.
-
- -- Function: looking-at regexp
-     This function determines whether the text in the current buffer
-     directly following point matches the regular expression REGEXP.
-     "Directly following" means precisely that: the search is
-     "anchored" and it can succeed only starting with the first
-     character following point.  The result is `t' if so, `nil'
-     otherwise.
-
-     This function does not move point, but it updates the match data,
-     which you can access using `match-beginning' and `match-end'.
-     *Note Match Data::.  If you need to test for a match without
-     modifying the match data, use `looking-at-p', described below.
-
-     In this example, point is located directly before the `T'.  If it
-     were anywhere else, the result would be `nil'.
-
-          ---------- Buffer: foo ----------
-          I read "-!-The cat in the hat
-          comes back" twice.
-          ---------- Buffer: foo ----------
-
-          (looking-at "The cat in the hat$")
-               => t
-
- -- Function: looking-back regexp &optional limit greedy
-     This function returns `t' if REGEXP matches text before point,
-     ending at point, and `nil' otherwise.
-
-     Because regular expression matching works only going forward, this
-     is implemented by searching backwards from point for a match that
-     ends at point.  That can be quite slow if it has to search a long
-     distance.  You can bound the time required by specifying LIMIT,
-     which says not to search before LIMIT.  In this case, the match
-     that is found must begin at or after LIMIT.
-
-     If GREEDY is non-`nil', this function extends the match backwards
-     as far as possible, stopping when a single additional previous
-     character cannot be part of a match for regexp.  When the match is
-     extended, its starting position is allowed to occur before LIMIT.
-
-          ---------- Buffer: foo ----------
-          I read "-!-The cat in the hat
-          comes back" twice.
-          ---------- Buffer: foo ----------
-
-          (looking-back "read \"" 3)
-               => t
-          (looking-back "read \"" 4)
-               => nil
-
- -- Function: looking-at-p regexp
-     This predicate function works like `looking-at', but without
-     updating the match data.
-
- -- Variable: search-spaces-regexp
-     If this variable is non-`nil', it should be a regular expression
-     that says how to search for whitespace.  In that case, any group of
-     spaces in a regular expression being searched for stands for use of
-     this regular expression.  However, spaces inside of constructs
-     such as `[...]' and `*', `+', `?' are not affected by
-     `search-spaces-regexp'.
-
-     Since this variable affects all regular expression search and match
-     constructs, you should bind it temporarily for as small as possible
-     a part of the code.
 

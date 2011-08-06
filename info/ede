@@ -1,9 +1,9 @@
-This is ../../info/ede, produced by makeinfo version 4.11 from ede.texi.
+This is ../../info/ede, produced by makeinfo version 4.13 from ede.texi.
 
 This file describes EDE, the Emacs Development Environment.
 
-   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009, 2010
-Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -17,9 +17,9 @@ Free Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* ede: (ede).       Project management for Emacs
+* EDE: (ede).                   The Emacs Development Environment.
 END-INFO-DIR-ENTRY
 
 
@@ -38,8 +38,8 @@ GNU ways of doing things.
 
    This file describes EDE, the Emacs Development Environment.
 
-   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009, 2010
-Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -393,8 +393,8 @@ lookup for Semantic, improving code completion performance.
 
 * ede-cpp-root::        This project marks the root of a C/C++ code project.
 * ede-simple subclassing:: Create your own simple project.
-* ede-emacs::		A project for working with Emacs.
-* ede-linux::		A project for working with Linux kernels.
+* ede-emacs::           A project for working with Emacs.
+* ede-linux::           A project for working with Linux kernels.
 * Custom Locate::       Customizing how to locate files in a simple project
 
 
@@ -506,14 +506,14 @@ EDE how to load your project pattern
        )
 
      (add-to-list 'ede-project-class-files
-     	     (ede-project-autoload "cpp-root"
-     	      :name "CPP ROOT"
-     	      :file 'ede-cpp-root
-     	      :proj-file 'MY-FILE-FOR-DIR
+                  (ede-project-autoload "cpp-root"
+                   :name "CPP ROOT"
+                   :file 'ede-cpp-root
+                   :proj-file 'MY-FILE-FOR-DIR
                    :proj-root 'MY-ROOT-FCN
-     	      :load-type 'MY-LOAD
-     	      :class-sym 'ede-cpp-root)
-     	     t)
+                   :load-type 'MY-LOAD
+                   :class-sym 'ede-cpp-root)
+                  t)
 
    This example only creates an auto-loader, and does not create a new
 kind of project.
@@ -762,9 +762,9 @@ object:
 
      (defvar ede-source-emacs
        (ede-sourcecode "ede-emacs-source"
-     		  :name "Emacs Lisp"
-     		  :sourcepattern "\\.el$"
-     		  :garbagepattern '("*.elc"))
+                       :name "Emacs Lisp"
+                       :sourcepattern "\\.el$"
+                       :garbagepattern '("*.elc"))
        "Emacs Lisp source code definition.")
 
    If you want to recycle parts of an existing sourcecode object, you
@@ -3333,68 +3333,68 @@ Slots:
 
 
 Tag Table:
-Node: Top1003
-Node: EDE Project Concepts2850
-Node: EDE Mode4221
-Node: Creating a project4838
-Node: Modifying your project7295
-Node: Add/Remove target7820
-Node: Add/Remove files8486
-Node: Customize Features9393
-Node: EDE Project Features10365
-Node: Changing Compilers and Flags11046
-Node: Configurations11993
-Node: Building and Debugging12872
-Node: Miscellaneous commands13454
-Ref: ede-locate-setup-options14271
-Node: Simple projects14835
-Node: ede-cpp-root15892
-Node: ede-simple subclassing20750
-Node: ede-emacs20998
-Node: ede-linux21373
-Node: Custom Locate21750
-Node: Extending EDE23224
-Node: User interface methods25831
-Node: Base project methods27026
-Node: Sourcecode objects28388
-Node: Compiler and Linker objects30086
-Node: Project32360
-Node: ede-project-placeholder32703
-Node: ede-project34686
-Node: ede-cpp-root-project43647
-Node: ede-simple-project47600
-Node: ede-simple-base-project48177
-Node: ede-proj-project48711
-Node: project-am-makefile54376
-Node: ede-step-project55448
-Node: Targets58834
-Node: ede-target59641
-Node: ede-proj-target65707
-Node: ede-proj-target-makefile71674
-Node: semantic-ede-proj-target-grammar74784
-Node: ede-proj-target-makefile-objectcode76168
-Node: ede-proj-target-makefile-archive77721
-Node: ede-proj-target-makefile-program78834
-Node: ede-proj-target-makefile-shared-object80725
-Node: ede-proj-target-elisp82415
-Node: ede-proj-target-elisp-autoloads84321
-Node: ede-proj-target-makefile-miscelaneous87692
-Node: ede-proj-target-makefile-info88892
-Node: ede-proj-target-scheme91311
-Node: project-am-target92072
-Node: project-am-objectcode93068
-Node: project-am-program94086
-Node: project-am-header-noinst94679
-Node: project-am-header-inst95341
-Node: project-am-lisp95994
-Node: project-am-texinfo96564
-Node: project-am-man97577
-Node: Sourcecode98117
-Node: ede-sourcecode98342
-Node: Compilers100971
-Node: ede-compilation-program101386
-Node: ede-compiler104580
-Node: ede-object-compiler107710
-Node: ede-linker108460
+Node: Top1042
+Node: EDE Project Concepts2896
+Node: EDE Mode4267
+Node: Creating a project4884
+Node: Modifying your project7341
+Node: Add/Remove target7866
+Node: Add/Remove files8532
+Node: Customize Features9439
+Node: EDE Project Features10411
+Node: Changing Compilers and Flags11092
+Node: Configurations12039
+Node: Building and Debugging12918
+Node: Miscellaneous commands13500
+Ref: ede-locate-setup-options14317
+Node: Simple projects14881
+Node: ede-cpp-root15956
+Node: ede-simple subclassing20863
+Node: ede-emacs21111
+Node: ede-linux21486
+Node: Custom Locate21863
+Node: Extending EDE23337
+Node: User interface methods25944
+Node: Base project methods27139
+Node: Sourcecode objects28501
+Node: Compiler and Linker objects30241
+Node: Project32515
+Node: ede-project-placeholder32858
+Node: ede-project34841
+Node: ede-cpp-root-project43802
+Node: ede-simple-project47755
+Node: ede-simple-base-project48332
+Node: ede-proj-project48866
+Node: project-am-makefile54531
+Node: ede-step-project55603
+Node: Targets58989
+Node: ede-target59796
+Node: ede-proj-target65862
+Node: ede-proj-target-makefile71829
+Node: semantic-ede-proj-target-grammar74939
+Node: ede-proj-target-makefile-objectcode76323
+Node: ede-proj-target-makefile-archive77876
+Node: ede-proj-target-makefile-program78989
+Node: ede-proj-target-makefile-shared-object80880
+Node: ede-proj-target-elisp82570
+Node: ede-proj-target-elisp-autoloads84476
+Node: ede-proj-target-makefile-miscelaneous87847
+Node: ede-proj-target-makefile-info89047
+Node: ede-proj-target-scheme91466
+Node: project-am-target92227
+Node: project-am-objectcode93223
+Node: project-am-program94241
+Node: project-am-header-noinst94834
+Node: project-am-header-inst95496
+Node: project-am-lisp96149
+Node: project-am-texinfo96719
+Node: project-am-man97732
+Node: Sourcecode98272
+Node: ede-sourcecode98497
+Node: Compilers101126
+Node: ede-compilation-program101541
+Node: ede-compiler104735
+Node: ede-object-compiler107865
+Node: ede-linker108615
 
 End Tag Table

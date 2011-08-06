@@ -1,9 +1,9 @@
-This is ../../info/org, produced by makeinfo version 4.11 from org.texi.
+This is ../../info/org, produced by makeinfo version 4.13 from org.texi.
 
 This manual is for Org version 6.33x.
 
-   Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
-Foundation
+   Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free
+Software Foundation
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,9 +23,9 @@ Foundation
      copy of the license to the document, as described in section 6 of
      the license.
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs editing modes
 START-INFO-DIR-ENTRY
-* Org Mode: (org).      Outline-based notes management and organizer
+* Org Mode: (org).              Outline-based notes management and organizer.
 END-INFO-DIR-ENTRY
 
 
@@ -1236,7 +1236,7 @@ File: org,  Node: Tables in HTML export,  Next: Images in HTML export,  Prev: Li
 Org-mode tables are exported to HTML using the table tag defined in
 `org-export-html-table-tag'.  The default setting makes tables without
 cell borders and frame.  If you would like to change this for individual
-tables, place somthing like the following before the table:
+tables, place something like the following before the table:
 
      #+CAPTION: This is a table with lines around and between cells
      #+ATTR_HTML: border="2" rules="all" frame="all"
@@ -2884,9 +2884,9 @@ File: org,  Node: Conflicts,  Prev: Cooperation,  Up: Interaction
      code fixed this problem:
 
           (add-hook 'org-mode-hook
-          	  (lambda ()
-          	    (org-set-local 'yas/trigger-key [tab])
-          	    (define-key yas/keymap [tab] 'yas/next-field-group)))
+                    (lambda ()
+                      (org-set-local 'yas/trigger-key [tab])
+                      (define-key yas/keymap [tab] 'yas/next-field-group)))
 
 `windmove.el' by Hovav Shacham
      This package also uses the `S-<cursor>' keys, so everything written

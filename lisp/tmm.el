@@ -1,7 +1,7 @@
 ;;; tmm.el --- text mode access to menu-bar
 
 ;; Copyright (C) 1994, 1995, 1996, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Ilya Zakharevich <ilya@math.mps.ohio-state.edu>
 ;; Maintainer: FSF
@@ -168,14 +168,13 @@ Its value should be an event that has a binding in MENU."
     ;; It has no other elements.
     ;; The order of elements in tmm-km-list is the order of the menu bar.
     (mapc (lambda (elt)
-	    (if (stringp elt)
-		(setq gl-str elt)
-	      (cond
-	       ((listp elt) (tmm-get-keymap elt not-menu))
-	       ((vectorp elt)
-		(dotimes (i (length elt))
-		  (tmm-get-keymap (cons i (aref elt i)) not-menu))))))
-	    menu)
+            (cond
+             ((stringp elt) (setq gl-str elt))
+             ((listp elt) (tmm-get-keymap elt not-menu))
+             ((vectorp elt)
+              (dotimes (i (length elt))
+                (tmm-get-keymap (cons i (aref elt i)) not-menu)))))
+          menu)
     ;; Choose an element of tmm-km-list; put it in choice.
     (if (and not-menu (= 1 (length tmm-km-list)))
 	;; If this is the top-level of an x-popup-menu menu,
@@ -261,9 +260,6 @@ Its value should be an event that has a binding in MENU."
 	       (setq choice (indirect-function choice)))
 	   (condition-case nil
 	       (require 'mouse)
-	     (error nil))
-	   (condition-case nil
-	       (x-popup-menu nil choice) ; Get the shortcuts
 	     (error nil))
 	   (tmm-prompt choice))
 	  ;; We just handled a menu keymap and found a command.
@@ -371,32 +367,31 @@ Stores a list of all the shortcuts in the free variable `tmm-short-cuts'."
   (add-hook 'minibuffer-exit-hook 'tmm-delete-map nil t)
   (unless tmm-c-prompt
     (error "No active menu entries"))
-  (let ((win (selected-window)))
-    (setq tmm-old-mb-map (tmm-define-keys t))
-    ;; Get window and hide it for electric mode to get correct size
-    (save-window-excursion
-      (let ((completions
-	     (mapcar 'car minibuffer-completion-table)))
-        (or tmm-completion-prompt
-            (add-hook 'completion-setup-hook
-                      'tmm-completion-delete-prompt 'append))
-        (unwind-protect
-            (with-output-to-temp-buffer "*Completions*"
-              (display-completion-list completions))
-          (remove-hook 'completion-setup-hook 'tmm-completion-delete-prompt)))
-      (set-buffer "*Completions*")
-      (tmm-remove-inactive-mouse-face)
-      (when tmm-completion-prompt
-	(let ((buffer-read-only nil))
-	  (goto-char (point-min))
-	  (insert tmm-completion-prompt))))
-    (save-selected-window
-      (other-window 1)			; Electric-pop-up-window does
+  (setq tmm-old-mb-map (tmm-define-keys t))
+  ;; Get window and hide it for electric mode to get correct size
+  (save-window-excursion
+    (let ((completions
+           (mapcar 'car minibuffer-completion-table)))
+      (or tmm-completion-prompt
+          (add-hook 'completion-setup-hook
+                    'tmm-completion-delete-prompt 'append))
+      (unwind-protect
+          (with-output-to-temp-buffer "*Completions*"
+            (display-completion-list completions))
+        (remove-hook 'completion-setup-hook 'tmm-completion-delete-prompt)))
+    (set-buffer "*Completions*")
+    (tmm-remove-inactive-mouse-face)
+    (when tmm-completion-prompt
+      (let ((buffer-read-only nil))
+        (goto-char (point-min))
+        (insert tmm-completion-prompt))))
+  (save-selected-window
+    (other-window 1)			; Electric-pop-up-window does
 					; not work in minibuffer
-      (Electric-pop-up-window "*Completions*")
-      (with-current-buffer "*Completions*"
-	(setq tmm-old-comp-map (tmm-define-keys nil))))
-    (insert tmm-c-prompt)))
+    (Electric-pop-up-window "*Completions*")
+    (with-current-buffer "*Completions*"
+      (setq tmm-old-comp-map (tmm-define-keys nil))))
+  (insert tmm-c-prompt))
 
 (defun tmm-delete-map ()
   (remove-hook 'minibuffer-exit-hook 'tmm-delete-map t)
@@ -445,33 +440,30 @@ element of keymap, an `x-popup-menu' argument, or an element of
 `x-popup-menu' argument (when IN-X-MENU is not-nil).
 This function adds the element only if it is not already present.
 It uses the free variable `tmm-table-undef' to keep undefined keys."
-  (let (km str cache plist filter visible enable (event (car elt)))
+  (let (km str plist filter visible enable (event (car elt)))
     (setq elt (cdr elt))
     (if (eq elt 'undefined)
 	(setq tmm-table-undef (cons (cons event nil) tmm-table-undef))
       (unless (assoc event tmm-table-undef)
 	(cond ((if (listp elt)
 		   (or (keymapp elt) (eq (car elt) 'lambda))
-		 (fboundp elt))
+		 (and (symbolp elt) (fboundp elt)))
 	       (setq km elt))
 
 	      ((if (listp (cdr-safe elt))
 		   (or (keymapp (cdr-safe elt))
 		       (eq (car (cdr-safe elt)) 'lambda))
-		 (fboundp (cdr-safe elt)))
+		 (and (symbolp (cdr-safe elt)) (fboundp (cdr-safe elt))))
 	       (setq km (cdr elt))
 	       (and (stringp (car elt)) (setq str (car elt))))
 
 	      ((if (listp (cdr-safe (cdr-safe elt)))
 		   (or (keymapp (cdr-safe (cdr-safe elt)))
 		       (eq (car (cdr-safe (cdr-safe elt))) 'lambda))
-		 (fboundp (cdr-safe (cdr-safe elt))))
+		 (and (symbolp (cdr-safe (cdr-safe elt)))
+			       (fboundp (cdr-safe (cdr-safe elt)))))
 	       (setq km (cddr elt))
-	       (and (stringp (car elt)) (setq str (car elt)))
-	       (and str
-		    (stringp (cdr-safe (cadr elt))) ; keyseq cache
-		    (setq cache (cdr (cadr elt)))
-		    cache (setq str (concat str cache))))
+	       (and (stringp (car elt)) (setq str (car elt))))
 
 	      ((eq (car-safe elt) 'menu-item)
 	       ;; (menu-item TITLE COMMAND KEY ...)
@@ -488,30 +480,34 @@ It uses the free variable `tmm-table-undef' to keep undefined keys."
 		   (setq km (and (eval visible) km)))
 	       (setq enable (plist-get plist :enable))
 	       (if enable
-                   (setq km (if (eval enable) km 'ignore)))
-	       (and str
-		    (consp (nth 3 elt))
-		    (stringp (cdr (nth 3 elt))) ; keyseq cache
-		    (setq cache (cdr (nth 3 elt)))
-		    cache
-		    (setq str (concat str cache))))
+                   (setq km (if (eval enable) km 'ignore))))
 
 	      ((if (listp (cdr-safe (cdr-safe (cdr-safe elt))))
 		   (or (keymapp (cdr-safe (cdr-safe (cdr-safe elt))))
 		       (eq (car (cdr-safe (cdr-safe (cdr-safe elt)))) 'lambda))
-		 (fboundp (cdr-safe (cdr-safe (cdr-safe elt)))))
+		 (and (symbolp (cdr-safe (cdr-safe (cdr-safe elt))))
+		      (fboundp (cdr-safe (cdr-safe (cdr-safe elt))))))
 					 ; New style of easy-menu
 	       (setq km (cdr (cddr elt)))
-	       (and (stringp (car elt)) (setq str (car elt)))
-	       (and str
-		    (stringp (cdr-safe (car (cddr elt)))) ; keyseq cache
-		    (setq cache (cdr (car (cdr (cdr elt)))))
-		    cache (setq str (concat str cache))))
+	       (and (stringp (car elt)) (setq str (car elt))))
 
 	      ((stringp event)		; x-popup or x-popup element
 	       (if (or in-x-menu (stringp (car-safe elt)))
 		   (setq str event event nil km elt)
-		 (setq str event event nil km (cons 'keymap elt))))))
+		 (setq str event event nil km (cons 'keymap elt)))))
+        (unless (or (eq km 'ignore) (null str))
+          (let ((binding (where-is-internal km nil t)))
+            (when binding
+              (setq binding (key-description binding))
+              ;; Try to align the keybindings.
+              (let ((colwidth (min 30 (- (/ (window-width) 2) 10))))
+                (setq str
+                      (concat str
+                              (make-string (max 2 (- colwidth
+                                                     (string-width str)
+                                                     (string-width binding)))
+                                           ?\s)
+                              binding)))))))
       (and km (stringp km) (setq str km))
       ;; Verify that the command is enabled;
       ;; if not, don't mention it.

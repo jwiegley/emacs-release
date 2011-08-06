@@ -1,6 +1,6 @@
 /* Generic frame functions.
    Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2001, 2002, 2003,
-     2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+     2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -100,6 +100,7 @@ Lisp_Object Qgeometry;  /* Not used */
 Lisp_Object Qheight, Qwidth;
 Lisp_Object Qleft, Qright;
 Lisp_Object Qicon_left, Qicon_top, Qicon_type, Qicon_name;
+Lisp_Object Qtooltip;
 Lisp_Object Qinternal_border_width;
 Lisp_Object Qmouse_color;
 Lisp_Object Qminibuffer;
@@ -210,11 +211,12 @@ extern Lisp_Object QCname, Qfont_param;
 
 DEFUN ("framep", Fframep, Sframep, 1, 1, 0,
        doc: /* Return non-nil if OBJECT is a frame.
-Value is t for a termcap frame (a character-only terminal),
-`x' for an Emacs frame that is really an X window,
-`w32' for an Emacs frame that is a window on MS-Windows display,
-`ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
-`pc' for a direct-write MS-DOS frame.
+Value is:
+  t for a termcap frame (a character-only terminal),
+ 'x' for an Emacs frame that is really an X window,
+ 'w32' for an Emacs frame that is a window on MS-Windows display,
+ 'ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
+ 'pc' for a direct-write MS-DOS frame.
 See also `frame-live-p'.  */)
      (object)
      Lisp_Object object;
@@ -258,10 +260,18 @@ return values.  */)
 
 DEFUN ("window-system", Fwindow_system, Swindow_system, 0, 1, 0,
        doc: /* The name of the window system that FRAME is displaying through.
-The value is a symbol---for instance, 'x' for X windows.
-The value is nil if Emacs is using a text-only terminal.
+The value is a symbol:
+ nil for a termcap frame (a character-only terminal),
+ 'x' for an Emacs frame that is really an X window,
+ 'w32' for an Emacs frame that is a window on MS-Windows display,
+ 'ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
+ 'pc' for a direct-write MS-DOS frame.
 
-FRAME defaults to the currently selected frame.  */)
+FRAME defaults to the currently selected frame.
+
+Use of this function as a predicate is deprecated.  Instead,
+use `display-graphic-p' or any of the other `display-*-p'
+predicates which report frame's specific UI-related capabilities.  */)
   (frame)
      Lisp_Object frame;
 {
@@ -1329,7 +1339,7 @@ delete_frame (frame, force)
   struct frame *sf = SELECTED_FRAME ();
   struct kboard *kb;
 
-  int minibuffer_selected;
+  int minibuffer_selected, tooltip_frame;
 
   if (EQ (frame, Qnil))
     {
@@ -1381,13 +1391,15 @@ delete_frame (frame, force)
 	}
     }
 
+  tooltip_frame = !NILP (Fframe_parameter (frame, intern ("tooltip")));
+
   /* Run `delete-frame-functions' unless FORCE is `noelisp' or
      frame is a tooltip.  FORCE is set to `noelisp' when handling
      a disconnect from the terminal, so we don't dare call Lisp
      code.  */
-  if (NILP (Vrun_hooks) || !NILP (Fframe_parameter (frame, intern ("tooltip"))))
+  if (NILP (Vrun_hooks) || tooltip_frame)
     ;
-  if (EQ (force, Qnoelisp))
+  else if (EQ (force, Qnoelisp))
     pending_funcalls
       = Fcons (list3 (Qrun_hook_with_args, Qdelete_frame_functions, frame),
 	       pending_funcalls);
@@ -1633,7 +1645,8 @@ delete_frame (frame, force)
     }
 
   /* Cause frame titles to update--necessary if we now have just one frame.  */
-  update_mode_lines = 1;
+  if (!tooltip_frame)
+    update_mode_lines = 1;
 
   return Qnil;
 }
@@ -4451,6 +4464,8 @@ syms_of_frame ()
   staticpro (&Qicon_left);
   Qicon_top = intern_c_string ("icon-top");
   staticpro (&Qicon_top);
+  Qtooltip = intern_c_string ("tooltip");
+  staticpro (&Qtooltip);
   Qleft = intern_c_string ("left");
   staticpro (&Qleft);
   Qright = intern_c_string ("right");

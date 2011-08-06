@@ -1,10 +1,10 @@
-This is ../../info/semantic, produced by makeinfo version 4.11 from
+This is ../../info/semantic, produced by makeinfo version 4.13 from
 semantic.texi.
 
 This manual documents the Semantic library and utilities.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2009,
-2010 Free Software Foundation, Inc.
+2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -18,9 +18,9 @@ This manual documents the Semantic library and utilities.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* Semantic: (semantic).      Source code parser library and utilities.
+* Semantic: (semantic).         Source code parser library and utilities.
 END-INFO-DIR-ENTRY
 
 
@@ -44,7 +44,7 @@ use the mailing list cedet-semantic@sourceforge.net via the URL:
    This manual documents the Semantic library and utilities.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2009,
-2010 Free Software Foundation, Inc.
+2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -504,8 +504,8 @@ language parsers, may change the value of
 given major mode, like this:
 
      (setq-mode-local c-mode
-     		 semanticdb-find-default-throttle
-     		 '(project unloaded system recursive))
+                      semanticdb-find-default-throttle
+                      '(project unloaded system recursive))
 
  -- Variable: semanticdb-find-default-throttle
      The default throttle for `semanticdb-find' routines.  The throttle
@@ -1486,8 +1486,8 @@ more about how Semantic works.
 
 * Menu:
 
-* Parser code ::	  Code used for the parsers
-* Tag handling ::	  Code used for manipulating tags
+* Parser code ::          Code used for the parsers
+* Tag handling ::         Code used for manipulating tags
 * Semanticdb Internals :: Code used in the semantic database
 * Analyzer Internals ::   Code used in the code analyzer
 * Tools ::                Code used in user tools
@@ -2456,62 +2456,62 @@ Index
 
 
 Tag Table:
-Node: Top1039
-Node: Introduction2719
-Node: Semantic Components5996
-Node: Using Semantic7342
-Node: Semantic mode8764
-Node: Semantic mode user commands11642
-Node: SemanticDB14815
-Node: Semanticdb Tag Storage16190
-Node: Semanticdb Search Configuration18755
-Node: Search Throttle20180
-Node: Semanticdb Roots22341
-Node: Include paths23820
-Node: Semanticdb search debugging commands25120
-Node: Changing Backends26495
-Node: Create System Databases27248
-Node: Idle Scheduler27878
-Node: Reparsing Options29582
-Node: Idle Working Options31060
-Node: Debugging Idle Time Issues32325
-Node: Idle Summary Mode33004
-Node: Idle Completions Mode34620
-Node: Analyzer37602
-Node: Smart Completion38149
-Node: Smart Summary41291
-Node: Smart Jump42202
-Node: Analyzer Debug43221
-Node: Speedbar49693
-Node: SymRef50979
-Node: MRU Bookmarks52929
-Node: Sticky Func Mode53871
-Node: Highlight Func Mode55021
-Node: Tag Decoration Mode56073
-Node: Semantic Internals60068
-Node: Parser code60774
-Node: Tag handling62523
-Node: Semanticdb Internals64197
-Node: Analyzer Internals66324
-Node: Tools68282
-Node: Tests69964
-Node: Glossary70417
-Ref: BNF70569
-Ref: bovinate70768
-Ref: bovine lambda70857
-Ref: bovine parser71040
-Ref: context71166
-Ref: LALR71175
-Ref: lexer71181
-Ref: LL71395
-Ref: nonterminal71399
-Ref: overloadable71591
-Ref: parser71699
-Ref: tag71752
-Ref: token72097
-Ref: token stream72215
-Ref: wisent parser72294
-Node: GNU Free Documentation License72460
-Node: Index97625
+Node: Top1062
+Node: Introduction2748
+Node: Semantic Components6025
+Node: Using Semantic7371
+Node: Semantic mode8793
+Node: Semantic mode user commands11671
+Node: SemanticDB14844
+Node: Semanticdb Tag Storage16219
+Node: Semanticdb Search Configuration18784
+Node: Search Throttle20209
+Node: Semanticdb Roots22398
+Node: Include paths23877
+Node: Semanticdb search debugging commands25177
+Node: Changing Backends26552
+Node: Create System Databases27305
+Node: Idle Scheduler27935
+Node: Reparsing Options29639
+Node: Idle Working Options31117
+Node: Debugging Idle Time Issues32382
+Node: Idle Summary Mode33061
+Node: Idle Completions Mode34677
+Node: Analyzer37659
+Node: Smart Completion38206
+Node: Smart Summary41348
+Node: Smart Jump42259
+Node: Analyzer Debug43278
+Node: Speedbar49750
+Node: SymRef51036
+Node: MRU Bookmarks52986
+Node: Sticky Func Mode53928
+Node: Highlight Func Mode55078
+Node: Tag Decoration Mode56130
+Node: Semantic Internals60125
+Node: Parser code60844
+Node: Tag handling62593
+Node: Semanticdb Internals64267
+Node: Analyzer Internals66394
+Node: Tools68352
+Node: Tests70034
+Node: Glossary70487
+Ref: BNF70639
+Ref: bovinate70838
+Ref: bovine lambda70927
+Ref: bovine parser71110
+Ref: context71236
+Ref: LALR71245
+Ref: lexer71251
+Ref: LL71465
+Ref: nonterminal71469
+Ref: overloadable71661
+Ref: parser71769
+Ref: tag71822
+Ref: token72167
+Ref: token stream72285
+Ref: wisent parser72364
+Node: GNU Free Documentation License72530
+Node: Index97695
 
 End Tag Table

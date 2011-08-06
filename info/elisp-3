@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,7 +21,7 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
@@ -699,9 +699,9 @@ the forms are function definitions and variable definitions.
 * Repeated Loading::        Precautions about loading a file twice.
 * Named Features::          Loading a library if it isn't already loaded.
 * Where Defined::           Finding which file defined a certain symbol.
-* Unloading::		    How to "unload" a library that was loaded.
-* Hooks for Loading::	    Providing code to be run when
-			      particular libraries are loaded.
+* Unloading::               How to "unload" a library that was loaded.
+* Hooks for Loading::       Providing code to be run when
+                              particular libraries are loaded.
 
 
 File: elisp,  Node: How Programs Do Loading,  Next: Load Suffixes,  Up: Loading
@@ -764,6 +764,10 @@ facilities call the `load' function to do the work.
      directory in `load-path', then all three suffixes in the second
      directory, and so on.  *Note Library Search::.
 
+     Whatever the name under which the file is eventually found, and the
+     directory where Emacs found it, Emacs sets the value of the
+     variable `load-file-name' to that file's name.
+
      If you get a warning that `foo.elc' is older than `foo.el', it
      means you should consider recompiling `foo.el'.  *Note Byte
      Compilation::.
@@ -805,6 +809,11 @@ facilities call the `load' function to do the work.
  -- Variable: load-in-progress
      This variable is non-`nil' if Emacs is in the process of loading a
      file, and it is `nil' otherwise.
+
+ -- Variable: load-file-name
+     When Emacs is in the process of loading a file, this variable's
+     value is the name of that file, as Emacs found it during the search
+     described earlier in this section.
 
  -- Variable: load-read-function
      This variable specifies an alternate expression-reading function
@@ -979,6 +988,26 @@ represented as absolute file names.)
      name as a string.  When the user runs `locate-library'
      interactively, the argument INTERACTIVE-CALL is `t', and this
      tells `locate-library' to display the file name in the echo area.
+
+ -- Command: list-load-path-shadows &optional stringp
+     This command shows a list of "shadowed" Emacs Lisp files.  A
+     shadowed file is one that will not normally be loaded, despite
+     being in a directory on `load-path', due to the existence of
+     another similarly-named file in a directory earlier on `load-path'.
+
+     For instance, suppose `load-path' is set to
+
+            ("/opt/emacs/site-lisp" "/usr/share/emacs/23.3/lisp")
+
+     and that both these directories contain a file named `foo.el'.
+     Then `(require 'foo)' never loads the file in the second
+     directory.  Such a situation might indicate a problem in the way
+     Emacs was installed.
+
+     When called from Lisp, this function prints a message listing the
+     shadowed files, instead of displaying them in a buffer.  If the
+     optional argument `stringp' is non-`nil', it instead returns the
+     shadowed files as a string.
 
 
 File: elisp,  Node: Loading Non-ASCII,  Next: Autoload,  Prev: Library Search,  Up: Loading
@@ -1598,9 +1627,9 @@ in byte compilation.
 * Compilation Functions::       Byte compilation functions.
 * Docs and Compilation::        Dynamic loading of documentation strings.
 * Dynamic Loading::             Dynamic loading of individual functions.
-* Eval During Compile::  	Code to be evaluated when you compile.
+* Eval During Compile::         Code to be evaluated when you compile.
 * Compiler Errors::             Handling compiler error messages.
-* Byte-Code Objects::		The data type used for byte-compiled functions.
+* Byte-Code Objects::           The data type used for byte-compiled functions.
 * Disassembly::                 Disassembling byte-code; how to read byte-code.
 
 
@@ -2967,7 +2996,7 @@ appears.
 * Menu:
 
 * Debugger::            How the Emacs Lisp debugger is implemented.
-* Edebug::		A source-level Emacs Lisp debugger.
+* Edebug::              A source-level Emacs Lisp debugger.
 * Syntax Errors::       How to find syntax errors.
 * Test Coverage::       Ensuring you have tested all branches in your code.
 * Compilation Errors::  How to find errors that show up in byte compilation.
@@ -2997,7 +3026,7 @@ recursively.  *Note Recursive Editing::.
 * Menu:
 
 * Error Debugging::       Entering the debugger when an error happens.
-* Infinite Loops::	  Stopping and debugging a program that doesn't exit.
+* Infinite Loops::        Stopping and debugging a program that doesn't exit.
 * Function Debugging::    Entering it when a certain function is called.
 * Explicit Debug::        Entering it at a certain point in the program.
 * Using Debugger::        What the debugger does; what you see while in it.
@@ -3577,24 +3606,24 @@ start using it.
 
 * Menu:
 
-* Using Edebug::		Introduction to use of Edebug.
-* Instrumenting::		You must instrument your code
-				  in order to debug it with Edebug.
+* Using Edebug::                Introduction to use of Edebug.
+* Instrumenting::               You must instrument your code
+                                  in order to debug it with Edebug.
 * Modes: Edebug Execution Modes. Execution modes, stopping more or less often.
-* Jumping::			Commands to jump to a specified place.
-* Misc: Edebug Misc.		Miscellaneous commands.
+* Jumping::                     Commands to jump to a specified place.
+* Misc: Edebug Misc.            Miscellaneous commands.
 * Breaks::                      Setting breakpoints to make the program stop.
-* Trapping Errors::		Trapping errors with Edebug.
-* Views: Edebug Views.		Views inside and outside of Edebug.
-* Eval: Edebug Eval.		Evaluating expressions within Edebug.
-* Eval List::			Expressions whose values are displayed
-				  each time you enter Edebug.
-* Printing in Edebug::		Customization of printing.
-* Trace Buffer::		How to produce trace output in a buffer.
-* Coverage Testing::		How to test evaluation coverage.
-* The Outside Context::		Data that Edebug saves and restores.
-* Edebug and Macros::	        Specifying how to handle macro calls.
-* Options: Edebug Options.	Option variables for customizing Edebug.
+* Trapping Errors::             Trapping errors with Edebug.
+* Views: Edebug Views.          Views inside and outside of Edebug.
+* Eval: Edebug Eval.            Evaluating expressions within Edebug.
+* Eval List::                   Expressions whose values are displayed
+                                  each time you enter Edebug.
+* Printing in Edebug::          Customization of printing.
+* Trace Buffer::                How to produce trace output in a buffer.
+* Coverage Testing::            How to test evaluation coverage.
+* The Outside Context::         Data that Edebug saves and restores.
+* Edebug and Macros::           Specifying how to handle macro calls.
+* Options: Edebug Options.      Option variables for customizing Edebug.
 
 
 File: elisp,  Node: Using Edebug,  Next: Instrumenting,  Up: Edebug
@@ -3935,8 +3964,8 @@ breakpoints, the global break condition, and source breakpoints.
 * Menu:
 
 * Breakpoints::                 Breakpoints at stop points.
-* Global Break Condition::	Breaking on an event.
-* Source Breakpoints::  	Embedding breakpoints in source code.
+* Global Break Condition::      Breaking on an event.
+* Source Breakpoints::          Embedding breakpoints in source code.
 
 
 File: elisp,  Node: Breakpoints,  Next: Global Break Condition,  Up: Breaks
@@ -4430,9 +4459,9 @@ completely transparent.
 
 * Menu:
 
-* Checking Whether to Stop::	When Edebug decides what to do.
-* Edebug Display Update::	When Edebug updates the display.
-* Edebug Recursive Edit::	When Edebug stops execution.
+* Checking Whether to Stop::    When Edebug decides what to do.
+* Edebug Display Update::       When Edebug updates the display.
+* Edebug Recursive Edit::       When Edebug stops execution.
 
 
 File: elisp,  Node: Checking Whether to Stop,  Next: Edebug Display Update,  Up: The Outside Context
@@ -4552,9 +4581,9 @@ extra care is needed.  This subsection explains the details.
 * Menu:
 
 * Instrumenting Macro Calls::   The basic problem.
-* Specification List::		How to specify complex patterns of evaluation.
-* Backtracking::		What Edebug does when matching fails.
-* Specification Examples::	To help understand specifications.
+* Specification List::          How to specify complex patterns of evaluation.
+* Backtracking::                What Edebug does when matching fails.
+* Specification Examples::      To help understand specifications.
 
 
 File: elisp,  Node: Instrumenting Macro Calls,  Next: Specification List,  Up: Edebug and Macros
@@ -5842,13 +5871,13 @@ only while it is in use for reading an argument.
 * Intro to Minibuffers::      Basic information about minibuffers.
 * Text from Minibuffer::      How to read a straight text string.
 * Object from Minibuffer::    How to read a Lisp object or expression.
-* Minibuffer History::	      Recording previous minibuffer inputs
-				so the user can reuse them.
+* Minibuffer History::        Recording previous minibuffer inputs
+                                so the user can reuse them.
 * Initial Input::             Specifying initial contents for the minibuffer.
 * Completion::                How to invoke and customize completion.
 * Yes-or-No Queries::         Asking a question with a simple answer.
-* Multiple Queries::	      Asking a series of similar questions.
-* Reading a Password::	      Reading a password from the terminal.
+* Multiple Queries::          Asking a series of similar questions.
+* Reading a Password::        Reading a password from the terminal.
 * Minibuffer Commands::       Commands used as key bindings in minibuffers.
 * Minibuffer Contents::       How such commands access the minibuffer text.
 * Minibuffer Windows::        Operating on the special minibuffer windows.
@@ -6551,6 +6580,23 @@ higher-level completion features that do use the minibuffer.
      the values STRING, PREDICATE and `lambda'; whatever it returns,
      `test-completion' returns in turn.
 
+ -- Function: completion-boundaries string collection predicate suffix
+     This function returns the boundaries of the field on which
+     COLLECTION will operate, assuming that STRING holds the text
+     before point and SUFFIX holds the text after point.
+
+     Normally completion operates on the whole string, so for all normal
+     collections, this will always return `(0 . (length SUFFIX))'.  But
+     more complex completion such as completion on files is done one
+     field at a time.  For example, completion of `"/usr/sh"' will
+     include `"/usr/share/"' but not `"/usr/share/doc"' even if
+     `"/usr/share/doc"' exists.  Also `all-completions' on `"/usr/sh"'
+     will not include `"/usr/share/"' but only `"share/"'.  So if
+     STRING is `"/usr/sh"' and SUFFIX is `"e/doc"',
+     `completion-boundaries' will return `(5 . 1)' which tells us that
+     the COLLECTION will only return completion information that
+     pertains to the area after `"/usr/"' and before `"/doc"'.
+
    If you store a completion alist in a variable, you should mark the
 variable as "risky" with a non-`nil' `risky-local-variable' property.
 *Note File Local Variables::.
@@ -6897,10 +6943,11 @@ specification.  *Note Defining Commands::.
                => "minibuffer.texi"
 
  -- User Option: read-buffer-function
-     This variable specifies how to read buffer names.  For example, if
-     you set this variable to `iswitchb-read-buffer', all Emacs commands
-     that call `read-buffer' to read a buffer name will actually use the
-     `iswitchb' package to read it.
+     This variable specifies how to read buffer names.  The function is
+     called with the arguments passed to `read-buffer'.  For example,
+     if you set this variable to `iswitchb-read-buffer', all Emacs
+     commands that call `read-buffer' to read a buffer name will
+     actually use the `iswitchb' package to read it.
 
  -- User Option: read-buffer-completion-ignore-case
      If this variable is non-`nil', `read-buffer' ignores case when

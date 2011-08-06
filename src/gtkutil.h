@@ -1,5 +1,5 @@
 /* Definitions and headers for GTK widgets.
-   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -153,6 +153,8 @@ extern void xg_modify_menubar_widgets P_ ((GtkWidget *menubar,
                                            GCallback hightlight_cb));
 
 extern int xg_update_frame_menubar P_ ((FRAME_PTR f));
+
+extern int xg_event_is_for_menubar P_ ((FRAME_PTR f, XEvent *event));
 
 extern int xg_have_tear_offs P_ ((void));
 

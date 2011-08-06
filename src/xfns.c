@@ -1,6 +1,6 @@
 /* Functions for the X window system.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -205,6 +205,8 @@ extern Lisp_Object Vwindow_system_version;
 
 /* The below are defined in frame.c.  */
 
+extern Lisp_Object Qtooltip;
+
 #if GLYPH_DEBUG
 int image_cache_refcount, dpyinfo_refcount;
 #endif
@@ -402,10 +404,11 @@ x_any_window_to_frame (dpyinfo, wdesc)
 /* Likewise, but consider only the menu bar widget.  */
 
 struct frame *
-x_menubar_window_to_frame (dpyinfo, wdesc)
+x_menubar_window_to_frame (dpyinfo, event)
      struct x_display_info *dpyinfo;
-     int wdesc;
+     XEvent *event;
 {
+  Window wdesc = event->xany.window;
   Lisp_Object tail, frame;
   struct frame *f;
   struct x_output *x;
@@ -421,21 +424,11 @@ x_menubar_window_to_frame (dpyinfo, wdesc)
       if (!FRAME_X_P (f) || FRAME_X_DISPLAY_INFO (f) != dpyinfo)
 	continue;
       x = f->output_data.x;
-      /* Match if the window is this frame's menubar.  */
 #ifdef USE_GTK
-      if (x->menubar_widget)
-        {
-          GtkWidget *gwdesc = xg_win_to_widget (dpyinfo->display, wdesc);
-
-	  /* This gives false positives, but the rectangle check in xterm.c
-	     where this is called takes care of that.  */
-          if (gwdesc != 0
-              && (gwdesc == x->menubar_widget
-                  || gtk_widget_is_ancestor (x->menubar_widget, gwdesc)
-		  || gtk_widget_is_ancestor (gwdesc, x->menubar_widget)))
-            return f;
-        }
+      if (x->menubar_widget && xg_event_is_for_menubar (f, event))
+        return f;
 #else
+      /* Match if the window is this frame's menubar.  */
       if (x->menubar_widget
 	  && lw_window_is_in_menubar (wdesc, x->menubar_widget))
 	return f;
@@ -540,12 +533,20 @@ x_real_positions (f, xptr, yptr)
   int real_x = 0, real_y = 0;
   int had_errors = 0;
   Window win = f->output_data.x->parent_desc;
+  Atom actual_type;
+  unsigned long actual_size, bytes_remaining;
+  int i, rc, actual_format;
+  struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
+  long max_len = 400;
+  Display *dpy = FRAME_X_DISPLAY (f);
+  unsigned char *tmp_data = NULL;
+  Atom target_type = XA_CARDINAL;
 
   BLOCK_INPUT;
 
-  x_catch_errors (FRAME_X_DISPLAY (f));
+  x_catch_errors (dpy);
 
-  if (win == FRAME_X_DISPLAY_INFO (f)->root_window)
+  if (win == dpyinfo->root_window)
     win = FRAME_OUTER_WINDOW (f);
 
   /* This loop traverses up the containment tree until we hit the root
@@ -629,6 +630,33 @@ x_real_positions (f, xptr, yptr)
 
       had_errors = x_had_errors_p (FRAME_X_DISPLAY (f));
     }
+
+
+  if (dpyinfo->root_window == f->output_data.x->parent_desc)
+    {
+      /* Try _NET_FRAME_EXTENTS if our parent is the root window.  */
+      rc = XGetWindowProperty (dpy, win, dpyinfo->Xatom_net_frame_extents,
+                               0, max_len, False, target_type,
+                               &actual_type, &actual_format, &actual_size,
+                               &bytes_remaining, &tmp_data);
+
+      if (rc == Success && actual_type == target_type && !x_had_errors_p (dpy)
+          && actual_size == 4 && actual_format == 32)
+        {
+          int ign;
+          Window rootw;
+          long *fe = (long *)tmp_data;
+
+          XGetGeometry (FRAME_X_DISPLAY (f), win,
+                        &rootw, &real_x, &real_y, &ign, &ign, &ign, &ign);
+          outer_x = -fe[0];
+          outer_y = -fe[2];
+          real_x -= fe[0];
+          real_y -= fe[2];
+        }
+    }
+
+  if (tmp_data) XFree (tmp_data);
 
   x_uncatch_errors ();
 
@@ -1032,7 +1060,7 @@ x_set_mouse_color (f, arg, oldval)
 
   if (FRAME_X_DISPLAY_INFO (f)->invisible_cursor == 0)
     FRAME_X_DISPLAY_INFO (f)->invisible_cursor = make_invisible_cursor (f);
-  
+
   if (cursor != x->text_cursor
       && x->text_cursor != 0)
     XFreeCursor (dpy, x->text_cursor);
@@ -3079,7 +3107,7 @@ x_default_font_parameter (f, parms)
       if (system_font) font_param = make_string (system_font,
                                                  strlen (system_font));
     }
-  
+
   font = !NILP (font_param) ? font_param
     : x_get_arg (dpyinfo, parms, Qfont, "font", "Font", RES_TYPE_STRING);
 
@@ -4914,9 +4942,8 @@ x_create_tip_frame (dpyinfo, parms, text)
   change_frame_size (f, height, width, 1, 0, 0);
 
   /* Add `tooltip' frame parameter's default value. */
-  if (NILP (Fframe_parameter (frame, intern ("tooltip"))))
-    Fmodify_frame_parameters (frame, Fcons (Fcons (intern ("tooltip"), Qt),
-					    Qnil));
+  if (NILP (Fframe_parameter (frame, Qtooltip)))
+    Fmodify_frame_parameters (frame, Fcons (Fcons (Qtooltip, Qt), Qnil));
 
   /* FIXME - can this be done in a similar way to normal frames?
      http://lists.gnu.org/archive/html/emacs-devel/2007-10/msg00641.html */
@@ -5196,7 +5223,7 @@ Text larger than the specified size is clipped.  */)
   clear_glyph_matrix (w->desired_matrix);
   clear_glyph_matrix (w->current_matrix);
   SET_TEXT_POS (pos, BEGV, BEGV_BYTE);
-  try_window (FRAME_ROOT_WINDOW (f), pos, 0);
+  try_window (FRAME_ROOT_WINDOW (f), pos, TRY_WINDOW_IGNORE_FONTS_CHANGE);
 
   /* Compute width and height of the tooltip.  */
   width = height = 0;
@@ -5654,7 +5681,7 @@ If FRAME is omitted or nil, it defaults to the selected frame. */)
   font_param = Ffont_get (font, intern (":name"));
   if (STRINGP (font_param))
     default_name = xstrdup (SDATA (font_param));
-  else 
+  else
     {
       font_param = Fframe_parameter (frame, Qfont_param);
       if (STRINGP (font_param))
@@ -5665,7 +5692,7 @@ If FRAME is omitted or nil, it defaults to the selected frame. */)
     default_name = xstrdup (x_last_font_name);
 
   /* Convert fontconfig names to Gtk names, i.e. remove - before number */
-  if (default_name) 
+  if (default_name)
     {
       char *p = strrchr (default_name, '-');
       if (p)
@@ -5926,8 +5953,8 @@ or when you set the mouse color.  */);
   Vx_cursor_fore_pixel = Qnil;
 
   DEFVAR_LISP ("x-max-tooltip-size", &Vx_max_tooltip_size,
-    doc: /* Maximum size for tooltips.  Value is a pair (COLUMNS . ROWS).
-Text larger than this is clipped.  */);
+    doc: /* Maximum size for tooltips.
+Value is a pair (COLUMNS . ROWS).  Text larger than this is clipped.  */);
   Vx_max_tooltip_size = Fcons (make_number (80), make_number (40));
 
   DEFVAR_LISP ("x-no-window-manager", &Vx_no_window_manager,

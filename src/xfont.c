@@ -1,6 +1,6 @@
 /* xfont.c -- X core font driver.
-   Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
-   Copyright (C) 2006, 2007, 2008, 2009, 2010
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H13PRO009
 
@@ -861,7 +861,7 @@ xfont_open (f, entity, pixel_size)
 
       val = Ffont_get (font_object, QCavgwidth);
       if (INTEGERP (val))
-	font->average_width = XINT (val);
+	font->average_width = XINT (val) / 10;
       if (font->average_width < 0)
 	font->average_width = - font->average_width;
       if (font->average_width == 0

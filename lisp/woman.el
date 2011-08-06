@@ -1,7 +1,7 @@
 ;;; woman.el --- browse UN*X manual pages `wo (without) man'
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010  Free Software Foundation, Inc.
+;;   2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Francis J. Wright <F.J.Wright@qmul.ac.uk>
 ;; Maintainer: FSF
@@ -1507,7 +1507,7 @@ Also make each path-info component into a list.
   ;;   (topic)
   ;;   (topic (path-index) (path-index) ... )
   ;;   (topic (path-index filename) (path-index filename) ... )
-  ;; where the are no duplicates in the value lists.
+  ;; where there are no duplicates in the value lists.
   ;; Topic must match first `word' of filename, so ...
   (let ((topic-regexp
 	 (concat
@@ -3384,7 +3384,10 @@ Format paragraphs upto TO.  Supports special chars.
   "Translate up to marker TO.  Do this last of all transformations."
   (if translations
       (let ((matches (car translations))
-	    (alist (cdr translations)))
+	    (alist (cdr translations))
+	    ;; Translations are case-sensitive, eg ".tr ab" does not
+	    ;; affect "A" (bug#6849).
+	    (case-fold-search nil))
 	(while (re-search-forward matches to t)
 	  ;; Done like this to retain text properties and
 	  ;; support translation of special characters:

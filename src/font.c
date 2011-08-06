@@ -1,6 +1,6 @@
 /* font.c -- "Font" primitives.
-   Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
-   Copyright (C) 2006, 2007, 2008, 2009, 2010
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H13PRO009
 
@@ -1549,7 +1549,8 @@ font_parse_fcname (name, font)
 		    size_found = 0;
 		    break;
 		  }
-	      if (size_found)
+	      /* GTK font sizes must occur at the end.  */
+	      if (size_found && *q == '\0')
 		{
 		  double point_size = strtod (p, &q);
 		  ASET (font, FONT_SIZE_INDEX, make_float (point_size));
@@ -1603,7 +1604,7 @@ font_parse_fcname (name, font)
 	  else if (PROP_MATCH ("Italic", 6))
 	    {
 	      prop_found = 1;
-	      prop = font_intern_prop ("italic", 4, 1);
+	      prop = font_intern_prop ("italic", 6, 1);
 	      FONT_SET_STYLE (font, FONT_SLANT_INDEX, prop);
 	    }
 	  else if (PROP_MATCH ("Oblique", 7))
@@ -2821,6 +2822,14 @@ font_clear_cache (f, cache, driver)
 
 static Lisp_Object scratch_font_spec, scratch_font_prefer;
 
+/* Check each font-entity in VEC, and return a list of font-entities
+   that satisfy this condition:
+     (1) matches with SPEC and SIZE if SPEC is not nil, and
+     (2) doesn't match with any regexps in Vface_ignored_fonts (if non-nil).
+*/
+
+extern Lisp_Object Vface_ignored_fonts;
+
 Lisp_Object
 font_delete_unmatched (vec, spec, size)
      Lisp_Object vec, spec;
@@ -2833,6 +2842,29 @@ font_delete_unmatched (vec, spec, size)
   for (val = Qnil, i = ASIZE (vec) - 1; i >= 0; i--)
     {
       entity = AREF (vec, i);
+      if (! NILP (Vface_ignored_fonts))
+	{
+	  char name[256];
+	  Lisp_Object tail, regexp;
+
+	  if (font_unparse_xlfd (entity, 0, name, 256) >= 0)
+	    {
+	      for (tail = Vface_ignored_fonts; CONSP (tail); tail = XCDR (tail))
+		{
+		  regexp = XCAR (tail);
+		  if (STRINGP (regexp)
+		      && fast_c_string_match_ignore_case (regexp, name) >= 0)
+		    break;
+		}
+	      if (CONSP (tail))
+		continue;
+	    }
+	}
+      if (NILP (spec))
+	{
+	  val = Fcons (entity, val);
+	  continue;
+	}
       for (prop = FONT_WEIGHT_INDEX; prop < FONT_SIZE_INDEX; prop++)
 	if (INTEGERP (AREF (spec, prop))
 	    && ((XINT (AREF (spec, prop)) >> 8)
@@ -2932,8 +2964,10 @@ font_list_entities (frame, spec)
 	    ASET (copy, FONT_TYPE_INDEX, driver_list->driver->type);
 	    XSETCDR (cache, Fcons (Fcons (copy, val), XCDR (cache)));
 	  }
-	if (ASIZE (val) > 0 && need_filtering)
-	  val = font_delete_unmatched (val, spec, size);
+	if (ASIZE (val) > 0
+	    && (need_filtering
+		|| ! NILP (Vface_ignored_fonts)))
+	  val = font_delete_unmatched (val, need_filtering ? spec : Qnil, size);
 	if (ASIZE (val) > 0)
 	  list = Fcons (val, list);
       }
@@ -3008,7 +3042,7 @@ font_open_entity (f, entity, pixel_size)
   Lisp_Object objlist, size, val, font_object;
   struct font *font;
   int min_width, height;
-  int scaled_pixel_size;
+  int scaled_pixel_size = pixel_size;
 
   font_assert (FONT_ENTITY_P (entity));
   size = AREF (entity, FONT_SIZE_INDEX);
@@ -3388,7 +3422,7 @@ font_find_for_lface (f, attrs, spec, c)
   XSETFRAME (frame, f);
   size = AREF (spec, FONT_SIZE_INDEX);
   pixel_size = font_pixel_size (f, spec);
-  if (pixel_size == 0)
+  if (pixel_size == 0 && INTEGERP (attrs[LFACE_HEIGHT_INDEX]))
     {
       double pt = XINT (attrs[LFACE_HEIGHT_INDEX]);
 
@@ -3859,6 +3893,59 @@ font_get_frame_data (f, driver)
   if (! list)
     return NULL;
   return list->data;
+}
+
+
+/* Sets attributes on a font.  Any properties that appear in ALIST and
+   BOOLEAN_PROPERTIES or NON_BOOLEAN_PROPERTIES are set on the font.
+   BOOLEAN_PROPERTIES and NON_BOOLEAN_PROPERTIES are NULL-terminated
+   arrays of strings.  This function is intended for use by the font
+   drivers to implement their specific font_filter_properties.  */
+void
+font_filter_properties (font, alist, boolean_properties, non_boolean_properties)
+     Lisp_Object font;
+     Lisp_Object alist;
+     const char *boolean_properties[];
+     const char *non_boolean_properties[];
+{
+  Lisp_Object it;
+  int i;
+
+  /* Set boolean values to Qt or Qnil */
+  for (i = 0; boolean_properties[i] != NULL; ++i)
+    for (it = alist; ! NILP (it); it = XCDR (it))
+      {
+        Lisp_Object key = XCAR (XCAR (it));
+        Lisp_Object val = XCDR (XCAR (it));
+        char *keystr = SDATA (SYMBOL_NAME (key));
+
+        if (strcmp (boolean_properties[i], keystr) == 0)
+          {
+            const char *str = INTEGERP (val) ? (XINT (val) ? "true" : "false")
+	      : SYMBOLP (val) ? (const char *) SDATA (SYMBOL_NAME (val))
+	      : "true";
+
+            if (strcmp ("false", str) == 0 || strcmp ("False", str) == 0
+                || strcmp ("FALSE", str) == 0 || strcmp ("FcFalse", str) == 0
+                || strcmp ("off", str) == 0 || strcmp ("OFF", str) == 0
+                || strcmp ("Off", str) == 0)
+              val = Qnil;
+	    else
+              val = Qt;
+
+            Ffont_put (font, key, val);
+          }
+      }
+
+  for (i = 0; non_boolean_properties[i] != NULL; ++i)
+    for (it = alist; ! NILP (it); it = XCDR (it))
+      {
+        Lisp_Object key = XCAR (XCAR (it));
+        Lisp_Object val = XCDR (XCAR (it));
+        char *keystr = SDATA (SYMBOL_NAME (key));
+        if (strcmp (non_boolean_properties[i], keystr) == 0)
+          Ffont_put (font, key, val);
+      }
 }
 
 
@@ -4634,7 +4721,7 @@ DEFUN ("font-variation-glyphs", Ffont_variation_glyphs, Sfont_variation_glyphs,
        doc: /* Return a list of variation glyphs for CHAR in FONT-OBJECT.
 Each element of the value is a cons (VARIATION-SELECTOR . GLYPH-ID),
 where
-  VARIATION-SELECTOR is a chracter code of variation selection
+  VARIATION-SELECTOR is a character code of variation selection
     (#xFE00..#xFE0F or #xE0100..#xE01EF)
   GLYPH-ID is a glyph code of the corresponding variation glyph.  */)
      (font_object, character)

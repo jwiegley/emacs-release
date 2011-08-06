@@ -1,6 +1,6 @@
 /* Graphical user interface functions for the Microsoft W32 API.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -47,6 +47,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "systime.h"
 #include "termhooks.h"
 #include "w32heap.h"
+#include "w32.h"
 
 #include "bitmaps/gray.xbm"
 
@@ -244,7 +245,7 @@ struct MONITOR_INFO
 };
 
 /* Reportedly, VS 6 does not have this in its headers.  */
-#if defined(_MSC_VER) && _MSC_VER < 1300
+#if defined (_MSC_VER) && _MSC_VER < 1300
 DECLARE_HANDLE(HMONITOR);
 #endif
 
@@ -287,9 +288,13 @@ unsigned int msh_mousewheel = 0;
 #define MENU_FREE_DELAY 1000
 static unsigned menu_free_timer = 0;
 
-/* The below are defined in frame.c.  */
+/* In dispnew.c */
 
 extern Lisp_Object Vwindow_system_version;
+
+/* The below are defined in frame.c.  */
+
+extern Lisp_Object Qtooltip;
 
 #ifdef GLYPH_DEBUG
 int image_cache_refcount, dpyinfo_refcount;
@@ -1348,7 +1353,10 @@ x_set_foreground_color (f, arg, oldval)
   if (FRAME_W32_WINDOW (f) != 0)
     {
       if (x->cursor_pixel == old_fg)
-	x->cursor_pixel = fg;
+	{
+	  x->cursor_pixel = fg;
+	  x->cursor_gc->background = fg;
+	}
 
       update_face_from_frame_parameter (f, Qforeground_color, arg);
       if (FRAME_VISIBLE_P (f))
@@ -1932,7 +1940,6 @@ x_set_title (f, name, old_name)
       UNBLOCK_INPUT;
     }
 }
-
 
 void x_set_scroll_bar_default_width (f)
      struct frame *f;
@@ -3161,7 +3168,7 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
           wmsg.dwModifiers = w32_get_key_modifiers (wParam, lParam);
           /* Get buffer size.  */
           size = get_composition_string_fn (context, GCS_RESULTSTR, buffer, 0);
-          buffer = alloca(size);
+          buffer = alloca (size);
           size = get_composition_string_fn (context, GCS_RESULTSTR,
                                             buffer, size);
 	  release_ime_context_fn (hwnd, context);
@@ -3999,7 +4006,6 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       return DefWindowProc (hwnd, msg, wParam, lParam);
     }
 
-
   /* The most common default return code for handled messages is 0.  */
   return 0;
 }
@@ -4451,7 +4457,6 @@ This function is an internal primitive--use `make-frame' instead.  */)
 		       "leftFringe", "LeftFringe", RES_TYPE_NUMBER);
   x_default_parameter (f, parameters, Qright_fringe, Qnil,
 		       "rightFringe", "RightFringe", RES_TYPE_NUMBER);
-
 
   /* Init faces before x_default_parameter is called for scroll-bar
      parameters because that function calls x_set_scroll_bar_width,
@@ -5583,9 +5588,8 @@ x_create_tip_frame (dpyinfo, parms, text)
   change_frame_size (f, height, width, 1, 0, 0);
 
   /* Add `tooltip' frame parameter's default value. */
-  if (NILP (Fframe_parameter (frame, intern ("tooltip"))))
-    Fmodify_frame_parameters (frame, Fcons (Fcons (intern ("tooltip"), Qt),
-					    Qnil));
+  if (NILP (Fframe_parameter (frame, Qtooltip)))
+    Fmodify_frame_parameters (frame, Fcons (Fcons (Qtooltip, Qt), Qnil));
 
   /* Set up faces after all frame parameters are known.  This call
      also merges in face attributes specified for new frames.
@@ -5888,7 +5892,7 @@ Text larger than the specified size is clipped.  */)
   clear_glyph_matrix (w->desired_matrix);
   clear_glyph_matrix (w->current_matrix);
   SET_TEXT_POS (pos, BEGV, BEGV_BYTE);
-  try_window (FRAME_ROOT_WINDOW (f), pos, 0);
+  try_window (FRAME_ROOT_WINDOW (f), pos, TRY_WINDOW_IGNORE_FONTS_CHANGE);
 
   /* Compute width and height of the tooltip.  */
   width = height = 0;
@@ -5905,9 +5909,7 @@ Text larger than the specified size is clipped.  */)
       /* Let the row go over the full width of the frame.  */
       row->full_width_p = 1;
 
-#ifdef TODO /* Investigate why some fonts need more width than is
-	       calculated for some tooltips.  */
-      /* There's a glyph at the end of rows that is use to place
+      /* There's a glyph at the end of rows that is used to place
 	 the cursor there.  Don't include the width of this glyph.  */
       if (row->used[TEXT_AREA])
 	{
@@ -5915,15 +5917,16 @@ Text larger than the specified size is clipped.  */)
 	  row_width = row->pixel_width - last->pixel_width;
 	}
       else
-#endif
 	row_width = row->pixel_width;
 
-      /* TODO: find why tips do not draw along baseline as instructed.  */
       height += row->height;
       width = max (width, row_width);
     }
 
-  /* Add the frame's internal border to the width and height the X
+  /* Round up the height to an integral multiple of FRAME_LINE_HEIGHT.  */
+  if (height % FRAME_LINE_HEIGHT (f) != 0)
+    height += FRAME_LINE_HEIGHT (f) - height % FRAME_LINE_HEIGHT (f);
+  /* Add the frame's internal border to the width and height the w32
      window should have.  */
   height += 2 * FRAME_INTERNAL_BORDER_WIDTH (f);
   width += 2 * FRAME_INTERNAL_BORDER_WIDTH (f);
@@ -5942,11 +5945,13 @@ Text larger than the specified size is clipped.  */)
 		      FRAME_EXTERNAL_MENU_BAR (f));
 
     /* Position and size tooltip, and put it in the topmost group.
-       The add-on of 3 to the 5th argument is a kludge: without it,
-       some fonts cause the last character of the tip to be truncated,
-       for some obscure reason.  */
+       The add-on of FRAME_COLUMN_WIDTH to the 5th argument is a
+       peculiarity of w32 display: without it, some fonts cause the
+       last character of the tip to be truncated or wrapped around to
+       the next line.  */
     SetWindowPos (FRAME_W32_WINDOW (f), HWND_TOPMOST,
-		  root_x, root_y, rect.right - rect.left + 3,
+		  root_x, root_y,
+		  rect.right - rect.left + FRAME_COLUMN_WIDTH (f),
 		  rect.bottom - rect.top, SWP_NOACTIVATE);
 
     /* Ensure tooltip is on top of other topmost windows (eg menus).  */
@@ -6333,6 +6338,7 @@ an integer representing a ShowWindow flag:
      Lisp_Object operation, document, parameters, show_flag;
 {
   Lisp_Object current_dir;
+  char *errstr;
 
   CHECK_STRING (document);
 
@@ -6353,7 +6359,17 @@ an integer representing a ShowWindow flag:
 			   XINT (show_flag) : SW_SHOWDEFAULT))
       > 32)
     return Qt;
-  error ("ShellExecute failed: %s", w32_strerror (0));
+  errstr = w32_strerror (0);
+  /* The error string might be encoded in the locale's encoding.  */
+  if (!NILP (Vlocale_coding_system))
+    {
+      Lisp_Object decoded =
+	code_convert_string_norecord (make_unibyte_string (errstr,
+							   strlen (errstr)),
+				      Vlocale_coding_system, 0);
+      errstr = (char *)SDATA (decoded);
+    }
+  error ("ShellExecute failed: %s", errstr);
 }
 
 /* Lookup virtual keycode from string representing the name of a
@@ -7181,7 +7197,7 @@ or when you set the mouse color.  */);
 
   DEFVAR_LISP ("x-max-tooltip-size", &Vx_max_tooltip_size,
 	       doc: /* Maximum size for tooltips.
-Value is a pair (COLUMNS . ROWS). Text larger than this is clipped.  */);
+Value is a pair (COLUMNS . ROWS).  Text larger than this is clipped.  */);
   Vx_max_tooltip_size = Fcons (make_number (80), make_number (40));
 
   DEFVAR_LISP ("x-no-window-manager", &Vx_no_window_manager,

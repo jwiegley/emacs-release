@@ -1,7 +1,8 @@
-This is ../../info/dbus, produced by makeinfo version 4.11 from
+This is ../../info/dbus, produced by makeinfo version 4.13 from
 dbus.texi.
 
-Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -15,7 +16,7 @@ Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs lisp libraries
 START-INFO-DIR-ENTRY
 * D-Bus: (dbus).                Using D-Bus in Emacs.
 END-INFO-DIR-ENTRY
@@ -31,7 +32,8 @@ message bus system, a simple way for applications to talk to one
 another.  An overview of D-Bus can be found at
 `http://dbus.freedesktop.org/'.
 
-   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -805,10 +807,10 @@ when the corresponding D-Bus message is created:
      list            ==>   DBUS_TYPE_ARRAY
 
    Other Lisp objects, like symbols or hash tables, are not accepted as
-input parameter.
+input parameters.
 
    If it is necessary to use another D-Bus type, a corresponding type
-symbol can be preceeded to the corresponding Lisp object. Basic D-Bus
+symbol can be prepended to the corresponding Lisp object.  Basic D-Bus
 types are represented by the type symbols `:byte', `:boolean',
 `:int16', `:uint16', `:int32', `:uint32', `:int64', `:uint64',
 `:double', `:string', `:object-path' and `:signature'.
@@ -2012,25 +2014,25 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top916
-Node: Overview2542
-Node: Inspection4888
-Node: Bus names5425
-Node: Introspection8777
-Ref: Introspection-Footnote-116399
-Ref: Introspection-Footnote-216552
-Node: Nodes and Interfaces16704
-Node: Methods and Signal20967
-Node: Properties and Annotations23954
-Ref: Properties and Annotations-Footnote-129685
-Ref: Properties and Annotations-Footnote-229786
-Node: Arguments and Signatures29877
-Node: Type Conversion32050
-Node: Synchronous Methods38933
-Node: Asynchronous Methods43745
-Node: Receiving Method Calls45542
-Node: Signals54387
-Node: Errors and Events58153
-Node: GNU Free Documentation License62547
+Node: Top937
+Node: Overview2569
+Node: Inspection4915
+Node: Bus names5452
+Node: Introspection8804
+Ref: Introspection-Footnote-116426
+Ref: Introspection-Footnote-216579
+Node: Nodes and Interfaces16731
+Node: Methods and Signal20994
+Node: Properties and Annotations23981
+Ref: Properties and Annotations-Footnote-129712
+Ref: Properties and Annotations-Footnote-229813
+Node: Arguments and Signatures29904
+Node: Type Conversion32077
+Node: Synchronous Methods38962
+Node: Asynchronous Methods43774
+Node: Receiving Method Calls45571
+Node: Signals54416
+Node: Errors and Events58182
+Node: GNU Free Documentation License62576
 
 End Tag Table

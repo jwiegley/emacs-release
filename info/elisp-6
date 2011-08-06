@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,10 +21,801 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Auto-Saving,  Next: Reverting,  Prev: Backup Files,  Up: Backups and Auto-Saving
+
+26.2 Auto-Saving
+================
+
+Emacs periodically saves all files that you are visiting; this is
+called "auto-saving".  Auto-saving prevents you from losing more than a
+limited amount of work if the system crashes.  By default, auto-saves
+happen every 300 keystrokes, or after around 30 seconds of idle time.
+*Note Auto Save: (emacs)Auto Save, for information on auto-save for
+users.  Here we describe the functions used to implement auto-saving
+and the variables that control them.
+
+ -- Variable: buffer-auto-save-file-name
+     This buffer-local variable is the name of the file used for
+     auto-saving the current buffer.  It is `nil' if the buffer should
+     not be auto-saved.
+
+          buffer-auto-save-file-name
+               => "/xcssun/users/rms/lewis/#backups.texi#"
+
+ -- Command: auto-save-mode arg
+     When used interactively without an argument, this command is a
+     toggle switch: it turns on auto-saving of the current buffer if it
+     is off, and vice versa.  With an argument ARG, the command turns
+     auto-saving on if the value of ARG is `t', a nonempty list, or a
+     positive integer.  Otherwise, it turns auto-saving off.
+
+ -- Function: auto-save-file-name-p filename
+     This function returns a non-`nil' value if FILENAME is a string
+     that could be the name of an auto-save file.  It assumes the usual
+     naming convention for auto-save files: a name that begins and ends
+     with hash marks (`#') is a possible auto-save file name.  The
+     argument FILENAME should not contain a directory part.
+
+          (make-auto-save-file-name)
+               => "/xcssun/users/rms/lewis/#backups.texi#"
+          (auto-save-file-name-p "#backups.texi#")
+               => 0
+          (auto-save-file-name-p "backups.texi")
+               => nil
+
+     The standard definition of this function is as follows:
+
+          (defun auto-save-file-name-p (filename)
+            "Return non-nil if FILENAME can be yielded by..."
+            (string-match "^#.*#$" filename))
+
+     This function exists so that you can customize it if you wish to
+     change the naming convention for auto-save files.  If you redefine
+     it, be sure to redefine the function `make-auto-save-file-name'
+     correspondingly.
+
+ -- Function: make-auto-save-file-name
+     This function returns the file name to use for auto-saving the
+     current buffer.  This is just the file name with hash marks (`#')
+     prepended and appended to it.  This function does not look at the
+     variable `auto-save-visited-file-name' (described below); callers
+     of this function should check that variable first.
+
+          (make-auto-save-file-name)
+               => "/xcssun/users/rms/lewis/#backups.texi#"
+
+     Here is a simplified version of the standard definition of this
+     function:
+
+          (defun make-auto-save-file-name ()
+            "Return file name to use for auto-saves \
+          of current buffer.."
+            (if buffer-file-name
+                (concat
+                 (file-name-directory buffer-file-name)
+                 "#"
+                 (file-name-nondirectory buffer-file-name)
+                 "#")
+              (expand-file-name
+               (concat "#%" (buffer-name) "#"))))
+
+     This exists as a separate function so that you can redefine it to
+     customize the naming convention for auto-save files.  Be sure to
+     change `auto-save-file-name-p' in a corresponding way.
+
+ -- User Option: auto-save-visited-file-name
+     If this variable is non-`nil', Emacs auto-saves buffers in the
+     files they are visiting.  That is, the auto-save is done in the
+     same file that you are editing.  Normally, this variable is `nil',
+     so auto-save files have distinct names that are created by
+     `make-auto-save-file-name'.
+
+     When you change the value of this variable, the new value does not
+     take effect in an existing buffer until the next time auto-save
+     mode is reenabled in it.  If auto-save mode is already enabled,
+     auto-saves continue to go in the same file name until
+     `auto-save-mode' is called again.
+
+ -- Function: recent-auto-save-p
+     This function returns `t' if the current buffer has been
+     auto-saved since the last time it was read in or saved.
+
+ -- Function: set-buffer-auto-saved
+     This function marks the current buffer as auto-saved.  The buffer
+     will not be auto-saved again until the buffer text is changed
+     again.  The function returns `nil'.
+
+ -- User Option: auto-save-interval
+     The value of this variable specifies how often to do auto-saving,
+     in terms of number of input events.  Each time this many
+     additional input events are read, Emacs does auto-saving for all
+     buffers in which that is enabled.  Setting this to zero disables
+     autosaving based on the number of characters typed.
+
+ -- User Option: auto-save-timeout
+     The value of this variable is the number of seconds of idle time
+     that should cause auto-saving.  Each time the user pauses for this
+     long, Emacs does auto-saving for all buffers in which that is
+     enabled.  (If the current buffer is large, the specified timeout
+     is multiplied by a factor that increases as the size increases;
+     for a million-byte buffer, the factor is almost 4.)
+
+     If the value is zero or `nil', then auto-saving is not done as a
+     result of idleness, only after a certain number of input events as
+     specified by `auto-save-interval'.
+
+ -- Variable: auto-save-hook
+     This normal hook is run whenever an auto-save is about to happen.
+
+ -- User Option: auto-save-default
+     If this variable is non-`nil', buffers that are visiting files
+     have auto-saving enabled by default.  Otherwise, they do not.
+
+ -- Command: do-auto-save &optional no-message current-only
+     This function auto-saves all buffers that need to be auto-saved.
+     It saves all buffers for which auto-saving is enabled and that
+     have been changed since the previous auto-save.
+
+     If any buffers are auto-saved, `do-auto-save' normally displays a
+     message saying `Auto-saving...' in the echo area while auto-saving
+     is going on.  However, if NO-MESSAGE is non-`nil', the message is
+     inhibited.
+
+     If CURRENT-ONLY is non-`nil', only the current buffer is
+     auto-saved.
+
+ -- Function: delete-auto-save-file-if-necessary &optional force
+     This function deletes the current buffer's auto-save file if
+     `delete-auto-save-files' is non-`nil'.  It is called every time a
+     buffer is saved.
+
+     Unless FORCE is non-`nil', this function only deletes the file if
+     it was written by the current Emacs session since the last true
+     save.
+
+ -- User Option: delete-auto-save-files
+     This variable is used by the function
+     `delete-auto-save-file-if-necessary'.  If it is non-`nil', Emacs
+     deletes auto-save files when a true save is done (in the visited
+     file).  This saves disk space and unclutters your directory.
+
+ -- Function: rename-auto-save-file
+     This function adjusts the current buffer's auto-save file name if
+     the visited file name has changed.  It also renames an existing
+     auto-save file, if it was made in the current Emacs session.  If
+     the visited file name has not changed, this function does nothing.
+
+ -- Variable: buffer-saved-size
+     The value of this buffer-local variable is the length of the
+     current buffer, when it was last read in, saved, or auto-saved.
+     This is used to detect a substantial decrease in size, and turn
+     off auto-saving in response.
+
+     If it is -1, that means auto-saving is temporarily shut off in
+     this buffer due to a substantial decrease in size.  Explicitly
+     saving the buffer stores a positive value in this variable, thus
+     reenabling auto-saving.  Turning auto-save mode off or on also
+     updates this variable, so that the substantial decrease in size is
+     forgotten.
+
+     If it is -2, that means this buffer should disregard changes in
+     buffer size; in particular, it should not shut off auto-saving
+     temporarily due to changes in buffer size.
+
+ -- Variable: auto-save-list-file-name
+     This variable (if non-`nil') specifies a file for recording the
+     names of all the auto-save files.  Each time Emacs does
+     auto-saving, it writes two lines into this file for each buffer
+     that has auto-saving enabled.  The first line gives the name of
+     the visited file (it's empty if the buffer has none), and the
+     second gives the name of the auto-save file.
+
+     When Emacs exits normally, it deletes this file; if Emacs crashes,
+     you can look in the file to find all the auto-save files that
+     might contain work that was otherwise lost.  The `recover-session'
+     command uses this file to find them.
+
+     The default name for this file specifies your home directory and
+     starts with `.saves-'.  It also contains the Emacs process ID and
+     the host name.
+
+ -- User Option: auto-save-list-file-prefix
+     After Emacs reads your init file, it initializes
+     `auto-save-list-file-name' (if you have not already set it
+     non-`nil') based on this prefix, adding the host name and process
+     ID.  If you set this to `nil' in your init file, then Emacs does
+     not initialize `auto-save-list-file-name'.
+
+
+File: elisp,  Node: Reverting,  Prev: Auto-Saving,  Up: Backups and Auto-Saving
+
+26.3 Reverting
+==============
+
+If you have made extensive changes to a file and then change your mind
+about them, you can get rid of them by reading in the previous version
+of the file with the `revert-buffer' command.  *Note Reverting a
+Buffer: (emacs)Reverting.
+
+ -- Command: revert-buffer &optional ignore-auto noconfirm
+          preserve-modes
+     This command replaces the buffer text with the text of the visited
+     file on disk.  This action undoes all changes since the file was
+     visited or saved.
+
+     By default, if the latest auto-save file is more recent than the
+     visited file, and the argument IGNORE-AUTO is `nil',
+     `revert-buffer' asks the user whether to use that auto-save
+     instead.  When you invoke this command interactively, IGNORE-AUTO
+     is `t' if there is no numeric prefix argument; thus, the
+     interactive default is not to check the auto-save file.
+
+     Normally, `revert-buffer' asks for confirmation before it changes
+     the buffer; but if the argument NOCONFIRM is non-`nil',
+     `revert-buffer' does not ask for confirmation.
+
+     Normally, this command reinitializes the buffer's major and minor
+     modes using `normal-mode'.  But if PRESERVE-MODES is non-`nil',
+     the modes remain unchanged.
+
+     Reverting tries to preserve marker positions in the buffer by
+     using the replacement feature of `insert-file-contents'.  If the
+     buffer contents and the file contents are identical before the
+     revert operation, reverting preserves all the markers.  If they
+     are not identical, reverting does change the buffer; in that case,
+     it preserves the markers in the unchanged text (if any) at the
+     beginning and end of the buffer.  Preserving any additional
+     markers would be problematical.
+
+   You can customize how `revert-buffer' does its work by setting the
+variables described in the rest of this section.
+
+ -- User Option: revert-without-query
+     This variable holds a list of files that should be reverted without
+     query.  The value is a list of regular expressions.  If the
+     visited file name matches one of these regular expressions, and
+     the file has changed on disk but the buffer is not modified, then
+     `revert-buffer' reverts the file without asking the user for
+     confirmation.
+
+   Some major modes customize `revert-buffer' by making buffer-local
+bindings for these variables:
+
+ -- Variable: revert-buffer-function
+     The value of this variable is the function to use to revert this
+     buffer.  If non-`nil', it should be a function with two optional
+     arguments to do the work of reverting.  The two optional arguments,
+     IGNORE-AUTO and NOCONFIRM, are the arguments that `revert-buffer'
+     received.  If the value is `nil', reverting works the usual way.
+
+     Modes such as Dired mode, in which the text being edited does not
+     consist of a file's contents but can be regenerated in some other
+     fashion, can give this variable a buffer-local value that is a
+     function to regenerate the contents.
+
+ -- Variable: revert-buffer-insert-file-contents-function
+     The value of this variable, if non-`nil', specifies the function
+     to use to insert the updated contents when reverting this buffer.
+     The function receives two arguments: first the file name to use;
+     second, `t' if the user has asked to read the auto-save file.
+
+     The reason for a mode to set this variable instead of
+     `revert-buffer-function' is to avoid duplicating or replacing the
+     rest of what `revert-buffer' does: asking for confirmation,
+     clearing the undo list, deciding the proper major mode, and
+     running the hooks listed below.
+
+ -- Variable: before-revert-hook
+     This normal hook is run by `revert-buffer' before inserting the
+     modified contents--but only if `revert-buffer-function' is `nil'.
+
+ -- Variable: after-revert-hook
+     This normal hook is run by `revert-buffer' after inserting the
+     modified contents--but only if `revert-buffer-function' is `nil'.
+
+
+File: elisp,  Node: Buffers,  Next: Windows,  Prev: Backups and Auto-Saving,  Up: Top
+
+27 Buffers
+**********
+
+A "buffer" is a Lisp object containing text to be edited.  Buffers are
+used to hold the contents of files that are being visited; there may
+also be buffers that are not visiting files.  While several buffers may
+exist at one time, only one buffer is designated the "current buffer"
+at any time.  Most editing commands act on the contents of the current
+buffer.  Each buffer, including the current buffer, may or may not be
+displayed in any windows.
+
+* Menu:
+
+* Buffer Basics::       What is a buffer?
+* Current Buffer::      Designating a buffer as current
+                          so that primitives will access its contents.
+* Buffer Names::        Accessing and changing buffer names.
+* Buffer File Name::    The buffer file name indicates which file is visited.
+* Buffer Modification:: A buffer is "modified" if it needs to be saved.
+* Modification Time::   Determining whether the visited file was changed
+                         ``behind Emacs's back''.
+* Read Only Buffers::   Modifying text is not allowed in a read-only buffer.
+* The Buffer List::     How to look at all the existing buffers.
+* Creating Buffers::    Functions that create buffers.
+* Killing Buffers::     Buffers exist until explicitly killed.
+* Indirect Buffers::    An indirect buffer shares text with some other buffer.
+* Swapping Text::       Swapping text between two buffers.
+* Buffer Gap::          The gap in the buffer.
+
+
+File: elisp,  Node: Buffer Basics,  Next: Current Buffer,  Up: Buffers
+
+27.1 Buffer Basics
+==================
+
+A "buffer" is a Lisp object containing text to be edited.  Buffers are
+used to hold the contents of files that are being visited; there may
+also be buffers that are not visiting files.  Although several buffers
+normally exist, only one buffer is designated the "current buffer" at
+any time.  Most editing commands act on the contents of the current
+buffer.  Each buffer, including the current buffer, may or may not be
+displayed in any windows.
+
+Buffers in Emacs editing are objects that have distinct names and hold
+text that can be edited.  Buffers appear to Lisp programs as a special
+data type.  You can think of the contents of a buffer as a string that
+you can extend; insertions and deletions may occur in any part of the
+buffer.  *Note Text::.
+
+   A Lisp buffer object contains numerous pieces of information.  Some
+of this information is directly accessible to the programmer through
+variables, while other information is accessible only through
+special-purpose functions.  For example, the visited file name is
+directly accessible through a variable, while the value of point is
+accessible only through a primitive function.
+
+   Buffer-specific information that is directly accessible is stored in
+"buffer-local" variable bindings, which are variable values that are
+effective only in a particular buffer.  This feature allows each buffer
+to override the values of certain variables.  Most major modes override
+variables such as `fill-column' or `comment-column' in this way.  For
+more information about buffer-local variables and functions related to
+them, see *note Buffer-Local Variables::.
+
+   For functions and variables related to visiting files in buffers, see
+*note Visiting Files:: and *note Saving Buffers::.  For functions and
+variables related to the display of buffers in windows, see *note
+Buffers and Windows::.
+
+ -- Function: bufferp object
+     This function returns `t' if OBJECT is a buffer, `nil' otherwise.
+
+
+File: elisp,  Node: Current Buffer,  Next: Buffer Names,  Prev: Buffer Basics,  Up: Buffers
+
+27.2 The Current Buffer
+=======================
+
+There are, in general, many buffers in an Emacs session.  At any time,
+one of them is designated as the "current buffer".  This is the buffer
+in which most editing takes place, because most of the primitives for
+examining or changing text in a buffer operate implicitly on the
+current buffer (*note Text::).  Normally the buffer that is displayed on
+the screen in the selected window is the current buffer, but this is not
+always so: a Lisp program can temporarily designate any buffer as
+current in order to operate on its contents, without changing what is
+displayed on the screen.
+
+   The way to designate a current buffer in a Lisp program is by calling
+`set-buffer'.  The specified buffer remains current until a new one is
+designated.
+
+   When an editing command returns to the editor command loop, the
+command loop designates the buffer displayed in the selected window as
+current, to prevent confusion: the buffer that the cursor is in when
+Emacs reads a command is the buffer that the command will apply to.
+(*Note Command Loop::.)  Therefore, `set-buffer' is not the way to
+switch visibly to a different buffer so that the user can edit it.  For
+that, you must use the functions described in *note Displaying
+Buffers::.
+
+   *Warning:* Lisp functions that change to a different current buffer
+should not depend on the command loop to set it back afterwards.
+Editing commands written in Emacs Lisp can be called from other programs
+as well as from the command loop; it is convenient for the caller if
+the subroutine does not change which buffer is current (unless, of
+course, that is the subroutine's purpose).  Therefore, you should
+normally use `set-buffer' within a `save-current-buffer' or
+`save-excursion' (*note Excursions::) form that will restore the
+current buffer when your function is done.  Here, as an example, is a
+simplified version of the command `append-to-buffer':
+
+     (defun append-to-buffer (buffer start end)
+       "Append to specified buffer the text of the region."
+       (interactive "BAppend to buffer: \nr")
+       (let ((oldbuf (current-buffer)))
+         (save-current-buffer
+           (set-buffer (get-buffer-create buffer))
+           (insert-buffer-substring oldbuf start end))))
+
+This function binds a local variable to record the current buffer, and
+then `save-current-buffer' arranges to make it current again.  Next,
+`set-buffer' makes the specified buffer current.  Finally,
+`insert-buffer-substring' copies the string from the original current
+buffer to the specified (and now current) buffer.
+
+   If the buffer appended to happens to be displayed in some window,
+the next redisplay will show how its text has changed.  Otherwise, you
+will not see the change immediately on the screen.  The buffer becomes
+current temporarily during the execution of the command, but this does
+not cause it to be displayed.
+
+   If you make local bindings (with `let' or function arguments) for a
+variable that may also have buffer-local bindings, make sure that the
+same buffer is current at the beginning and at the end of the local
+binding's scope.  Otherwise you might bind it in one buffer and unbind
+it in another!  There are two ways to do this.  In simple cases, you may
+see that nothing ever changes the current buffer within the scope of the
+binding.  Otherwise, use `save-current-buffer' or `save-excursion' to
+make sure that the buffer current at the beginning is current again
+whenever the variable is unbound.
+
+   Do not rely on using `set-buffer' to change the current buffer back,
+because that won't do the job if a quit happens while the wrong buffer
+is current.  For instance, in the previous example, it would have been
+wrong to do this:
+
+       (let ((oldbuf (current-buffer)))
+         (set-buffer (get-buffer-create buffer))
+         (insert-buffer-substring oldbuf start end)
+         (set-buffer oldbuf))
+
+Using `save-current-buffer', as we did, handles quitting, errors, and
+`throw', as well as ordinary evaluation.
+
+ -- Function: current-buffer
+     This function returns the current buffer.
+
+          (current-buffer)
+               => #<buffer buffers.texi>
+
+ -- Function: set-buffer buffer-or-name
+     This function makes BUFFER-OR-NAME the current buffer.
+     BUFFER-OR-NAME must be an existing buffer or the name of an
+     existing buffer.  The return value is the buffer made current.
+
+     This function does not display the buffer in any window, so the
+     user cannot necessarily see the buffer.  But Lisp programs will
+     now operate on it.
+
+ -- Special Form: save-current-buffer body...
+     The `save-current-buffer' special form saves the identity of the
+     current buffer, evaluates the BODY forms, and finally restores
+     that buffer as current.  The return value is the value of the last
+     form in BODY.  The current buffer is restored even in case of an
+     abnormal exit via `throw' or error (*note Nonlocal Exits::).
+
+     If the buffer that used to be current has been killed by the time
+     of exit from `save-current-buffer', then it is not made current
+     again, of course.  Instead, whichever buffer was current just
+     before exit remains current.
+
+ -- Macro: with-current-buffer buffer-or-name body...
+     The `with-current-buffer' macro saves the identity of the current
+     buffer, makes BUFFER-OR-NAME current, evaluates the BODY forms,
+     and finally restores the current buffer.  BUFFER-OR-NAME must
+     specify an existing buffer or the name of an existing buffer.
+
+     The return value is the value of the last form in BODY.  The
+     current buffer is restored even in case of an abnormal exit via
+     `throw' or error (*note Nonlocal Exits::).
+
+ -- Macro: with-temp-buffer body...
+     The `with-temp-buffer' macro evaluates the BODY forms with a
+     temporary buffer as the current buffer.  It saves the identity of
+     the current buffer, creates a temporary buffer and makes it
+     current, evaluates the BODY forms, and finally restores the
+     previous current buffer while killing the temporary buffer.  By
+     default, undo information (*note Undo::) is not recorded in the
+     buffer created by this macro (but BODY can enable that, if needed).
+
+     The return value is the value of the last form in BODY.  You can
+     return the contents of the temporary buffer by using
+     `(buffer-string)' as the last form.
+
+     The current buffer is restored even in case of an abnormal exit via
+     `throw' or error (*note Nonlocal Exits::).
+
+     See also `with-temp-file' in *note Writing to Files: Definition of
+     with-temp-file.
+
+
+File: elisp,  Node: Buffer Names,  Next: Buffer File Name,  Prev: Current Buffer,  Up: Buffers
+
+27.3 Buffer Names
+=================
+
+Each buffer has a unique name, which is a string.  Many of the
+functions that work on buffers accept either a buffer or a buffer name
+as an argument.  Any argument called BUFFER-OR-NAME is of this sort,
+and an error is signaled if it is neither a string nor a buffer.  Any
+argument called BUFFER must be an actual buffer object, not a name.
+
+   Buffers that are ephemeral and generally uninteresting to the user
+have names starting with a space, so that the `list-buffers' and
+`buffer-menu' commands don't mention them (but if such a buffer visits
+a file, it *is* mentioned).  A name starting with space also initially
+disables recording undo information; see *note Undo::.
+
+ -- Function: buffer-name &optional buffer
+     This function returns the name of BUFFER as a string.  BUFFER
+     defaults to the current buffer.
+
+     If `buffer-name' returns `nil', it means that BUFFER has been
+     killed.  *Note Killing Buffers::.
+
+          (buffer-name)
+               => "buffers.texi"
+
+          (setq foo (get-buffer "temp"))
+               => #<buffer temp>
+          (kill-buffer foo)
+               => nil
+          (buffer-name foo)
+               => nil
+          foo
+               => #<killed buffer>
+
+ -- Command: rename-buffer newname &optional unique
+     This function renames the current buffer to NEWNAME.  An error is
+     signaled if NEWNAME is not a string.
+
+     Ordinarily, `rename-buffer' signals an error if NEWNAME is already
+     in use.  However, if UNIQUE is non-`nil', it modifies NEWNAME to
+     make a name that is not in use.  Interactively, you can make
+     UNIQUE non-`nil' with a numeric prefix argument.  (This is how the
+     command `rename-uniquely' is implemented.)
+
+     This function returns the name actually given to the buffer.
+
+ -- Function: get-buffer buffer-or-name
+     This function returns the buffer specified by BUFFER-OR-NAME.  If
+     BUFFER-OR-NAME is a string and there is no buffer with that name,
+     the value is `nil'.  If BUFFER-OR-NAME is a buffer, it is returned
+     as given; that is not very useful, so the argument is usually a
+     name.  For example:
+
+          (setq b (get-buffer "lewis"))
+               => #<buffer lewis>
+          (get-buffer b)
+               => #<buffer lewis>
+          (get-buffer "Frazzle-nots")
+               => nil
+
+     See also the function `get-buffer-create' in *note Creating
+     Buffers::.
+
+ -- Function: generate-new-buffer-name starting-name &optional ignore
+     This function returns a name that would be unique for a new
+     buffer--but does not create the buffer.  It starts with
+     STARTING-NAME, and produces a name not currently in use for any
+     buffer by appending a number inside of `<...>'.  It starts at 2
+     and keeps incrementing the number until it is not the name of an
+     existing buffer.
+
+     If the optional second argument IGNORE is non-`nil', it should be
+     a string, a potential buffer name.  It means to consider that
+     potential buffer acceptable, if it is tried, even it is the name
+     of an existing buffer (which would normally be rejected).  Thus, if
+     buffers named `foo', `foo<2>', `foo<3>' and `foo<4>' exist,
+
+          (generate-new-buffer-name "foo")
+               => "foo<5>"
+          (generate-new-buffer-name "foo" "foo<3>")
+               => "foo<3>"
+          (generate-new-buffer-name "foo" "foo<6>")
+               => "foo<5>"
+
+     See the related function `generate-new-buffer' in *note Creating
+     Buffers::.
+
+
+File: elisp,  Node: Buffer File Name,  Next: Buffer Modification,  Prev: Buffer Names,  Up: Buffers
+
+27.4 Buffer File Name
+=====================
+
+The "buffer file name" is the name of the file that is visited in that
+buffer.  When a buffer is not visiting a file, its buffer file name is
+`nil'.  Most of the time, the buffer name is the same as the
+nondirectory part of the buffer file name, but the buffer file name and
+the buffer name are distinct and can be set independently.  *Note
+Visiting Files::.
+
+ -- Function: buffer-file-name &optional buffer
+     This function returns the absolute file name of the file that
+     BUFFER is visiting.  If BUFFER is not visiting any file,
+     `buffer-file-name' returns `nil'.  If BUFFER is not supplied, it
+     defaults to the current buffer.
+
+          (buffer-file-name (other-buffer))
+               => "/usr/user/lewis/manual/files.texi"
+
+ -- Variable: buffer-file-name
+     This buffer-local variable contains the name of the file being
+     visited in the current buffer, or `nil' if it is not visiting a
+     file.  It is a permanent local variable, unaffected by
+     `kill-all-local-variables'.
+
+          buffer-file-name
+               => "/usr/user/lewis/manual/buffers.texi"
+
+     It is risky to change this variable's value without doing various
+     other things.  Normally it is better to use
+     `set-visited-file-name' (see below); some of the things done
+     there, such as changing the buffer name, are not strictly
+     necessary, but others are essential to avoid confusing Emacs.
+
+ -- Variable: buffer-file-truename
+     This buffer-local variable holds the abbreviated truename of the
+     file visited in the current buffer, or `nil' if no file is visited.
+     It is a permanent local, unaffected by `kill-all-local-variables'.
+     *Note Truenames::, and *note Definition of abbreviate-file-name::.
+
+ -- Variable: buffer-file-number
+     This buffer-local variable holds the file number and directory
+     device number of the file visited in the current buffer, or `nil'
+     if no file or a nonexistent file is visited.  It is a permanent
+     local, unaffected by `kill-all-local-variables'.
+
+     The value is normally a list of the form `(FILENUM DEVNUM)'.  This
+     pair of numbers uniquely identifies the file among all files
+     accessible on the system.  See the function `file-attributes', in
+     *note File Attributes::, for more information about them.
+
+     If `buffer-file-name' is the name of a symbolic link, then both
+     numbers refer to the recursive target.
+
+ -- Function: get-file-buffer filename
+     This function returns the buffer visiting file FILENAME.  If there
+     is no such buffer, it returns `nil'.  The argument FILENAME, which
+     must be a string, is expanded (*note File Name Expansion::), then
+     compared against the visited file names of all live buffers.  Note
+     that the buffer's `buffer-file-name' must match the expansion of
+     FILENAME exactly.  This function will not recognize other names
+     for the same file.
+
+          (get-file-buffer "buffers.texi")
+              => #<buffer buffers.texi>
+
+     In unusual circumstances, there can be more than one buffer
+     visiting the same file name.  In such cases, this function returns
+     the first such buffer in the buffer list.
+
+ -- Function: find-buffer-visiting filename &optional predicate
+     This is like `get-file-buffer', except that it can return any
+     buffer visiting the file _possibly under a different name_.  That
+     is, the buffer's `buffer-file-name' does not need to match the
+     expansion of FILENAME exactly, it only needs to refer to the same
+     file.  If PREDICATE is non-`nil', it should be a function of one
+     argument, a buffer visiting FILENAME.  The buffer is only
+     considered a suitable return value if PREDICATE returns non-`nil'.
+     If it can not find a suitable buffer to return,
+     `find-buffer-visiting' returns `nil'.
+
+ -- Command: set-visited-file-name filename &optional no-query
+          along-with-file
+     If FILENAME is a non-empty string, this function changes the name
+     of the file visited in the current buffer to FILENAME.  (If the
+     buffer had no visited file, this gives it one.)  The _next time_
+     the buffer is saved it will go in the newly-specified file.
+
+     This command marks the buffer as modified, since it does not (as
+     far as Emacs knows) match the contents of FILENAME, even if it
+     matched the former visited file.  It also renames the buffer to
+     correspond to the new file name, unless the new name is already in
+     use.
+
+     If FILENAME is `nil' or the empty string, that stands for "no
+     visited file."  In this case, `set-visited-file-name' marks the
+     buffer as having no visited file, without changing the buffer's
+     modified flag.
+
+     Normally, this function asks the user for confirmation if there
+     already is a buffer visiting FILENAME.  If NO-QUERY is non-`nil',
+     that prevents asking this question.  If there already is a buffer
+     visiting FILENAME, and the user confirms or QUERY is non-`nil',
+     this function makes the new buffer name unique by appending a
+     number inside of `<...>' to FILENAME.
+
+     If ALONG-WITH-FILE is non-`nil', that means to assume that the
+     former visited file has been renamed to FILENAME.  In this case,
+     the command does not change the buffer's modified flag, nor the
+     buffer's recorded last file modification time as reported by
+     `visited-file-modtime' (*note Modification Time::).  If
+     ALONG-WITH-FILE is `nil', this function clears the recorded last
+     file modification time, after which `visited-file-modtime' returns
+     zero.
+
+     When the function `set-visited-file-name' is called interactively,
+     it prompts for FILENAME in the minibuffer.
+
+ -- Variable: list-buffers-directory
+     This buffer-local variable specifies a string to display in a
+     buffer listing where the visited file name would go, for buffers
+     that don't have a visited file name.  Dired buffers use this
+     variable.
+
+
+File: elisp,  Node: Buffer Modification,  Next: Modification Time,  Prev: Buffer File Name,  Up: Buffers
+
+27.5 Buffer Modification
+========================
+
+Emacs keeps a flag called the "modified flag" for each buffer, to
+record whether you have changed the text of the buffer.  This flag is
+set to `t' whenever you alter the contents of the buffer, and cleared
+to `nil' when you save it.  Thus, the flag shows whether there are
+unsaved changes.  The flag value is normally shown in the mode line
+(*note Mode Line Variables::), and controls saving (*note Saving
+Buffers::) and auto-saving (*note Auto-Saving::).
+
+   Some Lisp programs set the flag explicitly.  For example, the
+function `set-visited-file-name' sets the flag to `t', because the text
+does not match the newly-visited file, even if it is unchanged from the
+file formerly visited.
+
+   The functions that modify the contents of buffers are described in
+*note Text::.
+
+ -- Function: buffer-modified-p &optional buffer
+     This function returns `t' if the buffer BUFFER has been modified
+     since it was last read in from a file or saved, or `nil'
+     otherwise.  If BUFFER is not supplied, the current buffer is
+     tested.
+
+ -- Function: set-buffer-modified-p flag
+     This function marks the current buffer as modified if FLAG is
+     non-`nil', or as unmodified if the flag is `nil'.
+
+     Another effect of calling this function is to cause unconditional
+     redisplay of the mode line for the current buffer.  In fact, the
+     function `force-mode-line-update' works by doing this:
+
+          (set-buffer-modified-p (buffer-modified-p))
+
+ -- Function: restore-buffer-modified-p flag
+     Like `set-buffer-modified-p', but does not force redisplay of mode
+     lines.
+
+ -- Command: not-modified &optional arg
+     This command marks the current buffer as unmodified, and not
+     needing to be saved.  If ARG is non-`nil', it marks the buffer as
+     modified, so that it will be saved at the next suitable occasion.
+     Interactively, ARG is the prefix argument.
+
+     Don't use this function in programs, since it prints a message in
+     the echo area; use `set-buffer-modified-p' (above) instead.
+
+ -- Function: buffer-modified-tick &optional buffer
+     This function returns BUFFER's modification-count.  This is a
+     counter that increments every time the buffer is modified.  If
+     BUFFER is `nil' (or omitted), the current buffer is used.  The
+     counter can wrap around occasionally.
+
+ -- Function: buffer-chars-modified-tick &optional buffer
+     This function returns BUFFER's character-change modification-count.
+     Changes to text properties leave this counter unchanged; however,
+     each time text is inserted or removed from the buffer, the counter
+     is reset to the value that would be returned by
+     `buffer-modified-tick'.  By comparing the values returned by two
+     `buffer-chars-modified-tick' calls, you can tell whether a
+     character change occurred in that buffer in between the calls.  If
+     BUFFER is `nil' (or omitted), the current buffer is used.
 
 
 File: elisp,  Node: Modification Time,  Next: Read Only Buffers,  Prev: Buffer Modification,  Up: Buffers
@@ -634,8 +1425,8 @@ windows.
 * Buffers and Windows::     Each window displays the contents of a buffer.
 * Displaying Buffers::      Higher-level functions for displaying a buffer
                               and choosing a window for it.
-* Choosing Window::	    How to choose a window for displaying a buffer.
-* Dedicated Windows::	    How to avoid displaying another buffer in
+* Choosing Window::         How to choose a window for displaying a buffer.
+* Dedicated Windows::       How to avoid displaying another buffer in
                               a specific window.
 * Window Point::            Each window has its own location of point.
 * Window Start and End::    Buffer positions indicating which text is
@@ -2991,26 +3782,26 @@ from several remote locations.  *Note Multiple Terminals::.
 * Frame Parameters::            Controlling frame size, position, font, etc.
 * Terminal Parameters::         Parameters common for all frames on terminal.
 * Frame Titles::                Automatic updating of frame titles.
-* Deleting Frames::		Frames last until explicitly deleted.
-* Finding All Frames::		How to examine all existing frames.
-* Frames and Windows::		A frame contains windows;
-				  display of text always works through windows.
-* Minibuffers and Frames::	How a frame finds the minibuffer to use.
-* Input Focus::			Specifying the selected frame.
-* Visibility of Frames::	Frames may be visible or invisible, or icons.
-* Raising and Lowering::	Raising a frame makes it hide other windows;
-				  lowering it makes the others hide it.
-* Frame Configurations::	Saving the state of all frames.
-* Mouse Tracking::		Getting events that say when the mouse moves.
-* Mouse Position::		Asking where the mouse is, or moving it.
-* Pop-Up Menus::		Displaying a menu for the user to select from.
+* Deleting Frames::             Frames last until explicitly deleted.
+* Finding All Frames::          How to examine all existing frames.
+* Frames and Windows::          A frame contains windows;
+                                  display of text always works through windows.
+* Minibuffers and Frames::      How a frame finds the minibuffer to use.
+* Input Focus::                 Specifying the selected frame.
+* Visibility of Frames::        Frames may be visible or invisible, or icons.
+* Raising and Lowering::        Raising a frame makes it hide other windows;
+                                  lowering it makes the others hide it.
+* Frame Configurations::        Saving the state of all frames.
+* Mouse Tracking::              Getting events that say when the mouse moves.
+* Mouse Position::              Asking where the mouse is, or moving it.
+* Pop-Up Menus::                Displaying a menu for the user to select from.
 * Dialog Boxes::                Displaying a box to ask yes or no.
 * Pointer Shape::               Specifying the shape of the mouse pointer.
 * Window System Selections::    Transferring text to and from other X clients.
 * Drag and Drop::               Internals of Drag-and-Drop implementation.
-* Color Names::	                Getting the definitions of color names.
+* Color Names::                 Getting the definitions of color names.
 * Text Terminal Colors::        Defining colors for text-only terminals.
-* Resources::		        Getting resource values from the server.
+* Resources::                   Getting resource values from the server.
 * Display Feature Testing::     Determining the features of a terminal.
 
 
@@ -3229,7 +4020,7 @@ variables.  *Note Frame-Local Variables::.
 * Menu:
 
 * Parameter Access::       How to change a frame's parameters.
-* Initial Parameters::	   Specifying frame parameters when you make a frame.
+* Initial Parameters::     Specifying frame parameters when you make a frame.
 * Window Frame Parameters:: List of frame parameters for window systems.
 * Size and Position::      Changing the size and position of a frame.
 * Geometry::               Parsing geometry specifications.
@@ -4521,9 +5312,13 @@ the user can choose an alternative with the mouse.
      The argument MENU says what to display in the menu.  It can be a
      keymap or a list of keymaps (*note Menu Keymaps::).  In this case,
      the return value is the list of events corresponding to the user's
-     choice.  (This list has more than one element if the choice
-     occurred in a submenu.)  Note that `x-popup-menu' does not
-     actually execute the command bound to that sequence of events.
+     choice.  This list has more than one element if the choice
+     occurred in a submenu.  (Note that `x-popup-menu' does not
+     actually execute the command bound to that sequence of events.)
+     On toolkits that support menu titles, the title is taken from the
+     prompt string of MENU if MENU is a keymap, or from the prompt
+     string of the first keymap in MENU if it is a list of keymaps
+     (*note Defining Menus::).
 
      Alternatively, MENU can have the following form:
 
@@ -5795,882 +6590,4 @@ the search functions do (*note Searching and Matching::).
 
      The return value indicates the distance traveled.  It is an
      integer that is zero or less.
-
-
-File: elisp,  Node: Excursions,  Next: Narrowing,  Prev: Motion,  Up: Positions
-
-30.3 Excursions
-===============
-
-It is often useful to move point "temporarily" within a localized
-portion of the program, or to switch buffers temporarily.  This is
-called an "excursion", and it is done with the `save-excursion' special
-form.  This construct initially remembers the identity of the current
-buffer, and its values of point and the mark, and restores them after
-the completion of the excursion.
-
-   The forms for saving and restoring the configuration of windows are
-described elsewhere (see *note Window Configurations::, and *note Frame
-Configurations::).  When only the identity of the current buffer needs
-to be saved and restored, it is preferable to use `save-current-buffer'
-instead.
-
- -- Special Form: save-excursion body...
-     The `save-excursion' special form saves the identity of the current
-     buffer and the values of point and the mark in it, evaluates BODY,
-     and finally restores the buffer and its saved values of point and
-     the mark.  All three saved values are restored even in case of an
-     abnormal exit via `throw' or error (*note Nonlocal Exits::).
-
-     The `save-excursion' special form is the standard way to move
-     point within one part of a program and avoid affecting the rest of
-     the program.  It is used more than 4000 times in the Lisp sources
-     of Emacs.
-
-     `save-excursion' does not save the values of point and the mark for
-     other buffers, so changes in other buffers remain in effect after
-     `save-excursion' exits.
-
-     Likewise, `save-excursion' does not restore window-buffer
-     correspondences altered by functions such as `switch-to-buffer'.
-     One way to restore these correspondences, and the selected window,
-     is to use `save-window-excursion' inside `save-excursion' (*note
-     Window Configurations::).
-
-     The value returned by `save-excursion' is the result of the last
-     form in BODY, or `nil' if no body forms were given.
-
-          (save-excursion FORMS)
-          ==
-          (let ((old-buf (current-buffer))
-                (old-pnt (point-marker))
-                (old-mark (copy-marker (mark-marker))))
-            (unwind-protect
-                (progn FORMS)
-              (set-buffer old-buf)
-              (goto-char old-pnt)
-              (set-marker (mark-marker) old-mark)))
-
-   *Warning:* Ordinary insertion of text adjacent to the saved point
-value relocates the saved value, just as it relocates all markers.
-More precisely, the saved value is a marker with insertion type `nil'.
-*Note Marker Insertion Types::.  Therefore, when the saved point value
-is restored, it normally comes before the inserted text.
-
-   Although `save-excursion' saves the location of the mark, it does
-not prevent functions which modify the buffer from setting
-`deactivate-mark', and thus causing the deactivation of the mark after
-the command finishes.  *Note The Mark::.
-
-
-File: elisp,  Node: Narrowing,  Prev: Excursions,  Up: Positions
-
-30.4 Narrowing
-==============
-
-"Narrowing" means limiting the text addressable by Emacs editing
-commands to a limited range of characters in a buffer.  The text that
-remains addressable is called the "accessible portion" of the buffer.
-
-   Narrowing is specified with two buffer positions which become the
-beginning and end of the accessible portion.  For most editing commands
-and most Emacs primitives, these positions replace the values of the
-beginning and end of the buffer.  While narrowing is in effect, no text
-outside the accessible portion is displayed, and point cannot move
-outside the accessible portion.
-
-   Values such as positions or line numbers, which usually count from
-the beginning of the buffer, do so despite narrowing, but the functions
-which use them refuse to operate on text that is inaccessible.
-
-   The commands for saving buffers are unaffected by narrowing; they
-save the entire buffer regardless of any narrowing.
-
-   If you need to display in a single buffer several very different
-types of text, consider using an alternative facility described in
-*note Swapping Text::.
-
- -- Command: narrow-to-region start end
-     This function sets the accessible portion of the current buffer to
-     start at START and end at END.  Both arguments should be character
-     positions.
-
-     In an interactive call, START and END are set to the bounds of the
-     current region (point and the mark, with the smallest first).
-
- -- Command: narrow-to-page &optional move-count
-     This function sets the accessible portion of the current buffer to
-     include just the current page.  An optional first argument
-     MOVE-COUNT non-`nil' means to move forward or backward by
-     MOVE-COUNT pages and then narrow to one page.  The variable
-     `page-delimiter' specifies where pages start and end (*note
-     Standard Regexps::).
-
-     In an interactive call, MOVE-COUNT is set to the numeric prefix
-     argument.
-
- -- Command: widen
-     This function cancels any narrowing in the current buffer, so that
-     the entire contents are accessible.  This is called "widening".
-     It is equivalent to the following expression:
-
-          (narrow-to-region 1 (1+ (buffer-size)))
-
- -- Special Form: save-restriction body...
-     This special form saves the current bounds of the accessible
-     portion, evaluates the BODY forms, and finally restores the saved
-     bounds, thus restoring the same state of narrowing (or absence
-     thereof) formerly in effect.  The state of narrowing is restored
-     even in the event of an abnormal exit via `throw' or error (*note
-     Nonlocal Exits::).  Therefore, this construct is a clean way to
-     narrow a buffer temporarily.
-
-     The value returned by `save-restriction' is that returned by the
-     last form in BODY, or `nil' if no body forms were given.
-
-     *Caution:* it is easy to make a mistake when using the
-     `save-restriction' construct.  Read the entire description here
-     before you try it.
-
-     If BODY changes the current buffer, `save-restriction' still
-     restores the restrictions on the original buffer (the buffer whose
-     restrictions it saved from), but it does not restore the identity
-     of the current buffer.
-
-     `save-restriction' does _not_ restore point and the mark; use
-     `save-excursion' for that.  If you use both `save-restriction' and
-     `save-excursion' together, `save-excursion' should come first (on
-     the outside).  Otherwise, the old point value would be restored
-     with temporary narrowing still in effect.  If the old point value
-     were outside the limits of the temporary narrowing, this would
-     fail to restore it accurately.
-
-     Here is a simple example of correct use of `save-restriction':
-
-          ---------- Buffer: foo ----------
-          This is the contents of foo
-          This is the contents of foo
-          This is the contents of foo-!-
-          ---------- Buffer: foo ----------
-
-          (save-excursion
-            (save-restriction
-              (goto-char 1)
-              (forward-line 2)
-              (narrow-to-region 1 (point))
-              (goto-char (point-min))
-              (replace-string "foo" "bar")))
-
-          ---------- Buffer: foo ----------
-          This is the contents of bar
-          This is the contents of bar
-          This is the contents of foo-!-
-          ---------- Buffer: foo ----------
-
-
-File: elisp,  Node: Markers,  Next: Text,  Prev: Positions,  Up: Top
-
-31 Markers
-**********
-
-A "marker" is a Lisp object used to specify a position in a buffer
-relative to the surrounding text.  A marker changes its offset from the
-beginning of the buffer automatically whenever text is inserted or
-deleted, so that it stays with the two characters on either side of it.
-
-* Menu:
-
-* Overview of Markers::      The components of a marker, and how it relocates.
-* Predicates on Markers::    Testing whether an object is a marker.
-* Creating Markers::         Making empty markers or markers at certain places.
-* Information from Markers:: Finding the marker's buffer or character position.
-* Marker Insertion Types::   Two ways a marker can relocate when you
-                               insert where it points.
-* Moving Markers::           Moving the marker to a new buffer or position.
-* The Mark::                 How "the mark" is implemented with a marker.
-* The Region::               How to access "the region".
-
-
-File: elisp,  Node: Overview of Markers,  Next: Predicates on Markers,  Up: Markers
-
-31.1 Overview of Markers
-========================
-
-A marker specifies a buffer and a position in that buffer.  The marker
-can be used to represent a position in the functions that require one,
-just as an integer could be used.  In that case, the marker's buffer is
-normally ignored.  Of course, a marker used in this way usually points
-to a position in the buffer that the function operates on, but that is
-entirely the programmer's responsibility.  *Note Positions::, for a
-complete description of positions.
-
-   A marker has three attributes: the marker position, the marker
-buffer, and the insertion type.  The marker position is an integer that
-is equivalent (at a given time) to the marker as a position in that
-buffer.  But the marker's position value can change often during the
-life of the marker.  Insertion and deletion of text in the buffer
-relocate the marker.  The idea is that a marker positioned between two
-characters remains between those two characters despite insertion and
-deletion elsewhere in the buffer.  Relocation changes the integer
-equivalent of the marker.
-
-   Deleting text around a marker's position leaves the marker between
-the characters immediately before and after the deleted text.  Inserting
-text at the position of a marker normally leaves the marker either in
-front of or after the new text, depending on the marker's "insertion
-type" (*note Marker Insertion Types::)--unless the insertion is done
-with `insert-before-markers' (*note Insertion::).
-
-   Insertion and deletion in a buffer must check all the markers and
-relocate them if necessary.  This slows processing in a buffer with a
-large number of markers.  For this reason, it is a good idea to make a
-marker point nowhere if you are sure you don't need it any more.
-Unreferenced markers are garbage collected eventually, but until then
-will continue to use time if they do point somewhere.
-
-   Because it is common to perform arithmetic operations on a marker
-position, most of the arithmetic operations (including `+' and `-')
-accept markers as arguments.  In such cases, the marker stands for its
-current position.
-
-   Here are examples of creating markers, setting markers, and moving
-point to markers:
-
-     ;; Make a new marker that initially does not point anywhere:
-     (setq m1 (make-marker))
-          => #<marker in no buffer>
-
-     ;; Set `m1' to point between the 99th and 100th characters
-     ;;   in the current buffer:
-     (set-marker m1 100)
-          => #<marker at 100 in markers.texi>
-
-     ;; Now insert one character at the beginning of the buffer:
-     (goto-char (point-min))
-          => 1
-     (insert "Q")
-          => nil
-
-     ;; `m1' is updated appropriately.
-     m1
-          => #<marker at 101 in markers.texi>
-
-     ;; Two markers that point to the same position
-     ;;   are not `eq', but they are `equal'.
-     (setq m2 (copy-marker m1))
-          => #<marker at 101 in markers.texi>
-     (eq m1 m2)
-          => nil
-     (equal m1 m2)
-          => t
-
-     ;; When you are finished using a marker, make it point nowhere.
-     (set-marker m1 nil)
-          => #<marker in no buffer>
-
-
-File: elisp,  Node: Predicates on Markers,  Next: Creating Markers,  Prev: Overview of Markers,  Up: Markers
-
-31.2 Predicates on Markers
-==========================
-
-You can test an object to see whether it is a marker, or whether it is
-either an integer or a marker.  The latter test is useful in connection
-with the arithmetic functions that work with both markers and integers.
-
- -- Function: markerp object
-     This function returns `t' if OBJECT is a marker, `nil' otherwise.
-     Note that integers are not markers, even though many functions
-     will accept either a marker or an integer.
-
- -- Function: integer-or-marker-p object
-     This function returns `t' if OBJECT is an integer or a marker,
-     `nil' otherwise.
-
- -- Function: number-or-marker-p object
-     This function returns `t' if OBJECT is a number (either integer or
-     floating point) or a marker, `nil' otherwise.
-
-
-File: elisp,  Node: Creating Markers,  Next: Information from Markers,  Prev: Predicates on Markers,  Up: Markers
-
-31.3 Functions that Create Markers
-==================================
-
-When you create a new marker, you can make it point nowhere, or point
-to the present position of point, or to the beginning or end of the
-accessible portion of the buffer, or to the same place as another given
-marker.
-
-   The next four functions all return markers with insertion type
-`nil'.  *Note Marker Insertion Types::.
-
- -- Function: make-marker
-     This function returns a newly created marker that does not point
-     anywhere.
-
-          (make-marker)
-               => #<marker in no buffer>
-
- -- Function: point-marker
-     This function returns a new marker that points to the present
-     position of point in the current buffer.  *Note Point::.  For an
-     example, see `copy-marker', below.
-
- -- Function: point-min-marker
-     This function returns a new marker that points to the beginning of
-     the accessible portion of the buffer.  This will be the beginning
-     of the buffer unless narrowing is in effect.  *Note Narrowing::.
-
- -- Function: point-max-marker
-     This function returns a new marker that points to the end of the
-     accessible portion of the buffer.  This will be the end of the
-     buffer unless narrowing is in effect.  *Note Narrowing::.
-
-     Here are examples of this function and `point-min-marker', shown in
-     a buffer containing a version of the source file for the text of
-     this chapter.
-
-          (point-min-marker)
-               => #<marker at 1 in markers.texi>
-          (point-max-marker)
-               => #<marker at 15573 in markers.texi>
-
-          (narrow-to-region 100 200)
-               => nil
-          (point-min-marker)
-               => #<marker at 100 in markers.texi>
-          (point-max-marker)
-               => #<marker at 200 in markers.texi>
-
- -- Function: copy-marker marker-or-integer &optional insertion-type
-     If passed a marker as its argument, `copy-marker' returns a new
-     marker that points to the same place and the same buffer as does
-     MARKER-OR-INTEGER.  If passed an integer as its argument,
-     `copy-marker' returns a new marker that points to position
-     MARKER-OR-INTEGER in the current buffer.
-
-     The new marker's insertion type is specified by the argument
-     INSERTION-TYPE.  *Note Marker Insertion Types::.
-
-     If passed an integer argument less than 1, `copy-marker' returns a
-     new marker that points to the beginning of the current buffer.  If
-     passed an integer argument greater than the length of the buffer,
-     `copy-marker' returns a new marker that points to the end of the
-     buffer.
-
-          (copy-marker 0)
-               => #<marker at 1 in markers.texi>
-
-          (copy-marker 20000)
-               => #<marker at 7572 in markers.texi>
-
-     An error is signaled if MARKER is neither a marker nor an integer.
-
-   Two distinct markers are considered `equal' (even though not `eq')
-to each other if they have the same position and buffer, or if they
-both point nowhere.
-
-     (setq p (point-marker))
-          => #<marker at 2139 in markers.texi>
-
-     (setq q (copy-marker p))
-          => #<marker at 2139 in markers.texi>
-
-     (eq p q)
-          => nil
-
-     (equal p q)
-          => t
-
-
-File: elisp,  Node: Information from Markers,  Next: Marker Insertion Types,  Prev: Creating Markers,  Up: Markers
-
-31.4 Information from Markers
-=============================
-
-This section describes the functions for accessing the components of a
-marker object.
-
- -- Function: marker-position marker
-     This function returns the position that MARKER points to, or `nil'
-     if it points nowhere.
-
- -- Function: marker-buffer marker
-     This function returns the buffer that MARKER points into, or `nil'
-     if it points nowhere.
-
-          (setq m (make-marker))
-               => #<marker in no buffer>
-          (marker-position m)
-               => nil
-          (marker-buffer m)
-               => nil
-
-          (set-marker m 3770 (current-buffer))
-               => #<marker at 3770 in markers.texi>
-          (marker-buffer m)
-               => #<buffer markers.texi>
-          (marker-position m)
-               => 3770
-
- -- Function: buffer-has-markers-at position
-     This function returns `t' if one or more markers point at position
-     POSITION in the current buffer.
-
-
-File: elisp,  Node: Marker Insertion Types,  Next: Moving Markers,  Prev: Information from Markers,  Up: Markers
-
-31.5 Marker Insertion Types
-===========================
-
-When you insert text directly at the place where a marker points, there
-are two possible ways to relocate that marker: it can point before the
-inserted text, or point after it.  You can specify which one a given
-marker should do by setting its "insertion type".  Note that use of
-`insert-before-markers' ignores markers' insertion types, always
-relocating a marker to point after the inserted text.
-
- -- Function: set-marker-insertion-type marker type
-     This function sets the insertion type of marker MARKER to TYPE.
-     If TYPE is `t', MARKER will advance when text is inserted at its
-     position.  If TYPE is `nil', MARKER does not advance when text is
-     inserted there.
-
- -- Function: marker-insertion-type marker
-     This function reports the current insertion type of MARKER.
-
-   Most functions that create markers, without an argument allowing to
-specify the insertion type, create them with insertion type `nil'.
-Also, the mark has, by default, insertion type `nil'.
-
-
-File: elisp,  Node: Moving Markers,  Next: The Mark,  Prev: Marker Insertion Types,  Up: Markers
-
-31.6 Moving Marker Positions
-============================
-
-This section describes how to change the position of an existing
-marker.  When you do this, be sure you know whether the marker is used
-outside of your program, and, if so, what effects will result from
-moving it--otherwise, confusing things may happen in other parts of
-Emacs.
-
- -- Function: set-marker marker position &optional buffer
-     This function moves MARKER to POSITION in BUFFER.  If BUFFER is
-     not provided, it defaults to the current buffer.
-
-     If POSITION is less than 1, `set-marker' moves MARKER to the
-     beginning of the buffer.  If POSITION is greater than the size of
-     the buffer, `set-marker' moves marker to the end of the buffer.
-     If POSITION is `nil' or a marker that points nowhere, then MARKER
-     is set to point nowhere.
-
-     The value returned is MARKER.
-
-          (setq m (point-marker))
-               => #<marker at 4714 in markers.texi>
-          (set-marker m 55)
-               => #<marker at 55 in markers.texi>
-          (setq b (get-buffer "foo"))
-               => #<buffer foo>
-          (set-marker m 0 b)
-               => #<marker at 1 in foo>
-
- -- Function: move-marker marker position &optional buffer
-     This is another name for `set-marker'.
-
-
-File: elisp,  Node: The Mark,  Next: The Region,  Prev: Moving Markers,  Up: Markers
-
-31.7 The Mark
-=============
-
-Each buffer has a special marker, which is designated "the mark".  When
-a buffer is newly created, this marker exists but does not point
-anywhere; this means that the mark "doesn't exist" in that buffer yet.
-Subsequent commands can set the mark.
-
-   The mark specifies a position to bound a range of text for many
-commands, such as `kill-region' and `indent-rigidly'.  These commands
-typically act on the text between point and the mark, which is called
-the "region".  If you are writing a command that operates on the
-region, don't examine the mark directly; instead, use `interactive'
-with the `r' specification.  This provides the values of point and the
-mark as arguments to the command in an interactive call, but permits
-other Lisp programs to specify arguments explicitly.  *Note Interactive
-Codes::.
-
-   Some commands set the mark as a side-effect.  Commands should do
-this only if it has a potential use to the user, and never for their
-own internal purposes.  For example, the `replace-regexp' command sets
-the mark to the value of point before doing any replacements, because
-this enables the user to move back there conveniently after the replace
-is finished.
-
-   Once the mark "exists" in a buffer, it normally never ceases to
-exist.  However, it may become "inactive", if Transient Mark mode is
-enabled.  The buffer-local variable `mark-active', if non-`nil', means
-that the mark is active.  A command can call the function
-`deactivate-mark' to deactivate the mark directly, or it can request
-deactivation of the mark upon return to the editor command loop by
-setting the variable `deactivate-mark' to a non-`nil' value.
-
-   If Transient Mode is enabled, certain editing commands that normally
-apply to text near point, apply instead to the region when the mark is
-active.  This is the main motivation for using Transient Mark mode.
-(Another is that this enables highlighting of the region when the mark
-is active.  *Note Display::.)
-
-   In addition to the mark, each buffer has a "mark ring" which is a
-list of markers containing previous values of the mark.  When editing
-commands change the mark, they should normally save the old value of the
-mark on the mark ring.  The variable `mark-ring-max' specifies the
-maximum number of entries in the mark ring; once the list becomes this
-long, adding a new element deletes the last element.
-
-   There is also a separate global mark ring, but that is used only in a
-few particular user-level commands, and is not relevant to Lisp
-programming.  So we do not describe it here.
-
- -- Function: mark &optional force
-     This function returns the current buffer's mark position as an
-     integer, or `nil' if no mark has ever been set in this buffer.
-
-     If Transient Mark mode is enabled, and `mark-even-if-inactive' is
-     `nil', `mark' signals an error if the mark is inactive.  However,
-     if FORCE is non-`nil', then `mark' disregards inactivity of the
-     mark, and returns the mark position (or `nil') anyway.
-
- -- Function: mark-marker
-     This function returns the marker that represents the current
-     buffer's mark.  It is not a copy, it is the marker used
-     internally.  Therefore, changing this marker's position will
-     directly affect the buffer's mark.  Don't do that unless that is
-     the effect you want.
-
-          (setq m (mark-marker))
-               => #<marker at 3420 in markers.texi>
-          (set-marker m 100)
-               => #<marker at 100 in markers.texi>
-          (mark-marker)
-               => #<marker at 100 in markers.texi>
-
-     Like any marker, this marker can be set to point at any buffer you
-     like.  If you make it point at any buffer other than the one of
-     which it is the mark, it will yield perfectly consistent, but
-     rather odd, results.  We recommend that you not do it!
-
- -- Function: set-mark position
-     This function sets the mark to POSITION, and activates the mark.
-     The old value of the mark is _not_ pushed onto the mark ring.
-
-     *Please note:* Use this function only if you want the user to see
-     that the mark has moved, and you want the previous mark position to
-     be lost.  Normally, when a new mark is set, the old one should go
-     on the `mark-ring'.  For this reason, most applications should use
-     `push-mark' and `pop-mark', not `set-mark'.
-
-     Novice Emacs Lisp programmers often try to use the mark for the
-     wrong purposes.  The mark saves a location for the user's
-     convenience.  An editing command should not alter the mark unless
-     altering the mark is part of the user-level functionality of the
-     command.  (And, in that case, this effect should be documented.)
-     To remember a location for internal use in the Lisp program, store
-     it in a Lisp variable.  For example:
-
-          (let ((beg (point)))
-            (forward-line 1)
-            (delete-region beg (point))).
-
- -- Function: push-mark &optional position nomsg activate
-     This function sets the current buffer's mark to POSITION, and
-     pushes a copy of the previous mark onto `mark-ring'.  If POSITION
-     is `nil', then the value of point is used.  `push-mark' returns
-     `nil'.
-
-     The function `push-mark' normally _does not_ activate the mark.
-     To do that, specify `t' for the argument ACTIVATE.
-
-     A `Mark set' message is displayed unless NOMSG is non-`nil'.
-
- -- Function: pop-mark
-     This function pops off the top element of `mark-ring' and makes
-     that mark become the buffer's actual mark.  This does not move
-     point in the buffer, and it does nothing if `mark-ring' is empty.
-     It deactivates the mark.
-
-     The return value is not meaningful.
-
- -- User Option: transient-mark-mode
-     This variable, if non-`nil', enables Transient Mark mode.  In
-     Transient Mark mode, every buffer-modifying primitive sets
-     `deactivate-mark'.  As a consequence, most commands that modify
-     the buffer also deactivate the mark.
-
-     When Transient Mark mode is enabled and the mark is active, many
-     commands that normally apply to the text near point instead apply
-     to the region.  Such commands should use the function
-     `use-region-p' to test whether they should operate on the region.
-     *Note The Region::.
-
-     Lisp programs can set `transient-mark-mode' to non-`nil', non-`t'
-     values to enable Transient Mark mode temporarily.  If the value is
-     `lambda', Transient Mark mode is automatically turned off after
-     any action, such as buffer modification, that would normally
-     deactivate the mark.  If the value is `(only . OLDVAL)', then
-     `transient-mark-mode' is set to the value OLDVAL after any
-     subsequent command that moves point and is not shift-translated
-     (*note shift-translation: Key Sequence Input.), or after any other
-     action that would normally deactivate the mark.
-
- -- User Option: mark-even-if-inactive
-     If this is non-`nil', Lisp programs and the Emacs user can use the
-     mark even when it is inactive.  This option affects the behavior of
-     Transient Mark mode.  When the option is non-`nil', deactivation of
-     the mark turns off region highlighting, but commands that use the
-     mark behave as if the mark were still active.
-
- -- Variable: deactivate-mark
-     If an editor command sets this variable non-`nil', then the editor
-     command loop deactivates the mark after the command returns (if
-     Transient Mark mode is enabled).  All the primitives that change
-     the buffer set `deactivate-mark', to deactivate the mark when the
-     command is finished.
-
-     To write Lisp code that modifies the buffer without causing
-     deactivation of the mark at the end of the command, bind
-     `deactivate-mark' to `nil' around the code that does the
-     modification.  For example:
-
-          (let (deactivate-mark)
-            (insert " "))
-
- -- Function: deactivate-mark &optional force
-     If Transient Mark mode is enabled or FORCE is non-`nil', this
-     function deactivates the mark and runs the normal hook
-     `deactivate-mark-hook'.  Otherwise, it does nothing.
-
- -- Variable: mark-active
-     The mark is active when this variable is non-`nil'.  This variable
-     is always buffer-local in each buffer.  Do _not_ use the value of
-     this variable to decide whether a command that normally operates
-     on text near point should operate on the region instead.  Use the
-     function `use-region-p' for that (*note The Region::).
-
- -- Variable: activate-mark-hook
- -- Variable: deactivate-mark-hook
-     These normal hooks are run, respectively, when the mark becomes
-     active and when it becomes inactive.  The hook
-     `activate-mark-hook' is also run at the end of a command if the
-     mark is active and it is possible that the region may have changed.
-
- -- Function: handle-shift-selection
-     This function implements the "shift-selection" behavior of
-     point-motion commands.  *Note Shift Selection: (emacs)Shift
-     Selection.  It is called automatically by the Emacs command loop
-     whenever a command with a `^' character in its `interactive' spec
-     is invoked, before the command itself is executed (*note ^:
-     Interactive Codes.).
-
-     If `shift-select-mode' is non-`nil' and the current command was
-     invoked via shift translation (*note shift-translation: Key
-     Sequence Input.), this function sets the mark and temporarily
-     activates the region, unless the region was already temporarily
-     activated in this way.  Otherwise, if the region has been activated
-     temporarily, it deactivates the mark and restores the variable
-     `transient-mark-mode' to its earlier value.
-
- -- Variable: mark-ring
-     The value of this buffer-local variable is the list of saved former
-     marks of the current buffer, most recent first.
-
-          mark-ring
-          => (#<marker at 11050 in markers.texi>
-              #<marker at 10832 in markers.texi>
-              ...)
-
- -- User Option: mark-ring-max
-     The value of this variable is the maximum size of `mark-ring'.  If
-     more marks than this are pushed onto the `mark-ring', `push-mark'
-     discards an old mark when it adds a new one.
-
-
-File: elisp,  Node: The Region,  Prev: The Mark,  Up: Markers
-
-31.8 The Region
-===============
-
-The text between point and the mark is known as "the region".  Various
-functions operate on text delimited by point and the mark, but only
-those functions specifically related to the region itself are described
-here.
-
-   The next two functions signal an error if the mark does not point
-anywhere.  If Transient Mark mode is enabled and
-`mark-even-if-inactive' is `nil', they also signal an error if the mark
-is inactive.
-
- -- Function: region-beginning
-     This function returns the position of the beginning of the region
-     (as an integer).  This is the position of either point or the mark,
-     whichever is smaller.
-
- -- Function: region-end
-     This function returns the position of the end of the region (as an
-     integer).  This is the position of either point or the mark,
-     whichever is larger.
-
-   Few programs need to use the `region-beginning' and `region-end'
-functions.  A command designed to operate on a region should normally
-use `interactive' with the `r' specification to find the beginning and
-end of the region.  This lets other Lisp programs specify the bounds
-explicitly as arguments.  (*Note Interactive Codes::.)
-
- -- Function: use-region-p
-     This function returns `t' if Transient Mark mode is enabled, the
-     mark is active, and there's a valid region in the buffer.  Commands
-     that operate on the region (instead of on text near point) when
-     there's an active mark should use this to test whether to do that.
-
-
-File: elisp,  Node: Text,  Next: Non-ASCII Characters,  Prev: Markers,  Up: Top
-
-32 Text
-*******
-
-This chapter describes the functions that deal with the text in a
-buffer.  Most examine, insert, or delete text in the current buffer,
-often operating at point or on text adjacent to point.  Many are
-interactive.  All the functions that change the text provide for undoing
-the changes (*note Undo::).
-
-   Many text-related functions operate on a region of text defined by
-two buffer positions passed in arguments named START and END.  These
-arguments should be either markers (*note Markers::) or numeric
-character positions (*note Positions::).  The order of these arguments
-does not matter; it is all right for START to be the end of the region
-and END the beginning.  For example, `(delete-region 1 10)' and
-`(delete-region 10 1)' are equivalent.  An `args-out-of-range' error is
-signaled if either START or END is outside the accessible portion of
-the buffer.  In an interactive call, point and the mark are used for
-these arguments.
-
-   Throughout this chapter, "text" refers to the characters in the
-buffer, together with their properties (when relevant).  Keep in mind
-that point is always between two characters, and the cursor appears on
-the character after point.
-
-* Menu:
-
-* Near Point::       Examining text in the vicinity of point.
-* Buffer Contents::  Examining text in a general fashion.
-* Comparing Text::   Comparing substrings of buffers.
-* Insertion::        Adding new text to a buffer.
-* Commands for Insertion::  User-level commands to insert text.
-* Deletion::         Removing text from a buffer.
-* User-Level Deletion::     User-level commands to delete text.
-* The Kill Ring::    Where removed text sometimes is saved for later use.
-* Undo::             Undoing changes to the text of a buffer.
-* Maintaining Undo:: How to enable and disable undo information.
-			How to control how much information is kept.
-* Filling::          Functions for explicit filling.
-* Margins::          How to specify margins for filling commands.
-* Adaptive Fill::    Adaptive Fill mode chooses a fill prefix from context.
-* Auto Filling::     How auto-fill mode is implemented to break lines.
-* Sorting::          Functions for sorting parts of the buffer.
-* Columns::          Computing horizontal positions, and using them.
-* Indentation::      Functions to insert or adjust indentation.
-* Case Changes::     Case conversion of parts of the buffer.
-* Text Properties::  Assigning Lisp property lists to text characters.
-* Substitution::     Replacing a given character wherever it appears.
-* Transposition::    Swapping two portions of a buffer.
-* Registers::        How registers are implemented.  Accessing the text or
-                       position stored in a register.
-* Base 64::          Conversion to or from base 64 encoding.
-* MD5 Checksum::     Compute the MD5 "message digest"/"checksum".
-* Atomic Changes::   Installing several buffer changes "atomically".
-* Change Hooks::     Supplying functions to be run when text is changed.
-
-
-File: elisp,  Node: Near Point,  Next: Buffer Contents,  Up: Text
-
-32.1 Examining Text Near Point
-==============================
-
-Many functions are provided to look at the characters around point.
-Several simple functions are described here.  See also `looking-at' in
-*note Regexp Search::.
-
-   In the following four functions, "beginning" or "end" of buffer
-refers to the beginning or end of the accessible portion.
-
- -- Function: char-after &optional position
-     This function returns the character in the current buffer at (i.e.,
-     immediately after) position POSITION.  If POSITION is out of range
-     for this purpose, either before the beginning of the buffer, or at
-     or beyond the end, then the value is `nil'.  The default for
-     POSITION is point.
-
-     In the following example, assume that the first character in the
-     buffer is `@':
-
-          (char-to-string (char-after 1))
-               => "@"
-
- -- Function: char-before &optional position
-     This function returns the character in the current buffer
-     immediately before position POSITION.  If POSITION is out of range
-     for this purpose, either at or before the beginning of the buffer,
-     or beyond the end, then the value is `nil'.  The default for
-     POSITION is point.
-
- -- Function: following-char
-     This function returns the character following point in the current
-     buffer.  This is similar to `(char-after (point))'.  However, if
-     point is at the end of the buffer, then `following-char' returns 0.
-
-     Remember that point is always between characters, and the cursor
-     normally appears over the character following point.  Therefore,
-     the character returned by `following-char' is the character the
-     cursor is over.
-
-     In this example, point is between the `a' and the `c'.
-
-          ---------- Buffer: foo ----------
-          Gentlemen may cry ``Pea-!-ce! Peace!,''
-          but there is no peace.
-          ---------- Buffer: foo ----------
-
-          (char-to-string (preceding-char))
-               => "a"
-          (char-to-string (following-char))
-               => "c"
-
- -- Function: preceding-char
-     This function returns the character preceding point in the current
-     buffer.  See above, under `following-char', for an example.  If
-     point is at the beginning of the buffer, `preceding-char' returns
-     0.
-
- -- Function: bobp
-     This function returns `t' if point is at the beginning of the
-     buffer.  If narrowing is in effect, this means the beginning of the
-     accessible portion of the text.  See also `point-min' in *note
-     Point::.
-
- -- Function: eobp
-     This function returns `t' if point is at the end of the buffer.
-     If narrowing is in effect, this means the end of accessible
-     portion of the text.  See also `point-max' in *Note Point::.
-
- -- Function: bolp
-     This function returns `t' if point is at the beginning of a line.
-     *Note Text Lines::.  The beginning of the buffer (or of its
-     accessible portion) always counts as the beginning of a line.
-
- -- Function: eolp
-     This function returns `t' if point is at the end of a line.  The
-     end of the buffer (or of its accessible portion) is always
-     considered the end of a line.
 

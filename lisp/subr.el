@@ -1,7 +1,8 @@
 ;;; subr.el --- basic lisp subroutines for Emacs
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -219,6 +220,7 @@ Treated as a declaration when used at the right place in a
 (defmacro ignore-errors (&rest body)
   "Execute BODY; if an error occurs, return nil.
 Otherwise, return result of last form in BODY."
+  (declare (debug t) (indent 0))
   `(condition-case nil (progn ,@body) (error nil)))
 
 ;;;; Basic Lisp functions.
@@ -237,7 +239,7 @@ letter but *do not* end with a period.  Please follow this convention
 for the sake of consistency."
   (while t
     (signal 'error (list (apply 'format args)))))
-(set-advertised-calling-convention 'error '(string &rest args))
+(set-advertised-calling-convention 'error '(string &rest args) "23.1")
 
 ;; We put this here instead of in frame.el so that it's defined even on
 ;; systems where frame.el isn't loaded.
@@ -417,7 +419,7 @@ Unibyte strings are converted to multibyte for comparison."
   (assoc-string key alist nil))
 
 (defun member-ignore-case (elt list)
-  "Like `member', but ignores differences in case and text representation.
+  "Like `member', but ignore differences in case and text representation.
 ELT must be a string.  Upper-case and lower-case letters are treated as equal.
 Unibyte strings are converted to multibyte for comparison.
 Non-strings in LIST are ignored."
@@ -852,24 +854,37 @@ in the current Emacs session, then this function may return nil."
 
 (defsubst event-start (event)
   "Return the starting position of EVENT.
-If EVENT is a mouse or key press or a mouse click, this returns the location
-of the event.
-If EVENT is a drag, this returns the drag's starting position.
-The return value is of the form
+EVENT should be a click, drag, or key press event.
+If it is a key press event, the return value has the form
+    (WINDOW POS (0 . 0) 0)
+If it is a click or drag event, it has the form
    (WINDOW AREA-OR-POS (X . Y) TIMESTAMP OBJECT POS (COL . ROW)
     IMAGE (DX . DY) (WIDTH . HEIGHT))
-The `posn-' functions access elements of such lists."
+The `posn-' functions access elements of such lists.
+For more information, see Info node `(elisp)Click Events'.
+
+If EVENT is a mouse or key press or a mouse click, this is the
+position of the event.  If EVENT is a drag, this is the starting
+position of the drag."
   (if (consp event) (nth 1 event)
     (list (selected-window) (point) '(0 . 0) 0)))
 
 (defsubst event-end (event)
   "Return the ending location of EVENT.
 EVENT should be a click, drag, or key press event.
-If EVENT is a click event, this function is the same as `event-start'.
-The return value is of the form
+If EVENT is a key press event, the return value has the form
+    (WINDOW POS (0 . 0) 0)
+If EVENT is a click event, this function is the same as
+`event-start'.  For click and drag events, the return value has
+the form
    (WINDOW AREA-OR-POS (X . Y) TIMESTAMP OBJECT POS (COL . ROW)
     IMAGE (DX . DY) (WIDTH . HEIGHT))
-The `posn-' functions access elements of such lists."
+The `posn-' functions access elements of such lists.
+For more information, see Info node `(elisp)Click Events'.
+
+If EVENT is a mouse or key press or a mouse click, this is the
+position of the event.  If EVENT is a drag, this is the starting
+position of the drag."
   (if (consp event) (nth (if (consp (nth 2 event)) 2 1) event)
     (list (selected-window) (point) '(0 . 0) 0)))
 
@@ -915,8 +930,9 @@ Select the corresponding window as well."
 
 (defsubst posn-x-y (position)
   "Return the x and y coordinates in POSITION.
-POSITION should be a list of the form returned by the `event-start'
-and `event-end' functions."
+The return value has the form (X . Y), where X and Y are given in
+pixels.  POSITION should be a list of the form returned by
+`event-start' and `event-end'."
   (nth 2 position))
 
 (declare-function scroll-bar-scale "scroll-bar" (num-denom whole))
@@ -954,7 +970,10 @@ and `event-end' functions."
 	      ((null spacing)
 	       (setq spacing 0)))
 	(cons (/ (car pair) (frame-char-width frame))
-	      (/ (cdr pair) (+ (frame-char-height frame) spacing))))))))
+	      (- (/ (cdr pair) (+ (frame-char-height frame) spacing))
+		 (if (null (with-current-buffer (window-buffer window)
+			     header-line-format))
+		     0 1))))))))
 
 (defun posn-actual-col-row (position)
   "Return the actual column and row in POSITION, measured in characters.
@@ -995,14 +1014,15 @@ and `event-end' functions."
 
 (defsubst posn-object-x-y (position)
   "Return the x and y coordinates relative to the object of POSITION.
-POSITION should be a list of the form returned by the `event-start'
-and `event-end' functions."
+The return value has the form (DX . DY), where DX and DY are
+given in pixels.  POSITION should be a list of the form returned
+by `event-start' and `event-end'."
   (nth 8 position))
 
 (defsubst posn-object-width-height (position)
   "Return the pixel width and height of the object of POSITION.
-POSITION should be a list of the form returned by the `event-start'
-and `event-end' functions."
+The return value has the form (WIDTH . HEIGHT).  POSITION should
+be a list of the form returned by `event-start' and `event-end'."
   (nth 9 position))
 
 
@@ -1037,9 +1057,10 @@ is converted into a string by expressing it in decimal."
 (make-obsolete 'make-variable-frame-local
 	       "explicitly check for a frame-parameter instead." "22.2")
 (make-obsolete 'interactive-p 'called-interactively-p "23.2")
-(set-advertised-calling-convention 'called-interactively-p '(kind))
+(set-advertised-calling-convention 'called-interactively-p '(kind) "23.1")
 (set-advertised-calling-convention
- 'all-completions '(string collection &optional predicate))
+ 'all-completions '(string collection &optional predicate) "23.1")
+(set-advertised-calling-convention 'unintern '(name obarray) "23.3")
 
 ;;;; Obsolescence declarations for variables, and aliases.
 
@@ -1387,9 +1408,8 @@ if it is empty or a duplicate."
 
 (defun run-mode-hooks (&rest hooks)
   "Run mode hooks `delayed-mode-hooks' and HOOKS, or delay HOOKS.
-Execution is delayed if `delay-mode-hooks' is non-nil.
-If `delay-mode-hooks' is nil, run `after-change-major-mode-hook'
-after running the mode hooks.
+Execution is delayed if the variable `delay-mode-hooks' is non-nil.
+Otherwise, runs the mode hooks and then `after-change-major-mode-hook'.
 Major mode functions should use this instead of `run-hooks' when running their
 FOO-mode-hook."
   (if delay-mode-hooks
@@ -1817,6 +1837,7 @@ When there's an ambiguity because the key looks like the prefix of
 some sort of escape sequence, the ambiguity is resolved via `read-key-delay'."
   (let ((overriding-terminal-local-map read-key-empty-map)
 	(overriding-local-map nil)
+        (echo-keystrokes 0)
 	(old-global-map (current-global-map))
         (timer (run-with-idle-timer
                 ;; Wait long enough that Emacs has the time to receive and
@@ -1841,7 +1862,12 @@ some sort of escape sequence, the ambiguity is resolved via `read-key-delay'."
                       (throw 'read-key keys)))))))
     (unwind-protect
         (progn
-	  (use-global-map read-key-empty-map)
+	  (use-global-map
+           (let ((map (make-sparse-keymap)))
+             ;; Don't hide the menu-bar and tool-bar entries.
+             (define-key map [menu-bar] (lookup-key global-map [menu-bar]))
+             (define-key map [tool-bar] (lookup-key global-map [tool-bar]))
+             map))
 	  (aref	(catch 'read-key (read-key-sequence-vector prompt nil t)) 0))
       (cancel-timer timer)
       (use-global-map old-global-map))))
@@ -1871,16 +1897,13 @@ any other non-digit terminates the character code and is then used as input."))
 	(if inhibit-quit (setq quit-flag nil)))
       ;; Translate TAB key into control-I ASCII character, and so on.
       ;; Note: `read-char' does it using the `ascii-character' property.
-      ;; We could try and use read-key-sequence instead, but then C-q ESC
-      ;; or C-q C-x might not return immediately since ESC or C-x might be
-      ;; bound to some prefix in function-key-map or key-translation-map.
-      (setq translated
-	    (if (integerp char)
-		(char-resolve-modifiers char)
-	      char))
+      ;; We should try and use read-key instead.
       (let ((translation (lookup-key local-function-key-map (vector char))))
-	(if (arrayp translation)
-	    (setq translated (aref translation 0))))
+	(setq translated (if (arrayp translation)
+			     (aref translation 0)
+			   char)))
+      (if (integerp translated)
+	  (setq translated (char-resolve-modifiers translated)))
       (cond ((null translated))
 	    ((not (integerp translated))
 	     (setq unread-command-events (list char)
@@ -2057,7 +2080,7 @@ floating point support."
 		(setq read (cons t read)))
 	    (push read unread-command-events)
 	    nil))))))
-(set-advertised-calling-convention 'sit-for '(seconds &optional nodisp))
+(set-advertised-calling-convention 'sit-for '(seconds &optional nodisp) "22.1")
 
 ;;; Atomic change groups.
 
@@ -2209,22 +2232,11 @@ If MESSAGE is nil, instructions to type EXIT-CHAR are displayed there."
                 (recenter (/ (window-height) 2))))
           (message (or message "Type %s to continue editing.")
                    (single-key-description exit-char))
-          (let (char)
-            (if (integerp exit-char)
-                (condition-case nil
-                    (progn
-                      (setq char (read-char))
-                      (or (eq char exit-char)
-                          (setq unread-command-events (list char))))
-                  (error
-                   ;; `exit-char' is a character, hence it differs
-                   ;; from char, which is an event.
-                   (setq unread-command-events (list char))))
-              ;; `exit-char' can be an event, or an event description list.
-              (setq char (read-event))
-              (or (eq char exit-char)
-                  (eq char (event-convert-list exit-char))
-                  (setq unread-command-events (list char))))))
+	  (let ((event (read-event)))
+	    ;; `exit-char' can be an event, or an event description list.
+	    (or (eq event exit-char)
+		(eq event (event-convert-list exit-char))
+		(setq unread-command-events (list event)))))
       (delete-overlay ol))))
 
 
@@ -2328,11 +2340,16 @@ directory if it does not exist."
        ;; unless we're in batch mode or dumping Emacs
        (or noninteractive
 	   purify-flag
-	   (file-accessible-directory-p (directory-file-name user-emacs-directory))
-	   (make-directory user-emacs-directory))
+	   (file-accessible-directory-p
+	    (directory-file-name user-emacs-directory))
+	   (let ((umask (default-file-modes)))
+	     (unwind-protect
+		 (progn
+		   (set-default-file-modes ?\700)
+		   (make-directory user-emacs-directory))
+	       (set-default-file-modes umask))))
        (abbreviate-file-name
         (expand-file-name new-name user-emacs-directory))))))
-
 
 ;;;; Misc. useful functions.
 
@@ -2409,13 +2426,8 @@ Note: :data and :device are currently not supported on Windows."
         "''"
       ;; Quote everything except POSIX filename characters.
       ;; This should be safe enough even for really weird shells.
-      (let ((result "") (start 0) end)
-        (while (string-match "[^-0-9a-zA-Z_./]" argument start)
-          (setq end (match-beginning 0)
-                result (concat result (substring argument start end)
-                               "\\" (substring argument end (1+ end)))
-                start (1+ end)))
-        (concat result (substring argument start))))))
+      (replace-regexp-in-string "\n" "'\n'"
+       (replace-regexp-in-string "[^-0-9a-zA-Z_./\n]" "\\\\\\&" argument)))))
 
 (defun string-or-null-p (object)
   "Return t if OBJECT is a string or nil.
@@ -2498,7 +2510,7 @@ If PARAM is present and non-nil, it replaces STRING as the object
  `yank-rectangle', PARAM may be a list of strings to insert as a
  rectangle.
 If NOEXCLUDE is present and non-nil, the normal removal of the
- yank-excluded-properties is not performed; instead FUNCTION is
+ `yank-excluded-properties' is not performed; instead FUNCTION is
  responsible for removing those properties.  This may be necessary
  if FUNCTION adjusts point before or after inserting the object.
 If UNDO is present and non-nil, it is a function that will be called
@@ -2596,7 +2608,7 @@ discouraged."
   (start-process name buffer shell-file-name shell-command-switch
 		 (mapconcat 'identity args " ")))
 (set-advertised-calling-convention 'start-process-shell-command
-                                   '(name buffer command))
+                                   '(name buffer command) "23.1")
 
 (defun start-file-process-shell-command (name buffer &rest args)
   "Start a program in a subprocess.  Return the process object for it.
@@ -2607,7 +2619,7 @@ Similar to `start-process-shell-command', but calls `start-file-process'."
    (if (file-remote-p default-directory) "-c" shell-command-switch)
    (mapconcat 'identity args " ")))
 (set-advertised-calling-convention 'start-file-process-shell-command
-                                   '(name buffer command))
+                                   '(name buffer command) "23.1")
 
 (defun call-process-shell-command (command &optional infile buffer display
 					   &rest args)
@@ -2770,7 +2782,7 @@ See also `with-temp-file' and `with-output-to-string'."
                 (kill-buffer ,temp-buffer)))))))
 
 (defmacro with-silent-modifications (&rest body)
-  "Execute BODY, pretending it does not modifies the buffer.
+  "Execute BODY, pretending it does not modify the buffer.
 If BODY performs real modifications to the buffer's text, other
 than cosmetic ones, undo data may become corrupted.
 Typically used around modifications of text-properties which do not really
@@ -3781,9 +3793,9 @@ which is higher than \"1alpha\"."
 
 ;; The following statement ought to be in print.c, but `provide' can't
 ;; be used there.
+;; http://lists.gnu.org/archive/html/emacs-devel/2009-08/msg00236.html
 (when (hash-table-p (car (read-from-string
 			  (prin1-to-string (make-hash-table)))))
   (provide 'hashtable-print-readable))
 
-;; arch-tag: f7e0e6e5-70aa-4897-ae72-7a3511ec40bc
 ;;; subr.el ends here

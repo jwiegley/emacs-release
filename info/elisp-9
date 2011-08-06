@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,10 +21,961 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Managing Overlays,  Next: Overlay Properties,  Up: Overlays
+
+38.9.1 Managing Overlays
+------------------------
+
+This section describes the functions to create, delete and move
+overlays, and to examine their contents.  Overlay changes are not
+recorded in the buffer's undo list, since the overlays are not part of
+the buffer's contents.
+
+ -- Function: overlayp object
+     This function returns `t' if OBJECT is an overlay.
+
+ -- Function: make-overlay start end &optional buffer front-advance
+          rear-advance
+     This function creates and returns an overlay that belongs to
+     BUFFER and ranges from START to END.  Both START and END must
+     specify buffer positions; they may be integers or markers.  If
+     BUFFER is omitted, the overlay is created in the current buffer.
+
+     The arguments FRONT-ADVANCE and REAR-ADVANCE specify the marker
+     insertion type for the start of the overlay and for the end of the
+     overlay, respectively.  *Note Marker Insertion Types::.  If they
+     are both `nil', the default, then the overlay extends to include
+     any text inserted at the beginning, but not text inserted at the
+     end.  If FRONT-ADVANCE is non-`nil', text inserted at the
+     beginning of the overlay is excluded from the overlay.  If
+     REAR-ADVANCE is non-`nil', text inserted at the end of the overlay
+     is included in the overlay.
+
+ -- Function: overlay-start overlay
+     This function returns the position at which OVERLAY starts, as an
+     integer.
+
+ -- Function: overlay-end overlay
+     This function returns the position at which OVERLAY ends, as an
+     integer.
+
+ -- Function: overlay-buffer overlay
+     This function returns the buffer that OVERLAY belongs to.  It
+     returns `nil' if OVERLAY has been deleted.
+
+ -- Function: delete-overlay overlay
+     This function deletes OVERLAY.  The overlay continues to exist as
+     a Lisp object, and its property list is unchanged, but it ceases
+     to be attached to the buffer it belonged to, and ceases to have
+     any effect on display.
+
+     A deleted overlay is not permanently disconnected.  You can give
+     it a position in a buffer again by calling `move-overlay'.
+
+ -- Function: move-overlay overlay start end &optional buffer
+     This function moves OVERLAY to BUFFER, and places its bounds at
+     START and END.  Both arguments START and END must specify buffer
+     positions; they may be integers or markers.
+
+     If BUFFER is omitted, OVERLAY stays in the same buffer it was
+     already associated with; if OVERLAY was deleted, it goes into the
+     current buffer.
+
+     The return value is OVERLAY.
+
+     This is the only valid way to change the endpoints of an overlay.
+     Do not try modifying the markers in the overlay by hand, as that
+     fails to update other vital data structures and can cause some
+     overlays to be "lost."
+
+ -- Function: remove-overlays &optional start end name value
+     This function removes all the overlays between START and END whose
+     property NAME has the value VALUE.  It can move the endpoints of
+     the overlays in the region, or split them.
+
+     If NAME is omitted or `nil', it means to delete all overlays in
+     the specified region.  If START and/or END are omitted or `nil',
+     that means the beginning and end of the buffer respectively.
+     Therefore, `(remove-overlays)' removes all the overlays in the
+     current buffer.
+
+ -- Function: copy-overlay overlay
+     This function returns a copy of OVERLAY.  The copy has the same
+     endpoints and properties as OVERLAY.  However, the marker
+     insertion type for the start of the overlay and for the end of the
+     overlay are set to their default values (*note Marker Insertion
+     Types::).
+
+   Here are some examples:
+
+     ;; Create an overlay.
+     (setq foo (make-overlay 1 10))
+          => #<overlay from 1 to 10 in display.texi>
+     (overlay-start foo)
+          => 1
+     (overlay-end foo)
+          => 10
+     (overlay-buffer foo)
+          => #<buffer display.texi>
+     ;; Give it a property we can check later.
+     (overlay-put foo 'happy t)
+          => t
+     ;; Verify the property is present.
+     (overlay-get foo 'happy)
+          => t
+     ;; Move the overlay.
+     (move-overlay foo 5 20)
+          => #<overlay from 5 to 20 in display.texi>
+     (overlay-start foo)
+          => 5
+     (overlay-end foo)
+          => 20
+     ;; Delete the overlay.
+     (delete-overlay foo)
+          => nil
+     ;; Verify it is deleted.
+     foo
+          => #<overlay in no buffer>
+     ;; A deleted overlay has no position.
+     (overlay-start foo)
+          => nil
+     (overlay-end foo)
+          => nil
+     (overlay-buffer foo)
+          => nil
+     ;; Undelete the overlay.
+     (move-overlay foo 1 20)
+          => #<overlay from 1 to 20 in display.texi>
+     ;; Verify the results.
+     (overlay-start foo)
+          => 1
+     (overlay-end foo)
+          => 20
+     (overlay-buffer foo)
+          => #<buffer display.texi>
+     ;; Moving and deleting the overlay does not change its properties.
+     (overlay-get foo 'happy)
+          => t
+
+   Emacs stores the overlays of each buffer in two lists, divided
+around an arbitrary "center position."  One list extends backwards
+through the buffer from that center position, and the other extends
+forwards from that center position.  The center position can be anywhere
+in the buffer.
+
+ -- Function: overlay-recenter pos
+     This function recenters the overlays of the current buffer around
+     position POS.  That makes overlay lookup faster for positions near
+     POS, but slower for positions far away from POS.
+
+   A loop that scans the buffer forwards, creating overlays, can run
+faster if you do `(overlay-recenter (point-max))' first.
+
+
+File: elisp,  Node: Overlay Properties,  Next: Finding Overlays,  Prev: Managing Overlays,  Up: Overlays
+
+38.9.2 Overlay Properties
+-------------------------
+
+Overlay properties are like text properties in that the properties that
+alter how a character is displayed can come from either source.  But in
+most respects they are different.  *Note Text Properties::, for
+comparison.
+
+   Text properties are considered a part of the text; overlays and
+their properties are specifically considered not to be part of the
+text.  Thus, copying text between various buffers and strings preserves
+text properties, but does not try to preserve overlays.  Changing a
+buffer's text properties marks the buffer as modified, while moving an
+overlay or changing its properties does not.  Unlike text property
+changes, overlay property changes are not recorded in the buffer's undo
+list.
+
+   Since more than one overlay can specify a property value for the
+same character, Emacs lets you specify a priority value of each
+overlay.  You should not make assumptions about which overlay will
+prevail when there is a conflict and they have the same priority.
+
+   These functions read and set the properties of an overlay:
+
+ -- Function: overlay-get overlay prop
+     This function returns the value of property PROP recorded in
+     OVERLAY, if any.  If OVERLAY does not record any value for that
+     property, but it does have a `category' property which is a
+     symbol, that symbol's PROP property is used.  Otherwise, the value
+     is `nil'.
+
+ -- Function: overlay-put overlay prop value
+     This function sets the value of property PROP recorded in OVERLAY
+     to VALUE.  It returns VALUE.
+
+ -- Function: overlay-properties overlay
+     This returns a copy of the property list of OVERLAY.
+
+   See also the function `get-char-property' which checks both overlay
+properties and text properties for a given character.  *Note Examining
+Properties::.
+
+   Many overlay properties have special meanings; here is a table of
+them:
+
+`priority'
+     This property's value (which should be a nonnegative integer
+     number) determines the priority of the overlay.  No priority, or
+     `nil', means zero.
+
+     The priority matters when two or more overlays cover the same
+     character and both specify the same property; the one whose
+     `priority' value is larger overrides the other.  For the `face'
+     property, the higher priority overlay's value does not completely
+     override the other value; instead, its face attributes override
+     the face attributes of the lower priority `face' property.
+
+     Currently, all overlays take priority over text properties.  Please
+     avoid using negative priority values, as we have not yet decided
+     just what they should mean.
+
+`window'
+     If the `window' property is non-`nil', then the overlay applies
+     only on that window.
+
+`category'
+     If an overlay has a `category' property, we call it the "category"
+     of the overlay.  It should be a symbol.  The properties of the
+     symbol serve as defaults for the properties of the overlay.
+
+`face'
+     This property controls the way text is displayed--for example,
+     which font and which colors.  *Note Faces::, for more information.
+
+     In the simplest case, the value is a face name.  It can also be a
+     list; then each element can be any of these possibilities:
+
+        * A face name (a symbol or string).
+
+        * A property list of face attributes.  This has the form
+          (KEYWORD VALUE ...), where each KEYWORD is a face attribute
+          name and VALUE is a meaningful value for that attribute.  With
+          this feature, you do not need to create a face each time you
+          want to specify a particular attribute for certain text.
+          *Note Face Attributes::.
+
+        * A cons cell, either of the form `(foreground-color .
+          COLOR-NAME)' or `(background-color . COLOR-NAME)'.  These
+          elements specify just the foreground color or just the
+          background color.
+
+          `(foreground-color . COLOR-NAME)' has the same effect as
+          `(:foreground COLOR-NAME)'; likewise for the background.
+
+`mouse-face'
+     This property is used instead of `face' when the mouse is within
+     the range of the overlay.
+
+`display'
+     This property activates various features that change the way text
+     is displayed.  For example, it can make text appear taller or
+     shorter, higher or lower, wider or narrower, or replaced with an
+     image.  *Note Display Property::.
+
+`help-echo'
+     If an overlay has a `help-echo' property, then when you move the
+     mouse onto the text in the overlay, Emacs displays a help string
+     in the echo area, or in the tooltip window.  For details see *note
+     Text help-echo::.
+
+`modification-hooks'
+     This property's value is a list of functions to be called if any
+     character within the overlay is changed or if text is inserted
+     strictly within the overlay.
+
+     The hook functions are called both before and after each change.
+     If the functions save the information they receive, and compare
+     notes between calls, they can determine exactly what change has
+     been made in the buffer text.
+
+     When called before a change, each function receives four
+     arguments: the overlay, `nil', and the beginning and end of the
+     text range to be modified.
+
+     When called after a change, each function receives five arguments:
+     the overlay, `t', the beginning and end of the text range just
+     modified, and the length of the pre-change text replaced by that
+     range.  (For an insertion, the pre-change length is zero; for a
+     deletion, that length is the number of characters deleted, and the
+     post-change beginning and end are equal.)
+
+     If these functions modify the buffer, they should bind
+     `inhibit-modification-hooks' to `t' around doing so, to avoid
+     confusing the internal mechanism that calls these hooks.
+
+     Text properties also support the `modification-hooks' property,
+     but the details are somewhat different (*note Special
+     Properties::).
+
+`insert-in-front-hooks'
+     This property's value is a list of functions to be called before
+     and after inserting text right at the beginning of the overlay.
+     The calling conventions are the same as for the
+     `modification-hooks' functions.
+
+`insert-behind-hooks'
+     This property's value is a list of functions to be called before
+     and after inserting text right at the end of the overlay.  The
+     calling conventions are the same as for the `modification-hooks'
+     functions.
+
+`invisible'
+     The `invisible' property can make the text in the overlay
+     invisible, which means that it does not appear on the screen.
+     *Note Invisible Text::, for details.
+
+`intangible'
+     The `intangible' property on an overlay works just like the
+     `intangible' text property.  *Note Special Properties::, for
+     details.
+
+`isearch-open-invisible'
+     This property tells incremental search how to make an invisible
+     overlay visible, permanently, if the final match overlaps it.
+     *Note Invisible Text::.
+
+`isearch-open-invisible-temporary'
+     This property tells incremental search how to make an invisible
+     overlay visible, temporarily, during the search.  *Note Invisible
+     Text::.
+
+`before-string'
+     This property's value is a string to add to the display at the
+     beginning of the overlay.  The string does not appear in the
+     buffer in any sense--only on the screen.
+
+`after-string'
+     This property's value is a string to add to the display at the end
+     of the overlay.  The string does not appear in the buffer in any
+     sense--only on the screen.
+
+`line-prefix'
+     This property specifies a display spec to prepend to each
+     non-continuation line at display-time.  *Note Truncation::.
+
+`wrap-prefix'
+     This property specifies a display spec to prepend to each
+     continuation line at display-time.  *Note Truncation::.
+
+`evaporate'
+     If this property is non-`nil', the overlay is deleted automatically
+     if it becomes empty (i.e., if its length becomes zero).  If you
+     give an empty overlay a non-`nil' `evaporate' property, that
+     deletes it immediately.
+
+`local-map'
+     If this property is non-`nil', it specifies a keymap for a portion
+     of the text.  The property's value replaces the buffer's local
+     map, when the character after point is within the overlay.  *Note
+     Active Keymaps::.
+
+`keymap'
+     The `keymap' property is similar to `local-map' but overrides the
+     buffer's local map (and the map specified by the `local-map'
+     property) rather than replacing it.
+
+   The `local-map' and `keymap' properties do not affect a string
+displayed by the `before-string', `after-string', or `display'
+properties.  This is only relevant for mouse clicks and other mouse
+events that fall on the string, since point is never on the string.  To
+bind special mouse events for the string, assign it a `local-map' or
+`keymap' text property.  *Note Special Properties::.
+
+
+File: elisp,  Node: Finding Overlays,  Prev: Overlay Properties,  Up: Overlays
+
+38.9.3 Searching for Overlays
+-----------------------------
+
+ -- Function: overlays-at pos
+     This function returns a list of all the overlays that cover the
+     character at position POS in the current buffer.  The list is in
+     no particular order.  An overlay contains position POS if it
+     begins at or before POS, and ends after POS.
+
+     To illustrate usage, here is a Lisp function that returns a list
+     of the overlays that specify property PROP for the character at
+     point:
+
+          (defun find-overlays-specifying (prop)
+            (let ((overlays (overlays-at (point)))
+                  found)
+              (while overlays
+                (let ((overlay (car overlays)))
+                  (if (overlay-get overlay prop)
+                      (setq found (cons overlay found))))
+                (setq overlays (cdr overlays)))
+              found))
+
+ -- Function: overlays-in beg end
+     This function returns a list of the overlays that overlap the
+     region BEG through END.  "Overlap" means that at least one
+     character is contained within the overlay and also contained
+     within the specified region; however, empty overlays are included
+     in the result if they are located at BEG, strictly between BEG and
+     END, or at END when END denotes the position at the end of the
+     buffer.
+
+ -- Function: next-overlay-change pos
+     This function returns the buffer position of the next beginning or
+     end of an overlay, after POS.  If there is none, it returns
+     `(point-max)'.
+
+ -- Function: previous-overlay-change pos
+     This function returns the buffer position of the previous
+     beginning or end of an overlay, before POS.  If there is none, it
+     returns `(point-min)'.
+
+   As an example, here's a simplified (and inefficient) version of the
+primitive function `next-single-char-property-change' (*note Property
+Search::).  It searches forward from position POS for the next position
+where the value of a given property `prop', as obtained from either
+overlays or text properties, changes.
+
+     (defun next-single-char-property-change (position prop)
+       (save-excursion
+         (goto-char position)
+         (let ((propval (get-char-property (point) prop)))
+           (while (and (not (eobp))
+                       (eq (get-char-property (point) prop) propval))
+             (goto-char (min (next-overlay-change (point))
+                             (next-single-property-change (point) prop)))))
+         (point)))
+
+
+File: elisp,  Node: Width,  Next: Line Height,  Prev: Overlays,  Up: Display
+
+38.10 Width
+===========
+
+Since not all characters have the same width, these functions let you
+check the width of a character.  *Note Primitive Indent::, and *note
+Screen Lines::, for related functions.
+
+ -- Function: char-width char
+     This function returns the width in columns of the character CHAR,
+     if it were displayed in the current buffer and the selected window.
+
+ -- Function: string-width string
+     This function returns the width in columns of the string STRING,
+     if it were displayed in the current buffer and the selected window.
+
+ -- Function: truncate-string-to-width string width &optional
+          start-column padding ellipsis
+     This function returns the part of STRING that fits within WIDTH
+     columns, as a new string.
+
+     If STRING does not reach WIDTH, then the result ends where STRING
+     ends.  If one multi-column character in STRING extends across the
+     column WIDTH, that character is not included in the result.  Thus,
+     the result can fall short of WIDTH but cannot go beyond it.
+
+     The optional argument START-COLUMN specifies the starting column.
+     If this is non-`nil', then the first START-COLUMN columns of the
+     string are omitted from the value.  If one multi-column character
+     in STRING extends across the column START-COLUMN, that character
+     is not included.
+
+     The optional argument PADDING, if non-`nil', is a padding
+     character added at the beginning and end of the result string, to
+     extend it to exactly WIDTH columns.  The padding character is used
+     at the end of the result if it falls short of WIDTH.  It is also
+     used at the beginning of the result if one multi-column character
+     in STRING extends across the column START-COLUMN.
+
+     If ELLIPSIS is non-`nil', it should be a string which will replace
+     the end of STR (including any padding) if it extends beyond
+     END-COLUMN, unless the display width of STR is equal to or less
+     than the display width of ELLIPSIS.  If ELLIPSIS is non-`nil' and
+     not a string, it stands for `"..."'.
+
+          (truncate-string-to-width "\tab\t" 12 4)
+               => "ab"
+          (truncate-string-to-width "\tab\t" 12 4 ?\s)
+               => "    ab  "
+
+
+File: elisp,  Node: Line Height,  Next: Faces,  Prev: Width,  Up: Display
+
+38.11 Line Height
+=================
+
+The total height of each display line consists of the height of the
+contents of the line, plus optional additional vertical line spacing
+above or below the display line.
+
+   The height of the line contents is the maximum height of any
+character or image on that display line, including the final newline if
+there is one.  (A display line that is continued doesn't include a
+final newline.)  That is the default line height, if you do nothing to
+specify a greater height.  (In the most common case, this equals the
+height of the default frame font.)
+
+   There are several ways to explicitly specify a larger line height,
+either by specifying an absolute height for the display line, or by
+specifying vertical space.  However, no matter what you specify, the
+actual line height can never be less than the default.
+
+   A newline can have a `line-height' text or overlay property that
+controls the total height of the display line ending in that newline.
+
+   If the property value is `t', the newline character has no effect on
+the displayed height of the line--the visible contents alone determine
+the height.  This is useful for tiling small images (or image slices)
+without adding blank areas between the images.
+
+   If the property value is a list of the form `(HEIGHT TOTAL)', that
+adds extra space _below_ the display line.  First Emacs uses HEIGHT as
+a height spec to control extra space _above_ the line; then it adds
+enough space _below_ the line to bring the total line height up to
+TOTAL.  In this case, the other ways to specify the line spacing are
+ignored.
+
+   Any other kind of property value is a height spec, which translates
+into a number--the specified line height.  There are several ways to
+write a height spec; here's how each of them translates into a number:
+
+`INTEGER'
+     If the height spec is a positive integer, the height value is that
+     integer.
+
+`FLOAT'
+     If the height spec is a float, FLOAT, the numeric height value is
+     FLOAT times the frame's default line height.
+
+`(FACE . RATIO)'
+     If the height spec is a cons of the format shown, the numeric
+     height is RATIO times the height of face FACE.  RATIO can be any
+     type of number, or `nil' which means a ratio of 1.  If FACE is
+     `t', it refers to the current face.
+
+`(nil . RATIO)'
+     If the height spec is a cons of the format shown, the numeric
+     height is RATIO times the height of the contents of the line.
+
+   Thus, any valid height spec determines the height in pixels, one way
+or another.  If the line contents' height is less than that, Emacs adds
+extra vertical space above the line to achieve the specified total
+height.
+
+   If you don't specify the `line-height' property, the line's height
+consists of the contents' height plus the line spacing.  There are
+several ways to specify the line spacing for different parts of Emacs
+text.
+
+   On graphical terminals, you can specify the line spacing for all
+lines in a frame, using the `line-spacing' frame parameter (*note
+Layout Parameters::).  However, if the default value of `line-spacing'
+is non-`nil', it overrides the frame's `line-spacing' parameter.  An
+integer value specifies the number of pixels put below lines.  A
+floating point number specifies the spacing relative to the frame's
+default line height.
+
+   You can specify the line spacing for all lines in a buffer via the
+buffer-local `line-spacing' variable.  An integer value specifies the
+number of pixels put below lines.  A floating point number specifies
+the spacing relative to the default frame line height.  This overrides
+line spacings specified for the frame.
+
+   Finally, a newline can have a `line-spacing' text or overlay
+property that overrides the default frame line spacing and the buffer
+local `line-spacing' variable, for the display line ending in that
+newline.
+
+   One way or another, these mechanisms specify a Lisp value for the
+spacing of each line.  The value is a height spec, and it translates
+into a Lisp value as described above.  However, in this case the
+numeric height value specifies the line spacing, rather than the line
+height.
+
+   On text-only terminals, the line spacing cannot be altered.
+
+
+File: elisp,  Node: Faces,  Next: Fringes,  Prev: Line Height,  Up: Display
+
+38.12 Faces
+===========
+
+A "face" is a collection of graphical attributes for displaying text:
+font family, foreground color, background color, optional underlining,
+and so on.  Faces control how buffer text is displayed, and how some
+parts of the frame, such as the mode-line, are displayed.  *Note
+Standard Faces: (emacs)Standard Faces, for the list of faces Emacs
+normally comes with.
+
+   For most purposes, you refer to a face in Lisp programs using its
+"face name".  This is either a string or (equivalently) a Lisp symbol
+whose name is equal to that string.
+
+ -- Function: facep object
+     This function returns a non-`nil' value if OBJECT is a Lisp symbol
+     or string that names a face.  Otherwise, it returns `nil'.
+
+   Each face name is meaningful for all frames, and by default it has
+the same meaning in all frames.  But you can arrange to give a
+particular face name a special meaning in one frame if you wish.
+
+* Menu:
+
+* Defining Faces::      How to define a face with `defface'.
+* Face Attributes::     What is in a face?
+* Attribute Functions::  Functions to examine and set face attributes.
+* Displaying Faces::     How Emacs combines the faces specified for a character.
+* Face Remapping::     Remapping faces to alternative definitions.
+* Face Functions::      How to define and examine faces.
+* Auto Faces::          Hook for automatic face assignment.
+* Font Selection::      Finding the best available font for a face.
+* Font Lookup::         Looking up the names of available fonts
+                          and information about them.
+* Fontsets::            A fontset is a collection of fonts
+                          that handle a range of character sets.
+* Low-Level Font::      Lisp representation for character display fonts.
+
+
+File: elisp,  Node: Defining Faces,  Next: Face Attributes,  Up: Faces
+
+38.12.1 Defining Faces
+----------------------
+
+The way to define a new face is with `defface'.  This creates a kind of
+customization item (*note Customization::) which the user can customize
+using the Customization buffer (*note Easy Customization: (emacs)Easy
+Customization.).
+
+   People are sometimes tempted to create variables whose values specify
+which faces to use (for example, Font-Lock does this).  In the vast
+majority of cases, this is not necessary, and simply using faces
+directly is preferable.
+
+ -- Macro: defface face spec doc [keyword value]...
+     This declares FACE as a customizable face whose default attributes
+     are given by SPEC.  You should not quote the symbol FACE, and it
+     should not end in `-face' (that would be redundant).  The argument
+     DOC specifies the face documentation.  The keywords you can use in
+     `defface' are the same as in `defgroup' and `defcustom' (*note
+     Common Keywords::).
+
+     When `defface' executes, it defines the face according to SPEC,
+     then uses any customizations that were read from the init file
+     (*note Init File::) to override that specification.
+
+     When you evaluate a `defface' form with `C-M-x' in Emacs Lisp mode
+     (`eval-defun'), a special feature of `eval-defun' overrides any
+     customizations of the face.  This way, the face reflects exactly
+     what the `defface' says.
+
+     The purpose of SPEC is to specify how the face should appear on
+     different kinds of terminals.  It should be an alist whose elements
+     have the form `(DISPLAY ATTS)'.  Each element's CAR, DISPLAY,
+     specifies a class of terminals.  (The first element, if its CAR is
+     `default', is special--it specifies defaults for the remaining
+     elements).  The element's CADR, ATTS, is a list of face attributes
+     and their values; it specifies what the face should look like on
+     that kind of terminal.  The possible attributes are defined in the
+     value of `custom-face-attributes'.
+
+     The DISPLAY part of an element of SPEC determines which frames the
+     element matches.  If more than one element of SPEC matches a given
+     frame, the first element that matches is the one used for that
+     frame.  There are three possibilities for DISPLAY:
+
+    `default'
+          This element of SPEC doesn't match any frames; instead, it
+          specifies defaults that apply to all frames.  This kind of
+          element, if used, must be the first element of SPEC.  Each of
+          the following elements can override any or all of these
+          defaults.
+
+    `t'
+          This element of SPEC matches all frames.  Therefore, any
+          subsequent elements of SPEC are never used.  Normally `t' is
+          used in the last (or only) element of SPEC.
+
+    a list
+          If DISPLAY is a list, each element should have the form
+          `(CHARACTERISTIC VALUE...)'.  Here CHARACTERISTIC specifies a
+          way of classifying frames, and the VALUEs are possible
+          classifications which DISPLAY should apply to.  Here are the
+          possible values of CHARACTERISTIC:
+
+         `type'
+               The kind of window system the frame uses--either
+               `graphic' (any graphics-capable display), `x', `pc' (for
+               the MS-DOS console), `w32' (for MS Windows 9X/NT/2K/XP),
+               or `tty' (a non-graphics-capable display).  *Note
+               window-system: Window Systems.
+
+         `class'
+               What kinds of colors the frame supports--either `color',
+               `grayscale', or `mono'.
+
+         `background'
+               The kind of background--either `light' or `dark'.
+
+         `min-colors'
+               An integer that represents the minimum number of colors
+               the frame should support.  This matches a frame if its
+               `display-color-cells' value is at least the specified
+               integer.
+
+         `supports'
+               Whether or not the frame can display the face attributes
+               given in VALUE... (*note Face Attributes::).  *Note
+               Display Face Attribute Testing::, for more information
+               on exactly how this testing is done.
+
+          If an element of DISPLAY specifies more than one VALUE for a
+          given CHARACTERISTIC, any of those values is acceptable.  If
+          DISPLAY has more than one element, each element should
+          specify a different CHARACTERISTIC; then _each_
+          characteristic of the frame must match one of the VALUEs
+          specified for it in DISPLAY.
+
+   Here's how the standard face `region' is defined:
+
+     (defface region
+       '((((class color) (min-colors 88) (background dark))
+          :background "blue3")
+         (((class color) (min-colors 88) (background light))
+          :background "lightgoldenrod2")
+         (((class color) (min-colors 16) (background dark))
+          :background "blue3")
+         (((class color) (min-colors 16) (background light))
+          :background "lightgoldenrod2")
+         (((class color) (min-colors 8))
+          :background "blue" :foreground "white")
+         (((type tty) (class mono))
+          :inverse-video t)
+         (t :background "gray"))
+       "Basic face for highlighting the region."
+       :group 'basic-faces)
+
+   Internally, `defface' uses the symbol property `face-defface-spec'
+to record the specified face attributes.  The attributes saved by the
+user with the customization buffer are recorded in the symbol property
+`saved-face'; the attributes customized by the user for the current
+session, but not saved, are recorded in the symbol property
+`customized-face'.  The documentation string is recorded in the symbol
+property `face-documentation'.
+
+ -- User Option: frame-background-mode
+     This option, if non-`nil', specifies the background type to use for
+     interpreting face definitions.  If it is `dark', then Emacs treats
+     all frames as if they had a dark background, regardless of their
+     actual background colors.  If it is `light', then Emacs treats all
+     frames as if they had a light background.
+
+
+File: elisp,  Node: Face Attributes,  Next: Attribute Functions,  Prev: Defining Faces,  Up: Faces
+
+38.12.2 Face Attributes
+-----------------------
+
+The effect of using a face is determined by a fixed set of "face
+attributes".  This table lists all the face attributes, their possible
+values, and their effects.  You can specify more than one face for a
+given piece of text; Emacs merges the attributes of all the faces to
+determine how to display the text.  *Note Displaying Faces::.
+
+   In addition to the values given below, each face attribute can also
+have the value `unspecified'.  This special value means the face
+doesn't specify that attribute.  In face merging, when the first face
+fails to specify a particular attribute, the next face gets a chance.
+However, the `default' face must specify all attributes.
+
+   Some of these font attributes are meaningful only on certain kinds
+of displays.  If your display cannot handle a certain attribute, the
+attribute is ignored.
+
+`:family'
+     Font family name or fontset name (a string).  If you specify a font
+     family name, the wild-card characters `*' and `?' are allowed.
+     The function `font-family-list', described below, returns a list
+     of available family names.  *Note Fontsets::, for information
+     about fontsets.
+
+`:foundry'
+     The name of the "font foundry" in which the font family specified
+     by the `:family' attribute is located (a string).  The wild-card
+     characters `*' and `?' are allowed.
+
+`:width'
+     Relative proportionate character width, also known as the character
+     set width.  This should be one of the symbols `ultra-condensed',
+     `extra-condensed', `condensed', `semi-condensed', `normal',
+     `semi-expanded', `expanded', `extra-expanded', or `ultra-expanded'.
+
+`:height'
+     The height of the font.  In the simplest case, this is an integer
+     in units of 1/10 point.
+
+     The value can also be a floating point number or a function, which
+     specifies the height relative to an "underlying face" (i.e., a
+     face that has a lower priority in the list described in *note
+     Displaying Faces::).  If the value is a floating point number,
+     that specifies the amount by which to scale the height of the
+     underlying face.  If the value is a function, that function is
+     called with one argument, the height of the underlying face, and
+     returns the height of the new face.  If the function is passed an
+     integer argument, it must return an integer.
+
+     The height of the default face must be specified using an integer;
+     floating point and function values are not allowed.
+
+`:weight'
+     Font weight--one of the symbols (from densest to faintest)
+     `ultra-bold', `extra-bold', `bold', `semi-bold', `normal',
+     `semi-light', `light', `extra-light', or `ultra-light'.  On
+     text-only terminals that support variable-brightness text, any
+     weight greater than normal is displayed as extra bright, and any
+     weight less than normal is displayed as half-bright.
+
+`:slant'
+     Font slant--one of the symbols `italic', `oblique', `normal',
+     `reverse-italic', or `reverse-oblique'.  On text-only terminals
+     that support variable-brightness text, slanted text is displayed
+     as half-bright.
+
+`:foreground'
+     Foreground color, a string.  The value can be a system-defined
+     color name, or a hexadecimal color specification.  *Note Color
+     Names::.  On black-and-white displays, certain shades of gray are
+     implemented by stipple patterns.
+
+`:background'
+     Background color, a string.  The value can be a system-defined
+     color name, or a hexadecimal color specification.  *Note Color
+     Names::.
+
+`:underline'
+     Whether or not characters should be underlined, and in what color.
+     If the value is `t', underlining uses the foreground color of the
+     face.  If the value is a string, underlining uses that color.  The
+     value `nil' means do not underline.
+
+`:overline'
+     Whether or not characters should be overlined, and in what color.
+     The value is used like that of `:underline'.
+
+`:strike-through'
+     Whether or not characters should be strike-through, and in what
+     color.  The value is used like that of `:underline'.
+
+`:box'
+     Whether or not a box should be drawn around characters, its color,
+     the width of the box lines, and 3D appearance.  Here are the
+     possible values of the `:box' attribute, and what they mean:
+
+    `nil'
+          Don't draw a box.
+
+    `t'
+          Draw a box with lines of width 1, in the foreground color.
+
+    COLOR
+          Draw a box with lines of width 1, in color COLOR.
+
+    `(:line-width WIDTH :color COLOR :style STYLE)'
+          This way you can explicitly specify all aspects of the box.
+          The value WIDTH specifies the width of the lines to draw; it
+          defaults to 1.
+
+          The value COLOR specifies the color to draw with.  The
+          default is the foreground color of the face for simple boxes,
+          and the background color of the face for 3D boxes.
+
+          The value STYLE specifies whether to draw a 3D box.  If it is
+          `released-button', the box looks like a 3D button that is not
+          being pressed.  If it is `pressed-button', the box looks like
+          a 3D button that is being pressed.  If it is `nil' or
+          omitted, a plain 2D box is used.
+
+`:inverse-video'
+     Whether or not characters should be displayed in inverse video.
+     The value should be `t' (yes) or `nil' (no).
+
+`:stipple'
+     The background stipple, a bitmap.
+
+     The value can be a string; that should be the name of a file
+     containing external-format X bitmap data.  The file is found in
+     the directories listed in the variable `x-bitmap-file-path'.
+
+     Alternatively, the value can specify the bitmap directly, with a
+     list of the form `(WIDTH HEIGHT DATA)'.  Here, WIDTH and HEIGHT
+     specify the size in pixels, and DATA is a string containing the
+     raw bits of the bitmap, row by row.  Each row occupies (WIDTH + 7)
+     / 8 consecutive bytes in the string (which should be a unibyte
+     string for best results).  This means that each row always
+     occupies at least one whole byte.
+
+     If the value is `nil', that means use no stipple pattern.
+
+     Normally you do not need to set the stipple attribute, because it
+     is used automatically to handle certain shades of gray.
+
+`:font'
+     The font used to display the face.  Its value should be a font
+     object.  *Note Font Selection::, for information about font
+     objects.
+
+     When specifying this attribute using `set-face-attribute' (*note
+     Attribute Functions::), you may also supply a font spec, a font
+     entity, or a string.  Emacs converts such values to an appropriate
+     font object, and stores that font object as the actual attribute
+     value.  If you specify a string, the contents of the string should
+     be a font name (*note Font Specification Options: (emacs)Font X.);
+     if the font name is an XLFD containing wildcards, Emacs chooses
+     the first font matching those wildcards.  Specifying this
+     attribute also changes the values of the `:family', `:foundry',
+     `:width', `:height', `:weight', and `:slant' attributes.
+
+`:inherit'
+     The name of a face from which to inherit attributes, or a list of
+     face names.  Attributes from inherited faces are merged into the
+     face like an underlying face would be, with higher priority than
+     underlying faces (*note Displaying Faces::).  If a list of faces
+     is used, attributes from faces earlier in the list override those
+     from later faces.
+
+   For compatibility with Emacs 20, you can also specify values for two
+"fake" face attributes: `:bold' and `:italic'.  Their values must be
+either `t' or `nil'; a value of `unspecified' is not allowed.  Setting
+`:bold' to `t' is equivalent to setting the `:weight' attribute to
+`bold', and setting it to `nil' is equivalent to setting `:weight' to
+`normal'.  Setting `:italic' to `t' is equivalent to setting the
+`:slant' attribute to `italic', and setting it to `nil' is equivalent
+to setting `:slant' to `normal'.
+
+ -- Function: font-family-list &optional frame
+     This function returns a list of available font family names.  The
+     optional argument FRAME specifies the frame on which the text is
+     to be displayed; if it is `nil', the selected frame is used.
+
+ -- User Option: underline-minimum-offset
+     This variable specifies the minimum distance between the baseline
+     and the underline, in pixels, when displaying underlined text.
+
+ -- User Option: x-bitmap-file-path
+     This variable specifies a list of directories for searching for
+     bitmap files, for the `:stipple' attribute.
+
+ -- Function: bitmap-spec-p object
+     This returns `t' if OBJECT is a valid bitmap specification,
+     suitable for use with `:stipple' (see above).  It returns `nil'
+     otherwise.
 
 
 File: elisp,  Node: Attribute Functions,  Next: Displaying Faces,  Prev: Face Attributes,  Up: Faces
@@ -1357,9 +2308,8 @@ specifications and what they mean.
 * Replacing Specs::      Display specs that replace the text.
 * Specified Space::      Displaying one space with a specified width.
 * Pixel Specification::  Specifying space width or height in pixels.
-* Other Display Specs::  Displaying an image; magnifying text; moving it
-                          up or down on the page; adjusting the width
-                          of spaces within text.
+* Other Display Specs::     Displaying an image; adjusting the height,
+                              spacing, and other properties of text.
 * Display Margins::     Displaying text or images to the side of the main text.
 
 
@@ -1574,6 +2524,13 @@ the `display' text property.
      position as that text.  It is equivalent to using just STRING, but
      it is done as a special case of marginal display (*note Display
      Margins::).
+
+`(left-fringe BITMAP [FACE])'
+`(right-fringe BITMAP [FACE])'
+     This display specification on any character of a line of text
+     causes the specified BITMAP be displayed in the left or right
+     fringes for that line.  The optional FACE specifies the colors to
+     be used for the bitmap.  *Note Fringe Bitmaps::, for the details.
 
 `(space-width FACTOR)'
      This display specification affects all the space characters within
@@ -2531,8 +3488,9 @@ Overlays::) to hold the button properties:
 button actually part of the text instead of being a property of the
 buffer.  Buttons using text properties do not create markers into the
 buffer, which is important for speed when you use extremely large
-numbers of buttons.  Both functions return the position of the start of
-the new button:
+numbers of buttons.  (However, if there is an existing face text
+property at the site of the button, the button face may not be visible.)
+Both functions return the position of the start of the new button:
 
  -- Function: make-text-button beg end &rest properties
      This makes a button from BEG to END in the current buffer, using
@@ -3362,6 +4320,14 @@ concerned; the individual Emacs windows are not known to X at all.
      selected frame).  The list of possible symbols it returns is the
      same one documented for the variable `window-system' above.
 
+   Do _not_ use `window-system' and `initial-window-system' as
+predicates or boolean flag variables, if you want to write code that
+works differently on text terminals and graphic displays.  That is
+because `window-system' is not a good indicator of Emacs capabilities
+on a given display type.  Instead, use `display-graphic-p' or any of
+the other `display-*-p' predicates described in *note Display Feature
+Testing::.
+
  -- Variable: window-setup-hook
      This variable is a normal hook which Emacs runs after handling the
      initialization files.  Emacs runs this hook after it has completed
@@ -3393,14 +4359,14 @@ terminal and the screen.
 * Getting Out::         How exiting works (permanent or temporary).
 * System Environment::  Distinguish the name and kind of system.
 * User Identification:: Finding the name and user id of the user.
-* Time of Day::		Getting the current time.
+* Time of Day::         Getting the current time.
 * Time Conversion::     Converting a time from numeric form to
                           calendrical data and vice versa.
 * Time Parsing::        Converting a time from numeric form to text
                           and vice versa.
 * Processor Run Time::  Getting the run time used by Emacs.
 * Time Calculations::   Adding, subtracting, comparing times, etc.
-* Timers::		Setting a timer to call a function at a certain time.
+* Timers::              Setting a timer to call a function at a certain time.
 * Idle Timers::         Setting a timer to call a function when Emacs has
                           been idle for a certain length of time.
 * Terminal Input::      Accessing and recording terminal input.
@@ -5022,8 +5988,8 @@ functions.
 
 * Menu:
 
-* Input Modes::		Options for how input is processed.
-* Recording Input::	Saving histories of recent or all input events.
+* Input Modes::         Options for how input is processed.
+* Recording Input::     Saving histories of recent or all input events.
 
 
 File: elisp,  Node: Input Modes,  Next: Recording Input,  Up: Terminal Input
@@ -5362,7 +6328,7 @@ Appendix A Emacs 22 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 22.3.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 23.2 features.
+simplicity that results from the absence of many Emacs 23.3 features.
 
 A.1 Old Lisp Features in Emacs 22
 =================================
@@ -5959,755 +6925,4 @@ situation.
 recommend releasing these examples in parallel under your choice of
 free software license, such as the GNU General Public License, to
 permit their use in free software.
-
-
-File: elisp,  Node: GPL,  Next: Tips,  Prev: GNU Free Documentation License,  Up: Top
-
-Appendix C GNU General Public License
-*************************************
-
-                        Version 3, 29 June 2007
-
-     Copyright (C) 2007 Free Software Foundation, Inc. `http://fsf.org/'
-
-     Everyone is permitted to copy and distribute verbatim copies of this
-     license document, but changing it is not allowed.
-
-Preamble
-========
-
-The GNU General Public License is a free, copyleft license for software
-and other kinds of works.
-
-   The licenses for most software and other practical works are designed
-to take away your freedom to share and change the works.  By contrast,
-the GNU General Public License is intended to guarantee your freedom to
-share and change all versions of a program--to make sure it remains
-free software for all its users.  We, the Free Software Foundation, use
-the GNU General Public License for most of our software; it applies
-also to any other work released this way by its authors.  You can apply
-it to your programs, too.
-
-   When we speak of free software, we are referring to freedom, not
-price.  Our General Public Licenses are designed to make sure that you
-have the freedom to distribute copies of free software (and charge for
-them if you wish), that you receive source code or can get it if you
-want it, that you can change the software or use pieces of it in new
-free programs, and that you know you can do these things.
-
-   To protect your rights, we need to prevent others from denying you
-these rights or asking you to surrender the rights.  Therefore, you
-have certain responsibilities if you distribute copies of the software,
-or if you modify it: responsibilities to respect the freedom of others.
-
-   For example, if you distribute copies of such a program, whether
-gratis or for a fee, you must pass on to the recipients the same
-freedoms that you received.  You must make sure that they, too, receive
-or can get the source code.  And you must show them these terms so they
-know their rights.
-
-   Developers that use the GNU GPL protect your rights with two steps:
-(1) assert copyright on the software, and (2) offer you this License
-giving you legal permission to copy, distribute and/or modify it.
-
-   For the developers' and authors' protection, the GPL clearly explains
-that there is no warranty for this free software.  For both users' and
-authors' sake, the GPL requires that modified versions be marked as
-changed, so that their problems will not be attributed erroneously to
-authors of previous versions.
-
-   Some devices are designed to deny users access to install or run
-modified versions of the software inside them, although the
-manufacturer can do so.  This is fundamentally incompatible with the
-aim of protecting users' freedom to change the software.  The
-systematic pattern of such abuse occurs in the area of products for
-individuals to use, which is precisely where it is most unacceptable.
-Therefore, we have designed this version of the GPL to prohibit the
-practice for those products.  If such problems arise substantially in
-other domains, we stand ready to extend this provision to those domains
-in future versions of the GPL, as needed to protect the freedom of
-users.
-
-   Finally, every program is threatened constantly by software patents.
-States should not allow patents to restrict development and use of
-software on general-purpose computers, but in those that do, we wish to
-avoid the special danger that patents applied to a free program could
-make it effectively proprietary.  To prevent this, the GPL assures that
-patents cannot be used to render the program non-free.
-
-   The precise terms and conditions for copying, distribution and
-modification follow.
-
-TERMS AND CONDITIONS
-====================
-
-  0. Definitions.
-
-     "This License" refers to version 3 of the GNU General Public
-     License.
-
-     "Copyright" also means copyright-like laws that apply to other
-     kinds of works, such as semiconductor masks.
-
-     "The Program" refers to any copyrightable work licensed under this
-     License.  Each licensee is addressed as "you".  "Licensees" and
-     "recipients" may be individuals or organizations.
-
-     To "modify" a work means to copy from or adapt all or part of the
-     work in a fashion requiring copyright permission, other than the
-     making of an exact copy.  The resulting work is called a "modified
-     version" of the earlier work or a work "based on" the earlier work.
-
-     A "covered work" means either the unmodified Program or a work
-     based on the Program.
-
-     To "propagate" a work means to do anything with it that, without
-     permission, would make you directly or secondarily liable for
-     infringement under applicable copyright law, except executing it
-     on a computer or modifying a private copy.  Propagation includes
-     copying, distribution (with or without modification), making
-     available to the public, and in some countries other activities as
-     well.
-
-     To "convey" a work means any kind of propagation that enables other
-     parties to make or receive copies.  Mere interaction with a user
-     through a computer network, with no transfer of a copy, is not
-     conveying.
-
-     An interactive user interface displays "Appropriate Legal Notices"
-     to the extent that it includes a convenient and prominently visible
-     feature that (1) displays an appropriate copyright notice, and (2)
-     tells the user that there is no warranty for the work (except to
-     the extent that warranties are provided), that licensees may
-     convey the work under this License, and how to view a copy of this
-     License.  If the interface presents a list of user commands or
-     options, such as a menu, a prominent item in the list meets this
-     criterion.
-
-  1. Source Code.
-
-     The "source code" for a work means the preferred form of the work
-     for making modifications to it.  "Object code" means any
-     non-source form of a work.
-
-     A "Standard Interface" means an interface that either is an
-     official standard defined by a recognized standards body, or, in
-     the case of interfaces specified for a particular programming
-     language, one that is widely used among developers working in that
-     language.
-
-     The "System Libraries" of an executable work include anything,
-     other than the work as a whole, that (a) is included in the normal
-     form of packaging a Major Component, but which is not part of that
-     Major Component, and (b) serves only to enable use of the work
-     with that Major Component, or to implement a Standard Interface
-     for which an implementation is available to the public in source
-     code form.  A "Major Component", in this context, means a major
-     essential component (kernel, window system, and so on) of the
-     specific operating system (if any) on which the executable work
-     runs, or a compiler used to produce the work, or an object code
-     interpreter used to run it.
-
-     The "Corresponding Source" for a work in object code form means all
-     the source code needed to generate, install, and (for an executable
-     work) run the object code and to modify the work, including
-     scripts to control those activities.  However, it does not include
-     the work's System Libraries, or general-purpose tools or generally
-     available free programs which are used unmodified in performing
-     those activities but which are not part of the work.  For example,
-     Corresponding Source includes interface definition files
-     associated with source files for the work, and the source code for
-     shared libraries and dynamically linked subprograms that the work
-     is specifically designed to require, such as by intimate data
-     communication or control flow between those subprograms and other
-     parts of the work.
-
-     The Corresponding Source need not include anything that users can
-     regenerate automatically from other parts of the Corresponding
-     Source.
-
-     The Corresponding Source for a work in source code form is that
-     same work.
-
-  2. Basic Permissions.
-
-     All rights granted under this License are granted for the term of
-     copyright on the Program, and are irrevocable provided the stated
-     conditions are met.  This License explicitly affirms your unlimited
-     permission to run the unmodified Program.  The output from running
-     a covered work is covered by this License only if the output,
-     given its content, constitutes a covered work.  This License
-     acknowledges your rights of fair use or other equivalent, as
-     provided by copyright law.
-
-     You may make, run and propagate covered works that you do not
-     convey, without conditions so long as your license otherwise
-     remains in force.  You may convey covered works to others for the
-     sole purpose of having them make modifications exclusively for
-     you, or provide you with facilities for running those works,
-     provided that you comply with the terms of this License in
-     conveying all material for which you do not control copyright.
-     Those thus making or running the covered works for you must do so
-     exclusively on your behalf, under your direction and control, on
-     terms that prohibit them from making any copies of your
-     copyrighted material outside their relationship with you.
-
-     Conveying under any other circumstances is permitted solely under
-     the conditions stated below.  Sublicensing is not allowed; section
-     10 makes it unnecessary.
-
-  3. Protecting Users' Legal Rights From Anti-Circumvention Law.
-
-     No covered work shall be deemed part of an effective technological
-     measure under any applicable law fulfilling obligations under
-     article 11 of the WIPO copyright treaty adopted on 20 December
-     1996, or similar laws prohibiting or restricting circumvention of
-     such measures.
-
-     When you convey a covered work, you waive any legal power to forbid
-     circumvention of technological measures to the extent such
-     circumvention is effected by exercising rights under this License
-     with respect to the covered work, and you disclaim any intention
-     to limit operation or modification of the work as a means of
-     enforcing, against the work's users, your or third parties' legal
-     rights to forbid circumvention of technological measures.
-
-  4. Conveying Verbatim Copies.
-
-     You may convey verbatim copies of the Program's source code as you
-     receive it, in any medium, provided that you conspicuously and
-     appropriately publish on each copy an appropriate copyright notice;
-     keep intact all notices stating that this License and any
-     non-permissive terms added in accord with section 7 apply to the
-     code; keep intact all notices of the absence of any warranty; and
-     give all recipients a copy of this License along with the Program.
-
-     You may charge any price or no price for each copy that you convey,
-     and you may offer support or warranty protection for a fee.
-
-  5. Conveying Modified Source Versions.
-
-     You may convey a work based on the Program, or the modifications to
-     produce it from the Program, in the form of source code under the
-     terms of section 4, provided that you also meet all of these
-     conditions:
-
-       a. The work must carry prominent notices stating that you
-          modified it, and giving a relevant date.
-
-       b. The work must carry prominent notices stating that it is
-          released under this License and any conditions added under
-          section 7.  This requirement modifies the requirement in
-          section 4 to "keep intact all notices".
-
-       c. You must license the entire work, as a whole, under this
-          License to anyone who comes into possession of a copy.  This
-          License will therefore apply, along with any applicable
-          section 7 additional terms, to the whole of the work, and all
-          its parts, regardless of how they are packaged.  This License
-          gives no permission to license the work in any other way, but
-          it does not invalidate such permission if you have separately
-          received it.
-
-       d. If the work has interactive user interfaces, each must display
-          Appropriate Legal Notices; however, if the Program has
-          interactive interfaces that do not display Appropriate Legal
-          Notices, your work need not make them do so.
-
-     A compilation of a covered work with other separate and independent
-     works, which are not by their nature extensions of the covered
-     work, and which are not combined with it such as to form a larger
-     program, in or on a volume of a storage or distribution medium, is
-     called an "aggregate" if the compilation and its resulting
-     copyright are not used to limit the access or legal rights of the
-     compilation's users beyond what the individual works permit.
-     Inclusion of a covered work in an aggregate does not cause this
-     License to apply to the other parts of the aggregate.
-
-  6. Conveying Non-Source Forms.
-
-     You may convey a covered work in object code form under the terms
-     of sections 4 and 5, provided that you also convey the
-     machine-readable Corresponding Source under the terms of this
-     License, in one of these ways:
-
-       a. Convey the object code in, or embodied in, a physical product
-          (including a physical distribution medium), accompanied by the
-          Corresponding Source fixed on a durable physical medium
-          customarily used for software interchange.
-
-       b. Convey the object code in, or embodied in, a physical product
-          (including a physical distribution medium), accompanied by a
-          written offer, valid for at least three years and valid for
-          as long as you offer spare parts or customer support for that
-          product model, to give anyone who possesses the object code
-          either (1) a copy of the Corresponding Source for all the
-          software in the product that is covered by this License, on a
-          durable physical medium customarily used for software
-          interchange, for a price no more than your reasonable cost of
-          physically performing this conveying of source, or (2) access
-          to copy the Corresponding Source from a network server at no
-          charge.
-
-       c. Convey individual copies of the object code with a copy of
-          the written offer to provide the Corresponding Source.  This
-          alternative is allowed only occasionally and noncommercially,
-          and only if you received the object code with such an offer,
-          in accord with subsection 6b.
-
-       d. Convey the object code by offering access from a designated
-          place (gratis or for a charge), and offer equivalent access
-          to the Corresponding Source in the same way through the same
-          place at no further charge.  You need not require recipients
-          to copy the Corresponding Source along with the object code.
-          If the place to copy the object code is a network server, the
-          Corresponding Source may be on a different server (operated
-          by you or a third party) that supports equivalent copying
-          facilities, provided you maintain clear directions next to
-          the object code saying where to find the Corresponding Source.
-          Regardless of what server hosts the Corresponding Source, you
-          remain obligated to ensure that it is available for as long
-          as needed to satisfy these requirements.
-
-       e. Convey the object code using peer-to-peer transmission,
-          provided you inform other peers where the object code and
-          Corresponding Source of the work are being offered to the
-          general public at no charge under subsection 6d.
-
-
-     A separable portion of the object code, whose source code is
-     excluded from the Corresponding Source as a System Library, need
-     not be included in conveying the object code work.
-
-     A "User Product" is either (1) a "consumer product", which means
-     any tangible personal property which is normally used for personal,
-     family, or household purposes, or (2) anything designed or sold for
-     incorporation into a dwelling.  In determining whether a product
-     is a consumer product, doubtful cases shall be resolved in favor of
-     coverage.  For a particular product received by a particular user,
-     "normally used" refers to a typical or common use of that class of
-     product, regardless of the status of the particular user or of the
-     way in which the particular user actually uses, or expects or is
-     expected to use, the product.  A product is a consumer product
-     regardless of whether the product has substantial commercial,
-     industrial or non-consumer uses, unless such uses represent the
-     only significant mode of use of the product.
-
-     "Installation Information" for a User Product means any methods,
-     procedures, authorization keys, or other information required to
-     install and execute modified versions of a covered work in that
-     User Product from a modified version of its Corresponding Source.
-     The information must suffice to ensure that the continued
-     functioning of the modified object code is in no case prevented or
-     interfered with solely because modification has been made.
-
-     If you convey an object code work under this section in, or with,
-     or specifically for use in, a User Product, and the conveying
-     occurs as part of a transaction in which the right of possession
-     and use of the User Product is transferred to the recipient in
-     perpetuity or for a fixed term (regardless of how the transaction
-     is characterized), the Corresponding Source conveyed under this
-     section must be accompanied by the Installation Information.  But
-     this requirement does not apply if neither you nor any third party
-     retains the ability to install modified object code on the User
-     Product (for example, the work has been installed in ROM).
-
-     The requirement to provide Installation Information does not
-     include a requirement to continue to provide support service,
-     warranty, or updates for a work that has been modified or
-     installed by the recipient, or for the User Product in which it
-     has been modified or installed.  Access to a network may be denied
-     when the modification itself materially and adversely affects the
-     operation of the network or violates the rules and protocols for
-     communication across the network.
-
-     Corresponding Source conveyed, and Installation Information
-     provided, in accord with this section must be in a format that is
-     publicly documented (and with an implementation available to the
-     public in source code form), and must require no special password
-     or key for unpacking, reading or copying.
-
-  7. Additional Terms.
-
-     "Additional permissions" are terms that supplement the terms of
-     this License by making exceptions from one or more of its
-     conditions.  Additional permissions that are applicable to the
-     entire Program shall be treated as though they were included in
-     this License, to the extent that they are valid under applicable
-     law.  If additional permissions apply only to part of the Program,
-     that part may be used separately under those permissions, but the
-     entire Program remains governed by this License without regard to
-     the additional permissions.
-
-     When you convey a copy of a covered work, you may at your option
-     remove any additional permissions from that copy, or from any part
-     of it.  (Additional permissions may be written to require their own
-     removal in certain cases when you modify the work.)  You may place
-     additional permissions on material, added by you to a covered work,
-     for which you have or can give appropriate copyright permission.
-
-     Notwithstanding any other provision of this License, for material
-     you add to a covered work, you may (if authorized by the copyright
-     holders of that material) supplement the terms of this License
-     with terms:
-
-       a. Disclaiming warranty or limiting liability differently from
-          the terms of sections 15 and 16 of this License; or
-
-       b. Requiring preservation of specified reasonable legal notices
-          or author attributions in that material or in the Appropriate
-          Legal Notices displayed by works containing it; or
-
-       c. Prohibiting misrepresentation of the origin of that material,
-          or requiring that modified versions of such material be
-          marked in reasonable ways as different from the original
-          version; or
-
-       d. Limiting the use for publicity purposes of names of licensors
-          or authors of the material; or
-
-       e. Declining to grant rights under trademark law for use of some
-          trade names, trademarks, or service marks; or
-
-       f. Requiring indemnification of licensors and authors of that
-          material by anyone who conveys the material (or modified
-          versions of it) with contractual assumptions of liability to
-          the recipient, for any liability that these contractual
-          assumptions directly impose on those licensors and authors.
-
-     All other non-permissive additional terms are considered "further
-     restrictions" within the meaning of section 10.  If the Program as
-     you received it, or any part of it, contains a notice stating that
-     it is governed by this License along with a term that is a further
-     restriction, you may remove that term.  If a license document
-     contains a further restriction but permits relicensing or
-     conveying under this License, you may add to a covered work
-     material governed by the terms of that license document, provided
-     that the further restriction does not survive such relicensing or
-     conveying.
-
-     If you add terms to a covered work in accord with this section, you
-     must place, in the relevant source files, a statement of the
-     additional terms that apply to those files, or a notice indicating
-     where to find the applicable terms.
-
-     Additional terms, permissive or non-permissive, may be stated in
-     the form of a separately written license, or stated as exceptions;
-     the above requirements apply either way.
-
-  8. Termination.
-
-     You may not propagate or modify a covered work except as expressly
-     provided under this License.  Any attempt otherwise to propagate or
-     modify it is void, and will automatically terminate your rights
-     under this License (including any patent licenses granted under
-     the third paragraph of section 11).
-
-     However, if you cease all violation of this License, then your
-     license from a particular copyright holder is reinstated (a)
-     provisionally, unless and until the copyright holder explicitly
-     and finally terminates your license, and (b) permanently, if the
-     copyright holder fails to notify you of the violation by some
-     reasonable means prior to 60 days after the cessation.
-
-     Moreover, your license from a particular copyright holder is
-     reinstated permanently if the copyright holder notifies you of the
-     violation by some reasonable means, this is the first time you have
-     received notice of violation of this License (for any work) from
-     that copyright holder, and you cure the violation prior to 30 days
-     after your receipt of the notice.
-
-     Termination of your rights under this section does not terminate
-     the licenses of parties who have received copies or rights from
-     you under this License.  If your rights have been terminated and
-     not permanently reinstated, you do not qualify to receive new
-     licenses for the same material under section 10.
-
-  9. Acceptance Not Required for Having Copies.
-
-     You are not required to accept this License in order to receive or
-     run a copy of the Program.  Ancillary propagation of a covered work
-     occurring solely as a consequence of using peer-to-peer
-     transmission to receive a copy likewise does not require
-     acceptance.  However, nothing other than this License grants you
-     permission to propagate or modify any covered work.  These actions
-     infringe copyright if you do not accept this License.  Therefore,
-     by modifying or propagating a covered work, you indicate your
-     acceptance of this License to do so.
-
- 10. Automatic Licensing of Downstream Recipients.
-
-     Each time you convey a covered work, the recipient automatically
-     receives a license from the original licensors, to run, modify and
-     propagate that work, subject to this License.  You are not
-     responsible for enforcing compliance by third parties with this
-     License.
-
-     An "entity transaction" is a transaction transferring control of an
-     organization, or substantially all assets of one, or subdividing an
-     organization, or merging organizations.  If propagation of a
-     covered work results from an entity transaction, each party to that
-     transaction who receives a copy of the work also receives whatever
-     licenses to the work the party's predecessor in interest had or
-     could give under the previous paragraph, plus a right to
-     possession of the Corresponding Source of the work from the
-     predecessor in interest, if the predecessor has it or can get it
-     with reasonable efforts.
-
-     You may not impose any further restrictions on the exercise of the
-     rights granted or affirmed under this License.  For example, you
-     may not impose a license fee, royalty, or other charge for
-     exercise of rights granted under this License, and you may not
-     initiate litigation (including a cross-claim or counterclaim in a
-     lawsuit) alleging that any patent claim is infringed by making,
-     using, selling, offering for sale, or importing the Program or any
-     portion of it.
-
- 11. Patents.
-
-     A "contributor" is a copyright holder who authorizes use under this
-     License of the Program or a work on which the Program is based.
-     The work thus licensed is called the contributor's "contributor
-     version".
-
-     A contributor's "essential patent claims" are all patent claims
-     owned or controlled by the contributor, whether already acquired or
-     hereafter acquired, that would be infringed by some manner,
-     permitted by this License, of making, using, or selling its
-     contributor version, but do not include claims that would be
-     infringed only as a consequence of further modification of the
-     contributor version.  For purposes of this definition, "control"
-     includes the right to grant patent sublicenses in a manner
-     consistent with the requirements of this License.
-
-     Each contributor grants you a non-exclusive, worldwide,
-     royalty-free patent license under the contributor's essential
-     patent claims, to make, use, sell, offer for sale, import and
-     otherwise run, modify and propagate the contents of its
-     contributor version.
-
-     In the following three paragraphs, a "patent license" is any
-     express agreement or commitment, however denominated, not to
-     enforce a patent (such as an express permission to practice a
-     patent or covenant not to sue for patent infringement).  To
-     "grant" such a patent license to a party means to make such an
-     agreement or commitment not to enforce a patent against the party.
-
-     If you convey a covered work, knowingly relying on a patent
-     license, and the Corresponding Source of the work is not available
-     for anyone to copy, free of charge and under the terms of this
-     License, through a publicly available network server or other
-     readily accessible means, then you must either (1) cause the
-     Corresponding Source to be so available, or (2) arrange to deprive
-     yourself of the benefit of the patent license for this particular
-     work, or (3) arrange, in a manner consistent with the requirements
-     of this License, to extend the patent license to downstream
-     recipients.  "Knowingly relying" means you have actual knowledge
-     that, but for the patent license, your conveying the covered work
-     in a country, or your recipient's use of the covered work in a
-     country, would infringe one or more identifiable patents in that
-     country that you have reason to believe are valid.
-
-     If, pursuant to or in connection with a single transaction or
-     arrangement, you convey, or propagate by procuring conveyance of, a
-     covered work, and grant a patent license to some of the parties
-     receiving the covered work authorizing them to use, propagate,
-     modify or convey a specific copy of the covered work, then the
-     patent license you grant is automatically extended to all
-     recipients of the covered work and works based on it.
-
-     A patent license is "discriminatory" if it does not include within
-     the scope of its coverage, prohibits the exercise of, or is
-     conditioned on the non-exercise of one or more of the rights that
-     are specifically granted under this License.  You may not convey a
-     covered work if you are a party to an arrangement with a third
-     party that is in the business of distributing software, under
-     which you make payment to the third party based on the extent of
-     your activity of conveying the work, and under which the third
-     party grants, to any of the parties who would receive the covered
-     work from you, a discriminatory patent license (a) in connection
-     with copies of the covered work conveyed by you (or copies made
-     from those copies), or (b) primarily for and in connection with
-     specific products or compilations that contain the covered work,
-     unless you entered into that arrangement, or that patent license
-     was granted, prior to 28 March 2007.
-
-     Nothing in this License shall be construed as excluding or limiting
-     any implied license or other defenses to infringement that may
-     otherwise be available to you under applicable patent law.
-
- 12. No Surrender of Others' Freedom.
-
-     If conditions are imposed on you (whether by court order,
-     agreement or otherwise) that contradict the conditions of this
-     License, they do not excuse you from the conditions of this
-     License.  If you cannot convey a covered work so as to satisfy
-     simultaneously your obligations under this License and any other
-     pertinent obligations, then as a consequence you may not convey it
-     at all.  For example, if you agree to terms that obligate you to
-     collect a royalty for further conveying from those to whom you
-     convey the Program, the only way you could satisfy both those
-     terms and this License would be to refrain entirely from conveying
-     the Program.
-
- 13. Use with the GNU Affero General Public License.
-
-     Notwithstanding any other provision of this License, you have
-     permission to link or combine any covered work with a work licensed
-     under version 3 of the GNU Affero General Public License into a
-     single combined work, and to convey the resulting work.  The terms
-     of this License will continue to apply to the part which is the
-     covered work, but the special requirements of the GNU Affero
-     General Public License, section 13, concerning interaction through
-     a network will apply to the combination as such.
-
- 14. Revised Versions of this License.
-
-     The Free Software Foundation may publish revised and/or new
-     versions of the GNU General Public License from time to time.
-     Such new versions will be similar in spirit to the present
-     version, but may differ in detail to address new problems or
-     concerns.
-
-     Each version is given a distinguishing version number.  If the
-     Program specifies that a certain numbered version of the GNU
-     General Public License "or any later version" applies to it, you
-     have the option of following the terms and conditions either of
-     that numbered version or of any later version published by the
-     Free Software Foundation.  If the Program does not specify a
-     version number of the GNU General Public License, you may choose
-     any version ever published by the Free Software Foundation.
-
-     If the Program specifies that a proxy can decide which future
-     versions of the GNU General Public License can be used, that
-     proxy's public statement of acceptance of a version permanently
-     authorizes you to choose that version for the Program.
-
-     Later license versions may give you additional or different
-     permissions.  However, no additional obligations are imposed on any
-     author or copyright holder as a result of your choosing to follow a
-     later version.
-
- 15. Disclaimer of Warranty.
-
-     THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
-     APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE
-     COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS IS"
-     WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED,
-     INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE
-     RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.
-     SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-     NECESSARY SERVICING, REPAIR OR CORRECTION.
-
- 16. Limitation of Liability.
-
-     IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN
-     WRITING WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES
-     AND/OR CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU
-     FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR
-     CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-     THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA
-     BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD
-     PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
-     PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF
-     THE POSSIBILITY OF SUCH DAMAGES.
-
- 17. Interpretation of Sections 15 and 16.
-
-     If the disclaimer of warranty and limitation of liability provided
-     above cannot be given local legal effect according to their terms,
-     reviewing courts shall apply local law that most closely
-     approximates an absolute waiver of all civil liability in
-     connection with the Program, unless a warranty or assumption of
-     liability accompanies a copy of the Program in return for a fee.
-
-
-END OF TERMS AND CONDITIONS
-===========================
-
-How to Apply These Terms to Your New Programs
-=============================================
-
-If you develop a new program, and you want it to be of the greatest
-possible use to the public, the best way to achieve this is to make it
-free software which everyone can redistribute and change under these
-terms.
-
-   To do so, attach the following notices to the program.  It is safest
-to attach them to the start of each source file to most effectively
-state the exclusion of warranty; and each file should have at least the
-"copyright" line and a pointer to where the full notice is found.
-
-     ONE LINE TO GIVE THE PROGRAM'S NAME AND A BRIEF IDEA OF WHAT IT DOES.
-     Copyright (C) YEAR NAME OF AUTHOR
-
-     This program is free software: you can redistribute it and/or modify
-     it under the terms of the GNU General Public License as published by
-     the Free Software Foundation, either version 3 of the License, or (at
-     your option) any later version.
-
-     This program is distributed in the hope that it will be useful, but
-     WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-     General Public License for more details.
-
-     You should have received a copy of the GNU General Public License
-     along with this program.  If not, see `http://www.gnu.org/licenses/'.
-
-   Also add information on how to contact you by electronic and paper
-mail.
-
-   If the program does terminal interaction, make it output a short
-notice like this when it starts in an interactive mode:
-
-     PROGRAM Copyright (C) YEAR NAME OF AUTHOR
-     This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
-     This is free software, and you are welcome to redistribute it
-     under certain conditions; type `show c' for details.
-
-   The hypothetical commands `show w' and `show c' should show the
-appropriate parts of the General Public License.  Of course, your
-program's commands might be different; for a GUI interface, you would
-use an "about box".
-
-   You should also get your employer (if you work as a programmer) or
-school, if any, to sign a "copyright disclaimer" for the program, if
-necessary.  For more information on this, and how to apply and follow
-the GNU GPL, see `http://www.gnu.org/licenses/'.
-
-   The GNU General Public License does not permit incorporating your
-program into proprietary programs.  If your program is a subroutine
-library, you may consider it more useful to permit linking proprietary
-applications with the library.  If this is what you want to do, use the
-GNU Lesser General Public License instead of this License.  But first,
-please read `http://www.gnu.org/philosophy/why-not-lgpl.html'.
-
-
-File: elisp,  Node: Tips,  Next: GNU Emacs Internals,  Prev: GPL,  Up: Top
-
-Appendix D Tips and Conventions
-*******************************
-
-This chapter describes no additional features of Emacs Lisp.  Instead
-it gives advice on making effective use of the features described in the
-previous chapters, and describes conventions Emacs Lisp programmers
-should follow.
-
-   You can automatically check some of the conventions described below
-by running the command `M-x checkdoc RET' when visiting a Lisp file.
-It cannot check all of the conventions, and not all the warnings it
-gives necessarily correspond to problems, but it is worth examining them
-all.
-
-* Menu:
-
-* Coding Conventions::        Conventions for clean and robust programs.
-* Key Binding Conventions::   Which keys should be bound by which programs.
-* Programming Tips::          Making Emacs code fit smoothly in Emacs.
-* Compilation Tips::          Making compiled code run fast.
-* Warning Tips::              Turning off compiler warnings.
-* Documentation Tips::        Writing readable documentation strings.
-* Comment Tips::	      Conventions for writing comments.
-* Library Headers::           Standard headers for library packages.
 

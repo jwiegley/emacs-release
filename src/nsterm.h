@@ -1,5 +1,5 @@
 /* Definitions and headers for communication with NeXT/Open/GNUstep API.
-   Copyright (C) 1989, 1993, 2005, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1993, 2005, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -606,7 +606,7 @@ struct x_output
 #define NS_FACE_FOREGROUND(f) ((f)->foreground)
 #define NS_FACE_BACKGROUND(f) ((f)->background)
 #define FRAME_NS_TITLEBAR_HEIGHT(f) ((f)->output_data.ns->titlebar_height)
-#define FRAME_NS_TOOLBAR_HEIGHT(f) ((f)->output_data.ns->toolbar_height)
+#define FRAME_TOOLBAR_HEIGHT(f) ((f)->output_data.ns->toolbar_height)
 
 #define FONT_WIDTH(f)	((f)->max_width)
 #define FONT_HEIGHT(f)	((f)->height)

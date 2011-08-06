@@ -1,9 +1,9 @@
-This is ../../info/pcl-cvs, produced by makeinfo version 4.11 from
+This is ../../info/pcl-cvs, produced by makeinfo version 4.13 from
 pcl-cvs.texi.
 
 Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -17,9 +17,9 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* PCL-CVS: (pcl-cvs).	Emacs front-end to CVS.
+* PCL-CVS: (pcl-cvs).           Emacs front-end to CVS.
 END-INFO-DIR-ENTRY
 
 
@@ -34,8 +34,8 @@ RET pcl-cvs <RET>' and to look at the documentation strings of the
 various commands and major modes for further information.
 
    Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1911,38 +1911,38 @@ this manual.
 
 
 Tag Table:
-Node: Top1010
-Node: About PCL-CVS4349
-Node: Contributors5444
-Node: Getting started7989
-Node: Buffer contents10685
-Node: Selected files14974
-Node: Commands16608
-Node: Entering PCL-CVS18010
-Node: Setting flags20226
-Node: Updating the buffer22696
-Node: Movement commands23756
-Node: Marking files24333
-Node: Committing changes25469
-Node: Editing files27381
-Node: Getting info about files28288
-Node: Adding and removing files28802
-Node: Undoing changes30070
-Node: Removing handled entries30541
-Node: Ignoring files31396
-Node: Viewing differences31951
-Node: Invoking Ediff33523
-Node: Updating files34380
-Node: Tagging files34641
-Node: Miscellaneous commands35414
-Node: Log Edit Mode36379
-Node: Log View Mode37717
-Node: Customization38288
-Node: Customizing Faces41915
-Node: Bugs42710
-Node: GNU Free Documentation License44249
-Node: Function and Variable Index69431
-Node: Concept Index76837
-Node: Key Index85256
+Node: Top1040
+Node: About PCL-CVS4385
+Node: Contributors5480
+Node: Getting started8025
+Node: Buffer contents10721
+Node: Selected files15010
+Node: Commands16644
+Node: Entering PCL-CVS18046
+Node: Setting flags20262
+Node: Updating the buffer22732
+Node: Movement commands23792
+Node: Marking files24369
+Node: Committing changes25505
+Node: Editing files27417
+Node: Getting info about files28324
+Node: Adding and removing files28838
+Node: Undoing changes30106
+Node: Removing handled entries30577
+Node: Ignoring files31432
+Node: Viewing differences31987
+Node: Invoking Ediff33559
+Node: Updating files34416
+Node: Tagging files34677
+Node: Miscellaneous commands35450
+Node: Log Edit Mode36415
+Node: Log View Mode37753
+Node: Customization38324
+Node: Customizing Faces41951
+Node: Bugs42746
+Node: GNU Free Documentation License44285
+Node: Function and Variable Index69467
+Node: Concept Index76873
+Node: Key Index85292
 
 End Tag Table

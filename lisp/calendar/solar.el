@@ -1,7 +1,7 @@
 ;;; solar.el --- calendar functions for solar events
 
 ;; Copyright (C) 1992, 1993, 1995, 1997, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Edward M. Reingold <reingold@cs.uiuc.edu>
 ;;         Denis B. Roegel <Denis.Roegel@loria.fr>
@@ -752,12 +752,12 @@ The values of `calendar-daylight-savings-starts',
                                     (sin (mod
                                           (+ (cadr x)
                                              (* (nth 2 x) U))
-                                          (* 2 pi)))))
+                                          (* 2 float-pi)))))
                                solar-data-list)))))
          (aberration
           (* 0.0000001 (- (* 17 (cos (+ 3.10 (* 62830.14 U)))) 973)))
-         (A1 (mod (+ 2.18 (* U (+ -3375.70 (* 0.36 U)))) (* 2 pi)))
-         (A2 (mod (+ 3.51 (* U (+ 125666.39 (* 0.10 U)))) (* 2 pi)))
+         (A1 (mod (+ 2.18 (* U (+ -3375.70 (* 0.36 U)))) (* 2 float-pi)))
+         (A2 (mod (+ 3.51 (* U (+ 125666.39 (* 0.10 U)))) (* 2 float-pi)))
          (nutation (* -0.0000001 (+ (* 834 (sin A1)) (* 64 (sin A2))))))
     (mod (radians-to-degrees (+ longitude aberration nutation)) 360.0)))
 

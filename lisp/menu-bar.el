@@ -1,7 +1,7 @@
 ;;; menu-bar.el --- define a default menu bar
 
 ;; Copyright (C) 1993, 1994, 1995, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: RMS
 ;; Maintainer: FSF
@@ -55,8 +55,8 @@
 (defvar menu-bar-file-menu (make-sparse-keymap "File"))
 (define-key global-map [menu-bar file] (cons (purecopy "File") menu-bar-file-menu))
 
-;; This alias is for compatibility with 19.28 and before.
-(defvar menu-bar-files-menu menu-bar-file-menu)
+;; Only declared obsolete (and only made a proper alias) in 23.3.
+(define-obsolete-variable-alias 'menu-bar-files-menu 'menu-bar-file-menu "22.1")
 
 ;; This is referenced by some code below; it is defined in uniquify.el
 (defvar uniquify-buffer-name-style)
@@ -674,13 +674,23 @@ by \"Save Options\" in Custom buffers.")
     ;; put on a customized-value property.
     (dolist (elt '(line-number-mode column-number-mode size-indication-mode
 		   cua-mode show-paren-mode transient-mark-mode
-		   blink-cursor-mode display-time-mode display-battery-mode))
+		   blink-cursor-mode display-time-mode display-battery-mode
+		   ;; These are set by other functions that don't set
+		   ;; the customized state.  Having them here has the
+		   ;; side-effect that turning them off via X
+		   ;; resources acts like having customized them, but
+		   ;; that seems harmless.
+		   menu-bar-mode tool-bar-mode))
+      ;; FIXME ? It's a little annoying that running this command
+      ;; always loads cua-base, paren, time, and battery, even if they
+      ;; have not been customized in any way.  (Due to custom-load-symbol.)
       (and (customize-mark-to-save elt)
 	   (setq need-save t)))
     ;; These are set with `customize-set-variable'.
     (dolist (elt '(scroll-bar-mode
 		   debug-on-quit debug-on-error
-		   tooltip-mode menu-bar-mode tool-bar-mode
+		   ;; Somehow this works, when tool-bar and menu-bar don't.
+		   tooltip-mode
 		   save-place uniquify-buffer-name-style fringe-mode
 		   indicate-empty-lines indicate-buffer-boundaries
 		   case-fold-search font-use-system-font
@@ -970,16 +980,33 @@ mail status in mode line"))
 	      :visible (and (display-graphic-p) (fboundp 'x-show-tip))
 	      :button (:toggle . tooltip-mode)))
 
+(defun menu-bar-frame-for-menubar ()
+  "Return the frame suitable for updating the menu bar."
+  (or (and (framep menu-updating-frame)
+	   menu-updating-frame)
+      (selected-frame)))
+
+(defun menu-bar-positive-p (val)
+  "Return non-nil iff VAL is a positive number."
+  (and (numberp val)
+       (> val 0)))
+
 (define-key menu-bar-showhide-menu [menu-bar-mode]
   `(menu-item ,(purecopy "Menu-bar") toggle-menu-bar-mode-from-frame
 	      :help ,(purecopy "Turn menu-bar on/off")
-	      :button (:toggle . (> (frame-parameter nil 'menu-bar-lines) 0))))
+	      :button
+	      (:toggle . (menu-bar-positive-p
+			  (frame-parameter (menu-bar-frame-for-menubar)
+					   'menu-bar-lines)))))
 
 (define-key menu-bar-showhide-menu [showhide-tool-bar]
   `(menu-item ,(purecopy "Tool-bar") toggle-tool-bar-mode-from-frame
 	      :help ,(purecopy "Turn tool-bar on/off")
 	      :visible (display-graphic-p)
-	      :button (:toggle . (> (frame-parameter nil 'tool-bar-lines) 0))))
+	      :button
+	      (:toggle . (menu-bar-positive-p
+			  (frame-parameter (menu-bar-frame-for-menubar)
+					   'tool-bar-lines)))))
 
 (define-key menu-bar-options-menu [showhide]
   `(menu-item ,(purecopy "Show/Hide") ,menu-bar-showhide-menu))
@@ -1191,6 +1218,9 @@ mail status in mode line"))
 (define-key menu-bar-games-menu [life]
   `(menu-item ,(purecopy "Life")  life
 	      :help ,(purecopy "Watch how John Conway's cellular automaton evolves")))
+(define-key menu-bar-games-menu [land]
+  `(menu-item ,(purecopy "Landmark") landmark
+	      :help ,(purecopy "Watch a neural-network robot learn landmarks")))
 (define-key menu-bar-games-menu [hanoi]
   `(menu-item ,(purecopy "Towers of Hanoi") hanoi
 	      :help ,(purecopy "Watch Towers-of-Hanoi puzzle solved by Emacs")))
@@ -1920,15 +1950,6 @@ Buffers menu is regenerated."
     `(menu-item ,(purecopy "Previous History Item") previous-history-element
 		:help ,(purecopy "Put previous minibuffer history element in the minibuffer"))))
 
-;;;###autoload
-;; This comment is taken from tool-bar.el near
-;; (put 'tool-bar-mode ...)
-;; We want to pretend the menu bar by standard is on, as this will make
-;; customize consider disabling the menu bar a customization, and save
-;; that.  We could do this for real by setting :init-value below, but
-;; that would overwrite disabling the tool bar from X resources.
-(put 'menu-bar-mode 'standard-value '(t))
-
 (define-minor-mode menu-bar-mode
   "Toggle display of a menu bar on each frame.
 This command applies to all frames that exist and frames to be
@@ -1950,6 +1971,16 @@ turn on menu bars; otherwise, turn off menu bars."
     (run-with-idle-timer 0 nil 'message
 			 "Menu-bar mode disabled.  Use M-x menu-bar-mode to make the menu bar appear."))
   menu-bar-mode)
+
+;;;###autoload
+;; (This does not work right unless it comes after the above definition.)
+;; This comment is taken from tool-bar.el near
+;; (put 'tool-bar-mode ...)
+;; We want to pretend the menu bar by standard is on, as this will make
+;; customize consider disabling the menu bar a customization, and save
+;; that.  We could do this for real by setting :init-value above, but
+;; that would overwrite disabling the menu bar from X resources.
+(put 'menu-bar-mode 'standard-value '(t))
 
 (defun toggle-menu-bar-mode-from-frame (&optional arg)
   "Toggle menu bar on or off, based on the status of the current frame.
@@ -1983,5 +2014,4 @@ If FRAME is nil or not given, use the selected frame."
 
 (provide 'menu-bar)
 
-;; arch-tag: 6e6a3c22-4ec4-4d3d-8190-583f8ef94ced
 ;;; menu-bar.el ends here

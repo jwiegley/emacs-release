@@ -640,7 +640,7 @@
 
 2009-04-11  Chong Yidong  <cyd@stupidchicken.com>
 
-	* files.el (dir-locals-directory-cache):  Rename from
+	* files.el (dir-locals-directory-cache): Rename from
 	dir-locals-directory-alist.  Change format to include
 	the mtime of the directory-local variables file (Bug#2833).
 	(dir-locals-set-directory-class): New arg mtime.  Store it in
@@ -20547,7 +20547,7 @@ See ChangeLog.13 for earlier changes.
 ;; coding: utf-8
 ;; End:
 
-    Copyright (C) 2008, 2009, 2010  Free Software Foundation, Inc.
+    Copyright (C) 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

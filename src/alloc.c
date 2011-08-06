@@ -1,6 +1,6 @@
 /* Storage allocation and gc for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1988, 1993, 1994, 1995, 1997, 1998, 1999,
-      2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+      2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
       Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -3094,7 +3094,7 @@ usage: (make-byte-code ARGLIST BYTE-CODE CONSTANTS DEPTH &optional DOCSTRING INT
   else
     val = Fmake_vector (len, Qnil);
 
-  if (STRINGP (args[1]) && STRING_MULTIBYTE (args[1]))
+  if (nargs > 1 && STRINGP (args[1]) && STRING_MULTIBYTE (args[1]))
     /* BYTECODE-STRING must have been produced by Emacs 20.2 or the
        earlier because they produced a raw 8-bit string for byte-code
        and now such a byte-code string is loaded as multibyte while
@@ -5771,13 +5771,14 @@ mark_terminals (void)
   for (t = terminal_list; t; t = t->next_terminal)
     {
       eassert (t->name != NULL);
-      if (!VECTOR_MARKED_P (t))
-	{
 #ifdef HAVE_WINDOW_SYSTEM
-	  mark_image_cache (t->image_cache);
+      /* If a terminal object is reachable from a stacpro'ed object,
+	 it might have been marked already.  Make sure the image cache
+	 gets marked.  */
+      mark_image_cache (t->image_cache);
 #endif /* HAVE_WINDOW_SYSTEM */
-	  mark_vectorlike ((struct Lisp_Vector *)t);
-	}
+      if (!VECTOR_MARKED_P (t))
+	mark_vectorlike ((struct Lisp_Vector *)t);
     }
 }
 

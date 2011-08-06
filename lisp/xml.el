@@ -1,7 +1,7 @@
 ;;; xml.el --- XML parser
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Emmanuel Briot  <briot@gnat.com>
 ;; Maintainer: Mark A. Hershberger <mah@everybody.org>
@@ -321,18 +321,20 @@ If PARSE-NS is non-nil, then QNAMES are expanded."
 		(progn
 		  (forward-char -1)
 		  (setq result (xml-parse-tag parse-dtd parse-ns))
-		  (if (and xml result (not xml-sub-parser))
-		      ;;  translation of rule [1] of XML specifications
-		      (error "XML: (Not Well-Formed) Only one root tag allowed")
-		    (cond
-		     ((null result))
-		     ((and (listp (car result))
-			   parse-dtd)
-		      (setq dtd (car result))
-		      (if (cdr result)	; possible leading comment
-			  (add-to-list 'xml (cdr result))))
-		     (t
-		      (add-to-list 'xml result)))))
+		  (cond
+		   ((null result)
+		    ;; Not looking at an xml start tag.
+		    (forward-char 1))
+		   ((and xml (not xml-sub-parser))
+		    ;; Translation of rule [1] of XML specifications
+		    (error "XML: (Not Well-Formed) Only one root tag allowed"))
+		   ((and (listp (car result))
+			 parse-dtd)
+		    (setq dtd (car result))
+		    (if (cdr result)	; possible leading comment
+			(add-to-list 'xml (cdr result))))
+		   (t
+		    (add-to-list 'xml result))))
 	      (goto-char (point-max))))
 	  (if parse-dtd
 	      (cons dtd (nreverse xml))

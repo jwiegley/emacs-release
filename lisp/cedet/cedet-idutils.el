@@ -1,6 +1,6 @@
 ;;; cedet-idutils.el --- ID Utils support for CEDET.
 
-;; Copyright (C) 2009, 2010  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 ;; Version: 0.2
@@ -40,6 +40,11 @@
 
 (defcustom cedet-idutils-token-command "lid"
   "Command name for the ID Utils executable for searching for tokens."
+  :type 'string
+  :group 'cedet)
+
+(defcustom cedet-idutils-make-command "mkid"
+  "Command name for the ID Utils executable for creating token databases."
   :type 'string
   :group 'cedet)
 
@@ -100,6 +105,20 @@ Return the created buffer with with program output."
       (setq default-directory cd)
       (erase-buffer))
     (apply 'call-process cedet-idutils-token-command
+	   nil b nil
+	   flags)
+    b))
+
+(defun cedet-idutils-mkid-call (flags)
+  "Call ID Utils mkid with the list of FLAGS.
+Return the created buffer with with program output."
+  (let ((b (get-buffer-create "*CEDET mkid*"))
+	(cd default-directory)
+	)
+    (with-current-buffer b
+      (setq default-directory cd)
+      (erase-buffer))
+    (apply 'call-process cedet-idutils-make-command
 	   nil b nil
 	   flags)
     b))
@@ -171,6 +190,12 @@ return nil."
 	    (message "ID Utils %s  - Good enough for CEDET." rev))
 	  t)))))
 
+(defun cedet-idutils-create/update-database (&optional dir)
+  "Create an IDUtils database in DIR.
+IDUtils must start from scratch when updating a database."
+  (interactive "DDirectory: ")
+  (let ((default-directory dir))
+    (cedet-idutils-mkid-call nil)))
 
 (provide 'cedet-idutils)
 

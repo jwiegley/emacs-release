@@ -1,7 +1,7 @@
 ;;; ido.el --- interactively do things with buffers and files.
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Based on: iswitchb by Stephen Eglen <stephen@cns.ed.ac.uk>
@@ -1042,11 +1042,11 @@ Value is an integer which is number of chars to right of prompt.")
 ;; Stores the current list of items that will be searched through.
 ;; The list is ordered, so that the most interesting item comes first,
 ;; although by default, the files visible in the current frame are put
-;; at the end of the list.
-(defvar ido-cur-list nil)
+;; at the end of the list.  Created by `ido-make-item-list'.
+(defvar ido-cur-list)
 
 ;; Stores the choice list for ido-completing-read
-(defvar ido-choice-list nil)
+(defvar ido-choice-list)
 
 ;; Stores the list of items which are ignored when building
 ;; `ido-cur-list'.  It is in no specific order.
@@ -1439,6 +1439,11 @@ Removes badly formatted data and ignored directories."
   ;; ido kill emacs hook
   (ido-save-history))
 
+(defun ido-common-initialization ()
+  (ido-init-completion-maps)
+  (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
+  (add-hook 'choose-completion-string-functions 'ido-choose-completion-string))
+
 (define-minor-mode ido-everywhere
   "Toggle using ido speed-ups everywhere file and directory names are read.
 With ARG, turn ido speed-up on if arg is positive, off otherwise."
@@ -1482,12 +1487,9 @@ This function also adds a hook to the minibuffer."
 	 (t nil)))
 
   (ido-everywhere (if ido-everywhere 1 -1))
-  (when ido-mode
-    (ido-init-completion-maps))
 
   (when ido-mode
-    (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
-    (add-hook 'choose-completion-string-functions 'ido-choose-completion-string)
+    (ido-common-initialization)
     (ido-load-history)
 
     (add-hook 'kill-emacs-hook 'ido-kill-emacs-hook)
@@ -3348,12 +3350,9 @@ for first matching file."
     (if ido-temp-list
 	(nconc ido-temp-list ido-current-buffers)
       (setq ido-temp-list ido-current-buffers))
-    (if (and default (buffer-live-p (get-buffer default)))
-	(progn
-	  (setq ido-temp-list
-		(delete default ido-temp-list))
-	  (setq ido-temp-list
-		(cons default ido-temp-list))))
+    (if default
+        (setq ido-temp-list
+              (cons default (delete default ido-temp-list))))
     (run-hooks 'ido-make-buffer-list-hook)
     ido-temp-list))
 
@@ -3594,7 +3593,6 @@ for first matching file."
   ;; Used by `ido-get-buffers-in-frames' to walk through all windows
   (let ((buf (buffer-name (window-buffer win))))
 	(unless (or (member buf ido-bufs-in-frame)
-		    (minibufferp buf)
 		    (member buf ido-ignore-item-temp-list))
 	  ;; Only add buf if it is not already in list.
 	  ;; This prevents same buf in two different windows being
@@ -3835,27 +3833,6 @@ for first matching file."
 	      ;;(add-hook 'completion-setup-hook 'completion-setup-function)
 	      (display-completion-list completion-list)))))))
 
-(defun ido-kill-buffer-internal (buf)
-  "Kill buffer BUF and rebuild ido's buffer list if needed."
-  (if (not (kill-buffer buf))
-      ;; buffer couldn't be killed.
-      (setq ido-rescan t)
-    ;; else buffer was killed so remove name from list.
-    (setq ido-cur-list (delq buf ido-cur-list))
-    ;; Some packages, like uniquify.el, may rename buffers when one
-    ;; is killed, so we need to test this condition to avoid using
-    ;; an outdated list of buffer names. We don't want to always
-    ;; rebuild the list of buffers, as this alters the previous
-    ;; buffer order that the user was seeing on the prompt. However,
-    ;; when we rebuild the list, we try to keep the previous second
-    ;; buffer as the first one.
-    (catch 'update
-      (dolist (b ido-cur-list)
-	(unless (get-buffer b)
-	  (setq ido-cur-list (ido-make-buffer-list (cadr ido-matches)))
-	  (setq ido-rescan t)
-	  (throw 'update nil))))))
-
 ;;; KILL CURRENT BUFFER
 (defun ido-kill-buffer-at-head ()
   "Kill the buffer at the head of `ido-matches'.
@@ -3864,15 +3841,26 @@ If cursor is not at the end of the user input, delete to end of input."
   (if (not (eobp))
       (delete-region (point) (line-end-position))
     (let ((enable-recursive-minibuffers t)
-	  (buf (ido-name (car ido-matches))))
-      (when buf
-	(ido-kill-buffer-internal buf)
-	;; Check if buffer still exists.
-	(if (get-buffer buf)
-	    ;; buffer couldn't be killed.
+	  (buf (ido-name (car ido-matches)))
+	  (nextbuf (cadr ido-matches)))
+      (when (get-buffer buf)
+	;; If next match names a buffer use the buffer object; buffer
+	;; name may be changed by packages such as uniquify; mindful
+	;; of virtual buffers.
+	(when (and nextbuf (get-buffer nextbuf))
+	  (setq nextbuf (get-buffer nextbuf)))
+	(if (null (kill-buffer buf))
+	    ;; Buffer couldn't be killed.
 	    (setq ido-rescan t)
-	  ;; else buffer was killed so remove name from list.
-	  (setq ido-cur-list (delq buf ido-cur-list)))))))
+	  ;; Else `kill-buffer' succeeds so re-make the buffer list
+	  ;; taking into account packages like uniquify may rename
+	  ;; buffers.
+	  (if (bufferp nextbuf)
+	      (setq nextbuf (buffer-name nextbuf)))
+	  (setq ido-default-item nextbuf
+		ido-text-init ido-text
+		ido-exit 'refresh)
+	  (exit-minibuffer))))))
 
 ;;; DELETE CURRENT FILE
 (defun ido-delete-file-at-head ()
@@ -3910,7 +3898,7 @@ Record command in `command-history' if optional RECORD is non-nil."
      ((eq method 'kill)
       (if record
 	  (ido-record-command 'kill-buffer buffer))
-      (ido-kill-buffer-internal buffer))
+      (kill-buffer buffer))
 
      ((eq method 'other-window)
       (if record
@@ -4693,6 +4681,8 @@ DEF, if non-nil, is the default value."
 	(ido-directory-too-big nil)
 	(ido-context-switch-command 'ignore)
 	(ido-choice-list choices))
+    ;; Initialize ido before invoking ido-read-internal
+    (ido-common-initialization)
     (ido-read-internal 'list prompt hist def require-match initial-input)))
 
 (defun ido-unload-function ()

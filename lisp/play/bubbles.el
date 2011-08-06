@@ -1,6 +1,6 @@
 ;;; bubbles.el --- Puzzle game for Emacs.
 
-;; Copyright (C) 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author:      Ulf Jasper <ulf.jasper@web.de>
 ;; URL:         http://ulf.epplejasper.de/
@@ -1377,7 +1377,7 @@ Return t if new char is non-empty."
                                    (g (nth 1 crgb))
                                    (b (nth 2 crgb))
                                    (brightness (/ (+ r g b) 3.0 256 256))
-                                   (val (sin (* brightness (/ pi 2))))
+                                   (val (sin (* brightness (/ float-pi 2))))
                                    (rr (* red val))
                                    (gg (* green val))
                                    (bb (* blue val))

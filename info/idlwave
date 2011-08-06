@@ -1,4 +1,4 @@
-This is ../../info/idlwave, produced by makeinfo version 4.11 from
+This is ../../info/idlwave, produced by makeinfo version 4.13 from
 idlwave.texi.
 
 This file documents IDLWAVE, a major mode for editing IDL files with
@@ -7,7 +7,7 @@ Emacs, and interacting with an IDL shell run as a subprocess.
    This is edition 6.1 of the IDLWAVE User Manual for IDLWAVE 6.1.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,9 +21,9 @@ Emacs, and interacting with an IDL shell run as a subprocess.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs editing modes
 START-INFO-DIR-ENTRY
-* IDLWAVE: (idlwave).	Major mode and shell for IDL files.
+* IDLWAVE: (idlwave).           Major mode and shell for IDL files.
 END-INFO-DIR-ENTRY
 
 
@@ -39,7 +39,7 @@ Emacs, and interacting with an IDL shell run as a subprocess.
    This is edition 6.1 of the IDLWAVE User Manual for IDLWAVE 6.1.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -3167,7 +3167,7 @@ Here are the different routines (also available in the Menu
 `IDLWAVE->Routine Info'):
 
 `M-x idlwave-list-buffer-load-path-shadows'
-     This commands checks the names of all routines defined in the
+     This command checks the names of all routines defined in the
      current buffer for shadowing conflicts with other routines
      accessible to IDLWAVE.  The command also has a key binding: `C-c
      C-b'
@@ -3681,9 +3681,9 @@ common problems and their solutions are documented below.
      or similar when attempting to load IDLWAVE under XEmacs.*
 
      You don't have the `browse-url' (or other required) XEmacs package.
-     Unlike GNU Emacs, XEmacs distributes many packages separately from
-     the main program.  IDLWAVE is actually among these, but is not
-     always the most up to date.  When installing IDLWAVE as an XEmacs
+     Unlike Emacs, XEmacs distributes many packages separately from the
+     main program.  IDLWAVE is actually among these, but is not always
+     the most up to date.  When installing IDLWAVE as an XEmacs
      package, it should prompt you for required additional packages.
      When installing it from source, it won't and you'll get this
      error.  The easiest solution is to install all the packages when
@@ -4688,77 +4688,77 @@ Index
 
 
 Tag Table:
-Node: Top1177
-Node: Introduction5791
-Ref: Introduction-Footnote-19452
-Node: IDLWAVE in a Nutshell9575
-Node: Getting Started12408
-Node: Lesson I -- Development Cycle12685
-Node: Lesson II -- Customization20597
-Node: Lesson III -- User Catalog25585
-Node: The IDLWAVE Major Mode28353
-Node: Code Formatting29442
-Node: Code Indentation30752
-Node: Continued Statement Indentation32279
-Node: Comment Indentation35502
-Node: Continuation Lines36489
-Node: Syntax Highlighting38939
-Node: Octals and Highlighting39968
-Node: Routine Info41048
-Ref: Routine Info-Footnote-147686
-Node: Online Help47852
-Node: Help with HTML Documentation51900
-Node: Help with Source55459
-Node: Completion58376
-Node: Case of Completed Words62489
-Node: Object Method Completion and Class Ambiguity64303
-Node: Object Method Completion in the Shell66983
-Node: Class and Keyword Inheritance67833
-Node: Structure Tag Completion70149
-Node: Routine Source71899
-Node: Resolving Routines73005
-Node: Code Templates73985
-Node: Abbreviations74483
-Node: Actions78354
-Node: Block Boundary Check80191
-Node: Padding Operators81240
-Node: Case Changes83367
-Node: Doc Header84856
-Node: Motion Commands86115
-Node: Misc Options87194
-Node: The IDLWAVE Shell87792
-Node: Starting the Shell88799
-Node: Using the Shell92354
-Ref: Using the Shell-Footnote-196180
-Node: Commands Sent to the Shell96368
-Node: Debugging IDL Programs98486
-Node: A Tale of Two Modes99883
-Node: Debug Key Bindings101008
-Node: Breakpoints and Stepping102888
-Node: Compiling Programs108723
-Node: Walking the Calling Stack110180
-Node: Electric Debug Mode111273
-Ref: Electric Debug Mode-Footnote-1117236
-Node: Examining Variables117363
-Ref: Examining Variables-Footnote-1122228
-Node: Custom Expression Examination122314
-Ref: Custom Expression Examination-Footnote-1125803
-Node: Acknowledgements126007
-Node: Sources of Routine Info128030
-Node: Routine Definitions128740
-Node: Routine Information Sources130121
-Node: Catalogs133625
-Node: Library Catalogs136239
-Node: User Catalog139113
-Ref: User Catalog-Footnote-1142174
-Ref: User Catalog-Footnote-2142257
-Node: Load-Path Shadows142293
-Node: Documentation Scan144882
-Node: HTML Help Browser Tips146354
-Node: Configuration Examples149501
-Node: Windows and MacOS156590
-Node: Troubleshooting158786
-Node: GNU Free Documentation License168515
-Node: Index193686
+Node: Top1207
+Node: Introduction5827
+Ref: Introduction-Footnote-19488
+Node: IDLWAVE in a Nutshell9611
+Node: Getting Started12444
+Node: Lesson I -- Development Cycle12721
+Node: Lesson II -- Customization20633
+Node: Lesson III -- User Catalog25621
+Node: The IDLWAVE Major Mode28389
+Node: Code Formatting29478
+Node: Code Indentation30788
+Node: Continued Statement Indentation32315
+Node: Comment Indentation35538
+Node: Continuation Lines36525
+Node: Syntax Highlighting38975
+Node: Octals and Highlighting40004
+Node: Routine Info41084
+Ref: Routine Info-Footnote-147722
+Node: Online Help47888
+Node: Help with HTML Documentation51936
+Node: Help with Source55495
+Node: Completion58412
+Node: Case of Completed Words62525
+Node: Object Method Completion and Class Ambiguity64339
+Node: Object Method Completion in the Shell67019
+Node: Class and Keyword Inheritance67869
+Node: Structure Tag Completion70185
+Node: Routine Source71935
+Node: Resolving Routines73041
+Node: Code Templates74021
+Node: Abbreviations74519
+Node: Actions78390
+Node: Block Boundary Check80227
+Node: Padding Operators81276
+Node: Case Changes83403
+Node: Doc Header84892
+Node: Motion Commands86151
+Node: Misc Options87230
+Node: The IDLWAVE Shell87828
+Node: Starting the Shell88835
+Node: Using the Shell92390
+Ref: Using the Shell-Footnote-196216
+Node: Commands Sent to the Shell96404
+Node: Debugging IDL Programs98522
+Node: A Tale of Two Modes99919
+Node: Debug Key Bindings101044
+Node: Breakpoints and Stepping102924
+Node: Compiling Programs108759
+Node: Walking the Calling Stack110216
+Node: Electric Debug Mode111309
+Ref: Electric Debug Mode-Footnote-1117272
+Node: Examining Variables117399
+Ref: Examining Variables-Footnote-1122264
+Node: Custom Expression Examination122350
+Ref: Custom Expression Examination-Footnote-1125839
+Node: Acknowledgements126043
+Node: Sources of Routine Info128066
+Node: Routine Definitions128776
+Node: Routine Information Sources130157
+Node: Catalogs133661
+Node: Library Catalogs136275
+Node: User Catalog139149
+Ref: User Catalog-Footnote-1142210
+Ref: User Catalog-Footnote-2142293
+Node: Load-Path Shadows142329
+Node: Documentation Scan144917
+Node: HTML Help Browser Tips146389
+Node: Configuration Examples149536
+Node: Windows and MacOS156625
+Node: Troubleshooting158821
+Node: GNU Free Documentation License168546
+Node: Index193717
 
 End Tag Table

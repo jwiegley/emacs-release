@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-@c   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+@c   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node International, Major Modes, Frames, Top
 @chapter International Character Set Support
@@ -221,7 +221,7 @@ in a buffer whose coding system is @code{utf-8-unix}:
         character: @`A (192, #o300, #xc0)
 preferred charset: unicode (Unicode (ISO10646))
        code point: 0xC0
-           syntax: w 	which means: word
+           syntax: w    which means: word
          category: j:Japanese l:Latin v:Vietnamese
       buffer code: #xC3 #x80
         file code: not encodable by coding system undecided-unix

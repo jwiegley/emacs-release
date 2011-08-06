@@ -1,7 +1,7 @@
 ;;; window.el --- GNU Emacs window commands aside from those written in C
 
 ;; Copyright (C) 1985, 1989, 1992, 1993, 1994, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -160,8 +160,8 @@ counts, `walk-windows' includes the windows in the frame from
 which you entered the minibuffer, as well as the minibuffer
 window.
 
-ALL-FRAMES nil or omitted means cycle through all windows on
- WINDOW's frame, plus the minibuffer window if specified by the
+ALL-FRAMES nil or omitted means cycle through all windows on the
+ selected frame, plus the minibuffer window if specified by the
  MINIBUF argument, see above.  If the minibuffer counts, cycle
  through all windows on all frames that share that minibuffer
  too.
@@ -173,8 +173,8 @@ ALL-FRAMES 0 means cycle through all windows on all visible and
  iconified frames.
 ALL-FRAMES a frame means cycle through all windows on that frame
  only.
-Anything else means cycle through all windows on WINDOW's frame
- and no others.
+Anything else means cycle through all windows on the selected
+ frame and no others.
 
 This function changes neither the order of recently selected
 windows nor the buffer list."

@@ -1,8 +1,8 @@
 /* Header for coding system handler.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008, 2009, 2010
+     2005, 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
    Copyright (C) 2003
@@ -686,8 +686,7 @@ struct coding_system
    ? code_convert_string_norecord (str, Vlocale_coding_system, 0)	   \
    : str)
 
-/* Used by the gtk menu code.  Note that this encodes utf-8, not
-   utf-8-emacs, so it's not a no-op.  */
+/* Note that this encodes utf-8, not utf-8-emacs, so it's not a no-op.  */
 #define ENCODE_UTF_8(str) code_convert_string_norecord (str, Qutf_8, 1)
 
 /* Extern declarations.  */
@@ -707,6 +706,7 @@ extern Lisp_Object code_convert_string_norecord P_ ((Lisp_Object, Lisp_Object,
 						     int));
 extern Lisp_Object raw_text_coding_system P_ ((Lisp_Object));
 extern Lisp_Object coding_inherit_eol_type P_ ((Lisp_Object, Lisp_Object));
+extern Lisp_Object complement_process_encoding_system P_ ((Lisp_Object));
 
 extern int decode_coding_gap P_ ((struct coding_system *,
 				  EMACS_INT, EMACS_INT));

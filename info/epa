@@ -1,8 +1,9 @@
-This is ../../info/epa, produced by makeinfo version 4.11 from epa.texi.
+This is ../../info/epa, produced by makeinfo version 4.13 from epa.texi.
 
 This file describes EasyPG Assistant 1.0.0.
 
-   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -22,9 +23,9 @@ This file describes EasyPG Assistant 1.0.0.
      copy of the license to the document, as described in section 6 of
      the license.
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* EasyPG Assistant: (epa).   An Emacs user interface to GNU Privacy Guard.
+* EasyPG Assistant: (epa).      An Emacs user interface to GNU Privacy Guard.
 END-INFO-DIR-ENTRY
 
 
@@ -42,7 +43,8 @@ interface called EasyPG Library.
 
    This file describes EasyPG Assistant 1.0.0.
 
-   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -151,15 +153,15 @@ key you selected.
 
       u Daiki Ueno <ueno@unixuser.org>
       u A5B6B2D4B15813FE 1024bits DSA
-     	Created: 2001-10-09
-     	Expires: 2007-09-04
-     	Capabilities: sign certify
-     	Fingerprint: 8003 7CD0 0F1A 9400 03CA  50AA A5B6 B2D4 B158 13FE
+             Created: 2001-10-09
+             Expires: 2007-09-04
+             Capabilities: sign certify
+             Fingerprint: 8003 7CD0 0F1A 9400 03CA  50AA A5B6 B2D4 B158 13FE
       u 4447461B2A9BEA2D 2048bits ELGAMAL_E
-     	Created: 2001-10-09
-     	Expires: 2007-09-04
-     	Capabilities: encrypt
-     	Fingerprint: 9003 D76B 73B7 4A8A E588  10AF 4447 461B 2A9B EA2D
+             Created: 2001-10-09
+             Expires: 2007-09-04
+             Capabilities: encrypt
+             Fingerprint: 9003 D76B 73B7 4A8A E588  10AF 4447 461B 2A9B EA2D
 
 To browse your private keyring, use `M-x epa-list-secret-keys'.
 
@@ -367,15 +369,15 @@ behavior are below.
 
 
 Tag Table:
-Node: Top1299
-Node: Overview2825
-Node: Quick start3185
-Node: Commands3732
-Node: Key management4073
-Node: Cryptographic operations on regions6694
-Node: Cryptographic operations on files8682
-Node: Dired integration9272
-Node: Mail-mode integration9863
-Node: Encrypting/decrypting *.gpg files11085
+Node: Top1322
+Node: Overview2854
+Node: Quick start3214
+Node: Commands3761
+Node: Key management4102
+Node: Cryptographic operations on regions6779
+Node: Cryptographic operations on files8767
+Node: Dired integration9357
+Node: Mail-mode integration9948
+Node: Encrypting/decrypting *.gpg files11170
 
 End Tag Table

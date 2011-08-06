@@ -1,6 +1,6 @@
 ;;;; unsafep.el -- Determine whether a Lisp form is safe to evaluate
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Jonathan Yavner <jyavner@member.fsf.org>
 ;; Maintainer: Jonathan Yavner <jyavner@member.fsf.org>
@@ -101,15 +101,13 @@ in the parse.")
 (dolist (x '(;;Special forms
 	     and catch if or prog1 prog2 progn while unwind-protect
 	     ;;Safe subrs that have some side-effects
-	     ding error message minibuffer-message random read-minibuffer
-	     signal sleep-for string-match throw y-or-n-p yes-or-no-p
+	     ding error random signal sleep-for string-match throw
 	     ;;Defsubst functions from subr.el
 	     caar cadr cdar cddr
 	     ;;Macros from subr.el
-	     save-match-data unless when with-temp-message
+	     save-match-data unless when
 	     ;;Functions from subr.el that have side effects
-	     read-passwd split-string replace-regexp-in-string
-	     play-sound-file))
+	     split-string replace-regexp-in-string play-sound-file))
   (put x 'safe-function t))
 
 ;;;###autoload

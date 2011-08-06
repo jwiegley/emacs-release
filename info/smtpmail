@@ -1,7 +1,7 @@
-This is ../../info/smtpmail, produced by makeinfo version 4.11 from
+This is ../../info/smtpmail, produced by makeinfo version 4.13 from
 smtpmail.texi.
 
-Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free
+Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -16,9 +16,9 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs lisp libraries
 START-INFO-DIR-ENTRY
-* SMTP: (smtpmail). Emacs library for sending mail via SMTP.
+* SMTP: (smtpmail).             Emacs library for sending mail via SMTP.
 END-INFO-DIR-ENTRY
 
 
@@ -27,7 +27,7 @@ File: smtpmail,  Node: Top,  Next: How Mail Works,  Up: (dir)
 Emacs SMTP Library
 ******************
 
-Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free
+Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -44,17 +44,17 @@ Software Foundation, Inc.
 
 * Menu:
 
-* How Mail Works::	Brief introduction to mail concepts.
+* How Mail Works::      Brief introduction to mail concepts.
 * Emacs Speaks SMTP::   How to use the SMTP library in Emacs.
-* Authentication::	Authenticating yourself to the server.
-* Queued delivery::	Sending mail without an internet connection.
-* Server workarounds::	Mail servers with special requirements.
-* Debugging::		Tracking down problems.
+* Authentication::      Authenticating yourself to the server.
+* Queued delivery::     Sending mail without an internet connection.
+* Server workarounds::  Mail servers with special requirements.
+* Debugging::           Tracking down problems.
 * GNU Free Documentation License:: The license for this documentation.
 
 Indices
 
-* Index::		Index over variables and functions.
+* Index::               Index over variables and functions.
 
 
 File: smtpmail,  Node: How Mail Works,  Next: Emacs Speaks SMTP,  Prev: Top,  Up: Top
@@ -315,13 +315,13 @@ implement support for common requirements.
      configurations of sendmail requires this behavior.  Don't bother to
      set this unless you have get an error like:
 
-          	Sending failed; SMTP protocol error
+                  Sending failed; SMTP protocol error
 
      when sending mail, and the debug buffer (*note Debugging::))
      contains an error such as:
 
-          	RCPT TO: SOMEONE
-          	501 SOMEONE: recipient address must contain a domain
+                  RCPT TO: SOMEONE
+                  501 SOMEONE: recipient address must contain a domain
 
 
 
@@ -889,14 +889,14 @@ File: smtpmail,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 Tag Table:
-Node: Top955
-Node: How Mail Works2286
-Node: Emacs Speaks SMTP5059
-Node: Authentication8017
-Node: Queued delivery11929
-Node: Server workarounds13188
-Node: Debugging14363
-Node: GNU Free Documentation License15500
-Node: Index40648
+Node: Top988
+Node: How Mail Works2362
+Node: Emacs Speaks SMTP5135
+Node: Authentication8093
+Node: Queued delivery12005
+Node: Server workarounds13264
+Node: Debugging14460
+Node: GNU Free Documentation License15597
+Node: Index40745
 
 End Tag Table

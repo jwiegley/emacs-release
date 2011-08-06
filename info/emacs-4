@@ -1,12 +1,12 @@
-This is ../../info/emacs, produced by makeinfo version 4.11 from
+This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.2.
+updated for Emacs version 23.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,8 +23,163 @@ Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacs: (emacs).	The extensible self-documenting text editor.
+* Emacs: (emacs).       The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: GDB-UI Layout,  Next: Source Buffers,  Up: GDB Graphical Interface
+
+31.6.5.1 GDB User Interface Layout
+..................................
+
+If the variable `gdb-many-windows' is `nil' (the default value) then
+`M-x gdb' normally displays only the GUD buffer.  However, if the
+variable `gdb-show-main' is also non-`nil', it starts with two windows:
+one displaying the GUD buffer, and the other showing the source for the
+`main' function of the program you are debugging.
+
+   If `gdb-many-windows' is non-`nil', then `M-x gdb' displays the
+following frame layout:
+
+     +--------------------------------+--------------------------------+
+     |   GUD buffer (I/O of GDB)      |   Locals/Registers buffer      |
+     |--------------------------------+--------------------------------+
+     |   Primary Source buffer        |   I/O buffer for debugged pgm  |
+     |--------------------------------+--------------------------------+
+     |   Stack buffer                 |   Breakpoints/Threads buffer   |
+     +--------------------------------+--------------------------------+
+
+   However, if `gdb-use-separate-io-buffer' is `nil', the I/O buffer
+does not appear and the primary source buffer occupies the full width
+of the frame.
+
+   If you change the window layout, for example, while editing and
+re-compiling your program, then you can restore this standard window
+layout with the command `gdb-restore-windows'.
+
+   To switch between this standard layout and a simple layout
+containing just the GUD buffer and a source file, type `M-x
+gdb-many-windows'.
+
+   You may also specify additional GDB-related buffers to display,
+either in the same frame or a different one.  Select the buffers you
+want with the `GUD->GDB-Windows' and `GUD->GDB-Frames' sub-menus.  If
+the menu-bar is unavailable, type `M-x gdb-display-BUFFERTYPE-buffer'
+or `M-x gdb-frame-BUFFERTYPE-buffer' respectively, where BUFFERTYPE is
+the relevant buffer type, such as `breakpoints'.  Most of these buffers
+are read-only, and typing `q' in them kills them.
+
+   When you finish debugging, kill the GUD buffer with `C-x k', which
+will also kill all the buffers associated with the session.  However
+you need not do this if, after editing and re-compiling your source
+code within Emacs, you wish continue debugging.  When you restart
+execution, GDB will automatically find your new executable.  Keeping
+the GUD buffer has the advantage of keeping the shell history as well
+as GDB's breakpoints.  You do need to check that the breakpoints in
+recently edited source files are still in the right places.
+
+
+File: emacs,  Node: Source Buffers,  Next: Breakpoints Buffer,  Prev: GDB-UI Layout,  Up: GDB Graphical Interface
+
+31.6.5.2 Source Buffers
+.......................
+
+Many GDB commands can be entered using key bindings or the tool bar but
+sometimes it is quicker to use the fringe.  These commands either
+manipulate breakpoints or control program execution.  When there is no
+fringe, you can use the margin but this is only present when the source
+file already has a breakpoint.
+
+   You can click `Mouse-1' in the fringe or display margin of a source
+buffer to set a breakpoint there and, on a graphical display, a red
+bullet will appear on that line.  If a breakpoint already exists on
+that line, the same click will remove it.  You can also enable or
+disable a breakpoint by clicking `C-Mouse-1' on the bullet.
+
+   A solid arrow in the left fringe of a source buffer indicates the
+line of the innermost frame where the debugged program has stopped. A
+hollow arrow indicates the current execution line of higher level
+frames.
+
+   If you drag the arrow in the fringe with `Mouse-1'
+(`gdb-mouse-until'), execution will continue to the line where you
+release the button, provided it is still in the same frame.
+Alternatively, you can click `Mouse-3' at some point in the fringe of
+this buffer and execution will advance to there.  A similar command
+(`gdb-mouse-jump') allows you to jump to a source line without
+executing the intermediate lines by clicking `C-Mouse-3'.  This command
+allows you to go backwards which can be useful for running through code
+that has already executed, in order to examine its execution in more
+detail.
+
+`Mouse-1'
+     Set or clear a breakpoint.
+
+`C-Mouse-1'
+     Enable or disable a breakpoint.
+
+`Mouse-3'
+     Continue execution to here.
+
+`C-Mouse-3'
+     Jump to here.
+
+   If the variable `gdb-find-source-frame' is non-`nil' and execution
+stops in a frame for which there is no source code e.g after an
+interrupt, then Emacs finds and displays the first frame further up
+stack for which there is source.  If it is `nil' then the source buffer
+continues to display the last frame which maybe more useful, for
+example, when re-setting a breakpoint.
+
+
+File: emacs,  Node: Breakpoints Buffer,  Next: Stack Buffer,  Prev: Source Buffers,  Up: GDB Graphical Interface
+
+31.6.5.3 Breakpoints Buffer
+...........................
+
+The breakpoints buffer shows the existing breakpoints, watchpoints and
+catchpoints (*note Breakpoints: (gdb)Breakpoints.).  It has these
+special commands, which mostly apply to the "current breakpoint", the
+breakpoint which point is on.
+
+`<SPC>'
+     Enable/disable the current breakpoint (`gdb-toggle-breakpoint').
+     On a graphical display, this changes the color of a bullet in the
+     margin of a source buffer at the relevant line.  This is red when
+     the breakpoint is enabled and grey when it is disabled.  Text-only
+     terminals correspondingly display a `B' or `b'.
+
+`D'
+     Delete the current breakpoint (`gdb-delete-breakpoint').
+
+`<RET>'
+     Visit the source line for the current breakpoint
+     (`gdb-goto-breakpoint').
+
+`Mouse-2'
+     Visit the source line for the breakpoint you click on.
+
+   When `gdb-many-windows' is non-`nil', the breakpoints buffer shares
+its window with the threads buffer.  To switch from one to the other
+click with `Mouse-1' on the relevant button in the header line.
+
+
+File: emacs,  Node: Stack Buffer,  Next: Other GDB-UI Buffers,  Prev: Breakpoints Buffer,  Up: GDB Graphical Interface
+
+31.6.5.4 Stack Buffer
+.....................
+
+The stack buffer displays a "call stack", with one line for each of the
+nested subroutine calls ("stack frames") now active in the program.
+*Note Backtraces: (gdb)Backtrace.
+
+   An arrow in the fringe points to the selected frame or, if the
+fringe is not present, the number of the selected frame is displayed in
+reverse contrast.  To select a frame in GDB, move point in the stack
+buffer to that stack frame and type <RET> (`gdb-frames-select'), or
+click `Mouse-2' on a stack frame.  If the locals buffer is visible,
+selecting a stack frame updates it to display the local variables of the
+new frame.
 
 
 File: emacs,  Node: Other GDB-UI Buffers,  Next: Watch Expressions,  Prev: Stack Buffer,  Up: GDB Graphical Interface
@@ -461,9 +616,9 @@ This chapter describes Emacs features for maintaining large programs.
 * Menu:
 
 * Version Control::     Using version control systems.
-* Change Log::	        Maintaining a change history for your program.
-* Tags::	        Go directly to any function in your program in one
-			  command.  Tags remembers which file it is in.
+* Change Log::          Maintaining a change history for your program.
+* Tags::                Go directly to any function in your program in one
+                          command.  Tags remembers which file it is in.
 * EDE::                 An integrated development environment for Emacs.
 
 * Emerge::              A convenient way of merging two versions of a program.
@@ -474,27 +629,27 @@ File: emacs,  Node: Version Control,  Next: Change Log,  Up: Maintaining
 32.1 Version Control
 ====================
 
-A "version control system" is a package that can record multiple
+A "version control system" is a program that can record multiple
 versions of a source file, storing information such as the creation
-time of each version, who created it, and a description of what was
-changed in that version.
+time of each version, who made it, and a description of what was
+changed.
 
-   The Emacs version control interface is called VC.  Its commands work
-with several different version control systems; currently, it supports
-GNU Arch, Bazaar, CVS, Git, Mercurial, Monotone, RCS, SCCS/CSSC, and
-Subversion.  Of these, the GNU project distributes CVS, GNU Arch, RCS,
-and Bazaar.
+   The Emacs version control interface is called "VC".  VC commands
+work with several different version control systems; currently, it
+supports GNU Arch, Bazaar, CVS, Git, Mercurial, Monotone, RCS,
+SCCS/CSSC, and Subversion.  Of these, the GNU project distributes CVS,
+Arch, RCS, and Bazaar.
 
-   VC is enabled automatically whenever you visit a file that is
-governed by a version control system.  To disable VC entirely, set the
-customizable variable `vc-handled-backends' to `nil' (*note Customizing
-VC::).
+   VC is enabled automatically whenever you visit a file governed by a
+version control system.  To disable VC entirely, set the customizable
+variable `vc-handled-backends' to `nil' (*note Customizing VC::).
 
 * Menu:
 
 * Introduction to VC::  How version control works in general.
 * VC Mode Line::        How the mode line shows version control status.
 * Basic VC Editing::    How to edit a file under version control.
+* Log Buffer::          Features available in log entry buffers.
 * Old Revisions::       Examining and comparing old versions.
 * Secondary VC Commands::    The commands used a little less frequently.
 * VC Directory Mode::   Listing files managed by version control.
@@ -512,12 +667,13 @@ File: emacs,  Node: Introduction to VC,  Next: VC Mode Line,  Up: Version Contro
 --------------------------------------
 
 VC allows you to use a version control system from within Emacs,
-integrating the version control operations smoothly with editing.
-Though VC cannot completely bridge the gaps between version control
-systems with widely differing capabilities, it does provide a uniform
-interface to many version control operations. Regardless of which
-version control system is in use, you will be able to do basic
-operations in much the same way.
+integrating the version control operations smoothly with editing.  It
+provides a uniform interface for common operations in many version
+control operations.
+
+   Some uncommon or intricate version control operations, such as
+altering repository settings, are not supported in VC.  You should
+perform such tasks outside Emacs, e.g. via the command line.
 
    This section provides a general overview of version control, and
 describes the version control systems that VC supports.  You can skip
@@ -529,6 +685,9 @@ you want to use.
 * Why Version Control?::    Understanding the problems it addresses.
 * Version Control Systems:: Supported version control back-end systems.
 * VCS Concepts::            Words and concepts related to version control.
+* VCS Merging::             How file conflicts are handled.
+* VCS Changesets::          How changes are grouped.
+* VCS Repositories::        Where version control repositories are stored.
 * Types of Log File::       The VCS log in contrast to the ChangeLog.
 
 
@@ -560,8 +719,8 @@ File: emacs,  Node: Version Control Systems,  Next: VCS Concepts,  Prev: Why Ver
 32.1.1.2 Supported Version Control Systems
 ..........................................
 
-VC currently works with many different version control systems or "back
-ends":
+VC currently works with many different version control systems, which
+it refers to as "back ends":
 
    * SCCS was the first version control system ever built, and was long
      ago superseded by more advanced ones.  VC compensates for certain
@@ -575,61 +734,48 @@ ends":
      version control system.
 
    * RCS is the free version control system around which VC was
-     initially built.  Almost everything you can do with RCS can be
-     done through VC.  However, you cannot use RCS over the network,
-     and it only works at the level of individual files rather than
-     projects.
+     initially built.  It is relatively primitive: it cannot be used
+     over the network, and works at the level of individual files.
+     Almost everything you can do with RCS can be done through VC.
 
    * CVS is the free version control system that was, until recently
      (circa 2008), used by the majority of free software projects.
      Nowadays, it is slowly being superseded by newer systems.  CVS
      allows concurrent multi-user development either locally or over
-     the network.  It lacks support for atomic commits or file
-     moving/renaming.  VC supports all basic editing operations under
-     CVS.  For some less common tasks, you still need to call CVS from
-     the command line.  Note also that before using CVS you must set up
-     a repository, which is a subject too complex to treat here.
+     the network.  Unlike newer systems, it lacks support for atomic
+     commits and file moving/renaming.  VC supports all basic editing
+     operations under CVS.
 
    * Subversion (SVN) is a free version control system designed to be
-     similar to CVS but without its problems.  It supports atomic
-     commits of filesets, and versioning of directories, symbolic
-     links, meta-data, renames, copies, and deletes.
+     similar to CVS but without its problems (e.g., it supports atomic
+     commits of filesets, and versioning of directories, symbolic links,
+     meta-data, renames, copies, and deletes).
 
-   * GNU Arch is a version control system designed for distributed work.
-     It differs in many ways from older systems like CVS and RCS.  It
-     provides different methods for interoperating between users,
-     support for offline operations, and good branching and merging
-     features.  It also supports atomic commits of filesets and file
-     moving/renaming.  VC does not support all operations provided by
-     GNU Arch, so you must sometimes invoke it from the command line.
+   * GNU Arch is one of the earliest "distributed" version control
+     systems (the other being Monotone).  *Note VCS Concepts::, for a
+     description of distributed version control systems.  It is no
+     longer under active development, and has been deprecated in favor
+     of Bazaar.
 
-   * Git is a distributed version control system invented by Linus
-     Torvalds to support development of Linux (his kernel).  It
-     supports atomic commits of filesets and file moving/renaming.  One
-     significant feature of git is that it largely abolishes the notion
-     of a single centralized repository; instead, each working copy of
-     a git project is its own repository and coordination is done
-     through repository-sync operations.  VC supports most git
-     operations, with the exception of news merges and repository
-     syncing; these must be done from the command line.
+   * Git is a distributed version control system originally invented by
+     Linus Torvalds to support development of Linux (his kernel).  VC
+     supports many common git operations, but others, such as repository
+     syncing, must be done from the command line.
 
    * Mercurial (hg) is a distributed version control system broadly
-     resembling GNU Arch and git, with atomic fileset commits and file
-     moving/renaming.  Like git, it is fully decentralized.  VC supports
-     most Mercurial commands, with the exception of repository sync
-     operations; this needs to be done from the command line.
+     resembling git.  VC supports most Mercurial commands, with the
+     exception of repository sync operations.
 
    * Bazaar (bzr) is a distributed version control system that supports
-     both repository-based and distributed versioning, with atomic
-     fileset commits and file moving/renaming.  VC supports most basic
-     editing operations under Bazaar.
+     both repository-based and distributed versioning.  VC supports most
+     basic editing operations under Bazaar.
 
    Previous versions of VC supported a version control system known as
-Meta-CVS.  This support has been dropped because of limited interest
-from users and developers.
+Meta-CVS.  This support was dropped due to limited interest from users
+and developers.
 
 
-File: emacs,  Node: VCS Concepts,  Next: Types of Log File,  Prev: Version Control Systems,  Up: Introduction to VC
+File: emacs,  Node: VCS Concepts,  Next: VCS Merging,  Prev: Version Control Systems,  Up: Introduction to VC
 
 32.1.1.3 Concepts of Version Control
 ....................................
@@ -641,11 +787,11 @@ reconstruct the current version or any earlier version.  The repository
 also contains other information, such as "log entries" that describe
 the changes made to each file.
 
-   A file "checked out" of a repository is called the "work file".  You
-edit the work file and make changes in it, as you would with an
-ordinary file.  After you are done with a set of changes, you "check
-in" or "commit" the file; this records the changes in the repository,
-along with a log entry for those changes.
+   The copy of a version-controlled file that you actually edit is
+called the "work file".  You can change each work file as you would an
+ordinary file.  After you are done with a set of changes, you "commit"
+(or "check in") the changes; this records the changes in the
+repository, along with a descriptive log entry.
 
    A copy of a file stored in a repository is called a "revision".  The
 history of a file is a sequence of revisions.  Each revision is named
@@ -653,21 +799,25 @@ by a "revision ID".  The format of the revision ID depends on the
 version control system; in the simplest case, it is just an integer.
 
    To go beyond these basic concepts, you will need to understand three
-aspects in which version control systems differ.  They can be
-locking-based or merging-based; they can be file-based or
-changeset-based; and they can be centralized or decentralized.  VC
-handles all these modes of operation, but it cannot hide the
-differences.
+aspects in which version control systems differ.  As explained in the
+next three sections, they can be lock-based or merge-based; file-based
+or changeset-based; and centralized or decentralized.  VC handles all
+these modes of operation, but it cannot hide the differences.
 
-   A version control system typically has some mechanism to coordinate
+
+File: emacs,  Node: VCS Merging,  Next: VCS Changesets,  Prev: VCS Concepts,  Up: Introduction to VC
+
+32.1.1.4 Merge-based vs lock-based Version Control
+..................................................
+
+A version control system typically has some mechanism to coordinate
 between users who want to change the same file.  There are two ways to
 do this: merging and locking.
 
    In a version control system that uses merging, each user may check
 out and modify a work file at any time.  The system lets you "merge"
-your work file, which may contain changes that have not been checked
-in, with the latest changes that others have checked into the
-repository.
+your work file, which may contain changes that have not been committed,
+with the latest changes that others have committed.
 
    Older version control systems use a "locking" scheme instead.  Here,
 work files are normally read-only.  To edit a file, you ask the version
@@ -675,7 +825,7 @@ control system to make it writable for you by "locking" it; only one
 user can lock a given file at any given time.  This procedure is
 analogous to, but different from, the locking that Emacs uses to detect
 simultaneous editing of ordinary files (*note Interlocking::).  When
-you check in your changes, that unlocks the file, and the work file
+you commit your changes, that unlocks the file, and the work file
 becomes read-only again.  Other users may then lock the file to make
 their own changes.
 
@@ -683,8 +833,8 @@ their own changes.
 users try to modify the same file at the same time.  Locking systems
 have "lock conflicts"; a user may try to check a file out and be unable
 to because it is locked.  In merging systems, "merge conflicts" happen
-when you check in a change to a file that conflicts with a change
-checked in by someone else after your checkout.  Both kinds of conflict
+when you commit a change to a file that conflicts with a change
+committed by someone else after your checkout.  Both kinds of conflict
 have to be resolved by human judgment and communication.  Experience
 has shown that merging is superior to locking, both in convenience to
 developers and in minimizing the number and severity of conflicts that
@@ -697,26 +847,36 @@ version control systems, such as GNU Arch, git, and Mercurial, are
 exclusively merging-based.
 
    VC mode supports both locking and merging version control.  The
-terms "checkin" and "checkout" come from locking-based version control
-systems; newer version control systems have slightly different
-operations usually called "commit" and "update", but VC hides the
-differences between them as much as possible.
+terms "commit" and "update" are used in newer version control systems;
+older lock-based systems use the terms "check in" and "check out".  VC
+hides the differences between them as much as possible.
 
-   On SCCS, RCS, CVS, and other early version control systems, version
+
+File: emacs,  Node: VCS Changesets,  Next: VCS Repositories,  Prev: VCS Merging,  Up: Introduction to VC
+
+32.1.1.5 Changeset-based vs File-based Version Control
+......................................................
+
+On SCCS, RCS, CVS, and other early version control systems, version
 control operations are "file-based": each file has its own comment and
-revision history separate from that of all other files in the system.
-Later systems, beginning with Subversion, are "changeset-based": a
-checkin may include changes to several files, and the entire set of
-changes is treated as a unit by the system.  Any comment associated
-with the change does not belong to a single file, but to the changeset
-itself.
+revision history separate from that of all other files.  Newer systems,
+beginning with Subversion, are "changeset-based": a checkin may include
+changes to several files, and the entire set of changes is handled as a
+unit.  Any comment associated with the change does not belong to a
+single file, but to the changeset itself.
 
    Changeset-based version control is more flexible and powerful than
 file-based version control; usually, when a change to multiple files
 has to be reversed, it's good to be able to easily identify and remove
 all of it.
 
-   Early version control systems were designed around a "centralized"
+
+File: emacs,  Node: VCS Repositories,  Next: Types of Log File,  Prev: VCS Changesets,  Up: Introduction to VC
+
+32.1.1.6 Decentralized vs Centralized Repositories
+..................................................
+
+Early version control systems were designed around a "centralized"
 model in which each project has only one repository used by all
 developers.  SCCS, RCS, CVS, and Subversion share this kind of model.
 One of its drawbacks is that the repository is a choke point for
@@ -726,24 +886,22 @@ reliability and efficiency.
 later implemented in git, Mercurial, and Bazaar.  A project may have
 several different repositories, and these systems support a sort of
 super-merge between repositories that tries to reconcile their change
-histories.  At the limit, each developer has his/her own repository,
-and repository merges replace checkin/commit operations.
+histories.  In effect, there is one repository for each developer, and
+repository merges take the place of commit operations.
 
-   VC's job is to help you manage the traffic between your personal
-workfiles and a repository.  Whether that repository is a single master
-or one of a network of peer repositories is not something VC has to
-care about.  Thus, the difference between a centralized and a
-decentralized version control system is invisible to VC mode.
+   VC helps you manage the traffic between your personal workfiles and
+a repository.  Whether the repository is a single master, or one of a
+network of peer repositories, is not something VC has to care about.
 
 
-File: emacs,  Node: Types of Log File,  Prev: VCS Concepts,  Up: Introduction to VC
+File: emacs,  Node: Types of Log File,  Prev: VCS Repositories,  Up: Introduction to VC
 
-32.1.1.4 Types of Log File
+32.1.1.7 Types of Log File
 ..........................
 
 Projects that use a version control system can have two types of log
 for changes.  One is the log maintained by the version control system:
-each time you check in a change, you fill out a "log entry" for the
+each time you commit a change, you fill out a "log entry" for the
 change (*note Log Buffer::).  This is called the "version control log".
 
    The other kind of log is the file `ChangeLog' (*note Change Log::).
@@ -780,21 +938,22 @@ File: emacs,  Node: VC Mode Line,  Next: Basic VC Editing,  Prev: Introduction t
 ----------------------------------------
 
 When you visit a file that is under version control, Emacs indicates
-this on the mode line.  For example, `RCS-1.3' says that RCS is used
-for that file, and the current version is 1.3.
+this on the mode line.  For example, `Bzr-1223' says that Bazaar is
+used for that file, and the current revision ID is 1223.
 
    The character between the back-end name and the revision ID
-indicates the version control status of the file.  `-' means that the
-work file is not locked (if locking is in use), or not modified (if
-locking is not in use).  `:' indicates that the file is locked, or that
-it is modified.  If the file is locked by some other user (for
-instance, `jim'), that is displayed as `RCS:jim:1.3'.
+indicates the status of the work file.  In a merge-based version
+control system, a `-' character indicates that the work file is
+unmodified, and `:' indicates that it has been modified.  In a
+lock-based system, `-' indicates an unlocked file, and `:' a locked
+file; if the file is locked by another user (for instance, `jim'), that
+is displayed as `RCS:jim:1.3'.
 
    On a graphical display, you can move the mouse over this mode line
 indicator to pop up a "tool-tip", which displays a more verbose
 description of the version control status.  Pressing `Mouse-1' over the
-indicator pops up a menu of VC commands.  This menu is identical to the
-`Tools / Version Control' menu item.
+indicator pops up a menu of VC commands, identical to `Tools / Version
+Control' on the menu bar.
 
    When Auto Revert mode (*note Reverting::) reverts a buffer that is
 under version control, it updates the version control information in
@@ -808,7 +967,7 @@ usage depends on the version control system, but is usually not
 excessive.
 
 
-File: emacs,  Node: Basic VC Editing,  Next: Old Revisions,  Prev: VC Mode Line,  Up: Version Control
+File: emacs,  Node: Basic VC Editing,  Next: Log Buffer,  Prev: VC Mode Line,  Up: Version Control
 
 32.1.3 Basic Editing under Version Control
 ------------------------------------------
@@ -844,12 +1003,6 @@ files in a VC fileset must be under the same version control system; if
 they are not, Emacs signals an error when you attempt to execute a
 command on the fileset.
 
-   Support for VC filesets and changeset-based version control systems
-is the main improvement to VC in Emacs 23.  When you mark multi-file VC
-in a VC Directory buffer, VC operations treat them as a VC fileset, and
-operate on them all at once if the version control system is
-changeset-based.  *Note VC Directory Mode::.
-
    VC filesets are distinct from the "named filesets" used for viewing
 and visiting files in functional groups (*note Filesets::).  Unlike
 named filesets, VC filesets are not named and don't persist across
@@ -860,7 +1013,6 @@ sessions.
 * VC With A Merging VCS::  Without locking: default mode for CVS.
 * VC With A Locking VCS::  RCS in its default mode, SCCS, and optionally CVS.
 * Advanced C-x v v::       Advanced features available with a prefix argument.
-* Log Buffer::             Features available in log entry buffers.
 
 
 File: emacs,  Node: VC With A Merging VCS,  Next: VC With A Locking VCS,  Up: Basic VC Editing
@@ -890,13 +1042,13 @@ to `:' as soon as you save any changes (*note VC Mode Line::).
      checked in changes to the repository, merge those changes into the
      work file.
 
-   * If you have made modifications to the work file, attempts to check
-     in your changes.  To do this, Emacs first reads the log entry for
-     the new revision (*note Log Buffer::).  If some other user has
-     checked in changes to the repository since you last checked it
-     out, the checkin fails.  In that case, type `C-x v v' again to
-     merge those changes into your own work file; this puts the work
-     file into a "conflicted" state.  Type `C-x v v' to clear the
+   * If you have made modifications to the work file, attempt to commit
+     the changes.  To do this, Emacs first reads the log entry for the
+     new revision (*note Log Buffer::).  If some other user has
+     committed changes to the repository since you last checked it out,
+     the checkin fails.  In that case, type `C-x v v' again to merge
+     those changes into your own work file; this puts the work file
+     into a "conflicted" state.  Type `C-x v v' to clear the
      "conflicted" state; VC then regards the file as up-to-date and
      modified, and you can try to check it in again.
 
@@ -905,8 +1057,8 @@ to `:' as soon as you save any changes (*note VC Mode Line::).
 
    These rules also apply when you use RCS in its "non-locking" mode,
 except that changes are not automatically merged from the repository.
-Nothing informs you if another user has checked in changes in the same
-file since you began editing it; when you check in your revision, his
+Nothing informs you if another user has committed changes in the same
+file since you began editing it; when you commit your revision, his
 changes are removed (however, they remain in the repository and are
 thus not irrevocably lost).  Therefore, you must verify that the
 current revision is unchanged before checking in your changes.  In
@@ -926,7 +1078,7 @@ its default mode), `C-x v v' does the following:
    * If the file is not locked, lock it and make it writable, so that
      you can change it.
 
-   * If the file is locked by you, and contains changes, check in the
+   * If the file is locked by you, and contains changes, commit the
      changes.  In order to do this, Emacs first reads the log entry for
      the new revision.  *Note Log Buffer::.
 
@@ -939,10 +1091,10 @@ its default mode), `C-x v v' does the following:
      locked the file, to inform him of what has happened.
 
    These rules also apply when you use CVS in locking mode, except that
-there is no such thing as stealing a lock.
+CVS does not support stealing a lock.
 
 
-File: emacs,  Node: Advanced C-x v v,  Next: Log Buffer,  Prev: VC With A Locking VCS,  Up: Basic VC Editing
+File: emacs,  Node: Advanced C-x v v,  Prev: VC With A Locking VCS,  Up: Basic VC Editing
 
 32.1.3.3 Advanced Control in `C-x v v'
 ......................................
@@ -952,8 +1104,8 @@ still performs the next logical version control operation, but accepts
 additional arguments to specify precisely how to do the operation.
 
    * If the file is modified (or locked), you can specify the revision
-     ID to use for the new version that you check in.  This is one way
-     to create a new branch (*note Branches::).
+     ID to use for the new version that you commit.  This is one way to
+     create a new branch (*note Branches::).
 
    * If the file is not modified (and unlocked), you can specify the
      revision to select; this lets you start working from an older
@@ -969,42 +1121,58 @@ additional arguments to specify precisely how to do the operation.
 
 
 
-File: emacs,  Node: Log Buffer,  Prev: Advanced C-x v v,  Up: Basic VC Editing
+File: emacs,  Node: Log Buffer,  Next: Old Revisions,  Prev: Basic VC Editing,  Up: Version Control
 
-32.1.3.4 Features of the Log Entry Buffer
-.........................................
+32.1.4 Features of the Log Entry Buffer
+---------------------------------------
 
-When you check in changes, Emacs pops up a buffer called `*VC-Log*' for
-you to enter a log entry.
+When you tell VC to commit a change, it pops up a buffer called
+`*VC-Log*'.  In this buffer, you should write a "log entry" describing
+the changes you have made (*note Why Version Control?::).  After you
+are done, type `C-c C-c'; this exits the buffer and commits the change,
+together with your log entry.
 
-   After you have finished editing the log message, type `C-c C-c' to
-exit the buffer and commit the change.
+   While in the `*VC-Log*' buffer, you can write one or more "header
+lines", specifying additional information to be supplied to the version
+control system.  Each header line must occupy a single line at the top
+of the buffer; the first line that is not a header line is treated as
+the start of the log entry.  For example, the following header line
+states that the present change was not written by you, but by another
+developer:
 
-   In the `*VC-Log*' buffer, typing `C-c C-f' (`log-edit-show-files')
-displays a list of files in the VC fileset you are committing.  If you
-called `C-x v v' directly from a work file, the VC fileset consists of
-that single file, so this command is not very useful.  If you called
-`C-x v v' from a VC directory buffer, the VC fileset may consist of
-multiple files (*note VC Directory Mode::).
+     Author: J. R. Hacker <jrh@example.com>
+
+Apart from the `Author' header, Emacs recognizes the headers `Date' (a
+manually-specified commit time) and `Fixes' (a reference to a bug fixed
+by the change).  Not all version control systems recognize all headers:
+Bazaar recognizes all three headers, while git, Mercurial, and Monotone
+recognizes only `Author' and `Summary'.  If you specify a header for a
+version control that does not support it, the header is treated as part
+of the log entry.
+
+   Type `C-c C-f' (`log-edit-show-files') to display a list of files in
+the current VC fileset.  If you called `C-x v v' directly from a work
+file, the fileset consists of that single file; if you called `C-x v v'
+from a VC directory buffer (*note VC Directory Mode::), the fileset may
+consist of multiple files.
 
    Type `C-c C-d' (`log-edit-show-diff') to show a "diff" of the
 changes you have made (i.e., the differences between the work file and
-the repository revision from which you started editing the file).  The
-diff is displayed in a special buffer in another window.  *Note
-Comparing Files::.
+the repository revision from which you started editing).  *Note Old
+Revisions::.
 
-   If you have written an entry in the `ChangeLog' (*note Change
-Log::), type `C-c C-a' (`log-edit-insert-changelog') to pull it into
-the `*VC-Log*' buffer.  If the topmost item in the `ChangeLog' was made
-under your user name on the current date, this command searches that
-item for entries that match the file(s) to be committed; if found,
-these entries are inserted.  *Note Change Logs and VC::, for the
-opposite way of working--generating ChangeLog entries from the revision
-control log.
+   If the current VC fileset includes one or more `ChangeLog' files
+(*note Change Log::), type `C-c C-a' (`log-edit-insert-changelog') to
+pull the relevant entries into the `*VC-Log*' buffer.  If the topmost
+item in each `ChangeLog' was made under your user name on the current
+date, this command searches that item for entries that match the
+file(s) to be committed; if found, these entries are inserted.  *Note
+Change Logs and VC::, for the opposite way of working--generating
+ChangeLog entries from the revision control log.
 
    To abort a check-in, just *don't* type `C-c C-c' in that buffer.
 You can switch buffers and do other editing.  As long as you don't try
-to check in another file, the entry you were editing remains in the
+to commit another file, the entry you were editing remains in the
 `*VC-Log*' buffer, and you can go back to that buffer at any time to
 complete the check-in.
 
@@ -1013,7 +1181,7 @@ convenient to specify the same log entry for many of the files.  (This
 is the normal way to do things on a changeset-oriented system, where
 comments are attached to changesets rather than the history of
 individual files.)  The most convenient way to do this is to mark all
-the files in VC Directory Mode and check in from there; the log buffer
+the files in VC Directory Mode and commit from there; the log buffer
 will carry the fileset information with it and do a group commit when
 you type `C-c C-c'.
 
@@ -1024,14 +1192,14 @@ commands `M-n', `M-p', `M-s' and `M-r' for doing this work just like
 the minibuffer history commands (except that these versions are used
 outside the minibuffer).
 
-   Each time you check in a change, the log entry buffer is put into VC
+   Each time you commit a change, the log entry buffer is put into VC
 Log Edit mode, which involves running two hooks: `text-mode-hook' and
 `vc-log-mode-hook'.  *Note Hooks::.
 
 
-File: emacs,  Node: Old Revisions,  Next: Secondary VC Commands,  Prev: Basic VC Editing,  Up: Version Control
+File: emacs,  Node: Old Revisions,  Next: Secondary VC Commands,  Prev: Log Buffer,  Up: Version Control
 
-32.1.4 Examining And Comparing Old Revisions
+32.1.5 Examining And Comparing Old Revisions
 --------------------------------------------
 
 One of the convenient features of version control is the ability to
@@ -1066,8 +1234,12 @@ in a separate window.
    `C-x v =' (`vc-diff') compares each file in the current VC fileset
 (saving them if necessary) with the repository revision(s) from which
 you started editing.  Note that the latter may or may not be the latest
-revision of the file(s).  The diff is displayed in a special buffer in
-another window.  *Note Comparing Files::.
+revision of the file(s).
+
+   The diff is displayed in another window, in a Diff mode buffer
+(*note Diff Mode::) named `*vc-diff*'.  In this buffer, the `g'
+(`revert-buffer') command performs the file comparison again,
+generating a new diff.
 
    To compare two arbitrary revisions of the current VC fileset, call
 `vc-diff' with a prefix argument: `C-u C-x v ='.  This prompts for two
@@ -1175,7 +1347,7 @@ view diffs, or view log entries:
 
 File: emacs,  Node: Secondary VC Commands,  Next: VC Directory Mode,  Prev: Old Revisions,  Up: Version Control
 
-32.1.5 The Secondary Commands of VC
+32.1.6 The Secondary Commands of VC
 -----------------------------------
 
 This section explains the secondary commands of VC.
@@ -1189,7 +1361,7 @@ This section explains the secondary commands of VC.
 
 File: emacs,  Node: Registering,  Next: VC Change Log,  Up: Secondary VC Commands
 
-32.1.5.1 Registering a File for Version Control
+32.1.6.1 Registering a File for Version Control
 ...............................................
 
 You can put any file under version control by simply visiting it, and
@@ -1231,7 +1403,7 @@ initial comment works like reading a log entry (*note Log Buffer::).
 
 File: emacs,  Node: VC Change Log,  Next: VC Undo,  Prev: Registering,  Up: Secondary VC Commands
 
-32.1.5.2 VC Change Log
+32.1.6.2 VC Change Log
 ......................
 
 `C-x v l'
@@ -1240,6 +1412,14 @@ File: emacs,  Node: VC Change Log,  Next: VC Undo,  Prev: Registering,  Up: Seco
 `C-x v L'
      Display the change history for the current repository
      (`vc-print-root-log').
+
+`C-x v I'
+     Display the changes that will be received with a pull operation
+     (`vc-log-incoming').
+
+`C-x v O'
+     Display the changes that will be sent by the next push operation
+     (`vc-log-outgoing').
 
    The command `C-x v l' (`vc-print-log') displays a buffer named
 `*vc-change-log*' in a new window.  This buffer lists the changes to
@@ -1256,6 +1436,19 @@ buffer showing the history of the version-controlled directory tree as
 a whole.  With a prefix argument, the command prompts for the maximum
 number of revisions to display.  RCS, SCCS, and CVS do not support this
 feature.
+
+   On a distributed version control system, the `C-x v I'
+(`vc-log-incoming') command displays a log buffer showing the changes
+that will be applied, the next time you run the version control
+system's "pull" command to get new revisions from another repository.
+This other repository is the default one from which changes are pulled,
+as defined by the version control system; with a prefix argument,
+`vc-log-incoming' prompts for a specific repository from which changes
+would be pulled, and lists the changes accordingly.  Similarly, `C-x v
+O' (`vc-log-outgoing') shows the changes that will be sent to another
+repository, the next time you run the "push" command; with a prefix
+argument, it prompts for a specific repository to which changes would
+be pushed.
 
    In the `*vc-change-log*' buffer, you can use the following keys to
 move between the logs of revisions and of files, to view past
@@ -1320,7 +1513,7 @@ buffer.  However, RCS, SCCS, and CVS do not support this feature.
 
 File: emacs,  Node: VC Undo,  Prev: VC Change Log,  Up: Secondary VC Commands
 
-32.1.5.3 Undoing Version Control Actions
+32.1.6.3 Undoing Version Control Actions
 ........................................
 
 `C-x v u'
@@ -1342,7 +1535,7 @@ revision.
    `C-x v u' is also the command to unlock a file if you lock it and
 then decide not to change it.
 
-   To cancel a change that you already checked in, use `C-x v c'
+   To cancel a change that you already committed, use `C-x v c'
 (`vc-rollback').  This command discards all record of the most recent
 checked-in revision, but only if your work file corresponds to that
 revision--you cannot use `C-x v c' to cancel a revision that is not the
@@ -1353,7 +1546,7 @@ relic.
 
 File: emacs,  Node: VC Directory Mode,  Next: Branches,  Prev: Secondary VC Commands,  Up: Version Control
 
-32.1.6 VC Directory Mode
+32.1.7 VC Directory Mode
 ------------------------
 
 When you are working on a large program, it is often useful to find out
@@ -1376,7 +1569,7 @@ called PCL-CVS.  *Note About PCL-CVS: (pcl-cvs)Top.
 
 File: emacs,  Node: VC Directory Buffer,  Next: VC Directory Commands,  Up: VC Directory Mode
 
-32.1.6.1 The VC Directory Buffer
+32.1.7.1 The VC Directory Buffer
 ................................
 
 The VC Directory buffer contains a list of version-controlled files in
@@ -1403,8 +1596,8 @@ used.  Here is an example using CVS:
 
 In this example, `file1.c' is modified with respect to the repository,
 and `file2.c' is not.  `file3.c' is modified, but other changes have
-also been checked in to the repository--you need to merge them with the
-work file before you can check it in.
+also been committed--you need to merge them with the work file before
+you can check it in.
 
    In the above, if the repository were on a remote machine, VC only
 contacts it when the variable `vc-stay-local' (or `vc-cvs-stay-local')
@@ -1430,12 +1623,12 @@ can customize this by setting the variable
 
 File: emacs,  Node: VC Directory Commands,  Prev: VC Directory Buffer,  Up: VC Directory Mode
 
-32.1.6.2 VC Directory Commands
+32.1.7.2 VC Directory Commands
 ..............................
 
 VC Directory mode has a full set of navigation and marking commands for
 picking out filesets.  Some of these are also available in a context
-menu invoked by the `mouse-2' button.
+menu invoked by `mouse-2'.
 
    Up- and down-arrow keys move in the buffer; `n' and `p'  also move
 vertically as in other list-browsing modes.  <SPC> and <TAB> behave
@@ -1477,7 +1670,8 @@ directory buffer will be used.
 
    `M-s a C-s' does an incremental search on the marked files.
 
-   `M-s a C-M-s' does an incremental search on the marked files.
+   `M-s a C-M-s' does an incremental regular expression search on the
+marked files.
 
    Commands are also accessible from the VC-dir menu.  Note that some
 VC backends use the VC-dir menu to make available extra,
@@ -1491,10 +1685,10 @@ buffers.  Some single-key shortcuts are available as well; `=', `+',
 `l', `i', and `v' behave as through prefixed with `C-x v'.
 
    The command `C-x v v' (`vc-next-action') operates on all the marked
-files, so that you can check in several files at once.  If the
-underlying VC supports atomic commits of multiple-file changesets, `C-x
-v v' with a selected set of modified but not committed files will
-commit all of them at once as a single changeset.
+files, so that you can commit several files at once.  If the underlying
+VC supports atomic commits of multiple-file changesets, `C-x v v' with
+a selected set of modified but not committed files will commit all of
+them at once as a single changeset.
 
    When `C-x v v' (`vc-next-action') operates on multiple files, all of
 those files must be either in the same state or in compatible states
@@ -1511,7 +1705,7 @@ will be replicated into the history of each file.
 
 File: emacs,  Node: Branches,  Next: Remote Repositories,  Prev: VC Directory Mode,  Up: Version Control
 
-32.1.7 Multiple Branches of a File
+32.1.8 Multiple Branches of a File
 ----------------------------------
 
 One use of version control is to maintain multiple "current" revisions
@@ -1558,7 +1752,7 @@ dot-pair example above have branch IDs 1.2.1 and 1.2.2.
 
 File: emacs,  Node: Switching Branches,  Next: Creating Branches,  Up: Branches
 
-32.1.7.1 Switching between Branches
+32.1.8.1 Switching between Branches
 ...................................
 
 To switch between branches, type `C-u C-x v v' and specify the revision
@@ -1579,13 +1773,13 @@ some other branch.
 
 File: emacs,  Node: Creating Branches,  Next: Merging,  Prev: Switching Branches,  Up: Branches
 
-32.1.7.2 Creating New Branches
+32.1.8.2 Creating New Branches
 ..............................
 
 To create a new branch from a head revision (one that is the latest in
 the branch that contains it), first select that revision if necessary,
 lock it with `C-x v v', and make whatever changes you want.  Then, when
-you check in the changes, use `C-u C-x v v'.  This lets you specify the
+you commit the changes, use `C-u C-x v v'.  This lets you specify the
 revision ID for the new revision.  You should specify a suitable branch
 ID for a branch starting at the current revision.  For example, if the
 current revision is 2.5, the branch ID should be 2.5.1, 2.5.2, and so
@@ -1602,11 +1796,11 @@ that you really mean to create a new branch--if you say no, you'll be
 offered a chance to lock the latest revision instead.  On a
 merging-based VCS you will skip this step.
 
-   Then make your changes and type `C-x v v' again to check in a new
+   Then make your changes and type `C-x v v' again to commit a new
 revision.  This automatically creates a new branch starting from the
-selected revision.  You need not specially request a new branch, because
-that's the only way to add a new revision at a point that is not the
-head of a branch.
+selected revision.  You need not specially request a new branch,
+because that's the only way to add a new revision at a point that is
+not the head of a branch.
 
    After the branch is created, you "stay" on it.  That means that
 subsequent check-ins create new revisions on that branch.  To leave the
@@ -1617,7 +1811,7 @@ command, described in the next section.
 
 File: emacs,  Node: Merging,  Next: Multi-User Branching,  Prev: Creating Branches,  Up: Branches
 
-32.1.7.3 Merging Branches
+32.1.8.3 Merging Branches
 .........................
 
 When you have finished the changes on a certain branch, you will often
@@ -1652,11 +1846,11 @@ type `C-x v v' to lock revision 1.5 so that you can change it.  Next,
 type `C-x v m 1.3.1 <RET>'.  This takes the entire set of changes on
 branch 1.3.1 (relative to revision 1.3, where the branch started, up to
 the last revision on the branch) and merges it into the current revision
-of the work file.  You can now check in the changed file, thus creating
+of the work file.  You can now commit the changed file, thus creating
 revision 1.6 containing the changes from the branch.
 
    It is possible to do further editing after merging the branch, before
-the next check-in.  But it is usually wiser to check in the merged
+the next check-in.  But it is usually wiser to commit the merged
 revision, then lock it and make the further changes.  This will keep a
 better record of the history of changes.
 
@@ -1681,13 +1875,18 @@ file revision with user B's changes in it is 1.11.
 
    Then you can resolve the conflicts by editing the file manually.  Or
 you can type `M-x vc-resolve-conflicts' after visiting the file.  This
-starts an Ediff session, as described above.  Don't forget to check in
+starts an Ediff session, as described above.  Don't forget to commit
 the merged version afterwards.
+
+   If there is more than one conflicted file in a merge, type `M-x
+vc-find-conflicted-file' after resolving the conflicts in each file.
+This command visits the next conflicted file, and moves point to the
+first conflict marker in that file.
 
 
 File: emacs,  Node: Multi-User Branching,  Prev: Merging,  Up: Branches
 
-32.1.7.4 Multi-User Branching
+32.1.8.4 Multi-User Branching
 .............................
 
 It is often useful for multiple developers to work simultaneously on
@@ -1712,7 +1911,7 @@ during this particular editing session.
 
 File: emacs,  Node: Remote Repositories,  Next: Revision Tags,  Prev: Branches,  Up: Version Control
 
-32.1.8 Remote Repositories
+32.1.9 Remote Repositories
 --------------------------
 
 A common way of using CVS and other more advanced VCSes is to set up a
@@ -1740,7 +1939,7 @@ are only useful for Subversion and earlier VCSes.
 
 File: emacs,  Node: Version Backups,  Next: Local Version Control,  Up: Remote Repositories
 
-32.1.8.1 Version Backups
+32.1.9.1 Version Backups
 ........................
 
 When VC sees that the repository for a file is on a remote machine, it
@@ -1788,7 +1987,7 @@ version backups remain until you delete them.
 
 File: emacs,  Node: Local Version Control,  Prev: Version Backups,  Up: Remote Repositories
 
-32.1.8.2 Local Version Control
+32.1.9.2 Local Version Control
 ..............................
 
 When you make many changes to a file that comes from a remote
@@ -1884,8 +2083,8 @@ repository using `C-u C-x v v cvs <RET>'.
 
 File: emacs,  Node: Revision Tags,  Next: Miscellaneous VC,  Prev: Remote Repositories,  Up: Version Control
 
-32.1.9 Revision Tags
---------------------
+32.1.10 Revision Tags
+---------------------
 
 In a VCS with per-file revision numbers (such as SCCS, RCS, or CVS)
 "tag" is a named set of file versions (one for each registered file)
@@ -1898,14 +2097,14 @@ version of the system that is ready for distribution to users.
 
 * Menu:
 
-* Making Revision Tags::		The tag facilities.
-* Revision Tag Caveats::		Things to be careful of when using tags.
+* Making Revision Tags::  The tag facilities.
+* Revision Tag Caveats::  Things to be careful of when using tags.
 
 
 File: emacs,  Node: Making Revision Tags,  Next: Revision Tag Caveats,  Up: Revision Tags
 
-32.1.9.1 Making and Using Revision Tags
-.......................................
+32.1.10.1 Making and Using Revision Tags
+........................................
 
 There are two basic commands for tags; one makes a tag with a given
 name, the other retrieves a named tag.
@@ -1936,8 +2135,8 @@ against each other.
 
 File: emacs,  Node: Revision Tag Caveats,  Prev: Making Revision Tags,  Up: Revision Tags
 
-32.1.9.2 Revision Tag Caveats
-.............................
+32.1.10.2 Revision Tag Caveats
+..............................
 
 For SCCS, VC implements tags itself; these tags are visible only
 through VC.  Most later systems (including CVS, Subversion, bzr, git,
@@ -1973,7 +2172,7 @@ work as retrieved.
 
 File: emacs,  Node: Miscellaneous VC,  Next: Customizing VC,  Prev: Revision Tags,  Up: Version Control
 
-32.1.10 Miscellaneous Commands and Features of VC
+32.1.11 Miscellaneous Commands and Features of VC
 -------------------------------------------------
 
 This section explains the less-frequently-used features of VC.
@@ -1988,7 +2187,7 @@ This section explains the less-frequently-used features of VC.
 
 File: emacs,  Node: Change Logs and VC,  Next: Renaming and VC,  Up: Miscellaneous VC
 
-32.1.10.1 Change Logs and VC
+32.1.11.1 Change Logs and VC
 ............................
 
 If you use RCS or CVS for a program and also maintain a change log file
@@ -2082,7 +2281,7 @@ trivia into `ChangeLog'.
 
 File: emacs,  Node: Renaming and VC,  Next: Version Headers,  Prev: Change Logs and VC,  Up: Miscellaneous VC
 
-32.1.10.2 Renaming VC Work Files and Master Files
+32.1.11.2 Renaming VC Work Files and Master Files
 .................................................
 
 When you rename a registered file, you must also rename its master file
@@ -2102,7 +2301,7 @@ else.
 
 File: emacs,  Node: Version Headers,  Prev: Renaming and VC,  Up: Miscellaneous VC
 
-32.1.10.3 Inserting Version Control Headers
+32.1.11.3 Inserting Version Control Headers
 ...........................................
 
 Sometimes it is convenient to put version identification strings
@@ -2185,12 +2384,12 @@ markers may not handle markers positioned between two version headers.
 
 File: emacs,  Node: Customizing VC,  Prev: Miscellaneous VC,  Up: Version Control
 
-32.1.11 Customizing VC
+32.1.12 Customizing VC
 ----------------------
 
 The variable `vc-handled-backends' determines which version control
-systems VC should handle.  The default value is `(RCS CVS SVN SCCS BZR
-GIT HG Arch)', so it contains all the version systems that are
+systems VC should handle.  The default value is `(RCS CVS SVN SCCS Bzr
+Git Hg Mtn Arch)', so it contains all the version systems that are
 currently supported.  If you want VC to ignore one or more of these
 systems, exclude its name from the list.  To disable VC entirely, set
 this variable to `nil'.
@@ -2211,7 +2410,7 @@ details.
 
 File: emacs,  Node: General VC Options,  Next: RCS and SCCS,  Up: Customizing VC
 
-32.1.11.1 General Options
+32.1.12.1 General Options
 .........................
 
 Emacs normally does not save backup files for source files that are
@@ -2245,10 +2444,10 @@ without asking for confirmation.  (This variable does not affect `C-x v
 c'; that operation is so drastic that it should always ask for
 confirmation.)
 
-   VC mode does much of its work by running the shell commands for RCS,
-CVS and SCCS.  If `vc-command-messages' is non-`nil', VC displays
-messages to indicate which shell commands it runs, and additional
-messages when the commands finish.
+   VC mode does much of its work by running the shell commands for the
+appropriate backend.  If `vc-command-messages' is non-`nil', VC
+displays messages to indicate which shell commands it runs, and
+additional messages when the commands finish.
 
    You can specify additional directories to search for version control
 programs by setting the variable `vc-path'.  These directories are
@@ -2258,7 +2457,7 @@ this variable, because VC normally finds the proper files automatically.
 
 File: emacs,  Node: RCS and SCCS,  Next: CVS Options,  Prev: General VC Options,  Up: Customizing VC
 
-32.1.11.2 Options for RCS and SCCS
+32.1.12.2 Options for RCS and SCCS
 ..................................
 
 By default, RCS uses locking to coordinate the activities of several
@@ -2300,7 +2499,7 @@ the variable `vc-mistrust-permissions' affects SCCS use, but
 
 File: emacs,  Node: CVS Options,  Prev: RCS and SCCS,  Up: Customizing VC
 
-32.1.11.3 Options specific for CVS
+32.1.12.3 Options specific for CVS
 ..................................
 
 By default, CVS does not use locking to coordinate the activities of
@@ -2513,13 +2712,13 @@ Ebrowse: (ebrowse)Top.
 
 * Menu:
 
-* Tag Syntax::		Tag syntax for various types of code and text files.
-* Create Tags Table::	Creating a tags table with `etags'.
+* Tag Syntax::          Tag syntax for various types of code and text files.
+* Create Tags Table::   Creating a tags table with `etags'.
 * Etags Regexps::       Create arbitrary tags using regular expressions.
-* Select Tags Table::	How to visit a tags table.
-* Find Tag::		Commands to find the definition of a specific tag.
-* Tags Search::		Using a tags table for searching and replacing.
-* List Tags::		Listing and finding tags defined in a file.
+* Select Tags Table::   How to visit a tags table.
+* Find Tag::            Commands to find the definition of a specific tag.
+* Tags Search::         Using a tags table for searching and replacing.
+* List Tags::           Listing and finding tags defined in a file.
 
 
 File: emacs,  Node: Tag Syntax,  Next: Create Tags Table,  Up: Tags
@@ -3115,9 +3314,58 @@ with `M-x tags-apropos' by customizing the variable
 name in the buffer.  *Note Symbol Completion::.
 
 
+File: emacs,  Node: EDE,  Next: Emerge,  Prev: Tags,  Up: Maintaining
+
+32.4 Emacs Development Environment
+==================================
+
+EDE ("Emacs Development Environment") is a package that simplifies the
+task of creating, building, and debugging large programs with Emacs.
+It provides some of the features of an IDE, or "Integrated Development
+Environment", in Emacs.
+
+   This section provides a brief description of EDE usage.  For full
+details, see *note EDE: (ede)Top.
+
+   EDE is implemented as a global minor mode (*note Minor Modes::).  To
+enable it, type `M-x global-ede-mode' or click on the `Project Support
+(EDE)' item in the `Tools' menu.  You can also enable EDE each time you
+start Emacs, by adding the following line to your initialization file:
+
+     (global-ede-mode t)
+
+Activating EDE adds a menu named `Development' to the menu bar.  Many
+EDE commands, including the ones described below, can be invoked from
+this menu.
+
+   EDE organizes files into "projects", which correspond to directory
+trees.  The "project root" is the topmost directory of a project.  To
+define a new project, visit a file in the desired project root and type
+`M-x ede-new'.  This command prompts for a "project type", which refers
+to the underlying method that EDE will use to manage the project (*note
+EDE: (ede)Creating a Project.).  The most common project types are
+`Make', which uses Makefiles, and `Automake', which uses GNU Automake
+(*note Automake: (automake)Top.).  In both cases, EDE also creates a
+file named `Project.ede', which stores information about the project.
+
+   A project may contain one or more "targets".  A target can be an
+object file, executable program, or some other type of file, which is
+"built" from one or more of the files in the project.
+
+   To add a new "target" to a project, type `C-c . t' (`M-x
+ede-new-target').  This command also asks if you wish to "add" the
+current file to that target, which means that the target is to be built
+from that file.  After you have defined a target, you can add more
+files to it by typing `C-c . a' (`ede-add-file').
+
+   To build a target, type `C-c . c' (`ede-compile-target').  To build
+all the targets in the project, type `C-c . C' (`ede-compile-project').
+EDE uses the file types to guess how the target should be built.
+
+
 File: emacs,  Node: Emerge,  Prev: EDE,  Up: Maintaining
 
-32.4 Merging Files with Emerge
+32.5 Merging Files with Emerge
 ==============================
 
 It's not unusual for programmers to get their signals crossed and
@@ -3128,21 +3376,21 @@ and *note Ediff: (ediff)Top.
 
 * Menu:
 
-* Overview of Emerge::	How to start Emerge.  Basic concepts.
-* Submodes of Emerge::	Fast mode vs. Edit mode.
-			  Skip Prefers mode and Auto Advance mode.
-* State of Difference::	You do the merge by specifying state A or B
-			  for each difference.
-* Merge Commands::	Commands for selecting a difference,
-			  changing states of differences, etc.
-* Exiting Emerge::	What to do when you've finished the merge.
-* Combining in Emerge::	    How to keep both alternatives for a difference.
-* Fine Points of Emerge::   Miscellaneous issues.
+* Overview of Emerge::     How to start Emerge.  Basic concepts.
+* Submodes of Emerge::     Fast mode vs. Edit mode.
+                             Skip Prefers mode and Auto Advance mode.
+* State of Difference::    You do the merge by specifying state A or B
+                             for each difference.
+* Merge Commands::         Commands for selecting a difference,
+                             changing states of differences, etc.
+* Exiting Emerge::         What to do when you've finished the merge.
+* Combining in Emerge::    How to keep both alternatives for a difference.
+* Fine Points of Emerge::  Miscellaneous issues.
 
 
 File: emacs,  Node: Overview of Emerge,  Next: Submodes of Emerge,  Up: Emerge
 
-32.4.1 Overview of Emerge
+32.5.1 Overview of Emerge
 -------------------------
 
 To start Emerge, run one of these four commands:
@@ -3219,7 +3467,7 @@ the output buffer, but you can save it yourself if you wish.
 
 File: emacs,  Node: Submodes of Emerge,  Next: State of Difference,  Prev: Overview of Emerge,  Up: Emerge
 
-32.4.2 Submodes of Emerge
+32.5.2 Submodes of Emerge
 -------------------------
 
 You can choose between two modes for giving merge commands: Fast mode
@@ -3256,7 +3504,7 @@ toggle the mode with no argument.
 
 File: emacs,  Node: State of Difference,  Next: Merge Commands,  Prev: Submodes of Emerge,  Up: Emerge
 
-32.4.3 State of a Difference
+32.5.3 State of a Difference
 ----------------------------
 
 In the merge buffer, a difference is marked with lines of `v' and `^'
@@ -3316,7 +3564,7 @@ combined
 
 File: emacs,  Node: Merge Commands,  Next: Exiting Emerge,  Prev: State of Difference,  Up: Emerge
 
-32.4.4 Merge Commands
+32.5.4 Merge Commands
 ---------------------
 
 Here are the Merge commands for Fast mode; in Edit mode, precede them
@@ -3429,7 +3677,7 @@ with `C-c C-c':
 
 File: emacs,  Node: Exiting Emerge,  Next: Combining in Emerge,  Prev: Merge Commands,  Up: Emerge
 
-32.4.5 Exiting Emerge
+32.5.5 Exiting Emerge
 ---------------------
 
 The `q' command (`emerge-quit') finishes the merge, storing the results
@@ -3449,7 +3697,7 @@ return value is `t' for successful completion, or `nil' if you abort.
 
 File: emacs,  Node: Combining in Emerge,  Next: Fine Points of Emerge,  Prev: Exiting Emerge,  Up: Emerge
 
-32.4.6 Combining the Two Versions
+32.5.6 Combining the Two Versions
 ---------------------------------
 
 Sometimes you want to keep _both_ alternatives for a particular
@@ -3474,7 +3722,7 @@ above, looks like this:
 
 File: emacs,  Node: Fine Points of Emerge,  Prev: Combining in Emerge,  Up: Emerge
 
-32.4.7 Fine Points of Emerge
+32.5.7 Fine Points of Emerge
 ----------------------------
 
 During the merge, you mustn't try to edit the A and B buffers yourself.
@@ -3493,55 +3741,6 @@ doing other things with Emacs until Emerge is ready to accept commands.
 
    After setting up the merge, Emerge runs the hook
 `emerge-startup-hook'.  *Note Hooks::.
-
-
-File: emacs,  Node: EDE,  Next: Emerge,  Prev: Tags,  Up: Maintaining
-
-32.5 Emacs Development Environment
-==================================
-
-EDE ("Emacs Development Environment") is a package that simplifies the
-task of creating, building, and debugging large programs with Emacs.
-It provides some of the features of an IDE, or "Integrated Development
-Environment", in Emacs.
-
-   This section provides a brief description of EDE usage.  For full
-details, see *note EDE: (ede)Top.
-
-   EDE is implemented as a global minor mode (*note Minor Modes::).  To
-enable it, type `M-x global-ede-mode' or click on the `Project Support
-(EDE)' item in the `Tools' menu.  You can also enable EDE each time you
-start Emacs, by adding the following line to your initialization file:
-
-     (global-ede-mode t)
-
-Activating EDE adds a menu named `Development' to the menu bar.  Many
-EDE commands, including the ones described below, can be invoked from
-this menu.
-
-   EDE organizes files into "projects", which correspond to directory
-trees.  The "project root" is the topmost directory of a project.  To
-define a new project, visit a file in the desired project root and type
-`M-x ede-new'.  This command prompts for a "project type", which refers
-to the underlying method that EDE will use to manage the project (*note
-EDE: (ede)Creating a Project.).  The most common project types are
-`Make', which uses Makefiles, and `Automake', which uses GNU Automake
-(*note Automake: (automake)Top.).  In both cases, EDE also creates a
-file named `Project.ede', which stores information about the project.
-
-   A project may contain one or more "targets".  A target can be an
-object file, executable program, or some other type of file, which is
-"built" from one or more of the files in the project.
-
-   To add a new "target" to a project, type `C-c . t' (`M-x
-ede-new-target').  This command also asks if you wish to "add" the
-current file to that target, which means that the target is to be built
-from that file.  After you have defined a target, you can add more
-files to it by typing `C-c . a' (`ede-add-file').
-
-   To build a target, type `C-c . c' (`ede-compile-target').  To build
-all the targets in the project, type `C-c . C' (`ede-compile-project').
-EDE uses the file types to guess how the target should be built.
 
 
 File: emacs,  Node: Abbrevs,  Next: Picture Mode,  Prev: Maintaining,  Up: Top
@@ -3767,9 +3966,9 @@ File: emacs,  Node: Editing Abbrevs,  Next: Saving Abbrevs,  Prev: Expanding Abb
 
      VARIOUS OTHER TABLES...
      (lisp-mode-abbrev-table)
-     "dk"	       0    "define-key"
+     "dk"          0    "define-key"
      (global-abbrev-table)
-     "dfn"	       0    "definition"
+     "dfn"         0    "definition"
 
 (Some blank lines of no semantic significance, and some other abbrev
 tables, have been omitted.)
@@ -4259,7 +4458,7 @@ via SMTP (*note Mail Headers::).
 
 * Menu:
 
-* Format: Mail Format.	      Format of a mail message.
+* Format: Mail Format.        Format of a mail message.
 * Headers: Mail Headers.      Details of some standard mail header fields.
 * Aliases: Mail Aliases.      Abbreviating and grouping mail addresses.
 * Commands: Mail Commands.    Special commands for editing mail being composed.
@@ -4840,7 +5039,7 @@ mail.
 * Deletion: Rmail Deletion.  Deleting and expunging messages.
 * Inbox: Rmail Inbox.        How mail gets into the Rmail file.
 * Files: Rmail Files.        Using multiple Rmail files.
-* Output: Rmail Output.	     Copying messages out to files.
+* Output: Rmail Output.      Copying messages out to files.
 * Labels: Rmail Labels.      Classifying messages by labeling them.
 * Attrs: Rmail Attributes.   Certain standard labels, called attributes.
 * Reply: Rmail Reply.        Sending replies to messages you are viewing.
@@ -4850,7 +5049,7 @@ mail.
 * Coding: Rmail Coding.      How Rmail handles decoding character sets.
 * Editing: Rmail Editing.    Editing message text and headers in Rmail.
 * Digest: Rmail Digest.      Extracting the messages from a digest message.
-* Rot13: Rmail Rot13.	     Reading messages encoded in the rot13 code.
+* Rot13: Rmail Rot13.        Reading messages encoded in the rot13 code.
 * Movemail::                 More details of fetching new mail.
 * Remote Mailboxes::         Retrieving mail from remote mailboxes.
 * Other Mailbox Formats::    Retrieving mail from local mailboxes in
@@ -5562,8 +5761,8 @@ buffer's name.  Normally only one summary buffer is displayed at a time.
 
 * Menu:
 
-* Rmail Make Summary::	     Making various sorts of summaries.
-* Rmail Summary Edit::	     Manipulating messages from the summary.
+* Rmail Make Summary::       Making various sorts of summaries.
+* Rmail Summary Edit::       Manipulating messages from the summary.
 
 
 File: emacs,  Node: Rmail Make Summary,  Next: Rmail Summary Edit,  Up: Rmail Summary
@@ -5815,47 +6014,78 @@ File: emacs,  Node: Rmail Display,  Next: Rmail Coding,  Prev: Rmail Sorting,  U
 36.13 Display of Messages
 =========================
 
-Rmail reformats the header of each message before displaying it for the
-first time.  Reformatting hides uninteresting header fields to reduce
-clutter.  You can use the `t' command to show the entire header or to
-repeat the header reformatting operation.
+This section describes how Rmail displays mail headers, MIME sections
+and attachments, and URLs.
 
 `t'
      Toggle display of complete header (`rmail-toggle-header').
 
-   Reformatting the header involves deleting most header fields, on the
-grounds that they are not interesting.  The variable
-`rmail-ignored-headers' holds a regular expression that specifies which
-header fields to hide in this way--if it matches the beginning of a
-header field, that whole field is hidden.  However, the variable
-`rmail-nonignored-headers' provides a further override: a header
-matching that regular expression is shown even if it matches
-`rmail-ignored-headers' too.
+   Before displaying each message for the first time, Rmail reformats
+its header, hiding uninteresting header fields to reduce clutter.  The
+`t' (`rmail-toggle-header') command toggles this, switching between
+showing the reformatted header fields and showing the complete,
+original header.  With a positive prefix argument, the command shows
+the reformatted header; with a zero or negative prefix argument, it
+shows the full header.  Selecting the message again also reformats it
+if necessary.
 
-   As an alternative to the previous two variables, you can set
-`rmail-displayed-headers' instead.  If non-`nil', this should be a
-regular expression specifying which headers to display.
-
-   To see the complete, original header, use the `t' command
-(`rmail-toggle-header').  This discards the reformatted headers of the
-current message and displays it with the original header.  Repeating
-`t' reformats the message again, which shows only the interesting
-headers according to the current values of the above variables.
-Selecting the message again also reformats it if necessary.
-
-   When the `t' command has a prefix argument, a positive argument
-means to show the reformatted header, and a zero or negative argument
-means to show the full header.
+   The variable `rmail-ignored-headers' holds a regular expression
+specifying the header fields to hide; any matching header line will be
+hidden.  The variable `rmail-nonignored-headers' overrides this: any
+header field matching that regular expression is shown even if it
+matches `rmail-ignored-headers' too.  The variable
+`rmail-displayed-headers' is an alternative to these two variables; if
+non-`nil', this should be a regular expression specifying which headers
+to display (the default is `nil').
 
    Rmail highlights certain header fields that are especially
-interesting--by default, the `From' and `Subject' fields.  The variable
-`rmail-highlighted-headers' holds a regular expression that specifies
-the header fields to highlight; if it matches the beginning of a header
-field, that whole field is highlighted.  To turn off this feature, set
-`rmail-highlighted-headers' to `nil'.  Customize the face
-`rmail-highlight' to adjust the style of the highlighting.
+interesting--by default, the `From' and `Subject' fields.  This
+highlighting uses the `rmail-highlight' face.  The variable
+`rmail-highlighted-headers' holds a regular expression specifying the
+header fields to highlight; if it matches the beginning of a header
+field, that whole field is highlighted.  To disable this feature, set
+`rmail-highlighted-headers' to `nil'.
 
-   You can highlight and activate URLs in incoming messages using Goto
+   If a message is in MIME (Multipurpose Internet Mail Extensions)
+format and contains multiple parts (MIME entities), Rmail displays each
+part with a "tagline".  The tagline summarizes the part's index, size,
+and content type.  Depending on the content type, it may also contain
+one or more buttons; these perform actions such as saving the part into
+a file.
+
+`<RET>'
+     Hide or show the MIME part at point (`rmail-mime-toggle-hidden').
+
+`<TAB>'
+     Move point to the next MIME tagline button.
+     (`rmail-mime-next-item').
+
+`<BackTab>'
+     Move point to the previous MIME part (`rmail-mime-previous-item').
+
+`v'
+     Toggle between MIME display and raw message (`rmail-mime').
+
+   Each plain-text MIME part is initially displayed immediately after
+its tagline, as part of the Rmail buffer, while MIME parts of other
+types are represented only by their taglines, with their actual
+contents hidden.  In either case, you can toggle a MIME part between
+its "displayed" and "hidden" states by typing <RET> anywhere in the
+part--or anywhere in its tagline, apart from a tagline button for some
+other action.  Type <RET> (or click with the mouse) to activate a
+tagline button, and <TAB> to cycle point between tagline buttons.
+
+   The `v' (`rmail-mime') command toggles between the default MIME
+display described above, and a "raw" display showing the undecoded MIME
+data.  With a prefix argument, this command toggles the display of only
+an entity at point.
+
+   To prevent Rmail from handling MIME decoded messages, change the
+variable `rmail-enable-mime' to `nil'.  When this is the case, the `v'
+(`rmail-mime') command instead creates a temporary buffer to display
+the current MIME message.
+
+   You can highlight and activate URLs in the Rmail buffer using Goto
 Address mode:
 
      (add-hook 'rmail-show-message-hook (lambda () (goto-address-mode 1)))
@@ -5863,10 +6093,6 @@ Address mode:
 Then you can browse these URLs by clicking on them with `Mouse-2' (or
 `Mouse-1' quickly) or by moving to one and typing `C-c <RET>'.  *Note
 Activating URLs: Goto Address mode.
-
-   The `v' (`rmail-mime') command creates a temporary buffer displaying
-the current MIME message.  By default, it displays plain text and
-multipart messages, and offers buttons to save attachments.
 
 
 File: emacs,  Node: Rmail Coding,  Next: Rmail Editing,  Prev: Rmail Display,  Up: Rmail
@@ -6182,19 +6408,19 @@ operate on the listed files.  *Note Directories::.
 * Deletion: Dired Deletion.   Deleting files with Dired.
 * Flagging Many Files::       Flagging files based on their names.
 * Visit: Dired Visiting.      Other file operations through Dired.
-* Marks vs Flags::	      Flagging for deletion vs marking.
-* Operating on Files::	      How to copy, rename, print, compress, etc.
-			        either one file or several files.
+* Marks vs Flags::            Flagging for deletion vs marking.
+* Operating on Files::        How to copy, rename, print, compress, etc.
+                                either one file or several files.
 * Shell Commands in Dired::   Running a shell command on the marked files.
 * Transforming File Names::   Using patterns to rename multiple files.
-* Comparison in Dired::	      Running `diff' by way of Dired.
+* Comparison in Dired::       Running `diff' by way of Dired.
 * Subdirectories in Dired::   Adding subdirectories to the Dired buffer.
 
 * Subdir Switches::           Subdirectory switches in Dired.
-* Subdirectory Motion::	      Moving across subdirectories, and up and down.
+* Subdirectory Motion::       Moving across subdirectories, and up and down.
 * Hiding Subdirectories::     Making subdirectories visible or invisible.
 * Updating: Dired Updating.   Discarding lines for files of no interest.
-* Find: Dired and Find.	      Using `find' to choose the files for Dired.
+* Find: Dired and Find.       Using `find' to choose the files for Dired.
 * Wdired::                    Operating on files by editing the Dired buffer.
 * Image-Dired::               Viewing image thumbnails in Dired.
 * Misc: Misc Dired Features.  Various other features.
@@ -6218,12 +6444,12 @@ directory name.
 
    The variable `dired-listing-switches' specifies the options to give
 to `ls' for listing the directory; this string _must_ contain `-l'.  If
-you use a numeric prefix argument with the `dired' command, you can
-specify the `ls' switches with the minibuffer before you enter the
-directory specification.  No matter how they are specified, the `ls'
-switches can include short options (that is, single characters)
-requiring no arguments, and long options (starting with `--') whose
-arguments are specified with `='.
+you use a prefix argument with the `dired' command, you can specify the
+`ls' switches with the minibuffer before you enter the directory
+specification.  No matter how they are specified, the `ls' switches can
+include short options (that is, single characters) requiring no
+arguments, and long options (starting with `--') whose arguments are
+specified with `='.
 
    On MS-Windows and MS-DOS systems, Emacs _emulates_ `ls'; see *note
 ls in Lisp::, for options and peculiarities of that emulation.
@@ -6568,295 +6794,4 @@ unflag files.)
      `dired-undo' restores the original names in the Dired buffer,
      which gets the Dired buffer out of sync with the actual contents of
      the directory.
-
-
-File: emacs,  Node: Operating on Files,  Next: Shell Commands in Dired,  Prev: Marks vs Flags,  Up: Dired
-
-37.7 Operating on Files
-=======================
-
-This section describes the basic Dired commands to operate on one file
-or several files.  All of these commands are capital letters; all of
-them use the minibuffer, either to read an argument or to ask for
-confirmation, before they act.  All of them let you specify the files
-to manipulate in these ways:
-
-   * If you give the command a numeric prefix argument N, it operates
-     on the next N files, starting with the current file.  (If N is
-     negative, the command operates on the -N files preceding the
-     current line.)
-
-   * Otherwise, if some files are marked with `*', the command operates
-     on all those files.
-
-   * Otherwise, the command operates on the current file only.
-
-Certain other Dired commands, such as `!' and the `%' commands, use the
-same conventions to decide which files to work on.
-
-   Commands which ask for a destination directory, such as those which
-copy and rename files or create links for them, try to guess the default
-target directory for the operation.  Normally, they suggest the Dired
-buffer's default directory, but if the variable `dired-dwim-target' is
-non-`nil', and if there is another Dired buffer displayed in the next
-window, that other buffer's directory is suggested instead.
-
-   Here are the file-manipulating Dired commands that operate on files.
-
-`C NEW <RET>'
-     Copy the specified files (`dired-do-copy').  The argument NEW is
-     the directory to copy into, or (if copying a single file) the new
-     name.  This is like the shell command `cp'.
-
-     If `dired-copy-preserve-time' is non-`nil', then copying with this
-     command preserves the modification time of the old file in the
-     copy, like `cp -p'.
-
-     The variable `dired-recursive-copies' controls whether to copy
-     directories recursively (like `cp -r').  The default is `nil',
-     which means that directories cannot be copied.
-
-`D'
-     Delete the specified files (`dired-do-delete').  This is like the
-     shell command `rm'.
-
-     Like the other commands in this section, this command operates on
-     the _marked_ files, or the next N files.  By contrast, `x'
-     (`dired-do-flagged-delete') deletes all "flagged" files.
-
-`R NEW <RET>'
-     Rename the specified files (`dired-do-rename').  If you rename a
-     single file, the argument NEW is the new name of the file.  If you
-     rename several files, the argument NEW is the directory into which
-     to move the files (this is like the shell command `mv').
-
-     Dired automatically changes the visited file name of buffers
-     associated with renamed files so that they refer to the new names.
-
-`H NEW <RET>'
-     Make hard links to the specified files (`dired-do-hardlink').
-     This is like the shell command `ln'.  The argument NEW is the
-     directory to make the links in, or (if making just one link) the
-     name to give the link.
-
-`S NEW <RET>'
-     Make symbolic links to the specified files (`dired-do-symlink').
-     This is like `ln -s'.  The argument NEW is the directory to make
-     the links in, or (if making just one link) the name to give the
-     link.
-
-`M MODESPEC <RET>'
-     Change the mode (also called "permission bits") of the specified
-     files (`dired-do-chmod').  This uses the `chmod' program, so
-     MODESPEC can be any argument that `chmod' can handle.
-
-`G NEWGROUP <RET>'
-     Change the group of the specified files to NEWGROUP
-     (`dired-do-chgrp').
-
-`O NEWOWNER <RET>'
-     Change the owner of the specified files to NEWOWNER
-     (`dired-do-chown').  (On most systems, only the superuser can do
-     this.)
-
-     The variable `dired-chown-program' specifies the name of the
-     program to use to do the work (different systems put `chown' in
-     different places).
-
-`T TIMESTAMP <RET>'
-     Touch the specified files (`dired-do-touch').  This means updating
-     their modification times to the present time.  This is like the
-     shell command `touch'.
-
-`P COMMAND <RET>'
-     Print the specified files (`dired-do-print').  You must specify the
-     command to print them with, but the minibuffer starts out with a
-     suitable guess made using the variables `lpr-command' and
-     `lpr-switches' (the same variables that `lpr-buffer' uses; *note
-     Printing::).
-
-`Z'
-     Compress the specified files (`dired-do-compress').  If the file
-     appears to be a compressed file already, uncompress it instead.
-
-`L'
-     Load the specified Emacs Lisp files (`dired-do-load').  *Note Lisp
-     Libraries::.
-
-`B'
-     Byte compile the specified Emacs Lisp files
-     (`dired-do-byte-compile').  *Note Byte Compilation: (elisp)Byte
-     Compilation.
-
-`A REGEXP <RET>'
-     Search all the specified files for the regular expression REGEXP
-     (`dired-do-search').
-
-     This command is a variant of `tags-search'.  The search stops at
-     the first match it finds; use `M-,' to resume the search and find
-     the next match.  *Note Tags Search::.
-
-`Q REGEXP <RET> TO <RET>'
-     Perform `query-replace-regexp' on each of the specified files,
-     replacing matches for REGEXP with the string TO
-     (`dired-do-query-replace-regexp').
-
-     This command is a variant of `tags-query-replace'.  If you exit the
-     query replace loop, you can use `M-,' to resume the scan and
-     replace more matches.  *Note Tags Search::.
-
-
-File: emacs,  Node: Shell Commands in Dired,  Next: Transforming File Names,  Prev: Operating on Files,  Up: Dired
-
-37.8 Shell Commands in Dired
-============================
-
-The Dired command `!' (`dired-do-shell-command') reads a shell command
-string in the minibuffer and runs that shell command on one or more
-files.  The files that the shell command operates on are determined in
-the usual way for Dired commands (*note Operating on Files::).  The
-command `X' is a synonym for `!'.
-
-   The command `&' (`dired-do-async-shell-command') does the same,
-except that it runs the shell command asynchronously.  You can also do
-this with `!', by appending a `&' character to the end of the shell
-command.
-
-   For both `!' and `&', the working directory for the shell command is
-the top-level directory of the Dired buffer.
-
-   If you tell `!' or `&' to operate on more than one file, the shell
-command string determines how those files are passed to the shell
-command:
-
-   * If you use `*' surrounded by whitespace in the command string,
-     then the command runs just once, with the list of file names
-     substituted for the `*'.  The order of file names is the order of
-     appearance in the Dired buffer.
-
-     Thus, `! tar cf foo.tar * <RET>' runs `tar' on the entire list of
-     file names, putting them into one tar file `foo.tar'.
-
-     If you want to use `*' as a shell wildcard with whitespace around
-     it, write `*""'.  In the shell, this is equivalent to `*'; but
-     since the `*' is not surrounded by whitespace, Dired does not
-     treat it specially.
-
-   * Otherwise, if the command string contains `?' surrounded by
-     whitespace, Emacs runs the shell command once _for each file_,
-     substituting the current file name for `?' each time.  You can use
-     `?' more than once in the command; the same file name replaces
-     each occurrence.
-
-   * If the command string contains neither `*' nor `?', Emacs runs the
-     shell command once for each file, adding the file name is added at
-     the end.  For example, `! uudecode <RET>' runs `uudecode' on each
-     file.
-
-   To iterate over the file names in a more complicated fashion, use an
-explicit shell loop.  For example, here is how to uuencode each file,
-making the output file name by appending `.uu' to the input file name:
-
-     for file in * ; do uuencode "$file" "$file" >"$file".uu; done
-
-   The `!' and `&' commands do not attempt to update the Dired buffer
-to show new or modified files, because they don't know what files will
-be changed.  Use the `g' command to update the Dired buffer (*note
-Dired Updating::).
-
-   *Note Single Shell::, for information about running shell commands
-outside Dired.
-
-
-File: emacs,  Node: Transforming File Names,  Next: Comparison in Dired,  Prev: Shell Commands in Dired,  Up: Dired
-
-37.9 Transforming File Names in Dired
-=====================================
-
-This section describes Dired commands which alter file names in a
-systematic way.  Each command operates on some or all of the marked
-files, using a new name made by transforming the existing name.
-
-   Like the basic Dired file-manipulation commands (*note Operating on
-Files::), the commands described here operate either on the next N
-files, or on all files marked with `*', or on the current file.  (To
-mark files, use the commands described in *note Marks vs Flags::.)
-
-   All of the commands described in this section work _interactively_:
-they ask you to confirm the operation for each candidate file.  Thus,
-you can select more files than you actually need to operate on (e.g.,
-with a regexp that matches many files), and then filter the selected
-names by typing `y' or `n' when the command prompts for confirmation.
-
-`% u'
-     Rename each of the selected files to an upper-case name
-     (`dired-upcase').  If the old file names are `Foo' and `bar', the
-     new names are `FOO' and `BAR'.
-
-`% l'
-     Rename each of the selected files to a lower-case name
-     (`dired-downcase').  If the old file names are `Foo' and `bar',
-     the new names are `foo' and `bar'.
-
-`% R FROM <RET> TO <RET>'
-`% C FROM <RET> TO <RET>'
-`% H FROM <RET> TO <RET>'
-`% S FROM <RET> TO <RET>'
-     These four commands rename, copy, make hard links and make soft
-     links, in each case computing the new name by regular-expression
-     substitution from the name of the old file.
-
-   The four regular-expression substitution commands effectively
-perform a search-and-replace on the selected file names.  They read two
-arguments: a regular expression FROM, and a substitution pattern TO;
-they match each "old" file name against FROM, and then replace the
-matching part with TO.  You can use `\&' and `\DIGIT' in TO to refer to
-all or part of what the pattern matched in the old file name, as in
-`replace-regexp' (*note Regexp Replace::).  If the regular expression
-matches more than once in a file name, only the first match is replaced.
-
-   For example, `% R ^.*$ <RET> x-\& <RET>' renames each selected file
-by prepending `x-' to its name.  The inverse of this, removing `x-'
-from the front of each file name, is also possible: one method is `% R
-^x-\(.*\)$ <RET> \1 <RET>'; another is `% R ^x- <RET> <RET>'.  (Use `^'
-and `$' to anchor matches that should span the whole file name.)
-
-   Normally, the replacement process does not consider the files'
-directory names; it operates on the file name within the directory.  If
-you specify a numeric argument of zero, then replacement affects the
-entire absolute file name including directory name.  (A non-zero
-argument specifies the number of files to operate on.)
-
-   You may want to select the set of files to operate on using the same
-regexp FROM that you will use to operate on them.  To do this, mark
-those files with `% m FROM <RET>', then use the same regular expression
-in the command to operate on the files.  To make this more convenient,
-the `%' commands to operate on files use the last regular expression
-specified in any `%' command as a default.
-
-
-File: emacs,  Node: Comparison in Dired,  Next: Subdirectories in Dired,  Prev: Transforming File Names,  Up: Dired
-
-37.10 File Comparison with Dired
-================================
-
-Here are two Dired commands that compare specified files using `diff'.
-They show the output in a buffer using Diff mode (*note Comparing
-Files::).
-
-`='
-     Compare the current file (the file at point) with another file (the
-     file at the mark) using the `diff' program (`dired-diff').  The
-     file at the mark is the first argument of `diff', and the file at
-     point is the second argument.  This refers to the ordinary Emacs
-     mark, not Dired marks; use `C-<SPC>' (`set-mark-command') to set
-     the mark at the first file's line (*note Setting Mark::).
-
-`M-='
-     Compare the current file with its latest backup file
-     (`dired-backup-diff').  If the current file is itself a backup,
-     compare it with the file it is a backup of; this way, you can
-     compare a file with any one of its backups.
-
-     The backup file is the first file given to `diff'.
 

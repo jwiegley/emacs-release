@@ -1,6 +1,6 @@
 ;;; ede-proj-misc.el --- EDE Generic Project Emacs Lisp support
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2008, 2009, 2010
+;; Copyright (C) 1998, 1999, 2000, 2001, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
@@ -35,8 +35,8 @@
 
 ;; FIXME this isn't how you spell "miscellaneous". :(
 (defclass ede-proj-target-makefile-miscelaneous (ede-proj-target-makefile)
-  ((sourcetype :initform (ede-misc-source))
-   (availablecompilers :initform (ede-misc-compile))
+  ((sourcetype :initform '(ede-misc-source))
+   (availablecompilers :initform '(ede-misc-compile))
    (submakefile :initarg :submakefile
 		:initform ""
 		:type string

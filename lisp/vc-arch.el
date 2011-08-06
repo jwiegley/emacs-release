@@ -1,6 +1,6 @@
 ;;; vc-arch.el --- VC backend for the Arch version-control system
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
@@ -254,8 +254,7 @@ Only the value `maybe' can be trusted :-(."
 	       (buffer-substring (point-min) (1- (point-max)))))))))
 
 (defun vc-arch-workfile-unchanged-p (file)
-  "Check if FILE is unchanged by diffing against the master version.
-Return non-nil if FILE is unchanged."
+  "Stub: arch workfiles are always considered to be in a changed state,"
   nil)
 
 (defun vc-arch-state (file)

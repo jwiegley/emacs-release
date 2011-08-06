@@ -25,7 +25,7 @@
 This manual documents the Semantic library and utilities.
 
 Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
-2009, 2010 Free Software Foundation, Inc.
+2009, 2010, 2011 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -41,9 +41,9 @@ developing GNU and promoting software freedom.''
 @end quotation
 @end copying
 
-@dircategory Emacs
+@dircategory Emacs misc features
 @direntry
-* Semantic: (semantic).      Source code parser library and utilities.
+* Semantic: (semantic).         Source code parser library and utilities.
 @end direntry
 
 @titlepage
@@ -65,7 +65,7 @@ developing GNU and promoting software freedom.''
 @macro obsolete{old,new}
 @sp 1
 @strong{Compatibility}:
-@code{\new\} introduced in @semantic{} version 2.0 supercedes
+@code{\new\} introduced in @semantic{} version 2.0 supersedes
 @code{\old\} which is now obsolete.
 @end macro
 
@@ -224,8 +224,8 @@ grammar developers; it is useful mostly for the hackers who would like
 to learn more about how @semantic{} works.
 
 @menu
-* Parser code ::	  Code used for the parsers
-* Tag handling ::	  Code used for manipulating tags
+* Parser code ::          Code used for the parsers
+* Tag handling ::         Code used for manipulating tags
 * Semanticdb Internals :: Code used in the semantic database
 * Analyzer Internals ::   Code used in the code analyzer
 * Tools ::                Code used in user tools

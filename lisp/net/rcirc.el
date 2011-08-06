@@ -1,6 +1,6 @@
 ;;; rcirc.el --- default, simple IRC client.
 
-;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Ryan Yeske
 ;; URL: http://www.nongnu.org/rcirc
@@ -80,6 +80,11 @@ VALUE must be a number or string.  If absent,
 VALUE must be a string.  If absent, `rcirc-default-user-name' is
 used.
 
+`:password'
+
+VALUE must be a string.  If absent, no PASS command will be sent
+to the server.
+
 `:full-name'
 
 VALUE must be a string.  If absent, `rcirc-default-full-name' is
@@ -94,6 +99,7 @@ connected to automatically."
 		:value-type (plist :options ((:nick string)
 					     (:port integer)
 					     (:user-name string)
+					     (:password string)
 					     (:full-name string)
 					     (:channels (repeat string)))))
   :group 'rcirc)
@@ -393,6 +399,8 @@ If ARG is non-nil, instead prompt for connection parameters."
 				(or (plist-get server-plist :nick)
 				    rcirc-default-nick)
 				'rcirc-nick-name-history))
+             (password (read-passwd "IRC Password: "
+                                    (plist-get server-plist 'password)))
 	     (channels (split-string
 			(read-string "IRC Channels: "
 				     (mapconcat 'identity
@@ -400,9 +408,13 @@ If ARG is non-nil, instead prompt for connection parameters."
 							   :channels)
 						" "))
 			"[, ]+" t)))
+
+        (when (= 0 (length password))
+          (setq password nil))
+
 	(rcirc-connect server port nick rcirc-default-user-name
 		       rcirc-default-full-name
-		       channels))
+		       channels password))
     ;; connect to servers in `rcirc-server-alist'
     (let (connected-servers)
       (dolist (c rcirc-server-alist)
@@ -413,7 +425,8 @@ If ARG is non-nil, instead prompt for connection parameters."
 			     rcirc-default-user-name))
 	      (full-name (or (plist-get (cdr c) :full-name)
 			     rcirc-default-full-name))
-	      (channels (plist-get (cdr c) :channels)))
+	      (channels (plist-get (cdr c) :channels))
+              (password (plist-get (cdr c) :password)))
 	  (when server
 	    (let (connected)
 	      (dolist (p (rcirc-process-list))
@@ -422,7 +435,7 @@ If ARG is non-nil, instead prompt for connection parameters."
 	      (if (not connected)
 		  (condition-case e
 		      (rcirc-connect server port nick user-name
-				     full-name channels)
+				     full-name channels password)
 		    (quit (message "Quit connecting to %s" server)))
 		(with-current-buffer (process-buffer connected)
 		  (setq connected-servers
@@ -454,7 +467,7 @@ If ARG is non-nil, instead prompt for connection parameters."
 
 ;;;###autoload
 (defun rcirc-connect (server &optional port nick user-name full-name
-			     startup-channels)
+			     startup-channels password)
   (save-excursion
     (message "Connecting to %s..." server)
     (let* ((inhibit-eol-conversion)
@@ -503,6 +516,8 @@ If ARG is non-nil, instead prompt for connection parameters."
       (add-hook 'auto-save-hook 'rcirc-log-write)
 
       ;; identify
+      (when password
+        (rcirc-send-string process (concat "PASS " password)))
       (rcirc-send-string process (concat "NICK " nick))
       (rcirc-send-string process (concat "USER " user-name
                                       " hostname servername :"
@@ -1068,7 +1083,7 @@ Create the buffer if it doesn't exist."
     (when (not (equal 0 (- (point) rcirc-prompt-end-marker)))
       ;; delete a trailing newline
       (when (eq (point) (point-at-bol))
-	(delete-backward-char 1))
+	(delete-char -1))
       (let ((input (buffer-substring-no-properties
 		    rcirc-prompt-end-marker (point))))
 	(dolist (line (split-string input "\n"))
@@ -1505,8 +1520,11 @@ return the filename, or nil if no logging is desired for this
 session.
 
 If the returned filename is absolute (`file-name-absolute-p'
-returns true), then it is used as-is, otherwise the resulting
-file is put into `rcirc-log-directory'."
+returns t), then it is used as-is, otherwise the resulting file
+is put into `rcirc-log-directory'.
+
+The filename is then cleaned using `convert-standard-filename' to
+guarantee valid filenames for the current OS."
   :group 'rcirc
   :type 'function)
 
@@ -1531,7 +1549,9 @@ file is put into `rcirc-log-directory'."
 Log data is written to `rcirc-log-directory', except for
 log-files with absolute names (see `rcirc-log-filename-function')."
   (dolist (cell rcirc-log-alist)
-    (let ((filename (expand-file-name (car cell) rcirc-log-directory))
+    (let ((filename (convert-standard-filename
+                     (expand-file-name (car cell)
+                                       rcirc-log-directory)))
 	  (coding-system-for-write 'utf-8))
       (make-directory (file-name-directory filename) t)
       (with-temp-buffer
@@ -2095,12 +2115,13 @@ With a prefix arg, prompt for new topic."
   (rcirc-send-string process (format "PRIVMSG %s :\C-aACTION %s\C-a"
                                      target args)))
 
-(defun rcirc-add-or-remove (set &optional elt)
-  (if (and elt (not (string= "" elt)))
-      (if (member-ignore-case elt set)
-	  (delete elt set)
-	(cons elt set))
-    set))
+(defun rcirc-add-or-remove (set &rest elements)
+  (dolist (elt elements)
+    (if (and elt (not (string= "" elt)))
+	(setq set (if (member-ignore-case elt set)
+		      (delete elt set)
+		    (cons elt set)))))
+  set)
 
 (defun-rcirc-command ignore (nick)
   "Manage the ignore list.
@@ -2108,7 +2129,9 @@ Ignore NICK, unignore NICK if already ignored, or list ignored
 nicks when no NICK is given.  When listing ignored nicks, the
 ones added to the list automatically are marked with an asterisk."
   (interactive "sToggle ignoring of nick: ")
-  (setq rcirc-ignore-list (rcirc-add-or-remove rcirc-ignore-list nick))
+  (setq rcirc-ignore-list
+	(apply #'rcirc-add-or-remove rcirc-ignore-list
+	       (split-string nick nil t)))
   (rcirc-print process nil "IGNORE" target
 	       (mapconcat
 		(lambda (nick)
@@ -2120,14 +2143,18 @@ ones added to the list automatically are marked with an asterisk."
 (defun-rcirc-command bright (nick)
   "Manage the bright nick list."
   (interactive "sToggle emphasis of nick: ")
-  (setq rcirc-bright-nicks (rcirc-add-or-remove rcirc-bright-nicks nick))
+  (setq rcirc-bright-nicks
+	(apply #'rcirc-add-or-remove rcirc-bright-nicks
+	       (split-string nick nil t)))
   (rcirc-print process nil "BRIGHT" target
 	       (mapconcat 'identity rcirc-bright-nicks " ")))
 
 (defun-rcirc-command dim (nick)
   "Manage the dim nick list."
   (interactive "sToggle deemphasis of nick: ")
-  (setq rcirc-dim-nicks (rcirc-add-or-remove rcirc-dim-nicks nick))
+  (setq rcirc-dim-nicks
+	(apply #'rcirc-add-or-remove rcirc-dim-nicks
+	       (split-string nick nil t)))
   (rcirc-print process nil "DIM" target
 	       (mapconcat 'identity rcirc-dim-nicks " ")))
 
@@ -2136,7 +2163,9 @@ ones added to the list automatically are marked with an asterisk."
 Mark KEYWORD, unmark KEYWORD if already marked, or list marked
 keywords when no KEYWORD is given."
   (interactive "sToggle highlighting of keyword: ")
-  (setq rcirc-keywords (rcirc-add-or-remove rcirc-keywords keyword))
+  (setq rcirc-keywords
+	(apply #'rcirc-add-or-remove rcirc-keywords
+	       (split-string keyword nil t)))
   (rcirc-print process nil "KEYWORD" target
 	       (mapconcat 'identity rcirc-keywords " ")))
 

@@ -1,6 +1,6 @@
-diff -c -r 23.2-grammars-out/semantic-c-by.el 23.2-grammars-inc/semantic-c-by.el
-*** 23.2-grammars-out/semantic-c-by.el	2011-07-31 21:59:40.614757387 -0400
---- 23.2-grammars-inc/semantic-c-by.el	2011-07-31 21:42:10.224756628 -0400
+diff -c -r grammars/semantic-c-by.el new/semantic-c-by.el
+*** semantic-c-by.el	2011-07-31 20:19:31.884753047 -0400
+--- c-by.el	2011-07-31 20:21:02.694753113 -0400
 ***************
 *** 1,42 ****
 ! ;;; semantic-c-by.el --- Generated parser support file
@@ -8,7 +8,7 @@ diff -c -r 23.2-grammars-out/semantic-c-by.el 23.2-grammars-inc/semantic-c-by.el
 ! ;; Copyright (C) 1999-2011 Free Software Foundation, Inc.
   
 ! ;; Author: Chong Yidong <cyd@furball>
-! ;; Created: 2011-07-31 21:59:39-0400
+! ;; Created: 2011-07-31 20:19:31-0400
 ! ;; Keywords: syntax
 ! ;; X-RCS: $Id$
   
@@ -108,7 +108,263 @@ diff -c -r 23.2-grammars-out/semantic-c-by.el 23.2-grammars-inc/semantic-c-by.el
        ) ;; end bovine-inner-scope
   
 ***************
-*** 2192,2207 ****
+*** 1245,1253 ****
+  	 (nth 7 vals))
+  	(nth 0 vals)
+  	(nth 10 vals)
+! 	(list
+! 	 (nth 4 vals))
+! 	(nth 9 vals))
+        )
+       (opt-stars
+        opt-class
+--- 1239,1245 ----
+  	 (nth 7 vals))
+  	(nth 0 vals)
+  	(nth 10 vals)
+! 	(nth 4 vals))
+        )
+       (opt-stars
+        opt-class
+***************
+*** 1269,1277 ****
+  	 (nth 6 vals))
+  	(nth 0 vals)
+  	(nth 9 vals)
+! 	(list
+! 	 (nth 4 vals))
+! 	(nth 8 vals))
+        )
+       ) ;; end func-decl
+  
+--- 1261,1267 ----
+  	 (nth 6 vals))
+  	(nth 0 vals)
+  	(nth 9 vals)
+! 	(nth 4 vals))
+        )
+       ) ;; end func-decl
+  
+***************
+*** 1442,1452 ****
+        namespace-symbol
+        opt-bits
+        opt-array
+        ,(semantic-lambda
+  	(nth 2 vals)
+  	(nth 0 vals)
+  	(nth 3 vals)
+! 	(nth 4 vals))
+        )
+       ) ;; end varname
+  
+--- 1432,1444 ----
+        namespace-symbol
+        opt-bits
+        opt-array
++       opt-assign
+        ,(semantic-lambda
+  	(nth 2 vals)
+  	(nth 0 vals)
+  	(nth 3 vals)
+! 	(nth 4 vals)
+! 	(nth 5 vals))
+        )
+       ) ;; end varname
+  
+***************
+*** 1491,1518 ****
+        )
+       ) ;; end variablearg-opt-name
+  
+-     (varname-opt-initializer
+-      (semantic-list)
+-      (opt-assign)
+-      ( ;;EMPTY
+-       )
+-      ) ;; end varname-opt-initializer
+- 
+      (varnamelist
+       (opt-ref
+        varname
+-       varname-opt-initializer
+        punctuation
+        "\\`[,]\\'"
+        varnamelist
+        ,(semantic-lambda
+  	(cons
+  	 (nth 1 vals)
+! 	 (nth 4 vals)))
+        )
+       (opt-ref
+        varname
+-       varname-opt-initializer
+        ,(semantic-lambda
+  	(list
+  	 (nth 1 vals)))
+--- 1483,1501 ----
+        )
+       ) ;; end variablearg-opt-name
+  
+      (varnamelist
+       (opt-ref
+        varname
+        punctuation
+        "\\`[,]\\'"
+        varnamelist
+        ,(semantic-lambda
+  	(cons
+  	 (nth 1 vals)
+! 	 (nth 3 vals)))
+        )
+       (opt-ref
+        varname
+        ,(semantic-lambda
+  	(list
+  	 (nth 1 vals)))
+***************
+*** 2124,2187 ****
+        "\\`[&]\\'")
+       ) ;; end expr-start
+  
+-     (expr-binop
+-      (punctuation
+-       "\\`[-]\\'")
+-      (punctuation
+-       "\\`[+]\\'")
+-      (punctuation
+-       "\\`[*]\\'")
+-      (punctuation
+-       "\\`[/]\\'")
+-      (punctuation
+-       "\\`[&]\\'"
+-       punctuation
+-       "\\`[&]\\'")
+-      (punctuation
+-       "\\`[&]\\'")
+-      (punctuation
+-       "\\`[|]\\'"
+-       punctuation
+-       "\\`[|]\\'")
+-      (punctuation
+-       "\\`[|]\\'")
+-      ) ;; end expr-binop
+- 
+      (expression
+!      (unaryexpression
+!       expr-binop
+!       unaryexpression
+        ,(semantic-lambda
+  	(list
+  	 (identity start)
+  	 (identity end)))
+        )
+!      (unaryexpression
+        ,(semantic-lambda
+  	(list
+  	 (identity start)
+  	 (identity end)))
+        )
+-      ) ;; end expression
+- 
+-     (unaryexpression
+-      (number)
+-      (multi-stage-dereference)
+       (NEW
+!       multi-stage-dereference)
+       (NEW
+        builtintype-types
+!       semantic-list)
+!      (namespace-symbol)
+!      (string-seq)
+       (type-cast
+!       expression)
+       (semantic-list
+!       expression)
+!      (semantic-list)
+       (expr-start
+!       expression)
+!      ) ;; end unaryexpression
+      )
+    "Parser table.")
+  
+--- 2107,2180 ----
+        "\\`[&]\\'")
+       ) ;; end expr-start
+  
+      (expression
+!      (number
+        ,(semantic-lambda
+  	(list
+  	 (identity start)
+  	 (identity end)))
+        )
+!      (multi-stage-dereference
+        ,(semantic-lambda
+  	(list
+  	 (identity start)
+  	 (identity end)))
+        )
+       (NEW
+!       multi-stage-dereference
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+       (NEW
+        builtintype-types
+!       semantic-list
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+!      (namespace-symbol
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+!      (string-seq
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+       (type-cast
+!       expression
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+!      (semantic-list
+!       expression
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+       (semantic-list
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+       (expr-start
+!       expression
+!       ,(semantic-lambda
+! 	(list
+! 	 (identity start)
+! 	 (identity end)))
+!       )
+!      ) ;; end expression
+      )
+    "Parser table.")
+  
+***************
+*** 2193,2208 ****
   	semantic-flex-keywords-obarray semantic-c-by--keyword-table
   	semantic-equivalent-major-modes '(c-mode c++-mode)
   	))
@@ -137,9 +393,9 @@ diff -c -r 23.2-grammars-out/semantic-c-by.el 23.2-grammars-inc/semantic-c-by.el
   
 ! ;; arch-tag: 27da9f71-d2ef-473f-92a7-b0006b1a8491
 ! ;;; semantic/bovine/c-by.el ends here
-diff -c -r 23.2-grammars-out/semantic-make-by.el 23.2-grammars-inc/semantic-make-by.el
-*** 23.2-grammars-out/semantic-make-by.el	2011-07-31 21:59:41.024757389 -0400
---- 23.2-grammars-inc/semantic-make-by.el	2011-07-31 21:42:10.224756628 -0400
+diff -c -r grammars/semantic-make-by.el new/semantic-make-by.el
+*** semantic-make-by.el	2011-07-31 20:19:32.304753048 -0400
+--- make-by.el	2011-07-31 20:21:02.694753113 -0400
 ***************
 *** 1,36 ****
 ! ;;; semantic-make-by.el --- Generated parser support file
@@ -147,7 +403,7 @@ diff -c -r 23.2-grammars-out/semantic-make-by.el 23.2-grammars-inc/semantic-make
 ! ;; Copyright (C) 1999-2011 Free Software Foundation, Inc.
   
 ! ;; Author: Chong Yidong <cyd@furball>
-! ;; Created: 2011-07-31 21:59:40-0400
+! ;; Created: 2011-07-31 20:19:32-0400
 ! ;; Keywords: syntax
 ! ;; X-RCS: $Id$
   
@@ -253,9 +509,9 @@ diff -c -r 23.2-grammars-out/semantic-make-by.el 23.2-grammars-inc/semantic-make
   
 ! ;; arch-tag: 8c3749b8-7b19-46e0-af01-2a4d02fd0352
 ! ;;; semantic/bovine/make-by.el ends here
-diff -c -r 23.2-grammars-out/semantic-scm-by.el 23.2-grammars-inc/semantic-scm-by.el
-*** 23.2-grammars-out/semantic-scm-by.el	2011-07-31 21:59:41.234757387 -0400
---- 23.2-grammars-inc/semantic-scm-by.el	2011-07-31 21:42:10.224756628 -0400
+diff -c -r grammars/semantic-scm-by.el new/semantic-scm-by.el
+*** semantic-scm-by.el	2011-07-31 20:19:32.434753048 -0400
+--- scm-by.el	2011-07-31 20:21:02.694753113 -0400
 ***************
 *** 1,36 ****
   ;;; semantic-scm-by.el --- Generated parser support file
@@ -263,7 +519,7 @@ diff -c -r 23.2-grammars-out/semantic-scm-by.el 23.2-grammars-inc/semantic-scm-b
 ! ;; Copyright (C) 2001-2011 Free Software Foundation, Inc.
   
 ! ;; Author: Chong Yidong <cyd@furball>
-! ;; Created: 2011-07-31 21:59:41-0400
+! ;; Created: 2011-07-31 20:19:32-0400
 ! ;; Keywords: syntax
 ! ;; X-RCS: $Id$
   
@@ -368,9 +624,9 @@ diff -c -r 23.2-grammars-out/semantic-scm-by.el 23.2-grammars-inc/semantic-scm-b
   
 ! ;; arch-tag: 945749cc-a039-434f-bf95-bf2480a506c3
 ! ;;; semantic/bovine/scm-by.el ends here
-diff -c -r 23.2-grammars-out/wisent-javascript-jv-wy.el 23.2-grammars-inc/wisent-javascript-jv-wy.el
-*** 23.2-grammars-out/wisent-javascript-jv-wy.el	2011-07-31 21:59:31.334757380 -0400
---- 23.2-grammars-inc/wisent-javascript-jv-wy.el	2011-07-31 21:42:14.584756631 -0400
+diff -c -r grammars/wisent-javascript-jv-wy.el new/wisent-javascript-jv-wy.el
+*** wisent-javascript-jv-wy.el	2011-07-31 20:19:49.284753061 -0400
+--- js-wy.el	2011-07-31 20:21:11.574753119 -0400
 ***************
 *** 1,36 ****
 ! ;;; wisent-javascript-jv-wy.el --- Generated parser support file
@@ -378,7 +634,7 @@ diff -c -r 23.2-grammars-out/wisent-javascript-jv-wy.el 23.2-grammars-inc/wisent
 ! ;; Copyright (C) 2005-2011 Free Software Foundation, Inc.
   
 ! ;; Author: Chong Yidong <cyd@furball>
-! ;; Created: 2011-07-31 21:59:31-0400
+! ;; Created: 2011-07-31 20:19:49-0400
 ! ;; Keywords: syntax
 ! ;; X-RCS: $Id$
   
@@ -520,9 +776,9 @@ diff -c -r 23.2-grammars-out/wisent-javascript-jv-wy.el 23.2-grammars-inc/wisent
   
 ! ;; arch-tag: ff9ecf05-18e6-46a6-a3bb-e7f43f04640f
 ! ;;; semantic/wisent/js-wy.el ends here
-diff -c -r 23.2-grammars-out/wisent-java-tags-wy.el 23.2-grammars-inc/wisent-java-tags-wy.el
-*** 23.2-grammars-out/wisent-java-tags-wy.el	2011-07-31 21:59:30.654757379 -0400
---- 23.2-grammars-inc/wisent-java-tags-wy.el	2011-07-31 21:42:14.584756631 -0400
+diff -c -r grammars/wisent-java-tags-wy.el new/wisent-java-tags-wy.el
+*** wisent-java-tags-wy.el	2011-07-31 20:19:48.674753059 -0400
+--- javat-wy.el	2011-07-31 20:21:11.574753119 -0400
 ***************
 *** 1,36 ****
 ! ;;; wisent-java-tags-wy.el --- Generated parser support file
@@ -530,7 +786,7 @@ diff -c -r 23.2-grammars-out/wisent-java-tags-wy.el 23.2-grammars-inc/wisent-jav
 ! ;; Copyright (C) 2002-2011 Free Software Foundation, Inc.
   
 ! ;; Author: Chong Yidong <cyd@furball>
-! ;; Created: 2011-07-31 21:59:30-0400
+! ;; Created: 2011-07-31 20:19:48-0400
 ! ;; Keywords: syntax
 ! ;; X-RCS: $Id$
   
@@ -671,9 +927,9 @@ diff -c -r 23.2-grammars-out/wisent-java-tags-wy.el 23.2-grammars-inc/wisent-jav
   
 ! ;; arch-tag: b035ba00-e014-4c71-9bc7-a9dbf3d5b911
 ! ;;; semantic/wisent/javat-wy.el ends here
-diff -c -r 23.2-grammars-out/wisent-python-wy.el 23.2-grammars-inc/wisent-python-wy.el
-*** 23.2-grammars-out/wisent-python-wy.el	2011-07-31 21:59:32.294757381 -0400
---- 23.2-grammars-inc/wisent-python-wy.el	2011-07-31 21:42:14.584756631 -0400
+diff -c -r grammars/wisent-python-wy.el new/wisent-python-wy.el
+*** wisent-python-wy.el	2011-07-31 20:19:50.254753061 -0400
+--- python-wy.el	2011-07-31 20:21:11.574753119 -0400
 ***************
 *** 1,36 ****
 ! ;;; wisent-python-wy.el --- Generated parser support file
@@ -681,7 +937,7 @@ diff -c -r 23.2-grammars-out/wisent-python-wy.el 23.2-grammars-inc/wisent-python
 ! ;; Copyright (C) 2002-2011 Free Software Foundation, Inc.
   
 ! ;; Author: Chong Yidong <cyd@furball>
-! ;; Created: 2011-07-31 21:59:32-0400
+! ;; Created: 2011-07-31 20:19:50-0400
 ! ;; Keywords: syntax
 ! ;; X-RCS: $Id$
   
@@ -762,14 +1018,14 @@ diff -c -r 23.2-grammars-out/wisent-python-wy.el 23.2-grammars-inc/wisent-python
 ! ;; the derivative work available to others as provided herein, then
 ! ;; Licensee hereby agrees to include in any such work a brief summary
 ! ;; of the changes made to Python.
+! ;;
+! ;; 4. PSF is making Python available to Licensee on an "AS IS"
+! ;; basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+! ;; IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+! ;; DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+! ;; FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
+! ;; INFRINGE ANY THIRD PARTY RIGHTS.
   ;;
-+ ;; 4. PSF is making Python available to Licensee on an "AS IS"
-+ ;; basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
-+ ;; IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
-+ ;; DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
-+ ;; FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
-+ ;; INFRINGE ANY THIRD PARTY RIGHTS.
-+ ;;
 + ;; 5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
 + ;; FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS A
 + ;; RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON, OR
@@ -795,7 +1051,111 @@ diff -c -r 23.2-grammars-out/wisent-python-wy.el 23.2-grammars-inc/wisent-python
   ;;; Prologue
   ;;
 ***************
-*** 664,670 ****
+*** 40,46 ****
+  (defconst wisent-python-wy--keyword-table
+    (semantic-lex-make-keyword-table
+     '(("and" . AND)
+-      ("as" . AS)
+       ("assert" . ASSERT)
+       ("break" . BREAK)
+       ("class" . CLASS)
+--- 85,90 ----
+***************
+*** 78,84 ****
+       ("pass" summary "Statement that does nothing")
+       ("or" summary "Binary logical 'or' operator")
+       ("not" summary "Unary boolean negation operator")
+-      ("lambda" summary "Create anonymous function")
+       ("is" summary "Binary operator that tests for object equality")
+       ("in" summary "Part of 'for' statement ")
+       ("import" summary "Load specified modules")
+--- 122,127 ----
+***************
+*** 93,103 ****
+       ("elif" summary "Shorthand for 'else if' following an 'if' statement")
+       ("del" summary "Delete specified objects, i.e., undo what assignment did")
+       ("def" summary "Define a new function")
+!      ("continue" summary "Skip to the next iteration of enclosing 'for' or 'while' loop")
+       ("class" summary "Define a new class")
+       ("break" summary "Terminate 'for' or 'while' loop")
+       ("assert" summary "Raise AssertionError exception if <expr> is false")
+-      ("as" summary "EXPR as NAME makes value of EXPR available as variable NAME")
+       ("and" summary "Logical AND binary operator ... ")))
+    "Table of language keywords.")
+  
+--- 136,145 ----
+       ("elif" summary "Shorthand for 'else if' following an 'if' statement")
+       ("del" summary "Delete specified objects, i.e., undo what assignment did")
+       ("def" summary "Define a new function")
+!      ("continue" summary "Skip to the next interation of enclosing 'for' or 'while' loop")
+       ("class" summary "Define a new class")
+       ("break" summary "Terminate 'for' or 'while' loop")
+       ("assert" summary "Raise AssertionError exception if <expr> is false")
+       ("and" summary "Logical AND binary operator ... ")))
+    "Table of language keywords.")
+  
+***************
+*** 180,186 ****
+      (eval-when-compile
+        (require 'semantic/wisent/comp))
+      (wisent-compile-grammar
+!      '((BACKSLASH NEWLINE INDENT DEDENT INDENT_BLOCK PAREN_BLOCK BRACE_BLOCK BRACK_BLOCK LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK LTLTEQ GTGTEQ EXPEQ DIVDIVEQ DIVDIV LTLT GTGT EXPONENT EQ GE LE PLUSEQ MINUSEQ MULTEQ DIVEQ MODEQ AMPEQ OREQ HATEQ LTGT NE HAT LT GT AMP MULT DIV MOD PLUS MINUS PERIOD TILDE BAR COLON SEMICOLON COMMA ASSIGN BACKQUOTE STRING_LITERAL NUMBER_LITERAL NAME AND AS ASSERT BREAK CLASS CONTINUE DEF DEL ELIF ELSE EXCEPT EXEC FINALLY FOR FROM GLOBAL IF IMPORT IN IS LAMBDA NOT OR PASS PRINT RAISE RETURN TRY WHILE YIELD)
+         nil
+         (goal
+  	((NEWLINE))
+--- 222,228 ----
+      (eval-when-compile
+        (require 'semantic/wisent/comp))
+      (wisent-compile-grammar
+!      '((BACKSLASH NEWLINE INDENT DEDENT INDENT_BLOCK PAREN_BLOCK BRACE_BLOCK BRACK_BLOCK LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK LTLTEQ GTGTEQ EXPEQ DIVDIVEQ DIVDIV LTLT GTGT EXPONENT EQ GE LE PLUSEQ MINUSEQ MULTEQ DIVEQ MODEQ AMPEQ OREQ HATEQ LTGT NE HAT LT GT AMP MULT DIV MOD PLUS MINUS PERIOD TILDE BAR COLON SEMICOLON COMMA ASSIGN BACKQUOTE STRING_LITERAL NUMBER_LITERAL NAME AND ASSERT BREAK CLASS CONTINUE DEF DEL ELIF ELSE EXCEPT EXEC FINALLY FOR FROM GLOBAL IF IMPORT IN IS LAMBDA NOT OR PASS PRINT RAISE RETURN TRY WHILE YIELD)
+         nil
+         (goal
+  	((NEWLINE))
+***************
+*** 288,296 ****
+  	((testlist)
+  	 nil))
+         (yield_stmt
+- 	((YIELD)
+- 	 (wisent-raw-tag
+- 	  (semantic-tag-new-code $1 nil)))
+  	((YIELD testlist)
+  	 (wisent-raw-tag
+  	  (semantic-tag-new-code $1 nil))))
+--- 330,335 ----
+***************
+*** 331,344 ****
+  	((import_as_name_list COMMA import_as_name)
+  	 nil))
+         (import_as_name
+! 	((NAME as_name_opt)
+  	 nil))
+         (dotted_as_name
+! 	((dotted_name as_name_opt)))
+!        (as_name_opt
+  	(nil)
+! 	((AS NAME)
+! 	 (identity $2)))
+         (dotted_name
+  	((NAME))
+  	((dotted_name PERIOD NAME)
+--- 370,383 ----
+  	((import_as_name_list COMMA import_as_name)
+  	 nil))
+         (import_as_name
+! 	((NAME name_name_opt)
+  	 nil))
+         (dotted_as_name
+! 	((dotted_name name_name_opt)))
+!        (name_name_opt
+  	(nil)
+! 	((NAME NAME)
+! 	 nil))
+         (dotted_name
+  	((NAME))
+  	((dotted_name PERIOD NAME)
+***************
+*** 670,676 ****
      '((parse-stream . wisent-parse-stream)))
     (setq semantic-parser-name "LALR"
   	semantic--parse-table wisent-python-wy--parse-table
@@ -812,7 +1172,7 @@ diff -c -r 23.2-grammars-out/wisent-python-wy.el 23.2-grammars-inc/wisent-python
   	semantic-lex-types-obarray wisent-python-wy--token-table)
     ;; Collect unmatched syntax lexical tokens
 ***************
-*** 674,681 ****
+*** 680,687 ****
   
   
   ;;; Analyzers
@@ -823,7 +1183,7 @@ diff -c -r 23.2-grammars-out/wisent-python-wy.el 23.2-grammars-inc/wisent-python
     "keyword analyzer for <keyword> tokens."
 --- 719,724 ----
 ***************
-*** 751,756 ****
+*** 757,762 ****
   ;;; Epilogue
   ;;
   

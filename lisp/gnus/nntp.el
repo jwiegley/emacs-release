@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1987, 1988, 1989, 1990, 1992, 1993,
 ;;   1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -1632,7 +1632,7 @@ password contained in '~/.nntp-authinfo'."
 
         ;; Some nntp servers seem to have an extension to the XOVER
         ;; extension.  On these servers, requesting an article range
-        ;; preceeding the active range does not return an error as
+        ;; preceding the active range does not return an error as
         ;; specified in the RFC.  What we instead get is the NOV entry
         ;; for the first available article.  Obviously, a client can
         ;; use that entry to avoid making unnecessary requests.  The

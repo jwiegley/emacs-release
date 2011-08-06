@@ -1,6 +1,6 @@
 ;;; org-exp.el --- ASCII, HTML, XOXO and iCalendar export for Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
@@ -2540,10 +2540,10 @@ INDENT was the original indentation of the block."
 The copy is created in a temporary buffer and removed after use.
 TYPE is the final key (as a string) that also select the export command in
 the `C-c C-e' export dispatcher.
-As a special case, if the you type SPC at the prompt, the temporary
-org-mode file will not be removed but presented to you so that you can
-continue to use it.  The prefix arg ARG is passed through to the exporting
-command."
+
+As a special case, if you type SPC at the prompt, the temporary org-mode
+file will not be removed but presented to you so that you can continue to
+use it.  The prefix arg ARG is passed through to the exporting command."
   (interactive
    (list (progn
 	   (message "Export visible: [a]SCII  [h]tml  [b]rowse HTML [H/R]uffer with HTML  [D]ocBook  [x]OXO  [ ]keep buffer")

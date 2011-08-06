@@ -1,7 +1,7 @@
 ;;; syntax.el --- helper functions to find syntactic context
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -52,7 +52,7 @@
 
 (defun syntax-ppss-toplevel-pos (ppss)
   "Get the latest syntactically outermost position found in a syntactic scan.
-PPSS is a scan state, as returned by `partial-parse-sexp' or `syntax-ppss'.
+PPSS is a scan state, as returned by `parse-partial-sexp' or `syntax-ppss'.
 An \"outermost position\" means one that it is outside of any syntactic entity:
 outside of any parentheses, comments, or strings encountered in the scan.
 If no such position is recorded in PPSS (because the end of the scan was

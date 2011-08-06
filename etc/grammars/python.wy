@@ -194,6 +194,10 @@
 %put     AND summary
 "Logical AND binary operator ... "
 
+%keyword AS          "as"
+%put     AS summary
+"EXPR as NAME makes value of EXPR available as variable NAME"
+
 %keyword ASSERT	     "assert"
 %put     ASSERT summary
 "Raise AssertionError exception if <expr> is false"
@@ -208,7 +212,7 @@
 
 %keyword CONTINUE	     "continue"
 %put     CONTINUE summary
-"Skip to the next interation of enclosing 'for' or 'while' loop"
+"Skip to the next iteration of enclosing 'for' or 'while' loop"
 
 %keyword DEF	     "def"
 %put     DEF summary
@@ -267,7 +271,7 @@
 "Binary operator that tests for object equality"
 
 %keyword LAMBDA	     "lambda"
-%put     LAMDA summary
+%put     LAMBDA summary
 "Create anonymous function"
 
 %keyword NOT	     "not"
@@ -491,7 +495,9 @@ testlist_opt
 
 ;; yield_stmt: 'yield' testlist
 yield_stmt
-  : YIELD testlist
+  : YIELD
+    (CODE-TAG $1 nil)
+  | YIELD testlist
     (CODE-TAG $1 nil)
   ;
 
@@ -560,20 +566,20 @@ import_as_name_list
 
 ;; import_as_name: NAME [NAME NAME]
 import_as_name
-  : NAME name_name_opt
+  : NAME as_name_opt
     ()
   ;
 
-;; dotted_as_name: dotted_name [NAME NAME]
+;; dotted_as_name: dotted_name [AS NAME]
 dotted_as_name
-  : dotted_name name_name_opt
+  : dotted_name as_name_opt
   ;
 
-;; [NAME NAME]
-name_name_opt
+;; [AS NAME]
+as_name_opt
   : ;;EMPTY
-  | NAME NAME
-    ()
+  | AS NAME
+    (identity $2)
   ;
 
 ;; dotted_name: NAME ('.' NAME)*

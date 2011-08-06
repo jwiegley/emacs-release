@@ -1,7 +1,7 @@
 /* Implementation of GUI terminal on the Microsoft W32 API.
    Copyright (C) 1989, 1993, 1994, 1995, 1996, 1997, 1998,
                  1999, 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -325,8 +325,9 @@ XChangeGC (void * ignore, XGCValues* gc, unsigned long mask,
     gc->font = xgcv->font;
 }
 
-XGCValues *XCreateGC (void * ignore, Window window, unsigned long mask,
-                      XGCValues *xgcv)
+XGCValues *
+XCreateGC (void * ignore, Window window, unsigned long mask,
+	   XGCValues *xgcv)
 {
   XGCValues *gc = (XGCValues *) xmalloc (sizeof (XGCValues));
   bzero (gc, sizeof (XGCValues));
@@ -338,7 +339,7 @@ XGCValues *XCreateGC (void * ignore, Window window, unsigned long mask,
 
 void
 XGetGCValues (void* ignore, XGCValues *gc,
-                   unsigned long mask, XGCValues *xgcv)
+	      unsigned long mask, XGCValues *xgcv)
 {
   XChangeGC (ignore, xgcv, mask, gc);
 }
@@ -761,7 +762,6 @@ w32_draw_fringe_bitmap (w, row, p)
   struct frame *f = XFRAME (WINDOW_FRAME (w));
   HDC hdc;
   struct face *face = p->face;
-  int rowY;
 
   hdc = get_frame_dc (f);
 
@@ -820,21 +820,7 @@ w32_draw_fringe_bitmap (w, row, p)
     }
 
   /* Must clip because of partially visible lines.  */
-  rowY = WINDOW_TO_FRAME_PIXEL_Y (w, row->y);
-  if (p->y < rowY)
-    {
-      /* Adjust position of "bottom aligned" bitmap on partially
-	 visible last row.  */
-      int oldY = row->y;
-      int oldVH = row->visible_height;
-      row->visible_height = p->h;
-      row->y -= rowY - p->y;
-      w32_clip_to_row (w, row, -1, hdc);
-      row->y = oldY;
-      row->visible_height = oldVH;
-    }
-  else
-    w32_clip_to_row (w, row, -1, hdc);
+  w32_clip_to_row (w, row, -1, hdc);
 
   if (p->which && p->which < max_fringe_bmp)
     {
@@ -935,7 +921,7 @@ w32_set_terminal_modes (struct terminal *term)
 {
 }
 
-/* This is called when exiting or suspending Emacs. Exiting will make
+/* This is called when exiting or suspending Emacs.  Exiting will make
    the W32 windows go away, and suspending requires no action. */
 
 static void
@@ -2425,7 +2411,7 @@ x_draw_glyph_string (s)
 
       /* Draw strike-through.  */
       if (s->face->strike_through_p
-          && !FONT_TEXTMETRIC(s->font).tmStruckOut)
+          && !FONT_TEXTMETRIC (s->font).tmStruckOut)
         {
           unsigned long h = 1;
           unsigned long dy = (s->height - h) / 2;
@@ -2904,7 +2890,8 @@ x_get_keysym_name (keysym)
   return value;
 }
 
-static int codepage_for_locale(LCID locale)
+static int
+codepage_for_locale (LCID locale)
 {
   char cp[20];
 
@@ -3403,7 +3390,7 @@ w32_set_scroll_bar_thumb (bar, portion, position, whole)
       BLOCK_INPUT;
       si.cbSize = sizeof (si);
       si.fMask = SIF_POS | SIF_PAGE;
-      GetScrollInfo(w, SB_CTL, &si);
+      GetScrollInfo (w, SB_CTL, &si);
       near_bottom_p = si.nPos + si.nPage >= range;
       UNBLOCK_INPUT;
       if (!near_bottom_p)
@@ -4299,7 +4286,7 @@ w32_read_socket (sd, expected, hold_quit)
 		temp_index = 0;
 	      temp_buffer[temp_index++] = msg.msg.wParam;
 	      inev.kind = MULTIMEDIA_KEY_EVENT;
-	      inev.code = GET_APPCOMMAND_LPARAM(msg.msg.lParam);
+	      inev.code = GET_APPCOMMAND_LPARAM (msg.msg.lParam);
 	      inev.modifiers = msg.dwModifiers;
 	      XSETFRAME (inev.frame_or_window, f);
 	      inev.timestamp = msg.msg.time;
@@ -4347,7 +4334,7 @@ w32_read_socket (sd, expected, hold_quit)
 		     selected now and last mouse movement event was
 		     not in it.  Minibuffer window will be selected
 		     only when it is active.  */
-		  if (WINDOWP(window)
+		  if (WINDOWP (window)
 		      && !EQ (window, last_window)
 		      && !EQ (window, selected_window)
 		      /* For click-to-focus window managers
@@ -4361,7 +4348,7 @@ w32_read_socket (sd, expected, hold_quit)
 		      inev.frame_or_window = window;
 		    }
 
-		  last_window=window;
+		  last_window = window;
 		}
 	      if (!note_mouse_movement (f, &msg.msg))
 		help_echo_string = previous_help_echo_string;
@@ -5500,8 +5487,8 @@ x_set_window_size (f, change_gravity, cols, rows)
     rect.right = pixelwidth;
     rect.bottom = pixelheight;
 
-    AdjustWindowRect(&rect, f->output_data.w32->dwStyle,
-		     FRAME_EXTERNAL_MENU_BAR (f));
+    AdjustWindowRect (&rect, f->output_data.w32->dwStyle,
+		      FRAME_EXTERNAL_MENU_BAR (f));
 
     my_set_window_pos (FRAME_W32_WINDOW (f),
 		       NULL,
@@ -5754,8 +5741,8 @@ x_make_frame_visible (f)
 
 	  /* Adjust vertical window position in order to avoid being
 	     covered by a task bar placed at the bottom of the desktop. */
-	  SystemParametersInfo(SPI_GETWORKAREA, 0, &workarea_rect, 0);
-	  GetWindowRect(FRAME_W32_WINDOW(f), &window_rect);
+	  SystemParametersInfo (SPI_GETWORKAREA, 0, &workarea_rect, 0);
+	  GetWindowRect (FRAME_W32_WINDOW (f), &window_rect);
 	  if (window_rect.bottom > workarea_rect.bottom
 	      && window_rect.top > workarea_rect.top)
 	    f->top_pos = max (window_rect.top
@@ -6037,7 +6024,7 @@ w32_initialize_display_info (display_name)
 
 }
 
-/* Create an xrdb-style database of resources to supercede registry settings.
+/* Create an xrdb-style database of resources to supersede registry settings.
    The database is just a concatenation of C strings, finished by an additional
    \0.  The strings are submitted to some basic normalization, so
 
@@ -6325,7 +6312,7 @@ x_delete_display (dpyinfo)
     }
     dpyinfo->color_list = NULL;
     if (dpyinfo->palette)
-      DeleteObject(dpyinfo->palette);
+      DeleteObject (dpyinfo->palette);
   }
   xfree (dpyinfo->w32_id_name);
 

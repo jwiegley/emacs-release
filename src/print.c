@@ -1,7 +1,7 @@
 /* Lisp object printing and output streams.
    Copyright (C) 1985, 1986, 1988, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -1450,7 +1450,7 @@ static void print_check_string_charset_prop ();
 #define PRINT_STRING_NON_CHARSET_FOUND 1
 #define PRINT_STRING_UNSAFE_CHARSET_FOUND 2
 
-/* Bitwize or of the abobe macros. */
+/* Bitwise or of the above macros. */
 static int print_check_string_result;
 
 static void

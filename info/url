@@ -1,14 +1,14 @@
-This is ../../info/url, produced by makeinfo version 4.11 from url.texi.
+This is ../../info/url, produced by makeinfo version 4.13 from url.texi.
 
-INFO-DIR-SECTION World Wide WebINFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs lisp libraries
 START-INFO-DIR-ENTRY
-* URL: (url).                 URL loading package.
+* URL: (url).                   URL loading package.
 END-INFO-DIR-ENTRY
 
    This file documents the Emacs Lisp URL loading package.
 
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2002, 2004,
-2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -31,7 +31,7 @@ URL
 This file documents the Emacs Lisp URL loading package.
 
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2002, 2004,
-2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1685,47 +1685,47 @@ Concept Index
 
 
 Tag Table:
-Node: Top1071
-Node: Getting Started2622
-Node: Configuration4012
-Node: Parsed URLs4270
-Node: Retrieving URLs5622
-Node: Supported URL Types6535
-Node: http/https7395
-Node: Cookies8576
-Node: HTTP language/coding9562
-Node: HTTP URL Options11189
-Node: Dealing with HTTP documents12120
-Node: file/ftp13097
-Node: info13997
-Node: mailto14264
-Node: news/nntp/snews15372
-Node: rlogin/telnet/tn327016606
-Node: irc17173
-Node: data18080
-Node: nfs18545
-Node: cid19295
-Node: about19401
-Node: ldap19502
-Node: imap19643
-Node: man19751
-Node: Defining New URLs19949
-Node: Naming conventions20233
-Node: Required functions20371
-Node: Optional functions20536
-Node: Asynchronous fetching20704
-Node: Supporting file-name-handlers20889
-Node: General Facilities21063
-Node: Disk Caching21279
-Node: Proxies23260
-Node: Gateways in general25315
-Ref: Gateways in general-Footnote-129361
-Node: Suppressing network connections29436
-Node: History30087
-Node: Customization31926
-Node: GNU Free Documentation License33800
-Node: Function Index58974
-Node: Variable Index62076
-Node: Concept Index66654
+Node: Top1063
+Node: Getting Started2620
+Node: Configuration4010
+Node: Parsed URLs4268
+Node: Retrieving URLs5620
+Node: Supported URL Types6533
+Node: http/https7393
+Node: Cookies8574
+Node: HTTP language/coding9560
+Node: HTTP URL Options11187
+Node: Dealing with HTTP documents12118
+Node: file/ftp13095
+Node: info13995
+Node: mailto14262
+Node: news/nntp/snews15370
+Node: rlogin/telnet/tn327016604
+Node: irc17171
+Node: data18078
+Node: nfs18543
+Node: cid19293
+Node: about19399
+Node: ldap19500
+Node: imap19641
+Node: man19749
+Node: Defining New URLs19947
+Node: Naming conventions20231
+Node: Required functions20369
+Node: Optional functions20534
+Node: Asynchronous fetching20702
+Node: Supporting file-name-handlers20887
+Node: General Facilities21061
+Node: Disk Caching21277
+Node: Proxies23258
+Node: Gateways in general25313
+Ref: Gateways in general-Footnote-129359
+Node: Suppressing network connections29434
+Node: History30085
+Node: Customization31924
+Node: GNU Free Documentation License33798
+Node: Function Index58972
+Node: Variable Index62074
+Node: Concept Index66652
 
 End Tag Table

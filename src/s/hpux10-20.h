@@ -1,6 +1,6 @@
 /* System description file for hpux version 10.20.
    Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-     2008, 2009, 2010  Free Software Foundation, Inc.
+     2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -41,12 +41,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define FIRST_PTY_LETTER 'p'
 
-/*
- *	Define HAVE_TERMIO if the system provides sysV-style ioctls
- *	for terminal control.
- */
+#define HAVE_TERMIOS
+#define NO_TERMIO
 
-#define HAVE_TERMIO
+#define ORDINARY_LINK
 
 /*
  *	Define HAVE_PTYS if the system supports pty devices.

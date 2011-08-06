@@ -1,7 +1,7 @@
 ;;; paragraphs.el --- paragraph and sentence parsing
 
 ;; Copyright (C) 1985, 1986, 1987, 1991, 1994, 1995, 1996, 1997, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -43,7 +43,7 @@ only considered as a candidate to match `paragraph-start' or
 
 Prefix argument says to turn mode on if positive, off if negative.
 When the mode is turned on, if there are newlines in the buffer but no hard
-newlines, ask the user whether to mark as hard any newlines preceeding a
+newlines, ask the user whether to mark as hard any newlines preceding a
 `paragraph-start' line.  From a program, second arg INSERT specifies whether
 to do this; it can be `never' to change nothing, t or `always' to force
 marking, `guess' to try to do the right thing with no questions, nil

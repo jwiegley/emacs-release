@@ -1,7 +1,7 @@
 ;;; sort.el --- Utilities for sorting and re-arranging tag tables.
 
 ;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
-;;; 2008, 2009, 2010 Free Software Foundation, Inc.
+;;; 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -463,7 +463,7 @@ include the default behavior, and merely extend your own."
   )
 
 (defun semantic-tag-external-member-parent-default (tag)
-  "Return the name of TAGs parent only if TAG is not defined in it's parent."
+  "Return the name of TAGs parent only if TAG is not defined in its parent."
   ;; Use only the extra spec because a type has a parent which
   ;; means something completely different.
   (let ((tp (semantic-tag-get-attribute tag :parent)))
@@ -473,7 +473,7 @@ include the default behavior, and merely extend your own."
 (define-overloadable-function semantic-tag-external-member-p (parent tag)
   "Return non-nil if PARENT is the parent of TAG.
 TAG is an external member of PARENT when it is somehow tagged
-as having PARENT as it's parent.
+as having PARENT as its parent.
 PARENT and TAG must both be semantic tags.
 
 The default behavior, if not overridden with

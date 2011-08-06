@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1994, 1995, 1996,
 ;;   1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
@@ -56,7 +56,10 @@ when it has unsaved changes."
 A list of elements of the form (FROM . TO), each meaning to replace
 FROM with TO when it appears in a directory name.  This replacement is
 done when setting up the default directory of a newly visited file.
-*Every* FROM string should start with \"\\\\`\".
+
+FROM is matched against directory names anchored at the first
+character, so it should start with a \"\\\\`\", or, if directory
+names cannot have embedded newlines, with a \"^\".
 
 FROM and TO should be equivalent names, which refer to the
 same directory.  Do not use `~' in the TO strings;
@@ -66,9 +69,9 @@ Use this feature when you have directories which you normally refer to
 via absolute symbolic links.  Make TO the name of the link, and FROM
 the name it is linked to."
   :type '(repeat (cons :format "%v"
-		       :value ("" . "")
+		       :value ("\\`" . "")
 		       (regexp :tag "From")
-		       (regexp :tag "To")))
+		       (string :tag "To")))
   :group 'abbrev
   :group 'find-file)
 
@@ -123,6 +126,7 @@ the default for a new file created there by you.
 This variable is relevant only if `backup-by-copying' is nil."
   :type 'boolean
   :group 'backup)
+(put 'backup-by-copying-when-mismatch 'permanent-local t)
 
 (defcustom backup-by-copying-when-privileged-mismatch 200
   "Non-nil means create backups by copying to preserve a privileged owner.
@@ -2004,7 +2008,8 @@ Don't call it from programs!  Use `insert-file-contents-literally' instead.
 
 (defvar find-file-literally nil
   "Non-nil if this buffer was made by `find-file-literally' or equivalent.
-This is a permanent local.")
+This has the `permanent-local' property, which takes effect if you
+make the variable buffer-local.")
 (put 'find-file-literally 'permanent-local t)
 
 (defun find-file-literally (filename)
@@ -2266,6 +2271,7 @@ ARC\\|ZIP\\|LZH\\|LHA\\|ZOO\\|[JEW]AR\\|XPI\\|RAR\\)\\'" . archive-mode)
      ("\\.oak\\'" . scheme-mode)
      ("\\.sgml?\\'" . sgml-mode)
      ("\\.x[ms]l\\'" . xml-mode)
+     ("\\.dbk\\'" . xml-mode)
      ("\\.dtd\\'" . sgml-mode)
      ("\\.ds\\(ss\\)?l\\'" . dsssl-mode)
      ("\\.js\\'" . js-mode)		; javascript-mode would be better
@@ -2774,7 +2780,8 @@ asking you for confirmation."
 	(left-margin          . integerp)   ;; C source code
 	(no-update-autoloads  . booleanp)
 	(tab-width            . integerp)   ;; C source code
-	(truncate-lines       . booleanp))) ;; C source code
+	(truncate-lines       . booleanp)   ;; C source code
+	(word-wrap            . booleanp))) ;; C source code
 
 (put 'c-set-style 'safe-local-eval-function t)
 
@@ -2785,6 +2792,7 @@ is a file-local variable (a symbol) and VALUE is the value
 specified.  The actual value in the buffer may differ from VALUE,
 if it is changed by the major or minor modes, or by the user.")
 (make-variable-buffer-local 'file-local-variables-alist)
+(put 'file-local-variables-alist 'permanent-local t)
 
 (defvar dir-local-variables-alist nil
   "Alist of directory-local variable settings in the current buffer.
@@ -3132,7 +3140,10 @@ It is safe if any of these conditions are met:
    evaluates to a non-nil value with VAL as an argument."
   (or (member (cons sym val) safe-local-variable-values)
       (let ((safep (get sym 'safe-local-variable)))
-        (and (functionp safep) (funcall safep val)))))
+        (and (functionp safep)
+             ;; If the function signals an error, that means it
+             ;; can't assure us that the value is safe.
+             (with-demoted-errors (funcall safep val))))))
 
 (defun risky-local-variable-p (sym &optional ignored)
   "Non-nil if SYM could be dangerous as a file-local variable.
@@ -3673,10 +3684,9 @@ BACKUPNAME is the backup file name, which is the old file renamed."
 			(rename-file real-file-name backupname t)
 			(setq setmodes (cons modes backupname)))
 		    (file-error
-		     ;; If trouble writing the backup, write it in ~.
-		     (setq backupname (expand-file-name
-				       (convert-standard-filename
-					"~/%backup%~")))
+		     ;; If trouble writing the backup, write it in
+		     ;; .emacs.d/%backup%.
+		     (setq backupname (locate-user-emacs-file "%backup%~"))
 		     (message "Cannot write backup file; backing up in %s"
 			      backupname)
 		     (sleep-for 1)
@@ -4049,11 +4059,29 @@ on a DOS/Windows machine, it returns FILENAME in expanded form."
           (dremote (file-remote-p directory)))
       (if ;; Conditions for separate trees
 	  (or
-	   ;; Test for different drives on DOS/Windows
+	   ;; Test for different filesystems on DOS/Windows
 	   (and
 	    ;; Should `cygwin' really be included here?  --stef
 	    (memq system-type '(ms-dos cygwin windows-nt))
-	    (not (eq t (compare-strings filename 0 2 directory 0 2))))
+	    (or
+	     ;; Test for different drive letters
+	     (not (eq t (compare-strings filename 0 2 directory 0 2)))
+	     ;; Test for UNCs on different servers
+	     (not (eq t (compare-strings
+			 (progn
+			   (if (string-match "\\`//\\([^:/]+\\)/" filename)
+			       (match-string 1 filename)
+			     ;; Windows file names cannot have ? in
+			     ;; them, so use that to detect when
+			     ;; neither FILENAME nor DIRECTORY is a
+			     ;; UNC.
+			     "?"))
+			 0 nil
+			 (progn
+			   (if (string-match "\\`//\\([^:/]+\\)/" directory)
+			       (match-string 1 directory)
+			     "?"))
+			 0 nil t)))))
 	   ;; Test for different remote file system identification
 	   (not (equal fremote dremote)))
 	  filename
@@ -4647,7 +4675,7 @@ this happens by default."
 
 (defconst directory-files-no-dot-files-regexp
   "^\\([^.]\\|\\.\\([^.]\\|\\..\\)\\).*"
-  "Regexp of file names excluging \".\" an \"..\".")
+  "Regexp matching any file name except \".\" and \"..\".")
 
 (defun delete-directory (directory &optional recursive)
   "Delete the directory named DIRECTORY.  Does not follow symlinks.
@@ -4698,8 +4726,6 @@ If RECURSIVE is non-nil, all files in DIRECTORY are deleted as well."
 
 (defun copy-directory (directory newname &optional keep-time parents)
   "Copy DIRECTORY to NEWNAME.  Both args must be strings.
-If NEWNAME names an existing directory, copy DIRECTORY as subdirectory there.
-
 This function always sets the file modes of the output files to match
 the corresponding input file.
 
@@ -6014,8 +6040,7 @@ only these files will be asked to be saved."
 			  (substitute-in-file-name identity)
 			  ;; `add' means add "/:" to the result.
 			  (file-truename add 0)
-			  ;; `quote' means add "/:" to buffer-file-name.
-			  (insert-file-contents quote 0)
+			  (insert-file-contents insert-file-contents 0)
 			  ;; `unquote-then-quote' means set buffer-file-name
 			  ;; temporarily to unquoted filename.
 			  (verify-visited-file-modtime unquote-then-quote)
@@ -6046,20 +6071,18 @@ only these files will be asked to be saved."
 			   "/"
 			 (substring (car pair) 2)))))
 	(setq file-arg-indices (cdr file-arg-indices))))
-    (cond ((eq method 'identity)
-	   (car arguments))
-	  ((eq method 'add)
-	   (concat "/:" (apply operation arguments)))
-	  ((eq method 'quote)
-	   (unwind-protect
+    (case method
+      (identity (car arguments))
+      (add (concat "/:" (apply operation arguments)))
+      (insert-file-contents
+       (let ((visit (nth 1 arguments)))
+         (prog1
 	       (apply operation arguments)
-	     (setq buffer-file-name (concat "/:" buffer-file-name))))
-	  ((eq method 'unquote-then-quote)
-	   (let (res)
-	     (setq buffer-file-name (substring buffer-file-name 2))
-	     (setq res (apply operation arguments))
-	     (setq buffer-file-name (concat "/:" buffer-file-name))
-	     res))
+           (when (and visit buffer-file-name)
+             (setq buffer-file-name (concat "/:" buffer-file-name))))))
+      (unquote-then-quote
+       (let ((buffer-file-name (substring buffer-file-name 2)))
+         (apply operation arguments)))
 	  (t
 	   (apply operation arguments)))))
 

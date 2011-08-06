@@ -1,6 +1,6 @@
 ;;; ede/proj-archive.el --- EDE Generic Project archive support
 
-;;  Copyright (C) 1998, 1999, 2000, 2001, 2009, 2010  Free Software Foundation, Inc.
+;;  Copyright (C) 1998, 1999, 2000, 2001, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
@@ -29,7 +29,7 @@
 
 (defclass ede-proj-target-makefile-archive
   (ede-proj-target-makefile-objectcode)
-  ((availablelinkers :initform (ede-archive-linker)))
+  ((availablelinkers :initform '(ede-archive-linker)))
   "This target generates an object code archive.")
 
 (defvar ede-archive-linker

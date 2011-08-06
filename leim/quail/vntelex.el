@@ -1,6 +1,6 @@
 ;;; vntelex.el --- Quail package for Vietnamese by Telex method
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author:   Werner Lemberg <wl@gnu.org>
@@ -53,7 +53,7 @@ Other diacritics:
   acute         s      as -> ,1a(B
   grave         f      af -> ,1`(B
   hook above    r      ar -> ,1d(B
-  tilde         x      ax  -> ,1c(B
+  tilde         x      ax -> ,1c(B
   dot below     j      aj -> ,1U(B
 
   d bar                dd -> ,1p(B

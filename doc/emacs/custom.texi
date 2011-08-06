@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 @c   Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Customization, Quitting, Amusements, Top
@@ -24,18 +24,18 @@ Reference Manual}.
 @end ifnottex
 
 @menu
-* Minor Modes::		Each minor mode is a feature you can turn on
-			  independently of any others.
+* Minor Modes::         Each minor mode is a feature you can turn on
+                          independently of any others.
 * Easy Customization::  Convenient way to browse and change settings.
-* Variables::		Many Emacs commands examine Emacs variables
-			  to decide what to do; by setting variables,
-			  you can control their functioning.
-* Key Bindings::	The keymaps say what command each key runs.
-			  By changing them, you can "redefine keys".
-* Syntax::		The syntax table controls how words and
-			  expressions are parsed.
-* Init File::		How to write common customizations in the
-			  @file{.emacs} file.
+* Variables::           Many Emacs commands examine Emacs variables
+                          to decide what to do; by setting variables,
+                          you can control their functioning.
+* Key Bindings::        The keymaps say what command each key runs.
+                          By changing them, you can "redefine keys".
+* Syntax::              The syntax table controls how words and
+                          expressions are parsed.
+* Init File::           How to write common customizations in the
+                          @file{.emacs} file.
 @end menu
 
 @node Minor Modes
@@ -771,7 +771,7 @@ using the help command @kbd{C-h v} (@code{describe-variable}).
 most interesting variables for a non-programmer user are those meant
 for users to change---these are called @dfn{user options}.  @xref{Easy
 Customization}, for information about using the Customize facility to
-set user options.  In the following sections, we describe will other
+set user options.  In the following sections, we will describe other
 aspects of Emacs variables, such as how to set them outside Customize.
 
   Emacs Lisp allows any variable (with a few exceptions) to have any
@@ -794,10 +794,10 @@ check the variable's documentation string to see kind of value it
 expects (@pxref{Examining}).
 
 @menu
-* Examining::	        Examining or setting one variable's value.
-* Hooks::	        Hook variables let you specify programs for parts
-		          of Emacs to run on particular occasions.
-* Locals::	        Per-buffer values of variables.
+* Examining::           Examining or setting one variable's value.
+* Hooks::               Hook variables let you specify programs for parts
+                          of Emacs to run on particular occasions.
+* Locals::              Per-buffer values of variables.
 * File Variables::      How files can specify variable values.
 * Directory Variables:: How variable values can be specified by directory.
 @end menu
@@ -943,12 +943,12 @@ lambda expression.
 @end group
 @group
     (c-cleanup-list . (scope-operator
-		       empty-defun-braces
-		       defun-close-semi))
+                       empty-defun-braces
+                       defun-close-semi))
 @end group
 @group
     (c-offsets-alist . ((arglist-close . c-lineup-arglist)
-			(substatement-open . 0)))))
+                        (substatement-open . 0)))))
 @end group
 
 @group
@@ -2175,10 +2175,10 @@ Manual}.
 @end ifnottex
 
 @menu
-* Init Syntax::	        Syntax of constants in Emacs Lisp.
+* Init Syntax::         Syntax of constants in Emacs Lisp.
 * Init Examples::       How to do some things with an init file.
 * Terminal Init::       Each terminal type can have an init file.
-* Find Init::	        How Emacs finds the init file.
+* Find Init::           How Emacs finds the init file.
 * Init Non-ASCII::      Using non-@acronym{ASCII} characters in an init file.
 @end menu
 
@@ -2234,6 +2234,8 @@ a Meta character, as in @samp{\M-a} for @kbd{Meta-A} or @samp{\M-\C-a} for
 non-@acronym{ASCII} in your init file.
 
 @item Characters:
+@cindex Lisp character syntax
+@cindex character syntax
 Lisp character constant syntax consists of a @samp{?} followed by
 either a character or an escape sequence starting with @samp{\}.
 Examples: @code{?x}, @code{?\n}, @code{?\"}, @code{?\)}.  Note that
@@ -2250,6 +2252,7 @@ keys which send non-@acronym{ASCII} characters.
 @code{nil} stands for `false'.
 
 @item Other Lisp objects:
+@cindex Lisp object syntax
 Write a single-quote (@code{'}) followed by the Lisp object you want.
 @end table
 

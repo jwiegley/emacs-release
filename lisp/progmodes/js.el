@@ -1,6 +1,6 @@
 ;;; js.el --- Major mode for editing JavaScript
 
-;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Karl Landstrom <karl.landstrom@brgeight.se>
 ;;         Daniel Colascione <dan.colascione@gmail.com>
@@ -474,8 +474,7 @@ for preventing Firefox from stealing the keyboard focus."
 (defcustom js-js-tmpdir
   "~/.emacs.d/js/js"
   "Temporary directory used by `js-mode' to communicate with Mozilla.
-This directory must be readable and writable by both Mozilla and
-Emacs."
+This directory must be readable and writable by both Mozilla and Emacs."
   :type 'directory
   :group 'js)
 
@@ -499,11 +498,11 @@ getting timeout messages."
     (define-key keymap [(meta ?.)] #'js-find-symbol)
     (easy-menu-define nil keymap "Javascript Menu"
       '("Javascript"
-        ["Select new Mozilla context…" js-set-js-context
+        ["Select New Mozilla Context..." js-set-js-context
          (fboundp #'inferior-moz-process)]
-        ["Evaluate expression in Mozilla context…" js-eval
+        ["Evaluate Expression in Mozilla Context..." js-eval
          (fboundp #'inferior-moz-process)]
-        ["Send current function to Mozilla…" js-eval-defun
+        ["Send Current Function to Mozilla..." js-eval-defun
          (fboundp #'inferior-moz-process)]))
     keymap)
   "Keymap for `js-mode'.")
@@ -1655,7 +1654,7 @@ This performs fontification according to `js--class-styles'."
 ;; as the newline is escaped with \. Account for that in the regexp
 ;; below.
 (defconst js--regexp-literal
-  "[=(,:]\\(?:\\s-\\|\n\\)*\\(/\\)\\(?:\\\\/\\|[^/*]\\)\\(?:\\\\/\\|[^/]\\)*\\(/\\)"
+  "[=(,:]\\(?:\\s-\\|\n\\)*\\(/\\)\\(?:\\\\.\\|[^/*\\]\\)\\(?:\\\\.\\|[^/\\]\\)*\\(/\\)"
   "Regexp matching a JavaScript regular expression literal.
 Match groups 1 and 2 are the characters forming the beginning and
 end of the literal.")

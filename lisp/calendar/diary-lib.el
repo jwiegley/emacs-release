@@ -1,7 +1,7 @@
 ;;; diary-lib.el --- diary functions
 
 ;; Copyright (C) 1989, 1990, 1992, 1993, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Edward M. Reingold <reingold@cs.uiuc.edu>
 ;; Maintainer: Glenn Morris <rgm@gnu.org>
@@ -187,11 +187,12 @@ you will probably also want to add `diary-mark-included-diary-files' to
 
      (setq diary-display-function 'diary-fancy-display)
      (add-hook 'diary-list-entries-hook 'diary-include-other-diary-files)
-     (add-hook 'diary-list-entries-hook 'diary-sort-entries)
+     (add-hook 'diary-list-entries-hook 'diary-sort-entries t)
 
 in your `.emacs' file to cause the fancy diary buffer to be displayed with
 diary entries from various included files, each day's entries sorted into
-lexicographic order."
+lexicographic order.  Note how the sort function is placed last,
+so that it can sort the entries included from other files."
   :type 'hook
   :options '(diary-include-other-diary-files diary-sort-entries)
   :group 'diary)
@@ -383,14 +384,14 @@ The format of the header is specified by `diary-header-line-format'."
                      "Some text is hidden - press \"s\" in calendar \
 before edit/copy"
                    "Diary"))
-           ?\s (frame-width)))
+           ?\s (window-width)))
   "Format of the header line displayed by `diary-simple-display'.
 Only used if `diary-header-line-flag' is non-nil."
   :group 'diary
   :type 'sexp
   :initialize 'custom-initialize-default
   :set 'diary-set-header
-  :version "22.1")
+  :version "23.3")                      ; frame-width -> window-width
 
 ;; The first version of this also checked for diary-selective-display
 ;; in the non-fancy case. This was an attempt to distinguish between
@@ -699,6 +700,10 @@ of the appropriate type."
              (1+ (calendar-absolute-from-gregorian gdate))))))
   (goto-char (point-min)))
 
+(defvar diary-including) ; dynamically bound in diary-include-other-diary-files
+(defvar diary-included-files nil
+  "List of any diary files included in the last call to `diary-list-entries'.")
+
 ;; FIXME non-greg and list hooks run same number of times?
 (defun diary-list-entries (date number &optional list-only)
   "Create and display a buffer containing the relevant lines in `diary-file'.
@@ -706,14 +711,26 @@ The arguments are DATE and NUMBER; the entries selected are those
 for NUMBER days starting with date DATE.  The other entries are hidden
 using overlays.  If NUMBER is less than 1, this function does nothing.
 
-Returns a list of all relevant diary entries found, if any, in order by date.
+Returns a list of all relevant diary entries found.
 The list entries have the form ((MONTH DAY YEAR) STRING SPECIFIER) where
 \(MONTH DAY YEAR) is the date of the entry, STRING is the entry text, and
 SPECIFIER is the applicability.  If the variable `diary-list-include-blanks'
 is non-nil, this list includes a dummy diary entry consisting of the empty
 string for a date with no diary entries.
 
-After the list is prepared, the following hooks are run:
+If entries are being produced for multiple dates (i.e., NUMBER > 1),
+then this function normally returns the entries from any given
+diary file in date order.  The entries for any given day are in
+the order in which they were found in the file, not necessarily
+in time-of-day order.  Note that any functions present on the
+hooks (see below) may add entries, or change the order.  For
+example, `diary-include-other-diary-files' adds entries from any
+include files that it finds to the end of the original list.  The
+entries from each file will be in date order, but the overall
+list will not be.  If you want the entire list to be in time order,
+add `diary-sort-entries' to the end of `diary-list-entries-hook'.
+
+After the initial list is prepared, the following hooks are run:
 
   `diary-nongregorian-listing-hook' can cull dates from the diary
       and each included file, for example to process Islamic diary
@@ -743,6 +760,8 @@ LIST-ONLY is non-nil, in which case it just returns the list."
            (date-string (calendar-date-string date))
            (diary-buffer (find-buffer-visiting diary-file))
            diary-entries-list file-glob-attrs)
+      (or (bound-and-true-p diary-including)
+          (setq diary-included-files nil))
       (message "Preparing diary...")
       (save-current-buffer
         (if (not diary-buffer)
@@ -828,11 +847,15 @@ the variable `diary-include-string'."
     (let ((diary-file (match-string-no-properties 1))
           (diary-list-entries-hook 'diary-include-other-diary-files)
           (diary-display-function 'ignore)
+          (diary-including t)
           diary-hook diary-list-include-blanks)
       (if (file-exists-p diary-file)
           (if (file-readable-p diary-file)
               (unwind-protect
-                  (setq diary-entries-list
+                  (setq diary-included-files
+                        (append diary-included-files
+                                (list (expand-file-name diary-file)))
+                        diary-entries-list
                         (append diary-entries-list
                                 (diary-list-entries original-date number)))
                 (with-current-buffer (find-buffer-visiting diary-file)
@@ -1574,7 +1597,10 @@ be used instead of a colon (:) to separate the hour and minute parts."
                       (string-lessp ts1 ts2)))))))
 
 (defun diary-sort-entries ()
-  "Sort the list of diary entries by time of day."
+  "Sort the list of diary entries by time of day.
+If you add this function to `diary-list-entries-hook', it should
+be the last item in the hook, in case earlier items add diary
+entries, or change the order."
   (setq diary-entries-list (sort diary-entries-list 'diary-entry-compare)))
 
 (define-obsolete-function-alias 'sort-diary-entries 'diary-sort-entries "23.1")
@@ -1718,7 +1744,7 @@ best if they are non-marking."
         (forward-line 1)
         (while (looking-at "[ \t]")
           (forward-line 1))
-        (backward-char 1)
+        (if (bolp) (backward-char 1))
         (setq entry (buffer-substring-no-properties entry-start (point))))
       (setq diary-entry (diary-sexp-entry sexp entry date)
             literal entry               ; before evaluation
@@ -2286,9 +2312,19 @@ return a font-lock pattern matching array of MONTHS and marking SYMBOL."
                          t))
      '(1 font-lock-reference-face))
     '(diary-font-lock-sexps . font-lock-keyword-face)
+    ;; Don't need to worry about space around "-" because the first
+    ;; match takes care of that.  It does mean the "-" itself may or
+    ;; may not be fontified though.
+    ;; diary-date-forms often include a final character that is not
+    ;; part of the date (eg a non-digit to mark the end of the year).
+    ;; This can use up the only space char between a date and time (b#7891).
+    ;; Hence we use OVERRIDE, which can only override whitespace.
+    ;; FIXME it's probably better to tighten up the diary-time-regexp
+    ;; and drop the whitespace requirement below.
     `(,(format "\\(^\\|\\s-\\)%s\\(-%s\\)?" diary-time-regexp
                diary-time-regexp)
-      . 'diary-time))))
+      . (0 'diary-time t)))))
+;      . 'diary-time))))
 
 (defvar diary-font-lock-keywords (diary-font-lock-keywords)
   "Forms to highlight in `diary-mode'.")

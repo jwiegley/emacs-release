@@ -1,7 +1,7 @@
 ;;; repeat.el --- convenient way to repeat the previous command
 
 ;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Will Mengarini <seldon@eskimo.com>
 ;; Created: Mo 02 Mar 98
@@ -335,7 +335,12 @@ recently executed command not bound to an input event\"."
 	(setq real-last-command 'repeat)
 	(setq repeat-undo-count 1)
 	(unwind-protect
-	    (while (eq (read-event) repeat-repeat-char)
+	    (while (let ((evt (read-key)))
+                     ;; For clicks, we need to strip the meta-data to
+                     ;; check the underlying event name.
+                     (eq (or (car-safe evt) evt)
+                         (or (car-safe repeat-repeat-char)
+                             repeat-repeat-char)))
 	      (repeat repeat-arg))
 	  ;; Make sure `repeat-undo-count' is reset.
 	  (setq repeat-undo-count nil))

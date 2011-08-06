@@ -1,8 +1,9 @@
-This is ../../info/gnus, produced by makeinfo version 4.11 from
+This is ../../info/gnus, produced by makeinfo version 4.13 from
 gnus.texi.
 
 Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,9 +17,9 @@ Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* Gnus: (gnus).         The newsreader Gnus.
+* Gnus: (gnus).                 The newsreader Gnus.
 END-INFO-DIR-ENTRY
 
 
@@ -35,7 +36,8 @@ luck.
    This manual corresponds to Gnus v5.13
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2409,11 +2411,11 @@ which is an alist of regexps and values.
      (sieve)Top.
 
 `(agent parameters)'
-     If the agent has been enabled, you can set any of the its
-     parameters to control the behavior of the agent in individual
-     groups. See Agent Parameters in *note Category Syntax::.  Most
-     users will choose to set agent parameters in either an agent
-     category or group topic to minimize the configuration effort.
+     If the agent has been enabled, you can set any of its parameters to
+     control the behavior of the agent in individual groups.  See Agent
+     Parameters in *note Category Syntax::.  Most users will choose to
+     set agent parameters in either an agent category or group topic to
+     minimize the configuration effort.
 
 `(VARIABLE FORM)'
      You can use the group parameters to set variables local to the

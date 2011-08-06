@@ -1,7 +1,7 @@
 ;;; cus-start.el --- define customization properties of builtins
 ;;
 ;; Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: internal
@@ -266,6 +266,14 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 		      (const control) (const meta)
 		      (const alt) (const hyper)
 		      (const super)) "23.1")
+	     (ns-right-alternate-modifier
+	      ns
+	      (choice (const :tag "No modifier (work as alternate/option)" none)
+		      (const :tag "Use the value of ns-alternate-modifier"
+			     left)
+		      (const control) (const meta)
+		      (const alt) (const hyper)
+		      (const super)) "23.3")
 	     (ns-function-modifier
 	      ns
 	      (choice (const :tag "No modifier (work as function)" none)

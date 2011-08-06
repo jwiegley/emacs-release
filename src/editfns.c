@@ -1,7 +1,8 @@
 /* Lisp functions pertaining to editing.
-   Copyright (C) 1985, 1986, 1987, 1989, 1993, 1994, 1995, 1996,
-                 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+
+Copyright (C) 1985, 1986, 1987, 1989, 1993, 1994, 1995, 1996, 1997,
+  1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+  2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -218,6 +219,19 @@ usage: (char-to-string CHAR)  */)
 
   len = CHAR_STRING (XFASTINT (character), str);
   return make_string_from_bytes (str, 1, len);
+}
+
+DEFUN ("byte-to-string", Fbyte_to_string, Sbyte_to_string, 1, 1, 0,
+       doc: /* Convert arg BYTE to a unibyte string containing that byte.  */)
+     (byte)
+     Lisp_Object byte;
+{
+  unsigned char b;
+  CHECK_NUMBER (byte);
+  if (XINT (byte) < 0 || XINT (byte) > 255)
+    error ("Invalid byte");
+  b = XINT (byte);
+  return make_string_from_bytes (&b, 1, 1);
 }
 
 DEFUN ("string-to-char", Fstring_to_char, Sstring_to_char, 1, 1, 0,
@@ -3333,6 +3347,9 @@ save_restriction_restore (data)
 	}
     }
 
+  /* Changing the buffer bounds invalidates any recorded current column.  */
+  invalidate_current_column ();
+
   if (cur)
     set_buffer_internal (cur);
 
@@ -3606,12 +3623,12 @@ usage: (format STRING &rest OBJECTS)  */)
   int multibyte = 0;
   /* When we make a multibyte string, we must pay attention to the
      byte combining problem, i.e., a byte may be combined with a
-     multibyte charcter of the previous string.  This flag tells if we
+     multibyte character of the previous string.  This flag tells if we
      must consider such a situation or not.  */
   int maybe_combine_byte;
   unsigned char *this_format;
   /* Precision for each spec, or -1, a flag value meaning no precision
-     was given in that spec.  Element 0, corresonding to the format
+     was given in that spec.  Element 0, corresponding to the format
      string itself, will not be used.  Element NARGS, corresponding to
      no argument, *will* be assigned to in the case that a `%' and `.'
      occur after the final format specifier.  */
@@ -4686,6 +4703,7 @@ functions if all the text being accessed has this property.  */);
   defsubr (&Sgoto_char);
   defsubr (&Sstring_to_char);
   defsubr (&Schar_to_string);
+  defsubr (&Sbyte_to_string);
   defsubr (&Sbuffer_substring);
   defsubr (&Sbuffer_substring_no_properties);
   defsubr (&Sbuffer_string);

@@ -1,5 +1,5 @@
 /* Elisp bindings for D-Bus.
-   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -405,6 +405,7 @@ xd_append_arg (dtype, object, iter)
     switch (dtype)
       {
       case DBUS_TYPE_BYTE:
+	CHECK_NUMBER (object);
 	{
 	  unsigned char val = XUINT (object) & 0xFF;
 	  XD_DEBUG_MESSAGE ("%c %d", dtype, val);
@@ -423,6 +424,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_INT16:
+	CHECK_NUMBER (object);
 	{
 	  dbus_int16_t val = XINT (object);
 	  XD_DEBUG_MESSAGE ("%c %d", dtype, (int) val);
@@ -432,6 +434,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_UINT16:
+	CHECK_NUMBER (object);
 	{
 	  dbus_uint16_t val = XUINT (object);
 	  XD_DEBUG_MESSAGE ("%c %u", dtype, (unsigned int) val);
@@ -441,6 +444,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_INT32:
+	CHECK_NUMBER (object);
 	{
 	  dbus_int32_t val = XINT (object);
 	  XD_DEBUG_MESSAGE ("%c %d", dtype, val);
@@ -450,6 +454,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_UINT32:
+	CHECK_NUMBER (object);
 	{
 	  dbus_uint32_t val = XUINT (object);
 	  XD_DEBUG_MESSAGE ("%c %u", dtype, val);
@@ -459,6 +464,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_INT64:
+	CHECK_NUMBER (object);
 	{
 	  dbus_int64_t val = XINT (object);
 	  XD_DEBUG_MESSAGE ("%c %d", dtype, (int) val);
@@ -468,6 +474,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_UINT64:
+	CHECK_NUMBER (object);
 	{
 	  dbus_uint64_t val = XUINT (object);
 	  XD_DEBUG_MESSAGE ("%c %u", dtype, (unsigned int) val);
@@ -477,6 +484,7 @@ xd_append_arg (dtype, object, iter)
 	}
 
       case DBUS_TYPE_DOUBLE:
+	CHECK_FLOAT (object);
 	{
 	  double val = XFLOAT_DATA (object);
 	  XD_DEBUG_MESSAGE ("%c %f", dtype, val);
@@ -488,8 +496,13 @@ xd_append_arg (dtype, object, iter)
       case DBUS_TYPE_STRING:
       case DBUS_TYPE_OBJECT_PATH:
       case DBUS_TYPE_SIGNATURE:
+	CHECK_STRING (object);
 	{
-	  char *val = SDATA (Fstring_make_unibyte (object));
+	  /* We need to send a valid UTF-8 string.  We could encode `object'
+	     but by not encoding it, we guarantee it's valid utf-8, even if
+	     it contains eight-bit-bytes.  Of course, you can still send
+	     manually-crafted junk by passing a unibyte string.  */
+	  char *val = SDATA (object);
 	  XD_DEBUG_MESSAGE ("%c %s", dtype, val);
 	  if (!dbus_message_iter_append_basic (iter, dtype, &val))
 	    XD_SIGNAL2 (build_string ("Unable to append argument"), object);
@@ -841,6 +854,9 @@ This is an internal function, it shall not be used outside dbus.el.  */)
 					    NULL, (void*) XHASH (bus), NULL))
     XD_SIGNAL1 (build_string ("Cannot add watch functions"));
 
+  /* We do not want to abort.  */
+  putenv ("DBUS_FATAL_WARNINGS=0");
+
   /* Return.  */
   return Qnil;
 }
@@ -1158,6 +1174,10 @@ usage: (dbus-call-method-asynchronously BUS SERVICE PATH INTERFACE METHOD HANDLE
 		    SDATA (path),
 		    SDATA (interface),
 		    SDATA (method));
+
+  /* Check dbus-registered-objects-table.  */
+  if (!HASH_TABLE_P (Vdbus_registered_objects_table))
+    XD_SIGNAL1 (build_string ("dbus.el is not loaded"));
 
   /* Open a connection to the bus.  */
   connection = xd_initialize (bus);
@@ -1555,7 +1575,7 @@ usage: (dbus-send-signal BUS SERVICE PATH INTERFACE SIGNAL &rest ARGS)  */)
 
 /* Check, whether there is pending input in the message queue of the
    D-Bus BUS.  BUS is a Lisp symbol, either :system or :session.  */
-int
+static Lisp_Object
 xd_get_dispatch_status (bus)
      Lisp_Object bus;
 {
@@ -1571,23 +1591,34 @@ xd_get_dispatch_status (bus)
   return
     (dbus_connection_get_dispatch_status (connection)
      == DBUS_DISPATCH_DATA_REMAINS)
-    ? TRUE : FALSE;
+    ? Qt : Qnil;
 }
 
 /* Check for queued incoming messages from the system and session buses.  */
 int
 xd_pending_messages ()
 {
+  int ret = FALSE;
+  xd_in_read_queued_messages = 1;
 
   /* Vdbus_registered_objects_table will be initialized as hash table
      in dbus.el.  When this package isn't loaded yet, it doesn't make
      sense to handle D-Bus messages.  */
-  return (HASH_TABLE_P (Vdbus_registered_objects_table)
-	  ? (xd_get_dispatch_status (QCdbus_system_bus)
-	     || ((getenv ("DBUS_SESSION_BUS_ADDRESS") != NULL)
-		 ? xd_get_dispatch_status (QCdbus_session_bus)
-		 : FALSE))
-	  : FALSE);
+  if (HASH_TABLE_P (Vdbus_registered_objects_table))
+    {
+      ret = (!NILP (internal_catch (Qdbus_error, xd_get_dispatch_status,
+				    QCdbus_system_bus)));
+      if (ret) goto theend;
+
+      ret = ((getenv ("DBUS_SESSION_BUS_ADDRESS") != NULL) &&
+	     (!NILP (internal_catch (Qdbus_error, xd_get_dispatch_status,
+				     QCdbus_session_bus))));
+    }
+
+  /* Return.  */
+ theend:
+  xd_in_read_queued_messages = 0;
+  return ret;
 }
 
 /* Read queued incoming message of the D-Bus BUS.  BUS is a Lisp
@@ -1836,6 +1867,10 @@ usage: (dbus-register-signal BUS SERVICE PATH INTERFACE SIGNAL HANDLER &rest ARG
     wrong_type_argument (intern ("functionp"), handler);
   GCPRO6 (bus, service, path, interface, signal, handler);
 
+  /* Check dbus-registered-objects-table.  */
+  if (!HASH_TABLE_P (Vdbus_registered_objects_table))
+    XD_SIGNAL1 (build_string ("dbus.el is not loaded"));
+
   /* Retrieve unique name of service.  If service is a known name, we
      will register for the corresponding unique name, if any.  Signals
      are sent always with the unique name as sender.  Note: the unique
@@ -1948,6 +1983,10 @@ used for composing the returning D-Bus message.  */)
     wrong_type_argument (intern ("functionp"), handler);
   /* TODO: We must check for a valid service name, otherwise there is
      a segmentation fault.  */
+
+  /* Check dbus-registered-objects-table.  */
+  if (!HASH_TABLE_P (Vdbus_registered_objects_table))
+    XD_SIGNAL1 (build_string ("dbus.el is not loaded"));
 
   /* Open a connection to the bus.  */
   connection = xd_initialize (bus);
@@ -2117,6 +2156,9 @@ message arrives.  */);
     doc: /* If non-nil, debug messages of D-Bus bindings are raised.  */);
 #ifdef DBUS_DEBUG
   Vdbus_debug = Qt;
+  /* We can also set environment variable DBUS_VERBOSE=1 in order to
+     see more traces.  This requires libdbus-1 to be configured with
+     --enable-verbose-mode.  */
 #else
   Vdbus_debug = Qnil;
 #endif

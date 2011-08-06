@@ -1,6 +1,6 @@
 /* Heap management routines for GNU Emacs on the Microsoft W32 API.
    Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008, 2009, 2010  Free Software Foundation, Inc.
+                 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -279,7 +279,7 @@ round_heap (unsigned long align)
     sbrk (need_to_alloc);
 }
 
-#if (_MSC_VER >= 1000 && _MSC_VER < 1300 && !defined(USE_CRT_DLL))
+#if (_MSC_VER >= 1000 && _MSC_VER < 1300 && !defined (USE_CRT_DLL))
 
 /* MSVC 4.2 invokes these functions from mainCRTStartup to initialize
    a heap via HeapCreate.  They are normally defined by the runtime,

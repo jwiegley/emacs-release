@@ -1,3 +1,75 @@
+2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 23.3 released.
+
+2011-01-27  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Test existence of xaw3d library, not just the
+	header (Bug#7642).
+
+2011-01-23  Peter O'Gorman  <bug-gnu-emacs@mlists.thewrittenword.com>  (tiny change)
+
+	* configure.in: Add HP-UX on IA64 (Bug#6811).
+
+2011-01-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in [netbsd systems]: Check for tputs definition
+	(Bug#7642).
+
+2010-12-11  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Exclude etc/*.pyc.  [Backport from trunk]
+
+2010-11-13  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	Fix alloca definition when using gcc on non-gnu systems.
+	* configure.in: Use the code sequence indicated by "info autoconf"
+	for alloca (bug#6170).
+
+2010-11-08  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* .dir-locals.el (log-edit-mode): Set log-edit-rewrite-fixes.
+
+2010-11-04  Michael Albinus  <michael.albinus@gmx.de>
+
+	* configure.in: Don't write a warning for D-Bus anymore.
+
+2010-11-03  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (CRT_DIR): New output variable.
+	(--with-crt-dir): New option.  (Bug#5655)
+	(HAVE_LIB64_DIR): Remove.
+
+2010-10-12  Glenn Morris  <rgm@gnu.org>
+
+	* BUGS, INSTALL.BZR, README: Updates.
+
+2010-10-08  Eli Zaretskii  <eliz@gnu.org>
+
+	* make-dist: Don't distribute src/buildobj.h.  (Bug#7167)
+
+2010-06-23  Glenn Morris  <rgm@gnu.org>
+
+	* info/dir: Start descriptions in column 32, per Texinfo convention.
+
+2010-06-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* INSTALL: Update font information (Bug#6389).
+
+2010-06-10  Glenn Morris  <rgm@gnu.org>
+
+	* INSTALL: General update.
+
+2010-05-30  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* .bzrignore: Ignore new files from trunk, which appear if you use
+	colocated branches (i.e. "bzr switch").
+
+2010-05-10  Miles Bader  <miles@gnu.org>
+
+	* configure.in: Get rid of "unix" pre-defined macro when
+	preprocessing Makefile.  (Bug#5857)  [Backport from trunk]
+
 2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.2 released.
@@ -6203,7 +6275,7 @@
 
 	* Makefile.in (lib-src/Makefile, src/Makefile, oldXMenu/Makefile):
 	Depend on vpath.sed.
-	Replace sed comand for VPATH with @vpath_sed@.
+	Replace sed command for VPATH with @vpath_sed@.
 
 	* configure.in: Substitute variable `vpath_sed'.
 	If not in $srcdir and $srcdir is configured,
@@ -7544,7 +7616,7 @@
 	there, and then copy it in, to make sure we get a real file.
 
 	* make-dist: Don't try to distribute *.defns files any more.  The
-	only such file was for simula.el, which has been superceded by a
+	only such file was for simula.el, which has been superseded by a
 	version which doesn't have a separate .defns file.
 
 1992-05-28  Ken Raeburn  (Raeburn@Cygnus.COM)
@@ -7864,7 +7936,7 @@
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
-	2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+	2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

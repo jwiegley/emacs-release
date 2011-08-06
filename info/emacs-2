@@ -1,12 +1,12 @@
-This is ../../info/emacs, produced by makeinfo version 4.11 from
+This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.2.
+updated for Emacs version 23.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,8 +23,38 @@ Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacs: (emacs).	The extensible self-documenting text editor.
+* Emacs: (emacs).       The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Nonincremental Search,  Next: Word Search,  Prev: Incremental Search,  Up: Search
+
+19.2 Nonincremental Search
+==========================
+
+Emacs also has conventional nonincremental search commands, which
+require you to type the entire search string before searching begins.
+
+`C-s <RET> STRING <RET>'
+     Search for STRING.
+
+`C-r <RET> STRING <RET>'
+     Search backward for STRING.
+
+   To start a nonincremental search, first type `C-s <RET>'.  This
+enters the minibuffer to read the search string; terminate the string
+with <RET>, and then the search takes place.  If the string is not
+found, the search command signals an error.
+
+   When you type `C-s <RET>', the `C-s' invokes incremental search as
+usual.  That command is specially programmed to invoke nonincremental
+search, `search-forward', if the string you specify is empty.  (Such an
+empty argument would otherwise be useless.)  `C-r <RET>' does likewise,
+for a reverse incremental search.
+
+   Forward and backward nonincremental searches are implemented by the
+commands `search-forward' and `search-backward'.  These commands may be
+bound to other keys in the usual manner.
 
 
 File: emacs,  Node: Word Search,  Next: Regexp Search,  Prev: Nonincremental Search,  Up: Search
@@ -65,11 +95,13 @@ forward search, or `M-s w C-r <RET>' for a backward search.  These run
 the commands `word-search-forward' and `word-search-backward'
 respectively.
 
-   A nonincremental word search differs slightly from the incremental
-version in the way it finds a match: the last word in the search string
-must be an exact match for a whole word.  In an incremental word
-search, the last word in the search string can match part of a word;
-this allows the matching to proceed incrementally as you type.
+   Incremental and nonincremental word searches differ slightly in the
+way they find a match.  In a nonincremental word search, the last word
+in the search string must exactly match a whole word.  In an
+incremental word search, the matching is more lax: the last word in the
+search string can match part of a word, so that the matching proceeds
+incrementally as you type.  This additional laxity does not apply to
+the lazy highlight, which always matches whole words.
 
 
 File: emacs,  Node: Regexp Search,  Next: Regexps,  Prev: Word Search,  Up: Search
@@ -144,15 +176,13 @@ File: emacs,  Node: Regexps,  Next: Regexp Backslash,  Prev: Regexp Search,  Up:
 ==================================
 
 This manual describes regular expression features that users typically
-want to use.  There are additional features that are mainly used in
-Lisp programs; see *note Regular Expressions: (elisp)Regular
-Expressions.
+use.  *Note Regular Expressions: (elisp)Regular Expressions, for
+additional features used mainly in Lisp programs.
 
    Regular expressions have a syntax in which a few characters are
 special constructs and the rest are "ordinary".  An ordinary character
-is a simple regular expression which matches that same character and
-nothing else.  The special characters are `$', `^', `.', `*', `+', `?',
-`[', and `\'.  The character `]' is special if it ends a character
+matches that same character and nothing else.  The special characters
+are `$^.*+?[\'.  The character `]' is special if it ends a character
 alternative (see later).  The character `-' is special inside a
 character alternative.  Any other character appearing in a regular
 expression is ordinary, unless a `\' precedes it.  (When you use
@@ -170,23 +200,21 @@ exception.)
    Any two regular expressions A and B can be concatenated.  The result
 is a regular expression which matches a string if A matches some amount
 of the beginning of that string and B matches the rest of the string.
-
-   As a simple example, we can concatenate the regular expressions `f'
-and `o' to get the regular expression `fo', which matches only the
-string `fo'.  Still trivial.  To do something nontrivial, you need to
-use one of the special characters.  Here is a list of them.
+For example, concatenating the regular expressions `f' and `o' gives
+the regular expression `fo', which matches only the string `fo'.  Still
+trivial.  To do something nontrivial, you need to use one of the special
+characters.  Here is a list of them.
 
 `.' (Period)
      is a special character that matches any single character except a
-     newline.  Using concatenation, we can make regular expressions
-     like `a.b', which matches any three-character string that begins
-     with `a' and ends with `b'.
+     newline.  For example, the regular expressions `a.b' matches any
+     three-character string that begins with `a' and ends with `b'.
 
 `*'
      is not a construct by itself; it is a postfix operator that means
-     to match the preceding regular expression repetitively as many
-     times as possible.  Thus, `o*' matches any number of `o's
-     (including no `o's).
+     to match the preceding regular expression repetitively any number
+     of times, as many times as possible.  Thus, `o*' matches any number
+     of `o's, including no `o's.
 
      `*' always applies to the _smallest_ possible preceding
      expression.  Thus, `fo*' has a repeating `o', not a repeating
@@ -205,21 +233,20 @@ use one of the special characters.  Here is a list of them.
 
 `+'
      is a postfix operator, similar to `*' except that it must match
-     the preceding expression at least once.  So, for example, `ca+r'
-     matches the strings `car' and `caaaar' but not the string `cr',
-     whereas `ca*r' matches all three strings.
+     the preceding expression at least once.  Thus, `ca+r' matches the
+     strings `car' and `caaaar' but not the string `cr', whereas `ca*r'
+     matches all three strings.
 
 `?'
      is a postfix operator, similar to `*' except that it can match the
-     preceding expression either once or not at all.  For example,
-     `ca?r' matches `car' or `cr'; nothing else.
+     preceding expression either once or not at all.  Thus, `ca?r'
+     matches `car' or `cr', and nothing else.
 
 `*?', `+?', `??'
-     are non-greedy variants of the operators above.  The normal
-     operators `*', `+', `?' are "greedy" in that they match as much as
-     they can, as long as the overall regexp can still match.  With a
-     following `?', they are non-greedy: they will match as little as
-     possible.
+     are non-"greedy" variants of the operators above.  The normal
+     operators `*', `+', `?' match as much as they can, as long as the
+     overall regexp can still match.  With a following `?', they will
+     match as little as possible.
 
      Thus, both `ab*' and `ab*?' can match the string `a' and the
      string `abbbb'; but if you try to match them both against the text
@@ -234,30 +261,28 @@ use one of the special characters.  Here is a list of them.
      _can_ match starting at the first `a', it does.
 
 `\{N\}'
-     is a postfix operator that specifies repetition N times--that is,
-     the preceding regular expression must match exactly N times in a
-     row.  For example, `x\{4\}' matches the string `xxxx' and nothing
-     else.
+     is a postfix operator specifying N repetitions--that is, the
+     preceding regular expression must match exactly N times in a row.
+     For example, `x\{4\}' matches the string `xxxx' and nothing else.
 
 `\{N,M\}'
-     is a postfix operator that specifies repetition between N and M
-     times--that is, the preceding regular expression must match at
-     least N times, but no more than M times.  If M is omitted, then
-     there is no upper limit, but the preceding regular expression must
-     match at least N times.
+     is a postfix operator specifying between N and M repetitions--that
+     is, the preceding regular expression must match at least N times,
+     but no more than M times.  If M is omitted, then there is no upper
+     limit, but the preceding regular expression must match at least N
+     times.
      `\{0,1\}' is equivalent to `?'.
      `\{0,\}' is equivalent to `*'.
      `\{1,\}' is equivalent to `+'.
 
 `[ ... ]'
-     is a "character set", which begins with `[' and is terminated by
-     `]'.  In the simplest case, the characters between the two
-     brackets are what this set can match.
+     is a "character set", beginning with `[' and terminated by `]'.
 
-     Thus, `[ad]' matches either one `a' or one `d', and `[ad]*'
-     matches any string composed of just `a's and `d's (including the
-     empty string), from which it follows that `c[ad]*r' matches `cr',
-     `car', `cdr', `caddaar', etc.
+     In the simplest case, the characters between the two brackets are
+     what this set can match.  Thus, `[ad]' matches either one `a' or
+     one `d', and `[ad]*' matches any string composed of just `a's and
+     `d's (including the empty string).  It follows that `c[ad]*r'
+     matches `cr', `car', `cdr', `caddaar', etc.
 
      You can also include character ranges in a character set, by
      writing the starting and ending characters with a `-' between
@@ -266,9 +291,11 @@ use one of the special characters.  Here is a list of them.
      `[a-z$%.]', which matches any lower-case ASCII letter or `$', `%'
      or period.
 
-     Note that the usual regexp special characters are not special
-     inside a character set.  A completely different set of special
-     characters exists inside character sets: `]', `-' and `^'.
+     You can also include certain special "character classes" in a
+     character set.  A `[:' and balancing `:]' enclose a character
+     class inside a character alternative.  For instance, `[[:alnum:]]'
+     matches any letter or digit.  *Note Char Classes: (elisp)Char
+     Classes, for a list of character classes.
 
      To include a `]' in a character set, you must make it the first
      character.  For example, `[]a]' matches `]' or `a'.  To include a
@@ -503,7 +530,6 @@ Here is an example of a regexp--the regexp that Emacs uses, by default,
 to recognize the end of a sentence, not including the following space
 (i.e., the variable `sentence-end-base'):
 
-
      [.?!][]\"'””)}]*
 
 This contains two parts in succession: a character set matching period,
@@ -567,10 +593,10 @@ perform several replacements in parallel, using the command
 
 * Menu:
 
-* Unconditional Replace::	Replacing all matches for a string.
-* Regexp Replace::		Replacing all matches for a regexp.
-* Replacement and Case::	How replacements preserve case of letters.
-* Query Replace::		How to use querying.
+* Unconditional Replace::   Replacing all matches for a string.
+* Regexp Replace::          Replacing all matches for a regexp.
+* Replacement and Case::    How replacements preserve case of letters.
+* Query Replace::           How to use querying.
 
 
 File: emacs,  Node: Unconditional Replace,  Next: Regexp Replace,  Prev: Replace,  Up: Replace
@@ -2320,9 +2346,9 @@ saved contents if you save again.
 
 * Menu:
 
-* Names: Backup Names.		How backup files are named.
-* Deletion: Backup Deletion.	Emacs deletes excess numbered backups.
-* Copying: Backup Copying.	Backups can be made by copying or renaming.
+* Names: Backup Names.          How backup files are named.
+* Deletion: Backup Deletion.    Emacs deletes excess numbered backups.
+* Copying: Backup Copying.      Backups can be made by copying or renaming.
 
 
 File: emacs,  Node: Backup Names,  Next: Backup Deletion,  Up: Backup
@@ -2335,9 +2361,9 @@ appending `~' to the file name being edited; thus, the backup file for
 `eval.c' would be `eval.c~'.
 
    If access control stops Emacs from writing backup files under the
-usual names, it writes the backup file as `%backup%~' in your home
-directory.  Only one such file can exist, so only the most recently
-made such backup is available.
+usual names, it writes the backup file as `~/.emacs.d/%backup%~'.  Only
+one such file can exist, so only the most recently made such backup is
+available.
 
    Emacs can also make "numbered backup files".  Numbered backup file
 names contain `.~', the number, and another `~' after the original file
@@ -2917,7 +2943,7 @@ execution of commands you have been typing.
 * Files: Auto Save Files.       The file where auto-saved changes are
                                   actually made until you save the file.
 * Control: Auto Save Control.   Controlling when and how often to auto-save.
-* Recover::		        Recovering text from auto-save files.
+* Recover::                     Recovering text from auto-save files.
 
 
 File: emacs,  Node: Auto Save Files,  Next: Auto Save Control,  Up: Auto Save
@@ -3088,6 +3114,22 @@ file name recorded for a buffer is the file's "truename" (made by
 replacing all symbolic links with their target names), rather than the
 name you specify.  Setting `find-file-visit-truename' also implies the
 effect of `find-file-existing-other-name'.
+
+   Sometimes, a directory is ordinarily accessed through a symbolic
+link, and you may want Emacs to preferentially show its "linked" name.
+To do this, customize `directory-abbrev-alist'.  Each element in this
+list should have the form `(FROM . TO)', which means to replace FROM
+with TO whenever FROM appears in a directory name.  The FROM string is a
+regular expression (*note Regexps::).  It is matched against directory
+names anchored at the first character, and should start with `\`' (to
+support directory names with embedded newlines, which would defeat
+`^').  The TO string should be an ordinary absolute directory name
+pointing to the same directory.  Do not use `~' to stand for a home
+directory in the TO string; Emacs performs these substitutions
+separately.  Here's an example, from a system on which `/home/fsf' is
+normally accessed through a symbolic link named `/fsf':
+
+     (("\\`/home/fsf" . "/fsf"))
 
 
 File: emacs,  Node: Directories,  Next: Comparing Files,  Prev: File Aliases,  Up: Files
@@ -3786,10 +3828,10 @@ megabytes.
 
 * Select Buffer::       Creating a new buffer or reselecting an old one.
 * List Buffers::        Getting a list of buffers that exist.
-* Misc Buffer::	        Renaming; changing read-onlyness; copying text.
-* Kill Buffer::	        Killing buffers you no longer need.
+* Misc Buffer::         Renaming; changing read-onlyness; copying text.
+* Kill Buffer::         Killing buffers you no longer need.
 * Several Buffers::     How to go through the list of all buffers
-			  and operate variously on several of them.
+                          and operate variously on several of them.
 * Indirect Buffers::    An indirect buffer shares the text of another buffer.
 * Buffer Convenience::  Convenience and customization features for
                           buffer handling.
@@ -4776,10 +4818,10 @@ MS-DOS Mouse::.
 * Multiple Displays::   How one Emacs job can talk to several displays.
 * Special Buffer Frames::  You can make certain buffers have their own frames.
 * Frame Parameters::    Changing the colors and other modes of frames.
-* Scroll Bars::	        How to enable and disable scroll bars; how to use them.
+* Scroll Bars::         How to enable and disable scroll bars; how to use them.
 * Wheeled Mice::        Using mouse wheels for scrolling.
 * Drag and Drop::       Using drag and drop to open files and insert text.
-* Menu Bars::	        Enabling and disabling the menu bar.
+* Menu Bars::           Enabling and disabling the menu bar.
 * Tool Bars::           Enabling and disabling the tool bar.
 * Dialog Boxes::        Controlling use of dialog boxes.
 * Tooltips::            Displaying information at the current mouse position.
@@ -4790,11 +4832,11 @@ MS-DOS Mouse::.
 
 File: emacs,  Node: Cut and Paste,  Next: Mouse References,  Up: Frames
 
-25.1 Killing and Yanking on Graphical Displays
+25.1 Cutting and Pasting on Graphical Displays
 ==============================================
 
-This section describes commands for selecting a region, killing, and
-yanking using the mouse.
+This section describes commands for selecting a region, cutting, and
+pasting using the mouse.
 
 * Menu:
 
@@ -4958,6 +5000,13 @@ the Emacs kill ring (*note Kill Ring::), the primary selection has no
 "memory": each time you save something in the primary selection, either
 in Emacs or in another X application, the previous contents of the
 primary selection are lost.
+
+   MS-Windows provides no primary selection, but Emacs emulates it
+within a single Emacs session, by storing the selected text internally.
+Therefore, all the features and commands related to the primary
+selection work on Windows as they do on X, for cutting and pasting
+within the same session, but not across Emacs sessions or with other
+applications.
 
    Whenever you kill some text using a command such as `C-w'
 (`kill-region'), or copy it into the kill ring using a command such as
@@ -6170,7 +6219,7 @@ in a buffer whose coding system is `utf-8-unix':
              character: A` (192, #o300, #xc0)
      preferred charset: unicode (Unicode (ISO10646))
             code point: 0xC0
-                syntax: w 	which means: word
+                syntax: w    which means: word
               category: j:Japanese l:Latin v:Vietnamese
            buffer code: #xC3 #x80
              file code: not encodable by coding system undecided-unix
@@ -6541,127 +6590,4 @@ character.
    To see a list of all the supported input methods, type `M-x
 list-input-methods'.  The list gives information about each input
 method, including the string that stands for it in the mode line.
-
-
-File: emacs,  Node: Coding Systems,  Next: Recognize Coding,  Prev: Select Input Method,  Up: International
-
-26.6 Coding Systems
-===================
-
-Users of various languages have established many more-or-less standard
-coding systems for representing them.  Emacs does not use these coding
-systems internally; instead, it converts from various coding systems to
-its own system when reading data, and converts the internal coding
-system to other coding systems when writing data.  Conversion is
-possible in reading or writing files, in sending or receiving from the
-terminal, and in exchanging data with subprocesses.
-
-   Emacs assigns a name to each coding system.  Most coding systems are
-used for one language, and the name of the coding system starts with
-the language name.  Some coding systems are used for several languages;
-their names usually start with `iso'.  There are also special coding
-systems, such as `no-conversion', `raw-text', and `emacs-internal'.
-
-   A special class of coding systems, collectively known as
-"codepages", is designed to support text encoded by MS-Windows and
-MS-DOS software.  The names of these coding systems are `cpNNNN', where
-NNNN is a 3- or 4-digit number of the codepage.  You can use these
-encodings just like any other coding system; for example, to visit a
-file encoded in codepage 850, type `C-x <RET> c cp850 <RET> C-x C-f
-FILENAME <RET>'.
-
-   In addition to converting various representations of non-ASCII
-characters, a coding system can perform end-of-line conversion.  Emacs
-handles three different conventions for how to separate lines in a file:
-newline, carriage-return linefeed, and just carriage-return.
-
-`C-h C CODING <RET>'
-     Describe coding system CODING.
-
-`C-h C <RET>'
-     Describe the coding systems currently in use.
-
-`M-x list-coding-systems'
-     Display a list of all the supported coding systems.
-
-   The command `C-h C' (`describe-coding-system') displays information
-about particular coding systems, including the end-of-line conversion
-specified by those coding systems.  You can specify a coding system
-name as the argument; alternatively, with an empty argument, it
-describes the coding systems currently selected for various purposes,
-both in the current buffer and as the defaults, and the priority list
-for recognizing coding systems (*note Recognize Coding::).
-
-   To display a list of all the supported coding systems, type `M-x
-list-coding-systems'.  The list gives information about each coding
-system, including the letter that stands for it in the mode line (*note
-Mode Line::).
-
-   Each of the coding systems that appear in this list--except for
-`no-conversion', which means no conversion of any kind--specifies how
-and whether to convert printing characters, but leaves the choice of
-end-of-line conversion to be decided based on the contents of each file.
-For example, if the file appears to use the sequence carriage-return
-linefeed to separate lines, DOS end-of-line conversion will be used.
-
-   Each of the listed coding systems has three variants which specify
-exactly what to do for end-of-line conversion:
-
-`...-unix'
-     Don't do any end-of-line conversion; assume the file uses newline
-     to separate lines.  (This is the convention normally used on Unix
-     and GNU systems.)
-
-`...-dos'
-     Assume the file uses carriage-return linefeed to separate lines,
-     and do the appropriate conversion.  (This is the convention
-     normally used on Microsoft systems.(1))
-
-`...-mac'
-     Assume the file uses carriage-return to separate lines, and do the
-     appropriate conversion.  (This is the convention normally used on
-     the Macintosh system.)
-
-   These variant coding systems are omitted from the
-`list-coding-systems' display for brevity, since they are entirely
-predictable.  For example, the coding system `iso-latin-1' has variants
-`iso-latin-1-unix', `iso-latin-1-dos' and `iso-latin-1-mac'.
-
-   The coding systems `unix', `dos', and `mac' are aliases for
-`undecided-unix', `undecided-dos', and `undecided-mac', respectively.
-These coding systems specify only the end-of-line conversion, and leave
-the character code conversion to be deduced from the text itself.
-
-   The coding system `raw-text' is good for a file which is mainly
-ASCII text, but may contain byte values above 127 which are not meant
-to encode non-ASCII characters.  With `raw-text', Emacs copies those
-byte values unchanged, and sets `enable-multibyte-characters' to `nil'
-in the current buffer so that they will be interpreted properly.
-`raw-text' handles end-of-line conversion in the usual way, based on
-the data encountered, and has the usual three variants to specify the
-kind of end-of-line conversion to use.
-
-   In contrast, the coding system `no-conversion' specifies no
-character code conversion at all--none for non-ASCII byte values and
-none for end of line.  This is useful for reading or writing binary
-files, tar files, and other files that must be examined verbatim.  It,
-too, sets `enable-multibyte-characters' to `nil'.
-
-   The easiest way to edit a file with no conversion of any kind is with
-the `M-x find-file-literally' command.  This uses `no-conversion', and
-also suppresses other Emacs features that might convert the file
-contents before you see them.  *Note Visiting::.
-
-   The coding system `emacs-internal' (or `utf-8-emacs', which is
-equivalent) means that the file contains non-ASCII characters stored
-with the internal Emacs encoding.  This coding system handles
-end-of-line conversion based on the data encountered, and has the usual
-three variants to specify the kind of end-of-line conversion.
-
-   ---------- Footnotes ----------
-
-   (1) It is also specified for MIME `text/*' bodies and in other
-network transport contexts.  It is different from the SGML reference
-syntax record-start/record-end format which Emacs doesn't support
-directly.
 

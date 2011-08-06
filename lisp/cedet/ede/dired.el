@@ -1,6 +1,6 @@
 ;;; ede/dired.el --- EDE extensions to dired.
 
-;; Copyright (C) 1998, 1999, 2000, 2003, 2009, 2010
+;; Copyright (C) 1998, 1999, 2000, 2003, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
@@ -88,7 +88,7 @@ negative, force off."
   (let ((files (dired-get-marked-files t)))
     (while files
       (project-add-file target (car files))
-      ;; Find the buffer for this files, and set it's ede-object
+      ;; Find the buffer for this files, and set its ede-object
       (if (get-file-buffer (car files))
 	  (with-current-buffer (get-file-buffer (car files))
 	    (setq ede-object nil)

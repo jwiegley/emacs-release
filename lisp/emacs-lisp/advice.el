@@ -1,7 +1,7 @@
 ;;; advice.el --- an overloading mechanism for Emacs Lisp functions
 
 ;; Copyright (C) 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -2684,6 +2684,8 @@ For that it has to be fbound with a non-autoload definition."
       ;; because `byte-compile' uses `fset':
       (ad-with-auto-activation-disabled
        (require 'bytecomp)
+       (require 'warnings)              ;To define warning-suppress-types
+                                        ;before we let-bind it.
        (let ((symbol (make-symbol "advice-compilation"))
 	     (byte-compile-warnings byte-compile-warnings)
              ;; Don't pop up windows showing byte-compiler warnings.

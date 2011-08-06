@@ -1,6 +1,6 @@
 /* Define frame-object for GNU Emacs.
    Copyright (C) 1993, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -306,7 +306,7 @@ struct frame
   /* Canonical X unit.  Width of default font, in pixels.  */
   int column_width;
 
-  /* Widht of space glyph of default font, in pixels.  */
+  /* Width of space glyph of default font, in pixels.  */
   int space_width;
 
   /* Canonical Y unit.  Height of a line, in pixels.  */

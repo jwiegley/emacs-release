@@ -1,6 +1,6 @@
 /* String search routines for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1997, 1998, 1999, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -100,10 +100,10 @@ Lisp_Object Vinhibit_changing_match_data;
 
 static void set_search_regs P_ ((EMACS_INT, EMACS_INT));
 static void save_search_regs P_ ((void));
-static EMACS_INT simple_search P_ ((int, unsigned char *, int, int, 
+static EMACS_INT simple_search P_ ((int, unsigned char *, int, int,
 				    Lisp_Object, EMACS_INT, EMACS_INT,
 				    EMACS_INT, EMACS_INT));
-static EMACS_INT boyer_moore P_ ((int, unsigned char *, int, int, 
+static EMACS_INT boyer_moore P_ ((int, unsigned char *, int, int,
 				  Lisp_Object, Lisp_Object,
 				  EMACS_INT, EMACS_INT,
 				  EMACS_INT, EMACS_INT, int));
@@ -281,7 +281,7 @@ compile_pattern (pattern, regp, translate, posix, multibyte)
   if (regp)
     re_set_registers (&cp->buf, regp, regp->num_regs, regp->start, regp->end);
 
-  /* The compiled pattern can be used both for mulitbyte and unibyte
+  /* The compiled pattern can be used both for multibyte and unibyte
      target.  But, we have to tell which the pattern is used for. */
   cp->buf.target_multibyte = multibyte;
 
@@ -582,7 +582,7 @@ fast_looking_at (regexp, pos, pos_byte, limit, limit_byte, string)
   unsigned char *p1, *p2;
   EMACS_INT s1, s2;
   EMACS_INT len;
-  
+
   if (STRINGP (string))
     {
       if (pos_byte < 0)

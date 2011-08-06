@@ -1,10 +1,10 @@
-This is ../../info/message, produced by makeinfo version 4.11 from
+This is ../../info/message, produced by makeinfo version 4.13 from
 message.texi.
 
 This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -18,9 +18,10 @@ This file documents Message, the Emacs message composition mode.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* Message: (message).   Mail and news composition mode that goes with Gnus.
+* Message: (message).           Mail and news composition mode that
+                                  goes with Gnus.
 END-INFO-DIR-ENTRY
 
 
@@ -32,7 +33,7 @@ Message
 This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2915,51 +2916,51 @@ File: message,  Node: Key Index,  Prev: Index,  Up: Top
 
 
 Tag Table:
-Node: Top1079
-Node: Interface2680
-Node: New Mail Message3870
-Node: New News Message4232
-Node: Reply4625
-Node: Wide Reply5995
-Node: Followup6950
-Node: Canceling News7725
-Node: Superseding8905
-Node: Forwarding9559
-Node: Resending11107
-Node: Bouncing11462
-Node: Mailing Lists12033
-Node: Commands17230
-Node: Buffer Entry17968
-Node: Header Commands18639
-Node: Movement23506
-Node: Insertion24070
-Node: MIME25391
-Node: IDNA26594
-Node: Security27789
-Node: Signing and encryption28341
-Node: Using S/MIME31154
-Node: Using PGP/MIME34373
-Node: PGP Compatibility36210
-Node: Various Commands37865
-Node: Sending39485
-Node: Mail Aliases39895
-Node: Spelling41200
-Node: Variables42506
-Node: Message Headers43225
-Node: Mail Headers49330
-Node: Mail Variables50282
-Node: News Headers53334
-Node: News Variables60330
-Node: Insertion Variables60735
-Node: Various Message Variables65278
-Node: Sending Variables70848
-Node: Message Buffers72155
-Node: Message Actions74310
-Node: Compatibility75782
-Node: Appendices76225
-Node: Responses76443
-Node: GNU Free Documentation License77796
-Node: Index102944
-Node: Key Index125138
+Node: Top1144
+Node: Interface2751
+Node: New Mail Message3941
+Node: New News Message4303
+Node: Reply4696
+Node: Wide Reply6066
+Node: Followup7021
+Node: Canceling News7796
+Node: Superseding8976
+Node: Forwarding9630
+Node: Resending11178
+Node: Bouncing11533
+Node: Mailing Lists12104
+Node: Commands17301
+Node: Buffer Entry18039
+Node: Header Commands18710
+Node: Movement23577
+Node: Insertion24141
+Node: MIME25462
+Node: IDNA26665
+Node: Security27860
+Node: Signing and encryption28412
+Node: Using S/MIME31225
+Node: Using PGP/MIME34444
+Node: PGP Compatibility36281
+Node: Various Commands37936
+Node: Sending39556
+Node: Mail Aliases39966
+Node: Spelling41271
+Node: Variables42577
+Node: Message Headers43296
+Node: Mail Headers49401
+Node: Mail Variables50353
+Node: News Headers53405
+Node: News Variables60401
+Node: Insertion Variables60806
+Node: Various Message Variables65349
+Node: Sending Variables70919
+Node: Message Buffers72226
+Node: Message Actions74381
+Node: Compatibility75853
+Node: Appendices76296
+Node: Responses76514
+Node: GNU Free Documentation License77867
+Node: Index103015
+Node: Key Index125209
 
 End Tag Table

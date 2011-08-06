@@ -1,7 +1,7 @@
 ;;; dired.el --- directory-browsing commands
 
 ;; Copyright (C) 1985, 1986, 1992, 1993, 1994, 1995, 1996, 1997, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
@@ -1131,7 +1131,10 @@ If HDR is non-nil, insert a header line with the directory name."
   "Reread the dired buffer.
 Must also be called after `dired-actual-switches' have changed.
 Should not fail even on completely garbaged buffers.
-Preserves old cursor, marks/flags, hidden-p."
+Preserves old cursor, marks/flags, hidden-p.
+
+Dired sets `revert-buffer-function' to this function.  The args
+ARG and NOCONFIRM, passed from `revert-buffer', are ignored."
   (widen)				; just in case user narrowed
   (let ((modflag (buffer-modified-p))
 	(positions (dired-save-positions))
@@ -1177,7 +1180,7 @@ Preserves old cursor, marks/flags, hidden-p."
 The positions have the form (BUFFER-POSITION WINDOW-POSITIONS).
 
 BUFFER-POSITION is the point position in the current dired buffer.
-The buffer position have the form (BUFFER DIRED-FILENAME BUFFER-POINT).
+It has the form (BUFFER DIRED-FILENAME BUFFER-POINT).
 
 WINDOW-POSITIONS are current positions in all windows displaying
 this dired buffer.  The window positions have the form (WINDOW
@@ -2012,6 +2015,14 @@ Otherwise, an error occurs in these cases."
           ;; with quotation marks in their names.
 	  (while (string-match "\\(?:[^\\]\\|\\`\\)\\(\"\\)" file)
 	    (setq file (replace-match "\\\"" nil t file 1)))
+	  
+	  (when (eq system-type 'windows-nt)
+	    (save-match-data
+	      (let ((start 0))
+		(while (string-match "\\\\" file start)
+		  (aset file (match-beginning 0) ?/)
+		  (setq start (match-end 0))))))
+
           (setq file (read (concat "\"" file "\"")))
 	  ;; The above `read' will return a unibyte string if FILE
 	  ;; contains eight-bit-control/graphic characters.
@@ -2227,31 +2238,33 @@ You can then feed the file name(s) to other commands with \\[yank]."
 ;; Keeping Dired buffers in sync with the filesystem and with each other
 
 (defun dired-buffers-for-dir (dir &optional file)
-;; Return a list of buffers that dired DIR (top level or in-situ subdir).
+;; Return a list of buffers for DIR (top level or in-situ subdir).
 ;; If FILE is non-nil, include only those whose wildcard pattern (if any)
 ;; matches FILE.
 ;; The list is in reverse order of buffer creation, most recent last.
 ;; As a side effect, killed dired buffers for DIR are removed from
 ;; dired-buffers.
   (setq dir (file-name-as-directory dir))
-  (let ((alist dired-buffers) result elt buf)
-    (while alist
-      (setq elt (car alist)
-	    buf (cdr elt))
-      (if (buffer-name buf)
-	  (if (dired-in-this-tree dir (car elt))
-	      (with-current-buffer buf
-		(and (assoc dir dired-subdir-alist)
-		     (or (null file)
-			 (let ((wildcards
-				(file-name-nondirectory dired-directory)))
-			   (or (= 0 (length wildcards))
-			       (string-match (dired-glob-regexp wildcards)
-					     file))))
-		     (setq result (cons buf result)))))
-	;; else buffer is killed - clean up:
+  (let (result buf)
+    (dolist (elt dired-buffers)
+      (setq buf (cdr elt))
+      (cond
+       ((null (buffer-name buf))
+	;; Buffer is killed - clean up:
 	(setq dired-buffers (delq elt dired-buffers)))
-      (setq alist (cdr alist)))
+       ((dired-in-this-tree dir (car elt))
+	(with-current-buffer buf
+	  (and (assoc dir dired-subdir-alist)
+	       (or (null file)
+		   (if (stringp dired-directory)
+		       (let ((wildcards (file-name-nondirectory
+					 dired-directory)))
+			 (or (= 0 (length wildcards))
+			     (string-match (dired-glob-regexp wildcards)
+					   file)))
+		     (member (expand-file-name file dir)
+			     (cdr dired-directory))))
+	       (setq result (cons buf result)))))))
     result))
 
 (defun dired-glob-regexp (pattern)
@@ -2745,7 +2758,8 @@ name, or the marker and a count of marked files."
 		    ;; that's possible.  (Bug#1806)
 		    (split-window-vertically))
 	       ;; Otherwise, try to split WINDOW sensibly.
-	       (split-window-sensibly window)))))
+	       (split-window-sensibly window))))
+	pop-up-frames)
     (pop-to-buffer (get-buffer-create buf)))
   ;; If dired-shrink-to-fit is t, make its window fit its contents.
   (when dired-shrink-to-fit
@@ -3521,7 +3535,7 @@ Ask means pop up a menu for the user to select one of copy, move or link."
 ;;;;;;  dired-run-shell-command dired-do-shell-command dired-do-async-shell-command
 ;;;;;;  dired-clean-directory dired-do-print dired-do-touch dired-do-chown
 ;;;;;;  dired-do-chgrp dired-do-chmod dired-compare-directories dired-backup-diff
-;;;;;;  dired-diff) "dired-aux" "dired-aux.el" "07676ea25af17f5d50cc5db4f53bddc0")
+;;;;;;  dired-diff) "dired-aux" "dired-aux.el" "255ac82c318ef43da2e47b931c0f8581")
 ;;; Generated autoloads from dired-aux.el
 
 (autoload 'dired-diff "dired-aux" "\
@@ -3974,7 +3988,7 @@ true then the type of the file linked to by FILE is printed instead.
 ;;;***
 
 ;;;### (autoloads (dired-do-relsymlink dired-jump) "dired-x" "dired-x.el"
-;;;;;;  "bb37ec379c0a523368794491b691fd8d")
+;;;;;;  "48197b7ca054193643e01957196dd491")
 ;;; Generated autoloads from dired-x.el
 
 (autoload 'dired-jump "dired-x" "\

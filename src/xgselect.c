@@ -1,5 +1,5 @@
 /* Function for handling the GLib event loop.
-   Copyright (C) 2009, 2010
+   Copyright (C) 2009, 2010, 2011
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -113,11 +113,17 @@ xg_select (max_fds, rfds, wfds, efds, timeout)
               if (rfds && FD_ISSET (i, rfds)) ++retval;
               else ++our_fds;
             }
+          else if (rfds)
+            FD_CLR (i, rfds);
+
           if (have_wfds && FD_ISSET (i, &all_wfds))
             {
               if (wfds && FD_ISSET (i, wfds)) ++retval;
               else ++our_fds;
             }
+          else if (wfds)
+            FD_CLR (i, wfds);
+
           if (efds && FD_ISSET (i, efds))
             ++retval;
         }

@@ -1,7 +1,7 @@
 ;;; bindings.el --- define standard key bindings and some variables
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1994, 1995, 1996, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -688,6 +688,7 @@ language you are using."
 	      (fboundp 'semantic-active-p)
 	      (semantic-active-p))
 	 (semantic-ia-complete-symbol))
+        (completion-at-point-functions (completion-at-point))
 	(t
 	 (error "%s"
 		(substitute-command-keys
@@ -1035,6 +1036,9 @@ or \\[semantic-mode]")))))
 ;; so we can't distinguish those two keys, but usually we consider C-SPC
 ;; (rather than C-@) as the "canonical" binding.
 (define-key function-key-map [?\C-@] [?\C-\s])
+;; Many keyboards don't have a `backtab' key, so by convention the user
+;; can use S-tab instead to access that binding.
+(define-key function-key-map [S-tab] [backtab])
 
 (define-key global-map [mouse-movement] 'ignore)
 

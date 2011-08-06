@@ -1,7 +1,7 @@
 /* Buffer manipulation primitives for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994,
                  1995, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -2429,7 +2429,7 @@ current buffer is cleared.  */)
 	    {
 	      c = STRING_CHAR_AND_LENGTH (p, bytes);
 	      /* Delete all bytes for this 8-bit character but the
-		 last one, and change the last one to the charcter
+		 last one, and change the last one to the character
 		 code.  */
 	      bytes--;
 	      del_range_2 (pos, pos, pos + bytes, pos + bytes, 0);
@@ -6032,14 +6032,14 @@ fringe indicator.
 
 INDICATOR specifies the logical indicator type which is one of the
 following symbols: `truncation' , `continuation', `overlay-arrow',
-`top', `bottom', `up', `down', `one-line', `empty-line', or `unknown'.
+`top', `bottom', `top-bottom', `up', `down', empty-line', or `unknown'.
 
-BITMAPS is list of symbols (LEFT RIGHT [LEFT1 RIGHT1]) which specifies
+BITMAPS is a list of symbols (LEFT RIGHT [LEFT1 RIGHT1]) which specifies
 the actual bitmap shown in the left or right fringe for the logical
 indicator.  LEFT and RIGHT are the bitmaps shown in the left and/or
 right fringe for the specific indicator.  The LEFT1 or RIGHT1 bitmaps
-are used only for the `bottom' and `one-line' indicators when the last
-\(only) line in has no final newline.  BITMAPS may also be a single
+are used only for the `bottom' and `top-bottom' indicators when the
+last (only) line has no final newline.  BITMAPS may also be a single
 symbol which is used in both left and right fringes.  */);
 
   DEFVAR_PER_BUFFER ("fringe-cursor-alist",
@@ -6096,10 +6096,7 @@ No information is given about the length of the text after the change.
 
 Buffer changes made while executing the `before-change-functions'
 don't call any before-change or after-change functions.
-That's because these variables are temporarily set to nil.
-As a result, a hook function cannot straightforwardly alter the
-value of these variables.  See the Emacs Lisp manual for a way of
-accomplishing an equivalent result by using other variables.
+That's because `inhibit-modification-hooks' is temporarily set non-nil.
 
 If an unhandled error happens in running these functions,
 the variable's value remains nil.  That prevents the error
@@ -6117,10 +6114,7 @@ and the post-change beginning and end are at the same place.)
 
 Buffer changes made while executing the `after-change-functions'
 don't call any before-change or after-change functions.
-That's because these variables are temporarily set to nil.
-As a result, a hook function cannot straightforwardly alter the
-value of these variables.  See the Emacs Lisp manual for a way of
-accomplishing an equivalent result by using other variables.
+That's because `inhibit-modification-hooks' is temporarily set non-nil.
 
 If an unhandled error happens in running these functions,
 the variable's value remains nil.  That prevents the error

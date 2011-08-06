@@ -1,4 +1,4 @@
-This is ../../info/eudc, produced by makeinfo version 4.11 from
+This is ../../info/eudc, produced by makeinfo version 4.13 from
 eudc.texi.
 
 This file documents EUDC v1.30b.
@@ -8,7 +8,7 @@ directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
    Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -22,9 +22,9 @@ pages directory system (PH/QI)
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* EUDC: (eudc).   An Emacs client for directory servers (LDAP, PH).
+* EUDC: (eudc).                 Emacs client for directory servers (LDAP, PH).
 END-INFO-DIR-ENTRY
 
 
@@ -37,7 +37,7 @@ directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
    Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -122,7 +122,7 @@ protocol for directory applications defined in RFC 1777.
    LDAP servers usually store (but are not limited to) information about
 people such as their name, phone number, email address, office
 location, etc... More information about LDAP can be found at
-`http://www.openldap.org/'
+`http://www.openldap.org/'.
 
    EUDC requires external support to access LDAP directory servers
 (*note LDAP Requirements::)
@@ -134,17 +134,15 @@ File: eudc,  Node: CCSO PH/QI,  Next: BBDB,  Prev: LDAP,  Up: Overview
 ==============
 
 The Central Computing Services Office (CCSO) of the University of
-Illinois at Urbana Champaign (UIUC) created and freely distributes a
-directory system that is currently in use in more than 300 organizations
-around the world.  The system records information about people such as
-their address, phone number, email, academic information or any other
-details it was configured to.
+Illinois at Urbana Champaign created and freely distributed a directory
+system that was used by many organizations in the 1990s.  The system
+records information about people such as their address, phone number,
+email, academic information or any other details it was configured to.
+Nowadays this system is not widely used.
 
    The system consists of two parts: a database server traditionally
-called `qi' and a command-line client called `ph'.
-`ftp://uiarchive.cso.uiuc.edu/pub/packages/ph' is the main distribution
-site.  `http://www.uiuc.edu/cgi-bin/ph/lookup?Query=.'  provides a
-listing of the active `qi' servers.
+called `qi' and a command-line client called `ph'.  As of 2010, the
+code can still be downloaded from `http://www-dev.cites.uiuc.edu/ph/'.
 
    The original command-line `ph' client that comes with the `ph/qi'
 distribution provides additional features like the possibility to
@@ -211,14 +209,9 @@ File: eudc,  Node: LDAP Requirements,  Prev: Installation,  Up: Installation
 2.1 LDAP Requirements
 =====================
 
-LDAP support is added by means of `ldap.el' which is part of Emacs.
-`ldap.el' needs an external command line utility named `ldapsearch'
-which is available as part of LDAP toolkits:
-
-   * Open LDAP Libraries (`http://www.openldap.org/')
-
-   * University of Michigan's LDAP Client software
-     (`http://www.umich.edu/~dirsvcs/ldap/')
+LDAP support is added by means of `ldap.el', which is part of Emacs.
+`ldap.el' needs an external command line utility named `ldapsearch',
+available as part of Open LDAP (`http://www.openldap.org/').
 
 
 File: eudc,  Node: Usage,  Next: Credits,  Prev: Installation,  Up: Top
@@ -1485,31 +1478,31 @@ Variables Index
 
 
 Tag Table:
-Node: Top1190
-Node: Overview2607
-Node: LDAP3676
-Node: CCSO PH/QI4651
-Node: BBDB5703
-Node: Installation6720
-Node: LDAP Requirements7604
-Node: Usage8063
-Node: Querying Servers8915
-Node: Selecting a Server9434
-Node: Return Attributes11254
-Node: Duplicate Attributes12332
-Node: Query Form14904
-Node: Display of Query Results17386
-Node: Inline Query Expansion20356
-Node: The Server Hotlist24805
-Node: The Hotlist Edit Buffer26409
-Node: Multi-server Queries27469
-Node: Creating BBDB Records28752
-Ref: Creating BBDB Records-Footnote-133654
-Node: Server/Protocol Locals33783
-Node: Manipulating local bindings34290
-Node: Credits36957
-Node: GNU Free Documentation License37280
-Node: Command and Function Index62461
-Node: Variables Index66673
+Node: Top1224
+Node: Overview2647
+Node: LDAP3716
+Node: CCSO PH/QI4692
+Node: BBDB5667
+Node: Installation6684
+Node: LDAP Requirements7568
+Node: Usage7893
+Node: Querying Servers8745
+Node: Selecting a Server9264
+Node: Return Attributes11084
+Node: Duplicate Attributes12162
+Node: Query Form14734
+Node: Display of Query Results17216
+Node: Inline Query Expansion20186
+Node: The Server Hotlist24635
+Node: The Hotlist Edit Buffer26239
+Node: Multi-server Queries27299
+Node: Creating BBDB Records28582
+Ref: Creating BBDB Records-Footnote-133484
+Node: Server/Protocol Locals33613
+Node: Manipulating local bindings34120
+Node: Credits36787
+Node: GNU Free Documentation License37110
+Node: Command and Function Index62291
+Node: Variables Index66503
 
 End Tag Table

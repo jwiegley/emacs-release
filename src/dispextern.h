@@ -1,6 +1,6 @@
 /* Interface definitions for display code.
    Copyright (C) 1985, 1993, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -105,6 +105,8 @@ enum window_part
 /* Number of bits allocated to store fringe bitmap numbers.  */
 #define FRINGE_ID_BITS  16
 
+/* Number of bits allocated to store fringe bitmap height.  */
+#define FRINGE_HEIGHT_BITS 8
 
 
 /***********************************************************************
@@ -777,6 +779,12 @@ struct glyph_row
 
   /* Face of the right fringe glyph.  */
   unsigned right_fringe_face_id : FACE_ID_BITS;
+
+  /* Vertical offset of the left fringe bitmap.  */
+  signed left_fringe_offset : FRINGE_HEIGHT_BITS;
+
+  /* Vertical offset of the right fringe bitmap.  */
+  signed right_fringe_offset : FRINGE_HEIGHT_BITS;
 
   /* 1 means that we must draw the bitmaps of this row.  */
   unsigned redraw_fringe_bitmaps_p : 1;
@@ -1686,7 +1694,7 @@ struct face_cache
    This macro is only meaningful for multibyte character CHAR.  */
 
 #define FACE_FOR_CHAR(F, FACE, CHAR, POS, OBJECT)	\
-  (ASCII_CHAR_P (CHAR)					\
+  ((ASCII_CHAR_P (CHAR) || CHAR_BYTE8_P (CHAR))		\
    ? (FACE)->ascii_face->id				\
    : face_for_char ((F), (FACE), (CHAR), (POS), (OBJECT)))
 
@@ -1865,7 +1873,7 @@ struct composition_it
      are not iterating over a composition now.  */
   int id;
   /* If non-negative, character that triggers the automatic
-     composition at `stop_pos', and this is an automatic compositoin.
+     composition at `stop_pos', and this is an automatic composition.
      If negative, this is a static composition.  This is set to -2
      temporarily if searching of composition reach a limit or a
      newline.  */
@@ -1980,6 +1988,12 @@ struct it
   /* Total number of overlay strings to process.  This can be >
      OVERLAY_STRING_CHUNK_SIZE.  */
   int n_overlay_strings;
+
+  /* The charpos where n_overlay_strings was calculated.  This should
+     be set at the same time as n_overlay_strings.  It is needed
+     because we show before-strings at the start of invisible text;
+     see handle_invisible_prop in xdisp.c.  */
+  int overlay_strings_charpos;
 
   /* Vector of overlays to process.  Overlay strings are processed
      OVERLAY_STRING_CHUNK_SIZE at a time.  */
@@ -2123,9 +2137,11 @@ struct it
      composition.  */
   struct composition_it cmp_it;
 
-  /* The character to display, possibly translated to multibyte
-     if unibyte_display_via_language_environment is set.  This
-     is set after produce_glyphs has been called.  */
+  /* The character to display, possibly translated to multibyte if
+     multibyte_p is zero or unibyte_display_via_language_environment
+     is set.  This is set after get_next_display_element has been
+     called.  If we are setting it->C directly before calling
+     PRODUCE_GLYPHS, this should be set beforehand too.  */
   int char_to_display;
 
   /* If what == IT_IMAGE, the id of the image to display.  */
@@ -2830,6 +2846,10 @@ extern void expose_frame P_ ((struct frame *, int, int, int, int));
 extern int x_intersect_rectangles P_ ((XRectangle *, XRectangle *,
 				       XRectangle *));
 #endif
+
+/* Flags passed to try_window.  */
+#define TRY_WINDOW_CHECK_MARGINS	(1 << 0)
+#define TRY_WINDOW_IGNORE_FONTS_CHANGE	(1 << 1)
 
 /* Defined in fringe.c */
 

@@ -1,6 +1,6 @@
 /* Definitions for asynchronous process control in GNU Emacs.
    Copyright (C) 1985, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -169,6 +169,10 @@ extern Lisp_Object Qtime, Qctime;
 
 extern Lisp_Object list_system_processes (void);
 extern Lisp_Object system_process_attributes (Lisp_Object);
+
+extern void hold_keyboard_input (void);
+extern void unhold_keyboard_input (void);
+extern int kbd_on_hold_p (void);
 
 /* arch-tag: dffedfc4-d7bc-4b58-a26f-c16155449c72
    (do not change this comment) */

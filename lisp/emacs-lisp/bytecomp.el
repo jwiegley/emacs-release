@@ -1,7 +1,7 @@
 ;;; bytecomp.el --- compilation of Lisp code into byte code
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -294,21 +294,12 @@ suppress.  For example, (not mapcar) will suppress warnings about mapcar."
 		 (set :menu-tag "Some"
                       ,@(mapcar (lambda (x) `(const ,x))
                                 byte-compile-warning-types))))
-;;;###autoload(put 'byte-compile-warnings 'safe-local-variable 'byte-compile-warnings-safe-p)
 
 ;;;###autoload
-(defun byte-compile-warnings-safe-p (x)
-  "Return non-nil if X is valid as a value of `byte-compile-warnings'."
-  (or (booleanp x)
-      (and (listp x)
-           (if (eq (car x) 'not) (setq x (cdr x))
-             t)
-	   (equal (mapcar
-		   (lambda (e)
-		     (when (memq e byte-compile-warning-types)
-		       e))
-		   x)
-		  x))))
+(put 'byte-compile-warnings 'safe-local-variable
+     (lambda (v)
+       (or (symbolp v)
+           (null (delq nil (mapcar (lambda (x) (not (symbolp x))) v))))))
 
 (defun byte-compile-warning-enabled-p (warning)
   "Return non-nil if WARNING is enabled, according to `byte-compile-warnings'."
@@ -353,7 +344,7 @@ else the global value will be modified."
 (defvar byte-compile-interactive-only-functions
   '(beginning-of-buffer end-of-buffer replace-string replace-regexp
     insert-file insert-buffer insert-file-literally previous-line next-line
-    goto-line comint-run)
+    goto-line comint-run delete-backward-char)
   "List of commands that are not meant to be called from Lisp.")
 
 (defvar byte-compile-not-obsolete-vars nil

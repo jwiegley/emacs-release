@@ -1,6 +1,6 @@
 ;;; face-remap.el --- Functions for managing `face-remapping-alist'
 ;;
-;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: faces face remapping display user commands
@@ -312,7 +312,7 @@ a top-level keymap, `text-scale-increase' or
       (when step
 	(text-scale-increase step)
 	(setq inc 1 first nil)
-	(setq ev (read-event))))
+	(setq ev (read-event "+,-,0 for further adjustment: "))))
     (push ev unread-command-events)))
 
 

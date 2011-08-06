@@ -1,7 +1,7 @@
 ;; idlwave.el --- IDL editing mode for GNU Emacs
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
 ;;          Carsten Dominik <dominik@science.uva.nl>
@@ -429,7 +429,7 @@ path \(the value of !PATH).  However, under Windows and MacOS
 variable can be set to specify the paths where IDLWAVE can find PRO
 files.  The shell will only be asked for a list of paths when this
 variable is nil.  The value is a list of directories.  A directory
-preceeded by a `+' will be searched recursively.  If you set this
+preceded by a `+' will be searched recursively.  If you set this
 variable on a UNIX system, the shell will not be queried.  See also
 `idlwave-system-directory'."
   :group 'idlwave-routine-info
@@ -1198,7 +1198,7 @@ As a user, you should not set this to t.")
 	  (2 font-lock-function-name-face)))
 
        ;; Keyword parameters, like /xlog or ,xrange=[]
-       ;; This is anchored to the comma preceeding the keyword.
+       ;; This is anchored to the comma preceding the keyword.
        ;; Treats continuation lines, works only during whole buffer
        ;; fontification.  Slow, use it only in fancy fontification.
        (keyword-parameters
@@ -1601,7 +1601,7 @@ Capitalize system variables - action only
         `(lambda ()
            (interactive)
            (self-insert-command 1)
-           ,@(if (listp cmd) cmd (list cmd))))))
+           ,(if (listp cmd) cmd (list cmd))))))
 
 ;; Set action and key bindings.
 ;; See description of the function `idlwave-action-and-binding'.

@@ -1,12 +1,12 @@
-This is ../../info/emacs, produced by makeinfo version 4.11 from
+This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.2.
+updated for Emacs version 23.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,8 +23,131 @@ Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacs: (emacs).	The extensible self-documenting text editor.
+* Emacs: (emacs).       The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Coding Systems,  Next: Recognize Coding,  Prev: Select Input Method,  Up: International
+
+26.6 Coding Systems
+===================
+
+Users of various languages have established many more-or-less standard
+coding systems for representing them.  Emacs does not use these coding
+systems internally; instead, it converts from various coding systems to
+its own system when reading data, and converts the internal coding
+system to other coding systems when writing data.  Conversion is
+possible in reading or writing files, in sending or receiving from the
+terminal, and in exchanging data with subprocesses.
+
+   Emacs assigns a name to each coding system.  Most coding systems are
+used for one language, and the name of the coding system starts with
+the language name.  Some coding systems are used for several languages;
+their names usually start with `iso'.  There are also special coding
+systems, such as `no-conversion', `raw-text', and `emacs-internal'.
+
+   A special class of coding systems, collectively known as
+"codepages", is designed to support text encoded by MS-Windows and
+MS-DOS software.  The names of these coding systems are `cpNNNN', where
+NNNN is a 3- or 4-digit number of the codepage.  You can use these
+encodings just like any other coding system; for example, to visit a
+file encoded in codepage 850, type `C-x <RET> c cp850 <RET> C-x C-f
+FILENAME <RET>'.
+
+   In addition to converting various representations of non-ASCII
+characters, a coding system can perform end-of-line conversion.  Emacs
+handles three different conventions for how to separate lines in a file:
+newline, carriage-return linefeed, and just carriage-return.
+
+`C-h C CODING <RET>'
+     Describe coding system CODING.
+
+`C-h C <RET>'
+     Describe the coding systems currently in use.
+
+`M-x list-coding-systems'
+     Display a list of all the supported coding systems.
+
+   The command `C-h C' (`describe-coding-system') displays information
+about particular coding systems, including the end-of-line conversion
+specified by those coding systems.  You can specify a coding system
+name as the argument; alternatively, with an empty argument, it
+describes the coding systems currently selected for various purposes,
+both in the current buffer and as the defaults, and the priority list
+for recognizing coding systems (*note Recognize Coding::).
+
+   To display a list of all the supported coding systems, type `M-x
+list-coding-systems'.  The list gives information about each coding
+system, including the letter that stands for it in the mode line (*note
+Mode Line::).
+
+   Each of the coding systems that appear in this list--except for
+`no-conversion', which means no conversion of any kind--specifies how
+and whether to convert printing characters, but leaves the choice of
+end-of-line conversion to be decided based on the contents of each file.
+For example, if the file appears to use the sequence carriage-return
+linefeed to separate lines, DOS end-of-line conversion will be used.
+
+   Each of the listed coding systems has three variants which specify
+exactly what to do for end-of-line conversion:
+
+`...-unix'
+     Don't do any end-of-line conversion; assume the file uses newline
+     to separate lines.  (This is the convention normally used on Unix
+     and GNU systems.)
+
+`...-dos'
+     Assume the file uses carriage-return linefeed to separate lines,
+     and do the appropriate conversion.  (This is the convention
+     normally used on Microsoft systems.(1))
+
+`...-mac'
+     Assume the file uses carriage-return to separate lines, and do the
+     appropriate conversion.  (This is the convention normally used on
+     the Macintosh system.)
+
+   These variant coding systems are omitted from the
+`list-coding-systems' display for brevity, since they are entirely
+predictable.  For example, the coding system `iso-latin-1' has variants
+`iso-latin-1-unix', `iso-latin-1-dos' and `iso-latin-1-mac'.
+
+   The coding systems `unix', `dos', and `mac' are aliases for
+`undecided-unix', `undecided-dos', and `undecided-mac', respectively.
+These coding systems specify only the end-of-line conversion, and leave
+the character code conversion to be deduced from the text itself.
+
+   The coding system `raw-text' is good for a file which is mainly
+ASCII text, but may contain byte values above 127 which are not meant
+to encode non-ASCII characters.  With `raw-text', Emacs copies those
+byte values unchanged, and sets `enable-multibyte-characters' to `nil'
+in the current buffer so that they will be interpreted properly.
+`raw-text' handles end-of-line conversion in the usual way, based on
+the data encountered, and has the usual three variants to specify the
+kind of end-of-line conversion to use.
+
+   In contrast, the coding system `no-conversion' specifies no
+character code conversion at all--none for non-ASCII byte values and
+none for end of line.  This is useful for reading or writing binary
+files, tar files, and other files that must be examined verbatim.  It,
+too, sets `enable-multibyte-characters' to `nil'.
+
+   The easiest way to edit a file with no conversion of any kind is with
+the `M-x find-file-literally' command.  This uses `no-conversion', and
+also suppresses other Emacs features that might convert the file
+contents before you see them.  *Note Visiting::.
+
+   The coding system `emacs-internal' (or `utf-8-emacs', which is
+equivalent) means that the file contains non-ASCII characters stored
+with the internal Emacs encoding.  This coding system handles
+end-of-line conversion based on the data encountered, and has the usual
+three variants to specify the kind of end-of-line conversion.
+
+   ---------- Footnotes ----------
+
+   (1) It is also specified for MIME `text/*' bodies and in other
+network transport contexts.  It is different from the SGML reference
+syntax record-start/record-end format which Emacs doesn't support
+directly.
 
 
 File: emacs,  Node: Recognize Coding,  Next: Specify Coding,  Prev: Coding Systems,  Up: International
@@ -1260,17 +1383,17 @@ editing such pictures.  *Note Picture Mode::.
 
 * Menu:
 
-* Words::	        Moving over and killing words.
-* Sentences::	        Moving over and killing sentences.
-* Paragraphs::	        Moving over paragraphs.
-* Pages::	        Moving over pages.
-* Filling::	        Filling or justifying text.
-* Case::	        Changing the case of text.
-* Text Mode::	        The major modes for editing text files.
+* Words::               Moving over and killing words.
+* Sentences::           Moving over and killing sentences.
+* Paragraphs::          Moving over paragraphs.
+* Pages::               Moving over pages.
+* Filling::             Filling or justifying text.
+* Case::                Changing the case of text.
+* Text Mode::           The major modes for editing text files.
 * Outline Mode::        Editing outlines.
-* TeX Mode::	        Editing input to the formatter TeX.
+* TeX Mode::            Editing input to the formatter TeX.
 * HTML Mode::           Editing HTML and SGML files.
-* Nroff Mode::	        Editing input to the formatter nroff.
+* Nroff Mode::          Editing input to the formatter nroff.
 * Formatted Text::      Editing formatted text directly in WYSIWYG fashion.
 * Text Based Tables::   Editing text-based tables in WYSIWYG fashion.
 
@@ -1565,13 +1688,12 @@ style of filling for each portion of the text (*note Formatted Text::).
 
 * Menu:
 
-* Auto Fill::	        Auto Fill mode breaks long lines automatically.
-* Fill Commands::       Commands to refill paragraphs and center lines.
-* Fill Prefix::	        Filling paragraphs that are indented
-                          or in a comment, etc.
-* Adaptive Fill::       How Emacs can determine the fill prefix automatically.
-* Refill::              Keeping paragraphs filled.
-* Longlines::           Editing text with very long lines.
+* Auto Fill::      Auto Fill mode breaks long lines automatically.
+* Fill Commands::  Commands to refill paragraphs and center lines.
+* Fill Prefix::    Filling paragraphs that are indented or in a comment, etc.
+* Adaptive Fill::  How Emacs can determine the fill prefix automatically.
+* Refill::         Keeping paragraphs filled.
+* Longlines::      Editing text with very long lines.
 
 
 File: emacs,  Node: Auto Fill,  Next: Fill Commands,  Up: Filling
@@ -2087,8 +2209,8 @@ hook `outline-mode-hook' (*note Hooks::).
 
 * Menu:
 
-* Format: Outline Format.	   What the text of an outline looks like.
-* Motion: Outline Motion.	   Special commands for moving through
+* Format: Outline Format.          What the text of an outline looks like.
+* Motion: Outline Motion.          Special commands for moving through
                                      outlines.
 * Visibility: Outline Visibility.  Commands to control what is visible.
 * Views: Outline Views.            Outlines and multiple views.
@@ -2746,7 +2868,7 @@ variant of SGML mode.
 
 `C-c C-n'
      Interactively specify a special character and insert the SGML
-     `&'-command for that character.
+     `&'-command for that character (`sgml-name-char').
 
 `C-c C-t'
      Interactively specify a tag and its attributes (`sgml-tag').  This
@@ -2772,7 +2894,7 @@ variant of SGML mode.
 `C-c C-b'
      Skip backward across a balanced tag group (which extends from an
      opening tag through its corresponding closing tag)
-     (`sgml-skip-tag-forward').  A numeric argument acts as a repeat
+     (`sgml-skip-tag-backward').  A numeric argument acts as a repeat
      count.
 
 `C-c C-d'
@@ -2801,7 +2923,7 @@ variant of SGML mode.
 
 `C-c TAB'
      Toggle the visibility of existing tags in the buffer.  This can be
-     used as a cheap preview.
+     used as a cheap preview (`sgml-tags-invisible').
 
    The default mode for editing XML documents is called nXML mode
 (`xml-mode' or `nxml-mode').  This is a powerful major mode that can
@@ -3802,7 +3924,7 @@ these features can
                           of a program.
 * Program Indent::      Adjusting indentation to show the nesting.
 * Parentheses::         Commands that operate on parentheses.
-* Comments::	        Inserting, killing, and aligning comments.
+* Comments::            Inserting, killing, and aligning comments.
 * Documentation::       Getting documentation of functions you plan to call.
 * Hideshow::            Displaying blocks selectively.
 * Symbol Completion::   Completion on symbol names of your program or language.
@@ -4065,11 +4187,11 @@ single parenthetical grouping.
 
 * Menu:
 
-* Basic Indent::	Indenting a single line.
+* Basic Indent::        Indenting a single line.
 * Multi-line Indent::   Commands to reindent many lines at once.
-* Lisp Indent::		Specifying how each Lisp function should be indented.
-* C Indent::		Extra features for indenting C and related modes.
-* Custom C Indent::	Controlling indentation style for C and related modes.
+* Lisp Indent::         Specifying how each Lisp function should be indented.
+* C Indent::            Extra features for indenting C and related modes.
+* Custom C Indent::     Controlling indentation style for C and related modes.
 
    Emacs also provides a Lisp pretty-printer in the library `pp'.  This
 program reformats a Lisp object with indentation chosen to look nice.
@@ -4339,7 +4461,7 @@ and unbalanced string quotes in the buffer.
 * Expressions::         Expressions with balanced parentheses.
 * Moving by Parens::    Commands for moving up, down and across
                           in the structure of parentheses.
-* Matching::	        Insertion of a close-delimiter flashes matching open.
+* Matching::            Insertion of a close-delimiter flashes matching open.
 
 
 File: emacs,  Node: Expressions,  Next: Moving by Parens,  Up: Parentheses
@@ -5410,12 +5532,12 @@ runs the hook `fortran-mode-hook'.  *Note Hooks::.
 
 * Menu:
 
-* Motion: Fortran Motion.	 Moving point by statements or subprograms.
-* Indent: Fortran Indent.	 Indentation commands for Fortran.
-* Comments: Fortran Comments.	 Inserting and aligning comments.
-* Autofill: Fortran Autofill.	 Auto fill support for Fortran.
-* Columns: Fortran Columns.	 Measuring columns for valid Fortran.
-* Abbrev: Fortran Abbrev.	 Built-in abbrevs for Fortran keywords.
+* Motion: Fortran Motion.        Moving point by statements or subprograms.
+* Indent: Fortran Indent.        Indentation commands for Fortran.
+* Comments: Fortran Comments.    Inserting and aligning comments.
+* Autofill: Fortran Autofill.    Auto fill support for Fortran.
+* Columns: Fortran Columns.      Measuring columns for valid Fortran.
+* Abbrev: Fortran Abbrev.        Built-in abbrevs for Fortran keywords.
 
 
 File: emacs,  Node: Fortran Motion,  Next: Fortran Indent,  Up: Fortran
@@ -5891,14 +6013,14 @@ assist in the larger process of compiling and testing programs.
                           for use in the compilation buffer.
 * Grep Searching::      Searching with grep.
 * Flymake::             Finding syntax errors on the fly.
-* Debuggers::	        Running symbolic debuggers for non-Lisp programs.
+* Debuggers::           Running symbolic debuggers for non-Lisp programs.
 * Executing Lisp::      Various modes for editing Lisp programs,
                           with different facilities for running
                           the Lisp programs.
 * Libraries: Lisp Libraries.      Creating Lisp programs to run in Emacs.
 * Eval: Lisp Eval.      Executing a single Lisp expression in Emacs.
 * Interaction: Lisp Interaction.  Executing Lisp in an Emacs buffer.
-* External Lisp::         Communicating through Emacs with a separate Lisp.
+* External Lisp::       Communicating through Emacs with a separate Lisp.
 
 
 File: emacs,  Node: Compilation,  Next: Compilation Mode,  Up: Building
@@ -5978,10 +6100,10 @@ compilation at any time.  However, `M-x compile' asks for confirmation
 before actually killing a compilation that is running.  You can also
 kill the compilation process with `M-x kill-compilation'.
 
-   If you want to run two compilations at once, you should start the
-first one, then rename the `*compilation*' buffer (perhaps using
-`rename-uniquely'; *note Misc Buffer::), and start the other
-compilation.  That will create a new `*compilation*' buffer.
+   To run two compilations at once, start the first one, then rename
+the `*compilation*' buffer (perhaps using `rename-uniquely'; *note Misc
+Buffer::), then switch buffers and start the other compilation.  This
+will create a new `*compilation*' buffer.
 
    Emacs does not expect a compiler process to launch asynchronous
 subprocesses; if it does, and they keep running after the main compiler
@@ -6289,10 +6411,10 @@ information on the Emacs Lisp debugger.
 
 * Menu:
 
-* Starting GUD::	How to start a debugger subprocess.
-* Debugger Operation::	Connection between the debugger and source buffers.
-* Commands of GUD::	Key bindings for common commands.
-* GUD Customization::	Defining your own commands for GUD.
+* Starting GUD::        How to start a debugger subprocess.
+* Debugger Operation::  Connection between the debugger and source buffers.
+* Commands of GUD::     Key bindings for common commands.
+* GUD Customization::   Defining your own commands for GUD.
 * GDB Graphical Interface::  An enhanced mode that uses GDB features to
                         implement a graphical debugging environment through
                         Emacs.
@@ -6631,159 +6753,4 @@ programs within one Emacs session.
                                 assembler, threads and memory buffers.
 * Watch Expressions::           Monitor variable values in the speedbar.
 * Reverse Debugging::           Execute and reverse debug your program.
-
-
-File: emacs,  Node: GDB-UI Layout,  Next: Source Buffers,  Up: GDB Graphical Interface
-
-31.6.5.1 GDB User Interface Layout
-..................................
-
-If the variable `gdb-many-windows' is `nil' (the default value) then
-`M-x gdb' normally displays only the GUD buffer.  However, if the
-variable `gdb-show-main' is also non-`nil', it starts with two windows:
-one displaying the GUD buffer, and the other showing the source for the
-`main' function of the program you are debugging.
-
-   If `gdb-many-windows' is non-`nil', then `M-x gdb' displays the
-following frame layout:
-
-     +--------------------------------+--------------------------------+
-     |   GUD buffer (I/O of GDB)      |   Locals/Registers buffer      |
-     |--------------------------------+--------------------------------+
-     |   Primary Source buffer        |   I/O buffer for debugged pgm  |
-     |--------------------------------+--------------------------------+
-     |   Stack buffer                 |   Breakpoints/Threads buffer   |
-     +--------------------------------+--------------------------------+
-
-   However, if `gdb-use-separate-io-buffer' is `nil', the I/O buffer
-does not appear and the primary source buffer occupies the full width
-of the frame.
-
-   If you change the window layout, for example, while editing and
-re-compiling your program, then you can restore this standard window
-layout with the command `gdb-restore-windows'.
-
-   To switch between this standard layout and a simple layout
-containing just the GUD buffer and a source file, type `M-x
-gdb-many-windows'.
-
-   You may also specify additional GDB-related buffers to display,
-either in the same frame or a different one.  Select the buffers you
-want with the `GUD->GDB-Windows' and `GUD->GDB-Frames' sub-menus.  If
-the menu-bar is unavailable, type `M-x gdb-display-BUFFERTYPE-buffer'
-or `M-x gdb-frame-BUFFERTYPE-buffer' respectively, where BUFFERTYPE is
-the relevant buffer type, such as `breakpoints'.  Most of these buffers
-are read-only, and typing `q' in them kills them.
-
-   When you finish debugging, kill the GUD buffer with `C-x k', which
-will also kill all the buffers associated with the session.  However
-you need not do this if, after editing and re-compiling your source
-code within Emacs, you wish continue debugging.  When you restart
-execution, GDB will automatically find your new executable.  Keeping
-the GUD buffer has the advantage of keeping the shell history as well
-as GDB's breakpoints.  You do need to check that the breakpoints in
-recently edited source files are still in the right places.
-
-
-File: emacs,  Node: Source Buffers,  Next: Breakpoints Buffer,  Prev: GDB-UI Layout,  Up: GDB Graphical Interface
-
-31.6.5.2 Source Buffers
-.......................
-
-Many GDB commands can be entered using key bindings or the tool bar but
-sometimes it is quicker to use the fringe.  These commands either
-manipulate breakpoints or control program execution.  When there is no
-fringe, you can use the margin but this is only present when the source
-file already has a breakpoint.
-
-   You can click `Mouse-1' in the fringe or display margin of a source
-buffer to set a breakpoint there and, on a graphical display, a red
-bullet will appear on that line.  If a breakpoint already exists on
-that line, the same click will remove it.  You can also enable or
-disable a breakpoint by clicking `C-Mouse-1' on the bullet.
-
-   A solid arrow in the left fringe of a source buffer indicates the
-line of the innermost frame where the debugged program has stopped. A
-hollow arrow indicates the current execution line of higher level
-frames.
-
-   If you drag the arrow in the fringe with `Mouse-1'
-(`gdb-mouse-until'), execution will continue to the line where you
-release the button, provided it is still in the same frame.
-Alternatively, you can click `Mouse-3' at some point in the fringe of
-this buffer and execution will advance to there.  A similar command
-(`gdb-mouse-jump') allows you to jump to a source line without
-executing the intermediate lines by clicking `C-Mouse-3'.  This command
-allows you to go backwards which can be useful for running through code
-that has already executed, in order to examine its execution in more
-detail.
-
-`Mouse-1'
-     Set or clear a breakpoint.
-
-`C-Mouse-1'
-     Enable or disable a breakpoint.
-
-`Mouse-3'
-     Continue execution to here.
-
-`C-Mouse-3'
-     Jump to here.
-
-   If the variable `gdb-find-source-frame' is non-`nil' and execution
-stops in a frame for which there is no source code e.g after an
-interrupt, then Emacs finds and displays the first frame further up
-stack for which there is source.  If it is `nil' then the source buffer
-continues to display the last frame which maybe more useful, for
-example, when re-setting a breakpoint.
-
-
-File: emacs,  Node: Breakpoints Buffer,  Next: Stack Buffer,  Prev: Source Buffers,  Up: GDB Graphical Interface
-
-31.6.5.3 Breakpoints Buffer
-...........................
-
-The breakpoints buffer shows the existing breakpoints, watchpoints and
-catchpoints (*note Breakpoints: (gdb)Breakpoints.).  It has these
-special commands, which mostly apply to the "current breakpoint", the
-breakpoint which point is on.
-
-`<SPC>'
-     Enable/disable the current breakpoint (`gdb-toggle-breakpoint').
-     On a graphical display, this changes the color of a bullet in the
-     margin of a source buffer at the relevant line.  This is red when
-     the breakpoint is enabled and grey when it is disabled.  Text-only
-     terminals correspondingly display a `B' or `b'.
-
-`D'
-     Delete the current breakpoint (`gdb-delete-breakpoint').
-
-`<RET>'
-     Visit the source line for the current breakpoint
-     (`gdb-goto-breakpoint').
-
-`Mouse-2'
-     Visit the source line for the breakpoint you click on.
-
-   When `gdb-many-windows' is non-`nil', the breakpoints buffer shares
-its window with the threads buffer.  To switch from one to the other
-click with `Mouse-1' on the relevant button in the header line.
-
-
-File: emacs,  Node: Stack Buffer,  Next: Other GDB-UI Buffers,  Prev: Breakpoints Buffer,  Up: GDB Graphical Interface
-
-31.6.5.4 Stack Buffer
-.....................
-
-The stack buffer displays a "call stack", with one line for each of the
-nested subroutine calls ("stack frames") now active in the program.
-*Note Backtraces: (gdb)Backtrace.
-
-   An arrow in the fringe points to the selected frame or, if the
-fringe is not present, the number of the selected frame is displayed in
-reverse contrast.  To select a frame in GDB, move point in the stack
-buffer to that stack frame and type <RET> (`gdb-frames-select'), or
-click `Mouse-2' on a stack frame.  If the locals buffer is visible,
-selecting a stack frame updates it to display the local variables of the
-new frame.
 

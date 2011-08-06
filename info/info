@@ -1,11 +1,11 @@
-This is ../../info/info, produced by makeinfo version 4.11 from
+This is ../../info/info, produced by makeinfo version 4.13 from
 info.texi.
 
 This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
    Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -28,7 +28,7 @@ Foundation, Inc.
 
 INFO-DIR-SECTION Texinfo documentation system
 START-INFO-DIR-ENTRY
-* Info: (info).         How to use the documentation browsing system.
+* Info: (info).                 How to use the documentation browsing system.
 END-INFO-DIR-ENTRY
 
 
@@ -59,7 +59,7 @@ chapter.
 documentation system.
 
    Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -1440,35 +1440,35 @@ topics discussed in this document.
 
 
 Tag Table:
-Node: Top1441
-Node: Getting Started3770
-Node: Help-Small-Screen4623
-Node: Help6577
-Node: Help-P8225
-Node: Help-^L9428
-Ref: Help-^L-Footnote-113959
-Node: Help-Inv14332
-Node: Help-]16011
-Node: Help-M17571
-Node: Help-FOO26124
-Node: Help-Xref27084
-Node: Help-Int30656
-Node: Help-Q33661
-Node: Advanced34814
-Node: Search Text36022
-Node: Search Index37812
-Node: Go to node40248
-Node: Choose menu subtopic41270
-Node: Create Info buffer42452
-Node: Emacs Info Variables43534
-Node: Expert Info47316
-Node: Add48665
-Ref: Add-Footnote-151662
-Node: Menus51915
-Node: Cross-refs54802
-Node: Help-Cross55573
-Node: Tags56237
-Node: Checking57748
-Node: Index58670
+Node: Top1455
+Node: Getting Started3790
+Node: Help-Small-Screen4643
+Node: Help6597
+Node: Help-P8245
+Node: Help-^L9448
+Ref: Help-^L-Footnote-113979
+Node: Help-Inv14352
+Node: Help-]16031
+Node: Help-M17591
+Node: Help-FOO26144
+Node: Help-Xref27104
+Node: Help-Int30676
+Node: Help-Q33681
+Node: Advanced34834
+Node: Search Text36042
+Node: Search Index37832
+Node: Go to node40268
+Node: Choose menu subtopic41290
+Node: Create Info buffer42472
+Node: Emacs Info Variables43554
+Node: Expert Info47336
+Node: Add48685
+Ref: Add-Footnote-151682
+Node: Menus51935
+Node: Cross-refs54822
+Node: Help-Cross55593
+Node: Tags56257
+Node: Checking57768
+Node: Index58690
 
 End Tag Table

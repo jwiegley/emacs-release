@@ -3,7 +3,7 @@
    internationalization features.)
 
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
                  Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
@@ -2086,7 +2086,7 @@ struct range_table_work_area
   } while (0)
 
 
-/* Both FROM and TO are mulitbyte characters.  */
+/* Both FROM and TO are multibyte characters.  */
 
 #define SETUP_MULTIBYTE_RANGE(work_area, FROM, TO)			   \
   do {									   \
@@ -3805,7 +3805,7 @@ regex_compile (pattern, size, syntax, bufp)
 
 		    if (c1 != c2 && (c1 = RE_CHAR_TO_UNIBYTE (c2)) >= 0)
 		      c = c1;
-		  }		      
+		  }
 		*b++ = c;
 		len = 1;
 	      }
@@ -4125,7 +4125,7 @@ analyse_first (p, pend, fastmap, multibyte)
 	  if (/* Any leading code can possibly start a character
 		 which doesn't match the specified set of characters.  */
 	      not
-	      || 
+	      ||
 	      /* If we can match a character class, we can match any
 		 multibyte characters.  */
 	      (CHARSET_RANGE_TABLE_EXISTS_P (&p[-2])
@@ -4145,7 +4145,7 @@ analyse_first (p, pend, fastmap, multibyte)
 		   && match_any_multibyte_characters == false)
 	    {
 	      /* Set fastmap[I] to 1 where I is a leading code of each
-		 multibyte characer in the range table. */
+		 multibyte character in the range table. */
 	      int c, count;
 	      unsigned char lc1, lc2;
 

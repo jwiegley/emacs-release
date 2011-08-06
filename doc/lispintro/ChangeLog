@@ -1,3 +1,21 @@
+2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 23.3 released.
+
+2011-02-18  Eli Zaretskii  <eliz@gnu.org>
+
+	* emacs-lisp-intro.texi: Sync @dircategory with ../../info/dir.
+
+2010-09-21  Glenn Morris  <rgm@gnu.org>
+
+	* cons-1.eps, cons-2.eps, cons-2a.eps, cons-3.eps, cons-4.eps:
+	* cons-5.eps, lambda-1.eps, lambda-2.eps, lambda-3.eps:
+	Add first line EPSF magic comment.  (Bug#7064)
+
+2010-06-23  Glenn Morris  <rgm@gnu.org>
+
+	* emacs-lisp-intro.texi: Untabify.
+
 2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.2 released.
@@ -383,7 +401,7 @@
 ;; End:
 
     Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-	2008, 2009, 2010  Free Software Foundation, Inc.
+	2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

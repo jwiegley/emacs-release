@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,10 +21,855 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Regular Expressions,  Next: Regexp Search,  Prev: Searching and Case,  Up: Searching and Matching
+
+34.3 Regular Expressions
+========================
+
+A "regular expression", or "regexp" for short, is a pattern that
+denotes a (possibly infinite) set of strings.  Searching for matches for
+a regexp is a very powerful operation.  This section explains how to
+write regexps; the following section says how to search for them.
+
+   For convenient interactive development of regular expressions, you
+can use the `M-x re-builder' command.  It provides a convenient
+interface for creating regular expressions, by giving immediate visual
+feedback in a separate buffer.  As you edit the regexp, all its matches
+in the target buffer are highlighted.  Each parenthesized
+sub-expression of the regexp is shown in a distinct face, which makes
+it easier to verify even very complex regexps.
+
+* Menu:
+
+* Syntax of Regexps::       Rules for writing regular expressions.
+* Regexp Example::          Illustrates regular expression syntax.
+* Regexp Functions::        Functions for operating on regular expressions.
+
+
+File: elisp,  Node: Syntax of Regexps,  Next: Regexp Example,  Up: Regular Expressions
+
+34.3.1 Syntax of Regular Expressions
+------------------------------------
+
+Regular expressions have a syntax in which a few characters are special
+constructs and the rest are "ordinary".  An ordinary character is a
+simple regular expression that matches that character and nothing else.
+The special characters are `.', `*', `+', `?', `[', `^', `$', and `\';
+no new special characters will be defined in the future.  The character
+`]' is special if it ends a character alternative (see later).  The
+character `-' is special inside a character alternative.  A `[:' and
+balancing `:]' enclose a character class inside a character
+alternative.  Any other character appearing in a regular expression is
+ordinary, unless a `\' precedes it.
+
+   For example, `f' is not a special character, so it is ordinary, and
+therefore `f' is a regular expression that matches the string `f' and
+no other string.  (It does _not_ match the string `fg', but it does
+match a _part_ of that string.)  Likewise, `o' is a regular expression
+that matches only `o'.
+
+   Any two regular expressions A and B can be concatenated.  The result
+is a regular expression that matches a string if A matches some amount
+of the beginning of that string and B matches the rest of the string.
+
+   As a simple example, we can concatenate the regular expressions `f'
+and `o' to get the regular expression `fo', which matches only the
+string `fo'.  Still trivial.  To do something more powerful, you need
+to use one of the special regular expression constructs.
+
+* Menu:
+
+* Regexp Special::      Special characters in regular expressions.
+* Char Classes::        Character classes used in regular expressions.
+* Regexp Backslash::    Backslash-sequences in regular expressions.
+
+
+File: elisp,  Node: Regexp Special,  Next: Char Classes,  Up: Syntax of Regexps
+
+34.3.1.1 Special Characters in Regular Expressions
+..................................................
+
+Here is a list of the characters that are special in a regular
+expression.
+
+`.' (Period)
+     is a special character that matches any single character except a
+     newline.  Using concatenation, we can make regular expressions
+     like `a.b', which matches any three-character string that begins
+     with `a' and ends with `b'.
+
+`*'
+     is not a construct by itself; it is a postfix operator that means
+     to match the preceding regular expression repetitively as many
+     times as possible.  Thus, `o*' matches any number of `o's
+     (including no `o's).
+
+     `*' always applies to the _smallest_ possible preceding
+     expression.  Thus, `fo*' has a repeating `o', not a repeating
+     `fo'.  It matches `f', `fo', `foo', and so on.
+
+     The matcher processes a `*' construct by matching, immediately, as
+     many repetitions as can be found.  Then it continues with the rest
+     of the pattern.  If that fails, backtracking occurs, discarding
+     some of the matches of the `*'-modified construct in the hope that
+     that will make it possible to match the rest of the pattern.  For
+     example, in matching `ca*ar' against the string `caaar', the `a*'
+     first tries to match all three `a's; but the rest of the pattern is
+     `ar' and there is only `r' left to match, so this try fails.  The
+     next alternative is for `a*' to match only two `a's.  With this
+     choice, the rest of the regexp matches successfully.
+
+     *Warning:* Nested repetition operators can run for an indefinitely
+     long time, if they lead to ambiguous matching.  For example,
+     trying to match the regular expression `\(x+y*\)*a' against the
+     string `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxz' could take hours
+     before it ultimately fails.  Emacs must try each way of grouping
+     the `x's before concluding that none of them can work.  Even
+     worse, `\(x*\)*' can match the null string in infinitely many
+     ways, so it causes an infinite loop.  To avoid these problems,
+     check nested repetitions carefully, to make sure that they do not
+     cause combinatorial explosions in backtracking.
+
+`+'
+     is a postfix operator, similar to `*' except that it must match
+     the preceding expression at least once.  So, for example, `ca+r'
+     matches the strings `car' and `caaaar' but not the string `cr',
+     whereas `ca*r' matches all three strings.
+
+`?'
+     is a postfix operator, similar to `*' except that it must match the
+     preceding expression either once or not at all.  For example,
+     `ca?r' matches `car' or `cr'; nothing else.
+
+`*?', `+?', `??'
+     These are "non-greedy" variants of the operators `*', `+' and `?'.
+     Where those operators match the largest possible substring
+     (consistent with matching the entire containing expression), the
+     non-greedy variants match the smallest possible substring
+     (consistent with matching the entire containing expression).
+
+     For example, the regular expression `c[ad]*a' when applied to the
+     string `cdaaada' matches the whole string; but the regular
+     expression `c[ad]*?a', applied to that same string, matches just
+     `cda'.  (The smallest possible match here for `[ad]*?' that
+     permits the whole expression to match is `d'.)
+
+`[ ... ]'
+     is a "character alternative", which begins with `[' and is
+     terminated by `]'.  In the simplest case, the characters between
+     the two brackets are what this character alternative can match.
+
+     Thus, `[ad]' matches either one `a' or one `d', and `[ad]*'
+     matches any string composed of just `a's and `d's (including the
+     empty string).  It follows that `c[ad]*r' matches `cr', `car',
+     `cdr', `caddaar', etc.
+
+     You can also include character ranges in a character alternative,
+     by writing the starting and ending characters with a `-' between
+     them.  Thus, `[a-z]' matches any lower-case ASCII letter.  Ranges
+     may be intermixed freely with individual characters, as in
+     `[a-z$%.]', which matches any lower case ASCII letter or `$', `%'
+     or period.
+
+     Note that the usual regexp special characters are not special
+     inside a character alternative.  A completely different set of
+     characters is special inside character alternatives: `]', `-' and
+     `^'.
+
+     To include a `]' in a character alternative, you must make it the
+     first character.  For example, `[]a]' matches `]' or `a'.  To
+     include a `-', write `-' as the first or last character of the
+     character alternative, or put it after a range.  Thus, `[]-]'
+     matches both `]' and `-'.
+
+     To include `^' in a character alternative, put it anywhere but at
+     the beginning.
+
+     If a range starts with a unibyte character C and ends with a
+     multibyte character C2, the range is divided into two parts: one
+     is `C..?\377', the other is `C1..C2', where C1 is the first
+     character of the charset to which C2 belongs.
+
+     A character alternative can also specify named character classes
+     (*note Char Classes::).  This is a POSIX feature whose syntax is
+     `[:CLASS:]'.  Using a character class is equivalent to mentioning
+     each of the characters in that class; but the latter is not
+     feasible in practice, since some classes include thousands of
+     different characters.
+
+`[^ ... ]'
+     `[^' begins a "complemented character alternative".  This matches
+     any character except the ones specified.  Thus, `[^a-z0-9A-Z]'
+     matches all characters _except_ letters and digits.
+
+     `^' is not special in a character alternative unless it is the
+     first character.  The character following the `^' is treated as if
+     it were first (in other words, `-' and `]' are not special there).
+
+     A complemented character alternative can match a newline, unless
+     newline is mentioned as one of the characters not to match.  This
+     is in contrast to the handling of regexps in programs such as
+     `grep'.
+
+     You can specify named character classes, just like in character
+     alternatives.  For instance, `[^[:ascii:]]' matches any non-ASCII
+     character.  *Note Char Classes::.
+
+`^'
+     When matching a buffer, `^' matches the empty string, but only at
+     the beginning of a line in the text being matched (or the
+     beginning of the accessible portion of the buffer).  Otherwise it
+     fails to match anything.  Thus, `^foo' matches a `foo' that occurs
+     at the beginning of a line.
+
+     When matching a string instead of a buffer, `^' matches at the
+     beginning of the string or after a newline character.
+
+     For historical compatibility reasons, `^' can be used only at the
+     beginning of the regular expression, or after `\(', `\(?:' or `\|'.
+
+`$'
+     is similar to `^' but matches only at the end of a line (or the
+     end of the accessible portion of the buffer).  Thus, `x+$' matches
+     a string of one `x' or more at the end of a line.
+
+     When matching a string instead of a buffer, `$' matches at the end
+     of the string or before a newline character.
+
+     For historical compatibility reasons, `$' can be used only at the
+     end of the regular expression, or before `\)' or `\|'.
+
+`\'
+     has two functions: it quotes the special characters (including
+     `\'), and it introduces additional special constructs.
+
+     Because `\' quotes special characters, `\$' is a regular
+     expression that matches only `$', and `\[' is a regular expression
+     that matches only `[', and so on.
+
+     Note that `\' also has special meaning in the read syntax of Lisp
+     strings (*note String Type::), and must be quoted with `\'.  For
+     example, the regular expression that matches the `\' character is
+     `\\'.  To write a Lisp string that contains the characters `\\',
+     Lisp syntax requires you to quote each `\' with another `\'.
+     Therefore, the read syntax for a regular expression matching `\'
+     is `"\\\\"'.
+
+   *Please note:* For historical compatibility, special characters are
+treated as ordinary ones if they are in contexts where their special
+meanings make no sense.  For example, `*foo' treats `*' as ordinary
+since there is no preceding expression on which the `*' can act.  It is
+poor practice to depend on this behavior; quote the special character
+anyway, regardless of where it appears.
+
+   As a `\' is not special inside a character alternative, it can never
+remove the special meaning of `-' or `]'.  So you should not quote
+these characters when they have no special meaning either.  This would
+not clarify anything, since backslashes can legitimately precede these
+characters where they _have_ special meaning, as in `[^\]' (`"[^\\]"'
+for Lisp string syntax), which matches any single character except a
+backslash.
+
+   In practice, most `]' that occur in regular expressions close a
+character alternative and hence are special.  However, occasionally a
+regular expression may try to match a complex pattern of literal `['
+and `]'.  In such situations, it sometimes may be necessary to
+carefully parse the regexp from the start to determine which square
+brackets enclose a character alternative.  For example, `[^][]]'
+consists of the complemented character alternative `[^][]' (which
+matches any single character that is not a square bracket), followed by
+a literal `]'.
+
+   The exact rules are that at the beginning of a regexp, `[' is
+special and `]' not.  This lasts until the first unquoted `[', after
+which we are in a character alternative; `[' is no longer special
+(except when it starts a character class) but `]' is special, unless it
+immediately follows the special `[' or that `[' followed by a `^'.
+This lasts until the next special `]' that does not end a character
+class.  This ends the character alternative and restores the ordinary
+syntax of regular expressions; an unquoted `[' is special again and a
+`]' not.
+
+
+File: elisp,  Node: Char Classes,  Next: Regexp Backslash,  Prev: Regexp Special,  Up: Syntax of Regexps
+
+34.3.1.2 Character Classes
+..........................
+
+Here is a table of the classes you can use in a character alternative,
+and what they mean:
+
+`[:ascii:]'
+     This matches any ASCII character (codes 0-127).
+
+`[:alnum:]'
+     This matches any letter or digit.  (At present, for multibyte
+     characters, it matches anything that has word syntax.)
+
+`[:alpha:]'
+     This matches any letter.  (At present, for multibyte characters, it
+     matches anything that has word syntax.)
+
+`[:blank:]'
+     This matches space and tab only.
+
+`[:cntrl:]'
+     This matches any ASCII control character.
+
+`[:digit:]'
+     This matches `0' through `9'.  Thus, `[-+[:digit:]]' matches any
+     digit, as well as `+' and `-'.
+
+`[:graph:]'
+     This matches graphic characters--everything except ASCII control
+     characters, space, and the delete character.
+
+`[:lower:]'
+     This matches any lower-case letter, as determined by the current
+     case table (*note Case Tables::).  If `case-fold-search' is
+     non-`nil', this also matches any upper-case letter.
+
+`[:multibyte:]'
+     This matches any multibyte character (*note Text
+     Representations::).
+
+`[:nonascii:]'
+     This matches any non-ASCII character.
+
+`[:print:]'
+     This matches printing characters--everything except ASCII control
+     characters and the delete character.
+
+`[:punct:]'
+     This matches any punctuation character.  (At present, for multibyte
+     characters, it matches anything that has non-word syntax.)
+
+`[:space:]'
+     This matches any character that has whitespace syntax (*note
+     Syntax Class Table::).
+
+`[:unibyte:]'
+     This matches any unibyte character (*note Text Representations::).
+
+`[:upper:]'
+     This matches any upper-case letter, as determined by the current
+     case table (*note Case Tables::).  If `case-fold-search' is
+     non-`nil', this also matches any lower-case letter.
+
+`[:word:]'
+     This matches any character that has word syntax (*note Syntax
+     Class Table::).
+
+`[:xdigit:]'
+     This matches the hexadecimal digits: `0' through `9', `a' through
+     `f' and `A' through `F'.
+
+
+File: elisp,  Node: Regexp Backslash,  Prev: Char Classes,  Up: Syntax of Regexps
+
+34.3.1.3 Backslash Constructs in Regular Expressions
+....................................................
+
+For the most part, `\' followed by any character matches only that
+character.  However, there are several exceptions: certain
+two-character sequences starting with `\' that have special meanings.
+(The character after the `\' in such a sequence is always ordinary when
+used on its own.)  Here is a table of the special `\' constructs.
+
+`\|'
+     specifies an alternative.  Two regular expressions A and B with
+     `\|' in between form an expression that matches anything that
+     either A or B matches.
+
+     Thus, `foo\|bar' matches either `foo' or `bar' but no other string.
+
+     `\|' applies to the largest possible surrounding expressions.
+     Only a surrounding `\( ... \)' grouping can limit the grouping
+     power of `\|'.
+
+     If you need full backtracking capability to handle multiple uses of
+     `\|', use the POSIX regular expression functions (*note POSIX
+     Regexps::).
+
+`\{M\}'
+     is a postfix operator that repeats the previous pattern exactly M
+     times.  Thus, `x\{5\}' matches the string `xxxxx' and nothing
+     else.  `c[ad]\{3\}r' matches string such as `caaar', `cdddr',
+     `cadar', and so on.
+
+`\{M,N\}'
+     is a more general postfix operator that specifies repetition with a
+     minimum of M repeats and a maximum of N repeats.  If M is omitted,
+     the minimum is 0; if N is omitted, there is no maximum.
+
+     For example, `c[ad]\{1,2\}r' matches the strings `car', `cdr',
+     `caar', `cadr', `cdar', and `cddr', and nothing else.
+     `\{0,1\}' or `\{,1\}' is equivalent to `?'.
+     `\{0,\}' or `\{,\}' is equivalent to `*'.
+     `\{1,\}' is equivalent to `+'.
+
+`\( ... \)'
+     is a grouping construct that serves three purposes:
+
+       1. To enclose a set of `\|' alternatives for other operations.
+          Thus, the regular expression `\(foo\|bar\)x' matches either
+          `foox' or `barx'.
+
+       2. To enclose a complicated expression for the postfix operators
+          `*', `+' and `?' to operate on.  Thus, `ba\(na\)*' matches
+          `ba', `bana', `banana', `bananana', etc., with any number
+          (zero or more) of `na' strings.
+
+       3. To record a matched substring for future reference with
+          `\DIGIT' (see below).
+
+     This last application is not a consequence of the idea of a
+     parenthetical grouping; it is a separate feature that was assigned
+     as a second meaning to the same `\( ... \)' construct because, in
+     practice, there was usually no conflict between the two meanings.
+     But occasionally there is a conflict, and that led to the
+     introduction of shy groups.
+
+`\(?: ... \)'
+     is the "shy group" construct.  A shy group serves the first two
+     purposes of an ordinary group (controlling the nesting of other
+     operators), but it does not get a number, so you cannot refer back
+     to its value with `\DIGIT'.  Shy groups are particularly useful
+     for mechanically-constructed regular expressions, because they can
+     be added automatically without altering the numbering of ordinary,
+     non-shy groups.
+
+     Shy groups are also called "non-capturing" or "unnumbered groups".
+
+`\(?NUM: ... \)'
+     is the "explicitly numbered group" construct.  Normal groups get
+     their number implicitly, based on their position, which can be
+     inconvenient.  This construct allows you to force a particular
+     group number.  There is no particular restriction on the numbering,
+     e.g. you can have several groups with the same number in which case
+     the last one to match (i.e. the rightmost match) will win.
+     Implicitly numbered groups always get the smallest integer larger
+     than the one of any previous group.
+
+`\DIGIT'
+     matches the same text that matched the DIGITth occurrence of a
+     grouping (`\( ... \)') construct.
+
+     In other words, after the end of a group, the matcher remembers the
+     beginning and end of the text matched by that group.  Later on in
+     the regular expression you can use `\' followed by DIGIT to match
+     that same text, whatever it may have been.
+
+     The strings matching the first nine grouping constructs appearing
+     in the entire regular expression passed to a search or matching
+     function are assigned numbers 1 through 9 in the order that the
+     open parentheses appear in the regular expression.  So you can use
+     `\1' through `\9' to refer to the text matched by the
+     corresponding grouping constructs.
+
+     For example, `\(.*\)\1' matches any newline-free string that is
+     composed of two identical halves.  The `\(.*\)' matches the first
+     half, which may be anything, but the `\1' that follows must match
+     the same exact text.
+
+     If a `\( ... \)' construct matches more than once (which can
+     happen, for instance, if it is followed by `*'), only the last
+     match is recorded.
+
+     If a particular grouping construct in the regular expression was
+     never matched--for instance, if it appears inside of an
+     alternative that wasn't used, or inside of a repetition that
+     repeated zero times--then the corresponding `\DIGIT' construct
+     never matches anything.  To use an artificial example,
+     `\(foo\(b*\)\|lose\)\2' cannot match `lose': the second
+     alternative inside the larger group matches it, but then `\2' is
+     undefined and can't match anything.  But it can match `foobb',
+     because the first alternative matches `foob' and `\2' matches `b'.
+
+`\w'
+     matches any word-constituent character.  The editor syntax table
+     determines which characters these are.  *Note Syntax Tables::.
+
+`\W'
+     matches any character that is not a word constituent.
+
+`\sCODE'
+     matches any character whose syntax is CODE.  Here CODE is a
+     character that represents a syntax code: thus, `w' for word
+     constituent, `-' for whitespace, `(' for open parenthesis, etc.
+     To represent whitespace syntax, use either `-' or a space
+     character.  *Note Syntax Class Table::, for a list of syntax codes
+     and the characters that stand for them.
+
+`\SCODE'
+     matches any character whose syntax is not CODE.
+
+`\cC'
+     matches any character whose category is C.  Here C is a character
+     that represents a category: thus, `c' for Chinese characters or
+     `g' for Greek characters in the standard category table.
+
+`\CC'
+     matches any character whose category is not C.
+
+   The following regular expression constructs match the empty
+string--that is, they don't use up any characters--but whether they
+match depends on the context.  For all, the beginning and end of the
+accessible portion of the buffer are treated as if they were the actual
+beginning and end of the buffer.
+
+`\`'
+     matches the empty string, but only at the beginning of the buffer
+     or string being matched against.
+
+`\''
+     matches the empty string, but only at the end of the buffer or
+     string being matched against.
+
+`\='
+     matches the empty string, but only at point.  (This construct is
+     not defined when matching against a string.)
+
+`\b'
+     matches the empty string, but only at the beginning or end of a
+     word.  Thus, `\bfoo\b' matches any occurrence of `foo' as a
+     separate word.  `\bballs?\b' matches `ball' or `balls' as a
+     separate word.
+
+     `\b' matches at the beginning or end of the buffer (or string)
+     regardless of what text appears next to it.
+
+`\B'
+     matches the empty string, but _not_ at the beginning or end of a
+     word, nor at the beginning or end of the buffer (or string).
+
+`\<'
+     matches the empty string, but only at the beginning of a word.
+     `\<' matches at the beginning of the buffer (or string) only if a
+     word-constituent character follows.
+
+`\>'
+     matches the empty string, but only at the end of a word.  `\>'
+     matches at the end of the buffer (or string) only if the contents
+     end with a word-constituent character.
+
+`\_<'
+     matches the empty string, but only at the beginning of a symbol.  A
+     symbol is a sequence of one or more word or symbol constituent
+     characters.  `\_<' matches at the beginning of the buffer (or
+     string) only if a symbol-constituent character follows.
+
+`\_>'
+     matches the empty string, but only at the end of a symbol.  `\_>'
+     matches at the end of the buffer (or string) only if the contents
+     end with a symbol-constituent character.
+
+   Not every string is a valid regular expression.  For example, a
+string that ends inside a character alternative without terminating `]'
+is invalid, and so is a string that ends with a single `\'.  If an
+invalid regular expression is passed to any of the search functions, an
+`invalid-regexp' error is signaled.
+
+
+File: elisp,  Node: Regexp Example,  Next: Regexp Functions,  Prev: Syntax of Regexps,  Up: Regular Expressions
+
+34.3.2 Complex Regexp Example
+-----------------------------
+
+Here is a complicated regexp which was formerly used by Emacs to
+recognize the end of a sentence together with any whitespace that
+follows.  (Nowadays Emacs uses a similar but more complex default
+regexp constructed by the function `sentence-end'.  *Note Standard
+Regexps::.)
+
+   First, we show the regexp as a string in Lisp syntax to distinguish
+spaces from tab characters.  The string constant begins and ends with a
+double-quote.  `\"' stands for a double-quote as part of the string,
+`\\' for a backslash as part of the string, `\t' for a tab and `\n' for
+a newline.
+
+     "[.?!][]\"')}]*\\($\\| $\\|\t\\|  \\)[ \t\n]*"
+
+In contrast, if you evaluate this string, you will see the following:
+
+     "[.?!][]\"')}]*\\($\\| $\\|\t\\|  \\)[ \t\n]*"
+          => "[.?!][]\"')}]*\\($\\| $\\|  \\|  \\)[
+     ]*"
+
+In this output, tab and newline appear as themselves.
+
+   This regular expression contains four parts in succession and can be
+deciphered as follows:
+
+`[.?!]'
+     The first part of the pattern is a character alternative that
+     matches any one of three characters: period, question mark, and
+     exclamation mark.  The match must begin with one of these three
+     characters.  (This is one point where the new default regexp used
+     by Emacs differs from the old.  The new value also allows some
+     non-ASCII characters that end a sentence without any following
+     whitespace.)
+
+`[]\"')}]*'
+     The second part of the pattern matches any closing braces and
+     quotation marks, zero or more of them, that may follow the period,
+     question mark or exclamation mark.  The `\"' is Lisp syntax for a
+     double-quote in a string.  The `*' at the end indicates that the
+     immediately preceding regular expression (a character alternative,
+     in this case) may be repeated zero or more times.
+
+`\\($\\| $\\|\t\\|  \\)'
+     The third part of the pattern matches the whitespace that follows
+     the end of a sentence: the end of a line (optionally with a
+     space), or a tab, or two spaces.  The double backslashes mark the
+     parentheses and vertical bars as regular expression syntax; the
+     parentheses delimit a group and the vertical bars separate
+     alternatives.  The dollar sign is used to match the end of a line.
+
+`[ \t\n]*'
+     Finally, the last part of the pattern matches any additional
+     whitespace beyond the minimum needed to end a sentence.
+
+
+File: elisp,  Node: Regexp Functions,  Prev: Regexp Example,  Up: Regular Expressions
+
+34.3.3 Regular Expression Functions
+-----------------------------------
+
+These functions operate on regular expressions.
+
+ -- Function: regexp-quote string
+     This function returns a regular expression whose only exact match
+     is STRING.  Using this regular expression in `looking-at' will
+     succeed only if the next characters in the buffer are STRING;
+     using it in a search function will succeed if the text being
+     searched contains STRING.
+
+     This allows you to request an exact string match or search when
+     calling a function that wants a regular expression.
+
+          (regexp-quote "^The cat$")
+               => "\\^The cat\\$"
+
+     One use of `regexp-quote' is to combine an exact string match with
+     context described as a regular expression.  For example, this
+     searches for the string that is the value of STRING, surrounded by
+     whitespace:
+
+          (re-search-forward
+           (concat "\\s-" (regexp-quote string) "\\s-"))
+
+ -- Function: regexp-opt strings &optional paren
+     This function returns an efficient regular expression that will
+     match any of the strings in the list STRINGS.  This is useful when
+     you need to make matching or searching as fast as possible--for
+     example, for Font Lock mode.
+
+     If the optional argument PAREN is non-`nil', then the returned
+     regular expression is always enclosed by at least one
+     parentheses-grouping construct.  If PAREN is `words', then that
+     construct is additionally surrounded by `\<' and `\>'.
+
+     This simplified definition of `regexp-opt' produces a regular
+     expression which is equivalent to the actual value (but not as
+     efficient):
+
+          (defun regexp-opt (strings paren)
+            (let ((open-paren (if paren "\\(" ""))
+                  (close-paren (if paren "\\)" "")))
+              (concat open-paren
+                      (mapconcat 'regexp-quote strings "\\|")
+                      close-paren)))
+
+ -- Function: regexp-opt-depth regexp
+     This function returns the total number of grouping constructs
+     (parenthesized expressions) in REGEXP.  This does not include shy
+     groups (*note Regexp Backslash::).
+
+
+File: elisp,  Node: Regexp Search,  Next: POSIX Regexps,  Prev: Regular Expressions,  Up: Searching and Matching
+
+34.4 Regular Expression Searching
+=================================
+
+In GNU Emacs, you can search for the next match for a regular
+expression either incrementally or not.  For incremental search
+commands, see *note Regular Expression Search: (emacs)Regexp Search.
+Here we describe only the search functions useful in programs.  The
+principal one is `re-search-forward'.
+
+   These search functions convert the regular expression to multibyte if
+the buffer is multibyte; they convert the regular expression to unibyte
+if the buffer is unibyte.  *Note Text Representations::.
+
+ -- Command: re-search-forward regexp &optional limit noerror repeat
+     This function searches forward in the current buffer for a string
+     of text that is matched by the regular expression REGEXP.  The
+     function skips over any amount of text that is not matched by
+     REGEXP, and leaves point at the end of the first match found.  It
+     returns the new value of point.
+
+     If LIMIT is non-`nil', it must be a position in the current
+     buffer.  It specifies the upper bound to the search.  No match
+     extending after that position is accepted.
+
+     If REPEAT is supplied, it must be a positive number; the search is
+     repeated that many times; each repetition starts at the end of the
+     previous match.  If all these successive searches succeed, the
+     search succeeds, moving point and returning its new value.
+     Otherwise the search fails.  What `re-search-forward' does when
+     the search fails depends on the value of NOERROR:
+
+    `nil'
+          Signal a `search-failed' error.
+
+    `t'
+          Do nothing and return `nil'.
+
+    anything else
+          Move point to LIMIT (or the end of the accessible portion of
+          the buffer) and return `nil'.
+
+     In the following example, point is initially before the `T'.
+     Evaluating the search call moves point to the end of that line
+     (between the `t' of `hat' and the newline).
+
+          ---------- Buffer: foo ----------
+          I read "-!-The cat in the hat
+          comes back" twice.
+          ---------- Buffer: foo ----------
+
+          (re-search-forward "[a-z]+" nil t 5)
+               => 27
+
+          ---------- Buffer: foo ----------
+          I read "The cat in the hat-!-
+          comes back" twice.
+          ---------- Buffer: foo ----------
+
+ -- Command: re-search-backward regexp &optional limit noerror repeat
+     This function searches backward in the current buffer for a string
+     of text that is matched by the regular expression REGEXP, leaving
+     point at the beginning of the first text found.
+
+     This function is analogous to `re-search-forward', but they are not
+     simple mirror images.  `re-search-forward' finds the match whose
+     beginning is as close as possible to the starting point.  If
+     `re-search-backward' were a perfect mirror image, it would find the
+     match whose end is as close as possible.  However, in fact it
+     finds the match whose beginning is as close as possible (and yet
+     ends before the starting point).  The reason for this is that
+     matching a regular expression at a given spot always works from
+     beginning to end, and starts at a specified beginning position.
+
+     A true mirror-image of `re-search-forward' would require a special
+     feature for matching regular expressions from end to beginning.
+     It's not worth the trouble of implementing that.
+
+ -- Function: string-match regexp string &optional start
+     This function returns the index of the start of the first match for
+     the regular expression REGEXP in STRING, or `nil' if there is no
+     match.  If START is non-`nil', the search starts at that index in
+     STRING.
+
+     For example,
+
+          (string-match
+           "quick" "The quick brown fox jumped quickly.")
+               => 4
+          (string-match
+           "quick" "The quick brown fox jumped quickly." 8)
+               => 27
+
+     The index of the first character of the string is 0, the index of
+     the second character is 1, and so on.
+
+     After this function returns, the index of the first character
+     beyond the match is available as `(match-end 0)'.  *Note Match
+     Data::.
+
+          (string-match
+           "quick" "The quick brown fox jumped quickly." 8)
+               => 27
+
+          (match-end 0)
+               => 32
+
+ -- Function: string-match-p regexp string &optional start
+     This predicate function does what `string-match' does, but it
+     avoids modifying the match data.
+
+ -- Function: looking-at regexp
+     This function determines whether the text in the current buffer
+     directly following point matches the regular expression REGEXP.
+     "Directly following" means precisely that: the search is
+     "anchored" and it can succeed only starting with the first
+     character following point.  The result is `t' if so, `nil'
+     otherwise.
+
+     This function does not move point, but it updates the match data,
+     which you can access using `match-beginning' and `match-end'.
+     *Note Match Data::.  If you need to test for a match without
+     modifying the match data, use `looking-at-p', described below.
+
+     In this example, point is located directly before the `T'.  If it
+     were anywhere else, the result would be `nil'.
+
+          ---------- Buffer: foo ----------
+          I read "-!-The cat in the hat
+          comes back" twice.
+          ---------- Buffer: foo ----------
+
+          (looking-at "The cat in the hat$")
+               => t
+
+ -- Function: looking-back regexp &optional limit greedy
+     This function returns `t' if REGEXP matches text before point,
+     ending at point, and `nil' otherwise.
+
+     Because regular expression matching works only going forward, this
+     is implemented by searching backwards from point for a match that
+     ends at point.  That can be quite slow if it has to search a long
+     distance.  You can bound the time required by specifying LIMIT,
+     which says not to search before LIMIT.  In this case, the match
+     that is found must begin at or after LIMIT.
+
+     If GREEDY is non-`nil', this function extends the match backwards
+     as far as possible, stopping when a single additional previous
+     character cannot be part of a match for regexp.  When the match is
+     extended, its starting position is allowed to occur before LIMIT.
+
+          ---------- Buffer: foo ----------
+          I read "-!-The cat in the hat
+          comes back" twice.
+          ---------- Buffer: foo ----------
+
+          (looking-back "read \"" 3)
+               => t
+          (looking-back "read \"" 4)
+               => nil
+
+ -- Function: looking-at-p regexp
+     This predicate function works like `looking-at', but without
+     updating the match data.
+
+ -- Variable: search-spaces-regexp
+     If this variable is non-`nil', it should be a regular expression
+     that says how to search for whitespace.  In that case, any group of
+     spaces in a regular expression being searched for stands for use of
+     this regular expression.  However, spaces inside of constructs
+     such as `[...]' and `*', `+', `?' are not affected by
+     `search-spaces-regexp'.
+
+     Since this variable affects all regular expression search and match
+     constructs, you should bind it temporarily for as small as possible
+     a part of the code.
 
 
 File: elisp,  Node: POSIX Regexps,  Next: Match Data,  Prev: Regexp Search,  Up: Searching and Matching
@@ -89,9 +934,9 @@ match data around it, to prevent it from being overwritten.
 
 * Menu:
 
-* Replacing Match::	  Replacing a substring that was matched.
+* Replacing Match::       Replacing a substring that was matched.
 * Simple Match Data::     Accessing single items of match data,
-			    such as where a particular subexpression started.
+                            such as where a particular subexpression started.
 * Entire Match Data::     Accessing the entire match data at once, as a list.
 * Saving Match Data::     Saving and restoring the match data.
 
@@ -626,7 +1471,7 @@ functions in this chapter.
 * Desc: Syntax Descriptors.  How characters are classified.
 * Syntax Table Functions::   How to create, examine and alter syntax tables.
 * Syntax Properties::        Overriding syntax with text properties.
-* Motion and Syntax::	     Moving over characters with certain syntaxes.
+* Motion and Syntax::        Moving over characters with certain syntaxes.
 * Parsing Expressions::      Parsing balanced expressions
                                 using the syntax table.
 * Standard Syntax Tables::   Syntax tables used by various major modes.
@@ -1982,10 +2827,10 @@ lines.  Then you can put the following code in your `.emacs' file.
            (funcall expand))))
 
      (add-hook 'foo-mode-hook
-     	  #'(lambda ()
-     	      (add-hook 'abbrev-expand-functions
-     			'foo-mode-abbrev-expand-function
-     			nil t)))
+               #'(lambda ()
+                   (add-hook 'abbrev-expand-functions
+                             'foo-mode-abbrev-expand-function
+                             nil t)))
 
 
 File: elisp,  Node: Standard Abbrev Tables,  Next: Abbrev Properties,  Prev: Abbrev Expansion,  Up: Abbrevs
@@ -2158,13 +3003,13 @@ Processes::.
 * Sentinels::                Sentinels run when process run-status changes.
 * Query Before Exit::        Whether to query if exiting will kill a process.
 * System Processes::         Accessing other processes running on your system.
-* Transaction Queues::	     Transaction-based communication with subprocesses.
+* Transaction Queues::       Transaction-based communication with subprocesses.
 * Network::                  Opening network connections.
 * Network Servers::          Network servers let Emacs accept net connections.
 * Datagrams::                UDP network connections.
 * Low-Level Network::        Lower-level but more general function
                                to create connections and servers.
-* Misc Network::             Additional relevant functions for network connections.
+* Misc Network::             Additional relevant functions for net connections.
 * Serial Ports::             Communicating with serial ports.
 * Byte Packing::             Using bindat to pack and unpack binary data.
 
@@ -2287,9 +3132,14 @@ characters, use the function `shell-quote-argument':
                   " "
                   (shell-quote-argument newfile))
 
-   The following two functions are useful for creating shell commands
-from individual argument strings, and taking shell command lines apart
-into individual arguments.
+   The following two functions are useful for combining a list of
+individual command-line argument strings into a single string, and
+taking a string apart into a list of individual command-line arguments.
+These functions are mainly intended to be used for converting user
+input in the minibuffer, a Lisp string, into a list of string arguments
+to be passed to `call-process' or `start-process', or for the
+converting such lists of arguments in a single Lisp string to be
+presented in the minibuffer or echo area.
 
  -- Function: split-string-and-unquote string &optional separators
      This function splits STRING into substrings at matches for the
@@ -2301,7 +3151,7 @@ into individual arguments.
      is a regular expression that matches one or more characters with
      whitespace syntax (*note Syntax Class Table::).
 
-     This function performs two types of quoting: enclosing a whole
+     This function supports two types of quoting: enclosing a whole
      string in double quotes `"..."', and quoting individual characters
      with a backslash escape `\'.  The latter is also used in Lisp
      strings, so this function can handle those as well.
@@ -2317,9 +3167,8 @@ into individual arguments.
      The strings in LIST-OF-STRINGS that need quoting are those that
      include SEPARATOR as their substring.  Quoting a string encloses
      it in double quotes `"..."'.  In the simplest case, if you are
-     consing a shell command from the individual command-line
-     arguments, every argument that includes embedded blanks will be
-     quoted.
+     consing a command from the individual command-line arguments,
+     every argument that includes embedded blanks will be quoted.
 
 
 File: elisp,  Node: Synchronous Processes,  Next: Asynchronous Processes,  Prev: Shell Arguments,  Up: Processes
@@ -5975,957 +6824,6 @@ the overlay or outside, and likewise for the end of the overlay.
 
 * Managing Overlays::   Creating and moving overlays.
 * Overlay Properties::  How to read and set properties.
-			What properties do to the screen display.
+                          What properties do to the screen display.
 * Finding Overlays::    Searching for overlays.
-
-
-File: elisp,  Node: Managing Overlays,  Next: Overlay Properties,  Up: Overlays
-
-38.9.1 Managing Overlays
-------------------------
-
-This section describes the functions to create, delete and move
-overlays, and to examine their contents.  Overlay changes are not
-recorded in the buffer's undo list, since the overlays are not part of
-the buffer's contents.
-
- -- Function: overlayp object
-     This function returns `t' if OBJECT is an overlay.
-
- -- Function: make-overlay start end &optional buffer front-advance
-          rear-advance
-     This function creates and returns an overlay that belongs to
-     BUFFER and ranges from START to END.  Both START and END must
-     specify buffer positions; they may be integers or markers.  If
-     BUFFER is omitted, the overlay is created in the current buffer.
-
-     The arguments FRONT-ADVANCE and REAR-ADVANCE specify the marker
-     insertion type for the start of the overlay and for the end of the
-     overlay, respectively.  *Note Marker Insertion Types::.  If they
-     are both `nil', the default, then the overlay extends to include
-     any text inserted at the beginning, but not text inserted at the
-     end.  If FRONT-ADVANCE is non-`nil', text inserted at the
-     beginning of the overlay is excluded from the overlay.  If
-     REAR-ADVANCE is non-`nil', text inserted at the end of the overlay
-     is included in the overlay.
-
- -- Function: overlay-start overlay
-     This function returns the position at which OVERLAY starts, as an
-     integer.
-
- -- Function: overlay-end overlay
-     This function returns the position at which OVERLAY ends, as an
-     integer.
-
- -- Function: overlay-buffer overlay
-     This function returns the buffer that OVERLAY belongs to.  It
-     returns `nil' if OVERLAY has been deleted.
-
- -- Function: delete-overlay overlay
-     This function deletes OVERLAY.  The overlay continues to exist as
-     a Lisp object, and its property list is unchanged, but it ceases
-     to be attached to the buffer it belonged to, and ceases to have
-     any effect on display.
-
-     A deleted overlay is not permanently disconnected.  You can give
-     it a position in a buffer again by calling `move-overlay'.
-
- -- Function: move-overlay overlay start end &optional buffer
-     This function moves OVERLAY to BUFFER, and places its bounds at
-     START and END.  Both arguments START and END must specify buffer
-     positions; they may be integers or markers.
-
-     If BUFFER is omitted, OVERLAY stays in the same buffer it was
-     already associated with; if OVERLAY was deleted, it goes into the
-     current buffer.
-
-     The return value is OVERLAY.
-
-     This is the only valid way to change the endpoints of an overlay.
-     Do not try modifying the markers in the overlay by hand, as that
-     fails to update other vital data structures and can cause some
-     overlays to be "lost."
-
- -- Function: remove-overlays &optional start end name value
-     This function removes all the overlays between START and END whose
-     property NAME has the value VALUE.  It can move the endpoints of
-     the overlays in the region, or split them.
-
-     If NAME is omitted or `nil', it means to delete all overlays in
-     the specified region.  If START and/or END are omitted or `nil',
-     that means the beginning and end of the buffer respectively.
-     Therefore, `(remove-overlays)' removes all the overlays in the
-     current buffer.
-
- -- Function: copy-overlay overlay
-     This function returns a copy of OVERLAY.  The copy has the same
-     endpoints and properties as OVERLAY.  However, the marker
-     insertion type for the start of the overlay and for the end of the
-     overlay are set to their default values (*note Marker Insertion
-     Types::).
-
-   Here are some examples:
-
-     ;; Create an overlay.
-     (setq foo (make-overlay 1 10))
-          => #<overlay from 1 to 10 in display.texi>
-     (overlay-start foo)
-          => 1
-     (overlay-end foo)
-          => 10
-     (overlay-buffer foo)
-          => #<buffer display.texi>
-     ;; Give it a property we can check later.
-     (overlay-put foo 'happy t)
-          => t
-     ;; Verify the property is present.
-     (overlay-get foo 'happy)
-          => t
-     ;; Move the overlay.
-     (move-overlay foo 5 20)
-          => #<overlay from 5 to 20 in display.texi>
-     (overlay-start foo)
-          => 5
-     (overlay-end foo)
-          => 20
-     ;; Delete the overlay.
-     (delete-overlay foo)
-          => nil
-     ;; Verify it is deleted.
-     foo
-          => #<overlay in no buffer>
-     ;; A deleted overlay has no position.
-     (overlay-start foo)
-          => nil
-     (overlay-end foo)
-          => nil
-     (overlay-buffer foo)
-          => nil
-     ;; Undelete the overlay.
-     (move-overlay foo 1 20)
-          => #<overlay from 1 to 20 in display.texi>
-     ;; Verify the results.
-     (overlay-start foo)
-          => 1
-     (overlay-end foo)
-          => 20
-     (overlay-buffer foo)
-          => #<buffer display.texi>
-     ;; Moving and deleting the overlay does not change its properties.
-     (overlay-get foo 'happy)
-          => t
-
-   Emacs stores the overlays of each buffer in two lists, divided
-around an arbitrary "center position."  One list extends backwards
-through the buffer from that center position, and the other extends
-forwards from that center position.  The center position can be anywhere
-in the buffer.
-
- -- Function: overlay-recenter pos
-     This function recenters the overlays of the current buffer around
-     position POS.  That makes overlay lookup faster for positions near
-     POS, but slower for positions far away from POS.
-
-   A loop that scans the buffer forwards, creating overlays, can run
-faster if you do `(overlay-recenter (point-max))' first.
-
-
-File: elisp,  Node: Overlay Properties,  Next: Finding Overlays,  Prev: Managing Overlays,  Up: Overlays
-
-38.9.2 Overlay Properties
--------------------------
-
-Overlay properties are like text properties in that the properties that
-alter how a character is displayed can come from either source.  But in
-most respects they are different.  *Note Text Properties::, for
-comparison.
-
-   Text properties are considered a part of the text; overlays and
-their properties are specifically considered not to be part of the
-text.  Thus, copying text between various buffers and strings preserves
-text properties, but does not try to preserve overlays.  Changing a
-buffer's text properties marks the buffer as modified, while moving an
-overlay or changing its properties does not.  Unlike text property
-changes, overlay property changes are not recorded in the buffer's undo
-list.
-
-   Since more than one overlay can specify a property value for the
-same character, Emacs lets you specify a priority value of each
-overlay.  You should not make assumptions about which overlay will
-prevail when there is a conflict and they have the same priority.
-
-   These functions read and set the properties of an overlay:
-
- -- Function: overlay-get overlay prop
-     This function returns the value of property PROP recorded in
-     OVERLAY, if any.  If OVERLAY does not record any value for that
-     property, but it does have a `category' property which is a
-     symbol, that symbol's PROP property is used.  Otherwise, the value
-     is `nil'.
-
- -- Function: overlay-put overlay prop value
-     This function sets the value of property PROP recorded in OVERLAY
-     to VALUE.  It returns VALUE.
-
- -- Function: overlay-properties overlay
-     This returns a copy of the property list of OVERLAY.
-
-   See also the function `get-char-property' which checks both overlay
-properties and text properties for a given character.  *Note Examining
-Properties::.
-
-   Many overlay properties have special meanings; here is a table of
-them:
-
-`priority'
-     This property's value (which should be a nonnegative integer
-     number) determines the priority of the overlay.  No priority, or
-     `nil', means zero.
-
-     The priority matters when two or more overlays cover the same
-     character and both specify the same property; the one whose
-     `priority' value is larger overrides the other.  For the `face'
-     property, the higher priority overlay's value does not completely
-     override the other value; instead, its face attributes override
-     the face attributes of the lower priority `face' property.
-
-     Currently, all overlays take priority over text properties.  Please
-     avoid using negative priority values, as we have not yet decided
-     just what they should mean.
-
-`window'
-     If the `window' property is non-`nil', then the overlay applies
-     only on that window.
-
-`category'
-     If an overlay has a `category' property, we call it the "category"
-     of the overlay.  It should be a symbol.  The properties of the
-     symbol serve as defaults for the properties of the overlay.
-
-`face'
-     This property controls the way text is displayed--for example,
-     which font and which colors.  *Note Faces::, for more information.
-
-     In the simplest case, the value is a face name.  It can also be a
-     list; then each element can be any of these possibilities:
-
-        * A face name (a symbol or string).
-
-        * A property list of face attributes.  This has the form
-          (KEYWORD VALUE ...), where each KEYWORD is a face attribute
-          name and VALUE is a meaningful value for that attribute.  With
-          this feature, you do not need to create a face each time you
-          want to specify a particular attribute for certain text.
-          *Note Face Attributes::.
-
-        * A cons cell, either of the form `(foreground-color .
-          COLOR-NAME)' or `(background-color . COLOR-NAME)'.  These
-          elements specify just the foreground color or just the
-          background color.
-
-          `(foreground-color . COLOR-NAME)' has the same effect as
-          `(:foreground COLOR-NAME)'; likewise for the background.
-
-`mouse-face'
-     This property is used instead of `face' when the mouse is within
-     the range of the overlay.
-
-`display'
-     This property activates various features that change the way text
-     is displayed.  For example, it can make text appear taller or
-     shorter, higher or lower, wider or narrower, or replaced with an
-     image.  *Note Display Property::.
-
-`help-echo'
-     If an overlay has a `help-echo' property, then when you move the
-     mouse onto the text in the overlay, Emacs displays a help string
-     in the echo area, or in the tooltip window.  For details see *note
-     Text help-echo::.
-
-`modification-hooks'
-     This property's value is a list of functions to be called if any
-     character within the overlay is changed or if text is inserted
-     strictly within the overlay.
-
-     The hook functions are called both before and after each change.
-     If the functions save the information they receive, and compare
-     notes between calls, they can determine exactly what change has
-     been made in the buffer text.
-
-     When called before a change, each function receives four
-     arguments: the overlay, `nil', and the beginning and end of the
-     text range to be modified.
-
-     When called after a change, each function receives five arguments:
-     the overlay, `t', the beginning and end of the text range just
-     modified, and the length of the pre-change text replaced by that
-     range.  (For an insertion, the pre-change length is zero; for a
-     deletion, that length is the number of characters deleted, and the
-     post-change beginning and end are equal.)
-
-     If these functions modify the buffer, they should bind
-     `inhibit-modification-hooks' to `t' around doing so, to avoid
-     confusing the internal mechanism that calls these hooks.
-
-     Text properties also support the `modification-hooks' property,
-     but the details are somewhat different (*note Special
-     Properties::).
-
-`insert-in-front-hooks'
-     This property's value is a list of functions to be called before
-     and after inserting text right at the beginning of the overlay.
-     The calling conventions are the same as for the
-     `modification-hooks' functions.
-
-`insert-behind-hooks'
-     This property's value is a list of functions to be called before
-     and after inserting text right at the end of the overlay.  The
-     calling conventions are the same as for the `modification-hooks'
-     functions.
-
-`invisible'
-     The `invisible' property can make the text in the overlay
-     invisible, which means that it does not appear on the screen.
-     *Note Invisible Text::, for details.
-
-`intangible'
-     The `intangible' property on an overlay works just like the
-     `intangible' text property.  *Note Special Properties::, for
-     details.
-
-`isearch-open-invisible'
-     This property tells incremental search how to make an invisible
-     overlay visible, permanently, if the final match overlaps it.
-     *Note Invisible Text::.
-
-`isearch-open-invisible-temporary'
-     This property tells incremental search how to make an invisible
-     overlay visible, temporarily, during the search.  *Note Invisible
-     Text::.
-
-`before-string'
-     This property's value is a string to add to the display at the
-     beginning of the overlay.  The string does not appear in the
-     buffer in any sense--only on the screen.
-
-`after-string'
-     This property's value is a string to add to the display at the end
-     of the overlay.  The string does not appear in the buffer in any
-     sense--only on the screen.
-
-`line-prefix'
-     This property specifies a display spec to prepend to each
-     non-continuation line at display-time.  *Note Truncation::.
-
-`wrap-prefix'
-     This property specifies a display spec to prepend to each
-     continuation line at display-time.  *Note Truncation::.
-
-`evaporate'
-     If this property is non-`nil', the overlay is deleted automatically
-     if it becomes empty (i.e., if its length becomes zero).  If you
-     give an empty overlay a non-`nil' `evaporate' property, that
-     deletes it immediately.
-
-`local-map'
-     If this property is non-`nil', it specifies a keymap for a portion
-     of the text.  The property's value replaces the buffer's local
-     map, when the character after point is within the overlay.  *Note
-     Active Keymaps::.
-
-`keymap'
-     The `keymap' property is similar to `local-map' but overrides the
-     buffer's local map (and the map specified by the `local-map'
-     property) rather than replacing it.
-
-   The `local-map' and `keymap' properties do not affect a string
-displayed by the `before-string', `after-string', or `display'
-properties.  This is only relevant for mouse clicks and other mouse
-events that fall on the string, since point is never on the string.  To
-bind special mouse events for the string, assign it a `local-map' or
-`keymap' text property.  *Note Special Properties::.
-
-
-File: elisp,  Node: Finding Overlays,  Prev: Overlay Properties,  Up: Overlays
-
-38.9.3 Searching for Overlays
------------------------------
-
- -- Function: overlays-at pos
-     This function returns a list of all the overlays that cover the
-     character at position POS in the current buffer.  The list is in
-     no particular order.  An overlay contains position POS if it
-     begins at or before POS, and ends after POS.
-
-     To illustrate usage, here is a Lisp function that returns a list
-     of the overlays that specify property PROP for the character at
-     point:
-
-          (defun find-overlays-specifying (prop)
-            (let ((overlays (overlays-at (point)))
-                  found)
-              (while overlays
-                (let ((overlay (car overlays)))
-                  (if (overlay-get overlay prop)
-                      (setq found (cons overlay found))))
-                (setq overlays (cdr overlays)))
-              found))
-
- -- Function: overlays-in beg end
-     This function returns a list of the overlays that overlap the
-     region BEG through END.  "Overlap" means that at least one
-     character is contained within the overlay and also contained
-     within the specified region; however, empty overlays are included
-     in the result if they are located at BEG, strictly between BEG and
-     END, or at END when END denotes the position at the end of the
-     buffer.
-
- -- Function: next-overlay-change pos
-     This function returns the buffer position of the next beginning or
-     end of an overlay, after POS.  If there is none, it returns
-     `(point-max)'.
-
- -- Function: previous-overlay-change pos
-     This function returns the buffer position of the previous
-     beginning or end of an overlay, before POS.  If there is none, it
-     returns `(point-min)'.
-
-   As an example, here's a simplified (and inefficient) version of the
-primitive function `next-single-char-property-change' (*note Property
-Search::).  It searches forward from position POS for the next position
-where the value of a given property `prop', as obtained from either
-overlays or text properties, changes.
-
-     (defun next-single-char-property-change (position prop)
-       (save-excursion
-         (goto-char position)
-         (let ((propval (get-char-property (point) prop)))
-           (while (and (not (eobp))
-                       (eq (get-char-property (point) prop) propval))
-             (goto-char (min (next-overlay-change (point))
-                             (next-single-property-change (point) prop)))))
-         (point)))
-
-
-File: elisp,  Node: Width,  Next: Line Height,  Prev: Overlays,  Up: Display
-
-38.10 Width
-===========
-
-Since not all characters have the same width, these functions let you
-check the width of a character.  *Note Primitive Indent::, and *note
-Screen Lines::, for related functions.
-
- -- Function: char-width char
-     This function returns the width in columns of the character CHAR,
-     if it were displayed in the current buffer and the selected window.
-
- -- Function: string-width string
-     This function returns the width in columns of the string STRING,
-     if it were displayed in the current buffer and the selected window.
-
- -- Function: truncate-string-to-width string width &optional
-          start-column padding ellipsis
-     This function returns the part of STRING that fits within WIDTH
-     columns, as a new string.
-
-     If STRING does not reach WIDTH, then the result ends where STRING
-     ends.  If one multi-column character in STRING extends across the
-     column WIDTH, that character is not included in the result.  Thus,
-     the result can fall short of WIDTH but cannot go beyond it.
-
-     The optional argument START-COLUMN specifies the starting column.
-     If this is non-`nil', then the first START-COLUMN columns of the
-     string are omitted from the value.  If one multi-column character
-     in STRING extends across the column START-COLUMN, that character
-     is not included.
-
-     The optional argument PADDING, if non-`nil', is a padding
-     character added at the beginning and end of the result string, to
-     extend it to exactly WIDTH columns.  The padding character is used
-     at the end of the result if it falls short of WIDTH.  It is also
-     used at the beginning of the result if one multi-column character
-     in STRING extends across the column START-COLUMN.
-
-     If ELLIPSIS is non-`nil', it should be a string which will replace
-     the end of STR (including any padding) if it extends beyond
-     END-COLUMN, unless the display width of STR is equal to or less
-     than the display width of ELLIPSIS.  If ELLIPSIS is non-`nil' and
-     not a string, it stands for `"..."'.
-
-          (truncate-string-to-width "\tab\t" 12 4)
-               => "ab"
-          (truncate-string-to-width "\tab\t" 12 4 ?\s)
-               => "    ab  "
-
-
-File: elisp,  Node: Line Height,  Next: Faces,  Prev: Width,  Up: Display
-
-38.11 Line Height
-=================
-
-The total height of each display line consists of the height of the
-contents of the line, plus optional additional vertical line spacing
-above or below the display line.
-
-   The height of the line contents is the maximum height of any
-character or image on that display line, including the final newline if
-there is one.  (A display line that is continued doesn't include a
-final newline.)  That is the default line height, if you do nothing to
-specify a greater height.  (In the most common case, this equals the
-height of the default frame font.)
-
-   There are several ways to explicitly specify a larger line height,
-either by specifying an absolute height for the display line, or by
-specifying vertical space.  However, no matter what you specify, the
-actual line height can never be less than the default.
-
-   A newline can have a `line-height' text or overlay property that
-controls the total height of the display line ending in that newline.
-
-   If the property value is `t', the newline character has no effect on
-the displayed height of the line--the visible contents alone determine
-the height.  This is useful for tiling small images (or image slices)
-without adding blank areas between the images.
-
-   If the property value is a list of the form `(HEIGHT TOTAL)', that
-adds extra space _below_ the display line.  First Emacs uses HEIGHT as
-a height spec to control extra space _above_ the line; then it adds
-enough space _below_ the line to bring the total line height up to
-TOTAL.  In this case, the other ways to specify the line spacing are
-ignored.
-
-   Any other kind of property value is a height spec, which translates
-into a number--the specified line height.  There are several ways to
-write a height spec; here's how each of them translates into a number:
-
-`INTEGER'
-     If the height spec is a positive integer, the height value is that
-     integer.
-
-`FLOAT'
-     If the height spec is a float, FLOAT, the numeric height value is
-     FLOAT times the frame's default line height.
-
-`(FACE . RATIO)'
-     If the height spec is a cons of the format shown, the numeric
-     height is RATIO times the height of face FACE.  RATIO can be any
-     type of number, or `nil' which means a ratio of 1.  If FACE is
-     `t', it refers to the current face.
-
-`(nil . RATIO)'
-     If the height spec is a cons of the format shown, the numeric
-     height is RATIO times the height of the contents of the line.
-
-   Thus, any valid height spec determines the height in pixels, one way
-or another.  If the line contents' height is less than that, Emacs adds
-extra vertical space above the line to achieve the specified total
-height.
-
-   If you don't specify the `line-height' property, the line's height
-consists of the contents' height plus the line spacing.  There are
-several ways to specify the line spacing for different parts of Emacs
-text.
-
-   On graphical terminals, you can specify the line spacing for all
-lines in a frame, using the `line-spacing' frame parameter (*note
-Layout Parameters::).  However, if the default value of `line-spacing'
-is non-`nil', it overrides the frame's `line-spacing' parameter.  An
-integer value specifies the number of pixels put below lines.  A
-floating point number specifies the spacing relative to the frame's
-default line height.
-
-   You can specify the line spacing for all lines in a buffer via the
-buffer-local `line-spacing' variable.  An integer value specifies the
-number of pixels put below lines.  A floating point number specifies
-the spacing relative to the default frame line height.  This overrides
-line spacings specified for the frame.
-
-   Finally, a newline can have a `line-spacing' text or overlay
-property that overrides the default frame line spacing and the buffer
-local `line-spacing' variable, for the display line ending in that
-newline.
-
-   One way or another, these mechanisms specify a Lisp value for the
-spacing of each line.  The value is a height spec, and it translates
-into a Lisp value as described above.  However, in this case the
-numeric height value specifies the line spacing, rather than the line
-height.
-
-   On text-only terminals, the line spacing cannot be altered.
-
-
-File: elisp,  Node: Faces,  Next: Fringes,  Prev: Line Height,  Up: Display
-
-38.12 Faces
-===========
-
-A "face" is a collection of graphical attributes for displaying text:
-font family, foreground color, background color, optional underlining,
-and so on.  Faces control how buffer text is displayed, and how some
-parts of the frame, such as the mode-line, are displayed.  *Note
-Standard Faces: (emacs)Standard Faces, for the list of faces Emacs
-normally comes with.
-
-   For most purposes, you refer to a face in Lisp programs using its
-"face name".  This is either a string or (equivalently) a Lisp symbol
-whose name is equal to that string.
-
- -- Function: facep object
-     This function returns a non-`nil' value if OBJECT is a Lisp symbol
-     or string that names a face.  Otherwise, it returns `nil'.
-
-   Each face name is meaningful for all frames, and by default it has
-the same meaning in all frames.  But you can arrange to give a
-particular face name a special meaning in one frame if you wish.
-
-* Menu:
-
-* Defining Faces::      How to define a face with `defface'.
-* Face Attributes::     What is in a face?
-* Attribute Functions::  Functions to examine and set face attributes.
-* Displaying Faces::     How Emacs combines the faces specified for a character.
-* Face Remapping::     Remapping faces to alternative definitions.
-* Face Functions::      How to define and examine faces.
-* Auto Faces::          Hook for automatic face assignment.
-* Font Selection::      Finding the best available font for a face.
-* Font Lookup::         Looking up the names of available fonts
-                          and information about them.
-* Fontsets::            A fontset is a collection of fonts
-                          that handle a range of character sets.
-* Low-Level Font::      Lisp representation for character display fonts.
-
-
-File: elisp,  Node: Defining Faces,  Next: Face Attributes,  Up: Faces
-
-38.12.1 Defining Faces
-----------------------
-
-The way to define a new face is with `defface'.  This creates a kind of
-customization item (*note Customization::) which the user can customize
-using the Customization buffer (*note Easy Customization: (emacs)Easy
-Customization.).
-
-   People are sometimes tempted to create variables whose values specify
-which faces to use (for example, Font-Lock does this).  In the vast
-majority of cases, this is not necessary, and simply using faces
-directly is preferable.
-
- -- Macro: defface face spec doc [keyword value]...
-     This declares FACE as a customizable face whose default attributes
-     are given by SPEC.  You should not quote the symbol FACE, and it
-     should not end in `-face' (that would be redundant).  The argument
-     DOC specifies the face documentation.  The keywords you can use in
-     `defface' are the same as in `defgroup' and `defcustom' (*note
-     Common Keywords::).
-
-     When `defface' executes, it defines the face according to SPEC,
-     then uses any customizations that were read from the init file
-     (*note Init File::) to override that specification.
-
-     When you evaluate a `defface' form with `C-M-x' in Emacs Lisp mode
-     (`eval-defun'), a special feature of `eval-defun' overrides any
-     customizations of the face.  This way, the face reflects exactly
-     what the `defface' says.
-
-     The purpose of SPEC is to specify how the face should appear on
-     different kinds of terminals.  It should be an alist whose elements
-     have the form `(DISPLAY ATTS)'.  Each element's CAR, DISPLAY,
-     specifies a class of terminals.  (The first element, if its CAR is
-     `default', is special--it specifies defaults for the remaining
-     elements).  The element's CADR, ATTS, is a list of face attributes
-     and their values; it specifies what the face should look like on
-     that kind of terminal.  The possible attributes are defined in the
-     value of `custom-face-attributes'.
-
-     The DISPLAY part of an element of SPEC determines which frames the
-     element matches.  If more than one element of SPEC matches a given
-     frame, the first element that matches is the one used for that
-     frame.  There are three possibilities for DISPLAY:
-
-    `default'
-          This element of SPEC doesn't match any frames; instead, it
-          specifies defaults that apply to all frames.  This kind of
-          element, if used, must be the first element of SPEC.  Each of
-          the following elements can override any or all of these
-          defaults.
-
-    `t'
-          This element of SPEC matches all frames.  Therefore, any
-          subsequent elements of SPEC are never used.  Normally `t' is
-          used in the last (or only) element of SPEC.
-
-    a list
-          If DISPLAY is a list, each element should have the form
-          `(CHARACTERISTIC VALUE...)'.  Here CHARACTERISTIC specifies a
-          way of classifying frames, and the VALUEs are possible
-          classifications which DISPLAY should apply to.  Here are the
-          possible values of CHARACTERISTIC:
-
-         `type'
-               The kind of window system the frame uses--either
-               `graphic' (any graphics-capable display), `x', `pc' (for
-               the MS-DOS console), `w32' (for MS Windows 9X/NT/2K/XP),
-               or `tty' (a non-graphics-capable display).  *Note
-               window-system: Window Systems.
-
-         `class'
-               What kinds of colors the frame supports--either `color',
-               `grayscale', or `mono'.
-
-         `background'
-               The kind of background--either `light' or `dark'.
-
-         `min-colors'
-               An integer that represents the minimum number of colors
-               the frame should support.  This matches a frame if its
-               `display-color-cells' value is at least the specified
-               integer.
-
-         `supports'
-               Whether or not the frame can display the face attributes
-               given in VALUE... (*note Face Attributes::).  *Note
-               Display Face Attribute Testing::, for more information
-               on exactly how this testing is done.
-
-          If an element of DISPLAY specifies more than one VALUE for a
-          given CHARACTERISTIC, any of those values is acceptable.  If
-          DISPLAY has more than one element, each element should
-          specify a different CHARACTERISTIC; then _each_
-          characteristic of the frame must match one of the VALUEs
-          specified for it in DISPLAY.
-
-   Here's how the standard face `region' is defined:
-
-     (defface region
-       '((((class color) (min-colors 88) (background dark))
-          :background "blue3")
-         (((class color) (min-colors 88) (background light))
-          :background "lightgoldenrod2")
-         (((class color) (min-colors 16) (background dark))
-          :background "blue3")
-         (((class color) (min-colors 16) (background light))
-          :background "lightgoldenrod2")
-         (((class color) (min-colors 8))
-          :background "blue" :foreground "white")
-         (((type tty) (class mono))
-          :inverse-video t)
-         (t :background "gray"))
-       "Basic face for highlighting the region."
-       :group 'basic-faces)
-
-   Internally, `defface' uses the symbol property `face-defface-spec'
-to record the specified face attributes.  The attributes saved by the
-user with the customization buffer are recorded in the symbol property
-`saved-face'; the attributes customized by the user for the current
-session, but not saved, are recorded in the symbol property
-`customized-face'.  The documentation string is recorded in the symbol
-property `face-documentation'.
-
- -- User Option: frame-background-mode
-     This option, if non-`nil', specifies the background type to use for
-     interpreting face definitions.  If it is `dark', then Emacs treats
-     all frames as if they had a dark background, regardless of their
-     actual background colors.  If it is `light', then Emacs treats all
-     frames as if they had a light background.
-
-
-File: elisp,  Node: Face Attributes,  Next: Attribute Functions,  Prev: Defining Faces,  Up: Faces
-
-38.12.2 Face Attributes
------------------------
-
-The effect of using a face is determined by a fixed set of "face
-attributes".  This table lists all the face attributes, their possible
-values, and their effects.  You can specify more than one face for a
-given piece of text; Emacs merges the attributes of all the faces to
-determine how to display the text.  *Note Displaying Faces::.
-
-   In addition to the values given below, each face attribute can also
-have the value `unspecified'.  This special value means the face
-doesn't specify that attribute.  In face merging, when the first face
-fails to specify a particular attribute, the next face gets a chance.
-However, the `default' face must specify all attributes.
-
-   Some of these font attributes are meaningful only on certain kinds
-of displays.  If your display cannot handle a certain attribute, the
-attribute is ignored.
-
-`:family'
-     Font family name or fontset name (a string).  If you specify a font
-     family name, the wild-card characters `*' and `?' are allowed.
-     The function `font-family-list', described below, returns a list
-     of available family names.  *Note Fontsets::, for information
-     about fontsets.
-
-`:foundry'
-     The name of the "font foundry" in which the font family specified
-     by the `:family' attribute is located (a string).  The wild-card
-     characters `*' and `?' are allowed.
-
-`:width'
-     Relative proportionate character width, also known as the character
-     set width.  This should be one of the symbols `ultra-condensed',
-     `extra-condensed', `condensed', `semi-condensed', `normal',
-     `semi-expanded', `expanded', `extra-expanded', or `ultra-expanded'.
-
-`:height'
-     The height of the font.  In the simplest case, this is an integer
-     in units of 1/10 point.
-
-     The value can also be a floating point number or a function, which
-     specifies the height relative to an "underlying face" (i.e., a
-     face that has a lower priority in the list described in *note
-     Displaying Faces::).  If the value is a floating point number,
-     that specifies the amount by which to scale the height of the
-     underlying face.  If the value is a function, that function is
-     called with one argument, the height of the underlying face, and
-     returns the height of the new face.  If the function is passed an
-     integer argument, it must return an integer.
-
-     The height of the default face must be specified using an integer;
-     floating point and function values are not allowed.
-
-`:weight'
-     Font weight--one of the symbols (from densest to faintest)
-     `ultra-bold', `extra-bold', `bold', `semi-bold', `normal',
-     `semi-light', `light', `extra-light', or `ultra-light'.  On
-     text-only terminals that support variable-brightness text, any
-     weight greater than normal is displayed as extra bright, and any
-     weight less than normal is displayed as half-bright.
-
-`:slant'
-     Font slant--one of the symbols `italic', `oblique', `normal',
-     `reverse-italic', or `reverse-oblique'.  On text-only terminals
-     that support variable-brightness text, slanted text is displayed
-     as half-bright.
-
-`:foreground'
-     Foreground color, a string.  The value can be a system-defined
-     color name, or a hexadecimal color specification.  *Note Color
-     Names::.  On black-and-white displays, certain shades of gray are
-     implemented by stipple patterns.
-
-`:background'
-     Background color, a string.  The value can be a system-defined
-     color name, or a hexadecimal color specification.  *Note Color
-     Names::.
-
-`:underline'
-     Whether or not characters should be underlined, and in what color.
-     If the value is `t', underlining uses the foreground color of the
-     face.  If the value is a string, underlining uses that color.  The
-     value `nil' means do not underline.
-
-`:overline'
-     Whether or not characters should be overlined, and in what color.
-     The value is used like that of `:underline'.
-
-`:strike-through'
-     Whether or not characters should be strike-through, and in what
-     color.  The value is used like that of `:underline'.
-
-`:box'
-     Whether or not a box should be drawn around characters, its color,
-     the width of the box lines, and 3D appearance.  Here are the
-     possible values of the `:box' attribute, and what they mean:
-
-    `nil'
-          Don't draw a box.
-
-    `t'
-          Draw a box with lines of width 1, in the foreground color.
-
-    COLOR
-          Draw a box with lines of width 1, in color COLOR.
-
-    `(:line-width WIDTH :color COLOR :style STYLE)'
-          This way you can explicitly specify all aspects of the box.
-          The value WIDTH specifies the width of the lines to draw; it
-          defaults to 1.
-
-          The value COLOR specifies the color to draw with.  The
-          default is the foreground color of the face for simple boxes,
-          and the background color of the face for 3D boxes.
-
-          The value STYLE specifies whether to draw a 3D box.  If it is
-          `released-button', the box looks like a 3D button that is not
-          being pressed.  If it is `pressed-button', the box looks like
-          a 3D button that is being pressed.  If it is `nil' or
-          omitted, a plain 2D box is used.
-
-`:inverse-video'
-     Whether or not characters should be displayed in inverse video.
-     The value should be `t' (yes) or `nil' (no).
-
-`:stipple'
-     The background stipple, a bitmap.
-
-     The value can be a string; that should be the name of a file
-     containing external-format X bitmap data.  The file is found in
-     the directories listed in the variable `x-bitmap-file-path'.
-
-     Alternatively, the value can specify the bitmap directly, with a
-     list of the form `(WIDTH HEIGHT DATA)'.  Here, WIDTH and HEIGHT
-     specify the size in pixels, and DATA is a string containing the
-     raw bits of the bitmap, row by row.  Each row occupies (WIDTH + 7)
-     / 8 consecutive bytes in the string (which should be a unibyte
-     string for best results).  This means that each row always
-     occupies at least one whole byte.
-
-     If the value is `nil', that means use no stipple pattern.
-
-     Normally you do not need to set the stipple attribute, because it
-     is used automatically to handle certain shades of gray.
-
-`:font'
-     The font used to display the face.  Its value should be a font
-     object.  *Note Font Selection::, for information about font
-     objects.
-
-     When specifying this attribute using `set-face-attribute' (*note
-     Attribute Functions::), you may also supply a font spec, a font
-     entity, or a string.  Emacs converts such values to an appropriate
-     font object, and stores that font object as the actual attribute
-     value.  If you specify a string, the contents of the string should
-     be a font name (*note Font Specification Options: (emacs)Font X.);
-     if the font name is an XLFD containing wildcards, Emacs chooses
-     the first font matching those wildcards.  Specifying this
-     attribute also changes the values of the `:family', `:foundry',
-     `:width', `:height', `:weight', and `:slant' attributes.
-
-`:inherit'
-     The name of a face from which to inherit attributes, or a list of
-     face names.  Attributes from inherited faces are merged into the
-     face like an underlying face would be, with higher priority than
-     underlying faces (*note Displaying Faces::).  If a list of faces
-     is used, attributes from faces earlier in the list override those
-     from later faces.
-
-   For compatibility with Emacs 20, you can also specify values for two
-"fake" face attributes: `:bold' and `:italic'.  Their values must be
-either `t' or `nil'; a value of `unspecified' is not allowed.  Setting
-`:bold' to `t' is equivalent to setting the `:weight' attribute to
-`bold', and setting it to `nil' is equivalent to setting `:weight' to
-`normal'.  Setting `:italic' to `t' is equivalent to setting the
-`:slant' attribute to `italic', and setting it to `nil' is equivalent
-to setting `:slant' to `normal'.
-
- -- Function: font-family-list &optional frame
-     This function returns a list of available font family names.  The
-     optional argument FRAME specifies the frame on which the text is
-     to be displayed; if it is `nil', the selected frame is used.
-
- -- User Option: underline-minimum-offset
-     This variable specifies the minimum distance between the baseline
-     and the underline, in pixels, when displaying underlined text.
-
- -- User Option: x-bitmap-file-path
-     This variable specifies a list of directories for searching for
-     bitmap files, for the `:stipple' attribute.
-
- -- Function: bitmap-spec-p object
-     This returns `t' if OBJECT is a valid bitmap specification,
-     suitable for use with `:stipple' (see above).  It returns `nil'
-     otherwise.
 

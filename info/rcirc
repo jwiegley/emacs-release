@@ -1,8 +1,8 @@
-This is ../../info/rcirc, produced by makeinfo version 4.11 from
+This is ../../info/rcirc, produced by makeinfo version 4.13 from
 rcirc.texi.
 
-Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation,
-Inc.
+Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,9 +16,9 @@ Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* Rcirc: (rcirc).       Internet Relay Chat (IRC) client.
+* Rcirc: (rcirc).               Internet Relay Chat (IRC) client.
 END-INFO-DIR-ENTRY
 
 
@@ -34,8 +34,8 @@ communicate with each other in real-time.  Communication occurs both in
 topic channels which are collections of many users, or privately, with
 just one other user.
 
-   Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation,
-Inc.
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1494,29 +1494,29 @@ Index
 
 
 Tag Table:
-Node: Top928
-Node: Basics2679
-Node: Internet Relay Chat2940
-Node: Getting started with rcirc4456
-Node: Reference7333
-Node: rcirc commands7670
-Node: Useful IRC commands10532
-Node: Configuration11259
-Node: Fighting Information Overload16167
-Node: Channels16662
-Node: People18233
-Node: Keywords19839
-Node: Notices20339
-Node: Hacking and Tweaking21232
-Node: Skipping /away messages using handlers21697
-Node: Using fly spell mode22444
-Node: Scrolling conservatively22865
-Node: Changing the time stamp format23537
-Node: Defining a new command23913
-Node: Reconnecting after you have lost the connection24733
-Node: GNU Free Documentation License26598
-Node: Key Index51776
-Node: Variable Index53157
-Node: Index54661
+Node: Top959
+Node: Basics2716
+Node: Internet Relay Chat2977
+Node: Getting started with rcirc4493
+Node: Reference7370
+Node: rcirc commands7707
+Node: Useful IRC commands10569
+Node: Configuration11296
+Node: Fighting Information Overload16204
+Node: Channels16699
+Node: People18270
+Node: Keywords19876
+Node: Notices20376
+Node: Hacking and Tweaking21269
+Node: Skipping /away messages using handlers21734
+Node: Using fly spell mode22481
+Node: Scrolling conservatively22902
+Node: Changing the time stamp format23574
+Node: Defining a new command23950
+Node: Reconnecting after you have lost the connection24770
+Node: GNU Free Documentation License26635
+Node: Key Index51813
+Node: Variable Index53194
+Node: Index54698
 
 End Tag Table

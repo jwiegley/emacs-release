@@ -1,7 +1,7 @@
 ;;; composite.el --- support character composition
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010
+;;   2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -210,7 +210,7 @@ of the text in the region.
 
 If it is a string, the elements are alternate characters.  In
 this case, TAB element has a special meaning.  If the first
-characer is TAB, the glyphs are displayed with left padding space
+character is TAB, the glyphs are displayed with left padding space
 so that no pixel overlaps with the previous column.  If the last
 character is TAB, the glyphs are displayed with right padding
 space so that no pixel overlaps with the following column.

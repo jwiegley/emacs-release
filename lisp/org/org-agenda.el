@@ -1,6 +1,6 @@
 ;;; org-agenda.el --- Dynamic task and appointment lists for Org
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
@@ -1151,7 +1151,7 @@ range, respectively."
 		  (function))))
 
 (defcustom org-agenda-scheduled-leaders '("Scheduled: " "Sched.%2dx: ")
-  "Text preceeding scheduled items in the agenda view.
+  "Text preceding scheduled items in the agenda view.
 This is a list with two strings.  The first applies when the item is
 scheduled on the current day.  The second applies when it has been scheduled
 previously, it may contain a %d indicating that this is the nth time that
@@ -1164,7 +1164,7 @@ that passed since this item was scheduled first."
 	  (string :tag "Scheduled previously")))
 
 (defcustom org-agenda-deadline-leaders '("Deadline:  " "In %3d d.: ")
-  "Text preceeding deadline items in the agenda view.
+  "Text preceding deadline items in the agenda view.
 This is a list with two strings.  The first applies when the item has its
 deadline on the current day.  The second applies when it is in the past or
 in the future, it may contain %d to capture how many days away the deadline
@@ -2559,7 +2559,7 @@ removed from the entry content.  Currently only `planning' is allowed here."
 (defvar org-agenda-filter nil)
 (defvar org-agenda-filter-preset nil
   "A preset of the tags filter used for secondary agenda filtering.
-This must be a list of strings, each string must be a single tag preceeded
+This must be a list of strings, each string must be a single tag preceded
 by \"+\" or \"-\".
 This variable should not be set directly, but agenda custom commands can
 bind it in the options section.")
@@ -4501,9 +4501,9 @@ The flag is set if the currently compiled format contains a `%T'.")
   "A flag, set by `org-compile-prefix-format'.
 The flag is set if the currently compiled format contains a `%e'.")
 (defvar org-prefix-category-length nil
-  "Used by `org-compile-prefix-format' to remember the category field widh.")
+  "Used by `org-compile-prefix-format' to remember the category field width.")
 (defvar org-prefix-category-max-length nil
-  "Used by `org-compile-prefix-format' to remember the category field widh.")
+  "Used by `org-compile-prefix-format' to remember the category field width.")
 
 (defun org-format-agenda-item (extra txt &optional category tags dotime
 				     noprefix remove-re habitp)

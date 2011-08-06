@@ -1,6 +1,6 @@
 ;;; semantic/mru-bookmark.el --- Automatic bookmark tracking
 
-;; Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -246,7 +246,7 @@ been edited, and you can re-visit them with \\[semantic-mrub-switch-tags]."
   :group 'semantic
   :group 'semantic-modes
   :type 'boolean
-  :require 'semantic-util-modes
+  :require 'semantic/util-modes
   :initialize 'custom-initialize-default
   :set (lambda (sym val)
          (global-semantic-mru-bookmark-mode (if val 1 -1))))

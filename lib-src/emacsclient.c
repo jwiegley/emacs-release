@@ -1,6 +1,6 @@
 /* Client process that communicates with GNU Emacs acting as server.
    Copyright (C) 1986, 1987, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -1249,7 +1249,21 @@ set_local_socket ()
       {
 	tmpdir = egetenv ("TMPDIR");
 	if (!tmpdir)
-	  tmpdir = "/tmp";
+          {
+#ifdef DARWIN_OS
+#ifndef _CS_DARWIN_USER_TEMP_DIR
+#define _CS_DARWIN_USER_TEMP_DIR 65537
+#endif
+            size_t n = confstr (_CS_DARWIN_USER_TEMP_DIR, NULL, (size_t) 0);
+            if (n > 0)
+              {
+                tmpdir = alloca (n);
+                confstr (_CS_DARWIN_USER_TEMP_DIR, tmpdir, n);
+              }
+            else
+#endif
+              tmpdir = "/tmp";
+          }
 	socket_name = alloca (strlen (tmpdir) + strlen (server_name)
 			      + EXTRA_SPACE);
 	sprintf (socket_name, "%s/emacs%d/%s",

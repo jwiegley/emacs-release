@@ -1,7 +1,7 @@
 ;;; url-vars.el --- Variables for Uniform Resource Locator tool
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -128,7 +128,7 @@ email    -- the email address
 os       -- the operating system info
 lastloc  -- the last location
 agent    -- do not send the User-Agent string
-cookie   -- never accept HTTP cookies
+cookies  -- never accept HTTP cookies
 
 Samples:
 

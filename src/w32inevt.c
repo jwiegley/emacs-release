@@ -1,6 +1,6 @@
 /* Input event support for Emacs on the Microsoft W32 API.
    Copyright (C) 1992, 1993, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+                 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -582,8 +582,8 @@ w32_console_mouse_position (FRAME_PTR *f,
   *part = 0;
   SELECTED_FRAME ()->mouse_moved = 0;
 
-  XSETINT(*x, movement_pos.X);
-  XSETINT(*y, movement_pos.Y);
+  XSETINT (*x, movement_pos.X);
+  XSETINT (*y, movement_pos.Y);
   *time = movement_time;
 
   UNBLOCK_INPUT;

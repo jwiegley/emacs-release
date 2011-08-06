@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,10 +21,36 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Mode Help,  Next: Derived Modes,  Prev: Auto Major Mode,  Up: Major Modes
+
+23.2.4 Getting Help about a Major Mode
+--------------------------------------
+
+The `describe-mode' function is used to provide information about major
+modes.  It is normally called with `C-h m'.  The `describe-mode'
+function uses the value of `major-mode', which is why every major mode
+function needs to set the `major-mode' variable.
+
+ -- Command: describe-mode
+     This function displays the documentation of the current major mode.
+
+     The `describe-mode' function calls the `documentation' function
+     using the value of `major-mode' as an argument.  Thus, it displays
+     the documentation string of the major mode function.  (*Note
+     Accessing Documentation::.)
+
+ -- Variable: major-mode
+     This buffer-local variable holds the symbol for the current
+     buffer's major mode.  This symbol should have a function
+     definition that is the command to switch to that major mode.  The
+     `describe-mode' function uses the documentation string of the
+     function as the documentation of the major mode.
 
 
 File: elisp,  Node: Derived Modes,  Next: Generic Modes,  Prev: Mode Help,  Up: Major Modes
@@ -32,8 +58,10 @@ File: elisp,  Node: Derived Modes,  Next: Generic Modes,  Prev: Mode Help,  Up: 
 23.2.5 Defining Derived Modes
 -----------------------------
 
-It's often useful to define a new major mode in terms of an existing
-one.  An easy way to do this is to use `define-derived-mode'.
+The recommended way to define a new major mode is to derive it from an
+existing one using `define-derived-mode'.  If there is no closely
+related mode, you can inherit from `text-mode', `special-mode', or in
+the worst case `fundamental-mode'.
 
  -- Macro: define-derived-mode variant parent name docstring
           keyword-args... body...
@@ -263,8 +291,7 @@ conventions listed above:
       (see the variable `adaptive-fill-mode').
      \\{text-mode-map}
      Turning on Text mode runs the normal hook `text-mode-hook'."
-       (make-local-variable 'text-mode-variant)
-       (setq text-mode-variant t)
+       (set (make-local-variable 'text-mode-variant) t)
        ;; These two lines are a feature added recently.
        (set (make-local-variable 'require-final-newline)
             mode-require-final-newline)
@@ -277,9 +304,8 @@ default value, and we'll delete it in a future version.)
 existed:
 
      ;; This isn't needed nowadays, since `define-derived-mode' does it.
-     (defvar text-mode-abbrev-table nil
+     (define-abbrev-table 'text-mode-abbrev-table ()
        "Abbrev table used while in text mode.")
-     (define-abbrev-table 'text-mode-abbrev-table ())
 
      (defun text-mode ()
        "Major mode for editing text intended for humans to read...
@@ -293,12 +319,10 @@ existed:
        ;; These four lines are absent from the current version
        ;; not because this is done some other way, but rather
        ;; because nowadays Text mode uses the normal definition of paragraphs.
-       (make-local-variable 'paragraph-start)
-       (setq paragraph-start (concat "[ \t]*$\\|" page-delimiter))
-       (make-local-variable 'paragraph-separate)
-       (setq paragraph-separate paragraph-start)
-       (make-local-variable 'indent-line-function)
-       (setq indent-line-function 'indent-relative-maybe)
+       (set (make-local-variable 'paragraph-start)
+            (concat "[ \t]*$\\|" page-delimiter))
+       (set (make-local-variable 'paragraph-separate) paragraph-start)
+       (set (make-local-variable 'indent-line-function) 'indent-relative-maybe)
        (setq mode-name "Text")
        (setq major-mode 'text-mode)
        (run-mode-hooks 'text-mode-hook)) ; Finally, this permits the user to
@@ -358,13 +382,10 @@ commands to treat only blank lines as paragraph separators.  And the
 modes should understand the Lisp conventions for comments.  The rest of
 `lisp-mode-variables' sets this up:
 
-       (make-local-variable 'paragraph-start)
-       (setq paragraph-start (concat page-delimiter "\\|$" ))
-       (make-local-variable 'paragraph-separate)
-       (setq paragraph-separate paragraph-start)
+       (set (make-local-variable 'paragraph-start) (concat page-delimiter "\\|$" ))
+       (set (make-local-variable 'paragraph-separate) paragraph-start)
        ...
-       (make-local-variable 'comment-indent-function)
-       (setq comment-indent-function 'lisp-comment-indent))
+       (set (make-local-variable 'comment-indent-function) 'lisp-comment-indent))
        ...
 
    Each of the different Lisp modes has a slightly different keymap.
@@ -372,28 +393,23 @@ For example, Lisp mode binds `C-c C-z' to `run-lisp', but the other
 Lisp modes do not.  However, all Lisp modes have some commands in
 common.  The following code sets up the common commands:
 
-     (defvar shared-lisp-mode-map ()
+     (defvar shared-lisp-mode-map
+       (let ((map (make-sparse-keymap)))
+         (define-key shared-lisp-mode-map "\e\C-q" 'indent-sexp)
+         (define-key shared-lisp-mode-map "\177"
+                     'backward-delete-char-untabify)
+         map)
        "Keymap for commands shared by all sorts of Lisp modes.")
-
-     ;; Putting this `if' after the `defvar' is an older style.
-     (if shared-lisp-mode-map
-         ()
-        (setq shared-lisp-mode-map (make-sparse-keymap))
-        (define-key shared-lisp-mode-map "\e\C-q" 'indent-sexp)
-        (define-key shared-lisp-mode-map "\177"
-                    'backward-delete-char-untabify))
 
 And here is the code to set up the keymap for Lisp mode:
 
-     (defvar lisp-mode-map ()
+     (defvar lisp-mode-map
+       (let ((map (make-sparse-keymap)))
+         (set-keymap-parent map shared-lisp-mode-map)
+         (define-key map "\e\C-x" 'lisp-eval-defun)
+         (define-key map "\C-c\C-z" 'run-lisp)
+         map)
        "Keymap for ordinary Lisp mode...")
-
-     (if lisp-mode-map
-         ()
-       (setq lisp-mode-map (make-sparse-keymap))
-       (set-keymap-parent lisp-mode-map shared-lisp-mode-map)
-       (define-key lisp-mode-map "\e\C-x" 'lisp-eval-defun)
-       (define-key lisp-mode-map "\C-c\C-z" 'run-lisp))
 
    Finally, here is the complete major mode function definition for
 Lisp mode.
@@ -416,11 +432,9 @@ Lisp mode.
                                               ;   finds out what to describe.
        (setq mode-name "Lisp")                ; This goes into the mode line.
        (lisp-mode-variables t)                ; This defines various variables.
-       (make-local-variable 'comment-start-skip)
-       (setq comment-start-skip
-             "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)\\(;+\\|#|\\) *")
-       (make-local-variable 'font-lock-keywords-case-fold-search)
-       (setq font-lock-keywords-case-fold-search t)
+       (set (make-local-variable 'comment-start-skip)
+            "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)\\(;+\\|#|\\) *")
+       (set (make-local-variable 'font-lock-keywords-case-fold-search) t)
        (setq imenu-case-fold-search t)
        (set-syntax-table lisp-mode-syntax-table)
        (run-mode-hooks 'lisp-mode-hook))      ; This permits the user to use a
@@ -543,7 +557,7 @@ the macro `define-minor-mode'; *note Defining Minor Modes::.)
    Global minor modes distributed with Emacs should if possible support
 enabling and disabling via Custom (*note Customization::).  To do this,
 the first step is to define the mode variable with `defcustom', and
-specify `:type boolean'.
+specify `:type 'boolean'.
 
    If just setting the variable is not sufficient to enable the mode,
 you should also specify a `:set' method which enables the mode by
@@ -615,10 +629,15 @@ mode in one self-contained definition.
      mode line.
 
      The optional argument KEYMAP specifies the keymap for the minor
-     mode.  It can be a variable name, whose value is the keymap, or it
-     can be an alist specifying bindings in this form:
+     mode.  If non-`nil', it should be a variable name (whose value is
+     a keymap), a keymap, or an alist of the form
 
           (KEY-SEQUENCE . DEFINITION)
+
+     where each KEY-SEQUENCE and DEFINITION are arguments suitable for
+     passing to `define-key' (*note Changing Key Bindings::).  If
+     KEYMAP is a keymap or an alist, this also defines the variable
+     `MODE-map'.
 
      The above three arguments INIT-VALUE, LIGHTER, and KEYMAP can be
      (partially) omitted when KEYWORD-ARGS are used.  The KEYWORD-ARGS
@@ -687,7 +706,7 @@ unusual circumstances.  Normally, the initial value must be `nil'.
       ;; The indicator for the mode line.
       " Hungry"
       ;; The minor mode bindings.
-      '(("\C-\^?" . hungry-electric-delete))
+      '(([C-backspace] . hungry-electric-delete))
       :group 'hunger)
 
 This defines a minor mode named "Hungry mode," a command named
@@ -715,8 +734,8 @@ is enabled.  It initializes the keymap with a key binding for
       :lighter " Hungry"
       ;; The minor mode bindings.
       :keymap
-      '(("\C-\^?" . hungry-electric-delete)
-        ("\C-\M-\^?"
+      '(([C-backspace] . hungry-electric-delete)
+        ([C-M-backspace]
          . (lambda ()
              (interactive)
              (hungry-electric-delete t))))
@@ -765,14 +784,14 @@ minor modes.
 
 * Menu:
 
-* Base: Mode Line Basics. Basic ideas of mode line control.
-* Data: Mode Line Data.   The data structure that controls the mode line.
-* Top: Mode Line Top.     The top level variable, mode-line-format.
-* Mode Line Variables::   Variables used in that data structure.
-* %-Constructs::          Putting information into a mode line.
-* Properties in Mode::    Using text properties in the mode line.
-* Header Lines::          Like a mode line, but at the top.
-* Emulating Mode Line::   Formatting text as the mode line would.
+* Base: Mode Line Basics.       Basic ideas of mode line control.
+* Data: Mode Line Data.         The data structure that controls the mode line.
+* Top: Mode Line Top.           The top level variable, mode-line-format.
+* Mode Line Variables::         Variables used in that data structure.
+* %-Constructs::                Putting information into a mode line.
+* Properties in Mode::          Using text properties in the mode line.
+* Header Lines::                Like a mode line, but at the top.
+* Emulating Mode Line::         Formatting text as the mode line would.
 
 
 File: elisp,  Node: Mode Line Basics,  Next: Mode Line Data,  Up: Mode Line Format
@@ -1276,27 +1295,36 @@ specification.
 
  -- Function: format-mode-line format &optional face window buffer
      This function formats a line of text according to FORMAT as if it
-     were generating the mode line for WINDOW, but instead of
-     displaying the text in the mode line or the header line, it returns
-     the text as a string.  The argument WINDOW defaults to the
-     selected window.  If BUFFER is non-`nil', all the information used
-     is taken from BUFFER; by default, it comes from WINDOW's buffer.
+     were generating the mode line for WINDOW, but it also returns the
+     text as a string.  The argument WINDOW defaults to the selected
+     window.  If BUFFER is non-`nil', all the information used is taken
+     from BUFFER; by default, it comes from WINDOW's buffer.
 
      The value string normally has text properties that correspond to
-     the faces, keymaps, etc., that the mode line would have.  And any
-     character for which no `face' property is specified gets a default
-     value which is usually FACE.  (If FACE is `t', that stands for
-     either `mode-line' if WINDOW is selected, otherwise
+     the faces, keymaps, etc., that the mode line would have.  Any
+     character for which no `face' property is specified by FORMAT gets
+     a default value determined by FACE.  If FACE is `t', that stands
+     for either `mode-line' if WINDOW is selected, otherwise
      `mode-line-inactive'.  If FACE is `nil' or omitted, that stands
-     for no face property.)
+     for the default face.  If FACE is an integer, the value returned
+     by this function will have no text properties.
 
-     However, if FACE is an integer, the value has no text properties.
+     You can also specify other valid faces as the value of FACE.  If
+     specified, that face provides the `face' property for characters
+     whose face is not specified by FORMAT.
+
+     Note that using `mode-line', `mode-line-inactive', or
+     `header-line' as FACE will actually redisplay the mode line or the
+     header line, respectively, using the current definitions of the
+     corresponding face, in addition to returning the formatted string.
+     (Other faces do not cause redisplay.)
 
      For example, `(format-mode-line header-line-format)' returns the
      text that would appear in the selected window's header line (`""'
      if it has no header line).  `(format-mode-line header-line-format
      'header-line)' returns the same text, with each character carrying
-     the face that it will have in the header line itself.
+     the face that it will have in the header line itself, and also
+     redraws the header line.
 
 
 File: elisp,  Node: Imenu,  Next: Font Lock Mode,  Prev: Mode Line Format,  Up: Modes
@@ -1464,7 +1492,7 @@ variable `imenu-create-index-function':
      Setting this variable makes it buffer-local in the current buffer.
 
 
-File: elisp,  Node: Font Lock Mode,  Next: Desktop Save Mode,  Prev: Imenu,  Up: Modes
+File: elisp,  Node: Font Lock Mode,  Next: Auto-Indentation,  Prev: Imenu,  Up: Modes
 
 23.6 Font Lock Mode
 ===================
@@ -1490,7 +1518,7 @@ Search-based fontification happens second.
 * Other Font Lock Variables::   Additional customization facilities.
 * Levels of Font Lock::         Each mode can define alternative levels
                                   so that the user can select more or less.
-* Precalculated Fontification:: How Lisp programs that produce the buffer
+* Precalculated Fontification::  How Lisp programs that produce the buffer
                                   contents can also specify how to fontify it.
 * Faces for Font Lock::         Special faces specifically for Font Lock.
 * Syntactic Font Lock::         Fontification based on syntax tables.
@@ -2291,9 +2319,609 @@ one the following variables:
      be reasonably fast.
 
 
-File: elisp,  Node: Desktop Save Mode,  Prev: Font Lock Mode,  Up: Modes
+File: elisp,  Node: Auto-Indentation,  Next: Desktop Save Mode,  Prev: Font Lock Mode,  Up: Modes
 
-23.7 Desktop Save Mode
+23.7 Auto-indention of code
+===========================
+
+For programming languages, an important feature of a major mode is to
+provide automatic indentation.  This is controlled in Emacs by
+`indent-line-function' (*note Mode-Specific Indent::).  Writing a good
+indentation function can be difficult and to a large extent it is still
+a black art.
+
+   Many major mode authors will start by writing a simple indentation
+function that works for simple cases, for example by comparing with the
+indentation of the previous text line.  For most programming languages
+that are not really line-based, this tends to scale very poorly:
+improving such a function to let it handle more diverse situations tends
+to become more and more difficult, resulting in the end with a large,
+complex, unmaintainable indentation function which nobody dares to
+touch.
+
+   A good indentation function will usually need to actually parse the
+text, according to the syntax of the language.  Luckily, it is not
+necessary to parse the text in as much detail as would be needed for a
+compiler, but on the other hand, the parser embedded in the indentation
+code will want to be somewhat friendly to syntactically incorrect code.
+
+   Good maintainable indentation functions usually fall into 2
+categories: either parsing forward from some "safe" starting point
+until the position of interest, or parsing backward from the position
+of interest.  Neither of the two is a clearly better choice than the
+other: parsing backward is often more difficult than parsing forward
+because programming languages are designed to be parsed forward, but
+for the purpose of indentation it has the advantage of not needing to
+guess a "safe" starting point, and it generally enjoys the property
+that only a minimum of text will be analyzed to decide the indentation
+of a line, so indentation will tend to be unaffected by syntax errors in
+some earlier unrelated piece of code.  Parsing forward on the other hand
+is usually easier and has the advantage of making it possible to
+reindent efficiently a whole region at a time, with a single parse.
+
+   Rather than write your own indentation function from scratch, it is
+often preferable to try and reuse some existing ones or to rely on a
+generic indentation engine.  There are sadly few such engines.  The
+CC-mode indentation code (used with C, C++, Java, Awk and a few other
+such modes) has been made more generic over the years, so if your
+language seems somewhat similar to one of those languages, you might
+try to use that engine.  Another one is SMIE which takes an approach in
+the spirit of Lisp sexps and adapts it to non-Lisp languages.
+
+* Menu:
+
+* SMIE::                        A simple minded indentation engine
+
+
+File: elisp,  Node: SMIE,  Up: Auto-Indentation
+
+23.7.1 Simple Minded Indentation Engine
+---------------------------------------
+
+SMIE is a package that provides a generic navigation and indentation
+engine.  Based on a very simple parser using an "operator precedence
+grammar", it lets major modes extend the sexp-based navigation of Lisp
+to non-Lisp languages as well as provide a simple to use but reliable
+auto-indentation.
+
+   Operator precedence grammar is a very primitive technology for
+parsing compared to some of the more common techniques used in
+compilers.  It has the following characteristics: its parsing power is
+very limited, and it is largely unable to detect syntax errors, but it
+has the advantage of being algorithmically efficient and able to parse
+forward just as well as backward.  In practice that means that SMIE can
+use it for indentation based on backward parsing, that it can provide
+both `forward-sexp' and `backward-sexp' functionality, and that it will
+naturally work on syntactically incorrect code without any extra
+effort.  The downside is that it also means that most programming
+languages cannot be parsed correctly using SMIE, at least not without
+resorting to some special tricks (*note SMIE Tricks::).
+
+* Menu:
+
+* SMIE setup::                  SMIE setup and features
+* Operator Precedence Grammars::  A very simple parsing technique
+* SMIE Grammar::                Defining the grammar of a language
+* SMIE Lexer::                  Defining tokens
+* SMIE Tricks::                 Working around the parser's limitations
+* SMIE Indentation::            Specifying indentation rules
+* SMIE Indentation Helpers::    Helper functions for indentation rules
+* SMIE Indentation Example::    Sample indentation rules
+
+
+File: elisp,  Node: SMIE setup,  Next: Operator Precedence Grammars,  Up: SMIE
+
+23.7.1.1 SMIE Setup and Features
+................................
+
+SMIE is meant to be a one-stop shop for structural navigation and
+various other features which rely on the syntactic structure of code, in
+particular automatic indentation.  The main entry point is `smie-setup'
+which is a function typically called while setting up a major mode.
+
+ -- Function: smie-setup grammar rules-function &rest keywords
+     Setup SMIE navigation and indentation.  GRAMMAR is a grammar table
+     generated by `smie-prec2->grammar'.  RULES-FUNCTION is a set of
+     indentation rules for use on `smie-rules-function'.  KEYWORDS are
+     additional arguments, which can include the following keywords:
+        * `:forward-token' FUN: Specify the forward lexer to use.
+
+        * `:backward-token' FUN: Specify the backward lexer to use.
+
+   Calling this function is sufficient to make commands such as
+`forward-sexp', `backward-sexp', and `transpose-sexps' be able to
+properly handle structural elements other than just the paired
+parentheses already handled by syntax tables.  For example, if the
+provided grammar is precise enough, `transpose-sexps' can correctly
+transpose the two arguments of a `+' operator, taking into account the
+precedence rules of the language.
+
+   Calling `smie-setup' is also sufficient to make TAB indentation work
+in the expected way, and provides some commands that you can bind in the
+major mode keymap.
+
+ -- Command: smie-close-block
+     This command closes the most recently opened (and not yet closed)
+     block.
+
+ -- Command: smie-down-list &optional arg
+     This command is like `down-list' but it also pays attention to
+     nesting of tokens other than parentheses, such as `begin...end'.
+
+
+File: elisp,  Node: Operator Precedence Grammars,  Next: SMIE Grammar,  Prev: SMIE setup,  Up: SMIE
+
+23.7.1.2 Operator Precedence Grammars
+.....................................
+
+SMIE's precedence grammars simply give to each token a pair of
+precedences: the left-precedence and the right-precedence.  We say `T1
+< T2' if the right-precedence of token `T1' is less than the
+left-precedence of token `T2'.  A good way to read this `<' is as a
+kind of parenthesis: if we find `... T1 something T2 ...'  then that
+should be parsed as `... T1 (something T2 ...' rather than as `... T1
+something) T2 ...'.  The latter interpretation would be the case if we
+had `T1 > T2'.  If we have `T1 = T2', it means that token T2 follows
+token T1 in the same syntactic construction, so typically we have
+`"begin" = "end"'.  Such pairs of precedences are sufficient to express
+left-associativity or right-associativity of infix operators, nesting
+of tokens like parentheses and many other cases.
+
+ -- Function: smie-prec2->grammar table
+     This function takes a _prec2_ grammar TABLE and returns an alist
+     suitable for use in `smie-setup'.  The _prec2_ TABLE is itself
+     meant to be built by one of the functions below.
+
+ -- Function: smie-merge-prec2s &rest tables
+     This function takes several _prec2_ TABLES and merges them into a
+     new _prec2_ table.
+
+ -- Function: smie-precs->prec2 precs
+     This function builds a _prec2_ table from a table of precedences
+     PRECS.  PRECS should be a list, sorted by precedence (for example
+     `"+"' will come before `"*"'), of elements of the form `(ASSOC OP
+     ...)', where each OP is a token that acts as an operator; ASSOC is
+     their associativity, which can be either `left', `right', `assoc',
+     or `nonassoc'.  All operators in a given element share the same
+     precedence level and associativity.
+
+ -- Function: smie-bnf->prec2 bnf &rest resolvers
+     This function lets you specify the grammar using a BNF notation.
+     It accepts a BNF description of the grammar along with a set of
+     conflict resolution rules RESOLVERS, and returns a _prec2_ table.
+
+     BNF is a list of nonterminal definitions of the form `(NONTERM
+     RHS1 RHS2 ...)' where each RHS is a (non-empty) list of terminals
+     (aka tokens) or non-terminals.
+
+     Not all grammars are accepted:
+        * An RHS cannot be an empty list (an empty list is never needed,
+          since SMIE allows all non-terminals to match the empty string
+          anyway).
+
+        * An RHS cannot have 2 consecutive non-terminals: each pair of
+          non-terminals needs to be separated by a terminal (aka token).
+          This is a fundamental limitation of operator precedence
+          grammars.
+
+     Additionally, conflicts can occur:
+        * The returned _prec2_ table holds constraints between pairs of
+          tokens, and for any given pair only one constraint can be
+          present: T1 < T2, T1 = T2, or T1 > T2.
+
+        * A token can be an `opener' (something similar to an
+          open-paren), a `closer' (like a close-paren), or `neither' of
+          the two (e.g. an infix operator, or an inner token like
+          `"else"').
+
+     Precedence conflicts can be resolved via RESOLVERS, which is a
+     list of _precs_ tables (see `smie-precs->prec2'): for each
+     precedence conflict, if those `precs' tables specify a particular
+     constraint, then the conflict is resolved by using this constraint
+     instead, else a conflict is reported and one of the conflicting
+     constraints is picked arbitrarily and the others are simply
+     ignored.
+
+
+File: elisp,  Node: SMIE Grammar,  Next: SMIE Lexer,  Prev: Operator Precedence Grammars,  Up: SMIE
+
+23.7.1.3 Defining the Grammar of a Language
+...........................................
+
+The usual way to define the SMIE grammar of a language is by defining a
+new global variable that holds the precedence table by giving a set of
+BNF rules.  For example, the grammar definition for a small Pascal-like
+language could look like:
+     (require 'smie)
+     (defvar sample-smie-grammar
+       (smie-prec2->grammar
+        (smie-bnf->prec2
+         '((id)
+           (inst ("begin" insts "end")
+                 ("if" exp "then" inst "else" inst)
+                 (id ":=" exp)
+                 (exp))
+           (insts (insts ";" insts) (inst))
+           (exp (exp "+" exp)
+                (exp "*" exp)
+                ("(" exps ")"))
+           (exps (exps "," exps) (exp)))
+         '((assoc ";"))
+         '((assoc ","))
+         '((assoc "+") (assoc "*")))))
+
+A few things to note:
+
+   * The above grammar does not explicitly mention the syntax of
+     function calls: SMIE will automatically allow any sequence of
+     sexps, such as identifiers, balanced parentheses, or `begin ...
+     end' blocks to appear anywhere anyway.
+
+   * The grammar category `id' has no right hand side: this does not
+     mean that it can match only the empty string, since as mentioned
+     any sequence of sexps can appear anywhere anyway.
+
+   * Because non terminals cannot appear consecutively in the BNF
+     grammar, it is difficult to correctly handle tokens that act as
+     terminators, so the above grammar treats `";"' as a statement
+     _separator_ instead, which SMIE can handle very well.
+
+   * Separators used in sequences (such as `","' and `";"' above) are
+     best defined with BNF rules such as `(foo (foo "separator" foo)
+     ...)' which generate precedence conflicts which are then resolved
+     by giving them an explicit `(assoc "separator")'.
+
+   * The `("(" exps ")")' rule was not needed to pair up parens, since
+     SMIE will pair up any characters that are marked as having paren
+     syntax in the syntax table.  What this rule does instead (together
+     with the definition of `exps') is to make it clear that `","'
+     should not appear outside of parentheses.
+
+   * Rather than have a single _precs_ table to resolve conflicts, it is
+     preferable to have several tables, so as to let the BNF part of the
+     grammar specify relative precedences where possible.
+
+   * Unless there is a very good reason to prefer `left' or `right', it
+     is usually preferable to mark operators as associative, using
+     `assoc'.  For that reason `"+"' and `"*"' are defined above as
+     `assoc', although the language defines them formally as left
+     associative.
+
+
+File: elisp,  Node: SMIE Lexer,  Next: SMIE Tricks,  Prev: SMIE Grammar,  Up: SMIE
+
+23.7.1.4 Defining Tokens
+........................
+
+SMIE comes with a predefined lexical analyzer which uses syntax tables
+in the following way: any sequence of characters that have word or
+symbol syntax is considered a token, and so is any sequence of
+characters that have punctuation syntax.  This default lexer is often a
+good starting point but is rarely actually correct for any given
+language.  For example, it will consider `"2,+3"' to be composed of 3
+tokens: `"2"', `",+"', and `"3"'.
+
+   To describe the lexing rules of your language to SMIE, you need 2
+functions, one to fetch the next token, and another to fetch the
+previous token.  Those functions will usually first skip whitespace and
+comments and then look at the next chunk of text to see if it is a
+special token.  If so it should skip the token and return a description
+of this token.  Usually this is simply the string extracted from the
+buffer, but it can be anything you want.  For example:
+     (defvar sample-keywords-regexp
+       (regexp-opt '("+" "*" "," ";" ">" ">=" "<" "<=" ":=" "=")))
+     (defun sample-smie-forward-token ()
+       (forward-comment (point-max))
+       (cond
+        ((looking-at sample-keywords-regexp)
+         (goto-char (match-end 0))
+         (match-string-no-properties 0))
+        (t (buffer-substring-no-properties
+            (point)
+            (progn (skip-syntax-forward "w_")
+                   (point))))))
+     (defun sample-smie-backward-token ()
+       (forward-comment (- (point)))
+       (cond
+        ((looking-back sample-keywords-regexp (- (point) 2) t)
+         (goto-char (match-beginning 0))
+         (match-string-no-properties 0))
+        (t (buffer-substring-no-properties
+            (point)
+            (progn (skip-syntax-backward "w_")
+                   (point))))))
+
+   Notice how those lexers return the empty string when in front of
+parentheses.  This is because SMIE automatically takes care of the
+parentheses defined in the syntax table.  More specifically if the lexer
+returns nil or an empty string, SMIE tries to handle the corresponding
+text as a sexp according to syntax tables.
+
+
+File: elisp,  Node: SMIE Tricks,  Next: SMIE Indentation,  Prev: SMIE Lexer,  Up: SMIE
+
+23.7.1.5 Living With a Weak Parser
+..................................
+
+The parsing technique used by SMIE does not allow tokens to behave
+differently in different contexts.  For most programming languages, this
+manifests itself by precedence conflicts when converting the BNF
+grammar.
+
+   Sometimes, those conflicts can be worked around by expressing the
+grammar slightly differently.  For example, for Modula-2 it might seem
+natural to have a BNF grammar that looks like this:
+
+       ...
+       (inst ("IF" exp "THEN" insts "ELSE" insts "END")
+             ("CASE" exp "OF" cases "END")
+             ...)
+       (cases (cases "|" cases) (caselabel ":" insts) ("ELSE" insts))
+       ...
+
+   But this will create conflicts for `"ELSE"': on the one hand, the IF
+rule implies (among many other things) that `"ELSE" = "END"'; but on
+the other hand, since `"ELSE"' appears within `cases', which appears
+left of `"END"', we also have `"ELSE" > "END"'.  We can solve the
+conflict either by using:
+       ...
+       (inst ("IF" exp "THEN" insts "ELSE" insts "END")
+             ("CASE" exp "OF" cases "END")
+             ("CASE" exp "OF" cases "ELSE" insts "END")
+             ...)
+       (cases (cases "|" cases) (caselabel ":" insts))
+       ...
+   or
+       ...
+       (inst ("IF" exp "THEN" else "END")
+             ("CASE" exp "OF" cases "END")
+             ...)
+       (else (insts "ELSE" insts))
+       (cases (cases "|" cases) (caselabel ":" insts) (else))
+       ...
+
+   Reworking the grammar to try and solve conflicts has its downsides,
+tho, because SMIE assumes that the grammar reflects the logical
+structure of the code, so it is preferable to keep the BNF closer to
+the intended abstract syntax tree.
+
+   Other times, after careful consideration you may conclude that those
+conflicts are not serious and simply resolve them via the RESOLVERS
+argument of `smie-bnf->prec2'.  Usually this is because the grammar is
+simply ambiguous: the conflict does not affect the set of programs
+described by the grammar, but only the way those programs are parsed.
+This is typically the case for separators and associative infix
+operators, where you want to add a resolver like `'((assoc "|"))'.
+Another case where this can happen is for the classic _dangling else_
+problem, where you will use `'((assoc "else" "then"))'.  It can also
+happen for cases where the conflict is real and cannot really be
+resolved, but it is unlikely to pose a problem in practice.
+
+   Finally, in many cases some conflicts will remain despite all
+efforts to restructure the grammar.  Do not despair: while the parser
+cannot be made more clever, you can make the lexer as smart as you
+want.  So, the solution is then to look at the tokens involved in the
+conflict and to split one of those tokens into 2 (or more) different
+tokens.  E.g. if the grammar needs to distinguish between two
+incompatible uses of the token `"begin"', make the lexer return
+different tokens (say `"begin-fun"' and `"begin-plain"') depending on
+which kind of `"begin"' it finds.  This pushes the work of
+distinguishing the different cases to the lexer, which will thus have
+to look at the surrounding text to find ad-hoc clues.
+
+
+File: elisp,  Node: SMIE Indentation,  Next: SMIE Indentation Helpers,  Prev: SMIE Tricks,  Up: SMIE
+
+23.7.1.6 Specifying Indentation Rules
+.....................................
+
+Based on the provided grammar, SMIE will be able to provide automatic
+indentation without any extra effort.  But in practice, this default
+indentation style will probably not be good enough.  You will want to
+tweak it in many different cases.
+
+   SMIE indentation is based on the idea that indentation rules should
+be as local as possible.  To this end, it relies on the idea of
+_virtual_ indentation, which is the indentation that a particular
+program point would have if it were at the beginning of a line.  Of
+course, if that program point is indeed at the beginning of a line, its
+virtual indentation is its current indentation.  But if not, then SMIE
+uses the indentation algorithm to compute the virtual indentation of
+that point.  Now in practice, the virtual indentation of a program
+point does not have to be identical to the indentation it would have if
+we inserted a newline before it.  To see how this works, the SMIE rule
+for indentation after a `{' in C does not care whether the `{' is
+standing on a line of its own or is at the end of the preceding line.
+Instead, these different cases are handled in the indentation rule that
+decides how to indent before a `{'.
+
+   Another important concept is the notion of _parent_: The _parent_ of
+a token, is the head token of the nearest enclosing syntactic
+construct.  For example, the parent of an `else' is the `if' to which
+it belongs, and the parent of an `if', in turn, is the lead token of
+the surrounding construct.  The command `backward-sexp' jumps from a
+token to its parent, but there are some caveats: for _openers_ (tokens
+which start a construct, like `if'), you need to start with point
+before the token, while for others you need to start with point after
+the token.  `backward-sexp' stops with point before the parent token if
+that is the _opener_ of the token of interest, and otherwise it stops
+with point after the parent token.
+
+   SMIE indentation rules are specified using a function that takes two
+arguments METHOD and ARG where the meaning of ARG and the expected
+return value depend on METHOD.
+
+   METHOD can be:
+   * `:after', in which case ARG is a token and the function should
+     return the OFFSET to use for indentation after ARG.
+
+   * `:before', in which case ARG is a token and the function should
+     return the OFFSET to use to indent ARG itself.
+
+   * `:elem', in which case the function should return either the offset
+     to use to indent function arguments (if ARG is the symbol `arg')
+     or the basic indentation step (if ARG is the symbol `basic').
+
+   * `:list-intro', in which case ARG is a token and the function
+     should return non-`nil' if the token is followed by a list of
+     expressions (not separated by any token) rather than an expression.
+
+   When ARG is a token, the function is called with point just before
+that token.  A return value of nil always means to fallback on the
+default behavior, so the function should return nil for arguments it
+does not expect.
+
+   OFFSET can be:
+   * `nil': use the default indentation rule.
+
+   * `(column . COLUMN)': indent to column COLUMN.
+
+   * NUMBER: offset by NUMBER, relative to a base token which is the
+     current token for `:after' and its parent for `:before'.
+
+
+File: elisp,  Node: SMIE Indentation Helpers,  Next: SMIE Indentation Example,  Prev: SMIE Indentation,  Up: SMIE
+
+23.7.1.7 Helper Functions for Indentation Rules
+...............................................
+
+SMIE provides various functions designed specifically for use in the
+indentation rules function (several of those functions break if used in
+another context).  These functions all start with the prefix
+`smie-rule-'.
+
+ -- Function: smie-rule-bolp
+     Return non-`nil' if the current token is the first on the line.
+
+ -- Function: smie-rule-hanging-p
+     Return non-`nil' if the current token is _hanging_.  A token is
+     _hanging_ if it is the last token on the line and if it is
+     preceded by other tokens: a lone token on a line is not hanging.
+
+ -- Function: smie-rule-next-p &rest tokens
+     Return non-`nil' if the next token is among TOKENS.
+
+ -- Function: smie-rule-prev-p &rest tokens
+     Return non-`nil' if the previous token is among TOKENS.
+
+ -- Function: smie-rule-parent-p &rest parents
+     Return non-`nil' if the current token's parent is among PARENTS.
+
+ -- Function: smie-rule-sibling-p
+     Return non-nil if the current token's parent is actually a sibling.
+     This is the case for example when the parent of a `","' is just the
+     previous `","'.
+
+ -- Function: smie-rule-parent &optional offset
+     Return the proper offset to align the current token with the
+     parent.  If non-`nil', OFFSET should be an integer giving an
+     additional offset to apply.
+
+ -- Function: smie-rule-separator method
+     Indent current token as a _separator_.
+
+     By _separator_, we mean here a token whose sole purpose is to
+     separate various elements within some enclosing syntactic
+     construct, and which does not have any semantic significance in
+     itself (i.e. it would typically not exist as a node in an abstract
+     syntax tree).
+
+     Such a token is expected to have an associative syntax and be
+     closely tied to its syntactic parent.  Typical examples are `","'
+     in lists of arguments (enclosed inside parentheses), or `";"' in
+     sequences of instructions (enclosed in a `{...}' or `begin...end'
+     block).
+
+     METHOD should be the method name that was passed to
+     `smie-rules-function'.
+
+
+File: elisp,  Node: SMIE Indentation Example,  Prev: SMIE Indentation Helpers,  Up: SMIE
+
+23.7.1.8 Sample Indentation Rules
+.................................
+
+Here is an example of an indentation function:
+
+     (eval-when-compile (require 'cl))       ;For the `case' macro.
+     (defun sample-smie-rules (kind token)
+       (case kind
+         (:elem (case token
+                  (basic sample-indent-basic)))
+         (:after
+          (cond
+           ((equal token ",") (smie-rule-separator kind))
+           ((equal token ":=") sample-indent-basic)))
+         (:before
+          (cond
+           ((equal token ",") (smie-rule-separator kind))
+           ((member token '("begin" "(" "{"))
+            (if (smie-rule-hanging-p) (smie-rule-parent)))
+           ((equal token "if")
+            (and (not (smie-rule-bolp)) (smie-rule-prev-p "else")
+                 (smie-rule-parent)))))))
+
+A few things to note:
+
+   * The first case indicates the basic indentation increment to use.
+     If `sample-indent-basic' is nil, then SMIE uses the global setting
+     `smie-indent-basic'.  The major mode could have set
+     `smie-indent-basic' buffer-locally instead, but that is
+     discouraged.
+
+   * The two (identical) rules for the token `","' make SMIE try to be
+     more clever when the comma separator is placed at the beginning of
+     lines.  It tries to outdent the separator so as to align the code
+     after the comma; for example:
+
+          x = longfunctionname (
+                  arg1
+                , arg2
+              );
+
+   * The rule for indentation after `":="' exists because otherwise
+     SMIE would treat `":="' as an infix operator and would align the
+     right argument with the left one.
+
+   * The rule for indentation before `"begin"' is an example of the use
+     of virtual indentation:  This rule is used only when `"begin"' is
+     hanging, which can happen only when `"begin"' is not at the
+     beginning of a line.  So this is not used when indenting `"begin"'
+     itself but only when indenting something relative to this
+     `"begin"'.  Concretely, this rule changes the indentation from:
+
+              if x > 0 then begin
+                      dosomething(x);
+                  end
+     to
+              if x > 0 then begin
+                  dosomething(x);
+              end
+
+   * The rule for indentation before `"if"' is similar to the one for
+     `"begin"', but where the purpose is to treat `"else if"' as a
+     single unit, so as to align a sequence of tests rather than indent
+     each test further to the right.  This function does this only in
+     the case where the `"if"' is not placed on a separate line, hence
+     the `smie-rule-bolp' test.
+
+     If we know that the `"else"' is always aligned with its `"if"' and
+     is always at the beginning of a line, we can use a more efficient
+     rule:
+          ((equal token "if")
+           (and (not (smie-rule-bolp)) (smie-rule-prev-p "else")
+                (save-excursion
+                  (sample-smie-backward-token)  ;Jump before the "else".
+                  (cons 'column (current-column)))))
+
+     The advantage of this formulation is that it reuses the
+     indentation of the previous `"else"', rather than going all the
+     way back to the first `"if"' of the sequence.
+
+
+File: elisp,  Node: Desktop Save Mode,  Prev: Auto-Indentation,  Up: Modes
+
+23.8 Desktop Save Mode
 ======================
 
 "Desktop Save Mode" is a feature to save the state of Emacs from one
@@ -2780,7 +3408,7 @@ program-level interfaces to the same information.
      the keymap known as `help-map'.  It is defined in `help.el' as
      follows:
 
-          (define-key global-map (char-to-string help-char) 'help-command)
+          (define-key global-map (string help-char) 'help-command)
           (fset 'help-command help-map)
 
  -- User Option: help-char
@@ -2951,9 +3579,9 @@ in most cases obtained from the operating system, according to locale
 * Changing Files::           Renaming files, changing protection, etc.
 * File Names::               Decomposing and expanding file names.
 * Contents of Directories::  Getting a list of the files in a directory.
-* Create/Delete Dirs::	     Creating and Deleting Directories.
-* Magic File Names::	     Defining "magic" special handling
-			       for certain file names.
+* Create/Delete Dirs::       Creating and Deleting Directories.
+* Magic File Names::         Defining "magic" special handling
+                               for certain file names.
 * Format Conversion::        Conversion to and from various file formats.
 
 
@@ -3024,6 +3652,25 @@ temporary buffer.  Visiting the file is not necessary and takes longer.
 
      When `find-file' is called interactively, it prompts for FILENAME
      in the minibuffer.
+
+ -- Command: find-file-literally filename
+     This command visits FILENAME, like `find-file' does, but it does
+     not perform any format conversions (*note Format Conversion::),
+     character code conversions (*note Coding Systems::), or end-of-line
+     conversions (*note End of line conversion: Coding System Basics.).
+     The buffer visiting the file is made unibyte, and its major mode is
+     Fundamental mode, regardless of the file name.  File local variable
+     specifications  in the file (*note File Local Variables::) are
+     ignored, and automatic decompression and adding a newline at the
+     end of the file due to `require-final-newline' (*note
+     require-final-newline: Saving Buffers.) are also disabled.
+
+     Note that if Emacs already has a buffer visiting the same file
+     non-literally, it will not visit the same file literally, but
+     instead just switch to the existing buffer.  If you want to be
+     sure of accessing a file's contents literally, you should create a
+     temporary buffer and then read the file contents into it using
+     `insert-file-contents-literally' (*note Reading from Files::).
 
  -- Function: find-file-noselect filename &optional nowarn rawfile
           wildcards
@@ -3123,6 +3770,16 @@ temporary buffer.  Visiting the file is not necessary and takes longer.
 
      This is not a normal hook because the values of the functions are
      used, and in many cases only some of the functions are called.
+
+ -- Variable: find-file-literally
+     This buffer-local variable, if set to a non-`nil' value, makes
+     `save-buffer' behave as if the buffer were visiting its file
+     literally, i.e. without conversions of any kind.  The command
+     `find-file-literally' sets this variable's local value, but other
+     equivalent functions and commands can do that as well, e.g. to
+     avoid automatic addition of a newline at the end of the file.
+     This variable us permanent local, so it is unaffected by changes
+     of major modes.
 
 
 File: elisp,  Node: Subroutines of Visiting,  Prev: Visiting Functions,  Up: Visiting Files
@@ -3610,7 +4267,7 @@ all exist as actual files or directories unless otherwise noted.
 
 * Testing Accessibility::   Is a given file readable?  Writable?
 * Kinds of Files::          Is it a directory?  A symbolic link?
-* Truenames::		    Eliminating symbolic links from a file name.
+* Truenames::               Eliminating symbolic links from a file name.
 * File Attributes::         How large is it?  Any other names?  Etc.
 * Locating Files::          How to find a file in standard places.
 
@@ -4535,45 +5192,19 @@ Don't try concatenating a slash by hand, as in
 
 because this is not portable.  Always use `file-name-as-directory'.
 
-   Directory name abbreviations are useful for directories that are
-normally accessed through symbolic links.  Sometimes the users recognize
-primarily the link's name as "the name" of the directory, and find it
-annoying to see the directory's "real" name.  If you define the link
-name as an abbreviation for the "real" name, Emacs shows users the
-abbreviation instead.
-
- -- User Option: directory-abbrev-alist
-     The variable `directory-abbrev-alist' contains an alist of
-     abbreviations to use for file directories.  Each element has the
-     form `(FROM . TO)', and says to replace FROM with TO when it
-     appears in a directory name.  The FROM string is actually a
-     regular expression; it should always start with `^'.  The TO
-     string should be an ordinary absolute directory name.  Do not use
-     `~' to stand for a home directory in that string.  The function
-     `abbreviate-file-name' performs these substitutions.
-
-     You can set this variable in `site-init.el' to describe the
-     abbreviations appropriate for your site.
-
-     Here's an example, from a system on which file system `/home/fsf'
-     and so on are normally accessed through symbolic links named `/fsf'
-     and so on.
-
-          (("^/home/fsf" . "/fsf")
-           ("^/home/gp" . "/gp")
-           ("^/home/gd" . "/gd"))
-
    To convert a directory name to its abbreviation, use this function:
 
  -- Function: abbreviate-file-name filename
-     This function applies abbreviations from `directory-abbrev-alist'
-     to its argument, and also substitutes `~' for the user's home
-     directory if the argument names a file in the home directory or
-     one of its subdirectories.  (If the home directory is a root
-     directory, it is not replaced with `~', because this does not make
-     the result shorter on many systems.)  You can use it for directory
-     names and for file names, because it recognizes abbreviations even
-     as part of the name.
+     This function returns an abbreviated form of FILENAME.  It applies
+     the abbreviations specified in `directory-abbrev-alist' (*note
+     File Aliases: (emacs)File Aliases.), then substitutes `~' for the
+     user's home directory if the argument names a file in the home
+     directory or one of its subdirectories.  If the home directory is
+     a root directory, it is not replaced with `~', because this does
+     not make the result shorter on many systems.
+
+     You can use this function for directory names and for file names,
+     because it recognizes abbreviations even as part of the name.
 
 
 File: elisp,  Node: File Name Expansion,  Next: Unique File Names,  Prev: Directory Names,  Up: File Names
@@ -5662,10 +6293,8 @@ File: elisp,  Node: Making Backups,  Next: Rename or Copy,  Up: Backup Files
      save disk space.  (You would put this code in your init file.)
 
           (add-hook 'rmail-mode-hook
-                    (function (lambda ()
-                                (make-local-variable
-                                 'make-backup-files)
-                                (setq make-backup-files nil))))
+                    (lambda ()
+                      (set (make-local-variable 'make-backup-files) nil)))
 
  -- Variable: backup-enable-predicate
      This variable's value is a function to be called on certain
@@ -5939,795 +6568,4 @@ If you change one, you probably need to change the rest.
 
      Some file comparison commands use this function so that they can
      automatically compare a file with its most recent backup.
-
-
-File: elisp,  Node: Auto-Saving,  Next: Reverting,  Prev: Backup Files,  Up: Backups and Auto-Saving
-
-26.2 Auto-Saving
-================
-
-Emacs periodically saves all files that you are visiting; this is
-called "auto-saving".  Auto-saving prevents you from losing more than a
-limited amount of work if the system crashes.  By default, auto-saves
-happen every 300 keystrokes, or after around 30 seconds of idle time.
-*Note Auto Save: (emacs)Auto Save, for information on auto-save for
-users.  Here we describe the functions used to implement auto-saving
-and the variables that control them.
-
- -- Variable: buffer-auto-save-file-name
-     This buffer-local variable is the name of the file used for
-     auto-saving the current buffer.  It is `nil' if the buffer should
-     not be auto-saved.
-
-          buffer-auto-save-file-name
-               => "/xcssun/users/rms/lewis/#backups.texi#"
-
- -- Command: auto-save-mode arg
-     When used interactively without an argument, this command is a
-     toggle switch: it turns on auto-saving of the current buffer if it
-     is off, and vice versa.  With an argument ARG, the command turns
-     auto-saving on if the value of ARG is `t', a nonempty list, or a
-     positive integer.  Otherwise, it turns auto-saving off.
-
- -- Function: auto-save-file-name-p filename
-     This function returns a non-`nil' value if FILENAME is a string
-     that could be the name of an auto-save file.  It assumes the usual
-     naming convention for auto-save files: a name that begins and ends
-     with hash marks (`#') is a possible auto-save file name.  The
-     argument FILENAME should not contain a directory part.
-
-          (make-auto-save-file-name)
-               => "/xcssun/users/rms/lewis/#backups.texi#"
-          (auto-save-file-name-p "#backups.texi#")
-               => 0
-          (auto-save-file-name-p "backups.texi")
-               => nil
-
-     The standard definition of this function is as follows:
-
-          (defun auto-save-file-name-p (filename)
-            "Return non-nil if FILENAME can be yielded by..."
-            (string-match "^#.*#$" filename))
-
-     This function exists so that you can customize it if you wish to
-     change the naming convention for auto-save files.  If you redefine
-     it, be sure to redefine the function `make-auto-save-file-name'
-     correspondingly.
-
- -- Function: make-auto-save-file-name
-     This function returns the file name to use for auto-saving the
-     current buffer.  This is just the file name with hash marks (`#')
-     prepended and appended to it.  This function does not look at the
-     variable `auto-save-visited-file-name' (described below); callers
-     of this function should check that variable first.
-
-          (make-auto-save-file-name)
-               => "/xcssun/users/rms/lewis/#backups.texi#"
-
-     Here is a simplified version of the standard definition of this
-     function:
-
-          (defun make-auto-save-file-name ()
-            "Return file name to use for auto-saves \
-          of current buffer.."
-            (if buffer-file-name
-                (concat
-                 (file-name-directory buffer-file-name)
-                 "#"
-                 (file-name-nondirectory buffer-file-name)
-                 "#")
-              (expand-file-name
-               (concat "#%" (buffer-name) "#"))))
-
-     This exists as a separate function so that you can redefine it to
-     customize the naming convention for auto-save files.  Be sure to
-     change `auto-save-file-name-p' in a corresponding way.
-
- -- User Option: auto-save-visited-file-name
-     If this variable is non-`nil', Emacs auto-saves buffers in the
-     files they are visiting.  That is, the auto-save is done in the
-     same file that you are editing.  Normally, this variable is `nil',
-     so auto-save files have distinct names that are created by
-     `make-auto-save-file-name'.
-
-     When you change the value of this variable, the new value does not
-     take effect in an existing buffer until the next time auto-save
-     mode is reenabled in it.  If auto-save mode is already enabled,
-     auto-saves continue to go in the same file name until
-     `auto-save-mode' is called again.
-
- -- Function: recent-auto-save-p
-     This function returns `t' if the current buffer has been
-     auto-saved since the last time it was read in or saved.
-
- -- Function: set-buffer-auto-saved
-     This function marks the current buffer as auto-saved.  The buffer
-     will not be auto-saved again until the buffer text is changed
-     again.  The function returns `nil'.
-
- -- User Option: auto-save-interval
-     The value of this variable specifies how often to do auto-saving,
-     in terms of number of input events.  Each time this many
-     additional input events are read, Emacs does auto-saving for all
-     buffers in which that is enabled.  Setting this to zero disables
-     autosaving based on the number of characters typed.
-
- -- User Option: auto-save-timeout
-     The value of this variable is the number of seconds of idle time
-     that should cause auto-saving.  Each time the user pauses for this
-     long, Emacs does auto-saving for all buffers in which that is
-     enabled.  (If the current buffer is large, the specified timeout
-     is multiplied by a factor that increases as the size increases;
-     for a million-byte buffer, the factor is almost 4.)
-
-     If the value is zero or `nil', then auto-saving is not done as a
-     result of idleness, only after a certain number of input events as
-     specified by `auto-save-interval'.
-
- -- Variable: auto-save-hook
-     This normal hook is run whenever an auto-save is about to happen.
-
- -- User Option: auto-save-default
-     If this variable is non-`nil', buffers that are visiting files
-     have auto-saving enabled by default.  Otherwise, they do not.
-
- -- Command: do-auto-save &optional no-message current-only
-     This function auto-saves all buffers that need to be auto-saved.
-     It saves all buffers for which auto-saving is enabled and that
-     have been changed since the previous auto-save.
-
-     If any buffers are auto-saved, `do-auto-save' normally displays a
-     message saying `Auto-saving...' in the echo area while auto-saving
-     is going on.  However, if NO-MESSAGE is non-`nil', the message is
-     inhibited.
-
-     If CURRENT-ONLY is non-`nil', only the current buffer is
-     auto-saved.
-
- -- Function: delete-auto-save-file-if-necessary &optional force
-     This function deletes the current buffer's auto-save file if
-     `delete-auto-save-files' is non-`nil'.  It is called every time a
-     buffer is saved.
-
-     Unless FORCE is non-`nil', this function only deletes the file if
-     it was written by the current Emacs session since the last true
-     save.
-
- -- User Option: delete-auto-save-files
-     This variable is used by the function
-     `delete-auto-save-file-if-necessary'.  If it is non-`nil', Emacs
-     deletes auto-save files when a true save is done (in the visited
-     file).  This saves disk space and unclutters your directory.
-
- -- Function: rename-auto-save-file
-     This function adjusts the current buffer's auto-save file name if
-     the visited file name has changed.  It also renames an existing
-     auto-save file, if it was made in the current Emacs session.  If
-     the visited file name has not changed, this function does nothing.
-
- -- Variable: buffer-saved-size
-     The value of this buffer-local variable is the length of the
-     current buffer, when it was last read in, saved, or auto-saved.
-     This is used to detect a substantial decrease in size, and turn
-     off auto-saving in response.
-
-     If it is -1, that means auto-saving is temporarily shut off in
-     this buffer due to a substantial decrease in size.  Explicitly
-     saving the buffer stores a positive value in this variable, thus
-     reenabling auto-saving.  Turning auto-save mode off or on also
-     updates this variable, so that the substantial decrease in size is
-     forgotten.
-
-     If it is -2, that means this buffer should disregard changes in
-     buffer size; in particular, it should not shut off auto-saving
-     temporarily due to changes in buffer size.
-
- -- Variable: auto-save-list-file-name
-     This variable (if non-`nil') specifies a file for recording the
-     names of all the auto-save files.  Each time Emacs does
-     auto-saving, it writes two lines into this file for each buffer
-     that has auto-saving enabled.  The first line gives the name of
-     the visited file (it's empty if the buffer has none), and the
-     second gives the name of the auto-save file.
-
-     When Emacs exits normally, it deletes this file; if Emacs crashes,
-     you can look in the file to find all the auto-save files that
-     might contain work that was otherwise lost.  The `recover-session'
-     command uses this file to find them.
-
-     The default name for this file specifies your home directory and
-     starts with `.saves-'.  It also contains the Emacs process ID and
-     the host name.
-
- -- User Option: auto-save-list-file-prefix
-     After Emacs reads your init file, it initializes
-     `auto-save-list-file-name' (if you have not already set it
-     non-`nil') based on this prefix, adding the host name and process
-     ID.  If you set this to `nil' in your init file, then Emacs does
-     not initialize `auto-save-list-file-name'.
-
-
-File: elisp,  Node: Reverting,  Prev: Auto-Saving,  Up: Backups and Auto-Saving
-
-26.3 Reverting
-==============
-
-If you have made extensive changes to a file and then change your mind
-about them, you can get rid of them by reading in the previous version
-of the file with the `revert-buffer' command.  *Note Reverting a
-Buffer: (emacs)Reverting.
-
- -- Command: revert-buffer &optional ignore-auto noconfirm
-          preserve-modes
-     This command replaces the buffer text with the text of the visited
-     file on disk.  This action undoes all changes since the file was
-     visited or saved.
-
-     By default, if the latest auto-save file is more recent than the
-     visited file, and the argument IGNORE-AUTO is `nil',
-     `revert-buffer' asks the user whether to use that auto-save
-     instead.  When you invoke this command interactively, IGNORE-AUTO
-     is `t' if there is no numeric prefix argument; thus, the
-     interactive default is not to check the auto-save file.
-
-     Normally, `revert-buffer' asks for confirmation before it changes
-     the buffer; but if the argument NOCONFIRM is non-`nil',
-     `revert-buffer' does not ask for confirmation.
-
-     Normally, this command reinitializes the buffer's major and minor
-     modes using `normal-mode'.  But if PRESERVE-MODES is non-`nil',
-     the modes remain unchanged.
-
-     Reverting tries to preserve marker positions in the buffer by
-     using the replacement feature of `insert-file-contents'.  If the
-     buffer contents and the file contents are identical before the
-     revert operation, reverting preserves all the markers.  If they
-     are not identical, reverting does change the buffer; in that case,
-     it preserves the markers in the unchanged text (if any) at the
-     beginning and end of the buffer.  Preserving any additional
-     markers would be problematical.
-
-   You can customize how `revert-buffer' does its work by setting the
-variables described in the rest of this section.
-
- -- User Option: revert-without-query
-     This variable holds a list of files that should be reverted without
-     query.  The value is a list of regular expressions.  If the
-     visited file name matches one of these regular expressions, and
-     the file has changed on disk but the buffer is not modified, then
-     `revert-buffer' reverts the file without asking the user for
-     confirmation.
-
-   Some major modes customize `revert-buffer' by making buffer-local
-bindings for these variables:
-
- -- Variable: revert-buffer-function
-     The value of this variable is the function to use to revert this
-     buffer.  If non-`nil', it should be a function with two optional
-     arguments to do the work of reverting.  The two optional arguments,
-     IGNORE-AUTO and NOCONFIRM, are the arguments that `revert-buffer'
-     received.  If the value is `nil', reverting works the usual way.
-
-     Modes such as Dired mode, in which the text being edited does not
-     consist of a file's contents but can be regenerated in some other
-     fashion, can give this variable a buffer-local value that is a
-     function to regenerate the contents.
-
- -- Variable: revert-buffer-insert-file-contents-function
-     The value of this variable, if non-`nil', specifies the function
-     to use to insert the updated contents when reverting this buffer.
-     The function receives two arguments: first the file name to use;
-     second, `t' if the user has asked to read the auto-save file.
-
-     The reason for a mode to set this variable instead of
-     `revert-buffer-function' is to avoid duplicating or replacing the
-     rest of what `revert-buffer' does: asking for confirmation,
-     clearing the undo list, deciding the proper major mode, and
-     running the hooks listed below.
-
- -- Variable: before-revert-hook
-     This normal hook is run by `revert-buffer' before inserting the
-     modified contents--but only if `revert-buffer-function' is `nil'.
-
- -- Variable: after-revert-hook
-     This normal hook is run by `revert-buffer' after inserting the
-     modified contents--but only if `revert-buffer-function' is `nil'.
-
-
-File: elisp,  Node: Buffers,  Next: Windows,  Prev: Backups and Auto-Saving,  Up: Top
-
-27 Buffers
-**********
-
-A "buffer" is a Lisp object containing text to be edited.  Buffers are
-used to hold the contents of files that are being visited; there may
-also be buffers that are not visiting files.  While several buffers may
-exist at one time, only one buffer is designated the "current buffer"
-at any time.  Most editing commands act on the contents of the current
-buffer.  Each buffer, including the current buffer, may or may not be
-displayed in any windows.
-
-* Menu:
-
-* Buffer Basics::       What is a buffer?
-* Current Buffer::      Designating a buffer as current
-                          so that primitives will access its contents.
-* Buffer Names::        Accessing and changing buffer names.
-* Buffer File Name::    The buffer file name indicates which file is visited.
-* Buffer Modification:: A buffer is "modified" if it needs to be saved.
-* Modification Time::   Determining whether the visited file was changed
-                         ``behind Emacs's back''.
-* Read Only Buffers::   Modifying text is not allowed in a read-only buffer.
-* The Buffer List::     How to look at all the existing buffers.
-* Creating Buffers::    Functions that create buffers.
-* Killing Buffers::     Buffers exist until explicitly killed.
-* Indirect Buffers::    An indirect buffer shares text with some other buffer.
-* Swapping Text::       Swapping text between two buffers.
-* Buffer Gap::          The gap in the buffer.
-
-
-File: elisp,  Node: Buffer Basics,  Next: Current Buffer,  Up: Buffers
-
-27.1 Buffer Basics
-==================
-
-A "buffer" is a Lisp object containing text to be edited.  Buffers are
-used to hold the contents of files that are being visited; there may
-also be buffers that are not visiting files.  Although several buffers
-normally exist, only one buffer is designated the "current buffer" at
-any time.  Most editing commands act on the contents of the current
-buffer.  Each buffer, including the current buffer, may or may not be
-displayed in any windows.
-
-Buffers in Emacs editing are objects that have distinct names and hold
-text that can be edited.  Buffers appear to Lisp programs as a special
-data type.  You can think of the contents of a buffer as a string that
-you can extend; insertions and deletions may occur in any part of the
-buffer.  *Note Text::.
-
-   A Lisp buffer object contains numerous pieces of information.  Some
-of this information is directly accessible to the programmer through
-variables, while other information is accessible only through
-special-purpose functions.  For example, the visited file name is
-directly accessible through a variable, while the value of point is
-accessible only through a primitive function.
-
-   Buffer-specific information that is directly accessible is stored in
-"buffer-local" variable bindings, which are variable values that are
-effective only in a particular buffer.  This feature allows each buffer
-to override the values of certain variables.  Most major modes override
-variables such as `fill-column' or `comment-column' in this way.  For
-more information about buffer-local variables and functions related to
-them, see *note Buffer-Local Variables::.
-
-   For functions and variables related to visiting files in buffers, see
-*note Visiting Files:: and *note Saving Buffers::.  For functions and
-variables related to the display of buffers in windows, see *note
-Buffers and Windows::.
-
- -- Function: bufferp object
-     This function returns `t' if OBJECT is a buffer, `nil' otherwise.
-
-
-File: elisp,  Node: Current Buffer,  Next: Buffer Names,  Prev: Buffer Basics,  Up: Buffers
-
-27.2 The Current Buffer
-=======================
-
-There are, in general, many buffers in an Emacs session.  At any time,
-one of them is designated as the "current buffer".  This is the buffer
-in which most editing takes place, because most of the primitives for
-examining or changing text in a buffer operate implicitly on the
-current buffer (*note Text::).  Normally the buffer that is displayed on
-the screen in the selected window is the current buffer, but this is not
-always so: a Lisp program can temporarily designate any buffer as
-current in order to operate on its contents, without changing what is
-displayed on the screen.
-
-   The way to designate a current buffer in a Lisp program is by calling
-`set-buffer'.  The specified buffer remains current until a new one is
-designated.
-
-   When an editing command returns to the editor command loop, the
-command loop designates the buffer displayed in the selected window as
-current, to prevent confusion: the buffer that the cursor is in when
-Emacs reads a command is the buffer that the command will apply to.
-(*Note Command Loop::.)  Therefore, `set-buffer' is not the way to
-switch visibly to a different buffer so that the user can edit it.  For
-that, you must use the functions described in *note Displaying
-Buffers::.
-
-   *Warning:* Lisp functions that change to a different current buffer
-should not depend on the command loop to set it back afterwards.
-Editing commands written in Emacs Lisp can be called from other programs
-as well as from the command loop; it is convenient for the caller if
-the subroutine does not change which buffer is current (unless, of
-course, that is the subroutine's purpose).  Therefore, you should
-normally use `set-buffer' within a `save-current-buffer' or
-`save-excursion' (*note Excursions::) form that will restore the
-current buffer when your function is done.  Here, as an example, is a
-simplified version of the command `append-to-buffer':
-
-     (defun append-to-buffer (buffer start end)
-       "Append to specified buffer the text of the region."
-       (interactive "BAppend to buffer: \nr")
-       (let ((oldbuf (current-buffer)))
-         (save-current-buffer
-           (set-buffer (get-buffer-create buffer))
-           (insert-buffer-substring oldbuf start end))))
-
-This function binds a local variable to record the current buffer, and
-then `save-current-buffer' arranges to make it current again.  Next,
-`set-buffer' makes the specified buffer current.  Finally,
-`insert-buffer-substring' copies the string from the original current
-buffer to the specified (and now current) buffer.
-
-   If the buffer appended to happens to be displayed in some window,
-the next redisplay will show how its text has changed.  Otherwise, you
-will not see the change immediately on the screen.  The buffer becomes
-current temporarily during the execution of the command, but this does
-not cause it to be displayed.
-
-   If you make local bindings (with `let' or function arguments) for a
-variable that may also have buffer-local bindings, make sure that the
-same buffer is current at the beginning and at the end of the local
-binding's scope.  Otherwise you might bind it in one buffer and unbind
-it in another!  There are two ways to do this.  In simple cases, you may
-see that nothing ever changes the current buffer within the scope of the
-binding.  Otherwise, use `save-current-buffer' or `save-excursion' to
-make sure that the buffer current at the beginning is current again
-whenever the variable is unbound.
-
-   Do not rely on using `set-buffer' to change the current buffer back,
-because that won't do the job if a quit happens while the wrong buffer
-is current.  For instance, in the previous example, it would have been
-wrong to do this:
-
-       (let ((oldbuf (current-buffer)))
-         (set-buffer (get-buffer-create buffer))
-         (insert-buffer-substring oldbuf start end)
-         (set-buffer oldbuf))
-
-Using `save-current-buffer', as we did, handles quitting, errors, and
-`throw', as well as ordinary evaluation.
-
- -- Function: current-buffer
-     This function returns the current buffer.
-
-          (current-buffer)
-               => #<buffer buffers.texi>
-
- -- Function: set-buffer buffer-or-name
-     This function makes BUFFER-OR-NAME the current buffer.
-     BUFFER-OR-NAME must be an existing buffer or the name of an
-     existing buffer.  The return value is the buffer made current.
-
-     This function does not display the buffer in any window, so the
-     user cannot necessarily see the buffer.  But Lisp programs will
-     now operate on it.
-
- -- Special Form: save-current-buffer body...
-     The `save-current-buffer' special form saves the identity of the
-     current buffer, evaluates the BODY forms, and finally restores
-     that buffer as current.  The return value is the value of the last
-     form in BODY.  The current buffer is restored even in case of an
-     abnormal exit via `throw' or error (*note Nonlocal Exits::).
-
-     If the buffer that used to be current has been killed by the time
-     of exit from `save-current-buffer', then it is not made current
-     again, of course.  Instead, whichever buffer was current just
-     before exit remains current.
-
- -- Macro: with-current-buffer buffer-or-name body...
-     The `with-current-buffer' macro saves the identity of the current
-     buffer, makes BUFFER-OR-NAME current, evaluates the BODY forms,
-     and finally restores the current buffer.  BUFFER-OR-NAME must
-     specify an existing buffer or the name of an existing buffer.
-
-     The return value is the value of the last form in BODY.  The
-     current buffer is restored even in case of an abnormal exit via
-     `throw' or error (*note Nonlocal Exits::).
-
- -- Macro: with-temp-buffer body...
-     The `with-temp-buffer' macro evaluates the BODY forms with a
-     temporary buffer as the current buffer.  It saves the identity of
-     the current buffer, creates a temporary buffer and makes it
-     current, evaluates the BODY forms, and finally restores the
-     previous current buffer while killing the temporary buffer.  By
-     default, undo information (*note Undo::) is not recorded in the
-     buffer created by this macro (but BODY can enable that, if needed).
-
-     The return value is the value of the last form in BODY.  You can
-     return the contents of the temporary buffer by using
-     `(buffer-string)' as the last form.
-
-     The current buffer is restored even in case of an abnormal exit via
-     `throw' or error (*note Nonlocal Exits::).
-
-     See also `with-temp-file' in *note Writing to Files: Definition of
-     with-temp-file.
-
-
-File: elisp,  Node: Buffer Names,  Next: Buffer File Name,  Prev: Current Buffer,  Up: Buffers
-
-27.3 Buffer Names
-=================
-
-Each buffer has a unique name, which is a string.  Many of the
-functions that work on buffers accept either a buffer or a buffer name
-as an argument.  Any argument called BUFFER-OR-NAME is of this sort,
-and an error is signaled if it is neither a string nor a buffer.  Any
-argument called BUFFER must be an actual buffer object, not a name.
-
-   Buffers that are ephemeral and generally uninteresting to the user
-have names starting with a space, so that the `list-buffers' and
-`buffer-menu' commands don't mention them (but if such a buffer visits
-a file, it *is* mentioned).  A name starting with space also initially
-disables recording undo information; see *note Undo::.
-
- -- Function: buffer-name &optional buffer
-     This function returns the name of BUFFER as a string.  BUFFER
-     defaults to the current buffer.
-
-     If `buffer-name' returns `nil', it means that BUFFER has been
-     killed.  *Note Killing Buffers::.
-
-          (buffer-name)
-               => "buffers.texi"
-
-          (setq foo (get-buffer "temp"))
-               => #<buffer temp>
-          (kill-buffer foo)
-               => nil
-          (buffer-name foo)
-               => nil
-          foo
-               => #<killed buffer>
-
- -- Command: rename-buffer newname &optional unique
-     This function renames the current buffer to NEWNAME.  An error is
-     signaled if NEWNAME is not a string.
-
-     Ordinarily, `rename-buffer' signals an error if NEWNAME is already
-     in use.  However, if UNIQUE is non-`nil', it modifies NEWNAME to
-     make a name that is not in use.  Interactively, you can make
-     UNIQUE non-`nil' with a numeric prefix argument.  (This is how the
-     command `rename-uniquely' is implemented.)
-
-     This function returns the name actually given to the buffer.
-
- -- Function: get-buffer buffer-or-name
-     This function returns the buffer specified by BUFFER-OR-NAME.  If
-     BUFFER-OR-NAME is a string and there is no buffer with that name,
-     the value is `nil'.  If BUFFER-OR-NAME is a buffer, it is returned
-     as given; that is not very useful, so the argument is usually a
-     name.  For example:
-
-          (setq b (get-buffer "lewis"))
-               => #<buffer lewis>
-          (get-buffer b)
-               => #<buffer lewis>
-          (get-buffer "Frazzle-nots")
-               => nil
-
-     See also the function `get-buffer-create' in *note Creating
-     Buffers::.
-
- -- Function: generate-new-buffer-name starting-name &optional ignore
-     This function returns a name that would be unique for a new
-     buffer--but does not create the buffer.  It starts with
-     STARTING-NAME, and produces a name not currently in use for any
-     buffer by appending a number inside of `<...>'.  It starts at 2
-     and keeps incrementing the number until it is not the name of an
-     existing buffer.
-
-     If the optional second argument IGNORE is non-`nil', it should be
-     a string, a potential buffer name.  It means to consider that
-     potential buffer acceptable, if it is tried, even it is the name
-     of an existing buffer (which would normally be rejected).  Thus, if
-     buffers named `foo', `foo<2>', `foo<3>' and `foo<4>' exist,
-
-          (generate-new-buffer-name "foo")
-               => "foo<5>"
-          (generate-new-buffer-name "foo" "foo<3>")
-               => "foo<3>"
-          (generate-new-buffer-name "foo" "foo<6>")
-               => "foo<5>"
-
-     See the related function `generate-new-buffer' in *note Creating
-     Buffers::.
-
-
-File: elisp,  Node: Buffer File Name,  Next: Buffer Modification,  Prev: Buffer Names,  Up: Buffers
-
-27.4 Buffer File Name
-=====================
-
-The "buffer file name" is the name of the file that is visited in that
-buffer.  When a buffer is not visiting a file, its buffer file name is
-`nil'.  Most of the time, the buffer name is the same as the
-nondirectory part of the buffer file name, but the buffer file name and
-the buffer name are distinct and can be set independently.  *Note
-Visiting Files::.
-
- -- Function: buffer-file-name &optional buffer
-     This function returns the absolute file name of the file that
-     BUFFER is visiting.  If BUFFER is not visiting any file,
-     `buffer-file-name' returns `nil'.  If BUFFER is not supplied, it
-     defaults to the current buffer.
-
-          (buffer-file-name (other-buffer))
-               => "/usr/user/lewis/manual/files.texi"
-
- -- Variable: buffer-file-name
-     This buffer-local variable contains the name of the file being
-     visited in the current buffer, or `nil' if it is not visiting a
-     file.  It is a permanent local variable, unaffected by
-     `kill-all-local-variables'.
-
-          buffer-file-name
-               => "/usr/user/lewis/manual/buffers.texi"
-
-     It is risky to change this variable's value without doing various
-     other things.  Normally it is better to use
-     `set-visited-file-name' (see below); some of the things done
-     there, such as changing the buffer name, are not strictly
-     necessary, but others are essential to avoid confusing Emacs.
-
- -- Variable: buffer-file-truename
-     This buffer-local variable holds the abbreviated truename of the
-     file visited in the current buffer, or `nil' if no file is visited.
-     It is a permanent local, unaffected by `kill-all-local-variables'.
-     *Note Truenames::, and *note Definition of abbreviate-file-name::.
-
- -- Variable: buffer-file-number
-     This buffer-local variable holds the file number and directory
-     device number of the file visited in the current buffer, or `nil'
-     if no file or a nonexistent file is visited.  It is a permanent
-     local, unaffected by `kill-all-local-variables'.
-
-     The value is normally a list of the form `(FILENUM DEVNUM)'.  This
-     pair of numbers uniquely identifies the file among all files
-     accessible on the system.  See the function `file-attributes', in
-     *note File Attributes::, for more information about them.
-
-     If `buffer-file-name' is the name of a symbolic link, then both
-     numbers refer to the recursive target.
-
- -- Function: get-file-buffer filename
-     This function returns the buffer visiting file FILENAME.  If there
-     is no such buffer, it returns `nil'.  The argument FILENAME, which
-     must be a string, is expanded (*note File Name Expansion::), then
-     compared against the visited file names of all live buffers.  Note
-     that the buffer's `buffer-file-name' must match the expansion of
-     FILENAME exactly.  This function will not recognize other names
-     for the same file.
-
-          (get-file-buffer "buffers.texi")
-              => #<buffer buffers.texi>
-
-     In unusual circumstances, there can be more than one buffer
-     visiting the same file name.  In such cases, this function returns
-     the first such buffer in the buffer list.
-
- -- Function: find-buffer-visiting filename &optional predicate
-     This is like `get-file-buffer', except that it can return any
-     buffer visiting the file _possibly under a different name_.  That
-     is, the buffer's `buffer-file-name' does not need to match the
-     expansion of FILENAME exactly, it only needs to refer to the same
-     file.  If PREDICATE is non-`nil', it should be a function of one
-     argument, a buffer visiting FILENAME.  The buffer is only
-     considered a suitable return value if PREDICATE returns non-`nil'.
-     If it can not find a suitable buffer to return,
-     `find-buffer-visiting' returns `nil'.
-
- -- Command: set-visited-file-name filename &optional no-query
-          along-with-file
-     If FILENAME is a non-empty string, this function changes the name
-     of the file visited in the current buffer to FILENAME.  (If the
-     buffer had no visited file, this gives it one.)  The _next time_
-     the buffer is saved it will go in the newly-specified file.
-
-     This command marks the buffer as modified, since it does not (as
-     far as Emacs knows) match the contents of FILENAME, even if it
-     matched the former visited file.  It also renames the buffer to
-     correspond to the new file name, unless the new name is already in
-     use.
-
-     If FILENAME is `nil' or the empty string, that stands for "no
-     visited file."  In this case, `set-visited-file-name' marks the
-     buffer as having no visited file, without changing the buffer's
-     modified flag.
-
-     Normally, this function asks the user for confirmation if there
-     already is a buffer visiting FILENAME.  If NO-QUERY is non-`nil',
-     that prevents asking this question.  If there already is a buffer
-     visiting FILENAME, and the user confirms or QUERY is non-`nil',
-     this function makes the new buffer name unique by appending a
-     number inside of `<...>' to FILENAME.
-
-     If ALONG-WITH-FILE is non-`nil', that means to assume that the
-     former visited file has been renamed to FILENAME.  In this case,
-     the command does not change the buffer's modified flag, nor the
-     buffer's recorded last file modification time as reported by
-     `visited-file-modtime' (*note Modification Time::).  If
-     ALONG-WITH-FILE is `nil', this function clears the recorded last
-     file modification time, after which `visited-file-modtime' returns
-     zero.
-
-     When the function `set-visited-file-name' is called interactively,
-     it prompts for FILENAME in the minibuffer.
-
- -- Variable: list-buffers-directory
-     This buffer-local variable specifies a string to display in a
-     buffer listing where the visited file name would go, for buffers
-     that don't have a visited file name.  Dired buffers use this
-     variable.
-
-
-File: elisp,  Node: Buffer Modification,  Next: Modification Time,  Prev: Buffer File Name,  Up: Buffers
-
-27.5 Buffer Modification
-========================
-
-Emacs keeps a flag called the "modified flag" for each buffer, to
-record whether you have changed the text of the buffer.  This flag is
-set to `t' whenever you alter the contents of the buffer, and cleared
-to `nil' when you save it.  Thus, the flag shows whether there are
-unsaved changes.  The flag value is normally shown in the mode line
-(*note Mode Line Variables::), and controls saving (*note Saving
-Buffers::) and auto-saving (*note Auto-Saving::).
-
-   Some Lisp programs set the flag explicitly.  For example, the
-function `set-visited-file-name' sets the flag to `t', because the text
-does not match the newly-visited file, even if it is unchanged from the
-file formerly visited.
-
-   The functions that modify the contents of buffers are described in
-*note Text::.
-
- -- Function: buffer-modified-p &optional buffer
-     This function returns `t' if the buffer BUFFER has been modified
-     since it was last read in from a file or saved, or `nil'
-     otherwise.  If BUFFER is not supplied, the current buffer is
-     tested.
-
- -- Function: set-buffer-modified-p flag
-     This function marks the current buffer as modified if FLAG is
-     non-`nil', or as unmodified if the flag is `nil'.
-
-     Another effect of calling this function is to cause unconditional
-     redisplay of the mode line for the current buffer.  In fact, the
-     function `force-mode-line-update' works by doing this:
-
-          (set-buffer-modified-p (buffer-modified-p))
-
- -- Function: restore-buffer-modified-p flag
-     Like `set-buffer-modified-p', but does not force redisplay of mode
-     lines.
-
- -- Command: not-modified &optional arg
-     This command marks the current buffer as unmodified, and not
-     needing to be saved.  If ARG is non-`nil', it marks the buffer as
-     modified, so that it will be saved at the next suitable occasion.
-     Interactively, ARG is the prefix argument.
-
-     Don't use this function in programs, since it prints a message in
-     the echo area; use `set-buffer-modified-p' (above) instead.
-
- -- Function: buffer-modified-tick &optional buffer
-     This function returns BUFFER's modification-count.  This is a
-     counter that increments every time the buffer is modified.  If
-     BUFFER is `nil' (or omitted), the current buffer is used.  The
-     counter can wrap around occasionally.
-
- -- Function: buffer-chars-modified-tick &optional buffer
-     This function returns BUFFER's character-change modification-count.
-     Changes to text properties leave this counter unchanged; however,
-     each time text is inserted or removed from the buffer, the counter
-     is reset to the value that would be returned by
-     `buffer-modified-tick'.  By comparing the values returned by two
-     `buffer-chars-modified-tick' calls, you can tell whether a
-     character change occurred in that buffer in between the calls.  If
-     BUFFER is `nil' (or omitted), the current buffer is used.
 

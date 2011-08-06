@@ -1,5 +1,5 @@
 /* Functions for creating and updating GTK widgets.
-   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -2936,6 +2936,23 @@ xg_modify_menubar_widgets (menubar, f, val, deep_p,
   gtk_widget_show_all (menubar);
 }
 
+/* Callback called when the menu bar W is mapped.
+   Used to find the height of the menu bar if we didn't get it
+   after showing the widget.  */
+
+static void
+menubar_map_cb (GtkWidget *w, gpointer user_data)
+{
+  GtkRequisition req;
+  FRAME_PTR f = (FRAME_PTR) user_data;
+  gtk_widget_size_request (w, &req);
+  if (FRAME_MENUBAR_HEIGHT (f) != req.height) 
+    {
+      FRAME_MENUBAR_HEIGHT (f) = req.height;
+      xg_height_changed (f);
+    }
+}
+
 /* Recompute all the widgets of frame F, when the menu bar has been
    changed.  Value is non-zero if widgets were updated.  */
 
@@ -2958,10 +2975,19 @@ xg_update_frame_menubar (f)
                       FALSE, FALSE, 0);
   gtk_box_reorder_child (GTK_BOX (x->vbox_widget), x->menubar_widget, 0);
 
+  g_signal_connect (x->menubar_widget, "map", G_CALLBACK (menubar_map_cb), f);
   gtk_widget_show_all (x->menubar_widget);
   gtk_widget_size_request (x->menubar_widget, &req);
-  FRAME_MENUBAR_HEIGHT (f) = req.height;
-  xg_height_changed (f);
+  /* If menu bar doesn't know its height yet, cheat a little so the frame
+     doesn't jump so much when resized later in menubar_map_cb.  */
+  if (req.height == 0)
+    req.height = 23;
+
+  if (FRAME_MENUBAR_HEIGHT (f) != req.height)
+    {
+      FRAME_MENUBAR_HEIGHT (f) = req.height;
+      xg_height_changed (f);
+    }
   UNBLOCK_INPUT;
 
   return 1;
@@ -2988,6 +3014,55 @@ free_frame_menubar (f)
       xg_height_changed (f);
       UNBLOCK_INPUT;
     }
+}
+
+int
+xg_event_is_for_menubar (FRAME_PTR f, XEvent *event)
+{
+  struct x_output *x = f->output_data.x;
+  GList *iter;
+  GdkRectangle rec;
+  GList *list;
+  GdkDisplay *gdpy;
+  GdkWindow *gw;
+  GdkEvent gevent;
+  GtkWidget *gwdesc;
+
+  if (! x->menubar_widget) return 0;
+
+  if (! (event->xbutton.x >= 0
+         && event->xbutton.x < FRAME_PIXEL_WIDTH (f)
+         && event->xbutton.y >= 0
+         && event->xbutton.y < f->output_data.x->menubar_height
+         && event->xbutton.same_screen))
+    return 0;
+
+  gdpy = gdk_x11_lookup_xdisplay (FRAME_X_DISPLAY (f));
+  gw = gdk_xid_table_lookup_for_display (gdpy, event->xbutton.window);
+  if (! gw) return 0;
+  gevent.any.window = gw;
+  gwdesc = gtk_get_event_widget (&gevent);
+  if (! gwdesc) return 0;
+  if (! GTK_IS_MENU_BAR (gwdesc)
+      && ! GTK_IS_MENU_ITEM (gwdesc)
+      && ! gtk_widget_is_ancestor (x->menubar_widget, gwdesc))
+    return 0;
+
+  list = gtk_container_get_children (GTK_CONTAINER (x->menubar_widget));
+  if (! list) return 0;
+  rec.x = event->xbutton.x;
+  rec.y = event->xbutton.y;
+  rec.width = 1;
+  rec.height = 1;
+
+  for (iter = list ; iter; iter = g_list_next (iter))
+    {
+      GtkWidget *w = GTK_WIDGET (iter->data);
+      if (GTK_WIDGET_MAPPED (w) && gtk_widget_intersect (w, &rec, NULL))
+        break;
+    }
+  g_list_free (list);
+  return iter == 0 ? 0 : 1;
 }
 
 
@@ -3540,6 +3615,8 @@ xg_tool_bar_menu_proxy (toolitem, user_data)
       GtkImage *wimage = GTK_IMAGE (gtk_bin_get_child (GTK_BIN (wbutton)));
       GtkSettings *settings = gtk_widget_get_settings (GTK_WIDGET (wbutton));
       GtkImageType store_type = gtk_image_get_storage_type (wimage);
+
+      g_object_set (G_OBJECT (settings), "gtk-menu-images", TRUE, NULL);
 
       if (store_type == GTK_IMAGE_STOCK)
         {

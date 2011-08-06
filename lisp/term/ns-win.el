@@ -1,6 +1,6 @@
 ;;; ns-win.el --- lisp side of interface with NeXT/Open/GNUstep/MacOS X window system
 
-;; Copyright (C) 1993, 1994, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 1993, 1994, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Authors: Carl Edman
@@ -66,6 +66,7 @@
 ;; nsterm.m
 (defvar ns-version-string)
 (defvar ns-alternate-modifier)
+(defvar ns-right-alternate-modifier)
 
 ;;;; Command line argument handling.
 
@@ -286,6 +287,7 @@ The properties returned may include `top', `left', `height', and `width'."
 (defvaralias 'mac-command-modifier 'ns-command-modifier)
 (defvaralias 'mac-control-modifier 'ns-control-modifier)
 (defvaralias 'mac-option-modifier 'ns-option-modifier)
+(defvaralias 'mac-right-option-modifier 'ns-right-option-modifier)
 (defvaralias 'mac-function-modifier 'ns-function-modifier)
 (declare-function ns-do-applescript "nsfns.m" (script))
 (defalias 'do-applescript 'ns-do-applescript)
@@ -785,7 +787,8 @@ unless the current buffer is a scratch buffer."
   "Do a `find-file' with the `ns-input-file' as argument."
   (interactive)
   (let ((f) (file) (bufwin1) (bufwin2))
-    (setq f (file-truename (car ns-input-file)))
+    (setq f (file-truename (expand-file-name (car ns-input-file)
+					     command-line-default-directory)))
     (setq ns-input-file (cdr ns-input-file))
     (setq file (find-file-noselect f))
     (setq bufwin1 (get-buffer-window file 'visible))
@@ -817,6 +820,7 @@ unless the current buffer is a scratch buffer."
 
 ;; You say tomAYto, I say tomAHto..
 (defvaralias 'ns-option-modifier 'ns-alternate-modifier)
+(defvaralias 'ns-right-option-modifier 'ns-right-alternate-modifier)
 
 (defun ns-do-hide-emacs ()
   (interactive)

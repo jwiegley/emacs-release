@@ -1,5 +1,5 @@
 /* NeXT/Open/GNUstep / MacOSX communication module.
-   Copyright (C) 1989, 1993, 1994, 2005, 2006, 2008, 2009, 2010
+   Copyright (C) 1989, 1993, 1994, 2005, 2006, 2008, 2009, 2010, 2011
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -142,22 +142,27 @@ Lisp_Object ns_input_spi_name, ns_input_spi_arg;
 Lisp_Object Vx_toolkit_scroll_bars;
 static Lisp_Object Qmodifier_value;
 Lisp_Object Qalt, Qcontrol, Qhyper, Qmeta, Qsuper, Qnone;
-extern Lisp_Object Qcursor_color, Qcursor_type, Qns;
+extern Lisp_Object Qcursor_color, Qcursor_type, Qns, Qleft;
 
 /* Specifies which emacs modifier should be generated when NS receives
-   the Alternate modifer.  May be Qnone or any of the modifier lisp symbols. */
+   the Alternate modifier.  May be Qnone or any of the modifier lisp symbols. */
 Lisp_Object ns_alternate_modifier;
 
 /* Specifies which emacs modifier should be generated when NS receives
-   the Command modifer.  May be any of the modifier lisp symbols. */
+   the right Alternate modifier.  Has same values as ns_alternate_modifier plus
+   the value Qleft which means whatever value ns_alternate_modifier has.  */
+Lisp_Object ns_right_alternate_modifier;
+
+/* Specifies which emacs modifier should be generated when NS receives
+   the Command modifier.  May be any of the modifier lisp symbols. */
 Lisp_Object ns_command_modifier;
 
 /* Specifies which emacs modifier should be generated when NS receives
-   the Control modifer.  May be any of the modifier lisp symbols. */
+   the Control modifier.  May be any of the modifier lisp symbols. */
 Lisp_Object ns_control_modifier;
 
 /* Specifies which emacs modifier should be generated when NS receives
-   the Function modifer (laptops).  May be any of the modifier lisp symbols. */
+   the Function modifier (laptops).  May be any of the modifier lisp symbols. */
 Lisp_Object ns_function_modifier;
 
 /* Control via default 'GSFontAntiAlias' on OS X and GNUstep. */
@@ -218,12 +223,17 @@ static BOOL inNsSelect = 0;
 
 /* Convert modifiers in a NeXTSTEP event to emacs style modifiers.  */
 #define NS_FUNCTION_KEY_MASK 0x800000
+#define NSRightAlternateKeyMask (0x000040 | NSAlternateKeyMask)
 #define EV_MODIFIERS(e)                               \
     ((([e modifierFlags] & NSHelpKeyMask) ?           \
            hyper_modifier : 0)                        \
-     | (([e modifierFlags] & NSAlternateKeyMask) ?    \
+     | (!EQ (ns_right_alternate_modifier, Qleft) && \
+        (([e modifierFlags] & NSRightAlternateKeyMask) \
+         == NSRightAlternateKeyMask) ? \
+           parse_solitary_modifier (ns_right_alternate_modifier) : 0) \
+     | (([e modifierFlags] & NSAlternateKeyMask) ?                 \
            parse_solitary_modifier (ns_alternate_modifier) : 0)   \
-     | (([e modifierFlags] & NSShiftKeyMask) ?        \
+     | (([e modifierFlags] & NSShiftKeyMask) ?     \
            shift_modifier : 0)                        \
      | (([e modifierFlags] & NSControlKeyMask) ?      \
            parse_solitary_modifier (ns_control_modifier) : 0)     \
@@ -1072,16 +1082,31 @@ x_set_offset (struct frame *f, int xoff, int yoff, int change_grav)
 
   f->left_pos = xoff;
   f->top_pos = yoff;
-#ifdef NS_IMPL_GNUSTEP
-  if (xoff < 100)
-    f->left_pos = 100;  /* don't overlap menu */
-#endif
 
   if (view != nil && (screen = [[view window] screen]))
-    [[view window] setFrameTopLeftPoint:
-        NSMakePoint (SCREENMAXBOUND (f->left_pos),
-                     SCREENMAXBOUND ([screen frame].size.height
-                                     - NS_TOP_POS (f)))];
+    {
+      f->left_pos = f->size_hint_flags & XNegative
+        ? [screen visibleFrame].size.width + f->left_pos - FRAME_PIXEL_WIDTH (f)
+        : f->left_pos;
+      /* We use visibleFrame here to take menu bar into account.
+	 Ideally we should also adjust left/top with visibleFrame.offset.  */
+	 
+      f->top_pos = f->size_hint_flags & YNegative
+        ? ([screen visibleFrame].size.height + f->top_pos
+           - FRAME_PIXEL_HEIGHT (f) - FRAME_NS_TITLEBAR_HEIGHT (f)
+           - FRAME_TOOLBAR_HEIGHT (f))
+        : f->top_pos;
+#ifdef NS_IMPL_GNUSTEP
+      if (f->left_pos < 100)
+        f->left_pos = 100;  /* don't overlap menu */
+#endif
+      [[view window] setFrameTopLeftPoint:
+                       NSMakePoint (SCREENMAXBOUND (f->left_pos),
+                                    SCREENMAXBOUND ([screen frame].size.height
+                                                    - NS_TOP_POS (f)))];
+      f->size_hint_flags &= ~(XNegative|YNegative);
+    }
+
   UNBLOCK_INPUT;
 }
 
@@ -1138,15 +1163,15 @@ x_set_window_size (struct frame *f, int change_grav, int cols, int rows)
     /* NOTE: previously this would generate wrong result if toolbar not
              yet displayed and fixing toolbar_height=32 helped, but
              now (200903) seems no longer needed */
-    FRAME_NS_TOOLBAR_HEIGHT (f) =
+    FRAME_TOOLBAR_HEIGHT (f) =
       NSHeight ([window frameRectForContentRect: NSMakeRect (0, 0, 0, 0)])
         - FRAME_NS_TITLEBAR_HEIGHT (f);
   else
-    FRAME_NS_TOOLBAR_HEIGHT (f) = 0;
+    FRAME_TOOLBAR_HEIGHT (f) = 0;
 
   wr.size.width = pixelwidth + f->border_width;
   wr.size.height = pixelheight + FRAME_NS_TITLEBAR_HEIGHT (f) 
-                  + FRAME_NS_TOOLBAR_HEIGHT (f);
+                  + FRAME_TOOLBAR_HEIGHT (f);
 
   /* constrain to screen if we can */
   if (screen)
@@ -2177,20 +2202,7 @@ ns_draw_fringe_bitmap (struct window *w, struct glyph_row *row,
 
   /* Must clip because of partially visible lines.  */
   rowY = WINDOW_TO_FRAME_PIXEL_Y (w, row->y);
-  if (p->y < rowY)
-    {
-      /* Adjust position of "bottom aligned" bitmap on partially
-	 visible last row.  */
-      int oldY = row->y;
-      int oldVH = row->visible_height;
-      row->visible_height = p->h;
-      row->y -= rowY - p->y;
-      ns_clip_to_row (w, row, -1, NO);
-      row->y = oldY;
-      row->visible_height = oldVH;
-    }
-  else
-    ns_clip_to_row (w, row, -1, YES);
+  ns_clip_to_row (w, row, -1, YES);
 
   if (p->bx >= 0 && !p->overlay_p)
     {
@@ -2741,7 +2753,10 @@ ns_dumpglyphs_image (struct glyph_string *s, NSRect r)
   else
     face = FACE_FROM_ID (s->f, s->first_glyph->face_id);
 
-  [ns_lookup_indexed_color (NS_FACE_BACKGROUND (face), s->f) set];
+  if (s->hl == DRAW_CURSOR)
+      [FRAME_CURSOR_COLOR (s->f) set];
+  else
+    [ns_lookup_indexed_color (NS_FACE_BACKGROUND (face), s->f) set];
 
   if (bg_height > s->slice.height || s->img->hmargin || s->img->vmargin
       || s->img->mask || s->img->pixmap == 0 || s->width != s->background_width)
@@ -2803,6 +2818,16 @@ ns_dumpglyphs_image (struct glyph_string *s, NSRect r)
                       s->slice.y + s->slice.height == s->img->height,
                       s->slice.x == 0,
                       s->slice.x + s->slice.width == s->img->width, s);
+    }
+
+  /* If there is no mask, the background won't be seen,
+     so draw a rectangle on the image for the cursor.
+     Do this for all images, getting trancparency right is not reliable.  */
+  if (s->hl == DRAW_CURSOR)
+    {
+      int thickness = abs (s->img->relief);
+      if (thickness == 0) thickness = 1;
+      ns_draw_box (br, thickness, FRAME_CURSOR_COLOR (s->f), 1, 1);
     }
 }
 
@@ -4436,7 +4461,13 @@ ns_term_shutdown (int sig)
           emacs_event->modifiers |=
             parse_solitary_modifier (ns_function_modifier);
 
-      if (flags & NSAlternateKeyMask) /* default = meta */
+      if (!EQ (ns_right_alternate_modifier, Qleft)
+          && ((flags & NSRightAlternateKeyMask) == NSRightAlternateKeyMask)) 
+	{
+	  emacs_event->modifiers |= parse_solitary_modifier
+            (ns_right_alternate_modifier);
+	}
+      else if (flags & NSAlternateKeyMask) /* default = meta */
         {
           if ((NILP (ns_alternate_modifier) || EQ (ns_alternate_modifier, Qnone))
               && !fnKeysym)
@@ -4894,16 +4925,16 @@ ns_term_shutdown (int sig)
   rows = FRAME_PIXEL_HEIGHT_TO_TEXT_LINES (emacsframe, frameSize.height
 #ifdef NS_IMPL_GNUSTEP
       - FRAME_NS_TITLEBAR_HEIGHT (emacsframe) + 3
-        - FRAME_NS_TOOLBAR_HEIGHT (emacsframe));
+        - FRAME_TOOLBAR_HEIGHT (emacsframe));
 #else
       - FRAME_NS_TITLEBAR_HEIGHT (emacsframe)
-        - FRAME_NS_TOOLBAR_HEIGHT (emacsframe));
+        - FRAME_TOOLBAR_HEIGHT (emacsframe));
 #endif
   if (rows < MINHEIGHT)
     rows = MINHEIGHT;
   frameSize.height = FRAME_TEXT_LINES_TO_PIXEL_HEIGHT (emacsframe, rows)
                        + FRAME_NS_TITLEBAR_HEIGHT (emacsframe)
-                       + FRAME_NS_TOOLBAR_HEIGHT (emacsframe);
+                       + FRAME_TOOLBAR_HEIGHT (emacsframe);
 #ifdef NS_IMPL_COCOA
   {
     /* this sets window title to have size in it; the wm does this under GS */
@@ -5114,7 +5145,7 @@ ns_term_shutdown (int sig)
   [toggleButton setTarget: self];
   [toggleButton setAction: @selector (toggleToolbar: )];
 #endif
-  FRAME_NS_TOOLBAR_HEIGHT (f) = 0;
+  FRAME_TOOLBAR_HEIGHT (f) = 0;
 
   tem = f->icon_name;
   if (!NILP (tem))
@@ -5690,6 +5721,7 @@ ns_term_shutdown (int sig)
   win = nwin;
   condemned = NO;
   pixel_height = NSHeight (r);
+  if (pixel_height == 0) pixel_height = 1;
   min_portion = 20 / pixel_height;
 
   frame = XFRAME (XWINDOW (win)->frame);
@@ -5719,6 +5751,7 @@ ns_term_shutdown (int sig)
   NSTRACE (EmacsScroller_setFrame);
 /*  BLOCK_INPUT; */
   pixel_height = NSHeight (newRect);
+  if (pixel_height == 0) pixel_height = 1;
   min_portion = 20 / pixel_height;
   [super setFrame: newRect];
   [self display];
@@ -6197,6 +6230,14 @@ Set to control, meta, alt, super, or hyper means it is taken to be that key.\n\
 Set to none means that the alternate / option key is not interpreted by Emacs\n\
 at all, allowing it to be used at a lower level for accented character entry.");
   ns_alternate_modifier = Qmeta;
+
+  DEFVAR_LISP ("ns-right-alternate-modifier", &ns_right_alternate_modifier,
+               "This variable describes the behavior of the right alternate or option key.\n\
+Set to control, meta, alt, super, or hyper means it is taken to be that key.\n\
+Set to left means be the same key as `ns-alternate-modifier'.\n\
+Set to none means that the alternate / option key is not interpreted by Emacs\n\
+at all, allowing it to be used at a lower level for accented character entry.");
+  ns_right_alternate_modifier = Qleft;
 
   DEFVAR_LISP ("ns-command-modifier", &ns_command_modifier,
                "This variable describes the behavior of the command key.\n\

@@ -1,10 +1,10 @@
-This is ../../info/sc, produced by makeinfo version 4.11 from sc.texi.
+This is ../../info/sc, produced by makeinfo version 4.13 from sc.texi.
 
 This document describes Supercite, an Emacs package for citing and
 attributing replies to mail and news messages.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010 Free Software Foundation, Inc.
+2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -18,10 +18,10 @@ attributing replies to mail and news messages.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* SC: (sc).		Supercite lets you cite parts of messages you're
-			  replying to, in flexible ways.
+* SC: (sc).                     Supercite lets you cite parts of messages
+                                  you're replying to, in flexible ways.
 END-INFO-DIR-ENTRY
 
 
@@ -31,7 +31,7 @@ File: sc,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 attributing replies to mail and news messages.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010 Free Software Foundation, Inc.
+2009, 2010, 2011 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1492,23 +1492,23 @@ MUAs and Supercite (or any future Supercite-like packages).  This
 interface was formally proposed by Martin Neitzel on Fri, 23 Jun 89, in
 a mail message to the Supercite mailing list:
 
-     	Martin> Each news/mail-reader should provide a form of
-     	Martin> mail-yank-original that
+             Martin> Each news/mail-reader should provide a form of
+             Martin> mail-yank-original that
 
-     	Martin> 1: inserts the original message incl. header into the
-     	Martin>    reply buffer; no indentation/prefixing is done, the header
-     	Martin>    tends to be a "full blown" version rather than to be
-     	Martin>    stripped down.
+             Martin> 1: inserts the original message incl. header into the
+             Martin>    reply buffer; no indentation/prefixing is done, the header
+             Martin>    tends to be a "full blown" version rather than to be
+             Martin>    stripped down.
 
-     	Martin> 2: `point' is at the start of the header, `mark' at the
-     	Martin>    end of the message body.
+             Martin> 2: `point' is at the start of the header, `mark' at the
+             Martin>    end of the message body.
 
-     	Martin> 3: (run-hooks 'mail-yank-hooks)
+             Martin> 3: (run-hooks 'mail-yank-hooks)
 
-     	Martin> [Supercite] should be run as such a hook and merely
-     	Martin> rewrite the message.  This way it isn't anymore
-     	Martin> [Supercite]'s job to gather the original from obscure
-     	Martin> sources. [...]
+             Martin> [Supercite] should be run as such a hook and merely
+             Martin> rewrite the message.  This way it isn't anymore
+             Martin> [Supercite]'s job to gather the original from obscure
+             Martin> sources. [...]
 
    This specification was adopted, but underwent a slight modification
 with the release of Emacs 19.  Instead of the variable
@@ -2291,14 +2291,12 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
                                                                (line  6)
 * sc-recite-region:                      Citing Commands.      (line 35)
 * sc-setup-filladapt:                    Filling Cited Text.   (line  3)
-* sc-submit-bug-report:                  Getting Connected.    (line 36)
 * sc-uncite-region:                      Citing Commands.      (line 27)
 * set-variable:                          Variable Toggling Shortcuts.
                                                                (line 46)
 * setup-filladapt (sc-):                 Filling Cited Text.   (line  3)
 * string-match:                          Frames You Can Customize.
                                                                (line 42)
-* submit-bug-report (sc-):               Getting Connected.    (line 36)
 * uncite-region (sc-):                   Citing Commands.      (line 27)
 
 
@@ -2531,41 +2529,41 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 
 
 Tag Table:
-Node: Top1116
-Node: Introduction2529
-Node: Usage Overview3556
-Node: What Supercite Does Not Do4718
-Node: What Supercite Does5850
-Node: Citations8682
-Node: Citation Elements10972
-Node: Recognizing Citations12855
-Node: Information Keys and the Info Alist14614
-Node: Reference Headers17201
-Node: The Built-in Header Rewrite Functions18767
-Node: Electric References21217
-Node: Getting Connected24097
-Node: Replying and Yanking27230
-Node: Reply Buffer Initialization27548
-Node: Filling Cited Text34436
-Node: Selecting an Attribution37909
-Node: Attribution Preferences38767
-Node: Anonymous Attributions42683
-Node: Author Names45723
-Node: Configuring the Citation Engine48203
-Node: Using Regi49928
-Node: Frames You Can Customize53803
-Node: Post-yank Formatting Commands56331
-Node: Citing Commands57477
-Node: Insertion Commands59688
-Node: Variable Toggling Shortcuts60628
-Node: Mail Field Commands62987
-Node: Miscellaneous Commands65324
-Node: Hints to MUA Authors65762
-Node: Thanks and History69336
-Node: GNU Free Documentation License71393
-Node: Concept Index96570
-Node: Command Index104424
-Node: Key Index111695
-Node: Variable Index114068
+Node: Top1187
+Node: Introduction2606
+Node: Usage Overview3633
+Node: What Supercite Does Not Do4795
+Node: What Supercite Does5927
+Node: Citations8759
+Node: Citation Elements11049
+Node: Recognizing Citations12932
+Node: Information Keys and the Info Alist14691
+Node: Reference Headers17278
+Node: The Built-in Header Rewrite Functions18844
+Node: Electric References21294
+Node: Getting Connected24174
+Node: Replying and Yanking27307
+Node: Reply Buffer Initialization27625
+Node: Filling Cited Text34513
+Node: Selecting an Attribution37986
+Node: Attribution Preferences38844
+Node: Anonymous Attributions42760
+Node: Author Names45800
+Node: Configuring the Citation Engine48280
+Node: Using Regi50005
+Node: Frames You Can Customize53880
+Node: Post-yank Formatting Commands56408
+Node: Citing Commands57554
+Node: Insertion Commands59765
+Node: Variable Toggling Shortcuts60705
+Node: Mail Field Commands63064
+Node: Miscellaneous Commands65401
+Node: Hints to MUA Authors65839
+Node: Thanks and History69504
+Node: GNU Free Documentation License71561
+Node: Concept Index96738
+Node: Command Index104592
+Node: Key Index111717
+Node: Variable Index114090
 
 End Tag Table

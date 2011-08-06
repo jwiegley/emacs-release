@@ -1,6 +1,6 @@
 ;;; vc-mtn.el --- VC backend for Monotone
 
-;; Copyright (C) 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: 
@@ -109,7 +109,7 @@ If nil, use the value of `vc-diff-switches'.  If t, use no switches."
 (defun vc-mtn-after-dir-status (update-function)
   (let (result)
     (goto-char (point-min))
-    (re-search-forward "Current branch: \\(.*\\)\nChanges against parent \\(.*\\)" nil t)
+    (re-search-forward "\\(?:Current b\\|B\\)ranch:  *\\(.*\\)\n?\nChanges against parent \\(.*\\)" nil t)
     (while (re-search-forward
 	    "^  \\(?:\\(patched  \\)\\|\\(added    \\)\\)\\(.*\\)$" nil t)
       (cond  ((match-end 1) (push (list (match-string 3) 'edited) result))
@@ -128,7 +128,7 @@ If nil, use the value of `vc-diff-switches'.  If t, use no switches."
     (with-temp-buffer
       (vc-mtn-command t 0 file "status")
       (goto-char (point-min))
-      (re-search-forward "Current branch: \\(.*\\)\nChanges against parent \\(.*\\)")
+      (re-search-forward "\\(?:Current b\\|B\\)ranch:  *\\(.*\\)\n?\nChanges against parent \\(.*\\)")
       (match-string 2))))
 
 (defun vc-mtn-workfile-branch (file)
@@ -138,7 +138,7 @@ If nil, use the value of `vc-diff-switches'.  If t, use no switches."
     (with-temp-buffer
       (vc-mtn-command t 0 file "status")
       (goto-char (point-min))
-      (re-search-forward "Current branch: \\(.*\\)\nChanges against parent \\(.*\\)")
+      (re-search-forward "\\(?:Current b\\|B\\)ranch:  *\\(.*\\)\n?\nChanges against parent \\(.*\\)")
       (match-string 1))))
 
 (defun vc-mtn-workfile-unchanged-p (file)
@@ -172,8 +172,14 @@ If nil, use the value of `vc-diff-switches'.  If t, use no switches."
 (defun vc-mtn-responsible-p (file) (vc-mtn-root file))
 (defun vc-mtn-could-register (file) (vc-mtn-root file))
 
+(declare-function log-edit-extract-headers "log-edit" (headers string))
+
 (defun vc-mtn-checkin (files rev comment)
-  (vc-mtn-command nil 0 files "commit" "-m" comment))
+  (apply 'vc-mtn-command nil 0 files
+	 (nconc (list "commit" "-m")
+		(log-edit-extract-headers '(("Author" . "--author")
+					    ("Date" . "--date"))
+					  comment))))
 
 (defun vc-mtn-find-revision (file rev buffer)
   (vc-mtn-command buffer 0 file "cat" "-r" rev))

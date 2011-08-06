@@ -1,7 +1,7 @@
 ;;; descr-text.el --- describe text mode
 
 ;; Copyright (C) 1994, 1995, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Boris Goldowsky <boris@gnu.org>
 ;; Maintainer: FSF
@@ -301,7 +301,7 @@ This function is semi-obsolete.  Use `get-char-code-property'."
 				   (lambda (arg)
 				     (string (string-to-number arg 16)))
 				   parts " "))
-		      (concat info parts))))
+		      (concat info (if info " ") parts))))
 	       (list "Decimal digit value"
 		     (nth 5 fields))
 	       (list "Digit value"
@@ -426,7 +426,7 @@ as well as widgets, buttons, overlays, and text properties."
         ;; When the composition is trivial (i.e. composed only with the
         ;; current character itself without any alternate characters),
         ;; we don't show the composition information.  Otherwise, store
-        ;; two descriptive strings in the first two elments of
+        ;; two descriptive strings in the first two elements of
         ;; COMPOSITION.
         (or (catch 'tag
               (let ((from (car composition))

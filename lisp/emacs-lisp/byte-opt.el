@@ -1,7 +1,7 @@
 ;;; byte-opt.el --- the optimization passes of the emacs-lisp byte compiler
 
 ;; Copyright (C) 1991, 1994, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -381,9 +381,11 @@
 		form))
 	  ((or (byte-code-function-p fn)
 	       (eq 'lambda (car-safe fn)))
-           (byte-optimize-form-code-walker
-            (byte-compile-unfold-lambda form)
-            for-effect))
+	   (let ((newform (byte-compile-unfold-lambda form)))
+	     (if (eq newform form)
+		 ;; Some error occurred, avoid infinite recursion
+		 form
+	       (byte-optimize-form-code-walker newform for-effect))))
 	  ((memq fn '(let let*))
 	   ;; recursively enter the optimizer for the bindings and body
 	   ;; of a let or let*.  This for depth-firstness: forms that

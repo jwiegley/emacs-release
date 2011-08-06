@@ -1,7 +1,7 @@
 ;;; font-lock.el --- Electric font lock mode
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski
@@ -560,6 +560,8 @@ outside of any comment, string, or sexp.  This variable is semi-obsolete;
 we recommend setting `syntax-begin-function' instead.
 
 This is normally set via `font-lock-defaults'.")
+(make-obsolete-variable 'font-lock-beginning-of-syntax-function
+                        'syntax-begin-function "23.3")
 
 (defvar font-lock-mark-block-function nil
   "*Non-nil means use this function to mark a block of text.
@@ -1784,15 +1786,18 @@ preserve `hi-lock-mode' highlighting patterns."
   (kill-local-variable 'font-lock-set-defaults)
   (font-lock-mode 1))
 
-(defvar font-lock-mode-major-mode)
+(defvar font-lock-major-mode nil
+  "Major mode for which the font-lock settings have been setup.")
+(make-variable-buffer-local 'font-lock-major-mode)
+
 (defun font-lock-set-defaults ()
   "Set fontification defaults appropriately for this mode.
 Sets various variables using `font-lock-defaults' (or, if nil, using
 `font-lock-defaults-alist') and `font-lock-maximum-decoration'."
   ;; Set fontification defaults if not previously set for correct major mode.
   (unless (and font-lock-set-defaults
-	       (eq font-lock-mode-major-mode major-mode))
-    (setq font-lock-mode-major-mode major-mode)
+	       (eq font-lock-major-mode major-mode))
+    (setq font-lock-major-mode major-mode)
     (set (make-local-variable 'font-lock-set-defaults) t)
     (make-local-variable 'font-lock-fontified)
     (make-local-variable 'font-lock-multiline)

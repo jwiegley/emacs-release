@@ -1,8 +1,8 @@
 /* CCL (Code Conversion Language) interpreter.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008, 2009, 2010
+     2005, 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
    Copyright (C) 2003
@@ -450,7 +450,7 @@ extern int charset_unicode;
    Therefore, the instruction code range is 0..16384(0x3fff).
  */
 
-/* Read a multibyte characeter.
+/* Read a multibyte character.
    A code point is stored into reg[rrr].  A charset ID is stored into
    reg[RRR].  */
 
@@ -1362,7 +1362,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		    if (point >= size) continue;
 		    map = AREF (Vcode_conversion_map_vector, point);
 
-		    /* Check map varidity.  */
+		    /* Check map validity.  */
 		    if (!CONSP (map)) continue;
 		    map = XCDR (map);
 		    if (!VECTORP (map)) continue;
@@ -1373,7 +1373,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 		    /* check map type,
 		       [STARTPOINT VAL1 VAL2 ...] or
-		       [t ELELMENT STARTPOINT ENDPOINT]  */
+		       [t ELEMENT STARTPOINT ENDPOINT]  */
 		    if (NUMBERP (content))
 		      {
 			point = XUINT (content);
@@ -1535,7 +1535,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		      if (point >= map_vector_size) continue;
 		      map = AREF (Vcode_conversion_map_vector, point);
 
-		      /* Check map varidity.  */
+		      /* Check map validity.  */
 		      if (!CONSP (map)) continue;
 		      map = XCDR (map);
 		      if (!VECTORP (map)) continue;
@@ -1977,7 +1977,7 @@ check_ccl_update (ccl)
 
 DEFUN ("ccl-program-p", Fccl_program_p, Sccl_program_p, 1, 1, 0,
        doc: /* Return t if OBJECT is a CCL program name or a compiled CCL program code.
-See the documentation of  `define-ccl-program' for the detail of CCL program.  */)
+See the documentation of `define-ccl-program' for the detail of CCL program.  */)
      (object)
      Lisp_Object object;
 {
@@ -2058,7 +2058,7 @@ If R0..R7 are nil, they are initialized to 0.
 If IC is nil, it is initialized to head of the CCL program.
 
 If optional 4th arg CONTINUE is non-nil, keep IC on read operation
-when read buffer is exausted, else, IC is always set to the end of
+when read buffer is exhausted, else, IC is always set to the end of
 CCL-PROGRAM on exit.
 
 It returns the contents of write buffer as a string,
@@ -2229,7 +2229,7 @@ Return index number of the registered CCL program.  */)
 
       slot = AREF (Vccl_program_table, idx);
       if (!VECTORP (slot))
-	/* This is the first unsed slot.  Register NAME here.  */
+	/* This is the first unused slot.  Register NAME here.  */
 	break;
 
       if (EQ (name, AREF (slot, 0)))

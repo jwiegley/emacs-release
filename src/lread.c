@@ -1,7 +1,7 @@
 /* Lisp parsing and input streams.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994, 1995,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -616,7 +616,7 @@ read_emacs_mule_char (c, readbyte, readcharfun)
 
   if (len == 2)
     {
-      charset = emacs_mule_charset[buf[0]];
+      charset = CHARSET_FROM_ID (emacs_mule_charset[buf[0]]);
       code = buf[1] & 0x7F;
     }
   else if (len == 3)
@@ -624,18 +624,18 @@ read_emacs_mule_char (c, readbyte, readcharfun)
       if (buf[0] == EMACS_MULE_LEADING_CODE_PRIVATE_11
 	  || buf[0] == EMACS_MULE_LEADING_CODE_PRIVATE_12)
 	{
-	  charset = emacs_mule_charset[buf[1]];
+	  charset = CHARSET_FROM_ID (emacs_mule_charset[buf[1]]);
 	  code = buf[2] & 0x7F;
 	}
       else
 	{
-	  charset = emacs_mule_charset[buf[0]];
+	  charset = CHARSET_FROM_ID (emacs_mule_charset[buf[0]]);
 	  code = ((buf[1] << 8) | buf[2]) & 0x7F7F;
 	}
     }
   else
     {
-      charset = emacs_mule_charset[buf[1]];
+      charset = CHARSET_FROM_ID (emacs_mule_charset[buf[1]]);
       code = ((buf[2] << 8) | buf[3]) & 0x7F7F;
     }
   c = DECODE_CHAR (charset, code);
@@ -1006,6 +1006,10 @@ and then the former.
 Loading a file records its definitions, and its `provide' and
 `require' calls, in an element of `load-history' whose
 car is the file name loaded.  See `load-history'.
+
+While the file is in the process of being loaded, the variable
+`load-in-progress' is non-nil and the variable `load-file-name'
+is bound to the file's name.
 
 Return t if the file exists and loads successfully.  */)
      (file, noerror, nomessage, nosuffix, must_suffix)
@@ -2377,28 +2381,28 @@ read1 (readcharfun, pch, first_in_list)
 	      /* This is repetitive but fast and simple. */
 	      params[param_count] = QCsize;
 	      params[param_count+1] = Fplist_get (tmp, Qsize);
-	      if (!NILP (params[param_count+1]))
-		param_count+=2;
+	      if (!NILP (params[param_count + 1]))
+		param_count += 2;
 
 	      params[param_count] = QCtest;
 	      params[param_count+1] = Fplist_get (tmp, Qtest);
-	      if (!NILP (params[param_count+1]))
-		param_count+=2;
+	      if (!NILP (params[param_count + 1]))
+		param_count += 2;
 
 	      params[param_count] = QCweakness;
 	      params[param_count+1] = Fplist_get (tmp, Qweakness);
-	      if (!NILP (params[param_count+1]))
-		param_count+=2;
+	      if (!NILP (params[param_count + 1]))
+		param_count += 2;
 
 	      params[param_count] = QCrehash_size;
 	      params[param_count+1] = Fplist_get (tmp, Qrehash_size);
-	      if (!NILP (params[param_count+1]))
-		param_count+=2;
+	      if (!NILP (params[param_count + 1]))
+		param_count += 2;
 
 	      params[param_count] = QCrehash_threshold;
 	      params[param_count+1] = Fplist_get (tmp, Qrehash_threshold);
-	      if (!NILP (params[param_count+1]))
-		param_count+=2;
+	      if (!NILP (params[param_count + 1]))
+		param_count += 2;
 
 	      /* This is the hashtable data. */
 	      data = Fplist_get (tmp, Qdata);
@@ -2419,6 +2423,8 @@ read1 (readcharfun, pch, first_in_list)
 
 	      return ht;
 	    }
+	  UNREAD (c);
+	  invalid_syntax ("#", 1);
 	}
       if (c == '^')
 	{

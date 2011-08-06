@@ -1,6 +1,6 @@
 /* Definitions and headers for communication with X protocol.
    Copyright (C) 1989, 1993, 1994, 1998, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -362,10 +362,10 @@ struct x_display_info
   Window net_supported_window;
   Atom Xatom_net_window_type, Xatom_net_window_type_tooltip;
 
-  /* Atoms dealing with maximization and fullscreen */
+  /* Atoms dealing with EWMH (i.e. _NET_...) */
   Atom Xatom_net_wm_state, Xatom_net_wm_state_fullscreen_atom,
     Xatom_net_wm_state_maximized_horz, Xatom_net_wm_state_maximized_vert,
-    Xatom_net_wm_state_sticky;
+    Xatom_net_wm_state_sticky, Xatom_net_frame_extents;
 
   /* XSettings atoms and windows.  */
   Atom Xatom_xsettings_sel, Xatom_xsettings_prop, Xatom_xsettings_mgr;
@@ -383,7 +383,8 @@ extern void check_x P_ ((void));
 extern struct frame *x_window_to_frame P_ ((struct x_display_info *, int));
 
 extern struct frame *x_any_window_to_frame P_ ((struct x_display_info *, int));
-extern struct frame *x_menubar_window_to_frame P_ ((struct x_display_info *, int));
+extern struct frame *x_menubar_window_to_frame P_ ((struct x_display_info *,
+                                                    XEvent *));
 extern struct frame *x_top_window_to_frame P_ ((struct x_display_info *, int));
 
 #if ! defined (USE_X_TOOLKIT) && ! defined (USE_GTK)

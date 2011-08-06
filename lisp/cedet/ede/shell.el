@@ -1,6 +1,6 @@
 ;;; ede/shell.el --- A shell controlled by EDE.
 ;;
-;; Copyright (C) 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2010, 2011 Free Software Foundation, Inc.
 ;;
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -70,7 +70,7 @@ COMMAND is a text string representing the thing to be run."
 (defmethod ede-shell-buffer ((target ede-target))
   "Get the buffer for running shell commands for TARGET."
   (let ((name (ede-name target)))
-    (get-buffer-create (format "*EDE Shell %s" name))))
+    (get-buffer-create (format "*EDE Shell %s*" name))))
 
 (provide 'ede/shell)
 

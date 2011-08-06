@@ -1,7 +1,7 @@
 ;;; url-util.el --- Miscellaneous helper routines for URL library
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes
@@ -322,10 +322,10 @@ forbidden in URL encoding."
 		   tmp (substring str 0 start)
 		   (cond
 		    (allow-newlines
-		     (char-to-string code))
+		     (byte-to-string code))
 		    ((or (= code ?\n) (= code ?\r))
 		     " ")
-		    (t (char-to-string code))))
+		    (t (byte-to-string code))))
 	      str (substring str (match-end 0)))))
     (setq tmp (concat tmp str))
     tmp))

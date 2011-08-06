@@ -1,8 +1,9 @@
-;;; dnd.el --- drag and drop support.
+;;; dnd.el --- drag and drop support.  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;;   Free Software Foundation, Inc.
 
-;; Author: Jan Dj,Ad(Brv <jan.h.d@swipnet.se>
+;; Author: Jan Djärv <jan.h.d@swipnet.se>
 ;; Maintainer: FSF
 ;; Keywords: window, drag, drop
 
@@ -153,10 +154,11 @@ Return nil if URI is not a local file."
       (let* ((decoded-f (decode-coding-string
 			 f
 			 (or file-name-coding-system
-			     default-file-name-coding-system)))
-	     (try-f (if (file-readable-p decoded-f) decoded-f f)))
-	(when (file-readable-p try-f) try-f)))))
-
+			     default-file-name-coding-system))))
+	(setq f (cond ((file-readable-p decoded-f) decoded-f)
+		      ((file-readable-p f) f)
+		      (t nil)))))
+    f))
 
 (defun dnd-open-local-file (uri action)
   "Open a local file.

@@ -1,7 +1,7 @@
 ;;; fill.el --- fill commands for Emacs		-*- coding: utf-8 -*-
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1996, 1997, 1999, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
@@ -1036,7 +1036,7 @@ space does not end a sentence, so don't break a line there."
 	  (fill-forward-paragraph -1))
 	(if (< (point) beg)
 	    (goto-char beg))
-	(if (>= (point) initial)
+	(if (and (>= (point) initial) (< (point) end))
 	    (setq fill-pfx
 		  (fill-region-as-paragraph (point) end justify nosqueeze))
 	  (goto-char end))))

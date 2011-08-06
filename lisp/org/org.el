@@ -1,6 +1,6 @@
 ;;; org.el --- Outline-based notes management and organizer
 ;; Carstens outline-mode for keeping track of everything.
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
@@ -3659,7 +3659,7 @@ Also put tags into group 4 if tags are present.")
   "Matches any of the 3 keywords, together with the time stamp.")
 (make-variable-buffer-local 'org-keyword-time-not-clock-regexp)
 (defvar org-maybe-keyword-time-regexp nil
-  "Matches a timestamp, possibly preceeded by a keyword.")
+  "Matches a timestamp, possibly preceded by a keyword.")
 (make-variable-buffer-local 'org-maybe-keyword-time-regexp)
 (defvar org-planning-or-clock-line-re nil
   "Matches a line with planning or clock info.")

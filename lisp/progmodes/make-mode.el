@@ -1,7 +1,7 @@
 ;;; make-mode.el --- makefile editing commands for Emacs
 
 ;; Copyright (C) 1992, 1994, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Thomas Neumann <tom@smart.bo.open.de>
 ;;	Eric S. Raymond <esr@snark.thyrsus.com>
@@ -1324,7 +1324,9 @@ definition and conveniently use this command."
 	(save-restriction
 	  (narrow-to-region beginning end)
 	  (makefile-backslash-region (point-min) (point-max) t)
-	  (let ((fill-paragraph-function nil))
+	  (let ((fill-paragraph-function nil)
+                ;; Adjust fill-column to allow space for the backslash.
+                (fill-column (- fill-column 1)))
 	    (fill-paragraph nil))
 	  (makefile-backslash-region (point-min) (point-max) nil)
 	  (goto-char (point-max))
@@ -1338,7 +1340,9 @@ definition and conveniently use this command."
       ;; resulting region.
       (save-restriction
 	(narrow-to-region (point) (line-beginning-position 2))
-	(let ((fill-paragraph-function nil))
+	(let ((fill-paragraph-function nil)
+              ;; Adjust fill-column to allow space for the backslash.
+              (fill-column (- fill-column 1)))
 	  (fill-paragraph nil))
 	(makefile-backslash-region (point-min) (point-max) nil))
       ;; Return non-nil to indicate it's been filled.

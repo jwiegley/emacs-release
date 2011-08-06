@@ -1,6 +1,6 @@
 ;;; vc-svn.el --- non-resident support for Subversion version-control
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
@@ -170,7 +170,7 @@ want to force an empty list of arguments, use t."
                      (?? . unregistered)
                      ;; This is what vc-svn-parse-status does.
                      (?~ . edited)))
-	(re (if remote "^\\(.\\)...... \\([ *]\\) +\\(?:[-0-9]+\\)?   \\(.*\\)$"
+	(re (if remote "^\\(.\\)......? \\([ *]\\) +\\(?:[-0-9]+\\)?   \\(.*\\)$"
 	      ;; Subexp 2 is a dummy in this case, so the numbers match.
 	      "^\\(.\\)....\\(.\\) \\(.*\\)$"))
        result)
@@ -373,7 +373,7 @@ The changes are between FIRST-VERSION and SECOND-VERSION."
   (message "Merging changes into %s..." file)
   ;; (vc-file-setprop file 'vc-working-revision nil)
   (vc-file-setprop file 'vc-checkout-time 0)
-  (vc-svn-command nil 0 file "update")
+  (vc-svn-command nil 0 file "--non-interactive" "update") ; see bug#7152
   ;; Analyze the merge result reported by SVN, and set
   ;; file properties accordingly.
   (with-current-buffer (get-buffer "*vc*")

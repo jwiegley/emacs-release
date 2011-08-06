@@ -1,4 +1,4 @@
-This is ../../info/reftex, produced by makeinfo version 4.11 from
+This is ../../info/reftex, produced by makeinfo version 4.13 from
 reftex.texi.
 
 This file documents RefTeX, a package to do labels, references,
@@ -7,7 +7,7 @@ citations and indices for LaTeX documents with Emacs.
    This is edition 4.31 of the RefTeX User Manual for RefTeX 4.31
 
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,9 +21,10 @@ citations and indices for LaTeX documents with Emacs.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* RefTeX: (reftex).	Emacs support for LaTeX cross-references and citations.
+* RefTeX: (reftex).             Emacs support for LaTeX cross-references
+                                  and citations.
 END-INFO-DIR-ENTRY
 
 
@@ -43,7 +44,7 @@ citations and indices for LaTeX documents with Emacs.
    This is edition 4.31 of the RefTeX User Manual for RefTeX 4.31
 
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2813,7 +2814,7 @@ support for one of the builtin index packages.  For example, the style
      (TeX-add-style-hook "multind"
        (lambda ()
          (and (fboundp 'reftex-add-index-macros)
-     	 (reftex-add-index-macros '(multind)))))
+              (reftex-add-index-macros '(multind)))))
 
    If you have your own package `myindex' which defines the following
 macros to be used with the LaTeX `index.sty' file
@@ -6016,86 +6017,86 @@ Index
 
 
 Tag Table:
-Node: Top1192
-Node: Introduction6852
-Node: Installation7692
-Node: RefTeX in a Nutshell9288
-Node: Table of Contents15478
-Node: Labels and References23767
-Node: Creating Labels25245
-Ref: Creating Labels-Footnote-127668
-Node: Referencing Labels28148
-Node: Builtin Label Environments35588
-Node: Defining Label Environments36995
-Node: Theorem and Axiom38342
-Node: Quick Equation43095
-Node: Figure Wrapper44699
-Node: Adding Magic Words46639
-Node: Using \eqref47598
-Node: Non-Standard Environments48452
-Node: Putting it Together52413
-Node: Reference Info53180
-Node: xr (LaTeX package)53826
-Node: varioref (LaTeX package)54990
-Ref: varioref (LaTeX package)-Footnote-155887
-Node: fancyref (LaTeX package)55915
-Ref: fancyref (LaTeX package)-Footnote-156911
-Node: Citations56953
-Node: Creating Citations57831
-Node: Citation Styles62156
-Node: Citation Info64145
-Node: Chapterbib and Bibunits64793
-Node: Citations Outside LaTeX65454
-Node: BibTeX Database Subsets66565
-Node: Index Support67948
-Node: Creating Index Entries71103
-Node: The Index Phrases File72437
-Node: Collecting Phrases74573
-Ref: Collecting Phrases-Footnote-177404
-Ref: Collecting Phrases-Footnote-277486
-Node: Consistency Checks77567
-Node: Global Indexing79048
-Ref: Global Indexing-Footnote-182246
-Node: Displaying and Editing the Index82393
-Node: Builtin Index Macros88221
-Node: Defining Index Macros88824
-Ref: Defining Index Macros-Footnote-192362
-Node: Viewing Cross-References92423
-Ref: Viewing Cross-References-Footnote-195037
-Ref: Viewing Cross-References-Footnote-295110
-Node: RefTeXs Menu95166
-Node: Key Bindings95560
-Node: Faces97092
-Node: Multifile Documents97626
-Node: Language Support99381
-Node: Finding Files100835
-Node: Optimizations103935
-Node: AUCTeX109195
-Ref: AUCTeX-Footnote-1109829
-Node: AUCTeX-RefTeX Interface109909
-Ref: AUCTeX-RefTeX Interface-Footnote-1112202
-Ref: AUCTeX-RefTeX Interface-Footnote-2112324
-Node: Style Files112483
-Ref: Style Files-Footnote-1116376
-Node: Bib-Cite116497
-Node: Problems and Work-Arounds117530
-Node: Imprint121577
-Node: Commands124241
-Node: Options132341
-Node: Options (Table of Contents)133132
-Node: Options (Defining Label Environments)138047
-Node: Options (Creating Labels)148773
-Node: Options (Referencing Labels)153168
-Node: Options (Creating Citations)158131
-Node: Options (Index Support)164187
-Node: Options (Viewing Cross-References)173841
-Node: Options (Finding Files)176448
-Node: Options (Optimizations)180317
-Node: Options (Fontification)184806
-Node: Options (Misc)188198
-Node: Keymaps and Hooks189974
-Node: Changes190742
-Node: GNU Free Documentation License195198
-Node: Index220360
+Node: Top1258
+Node: Introduction6924
+Node: Installation7764
+Node: RefTeX in a Nutshell9360
+Node: Table of Contents15550
+Node: Labels and References23839
+Node: Creating Labels25317
+Ref: Creating Labels-Footnote-127740
+Node: Referencing Labels28220
+Node: Builtin Label Environments35660
+Node: Defining Label Environments37067
+Node: Theorem and Axiom38414
+Node: Quick Equation43167
+Node: Figure Wrapper44771
+Node: Adding Magic Words46711
+Node: Using \eqref47670
+Node: Non-Standard Environments48524
+Node: Putting it Together52485
+Node: Reference Info53252
+Node: xr (LaTeX package)53898
+Node: varioref (LaTeX package)55062
+Ref: varioref (LaTeX package)-Footnote-155959
+Node: fancyref (LaTeX package)55987
+Ref: fancyref (LaTeX package)-Footnote-156983
+Node: Citations57025
+Node: Creating Citations57903
+Node: Citation Styles62228
+Node: Citation Info64217
+Node: Chapterbib and Bibunits64865
+Node: Citations Outside LaTeX65526
+Node: BibTeX Database Subsets66637
+Node: Index Support68020
+Node: Creating Index Entries71175
+Node: The Index Phrases File72509
+Node: Collecting Phrases74645
+Ref: Collecting Phrases-Footnote-177476
+Ref: Collecting Phrases-Footnote-277558
+Node: Consistency Checks77639
+Node: Global Indexing79120
+Ref: Global Indexing-Footnote-182318
+Node: Displaying and Editing the Index82465
+Node: Builtin Index Macros88293
+Node: Defining Index Macros88896
+Ref: Defining Index Macros-Footnote-192434
+Node: Viewing Cross-References92495
+Ref: Viewing Cross-References-Footnote-195109
+Ref: Viewing Cross-References-Footnote-295182
+Node: RefTeXs Menu95238
+Node: Key Bindings95632
+Node: Faces97164
+Node: Multifile Documents97698
+Node: Language Support99453
+Node: Finding Files100907
+Node: Optimizations104007
+Node: AUCTeX109267
+Ref: AUCTeX-Footnote-1109901
+Node: AUCTeX-RefTeX Interface109981
+Ref: AUCTeX-RefTeX Interface-Footnote-1112274
+Ref: AUCTeX-RefTeX Interface-Footnote-2112396
+Node: Style Files112555
+Ref: Style Files-Footnote-1116455
+Node: Bib-Cite116576
+Node: Problems and Work-Arounds117609
+Node: Imprint121656
+Node: Commands124320
+Node: Options132420
+Node: Options (Table of Contents)133211
+Node: Options (Defining Label Environments)138126
+Node: Options (Creating Labels)148852
+Node: Options (Referencing Labels)153247
+Node: Options (Creating Citations)158210
+Node: Options (Index Support)164266
+Node: Options (Viewing Cross-References)173920
+Node: Options (Finding Files)176527
+Node: Options (Optimizations)180396
+Node: Options (Fontification)184885
+Node: Options (Misc)188277
+Node: Keymaps and Hooks190053
+Node: Changes190821
+Node: GNU Free Documentation License195277
+Node: Index220439
 
 End Tag Table

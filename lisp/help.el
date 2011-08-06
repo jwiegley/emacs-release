@@ -1,7 +1,7 @@
 ;;; help.el --- help commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
@@ -768,9 +768,10 @@ temporarily enables it to allow getting help on disabled items and buttons."
 
 ----------------- up-event %s----------------
 
-<%S>%s%s runs the command %S, which is "
+%s%s%s runs the command %S, which is "
 			   (if mouse-1-tricky "(short click) " "")
-			   ev-type mouse-msg
+			   (key-description (vector up-event))
+			   mouse-msg
 			   (if mouse-1-remapped
                                " is remapped to <mouse-2>, which" "")
 			   defn-up))

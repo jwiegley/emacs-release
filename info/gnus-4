@@ -1,8 +1,9 @@
-This is ../../info/gnus, produced by makeinfo version 4.11 from
+This is ../../info/gnus, produced by makeinfo version 4.13 from
 gnus.texi.
 
 Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,9 +17,9 @@ Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* Gnus: (gnus).         The newsreader Gnus.
+* Gnus: (gnus).                 The newsreader Gnus.
 END-INFO-DIR-ENTRY
 
 
@@ -1055,7 +1056,7 @@ New features in Gnus 5.10:
           `make.bat' `/copy' as the second parameter.
 
           `make.bat' has been rewritten from scratch, it now features
-          automatic recognition of XEmacs and GNU Emacs, generates
+          automatic recognition of XEmacs and Emacs, generates
           `gnus-load.el', checks if errors occur while compilation and
           generation of info files and reports them at the end of the
           build process.  It now uses `makeinfo' if it is available and
@@ -4288,7 +4289,7 @@ something different, change the line above to something like this:
 
      (add-to-list 'gnus-secondary-select-methods
                   '(nnspool ""
-     		       (nnspool-directory "/usr/local/myspoolddir")))
+                            (nnspool-directory "/usr/local/myspoolddir")))
    This sets the spool directory for this server only.  You might have
 to specify more stuff like the program used to post articles, see the
 Gnus manual on how to do this.
@@ -4350,8 +4351,8 @@ directory, for example because procmail already split your mail, it's
 
      (eval-after-load "mail-source"
        '(add-to-list 'mail-sources
-     		'(directory :path "/path/to/procmail-dir/"
-     			    :suffix ".prcml")))
+                     '(directory :path "/path/to/procmail-dir/"
+                                 :suffix ".prcml")))
    Where :suffix ".prcml" tells Gnus only to use files with the suffix
 .prcml.
 
@@ -4396,10 +4397,10 @@ a different approach.  You've got to add the nnimap back end to your
 select method and give the information about the server there.
 
      (add-to-list 'gnus-secondary-select-methods
-     	     '(nnimap "Give the baby a name"
-     		      (nnimap-address "imap.yourProvider.net")
-     		      (nnimap-port 143)
-     		      (nnimap-list-pattern "archive.*")))
+                  '(nnimap "Give the baby a name"
+                           (nnimap-address "imap.yourProvider.net")
+                           (nnimap-port 143)
+                           (nnimap-list-pattern "archive.*")))
    Again, you might have to specify how to authenticate to the server
 if Gnus can't guess the correct way, see the Manual Node "IMAP" for
 detailed information.
@@ -4587,7 +4588,7 @@ Followup-To and MUA / NUA say this in ~/.gnus.el:
 
      (setq gnus-visible-headers
            '("^From" "^Subject" "^Date" "^Newsgroups" "^Followup-To"
-     	"^User-Agent" "^X-Newsreader" "^X-Mailer"))
+             "^User-Agent" "^X-Newsreader" "^X-Mailer"))
 
 
 File: gnus,  Node: FAQ 4-6,  Next: FAQ 4-7,  Prev: FAQ 4-5,  Up: FAQ 4 - Reading messages
@@ -4797,18 +4798,18 @@ top-right, article buffer bottom-right:
      (gnus-add-configuration
       '(article
         (horizontal 1.0
-     	       (vertical 25
-     			 (group 1.0))
-     	       (vertical 1.0
-     			 (summary 0.25 point)
-     			 (article 1.0)))))
+                    (vertical 25
+                              (group 1.0))
+                    (vertical 1.0
+                              (summary 0.25 point)
+                              (article 1.0)))))
      (gnus-add-configuration
       '(summary
         (horizontal 1.0
-     	       (vertical 25
-     			 (group 1.0))
-     	       (vertical 1.0
-     			 (summary 1.0 point)))))
+                    (vertical 25
+                              (group 1.0))
+                    (vertical 1.0
+                              (summary 1.0 point)))))
 
 
 File: gnus,  Node: FAQ 4-14,  Next: FAQ 4-15,  Prev: FAQ 4-13,  Up: FAQ 4 - Reading messages
@@ -5149,7 +5150,7 @@ Answer
 There's an very basic solution for this, mail aliases.  You can store
 your mail addresses in a ~/.mailrc file using a simple alias syntax:
 
-     alias al	"Al <al@english-heritage.invalid>"
+     alias al        "Al <al@english-heritage.invalid>"
    Then typing your alias (followed by a space or punctuation
 character) on a To: or Cc: line in the message buffer will cause Gnus
 to insert the full address for you. See the node "Mail Aliases" in
@@ -5285,9 +5286,9 @@ shall go or like in the example below use a function which is evaluated
 and which returns the group to use.
 
      (setq gnus-message-archive-group
-     	'((if (message-news-p)
-     	      "nnml:Send-News"
-     	    "nnml:Send-Mail")))
+             '((if (message-news-p)
+                   "nnml:Send-News"
+                 "nnml:Send-Mail")))
 
 
 File: gnus,  Node: FAQ 5-12,  Next: FAQ 5-13,  Prev: FAQ 5-11,  Up: FAQ 5 - Composing messages

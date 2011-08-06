@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,7 +21,7 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
@@ -276,13 +276,14 @@ Sometimes it is not possible to create an alist or an obarray
 containing all the intended possible completions.  In such a case, you
 can supply your own function to compute the completion of a given
 string.  This is called "programmed completion".  Emacs uses programmed
-completion when completing file names (*note File Name Completion::).
+completion when completing file names (*note File Name Completion::),
+among many other cases.
 
-   To use this feature, pass a symbol with a function definition as the
-COLLECTION argument to `completing-read'.  The function
-`completing-read' arranges to pass your completion function along to
-`try-completion' and `all-completions', which will then let your
-function do all the work.
+   To use this feature, pass a function as the COLLECTION argument to
+`completing-read'.  The function `completing-read' arranges to pass
+your completion function along to `try-completion', `all-completions',
+and other basic completion functions, which will then let your function
+do all the work.
 
    The completion function should accept three arguments:
 
@@ -293,9 +294,13 @@ function do all the work.
      match, and ignore the possible match if the predicate returns
      `nil'.
 
-   * A flag specifying the type of operation.
+   * A flag specifying the type of operation.  The best way to think
+     about it is that the function stands for an object (in the
+     "object-oriented" sense of the word), and this third argument
+     specifies which method to run.
 
-   There are three flag values for three operations:
+   There are currently four methods, i.e. four flag values, one for
+each of the four different basic operations:
 
    * `nil' specifies `try-completion'.  The completion function should
      return the completion of the specified string, or `t' if the
@@ -312,6 +317,12 @@ function do all the work.
    * `lambda' specifies `test-completion'.  The completion function
      should return `t' if the specified string is an exact match for
      some possibility; `nil' otherwise.
+
+   * `(boundaries . SUFFIX)' specifies `completion-boundaries'.  The
+     function should return a value of the form `(boundaries START .
+     END)' where START is the position of the beginning boundary in in
+     the string to complete, and END is the position of the end boundary
+     in SUFFIX.
 
    It would be consistent and clean for completion functions to allow
 lambda expressions (lists that are functions) as well as function
@@ -786,7 +797,7 @@ are done, and the subroutines that allow Lisp programs to do them.
 * Distinguish Interactive::     Making a command distinguish interactive calls.
 * Command Loop Info::   Variables set by the command loop for you to examine.
 * Adjusting Point::     Adjustment of point after a command.
-* Input Events::	What input looks like when you read it.
+* Input Events::        What input looks like when you read it.
 * Reading Input::       How to read input events from the keyboard or mouse.
 * Special Events::      Events processed immediately and individually.
 * Waiting::             Waiting for user input or elapsed time.
@@ -818,16 +829,19 @@ callable function.  If the key is `M-x', then it reads the name of
 another command, which it then calls.  This is done by the command
 `execute-extended-command' (*note Interactive Call::).
 
-   To execute a command requires first reading the arguments for it.
-This is done by calling `command-execute' (*note Interactive Call::).
-For commands written in Lisp, the `interactive' specification says how
-to read the arguments.  This may use the prefix argument (*note Prefix
-Command Arguments::) or may read with prompting in the minibuffer
-(*note Minibuffers::).  For example, the command `find-file' has an
-`interactive' specification which says to read a file name using the
-minibuffer.  The command's function body does not use the minibuffer;
-if you call this command from Lisp code as a function, you must supply
-the file name string as an ordinary Lisp function argument.
+   Prior to executing the command, Emacs runs `undo-boundary' to create
+an undo boundary.  *Note Maintaining Undo::.
+
+   To execute a command, Emacs first reads its arguments by calling
+`command-execute' (*note Interactive Call::).  For commands written in
+Lisp, the `interactive' specification says how to read the arguments.
+This may use the prefix argument (*note Prefix Command Arguments::) or
+may read with prompting in the minibuffer (*note Minibuffers::).  For
+example, the command `find-file' has an `interactive' specification
+which says to read a file name using the minibuffer.  The function body
+of `find-file' does not use the minibuffer, so if you call `find-file'
+as a function from Lisp code, you must supply the file name string as
+an ordinary Lisp function argument.
 
    If the command is a string or vector (i.e., a keyboard macro) then
 `execute-kbd-macro' is used to execute it.  You can call this function
@@ -1631,23 +1645,23 @@ describes the representation and meaning of input events in detail.
 
 * Menu:
 
-* Keyboard Events::		Ordinary characters--keys with symbols on them.
-* Function Keys::		Function keys--keys with names, not symbols.
+* Keyboard Events::             Ordinary characters--keys with symbols on them.
+* Function Keys::               Function keys--keys with names, not symbols.
 * Mouse Events::                Overview of mouse events.
-* Click Events::		Pushing and releasing a mouse button.
-* Drag Events::			Moving the mouse before releasing the button.
-* Button-Down Events::		A button was pushed and not yet released.
+* Click Events::                Pushing and releasing a mouse button.
+* Drag Events::                 Moving the mouse before releasing the button.
+* Button-Down Events::          A button was pushed and not yet released.
 * Repeat Events::               Double and triple click (or drag, or down).
-* Motion Events::		Just moving the mouse, not pushing a button.
-* Focus Events::		Moving the mouse between frames.
+* Motion Events::               Just moving the mouse, not pushing a button.
+* Focus Events::                Moving the mouse between frames.
 * Misc Events::                 Other events the system can generate.
-* Event Examples::		Examples of the lists for mouse events.
-* Classifying Events::		Finding the modifier keys in an event symbol.
-				Event types.
-* Accessing Mouse::		Functions to extract info from mouse events.
-* Accessing Scroll::		Functions to get info from scroll bar events.
+* Event Examples::              Examples of the lists for mouse events.
+* Classifying Events::          Finding the modifier keys in an event symbol.
+                                Event types.
+* Accessing Mouse::             Functions to extract info from mouse events.
+* Accessing Scroll::            Functions to get info from scroll bar events.
 * Strings of Events::           Special considerations for putting
-				  keyboard character events in a string.
+                                  keyboard character events in a string.
 
 
 File: elisp,  Node: Keyboard Events,  Next: Function Keys,  Up: Input Events
@@ -2475,10 +2489,17 @@ various parts of it.
                     (+ (cdr x-y) (cadr edges)))))
 
  -- Function: posn-col-row position
-     Return the row and column (in units of the frame's default
-     character height and width) of POSITION, as a cons cell `(COL .
-     ROW)'.  These are computed from the X and Y values actually found
-     in POSITION.
+     This function returns a cons cell `(COL .  ROW)', containing the
+     estimated column and row corresponding to buffer position
+     POSITION.  The return value is given in units of the frame's
+     default character width and height, as computed from the X and Y
+     values corresponding to POSITION.  (So, if the actual characters
+     have non-default sizes, the actual row and column may differ from
+     these computed values.)
+
+     Note that ROW is counted from the top of the text area.  If the
+     window possesses a header line (*note Header Lines::), it is _not_
+     counted as the first line.
 
  -- Function: posn-actual-col-row position
      Return the actual row and column in POSITION, as a cons cell `(COL
@@ -2664,12 +2685,12 @@ terminal input.
 
 * Menu:
 
-* Key Sequence Input::		How to read one key sequence.
-* Reading One Event::		How to read just one event.
+* Key Sequence Input::          How to read one key sequence.
+* Reading One Event::           How to read just one event.
 * Event Mod::                   How Emacs modifies events as they are read.
 * Invoking the Input Method::   How reading an event uses the input method.
-* Quoted Character Input::	Asking the user to specify a character.
-* Event Input Misc::    	How to reread or throw away input events.
+* Quoted Character Input::      Asking the user to specify a character.
+* Event Input Misc::            How to reread or throw away input events.
 
 
 File: elisp,  Node: Key Sequence Input,  Next: Reading One Event,  Up: Reading Input
@@ -3328,9 +3349,9 @@ that normal quitting is permitted after the first character of input.
          (while (not done)
            (let ((inhibit-quit first)
                  ...)
-     	(and prompt (message "%s-" prompt))
-     	(setq char (read-event))
-     	(if inhibit-quit (setq quit-flag nil)))
+             (and prompt (message "%s-" prompt))
+             (setq char (read-event))
+             (if inhibit-quit (setq quit-flag nil)))
            ...set the variable `code'...)
          code))
 
@@ -3776,19 +3797,19 @@ process is called "key lookup".
 
 * Menu:
 
-* Key Sequences::        	Key sequences as Lisp objects.
+* Key Sequences::               Key sequences as Lisp objects.
 * Keymap Basics::               Basic concepts of keymaps.
-* Format of Keymaps::		What a keymap looks like as a Lisp object.
-* Creating Keymaps:: 		Functions to create and copy keymaps.
-* Inheritance and Keymaps::	How one keymap can inherit the bindings
-				   of another keymap.
+* Format of Keymaps::           What a keymap looks like as a Lisp object.
+* Creating Keymaps::            Functions to create and copy keymaps.
+* Inheritance and Keymaps::     How one keymap can inherit the bindings
+                                   of another keymap.
 * Prefix Keys::                 Defining a key with a keymap as its definition.
 * Active Keymaps::              How Emacs searches the active keymaps
                                    for a key binding.
 * Searching Keymaps::           A pseudo-Lisp summary of searching active maps.
 * Controlling Active Maps::     Each buffer has a local keymap
                                    to override the standard (global) bindings.
-				   A minor mode can also override them.
+                                   A minor mode can also override them.
 * Key Lookup::                  Finding a key's binding in one keymap.
 * Functions for Key Lookup::    How to request key lookup.
 * Changing Key Bindings::       Redefining a key in a keymap.
@@ -3796,7 +3817,7 @@ process is called "key lookup".
 * Translation Keymaps::         Keymaps for translating sequences of events.
 * Key Binding Commands::        Interactive interfaces for redefining keys.
 * Scanning Keymaps::            Looking through all keymaps, for printing help.
-* Menu Keymaps::		Defining a menu as a keymap.
+* Menu Keymaps::                Defining a menu as a keymap.
 
 
 File: elisp,  Node: Key Sequences,  Next: Keymap Basics,  Up: Keymaps
@@ -4995,6 +5016,10 @@ does not have the effect of remapping `kill-line' into
 ordinary binding specifies `my-kill-line', this keymap will remap it to
 `my-other-kill-line'.
 
+   To undo the remapping of a command, remap it to `nil'; e.g.
+
+     (define-key my-mode-map [remap kill-line] nil)
+
  -- Function: command-remapping command &optional position keymaps
      This function returns the remapping for COMMAND (a symbol), given
      the current active keymaps.  If COMMAND is not remapped (which is
@@ -5371,11 +5396,11 @@ feature.
 
 * Menu:
 
-* Defining Menus::		How to make a keymap that defines a menu.
-* Mouse Menus::			How users actuate the menu with the mouse.
-* Keyboard Menus::		How users actuate the menu with the keyboard.
-* Menu Example::		Making a simple menu.
-* Menu Bar::			How to customize the menu bar.
+* Defining Menus::              How to make a keymap that defines a menu.
+* Mouse Menus::                 How users actuate the menu with the mouse.
+* Keyboard Menus::              How users actuate the menu with the keyboard.
+* Menu Example::                Making a simple menu.
+* Menu Bar::                    How to customize the menu bar.
 * Tool Bar::                    A tool bar is a row of images.
 * Modifying Menus::             How to add new items to a menu.
 
@@ -5798,10 +5823,10 @@ Next we define the menu items:
 
      (define-key menu-bar-replace-menu [tags-repl-continue]
        '(menu-item "Continue Replace" tags-loop-continue
-     	      :help "Continue last tags replace operation"))
+                   :help "Continue last tags replace operation"))
      (define-key menu-bar-replace-menu [tags-repl]
        '(menu-item "Replace in tagged files" tags-query-replace
-     	      :help "Interactively replace a regexp in all tagged files"))
+                   :help "Interactively replace a regexp in all tagged files"))
      (define-key menu-bar-replace-menu [separator-replace-tags]
        '(menu-item "--"))
      ;; ...
@@ -6015,8 +6040,8 @@ indirection through `tool-bar-map'.
  -- Variable: tool-bar-map
      By default, the global map binds `[tool-bar]' as follows:
           (global-set-key [tool-bar]
-          		'(menu-item "tool bar" ignore
-          			    :filter (lambda (ignore) tool-bar-map)))
+                          '(menu-item "tool bar" ignore
+                                      :filter (lambda (ignore) tool-bar-map)))
      Thus the tool bar map is derived dynamically from the value of
      variable `tool-bar-map' and you should normally adjust the default
      (global) tool bar by changing that map.  Major modes may replace
@@ -6177,14 +6202,15 @@ the user.  For related topics such as keymaps and syntax tables, see
 
 * Menu:
 
-* Hooks::              How to use hooks; how to write code that provides hooks.
-* Major Modes::        Defining major modes.
-* Minor Modes::        Defining minor modes.
-* Mode Line Format::   Customizing the text that appears in the mode line.
-* Imenu::              How a mode can provide a menu
+* Hooks::                       How to use hooks; how to write code that provides hooks.
+* Major Modes::                 Defining major modes.
+* Minor Modes::                 Defining minor modes.
+* Mode Line Format::            Customizing the text that appears in the mode line.
+* Imenu::                       How a mode can provide a menu
                          of definitions in the buffer.
-* Font Lock Mode::     How modes can highlight text according to syntax.
-* Desktop Save Mode::  How modes can have buffer state saved between
+* Font Lock Mode::              How modes can highlight text according to syntax.
+* Auto-Indentation::            How to teach Emacs to indent for a major mode.
+* Desktop Save Mode::           How modes can have buffer state saved between
                          Emacs sessions.
 
 
@@ -6234,8 +6260,8 @@ single function, not a list of functions.
 
 * Menu:
 
-* Running Hooks::      How to run a hook.
-* Setting Hooks::      How to put functions on a hook, or remove them.
+* Running Hooks::               How to run a hook.
+* Setting Hooks::               How to put functions on a hook, or remove them.
 
 
 File: elisp,  Node: Running Hooks,  Next: Setting Hooks,  Up: Hooks
@@ -6351,15 +6377,15 @@ another major mode in the same buffer.
 * Menu:
 
 * Major Mode Basics::
-* Major Mode Conventions::  Coding conventions for keymaps, etc.
-* Auto Major Mode::         How Emacs chooses the major mode automatically.
-* Mode Help::               Finding out how to use a mode.
-* Derived Modes::           Defining a new major mode based on another major
+* Major Mode Conventions::      Coding conventions for keymaps, etc.
+* Auto Major Mode::             How Emacs chooses the major mode automatically.
+* Mode Help::                   Finding out how to use a mode.
+* Derived Modes::               Defining a new major mode based on another major
                               mode.
-* Generic Modes::           Defining a simple major mode that supports
+* Generic Modes::               Defining a simple major mode that supports
                               comment syntax and Font Lock mode.
-* Mode Hooks::              Hooks run at the end of major mode functions.
-* Example Major Modes::     Text mode and Lisp modes.
+* Mode Hooks::                  Hooks run at the end of major mode functions.
+* Example Major Modes::         Text mode and Lisp modes.
 
 
 File: elisp,  Node: Major Mode Basics,  Next: Major Mode Conventions,  Up: Major Modes
@@ -6390,9 +6416,8 @@ it provides two additional commands.  Its definition is distinct from
 that of Text mode, but uses that of Text mode.
 
    Even if the new mode is not an obvious derivative of any other mode,
-it is convenient to use `define-derived-mode' with a `nil' parent
-argument, since it automatically enforces the most important coding
-conventions for you.
+we recommend to use `define-derived-mode', since it automatically
+enforces the most important coding conventions for you.
 
    For a very simple programming language major mode that handles
 comments and fontification, you can use `define-generic-mode'.  *Note
@@ -6477,7 +6502,7 @@ the usual conventions, please make it compatible.
      programming language, indentation of text according to structure is
      probably useful.  So the mode should set `indent-line-function' to
      a suitable function, and probably customize other variables for
-     indentation.
+     indentation.  *Note Auto-Indentation::.
 
    * The major mode should usually have its own keymap, which is used
      as the local keymap in all buffers in that mode.  The major mode
@@ -6559,6 +6584,9 @@ the usual conventions, please make it compatible.
      `eldoc-documentation-function' to tell ElDoc mode how to handle
      this mode.
 
+   * The mode can specify how to complete various keywords by adding to
+     the special hook `completion-at-point-functions'.
+
    * Use `defvar' or `defcustom' to set mode-related variables, so that
      they are not reinitialized if they already have a value.  (Such
      reinitialization could discard customizations made by the user.)
@@ -6611,7 +6639,7 @@ the usual conventions, please make it compatible.
      mode as special if the parent mode is special.  The special mode
      `special-mode' provides a convenient parent for other special
      modes to inherit from; it sets `buffer-read-only' to `t', and does
-     nothing else.
+     little else.
 
    * If you want to make the new mode the default for files with certain
      recognizable names, add an element to `auto-mode-alist' to select
@@ -6793,30 +6821,4 @@ visited.  It also processes local variables specified in the file text.
                ;; File name ends in `.C'.
                ("\\.C\\'" . c++-mode))
              auto-mode-alist))
-
-
-File: elisp,  Node: Mode Help,  Next: Derived Modes,  Prev: Auto Major Mode,  Up: Major Modes
-
-23.2.4 Getting Help about a Major Mode
---------------------------------------
-
-The `describe-mode' function is used to provide information about major
-modes.  It is normally called with `C-h m'.  The `describe-mode'
-function uses the value of `major-mode', which is why every major mode
-function needs to set the `major-mode' variable.
-
- -- Command: describe-mode
-     This function displays the documentation of the current major mode.
-
-     The `describe-mode' function calls the `documentation' function
-     using the value of `major-mode' as an argument.  Thus, it displays
-     the documentation string of the major mode function.  (*Note
-     Accessing Documentation::.)
-
- -- Variable: major-mode
-     This buffer-local variable holds the symbol for the current
-     buffer's major mode.  This symbol should have a function
-     definition that is the command to switch to that major mode.  The
-     `describe-mode' function uses the documentation string of the
-     function as the documentation of the major mode.
 

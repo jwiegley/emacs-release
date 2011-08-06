@@ -1,12 +1,12 @@
-This is ../../info/emacs, produced by makeinfo version 4.11 from
+This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.2.
+updated for Emacs version 23.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,8 +23,299 @@ Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacs: (emacs).	The extensible self-documenting text editor.
+* Emacs: (emacs).       The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Operating on Files,  Next: Shell Commands in Dired,  Prev: Marks vs Flags,  Up: Dired
+
+37.7 Operating on Files
+=======================
+
+This section describes the basic Dired commands to operate on one file
+or several files.  All of these commands are capital letters; all of
+them use the minibuffer, either to read an argument or to ask for
+confirmation, before they act.  All of them let you specify the files
+to manipulate in these ways:
+
+   * If you give the command a numeric prefix argument N, it operates
+     on the next N files, starting with the current file.  (If N is
+     negative, the command operates on the -N files preceding the
+     current line.)
+
+   * Otherwise, if some files are marked with `*', the command operates
+     on all those files.
+
+   * Otherwise, the command operates on the current file only.
+
+Certain other Dired commands, such as `!' and the `%' commands, use the
+same conventions to decide which files to work on.
+
+   Commands which ask for a destination directory, such as those which
+copy and rename files or create links for them, try to guess the default
+target directory for the operation.  Normally, they suggest the Dired
+buffer's default directory, but if the variable `dired-dwim-target' is
+non-`nil', and if there is another Dired buffer displayed in the next
+window, that other buffer's directory is suggested instead.
+
+   Here are the file-manipulating Dired commands that operate on files.
+
+`C NEW <RET>'
+     Copy the specified files (`dired-do-copy').  The argument NEW is
+     the directory to copy into, or (if copying a single file) the new
+     name.  This is like the shell command `cp'.
+
+     If `dired-copy-preserve-time' is non-`nil', then copying with this
+     command preserves the modification time of the old file in the
+     copy, like `cp -p'.
+
+     The variable `dired-recursive-copies' controls whether to copy
+     directories recursively (like `cp -r').  The default is `nil',
+     which means that directories cannot be copied.
+
+`D'
+     Delete the specified files (`dired-do-delete').  This is like the
+     shell command `rm'.
+
+     Like the other commands in this section, this command operates on
+     the _marked_ files, or the next N files.  By contrast, `x'
+     (`dired-do-flagged-delete') deletes all "flagged" files.
+
+`R NEW <RET>'
+     Rename the specified files (`dired-do-rename').  If you rename a
+     single file, the argument NEW is the new name of the file.  If you
+     rename several files, the argument NEW is the directory into which
+     to move the files (this is like the shell command `mv').
+
+     Dired automatically changes the visited file name of buffers
+     associated with renamed files so that they refer to the new names.
+
+`H NEW <RET>'
+     Make hard links to the specified files (`dired-do-hardlink').
+     This is like the shell command `ln'.  The argument NEW is the
+     directory to make the links in, or (if making just one link) the
+     name to give the link.
+
+`S NEW <RET>'
+     Make symbolic links to the specified files (`dired-do-symlink').
+     This is like `ln -s'.  The argument NEW is the directory to make
+     the links in, or (if making just one link) the name to give the
+     link.
+
+`M MODESPEC <RET>'
+     Change the mode (also called "permission bits") of the specified
+     files (`dired-do-chmod').  This uses the `chmod' program, so
+     MODESPEC can be any argument that `chmod' can handle.
+
+`G NEWGROUP <RET>'
+     Change the group of the specified files to NEWGROUP
+     (`dired-do-chgrp').
+
+`O NEWOWNER <RET>'
+     Change the owner of the specified files to NEWOWNER
+     (`dired-do-chown').  (On most systems, only the superuser can do
+     this.)
+
+     The variable `dired-chown-program' specifies the name of the
+     program to use to do the work (different systems put `chown' in
+     different places).
+
+`T TIMESTAMP <RET>'
+     Touch the specified files (`dired-do-touch').  This means updating
+     their modification times to the present time.  This is like the
+     shell command `touch'.
+
+`P COMMAND <RET>'
+     Print the specified files (`dired-do-print').  You must specify the
+     command to print them with, but the minibuffer starts out with a
+     suitable guess made using the variables `lpr-command' and
+     `lpr-switches' (the same variables that `lpr-buffer' uses; *note
+     Printing::).
+
+`Z'
+     Compress the specified files (`dired-do-compress').  If the file
+     appears to be a compressed file already, uncompress it instead.
+
+`L'
+     Load the specified Emacs Lisp files (`dired-do-load').  *Note Lisp
+     Libraries::.
+
+`B'
+     Byte compile the specified Emacs Lisp files
+     (`dired-do-byte-compile').  *Note Byte Compilation: (elisp)Byte
+     Compilation.
+
+`A REGEXP <RET>'
+     Search all the specified files for the regular expression REGEXP
+     (`dired-do-search').
+
+     This command is a variant of `tags-search'.  The search stops at
+     the first match it finds; use `M-,' to resume the search and find
+     the next match.  *Note Tags Search::.
+
+`Q REGEXP <RET> TO <RET>'
+     Perform `query-replace-regexp' on each of the specified files,
+     replacing matches for REGEXP with the string TO
+     (`dired-do-query-replace-regexp').
+
+     This command is a variant of `tags-query-replace'.  If you exit the
+     query replace loop, you can use `M-,' to resume the scan and
+     replace more matches.  *Note Tags Search::.
+
+
+File: emacs,  Node: Shell Commands in Dired,  Next: Transforming File Names,  Prev: Operating on Files,  Up: Dired
+
+37.8 Shell Commands in Dired
+============================
+
+The Dired command `!' (`dired-do-shell-command') reads a shell command
+string in the minibuffer and runs that shell command on one or more
+files.  The files that the shell command operates on are determined in
+the usual way for Dired commands (*note Operating on Files::).  The
+command `X' is a synonym for `!'.
+
+   The command `&' (`dired-do-async-shell-command') does the same,
+except that it runs the shell command asynchronously.  You can also do
+this with `!', by appending a `&' character to the end of the shell
+command.
+
+   For both `!' and `&', the working directory for the shell command is
+the top-level directory of the Dired buffer.
+
+   If you tell `!' or `&' to operate on more than one file, the shell
+command string determines how those files are passed to the shell
+command:
+
+   * If you use `*' surrounded by whitespace in the command string,
+     then the command runs just once, with the list of file names
+     substituted for the `*'.  The order of file names is the order of
+     appearance in the Dired buffer.
+
+     Thus, `! tar cf foo.tar * <RET>' runs `tar' on the entire list of
+     file names, putting them into one tar file `foo.tar'.
+
+     If you want to use `*' as a shell wildcard with whitespace around
+     it, write `*""'.  In the shell, this is equivalent to `*'; but
+     since the `*' is not surrounded by whitespace, Dired does not
+     treat it specially.
+
+   * Otherwise, if the command string contains `?' surrounded by
+     whitespace, Emacs runs the shell command once _for each file_,
+     substituting the current file name for `?' each time.  You can use
+     `?' more than once in the command; the same file name replaces
+     each occurrence.
+
+   * If the command string contains neither `*' nor `?', Emacs runs the
+     shell command once for each file, adding the file name is added at
+     the end.  For example, `! uudecode <RET>' runs `uudecode' on each
+     file.
+
+   To iterate over the file names in a more complicated fashion, use an
+explicit shell loop.  For example, here is how to uuencode each file,
+making the output file name by appending `.uu' to the input file name:
+
+     for file in * ; do uuencode "$file" "$file" >"$file".uu; done
+
+   The `!' and `&' commands do not attempt to update the Dired buffer
+to show new or modified files, because they don't know what files will
+be changed.  Use the `g' command to update the Dired buffer (*note
+Dired Updating::).
+
+   *Note Single Shell::, for information about running shell commands
+outside Dired.
+
+
+File: emacs,  Node: Transforming File Names,  Next: Comparison in Dired,  Prev: Shell Commands in Dired,  Up: Dired
+
+37.9 Transforming File Names in Dired
+=====================================
+
+This section describes Dired commands which alter file names in a
+systematic way.  Each command operates on some or all of the marked
+files, using a new name made by transforming the existing name.
+
+   Like the basic Dired file-manipulation commands (*note Operating on
+Files::), the commands described here operate either on the next N
+files, or on all files marked with `*', or on the current file.  (To
+mark files, use the commands described in *note Marks vs Flags::.)
+
+   All of the commands described in this section work _interactively_:
+they ask you to confirm the operation for each candidate file.  Thus,
+you can select more files than you actually need to operate on (e.g.,
+with a regexp that matches many files), and then filter the selected
+names by typing `y' or `n' when the command prompts for confirmation.
+
+`% u'
+     Rename each of the selected files to an upper-case name
+     (`dired-upcase').  If the old file names are `Foo' and `bar', the
+     new names are `FOO' and `BAR'.
+
+`% l'
+     Rename each of the selected files to a lower-case name
+     (`dired-downcase').  If the old file names are `Foo' and `bar',
+     the new names are `foo' and `bar'.
+
+`% R FROM <RET> TO <RET>'
+`% C FROM <RET> TO <RET>'
+`% H FROM <RET> TO <RET>'
+`% S FROM <RET> TO <RET>'
+     These four commands rename, copy, make hard links and make soft
+     links, in each case computing the new name by regular-expression
+     substitution from the name of the old file.
+
+   The four regular-expression substitution commands effectively
+perform a search-and-replace on the selected file names.  They read two
+arguments: a regular expression FROM, and a substitution pattern TO;
+they match each "old" file name against FROM, and then replace the
+matching part with TO.  You can use `\&' and `\DIGIT' in TO to refer to
+all or part of what the pattern matched in the old file name, as in
+`replace-regexp' (*note Regexp Replace::).  If the regular expression
+matches more than once in a file name, only the first match is replaced.
+
+   For example, `% R ^.*$ <RET> x-\& <RET>' renames each selected file
+by prepending `x-' to its name.  The inverse of this, removing `x-'
+from the front of each file name, is also possible: one method is `% R
+^x-\(.*\)$ <RET> \1 <RET>'; another is `% R ^x- <RET> <RET>'.  (Use `^'
+and `$' to anchor matches that should span the whole file name.)
+
+   Normally, the replacement process does not consider the files'
+directory names; it operates on the file name within the directory.  If
+you specify a numeric argument of zero, then replacement affects the
+entire absolute file name including directory name.  (A non-zero
+argument specifies the number of files to operate on.)
+
+   You may want to select the set of files to operate on using the same
+regexp FROM that you will use to operate on them.  To do this, mark
+those files with `% m FROM <RET>', then use the same regular expression
+in the command to operate on the files.  To make this more convenient,
+the `%' commands to operate on files use the last regular expression
+specified in any `%' command as a default.
+
+
+File: emacs,  Node: Comparison in Dired,  Next: Subdirectories in Dired,  Prev: Transforming File Names,  Up: Dired
+
+37.10 File Comparison with Dired
+================================
+
+Here are two Dired commands that compare specified files using `diff'.
+They show the output in a buffer using Diff mode (*note Comparing
+Files::).
+
+`='
+     Compare the current file (the file at point) with another file (the
+     file at the mark) using the `diff' program (`dired-diff').  The
+     file at the mark is the first argument of `diff', and the file at
+     point is the second argument.  This refers to the ordinary Emacs
+     mark, not Dired marks; use `C-<SPC>' (`set-mark-command') to set
+     the mark at the first file's line (*note Setting Mark::).
+
+`M-='
+     Compare the current file with its latest backup file
+     (`dired-backup-diff').  If the current file is itself a backup,
+     compare it with the file it is a backup of; this way, you can
+     compare a file with any one of its backups.
+
+     The backup file is the first file given to `diff'.
 
 
 File: emacs,  Node: Subdirectories in Dired,  Next: Subdir Switches,  Prev: Comparison in Dired,  Up: Dired
@@ -502,7 +793,7 @@ calendar, type `q'.
 * Lunar Phases::        Displaying phases of the moon.
 * Other Calendars::     Converting dates to other calendar systems.
 * Diary::               Displaying events from your diary.
-* Appointments::	Reminders when it's time to do something.
+* Appointments::        Reminders when it's time to do something.
 * Importing Diary::     Converting diary events to/from other formats.
 * Daylight Saving::     How to specify when daylight saving time is active.
 * Time Intervals::      Keeping track of time intervals.
@@ -1072,11 +1363,11 @@ and from several other calendars.
 
 * Menu:
 
-* Calendar Systems::	   The calendars Emacs understands
-			     (aside from Gregorian).
-* To Other Calendar::	   Converting the selected date to various calendars.
-* From Other Calendar::	   Moving to a date specified in another calendar.
-* Mayan Calendar::	   Moving to a date specified in a Mayan calendar.
+* Calendar Systems::       The calendars Emacs understands
+                             (aside from Gregorian).
+* To Other Calendar::      Converting the selected date to various calendars.
+* From Other Calendar::    Moving to a date specified in another calendar.
+* Mayan Calendar::         Moving to a date specified in a Mayan calendar.
 
 
 File: emacs,  Node: Calendar Systems,  Next: To Other Calendar,  Up: Other Calendars
@@ -1414,8 +1705,8 @@ entries.
 
 * Displaying the Diary::   Viewing diary entries and associated calendar dates.
 * Format of Diary File::   Entering events in your diary.
-* Date Formats::	   Various ways you can specify dates.
-* Adding to Diary::	   Commands to create diary entries.
+* Date Formats::           Various ways you can specify dates.
+* Adding to Diary::        Commands to create diary entries.
 * Special Diary Entries::  Anniversaries, blocks of dates, cyclic entries, etc.
 
 
@@ -1803,7 +2094,7 @@ automatically just after midnight.  You can force an update at any time
 by re-enabling appointment notification.  Both these actions also
 display the day's diary buffer, unless you set `appt-display-diary' to
 `nil'.  The appointments list is also updated whenever the diary file
-is saved.
+(or a file it includes; see *note Fancy Diary Display::) is saved.
 
    You can also use the appointment notification facility like an alarm
 clock.  The command `M-x appt-add' adds entries to the appointment list
@@ -2462,7 +2753,9 @@ day's diary entries by their time of day.  Here's how:
 
 For each day, this sorts diary entries that begin with a recognizable
 time of day according to their times.  Diary entries without times come
-first within each day.
+first within each day.  Note how the sort command is placed at the end
+of the hook list, in case earlier members of the list change the order
+of the diary entries, or add items.
 
    Your main diary file can include other files.  This permits a group
 of people to share a diary file for events that apply to all of them.
@@ -2725,10 +3018,10 @@ default size for DocView, set or customize the variable
 
 * Menu:
 
-* Navigation::	Navigation inside DocView buffers.
-* Searching::	Searching inside documents.
-* Slicing::	Specifying which part of pages should be displayed.
-* Conversion::	Influencing and triggering conversion.
+* Navigation::  Navigation inside DocView buffers.
+* Searching::   Searching inside documents.
+* Slicing::     Specifying which part of pages should be displayed.
+* Conversion::  Influencing and triggering conversion.
 
 
 File: emacs,  Node: Navigation,  Next: Searching,  Up: Document View
@@ -2843,9 +3136,9 @@ details, see *note Gnus: (gnus)Top.
 
 * Menu:
 
-* Buffers of Gnus::	The group, summary, and article buffers.
-* Gnus Startup::	What you should know about starting Gnus.
-* Summary of Gnus::	A short description of the basic Gnus commands.
+* Buffers of Gnus::     The group, summary, and article buffers.
+* Gnus Startup::        What you should know about starting Gnus.
+* Summary of Gnus::     A short description of the basic Gnus commands.
 
 
 File: emacs,  Node: Buffers of Gnus,  Next: Gnus Startup,  Up: Gnus
@@ -4074,7 +4367,7 @@ program: `nil' means don't add them.  `lpr-add-switches' should be
 
 * Menu:
 
-* PostScript::	         Printing buffers or regions as PostScript.
+* PostScript::           Printing buffers or regions as PostScript.
 * PostScript Variables:: Customizing the PostScript printing commands.
 * Printing Package::     An optional advanced printing interface.
 
@@ -4583,11 +4876,13 @@ or add this line in your init file (*note Init File::):
 
    If you turn on `desktop-save-mode' in your init file, then when
 Emacs starts, it looks for a saved desktop in the current directory.
-Thus, you can have separate saved desktops in different directories,
-and the starting directory determines which one Emacs reloads.  You can
-save the current desktop and reload one saved in another directory by
-typing `M-x desktop-change-dir'.  Typing `M-x desktop-revert' reverts
-to the desktop previously reloaded.
+(More precisely, it looks in the directories specified by DESKTOP-PATH,
+and uses the first desktop it finds.)  Thus, you can have separate
+saved desktops in different directories, and the starting directory
+determines which one Emacs reloads.  You can save the current desktop
+and reload one saved in another directory by typing `M-x
+desktop-change-dir'.  Typing `M-x desktop-revert' reverts to the
+desktop previously reloaded.
 
    Specify the option `--no-desktop' on the command line when you don't
 want it to reload any saved desktop.  This turns off
@@ -4963,6 +5258,9 @@ bored, try an argument of 9.  Sit back and watch.
    If you want a little more personal involvement, try `M-x gomoku',
 which plays the game Go Moku with you.
 
+   `M-x bubbles' is a game in which the object is to remove as many
+bubbles as you can in the smallest number of moves.
+
    `M-x blackbox', `M-x mpuz' and `M-x 5x5' are puzzles.  `blackbox'
 challenges you to determine the location of objects inside a box by
 tomography.  `mpuz' displays a multiplication puzzle with letters
@@ -4990,6 +5288,9 @@ bats.
 
    `M-x solitaire' plays a game of solitaire in which you jump pegs
 across other pegs.
+
+   The `animate' package makes text dance.  For an example, try `M-x
+animate-birthday-present'.
 
    `M-x studlify-region' studlify-cases the region, producing text like
 this:
@@ -5024,18 +5325,18 @@ involves writing Emacs Lisp code; see *note Emacs Lisp: (elisp)Top.
 
 * Menu:
 
-* Minor Modes::		Each minor mode is a feature you can turn on
-			  independently of any others.
+* Minor Modes::         Each minor mode is a feature you can turn on
+                          independently of any others.
 * Easy Customization::  Convenient way to browse and change settings.
-* Variables::		Many Emacs commands examine Emacs variables
-			  to decide what to do; by setting variables,
-			  you can control their functioning.
-* Key Bindings::	The keymaps say what command each key runs.
-			  By changing them, you can "redefine keys".
-* Syntax::		The syntax table controls how words and
-			  expressions are parsed.
-* Init File::		How to write common customizations in the
-			  `.emacs' file.
+* Variables::           Many Emacs commands examine Emacs variables
+                          to decide what to do; by setting variables,
+                          you can control their functioning.
+* Key Bindings::        The keymaps say what command each key runs.
+                          By changing them, you can "redefine keys".
+* Syntax::              The syntax table controls how words and
+                          expressions are parsed.
+* Init File::           How to write common customizations in the
+                          `.emacs' file.
 
 
 File: emacs,  Node: Minor Modes,  Next: Easy Customization,  Up: Customization
@@ -5687,7 +5988,7 @@ Examining::.
 most interesting variables for a non-programmer user are those meant
 for users to change--these are called "user options".  *Note Easy
 Customization::, for information about using the Customize facility to
-set user options.  In the following sections, we describe will other
+set user options.  In the following sections, we will describe other
 aspects of Emacs variables, such as how to set them outside Customize.
 
    Emacs Lisp allows any variable (with a few exceptions) to have any
@@ -5710,10 +6011,10 @@ Examining::).
 
 * Menu:
 
-* Examining::	        Examining or setting one variable's value.
-* Hooks::	        Hook variables let you specify programs for parts
-		          of Emacs to run on particular occasions.
-* Locals::	        Per-buffer values of variables.
+* Examining::           Examining or setting one variable's value.
+* Hooks::               Hook variables let you specify programs for parts
+                          of Emacs to run on particular occasions.
+* Locals::              Per-buffer values of variables.
 * File Variables::      How files can specify variable values.
 * Directory Variables:: How variable values can be specified by directory.
 
@@ -5838,10 +6139,10 @@ lambda expression.
      (setq my-c-style
        '((c-comment-only-line-offset . 4)
          (c-cleanup-list . (scope-operator
-     		       empty-defun-braces
-     		       defun-close-semi))
+                            empty-defun-braces
+                            defun-close-semi))
          (c-offsets-alist . ((arglist-close . c-lineup-arglist)
-     			(substatement-open . 0)))))
+                             (substatement-open . 0)))))
 
      (add-hook 'c-mode-common-hook
        '(lambda ()
@@ -6659,291 +6960,4 @@ keys, using the variables `keypad-setup', `keypad-numlock-setup',
 be found in the `keyboard' customization group (*note Easy
 Customization::).  You can rebind the keys to perform other tasks, such
 as issuing numeric prefix arguments.
-
-
-File: emacs,  Node: Named ASCII Chars,  Next: Mouse Buttons,  Prev: Function Keys,  Up: Key Bindings
-
-57.4.9 Named ASCII Control Characters
--------------------------------------
-
-<TAB>, <RET>, <BS>, <LFD>, <ESC> and <DEL> started out as names for
-certain ASCII control characters, used so often that they have special
-keys of their own.  For instance, <TAB> was another name for `C-i'.
-Later, users found it convenient to distinguish in Emacs between these
-keys and the "same" control characters typed with the <CTRL> key.
-Therefore, on most modern terminals, they are no longer the same: <TAB>
-is different from `C-i'.
-
-   Emacs can distinguish these two kinds of input if the keyboard does.
-It treats the "special" keys as function keys named `tab', `return',
-`backspace', `linefeed', `escape', and `delete'.  These function keys
-translate automatically into the corresponding ASCII characters _if_
-they have no bindings of their own.  As a result, neither users nor
-Lisp programs need to pay attention to the distinction unless they care
-to.
-
-   If you do not want to distinguish between (for example) <TAB> and
-`C-i', make just one binding, for the ASCII character <TAB> (octal code
-011).  If you do want to distinguish, make one binding for this ASCII
-character, and another for the "function key" `tab'.
-
-   With an ordinary ASCII terminal, there is no way to distinguish
-between <TAB> and `C-i' (and likewise for other such pairs), because
-the terminal sends the same character in both cases.
-
-
-File: emacs,  Node: Mouse Buttons,  Next: Disabling,  Prev: Named ASCII Chars,  Up: Key Bindings
-
-57.4.10 Rebinding Mouse Buttons
--------------------------------
-
-Emacs uses Lisp symbols to designate mouse buttons, too.  The ordinary
-mouse events in Emacs are "click" events; these happen when you press a
-button and release it without moving the mouse.  You can also get
-"drag" events, when you move the mouse while holding the button down.
-Drag events happen when you finally let go of the button.
-
-   The symbols for basic click events are `mouse-1' for the leftmost
-button, `mouse-2' for the next, and so on.  Here is how you can
-redefine the second mouse button to split the current window:
-
-     (global-set-key [mouse-2] 'split-window-vertically)
-
-   The symbols for drag events are similar, but have the prefix `drag-'
-before the word `mouse'.  For example, dragging the first button
-generates a `drag-mouse-1' event.
-
-   You can also define bindings for events that occur when a mouse
-button is pressed down.  These events start with `down-' instead of
-`drag-'.  Such events are generated only if they have key bindings.
-When you get a button-down event, a corresponding click or drag event
-will always follow.
-
-   If you wish, you can distinguish single, double, and triple clicks.
-A double click means clicking a mouse button twice in approximately the
-same place.  The first click generates an ordinary click event.  The
-second click, if it comes soon enough, generates a double-click event
-instead.  The event type for a double-click event starts with
-`double-': for example, `double-mouse-3'.
-
-   This means that you can give a special meaning to the second click at
-the same place, but it must act on the assumption that the ordinary
-single click definition has run when the first click was received.
-
-   This constrains what you can do with double clicks, but user
-interface designers say that this constraint ought to be followed in
-any case.  A double click should do something similar to the single
-click, only "more so."  The command for the double-click event should
-perform the extra work for the double click.
-
-   If a double-click event has no binding, it changes to the
-corresponding single-click event.  Thus, if you don't define a
-particular double click specially, it executes the single-click command
-twice.
-
-   Emacs also supports triple-click events whose names start with
-`triple-'.  Emacs does not distinguish quadruple clicks as event types;
-clicks beyond the third generate additional triple-click events.
-However, the full number of clicks is recorded in the event list, so if
-you know Emacs Lisp you can distinguish if you really want to (*note
-Click Events: (elisp)Click Events.).  We don't recommend distinct
-meanings for more than three clicks, but sometimes it is useful for
-subsequent clicks to cycle through the same set of three meanings, so
-that four clicks are equivalent to one click, five are equivalent to
-two, and six are equivalent to three.
-
-   Emacs also records multiple presses in drag and button-down events.
-For example, when you press a button twice, then move the mouse while
-holding the button, Emacs gets a `double-drag-' event.  And at the
-moment when you press it down for the second time, Emacs gets a
-`double-down-' event (which is ignored, like all button-down events, if
-it has no binding).
-
-   The variable `double-click-time' specifies how much time can elapse
-between clicks and still allow them to be grouped as a multiple click.
-Its value is in units of milliseconds.  If the value is `nil', double
-clicks are not detected at all.  If the value is `t', then there is no
-time limit.  The default is 500.
-
-   The variable `double-click-fuzz' specifies how much the mouse can
-move between clicks and still allow them to be grouped as a multiple
-click.  Its value is in units of pixels on windowed displays and in
-units of 1/8 of a character cell on text-mode terminals; the default is
-3.
-
-   The symbols for mouse events also indicate the status of the modifier
-keys, with the usual prefixes `C-', `M-', `H-', `s-', `A-' and `S-'.
-These always precede `double-' or `triple-', which always precede
-`drag-' or `down-'.
-
-   A frame includes areas that don't show text from the buffer, such as
-the mode line and the scroll bar.  You can tell whether a mouse button
-comes from a special area of the screen by means of dummy "prefix
-keys."  For example, if you click the mouse in the mode line, you get
-the prefix key `mode-line' before the ordinary mouse-button symbol.
-Thus, here is how to define the command for clicking the first button in
-a mode line to run `scroll-up':
-
-     (global-set-key [mode-line mouse-1] 'scroll-up)
-
-   Here is the complete list of these dummy prefix keys and their
-meanings:
-
-`mode-line'
-     The mouse was in the mode line of a window.
-
-`vertical-line'
-     The mouse was in the vertical line separating side-by-side
-     windows.  (If you use scroll bars, they appear in place of these
-     vertical lines.)
-
-`vertical-scroll-bar'
-     The mouse was in a vertical scroll bar.  (This is the only kind of
-     scroll bar Emacs currently supports.)
-
-`menu-bar'
-     The mouse was in the menu bar.
-
-`header-line'
-     The mouse was in a header line.
-
-   You can put more than one mouse button in a key sequence, but it
-isn't usual to do so.
-
-
-File: emacs,  Node: Disabling,  Prev: Mouse Buttons,  Up: Key Bindings
-
-57.4.11 Disabling Commands
---------------------------
-
-Disabling a command means that invoking it interactively asks for
-confirmation from the user.  The purpose of disabling a command is to
-prevent users from executing it by accident; we do this for commands
-that might be confusing to the uninitiated.
-
-   Attempting to invoke a disabled command interactively in Emacs
-displays a window containing the command's name, its documentation, and
-some instructions on what to do immediately; then Emacs asks for input
-saying whether to execute the command as requested, enable it and
-execute it, or cancel.  If you decide to enable the command, you must
-then answer another question--whether to do this permanently, or just
-for the current session.  (Enabling permanently works by automatically
-editing your `.emacs' file.)  You can also type `!' to enable _all_
-commands, for the current session only.
-
-   The direct mechanism for disabling a command is to put a non-`nil'
-`disabled' property on the Lisp symbol for the command.  Here is the
-Lisp program to do this:
-
-     (put 'delete-region 'disabled t)
-
-   If the value of the `disabled' property is a string, that string is
-included in the message displayed when the command is used:
-
-     (put 'delete-region 'disabled
-          "It's better to use `kill-region' instead.\n")
-
-   You can make a command disabled either by editing the `.emacs' file
-directly, or with the command `M-x disable-command', which edits the
-`.emacs' file for you.  Likewise, `M-x enable-command' edits `.emacs'
-to enable a command permanently.  *Note Init File::.
-
-   If Emacs was invoked with the `-q' or `--no-init-file' options
-(*note Initial Options::), it will not edit your `~/.emacs' init file.
-Doing so could lose information because Emacs has not read your init
-file.
-
-   Whether a command is disabled is independent of what key is used to
-invoke it; disabling also applies if the command is invoked using
-`M-x'.  However, disabling a command has no effect on calling it as a
-function from Lisp programs.
-
-
-File: emacs,  Node: Syntax,  Next: Init File,  Prev: Key Bindings,  Up: Customization
-
-57.5 The Syntax Table
-=====================
-
-All the Emacs commands which parse words or balance parentheses are
-controlled by the "syntax table".  The syntax table says which
-characters are opening delimiters, which are parts of words, which are
-string quotes, and so on.  It does this by assigning each character to
-one of fifteen-odd "syntax classes".  In some cases it specifies some
-additional information also.
-
-   Each major mode has its own syntax table (though related major modes
-sometimes share one syntax table), which it installs in each buffer
-that uses the mode.  The syntax table installed in the current buffer
-is the one that all commands use, so we call it "the" syntax table.
-
-   To display a description of the contents of the current syntax
-table, type `C-h s' (`describe-syntax').  The description of each
-character includes the string you would have to give to
-`modify-syntax-entry' to set up that character's current syntax,
-starting with the character which designates its syntax class, plus
-some English text to explain its meaning.
-
-   A syntax table is actually a Lisp object, a char-table, whose
-elements are cons cells.  For full information on the syntax table, see
-*note Syntax Tables: (elisp)Syntax Tables.
-
-
-File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
-
-57.6 The Init File, `~/.emacs'
-==============================
-
-When Emacs is started, it normally tries to load a Lisp program from an
-"initialization file", or "init file" for short.  This file, if it
-exists, specifies how to initialize Emacs for you.  Emacs looks for
-your init file using the filenames `~/.emacs', `~/.emacs.el', or
-`~/.emacs.d/init.el'; you can choose to use any one of these three
-names (*note Find Init::).  Here, `~/' stands for your home directory.
-
-   You can use the command line switch `-q' to prevent loading your
-init file, and `-u' (or `--user') to specify a different user's init
-file (*note Initial Options::).
-
-   There can also be a "default init file", which is the library named
-`default.el', found via the standard search path for libraries.  The
-Emacs distribution contains no such library; your site may create one
-for local customizations.  If this library exists, it is loaded
-whenever you start Emacs (except when you specify `-q').  But your init
-file, if any, is loaded first; if it sets `inhibit-default-init'
-non-`nil', then `default' is not loaded.
-
-   Your site may also have a "site startup file"; this is named
-`site-start.el', if it exists.  Like `default.el', Emacs finds this
-file via the standard search path for Lisp libraries.  Emacs loads this
-library before it loads your init file.  To inhibit loading of this
-library, use the option `--no-site-file'.  *Note Initial Options::.  We
-recommend against using `site-start.el' for changes that some users may
-not like.  It is better to put them in `default.el', so that users can
-more easily override them.
-
-   You can place `default.el' and `site-start.el' in any of the
-directories which Emacs searches for Lisp libraries.  The variable
-`load-path' (*note Lisp Libraries::) specifies these directories.  Many
-sites put these files in the `site-lisp' subdirectory of the Emacs
-installation directory, typically `/usr/local/share/emacs/site-lisp'.
-
-   Byte-compiling your init file is not recommended (*note Byte
-Compilation: (elisp)Byte Compilation.).  It generally does not speed up
-startup very much, and often leads to problems when you forget to
-recompile the file.  A better solution is to use the Emacs server to
-reduce the number of times you have to start Emacs (*note Emacs
-Server::).  If your init file defines many functions, consider moving
-them to a separate (byte-compiled) file that you load in your init file.
-
-   If you are going to write actual Emacs Lisp programs that go beyond
-minor customization, you should read the `Emacs Lisp Reference Manual'.
-*Note Emacs Lisp: (elisp)Top.
-
-* Menu:
-
-* Init Syntax::	        Syntax of constants in Emacs Lisp.
-* Init Examples::       How to do some things with an init file.
-* Terminal Init::       Each terminal type can have an init file.
-* Find Init::	        How Emacs finds the init file.
-* Init Non-ASCII::      Using non-ASCII characters in an init file.
 

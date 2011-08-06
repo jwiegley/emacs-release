@@ -4,7 +4,7 @@ dnl 	autoconf
 dnl in the directory containing this script.
 dnl
 dnl  Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003,
-dnl    2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+dnl    2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 dnl
 dnl  This file is part of GNU Emacs.
 dnl
@@ -22,7 +22,7 @@ dnl  You should have received a copy of the GNU General Public License
 dnl  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ(2.62)
-AC_INIT(emacs, 23.2)
+AC_INIT(emacs, 23.3)
 AC_CONFIG_HEADER(src/config.h:src/config.in)
 AC_CONFIG_SRCDIR(src/lisp.h)
 
@@ -168,6 +168,12 @@ if test "X${with_pkg_config_prog}" != X; then
       PKG_CONFIG="${with_pkg_config_prog}"
    fi
 fi
+
+CRT_DIR=
+AC_ARG_WITH([crt-dir],dnl
+[AS_HELP_STRING([--with-crt-dir=DIR],[directory containing crtn.o etc.
+This option is only used on x86-64 and s390x GNU/Linux architectures.])])
+CRT_DIR="${with_crt_dir}"
 
 AC_ARG_WITH([gnustep-conf],dnl
 [AS_HELP_STRING([--with-gnustep-conf=PATH],[path to GNUstep.conf; default $GNUSTEP_CONFIG_FILE, or /etc/GNUstep/GNUstep.conf])])
@@ -485,6 +491,10 @@ dnl see the `changequote' comment above.
   hppa*-hp-hpux1[1-9]* )
     machine=hp800 opsys=hpux11
     CFLAGS="-D_INCLUDE__STDC_A1_SOURCE $CFLAGS"
+  ;;
+
+  ia64*-hp-hpux1[1-9]* )
+    machine=hp800 opsys=hpux11
   ;;
 
   hppa*-*-linux-gnu* )
@@ -996,18 +1006,28 @@ AC_CONFIG_LIBOBJ_DIR(src)
 dnl Do this early because it can frob feature test macros for Unix-98 &c.
 AC_SYS_LARGEFILE
 
-
-### The standard library on x86-64 and s390x GNU/Linux distributions can
-### be located in either /usr/lib64 or /usr/lib.
-### In some rare cases, /usr/lib64 exists but does not contain the
-### relevant files (bug#1287).  Hence test for crtn.o.
+## Note: at present CRT_DIR is only used for amdx86-64 and ibms390x.
+## Other machine types hard-code the location in src/[ms]/*.h.
 case "${canonical}" in
   x86_64-*-linux-gnu* | s390x-*-linux-gnu* )
-    if test -e /usr/lib64/crtn.o; then
-      AC_DEFINE(HAVE_LIB64_DIR, 1,
-        [Define to 1 if the directory /usr/lib64 exists.])
-fi
+   ## On x86-64 and s390x GNU/Linux distributions, the standard library
+   ## can be in a variety of places.  We only try /usr/lib64 and /usr/lib.
+   ## For anything else (eg /usr/lib32), it is up the user to specify
+   ## the location (bug#5655).
+   ## Test for crtn.o, not just the directory, because sometimes the
+   ## directory exists but does not have the relevant files (bug#1287).
+   ## If user specified a crt-dir, use that unconditionally.
+   if test "X$CRT_DIR" = "X"; then
+     CRT_DIR=/usr/lib
+     test -e /usr/lib64/crtn.o && CRT_DIR=/usr/lib64
+   fi
+
+   test -e $CRT_DIR/crtn.o || test -e $CRT_DIR/crt0.o || \
+     AC_MSG_ERROR([crt*.o not found.  Use --with-crt-dir to specify the location.])
+   ;;
 esac
+test "X$CRT_DIR" = "X" && CRT_DIR=/usr/lib
+AC_SUBST(CRT_DIR)
 
 dnl This function defintion taken from Gnome 2.0
 dnl PKG_CHECK_MODULES(GSTUFF, gtk+-2.0 >= 1.3 glib = 1.3.4, action-if, action-not)
@@ -1760,6 +1780,8 @@ if test "${HAVE_X11}" = "yes" && test "${with_gconf}" = "yes"; then
    PKG_CHECK_MODULES(GCONF, gconf-2.0 >= 2.13, HAVE_GCONF=yes, HAVE_GCONF=no)
    if test "$HAVE_GCONF" = yes; then
       AC_DEFINE(HAVE_GCONF, 1, [Define to 1 if using GConf.])
+      dnl Newer GConf doesn't link with g_objects, so this is not defined.
+      AC_CHECK_FUNCS([g_type_init])
    fi
 fi
 
@@ -1774,7 +1796,8 @@ if test x"${USE_X_TOOLKIT}" = xmaybe || test x"${USE_X_TOOLKIT}" = xLUCID; then
 #include <X11/Intrinsic.h>
 #include <X11/Xaw3d/Simple.h>],
       [],
-      emacs_cv_xaw3d=yes,
+      [AC_CHECK_LIB(Xaw3d, XawScrollbarSetThumb,
+                    emacs_cv_xaw3d=yes, emacs_cv_xaw3d=no)],
       emacs_cv_xaw3d=no)])
   else
     emacs_cv_xaw3d=no
@@ -2354,6 +2377,15 @@ AC_CHECK_FUNCS(getpt)
 # than to expect to find it in ncurses.
 AC_CHECK_LIB(ncurses, tparm)
 
+case "$opsys" in
+  netbsd)
+    AC_SEARCH_LIBS(tputs, [ncurses terminfo termcap])
+    if test $ac_cv_search_tputs = -lterminfo; then
+      AC_DEFINE(TERMINFO, 1, [Define to 1 if you use terminfo instead of termcap.])
+    fi
+    ;;
+esac
+
 # Do we have res_init, for detecting changes in /etc/resolv.conf?
 
 resolv=no
@@ -2725,7 +2757,7 @@ fi
 
 AH_TOP([/* GNU Emacs site configuration template file.
    Copyright (C) 1988, 1993, 1994, 1999, 2000, 2001, 2002, 2004, 2005,
-     2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+     2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -2911,15 +2943,19 @@ extern char *getenv ();
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#ifndef __GNUC__
-# ifdef HAVE_ALLOCA_H
-#  include <alloca.h>
-# else /* AIX files deal with #pragma.  */
-#  ifndef alloca /* predefined by HP cc +Olibcalls */
-char *alloca ();
-#  endif
-# endif /* HAVE_ALLOCA_H */
-#endif /* __GNUC__ */
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif defined __GNUC__
+# define alloca __builtin_alloca
+#elif defined _AIX
+# define alloca __alloca
+#else
+# include <stddef.h>
+# ifdef  __cplusplus
+extern "C"
+# endif
+void *alloca (size_t);
+#endif
 #ifndef HAVE_SIZE_T
 typedef unsigned size_t;
 #endif
@@ -3054,11 +3090,6 @@ to run if these resources are not installed."
    echo
 fi
 
-if test "$HAVE_DBUS" = yes && test "${opsys}" != "gnu-linux"; then
-  echo "D-Bus integration has been tested for GNU/Linux only."
-  echo
-fi
-
 
 # Remove any trailing slashes in these variables.
 [test "${prefix}" != NONE &&
@@ -3072,7 +3103,7 @@ test "${exec_prefix}" != NONE &&
 # the C preprocessor to some helpful value like 1, or maybe the empty
 # string.  Needless to say consequent macro substitutions are less
 # than conducive to the makefile finding the correct directory.
-[cpp_undefs="`echo $srcdir $configuration $canonical |
+[cpp_undefs="`echo $srcdir $configuration $canonical unix |
   sed -e 's/[^a-zA-Z0-9_]/ /g' -e 's/^/ /' -e 's/  *$//' \
   -e 's/  */ -U/g' -e 's/-U[0-9][^ ]*//g'`"]
 

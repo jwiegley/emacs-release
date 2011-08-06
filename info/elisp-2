@@ -1,12 +1,12 @@
-This is ../../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.2.
+corresponding to Emacs version 23.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
-Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,7 +21,7 @@ Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
@@ -401,13 +401,13 @@ code; it can also specify a value for an entire character set.
           (let (accumulator)
              (map-char-table
               #'(lambda (key value)
-          	(setq accumulator
-          	      (cons (list
-          		     (if (consp key)
-          			 (list (car key) (cdr key))
-          		       key)
-          		     value)
-          		    accumulator)))
+                  (setq accumulator
+                        (cons (list
+                               (if (consp key)
+                                   (list (car key) (cdr key))
+                                 key)
+                               value)
+                              accumulator)))
               (syntax-table))
              accumulator)
           =>
@@ -1119,7 +1119,7 @@ not a string, or if the obarray is not a vector.
      See `documentation' in *note Accessing Documentation::, for another
      example using `mapatoms'.
 
- -- Function: unintern symbol &optional obarray
+ -- Function: unintern symbol obarray
      This function deletes SYMBOL from the obarray OBARRAY.  If
      `symbol' is not actually in the obarray, `unintern' does nothing.
      If OBARRAY is `nil', the current obarray is used.
@@ -1414,7 +1414,7 @@ forms.
 * Symbol Forms::            Symbols evaluate as variables.
 * Classifying Lists::       How to distinguish various sorts of list forms.
 * Function Indirection::    When a symbol appears as the car of a list,
-			      we find the real function via the symbol.
+                              we find the real function via the symbol.
 * Function Forms::          Forms that call functions.
 * Macro Forms::             Forms that call macros.
 * Special Forms::           "Special forms" are idiosyncratic primitives,
@@ -2815,7 +2815,7 @@ is no suitable `catch' signals an error that can be handled).
      to `condition-case' whose error condition you want to re-throw.
      *Note Definition of signal::.
 
- -- Function: error-message-string error-description
+ -- Function: error-message-string error-descriptor
      This function returns the error message string for a given error
      descriptor.  It is useful if you want to handle an error by
      printing the usual error message for that error.  *Note Definition
@@ -3475,16 +3475,17 @@ void.
      buffer-local value.  (But you should not be making buffer-local
      bindings for a symbol that is defined with `defconst'.)
 
-     Here, `pi' is a constant that presumably ought not to be changed
-     by anyone (attempts by the Indiana State Legislature
-     notwithstanding).  As the second form illustrates, however, this
-     is only advisory.
+     An example of the use of `defconst' is Emacs' definition of
+     `float-pi'--the mathematical constant pi, which ought not to be
+     changed by anyone (attempts by the Indiana State Legislature
+     notwithstanding).  As the second form illustrates, however,
+     `defconst' is only advisory.
 
-          (defconst pi 3.1415 "Pi to five places.")
-               => pi
-          (setq pi 3)
-               => pi
-          pi
+          (defconst float-pi 3.141592653589793 "The value of Pi.")
+               => float-pi
+          (setq float-pi 3)
+               => float-pi
+          float-pi
                => 3
 
  -- Function: user-variable-p variable
@@ -4224,7 +4225,9 @@ File: elisp,  Node: Creating Buffer-Local,  Next: Default Value,  Prev: Intro to
      subsequent major mode.  *Note Hooks::.
 
    A buffer-local variable is "permanent" if the variable name (a
-symbol) has a `permanent-local' property that is non-`nil'.  Permanent
+symbol) has a `permanent-local' property that is non-`nil'.  Such
+variables are unaffected by `kill-all-local-variables', and their local
+bindings are therefore not cleared by changing major modes.  Permanent
 locals are appropriate for data pertaining to where the file came from
 or how to save it, rather than with how to edit the contents.
 
@@ -4522,12 +4525,20 @@ class" for that directory.
      recursively by following the above rules; LIST should be of one of
      the two forms accepted by this function in VARIABLES.
 
- -- Function: dir-locals-set-directory-class directory class
+ -- Function: dir-locals-set-directory-class directory class &optional
+          mtime
      This function assigns CLASS to all the files in `directory' and
      its subdirectories.  Thereafter, all the variable settings
      specified for CLASS will be applied to any visited file in
      DIRECTORY and its children.  CLASS must have been already defined
-     by `dir-locals-set-class-variables'
+     by `dir-locals-set-class-variables'.
+
+     Emacs uses this function internally when it loads directory
+     variables from a `.dir-locals.el' file.  In that case, the optional
+     argument MTIME holds the file modification time (as returned by
+     `file-attributes').  Emacs uses this time to check stored local
+     variables are still valid.  If you are assigning a class directly,
+     not via a file, this argument should be `nil'.
 
  -- Variable: dir-locals-class-alist
      This alist holds the class symbols and the associated variable
@@ -4535,8 +4546,9 @@ class" for that directory.
 
  -- Variable: dir-locals-directory-cache
      This alist holds directory names, their assigned class names, and
-     modification times of the associated directory local variables
-     file.  It is updated by `dir-locals-set-directory-class'.
+     modification times of the associated directory local variables file
+     (if there is one).  The function `dir-locals-set-directory-class'
+     updates this list.
 
    ---------- Footnotes ----------
 
@@ -4705,7 +4717,7 @@ define them.
 * Function Cells::        Accessing or setting the function definition
                             of a symbol.
 * Obsolete Functions::    Declaring functions obsolete.
-* Inline Functions::	  Defining functions that the compiler will open code.
+* Inline Functions::      Defining functions that the compiler will open code.
 * Declaring Functions::   Telling the compiler that a function is defined.
 * Function Safety::       Determining whether a function is safe to call.
 * Related Topics::        Cross-references to specific Lisp primitives
@@ -5378,7 +5390,7 @@ use the function `map-char-table' (*note Char-Tables::).
                => (a c e)
           (mapcar '1+ [1 2 3])
                => (2 3 4)
-          (mapcar 'char-to-string "abc")
+          (mapcar 'string "abc")
                => ("a" "b" "c")
 
           ;; Call each function in `my-hooks'.

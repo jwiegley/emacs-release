@@ -1,10 +1,10 @@
-This is ../../info/sasl, produced by makeinfo version 4.11 from
+This is ../../info/sasl, produced by makeinfo version 4.13 from
 sasl.texi.
 
 This file describes the Emacs SASL library, version 0.2.
 
-   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free
-Software Foundation, Inc.
+   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -24,9 +24,9 @@ Software Foundation, Inc.
      copy of the license to the document, as described in section 6 of
      the license.
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* SASL: (sasl).   The Emacs SASL library.
+* SASL: (sasl).                 The Emacs SASL library.
 END-INFO-DIR-ENTRY
 
 
@@ -40,8 +40,8 @@ between applications using different protocols.
 
    This file describes the Emacs SASL library, version 0.2.
 
-   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free
-Software Foundation, Inc.
+   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -155,7 +155,7 @@ and `sasl-mechanism-alist' correctly.
      functions.
 
           (defconst sasl-anonymous-steps
-            '(identity				;no initial response
+            '(identity                            ;no initial response
               sasl-anonymous-response))
 
           (put 'sasl-anonymous 'sasl-mechanism
@@ -228,7 +228,7 @@ authentication protocol exchange.  For example,
 
      (process-send-string
       process
-      (if (sasl-step-data step)		;initial response
+      (if (sasl-step-data step)              ;initial response
           (format "AUTH %s %s\r\n" name (base64-encode-string (sasl-step-data step) t))
         (format "AUTH %s\r\n" name)))
 
@@ -294,16 +294,16 @@ File: sasl,  Node: Variable Index,  Prev: Function Index,  Up: Top
 
 
 Tag Table:
-Node: Top1305
-Node: Overview2904
-Node: How to use3586
-Node: Data types3969
-Node: Mechanisms4271
-Node: Clients5587
-Node: Steps6885
-Node: Back end drivers8047
-Node: Index8188
-Node: Function Index8311
-Node: Variable Index9547
+Node: Top1342
+Node: Overview2947
+Node: How to use3629
+Node: Data types4012
+Node: Mechanisms4314
+Node: Clients5654
+Node: Steps6952
+Node: Back end drivers8126
+Node: Index8267
+Node: Function Index8390
+Node: Variable Index9626
 
 End Tag Table

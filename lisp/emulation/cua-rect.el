@@ -1,7 +1,7 @@
 ;;; cua-rect.el --- CUA unified rectangle support
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard emulations convenience CUA
@@ -231,7 +231,7 @@
     (move-to-column mc)
     (set-mark (point))
     (goto-char pp)
-    ;; Move cursor inside rectangle, except if char at rigth edge is a tab.
+    ;; Move cursor inside rectangle, except if char at right edge is a tab.
     (if (and (if (cua--rectangle-right-side)
 		 (and (= (move-to-column pc) (- pc tab-width))
 		      (not (eolp)))

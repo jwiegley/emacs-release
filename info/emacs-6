@@ -1,12 +1,12 @@
-This is ../../info/emacs, produced by makeinfo version 4.11 from
+This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.2.
+updated for Emacs version 23.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,8 +23,295 @@ Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacs: (emacs).	The extensible self-documenting text editor.
+* Emacs: (emacs).       The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Named ASCII Chars,  Next: Mouse Buttons,  Prev: Function Keys,  Up: Key Bindings
+
+57.4.9 Named ASCII Control Characters
+-------------------------------------
+
+<TAB>, <RET>, <BS>, <LFD>, <ESC> and <DEL> started out as names for
+certain ASCII control characters, used so often that they have special
+keys of their own.  For instance, <TAB> was another name for `C-i'.
+Later, users found it convenient to distinguish in Emacs between these
+keys and the "same" control characters typed with the <CTRL> key.
+Therefore, on most modern terminals, they are no longer the same: <TAB>
+is different from `C-i'.
+
+   Emacs can distinguish these two kinds of input if the keyboard does.
+It treats the "special" keys as function keys named `tab', `return',
+`backspace', `linefeed', `escape', and `delete'.  These function keys
+translate automatically into the corresponding ASCII characters _if_
+they have no bindings of their own.  As a result, neither users nor
+Lisp programs need to pay attention to the distinction unless they care
+to.
+
+   If you do not want to distinguish between (for example) <TAB> and
+`C-i', make just one binding, for the ASCII character <TAB> (octal code
+011).  If you do want to distinguish, make one binding for this ASCII
+character, and another for the "function key" `tab'.
+
+   With an ordinary ASCII terminal, there is no way to distinguish
+between <TAB> and `C-i' (and likewise for other such pairs), because
+the terminal sends the same character in both cases.
+
+
+File: emacs,  Node: Mouse Buttons,  Next: Disabling,  Prev: Named ASCII Chars,  Up: Key Bindings
+
+57.4.10 Rebinding Mouse Buttons
+-------------------------------
+
+Emacs uses Lisp symbols to designate mouse buttons, too.  The ordinary
+mouse events in Emacs are "click" events; these happen when you press a
+button and release it without moving the mouse.  You can also get
+"drag" events, when you move the mouse while holding the button down.
+Drag events happen when you finally let go of the button.
+
+   The symbols for basic click events are `mouse-1' for the leftmost
+button, `mouse-2' for the next, and so on.  Here is how you can
+redefine the second mouse button to split the current window:
+
+     (global-set-key [mouse-2] 'split-window-vertically)
+
+   The symbols for drag events are similar, but have the prefix `drag-'
+before the word `mouse'.  For example, dragging the first button
+generates a `drag-mouse-1' event.
+
+   You can also define bindings for events that occur when a mouse
+button is pressed down.  These events start with `down-' instead of
+`drag-'.  Such events are generated only if they have key bindings.
+When you get a button-down event, a corresponding click or drag event
+will always follow.
+
+   If you wish, you can distinguish single, double, and triple clicks.
+A double click means clicking a mouse button twice in approximately the
+same place.  The first click generates an ordinary click event.  The
+second click, if it comes soon enough, generates a double-click event
+instead.  The event type for a double-click event starts with
+`double-': for example, `double-mouse-3'.
+
+   This means that you can give a special meaning to the second click at
+the same place, but it must act on the assumption that the ordinary
+single click definition has run when the first click was received.
+
+   This constrains what you can do with double clicks, but user
+interface designers say that this constraint ought to be followed in
+any case.  A double click should do something similar to the single
+click, only "more so."  The command for the double-click event should
+perform the extra work for the double click.
+
+   If a double-click event has no binding, it changes to the
+corresponding single-click event.  Thus, if you don't define a
+particular double click specially, it executes the single-click command
+twice.
+
+   Emacs also supports triple-click events whose names start with
+`triple-'.  Emacs does not distinguish quadruple clicks as event types;
+clicks beyond the third generate additional triple-click events.
+However, the full number of clicks is recorded in the event list, so if
+you know Emacs Lisp you can distinguish if you really want to (*note
+Click Events: (elisp)Click Events.).  We don't recommend distinct
+meanings for more than three clicks, but sometimes it is useful for
+subsequent clicks to cycle through the same set of three meanings, so
+that four clicks are equivalent to one click, five are equivalent to
+two, and six are equivalent to three.
+
+   Emacs also records multiple presses in drag and button-down events.
+For example, when you press a button twice, then move the mouse while
+holding the button, Emacs gets a `double-drag-' event.  And at the
+moment when you press it down for the second time, Emacs gets a
+`double-down-' event (which is ignored, like all button-down events, if
+it has no binding).
+
+   The variable `double-click-time' specifies how much time can elapse
+between clicks and still allow them to be grouped as a multiple click.
+Its value is in units of milliseconds.  If the value is `nil', double
+clicks are not detected at all.  If the value is `t', then there is no
+time limit.  The default is 500.
+
+   The variable `double-click-fuzz' specifies how much the mouse can
+move between clicks and still allow them to be grouped as a multiple
+click.  Its value is in units of pixels on windowed displays and in
+units of 1/8 of a character cell on text-mode terminals; the default is
+3.
+
+   The symbols for mouse events also indicate the status of the modifier
+keys, with the usual prefixes `C-', `M-', `H-', `s-', `A-' and `S-'.
+These always precede `double-' or `triple-', which always precede
+`drag-' or `down-'.
+
+   A frame includes areas that don't show text from the buffer, such as
+the mode line and the scroll bar.  You can tell whether a mouse button
+comes from a special area of the screen by means of dummy "prefix
+keys."  For example, if you click the mouse in the mode line, you get
+the prefix key `mode-line' before the ordinary mouse-button symbol.
+Thus, here is how to define the command for clicking the first button in
+a mode line to run `scroll-up':
+
+     (global-set-key [mode-line mouse-1] 'scroll-up)
+
+   Here is the complete list of these dummy prefix keys and their
+meanings:
+
+`mode-line'
+     The mouse was in the mode line of a window.
+
+`vertical-line'
+     The mouse was in the vertical line separating side-by-side
+     windows.  (If you use scroll bars, they appear in place of these
+     vertical lines.)
+
+`vertical-scroll-bar'
+     The mouse was in a vertical scroll bar.  (This is the only kind of
+     scroll bar Emacs currently supports.)
+
+`menu-bar'
+     The mouse was in the menu bar.
+
+`header-line'
+     The mouse was in a header line.
+
+   You can put more than one mouse button in a key sequence, but it
+isn't usual to do so.
+
+
+File: emacs,  Node: Disabling,  Prev: Mouse Buttons,  Up: Key Bindings
+
+57.4.11 Disabling Commands
+--------------------------
+
+Disabling a command means that invoking it interactively asks for
+confirmation from the user.  The purpose of disabling a command is to
+prevent users from executing it by accident; we do this for commands
+that might be confusing to the uninitiated.
+
+   Attempting to invoke a disabled command interactively in Emacs
+displays a window containing the command's name, its documentation, and
+some instructions on what to do immediately; then Emacs asks for input
+saying whether to execute the command as requested, enable it and
+execute it, or cancel.  If you decide to enable the command, you must
+then answer another question--whether to do this permanently, or just
+for the current session.  (Enabling permanently works by automatically
+editing your `.emacs' file.)  You can also type `!' to enable _all_
+commands, for the current session only.
+
+   The direct mechanism for disabling a command is to put a non-`nil'
+`disabled' property on the Lisp symbol for the command.  Here is the
+Lisp program to do this:
+
+     (put 'delete-region 'disabled t)
+
+   If the value of the `disabled' property is a string, that string is
+included in the message displayed when the command is used:
+
+     (put 'delete-region 'disabled
+          "It's better to use `kill-region' instead.\n")
+
+   You can make a command disabled either by editing the `.emacs' file
+directly, or with the command `M-x disable-command', which edits the
+`.emacs' file for you.  Likewise, `M-x enable-command' edits `.emacs'
+to enable a command permanently.  *Note Init File::.
+
+   If Emacs was invoked with the `-q' or `--no-init-file' options
+(*note Initial Options::), it will not edit your `~/.emacs' init file.
+Doing so could lose information because Emacs has not read your init
+file.
+
+   Whether a command is disabled is independent of what key is used to
+invoke it; disabling also applies if the command is invoked using
+`M-x'.  However, disabling a command has no effect on calling it as a
+function from Lisp programs.
+
+
+File: emacs,  Node: Syntax,  Next: Init File,  Prev: Key Bindings,  Up: Customization
+
+57.5 The Syntax Table
+=====================
+
+All the Emacs commands which parse words or balance parentheses are
+controlled by the "syntax table".  The syntax table says which
+characters are opening delimiters, which are parts of words, which are
+string quotes, and so on.  It does this by assigning each character to
+one of fifteen-odd "syntax classes".  In some cases it specifies some
+additional information also.
+
+   Each major mode has its own syntax table (though related major modes
+sometimes share one syntax table), which it installs in each buffer
+that uses the mode.  The syntax table installed in the current buffer
+is the one that all commands use, so we call it "the" syntax table.
+
+   To display a description of the contents of the current syntax
+table, type `C-h s' (`describe-syntax').  The description of each
+character includes the string you would have to give to
+`modify-syntax-entry' to set up that character's current syntax,
+starting with the character which designates its syntax class, plus
+some English text to explain its meaning.
+
+   A syntax table is actually a Lisp object, a char-table, whose
+elements are cons cells.  For full information on the syntax table, see
+*note Syntax Tables: (elisp)Syntax Tables.
+
+
+File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
+
+57.6 The Init File, `~/.emacs'
+==============================
+
+When Emacs is started, it normally tries to load a Lisp program from an
+"initialization file", or "init file" for short.  This file, if it
+exists, specifies how to initialize Emacs for you.  Emacs looks for
+your init file using the filenames `~/.emacs', `~/.emacs.el', or
+`~/.emacs.d/init.el'; you can choose to use any one of these three
+names (*note Find Init::).  Here, `~/' stands for your home directory.
+
+   You can use the command line switch `-q' to prevent loading your
+init file, and `-u' (or `--user') to specify a different user's init
+file (*note Initial Options::).
+
+   There can also be a "default init file", which is the library named
+`default.el', found via the standard search path for libraries.  The
+Emacs distribution contains no such library; your site may create one
+for local customizations.  If this library exists, it is loaded
+whenever you start Emacs (except when you specify `-q').  But your init
+file, if any, is loaded first; if it sets `inhibit-default-init'
+non-`nil', then `default' is not loaded.
+
+   Your site may also have a "site startup file"; this is named
+`site-start.el', if it exists.  Like `default.el', Emacs finds this
+file via the standard search path for Lisp libraries.  Emacs loads this
+library before it loads your init file.  To inhibit loading of this
+library, use the option `--no-site-file'.  *Note Initial Options::.  We
+recommend against using `site-start.el' for changes that some users may
+not like.  It is better to put them in `default.el', so that users can
+more easily override them.
+
+   You can place `default.el' and `site-start.el' in any of the
+directories which Emacs searches for Lisp libraries.  The variable
+`load-path' (*note Lisp Libraries::) specifies these directories.  Many
+sites put these files in the `site-lisp' subdirectory of the Emacs
+installation directory, typically `/usr/local/share/emacs/site-lisp'.
+
+   Byte-compiling your init file is not recommended (*note Byte
+Compilation: (elisp)Byte Compilation.).  It generally does not speed up
+startup very much, and often leads to problems when you forget to
+recompile the file.  A better solution is to use the Emacs server to
+reduce the number of times you have to start Emacs (*note Emacs
+Server::).  If your init file defines many functions, consider moving
+them to a separate (byte-compiled) file that you load in your init file.
+
+   If you are going to write actual Emacs Lisp programs that go beyond
+minor customization, you should read the `Emacs Lisp Reference Manual'.
+*Note Emacs Lisp: (elisp)Top.
+
+* Menu:
+
+* Init Syntax::         Syntax of constants in Emacs Lisp.
+* Init Examples::       How to do some things with an init file.
+* Terminal Init::       Each terminal type can have an init file.
+* Find Init::           How Emacs finds the init file.
+* Init Non-ASCII::      Using non-ASCII characters in an init file.
 
 
 File: emacs,  Node: Init Syntax,  Next: Init Examples,  Up: Init File
@@ -756,33 +1043,76 @@ File: emacs,  Node: Bugs,  Next: Contributing,  Prev: Lossage,  Up: Top
 60 Reporting Bugs
 *****************
 
-Sometimes you will encounter a bug in Emacs.  Although we cannot
-promise we can or will fix the bug, and we might not even agree that it
-is a bug, we want to hear about problems you encounter.  Often we agree
-they are bugs and want to fix them.
-
-   To make it possible for us to fix a bug, you must report it.  In
-order to do so effectively, you must know when and how to do it.
-
-   Before reporting a bug, it is a good idea to see if it is already
-known.  You can find the list of known problems in the file
-`etc/PROBLEMS' in the Emacs distribution; type `C-h C-p' to read it.
-Some additional user-level problems can be found in *note Bugs and
-problems: (efaq)Bugs and problems.  Looking up your problem in these
-two documents might provide you with a solution or a work-around, or
-give you additional information about related issues.
+If you think you have found a bug in Emacs, please report it.  We
+cannot promise to fix it, or always to agree that it is a bug, but we
+certainly want to hear about it.  The same applies for new features you
+would like to see added.  The following sections will help you to
+construct an effective bug report.
 
 * Menu:
 
-* Criteria:  Bug Criteria.	 Have you really found a bug?
-* Understanding Bug Reporting::	 How to report a bug effectively.
-* Checklist::			 Steps to follow for a good bug report.
-* Sending Patches::		 How to send a patch for GNU Emacs.
+* Known Problems::               How to read about known problems and bugs.
+* Criteria:  Bug Criteria.       Have you really found a bug?
+* Understanding Bug Reporting::  How to report a bug effectively.
+* Checklist::                    Steps to follow for a good bug report.
+* Sending Patches::              How to send a patch for GNU Emacs.
 
 
-File: emacs,  Node: Bug Criteria,  Next: Understanding Bug Reporting,  Up: Bugs
+File: emacs,  Node: Known Problems,  Next: Bug Criteria,  Up: Bugs
 
-60.1 When Is There a Bug
+60.1 Reading Existing Bug Reports and Known Problems
+====================================================
+
+Before reporting a bug, if at all possible please check to see if it is
+already known about.  Indeed, it may already have been fixed in a later
+release of Emacs, or in the development version.  Here is a list of the
+main places you can read about known issues:
+
+   * The `etc/PROBLEMS' file in the Emacs distribution; type `C-h C-p'
+     to read it.  This file contains a list of particularly well-known
+     issues that have been encountered in compiling, installing and
+     running Emacs.  Often, there are suggestions for workarounds and
+     solutions.
+
+   * Some additional user-level problems can be found in *note Bugs and
+     problems: (efaq)Bugs and problems.
+
+   * The `bug-gnu-emacs' mailing list (also available as the newsgroup
+     `gnu.emacs.bug').  This is where you will find most Emacs bug
+     reports.  You can read the list archives at
+     `http://lists.gnu.org/mailman/listinfo/bug-gnu-emacs'.  If you
+     like, you can also subscribe to the list.  Be aware that the sole
+     purpose of this list is to provide the Emacs maintainers with
+     information about bugs and feature requests.  Reports may contain
+     fairly large amounts of data; spectators should not complain about
+     this.
+
+   * The bug tracker at `http://debbugs.gnu.org'.  From early 2008,
+     reports from the `bug-gnu-emacs' list have been sent here.  The
+     tracker contains the same information as the mailing list, just in
+     a different format.  You may prefer to browse and read reports
+     using the tracker.
+
+   * The `emacs-pretest-bug' mailing list.  This list is no longer
+     used, and is mainly of historical interest.  At one time, it was
+     used for bug reports in development (i.e., not yet released)
+     versions of Emacs.  You can read the archives for 2003 to mid 2007
+     at `http://lists.gnu.org/archive/html/emacs-pretest-bug/'.  From
+     late 2007 to mid 2008, the address was an alias for the
+     `emacs-devel' mailing list.  From mid 2008 onwards, it has been an
+     alias for `bug-gnu-emacs'.
+
+   * The `emacs-devel' mailing list.  Sometimes people report bugs to
+     this mailing list.  This is not the main purpose of the list,
+     however, and it is much better to send bug reports to the bug
+     list.  You should not feel obliged to read this list before
+     reporting a bug.
+
+
+
+File: emacs,  Node: Bug Criteria,  Next: Understanding Bug Reporting,  Prev: Known Problems,  Up: Bugs
+
+60.2 When Is There a Bug
 ========================
 
 If Emacs accesses an invalid memory location ("segmentation fault"), or
@@ -836,7 +1166,7 @@ disagrees with the manual, one of them must be wrong; that is a bug.
 
 File: emacs,  Node: Understanding Bug Reporting,  Next: Checklist,  Prev: Bug Criteria,  Up: Bugs
 
-60.2 Understanding Bug Reporting
+60.3 Understanding Bug Reporting
 ================================
 
 When you decide that there is a bug, it is important to report it and to
@@ -886,34 +1216,55 @@ more than guesses, that is useful--but please include the facts as well.
 
 File: emacs,  Node: Checklist,  Next: Sending Patches,  Prev: Understanding Bug Reporting,  Up: Bugs
 
-60.3 Checklist for Bug Reports
+60.4 Checklist for Bug Reports
 ==============================
 
-The best way to send a bug report is to mail it electronically to the
-Emacs maintainers at <bug-gnu-emacs@gnu.org>.  (If you want to suggest
-a change as an improvement, use the same address.)
+Before reporting a bug, first try to see if the problem has already
+been reported (*note Known Problems::).
 
-   If you'd like to read the bug reports, you can find them on the
-newsgroup `gnu.emacs.bug'; keep in mind, however, that as a spectator
-you should not criticize anything about what you see there.  The
-purpose of bug reports is to give information to the Emacs maintainers.
-Spectators are welcome only as long as they do not interfere with this.
-In particular, some bug reports contain fairly large amounts of data;
-spectators should not complain about this.
+   If you are able to, try the latest release of Emacs to see if the
+problem has already been fixed.  Even better is to try the latest
+development version.  We recognize that this is not easy for some
+people, so do not feel that you absolutely must do this before making a
+report.
 
-   Please do not post bug reports using netnews; mail is more reliable
-than netnews about reporting your correct address, which we may need in
-order to ask you for more information.  If your data is more than
-500,000 bytes, please don't include it directly in the bug report;
-instead, offer to send it on request, or make it available by ftp and
-say where.
-
-   A convenient way to send a bug report for Emacs is to use the command
+   The best way to write a bug report for Emacs is to use the command
 `M-x report-emacs-bug'.  This sets up a mail buffer (*note Sending
 Mail::) and automatically inserts _some_ of the essential information.
 However, it cannot supply all the necessary information; you should
 still read and follow the guidelines below, so you can enter the other
-crucial information by hand before you send the message.
+crucial information by hand before you send the message.  You may feel
+that some of the information inserted by `M-x report-emacs-bug' is not
+relevant, but unless you are absolutely sure it is best to leave it, so
+that the developers can decide for themselves.
+
+   When you have finished writing your report, type `C-c C-c' and it
+will be sent to the Emacs maintainers at <bug-gnu-emacs@gnu.org>.  (If
+you want to suggest an improvement or new feature, use the same
+address.)  If you cannot send mail from inside Emacs, you can copy the
+text of your report to your normal mail client and send it to that
+address.  Or you can simply send an email to that address describing
+the problem.
+
+   Your report will be sent to the `bug-gnu-emacs' mailing list, and
+stored in the tracker at `http://debbugs.gnu.org'.  Please try to
+include a valid reply email address, in case we need to ask you for
+more information about your report.  Submissions are moderated, so
+there may be a delay before your report appears.
+
+   You do not need to know how the `http://debbugs.gnu.org' bug tracker
+works in order to report a bug, but if you want to, you can read the
+tracker's online documentation to see the various features you can use.
+
+   All mail sent to the `bug-gnu-emacs' mailing list is also gatewayed
+to the `gnu.emacs.bug' newsgroup.  The reverse is also true, but we ask
+you not to post bug reports (or replies) via the newsgroup.  It can
+make it much harder to contact you if we need to ask for more
+information, and it does not integrate well with the bug tracker.
+
+   If your data is more than 500,000 bytes, please don't include it
+directly in the bug report; instead, offer to send it on request, or
+make it available by ftp and say where.
 
    To enable maintainers to investigate a bug, your report should
 include all these things:
@@ -922,18 +1273,20 @@ include all these things:
      there is any point in looking for the bug in the current version
      of GNU Emacs.
 
-     You can get the version number by typing `M-x emacs-version
-     <RET>'.  If that command does not work, you probably have something
-     other than GNU Emacs, so you will have to report the bug somewhere
-     else.
+     `M-x report-emacs-bug' includes this information automatically,
+     but if you are not using that command for your report you can get
+     the version number by typing `M-x emacs-version <RET>'.  If that
+     command does not work, you probably have something other than GNU
+     Emacs, so you will have to report the bug somewhere else.
 
    * The type of machine you are using, and the operating system name
-     and version number.  `M-x emacs-version <RET>' provides this
+     and version number (again, automatically included by `M-x
+     report-emacs-bug').  `M-x emacs-version <RET>' provides this
      information too.  Copy its output from the `*Messages*' buffer, so
      that you get it all and get it accurately.
 
    * The operands given to the `configure' command when Emacs was
-     installed.
+     installed (automatically included by `M-x report-emacs-bug').
 
    * A complete list of any modifications you have made to the Emacs
      source.  (We may not have time to investigate the bug unless it
@@ -959,9 +1312,12 @@ include all these things:
      (nothing ought to care whether the last line is terminated, but
      try telling the bugs that).
 
-   * The precise commands we need to type to reproduce the bug.
+   * The precise commands we need to type to reproduce the bug.  If at
+     all possible, give a full recipe for an Emacs started with the
+     `-Q' option (*note Initial Options::).  This bypasses your
+     `.emacs' customizations.
 
-     The easy way to record the input to Emacs precisely is to write a
+     One way to record the input to Emacs precisely is to write a
      dribble file.  To start the file, execute the Lisp expression
 
           (open-dribble-file "~/dribble")
@@ -1055,11 +1411,17 @@ include all these things:
      the bug happen again.  If you can't make it happen again, at least
      copy the whole error message.
 
+     If Emacs appears to be stuck in an infinite loop or in a very long
+     operation, typing `C-g' with the variable `debug-on-quit'
+     non-`nil' will start the Lisp debugger and show a backtrace.  This
+     backtrace is useful for debugging such long loops, so if you can
+     produce it, copy it into the bug report.
+
    * Check whether any programs you have loaded into the Lisp world,
      including your `.emacs' file, set any variables that may affect the
      functioning of Emacs.  Also, see whether the problem happens in a
      freshly started Emacs without loading your `.emacs' file (start
-     Emacs with the `-q' switch to prevent loading the init file).  If
+     Emacs with the `-Q' switch to prevent loading the init files).  If
      the problem does _not_ occur then, you must report the precise
      contents of any programs that you must load into the Lisp world in
      order to cause the problem to occur.
@@ -1210,7 +1572,7 @@ include all these things:
 
 File: emacs,  Node: Sending Patches,  Prev: Checklist,  Up: Bugs
 
-60.4 Sending Patches for GNU Emacs
+60.5 Sending Patches for GNU Emacs
 ==================================
 
 If you would like to write bug fixes or improvements for GNU Emacs,
@@ -1222,12 +1584,10 @@ work in the best of circumstances, and we can't keep up unless you do
 your best to help.
 
    * Send an explanation with your changes of what problem they fix or
-     what improvement they bring about.  For a bug fix, just include a
-     copy of the bug report, and explain why the change fixes the bug.
-
-     (Referring to a bug report is not as good as including it, because
-     then we will have to look it up, and we have probably already
-     deleted it if we've already fixed the bug.)
+     what improvement they bring about.  For a fix for an existing bug,
+     it is best to reply to the relevant discussion on the
+     `bug-gnu-emacs' list, or item in the `http://debbugs.gnu.org'
+     tracker.  Explain why your change fixes the bug.
 
    * Always include a proper bug report for the problem you think you
      have fixed.  We need to convince ourselves that the change is
@@ -3964,11 +4324,11 @@ Resources for _non-menubar_ toolkit pop-up menus have `menu*' instead
 of `pane.menubar'.  For example, to specify the font `8x16' for the
 pop-up menu items, write this:
 
-     Emacs.menu*.font:	8x16
+     Emacs.menu*.font:  8x16
 
 For dialog boxes, use `dialog*':
 
-     Emacs.dialog*.font:	8x16
+     Emacs.dialog*.font:  8x16
 
 The Lucid menus can display multilingual text in your locale.  For more
 information about fontsets see the man page for `XCreateFontSet'.  To
@@ -4499,7 +4859,7 @@ Appendix E Emacs 22 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 22.3.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 23.2 features.
+simplicity that results from the absence of many Emacs 23.3 features.
 
    * We have switched to a character representation specially designed
      for Emacs.  Rather than forcing all the widely used scripts into
@@ -4610,23 +4970,22 @@ File: emacs,  Node: Mac OS / GNUstep,  Next: Microsoft Windows,  Prev: Antinews,
 Appendix F Emacs and Mac OS / GNUstep
 *************************************
 
-This section briefly describes the peculiarities of using Emacs built
-with the GNUstep libraries on GNU/Linux or other operating systems, or
-on Mac OS X with native window system support.  For Mac OS X, Emacs can
-be built either without window system support, with X11, or with the
-Cocoa interface.  This section only applies to the Cocoa build.  Emacs
-23 does not support Mac OS Classic.
+This section describes the peculiarities of using Emacs built with the
+GNUstep libraries on GNU/Linux or other operating systems, or on Mac OS
+X with native window system support.  On Mac OS X, Emacs can be built
+either without window system support, with X11, or with the Cocoa
+interface; this section only applies to the Cocoa build.  Emacs does
+not support earlier versions of Mac OS.
 
-   Emacs, when built on Mac OS X, uses the Cocoa application interface.
-For various historical and technical reasons, Emacs uses the term
+   For various historical and technical reasons, Emacs uses the term
 `Nextstep' internally, instead of "Cocoa" or "Mac OS X"; for instance,
-most of the commands and variables described in the following sections
-begin with `ns-', which is short for `Nextstep'.  NeXTstep was an
-application interface released by NeXT Inc during the 1980s, of which
-Cocoa is a direct descendant.  Apart from Cocoa, there is another
-NeXTstep-style system: GNUstep, which is free software.  As of this
-writing, the GNUstep support is alpha status (*note GNUstep Support::),
-but we hope to improve it in the future.
+most of the commands and variables described in this section begin with
+`ns-', which is short for `Nextstep'.  NeXTstep was an application
+interface released by NeXT Inc during the 1980s, of which Cocoa is a
+direct descendant.  Apart from Cocoa, there is another NeXTstep-style
+system: GNUstep, which is free software.  As of this writing, the
+GNUstep support is alpha status (*note GNUstep Support::), but we hope
+to improve it in the future.
 
 * Menu:
 
@@ -4641,17 +5000,24 @@ File: emacs,  Node: Mac / GNUstep Basics,  Next: Mac / GNUstep Customization,  U
 F.1 Basic Emacs usage under Mac OS and GNUstep
 ==============================================
 
-By default, the <alt> and <option> keys are the same as <Meta> when
-running under Mac OS.  The Mac <Cmd> key is the same as <Super>, and
-Emacs provides a set of keybindings using this modifier key that mimic
-other Mac / GNUstep applications (*note Mac / GNUstep Events::).  You
-can change these bindings in the usual way (*note Key Bindings::).
+By default, the <alt> and <option> keys are the same as <Meta>.  The
+Mac <Cmd> key is the same as <Super>, and Emacs provides a set of
+keybindings using this modifier key that mimic other Mac / GNUstep
+applications (*note Mac / GNUstep Events::).  You can change these
+bindings in the usual way (*note Key Bindings::).
+
+   The variable `ns-right-alternate-modifier' controls the behavior of
+the right <alt> and <option> keys.  These keys behave like the
+left-hand keys if the value is `left' (the default).  A value of
+`control', `meta', `alt', `super', or `hyper' makes them behave like
+the corresponding modifier keys; a value of `none' tells Emacs to
+ignore them.
 
    The standard Mac / GNUstep font and color panels are accessible via
-Lisp commands.    To use the color panel, drag from it to an Emacs
-frame to change the foreground color of the face at that position (if
-the <shift> key is held down, it changes the background color instead).
-To discard the settings, create a new frame and close the altered one.
+Lisp commands.  To use the color panel, drag from it to an Emacs frame
+to change the foreground color of the face at that position (if the
+<shift> key is held down, it changes the background color instead). To
+discard the settings, create a new frame and close the altered one.
 
    <S-Mouse-1> (i.e., clicking the left mouse button while holding down
 the <Shift> key) adjusts the region to the click position, just like
@@ -4808,7 +5174,7 @@ File: emacs,  Node: GNUstep Support,  Prev: Mac / GNUstep Events,  Up: Mac OS / 
 F.4 GNUstep Support
 ===================
 
-Emacs can be built and run under GNUstep, however there are still some
+Emacs can be built and run under GNUstep, but there are still some
 issues to be addressed.  Interested developers should contact
 <emacs-devel@gnu.org>.
 
@@ -4832,10 +5198,12 @@ here.
 
 * Menu:
 
+* Windows Startup::     How to start Emacs on Windows.
 * Text and Binary::     Text files use CRLF to terminate lines.
 * Windows Files::       File-name conventions on Windows.
 * ls in Lisp::          Emulation of `ls' for Dired.
-* Windows HOME::        Where Emacs looks for your `.emacs'.
+* Windows HOME::        Where Emacs looks for your `.emacs' and
+                          where it starts up.
 * Windows Keyboard::    Windows-specific keyboard features.
 * Windows Mouse::       Windows-specific mouse features.
 * Windows Processes::   Running subprocesses on Windows.
@@ -4846,9 +5214,65 @@ here.
 * MS-DOS::              Using Emacs on MS-DOS (otherwise known as "MS-DOG").
 
 
-File: emacs,  Node: Text and Binary,  Next: Windows Files,  Up: Microsoft Windows
+File: emacs,  Node: Windows Startup,  Next: Text and Binary,  Up: Microsoft Windows
 
-G.1 Text Files and Binary Files
+G.1 How to Start Emacs on MS-Windows
+====================================
+
+There are several ways of starting Emacs on MS-Windows:
+
+  1. From the desktop shortcut icon: either double-click the left mouse
+     button on the icon, or click once, then press <RET>.  The desktop
+     shortcut should specify as its "Target" (in the "Properties" of
+     the shortcut) the full absolute file name of `runemacs.exe', _not_
+     of `emacs.exe'.  This is because `runemacs.exe' hides the console
+     window that would have been created if the target of the shortcut
+     were `emacs.exe' (which is a console program, as far as Windows is
+     concerned).  If you use this method, Emacs starts in the directory
+     specified by the shortcut.  To control where that is, right-click
+     on the shortcut, select "Properties", and in the "Shortcut" tab
+     modify the "Start in" field to your liking.
+
+  2. From the Command Prompt window, by typing `emacs <RET>' at the
+     prompt.  The Command Prompt window where you did that will not be
+     available for invoking other commands until Emacs exits.  In this
+     case, Emacs will start in the current directory of the Windows
+     shell.
+
+  3. From the Command Prompt window, by typing `runemacs <RET>' at the
+     prompt.  The Command Prompt window where you did that will be
+     immediately available for invoking other commands.  In this case,
+     Emacs will start in the current directory of the Windows shell.
+
+  4. Via the Emacs client program, `emacsclient.exe' or
+     `emacsclientw.exe'.  This allows to invoke Emacs from other
+     programs, and to reuse a running Emacs process for serving editing
+     jobs required by other programs.  *Note Emacs Server::.  The
+     difference between `emacsclient.exe' and `emacsclientw.exe' is
+     that the former is a console program, while the latter is a
+     Windows GUI program.  Both programs wait for Emacs to signal that
+     the editing job is finished, before they exit and return control
+     to the program that invoked them.  Which one of them to use in
+     each case depends on the expectations of the program that needs
+     editing services.  If that program is itself a console (text-mode)
+     program, you should use `emacsclient.exe', so that any of its
+     messages and prompts appear in the same command window as those of
+     the invoking program.  By contrast, if the invoking program is a
+     GUI program, you will be better off using `emacsclientw.exe',
+     because `emacsclient.exe' will pop up a command window if it is
+     invoked from a GUI program.  A notable situation where you would
+     want `emacsclientw.exe' is when you right-click on a file in the
+     Windows Explorer and select "Open With" from the pop-up menu.  Use
+     the `--alternate-editor=' or `-a' options if Emacs might not be
+     running (or not running as a server) when `emacsclient' is
+     invoked--that will always give you an editor.  When invoked via
+     `emacsclient', Emacs will start in the current directory of the
+     program that invoked `emacsclient'.
+
+
+File: emacs,  Node: Text and Binary,  Next: Windows Files,  Prev: Windows Startup,  Up: Microsoft Windows
+
+G.2 Text Files and Binary Files
 ===============================
 
 GNU Emacs uses newline characters to separate text lines.  This is the
@@ -4950,7 +5374,7 @@ conversion is determined by `file-name-buffer-file-type-alist'.
 
 File: emacs,  Node: Windows Files,  Next: ls in Lisp,  Prev: Text and Binary,  Up: Microsoft Windows
 
-G.2 File Names on MS-Windows
+G.3 File Names on MS-Windows
 ============================
 
 MS-Windows and MS-DOS normally use a backslash, `\', to separate name
@@ -4981,7 +5405,7 @@ hard links and file security, than on FAT, FAT32, and XFAT volumes.
 
 File: emacs,  Node: ls in Lisp,  Next: Windows HOME,  Prev: Windows Files,  Up: Microsoft Windows
 
-G.3 Emulation of `ls' on MS-Windows
+G.4 Emulation of `ls' on MS-Windows
 ===================================
 
 Dired normally uses the external program `ls' (or its close work-alike)
@@ -5094,8 +5518,8 @@ columns in Dired display.
 
 File: emacs,  Node: Windows HOME,  Next: Windows Keyboard,  Prev: ls in Lisp,  Up: Microsoft Windows
 
-G.4 HOME Directory on MS-Windows
-================================
+G.5 HOME and Startup Directories on MS-Windows
+==============================================
 
 The Windows equivalent of the `HOME' directory is the "user-specific
 application data directory".  The actual location depends on your
@@ -5104,6 +5528,9 @@ Windows version and system configuration; typical values are
 and later, and either `C:\WINDOWS\Application Data' or
 `C:\WINDOWS\Profiles\USERNAME\Application Data' on the older Windows
 9X/ME systems.
+
+   `HOME' can also be set in the system registry, for details see *note
+MS-Windows Registry::.
 
    The home directory is where your init file `.emacs' is stored.  When
 Emacs starts, it first checks whether the environment variable `HOME'
@@ -5138,7 +5565,7 @@ Emacs, which didn't check the application data directory.
 
 File: emacs,  Node: Windows Keyboard,  Next: Windows Mouse,  Prev: Windows HOME,  Up: Microsoft Windows
 
-G.5 Keyboard Usage on MS-Windows
+G.6 Keyboard Usage on MS-Windows
 ================================
 
 This section describes the Windows-specific features related to
@@ -5259,7 +5686,7 @@ some cases, though.
 
 File: emacs,  Node: Windows Mouse,  Next: Windows Processes,  Prev: Windows Keyboard,  Up: Microsoft Windows
 
-G.6 Mouse Usage on MS-Windows
+G.7 Mouse Usage on MS-Windows
 =============================
 
 This section describes the Windows-specific variables related to mouse.
@@ -5282,7 +5709,7 @@ of these two buttons are reversed.
 
 File: emacs,  Node: Windows Processes,  Next: Windows Printing,  Prev: Windows Mouse,  Up: Microsoft Windows
 
-G.7 Subprocesses on Windows 9X/ME and Windows NT/2K/XP
+G.8 Subprocesses on Windows 9X/ME and Windows NT/2K/XP
 ======================================================
 
 Emacs compiled as a native Windows application (as opposed to the DOS
@@ -5346,7 +5773,7 @@ details.
 
 File: emacs,  Node: Windows Printing,  Next: Windows Fonts,  Prev: Windows Processes,  Up: Microsoft Windows
 
-G.8 Printing and MS-Windows
+G.9 Printing and MS-Windows
 ===========================
 
 Printing commands, such as `lpr-buffer' (*note Printing::) and
@@ -5458,8 +5885,8 @@ printer, put this in your `.emacs' file:
      (setq ps-printer-name t)
      (setq ps-lpr-command "D:/gs6.01/bin/gswin32c.exe")
      (setq ps-lpr-switches '("-q" "-dNOPAUSE" "-dBATCH"
-     			"-sDEVICE=mswinpr2"
-     			"-sPAPERSIZE=a4"))
+                             "-sDEVICE=mswinpr2"
+                             "-sPAPERSIZE=a4"))
 
 (This assumes that Ghostscript is installed in the `D:/gs6.01'
 directory.)
@@ -5473,8 +5900,8 @@ typed with the Windows-style backslashes, while the value of
 
 File: emacs,  Node: Windows Fonts,  Next: Windows Misc,  Prev: Windows Printing,  Up: Microsoft Windows
 
-G.9 Specifying Fonts on MS-Windows
-==================================
+G.10 Specifying Fonts on MS-Windows
+===================================
 
 Starting with Emacs 23, fonts are specified by their name, size and
 optional properties.  The format for specifying fonts comes from the
@@ -5571,7 +5998,7 @@ Optional properties common to all font backends on MS-Windows are:
 
 File: emacs,  Node: Windows Misc,  Next: MS-DOS,  Prev: Windows Fonts,  Up: Microsoft Windows
 
-G.10 Miscellaneous Windows-specific features
+G.11 Miscellaneous Windows-specific features
 ============================================
 
 This section describes miscellaneous Windows-specific features.
@@ -5592,7 +6019,7 @@ which fits well with the Windows default click-to-focus policy.
 
 File: emacs,  Node: MS-DOS,  Prev: Windows Misc,  Up: Microsoft Windows
 
-G.11 Emacs and MS-DOS
+G.12 Emacs and MS-DOS
 =====================
 
 This section briefly describes the peculiarities of using Emacs on the
@@ -5622,7 +6049,7 @@ handling of text files under MS-DOS (and Windows).
 
 File: emacs,  Node: MS-DOS Keyboard,  Next: MS-DOS Mouse,  Up: MS-DOS
 
-G.11.1 Keyboard Usage on MS-DOS
+G.12.1 Keyboard Usage on MS-DOS
 -------------------------------
 
 The key that is called <DEL> in Emacs (because that's how it is
@@ -5661,7 +6088,7 @@ following line into your `_emacs' file:
 
 File: emacs,  Node: MS-DOS Mouse,  Next: MS-DOS Display,  Prev: MS-DOS Keyboard,  Up: MS-DOS
 
-G.11.2 Mouse Usage on MS-DOS
+G.12.2 Mouse Usage on MS-DOS
 ----------------------------
 
 Emacs on MS-DOS supports a mouse (on the default terminal only).  The
@@ -5715,7 +6142,7 @@ command, for debugging.
 
 File: emacs,  Node: MS-DOS Display,  Next: MS-DOS File Names,  Prev: MS-DOS Mouse,  Up: MS-DOS
 
-G.11.3 Display on MS-DOS
+G.12.3 Display on MS-DOS
 ------------------------
 
 Display on MS-DOS cannot use font variants, like bold or italic, but it
@@ -5796,7 +6223,7 @@ the other frames to the new dimensions.
 
 File: emacs,  Node: MS-DOS File Names,  Next: MS-DOS Printing,  Prev: MS-DOS Display,  Up: MS-DOS
 
-G.11.4 File Names on MS-DOS
+G.12.4 File Names on MS-DOS
 ---------------------------
 
 On MS-DOS, file names are case-insensitive and limited to eight
@@ -5846,7 +6273,7 @@ using an actual directory named `/dev' on any disk.
 
 File: emacs,  Node: MS-DOS Printing,  Next: MS-DOS and MULE,  Prev: MS-DOS File Names,  Up: MS-DOS
 
-G.11.5 Printing and MS-DOS
+G.12.5 Printing and MS-DOS
 --------------------------
 
 Printing commands, such as `lpr-buffer' (*note Printing::) and
@@ -5875,7 +6302,7 @@ will print the region while converting it to the codepage 850 encoding.
 
 File: emacs,  Node: MS-DOS and MULE,  Next: MS-DOS Processes,  Prev: MS-DOS Printing,  Up: MS-DOS
 
-G.11.6 International Support on MS-DOS
+G.12.6 International Support on MS-DOS
 --------------------------------------
 
 Emacs on MS-DOS supports the same international character sets as it
@@ -5983,7 +6410,7 @@ but the corresponding DOS codepage 850 uses code 135 for this glyph.
 
 File: emacs,  Node: MS-DOS Processes,  Prev: MS-DOS and MULE,  Up: MS-DOS
 
-G.11.7 Subprocesses on MS-DOS
+G.12.7 Subprocesses on MS-DOS
 -----------------------------
 
 Because MS-DOS is a single-process "operating system," asynchronous
@@ -6029,547 +6456,4 @@ the system `ls' command.  Therefore, Dired on MS-DOS supports only some
 of the possible options you can mention in the `dired-listing-switches'
 variable.  The options that work are `-A', `-a', `-c', `-i', `-r', `-S',
 `-s', `-t', and `-u'.
-
-
-File: emacs,  Node: Manifesto,  Prev: Microsoft Windows,  Up: Top
-
-The GNU Manifesto
-*****************
-
-     The GNU Manifesto which appears below was written by Richard
-     Stallman at the beginning of the GNU project, to ask for
-     participation and support.  For the first few years, it was
-     updated in minor ways to account for developments, but now it
-     seems best to leave it unchanged as most people have seen it.
-
-     Since that time, we have learned about certain common
-     misunderstandings that different wording could help avoid.
-     Footnotes added in 1993 help clarify these points.
-
-     For up-to-date information about available GNU software, please see
-     our web site, `http://www.gnu.org'.  For software tasks and other
-     ways to contribute, see `http://www.gnu.org/help'.
-
-What's GNU?  Gnu's Not Unix!
-============================
-
-GNU, which stands for Gnu's Not Unix, is the name for the complete
-Unix-compatible software system which I am writing so that I can give it
-away free to everyone who can use it.(1) Several other volunteers are
-helping me.  Contributions of time, money, programs and equipment are
-greatly needed.
-
-   So far we have an Emacs text editor with Lisp for writing editor
-commands, a source level debugger, a yacc-compatible parser generator,
-a linker, and around 35 utilities.  A shell (command interpreter) is
-nearly completed.  A new portable optimizing C compiler has compiled
-itself and may be released this year.  An initial kernel exists but
-many more features are needed to emulate Unix.  When the kernel and
-compiler are finished, it will be possible to distribute a GNU system
-suitable for program development.  We will use TeX as our text
-formatter, but an nroff is being worked on.  We will use the free,
-portable X window system as well.  After this we will add a portable
-Common Lisp, an Empire game, a spreadsheet, and hundreds of other
-things, plus on-line documentation.  We hope to supply, eventually,
-everything useful that normally comes with a Unix system, and more.
-
-   GNU will be able to run Unix programs, but will not be identical to
-Unix.  We will make all improvements that are convenient, based on our
-experience with other operating systems.  In particular, we plan to
-have longer file names, file version numbers, a crashproof file system,
-file name completion perhaps, terminal-independent display support, and
-perhaps eventually a Lisp-based window system through which several
-Lisp programs and ordinary Unix programs can share a screen.  Both C
-and Lisp will be available as system programming languages.  We will
-try to support UUCP, MIT Chaosnet, and Internet protocols for
-communication.
-
-   GNU is aimed initially at machines in the 68000/16000 class with
-virtual memory, because they are the easiest machines to make it run
-on.  The extra effort to make it run on smaller machines will be left
-to someone who wants to use it on them.
-
-   To avoid horrible confusion, please pronounce the `G' in the word
-`GNU' when it is the name of this project.
-
-Why I Must Write GNU
-====================
-
-I consider that the golden rule requires that if I like a program I must
-share it with other people who like it.  Software sellers want to divide
-the users and conquer them, making each user agree not to share with
-others.  I refuse to break solidarity with other users in this way.  I
-cannot in good conscience sign a nondisclosure agreement or a software
-license agreement.  For years I worked within the Artificial
-Intelligence Lab to resist such tendencies and other inhospitalities,
-but eventually they had gone too far: I could not remain in an
-institution where such things are done for me against my will.
-
-   So that I can continue to use computers without dishonor, I have
-decided to put together a sufficient body of free software so that I
-will be able to get along without any software that is not free.  I
-have resigned from the AI lab to deny MIT any legal excuse to prevent
-me from giving GNU away.
-
-Why GNU Will Be Compatible with Unix
-====================================
-
-Unix is not my ideal system, but it is not too bad.  The essential
-features of Unix seem to be good ones, and I think I can fill in what
-Unix lacks without spoiling them.  And a system compatible with Unix
-would be convenient for many other people to adopt.
-
-How GNU Will Be Available
-=========================
-
-GNU is not in the public domain.  Everyone will be permitted to modify
-and redistribute GNU, but no distributor will be allowed to restrict its
-further redistribution.  That is to say, proprietary modifications will
-not be allowed.  I want to make sure that all versions of GNU remain
-free.
-
-Why Many Other Programmers Want to Help
-=======================================
-
-I have found many other programmers who are excited about GNU and want
-to help.
-
-   Many programmers are unhappy about the commercialization of system
-software.  It may enable them to make more money, but it requires them
-to feel in conflict with other programmers in general rather than feel
-as comrades.  The fundamental act of friendship among programmers is the
-sharing of programs; marketing arrangements now typically used
-essentially forbid programmers to treat others as friends.  The
-purchaser of software must choose between friendship and obeying the
-law.  Naturally, many decide that friendship is more important.  But
-those who believe in law often do not feel at ease with either choice.
-They become cynical and think that programming is just a way of making
-money.
-
-   By working on and using GNU rather than proprietary programs, we can
-be hospitable to everyone and obey the law.  In addition, GNU serves as
-an example to inspire and a banner to rally others to join us in
-sharing.  This can give us a feeling of harmony which is impossible if
-we use software that is not free.  For about half the programmers I
-talk to, this is an important happiness that money cannot replace.
-
-How You Can Contribute
-======================
-
-I am asking computer manufacturers for donations of machines and money.
-I'm asking individuals for donations of programs and work.
-
-   One consequence you can expect if you donate machines is that GNU
-will run on them at an early date.  The machines should be complete,
-ready to use systems, approved for use in a residential area, and not
-in need of sophisticated cooling or power.
-
-   I have found very many programmers eager to contribute part-time
-work for GNU.  For most projects, such part-time distributed work would
-be very hard to coordinate; the independently-written parts would not
-work together.  But for the particular task of replacing Unix, this
-problem is absent.  A complete Unix system contains hundreds of utility
-programs, each of which is documented separately.  Most interface
-specifications are fixed by Unix compatibility.  If each contributor
-can write a compatible replacement for a single Unix utility, and make
-it work properly in place of the original on a Unix system, then these
-utilities will work right when put together.  Even allowing for Murphy
-to create a few unexpected problems, assembling these components will
-be a feasible task.  (The kernel will require closer communication and
-will be worked on by a small, tight group.)
-
-   If I get donations of money, I may be able to hire a few people full
-or part time.  The salary won't be high by programmers' standards, but
-I'm looking for people for whom building community spirit is as
-important as making money.  I view this as a way of enabling dedicated
-people to devote their full energies to working on GNU by sparing them
-the need to make a living in another way.
-
-Why All Computer Users Will Benefit
-===================================
-
-Once GNU is written, everyone will be able to obtain good system
-software free, just like air.(2)
-
-   This means much more than just saving everyone the price of a Unix
-license.  It means that much wasteful duplication of system programming
-effort will be avoided.  This effort can go instead into advancing the
-state of the art.
-
-   Complete system sources will be available to everyone.  As a result,
-a user who needs changes in the system will always be free to make them
-himself, or hire any available programmer or company to make them for
-him.  Users will no longer be at the mercy of one programmer or company
-which owns the sources and is in sole position to make changes.
-
-   Schools will be able to provide a much more educational environment
-by encouraging all students to study and improve the system code.
-Harvard's computer lab used to have the policy that no program could be
-installed on the system if its sources were not on public display, and
-upheld it by actually refusing to install certain programs.  I was very
-much inspired by this.
-
-   Finally, the overhead of considering who owns the system software
-and what one is or is not entitled to do with it will be lifted.
-
-   Arrangements to make people pay for using a program, including
-licensing of copies, always incur a tremendous cost to society through
-the cumbersome mechanisms necessary to figure out how much (that is,
-which programs) a person must pay for.  And only a police state can
-force everyone to obey them.  Consider a space station where air must
-be manufactured at great cost: charging each breather per liter of air
-may be fair, but wearing the metered gas mask all day and all night is
-intolerable even if everyone can afford to pay the air bill.  And the
-TV cameras everywhere to see if you ever take the mask off are
-outrageous.  It's better to support the air plant with a head tax and
-chuck the masks.
-
-   Copying all or parts of a program is as natural to a programmer as
-breathing, and as productive.  It ought to be as free.
-
-Some Easily Rebutted Objections to GNU's Goals
-==============================================
-
-     "Nobody will use it if it is free, because that means they can't
-     rely on any support."
-
-     "You have to charge for the program to pay for providing the
-     support."
-
-   If people would rather pay for GNU plus service than get GNU free
-without service, a company to provide just service to people who have
-obtained GNU free ought to be profitable.(3)
-
-   We must distinguish between support in the form of real programming
-work and mere handholding.  The former is something one cannot rely on
-from a software vendor.  If your problem is not shared by enough
-people, the vendor will tell you to get lost.
-
-   If your business needs to be able to rely on support, the only way
-is to have all the necessary sources and tools.  Then you can hire any
-available person to fix your problem; you are not at the mercy of any
-individual.  With Unix, the price of sources puts this out of
-consideration for most businesses.  With GNU this will be easy.  It is
-still possible for there to be no available competent person, but this
-problem cannot be blamed on distribution arrangements.  GNU does not
-eliminate all the world's problems, only some of them.
-
-   Meanwhile, the users who know nothing about computers need
-handholding: doing things for them which they could easily do
-themselves but don't know how.
-
-   Such services could be provided by companies that sell just
-hand-holding and repair service.  If it is true that users would rather
-spend money and get a product with service, they will also be willing
-to buy the service having got the product free.  The service companies
-will compete in quality and price; users will not be tied to any
-particular one.  Meanwhile, those of us who don't need the service
-should be able to use the program without paying for the service.
-
-     "You cannot reach many people without advertising, and you must
-     charge for the program to support that."
-
-     "It's no use advertising a program people can get free."
-
-   There are various forms of free or very cheap publicity that can be
-used to inform numbers of computer users about something like GNU.  But
-it may be true that one can reach more microcomputer users with
-advertising.  If this is really so, a business which advertises the
-service of copying and mailing GNU for a fee ought to be successful
-enough to pay for its advertising and more.  This way, only the users
-who benefit from the advertising pay for it.
-
-   On the other hand, if many people get GNU from their friends, and
-such companies don't succeed, this will show that advertising was not
-really necessary to spread GNU.  Why is it that free market advocates
-don't want to let the free market decide this?(4)
-
-     "My company needs a proprietary operating system to get a
-     competitive edge."
-
-   GNU will remove operating system software from the realm of
-competition.  You will not be able to get an edge in this area, but
-neither will your competitors be able to get an edge over you.  You and
-they will compete in other areas, while benefiting mutually in this
-one.  If your business is selling an operating system, you will not
-like GNU, but that's tough on you.  If your business is something else,
-GNU can save you from being pushed into the expensive business of
-selling operating systems.
-
-   I would like to see GNU development supported by gifts from many
-manufacturers and users, reducing the cost to each.(5)
-
-     "Don't programmers deserve a reward for their creativity?"
-
-   If anything deserves a reward, it is social contribution.
-Creativity can be a social contribution, but only in so far as society
-is free to use the results.  If programmers deserve to be rewarded for
-creating innovative programs, by the same token they deserve to be
-punished if they restrict the use of these programs.
-
-     "Shouldn't a programmer be able to ask for a reward for his
-     creativity?"
-
-   There is nothing wrong with wanting pay for work, or seeking to
-maximize one's income, as long as one does not use means that are
-destructive.  But the means customary in the field of software today
-are based on destruction.
-
-   Extracting money from users of a program by restricting their use of
-it is destructive because the restrictions reduce the amount and the
-ways that the program can be used.  This reduces the amount of wealth
-that humanity derives from the program.  When there is a deliberate
-choice to restrict, the harmful consequences are deliberate destruction.
-
-   The reason a good citizen does not use such destructive means to
-become wealthier is that, if everyone did so, we would all become
-poorer from the mutual destructiveness.  This is Kantian ethics; or,
-the Golden Rule.  Since I do not like the consequences that result if
-everyone hoards information, I am required to consider it wrong for one
-to do so.  Specifically, the desire to be rewarded for one's creativity
-does not justify depriving the world in general of all or part of that
-creativity.
-
-     "Won't programmers starve?"
-
-   I could answer that nobody is forced to be a programmer.  Most of us
-cannot manage to get any money for standing on the street and making
-faces.  But we are not, as a result, condemned to spend our lives
-standing on the street making faces, and starving.  We do something
-else.
-
-   But that is the wrong answer because it accepts the questioner's
-implicit assumption: that without ownership of software, programmers
-cannot possibly be paid a cent.  Supposedly it is all or nothing.
-
-   The real reason programmers will not starve is that it will still be
-possible for them to get paid for programming; just not paid as much as
-now.
-
-   Restricting copying is not the only basis for business in software.
-It is the most common basis because it brings in the most money.  If it
-were prohibited, or rejected by the customer, software business would
-move to other bases of organization which are now used less often.
-There are always numerous ways to organize any kind of business.
-
-   Probably programming will not be as lucrative on the new basis as it
-is now.  But that is not an argument against the change.  It is not
-considered an injustice that sales clerks make the salaries that they
-now do.  If programmers made the same, that would not be an injustice
-either.  (In practice they would still make considerably more than
-that.)
-
-     "Don't people have a right to control how their creativity is
-     used?"
-
-   "Control over the use of one's ideas" really constitutes control over
-other people's lives; and it is usually used to make their lives more
-difficult.
-
-   People who have studied the issue of intellectual property rights(6)
-carefully (such as lawyers) say that there is no intrinsic right to
-intellectual property.  The kinds of supposed intellectual property
-rights that the government recognizes were created by specific acts of
-legislation for specific purposes.
-
-   For example, the patent system was established to encourage
-inventors to disclose the details of their inventions.  Its purpose was
-to help society rather than to help inventors.  At the time, the life
-span of 17 years for a patent was short compared with the rate of
-advance of the state of the art.  Since patents are an issue only among
-manufacturers, for whom the cost and effort of a license agreement are
-small compared with setting up production, the patents often do not do
-much harm.  They do not obstruct most individuals who use patented
-products.
-
-   The idea of copyright did not exist in ancient times, when authors
-frequently copied other authors at length in works of non-fiction.  This
-practice was useful, and is the only way many authors' works have
-survived even in part.  The copyright system was created expressly for
-the purpose of encouraging authorship.  In the domain for which it was
-invented--books, which could be copied economically only on a printing
-press--it did little harm, and did not obstruct most of the individuals
-who read the books.
-
-   All intellectual property rights are just licenses granted by society
-because it was thought, rightly or wrongly, that society as a whole
-would benefit by granting them.  But in any particular situation, we
-have to ask: are we really better off granting such license?  What kind
-of act are we licensing a person to do?
-
-   The case of programs today is very different from that of books a
-hundred years ago.  The fact that the easiest way to copy a program is
-from one neighbor to another, the fact that a program has both source
-code and object code which are distinct, and the fact that a program is
-used rather than read and enjoyed, combine to create a situation in
-which a person who enforces a copyright is harming society as a whole
-both materially and spiritually; in which a person should not do so
-regardless of whether the law enables him to.
-
-     "Competition makes things get done better."
-
-   The paradigm of competition is a race: by rewarding the winner, we
-encourage everyone to run faster.  When capitalism really works this
-way, it does a good job; but its defenders are wrong in assuming it
-always works this way.  If the runners forget why the reward is offered
-and become intent on winning, no matter how, they may find other
-strategies--such as, attacking other runners.  If the runners get into
-a fist fight, they will all finish late.
-
-   Proprietary and secret software is the moral equivalent of runners
-in a fist fight.  Sad to say, the only referee we've got does not seem
-to object to fights; he just regulates them ("For every ten yards you
-run, you can fire one shot").  He really ought to break them up, and
-penalize runners for even trying to fight.
-
-     "Won't everyone stop programming without a monetary incentive?"
-
-   Actually, many people will program with absolutely no monetary
-incentive.  Programming has an irresistible fascination for some
-people, usually the people who are best at it.  There is no shortage of
-professional musicians who keep at it even though they have no hope of
-making a living that way.
-
-   But really this question, though commonly asked, is not appropriate
-to the situation.  Pay for programmers will not disappear, only become
-less.  So the right question is, will anyone program with a reduced
-monetary incentive?  My experience shows that they will.
-
-   For more than ten years, many of the world's best programmers worked
-at the Artificial Intelligence Lab for far less money than they could
-have had anywhere else.  They got many kinds of non-monetary rewards:
-fame and appreciation, for example.  And creativity is also fun, a
-reward in itself.
-
-   Then most of them left when offered a chance to do the same
-interesting work for a lot of money.
-
-   What the facts show is that people will program for reasons other
-than riches; but if given a chance to make a lot of money as well, they
-will come to expect and demand it.  Low-paying organizations do poorly
-in competition with high-paying ones, but they do not have to do badly
-if the high-paying ones are banned.
-
-     "We need the programmers desperately.  If they demand that we stop
-     helping our neighbors, we have to obey."
-
-   You're never so desperate that you have to obey this sort of demand.
-Remember: millions for defense, but not a cent for tribute!
-
-     "Programmers need to make a living somehow."
-
-   In the short run, this is true.  However, there are plenty of ways
-that programmers could make a living without selling the right to use a
-program.  This way is customary now because it brings programmers and
-businessmen the most money, not because it is the only way to make a
-living.  It is easy to find other ways if you want to find them.  Here
-are a number of examples.
-
-   A manufacturer introducing a new computer will pay for the porting of
-operating systems onto the new hardware.
-
-   The sale of teaching, hand-holding and maintenance services could
-also employ programmers.
-
-   People with new ideas could distribute programs as freeware(7),
-asking for donations from satisfied users, or selling hand-holding
-services.  I have met people who are already working this way
-successfully.
-
-   Users with related needs can form users' groups, and pay dues.  A
-group would contract with programming companies to write programs that
-the group's members would like to use.
-
-   All sorts of development can be funded with a Software Tax:
-
-     Suppose everyone who buys a computer has to pay x percent of the
-     price as a software tax.  The government gives this to an agency
-     like the NSF to spend on software development.
-
-     But if the computer buyer makes a donation to software development
-     himself, he can take a credit against the tax.  He can donate to
-     the project of his own choosing--often, chosen because he hopes to
-     use the results when it is done.  He can take a credit for any
-     amount of donation up to the total tax he had to pay.
-
-     The total tax rate could be decided by a vote of the payers of the
-     tax, weighted according to the amount they will be taxed on.
-
-     The consequences:
-
-        * The computer-using community supports software development.
-
-        * This community decides what level of support is needed.
-
-        * Users who care which projects their share is spent on can
-          choose this for themselves.
-
-   In the long run, making programs free is a step toward the
-post-scarcity world, where nobody will have to work very hard just to
-make a living.  People will be free to devote themselves to activities
-that are fun, such as programming, after spending the necessary ten
-hours a week on required tasks such as legislation, family counseling,
-robot repair and asteroid prospecting.  There will be no need to be
-able to make a living from programming.
-
-   We have already greatly reduced the amount of work that the whole
-society must do for its actual productivity, but only a little of this
-has translated itself into leisure for workers because much
-nonproductive activity is required to accompany productive activity.
-The main causes of this are bureaucracy and isometric struggles against
-competition.  Free software will greatly reduce these drains in the
-area of software production.  We must do this, in order for technical
-gains in productivity to translate into less work for us.
-
-   ---------- Footnotes ----------
-
-   (1) The wording here was careless.  The intention was that nobody
-would have to pay for _permission_ to use the GNU system.  But the
-words don't make this clear, and people often interpret them as saying
-that copies of GNU should always be distributed at little or no charge.
-That was never the intent; later on, the manifesto mentions the
-possibility of companies providing the service of distribution for a
-profit.  Subsequently I have learned to distinguish carefully between
-"free" in the sense of freedom and "free" in the sense of price.  Free
-software is software that users have the freedom to distribute and
-change.  Some users may obtain copies at no charge, while others pay to
-obtain copies--and if the funds help support improving the software, so
-much the better.  The important thing is that everyone who has a copy
-has the freedom to cooperate with others in using it.
-
-   (2) This is another place I failed to distinguish carefully between
-the two different meanings of "free."  The statement as it stands is
-not false--you can get copies of GNU software at no charge, from your
-friends or over the net.  But it does suggest the wrong idea.
-
-   (3) Several such companies now exist.
-
-   (4) The Free Software Foundation raises most of its funds from a
-distribution service, although it is a charity rather than a company.
-If _no one_ chooses to obtain copies by ordering from the FSF, it will
-be unable to do its work.  But this does not mean that proprietary
-restrictions are justified to force every user to pay.  If a small
-fraction of all the users order copies from the FSF, that is sufficient
-to keep the FSF afloat.  So we ask users to choose to support us in
-this way.  Have you done your part?
-
-   (5) A group of computer companies recently pooled funds to support
-maintenance of the GNU C Compiler.
-
-   (6) In the 80s I had not yet realized how confusing it was to speak
-of "the issue" of "intellectual property."  That term is obviously
-biased; more subtle is the fact that it lumps together various
-disparate laws which raise very different issues.  Nowadays I urge
-people to reject the term "intellectual property" entirely, lest it
-lead others to suppose that those laws form one coherent issue.  The
-way to be clear is to discuss patents, copyrights, and trademarks
-separately.  See `http://www.gnu.org/philosophy/not-ipr.xhtml' for more
-explanation of how this term spreads confusion and bias.
-
-   (7) Subsequently we have discovered the need to distinguish between
-"free software" and "freeware".  The term "freeware" means software you
-are free to redistribute, but usually you are not free to study and
-change the source code, so most of it is not free software.  See
-`http://www.gnu.org/philosophy/words-to-avoid.html' for more
-explanation.
 

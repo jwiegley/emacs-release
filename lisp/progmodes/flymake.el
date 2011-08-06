@@ -1,6 +1,6 @@
 ;;; flymake.el -- a universal on-the-fly syntax checker
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author:  Pavel Kobyakov <pk_at_work@yahoo.com>
@@ -1152,7 +1152,8 @@ For the format of LINE-ERR-INFO, see `flymake-ler-make-ler'."
 	  (when dir
 	    (let ((default-directory dir))
 	      (flymake-log 3 "starting process on dir %s" default-directory)))
-	  (setq process (apply 'start-process "flymake-proc" (current-buffer) cmd args))
+	  (setq process (apply 'start-file-process
+			       "flymake-proc" (current-buffer) cmd args))
 	  (set-process-sentinel process 'flymake-process-sentinel)
 	  (set-process-filter process 'flymake-process-filter)
           (push process flymake-processes)

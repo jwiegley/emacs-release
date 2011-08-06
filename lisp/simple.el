@@ -1,8 +1,8 @@
 ;;; simple.el --- basic editing commands for Emacs
 
-;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+;;   2010, 2011  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -305,8 +305,8 @@ runs `next-error-hook' with `run-hooks', and stays with that buffer
 until you use it in some other buffer which uses Compilation mode
 or Compilation Minor mode.
 
-See variables `compilation-parse-errors-function' and
-\`compilation-error-regexp-alist' for customization ideas."
+To control which errors are matched, customize the variable
+`compilation-error-regexp-alist'."
   (interactive "P")
   (if (consp arg) (setq reset t arg nil))
   (when (setq next-error-last-buffer (next-error-find-buffer))
@@ -784,15 +784,16 @@ If BACKWARD-ONLY is non-nil, only delete them before point."
        (constrain-to-field nil orig-pos t)))))
 
 (defun beginning-of-buffer (&optional arg)
-  "Move point to the beginning of the buffer; leave mark at previous position.
-With \\[universal-argument] prefix, do not set mark at previous position.
+  "Move point to the beginning of the buffer.
 With numeric arg N, put point N/10 of the way from the beginning.
+If the buffer is narrowed, this command uses the beginning of the
+accessible part of the buffer.
 
-If the buffer is narrowed, this command uses the beginning and size
-of the accessible part of the buffer.
+If Transient Mark mode is disabled, leave mark at previous
+position, unless a \\[universal-argument] prefix is supplied.
 
 Don't use this command in Lisp programs!
-\(goto-char (point-min)) is faster and avoids clobbering the mark."
+\(goto-char (point-min)) is faster."
   (interactive "^P")
   (or (consp arg)
       (region-active-p)
@@ -809,15 +810,16 @@ Don't use this command in Lisp programs!
   (if (and arg (not (consp arg))) (forward-line 1)))
 
 (defun end-of-buffer (&optional arg)
-  "Move point to the end of the buffer; leave mark at previous position.
-With \\[universal-argument] prefix, do not set mark at previous position.
+  "Move point to the end of the buffer.
 With numeric arg N, put point N/10 of the way from the end.
+If the buffer is narrowed, this command uses the end of the
+accessible part of the buffer.
 
-If the buffer is narrowed, this command uses the beginning and size
-of the accessible part of the buffer.
+If Transient Mark mode is disabled, leave mark at previous
+position, unless a \\[universal-argument] prefix is supplied.
 
 Don't use this command in Lisp programs!
-\(goto-char (point-max)) is faster and avoids clobbering the mark."
+\(goto-char (point-max)) is faster."
   (interactive "^P")
   (or (consp arg) (region-active-p) (push-mark))
   (let ((size (- (point-max) (point-min))))
@@ -2829,11 +2831,6 @@ If `interprogram-cut-function' is non-nil, apply it to STRING.
 Optional second argument REPLACE non-nil means that STRING will replace
 the front of the kill ring, rather than being added to the list.
 
-Optional third arguments YANK-HANDLER controls how the STRING is later
-inserted into a buffer; see `insert-for-yank' for details.
-When a yank handler is specified, STRING must be non-empty (the yank
-handler, if non-nil, is stored as a `yank-handler' text property on STRING).
-
 When `save-interprogram-paste-before-kill' and `interprogram-paste-function'
 are non-nil, saves the interprogram paste string(s) into `kill-ring' before
 STRING.
@@ -2870,22 +2867,19 @@ argument should still be a \"useful\" string for such uses."
   (setq kill-ring-yank-pointer kill-ring)
   (if interprogram-cut-function
       (funcall interprogram-cut-function string (not replace))))
+(set-advertised-calling-convention
+ 'kill-new '(string &optional replace) "23.3")
 
 (defun kill-append (string before-p &optional yank-handler)
   "Append STRING to the end of the latest kill in the kill ring.
 If BEFORE-P is non-nil, prepend STRING to the kill.
-Optional third argument YANK-HANDLER, if non-nil, specifies the
-yank-handler text property to be set on the combined kill ring
-string.  If the specified yank-handler arg differs from the
-yank-handler property of the latest kill string, this function
-adds the combined string to the kill ring as a new element,
-instead of replacing the last kill with it.
 If `interprogram-cut-function' is set, pass the resulting kill to it."
   (let* ((cur (car kill-ring)))
     (kill-new (if before-p (concat string cur) (concat cur string))
 	      (or (= (length cur) 0)
 		  (equal yank-handler (get-text-property 0 'yank-handler cur)))
 	      yank-handler)))
+(set-advertised-calling-convention 'kill-append '(string before-p) "23.3")
 
 (defcustom yank-pop-change-selection nil
   "If non-nil, rotating the kill ring changes the window system selection."
@@ -2959,17 +2953,14 @@ If the buffer is read-only, Emacs will beep and refrain from deleting
 the text, but put the text in the kill ring anyway.  This means that
 you can use the killing commands to copy text from a read-only buffer.
 
-This is the primitive for programs to kill text (as opposed to deleting it).
+Lisp programs should use this function for killing text.
+ (To delete text, use `delete-region'.)
 Supply two arguments, character positions indicating the stretch of text
  to be killed.
 Any command that calls this function is a \"kill command\".
 If the previous command was also a kill command,
 the text killed this time appends to the text killed last time
-to make one entry in the kill ring.
-
-In Lisp code, optional third arg YANK-HANDLER, if non-nil,
-specifies the yank-handler text property to be set on the killed
-text.  See `insert-for-yank'."
+to make one entry in the kill ring."
   ;; Pass point first, then mark, because the order matters
   ;; when calling kill-append.
   (interactive (list (point) (mark)))
@@ -3001,6 +2992,7 @@ text.  See `insert-for-yank'."
        (barf-if-buffer-read-only)
        ;; If the buffer isn't read-only, the text is.
        (signal 'text-read-only (list (current-buffer)))))))
+(set-advertised-calling-convention 'kill-region '(beg end) "23.3")
 
 ;; copy-region-as-kill no longer sets this-command, because it's confusing
 ;; to get two copies of the text when the user accidentally types M-w and
@@ -3536,7 +3528,7 @@ a mistake; see the documentation of `set-mark'."
     (signal 'mark-inactive nil)))
 
 (defcustom select-active-regions nil
-  "If non-nil, an active region automatically becomes the window selection."
+  "If non-nil, an active region automatically sets the primary selection."
   :type 'boolean
   :group 'killing
   :version "23.1")
@@ -3629,10 +3621,9 @@ point otherwise."
 This is used by commands that act specially on the region under
 Transient Mark mode.
 
-The return value is t provided Transient Mark mode is enabled and
-the mark is active; and, when `use-empty-active-region' is
-non-nil, provided the region is empty.  Otherwise, the return
-value is nil.
+The return value is t if Transient Mark mode is enabled and the
+mark is active; furthermore, if `use-empty-active-region' is nil,
+the region must not be empty.  Otherwise, the return value is nil.
 
 For some commands, it may be appropriate to ignore the value of
 `use-empty-active-region'; in that case, use `region-active-p'."
@@ -3688,6 +3679,8 @@ Display `Mark set' unless the optional second arg NOMSG is non-nil."
 	(push-mark nil nomsg t)
       (setq mark-active t)
       (run-hooks 'activate-mark-hook)
+      (and select-active-regions (display-selections-p)
+	   (x-set-selection 'PRIMARY (current-buffer)))
       (unless nomsg
 	(message "Mark activated")))))
 
@@ -3818,7 +3811,8 @@ Does not set point.  Does nothing if mark ring is empty."
     (setq mark-ring (cdr mark-ring)))
   (deactivate-mark))
 
-(defalias 'exchange-dot-and-mark 'exchange-point-and-mark)
+(define-obsolete-function-alias
+  'exchange-dot-and-mark 'exchange-point-and-mark "23.3")
 (defun exchange-point-and-mark (&optional arg)
   "Put the mark where point is now, and point where the mark is now.
 This command works even when the mark is not active,
@@ -3922,15 +3916,17 @@ Non-nil also enables highlighting of the region whenever the mark is active.
 The variable `highlight-nonselected-windows' controls whether to highlight
 all windows or just the selected window.
 
-If the value is `lambda', that enables Transient Mark mode temporarily.
-After any subsequent action that would normally deactivate the mark
-\(such as buffer modification), Transient Mark mode is turned off.
+Lisp programs may give this variable certain special values:
 
-If the value is (only . OLDVAL), that enables Transient Mark mode
-temporarily.  After any subsequent point motion command that is not
-shift-translated, or any other action that would normally deactivate
-the mark (such as buffer modification), the value of
-`transient-mark-mode' is set to OLDVAL.")
+- A value of `lambda' enables Transient Mark mode temporarily.
+  It is disabled again after any subsequent action that would
+  normally deactivate the mark (e.g. buffer modification).
+
+- A value of (only . OLDVAL) enables Transient Mark mode
+  temporarily.  After any subsequent point motion command that is
+  not shift-translated, or any other action that would normally
+  deactivate the mark (e.g. buffer modification), the value of
+  `transient-mark-mode' is set to OLDVAL.")
 
 (defvar widen-automatically t
   "Non-nil means it is ok for commands to call `widen' when they want to.
@@ -4077,9 +4073,11 @@ Outline mode sets this."
   "When non-nil, `line-move' moves point by visual lines.
 This movement is based on where the cursor is displayed on the
 screen, instead of relying on buffer contents alone.  It takes
-into account variable-width characters and line continuation."
+into account variable-width characters and line continuation.
+If nil, `line-move' moves point by logical lines."
   :type 'boolean
-  :group 'editing-basics)
+  :group 'editing-basics
+  :version "23.1")
 
 ;; Returns non-nil if partial move was done.
 (defun line-move-partial (arg noerror to-end)
@@ -4119,6 +4117,11 @@ into account variable-width characters and line continuation."
 	 ;; When already vscrolled, we vscroll some more if we can,
 	 ;; or clear vscroll and move forward at end of tall image.
 	 ((> (setq vs (window-vscroll nil t)) 0)
+
+	  ;; If we are vscrolling an image at the top of the screen,
+	  ;; we could actually advance point if this yields space
+	  ;; below....
+
 	  (when (> rbot 0)
 	    (set-window-vscroll nil (+ vs (min rbot (frame-char-height))) t)))
 	 ;; If cursor just entered the bottom scroll margin, move forward,
@@ -4188,7 +4191,7 @@ into account variable-width characters and line continuation."
     (or (and (= (vertical-motion
 		 (cons (or goal-column
 			   (if (consp temporary-goal-column)
-			       (truncate (car temporary-goal-column))
+			       (car temporary-goal-column)
 			     temporary-goal-column))
 		       arg))
 		arg)
@@ -4255,7 +4258,7 @@ into account variable-width characters and line continuation."
 		  (goto-char (next-char-property-change (point))))
 		;; Move a line.
 		;; We don't use `end-of-line', since we want to escape
-		;; from field boundaries ocurring exactly at point.
+		;; from field boundaries occurring exactly at point.
 		(goto-char (constrain-to-field
 			    (let ((inhibit-field-text-motion t))
 			      (line-end-position))
@@ -5004,12 +5007,10 @@ If optional arg REALLY-WORD is non-nil, it finds just a word."
 		 regexp)
   :group 'fill)
 
-;; This function is used as the auto-fill-function of a buffer
-;; when Auto-Fill mode is enabled.
-;; It returns t if it really did any work.
-;; (Actually some major modes use a different auto-fill function,
-;; but this one is the default one.)
 (defun do-auto-fill ()
+  "The default value for `normal-auto-fill-function'.
+This is the default auto-fill function, some major modes use a different one.
+Returns t if it really did any work."
   (let (fc justify give-up
 	   (fill-prefix fill-prefix))
     (if (or (not (setq justify (current-justification)))
@@ -5584,7 +5585,10 @@ appears to have customizations applying to the old default,
   'mail-send-and-exit)
 
 (defun rfc822-goto-eoh ()
-  ;; Go to header delimiter line in a mail message, following RFC822 rules
+  "If the buffer starts with a mail header, move point to the header's end.
+Otherwise, moves to `point-min'.
+The end of the header is the start of the next line, if there is one,
+else the end of the last line.  This function obeys RFC822."
   (goto-char (point-min))
   (when (re-search-forward
 	 "^\\([:\n]\\|[^: \t\n]+[ \t\n]\\)" nil 'move)
@@ -5669,7 +5673,7 @@ Each action has the form (FUNCTION . ARGS)."
 The default mail mode is now Message mode.
 You have the following Mail mode variable%s customized:
 \n  %s\n\nTo use Mail mode, set `mail-user-agent' to sendmail-user-agent.
-To disable this warning, set `compose-mail-check-user-agent' to nil."
+To disable this warning, set `compose-mail-user-agent-warnings' to nil."
 				    (if (> (length warn-vars) 1) "s" "")
 				    (mapconcat 'symbol-name
 					       warn-vars " "))))))
@@ -6663,5 +6667,4 @@ warning using STRING as the message.")
 
 (provide 'simple)
 
-;; arch-tag: 24af67c0-2a49-44f6-b3b1-312d8b570dfd
 ;;; simple.el ends here

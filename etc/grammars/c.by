@@ -490,7 +490,7 @@ opt-template-specifier
   : template-specifier
     ( ,$1 )
   | ;;EMPTY
-    ()
+    ( )
   ;
 
 template-specifier
@@ -779,7 +779,7 @@ func-decl
           ;; Extra stuff goes in here.
           ;; Continue with the stuff we found in
           ;; this definition
-          $2 $3 $7 $9 $8 ,$1 ,$11 ,$5)
+          $2 $3 $7 $9 $8 ,$1 ,$11 $5 ,$10)
   | opt-stars opt-class opt-destructor functionname
     opt-template-specifier
     opt-under-p
@@ -792,7 +792,7 @@ func-decl
           ;; Extra stuff goes in here.
           ;; Continue with the stuff we found in
           ;; this definition
-          $2 $3 nil $8 $7 ,$1 ,$10 ,$5)
+          $2 $3 nil $8 $7 ,$1 ,$10 $5 ,$9)
   ;
 
 var-decl
@@ -879,9 +879,9 @@ opt-restrict
 ;; then also some invalid C++-syntax is parsed but this is better than
 ;; not parsing valid syntax.
 varname
-  : opt-stars opt-restrict namespace-symbol opt-bits opt-array opt-assign
-    ( ,$3 ,$1 ,$4 ,$5 ,$6 )
-  ;
+  : opt-stars opt-restrict namespace-symbol opt-bits opt-array 
+    ( ,$3 ,$1 ,$4 ,$5 )
+;
 
 ;; I should store more in this def, but leave it simple for now.
 ;; Klaus Berndl: const and volatile can be written after the type!
@@ -903,10 +903,16 @@ variablearg-opt-name
     ( "" ,$1 nil nil nil )
   ;
 
+varname-opt-initializer
+  : semantic-list
+  | opt-assign
+  | ;; EMPTY
+  ;
+
 varnamelist
-  : opt-ref varname COMA varnamelist
-    ( ,(cons $2 $4) )
-  | opt-ref varname
+  : opt-ref varname varname-opt-initializer COMA varnamelist
+    ( ,(cons $2 $5) )
+  | opt-ref varname varname-opt-initializer
     ( $2 )
   ;
 
@@ -1155,33 +1161,42 @@ expr-start
   | AMPERSAND
   ;
 
+expr-binop
+  : MINUS
+  | PLUS
+  | STAR
+  | DIVIDE
+  | AMPERSAND AMPERSAND
+  | AMPERSAND
+  | OR OR
+  | OR
+ ;; There are more.
+  ;
+
 ;; Use expression for parsing only.  Don't actually return anything
 ;; for now.  Hopefully we can fix this later.
 expression
+  : unaryexpression expr-binop unaryexpression
+    ( (identity start) (identity end) )
+  | unaryexpression
+    ( (identity start) (identity end) )
+  ;
+
+unaryexpression
   : number
-    ( (identity start) (identity end) )
   | multi-stage-dereference
-    ( (identity start) (identity end) )
   | NEW multi-stage-dereference
-    ( (identity start) (identity end) )
   | NEW builtintype-types semantic-list
-    ( (identity start) (identity end) )
  ;; Klaus Berndl: symbol -> namespace-symbol!
   | namespace-symbol
-    ( (identity start) (identity end) )
  ;; Klaus Berndl: C/C++ allows sequences of strings which are
  ;; concatenated by the precompiler to one string
   | string-seq
-    ( (identity start) (identity end) )
   | type-cast expression  ;; A cast to some other type
-    ( (identity start) (identity end) )
  ;; Casting the results of one expression to something else.
   | semantic-list expression
-    ( (identity start) (identity end) )
   | semantic-list
-    ( (identity start) (identity end) )
   | expr-start expression
-    ( (identity start) (identity end) )
   ;
 
 ;;; c.by ends here

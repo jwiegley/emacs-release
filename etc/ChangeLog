@@ -1,3 +1,73 @@
+2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 23.3 released.
+
+2011-01-18  Glenn Morris  <rgm@gnu.org>
+
+	* PROBLEMS: Add note about svn+ssh.  (Bug#7791)
+
+2011-01-03  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/calccard.tex, refcards/cs-dired-ref.tex:
+	* refcards/cs-refcard.tex, refcards/cs-survival.tex:
+	* refcards/de-refcard.tex, refcards/dired-ref.tex:
+	* refcards/fr-dired-ref.tex, refcards/fr-refcard.tex:
+	* refcards/fr-survival.tex, refcards/orgcard.tex:
+	* refcards/pl-refcard.tex, refcards/pt-br-refcard.tex:
+	* refcards/refcard.tex, refcards/ru-refcard.tex:
+	* refcards/sk-dired-ref.tex, refcards/sk-refcard.tex:
+	* refcards/sk-survival.tex, refcards/survival.tex:
+	* refcards/vipcard.tex, refcards/viperCard.tex:
+	Update short copyright year to 2011.
+
+2010-12-24  Kenichi Handa  <handa@m17n.org>
+
+	* NEWS: Describe the changes for rmail's MIME handling.
+
+2010-12-04  W. Martin Borgert <debacle@debian.org>  (tiny change)
+
+	* schema/schemas.xml: Add DocBook (Bug#7491).
+
+2010-11-21  Ulrich Mueller  <ulm@gentoo.org>
+
+	* HELLO: Add ancient Greek (Bug#7418).
+
+2010-10-20  Richard Stallman  <rms@gnu.org>
+
+	* DISTRIB: Update donation section.
+
+2010-10-20  Glenn Morris  <rgm@gnu.org>
+
+	* DISTRIB: Small updates.
+
+2010-10-12  Juanma Barranquero  <lekktu@gmail.com>
+
+	* tutorials/TUTORIAL.es: Fix typos.
+
+2010-09-21  Eric Ludlam  <zappo@gnu.org>
+
+	* srecode/java.srt: Make NAME be a prompt.
+
+2010-08-22  Alex Harsanyi  <harsanyi@mac.com>  (tiny change)
+
+	* emacs3.py: Import imp module and use it (Bug#5756).
+
+2010-07-27  Ken Brown  <kbrown@cornell.edu>
+
+	* PROBLEMS: Mention problem with Cygwin 1.5.19.
+
+2010-06-19  Ken Brown  <kbrown@cornell.edu>
+
+	* PROBLEMS: Update Cygwin GCC information.  (Bug#6458)
+
+2010-06-12  Glenn Morris  <rgm@gnu.org>
+
+	* tutorials/TUTORIAL.bg, tutorials/TUTORIAL.es: Fix typos.
+
+2010-05-19  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* NEWS: Add sections for Emacs-23.3.
+
 2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.2 released.
@@ -26,8 +96,7 @@
 
 2010-03-15  Francesc Rocher  <rocher@member.fsf.org>
 
-	* MORE.STUFF: Remove CEDET entry, now distributed as part of
-	Emacs.
+	* MORE.STUFF: Remove CEDET entry, now distributed as part of Emacs.
 
 2010-03-06  Glenn Morris  <rgm@gnu.org>
 
@@ -99,7 +168,7 @@
 	* srecode/doc-default.srt (section-comment, function-comment)
 	(variable-same-line-comment, group-comment-start, group-comment-end):
 	* srecode/doc-java.srt (function-comment, variable-same-line-comment)
-	(group-comment-start, gropu-comment-end):
+	(group-comment-start, group-comment-end):
 	Fix typos in template docstrings.
 
 2010-01-14  Kenichi Handa  <handa@m17n.org>
@@ -4926,12 +4995,11 @@
 
 ;; Local Variables:
 ;; coding: utf-8
-;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001
-	2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-	Free Software Foundation, Inc.
+  Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
+    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+    Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -4948,4 +5016,3 @@
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; arch-tag: 094f3a51-bd72-44d0-8fac-2ac242c6c5b1

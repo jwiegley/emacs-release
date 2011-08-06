@@ -1,7 +1,7 @@
 /* Asynchronous subprocess control for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995,
 		 1996, 1998, 1999, 2001, 2002, 2003, 2004,
-		 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+		 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -345,6 +345,9 @@ static int max_keyboard_desc;
 
 /* The largest descriptor currently in use for gpm mouse input.  */
 static int max_gpm_desc;
+
+/* Non-zero if keyboard input is on hold, zero otherwise.  */
+static int kbd_is_on_hold;
 
 /* Nonzero means delete a process right away if it exits.  */
 static int delete_exited_processes;
@@ -1727,6 +1730,11 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
 	  val = XCDR (Vdefault_process_coding_system);
       }
     XPROCESS (proc)->encode_coding_system = val;
+    /* Note: At this momemnt, the above coding system may leave
+       text-conversion or eol-conversion unspecified.  They will be
+       decided after we read output from the process and decode it by
+       some coding system, or just before we actually send a text to
+       the process.  */
   }
 
 
@@ -1769,6 +1777,7 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
 	tem = Fsubstring (tem, make_number (2), Qnil);
 
       {
+	Lisp_Object arg_encoding = Qnil;
 	struct gcpro gcpro1;
 	GCPRO1 (tem);
 
@@ -1786,9 +1795,14 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
 	    tem = Fcons (args[i], tem);
 	    CHECK_STRING (XCAR (tem));
 	    if (STRING_MULTIBYTE (XCAR (tem)))
-	      XSETCAR (tem,
-		       code_convert_string_norecord
-		       (XCAR (tem), XPROCESS (proc)->encode_coding_system, 1));
+	      {
+		if (NILP (arg_encoding))
+		  arg_encoding = (complement_process_encoding_system
+				  (XPROCESS (proc)->encode_coding_system));
+		XSETCAR (tem,
+			 code_convert_string_norecord
+			 (XCAR (tem), arg_encoding, 1));
+	      }
 	  }
 
 	UNGCPRO;
@@ -2540,9 +2554,11 @@ conv_lisp_to_sockaddr (family, address, sa, len)
 		ip6[i] = ntohs (j);
 	      }
 	  sa->sa_family = family;
+	  return;
 	}
 #endif
-      return;
+      else
+	return;
     }
   else if (STRINGP (address))
     {
@@ -3640,22 +3656,8 @@ usage: (make-network-process &rest ARGS)  */)
       immediate_quit = 1;
       QUIT;
 
-      /* This turns off all alarm-based interrupts; the
-	 bind_polling_period call above doesn't always turn all the
-	 short-interval ones off, especially if interrupt_input is
-	 set.
-
-	 It'd be nice to be able to control the connect timeout
-	 though.  Would non-blocking connect calls be portable?
-
-	 This used to be conditioned by HAVE_GETADDRINFO.  Why?  */
-
-      turn_on_atimers (0);
-
       ret = connect (s, lres->ai_addr, lres->ai_addrlen);
       xerrno = errno;
-
-      turn_on_atimers (1);
 
       if (ret == 0 || xerrno == EISCONN)
 	{
@@ -3676,6 +3678,40 @@ usage: (make-network-process &rest ARGS)  */)
 #endif
 #endif
 
+#ifndef WINDOWSNT
+      if (xerrno == EINTR)
+	{
+	  /* Unlike most other syscalls connect() cannot be called
+	     again.  (That would return EALREADY.)  The proper way to
+	     wait for completion is select(). */
+	  int sc, len;
+	  SELECT_TYPE fdset;
+	retry_select:
+	  FD_ZERO (&fdset);
+	  FD_SET (s, &fdset);
+	  QUIT;
+	  sc = select (s + 1, (SELECT_TYPE *)0, &fdset, (SELECT_TYPE *)0,
+		       (EMACS_TIME *)0);
+	  if (sc == -1)
+	    {
+	      if (errno == EINTR)
+		goto retry_select;
+	      else
+		report_file_error ("select failed", Qnil);
+	    }
+	  eassert (sc > 0);
+
+	  len = sizeof xerrno;
+	  eassert (FD_ISSET (s, &fdset));
+	  if (getsockopt (s, SOL_SOCKET, SO_ERROR, &xerrno, &len) == -1)
+	    report_file_error ("getsockopt failed", Qnil);
+	  if (xerrno)
+	    errno = xerrno, report_file_error ("error during connect", Qnil);
+	  else
+	    break;
+	}
+#endif /* !WINDOWSNT */
+
       immediate_quit = 0;
 
       /* Discard the unwind protect closing S.  */
@@ -3683,8 +3719,10 @@ usage: (make-network-process &rest ARGS)  */)
       emacs_close (s);
       s = -1;
 
+#ifdef WINDOWSNT
       if (xerrno == EINTR)
 	goto retry_connect;
+#endif
     }
 
   if (s >= 0)
@@ -4782,7 +4820,11 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 	  SELECT_TYPE Ctemp;
 #endif
 
-	  Atemp = input_wait_mask;
+          if (kbd_on_hold_p ())
+            FD_ZERO (&Atemp);
+          else
+            Atemp = input_wait_mask;
+
 	  IF_NON_BLOCKING_CONNECT (Ctemp = connect_wait_mask);
 
 	  EMACS_SET_SECS_USECS (timeout, 0, 0);
@@ -5688,12 +5730,21 @@ send_process (proc, buf, len, object)
 	  && !NILP (XBUFFER (object)->enable_multibyte_characters))
       || EQ (object, Qt))
     {
+      p->encode_coding_system
+	= complement_process_encoding_system (p->encode_coding_system);
       if (!EQ (Vlast_coding_system_used, p->encode_coding_system))
-	/* The coding system for encoding was changed to raw-text
-	   because we sent a unibyte text previously.  Now we are
-	   sending a multibyte text, thus we must encode it by the
-	   original coding system specified for the current process.  */
-	setup_coding_system (p->encode_coding_system, coding);
+	{
+	  /* The coding system for encoding was changed to raw-text
+	     because we sent a unibyte text previously.  Now we are
+	     sending a multibyte text, thus we must encode it by the
+	     original coding system specified for the current process.
+
+	     Another reason we comming here is that the coding system
+	     was just complemented and new one was returned by
+	     complement_process_encoding_system.  */
+	  setup_coding_system (p->encode_coding_system, coding);
+	  Vlast_coding_system_used = p->encode_coding_system;
+	}
       coding->src_multibyte = 1;
     }
   else
@@ -7202,6 +7253,31 @@ keyboard_bit_set (mask)
 
   return 0;
 }
+
+/* Stop reading input from keyboard sources.  */
+
+void
+hold_keyboard_input (void)
+{
+  kbd_is_on_hold = 1;
+}
+
+/* Resume reading input from keyboard sources.  */
+
+void
+unhold_keyboard_input (void)
+{
+  kbd_is_on_hold = 0;
+}
+
+/* Return non-zero if keyboard input is on hold, zero otherwise.  */
+
+int
+kbd_on_hold_p (void)
+{
+  return kbd_is_on_hold;
+}
+
 
 /* Enumeration of and access to system processes a-la ps(1).  */
 
@@ -7280,6 +7356,7 @@ init_process ()
   register int i;
 
   inhibit_sentinels = 0;
+  kbd_is_on_hold = 0;
 
 #ifdef SIGCHLD
 #ifndef CANNOT_DUMP

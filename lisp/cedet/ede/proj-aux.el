@@ -1,6 +1,6 @@
 ;;; ede/proj-aux.el --- EDE Generic Project auxiliary file support
 
-;; Copyright (C) 1998, 1999, 2000, 2007, 2009, 2010  Free Software Foundation, Inc.
+;; Copyright (C) 1998, 1999, 2000, 2007, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
@@ -29,7 +29,7 @@
 
 ;;; Code:
 (defclass ede-proj-target-aux (ede-proj-target)
-  ((sourcetype :initform (ede-aux-source)))
+  ((sourcetype :initform '(ede-aux-source)))
   "This target consists of aux files such as READMEs and COPYING.")
 
 (defvar ede-aux-source

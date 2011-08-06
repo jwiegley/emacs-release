@@ -1,7 +1,7 @@
 ;;; artist.el --- draw ascii graphics with your mouse
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author:       Tomas Abrahamsson <tab@lysator.liu.se>
 ;; Maintainer:   Tomas Abrahamsson <tab@lysator.liu.se>
@@ -2939,7 +2939,7 @@ Blanks in the rendered text overwrite any text in the buffer."
 Returns a list of points.  Each point is on the form (X1 . Y1)."
   (let ((points))
     (while (> n 0)
-      (let* ((angle (* (random 359) (/ pi 180)))
+      (let* ((angle (* (random 359) (/ float-pi 180)))
 	     (dist  (random radius))
 	     (point (cons (round (* dist (cos angle)))
 			  (round (* dist (sin angle))))))

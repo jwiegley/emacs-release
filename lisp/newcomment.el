@@ -1,7 +1,7 @@
 ;;; newcomment.el --- (un)comment regions of buffers
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: code extracted from Emacs-20's simple.el
 ;; Maintainer: Stefan Monnier <monnier@iro.umontreal.ca>
@@ -318,7 +318,8 @@ the variables are properly set."
 		   "+\\)[ \t]*")))
     (unless (and comment-end-skip
 		 ;; In case comment-end has changed since last time.
-		 (string-match comment-end-skip comment-end))
+		 (string-match comment-end-skip
+                               (if (string= "" comment-end) "\n" comment-end)))
       (let ((ce (if (string= "" comment-end) "\n"
 		  (comment-string-strip comment-end t t))))
 	(set (make-local-variable 'comment-end-skip)

@@ -1,9 +1,10 @@
-This is ../../info/eieio, produced by makeinfo version 4.11 from
+This is ../../info/eieio, produced by makeinfo version 4.13 from
 eieio.texi.
 
 This manual documents EIEIO, an object framework for Emacs Lisp.
 
-   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -17,9 +18,9 @@ This manual documents EIEIO, an object framework for Emacs Lisp.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* eieio: (eieio).       Objects for Emacs
+* EIEIO: (eieio).               An objects system for Emacs Lisp.
 END-INFO-DIR-ENTRY
 
 
@@ -35,7 +36,8 @@ Emacs.
 
    This manual documents EIEIO, an object framework for Emacs Lisp.
 
-   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -268,8 +270,8 @@ created for it, named `CLASS-NAME-p' and `CLASS-NAME-child-p':
 * Menu:
 
 * Inheritance::         How to specify parents classes
-* Slot Options::	How to specify features of a slot.
-* Class Options::	How to specify features for this class.
+* Slot Options::        How to specify features of a slot.
+* Class Options::       How to specify features for this class.
 
 
 File: eieio,  Node: Inheritance,  Next: Slot Options,  Up: Building Classes
@@ -1818,61 +1820,61 @@ Function Index
 
 
 Tag Table:
-Node: Top975
-Node: Quick Start3126
-Node: Introduction6297
-Node: Building Classes8090
-Node: Inheritance10384
-Node: Slot Options12675
-Node: Class Options18761
-Node: Making New Objects21202
-Ref: make-instance22625
-Node: Accessing Slots23297
-Ref: oref24432
-Ref: oref-default24642
-Ref: slot-value25065
-Ref: set-slot-value25230
-Ref: object-add-to-list25687
-Ref: object-remove-from-list26079
-Ref: with-slots26328
-Node: Writing Methods27314
-Node: Generics28046
-Node: Methods29362
-Ref: call-next-method32204
-Ref: next-method-p32609
-Node: Static Methods32953
-Node: Predicates33567
-Ref: find-class33961
-Ref: class-p34167
-Ref: slot-exists-p34287
-Ref: slot-boundp34370
-Node: Association Lists37293
-Ref: object-assoc37648
-Node: Customizing38617
-Node: Introspection41067
-Node: Base Classes41739
-Node: eieio-instance-inheritor42690
-Node: eieio-instance-tracker43961
-Node: eieio-singleton45426
-Node: eieio-persistent45861
-Node: eieio-named47765
-Node: eieio-speedbar48098
-Node: Browsing51927
-Node: Class Values52639
-Node: Default Superclass53129
-Node: Initialization54262
-Node: Basic Methods55330
-Ref: clone55576
-Ref: object-print55894
-Node: Signal Handling57221
-Ref: slot-missing57752
-Ref: slot-unbound58443
-Ref: no-applicable-method59135
-Ref: no-next-method59500
-Node: Signals59868
-Node: Naming Conventions61480
-Node: CLOS compatibility62602
-Node: Wish List65174
-Node: Function Index65944
+Node: Top1019
+Node: Quick Start3176
+Node: Introduction6347
+Node: Building Classes8140
+Node: Inheritance10447
+Node: Slot Options12738
+Node: Class Options18824
+Node: Making New Objects21265
+Ref: make-instance22688
+Node: Accessing Slots23360
+Ref: oref24495
+Ref: oref-default24705
+Ref: slot-value25128
+Ref: set-slot-value25293
+Ref: object-add-to-list25750
+Ref: object-remove-from-list26142
+Ref: with-slots26391
+Node: Writing Methods27377
+Node: Generics28109
+Node: Methods29425
+Ref: call-next-method32267
+Ref: next-method-p32672
+Node: Static Methods33016
+Node: Predicates33630
+Ref: find-class34024
+Ref: class-p34230
+Ref: slot-exists-p34350
+Ref: slot-boundp34433
+Node: Association Lists37356
+Ref: object-assoc37711
+Node: Customizing38680
+Node: Introspection41130
+Node: Base Classes41802
+Node: eieio-instance-inheritor42753
+Node: eieio-instance-tracker44024
+Node: eieio-singleton45489
+Node: eieio-persistent45924
+Node: eieio-named47828
+Node: eieio-speedbar48161
+Node: Browsing51990
+Node: Class Values52702
+Node: Default Superclass53192
+Node: Initialization54325
+Node: Basic Methods55393
+Ref: clone55639
+Ref: object-print55957
+Node: Signal Handling57284
+Ref: slot-missing57815
+Ref: slot-unbound58506
+Ref: no-applicable-method59198
+Ref: no-next-method59563
+Node: Signals59931
+Node: Naming Conventions61543
+Node: CLOS compatibility62665
+Node: Wish List65237
+Node: Function Index66007
 
 End Tag Table

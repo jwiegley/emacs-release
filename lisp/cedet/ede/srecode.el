@@ -1,6 +1,6 @@
 ;;; ede/srecode.el --- EDE utilities on top of SRecoder
 
-;; Copyright (C) 2008, 2009, 2010  Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -43,7 +43,9 @@
   (srecode-map-update-map t)
   ;; We don't call this unless we need it.  Load in the templates.
   (srecode-load-tables-for-mode 'makefile-mode)
-  (srecode-load-tables-for-mode 'makefile-mode 'ede))
+  (srecode-load-tables-for-mode 'makefile-mode 'ede)
+  (srecode-load-tables-for-mode 'autoconf-mode)
+  (srecode-load-tables-for-mode 'autoconf-mode 'ede))
 
 (defmacro ede-srecode-insert-with-dictionary (template &rest forms)
   "Insert TEMPLATE after executing FORMS with a dictionary.

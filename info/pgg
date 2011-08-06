@@ -1,10 +1,10 @@
-This is ../../info/pgg, produced by makeinfo version 4.11 from pgg.texi.
+This is ../../info/pgg, produced by makeinfo version 4.13 from pgg.texi.
 
 This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -18,9 +18,9 @@ Free Software Foundation, Inc.
      modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
 
-INFO-DIR-SECTION Emacs
+INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* PGG: (pgg).   Emacs interface to various PGP implementations.
+* PGG: (pgg).                   Emacs interface to various PGP implementations.
 END-INFO-DIR-ENTRY
 
 
@@ -36,8 +36,8 @@ decrypt, sign, and verify MIME messages.
    This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -380,7 +380,7 @@ of `pgg-gpg' scheme is initialized, it's stored to the variable
      (defun pgg-make-scheme-gpg ()
        (or pgg-scheme-gpg-instance
            (setq pgg-scheme-gpg-instance
-     	    (luna-make-entity 'pgg-scheme-gpg))))
+                 (luna-make-entity 'pgg-scheme-gpg))))
 
    The name of the function must follow the
 regulation--`pgg-make-scheme-' follows the back end name.
@@ -1033,22 +1033,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1038
-Node: Overview2459
-Node: Prerequisites2944
-Node: How to use3936
-Node: User Commands5139
-Node: Selecting an implementation8350
-Node: Caching passphrase9356
-Ref: Caching passphrase-Footnote-112642
-Node: Default user identity12807
-Node: Architecture13847
-Node: Initializing14497
-Node: Back end methods15224
-Node: Getting output17665
-Node: Parsing OpenPGP packets18300
-Node: GNU Free Documentation License19015
-Node: Function Index44199
-Node: Variable Index45733
+Node: Top1078
+Node: Overview2506
+Node: Prerequisites2991
+Node: How to use3983
+Node: User Commands5186
+Node: Selecting an implementation8397
+Node: Caching passphrase9403
+Ref: Caching passphrase-Footnote-112689
+Node: Default user identity12854
+Node: Architecture13894
+Node: Initializing14544
+Node: Back end methods15278
+Node: Getting output17719
+Node: Parsing OpenPGP packets18354
+Node: GNU Free Documentation License19069
+Node: Function Index44253
+Node: Variable Index45787
 
 End Tag Table

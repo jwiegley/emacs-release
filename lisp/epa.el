@@ -1,5 +1,5 @@
 ;;; epa.el --- the EasyPG Assistant
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Keywords: PGP, GnuPG
@@ -508,13 +508,12 @@ If ARG is non-nil, mark the key."
       (set-keymap-parent (current-local-map) widget-keymap)
       (setq epa-exit-buffer-function #'abort-recursive-edit)
       (goto-char (point-min))
-      (pop-to-buffer (current-buffer)))
+      (let ((display-buffer-mark-dedicated 'soft))
+        (pop-to-buffer (current-buffer))))
     (unwind-protect
 	(progn
 	  (recursive-edit)
 	  (epa--marked-keys))
-      (if (get-buffer-window epa-keys-buffer)
-	  (delete-window (get-buffer-window epa-keys-buffer)))
       (kill-buffer epa-keys-buffer))))
 
 ;;;###autoload

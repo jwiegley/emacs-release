@@ -1,6 +1,6 @@
 ;;; vc-dir.el --- Directory status display under VC
 
-;; Copyright (C) 2007, 2008, 2009, 2010
+;; Copyright (C) 2007, 2008, 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author:   Dan Nicolaescu <dann@ics.uci.edu>
@@ -188,9 +188,18 @@ See `run-hooks'."
     (define-key map [diff]
       '(menu-item "Compare with Base Version" vc-diff
 		  :help "Compare file set with the base version"))
+    (define-key map [logo]
+      '(menu-item "Show Outgoing Log" vc-log-outgoing
+		  :help "Show a log of changes that will be sent with a push operation"))
+    (define-key map [logi]
+      '(menu-item "Show Incoming Log" vc-log-incoming
+		  :help "Show a log of changes that will be received with a pull operation"))
     (define-key map [log]
-     '(menu-item "Show history" vc-print-log
-     :help "List the change log of the current file set in a window"))
+      '(menu-item "Show history" vc-print-log
+		  :help "List the change log of the current file set in a window"))
+    (define-key map [rlog]
+      '(menu-item "Show Top of the Tree History " vc-print-root-log
+		  :help "List the change log for the current tree in a window"))
     ;; VC commands.
     (define-key map [sepvccmd] '("--"))
     (define-key map [update]
@@ -263,6 +272,7 @@ See `run-hooks'."
     (define-key map [mouse-2] 'vc-dir-toggle-mark)
     (define-key map [follow-link] 'mouse-face)
     (define-key map "x" 'vc-dir-hide-up-to-date)
+    (define-key map [?\C-k] 'vc-dir-kill-line)
     (define-key map "S" 'vc-dir-search) ;; FIXME: Maybe use A like dired?
     (define-key map "Q" 'vc-dir-query-replace-regexp)
     (define-key map (kbd "M-s a C-s")   'vc-dir-isearch)
@@ -357,6 +367,7 @@ If NOINSERT, ignore elements on ENTRIES which are not in the ewoc."
     ;; Insert directory entries in the right places.
     (let ((entry (car entries))
 	  (node (ewoc-nth vc-ewoc 0))
+	  (to-remove nil)
 	  (dotname (file-relative-name default-directory)))
       ;; Insert . if it is not present.
       (unless node
@@ -383,30 +394,38 @@ If NOINSERT, ignore elements on ENTRIES which are not in the ewoc."
 	       ((string-lessp nodefile entryfile)
 		(setq node (ewoc-next vc-ewoc node)))
 	       ((string-equal nodefile entryfile)
-		(setf (vc-dir-fileinfo->state (ewoc-data node)) (nth 1 entry))
-		(setf (vc-dir-fileinfo->extra (ewoc-data node)) (nth 2 entry))
-		(setf (vc-dir-fileinfo->needs-update (ewoc-data node)) nil)
-		(ewoc-invalidate vc-ewoc node)
+		(if (nth 1 entry)
+		    (progn
+		      (setf (vc-dir-fileinfo->state (ewoc-data node)) (nth 1 entry))
+		      (setf (vc-dir-fileinfo->extra (ewoc-data node)) (nth 2 entry))
+		      (setf (vc-dir-fileinfo->needs-update (ewoc-data node)) nil)
+		      (ewoc-invalidate vc-ewoc node))
+		  ;; If the state is nil, the file does not exist
+		  ;; anymore, so remember the entry so we can remove
+		  ;; it after we are done inserting all ENTRIES.
+		  (push node to-remove))
 		(setq entries (cdr entries))
 		(setq entry (car entries))
 		(setq node (ewoc-next vc-ewoc node)))
 	       (t
-		(ewoc-enter-before vc-ewoc node
-				   (apply 'vc-dir-create-fileinfo entry))
+		(unless noinsert
+		  (ewoc-enter-before vc-ewoc node
+				     (apply 'vc-dir-create-fileinfo entry)))
 		(setq entries (cdr entries))
 		(setq entry (car entries))))))
 	   (t
-	    ;; We might need to insert a directory node if the
-	    ;; previous node was in a different directory.
-	    (let* ((rd (file-relative-name entrydir))
-		   (prev-node (ewoc-prev vc-ewoc node))
-		   (prev-dir (vc-dir-node-directory prev-node)))
-	      (unless (string-equal entrydir prev-dir)
-		(ewoc-enter-before
-		 vc-ewoc node (vc-dir-create-fileinfo rd nil nil nil entrydir))))
-	    ;; Now insert the node itself.
-	    (ewoc-enter-before vc-ewoc node
-			       (apply 'vc-dir-create-fileinfo entry))
+	    (unless noinsert
+	      ;; We might need to insert a directory node if the
+	      ;; previous node was in a different directory.
+	      (let* ((rd (file-relative-name entrydir))
+		     (prev-node (ewoc-prev vc-ewoc node))
+		     (prev-dir (vc-dir-node-directory prev-node)))
+		(unless (string-equal entrydir prev-dir)
+		  (ewoc-enter-before
+		   vc-ewoc node (vc-dir-create-fileinfo rd nil nil nil entrydir))))
+	      ;; Now insert the node itself.
+	      (ewoc-enter-before vc-ewoc node
+				 (apply 'vc-dir-create-fileinfo entry)))
 	    (setq entries (cdr entries) entry (car entries))))))
       ;; We're past the last node, all remaining entries go to the end.
       (unless (or node noinsert)
@@ -422,7 +441,10 @@ If NOINSERT, ignore elements on ENTRIES which are not in the ewoc."
 		   vc-ewoc (vc-dir-create-fileinfo rd nil nil nil entrydir))))
 	      ;; Now insert the node itself.
 	      (ewoc-enter-last vc-ewoc
-			       (apply 'vc-dir-create-fileinfo entry)))))))))
+			       (apply 'vc-dir-create-fileinfo entry))))))
+      (when to-remove
+	(let ((inhibit-read-only t))
+	  (apply 'ewoc-delete vc-ewoc (nreverse to-remove)))))))
 
 (defun vc-dir-busy ()
   (and (buffer-live-p vc-dir-process-buffer)
@@ -726,12 +748,11 @@ To continue searching for next match, use command \\[tags-loop-continue]."
 
 (defun vc-dir-query-replace-regexp (from to &optional delimited)
   "Do `query-replace-regexp' of FROM with TO, on all marked files.
-For marked directories, use the files displayed from those directories.
 If a directory is marked, then use the files displayed for that directory.
 Third arg DELIMITED (prefix arg) means replace only word-delimited matches.
 If you exit (\\[keyboard-quit], RET or q), you can resume the query replace
 with the command \\[tags-loop-continue]."
-  ;; FIXME: this is almost a copy of `dired-do-replace-regexp'.  This
+  ;; FIXME: this is almost a copy of `dired-do-query-replace-regexp'.  This
   ;; should probably be made generic and used in both places instead of
   ;; duplicating it here.
   (interactive
@@ -878,10 +899,12 @@ If it is a file, return the corresponding cons for the file itself."
 		      (vc-dir-resync-directory-files file)
 		      (ewoc-set-hf vc-ewoc
 				   (vc-dir-headers vc-dir-backend default-directory) ""))
-                  (let ((state (vc-dir-recompute-file-state file ddir)))
+                  (let* ((complete-state (vc-dir-recompute-file-state file ddir))
+			 (state (cadr complete-state)))
                     (vc-dir-update
-                     (list state)
-                     status-buf (eq (cadr state) 'up-to-date))))))))))
+                     (list complete-state)
+                     status-buf (or (not state)
+				    (eq state 'up-to-date)))))))))))
     ;; Remove out-of-date entries from vc-dir-buffers.
     (dolist (b drop) (setq vc-dir-buffers (delq b vc-dir-buffers)))))
 
@@ -949,7 +972,8 @@ specific headers."
    (propertize "VC backend : " 'face 'font-lock-type-face)
    (propertize (format "%s\n" backend) 'face 'font-lock-variable-name-face)
    (propertize "Working dir: " 'face 'font-lock-type-face)
-   (propertize (format "%s\n" dir) 'face 'font-lock-variable-name-face)
+   (propertize (format "%s\n" (abbreviate-file-name dir))
+               'face 'font-lock-variable-name-face)
    ;; Then the backend specific ones.
    (vc-call-backend backend 'dir-extra-headers dir)
    "\n"))
@@ -1086,6 +1110,13 @@ outside of VC) and one wants to do some operation on it."
 	    (ewoc-delete vc-ewoc crt))
 	  (setq crt prev)))))
 
+(defun vc-dir-kill-line ()
+  "Remove the current line from display."
+  (interactive)
+  (let ((crt (ewoc-locate vc-ewoc))
+        (inhibit-read-only t))
+    (ewoc-delete vc-ewoc crt)))
+
 (defun vc-dir-printer (fileentry)
   (vc-call-backend vc-dir-backend 'dir-printer fileentry))
 
@@ -1155,7 +1186,8 @@ These are the commands available for use in the file status buffer:
 	  nil t nil nil)))))
   (unless backend
     (setq backend (vc-responsible-backend dir)))
-  (pop-to-buffer (vc-dir-prepare-status-buffer "*vc-dir*" dir backend))
+  (let (pop-up-windows)		      ; based on cvs-examine; bug#6204
+    (pop-to-buffer (vc-dir-prepare-status-buffer "*vc-dir*" dir backend)))
   (if (derived-mode-p 'vc-dir-mode)
       (vc-dir-refresh)
     ;; FIXME: find a better way to pass the backend to `vc-dir-mode'.

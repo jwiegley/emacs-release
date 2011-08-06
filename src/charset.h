@@ -1,8 +1,8 @@
 /* Header for charset handler.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008, 2009, 2010
+     2005, 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -255,7 +255,7 @@ extern Lisp_Object Vcharset_list;
 extern Lisp_Object Viso_2022_charset_list;
 extern Lisp_Object Vemacs_mule_charset_list;
 
-extern struct charset *emacs_mule_charset[256];
+extern int emacs_mule_charset[256];
 
 extern Lisp_Object Vcurrent_iso639_language;
 
@@ -516,8 +516,6 @@ extern int iso_charset_table[ISO_MAX_DIMENSION][ISO_MAX_CHARS][ISO_MAX_FINAL];
 #define EMACS_MULE_LEADING_CODE_PRIVATE_12	0x9B /* 1/2 */
 #define EMACS_MULE_LEADING_CODE_PRIVATE_21	0x9C /* 2/2 */
 #define EMACS_MULE_LEADING_CODE_PRIVATE_22	0x9D /* 2/2 */
-
-extern struct charset *emacs_mule_charset[256];
 
 
 

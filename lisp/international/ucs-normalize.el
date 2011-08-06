@@ -1,6 +1,6 @@
 ;;; ucs-normalize.el --- Unicode normalization NFC/NFD/NFKD/NFKC
 
-;; Copyright (C) 2009, 2010
+;; Copyright (C) 2009, 2010, 2011
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Taichi Kawabata <kawabata.taichi@gmail.com>
@@ -100,7 +100,7 @@
 ;; D. Sorting and Composition  of Smaller Blocks (`ucs-normalize-block-compose-chars')
 ;;
 ;;    The block will be split to multiple samller blocks by starter
-;;    charcters.  Each block is sorted, and composed if necessary.
+;;    characters.  Each block is sorted, and composed if necessary.
 ;;
 ;; E. Composition of Entire Block (`ucs-normalize-compose-chars')
 ;;

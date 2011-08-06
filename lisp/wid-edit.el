@@ -1,7 +1,7 @@
 ;;; wid-edit.el --- Functions for creating and using widgets -*-byte-compile-dynamic: t;-*-
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -316,9 +316,8 @@ size field.")
 
 (defvar widget-field-use-before-change t
   "Non-nil means use `before-change-functions' to track editable fields.
-This enables the use of undo, but doesn't work on Emacs 19.34 and earlier.
-Using before hooks also means that the :notify function can't know the
-new value.")
+This enables the use of undo.  Using before hooks also means that
+the :notify function can't know the new value.")
 
 (defun widget-specify-field (widget from to)
   "Specify editable button for WIDGET between FROM and TO."
@@ -1053,7 +1052,7 @@ POS defaults to the value of (point)."
 
 (defvar widget-use-overlay-change t
   "If non-nil, use overlay change functions to tab around in the buffer.
-This is much faster, but doesn't work reliably on Emacs 19.34.")
+This is much faster.")
 
 (defun widget-move (arg)
   "Move point to the ARG next field or button.
@@ -1156,14 +1155,17 @@ the field."
     (if field
 	(narrow-to-region (line-beginning-position) (line-end-position)))))
 
+;; This used to say:
+;; "When not inside a field, move to the previous button or field."
+;; but AFAICS, it has always just thrown an error.
 (defun widget-complete ()
   "Complete content of editable field from point.
-When not inside a field, move to the previous button or field."
+When not inside a field, signal an error."
   (interactive)
   (let ((field (widget-field-find (point))))
-    (when field
-      (widget-apply field :complete))
-    (error "Not in an editable field")))
+    (if field
+	(widget-apply field :complete)
+      (error "Not in an editable field"))))
 
 ;;; Setting up the buffer.
 
@@ -3748,5 +3750,4 @@ example:
 
 (provide 'wid-edit)
 
-;; arch-tag: a076e75e-18a1-4b46-8be5-3f317bcbc707
 ;;; wid-edit.el ends here

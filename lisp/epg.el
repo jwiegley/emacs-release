@@ -1,6 +1,6 @@
 ;;; epg.el --- the EasyPG Library
 ;; Copyright (C) 1999, 2000, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Keywords: PGP, GnuPG
@@ -66,7 +66,7 @@
 (defconst epg-digest-algorithm-alist
   '((1 . "MD5")
     (2 . "SHA1")
-    (3 . "RMD160")
+    (3 . "RIPEMD160")
     (8 . "SHA256")
     (9 . "SHA384")
     (10 . "SHA512")
@@ -335,7 +335,13 @@ PASSPHRASE-CALLBACK is either a function, or a cons-cell whose
 car is a function and cdr is a callback data.
 
 The function gets three arguments: the context, the key-id in
-question, and the callback data (if any)."
+question, and the callback data (if any).
+
+The callback may not be called if you use GnuPG 2.x, which relies
+on the external program called `gpg-agent' for passphrase query.
+If you really want to intercept passphrase query, consider
+installing GnuPG 1.x _along with_ GnuPG 2.x, which does passphrase
+query by itself and Emacs can intercept them."
   (unless (eq (car-safe context) 'epg-context)
     (signal 'wrong-type-argument (list 'epg-context-p context)))
   (aset (cdr context) 7 (if (consp passphrase-callback)
@@ -1209,7 +1215,8 @@ This function is for internal use only."
   "Delete the output file of CONTEXT."
   (if (and (epg-context-output-file context)
 	   (file-exists-p (epg-context-output-file context)))
-      (delete-file (epg-context-output-file context))))
+      (let ((delete-by-moving-to-trash nil))
+	(delete-file (epg-context-output-file context)))))
 
 (eval-and-compile
   (if (fboundp 'decode-coding-string)
@@ -1554,14 +1561,14 @@ This function is for internal use only."
 
 (defun epg--status-KEYEXPIRED (context string)
   (epg-context-set-result-for
-   context 'error
+   context 'key
    (cons (list 'key-expired (cons 'expiration-time
 				  (epg--time-from-seconds string)))
 	 (epg-context-result-for context 'error))))
 
 (defun epg--status-KEYREVOKED (context string)
   (epg-context-set-result-for
-   context 'error
+   context 'key
    (cons '(key-revoked)
 	 (epg-context-result-for context 'error))))
 
@@ -1898,7 +1905,8 @@ You can then use `write-region' to write new data into the file."
 	  ;; Cleanup the tempfile.
 	  (and tempfile
 	       (file-exists-p tempfile)
-	       (delete-file tempfile))
+	       (let ((delete-by-moving-to-trash nil))
+		 (delete-file tempfile)))
 	  ;; Cleanup the tempdir.
 	  (and tempdir
 	       (file-directory-p tempdir)
@@ -1998,7 +2006,8 @@ If PLAIN is nil, it returns the result as a string."
 	  (epg-read-output context))
       (epg-delete-output-file context)
       (if (file-exists-p input-file)
-	  (delete-file input-file))
+	  (let ((delete-by-moving-to-trash nil))
+	    (delete-file input-file)))
       (epg-reset context))))
 
 (defun epg-start-verify (context signature &optional signed-text)
@@ -2095,7 +2104,8 @@ successful verification."
       (epg-delete-output-file context)
       (if (and input-file
 	       (file-exists-p input-file))
-	  (delete-file input-file))
+	  (let ((delete-by-moving-to-trash nil))
+	    (delete-file input-file)))
       (epg-reset context))))
 
 (defun epg-start-sign (context plain &optional mode)
@@ -2202,7 +2212,8 @@ Otherwise, it makes a cleartext signature."
 	  (epg-read-output context))
       (epg-delete-output-file context)
       (if input-file
-	  (delete-file input-file))
+	  (let ((delete-by-moving-to-trash nil))
+	    (delete-file input-file)))
       (epg-reset context))))
 
 (defun epg-start-encrypt (context plain recipients
@@ -2322,7 +2333,8 @@ If RECIPIENTS is nil, it performs symmetric encryption."
 	  (epg-read-output context))
       (epg-delete-output-file context)
       (if input-file
-	  (delete-file input-file))
+	  (let ((delete-by-moving-to-trash nil))
+	    (delete-file input-file)))
       (epg-reset context))))
 
 (defun epg-start-export-keys (context keys)

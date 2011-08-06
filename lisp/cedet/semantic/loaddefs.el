@@ -3,8 +3,77 @@
 ;;; Code:
 
 
+;;;### (autoloads (semantic-symref-regexp semantic-symref-symbol
+;;;;;;  semantic-symref) "semantic/symref/list" "symref/list.el"
+;;;;;;  "6552cfebbf91e3598bf1b341af4f2b0f")
+;;; Generated autoloads from symref/list.el
+
+(autoload 'semantic-symref "semantic/symref/list" "\
+Find references to the current tag.
+This command uses the currently configured references tool within the
+current project to find references to the current tag.  The
+references are organized by file and the name of the function
+they are used in.
+Display the references in `semantic-symref-results-mode'.
+
+\(fn)" t nil)
+
+(autoload 'semantic-symref-symbol "semantic/symref/list" "\
+Find references to the symbol SYM.
+This command uses the currently configured references tool within the
+current project to find references to the input SYM.  The
+references are organized by file and the name of the function
+they are used in.
+Display the references in `semantic-symref-results-mode'.
+
+\(fn SYM)" t nil)
+
+(autoload 'semantic-symref-regexp "semantic/symref/list" "\
+Find references to the a symbol regexp SYM.
+This command uses the currently configured references tool within the
+current project to find references to the input SYM.  The
+references are the organized by file and the name of the function
+they are used in.
+Display the references in`semantic-symref-results-mode'.
+
+\(fn SYM)" t nil)
+
+;;;***
+
+;;;### (autoloads (semantic-symref-tool-idutils) "semantic/symref/idutils"
+;;;;;;  "symref/idutils.el" "3205cf42cab418ebf99d3ac39ba9b31b")
+;;; Generated autoloads from symref/idutils.el
+
+(eieio-defclass-autoload 'semantic-symref-tool-idutils '(semantic-symref-tool-baseclass) "semantic/symref/idutils" "A symref tool implementation using ID Utils.\nThe udutils command set can be used to generate lists of tags in a way\nsimilar to that of `grep'.  This tool will parse the output to generate\nthe hit list.\n\nSee the function `cedet-idutils-search' for more details.")
+
+;;;***
+
+;;;### (autoloads (semantic-symref-tool-grep) "semantic/symref/grep"
+;;;;;;  "symref/grep.el" "eb6e25d3aef8de1fe7e5ab33383e0da7")
+;;; Generated autoloads from symref/grep.el
+
+(eieio-defclass-autoload 'semantic-symref-tool-grep '(semantic-symref-tool-baseclass) "semantic/symref/grep" "A symref tool implementation using grep.\nThis tool uses EDE to find he root of the project, then executes\nfind-grep in the project.  The output is parsed for hits\nand those hits returned.")
+
+;;;***
+
+;;;### (autoloads (semantic-symref-tool-global) "semantic/symref/global"
+;;;;;;  "symref/global.el" "5b3c6031b1607eb1f1984ffa3ee78591")
+;;; Generated autoloads from symref/global.el
+
+(eieio-defclass-autoload 'semantic-symref-tool-global '(semantic-symref-tool-baseclass) "semantic/symref/global" "A symref tool implementation using GNU Global.\nThe GNU Global command can be used to generate lists of tags in a way\nsimilar to that of `grep'.  This tool will parse the output to generate\nthe hit list.\n\nSee the function `cedet-gnu-global-search' for more details.")
+
+;;;***
+
+;;;### (autoloads (semantic-symref-tool-cscope) "semantic/symref/cscope"
+;;;;;;  "symref/cscope.el" "bf5e4d5360eeadab5b2e53917a9e3b61")
+;;; Generated autoloads from symref/cscope.el
+
+(eieio-defclass-autoload 'semantic-symref-tool-cscope '(semantic-symref-tool-baseclass) "semantic/symref/cscope" "A symref tool implementation using CScope.\nThe CScope command can be used to generate lists of tags in a way\nsimilar to that of `grep'.  This tool will parse the output to generate\nthe hit list.\n\nSee the function `cedet-cscope-search' for more details.")
+
+;;;***
+
 ;;;### (autoloads (wisent-python-default-setup) "semantic/wisent/python"
-;;;;;;  "wisent/python.el" "30ccc1224a421b0a8cdad3568bf3897a")
+;;;;;;  "wisent/python.el" "9ce29851fa4097d4a67a5182997a4167")
 ;;; Generated autoloads from wisent/python.el
 
 (autoload 'wisent-python-default-setup "semantic/wisent/python" "\
@@ -17,7 +86,7 @@ Setup buffer for parse.
 ;;;***
 
 ;;;### (autoloads (wisent-javascript-setup-parser) "semantic/wisent/javascript"
-;;;;;;  "wisent/javascript.el" "3a0737171426b551a19d283eda4d0690")
+;;;;;;  "wisent/javascript.el" "fe1689729d37064e34835683bc6ba522")
 ;;; Generated autoloads from wisent/javascript.el
 
 (autoload 'wisent-javascript-setup-parser "semantic/wisent/javascript" "\
@@ -28,7 +97,7 @@ Setup buffer for parse.
 ;;;***
 
 ;;;### (autoloads (wisent-java-default-setup) "semantic/wisent/java-tags"
-;;;;;;  "wisent/java-tags.el" "3ff709675d693dff99fe3682e7432c2a")
+;;;;;;  "wisent/java-tags.el" "d649fd398b2e29e374158339c2457dbd")
 ;;; Generated autoloads from wisent/java-tags.el
 
 (autoload 'wisent-java-default-setup "semantic/wisent/java-tags" "\
@@ -39,98 +108,8 @@ Use the alternate LALR(1) parser.
 
 ;;;***
 
-;;;### (autoloads (semantic-symref-symbol semantic-symref) "semantic/symref/list"
-;;;;;;  "symref/list.el" "8626ea207a49b9f8b35c8b785161f9ff")
-;;; Generated autoloads from symref/list.el
-
-(autoload 'semantic-symref "semantic/symref/list" "\
-Find references to the current tag.
-This command uses the currently configured references tool within the
-current project to find references to the current tag.  The
-references are the organized by file and the name of the function
-they are used in.
-Display the references in`semantic-symref-results-mode'.
-
-\(fn)" t nil)
-
-(autoload 'semantic-symref-symbol "semantic/symref/list" "\
-Find references to the symbol SYM.
-This command uses the currently configured references tool within the
-current project to find references to the input SYM.  The
-references are the organized by file and the name of the function
-they are used in.
-Display the references in`semantic-symref-results-mode'.
-
-\(fn SYM)" t nil)
-
-;;;***
-
-;;;### (autoloads (semantic-symref-tool-idutils) "semantic/symref/idutils"
-;;;;;;  "symref/idutils.el" "252f6d89ea9f248a97840cc4a71e17b7")
-;;; Generated autoloads from symref/idutils.el
-
-(eieio-defclass-autoload 'semantic-symref-tool-idutils '(semantic-symref-tool-baseclass) "semantic/symref/idutils" "A symref tool implementation using ID Utils.\nThe udutils command set can be used to generate lists of tags in a way\nsimilar to that of `grep'.  This tool will parse the output to generate\nthe hit list.\n\nSee the function `cedet-idutils-search' for more details.")
-
-;;;***
-
-;;;### (autoloads (semantic-symref-tool-grep) "semantic/symref/grep"
-;;;;;;  "symref/grep.el" "2c121217f1026d5fb49046fb04bf9dcf")
-;;; Generated autoloads from symref/grep.el
-
-(eieio-defclass-autoload 'semantic-symref-tool-grep '(semantic-symref-tool-baseclass) "semantic/symref/grep" "A symref tool implementation using grep.\nThis tool uses EDE to find he root of the project, then executes\nfind-grep in the project.  The output is parsed for hits\nand those hits returned.")
-
-;;;***
-
-;;;### (autoloads (semantic-symref-tool-global) "semantic/symref/global"
-;;;;;;  "symref/global.el" "c6d552272bae336751b2393a0ea6479b")
-;;; Generated autoloads from symref/global.el
-
-(eieio-defclass-autoload 'semantic-symref-tool-global '(semantic-symref-tool-baseclass) "semantic/symref/global" "A symref tool implementation using GNU Global.\nThe GNU Global command can be used to generate lists of tags in a way\nsimilar to that of `grep'.  This tool will parse the output to generate\nthe hit list.\n\nSee the function `cedet-gnu-global-search' for more details.")
-
-;;;***
-
-;;;### (autoloads (semantic-symref-tool-cscope) "semantic/symref/cscope"
-;;;;;;  "symref/cscope.el" "3cd16e6f1c59b3b87d9300894e8a83d6")
-;;; Generated autoloads from symref/cscope.el
-
-(eieio-defclass-autoload 'semantic-symref-tool-cscope '(semantic-symref-tool-baseclass) "semantic/symref/cscope" "A symref tool implementation using CScope.\nThe CScope command can be used to generate lists of tags in a way\nsimilar to that of `grep'.  This tool will parse the output to generate\nthe hit list.\n\nSee the function `cedet-cscope-search' for more details.")
-
-;;;***
-
-;;;### (autoloads (global-semantic-decoration-mode) "semantic/decorate/mode"
-;;;;;;  "decorate/mode.el" "163ab56fd4971c483649f1a3d60327a7")
-;;; Generated autoloads from decorate/mode.el
-
-(autoload 'global-semantic-decoration-mode "semantic/decorate/mode" "\
-Toggle global use of option `semantic-decoration-mode'.
-Decoration mode turns on all active decorations as specified
-by `semantic-decoration-styles'.
-If ARG is positive, enable, if it is negative, disable.
-If ARG is nil, then toggle.
-
-\(fn &optional ARG)" t nil)
-
-;;;***
-
-;;;### (autoloads (semantic-decoration-unparsed-include-do-reset
-;;;;;;  semantic-decoration-include-visit) "semantic/decorate/include"
-;;;;;;  "decorate/include.el" "6e09b8f109f3113d336a32c62b25f608")
-;;; Generated autoloads from decorate/include.el
-
-(autoload 'semantic-decoration-include-visit "semantic/decorate/include" "\
-Visit the included file at point.
-
-\(fn)" t nil)
-
-(autoload 'semantic-decoration-unparsed-include-do-reset "semantic/decorate/include" "\
-Do a reset of unparsed includes in the current buffer.
-
-\(fn)" nil nil)
-
-;;;***
-
 ;;;### (autoloads (semantic-default-scheme-setup) "semantic/bovine/scm"
-;;;;;;  "bovine/scm.el" "1bfb1812a4d9a6353452a53ec4c82d44")
+;;;;;;  "bovine/scm.el" "3f9e33a8ac3d916c266ecb93d399268b")
 ;;; Generated autoloads from bovine/scm.el
 
 (autoload 'semantic-default-scheme-setup "semantic/bovine/scm" "\
@@ -141,7 +120,7 @@ Setup hook function for Emacs Lisp files and Semantic.
 ;;;***
 
 ;;;### (autoloads (semantic-default-make-setup) "semantic/bovine/make"
-;;;;;;  "bovine/make.el" "38f6ca1b1d7455da3bf1435059722ed1")
+;;;;;;  "bovine/make.el" "7e9e499ae02aa03ad7f4f058d595e118")
 ;;; Generated autoloads from bovine/make.el
 
 (autoload 'semantic-default-make-setup "semantic/bovine/make" "\
@@ -152,7 +131,7 @@ Set up a Makefile buffer for parsing with semantic.
 ;;;***
 
 ;;;### (autoloads (semantic-gcc-setup) "semantic/bovine/gcc" "bovine/gcc.el"
-;;;;;;  "42123085a285f11b71df2da699643cb4")
+;;;;;;  "9fa44f9bc6d52b250b6ee0403dc26743")
 ;;; Generated autoloads from bovine/gcc.el
 
 (autoload 'semantic-gcc-setup "semantic/bovine/gcc" "\
@@ -163,7 +142,7 @@ Setup Semantic C/C++ parsing based on GCC output.
 ;;;***
 
 ;;;### (autoloads (semantic-c-add-preprocessor-symbol semantic-default-c-setup)
-;;;;;;  "semantic/bovine/c" "bovine/c.el" "846547a3d88f37454a64ab3ec27e16a3")
+;;;;;;  "semantic/bovine/c" "bovine/c.el" "d8479e6f69071a930d00bcfbec61695f")
 ;;; Generated autoloads from bovine/c.el
 
 (autoload 'semantic-default-c-setup "semantic/bovine/c" "\
@@ -179,7 +158,7 @@ Add a preprocessor symbol SYM with a REPLACEMENT value.
 ;;;***
 
 ;;;### (autoloads (semantic-analyze-proto-impl-toggle semantic-analyze-current-tag)
-;;;;;;  "semantic/analyze/refs" "analyze/refs.el" "84173901bd453c8583e9b14479e04d7e")
+;;;;;;  "semantic/analyze/refs" "analyze/refs.el" "8140f95a701f9e034d5989145758186c")
 ;;; Generated autoloads from analyze/refs.el
 
 (autoload 'semantic-analyze-current-tag "semantic/analyze/refs" "\
@@ -195,7 +174,7 @@ Toggle between the implementation, and a prototype of tag under point.
 ;;;***
 
 ;;;### (autoloads (semantic-analyze-possible-completions semantic-analyze-type-constants)
-;;;;;;  "semantic/analyze/complete" "analyze/complete.el" "059292b94f06a6d09f1f0a1047e3fe6f")
+;;;;;;  "semantic/analyze/complete" "analyze/complete.el" "804d4533cfd5fe852138c65f4c47e420")
 ;;; Generated autoloads from analyze/complete.el
 
 (autoload 'semantic-analyze-type-constants "semantic/analyze/complete" "\
@@ -209,6 +188,10 @@ Return a list of semantic tags which are possible completions.
 CONTEXT is either a position (such as point), or a precalculated
 context.  Passing in a context is useful if the caller also needs
 to access parts of the analysis.
+The remaining FLAGS arguments are passed to the mode specific completion engine.
+Bad flags should be ignored by modes that don't use them.
+See `semantic-analyze-possible-completions-default' for details on the default FLAGS.
+
 Completions run through the following filters:
   * Elements currently in scope
   * Constants currently in scope
@@ -221,12 +204,44 @@ Context type matching can identify the following:
 When called interactively, displays the list of possible completions
 in a buffer.
 
-\(fn CONTEXT)" t nil)
+\(fn CONTEXT &rest FLAGS)" t nil)
+
+;;;***
+
+;;;### (autoloads (global-semantic-decoration-mode) "semantic/decorate/mode"
+;;;;;;  "decorate/mode.el" "989825c55f0ae9df59e626c14f801f6f")
+;;; Generated autoloads from decorate/mode.el
+
+(autoload 'global-semantic-decoration-mode "semantic/decorate/mode" "\
+Toggle global use of option `semantic-decoration-mode'.
+Decoration mode turns on all active decorations as specified
+by `semantic-decoration-styles'.
+If ARG is positive, enable, if it is negative, disable.
+If ARG is nil, then toggle.
+
+\(fn &optional ARG)" t nil)
+
+;;;***
+
+;;;### (autoloads (semantic-decoration-unparsed-include-do-reset
+;;;;;;  semantic-decoration-include-visit) "semantic/decorate/include"
+;;;;;;  "decorate/include.el" "23b8b2a746723e241e6697286216569f")
+;;; Generated autoloads from decorate/include.el
+
+(autoload 'semantic-decoration-include-visit "semantic/decorate/include" "\
+Visit the included file at point.
+
+\(fn)" t nil)
+
+(autoload 'semantic-decoration-unparsed-include-do-reset "semantic/decorate/include" "\
+Do a reset of unparsed includes in the current buffer.
+
+\(fn)" nil nil)
 
 ;;;***
 
 ;;;### (autoloads (semantic-calculate-scope) "semantic/scope" "scope.el"
-;;;;;;  "f01b24523f34170e75789c13afbcf27d")
+;;;;;;  "0191a1ab2547d72351a3477c664502bf")
 ;;; Generated autoloads from scope.el
 
 (autoload 'semantic-calculate-scope "semantic/scope" "\
@@ -240,7 +255,7 @@ The class returned from the scope calculation is variable
 ;;;***
 
 ;;;### (autoloads (global-semantic-mru-bookmark-mode) "semantic/mru-bookmark"
-;;;;;;  "mru-bookmark.el" "c80c8bb6ee9f1f18110b3517724e64ea")
+;;;;;;  "mru-bookmark.el" "39141dd9660a0504117ef8ca7e500996")
 ;;; Generated autoloads from mru-bookmark.el
 
 (autoload 'global-semantic-mru-bookmark-mode "semantic/mru-bookmark" "\
@@ -252,7 +267,7 @@ If ARG is nil, then toggle.
 
 ;;;***
 
-;;;### (autoloads (semantic-lex) "semantic/lex" "lex.el" "fcb6b964612d616ec2ff727dd581390b")
+;;;### (autoloads (semantic-lex) "semantic/lex" "lex.el" "c9090980b58e0dd62c3485afcd5c1cb2")
 ;;; Generated autoloads from lex.el
 
 (autoload 'semantic-lex "semantic/lex" "\
@@ -274,7 +289,7 @@ scanning, use `narrow-to-region'.
 ;;;***
 
 ;;;### (autoloads (semantic-lex-spp-table-write-slot-value) "semantic/lex-spp"
-;;;;;;  "lex-spp.el" "454a537acdc2d1f05127905d246d6ff0")
+;;;;;;  "lex-spp.el" "df2735aaabb7b61d03d7d458ac59c2ee")
 ;;; Generated autoloads from lex-spp.el
 
 (autoload 'semantic-lex-spp-table-write-slot-value "semantic/lex-spp" "\
@@ -287,7 +302,7 @@ The VALUE is a spp lexical table.
 
 ;;;### (autoloads (semantic-create-imenu-index semantic-imenu-expand-type-members
 ;;;;;;  semantic-imenu-bucketize-file semantic-imenu-summary-function)
-;;;;;;  "semantic/imenu" "imenu.el" "1352a601487f8adb868ef1cfc3c18873")
+;;;;;;  "semantic/imenu" "imenu.el" "8ff23581ce2978e8b6b01069552d183e")
 ;;; Generated autoloads from imenu.el
 
 (defvar semantic-imenu-summary-function 'semantic-format-tag-abbreviate "\
@@ -323,7 +338,7 @@ Optional argument STREAM is an optional stream of tags used to create menus.
 
 ;;;### (autoloads (global-semantic-idle-scheduler-mode semantic-idle-scheduler-mode
 ;;;;;;  global-semantic-idle-scheduler-mode) "semantic/idle" "idle.el"
-;;;;;;  "64168e0c28fd86ed0cf5385fc7022d9d")
+;;;;;;  "a87c301715a6ce0883623906d0994f7b")
 ;;; Generated autoloads from idle.el
 
 (defvar global-semantic-idle-scheduler-mode nil "\
@@ -357,9 +372,9 @@ If ARG is nil, then toggle.
 ;;;***
 
 ;;;### (autoloads (semantic-ia-describe-class semantic-ia-show-doc
-;;;;;;  semantic-ia-fast-mouse-jump semantic-ia-fast-jump semantic-ia-show-summary
-;;;;;;  semantic-ia-complete-tip semantic-ia-complete-symbol) "semantic/ia"
-;;;;;;  "ia.el" "591468e9f6677fa14be32dce924a433c")
+;;;;;;  semantic-ia-fast-mouse-jump semantic-ia-fast-jump semantic-ia-show-variants
+;;;;;;  semantic-ia-show-summary semantic-ia-complete-tip semantic-ia-complete-symbol)
+;;;;;;  "semantic/ia" "ia.el" "991c0083672fa87ad7c2f3ddad741c3e")
 ;;; Generated autoloads from ia.el
 
 (autoload 'semantic-ia-complete-symbol "semantic/ia" "\
@@ -376,6 +391,11 @@ Pop up a tooltip for completion at POINT.
 
 (autoload 'semantic-ia-show-summary "semantic/ia" "\
 Display a summary for the symbol under POINT.
+
+\(fn POINT)" t nil)
+
+(autoload 'semantic-ia-show-variants "semantic/ia" "\
+Display a list of all variants for the symbol under POINT.
 
 \(fn POINT)" t nil)
 
@@ -408,7 +428,7 @@ parts of the parent classes are displayed.
 ;;;***
 
 ;;;### (autoloads (semantic-speedbar-analysis) "semantic/ia-sb" "ia-sb.el"
-;;;;;;  "1ca7979dd6c7a7ad8a736dcb540ad2c7")
+;;;;;;  "80783644127d44ef9f9ef9a616e45269")
 ;;; Generated autoloads from ia-sb.el
 
 (autoload 'semantic-speedbar-analysis "semantic/ia-sb" "\
@@ -421,7 +441,7 @@ list of possible completions.
 ;;;***
 
 ;;;### (autoloads (semantic-default-html-setup) "semantic/html" "html.el"
-;;;;;;  "5f2a895d6b9e2e801b8907380b1ce250")
+;;;;;;  "aa84a5b5860b516b16a0f77ed9ee4f28")
 ;;; Generated autoloads from html.el
 
 (autoload 'semantic-default-html-setup "semantic/html" "\
@@ -433,7 +453,7 @@ Set up a buffer for parsing of HTML files.
 
 ;;;### (autoloads (semantic-format-tag-concise-prototype semantic-format-tag-prototype
 ;;;;;;  semantic-format-tag-summarize semantic-format-tag-name) "semantic/format"
-;;;;;;  "format.el" "53961789c32253b2fd9c496aef576e15")
+;;;;;;  "format.el" "92555113ce7b314946dc28331591e1a0")
 ;;; Generated autoloads from format.el
 
 (autoload 'semantic-format-tag-name "semantic/format" "\
@@ -474,7 +494,7 @@ Optional argument COLOR means highlight the prototype with font-lock colors.
 ;;;;;;  semantic-current-tag-parent semantic-current-tag semantic-find-tag-parent-by-overlay
 ;;;;;;  semantic-find-tag-by-overlay-prev semantic-find-tag-by-overlay-next
 ;;;;;;  semantic-find-tag-by-overlay-in-region semantic-find-tag-by-overlay)
-;;;;;;  "semantic/find" "find.el" "250f4f6bb9c1d5f260c02eb70cdd9ed8")
+;;;;;;  "semantic/find" "find.el" "ae8409425a0e02fe4f5081eb9f92e015")
 ;;; Generated autoloads from find.el
 
 (autoload 'semantic-find-tag-by-overlay "semantic/find" "\
@@ -551,7 +571,7 @@ See `semantic-tag-protected-p' for details on which tags are returned.
 ;;;***
 
 ;;;### (autoloads (semantic-change-function) "semantic/edit" "edit.el"
-;;;;;;  "67dcb62513ae9748bb876294e4f8f4ee")
+;;;;;;  "bc16234d12a74a01a732739eb3837301")
 ;;; Generated autoloads from edit.el
 
 (autoload 'semantic-change-function "semantic/edit" "\
@@ -565,7 +585,7 @@ Argument START, END, and LENGTH specify the bounds of the change.
 ;;;***
 
 ;;;### (autoloads (semantic-documentation-for-tag) "semantic/doc"
-;;;;;;  "doc.el" "5a7040674bc8a8db3b4f63262585de48")
+;;;;;;  "doc.el" "0713b29e0fb1dc9e9cdd94f51fda3b63")
 ;;; Generated autoloads from doc.el
 
 (autoload 'semantic-documentation-for-tag "semantic/doc" "\
@@ -583,7 +603,7 @@ If nosnarf if 'lex, then only return the lex token.
 
 ;;;### (autoloads (semantic-customize-system-include-path semantic-reset-system-include
 ;;;;;;  semantic-remove-system-include semantic-add-system-include)
-;;;;;;  "semantic/dep" "dep.el" "88e2339a2a3094e1cb9fe1eb51130375")
+;;;;;;  "semantic/dep" "dep.el" "c99023eced3347cd0c6a0c2f22ca9531")
 ;;; Generated autoloads from dep.el
 
 (autoload 'semantic-add-system-include "semantic/dep" "\
@@ -618,7 +638,7 @@ macro `defcustom-mode-local-semantic-dependency-system-include-path'.
 
 ;;;***
 
-;;;### (autoloads nil "semantic/debug" "debug.el" "af8c9f611caa756b97d17d7d4801ecee")
+;;;### (autoloads nil "semantic/debug" "debug.el" "4079c7d3d4b7281629936d84c35ec918")
 ;;; Generated autoloads from debug.el
 
 (defvar semantic-debug-parser-source nil "\
@@ -636,7 +656,7 @@ Class to create when building a debug parser object.")
 ;;;***
 
 ;;;### (autoloads (semanticdb-file-table-object) "semantic/db" "db.el"
-;;;;;;  "15c07ae50fec5ebca6a38c93f0501bf3")
+;;;;;;  "d0dcf7121b9eb062db99e64c56bd719a")
 ;;; Generated autoloads from db.el
 
 (defvar semanticdb-current-database nil "\
@@ -658,7 +678,7 @@ DONTLOAD does not affect the creation of new database objects.
 
 ;;;### (autoloads (semanticdb-typecache-find semanticdb-database-typecache
 ;;;;;;  semanticdb-typecache) "semantic/db-typecache" "db-typecache.el"
-;;;;;;  "1b092f225fe6298a8bc145bbfbeb7249")
+;;;;;;  "4e4e98133d46bcee64924c5c3a2fab11")
 ;;; Generated autoloads from db-typecache.el
 
 (eieio-defclass-autoload 'semanticdb-typecache 'nil "semantic/db-typecache" "Structure for maintaining a typecache.")
@@ -677,7 +697,7 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer.
 ;;;***
 
 ;;;### (autoloads (global-semanticdb-minor-mode semanticdb-minor-mode-p)
-;;;;;;  "semantic/db-mode" "db-mode.el" "cb88864460da7b903a3734dd004c48f7")
+;;;;;;  "semantic/db-mode" "db-mode.el" "3d919f245b4a497acd1c86eee7d7ff75")
 ;;; Generated autoloads from db-mode.el
 
 (autoload 'semanticdb-minor-mode-p "semantic/db-mode" "\
@@ -706,7 +726,7 @@ database, which can be saved for future Emacs sessions.
 ;;;***
 
 ;;;### (autoloads (semanticdb-enable-gnu-global-databases) "semantic/db-global"
-;;;;;;  "db-global.el" "332b5d8418761d987f160320abb3ff46")
+;;;;;;  "db-global.el" "2d356f6d78028cf475f430dac56469f5")
 ;;; Generated autoloads from db-global.el
 
 (autoload 'semanticdb-enable-gnu-global-databases "semantic/db-global" "\
@@ -725,7 +745,7 @@ in a GNU Global supported hierarchy.
 ;;;;;;  semanticdb-find-adebug-lost-includes semanticdb-find-test-translate-path
 ;;;;;;  semanticdb-find-table-for-include semanticdb-find-translate-path
 ;;;;;;  semanticdb-find-default-throttle) "semantic/db-find" "db-find.el"
-;;;;;;  "ca25fb96642b61b3f517f0f5a2760c5e")
+;;;;;;  "4eae06de354c088ba58c9ad6d15e828b")
 ;;; Generated autoloads from db-find.el
 
 (defvar semanticdb-find-default-throttle '(local project unloaded system recursive) "\
@@ -759,13 +779,13 @@ the following keys:
 Translate PATH into a list of semantic tables.
 Path translation involves identifying the PATH input argument
 in one of the following ways:
-  nil - Take the current buffer, and use it's include list
+  nil - Take the current buffer, and use its include list
   buffer - Use that buffer's include list.
   filename - Use that file's include list.  If the file is not
       in a buffer, see of there is a semanticdb table for it.  If
       not, read that file into a buffer.
   tag - Get that tag's buffer of file file.  See above.
-  table - Search that table, and it's include list.
+  table - Search that table, and its include list.
   find result - Search the results of a previous find.
 
 In addition, once the base path is found, there is the possibility of
@@ -893,7 +913,7 @@ associated with that tag should be loaded into a buffer.
 ;;;***
 
 ;;;### (autoloads (semanticdb-project-database-file) "semantic/db-file"
-;;;;;;  "db-file.el" "32bed43bf66dd380e61f03bc4dd522d8")
+;;;;;;  "db-file.el" "01283c7cc76c7bd0378fb39c6b938536")
 ;;; Generated autoloads from db-file.el
 
 (eieio-defclass-autoload 'semanticdb-project-database-file '(semanticdb-project-database eieio-persistent) "semantic/db-file" "Database of file tables saved to disk.")
@@ -901,7 +921,7 @@ associated with that tag should be loaded into a buffer.
 ;;;***
 
 ;;;### (autoloads (semantic-ctxt-current-mode) "semantic/ctxt" "ctxt.el"
-;;;;;;  "cc2f97390d8ab76ceff934c87d44a870")
+;;;;;;  "dffb1f3c2f8d4b0d94a82db066a3d892")
 ;;; Generated autoloads from ctxt.el
 
 (autoload 'semantic-ctxt-current-mode "semantic/ctxt" "\
@@ -916,16 +936,22 @@ determine which major mode apply at point.
 
 ;;;### (autoloads (semantic-complete-self-insert semantic-complete-analyze-inline-idle
 ;;;;;;  semantic-complete-analyze-inline semantic-complete-analyze-and-replace
-;;;;;;  semantic-complete-jump semantic-complete-jump-local) "semantic/complete"
-;;;;;;  "complete.el" "bc374fa28f724233efd2d57c3a71f003")
+;;;;;;  semantic-complete-jump-local-members semantic-complete-jump
+;;;;;;  semantic-complete-jump-local) "semantic/complete" "complete.el"
+;;;;;;  "9991025bfa08d21925b4cb77a59b96eb")
 ;;; Generated autoloads from complete.el
 
 (autoload 'semantic-complete-jump-local "semantic/complete" "\
-Jump to a semantic symbol.
+Jump to a local semantic symbol.
 
 \(fn)" t nil)
 
 (autoload 'semantic-complete-jump "semantic/complete" "\
+Jump to a semantic symbol.
+
+\(fn)" t nil)
+
+(autoload 'semantic-complete-jump-local-members "semantic/complete" "\
 Jump to a semantic symbol.
 
 \(fn)" t nil)
@@ -971,7 +997,7 @@ use `semantic-complete-analyze-inline' to complete.
 ;;;***
 
 ;;;### (autoloads (semantic-bovinate-stream) "semantic/bovine" "bovine.el"
-;;;;;;  "f34c26194ce015f7b3c093e3fd4ba250")
+;;;;;;  "01efa966a5d3ed27b78a4d413d260b11")
 ;;; Generated autoloads from bovine.el
 
 (autoload 'semantic-bovinate-stream "semantic/bovine" "\
@@ -989,7 +1015,7 @@ list of semantic tokens found.
 ;;;***
 
 ;;;### (autoloads (semantic-analyze-current-context) "semantic/analyze"
-;;;;;;  "analyze.el" "66874d90e554078ab23b115dc6614e6e")
+;;;;;;  "analyze.el" "eda2f849814fc52d830c86ec56a8690f")
 ;;; Generated autoloads from analyze.el
 
 (autoload 'semantic-analyze-current-context "semantic/analyze" "\
@@ -1011,7 +1037,7 @@ if a cached copy of the return object is found.
 ;;;;;;  senator-copy-tag-to-register senator-yank-tag senator-kill-tag
 ;;;;;;  senator-copy-tag senator-go-to-up-reference senator-previous-tag
 ;;;;;;  senator-next-tag senator-step-at-start-end-tag-classes senator-step-at-tag-classes)
-;;;;;;  "semantic/senator" "senator.el" "9700ffc3ba97714a2e0a6e5d9becc274")
+;;;;;;  "semantic/senator" "senator.el" "c7d8d454159dbf95a00b611808b61f03")
 ;;; Generated autoloads from senator.el
 
 (defvar senator-step-at-tag-classes nil "\
@@ -1103,7 +1129,7 @@ Transpose the current tag, and the following tag.
 ;;;***
 
 ;;;### (autoloads (semantic-tag-external-member-parent semantic-flatten-tags-table)
-;;;;;;  "semantic/sort" "sort.el" "3ec73a4d627064b2bd6380029ad60dd9")
+;;;;;;  "semantic/sort" "sort.el" "6e6a4761a85c28e3ccfcb22ec7e1b871")
 ;;; Generated autoloads from sort.el
 
 (autoload 'semantic-flatten-tags-table "semantic/sort" "\
@@ -1136,7 +1162,7 @@ include the default behavior, and merely extend your own.
 ;;;### (autoloads (semantic-symref-find-text semantic-symref-find-file-references-by-name
 ;;;;;;  semantic-symref-find-tags-by-completion semantic-symref-find-tags-by-regexp
 ;;;;;;  semantic-symref-find-tags-by-name semantic-symref-find-references-by-name)
-;;;;;;  "semantic/symref" "symref.el" "d850173cc4010dc997cc0384d8c270a3")
+;;;;;;  "semantic/symref" "symref.el" "b49589e3fcc4898f6a55335fac7d22dc")
 ;;; Generated autoloads from symref.el
 
 (autoload 'semantic-symref-find-references-by-name "semantic/symref" "\
@@ -1199,7 +1225,7 @@ Returns an object of class `semantic-symref-result'.
 ;;;***
 
 ;;;### (autoloads (semantic-dependency-tag-file semantic-go-to-tag)
-;;;;;;  "semantic/tag-file" "tag-file.el" "9addeeb34c0400247f3fea6099be527f")
+;;;;;;  "semantic/tag-file" "tag-file.el" "1fb4ae11383bae7f80d5e606860a51c0")
 ;;; Generated autoloads from tag-file.el
 
 (autoload 'semantic-go-to-tag "semantic/tag-file" "\
@@ -1220,7 +1246,7 @@ Depends on `semantic-dependency-include-path' for searching.  Always searches
 ;;;***
 
 ;;;### (autoloads (semantic-tag-prototype-p) "semantic/tag-ls" "tag-ls.el"
-;;;;;;  "a30e0a1b78742728e49d20b9e59a82ab")
+;;;;;;  "07056129f3e73ae59ccf0fe94858fde9")
 ;;; Generated autoloads from tag-ls.el
 
 (autoload 'semantic-tag-prototype-p "semantic/tag-ls" "\
@@ -1233,7 +1259,7 @@ something without an implementation.
 ;;;***
 
 ;;;### (autoloads (semantic-tag-write-list-slot-value) "semantic/tag-write"
-;;;;;;  "tag-write.el" "e122e29a570109c94846afbf6403aee3")
+;;;;;;  "tag-write.el" "cc5d8d0cf30a70ffbfe0d3d92c327a82")
 ;;; Generated autoloads from tag-write.el
 
 (autoload 'semantic-tag-write-list-slot-value "semantic/tag-write" "\
@@ -1245,7 +1271,7 @@ The VALUE is a list of tags.
 ;;;***
 
 ;;;### (autoloads (semantic-tag-components) "semantic/tag" "tag.el"
-;;;;;;  "3685916e15a2f52ded31b29a22bd40ea")
+;;;;;;  "ca078d6fad01671343bf83629bb0c0fe")
 ;;; Generated autoloads from tag.el
 
 (autoload 'semantic-tag-components "semantic/tag" "\
@@ -1267,7 +1293,7 @@ tag of class 'function.
 ;;;;;;  global-semantic-show-unmatched-syntax-mode global-semantic-show-unmatched-syntax-mode
 ;;;;;;  semantic-highlight-edits-mode global-semantic-highlight-edits-mode
 ;;;;;;  global-semantic-highlight-edits-mode) "semantic/util-modes"
-;;;;;;  "util-modes.el" "c0f3de5d4dfdd24398c4222bb606b35e")
+;;;;;;  "util-modes.el" "235ac7e1510deff4c0e13ed6d8d7070a")
 ;;; Generated autoloads from util-modes.el
 
 (autoload 'global-semantic-highlight-edits-mode "semantic/util-modes" "\
