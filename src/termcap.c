@@ -1,5 +1,6 @@
 /* Work-alike for termcap, plus extra features.
-   Copyright (C) 1985, 86, 93, 94, 95 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 93, 94, 95, 2000, 2001
+   Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,10 +24,14 @@ Boston, MA 02111-1307, USA.  */
 
 #ifdef emacs
 
+#include <lisp.h>		/* xmalloc is here */
 /* Get the O_* definitions for open et al.  */
 #include <sys/file.h>
-#ifdef USG5
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
 #endif
 
 #else /* not emacs */
@@ -284,10 +289,11 @@ tgetst1 (ptr, area)
 
 /* Outputting a string with padding.  */
 
-short ospeed;
 /* If OSPEED is 0, we use this as the actual baud rate.  */
 int tputs_baud_rate;
 char PC;
+
+#if 0 /* Doesn't seem to be used anymore.  */
 
 /* Actual baud rate if positive;
    - baud rate / 100 if negative.  */
@@ -303,6 +309,8 @@ static int speeds[] =
 #endif /* not VMS */
   };
 
+#endif /* 0  */
+
 void
 tputs (str, nlines, outfun)
      register char *str;
@@ -312,21 +320,12 @@ tputs (str, nlines, outfun)
   register int padcount = 0;
   register int speed;
 
-#ifdef emacs
-  extern baud_rate;
+  extern int baud_rate;
   speed = baud_rate;
   /* For quite high speeds, convert to the smaller
      units to avoid overflow.  */
   if (speed > 10000)
     speed = - speed / 100;
-#else
-  if (ospeed == 0)
-    speed = tputs_baud_rate;
-  else if (ospeed > 0 && ospeed < (sizeof speeds / sizeof speeds[0]))
-    speed = speeds[ospeed];
-  else
-    speed = 0;
-#endif
 
   if (!str)
     return;
@@ -449,7 +448,7 @@ tgetent (bp, name)
   char *term;
   int malloc_size = 0;
   register int c;
-  char *tcenv;			/* TERMCAP value, if it contains :tc=.  */
+  char *tcenv = NULL;		/* TERMCAP value, if it contains :tc=.  */
   char *indirect = NULL;	/* Terminal type in :tc= in TERMCAP value.  */
   int filep;
 
@@ -561,11 +560,11 @@ tgetent (bp, name)
       /* If BP is malloc'd by us, make sure it is big enough.  */
       if (malloc_size)
 	{
-	  malloc_size = bp1 - bp + buf.size;
-	  termcap_name = (char *) xrealloc (bp, malloc_size);
-	  bp1 += termcap_name - bp;
-	  tc_search_point += termcap_name - bp;
-	  bp = termcap_name;
+	  int offset1 = bp1 - bp, offset2 = tc_search_point - bp;
+	  malloc_size = offset1 + buf.size;
+	  bp = termcap_name = (char *) xrealloc (bp, malloc_size);
+	  bp1 = termcap_name + offset1;
+	  tc_search_point = termcap_name + offset2;
 	}
 
       /* Copy the line of the entry from buf into bp.  */

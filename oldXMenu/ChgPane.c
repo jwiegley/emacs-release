@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/ChgPane.c,v 1.1 1992/04/11 22:10:17 jimb Exp $ */
+/* $Header: /cvsroot/emacs//emacs/oldXMenu/ChgPane.c,v 1.1 1999/10/03 19:34:53 fx Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*

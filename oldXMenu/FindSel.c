@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/FindSel.c,v 1.1 1992/04/11 22:10:19 jimb Exp $ */
+/* $Header: /cvsroot/emacs//emacs/oldXMenu/FindSel.c,v 1.1 1999/10/03 19:35:03 fx Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*

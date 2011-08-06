@@ -1,4 +1,4 @@
-/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/X10.h,v 1.1 1992/04/11 22:10:21 jimb Exp $ */
+/* $Header: /cvsroot/emacs//emacs/oldXMenu/X10.h,v 1.1 1999/10/03 19:35:16 fx Exp $ */
 /* 
  * Copyright 1985, 1986, 1987 by the Massachusetts Institute of Technology
  *

@@ -1,5 +1,5 @@
 /* Merge parameters into a termcap entry string.
-   Copyright (C) 1985, 87, 93, 95 Free Software Foundation, Inc.
+   Copyright (C) 1985, 87, 93, 95, 2000 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 #endif
 
-#ifndef emacs
+#ifdef emacs
+#include "lisp.h"		/* for xmalloc */
+#else
 #if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
 #define bcopy(s, d, n) memcpy ((d), (s), (n))
 #endif
@@ -148,21 +150,22 @@ tparam1 (string, outstring, len, up, left, argp)
       if (op + 5 >= outend)
 	{
 	  register char *new;
+	  int offset = op - outstring;
+
 	  if (outlen == 0)
 	    {
 	      outlen = len + 40;
 	      new = (char *) xmalloc (outlen);
-	      outend += 40;
-	      bcopy (outstring, new, op - outstring);
+	      bcopy (outstring, new, offset);
 	    }
 	  else
 	    {
-	      outend += outlen;
 	      outlen *= 2;
 	      new = (char *) xrealloc (outstring, outlen);
 	    }
-	  op += new - outstring;
-	  outend += new - outstring;
+	  
+	  op = new + offset;
+	  outend = new + outlen;
 	  outstring = new;
 	}
       c = *p++;
@@ -290,6 +293,9 @@ tparam1 (string, outstring, len, up, left, argp)
 	    case 'D':		/* %D means weird Delta Data transformation.  */
 	      argp[0] -= 2 * (tem % 16);
 	      break;
+
+	    default:
+	      abort ();
 	    }
 	}
       else

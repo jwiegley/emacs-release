@@ -1,5 +1,5 @@
 
-/* $Header: /u/src/emacs/19.0/oldXMenu/RCS/XMenuInt.h,v 1.3 1992/10/10 16:05:10 jimb Exp $ */
+/* $Header: /cvsroot/emacs//emacs/oldXMenu/XMenuInt.h,v 1.1 1999/10/03 19:35:24 fx Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
