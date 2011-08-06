@@ -76,6 +76,8 @@
 (require 'faces)
 (require 'select)
 (require 'menu-bar)
+(if (fboundp 'new-fontset)
+    (require 'fontset))
 
 ;; Because Windows scrollbars look and act quite differently compared
 ;; with the standard X scroll-bars, we don't try to use the normal
@@ -153,7 +155,9 @@
   "Edit the files listed in the drag-n-drop event.
 Switch to a buffer editing the last file dropped."
   (interactive "e")
-  (mapcar 'find-file (car (cdr (cdr event))))
+  (save-excursion
+    (set-frame-selected-window nil (posn-window (event-start event)))
+    (mapcar 'find-file (car (cdr (cdr event)))))
   (raise-frame))
 
 (defun w32-drag-n-drop-other-frame (event)
@@ -166,6 +170,12 @@ the last file dropped is selected."
 ;; Bind the drag-n-drop event.
 (global-set-key [drag-n-drop] 'w32-drag-n-drop)
 (global-set-key [C-drag-n-drop] 'w32-drag-n-drop-other-frame)
+
+;; Keyboard layout/language change events
+;; For now ignore language-change events; in the future
+;; we should switch the Emacs Input Method to match the
+;; new layout/language selected by the user.
+(global-set-key [language-change] 'ignore)
 
 (defvar x-invocation-args)
 
@@ -577,6 +587,9 @@ This is in addition to the primary selection.")
 	 (t
 	  (setq x-last-selected-text text))))))
 
+(defalias 'x-cut-buffer-or-selection-value 'x-get-selection-value)
+
+
 ;;; Do the actual Windows setup here; the above code just defines
 ;;; functions and variables that we use now.
 
@@ -611,6 +624,96 @@ This is in addition to the primary selection.")
 ;; W32 expects the menu bar cut and paste commands to use the clipboard.
 ;; This has ,? to match both on Sunos and on Solaris.
 (menu-bar-enable-clipboard)
+
+;; W32 systems have different fonts than commonly found on X, so
+;; we define our own standard fontset here.
+(defvar w32-standard-fontset-spec
+ "-*-Courier New-normal-r-*-*-13-*-*-*-c-*-fontset-standard"
+ "String of fontset spec of the standard fontset. This defines a
+fontset consisting of the Courier New variations for European
+languages which are distributed with Windows as \"Multilanguage Support\".
+
+See the documentation of `create-fontset-from-fontset-spec for the format.")
+
+(if (fboundp 'new-fontset)
+    (progn
+      (defun w32-create-initial-fontsets ()
+        "Create fontset-startup, fontset-standard and any fontsets
+specified in X resources."
+        ;; Create the standard fontset.
+        (create-fontset-from-fontset-spec w32-standard-fontset-spec t)
+
+        ;; Create fontset specified in X resources "Fontset-N" (N is 0, 1,...).
+        (create-fontset-from-x-resource)
+
+        ;; Try to create a fontset from a font specification which comes
+        ;; from initial-frame-alist, default-frame-alist, or X resource.
+        ;; A font specification in command line argument (i.e. -fn XXXX)
+        ;; should be already in default-frame-alist as a `font'
+        ;; parameter.  However, any font specifications in site-start
+        ;; library, user's init file (.emacs), and default.el are not
+        ;; yet handled here.
+
+        (let ((font (or (cdr (assq 'font initial-frame-alist))
+                        (cdr (assq 'font default-frame-alist))
+                        (x-get-resource "font" "Font")))
+              xlfd-fields resolved-name)
+          (if (and font
+                   (not (query-fontset font))
+                   (setq resolved-name (x-resolve-font-name font))
+                   (setq xlfd-fields (x-decompose-font-name font)))
+              (if (string= "fontset"
+                           (aref xlfd-fields xlfd-regexp-registry-subnum))
+                  (new-fontset font
+                               (x-complement-fontset-spec xlfd-fields nil))
+                ;; Create a fontset from FONT.  The fontset name is
+                ;; generated from FONT.  Create style variants of the
+                ;; fontset too.  Font names in the variants are
+                ;; generated automatially unless X resources
+                ;; XXX.attribyteFont explicitly specify them.
+                (let ((styles (mapcar 'car x-style-funcs-alist))
+                      (faces '(bold italic bold-italic))
+                      face face-font fontset fontset-spec)
+                  (while faces
+                    (setq face (car faces))
+                    (setq face-font (x-get-resource (concat (symbol-name face)
+                                                            ".attributeFont")
+                                                    "Face.AttributeFont"))
+                    (if face-font
+                        (setq styles (cons (cons face face-font)
+                                           (delq face styles))))
+                    (setq faces (cdr faces)))
+                  (aset xlfd-fields xlfd-regexp-foundry-subnum nil)
+                  (aset xlfd-fields xlfd-regexp-family-subnum nil)
+                  (aset xlfd-fields xlfd-regexp-registry-subnum "fontset")
+                  (aset xlfd-fields xlfd-regexp-encoding-subnum "startup")
+                  ;; The fontset name should have concrete values in
+                  ;; weight and slant field.
+                  (let ((weight (aref xlfd-fields xlfd-regexp-weight-subnum))
+                        (slant (aref xlfd-fields xlfd-regexp-slant-subnum))
+                        xlfd-temp)
+                    (if (or (not weight) (string-match "[*?]*" weight))
+                        (progn
+                          (setq xlfd-temp
+                                (x-decompose-font-name resolved-name))
+                          (aset xlfd-fields xlfd-regexp-weight-subnum
+                                (aref xlfd-temp xlfd-regexp-weight-subnum))))
+                    (if (or (not slant) (string-match "[*?]*" slant))
+                        (progn
+                          (or xlfd-temp
+                              (setq xlfd-temp
+                                    (x-decompose-font-name resolved-name)))
+                          (aset xlfd-fields xlfd-regexp-slant-subnum
+                                (aref xlfd-temp xlfd-regexp-slant-subnum)))))
+                  (setq fontset (x-compose-font-name xlfd-fields))
+                  (create-fontset-from-fontset-spec
+                   (concat fontset ", ascii:" font) styles)
+                  )))))
+      ;; This cannot be run yet, as creating fontsets requires a
+      ;; Window to be initialised so the fonts can be listed.
+      ;; Add it to a hook so it gets run later.
+      (add-hook 'before-init-hook 'w32-create-initial-fontsets)
+      ))
 
 ;; Apply a geometry resource to the initial frame.  Put it at the end
 ;; of the alist, so that anything specified on the command line takes
@@ -699,9 +802,137 @@ This is in addition to the primary selection.")
     (list face (if (equal value "") nil value))))
 
 ;; Redefine the font selection to use the standard W32 dialog
+(defvar w32-use-w32-font-dialog t
+  "*Use the standard font dialog if 't' - otherwise pop up a menu of
+some standard fonts like X does - including fontsets")
+
+(defvar w32-fixed-font-alist
+  '("Font menu"
+    ("Misc"
+     ;; For these, we specify the pixel height and width.
+     ("fixed" "Fixedsys")
+     ("")
+     ("Terminal 5x4"
+      "-*-Terminal-normal-r-*-*-*-45-*-*-c-40-*-oem")
+     ("Terminal 6x8"
+      "-*-Terminal-normal-r-*-*-*-60-*-*-c-80-*-oem")
+     ("Terminal 9x5"
+      "-*-Terminal-normal-r-*-*-*-90-*-*-c-50-*-oem")
+     ("Terminal 9x7"
+      "-*-Terminal-normal-r-*-*-*-90-*-*-c-70-*-oem")
+     ("Terminal 9x8"
+      "-*-Terminal-normal-r-*-*-*-90-*-*-c-80-*-oem")
+     ("Terminal 12x12"
+      "-*-Terminal-normal-r-*-*-*-120-*-*-c-120-*-oem")
+     ("Terminal 14x10"
+      "-*-Terminal-normal-r-*-*-*-135-*-*-c-100-*-oem")
+     ("Terminal 6x6 Bold"
+      "-*-Terminal-bold-r-*-*-*-60-*-*-c-60-*-oem")
+     ("")
+     ("Lucida Sans Typewriter.8"
+      "-*-Lucida Sans Typewriter-normal-r-*-*-11-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.9"
+      "-*-Lucida Sans Typewriter-normal-r-*-*-12-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.10"
+      "-*-Lucida Sans Typewriter-normal-r-*-*-13-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.11"
+      "-*-Lucida Sans Typewriter-normal-r-*-*-15-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.12"
+      "-*-Lucida Sans Typewriter-normal-r-*-*-16-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.8 Bold"
+      "-*-Lucida Sans Typewriter-semibold-r-*-*-11-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.9 Bold"
+      "-*-Lucida Sans Typewriter-semibold-r-*-*-12-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.10 Bold"
+      "-*-Lucida Sans Typewriter-semibold-r-*-*-13-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.11 Bold"
+      "-*-Lucida Sans Typewriter-semibold-r-*-*-15-*-*-*-c-*-iso8859-1")
+     ("Lucida Sans Typewriter.12 Bold"
+      "-*-Lucida Sans Typewriter-semibold-r-*-*-16-*-*-*-c-*-iso8859-1"))
+    ("Courier"
+     ("Courier 10x8"
+      "-*-Courier-*normal-r-*-*-*-97-*-*-c-80-iso8859-1")
+     ("Courier 12x9"
+      "-*-Courier-*normal-r-*-*-*-120-*-*-c-90-iso8859-1")
+     ("Courier 15x12"
+      "-*-Courier-*normal-r-*-*-*-150-*-*-c-120-iso8859-1")
+     ;; For these, we specify the point height.
+     ("")
+     ("8" "-*-Courier New-normal-r-*-*-11-*-*-*-c-*-iso8859-1")
+     ("9" "-*-Courier New-normal-r-*-*-12-*-*-*-c-*-iso8859-1")
+     ("10" "-*-Courier New-normal-r-*-*-13-*-*-*-c-*-iso8859-1")
+     ("11" "-*-Courier New-normal-r-*-*-15-*-*-*-c-*-iso8859-1")
+     ("12" "-*-Courier New-normal-r-*-*-16-*-*-*-c-*-iso8859-1")
+     ("8 bold" "-*-Courier New-bold-r-*-*-11-*-*-*-c-*-iso8859-1")
+     ("9 bold" "-*-Courier New-bold-r-*-*-12-*-*-*-c-*-iso8859-1")
+     ("10 bold" "-*-Courier New-bold-r-*-*-13-*-*-*-c-*-iso8859-1")
+     ("11 bold" "-*-Courier New-bold-r-*-*-15-*-*-*-c-*-iso8859-1")
+     ("12 bold" "-*-Courier New-bold-r-*-*-16-*-*-*-c-*-iso8859-1")
+     ("8 italic" "-*-Courier New-normal-i-*-*-11-*-*-*-c-*-iso8859-1")
+     ("9 italic" "-*-Courier New-normal-i-*-*-12-*-*-*-c-*-iso8859-1")
+     ("10 italic" "-*-Courier New-normal-i-*-*-13-*-*-*-c-*-iso8859-1")
+     ("11 italic" "-*-Courier New-normal-i-*-*-15-*-*-*-c-*-iso8859-1")
+     ("12 italic" "-*-Courier New-normal-i-*-*-16-*-*-*-c-*-iso8859-1")
+     ("8 bold italic" "-*-Courier New-bold-i-*-*-11-*-*-*-c-*-iso8859-1")
+     ("9 bold italic" "-*-Courier New-bold-i-*-*-12-*-*-*-c-*-iso8859-1")
+     ("10 bold italic" "-*-Courier New-bold-i-*-*-13-*-*-*-c-*-iso8859-1")
+     ("11 bold italic" "-*-Courier New-bold-i-*-*-15-*-*-*-c-*-iso8859-1")
+     ("12 bold italic" "-*-Courier New-bold-i-*-*-16-*-*-*-c-*-iso8859-1")
+     ))
+    "Fonts suitable for use in Emacs. Initially this is a list of some
+fixed width fonts that most people will have like Terminal and
+Courier. These fonts are used in the font menu if the variable
+`w32-use-w32-font-dialog' is nil.")
+
+;;; Enable Japanese fonts on Windows to be used by default.
+(put-charset-property 'katakana-jisx0201 'x-charset-registry "JISX0208-SJIS")
+(put-charset-property 'latin-jisx0201 'x-charset-registry "JISX0208-SJIS")
+(put-charset-property 'japanese-jisx0208 'x-charset-registry "JISX0208-SJIS")
+(put-charset-property 'japanese-jisx0208-1978 'x-charset-registry
+                      "JISX0208-SJIS")
 
 (defun mouse-set-font (&rest fonts)
-  (interactive)
-  (set-default-font (w32-select-font)))
+  "Select a font. If `w32-use-w32-font-dialog' is non-nil (the default),
+use the Windows font dialog. Otherwise use a pop-up menu (like Emacs
+on other platforms) initialized with the fonts in
+`w32-fixed-font-alist'. Emacs will attempt to create a fontset from
+the font chosen, covering all the charsets that can be fully represented
+with the font."
+  (interactive
+   (if w32-use-w32-font-dialog
+       (list (w32-select-font))
+     (x-popup-menu
+      last-nonmenu-event
+    ;; Append list of fontsets currently defined.
+      (if (fboundp 'new-fontset)
+      (append w32-fixed-font-alist (list (generate-fontset-menu)))))))
+  (if fonts
+      (let (font fontset xlfd resolved-font)
+	(while fonts
+	  (condition-case nil
+	      (progn
+                (setq font (car fonts))
+                (if (fontset-name-p font)
+                    (setq fontset font)
+                  (condition-case nil
+                      (setq resolved-font (x-resolve-font-name font)
+                            xlfd (x-decompose-font-name resolved-font)
+                            fontset
+                              (create-fontset-from-ascii-font
+                               font resolved-font
+                               (format "%s_%s_%s_%s"
+                                       (aref xlfd xlfd-regexp-family-subnum)
+                                       (aref xlfd xlfd-regexp-registry-subnum)
+                                       (aref xlfd xlfd-regexp-encoding-subnum)
+                                       (aref xlfd
+                                             xlfd-regexp-pixelsize-subnum))))
+                    (error nil)))
+                (if fontset
+                    (set-default-font fontset)
+                  (set-default-font font))
+                (setq fonts nil))
+	    (error (setq fonts (cdr fonts)))))
+	(if (null font)
+	    (error "Font not found")))))
 
 ;;; w32-win.el ends here

@@ -1,3 +1,4 @@
+#define IRIX6
 #include "irix5-0.h"
 
 /* Irix 6 tries to do 64 bits, but doesn't do it fully,
@@ -29,3 +30,11 @@
 /* Canced the #define that is in irix5-0.h.  */
 #undef ospeed
 #endif
+
+/* Cancel some #define's in usg5-4.h.
+   Larry Hunter <hunter@nlm.nih.gov> said this was needed
+   for Irix 6.5.  Let's see if it is safe in 6.N, N<5, as well.  */
+#undef TIOCSIGSEND
+#undef bcopy
+#undef bcmp
+#undef bzero

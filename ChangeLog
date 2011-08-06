@@ -1,3 +1,133 @@
+1999-07-12  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+1999-06-23  Karl Heuer  <kwzh@gnu.org>
+
+	* make-dist: Unset EMACS_UNIBYTE, so Emacs runs in its default state.
+	Quote $EMACS, in case it's a program with args.
+
+1999-05-29  Richard M. Stallman  <rms@gnu.org>
+
+	* configure.in: Delete the Kerberos stuff.
+
+1999-05-27  Greg Hudson  <ghudson@mit.edu>
+
+	* configure.in: Prefer kerberos 5 names.
+
+1999-04-26  Richard M. Stallman  <rms@gnu.org>
+
+	* configure.in: Check for libXp.
+
+1999-04-08  Richard Stallman  <rms@gnu.org>
+
+	* make-dist: Include change logs in subdirs of `lisp'.
+
+1999-04-05  Richard Stallman  <rms@gnu.org>
+
+	* Makefile.in (mkdir): If we create ${datadir}, make it world-readable.
+	(install-arch-indep): Make ${datadir}/emacs world-readable.
+
+1999-03-30  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Use epaths.* instead of paths.*.
+
+1999-03-07  Eli Zaretskii  <eliz@gnu.org>
+
+	* INSTALL: Add detailed instructions to unpack and install
+	intlfonts on MS-DOS.
+
+1999-02-26  Richard Stallman  <rms@gnu.org>
+
+	* configure.in: Use epaths.h and epaths-force instead of paths....
+
+	* Makefile.in (epaths-force): Renamed from paths-force;
+	operate on epaths.in and produce epaths.h.
+
+1999-02-24  Richard Stallman  <rms@gnu.org>
+
+	* make-dist: Fix nt/icons directory handling.
+
+1999-02-22  Simon Josefsson  <jas@pdc.kth.se>
+
+	* configure.in (f301-fujitsu-uxpv4.1): New target.
+
+1999-02-20  Richard Stallman  <rms@gnu.org>
+
+	* make-dist (tempparent): Fix command to update info files.
+
+1999-02-09  Richard Stallman  <rms@gnu.org>
+
+	* configure.in (powerpc-apple-netbsd*): New alternative.
+
+1999-01-25  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* make-dist: Include the new directory nt/icons in distributions.
+
+1999-01-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* configure.in: Change message about HAVE_XFREE386.
+
+1999-01-07  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Support configuring with leim.
+
+1998-12-16  Petri Kaurinkoski  <Petri.Kaurinkoski@hut.fi>
+
+	* configure.in (mips-sgi-irix6.5): New target.
+
+1998-12-16  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* configure.in: Remove GSS-API support, since it has been removed
+	from movemail.
+
+1998-12-04  Markus Rost  <rost@delysid.gnu.org>
+
+	* Makefile.in (install-arch-dep): Copy fns-*.el from lib-src.
+
+1998-12-04  Andreas Schwab  <schwab@delysid.gnu.org>
+
+	* Makefile.in: Don't install customize info file.  Run
+	install-info on viper info file.
+
+1998-11-29  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in (install-arch-dep): Copy fns-*.el from lib-src.
+
+1998-11-16  Kenichi Handa  <handa@etl.go.jp>
+
+	* configure.in (*-*-bsdi4*): New target.
+
+1998-11-13  Ehud Karni  <ehud@unix.simonwiesel.co.il>
+
+	* configure.in: Fix previous change.
+
+1998-11-11  Richard Stallman  <rms@gnu.org>
+
+	* configure.in (aviion-intel): New machine.
+
+1998-11-04  Kenichi Handa  <handa@etl.go.jp>
+
+	* configure.in (mips-nec-sysv4*): New target.
+
+1998-11-03  Andreas Schwab  <schwab@delysid.gnu.org>
+
+	* Makefile.in (install-arch-dep): Fix last change and use fns-*.el
+	from lisp.
+
+1998-10-31  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* make-dist: Don't include fns*.el in dist.
+
+1998-10-30  Dave Love  <fx@gnu.org>
+
+	* configure.in: Don't mkdir cpp.
+
+1998-10-30  Andreas Schwab  <schwab@delysid.gnu.org>
+
+	* Makefile.in (install-arch-dep): Install src/fns-*.el in
+	${archlibdir}.
+
 1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
 	* Version 20.3 released.

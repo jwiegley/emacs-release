@@ -1,17 +1,19 @@
 ;;; ps-print.el --- Print text from the buffer as PostScript
 
-;; Copyright (C) 1993, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 94, 95, 96, 97, 98, 1999 Free Software Foundation, Inc.
 
-;; Author:     Jim Thompson (was <thompson@wg2.waii.com>)
-;; Author:     Jacques Duthen <duthen@cegelec-red.fr>
-;; Author:     Vinicius Jose Latorre <vinicius@cpqd.com.br>
-;; Maintainer: Vinicius Jose Latorre <vinicius@cpqd.com.br>
-;; Keywords:   print, PostScript
-;; Time-stamp: <98/06/04  15:23:12 vinicius>
-;; Version:    3.06.3
+;; Author:	Jim Thompson (was <thompson@wg2.waii.com>)
+;; Author:	Jacques Duthen (was <duthen@cegelec-red.fr>)
+;; Author:	Vinicius Jose Latorre <vinicius@cpqd.com.br>
+;; Author:	Kenichi Handa <handa@etl.go.jp> (multi-byte characters)
+;; Maintainer:	Kenichi Handa <handa@etl.go.jp> (multi-byte characters)
+;; Maintainer:	Vinicius Jose Latorre <vinicius@cpqd.com.br>
+;; Keywords:	print, PostScript
+;; Time-stamp:	<99/02/19 11:47:32 vinicius>
+;; Version:	4.1.4
 
-(defconst ps-print-version "3.06.3"
-  "ps-print.el, v 3.06.3 <98/06/04 vinicius>
+(defconst ps-print-version "4.1.4"
+  "ps-print.el, v 4.1.4 <99/02/19 vinicius>
 
 Vinicius's last change version -- this file may have been edited as part of
 Emacs without changes to the version number.  When reporting bugs,
@@ -48,7 +50,7 @@ Please send all bug fixes and enhancements to
 ;;
 ;; This package provides printing of Emacs buffers on PostScript
 ;; printers; the buffer's bold and italic text attributes are
-;; preserved in the printer output.  Ps-print is intended for use with
+;; preserved in the printer output.  ps-print is intended for use with
 ;; Emacs 19 or Lucid Emacs, together with a fontifying package such as
 ;; font-lock or hilit.
 ;;
@@ -65,9 +67,7 @@ Please send all bug fixes and enhancements to
 ;; Using ps-print
 ;; --------------
 ;;
-;; The Commands
-;;
-;; Ps-print provides eight commands for generating PostScript images
+;; ps-print provides eight commands for generating PostScript images
 ;; of Emacs buffers:
 ;;
 ;;        ps-print-buffer
@@ -101,7 +101,7 @@ Please send all bug fixes and enhancements to
 ;; your output at the printer (it's easier to pick up one 50-page
 ;; printout than to find 50 single-page printouts).
 ;;
-;; Ps-print has a hook in the `kill-emacs-hook' so that you won't
+;; ps-print has a hook in the `kill-emacs-hook' so that you won't
 ;; accidentally quit from Emacs while you have unprinted PostScript
 ;; waiting in the spool buffer.  If you do attempt to exit with
 ;; spooled PostScript, you'll be asked if you want to print it, and if
@@ -181,11 +181,16 @@ Please send all bug fixes and enhancements to
 ;; Make sure that they contain appropriate values for your system;
 ;; see the usage notes below and the documentation of these variables.
 ;;
+;; The variable `ps-printer-name' determine the name of a local printer for
+;; printing PostScript files.
+;;
 ;; NOTE: `ps-lpr-command' and `ps-lpr-switches' take their initial values
 ;;       from the variables `lpr-command' and `lpr-switches'.  If you have
 ;;       `lpr-command' set to invoke a pretty-printer such as `enscript',
 ;;       then ps-print won't work properly.  `ps-lpr-command' must name
 ;;       a program that does not format the files it prints.
+;;       `ps-printer-name' takes its initial value from the variable
+;;       `printer-name'.
 ;;
 ;;
 ;; The Page Layout
@@ -269,7 +274,7 @@ Please send all bug fixes and enhancements to
 ;; Headers
 ;; -------
 ;;
-;; Ps-print can print headers at the top of each column or at the top
+;; ps-print can print headers at the top of each column or at the top
 ;; of each page; the default headers contain the following four items:
 ;; on the left, the name of the buffer and, if the buffer is visiting
 ;; a file, the file's directory; on the right, the page number and
@@ -355,12 +360,43 @@ Please send all bug fixes and enhancements to
 ;; Consider yourself warned!
 ;;
 ;;
+;; PostScript Prologue Header
+;; --------------------------
+;;
+;; It is possible to add PostScript prologue header comments besides that
+;; ps-print generates by setting the variable `ps-print-prologue-header'.
+;;
+;; `ps-print-prologue-header' may be a string or a symbol function which
+;; returns a string.  Note that this string is inserted on PostScript prologue
+;; header section which is used to define some document characteristic through
+;; PostScript special comments, like "%%Requirements: jog\n".
+;;
+;; By default `ps-print-prologue-header' is nil.
+;;
+;; ps-print always inserts the %%Requirements: comment, so if you need to insert
+;; more requirements put them first in `ps-print-prologue-header' using the
+;; "%%+" comment.  For example, if you need to set numcopies to 3 and jog on
+;; requirements and set %%LanguageLevel: to 2, do:
+;;
+;; (setq ps-print-prologue-header
+;;       "%%+ numcopies(3) jog\n%%LanguageLevel: 2\n")
+;;
+;; The duplex requirement is inserted by ps-print (see section Duplex Printers).
+;;
+;; Do not forget to terminate the string with "\n".
+;;
+;; For more information about PostScript document comments, see:
+;;    PostScript Language Reference Manual (2nd edition)
+;;    Adobe Systems Incorporated
+;;    Appendix G: Document Structuring Conventions -- Version 3.0
+;;
+;;
 ;; Duplex Printers
 ;; ---------------
 ;;
 ;; If you have a duplex-capable printer (one that prints both sides of
 ;; the paper), set `ps-spool-duplex' to t.
-;; Ps-print will insert blank pages to make sure each buffer starts
+;; ps-print will insert blank pages to make sure each buffer starts
 ;; on the correct side of the paper.
 ;; Don't forget to set `ps-lpr-switches' to select duplex printing
 ;; for your printer.
@@ -375,21 +411,21 @@ Please send all bug fixes and enhancements to
 ;;
 ;; Valid values for `ps-print-control-characters' are:
 ;;
-;;  8-bit           This is the value to use when you want an ascii encoding of
-;;                  any control or non-ascii character. Control characters are
-;;                  encoded as "^D", and non-ascii characters have an
+;;  8-bit           This is the value to use when you want an ASCII encoding of
+;;                  any control or non-ASCII character. Control characters are
+;;                  encoded as "^D", and non-ASCII characters have an
 ;;                  octal encoding.
 ;;
-;;  control-8-bit   This is the value to use when you want an ascii encoding of
+;;  control-8-bit   This is the value to use when you want an ASCII encoding of
 ;;                  any control character, whether it is 7 or 8-bit.
 ;;                  European 8-bits accented characters are printed according
 ;;                  the current font.
 ;;
-;;  control         Only ascii control characters have an ascii encoding.
+;;  control         Only ASCII control characters have an ASCII encoding.
 ;;                  European 8-bits accented characters are printed according
 ;;                  the current font.
 ;;
-;;  nil             No ascii encoding. Any character is printed according the
+;;  nil             No ASCII encoding. Any character is printed according the
 ;;                  current font.
 ;;
 ;; Any other value is treated as nil.
@@ -397,6 +433,12 @@ Please send all bug fixes and enhancements to
 ;; The default is `control-8-bit'.
 ;;
 ;; Characters TAB, NEWLINE and FORMFEED are always treated by ps-print engine.
+;;
+;;
+;; Printing Multi-byte Buffer
+;; --------------------------
+;;
+;; See ps-mule.el for documentation.
 ;;
 ;;
 ;; Line Number
@@ -438,7 +480,7 @@ Please send all bug fixes and enhancements to
 ;; Hooks
 ;; -----
 ;;
-;; Ps-print has the following hook variables:
+;; ps-print has the following hook variables:
 ;;
 ;; `ps-print-hook'
 ;;    It is evaluated once before any printing process.  This is the right
@@ -459,30 +501,32 @@ Please send all bug fixes and enhancements to
 ;; Font Managing
 ;; -------------
 ;;
-;; Ps-print now knows rather precisely some fonts:
-;; the variable `ps-font-info-database' contains information
-;; for a list of font families (currently mainly `Courier' `Helvetica'
-;; `Times' `Palatino' `Helvetica-Narrow' `NewCenturySchlbk').
-;; Each font family contains the font names for standard, bold, italic
-;; and bold-italic characters, a reference size (usually 10) and the
-;; corresponding line height, width of a space and average character width.
+;; ps-print now knows rather precisely some fonts: the variable
+;; `ps-font-info-database' contains information for a list of font families
+;; (currently mainly `Courier' `Helvetica' `Times' `Palatino' `Helvetica-Narrow'
+;; `NewCenturySchlbk').  Each font family contains the font names for standard,
+;; bold, italic and bold-italic characters, a reference size (usually 10) and
+;; the corresponding line height, width of a space and average character width.
 ;;
-;; The variable `ps-font-family' determines which font family
-;; is to be used for ordinary text.
-;; If its value does not correspond to a known font family,
-;; an error message is printed into the `*Messages*' buffer,
-;; which lists the currently available font families.
+;; The variable `ps-font-family' determines which font family is to be used for
+;; ordinary text.  If its value does not correspond to a known font family, an
+;; error message is printed into the `*Messages*' buffer, which lists the
+;; currently available font families.
 ;;
-;; The variable `ps-font-size' determines the size (in points)
-;; of the font for ordinary text, when generating Postscript.
-;; Its value is a float.
+;; The variable `ps-font-size' determines the size (in points) of the font for
+;; ordinary text, when generating PostScript.  Its value is a float or a cons of
+;; floats which has the following form:
 ;;
-;; Similarly, the variable `ps-header-font-family' determines
-;; which font family is to be used for text in the header.
-;; The variable `ps-header-font-size' determines the font size,
-;; in points, for text in the header.
-;; The variable `ps-header-title-font-size' determines the font size,
-;; in points, for the top line of text in the header.
+;;    (LANDSCAPE-SIZE . PORTRAIT-SIZE)
+;;
+;; Similarly, the variable `ps-header-font-family' determines which font family
+;; is to be used for text in the header.
+;;
+;; The variable `ps-header-font-size' determines the font size, in points, for
+;; text in the header (similar to `ps-font-size').
+;;
+;; The variable `ps-header-title-font-size' determines the font size, in points,
+;; for the top line of text in the header (similar to `ps-font-size').
 ;;
 ;;
 ;; Adding a New Font Family
@@ -545,6 +589,7 @@ Please send all bug fixes and enhancements to
 ;;       (line-height . 10.55)
 ;;       (space-width . 6.0)
 ;;       (avg-char-width . 6.0))
+;;
 ;; Now you can use your new font family with any size:
 ;;	(setq ps-font-family 'my-mixed-family)
 ;;
@@ -603,7 +648,7 @@ Please send all bug fixes and enhancements to
 ;; Faces like bold-italic that are both bold and italic should go in
 ;; *both* lists.
 ;;
-;; Ps-print keeps internal lists of which fonts are bold and which are
+;; ps-print keeps internal lists of which fonts are bold and which are
 ;; italic; these lists are built the first time you invoke ps-print.
 ;; For the sake of efficiency, the lists are built only once; the same
 ;; lists are referred in later invocations of ps-print.
@@ -620,7 +665,7 @@ Please send all bug fixes and enhancements to
 ;; How Ps-Print Deals With Color
 ;; -----------------------------
 ;;
-;; Ps-print detects faces with foreground and background colors
+;; ps-print detects faces with foreground and background colors
 ;; defined and embeds color information in the PostScript image.
 ;; The default foreground and background colors are defined by the
 ;; variables `ps-default-fg' and `ps-default-bg'.
@@ -655,7 +700,7 @@ Please send all bug fixes and enhancements to
 ;; How Ps-Print Has A Text And/Or Image On Background
 ;; --------------------------------------------------
 ;;
-;; Ps-print can print texts and/or EPS PostScript images on background; it is
+;; ps-print can print texts and/or EPS PostScript images on background; it is
 ;; possible to define the following text attributes: font name, font size,
 ;; initial position, angle, gray scale and pages to print.
 ;;
@@ -744,9 +789,18 @@ Please send all bug fixes and enhancements to
 ;; New since version 2.8
 ;; ---------------------
 ;;
+;; [vinicius] 980922 Vinicius Jose Latorre <vinicius@cpqd.com.br>
+;;
+;; PostScript prologue header comment insertion.
+;; Skip invisible text better.
+;;
+;; [keinichi] 980819 Kein'ichi Handa <handa@etl.go.jp>
+;;
+;; Multi-byte buffer handling.
+;;
 ;; [vinicius] 980306 Vinicius Jose Latorre <vinicius@cpqd.com.br>
 ;;
-;; Skip invisible text
+;; Skip invisible text.
 ;;
 ;; [vinicius] 971130 Vinicius Jose Latorre <vinicius@cpqd.com.br>
 ;;
@@ -774,7 +828,7 @@ Please send all bug fixes and enhancements to
 ;; Tools for page setup.
 ;;
 ;;
-;; Known bugs and limitations of ps-print:
+;; Known bugs and limitations of ps-print
 ;; --------------------------------------
 ;;
 ;; Although color printing will work in XEmacs 19.12, it doesn't work
@@ -807,9 +861,10 @@ Please send all bug fixes and enhancements to
 ;; of folding lines.
 ;;
 ;;
-;; Things to change:
+;; Things to change
 ;; ----------------
 ;;
+;; 2-up and 4-up capabilities.
 ;; Avoid page break inside a paragraph.
 ;; Add `ps-non-bold-faces' and `ps-non-italic-faces' (should be easy).
 ;; Improve the memory management for big files (hard?).
@@ -819,6 +874,14 @@ Please send all bug fixes and enhancements to
 ;;
 ;; Acknowledgements
 ;; ----------------
+;;
+;; Thanks to Kein'ichi Handa <handa@etl.go.jp> for multi-byte buffer handling.
+;;
+;; Thanks to Matthew O Persico <Matthew.Persico@lazard.com> for line number on
+;; empty columns.
+;;
+;; Thanks to Theodore Jump <tjump@cais.com> for adjust PostScript code order on
+;; last page.
 ;;
 ;; Thanks to Roland Ducournau <ducour@lirmm.fr> for
 ;; `ps-print-control-characters' variable documentation.
@@ -875,6 +938,17 @@ Please send all bug fixes and enhancements to
 (unless (featurep 'lisp-float-type)
   (error "`ps-print' requires floating point support"))
 
+;; For Emacs 20.2 and the earlier version.
+(eval-and-compile
+  (and (string< mule-version "4.0")
+       (progn
+	 (defun set-buffer-multibyte (arg)
+	   (setq enable-multibyte-characters arg))
+	 (defun string-as-unibyte (arg) arg)
+	 (defun string-as-multibyte (arg) arg)
+	 (defun charset-after (&optional arg)
+	   (char-charset (char-after arg))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User Variables:
 
@@ -923,38 +997,78 @@ Please send all bug fixes and enhancements to
   :group 'faces)
 
 
-(defcustom ps-printer-name printer-name
+(defcustom ps-print-prologue-header nil
+  "*PostScript prologue header comments besides that ps-print generates.
+
+`ps-print-prologue-header' may be a string or a symbol function which
+returns a string.  Note that this string is inserted on PostScript prologue
+header section which is used to define some document characteristic through
+PostScript special comments, like \"%%Requirements: jog\\n\".
+
+ps-print always inserts the %%Requirements: comment, so if you need to insert
+more requirements put them first in `ps-print-prologue-header' using the
+\"%%+\" comment.  For example, if you need to set numcopies to 3 and jog on
+requirements and set %%LanguageLevel: to 2, do:
+
+(setq ps-print-prologue-header
+      \"%%+ numcopies(3) jog\\n%%LanguageLevel: 2\\n\")
+
+The duplex requirement is inserted by ps-print (see `ps-spool-duplex').
+
+Do not forget to terminate the string with \"\\n\".
+
+For more information about PostScript document comments, see:
+   PostScript Language Reference Manual (2nd edition)
+   Adobe Systems Incorporated
+   Appendix G: Document Structuring Conventions -- Version 3.0"
+  :type '(choice string symbol (other :tag "nil" nil))
+  :group 'ps-print)
+
+(defcustom ps-printer-name (and (boundp 'printer-name)
+				printer-name)
   "*The name of a local printer for printing PostScript files.
 
 On Unix-like systems, a string value should be a name understood by
-lpr's -P option; otherwise the value should be nil.
+lpr's -P option; a value of nil means use the value of `printer-name'
+instead.  Any other value will be ignored.
 
-On MS-DOS and MS-Windows systems, if the value is a string, then it is
-taken as the name of the device to which PostScript files are written.
-By default it is the same as `printer-name'; typical non-default
-settings would be \"LPT1\" to \"LPT3\" for parallel printers, or
-\"COM1\" to \"COM4\" or \"AUX\" for serial printers, or
-\"//hostname/printer\" for a shared network printer.  You can also set
-it to a name of a file, in which case the output gets appended to that
-file.  \(Note that `ps-print' package already has facilities for
-printing to a file, so you might as well use them instead of changing
-the setting of this variable.\) If you want to silently discard the
-printed output, set this to \"NUL\".
-
-On DOS/Windows, if the value is anything but a string, PostScript files
-will be piped to the program given by `ps-lpr-command', with switches
-given by `ps-lpr-switches', which see."
-  :type '(choice file (other :tag "Pipe to ps-lpr-command" pipe))
+On MS-DOS and MS-Windows systems, a string value is taken as the name of
+the printer device or port to which PostScript files are written,
+provided `ps-lpr-command' is \"\".  By default it is the same as
+`printer-name'; typical non-default settings would be \"LPT1\" to
+\"LPT3\" for parallel printers, or \"COM1\" to \"COM4\" or \"AUX\" for
+serial printers, or \"//hostname/printer\" for a shared network printer.
+You can also set it to a name of a file, in which case the output gets
+appended to that file.  \(Note that `ps-print' package already has
+facilities for printing to a file, so you might as well use them instead
+of changing the setting of this variable.\)  If you want to silently
+discard the printed output, set this to \"NUL\"."
+  :type '(choice (file :tag "Name")
+		 (const :tag "Default" nil))
   :group 'ps-print)
 
 (defcustom ps-lpr-command lpr-command
-  "*The shell command for printing a PostScript file."
+  "*Name of program for printing a PostScript file.
+
+On MS-DOS and MS-Windows systems, if the value is an empty string then
+Emacs will write directly to the printer port named by `ps-printer-name'.
+The programs `print' and `nprint' (the standard print programs on Windows
+NT and Novell Netware respectively) are handled specially, using
+`ps-printer-name' as the destination for output; any other program is
+treated like `lpr' except that an explicit filename is given as the last
+argument."
   :type 'string
   :group 'ps-print)
 
 (defcustom ps-lpr-switches lpr-switches
   "*A list of extra switches to pass to `ps-lpr-command'."
   :type '(repeat string)
+  :group 'ps-print)
+
+(defcustom ps-print-region-function nil
+  "Function to call to print the region on a PostScript printer.
+See definition of `ps-do-despool' for calling conventions."
+  :type 'function
   :group 'ps-print)
 
 ;;; Page layout
@@ -1019,26 +1133,26 @@ example `letter', `legal' or `a4'."
 (defcustom ps-print-control-characters 'control-8-bit
   "*Specifies the printable form for control and 8-bit characters.
 That is, instead of sending, for example, a ^D (\004) to printer,
-you can send ^ and D.
+it is sent the string \"^D\".
 
 Valid values are:
 
   `8-bit'         This is the value to use when you want an ASCII encoding of
-                  any control or non-ASCII character.  Control characters are
-                  encoded as \"^D\", and non-ascii characters have an
-                  octal encoding.
+		  any control or non-ASCII character.  Control characters are
+		  encoded as \"^D\", and non-ASCII characters have an
+		  octal encoding.
 
   `control-8-bit' This is the value to use when you want an ASCII encoding of
-                  any control character, whether it is 7 or 8-bit.
-                  European 8-bits accented characters are printed according
-                  the current font.
+		  any control character, whether it is 7 or 8-bit.
+		  European 8-bits accented characters are printed according
+		  the current font.
 
-  `control'       Only ascii control characters have an ASCII encoding.
-                  European 8-bits accented characters are printed according
-                  the current font.
+  `control'       Only ASCII control characters have an ASCII encoding.
+		  European 8-bits accented characters are printed according
+		  the current font.
 
   nil             No ASCII encoding.  Any character is printed according the
-                  current font.
+		  current font.
 
 Any other value is treated as nil."
   :type '(choice (const 8-bit) (const control-8-bit)
@@ -1295,7 +1409,7 @@ the left on even-numbered pages."
      (size . 10.0)
      (line-height . 11.0)
      (space-width . 2.5)
-     (avg-char-width 4.71432))
+     (avg-char-width . 4.71432))
     (Palatino
      (fonts (normal      . "Palatino-Roman")
 	    (bold        . "Palatino-Bold")
@@ -1320,7 +1434,7 @@ the left on even-numbered pages."
 	    (italic      . "NewCenturySchlbk-Italic")
 	    (bold-italic . "NewCenturySchlbk-BoldItalic"))
      (size . 10.0)
-     (line-height 12.15)
+     (line-height . 12.15)
      (space-width . 2.78)
      (avg-char-width . 5.31162))
     ;; got no bold for the next ones
@@ -1386,46 +1500,61 @@ To get the info for another specific font (say Helvetica), do the following:
 You can get all the fonts of YOUR printer using `ReportAllFontInfo'."
   :type '(repeat (list :tag "Font Definition"
 		       (symbol :tag "Font Family")
-		       (cons (const fonts)
-			     (repeat (cons (choice (const normal)
+		       (cons :format "%v"
+			     (const :format "" fonts)
+			     (repeat :tag "Faces"
+				     (cons (choice (const normal)
 						   (const bold)
 						   (const italic)
 						   (const bold-italic)
 						   (symbol :tag "Face"))
 					   (string :tag "Font Name"))))
-		       (cons (const size)
+		       (cons :format "%v"
+			     (const :format "" size)
 			     (number :tag "Reference Size"))
-		       (cons (const line-height)
+		       (cons :format "%v"
+			     (const :format "" line-height)
 			     (number :tag "Line Height"))
-		       (cons (const space-width)
+		       (cons :format "%v"
+			     (const :format "" space-width)
 			     (number :tag "Space Width"))
-		       (cons (const avg-char-width)
+		       (cons :format "%v"
+			     (const :format "" avg-char-width)
 			     (number :tag "Average Character Width"))))
   :group 'ps-print-font)
 
 (defcustom ps-font-family 'Courier
-  "Font family name for ordinary text, when generating PostScript."
+  "*Font family name for ordinary text, when generating PostScript."
   :type 'symbol
   :group 'ps-print-font)
 
-(defcustom ps-font-size   (if ps-landscape-mode 7 8.5)
-  "Font size, in points, for ordinary text, when generating PostScript."
-  :type 'number
+(defcustom ps-font-size   '(7 . 8.5)
+  "*Font size, in points, for ordinary text, when generating PostScript."
+  :type '(choice (number :tag "Text Size")
+		 (cons :tag "Landscape/Portrait"
+		       (number :tag "Landscape Text Size")
+		       (number :tag "Portrait Text Size")))
   :group 'ps-print-font)
 
 (defcustom ps-header-font-family      'Helvetica
-  "Font family name for text in the header, when generating PostScript."
+  "*Font family name for text in the header, when generating PostScript."
   :type 'symbol
   :group 'ps-print-font)
 
-(defcustom ps-header-font-size       (if ps-landscape-mode 10 12)
-  "Font size, in points, for text in the header, when generating PostScript."
-  :type 'number
+(defcustom ps-header-font-size       '(10 . 12)
+  "*Font size, in points, for text in the header, when generating PostScript."
+  :type '(choice (number :tag "Header Size")
+		 (cons :tag "Landscape/Portrait"
+		       (number :tag "Landscape Header Size")
+		       (number :tag "Portrait Header Size")))
   :group 'ps-print-font)
 
-(defcustom ps-header-title-font-size (if ps-landscape-mode 12 14)
-  "Font size, in points, for the top line of text in header, in PostScript."
-  :type 'number
+(defcustom ps-header-title-font-size '(12 . 14)
+  "*Font size, in points, for the top line of text in header, in PostScript."
+  :type '(choice (number :tag "Header Title Size")
+		 (cons :tag "Landscape/Portrait"
+		       (number :tag "Landscape Header Title Size")
+		       (number :tag "Portrait Header Title Size")))
   :group 'ps-print-font)
 
 ;;; Colors
@@ -1536,7 +1665,7 @@ printers require slightly different versions of this line."
 (defcustom ps-build-face-reference t
   "*Non-nil means build the reference face lists.
 
-Ps-print sets this value to nil after it builds its internal reference
+ps-print sets this value to nil after it builds its internal reference
 lists of bold and italic faces.  By settings its value back to t, you
 can force ps-print to rebuild the lists the next time you invoke one
 of the ...-with-faces commands.
@@ -1564,14 +1693,13 @@ variable."
 (defun ps-print-buffer (&optional filename)
   "Generate and print a PostScript image of the buffer.
 
-When called with a numeric prefix argument (C-u), prompts the user for
-the name of a file to save the PostScript image in, instead of sending
-it to the printer.
+Interactively, when you use a prefix argument (C-u), the command
+prompts the user for a file name, and saves the PostScript image
+in that file instead of sending it to the printer.
 
-More specifically, the FILENAME argument is treated as follows: if it
+Noninteractively, the argument FILENAME is treated as follows: if it
 is nil, send the image to the printer.  If FILENAME is a string, save
-the PostScript image in a file with that name.  If FILENAME is a
-number, prompt the user for the name of the file to save in."
+the PostScript image in a file with that name."
   (interactive (list (ps-print-preprint current-prefix-arg)))
   (ps-print-without-faces (point-min) (point-max) filename))
 
@@ -1652,14 +1780,13 @@ Use the command `ps-despool' to send the spooled images to the printer."
 (defun ps-despool (&optional filename)
   "Send the spooled PostScript to the printer.
 
-When called with a numeric prefix argument (C-u), prompt the user for
-the name of a file to save the spooled PostScript in, instead of sending
-it to the printer.
+Interactively, when you use a prefix argument (C-u), the command
+prompts the user for a file name, and saves the spooled PostScript
+image in that file instead of sending it to the printer.
 
-More specifically, the FILENAME argument is treated as follows: if it
+Noninteractively, the argument FILENAME is treated as follows: if it
 is nil, send the image to the printer.  If FILENAME is a string, save
-the PostScript image in a file with that name.  If FILENAME is a
-number, prompt the user for the name of the file to save in."
+the PostScript image in a file with that name."
   (interactive (list (ps-print-preprint current-prefix-arg)))
   (ps-do-despool filename))
 
@@ -1691,10 +1818,11 @@ The table depends on the current ps-print setup."
   (format
    "
 \(setq ps-print-color-p  %s
-      ps-lpr-command    \"%s\"
+      ps-lpr-command    %S
       ps-lpr-switches   %s
+      ps-printer-name   %S
 
-      ps-paper-type          '%s
+      ps-paper-type          %s
       ps-landscape-mode      %s
       ps-number-of-columns   %s
 
@@ -1708,37 +1836,43 @@ The table depends on the current ps-print setup."
 
       ps-print-background-text %s
 
-      ps-left-margin        %s
-      ps-right-margin       %s
-      ps-inter-column       %s
-      ps-bottom-margin      %s
-      ps-top-margin         %s
-      ps-header-offset      %s
-      ps-header-line-pad    %s
-      ps-print-header       %s
-      ps-print-header-frame %s
-      ps-header-lines       %s
-      ps-show-n-of-n        %s
-      ps-spool-duplex       %s
+      ps-print-prologue-header %s
 
-      ps-font-family            '%s
+      ps-left-margin           %s
+      ps-right-margin          %s
+      ps-inter-column          %s
+      ps-bottom-margin         %s
+      ps-top-margin            %s
+      ps-header-offset         %s
+      ps-header-line-pad       %s
+      ps-print-header          %s
+      ps-print-only-one-header %s
+      ps-print-header-frame    %s
+      ps-header-lines          %s
+      ps-show-n-of-n           %s
+      ps-spool-duplex          %s
+
+      ps-multibyte-buffer       %s
+      ps-font-family            %s
       ps-font-size              %s
-      ps-header-font-family     '%s
+      ps-header-font-family     %s
       ps-header-font-size       %s
       ps-header-title-font-size %s)
 "
    ps-print-color-p
    ps-lpr-command
-   ps-lpr-switches
-   ps-paper-type
+   (ps-print-quote ps-lpr-switches)
+   ps-printer-name
+   (ps-print-quote ps-paper-type)
    ps-landscape-mode
    ps-number-of-columns
    ps-zebra-stripes
    ps-zebra-stripe-height
    ps-line-number
-   ps-print-control-characters
-   ps-print-background-image
-   ps-print-background-text
+   (ps-print-quote ps-print-control-characters)
+   (ps-print-quote ps-print-background-image)
+   (ps-print-quote ps-print-background-text)
+   (ps-print-quote ps-print-prologue-header)
    ps-left-margin
    ps-right-margin
    ps-inter-column
@@ -1747,18 +1881,30 @@ The table depends on the current ps-print setup."
    ps-header-offset
    ps-header-line-pad
    ps-print-header
+   ps-print-only-one-header
    ps-print-header-frame
    ps-header-lines
    ps-show-n-of-n
    ps-spool-duplex
-   ps-font-family
-   ps-font-size
-   ps-header-font-family
-   ps-header-font-size
-   ps-header-title-font-size))
+   (ps-print-quote ps-multibyte-buffer)	; see `ps-mule.el'
+   (ps-print-quote ps-font-family)
+   (ps-print-quote ps-font-size)
+   (ps-print-quote ps-header-font-family)
+   (ps-print-quote ps-header-font-size)
+   (ps-print-quote ps-header-title-font-size)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions and variables:
+
+(defun ps-print-quote (sym)
+  (cond ((null sym)
+	 nil)
+	((or (symbolp sym) (listp sym))
+	 (format "'%S" sym))
+	((stringp sym)
+	 (format "%S" sym))
+	(t
+	 sym)))
 
 (defvar ps-print-emacs-type
   (cond ((string-match "XEmacs" emacs-version) 'xemacs)
@@ -1776,11 +1922,17 @@ The table depends on the current ps-print setup."
 ;; Return t if the device (which can be changed during an emacs session)
 ;; can handle colors.
 ;; This is function is not yet implemented for GNU emacs.
-(defun ps-color-device ()
-  (if (and (eq ps-print-emacs-type 'xemacs)
-	   (>= emacs-minor-version 12))
-      (eq (device-class) 'color)
-    t))
+(cond ((and (eq ps-print-emacs-type 'xemacs)
+	    (>= emacs-minor-version 12)) ; xemacs
+       (defun ps-color-device ()
+	 (eq (device-class) 'color))
+       )
+
+      (t				; emacs
+       (defun ps-color-device ()
+	 t)
+       ))
+
 
 (require 'time-stamp)
 
@@ -1867,7 +2019,7 @@ StandardEncoding 46 82 getinterval aload pop
 % (x1 y1) --> +----+ - -
 
     currentdict /FontType get 0 ne {
-      FontBBox				% -- x1 y1 x2 y2
+      /FontBBox load aload pop			% -- x1 y1 x2 y2
       FontMatrix transform /Ascent  exch def pop
       FontMatrix transform /Descent exch def pop
     } {
@@ -1884,9 +2036,9 @@ StandardEncoding 46 82 getinterval aload pop
     /UnderlinePosition  Descent 0.70 mul def
     /OverlinePosition   Descent UnderlinePosition sub Ascent add def
     /StrikeoutPosition  Ascent 0.30 mul def
-    /LineThickness      0  50 FontMatrix transform exch pop def
-    /Xshadow            0  80 FontMatrix transform exch pop def
-    /Yshadow            0 -90 FontMatrix transform exch pop def
+    /LineThickness      FontHeight 0.05 mul def
+    /Xshadow            FontHeight  0.08 mul def
+    /Yshadow            FontHeight -0.09 mul def
     /SpaceBackground    Descent neg UnderlinePosition add def
     /XBox               Descent neg def
     /YBox               LineThickness 0.7 mul def
@@ -2171,17 +2323,26 @@ StandardEncoding 46 82 getinterval aload pop
 } def
 
 /BeginDoc {
+  % ---- Remember space width of the normal text font `f0'.
+  /SpaceWidth /f0 findfont setfont ( ) stringwidth pop def
   % ---- save the state of the document (useful for ghostscript!)
   /docState save def
   % ---- [jack] Kludge: my ghostscript window is 21x27.7 instead of 21x29.7
-  /JackGhostscript where {
-    pop 1 27.7 29.7 div scale
-  } if
-  LandscapeMode {
-    % ---- translate to bottom-right corner of Portrait page
-    LandscapePageHeight 0 translate
-    90 rotate
-    } if
+  /JackGhostscript where {pop 1 27.7 29.7 div scale}if
+  % ---- [andrewi] set PageSize based on chosen dimensions
+%  /setpagedevice where {
+%    pop
+%    1 dict dup
+%    /PageSize [ PrintPageWidth LeftMargin add RightMargin add
+%		 LandscapePageHeight ] put
+%    setpagedevice
+%  }{
+    LandscapeMode {
+      % ---- translate to bottom-right corner of Portrait page
+      LandscapePageHeight 0 translate
+      90 rotate
+    }if
+%  }ifelse
   /ColumnWidth PrintWidth InterColumn add def
   % ---- translate to lower left corner of TEXT
   LeftMargin BottomMargin translate
@@ -2434,12 +2595,13 @@ StandardEncoding 46 82 getinterval aload pop
 (defvar ps-background-image-count 0)
 
 (defvar ps-current-font 0)
-(defvar ps-default-color (if ps-print-color-p ps-default-fg)) ; black
+(defvar ps-default-color (and ps-print-color-p ps-default-fg)) ; black
 (defvar ps-current-color ps-default-color)
 (defvar ps-current-bg nil)
 
 (defvar ps-razchunk 0)
 
+(defvar ps-color-p nil)
 (defvar ps-color-format
   (if (eq ps-print-emacs-type 'emacs)
 
@@ -2473,6 +2635,10 @@ This is in units of points (1/72 inch).")
 (defvar ps-width-remaining nil)
 
 (defvar ps-print-color-scale nil)
+
+(defvar ps-font-size-internal nil)
+(defvar ps-header-font-size-internal nil)
+(defvar ps-header-title-font-size-internal nil)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2746,7 +2912,7 @@ which long lines wrap around."
 using the current ps-print setup.
 Try: pr -t file | awk '{printf \"%3d %s\n\", length($0), $0}' | sort -r | head"
   (let ((buf (get-buffer-create "*Line-lengths*"))
-	(ifs ps-font-size)		; initial font size
+	(ifs ps-font-size-internal)	; initial font size
 	(icw (ps-avg-char-width 'ps-font-for-text)) ; initial character width
 	(print-width (progn (ps-get-page-dimensions)
 			    ps-print-width))
@@ -2784,7 +2950,7 @@ Try: pr -t file | awk '{printf \"%3d %s\n\", length($0), $0}' | sort -r | head"
 The correspondence is based on having NB-LINES lines of text,
 and on the current ps-print setup."
   (let ((buf (get-buffer-create "*Nb-Pages*"))
-	(ifs ps-font-size)		; initial font size
+	(ifs ps-font-size-internal)	; initial font size
 	(ilh (ps-line-height 'ps-font-for-text)) ; initial line height
 	(page-height (progn (ps-get-page-dimensions)
 			    ps-print-height))
@@ -2854,9 +3020,10 @@ and on the current ps-print setup."
 	     ps-number-of-columns)))
 
     (ps-select-font ps-font-family 'ps-font-for-text
-		    ps-font-size ps-font-size)
+		    ps-font-size-internal ps-font-size-internal)
     (ps-select-font ps-header-font-family 'ps-font-for-header
-		    ps-header-font-size ps-header-title-font-size)
+		    ps-header-font-size-internal
+		    ps-header-title-font-size-internal)
 
     (setq page-width  (ps-page-dimensions-get-width  page-dimensions)
 	  page-height (ps-page-dimensions-get-height page-dimensions))
@@ -2940,9 +3107,23 @@ page-height == bm + print-height + tm - ho - hh
   (and filename
        (or (numberp filename)
 	   (listp filename))
-       (let* ((name   (concat (buffer-name) ".ps"))
+       (let* ((name   (concat (file-name-nondirectory (or (buffer-file-name)
+							  (buffer-name)))
+			      ".ps"))
 	      (prompt (format "Save PostScript to file: (default %s) " name))
 	      (res    (read-file-name prompt default-directory name nil)))
+	 (while (cond ((not (file-writable-p res))
+		       (ding)
+		       (setq prompt "is unwritable"))
+		      ((file-exists-p res)
+		       (setq prompt "exists")
+		       (not (y-or-n-p (format "File `%s' exists; overwrite? "
+					      res))))
+		      (t nil))
+	   (setq res (read-file-name
+		      (format "File %s; save PostScript to file: " prompt)
+		      (file-name-directory res) nil nil
+		      (file-name-nondirectory res))))
 	 (if (file-directory-p res)
 	     (expand-file-name name (file-name-as-directory res))
 	   res))))
@@ -2984,16 +3165,13 @@ page-height == bm + print-height + tm - ho - hh
 (defun ps-output-string-prim (string)
   (insert "(")				;insert start-string delimiter
   (save-excursion			;insert string
-    (insert string))
+    (insert (string-as-unibyte string)))
   ;; Find and quote special characters as necessary for PS
-  ;; This skips everything except control chars, nonascii chars,
-  ;; (, ) and \.
+  ;; This skips everything except control chars, non-ASCII chars, (, ) and \.
   (while (progn (skip-chars-forward " -'*-[]-~") (not (eobp)))
     (let ((special (following-char)))
-      (if (> (char-bytes special) 1)
-	  (forward-char)
-	(delete-char 1)
-	(insert (aref ps-string-escape-codes special)))))
+      (delete-char 1)
+      (insert (aref ps-string-escape-codes special))))
   (goto-char (point-max))
   (insert ")"))				;insert end-string delimiter
 
@@ -3012,16 +3190,28 @@ page-height == bm + print-height + tm - ho - hh
 (defun ps-output-list (the-list)
   (mapcar 'ps-output the-list))
 
+;; Output strings in the list ARGS in the PostScript prologue part.
+(defun ps-output-prologue (args)
+  (ps-output 'prologue (if (stringp args) (list args) args)))
+
 (defun ps-flush-output ()
   (save-excursion
     (set-buffer ps-spool-buffer)
     (goto-char (point-max))
     (while ps-output-head
       (let ((it (car ps-output-head)))
-	(if (not (eq t it))
-	    (insert it)
+	(cond
+	 ((eq t it)
 	  (setq ps-output-head (cdr ps-output-head))
-	  (ps-output-string-prim (car ps-output-head))))
+	  (ps-output-string-prim (car ps-output-head)))
+	 ((eq 'prologue it)
+	  (setq ps-output-head (cdr ps-output-head))
+	  (save-excursion
+	    (search-backward "\nBeginDoc")
+	    (forward-char 1)
+	    (apply 'insert (car ps-output-head))))
+	 (t
+	  (insert it))))
       (setq ps-output-head (cdr ps-output-head))))
   (ps-init-output-queue))
 
@@ -3213,6 +3403,7 @@ page-height == bm + print-height + tm - ho - hh
       (setq tail (cdr tail)))
     (nreverse new)))
 
+
 ;; Find the first occurrence of ITEM in LIST.
 ;; Return the index of the matching item, or nil if not found.
 ;; Elements are compared with `eq'.
@@ -3243,15 +3434,23 @@ page-height == bm + print-height + tm - ho - hh
 	     (time-stamp-hh:mm:ss) " " (time-stamp-mon-dd-yyyy)
 	     "\n%%Orientation: "
 	     (if ps-landscape-mode "Landscape" "Portrait")
-	     "\n%% DocumentFonts: Times-Roman Times-Italic "
+	     "\n%%DocumentNeededResources: font Times-Roman Times-Italic\n%%+ font "
 	     (mapconcat 'identity
 			(ps-remove-duplicates
 			 (append (ps-fonts 'ps-font-for-text)
 				 (list (ps-font 'ps-font-for-header 'normal)
 				       (ps-font 'ps-font-for-header 'bold))))
-			" ")
-	     "\n%%Pages: (atend)\n"
-	     "%%EndComments\n\n")
+			"\n%%+ font ")
+	     "\n%%Pages: (atend)\n%%Requirements:"
+	     (if ps-spool-duplex " duplex\n" "\n"))
+
+  (let ((comments (if (functionp ps-print-prologue-header)
+		      (funcall ps-print-prologue-header)
+		    ps-print-prologue-header)))
+    (and (stringp comments)
+	 (ps-output comments)))
+
+  (ps-output "%%EndComments\n\n%%BeginPrologue\n\n")
 
   (ps-output-boolean "LandscapeMode"             ps-landscape-mode)
   (ps-output (format "/NumberOfColumns %d def\n" ps-number-of-columns)
@@ -3302,12 +3501,12 @@ page-height == bm + print-height + tm - ho - hh
   (ps-output "} def\n/printLocalBackground {\n} def\n")
 
   ;; Header fonts
-  (ps-output (format "/h0 %s /%s DefFont\n" ; /h0 14 /Helvetica-Bold DefFont
-		     ps-header-title-font-size (ps-font 'ps-font-for-header
-							'bold))
-	     (format "/h1 %s /%s DefFont\n" ; /h1 12 /Helvetica DefFont
-		     ps-header-font-size (ps-font 'ps-font-for-header
-						  'normal)))
+  (ps-output (format "/h0 %s (%s) cvn DefFont\n" ; /h0 14 /Helvetica-Bold DefFont
+		     ps-header-title-font-size-internal
+		     (ps-font 'ps-font-for-header 'bold))
+	     (format "/h1 %s (%s) cvn DefFont\n" ; /h1 12 /Helvetica DefFont
+		     ps-header-font-size-internal
+		     (ps-font 'ps-font-for-header 'normal)))
 
   (ps-output ps-print-prologue-2)
 
@@ -3315,15 +3514,18 @@ page-height == bm + print-height + tm - ho - hh
   (let ((font (ps-font-alist 'ps-font-for-text))
 	(i 0))
     (while font
-      (ps-output (format "/f%d %s /%s DefFont\n"
+      (ps-output (format "/f%d %s (%s) cvn DefFont\n"
 			 i
-			 ps-font-size
+			 ps-font-size-internal
 			 (ps-font 'ps-font-for-text (car (car font)))))
       (setq font (cdr font)
 	    i (1+ i))))
 
-  (ps-output "\nBeginDoc\n\n"
-	     "%%EndPrologue\n"))
+  (let ((font-entry (cdr (assq ps-font-family ps-font-info-database))))
+    (ps-output (format "/SpaceWidthRatio %f def\n"
+		       (/ (ps-lookup 'space-width) (ps-lookup 'size)))))
+
+  (ps-output "\n%%EndPrologue\n\n%%BeginSetup\nBeginDoc\n%%EndSetup\n"))
 
 (defun ps-header-dirpart ()
   (let ((fname (buffer-file-name)))
@@ -3346,6 +3548,21 @@ page-height == bm + print-height + tm - ho - hh
        (buffer-name)
        (and (buffer-modified-p) " (unsaved)")))))
 
+
+(defun ps-get-font-size (font-sym)
+  (let ((font-size (symbol-value font-sym)))
+    (cond ((numberp font-size)
+	   font-size)
+	  ((and (consp font-size)
+		(numberp (car font-size))
+		(numberp (cdr font-size)))
+	   (if ps-landscape-mode
+	       (car font-size)
+	     (cdr font-size)))
+	  (t
+	   (error "Invalid font size `%S' for `%S'" font-size font-sym)))))
+
+
 (defun ps-begin-job ()
   (save-excursion
     (set-buffer ps-spool-buffer)
@@ -3354,11 +3571,15 @@ page-height == bm + print-height + tm - ho - hh
 	 (delete-region (match-beginning 0) (point-max))))
   (setq ps-showline-count (if ps-printing-region (car ps-printing-region) 1)
 	ps-page-count 0
+	ps-font-size-internal        (ps-get-font-size 'ps-font-size)
+	ps-header-font-size-internal (ps-get-font-size 'ps-header-font-size)
+	ps-header-title-font-size-internal
+	(ps-get-font-size 'ps-header-title-font-size)
 	ps-control-or-escape-regexp
 	(cond ((eq ps-print-control-characters '8-bit)
-	       "[\000-\037\177-\377]")
+	       (string-as-unibyte "[\000-\037\177-\377]"))
 	      ((eq ps-print-control-characters 'control-8-bit)
-	       "[\000-\037\177-\237]")
+	       (string-as-unibyte "[\000-\037\177-\237]"))
 	      ((eq ps-print-control-characters 'control)
 	       "[\000-\037\177]")
 	      (t "[\t\n\f]"))))
@@ -3415,7 +3636,8 @@ page-height == bm + print-height + tm - ho - hh
   (ps-output "BeginPage\n")
   (ps-set-font  ps-current-font)
   (ps-set-bg    ps-current-bg)
-  (ps-set-color ps-current-color))
+  (ps-set-color ps-current-color)
+  (ps-mule-begin-page))
 
 (defun ps-end-page ()
   (ps-output "EndPage\nEndDSCPage\n"))
@@ -3456,6 +3678,7 @@ EndDSCPage\n"))
 				       (ps-avg-char-width 'ps-font-for-text)))
 	 (to (car wrappoint))
 	 (string (buffer-substring-no-properties from to)))
+    (ps-mule-prepare-ascii-font string)
     (ps-output-string string)
     (ps-output " S\n")
     wrappoint))
@@ -3490,8 +3713,11 @@ EndDSCPage\n"))
 			 (/ q-done (/ q-todo 100)))
 		       ))))))
 
+(defvar ps-last-font nil)
+
 (defun ps-set-font (font)
-  (ps-output (format "/f%d F\n" (setq ps-current-font font))))
+  (setq ps-last-font (format "f%d" (setq ps-current-font font)))
+  (ps-output (format "/%s F\n" ps-last-font)))
 
 (defun ps-set-bg (color)
   (if (setq ps-current-bg color)
@@ -3540,19 +3766,22 @@ EndDSCPage\n"))
     ;; pagefeeds, control characters, and plot each chunk.
     (while (< from to)
       (if (re-search-forward ps-control-or-escape-regexp to t)
-	  ;; region with some control characters
+	  ;; region with some control characters or some multi-byte characters
 	  (let* ((match-point (match-beginning 0))
 		 (match (char-after match-point)))
-	    (ps-plot 'ps-basic-plot-string from (1- (point)) bg-color)
+	    (when (< from match-point)
+	      (ps-mule-set-ascii-font)
+	      (ps-plot 'ps-basic-plot-string from match-point bg-color))
 	    (cond
 	     ((= match ?\t)		; tab
-	      (let ((linestart (save-excursion (beginning-of-line) (point))))
+	      (let ((linestart (line-beginning-position)))
 		(forward-char -1)
 		(setq from (+ linestart (current-column)))
-		(if (re-search-forward "[ \t]+" to t)
-		    (ps-plot 'ps-basic-plot-whitespace
-			     from (+ linestart (current-column))
-			     bg-color))))
+		(when (re-search-forward "[ \t]+" to t)
+		  (ps-mule-set-ascii-font)
+		  (ps-plot 'ps-basic-plot-whitespace
+			   from (+ linestart (current-column))
+			   bg-color))))
 
 	     ((= match ?\n)		; newline
 	      (ps-next-line))
@@ -3563,11 +3792,19 @@ EndDSCPage\n"))
 	      (or (and (= (char-after (1- match-point)) ?\n)
 		       (= ps-height-remaining ps-print-height))
 		  (ps-next-page)))
+
+	     ((> match 255)		; a multi-byte character
+	      (let ((charset (char-charset match)))
+		(or (eq charset 'composition)
+		    (while (eq (charset-after) charset)
+		      (forward-char 1)))
+		(ps-plot 'ps-mule-plot-string match-point (point) bg-color)))
 					; characters from ^@ to ^_ and
 	     (t				; characters from 127 to 255
 	      (ps-control-character match)))
 	    (setq from (point)))
-	;; region without control characters
+	;; region without control characters nor multi-byte characters
+	(ps-mule-set-ascii-font)
 	(ps-plot 'ps-basic-plot-string from to bg-color)
 	(setq from to)))))
 
@@ -3600,6 +3837,7 @@ EndDSCPage\n"))
     (if (< (car wrappoint) to)
 	(ps-continue-line))
     (setq ps-width-remaining (- ps-width-remaining (* len char-width)))
+    (ps-mule-prepare-ascii-font str)
     (ps-output-string str)
     (ps-output " S\n")))
 
@@ -3607,19 +3845,31 @@ EndDSCPage\n"))
   ;; Scale 16-bit X-COLOR-VALUE to PostScript color value in [0, 1] interval.
   (/ x-color-value ps-print-color-scale))
 
-(defun ps-color-values (x-color)
-  (cond ((fboundp 'x-color-values)
-	 (x-color-values x-color))
-	((and (fboundp 'color-instance-rgb-components)
-	      (ps-color-device))
-	 (color-instance-rgb-components
-	  (if (color-instance-p x-color)
-	      x-color
-	    (make-color-instance
-	     (if (color-specifier-p x-color)
-		 (color-name x-color)
-	       x-color)))))
-	(t (error "No available function to determine X color values."))))
+
+(cond ((eq ps-print-emacs-type 'emacs)  ; emacs
+
+       (defun ps-color-values (x-color)
+	 (if (fboundp 'x-color-values)
+	     (x-color-values x-color)
+	   (error "No available function to determine X color values.")))
+       )
+					; xemacs
+					; lucid
+      (t				; epoch
+       (defun ps-color-values (x-color)
+	 (cond ((fboundp 'x-color-values)
+		(x-color-values x-color))
+	       ((and (fboundp 'color-instance-rgb-components)
+		     (ps-color-device))
+		(color-instance-rgb-components
+		 (if (color-instance-p x-color)
+		     x-color
+		   (make-color-instance
+		    (if (color-specifier-p x-color)
+			(color-name x-color)
+		      x-color)))))
+	       (t (error "No available function to determine X color values."))))
+       ))
 
 
 (defun ps-face-attributes (face)
@@ -3669,11 +3919,11 @@ If FACE is not a valid face name, it is used default face."
 	   (effect     (aref face-bit 0))
 	   (foreground (aref face-bit 1))
 	   (background (aref face-bit 2))
-	   (fg-color (if (and ps-print-color-p foreground (ps-color-device))
+	   (fg-color (if (and ps-color-p foreground)
 			 (mapcar 'ps-color-value
 				 (ps-color-values foreground))
 		       ps-default-color))
-	   (bg-color (and ps-print-color-p background (ps-color-device)
+	   (bg-color (and ps-color-p background
 			  (mapcar 'ps-color-value
 				  (ps-color-values background)))))
       (ps-plot-region
@@ -3689,25 +3939,37 @@ If FACE is not a valid face name, it is used default face."
   (let* ((frame-font (or (face-font-instance face)
 			 (face-font-instance 'default)))
 	 (kind-cons (and frame-font
-			 (assq kind (font-instance-properties frame-font))))
+			 (assq kind
+			       (font-instance-properties frame-font))))
 	 (kind-spec (cdr-safe kind-cons))
 	 (case-fold-search t))
     (or (and kind-spec (string-match kind-regex kind-spec))
 	;; Kludge-compatible:
 	(memq face kind-list))))
 
-(defun ps-face-bold-p (face)
-  (if (eq ps-print-emacs-type 'emacs)
-      (or (face-bold-p face)
-	  (memq face ps-bold-faces))
-    (ps-xemacs-face-kind-p face 'WEIGHT_NAME "bold\\|demibold" ps-bold-faces)))
 
-(defun ps-face-italic-p (face)
-  (if (eq ps-print-emacs-type 'emacs)
-      (or (face-italic-p face)
-	  (memq face ps-italic-faces))
-    (or (ps-xemacs-face-kind-p face 'ANGLE_NAME "i\\|o" ps-italic-faces)
-	(ps-xemacs-face-kind-p face 'SLANT "i\\|o" ps-italic-faces))))
+(cond ((eq ps-print-emacs-type 'emacs)  ; emacs
+
+       (defun ps-face-bold-p (face)
+	 (or (face-bold-p face)
+	     (memq face ps-bold-faces)))
+
+       (defun ps-face-italic-p (face)
+	 (or (face-italic-p face)
+	     (memq face ps-italic-faces)))
+       )
+					; xemacs
+					; lucid
+      (t				; epoch
+       (defun ps-face-bold-p (face)
+	 (ps-xemacs-face-kind-p face 'WEIGHT_NAME "bold\\|demibold"
+				ps-bold-faces))
+
+       (defun ps-face-italic-p (face)
+	 (or (ps-xemacs-face-kind-p face 'ANGLE_NAME "i\\|o" ps-italic-faces)
+	     (ps-xemacs-face-kind-p face 'SLANT "i\\|o" ps-italic-faces)))
+       ))
+
 
 (defun ps-face-underlined-p (face)
   (or (face-underline-p face)
@@ -3770,19 +4032,23 @@ If FACE is not a valid face name, it is used default face."
 		(face-background face))))
 
 
-(defun ps-mapper (extent list)
-  (nconc list (list (list (extent-start-position extent) 'push extent)
-		    (list (extent-end-position extent) 'pull extent)))
-  nil)
+(cond ((not (eq ps-print-emacs-type 'emacs))
+					; xemacs
+					; lucid
+					; epoch
+       (defun ps-mapper (extent list)
+	 (nconc list (list (list (extent-start-position extent) 'push extent)
+			   (list (extent-end-position extent) 'pull extent)))
+	 nil)
 
-(defun ps-extent-sorter (a b)
-  (< (extent-priority a) (extent-priority b)))
+       (defun ps-extent-sorter (a b)
+	 (< (extent-priority a) (extent-priority b)))
+       ))
+
 
 (defun ps-print-ensure-fontified (start end)
   (and (boundp 'lazy-lock-mode) (symbol-value 'lazy-lock-mode)
-       (if (fboundp 'lazy-lock-fontify-region)
-	   (lazy-lock-fontify-region start end) ; the new
-	 (lazy-lock-fontify-buffer))))	; the old
+       (lazy-lock-fontify-region start end)))
 
 (defun ps-generate-postscript-with-faces (from to)
   ;; Some initialization...
@@ -3797,16 +4063,16 @@ If FACE is not a valid face name, it is used default face."
   ;; Set the color scale.  We do it here instead of in the defvar so
   ;; that ps-print can be dumped into emacs.  This expression can't be
   ;; evaluated at dump-time because X isn't initialized.
-  (setq ps-print-color-scale
-	(if (and ps-print-color-p (ps-color-device))
-	    (float (car (ps-color-values "white")))
-	  1.0))
+  (setq ps-color-p           (and ps-print-color-p (ps-color-device))
+	ps-print-color-scale (if ps-color-p
+				 (float (car (ps-color-values "white")))
+			       1.0))
   ;; Generate some PostScript.
   (save-restriction
     (narrow-to-region from to)
+    (ps-print-ensure-fontified from to)
     (let ((face 'default)
 	  (position to))
-      (ps-print-ensure-fontified from to)
       (cond
        ((or (eq ps-print-emacs-type 'lucid)
 	    (eq ps-print-emacs-type 'xemacs))
@@ -3841,36 +4107,33 @@ If FACE is not a valid face name, it is used default face."
 
 	    (cond
 	     ((eq type 'push)
-	      (if (extent-face extent)
-		  (setq extent-list (sort (cons extent extent-list)
-					  'ps-extent-sorter))))
+	      (and (extent-face extent)
+		   (setq extent-list (sort (cons extent extent-list)
+					   'ps-extent-sorter))))
 
 	     ((eq type 'pull)
 	      (setq extent-list (sort (delq extent extent-list)
 				      'ps-extent-sorter))))
 
-	    (setq face
-		  (if extent-list
-		      (extent-face (car extent-list))
-		    'default)
-
+	    (setq face (if extent-list
+			   (extent-face (car extent-list))
+			 'default)
 		  from position
 		  a (cdr a)))))
 
        ((eq ps-print-emacs-type 'emacs)
 	(let ((property-change from)
-	      (overlay-change from))
+	      (overlay-change from)
+	      (save-buffer-invisibility-spec buffer-invisibility-spec)
+	      (buffer-invisibility-spec nil))
 	  (while (< from to)
-	    (if (< property-change to)	; Don't search for property change
+	    (and (< property-change to)	; Don't search for property change
 					; unless previous search succeeded.
-		(setq property-change
-		      (next-property-change from nil to)))
-	    (if (< overlay-change to)	; Don't search for overlay change
+		 (setq property-change (next-property-change from nil to)))
+	    (and (< overlay-change to)	; Don't search for overlay change
 					; unless previous search succeeded.
-		(setq overlay-change
-		      (min (next-overlay-change from) to)))
-	    (setq position
-		  (min property-change overlay-change))
+		 (setq overlay-change (min (next-overlay-change from) to)))
+	    (setq position (min property-change overlay-change))
 	    ;; The code below is not quite correct,
 	    ;; because a non-nil overlay invisible property
 	    ;; which is inactive according to the current value
@@ -3880,32 +4143,32 @@ If FACE is not a valid face name, it is used default face."
 		  (cond ((let ((prop (get-text-property from 'invisible)))
 			   ;; Decide whether this invisible property
 			   ;; really makes the text invisible.
-			   (if (eq buffer-invisibility-spec t)
+			   (if (eq save-buffer-invisibility-spec t)
 			       (not (null prop))
-			     (or (memq prop buffer-invisibility-spec)
-				 (assq prop buffer-invisibility-spec))))
+			     (or (memq prop save-buffer-invisibility-spec)
+				 (assq prop save-buffer-invisibility-spec))))
 			 'emacs--invisible--face)
 			((get-text-property from 'face))
 			(t 'default)))
 	    (let ((overlays (overlays-at from))
 		  (face-priority -1))	; text-property
-	      (while overlays
+	      (while (and overlays
+			  (not (eq face 'emacs--invisible--face)))
 		(let* ((overlay (car overlays))
-		       (overlay-face (overlay-get overlay 'face))
 		       (overlay-invisible (overlay-get overlay 'invisible))
-		       (overlay-priority (or (overlay-get overlay
-							  'priority)
+		       (overlay-priority (or (overlay-get overlay 'priority)
 					     0)))
-		  (and (or overlay-invisible overlay-face)
-		       (> overlay-priority face-priority)
-		       (setq face (cond ((if (eq buffer-invisibility-spec t)
-					     (not (null overlay-invisible))
-					   (or (memq overlay-invisible
-						     buffer-invisibility-spec)
-					       (assq overlay-invisible
-						     buffer-invisibility-spec)))
-					 nil)
-					((and face overlay-face)))
+		  (and (> overlay-priority face-priority)
+		       (setq face
+			     (cond ((if (eq save-buffer-invisibility-spec t)
+					(not (null overlay-invisible))
+				      (or (memq overlay-invisible
+						save-buffer-invisibility-spec)
+					  (assq overlay-invisible
+						save-buffer-invisibility-spec)))
+				    'emacs--invisible--face)
+				   ((overlay-get overlay 'face))
+				   (t face))
 			     face-priority overlay-priority)))
 		(setq overlays (cdr overlays))))
 	    ;; Plot up to this record.
@@ -3927,7 +4190,6 @@ If FACE is not a valid face name, it is used default face."
 	(narrow-to-region from to)
 	(and ps-razzle-dazzle
 	     (message "Formatting...%3d%%" (setq ps-razchunk 0)))
-	(set-buffer buffer)
 	(setq ps-source-buffer buffer
 	      ps-spool-buffer (get-buffer-create ps-spool-buffer-name))
 	(ps-init-output-queue)
@@ -3936,6 +4198,7 @@ If FACE is not a valid face name, it is used default face."
 	      (progn
 		(set-buffer ps-spool-buffer)
 		(set-buffer-multibyte nil)
+
 		;; Get a marker and make it point to the current end of the
 		;; buffer,  If an error occurs, we'll delete everything from
 		;; the end of this marker onwards.
@@ -3947,8 +4210,11 @@ If FACE is not a valid face name, it is used default face."
 		    (setq needs-begin-file t))
 		(save-excursion
 		  (set-buffer ps-source-buffer)
-		  (if needs-begin-file (ps-begin-file))
 		  (ps-begin-job)
+		  (when needs-begin-file
+		    (ps-begin-file)
+		    (ps-mule-initialize))
+		  (ps-mule-begin-job from to)
 		  (ps-begin-page))
 		(set-buffer ps-source-buffer)
 		(funcall genfunc from to)
@@ -3988,6 +4254,11 @@ If FACE is not a valid face name, it is used default face."
 
 	(and ps-razzle-dazzle (message "Formatting...done"))))))
 
+
+;; to avoid compilation gripes.
+(defvar dos-ps-printer nil)
+
+
 ;; Permit dynamic evaluation at print time of `ps-lpr-switches'.
 (defun ps-do-despool (filename)
   (if (or (not (boundp 'ps-spool-buffer))
@@ -4006,28 +4277,20 @@ If FACE is not a valid face name, it is used default face."
       (save-excursion
 	(set-buffer ps-spool-buffer)
 	(let* ((coding-system-for-write 'raw-text-unix)
-	       (ps-printer-name (or ps-printer-name printer-name))
+	       (ps-printer-name (or ps-printer-name
+				    (and (boundp 'printer-name)
+					 printer-name)))
 	       (ps-lpr-switches
 		(append
 		 (and (stringp ps-printer-name)
 		      (list (concat "-P" ps-printer-name)))
 		 ps-lpr-switches)))
-	  (if (and (memq system-type '(ms-dos windows-nt))
-		   (or (and (boundp 'dos-ps-printer)
-			    (stringp (symbol-value 'dos-ps-printer)))
-		       (stringp (symbol-value 'ps-printer-name))))
-	      (write-region (point-min) (point-max)
-			    (or (and (boundp 'dos-ps-printer)
-				     (stringp (symbol-value 'dos-ps-printer))
-				     (symbol-value 'dos-ps-printer))
-				(symbol-value 'ps-printer-name))
-			    t 0)
-	    (apply 'call-process-region
-		   (point-min) (point-max) ps-lpr-command nil
-		   (and (fboundp 'start-process) 0)
-		   nil
-		   (ps-flatten-list	; dynamic evaluation
-		    (mapcar 'ps-eval-switch ps-lpr-switches))))))
+	  (apply (or ps-print-region-function 'call-process-region)
+		 (point-min) (point-max) ps-lpr-command nil
+		 (and (fboundp 'start-process) 0)
+		 nil
+		 (ps-flatten-list	; dynamic evaluation
+		  (mapcar 'ps-eval-switch ps-lpr-switches)))))
       (and ps-razzle-dazzle (message "Printing...done")))
     (kill-buffer ps-spool-buffer)))
 
@@ -4066,20 +4329,23 @@ If FACE is not a valid face name, it is used default face."
 	 (not (yes-or-no-p "Unprinted PostScript waiting; exit anyway? "))
 	 (error "Unprinted PostScript"))))
 
-(if (fboundp 'add-hook)
-    (funcall 'add-hook 'kill-emacs-hook 'ps-kill-emacs-check)
-  (if kill-emacs-hook
-      (message "Won't override existing kill-emacs-hook")
-    (setq kill-emacs-hook 'ps-kill-emacs-check)))
+(cond ((fboundp 'add-hook)
+       (funcall 'add-hook 'kill-emacs-hook 'ps-kill-emacs-check))
+      (kill-emacs-hook
+       (message "Won't override existing `kill-emacs-hook'"))
+      (t
+       (setq kill-emacs-hook 'ps-kill-emacs-check)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Sample Setup Code:
 
 ;; This stuff is for anybody that's brave enough to look this far,
 ;; and able to figure out how to use it.  It isn't really part of
 ;; ps-print, but I'll leave it here in hopes it might be useful:
 
-;; WARNING!!! The following code is *sample* code only. Don't use it
-;; unless you understand what it does!
+;; WARNING!!! The following code is *sample* code only.
+;; Don't use it unless you understand what it does!
 
 (defmacro ps-prsc ()
   `(if (eq ps-print-emacs-type 'emacs) [f22] 'f22))
@@ -4271,6 +4537,45 @@ If FACE is not a valid face name, it is used default face."
 	ps-header-font-size        6
 	ps-header-title-font-size  8)
   'ps-jack-setup)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; To make this file smaller, some commands go in a separate file.
+;; But autoload them here to make the separation invisible.
+
+(autoload 'ps-mule-prepare-ascii-font "ps-mule"
+  "Setup special ASCII font for STRING.
+STRING should contain only ASCII characters.")
+
+(autoload 'ps-mule-set-ascii-font     "ps-mule"
+  "Adjust current font if current charset is not ASCII.")
+
+(autoload 'ps-mule-plot-string        "ps-mule"
+  "Generate PostScript code for ploting characters in the region FROM and TO.
+
+It is assumed that all characters in this region belong to the same charset.
+
+Optional argument BG-COLOR specifies background color.
+
+Returns the value:
+
+	(ENDPOS . RUN-WIDTH)
+
+Where ENDPOS is the end position of the sequence and RUN-WIDTH is the width of
+the sequence.")
+
+(autoload 'ps-mule-initialize         "ps-mule"
+  "Initialize global data for printing multi-byte characters.")
+
+(autoload 'ps-mule-begin-job          "ps-mule"
+  "Start printing job for multi-byte chars between FROM and TO.
+This checks if all multi-byte characters in the region are printable or not.")
+
+(autoload 'ps-mule-begin-page         "ps-mule"
+  "Initialize multi-byte charset for printing current page.")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'ps-print)
 

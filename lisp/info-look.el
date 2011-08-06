@@ -4,6 +4,7 @@
 ;; Copyright (C) 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 ;; Author: Ralph Schleicher <rs@purple.UL.BaWue.DE>
+;; Maintainers: FSF (unless Schleicher can be found)
 ;; Keywords: help languages
 
 ;; This file is part of GNU Emacs.
@@ -259,10 +260,10 @@ system."
 
 ;;;###autoload
 (defun info-lookup-symbol (symbol &optional mode)
-  "Display the documentation of a symbol.
-If called interactively, SYMBOL will be read from the mini-buffer.
-Prefix argument means unconditionally insert the default symbol name
-into the mini-buffer so that it can be edited.
+  "Display the definition of SYMBOL, as found in the relevant manual.
+When this command is called interactively, it reads SYMBOL from the minibuffer.
+In the minibuffer, use M-n to yank the default argument value
+into the minibuffer so you can edit it.
 The default symbol is the one found at point."
   (interactive
    (info-lookup-interactive-arguments 'symbol))
@@ -271,30 +272,28 @@ The default symbol is the one found at point."
 ;;;###autoload
 (defun info-lookup-file (file &optional mode)
   "Display the documentation of a file.
-If called interactively, FILE will be read from the mini-buffer.
-Prefix argument means unconditionally insert the default file name
-into the mini-buffer so that it can be edited.
+When this command is called interactively, it reads FILE from the minibuffer.
+In the minibuffer, use M-n to yank the default file name
+into the minibuffer so you can edit it.
 The default file name is the one found at point."
   (interactive
    (info-lookup-interactive-arguments 'file))
   (info-lookup 'file file mode))
 
 (defun info-lookup-interactive-arguments (topic)
-  "Return default value and help mode for help topic TOPIC."
+  "Read and return argument value (and help mode) for help topic TOPIC."
   (let* ((mode (if (info-lookup->mode-value topic (info-lookup-select-mode))
 		   info-lookup-mode
 		 (info-lookup-change-mode topic)))
 	 (completions (info-lookup->completions topic mode))
 	 (default (info-lookup-guess-default topic mode))
-	 (input (if (or current-prefix-arg (not (assoc default completions)))
-		    default))
 	 (completion-ignore-case (info-lookup->ignore-case topic mode))
 	 (enable-recursive-minibuffers t)
 	 (value (completing-read
-		 (if (and default (not input))
+		 (if default
 		     (format "Describe %s (default %s): " topic default)
 		   (format "Describe %s: " topic))
-		 completions nil nil input 'info-lookup-history)))
+		 completions nil nil nil 'info-lookup-history default)))
     (list (if (equal value "") default value) mode)))
 
 (defun info-lookup-select-mode ()
@@ -454,12 +453,17 @@ The default file name is the one found at point."
 		     (while (re-search-forward "\n\\* \\([^:\t\n]*\\):" nil t)
 		       (setq entry (match-string 1)
 			     item (funcall trans entry))
-		       (and (info-lookup->ignore-case topic mode)
-			    (setq item (downcase item)))
-		       (and (string-equal entry item)
-			    (setq entry nil))
-		       (or (assoc item result)
-			   (setq result (cons (cons item entry) result))))))
+		       ;; `trans' can return nil if the regexp doesn't match.
+		       (when (and item
+				  ;; Sometimes there's more than one Menu:
+				  (not (string= entry "Menu"))) 
+			 (and (info-lookup->ignore-case topic mode)
+			      (setq item (downcase item)))
+			 (and (string-equal entry item)
+			      (setq entry nil))
+			 (and (or (assoc item result)
+				  (setq result (cons (cons item entry)
+						     result))))))))
 	    (error nil))))
       (message "Processing Info node `%s'...done" node)
       (setq doc-spec (cdr doc-spec)))
@@ -712,14 +716,6 @@ Return nil if there is nothing appropriate."
 	      "`" "\\({[^}]*}\\)?'")))
 
 (info-lookup-maybe-add-help
- :mode 'scheme-mode
- :regexp ;; "\\(\\sw\\|\\s_\\)+"
- "[^()' \t\n]+"
- :ignore-case t
- ;; Aubrey Jaffer's rendition from <URL:ftp://ftp-swiss.ai.mit.edu/pub/scm>
- :doc-spec '(("(r5rs)Index")))
-
-(info-lookup-maybe-add-help
  :mode 'emacs-lisp-mode
  :regexp "[^()' \t\n]+"
  :doc-spec '(("(emacs)Command Index")
@@ -749,9 +745,24 @@ Return nil if there is nothing appropriate."
  :mode 'scheme-mode
  :regexp "[^()' \t\n]+"
  :ignore-case t
+ ;; Aubrey Jaffer's rendition from <URL:ftp://ftp-swiss.ai.mit.edu/pub/scm>
  :doc-spec '(("(r5rs)Index" nil
 	      "^[ \t]+- [^:]+:[ \t]*" "\\b")))
 
+(info-lookup-maybe-add-help
+ :mode 'octave-mode
+ :regexp "[_a-zA-Z0-9]+"
+ :doc-spec '(("(octave)Function Index" nil "^ - [^:]+:[ ]+" nil)
+	     ("(octave)Variable Index" nil "^ - [^:]+:[ ]+" nil)
+	     ;; Catch lines of the form "xyz statement"
+	     ("(octave)Concept Index" 
+	      (lambda (item)
+		(cond
+		 ((string-match "^\\([A-Z]+\\) statement\\b" item)
+		    (match-string 1 item))
+		 (t nil)))
+	      nil; "^ - [^:]+:[ ]+" don't think this prefix is useful here.
+	      nil)))
 
 (provide 'info-look)
 

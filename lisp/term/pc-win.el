@@ -175,6 +175,7 @@
   "List of alternate names for colors.")
 
 (defun msdos-color-translate (name)
+  "Translate color specification in NAME into something DOS terminal groks."
   (setq name (downcase name))
   (let* ((len (length name))
 	 (val (- (length x-colors)
@@ -232,7 +233,33 @@
 	       (and
 		(string-match "[1-4]\\'" name)
 		(msdos-color-translate
-		 (substring name 0 (match-beginning 0)))))))))
+		 (substring name 0 (match-beginning 0))))))
+	(and (= len 7)	;; X-style "#XXYYZZ" color spec
+	     (eq (aref name 0) ?#)
+	     (member (aref name 1)
+		     '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9
+			  ?A ?B ?C ?D ?E ?F ?a ?b ?c ?d ?e ?f))
+	     (msdos-color-translate
+	      (msdos-approximate-color (string-to-number
+					(substring name 1) 16)))))))
+
+(defun msdos-approximate-color (num)
+  "Return a DOS color name which is the best approximation for the number NUM."
+  (let ((color-values msdos-color-values)
+	(candidate (car msdos-color-values))
+	(best-distance 16777216)	;; 0xFFFFFF + 1
+	best-color)
+    (while candidate
+      (let* ((values (cdr candidate))
+	     (value (+ (lsh (car values) 16)
+		       (lsh (car (cdr values)) 8)
+		       (nth 2 values))))
+	 (if (< (abs (- value num)) best-distance)
+	     (setq best-distance (abs (- value num))
+		   best-color (car candidate))))
+      (setq color-values (cdr color-values))
+      (setq candidate (car color-values)))
+    best-color))
 ;; ---------------------------------------------------------------------------
 ;; We want to delay setting frame parameters until the faces are setup
 (defvar default-frame-alist nil)
@@ -242,7 +269,11 @@
   (let* ((frame (or frame (selected-frame)))
 	 (params (frame-parameters frame))
 	 (bg (cdr (assq 'background-color params))))
-    (if (member bg '("black" "blue" "darkgray" "green"))
+    ;; The list of ``dark'' colors should be consistent with
+    ;; `x-color-values' (below) and the dark/light color
+    ;; decisions `frame-set-background-mode' in lisp/faces.el.
+    (if (member bg
+		'("black" "blue" "green" "red" "magenta" "brown" "darkgray"))
 	'dark
       'light)))
 
@@ -312,6 +343,44 @@
 (defun x-display-visual-class (&optional frame) 'static-color)
 (fset 'x-display-save-under 'ignore)
 (fset 'x-get-resource 'ignore)
+;;;
+;;; This is copied from etc/rgb.txt, except that some values were changed
+;;; a bit to make them consistent with DOS console colors.  The order of
+;;; the colors is according to the PC text mode color codes.
+;;;
+;;; If you want to change the RGB values, keep in mind that various pieces
+;;; of Emacs think that a color whose RGB values add up to less than 0.6 of
+;;; the values for WHITE (i.e. less than 459) are ``dark'', otherwise the
+;;; color is ``light''; see `frame-set-background-mode' in lisp/faces.el for
+;;; an example.
+(defvar msdos-color-values
+  '(("black"          0   0   0)
+    ("blue"           0   0 255)
+    ("green"          0 255   0)
+    ("cyan"           0 255 255)
+    ("red"          255   0   0)
+    ("magenta"      139   0 139)	; dark magenta
+    ("brown"        165  42  42)
+    ("lightgray"    211 211 211)
+    ("darkgray"     102 102 102)	; gray40
+    ("lightblue"    173 216 230)
+    ("lightgreen"   144 238 144)
+    ("lightcyan"    224 255 255)
+    ("lightred"     255  52 179)	; maroon1
+    ("lightmagenta" 238   0 238)	; magenta2
+    ("yellow"       255 255   0)
+    ("white"        255 255 255))
+  "A list of MS-DOS console colors and their RGB values.")
+
+(defun x-color-values (color &optional frame)
+  "Return a description of the color named COLOR on frame FRAME.\n\
+The value is a list of integer RGB values--(RED GREEN BLUE).\n\
+These values range from 0 to 255; white is (255 255 255).\n\
+If FRAME is omitted or nil, use the selected frame."
+  (if (x-color-defined-p color)
+      (let ((frame (or frame (selected-frame)))
+	    (color-code (msdos-color-translate color)))
+	(cdr (nth color-code msdos-color-values)))))
 
 ;; From lisp/term/x-win.el
 (setq x-display-name "pc")

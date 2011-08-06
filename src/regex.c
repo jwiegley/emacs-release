@@ -2903,8 +2903,12 @@ regex_compile (pattern, size, syntax, bufp)
 	  p1 = p - 1;		/* P1 points the head of C.  */
 #ifdef emacs
 	  if (bufp->multibyte)
-	    /* Set P to the next character boundary.  */
-	    p += MULTIBYTE_FORM_LENGTH (p1, pend - p1) - 1;
+	    {
+	      c = STRING_CHAR (p1, pend - p1);
+	      c = TRANSLATE (c);
+	      /* Set P to the next character boundary.  */
+	      p += MULTIBYTE_FORM_LENGTH (p1, pend - p1) - 1;
+	    }
 #endif
 	      /* If no exactn currently being built.  */
 	  if (!pending_exact
@@ -2933,16 +2937,23 @@ regex_compile (pattern, size, syntax, bufp)
 	      pending_exact = b - 1;
 	    }
 
-	  /* Here, C may translated, therefore C may not equal to *P1. */
-	  while (1)
+#ifdef emacs
+	  if (! SINGLE_BYTE_CHAR_P (c))
+	    {
+	      unsigned char work[4], *str;
+	      int i = CHAR_STRING (c, work, str);
+	      int j;
+	      for (j = 0; j < i; j++)
+		{
+		  BUF_PUSH (str[j]);
+		  (*pending_exact)++;
+		}
+	    }
+	  else
+#endif
 	    {
 	      BUF_PUSH (c);
 	      (*pending_exact)++;
-	      if (++p1 == p)
-		break;
-
-	      /* Rest of multibyte form should be copied literally. */
-	      c = *(unsigned char *)p1;
 	    }
 	  break;
 	} /* switch (c) */
@@ -3312,9 +3323,11 @@ re_compile_fastmap (bufp)
 
 
 	case charset_not:
-	  /* Chars beyond end of map must be allowed.  End of map is
-	     `127' if bufp->multibyte is nonzero.  */
-	  simple_char_max = bufp->multibyte ? 0x80 : (1 << BYTEWIDTH);
+	  /* Chars beyond end of bitmap are possible matches.
+	     All the single-byte codes can occur in multibyte buffers.
+	     So any that are not listed in the charset
+	     are possible matches, even in multibyte buffers.  */
+	  simple_char_max = (1 << BYTEWIDTH);
 	  for (j = CHARSET_BITMAP_SIZE (&p[-1]) * BYTEWIDTH;
 	       j < simple_char_max; j++)
 	    fastmap[j] = 1;
@@ -3341,7 +3354,9 @@ re_compile_fastmap (bufp)
 
 
 	case wordchar:
-	  simple_char_max = bufp->multibyte ? 0x80 : (1 << BYTEWIDTH);
+	  /* All the single-byte codes can occur in multibyte buffers,
+	     and they may have word syntax.  So do consider them.  */
+	  simple_char_max = (1 << BYTEWIDTH);
 	  for (j = 0; j < simple_char_max; j++)
 	    if (SYNTAX (j) == Sword)
 	      fastmap[j] = 1;
@@ -3354,7 +3369,9 @@ re_compile_fastmap (bufp)
 
 
 	case notwordchar:
-	  simple_char_max = bufp->multibyte ? 0x80 : (1 << BYTEWIDTH);
+	  /* All the single-byte codes can occur in multibyte buffers,
+	     and they may not have word syntax.  So do consider them.  */
+	  simple_char_max = (1 << BYTEWIDTH);
 	  for (j = 0; j < simple_char_max; j++)
 	    if (SYNTAX (j) != Sword)
 	      fastmap[j] = 1;
@@ -3370,21 +3387,13 @@ re_compile_fastmap (bufp)
 	  {
 	    int fastmap_newline = fastmap['\n'];
 
-	    /* `.' matches anything (but if bufp->multibyte is
-	       nonzero, matches `\000' .. `\127' and possible multibyte
-	       character) ...  */
+	    /* `.' matches anything, except perhaps newline.
+	       Even in a multibyte buffer, it should match any
+	       conceivable byte value for the fastmap.  */
 	    if (bufp->multibyte)
-	      {
-		simple_char_max = 0x80;
+	      match_any_multibyte_characters = true;
 
-		for (j = 0x80; j < 0xA0; j++)
-		  if (BASE_LEADING_CODE_P (j))
-		    fastmap[j] = 1;
-		match_any_multibyte_characters = true;
-	      }
-	    else
-	      simple_char_max = (1 << BYTEWIDTH);
-
+	    simple_char_max = (1 << BYTEWIDTH);
 	    for (j = 0; j < simple_char_max; j++)
 	      fastmap[j] = 1;
 
@@ -3442,7 +3451,7 @@ re_compile_fastmap (bufp)
 
 	case categoryspec:
 	  k = *p++;
-	  simple_char_max = bufp->multibyte ? 0x80 : (1 << BYTEWIDTH);
+	  simple_char_max = (1 << BYTEWIDTH);
 	  for (j = 0; j < simple_char_max; j++)
 	    if (CHAR_HAS_CATEGORY (j, k))
 	      fastmap[j] = 1;
@@ -3456,7 +3465,7 @@ re_compile_fastmap (bufp)
 
 	case notcategoryspec:
 	  k = *p++;
-	  simple_char_max = bufp->multibyte ? 0x80 : (1 << BYTEWIDTH);
+	  simple_char_max = (1 << BYTEWIDTH);
 	  for (j = 0; j < simple_char_max; j++)
 	    if (!CHAR_HAS_CATEGORY (j, k))
 	      fastmap[j] = 1;
@@ -4998,6 +5007,10 @@ re_match_2_internal (bufp, string1, size1, string2, size2, pos, regs, stop)
 	on_failure:
 	  DEBUG_PRINT1 ("EXECUTING on_failure_jump");
 
+#if defined (WINDOWSNT) && defined (emacs)
+	  QUIT;
+#endif
+
 	  EXTRACT_NUMBER_AND_INCR (mcnt, p);
 	  DEBUG_PRINT3 (" %d (to 0x%x)", mcnt, p + mcnt);
 
@@ -5038,6 +5051,9 @@ re_match_2_internal (bufp, string1, size1, string2, size2, pos, regs, stop)
 	/* A smart repeat ends with `maybe_pop_jump'.
 	   We change it to either `pop_failure_jump' or `jump'.	 */
 	case maybe_pop_jump:
+#if defined (WINDOWSNT) && defined (emacs)
+	  QUIT;
+#endif
 	  EXTRACT_NUMBER_AND_INCR (mcnt, p);
 	  DEBUG_PRINT2 ("EXECUTING maybe_pop_jump %d.\n", mcnt);
 	  {
@@ -5258,6 +5274,9 @@ re_match_2_internal (bufp, string1, size1, string2, size2, pos, regs, stop)
 	/* Unconditionally jump (without popping any failure points).  */
 	case jump:
 	unconditional_jump:
+#if defined (WINDOWSNT) && defined (emacs)
+	  QUIT;
+#endif
 	  EXTRACT_NUMBER_AND_INCR (mcnt, p);	/* Get the amount to jump.  */
 	  DEBUG_PRINT2 ("EXECUTING jump %d ", mcnt);
 	  p += mcnt;				/* Do the jump.	 */
@@ -5661,6 +5680,9 @@ re_match_2_internal (bufp, string1, size1, string2, size2, pos, regs, stop)
 
     /* We goto here if a matching operation fails. */
     fail:
+#if defined (WINDOWSNT) && defined (emacs)
+      QUIT;
+#endif
       if (!FAIL_STACK_EMPTY ())
 	{ /* A restart point is known.  Restore to that state.  */
           DEBUG_PRINT1 ("\nFAIL:\n");

@@ -542,7 +542,7 @@ any difference to this command.
 @findex string-rectangle
   The command @kbd{C-x r t} (@code{M-x string-rectangle}) replaces the
 rectangle with a specified string (inserted once on each line).  The
-string's width need not be the same as the width of the rectangle.  if
+string's width need not be the same as the width of the rectangle.  If
 the string's width is less, the text after the rectangle shifts left; if
-the stringis wider than the rectangle, the text after the rectangle
+the string is wider than the rectangle, the text after the rectangle
 shifts right.

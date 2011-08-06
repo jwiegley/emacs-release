@@ -69,7 +69,15 @@
       (modify-syntax-entry ?\( "()  " emacs-lisp-mode-syntax-table)
       (modify-syntax-entry ?\) ")(  " emacs-lisp-mode-syntax-table)
       (modify-syntax-entry ?\[ "(]  " emacs-lisp-mode-syntax-table)
-      (modify-syntax-entry ?\] ")[  " emacs-lisp-mode-syntax-table)))
+      (modify-syntax-entry ?\] ")[  " emacs-lisp-mode-syntax-table)
+      ;; All non-word multibyte characters should be `symbol'.
+      (map-char-table
+       (function (lambda (key val) 
+		   (and (>= key 256)
+			(/= (char-syntax key) ?w)
+			(modify-syntax-entry key "_   " 
+					     emacs-lisp-mode-syntax-table))))
+       (standard-syntax-table))))
 
 (if (not lisp-mode-syntax-table)
     (progn (setq lisp-mode-syntax-table
@@ -83,7 +91,7 @@
 (defvar lisp-imenu-generic-expression
       '(
 	(nil 
-	 "^\\s-*(def\\(un\\|subst\\|macro\\|advice\\)\\s-+\\([-A-Za-z0-9+*|:/]+\\)" 2)
+	 "^\\s-*(def\\(un\\|subst\\|macro\\|advice\\|ine-skeleton\\)\\s-+\\([-A-Za-z0-9+*|:/]+\\)" 2)
 	("Variables" 
 	 "^\\s-*(def\\(var\\|const\\|custom\\)\\s-+\\([-A-Za-z0-9+*|:/]+\\)" 2)
 	("Types" 
@@ -254,7 +262,7 @@ if that value is non-nil."
   (error "Process lisp does not exist"))
 
 (defvar lisp-interaction-mode-map ()
-  "Keymap for Lisp Interaction moe.
+  "Keymap for Lisp Interaction mode.
 All commands in `shared-lisp-mode-map' are inherited by this map.")
 
 (if lisp-interaction-mode-map
@@ -338,8 +346,15 @@ With argument, print output into current buffer."
 
 (defun eval-defun (eval-defun-arg-internal)
   "Evaluate defun that point is in or before.
-Print value in minibuffer.
-With argument, insert value in current buffer after the defun."
+The value is displayed in the minibuffer.
+If the current defun is actually a call to `defvar',
+then reset the variable using the initial value expression
+even if the variable already has some other value.
+\(Normally `defvar' does not change the variable's value
+if it already has a value.\)
+
+With argument, insert value in current buffer after the defun.
+Return the result of evaluation."
   (interactive "P")
   (let ((standard-output (if eval-defun-arg-internal (current-buffer) t))
 	 beg end form)
@@ -367,7 +382,10 @@ With argument, insert value in current buffer after the defun."
 		       ;; Skipping to the end of the specified region
 		       ;; will make eval-region return.
 		       (goto-char end)
-		       form)))))
+		       form))
+      ;; The result of evaluation has been put onto VALUES.
+      ;; So return it.
+      (car values))))
 
 (defun lisp-comment-indent ()
   (if (looking-at "\\s<\\s<\\s<")
@@ -647,6 +665,7 @@ is the buffer position of the start of the containing expression."
 (put 'with-output-to-string 'lisp-indent-function 0)
 (put 'with-temp-file 'lisp-indent-function 1)
 (put 'with-temp-buffer 'lisp-indent-function 0)
+(put 'with-temp-message 'lisp-indent-function 1)
 (put 'let 'lisp-indent-function 1)
 (put 'let* 'lisp-indent-function 1)
 (put 'while 'lisp-indent-function 1)

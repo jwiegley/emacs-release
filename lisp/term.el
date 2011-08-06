@@ -6,6 +6,23 @@
 ;;; Based on comint mode written by: Olin Shivers <shivers@cs.cmu.edu>
 ;;; Keyword: processes
 
+;; This file is part of GNU Emacs.
+
+;; GNU Emacs is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
 ;;; Dir/Hostname tracking and ANSI colorization by
 ;;; Marco Melgazzi <marco@techie.com>.
 
@@ -480,7 +497,7 @@ surrounding them, and also be regarded as arguments in their own right (unlike
 whitespace).  See `term-arguments'.
 Defaults to the empty list.
 
-For shells, a good value is (?\\| ?& ?< ?> ?\\( ?\\) ?;).
+For shells, a good value is (?\\| ?& ?< ?> ?\\( ?\\) ?\\;).
 
 This is a good thing to set in mode hooks.")
 
@@ -1223,8 +1240,8 @@ without any interpretation."
 (defun term-send-down  () (interactive) (term-send-raw-string "\eOB"))
 (defun term-send-right () (interactive) (term-send-raw-string "\eOC"))
 (defun term-send-left  () (interactive) (term-send-raw-string "\eOD"))
-(defun term-send-home  () (interactive) (term-send-raw-string "\e[H"))
-(defun term-send-end   () (interactive) (term-send-raw-string "\eOw"))
+(defun term-send-home  () (interactive) (term-send-raw-string "\e[1~"))
+(defun term-send-end   () (interactive) (term-send-raw-string "\e[4~"))
 (defun term-send-prior () (interactive) (term-send-raw-string "\e[5~"))
 (defun term-send-next  () (interactive) (term-send-raw-string "\e[6~"))
 (defun term-send-del   () (interactive) (term-send-raw-string "\C-?"))
@@ -2683,6 +2700,7 @@ See `term-prompt-regexp'."
   (let* ((previous-buffer (current-buffer))
 	 (i 0) char funny count save-point save-marker old-point temp win
 	 (selected (selected-window))
+	 last-win
 	 (str-length (length str)))
     (unwind-protect
 	(progn
@@ -2877,7 +2895,7 @@ See `term-prompt-regexp'."
 		     (cond ((and (>= char ?0) (<= char ?9))
 			    (setq term-terminal-parameter
 				  (+ (* 10 term-terminal-parameter) (- char ?0))))
-			   ((eq char ?\073 ) ; ?;
+			   ((eq char ?\;)
 ;;; Some modifications to cope with multiple settings like ^[[01;32;43m -mm
 			    (setq term-terminal-more-parameters 1)
 			    (setq term-terminal-previous-parameter-4
@@ -2940,6 +2958,11 @@ See `term-prompt-regexp'."
 	  ;; Scroll each window displaying the buffer but (by default)
 	  ;; only if the point matches the process-mark we started with.
 	  (setq win selected)
+	  ;; Avoid infinite loop in strange case where minibuffer window
+	  ;; is selected but not active.
+	  (while (window-minibuffer-p win)
+	    (setq win (next-window win nil t)))
+	  (setq last-win win)
 	  (while (progn
 		   (setq win (next-window win nil t))
 		   (if (eq (window-buffer win) (process-buffer proc))
@@ -2965,7 +2988,7 @@ See `term-prompt-regexp'."
 			     (save-excursion
 			       (goto-char (point-max))
 			       (recenter -1)))))
-		   (not (eq win selected))))
+		   (not (eq win last-win))))
 
 ;;; Stolen from comint.el and adapted -mm
 	  (if (> term-buffer-maximum-size 0)

@@ -488,6 +488,7 @@ Lisp_Object Qfunction_key;
 Lisp_Object Qmouse_click;
 #ifdef WINDOWSNT
 Lisp_Object Qmouse_wheel;
+Lisp_Object Qlanguage_change;
 #endif
 Lisp_Object Qdrag_n_drop;
 /* Lisp_Object Qmouse_movement; - also an event header */
@@ -1059,7 +1060,8 @@ command_loop ()
 {
   if (command_loop_level > 0 || minibuf_level > 0)
     {
-      Lisp_Object val = internal_catch (Qexit, command_loop_2, Qnil);
+      Lisp_Object val;
+      val = internal_catch (Qexit, command_loop_2, Qnil);
       executing_macro = Qnil;
       return val;
     }
@@ -1200,6 +1202,9 @@ command_loop_1 ()
 
   while (1)
     {
+      if (! FRAME_LIVE_P (selected_frame))
+	Fkill_emacs (Qnil);
+
       /* Make sure the current window's buffer is selected.  */
       if (XBUFFER (XWINDOW (selected_window)->buffer) != current_buffer)
 	set_buffer_internal (XBUFFER (XWINDOW (selected_window)->buffer));
@@ -1271,6 +1276,8 @@ command_loop_1 ()
 			     Qnil, 0, 1, 1);
 
       /* A filter may have run while we were reading the input.  */
+      if (! FRAME_LIVE_P (selected_frame))
+	Fkill_emacs (Qnil);
       if (XBUFFER (XWINDOW (selected_window)->buffer) != current_buffer)
 	set_buffer_internal (XBUFFER (XWINDOW (selected_window)->buffer));
 
@@ -2409,7 +2416,6 @@ read_char (commandflag, nmaps, maps, prev_event, used_mouse_menu)
 	 never use the echo area.  */
       if (maps == 0)
 	{
-	  specbind (Qinput_method_exit_on_first_char, Qt);
 	  specbind (Qinput_method_use_echo_area, Qt);
 	}
 
@@ -3073,6 +3079,17 @@ kbd_buffer_get_event (kbp, used_mouse_menu)
 	    x_activate_menubar (XFRAME (event->frame_or_window));
 	}
 #endif
+#ifdef WINDOWSNT
+      else if (event->kind == language_change_event)
+	{
+	  /* Make an event (language-change (FRAME CHARSET LCID)).  */
+	  obj = Fcons (event->modifiers, Qnil);
+	  obj = Fcons (event->code, Qnil);
+	  obj = Fcons (event->frame_or_window, obj);
+	  obj = Fcons (Qlanguage_change, Fcons (obj, Qnil));
+	  kbd_fetch_ptr = event + 1;
+	}
+#endif
       /* Just discard these, by returning nil.
 	 With MULTI_KBOARD, these events are used as placeholders
 	 when we need to randomly delete events from the queue.
@@ -3614,15 +3631,15 @@ char *lispy_function_keys[] =
     
     0, 0,             /*    0x0E .. 0x0F        */
   
-    "shift",          /* VK_SHIFT          0x10 */
-    "control",        /* VK_CONTROL        0x11 */
-    "menu",           /* VK_MENU           0x12 */
+    0,                /* VK_SHIFT          0x10 */
+    0,                /* VK_CONTROL        0x11 */
+    0,                /* VK_MENU           0x12 */
     "pause",          /* VK_PAUSE          0x13 */
-    "capital",        /* VK_CAPITAL        0x14 */
+    "capslock",       /* VK_CAPITAL        0x14 */
     
     0, 0, 0, 0, 0, 0, /*    0x15 .. 0x1A        */
     
-    0,                /* VK_ESCAPE         0x1B */
+    "escape",         /* VK_ESCAPE         0x1B */
     
     0, 0, 0, 0,       /*    0x1C .. 0x1F        */
     
@@ -3749,6 +3766,7 @@ char *lispy_function_keys[] =
     "noname",        /* VK_NONAME         0xFC */
     "pa1",           /* VK_PA1            0xFD */
     "oem_clear",     /* VK_OEM_CLEAR      0xFE */
+    0 /* 0xFF */
   };
 
 #else /* not HAVE_NTGUI */
@@ -3934,6 +3952,14 @@ Lisp_Object Qup, Qdown;
 Lisp_Object *scroll_bar_parts[] = {
   &Qabove_handle, &Qhandle, &Qbelow_handle,
   &Qup, &Qdown,
+};
+
+/* User signal events.  */
+Lisp_Object Qusr1_signal, Qusr2_signal;
+
+Lisp_Object *lispy_user_signals[] =
+{
+  &Qusr1_signal, &Qusr2_signal
 };
 
 
@@ -4500,6 +4526,10 @@ make_lispy_event (event)
       return XCONS (event->frame_or_window)->cdr;
 #endif
 
+    case user_signal:
+      /* A user signal.  */
+      return *lispy_user_signals[event->code];
+      
       /* The 'kind' field of the event is something we don't recognize.  */
     default:
       abort ();
@@ -4783,7 +4813,7 @@ lispy_modifier_list (modifiers)
    SYMBOL's Qevent_symbol_element_mask property, and maintains the
    Qevent_symbol_elements property.  */
 
-static Lisp_Object
+Lisp_Object
 parse_modifiers (symbol)
      Lisp_Object symbol;
 {
@@ -5683,11 +5713,15 @@ menu_bar_items (old)
 /* Scan one map KEYMAP, accumulating any menu items it defines
    in menu_bar_items_vector.  */
 
+static Lisp_Object menu_bar_one_keymap_changed_items;
+
 static void
 menu_bar_one_keymap (keymap)
      Lisp_Object keymap;
 {
   Lisp_Object tail, item, table;
+
+  menu_bar_one_keymap_changed_items = Qnil;
 
   /* Loop over all keymap entries that have menu strings.  */
   for (tail = keymap; CONSP (tail); tail = XCONS (tail)->cdr)
@@ -5721,6 +5755,7 @@ menu_bar_item (key, item)
 {
   struct gcpro gcpro1;
   int i;
+  Lisp_Object tem;
 
   if (EQ (item, Qundefined))
     {
@@ -5748,6 +5783,15 @@ menu_bar_item (key, item)
   UNGCPRO;
   if (!i)
     return;
+
+  /* If this keymap has already contributed to this KEY,
+     don't contribute to it a second time.  */
+  tem = Fmemq (key, menu_bar_one_keymap_changed_items);
+  if (!NILP (tem))
+    return;
+
+  menu_bar_one_keymap_changed_items
+    = Fcons (key, menu_bar_one_keymap_changed_items);
 
   item = XVECTOR (item_properties)->contents[ITEM_PROPERTY_DEF];
 
@@ -5831,11 +5875,15 @@ parse_menu_item (item, notreal, inmenubar)
      int notreal, inmenubar;
 {
   Lisp_Object def, tem, item_string, start;
-  Lisp_Object cachelist = Qnil;
-  Lisp_Object filter = Qnil;
-  Lisp_Object keyhint = Qnil;
+  Lisp_Object cachelist;
+  Lisp_Object filter;
+  Lisp_Object keyhint;
   int i;
   int newcache = 0;
+
+  cachelist = Qnil;
+  filter = Qnil;
+  keyhint = Qnil;
 
   if (!CONSP (item))
     return 0;
@@ -6012,14 +6060,18 @@ parse_menu_item (item, notreal, inmenubar)
   /* See if this is a separate pane or a submenu.  */
   def = XVECTOR (item_properties)->contents[ITEM_PROPERTY_DEF];
   tem = get_keymap_1 (def, 0, 1);
+  /* For a subkeymap, just record its details and exit.  */
   if (!NILP (tem))
     {
       XVECTOR (item_properties)->contents[ITEM_PROPERTY_MAP] = tem;
       XVECTOR (item_properties)->contents[ITEM_PROPERTY_DEF] = tem;
       return 1;
     }
-  else if (inmenubar > 0)
-    return 0;			/* Entries in menu bar must be submenus.  */
+  /* At the top level in the menu bar, do likewise for commands also.
+     The menu bar does not display equivalent key bindings anyway.
+     ITEM_PROPERTY_DEF is already set up properly.  */
+  if (inmenubar > 0)
+    return 1;
 
   /* This is a command.  See if there is an equivalent key binding. */
   if (NILP (cachelist))
@@ -6993,8 +7045,12 @@ read_key_sequence (keybuf, bufsize, prompt, dont_downcase_last,
 		 This is to be more consistent with the behavior
 		 of the command_loop_1.  */
 	      if (fix_current_buffer)
-		if (XBUFFER (XWINDOW (selected_window)->buffer) != current_buffer)
-		  Fset_buffer (XWINDOW (selected_window)->buffer);
+		{
+		  if (! FRAME_LIVE_P (selected_frame))
+		    Fkill_emacs (Qnil);
+		  if (XBUFFER (XWINDOW (selected_window)->buffer) != current_buffer)
+		    Fset_buffer (XWINDOW (selected_window)->buffer);
+		}
 
 	      orig_local_map = get_local_map (PT, current_buffer);
 	      goto replay_sequence;
@@ -7092,6 +7148,8 @@ read_key_sequence (keybuf, bufsize, prompt, dont_downcase_last,
 		     emacsclient).  */
 		  record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
 
+		  if (! FRAME_LIVE_P (selected_frame))
+		    Fkill_emacs (Qnil);
 		  set_buffer_internal (XBUFFER (XWINDOW (window)->buffer));
 		  orig_local_map = get_local_map (PT, current_buffer);
 		  goto replay_sequence;
@@ -7355,7 +7413,21 @@ read_key_sequence (keybuf, bufsize, prompt, dont_downcase_last,
 		fkey_next = fkey_map;
 
 	      fkey_next
-		= get_keyelt (access_keymap (fkey_next, key, 1, 0), 0);
+		= get_keyelt (access_keymap (fkey_next, key, 1, 0), 1);
+
+	      /* Handle symbol with autoload definition.  */
+	      if (SYMBOLP (fkey_next) && ! NILP (Ffboundp (fkey_next))
+		  && CONSP (XSYMBOL (fkey_next)->function)
+		  && EQ (XCONS (XSYMBOL (fkey_next)->function)->car, Qautoload))
+		do_autoload (XSYMBOL (fkey_next)->function,
+			     fkey_next);
+
+	      /* Handle a symbol whose function definition is a keymap
+		 or an array.  */
+	      if (SYMBOLP (fkey_next) && ! NILP (Ffboundp (fkey_next))
+		  && (!NILP (Farrayp (XSYMBOL (fkey_next)->function))
+		      || !NILP (Fkeymapp (XSYMBOL (fkey_next)->function))))
+		fkey_next = XSYMBOL (fkey_next)->function;
 
 #if 0 /* I didn't turn this on, because it might cause trouble
 	 for the mapping of return into C-m and tab into C-i.  */
@@ -7418,8 +7490,10 @@ read_key_sequence (keybuf, bufsize, prompt, dont_downcase_last,
 		  fkey_start = fkey_end = t;
 		  fkey_map = Vfunction_key_map;
 
-		  /* Do pass the results through key-translation-map.  */
-		  keytran_start = keytran_end = 0;
+		  /* Do pass the results through key-translation-map.
+		     But don't retranslate what key-translation-map
+		     has already translated.  */
+		  keytran_end = keytran_start;
 		  keytran_map = Vkey_translation_map;
 
 		  goto replay_sequence;
@@ -7463,10 +7537,24 @@ read_key_sequence (keybuf, bufsize, prompt, dont_downcase_last,
 	      keytran_next = keytran_map;
 
 	    keytran_next
-	      = get_keyelt (access_keymap (keytran_next, key, 1, 0), 0);
+	      = get_keyelt (access_keymap (keytran_next, key, 1, 0), 1);
 
+	    /* Handle symbol with autoload definition.  */
+	    if (SYMBOLP (keytran_next) && ! NILP (Ffboundp (keytran_next))
+		&& CONSP (XSYMBOL (keytran_next)->function)
+		&& EQ (XCONS (XSYMBOL (keytran_next)->function)->car, Qautoload))
+	      do_autoload (XSYMBOL (keytran_next)->function,
+			   keytran_next);
+
+	    /* Handle a symbol whose function definition is a keymap
+	       or an array.  */
+	    if (SYMBOLP (keytran_next) && ! NILP (Ffboundp (keytran_next))
+		&& (!NILP (Farrayp (XSYMBOL (keytran_next)->function))
+		    || !NILP (Fkeymapp (XSYMBOL (keytran_next)->function))))
+	      keytran_next = XSYMBOL (keytran_next)->function;
+	    
 	    /* If the key translation map gives a function, not an
-	       array, then call the function with no args and use
+	       array, then call the function with one arg and use
 	       its value instead.  */
 	    if (SYMBOLP (keytran_next) && ! NILP (Ffboundp (keytran_next))
 		&& keytran_end == t)
@@ -7521,7 +7609,7 @@ read_key_sequence (keybuf, bufsize, prompt, dont_downcase_last,
 		/* Don't pass the results of key-translation-map
 		   through function-key-map.  */
 		fkey_start = fkey_end = t;
-		fkey_map = Vkey_translation_map;
+		fkey_map = Vfunction_key_map;
 
 		goto replay_sequence;
 	      }
@@ -8228,6 +8316,15 @@ appears in the echo area and in the value of `this-command-keys.'.")
   return Qnil;
 }
 
+DEFUN ("clear-this-command-keys", Fclear_this_command_keys,
+  Sclear_this_command_keys, 0, 0, 0,
+  "Clear out the vector that `this-command-keys' returns.")
+  ()
+{
+  this_command_key_count = 0;
+  return Qnil;
+}
+
 DEFUN ("recursion-depth", Frecursion_depth, Srecursion_depth, 0, 0, 0,
   "Return the current depth in recursive edits.")
   ()
@@ -8888,9 +8985,16 @@ syms_of_keyboard ()
 #ifdef WINDOWSNT
   Qmouse_wheel = intern ("mouse-wheel");
   staticpro (&Qmouse_wheel);
+  Qlanguage_change = intern ("language-change");
+  staticpro (&Qlanguage_change);
 #endif
   Qdrag_n_drop = intern ("drag-n-drop");
   staticpro (&Qdrag_n_drop);
+
+  Qusr1_signal = intern ("usr1-signal");
+  staticpro (&Qusr1_signal);
+  Qusr2_signal = intern ("usr2-signal");
+  staticpro (&Qusr2_signal);
 
   Qmenu_enable = intern ("menu-enable");
   staticpro (&Qmenu_enable);
@@ -9032,6 +9136,9 @@ syms_of_keyboard ()
   read_key_sequence_cmd = Qnil;
   staticpro (&read_key_sequence_cmd);
 
+  menu_bar_one_keymap_changed_items = Qnil;
+  staticpro (&menu_bar_one_keymap_changed_items);
+
   defsubr (&Sevent_convert_list);
   defsubr (&Sread_key_sequence);
   defsubr (&Sread_key_sequence_vector);
@@ -9047,6 +9154,7 @@ syms_of_keyboard ()
   defsubr (&Sthis_single_command_keys);
   defsubr (&Sthis_single_command_raw_keys);
   defsubr (&Sreset_this_command_lengths);
+  defsubr (&Sclear_this_command_keys);
   defsubr (&Ssuspend_emacs);
   defsubr (&Sabort_recursive_edit);
   defsubr (&Sexit_recursive_edit);
@@ -9097,14 +9205,15 @@ before actual keyboard input.");
   Vunread_input_method_events = Qnil;
 
   DEFVAR_LISP ("meta-prefix-char", &meta_prefix_char,
-    "Meta-prefix character code.  Meta-foo as command input\n\
-turns into this character followed by foo.");
+    "Meta-prefix character code.\n\
+Meta-foo as command input turns into this character followed by foo.");
   XSETINT (meta_prefix_char, 033);
 
   DEFVAR_KBOARD ("last-command", Vlast_command,
-    "The last command executed.  Normally a symbol with a function definition,\n\
-but can be whatever was found in the keymap, or whatever the variable\n\
-`this-command' was set to by that command.\n\
+    "The last command executed.\n\
+Normally a symbol with a function definition, but can be whatever was found\n\
+in the keymap, or whatever the variable `this-command' was set to by that\n\
+command.\n\
 \n\
 The value `mode-exit' is special; it means that the previous command\n\
 read an event that told it to exit, and it did so and unread that event.\n\
@@ -9215,8 +9324,8 @@ In a vector or a char-table, an element which is nil means \"no translation\".")
   Vkeyboard_translate_table = Qnil;
 
   DEFVAR_BOOL ("cannot-suspend", &cannot_suspend,
-    "Non-nil means to always spawn a subshell instead of suspending,\n\
-even if the operating system has support for stopping a process.");
+    "Non-nil means to always spawn a subshell instead of suspending.\n\
+\(Even if the operating system has support for stopping a process.\)");
   cannot_suspend = 0;
 
   DEFVAR_BOOL ("menu-prompting", &menu_prompting,
@@ -9260,12 +9369,16 @@ Buffer modification stores t in this variable.");
 
   DEFVAR_LISP ("pre-command-hook", &Vpre_command_hook,
     "Normal hook run before each command is executed.\n\
-Errors running the hook are caught and ignored.");
+If an unhandled error happens in running this hook,\n\
+the hook value is set to nil, since otherwise the error\n\
+might happen repeatedly and make Emacs nonfunctional.");
   Vpre_command_hook = Qnil;
 
   DEFVAR_LISP ("post-command-hook", &Vpost_command_hook,
     "Normal hook run after each command is executed.\n\
-Errors running the hook are caught and ignored.");
+If an unhandled error happens in running this hook,\n\
+the hook value is set to nil, since otherwise the error\n\
+might happen repeatedly and make Emacs nonfunctional.");
   Vpost_command_hook = Qnil;
 
   DEFVAR_LISP ("post-command-idle-hook", &Vpost_command_idle_hook,
@@ -9376,7 +9489,7 @@ for guidance on what to do.");
 
   DEFVAR_LISP ("input-method-previous-message",
 	       &Vinput_method_previous_message,
-	       "When `input-mehod-function' is called, hold the previous echo area message.\n\
+    "When `input-method-function' is called, hold the previous echo area message.\n\
 This variable exists because `read-event' clears the echo area\n\
 before running the input method.  It is nil if there was no message.");
   Vinput_method_previous_message = Qnil;

@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -34,662 +34,696 @@ translation approved by the Free Software Foundation instead of in the
 original English.
 
 
-File: emacs,  Node: Key Index,  Next: Command Index,  Prev: Glossary,  Up: Top
+File: emacs,  Node: Acknowledgments,  Next: Screen,  Prev: Concept Index,  Up: Top
 
-Key (Character) Index
-*********************
+Acknowledgments
+***************
 
-* Menu:
+   Many people have contributed code included in the Free Software
+Foundation's distribution of GNU Emacs.  To show our appreciation for
+their public spirit, we list here those who have written substantial
+portions.
 
-* ! (Dired):                             Shell Commands in Dired.
-* " (TeX mode):                          TeX Editing.
-* # (Dired):                             Flagging Many Files.
-* $ (Dired):                             Hiding Subdirectories.
-* % C (Dired):                           Transforming File Names.
-* % d (Dired):                           Flagging Many Files.
-* % H (Dired):                           Transforming File Names.
-* % l (Dired):                           Transforming File Names.
-* % m (Dired):                           Marks vs Flags.
-* % R (Dired):                           Transforming File Names.
-* % S (Dired):                           Transforming File Names.
-* % u (Dired):                           Transforming File Names.
-* & (Dired):                             Flagging Many Files.
-* * ! (Dired):                           Marks vs Flags.
-* * % (Dired):                           Marks vs Flags.
-* * * (Dired):                           Marks vs Flags.
-* * / (Dired):                           Marks vs Flags.
-* * ? (Dired):                           Marks vs Flags.
-* * @ (Dired):                           Marks vs Flags.
-* * c (Dired):                           Marks vs Flags.
-* * C-n (Dired):                         Marks vs Flags.
-* * C-p (Dired):                         Marks vs Flags.
-* * DEL (Dired):                         Marks vs Flags.
-* * m (Dired):                           Marks vs Flags.
-* * s (Dired):                           Marks vs Flags.
-* * t (Dired):                           Marks vs Flags.
-* * u (Dired):                           Marks vs Flags.
-* + (Dired):                             Operating on Files.
-* . (Calendar mode):                     Specified Dates.
-* . (Dired):                             Flagging Many Files.
-* . (Rmail):                             Rmail Scrolling.
-* < (Dired):                             Subdirectory Motion.
-* < (Rmail):                             Rmail Motion.
-* <TAB> (Help mode):                     Help Mode.
-* = (Dired):                             Comparison in Dired.
-* > (Dired):                             Subdirectory Motion.
-* > (Rmail):                             Rmail Motion.
-* a (Calendar mode):                     Holidays.
-* A (Dired):                             Operating on Files.
-* a (Rmail):                             Rmail Labels.
-* B (Dired):                             Operating on Files.
-* b (Rmail):                             Rmail Basics.
-* BS (MS-DOS):                           MS-DOS Input.
-* C (Dired):                             Operating on Files.
-* c (Rmail):                             Rmail Reply.
-* C-@:                                   Setting Mark.
-* C-\:                                   Select Input Method.
-* C-]:                                   Quitting.
-* C-_:                                   Undo.
-* C-_ (Dired):                           Marks vs Flags.
-* C-a:                                   Moving Point.
-* C-a (Calendar mode):                   Move to Beginning or End.
-* C-b:                                   Moving Point.
-* C-b (Calendar mode):                   Calendar Unit Motion.
-* C-BREAK (MS-DOS):                      MS-DOS Input.
-* C-c ' (Picture mode):                  Insert in Picture.
-* C-c . (Picture mode):                  Insert in Picture.
-* C-c / (Picture mode):                  Insert in Picture.
-* C-c : (C mode):                        Electric C.
-* C-c ; (Fortran mode):                  Fortran Comments.
-* C-c < (GUD):                           Commands of GUD.
-* C-c < (Picture mode):                  Insert in Picture.
-* C-c > (GUD):                           Commands of GUD.
-* C-c > (Picture mode):                  Insert in Picture.
-* C-c @ (Outline minor mode):            Outline Mode.
-* C-c \ (Picture mode):                  Insert in Picture.
-* C-c ^ (Picture mode):                  Insert in Picture.
-* C-c ` (Picture mode):                  Insert in Picture.
-* C-c C-\ (C mode):                      Other C Commands.
-* C-c C-\ (Shell mode):                  Shell Mode.
-* C-c C-a (C mode):                      Electric C.
-* C-c C-a (Mail mode):                   Mail Aliases.
-* C-c C-a (Outline mode):                Outline Visibility.
-* C-c C-a (Shell mode):                  Shell Mode.
-* C-c C-b (Outline mode):                Outline Motion.
-* C-c C-b (Picture mode):                Insert in Picture.
-* C-c C-b (Shell mode):                  Shell Mode.
-* C-c C-b (TeX mode):                    TeX Print.
-* C-c C-c (Edit Abbrevs):                Editing Abbrevs.
-* C-c C-c (Edit Tab Stops):              Tab Stops.
-* C-c C-c (Mail mode):                   Mail Sending.
-* C-c C-c (Outline mode):                Outline Visibility.
-* C-c C-c (Shell mode):                  Shell Mode.
-* C-c C-d (C mode):                      Hungry Delete.
-* C-c C-d (GUD):                         Commands of GUD.
-* C-c C-d (Outline mode):                Outline Visibility.
-* C-c C-d (Picture mode):                Basic Picture.
-* C-c C-e (C mode):                      Other C Commands.
-* C-c C-e (LaTeX mode):                  LaTeX Editing.
-* C-c C-e (Outline mode):                Outline Visibility.
-* C-c C-e (Shell mode):                  Shell Mode.
-* C-c C-f (GUD):                         Commands of GUD.
-* C-c C-f (Outline mode):                Outline Motion.
-* C-c C-f (Picture mode):                Insert in Picture.
-* C-c C-f (Shell mode):                  Shell Mode.
-* C-c C-f (TeX mode):                    TeX Print.
-* C-c C-f C-b (Mail mode):               Header Editing.
-* C-c C-f C-c (Mail mode):               Header Editing.
-* C-c C-f C-f (Mail mode):               Header Editing.
-* C-c C-f C-s (Mail mode):               Header Editing.
-* C-c C-f C-t (Mail mode):               Header Editing.
-* C-c C-i (GUD):                         Commands of GUD.
-* C-c C-i (Mail mode):                   Mail Mode Misc.
-* C-c C-i (Outline mode):                Outline Visibility.
-* C-c C-k (Outline mode):                Outline Visibility.
-* C-c C-k (Picture mode):                Rectangles in Picture.
-* C-c C-k (TeX mode):                    TeX Print.
-* C-c C-l (Calendar mode):               General Calendar.
-* C-c C-l (GUD):                         Commands of GUD.
-* C-c C-l (Outline mode):                Outline Visibility.
-* C-c C-l (Shell mode):                  Shell Mode.
-* C-c C-l (TeX mode):                    TeX Print.
-* C-c C-n (C mode):                      Motion in C.
-* C-c C-n (Fortran mode):                Fortran Motion.
-* C-c C-n (GUD):                         Commands of GUD.
-* C-c C-n (Outline mode):                Outline Motion.
-* C-c C-n (Shell mode):                  Shell History Copying.
-* C-c C-o (C mode):                      Changing Indent Style.
-* C-c C-o (LaTeX mode):                  LaTeX Editing.
-* C-c C-o (Outline mode):                Outline Visibility.
-* C-c C-o (Shell mode):                  Shell Mode.
-* C-c C-p (C mode):                      Motion in C.
-* C-c C-p (Fortran mode):                Fortran Motion.
-* C-c C-p (Outline mode):                Outline Motion.
-* C-c C-p (Shell mode):                  Shell History Copying.
-* C-c C-p (TeX mode):                    TeX Print.
-* C-c C-q (C mode):                      C Indent.
-* C-c C-q (Mail mode):                   Citing Mail.
-* C-c C-q (Outline mode):                Outline Visibility.
-* C-c C-q (TeX mode):                    TeX Print.
-* C-c C-r (Fortran mode):                Fortran Columns.
-* C-c C-r (GUD):                         Commands of GUD.
-* C-c C-r (Mail mode):                   Citing Mail.
-* C-c C-r (Shell mode):                  Shell Mode.
-* C-c C-r (TeX mode):                    TeX Print.
-* C-c C-s (C mode):                      Other C Commands.
-* C-c C-s (GUD):                         Commands of GUD.
-* C-c C-s (Mail mode):                   Mail Sending.
-* C-c C-s (Outline mode):                Outline Visibility.
-* C-c C-t (C mode):                      Hungry Delete.
-* C-c C-t (GUD):                         Commands of GUD.
-* C-c C-t (Mail mode):                   Mail Mode Misc.
-* C-c C-t (Outline mode):                Outline Visibility.
-* C-c C-u (C mode):                      Motion in C.
-* C-c C-u (Outline mode):                Outline Motion.
-* C-c C-u (Shell mode):                  Shell Mode.
-* C-c C-v (TeX mode):                    TeX Print.
-* C-c C-w (Fortran mode):                Fortran Columns.
-* C-c C-w (Mail mode):                   Mail Mode Misc.
-* C-c C-w (Picture mode):                Rectangles in Picture.
-* C-c C-w (Shell mode):                  Shell Mode.
-* C-c C-x (Picture mode):                Rectangles in Picture.
-* C-c C-y (Mail mode):                   Citing Mail.
-* C-c C-y (Picture mode):                Rectangles in Picture.
-* C-c C-z (Shell mode):                  Shell Mode.
-* C-c RET (Shell mode):                  Shell History Copying.
-* C-c TAB (Picture mode):                Tabs in Picture.
-* C-c TAB (TeX mode):                    TeX Print.
-* C-c { (TeX mode):                      TeX Editing.
-* C-c } (TeX mode):                      TeX Editing.
-* C-d:                                   Deletion.
-* C-d (Rmail):                           Rmail Deletion.
-* C-d (Shell mode):                      Shell Mode.
-* C-e:                                   Moving Point.
-* C-e (Calendar mode):                   Move to Beginning or End.
-* C-f:                                   Moving Point.
-* C-f (Calendar mode):                   Calendar Unit Motion.
-* C-g:                                   Quitting.
-* C-g (MS-DOS):                          MS-DOS Input.
-* C-h:                                   Help.
-* C-h a:                                 Apropos.
-* C-h b:                                 Misc Help.
-* C-h C:                                 Coding Systems.
-* C-h c:                                 Key Help.
-* C-h C-\:                               Select Input Method.
-* C-h C-c:                               Misc Help.
-* C-h C-d:                               Misc Help.
-* C-h C-f:                               Misc Help.
-* C-h C-h:                               Help.
-* C-h C-i:                               Documentation.
-* C-h C-k:                               Misc Help.
-* C-h C-p:                               Misc Help.
-* C-h C-w:                               Misc Help.
-* C-h f:                                 Name Help.
-* C-h h:                                 International Intro.
-* C-h I:                                 Select Input Method.
-* C-h i:                                 Misc Help.
-* C-h k:                                 Key Help.
-* C-h L:                                 Language Environments.
-* C-h l:                                 Misc Help.
-* C-h m:                                 Misc Help.
-* C-h n:                                 Misc Help.
-* C-h p:                                 Library Keywords.
-* C-h s:                                 Syntax.
-* C-h t:                                 Basic.
-* C-h w:                                 Name Help.
-* C-j:                                   Basic Indent.
-* C-j (and major modes):                 Major Modes.
-* C-j (Fortran mode):                    ForIndent Commands.
-* C-j (MS-DOS):                          MS-DOS Input.
-* C-j (TeX mode):                        TeX Editing.
-* C-k:                                   Killing by Lines.
-* C-k (Gnus):                            Summary of Gnus.
-* C-l:                                   Scrolling.
-* C-M-%:                                 Query Replace.
-* C-M-.:                                 Find Tag.
-* C-M-/:                                 Dynamic Abbrevs.
-* C-M-@:                                 List Commands.
-* C-M-\:                                 Indentation Commands.
-* C-M-a:                                 Defuns.
-* C-M-a (Fortran mode):                  Fortran Motion.
-* C-M-b:                                 List Commands.
-* C-M-c:                                 Recursive Edit.
-* C-M-d:                                 List Commands.
-* C-M-d (Dired):                         Subdirectory Motion.
-* C-M-DEL:                               List Commands.
-* C-M-e:                                 Defuns.
-* C-M-e (Fortran mode):                  Fortran Motion.
-* C-M-f:                                 List Commands.
-* C-M-h:                                 Defuns.
-* C-M-h (C mode):                        Other C Commands.
-* C-M-h (Fortran mode):                  Fortran Motion.
-* C-M-j:                                 Multi-Line Comments.
-* C-M-j (Fortran mode):                  ForIndent Commands.
-* C-M-k:                                 List Commands.
-* C-M-l:                                 Scrolling.
-* C-M-l (Rmail):                         Rmail Make Summary.
-* C-M-l (Shell mode):                    Shell Mode.
-* C-M-n:                                 List Commands.
-* C-M-n (Dired):                         Subdirectory Motion.
-* C-M-n (Rmail):                         Rmail Labels.
-* C-M-o:                                 Indentation Commands.
-* C-M-p:                                 List Commands.
-* C-M-p (Dired):                         Subdirectory Motion.
-* C-M-p (Rmail):                         Rmail Labels.
-* C-M-q:                                 Multi-line Indent.
-* C-M-q (C mode):                        C Indent.
-* C-M-q (Fortran mode):                  ForIndent Commands.
-* C-M-r:                                 Regexp Search.
-* C-M-r (Rmail):                         Rmail Make Summary.
-* C-M-s:                                 Regexp Search.
-* C-M-t <1>:                             List Commands.
-* C-M-t:                                 Transpose.
-* C-M-t (Rmail):                         Rmail Make Summary.
-* C-M-u:                                 List Commands.
-* C-M-u (Dired):                         Subdirectory Motion.
-* C-M-v:                                 Other Window.
-* C-M-w:                                 Appending Kills.
-* C-M-x (Emacs-Lisp mode):               Lisp Eval.
-* C-M-x (Lisp mode):                     External Lisp.
-* C-Mouse-2 (scroll bar):                Split Window.
-* C-Mouse-3:                             Menu Mouse Clicks.
-* C-n:                                   Moving Point.
-* C-n (Calendar mode):                   Calendar Unit Motion.
-* C-n (Dired):                           Dired Commands.
-* C-n (Gnus Group mode):                 Summary of Gnus.
-* C-n (Gnus Summary mode):               Summary of Gnus.
-* C-o:                                   Blank Lines.
-* C-o (Dired):                           Dired Visiting.
-* C-o (Rmail):                           Rmail Output.
-* C-p:                                   Moving Point.
-* C-p (Calendar mode):                   Calendar Unit Motion.
-* C-p (Dired):                           Dired Commands.
-* C-p (Gnus Group mode):                 Summary of Gnus.
-* C-p (Gnus Summary mode):               Summary of Gnus.
-* C-q:                                   Inserting Text.
-* C-r:                                   Incremental Search.
-* C-s:                                   Incremental Search.
-* C-SPC:                                 Setting Mark.
-* C-t <1>:                               Transpose.
-* C-t:                                   Moving Point.
-* C-u:                                   Arguments.
-* C-u - C-x ;:                           Comment Commands.
-* C-u C-@:                               Mark Ring.
-* C-u C-SPC:                             Mark Ring.
-* C-u C-x u:                             Undo.
-* C-u TAB:                               Multi-line Indent.
-* C-v:                                   Scrolling.
-* C-v (Calendar mode):                   Scroll Calendar.
-* C-w:                                   Other Kill Commands.
-* C-x #:                                 Emacs Server.
-* C-x $:                                 Selective Display.
-* C-x (:                                 Basic Kbd Macro.
-* C-x ):                                 Basic Kbd Macro.
-* C-x +:                                 Change Window.
-* C-x -:                                 Change Window.
-* C-x .:                                 Fill Prefix.
-* C-x 0:                                 Change Window.
-* C-x 1:                                 Change Window.
-* C-x 2:                                 Split Window.
-* C-x 3:                                 Split Window.
-* C-x 4:                                 Pop Up Window.
-* C-x 4 .:                               Find Tag.
-* C-x 4 0:                               Change Window.
-* C-x 4 a:                               Change Log.
-* C-x 4 b:                               Select Buffer.
-* C-x 4 d:                               Dired Enter.
-* C-x 4 f:                               Visiting.
-* C-x 4 m:                               Sending Mail.
-* C-x 5:                                 Creating Frames.
-* C-x 5 .:                               Find Tag.
-* C-x 5 0:                               Misc X.
-* C-x 5 2:                               Creating Frames.
-* C-x 5 b:                               Select Buffer.
-* C-x 5 d:                               Dired Enter.
-* C-x 5 f:                               Visiting.
-* C-x 5 m:                               Sending Mail.
-* C-x 5 o:                               Misc X.
-* C-x 5 r:                               Creating Frames.
-* C-x 6 1:                               Two-Column.
-* C-x 6 2:                               Two-Column.
-* C-x 6 b:                               Two-Column.
-* C-x 6 d:                               Two-Column.
-* C-x 6 RET:                             Two-Column.
-* C-x 6 s:                               Two-Column.
-* C-x 8:                                 Single-Byte European Support.
-* C-x ;:                                 Options for Comments.
-* C-x <:                                 Horizontal Scrolling.
-* C-x < (Calendar mode):                 Scroll Calendar.
-* C-x =:                                 Position Info.
-* C-x >:                                 Horizontal Scrolling.
-* C-x > (Calendar mode):                 Scroll Calendar.
-* C-x [:                                 Pages.
-* C-x [ (Calendar mode):                 Calendar Unit Motion.
-* C-x ]:                                 Pages.
-* C-x ] (Calendar mode):                 Calendar Unit Motion.
-* C-x ^:                                 Change Window.
-* C-x `:                                 Compilation Mode.
-* C-x a g:                               Defining Abbrevs.
-* C-x a i g:                             Defining Abbrevs.
-* C-x a i l:                             Defining Abbrevs.
-* C-x a l:                               Defining Abbrevs.
-* C-x b:                                 Select Buffer.
-* C-x C-a (GUD):                         Commands of GUD.
-* C-x C-b:                               List Buffers.
-* C-x C-c:                               Exiting.
-* C-x C-d:                               Directories.
-* C-x C-e:                               Lisp Eval.
-* C-x C-f:                               Visiting.
-* C-x C-k:                               Basic Kbd Macro.
-* C-x C-l:                               Case.
-* C-x C-n:                               Moving Point.
-* C-x C-o:                               Blank Lines.
-* C-x C-p:                               Pages.
-* C-x C-q <1>:                           Misc Buffer.
-* C-x C-q:                               Basic VC Editing.
-* C-x C-q (Version Control):             Basic VC Editing.
-* C-x C-r:                               Visiting.
-* C-x C-s:                               Saving.
-* C-x C-t:                               Transpose.
-* C-x C-u:                               Case.
-* C-x C-v:                               Visiting.
-* C-x C-w:                               Saving.
-* C-x C-x:                               Setting Mark.
-* C-x C-z:                               External Lisp.
-* C-x d:                                 Dired Enter.
-* C-x DEL:                               Sentences.
-* C-x e:                                 Basic Kbd Macro.
-* C-x ESC ESC:                           Repetition.
-* C-x f:                                 Fill Commands.
-* C-x h:                                 Marking Objects.
-* C-x k:                                 Kill Buffer.
-* C-x l:                                 Pages.
-* C-x m:                                 Sending Mail.
-* C-x n d <1>:                           Narrowing.
-* C-x n d:                               Fortran Misc.
-* C-x n n:                               Narrowing.
-* C-x n p:                               Narrowing.
-* C-x n w:                               Narrowing.
-* C-x o:                                 Other Window.
-* C-x q:                                 Kbd Macro Query.
-* C-x r +:                               RegNumbers.
-* C-x r b:                               Bookmarks.
-* C-x r d:                               Rectangles.
-* C-x r f:                               RegConfig.
-* C-x r i:                               RegText.
-* C-x r j:                               RegPos.
-* C-x r k:                               Rectangles.
-* C-x r l:                               Bookmarks.
-* C-x r m:                               Bookmarks.
-* C-x r n:                               RegNumbers.
-* C-x r o:                               Rectangles.
-* C-x r r:                               RegRect.
-* C-x r s:                               RegText.
-* C-x r SPC:                             RegPos.
-* C-x r t:                               Rectangles.
-* C-x r w:                               RegConfig.
-* C-x r y:                               Rectangles.
-* C-x RET:                               International Intro.
-* C-x RET c:                             Specify Coding.
-* C-x RET C-\:                           Select Input Method.
-* C-x RET f:                             Specify Coding.
-* C-x RET k:                             Specify Coding.
-* C-x RET p:                             Specify Coding.
-* C-x RET t:                             Specify Coding.
-* C-x RET X:                             Specify Coding.
-* C-x RET x:                             Specify Coding.
-* C-x s:                                 Saving.
-* C-x SPC:                               Commands of GUD.
-* C-x TAB:                               Indentation Commands.
-* C-x TAB (Enriched mode):               Format Indentation.
-* C-x u:                                 Undo.
-* C-x v =:                               Old Versions.
-* C-x v a:                               Change Logs and VC.
-* C-x v c:                               VC Undo.
-* C-x v d:                               VC Dired Mode.
-* C-x v g:                               Old Versions.
-* C-x v h:                               Version Headers.
-* C-x v i:                               Registering.
-* C-x v l:                               VC Status.
-* C-x v m:                               Merging.
-* C-x v r:                               Making Snapshots.
-* C-x v s:                               Making Snapshots.
-* C-x v u:                               VC Undo.
-* C-x v v:                               Basic VC Editing.
-* C-x v ~:                               Old Versions.
-* C-x z:                                 Repeating.
-* C-x }:                                 Change Window.
-* C-y:                                   Kill Ring.
-* C-z:                                   Exiting.
-* C-z (X windows):                       Misc X.
-* d (Calendar mode):                     Diary Commands.
-* D (Dired):                             Operating on Files.
-* d (Dired):                             Dired Deletion.
-* d (Rmail):                             Rmail Deletion.
-* DEL:                                   Deletion.
-* DEL (and major modes):                 Major Modes.
-* DEL (Dired):                           Dired Deletion.
-* DEL (Gnus):                            Summary of Gnus.
-* DEL (MS-DOS):                          MS-DOS Input.
-* DEL (programming modes):               Program Modes.
-* DEL (Rmail):                           Rmail Scrolling.
-* DELETE:                                Mouse Commands.
-* DOWN:                                  Moving Point.
-* e (Rmail):                             Rmail Editing.
-* ESC a:                                 Motion in C.
-* ESC e:                                 Motion in C.
-* ESC ESC ESC:                           Quitting.
-* f (Dired):                             Dired Visiting.
-* f (Rmail):                             Rmail Reply.
-* F1:                                    Help.
-* F10:                                   Menu Bar.
-* F2 1:                                  Two-Column.
-* F2 2:                                  Two-Column.
-* F2 b:                                  Two-Column.
-* F2 d:                                  Two-Column.
-* F2 RET:                                Two-Column.
-* F2 s:                                  Two-Column.
-* g (Dired):                             Dired Updating.
-* G (Dired):                             Operating on Files.
-* g (Rmail):                             Rmail Files.
-* g CHAR (Calendar mode):                From Other Calendar.
-* g d (Calendar mode):                   Specified Dates.
-* g m (Calendar mode):                   Mayan Calendar.
-* h (Calendar mode):                     Holidays.
-* H (Dired):                             Operating on Files.
-* h (Rmail):                             Rmail Make Summary.
-* Help:                                  Help.
-* i (Dired):                             Subdirectories in Dired.
-* i (Rmail):                             Rmail Files.
-* i a (Calendar mode):                   Special Diary Entries.
-* i b (Calendar mode):                   Special Diary Entries.
-* i c (Calendar mode):                   Special Diary Entries.
-* i d (Calendar mode):                   Adding to Diary.
-* i m (Calendar mode):                   Adding to Diary.
-* i w (Calendar mode):                   Adding to Diary.
-* i y (Calendar mode):                   Adding to Diary.
-* j (Rmail):                             Rmail Motion.
-* k (Dired):                             Dired Updating.
-* k (Rmail):                             Rmail Labels.
-* l (Dired):                             Dired Updating.
-* L (Dired):                             Operating on Files.
-* l (Gnus Group mode):                   Summary of Gnus.
-* L (Gnus Group mode):                   Summary of Gnus.
-* l (Rmail):                             Rmail Make Summary.
-* LEFT:                                  Moving Point.
-* m (Calendar mode):                     Diary Commands.
-* M (Calendar mode):                     Lunar Phases.
-* M (Dired):                             Operating on Files.
-* m (Dired):                             Marks vs Flags.
-* m (Rmail):                             Rmail Reply.
-* M-!:                                   Single Shell.
-* M-$:                                   Spelling.
-* M-$ (Dired):                           Hiding Subdirectories.
-* M-%:                                   Query Replace.
-* M-':                                   Expanding Abbrevs.
-* M-(:                                   Balanced Editing.
-* M-):                                   Balanced Editing.
-* M-*:                                   Find Tag.
-* M-,:                                   Tags Search.
-* M--:                                   Arguments.
-* M-- M-c:                               Fixing Case.
-* M-- M-l:                               Fixing Case.
-* M-- M-u:                               Fixing Case.
-* M-.:                                   Find Tag.
-* M-/:                                   Dynamic Abbrevs.
-* M-1:                                   Arguments.
-* M-::                                   Lisp Eval.
-* M-;:                                   Comment Commands.
-* M-<:                                   Moving Point.
-* M-< (Calendar mode):                   Move to Beginning or End.
-* M-=:                                   Position Info.
-* M-= (Calendar mode):                   Counting Days.
-* M-= (Dired):                           Comparison in Dired.
-* M->:                                   Moving Point.
-* M-> (Calendar mode):                   Move to Beginning or End.
-* M-? (Nroff mode):                      Nroff Mode.
-* M-? (Shell mode):                      Shell Mode.
-* M-@:                                   Words.
-* M-\:                                   Deletion.
-* M-^:                                   Indentation Commands.
-* M-^ (Fortran mode):                    ForIndent Commands.
-* M-`:                                   Menu Bar.
-* M-a:                                   Sentences.
-* M-a (Calendar mode):                   Move to Beginning or End.
-* M-b:                                   Words.
-* M-c:                                   Case.
-* M-d:                                   Words.
-* M-DEL:                                 Words.
-* M-Drag-Mouse-1:                        Secondary Selection.
-* M-e:                                   Sentences.
-* M-e (Calendar mode):                   Move to Beginning or End.
-* M-f:                                   Words.
-* M-g b (Enriched mode):                 Format Faces.
-* M-g d (Enriched mode):                 Format Faces.
-* M-g i (Enriched mode):                 Format Faces.
-* M-g l (Enriched mode):                 Format Faces.
-* M-g M-g:                               Font Lock.
-* M-g o (Enriched mode):                 Format Faces.
-* M-g u (Enriched mode):                 Format Faces.
-* M-h:                                   Paragraphs.
-* M-i:                                   Tab Stops.
-* M-j c (Enriched mode):                 Format Justification.
-* M-j f (Enriched mode):                 Format Justification.
-* M-j l (Enriched mode):                 Format Justification.
-* M-j r (Enriched mode):                 Format Justification.
-* M-j u (Enriched mode):                 Format Justification.
-* M-k:                                   Sentences.
-* M-l:                                   Case.
-* M-m:                                   Indentation Commands.
-* M-m (Rmail):                           Rmail Reply.
-* M-Mouse-1:                             Secondary Selection.
-* M-Mouse-2:                             Secondary Selection.
-* M-Mouse-3:                             Secondary Selection.
-* M-n (minibuffer history):              Minibuffer History.
-* M-n (Nroff mode):                      Nroff Mode.
-* M-n (Rmail):                           Rmail Motion.
-* M-n (Shell mode):                      Shell Ring.
-* M-p (minibuffer history):              Minibuffer History.
-* M-p (Nroff mode):                      Nroff Mode.
-* M-p (Rmail):                           Rmail Motion.
-* M-p (Shell mode):                      Shell Ring.
-* M-q:                                   Fill Commands.
-* M-q (C mode):                          Other C Commands.
-* M-r:                                   Moving Point.
-* M-r (minibuffer history):              Minibuffer History.
-* M-r (Shell mode):                      Shell Ring.
-* M-S (Enriched mode):                   Format Justification.
-* M-s (Gnus Summary mode):               Summary of Gnus.
-* M-s (minibuffer history):              Minibuffer History.
-* M-s (Rmail):                           Rmail Motion.
-* M-s (Shell mode):                      Shell Ring.
-* M-s (Text mode):                       Fill Commands.
-* M-SPC:                                 Deletion.
-* M-t <1>:                               Words.
-* M-t:                                   Transpose.
-* M-TAB:                                 Symbol Completion.
-* M-TAB (customization buffer):          Changing an Option.
-* M-TAB (Mail mode):                     Header Editing.
-* M-TAB (Picture mode):                  Tabs in Picture.
-* M-TAB (Text mode):                     Text Mode.
-* M-u:                                   Case.
-* M-v:                                   Scrolling.
-* M-v (Calendar mode):                   Scroll Calendar.
-* M-w:                                   Kill Ring.
-* M-x:                                   M-x.
-* M-y:                                   Earlier Kills.
-* M-z:                                   Other Kill Commands.
-* M-{:                                   Paragraphs.
-* M-{ (Calendar mode):                   Calendar Unit Motion.
-* M-|:                                   Single Shell.
-* M-}:                                   Paragraphs.
-* M-} (Calendar mode):                   Calendar Unit Motion.
-* M-~:                                   Saving.
-* Mouse-1:                               Mouse Commands.
-* Mouse-2:                               Mouse Commands.
-* Mouse-2 (selection):                   Mouse References.
-* Mouse-3:                               Mouse Commands.
-* n (Gnus):                              Summary of Gnus.
-* n (Rmail):                             Rmail Motion.
-* NEXT:                                  Scrolling.
-* o (Calendar mode):                     Specified Dates.
-* O (Dired):                             Operating on Files.
-* o (Dired):                             Dired Visiting.
-* o (Rmail):                             Rmail Output.
-* p (Calendar mode):                     To Other Calendar.
-* P (Dired):                             Operating on Files.
-* p (Gnus):                              Summary of Gnus.
-* p (Rmail):                             Rmail Motion.
-* p d (Calendar mode):                   General Calendar.
-* PRIOR:                                 Scrolling.
-* q (Calendar mode):                     General Calendar.
-* Q (Dired):                             Operating on Files.
-* q (Gnus Group mode):                   Summary of Gnus.
-* q (Rmail summary):                     Rmail Summary Edit.
-* Q (Rmail summary):                     Rmail Summary Edit.
-* q (Rmail):                             Rmail Basics.
-* R (Dired):                             Operating on Files.
-* r (Rmail):                             Rmail Reply.
-* RET:                                   Inserting Text.
-* RET (Dired):                           Dired Visiting.
-* RET (Occur mode):                      Other Repeating Search.
-* RET (Shell mode):                      Shell Mode.
-* RIGHT:                                 Moving Point.
-* s (Calendar mode):                     Diary Commands.
-* S (Calendar mode):                     Sunrise/Sunset.
-* s (Dired):                             Dired Updating.
-* S (Dired):                             Operating on Files.
-* s (Gnus Summary mode):                 Summary of Gnus.
-* s (Rmail):                             Rmail Basics.
-* S-<TAB> (Help mode):                   Help Mode.
-* S-Mouse-1:                             Frame Parameters.
-* S-TAB (customization buffer):          Changing an Option.
-* SPC:                                   Completion Commands.
-* SPC (Calendar mode):                   General Calendar.
-* SPC (Dired):                           Dired Commands.
-* SPC (Gnus):                            Summary of Gnus.
-* SPC (Rmail):                           Rmail Scrolling.
-* t (Calendar mode):                     LaTeX Calendar.
-* t (Rmail):                             Rmail Display.
-* TAB:                                   Indentation.
-* TAB (and major modes):                 Major Modes.
-* TAB (completion):                      Completion Example.
-* TAB (customization buffer):            Changing an Option.
-* TAB (GUD):                             Commands of GUD.
-* TAB (programming modes):               Basic Indent.
-* TAB (Shell mode):                      Shell Mode.
-* TAB (Text mode):                       Text Mode.
-* u (Calendar mode):                     Holidays.
-* u (Dired deletion):                    Dired Deletion.
-* u (Dired):                             Marks vs Flags.
-* u (Gnus Group mode):                   Summary of Gnus.
-* u (Rmail):                             Rmail Deletion.
-* UP:                                    Moving Point.
-* v (Dired):                             Dired Visiting.
-* w (Rmail):                             Rmail Output.
-* x (Calendar mode):                     Holidays.
-* x (Dired):                             Dired Deletion.
-* x (Rmail):                             Rmail Deletion.
-* Z (Dired):                             Operating on Files.
-* ~ (Dired):                             Flagging Many Files.
+   * Per Abrahamsen wrote the customization buffer facilities, as well
+     as `double.el' for typing accented characters not normally
+     available from the keyboard, `xt-mouse.el' which handles mouse
+     commands through Xterm, and `cpp.el' which hides or highlights
+     parts of C programs according to preprocessor conditionals.
+
+   * Jay K. Adams wrote `jka-compr.el', providing automatic
+     decompression and recompression for compressed files.
+
+   * Joe Arceneaux wrote the original text property implementation, and
+     implemented support for X11.
+
+   * Boaz Ben-Zvi wrote `profile.el', to time Emacs Lisp functions.
+
+   * Jim Blandy wrote Emacs 19's input system, brought its
+     configuration and build process up to the GNU coding standards,
+     and contributed to the frame support and multi-face support.
+
+   * Terrence M. Brannon wrote `landmark.el', a neural-network robot
+     that learns landmarks.
+
+   * Frank Bresz wrote `diff.el', a program to display `diff' output.
+
+   * Peter Breton implemented `dirtrack' which does better tracking of
+     directory changes in shell buffers, `filecache.el' which records
+     which directories your files are in, `locate.el' which interfaces
+     to the `locate' command, `net-utils.el', and the "generic mode"
+     feature.
+
+   * Kevin Broadey wrote `foldout.el', providing folding extensions to
+     Emacs's outline modes.
+
+   * Vincent Broman wrote `ada.el', a mode for editing Ada code (since
+     replaced by `ada-mode.el').
+
+   * David M. Brown wrote `array.el', for editing arrays and other
+     tabular data.
+
+   * Bill Carpenter provided `feedmail.el'.
+
+   * Hans Chalupsky wrote `advice.el', an overloading mechanism for
+     Emacs Lisp functions, and `trace.el', a tracing facility for Emacs
+     Lisp.
+
+   * Bob Chassell wrote `texnfo-upd.el' and `makeinfo.el', modes and
+     utilities for working with Texinfo files.
+
+   * James Clark wrote `sgml-mode.el', a mode for editing SGML
+     documents, and contributed to Emacs's dumping procedures.
+
+   * Mike Clarkson wrote `edt.el', an emulation of DEC's EDT editor.
+
+   * Glynn Clements provided `gamegrid.el' and a couple of games that
+     use it, Snake and Tetris.
+
+   * Andrew Csillag wrote M4 mode (`m4-mode.el').
+
+   * Doug Cutting and Jamie Zawinski wrote `disass.el', a disassembler
+     for compiled Emacs Lisp code.
+
+   * Michael DeCorte wrote `emacs.csh', a C-shell script that starts a
+     new Emacs job, or restarts a paused Emacs if one exists.
+
+   * Gary Delp wrote `mailpost.el', an interface between RMAIL and the
+     `/usr/uci/post' mailer.
+
+   * Matthieu Devin wrote `delsel.el', a package to make newly-typed
+     text replace the current selection.
+
+   * Eric Ding contributed `goto-addr.el',
+
+   * Carsten Dominik wrote `reftex.el', a package for setting up labels
+     and cross-references for LaTeX.
+
+   * Scott Draves wrote `tq.el', help functions for maintaining
+     transaction queues between Emacs and its subprocesses.
+
+   * Viktor Dukhovni wrote support for dumping under SunOS version 4.
+
+   * John Eaton co-wrote Octave mode (`octave.el' and related files).
+
+   * Rolf Ebert co-wrote Ada mode (`ada-mode.el').
+
+   * Stephen Eglen implemented `mspools.el', for use with Procmail,
+     which tells you which mail folders have mail waiting in them, and
+     `iswitchb.el', a feature for incremental reading and completion of
+     buffer names.
+
+   * Torbj"orn Einarsson contributed F90 mode (`f90.el').
+
+   * Tsugutomo Enami co-wrote the support for international character
+     sets.
+
+   * Hans Henrik Eriksen wrote `simula.el', a mode for editing SIMULA 87
+     code.
+
+   * Michael Ernst wrote `reposition.el', a command for recentering a
+     function's source code and preceding comment on the screen.
+
+   * Ata Etemadi wrote `cdl.el', functions for working with Common Data
+     Language source code.
+
+   * Frederick Farnback implemented `morse.el', which converts text to
+     morse code.
+
+   * Fred Fish wrote the support for dumping COFF executable files.
+
+   * Karl Fogel wrote:
+        * `bookmark.el', for creating named placeholders, saving them
+          and jumping to them later,
+
+        * `mail-hist.el', a history mechanism for outgoing mail
+          messages, and
+
+        * `saveplace.el', for preserving point's location in files
+          between editing sessions.
+
+   * Gary Foster wrote the emulation for CRiSP: `crisp.el' and
+     `scroll-lock.el'.
+
+   * Noah Friedman wrote `rlogin.el', an interface to Rlogin, and
+     `type-break.el', which reminds you to take periodic breaks from
+     typing.  With Roland McGrath, he wrote `rsz-mini.el', a minor mode
+     to automatically resize the minibuffer to fit the text it contains.
+
+   * Keith Gabryelski wrote `hexl.el', a mode for editing binary files.
+
+   * Kevin Gallagher rewrote and enhanced the EDT emulation, and wrote
+     `flow-ctrl.el', a package for coping with unsuppressible XON/XOFF
+     flow control.
+
+   * Kevin Gallo added multiple-frame support for Windows NT.
+
+   * Howard Gayle wrote:
+        * the C and lisp code for display tables and case tables,
+
+        * `rot13.el', a command to display the plaintext form of a
+          buffer encoded with the Caesar cipher,
+
+        * much of the support for the ISO-8859 European character set
+          (which includes `iso-ascii.el', `iso-insert.el',
+          `iso-swed.el', `iso-syntax.el', `iso-transl.el', and
+          `swedish.el'), and
+
+        * `vt100-led.el', a package for controlling the LED's on
+          VT100-compatible terminals.
+
+   * Stephen Gildea made the Emacs quick reference card.
+
+   * David Gillespie wrote:
+        * Emacs 19's Common Lisp compatibility packages, replacing the
+          old package by Cesar Augusto Quiroz Gonzalez,
+
+        * `complete.el', a partial completion mechanism, and
+
+        * `edmacro.el', a package for editing keyboard macros.
+
+   * Bob Glickstein contributed the `sregex.el' feature.
+
+   * Boris Goldowsky wrote `avoid.el', a package to keep the mouse
+     cursor out of the way of the text cursor; `shadowfile.el', a
+     package for keeping identical copies of files in more than one
+     place; `enriched.el', a package for saving text properties in
+     files; and `facemenu.el', a package for specifying faces.
+
+   * Michelangelo Grigni wrote `ffap.el' which visits a file, taking
+     the file name from the buffer.
+
+   * Odd Gripenstam wrote `dcl-mode.el'.
+
+   * Michael Gschwind wrote `iso-cvt.el', a package to convert between
+     the ISO 8859-1 character set and the notations for non-`ASCII'
+     characters used by TeX and net tradition.
+
+   * Henry Guillaume wrote `find-file.el', a package to visit files
+     related to the currently visited file.
+
+   * Doug Gwyn wrote the portable `alloca' implementation.
+
+   * Ken'ichi Handa implemented most of the support for international
+     character sets.
+
+   * Chris Hanson wrote `netuname.el', a package to use HP-UX's Remote
+     File Access facility from Emacs.
+
+   * K. Shane Hartman wrote:
+        * `chistory.el' and `echistory.el', packages for browsing
+          command history lists,
+
+        * `electric.el' and `helper.el', providing an alternative
+          command loop and appropriate help facilities,
+
+        * `emacsbug.el', a package for reporting Emacs bugs,
+
+        * `picture.el', a mode for editing ASCII pictures, and
+
+        * `view.el', a package for perusing files and buffers without
+          editing them.
+
+   * John Heidemann wrote `mouse-copy.el' and `mouse-drag.el', which
+     provide alternative mouse-based editing and scrolling features.
+
+   * Markus Heritsch co-wrote Ada mode (`ada-mode.el').
+
+   * Karl Heuer wrote the original blessmail script, implemented the
+     `intangible' text property, and rearranged the structure of the
+     `Lisp_Object' type to allow for more data bits.
+
+   * Manabu Higashida ported Emacs to the MS-DOS operating system.
+
+   * Anders Holst wrote `hippie-exp.el', a versatile completion and
+     expansion package.
+
+   * Kurt Hornik co-wrote Octave mode (`octave.el' and related files).
+
+   * Tom Houlder wrote `mantemp.el', which generates manual C++ template
+     instantiations.
+
+   * Lars Ingebrigtsen did a major redesign of the GNUS newsreader.
+
+   * Andrew Innes contributed extensively to the Windows NT support.
+
+   * Kyle Jones wrote `life.el', a package to play Conway's "life" game,
+     and `mldrag.el', a package which allows the user to resize windows
+     by dragging mode lines and vertical window separators with the
+     mouse.
+
+   * Tomoji Kagatani implemented `smtpmail.el', used for sending out
+     mail with SMTP.
+
+   * David Kaufman wrote `yow.c', an essential utility program for the
+     hopelessly pinheaded.
+
+   * Henry Kautz wrote `bib-mode.el', a mode for maintaining
+     bibliography databases compatible with `refer' (the `troff'
+     version) and `lookbib', and `refbib.el', a package to convert
+     those databases to the format used by the LaTeX text formatting
+     package.
+
+   * Howard Kaye wrote `sort.el', commands to sort text in Emacs
+     buffers.
+
+   * Michael Kifer wrote `ediff.el', an interactive interface to the
+     `diff' and `patch' programs, and Viper, the newest emulation for
+     VI.
+
+   * Richard King wrote the first version of `userlock.el' and
+     `filelock.c', which provide simple support for multiple users
+     editing the same file.
+
+   * Larry K. Kolodney wrote `cvtmail.c', a program to convert the mail
+     directories used by Gosling Emacs into RMAIL format.
+
+   * Robert Krawitz wrote the original `xmenu.c', part of Emacs's pop-up
+     menu support.
+
+   * Sebastian Kremer wrote Emacs 19's `dired-mode', with contributions
+     by Lawrence R. Dodd.
+
+   * Geoff Kuenning wrote Emacs 19's `ispell.el', based on work by Ken
+     Stevens and others.
+
+   * David K*agedal wrote `tempo.el', providing support for easy
+     insertion of boilerplate text and other common constructions.
+
+   * Daniel LaLiberte wrote:
+        * `edebug.el', a source-level debugger for Emacs Lisp,
+
+        * `cl-specs.el', specifications to help `edebug' debug code
+          written using David Gillespie's Common Lisp support,
+
+        * `cust-print.el', a customizable package for printing lisp
+          objects,
+
+        * `eval-reg.el', a re-implementation of `eval-region' in Emacs
+          Lisp, and
+
+        * `isearch.el', Emacs 19's incremental search minor mode.
+
+   * James R. Larus wrote `mh-e.el', an interface to the MH mail system.
+
+   * Frederic Lepied contributed `expand.el', which uses the abbrev
+     mechanism for inserting programming constructs.
+
+   * Lars Lindberg wrote `msb.el', which provides more flexible menus
+     for buffer selection, and rewrote `dabbrev.el'.
+
+   * Eric Ludlam wrote the Speedbar package and `checkdoc.el'.
+
+   * Neil M. Mager wrote `appt.el', functions to notify users of their
+     appointments.  It finds appointments recorded in the diary files
+     generated by Edward M. Reingold's `calendar' package.
+
+   * Ken Manheimer wrote `allout.el', a mode for manipulating and
+     formatting outlines, and `icomplete.el', which provides incremental
+     completion feedback in the minibuffer.
+
+   * Bill Mann wrote `perl-mode.el', a mode for editing Perl code.
+
+   * Brian Marick and Daniel LaLiberte wrote `hideif.el', support for
+     hiding selected code within C `#ifdef' clauses.
+
+   * Simon Marshall wrote:
+        * `fast-lock.el', which caches the face data computed by Font
+          Lock mode,
+
+        * `lazy-lock.el', which delays fontification in Font Lock mode
+          until text is actually displayed, and
+
+        * `regexp-opt.el', which generates a regular expression from a
+          list of strings.
+
+   * Bengt Martensson, Mark Shapiro, Mike Newton, Aaron Larson, and
+     Stefan Schoef, wrote `bibtex.el', a mode for editing BibTeX
+     bibliography files.
+
+   * Charlie Martin wrote `autoinsert.el', which provides automatic
+     mode-sensitive insertion of text into new files.
+
+   * Thomas May wrote `blackbox.el', a version of the traditional
+     blackbox game.
+
+   * Roland McGrath wrote:
+        * `compile.el', a package for running compilations in a buffer,
+          and then visiting the locations reported in error messages,
+
+        * `etags.el', a package for jumping to function definitions and
+          searching or replacing in all the files mentioned in a `TAGS'
+          file,
+
+        * `find-dired.el', for using `dired' commands on output from the
+          `find' program, with Sebastian Kremer,
+
+        * `map-ynp.el', a general purpose boolean question-asker,
+
+        * `autoload.el', providing semi-automatic maintenance of
+          autoload files, and
+
+        * `upd-copyr.el', providing semi-automatic maintenance of
+          copyright notices in source code.
+
+   * David Megginson wrote `derived.el', which allows one to define new
+     major modes by inheriting key bindings and commands from existing
+     major modes.
+
+   * Wayne Mesard wrote `hscroll.el' which does horizontal scrolling
+     automatically.
+
+   * Richard Mlynarik wrote:
+        * `cl-indent.el', a package for indenting Common Lisp code,
+
+        * `ebuff-menu.el', an "electric" browser for buffer listings,
+
+        * `ehelp.el', bindings for browsing help screens,
+
+        * `rfc822.el', a parser for E-mail addresses in the RFC-822
+          format, used in mail messages and news articles,
+
+        * `terminal.el', a terminal emulator for Emacs subprocesses, and
+
+        * `yow.el', an essential utility (try `M-x yow').
+
+   * Keith Moore wrote `aixcc.lex', a pre-processor designed to help
+     Emacs parse the error messages produced by the AIX C compiler.
+
+   * Erik Naggum wrote the time-conversion functions, and has tested the
+     latest source code daily.
+
+   * Thomas Neumann and Eric Raymond wrote `makefile.el', a mode for
+     editing makefiles.
+
+   * Jurgen Nickelsen wrote `ws-mode.el', providing WordStar emulation.
+
+   * Jeff Norden wrote `kermit.el', a package to help the Kermit dialup
+     communications program run comfortably in an Emacs shell buffer.
+
+   * Andrew Norman wrote `ange-ftp.el', providing transparent FTP
+     support.
+
+   * Jeff Peck wrote:
+        * `emacstool.c', support for running Emacs under SunView/Sun
+          Windows,
+
+        * `sun-curs.el', cursor definitions for Sun Windows, and
+
+        * `sun-fns.el', providing mouse support for Sun Windows.
+
+   * Damon Anton Permezel wrote `hanoi.el', an animated demonstration of
+     the "Towers of Hanoi" puzzle.
+
+   * Jens Petersen wrote `find-func.el', which makes it easy to find
+     the source code for an Emacs Lisp function or variable.
+
+   * Daniel Pfeiffer wrote:
+        * `executable.el'
+
+        * `sh-script.el', a mode for editing shell scripts,
+
+        * `skeleton.el', implementing a concise language for writing
+          statement skeletons, and
+
+        * `two-column.el', a minor mode for simultaneous two-column
+          editing.
+
+   * Fred Pierresteguy and Paul Reilly made Emacs work with X Toolkit
+     widgets.
+
+   * Christian Plaunt wrote `soundex.el', an implementation of the
+     Soundex algorithm for comparing English words by their
+     pronunciation.
+
+   * Francesco A. Potorti wrote `cmacexp.el', providing a command which
+     runs the C preprocessor on a region of a file and displays the
+     results.
+
+   * Michael D. Prange and Steven A. Wood wrote `fortran.el', a mode for
+     editing FORTRAN code.
+
+   * Ashwin Ram wrote `refer.el', commands to look up references in
+     bibliography files by keyword.
+
+   * Eric S. Raymond wrote:
+        * `vc.el', an interface to the RCS and SCCS source code version
+          control systems, with Paul Eggert,
+
+        * `gud.el', a package for running source-level debuggers like
+          GDB and SDB in Emacs,
+
+        * `asm-mode.el', a mode for editing assembly language code,
+
+        * `cookie1.el', support for "fortune-cookie" programs like
+          `yow.el' and `spook.el',
+
+        * `finder.el', a package for finding Emacs Lisp packages by
+          keyword and topic,
+
+        * `lisp-mnt.el', functions for working with the special headers
+          used in Emacs Lisp library files, and
+
+        * code to set and make use of the `load-history' lisp variable,
+          which records the source file from which each lisp function
+          loaded into Emacs came.
+
+   * Edward M. Reingold wrote the extensive calendar and diary support
+     (try `M-x calendar'), with contributions from Stewart Clamen, Paul
+     Eggert, and Lara Rios.  Andy Oram contributed to its documentation.
+     Reingold has also contributed to `tex-mode.el', a mode for editing
+     TeX files, as have William F. Schelter, Dick King, Stephen Gildea,
+     Michael Prange, and Jacob Gore.
+
+   * Rob Riepel contributed `tpu-edt.el' and its associated files,
+     providing an emulation of the VMS TPU text editor emulating the
+     VMS EDT editor, and `vt-control.el', providing some control
+     functions for the DEC VT line of terminals.
+
+   * Roland B. Roberts contributed much of the VMS support distributed
+     with Emacs 19, along with Joseph M. Kelsey, and `vms-pmail.el',
+     support for using Emacs within VMS MAIL.
+
+   * John Robinson wrote `bg-mouse.el', support for the mouse on the BBN
+     Bitgraph terminal.
+
+   * Danny Roozendaal implemented `handwrite.el', which converts text
+     into "handwriting."
+
+   * William Rosenblatt wrote `float.el', implementing a floating-point
+     numeric type using Lisp cons cells and integers.
+
+   * Guillermo J. Rozas wrote `scheme.el', a mode for editing Scheme
+     code, and `fakemail.c', an interface to the System V mailer.
+
+   * Ivar Rummelhoff provided `winner.el', which records recent window
+     configurations so you can move back to them.
+
+   * Wolfgang Rupprecht contributed Emacs 19's floating-point support
+     (including `float-sup.el' and `floatfns.c'), and `sup-mouse.el',
+     support for the Supdup mouse on lisp machines.
+
+   * James B. Salem and Brewster Kahle wrote `completion.el', providing
+     dynamic word completion.
+
+   * Masahiko Sato wrote `vip.el', an emulation of the VI editor.
+
+   * William Schelter wrote `telnet.el', support for `telnet' sessions
+     within Emacs.
+
+   * Ralph Schleicher contributed `battery.el', a package for displaying
+     laptop computer battery status, and `info-look.el', a package for
+     looking up Info documentation for symbols in the buffer.
+
+   * Gregor Schmid wrote `tcl.el', a mode for editing Tcl/Tk scripts.
+
+   * Michael Schmidt and Tom Perrine wrote `modula2.el', a mode for
+     editing Modula-2 code, based on work by Mick Jordan and Peter
+     Robinson.
+
+   * Ronald S. Schnell wrote `dunnet.el', a text adventure game.
+
+   * Philippe Schnoebelen wrote `gomoku.el', a Go Moku game played
+     against Emacs, and `mpuz.el', a multiplication puzzle.
+
+   * Randal Schwartz wrote `pp.el', a pretty-printer for lisp objects.
+
+   * Manuel Serrano contributed the Flyspell package that does spell
+     checking as you type.
+
+   * Stanislav Shalunov wrote `uce.el', for responding to unsolicited
+     commercial email.
+
+   * Richard Sharman contributed `hilit-chg.el', which uses colors to
+     inclidate recent editing changes.
+
+   * Olin Shivers wrote:
+        * `comint.el', a library for modes running interactive
+          command-line- oriented subprocesses,
+
+        * `cmuscheme.el', for running inferior Scheme processes,
+
+        * `inf-lisp.el', for running inferior Lisp process, and
+
+        * `shell.el', for running inferior shells.
+
+   * Sam Shteingold wrote `gulp.el'.
+
+   * Espen Skoglund wrote `pascal.el', a mode for editing Pascal code.
+
+   * Rick Sladkey wrote `backquote.el', a lisp macro for creating
+     mostly-constant data.
+
+   * Lynn Slater wrote `help-macro.el', a macro for writing interactive
+     help for key bindings.
+
+   * Chris Smith wrote `icon.el', a mode for editing Icon code.
+
+   * David Smith wrote `ielm.el', a mode for interacting with the Emacs
+     Lisp interpreter as a subprocess.
+
+   * Paul D. Smith wrote `snmp-mode.el'.
+
+   * William Sommerfeld wrote `scribe.el', a mode for editing Scribe
+     files, and `server.el', a package allowing programs to send files
+     to an extant Emacs job to be edited.
+
+   * Michael Staats wrote `pc-select.el', which rebinds keys for
+     selecting regions to follow many other systems.
+
+   * Ake Stenhoff and Lars Lindberg wrote `imenu.el', a framework for
+     browsing indices made from buffer contents.
+
+   * Peter Stephenson contributed `vcursor.el', which implements a
+     "virtual cursor" that you can move with the keyboard and use for
+     copying text.
+
+   * Sam Steingold wrote `midnight.el'.
+
+   * Jonathan Stigelman wrote `hilit19.el', a package providing
+     automatic highlighting in source code buffers, mail readers, and
+     other contexts.
+
+   * Steve Strassman did not write `spook.el', and even if he did, he
+     really didn't mean for you to use it in an anarchistic way.
+
+   * Jens T. Berger Thielemann wrote `word-help.el', which is part of
+     the basis for `info-look.el'.
+
+   * Spencer Thomas wrote the original `dabbrev.el', providing a command
+     which completes the partial word before point, based on other
+     nearby words for which it is a prefix.  He also wrote the original
+     dumping support.
+
+   * Jim Thompson wrote `ps-print.el', which converts Emacs text to
+     Postscript.
+
+   * Masanobu Umeda wrote:
+        * GNUS, a featureful reader for Usenet news,
+
+        * `prolog.el', a mode for editing Prolog code,
+
+        * `rmailsort.el', a package for sorting messages in RMAIL
+          folders,
+
+        * `metamail.el', an interface to the Metamail program,
+
+        * `tcp.el', emulation of the `open-network-stream' function for
+          some Emacs configurations which lack it, and
+
+        * `timezone.el', providing functions for dealing with time
+          zones.
+
+   * Neil W. Van Dyke wrote `webjump.el', a "hot links" package.
+
+   * Ulrik Vieth implemented `meta-mode.el', for editing MetaFont code.
+
+   * Geoffrey Voelker wrote the Windows NT support.
+
+   * Johan Vromans wrote `forms.el' and its associated files, defining a
+     mode for filling in forms, and `iso-acc.el', a minor mode providing
+     electric accent keys for text using the ISO-8859 character set.
+
+   * Barry Warsaw wrote:
+        * `assoc.el', a set of utility functions for working with
+          association lists,
+
+        * `cc-mode.el', a major mode for editing C and C++ code, based
+          on earlier work by Dave Detlefs, Stewart Clamen, and Richard
+          Stallman,
+
+        * `elp.el', a new profiler for Emacs Lisp programs.
+
+        * `man.el', a mode for reading UNIX manual pages,
+
+        * `regi.el', providing an AWK-like control structure for use in
+          lisp programs, and
+
+        * `reporter.el', providing customizable bug reporting for lisp
+          packages.
+
+        * `supercite.el', a minor mode for quoting sections of mail
+          messages and news articles,
+
+   * Morten Welinder wrote:
+        * `desktop.el', facilities for saving some of Emacs's state
+          between sessions,
+
+        * `s-region.el', commands for setting the region using the
+          shift key and motion commands, and
+
+        * `dos-fns.el', functions for use under MS-DOS.
+
+     He also helped port Emacs to MS-DOS.
+
+   * Joseph Brian Wells wrote:
+        * `apropos.el', a command to find commands, functions, and
+          variables whose names contain matches for a regular
+          expression,
+
+        * `resume.el', support for processing command-line arguments
+          after resuming a suspended Emacs job, and
+
+        * `mail-extr.el', a package for extracting names and addresses
+          from mail headers, with contributions from Jamie Zawinski.
+
+   * Rodney Whitby and Reto Zimmermann wrote `vhdl-mode.el'.
+
+   * Ed Wilkinson wrote `b2m.c', a program to convert mail files from
+     RMAIL format to Unix `mbox' format.
+
+   * Mike Williams wrote `mouse-sel.el', providing enhanced mouse
+     selection, and `thingatpt.el', a library of functions for finding
+     the "thing" (word, line, s-expression) containing point.
+
+   * Dale R. Worley wrote `emerge.el', a package for interactively
+     merging two versions of a file.
+
+   * Tom Wurgler wrote `emacs-lock.el', which makes it harder to exit
+     with valuable buffers unsaved.
+
+   * Eli Zaretskii made many standard Emacs features work on MS-DOS.
+
+   * Jamie Zawinski wrote:
+        * Emacs 19's optimizing byte compiler, with Hallvard Furuseth,
+
+        * much of the support for faces and X selections,
+
+        * `mailabbrev.el', a package providing automatic expansion of
+          mail aliases, and
+
+        * `tar-mode.el', providing simple viewing and editing commands
+          for tar files.
+
+   * Ian T. Zimmerman wrote `gametree.el'.
+
+   * Neal Ziring and Felix S. T. Wu wrote `vi.el', an emulation of the
+     VI text editor.
+
+   Others too numerous to mention have reported and fixed bugs, and
+added features to many parts of Emacs.  We thank them for their
+generosity as well.
+
+   This list intended to mention every contributor of a major package or
+feature we currently distribute; if you know of someone we have omitted,
+please report that as a manual bug.
 

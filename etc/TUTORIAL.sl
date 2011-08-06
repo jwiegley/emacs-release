@@ -1,5 +1,4 @@
 Copyright (c) 1985 Free Software Foundation, Inc;  See end for conditions.
-Translated by Primoz Peterlin <peterlin@biofiz.mf.uni-lj.sl>
 Emacs. Prvo berilo.
 
 Ukazi v Emacsu v splo¹nem vkljuèujejo tipki CONTROL (vèasih oznaèeni
@@ -195,16 +194,20 @@ kolikokrat naj se ukaz ponovi, in nazadnje ¾eljeni ukaz. Èe ima va¹a
 tipkovnica tipko META (ali EDIT ali ALT), lahko izpustite ukaz C-u in
 namesto tega vtipkate ¹tevilo ponovitev, medtem ko dr¾ite pritisnjeno
 tipko META. Druga metoda je sicer kraj¹a, priporoèamo pa prvo, ker
-deluje na vseh terminalih.
+deluje na vseh terminalih. Tak¹en ¹tevilèni argument je ,,prefiksni``
+argument, ker vnesemo argument pred ukazom, na katerega se nana¹a.
 
 Primer: C-u 8 C-f premakne kazalèek za osem znakov naprej.
 
 >> Poskusite s primernim argumentom za ¹tevilo ponovitev ukaza
    C-n ali C-p priti èim bli¾e tej vrstici v enem samem skoku.
 
-Kot smo rekli, veèina ukazov prebere ¹tevilèni argument kot ¹tevilo
-ponovitev ukaza. Doloèeni izjemni ukazi pa ga uporabijo tudi drugaèe.
-Ukaza C-v in M-v sta tak¹ni izjemi. Èe jima podamo argument,
+Veèina ukazov, ne pa vsi, uporablja ¹tevilèni argument kot ¹tevilo
+ponovitev ukaza. Nekateri ukazi (nobeden od tistih, ki smo si jih
+ogledali do zdaj) ga uporabljajo kot stikalo: s podanim prefiksnim
+argumentom napravi ukaz nekaj drugega kot obièajno.
+
+Ukaza C-v in M-v sta tudi izjemi, a drugaèni. Èe jima podamo argument,
 premakneta zaslon za navedeno ¹tevilo vrstic, ne pa zaslonov. Ukaz C-u
 4 C-v, na primer, premakne zaslon navzgor za 4 vrstice.
 
@@ -662,7 +665,7 @@ datoteka ni veè potrebna, in Emacs jo pobri¹e.
 Èe res pride do izgube podatkov v pomnilniku, lahko povrnete avtomatièno
 shranjeno besedilo tako, da normalno poi¹èete datoteko (pravo ime
 datoteke, ne ime avtomatièno shranjene datoteke), zatem pa vtipkate M-x
-recover file<return>. Ko vas vpra¹a za potrditev, vtipkajte yes<return>
+recover file<Return>. Ko vas vpra¹a za potrditev, vtipkajte yes<Return>
 za nadaljevanje in povrnitev avtomatièno shranjenenih podatkov. 
 
 
@@ -714,7 +717,7 @@ Fundamental.
 
 Èe nameravate popravljati slovensko (ali angle¹ko) besedilo, kot je na
 primer tole, boste verjetno izbrali tekstovni naèin (Text).
->> Vtipkajte M-x text-mode<Return>.
+>> Vtipkajte M-x text mode<Return>.
 
 Ne skrbite, noben od ukazov, ki ste se jih nauèili, se s tem ne
 spremeni kaj dosti. Lahko pa opazite, da Emacs zdaj jemlje opu¹èaje za
@@ -743,12 +746,12 @@ Podnaèin, ki je zelo uporaben, posebno za pisanje besedil, je Auto
 Fill. Ko je vklopljen, Emacs med pisanjem avtomatièno deli vrstice na
 presledkih med besedami, tako da vrstice niso predolge.
 
-Vklopite ga lahko z ukazom M-x auto-fill-mode<return>. Ko je
+Vklopite ga lahko z ukazom M-x auto fill mode<return>. Ko je
 vklopljen, ga lahko izklopite z istim ukazom, M-x
-auto-fill-mode<return>. Z istim ukazom torej preklapljamo
+auto fill mode<return>. Z istim ukazom torej preklapljamo
 (angl. toggle) med vklopljenim in izklopljenim stanjem.
 
->> Vtipkajte zdaj M-x auto-fill-mode. Potem zaènite tipkati "asdf asdkl
+>> Vtipkajte zdaj M-x auto fill mode. Potem zaènite tipkati "asdf asdkl
    sdjf sdjkf"... dokler ne opazite, da je Emacs razbil vrstico na dve.
    Med tipkanjem mora biti dovolj presledkov, saj Auto Fill prelamlja
    vrstice samo na presledkih.

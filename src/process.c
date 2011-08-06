@@ -547,7 +547,7 @@ DEFUN ("get-process", Fget_process, Sget_process, 1, 1, 0,
 }
 
 DEFUN ("get-buffer-process", Fget_buffer_process, Sget_buffer_process, 1, 1, 0,
-  "Return the (or, a) process associated with BUFFER.\n\
+  "Return the (or a) process associated with BUFFER.\n\
 BUFFER may be a buffer or the name of one.")
   (buffer)
      register Lisp_Object buffer;
@@ -635,7 +635,8 @@ nil, indicating the current buffer's process.")
 }
 
 DEFUN ("process-status", Fprocess_status, Sprocess_status, 1, 1, 0,
-  "Return the status of PROCESS: a symbol, one of these:\n\
+  "Return the status of PROCESS.\n\
+The returned value is one of the following symbols:\n\
 run  -- for a process that is running.\n\
 stop -- for a process stopped but continuable.\n\
 exit -- for a process that has exited.\n\
@@ -643,7 +644,7 @@ signal -- for a process that has got a fatal signal.\n\
 open -- for a network stream connection that is open.\n\
 closed -- for a network stream connection that is closed.\n\
 nil -- if arg is a process name and no such process exists.\n\
-PROCESS may be a process, a buffer, the name of a process or buffer, or\n\
+PROCESS may be a process, a buffer, the name of a process, or\n\
 nil, indicating the current buffer's process.")
   (process)
      register Lisp_Object process;
@@ -751,8 +752,7 @@ DEFUN ("set-process-buffer", Fset_process_buffer, Sset_process_buffer,
 DEFUN ("process-buffer", Fprocess_buffer, Sprocess_buffer,
   1, 1, 0,
   "Return the buffer PROCESS is associated with.\n\
-Output from PROCESS is inserted in this buffer\n\
-unless PROCESS has a filter.")
+Output from PROCESS is inserted in this buffer unless PROCESS has a filter.")
   (process)
      register Lisp_Object process;
 {
@@ -917,9 +917,9 @@ For a net connection, the value is a cons cell of the form (HOST SERVICE).")
 #if 0 /* Turned off because we don't currently record this info
 	 in the process.  Perhaps add it.  */
 DEFUN ("process-connection", Fprocess_connection, Sprocess_connection, 1, 1, 0,
- "Return the connection type of `PROCESS'.\n\
-The value is `nil' for a pipe,\n\
-`t' or `pty' for a pty, or `stream' for a socket connection.")
+ "Return the connection type of PROCESS.\n\
+The value is nil for a pipe, t or `pty' for a pty, or `stream' for\n\
+a socket connection.")
   (process)
      Lisp_Object process;
 {
@@ -1047,8 +1047,8 @@ Proc         Status   Buffer         Tty         Command\n\
 
 DEFUN ("list-processes", Flist_processes, Slist_processes, 0, 0, "",
   "Display a list of all processes.\n\
-\(Any processes listed as Exited or Signaled are actually eliminated\n\
-after the listing is made.)")
+Any process listed as exited or signaled is actually eliminated\n\
+after the listing is made.")
   ()
 {
   internal_with_output_to_temp_buffer ("*Process List*",
@@ -1442,11 +1442,9 @@ create_process (process, new_argv, current_dir)
       /* In unibyte mode, character code conversion should not take
 	 place but EOL conversion should.  So, setup raw-text or one
 	 of the subsidiary according to the information just setup.  */
-      if (NILP (Vcoding_system_for_read)
-	  && !NILP (XPROCESS (process)->decode_coding_system))
+      if (!NILP (XPROCESS (process)->decode_coding_system))
 	setup_raw_text_coding_system (proc_decode_coding_system[inchannel]);
-      if (NILP (Vcoding_system_for_write)
-	  && !NILP (XPROCESS (process)->encode_coding_system))
+      if (!NILP (XPROCESS (process)->encode_coding_system))
 	setup_raw_text_coding_system (proc_encode_coding_system[outchannel]);
     }
 
@@ -2157,6 +2155,9 @@ Return non-nil iff we received any output before the timeout expired.")
   int seconds;
   int useconds;
 
+  if (! NILP (process))
+    CHECK_PROCESS (process, 0);
+
   if (! NILP (timeout_msecs))
     {
       CHECK_NUMBER (timeout_msecs, 2);
@@ -2841,7 +2842,12 @@ read_process_output (proc, channel)
 
   /* At this point, NBYTES holds number of characters just received
      (including the one in proc_buffered_char[channel]).  */
-  if (nbytes <= 0) return nbytes;
+  if (nbytes <= 0)
+    {
+      if (nbytes < 0 || coding->mode & CODING_MODE_LAST_BLOCK)
+	return nbytes;
+      coding->mode |= CODING_MODE_LAST_BLOCK;
+    }
 
   /* Now set NBYTES how many bytes we must decode.  */
   nbytes += carryover;
@@ -2961,6 +2967,7 @@ read_process_output (proc, channel)
       Lisp_Object obuffer, okeymap;
       Lisp_Object text;
       int outer_running_asynch_code = running_asynch_code;
+      int waiting = waiting_for_user_input_p;
 
       /* No need to gcpro these, because all we do with them later
 	 is test them for EQness, and none of them should be a string.  */
@@ -2988,7 +2995,14 @@ read_process_output (proc, channel)
 	 save the match data in a special nonrecursive fashion.  */
       running_asynch_code = 1;
 
-      text = make_string_from_bytes (chars, nchars, nbytes);
+      /* The multibyteness of a string given to the filter is decided
+         by which coding system we used for decoding.  */
+      if (coding->type == coding_type_no_conversion
+	  || coding->type == coding_type_raw_text)
+	text = make_unibyte_string (chars, nbytes);
+      else
+	text = make_multibyte_string (chars, nchars, nbytes);
+
       internal_condition_case_1 (read_process_output_call,
 				 Fcons (outstream,
 					Fcons (proc, Fcons (text, Qnil))),
@@ -3001,6 +3015,10 @@ read_process_output (proc, channel)
 
       /* Handling the process output should not deactivate the mark.  */
       Vdeactivate_mark = odeactivate;
+
+      /* Restore waiting_for_user_input_p as it was
+	 when we were called, in case the filter clobbered it.  */
+      waiting_for_user_input_p = waiting;
 
 #if 0 /* Call record_asynch_buffer_change unconditionally,
 	 because we might have changed minor modes or other things
@@ -3077,7 +3095,10 @@ read_process_output (proc, channel)
 	  insert_before_markers (temp_buf, nbytes);
 	}
       else
-	insert_1_both (chars, nchars, nbytes, 0, 1, 1);
+	{
+	  insert_1_both (chars, nchars, nbytes, 0, 1, 1);
+	  signal_after_change (opoint, 0, PT - opoint);
+	}
       set_marker_both (p->mark, p->buffer, PT, PT_BYTE);
 
       update_mode_lines++;
@@ -3189,11 +3210,11 @@ send_process (proc, buf, len, object)
 
       /* Remember the offset of data because a string or a buffer may
          be relocated.  Setting OFFSET to -1 means we don't have to
-         care relocation.  */
+         care about relocation.  */
       offset = (BUFFERP (object)
 		? BUF_PTR_BYTE_POS (XBUFFER (object), buf)
 		: (STRINGP (object)
-		   ? offset = buf - XSTRING (object)->data
+		   ? buf - XSTRING (object)->data
 		   : -1));
 
       if (carryover > 0)
@@ -3206,7 +3227,7 @@ send_process (proc, buf, len, object)
 		buf = BUF_BYTE_ADDRESS (XBUFFER (object), offset);
 	      else if (STRINGP (object))
 		buf = offset + XSTRING (object)->data;
-	      /* Now we don't have to care relocation.  */
+	      /* Now we don't have to care about relocation.  */
 	      offset = -1;
 	    }
 	  bcopy ((XSTRING (XPROCESS (proc)->encoding_buf)->data
@@ -3421,10 +3442,49 @@ Output from processes can arrive in between bunches.")
   return Qnil;
 }
 
+DEFUN ("process-running-child-p", Fprocess_running_child_p,
+       Sprocess_running_child_p, 0, 1, 0,
+  "Return t if PROCESS has given the terminal to a child.\n\
+If the operating system does not make it possible to find out,\n\
+return t unconditionally.")
+  (process)
+     Lisp_Object process;
+{
+  /* Initialize in case ioctl doesn't exist or gives an error,
+     in a way that will cause returning t.  */
+  int gid = 0;
+  Lisp_Object proc;
+  struct Lisp_Process *p;
+
+  proc = get_process (process);
+  p = XPROCESS (proc);
+
+  if (!EQ (p->childp, Qt))
+    error ("Process %s is not a subprocess",
+	   XSTRING (p->name)->data);
+  if (XINT (p->infd) < 0)
+    error ("Process %s is not active",
+	   XSTRING (p->name)->data);
+
+#ifdef TIOCGPGRP 
+  if (!NILP (p->subtty))
+    ioctl (XFASTINT (p->subtty), TIOCGPGRP, &gid);
+  else
+    ioctl (XINT (p->infd), TIOCGPGRP, &gid);
+#endif /* defined (TIOCGPGRP ) */
+
+  if (gid == XFASTINT (p->pid))
+    return Qnil;
+  return Qt;
+}
+
 /* send a signal number SIGNO to PROCESS.
-   CURRENT_GROUP means send to the process group that currently owns
-   the terminal being used to communicate with PROCESS.
+   If CURRENT_GROUP is t, that means send to the process group
+   that currently owns the terminal being used to communicate with PROCESS.
    This is used for various commands in shell mode.
+   If CURRENT_GROUP is lambda, that means send to the process group
+   that currently owns the terminal, but only if it is NOT the shell itself.
+
    If NOMSG is zero, insert signal-announcements into process's buffers
    right away.
 
@@ -3580,6 +3640,11 @@ process_send_signal (process, signo, current_group, nomsg)
 	 the child itself heads the pgrp.  */
       gid = - XFASTINT (p->pid);
 #endif /* ! defined (TIOCGPGRP ) */
+
+      /* If current_group is lambda, and the shell owns the terminal,
+	 don't send any signal.  */
+      if (EQ (current_group, Qlambda) && gid == - XFASTINT (p->pid))
+	return;
     }
   else
     gid = - XFASTINT (p->pid);
@@ -3639,14 +3704,17 @@ process_send_signal (process, signo, current_group, nomsg)
 }
 
 DEFUN ("interrupt-process", Finterrupt_process, Sinterrupt_process, 0, 2, 0,
-  "Interrupt process PROCESS.  May be process or name of one.\n\
+  "Interrupt process PROCESS.\n\
 PROCESS may be a process, a buffer, or the name of a process or buffer.\n\
 nil or no arg means current buffer's process.\n\
 Second arg CURRENT-GROUP non-nil means send signal to\n\
 the current process-group of the process's controlling terminal\n\
 rather than to the process's own process group.\n\
 If the process is a shell, this means interrupt current subjob\n\
-rather than the shell.")
+rather than the shell.\n\
+\n\
+If CURRENT-GROUP is `lambda', and if the shell owns the terminal,\n\
+don't send the signal.")
   (process, current_group)
      Lisp_Object process, current_group;
 {
@@ -3828,7 +3896,7 @@ SIGCODE may be an integer, or a symbol whose name is a signal name.")
 
 DEFUN ("process-send-eof", Fprocess_send_eof, Sprocess_send_eof, 0, 1, 0,
   "Make PROCESS see end-of-file in its input.\n\
-Eof comes after any text already sent to it.\n\
+EOF comes after any text already sent to it.\n\
 PROCESS may be a process, a buffer, the name of a process or buffer, or\n\
 nil, indicating the current buffer's process.\n\
 If PROCESS is a network connection, or is a process communicating\n\
@@ -3838,14 +3906,22 @@ text to PROCESS after you call this function.")
      Lisp_Object process;
 {
   Lisp_Object proc;
+  struct coding_system *coding;
 
   proc = get_process (process);
+  coding = proc_encode_coding_system[XINT (XPROCESS (proc)->outfd)];
 
   /* Make sure the process is really alive.  */
   if (! NILP (XPROCESS (proc)->raw_status_low))
     update_status (XPROCESS (proc));
   if (! EQ (XPROCESS (proc)->status, Qrun))
     error ("Process %s not running", XSTRING (XPROCESS (proc)->name)->data);
+
+  if (CODING_REQUIRE_FLUSHING (coding))
+    {
+      coding->mode |= CODING_MODE_LAST_BLOCK;
+      send_process (proc, "", 0, Qnil);
+    }
 
 #ifdef VMS
   send_process (proc, "\032", 1, Qnil); 	/* ^z */
@@ -4114,6 +4190,7 @@ exec_sentinel (proc, reason)
   register struct Lisp_Process *p = XPROCESS (proc);
   int count = specpdl_ptr - specpdl;
   int outer_running_asynch_code = running_asynch_code;
+  int waiting = waiting_for_user_input_p;
 
   /* No need to gcpro these, because all we do with them later
      is test them for EQness, and none of them should be a string.  */
@@ -4160,6 +4237,11 @@ exec_sentinel (proc, reason)
   running_asynch_code = outer_running_asynch_code;
 
   Vdeactivate_mark = odeactivate;
+
+  /* Restore waiting_for_user_input_p as it was
+     when we were called, in case the filter clobbered it.  */
+  waiting_for_user_input_p = waiting;
+
 #if 0
   if (! EQ (Fcurrent_buffer (), obuffer)
       || ! EQ (current_buffer->keymap, okeymap))
@@ -4301,8 +4383,9 @@ status_notify ()
 
 DEFUN ("set-process-coding-system", Fset_process_coding_system,
        Sset_process_coding_system, 1, 3, 0,
-  "Set coding systems of PROCESS to DECODING (input from the process) and\n\
-ENCODING (output to the process).")
+  "Set coding systems of PROCESS to DECODING and ENCODING.\n\
+DECODING will be used to decode subprocess output and ENCODING to\n\
+encode subprocess input.")
   (proc, decoding, encoding)
      register Lisp_Object proc, decoding, encoding;
 {
@@ -4504,6 +4587,7 @@ The value takes effect when `start-process' is called.");
   defsubr (&Squit_process);
   defsubr (&Sstop_process);
   defsubr (&Scontinue_process);
+  defsubr (&Sprocess_running_child_p);
   defsubr (&Sprocess_send_eof);
   defsubr (&Ssignal_process);
   defsubr (&Swaiting_for_user_input_p);

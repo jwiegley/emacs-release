@@ -36,7 +36,8 @@
 
 (defcustom display-time-mode nil
   "Toggle display of time, load level, and mail flag in mode lines.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `display-time-mode'."
   :set (lambda (symbol value)
 	 (display-time-mode (or value 0)))
   :initialize 'custom-initialize-default
@@ -212,9 +213,11 @@ would give mode line times like `94/12/30 21:07:48 (UTC)'."
 	 (mail (and (stringp mail-spool-file)
 		    (or (null display-time-server-down-time)
 			;; If have been down for 20 min, try again.
-			(> (- (nth 1 (current-time))
-			      display-time-server-down-time)
-			   1200))
+			(> (- (nth 1 now) display-time-server-down-time)
+			   1200)
+			(and (< (nth 1 now) display-time-server-down-time)
+			     (> (- (nth 1 now) display-time-server-down-time)
+				-64336)))
 		    (let ((start-time (current-time)))
 		      (prog1
 			  (display-time-file-nonempty-p mail-spool-file)

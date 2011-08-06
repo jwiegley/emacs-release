@@ -5,7 +5,7 @@
 ;; Author:     Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: Andre Spiegel <spiegel@inf.fu-berlin.de>
 
-;; $Id: vc-hooks.el,v 1.111 1998/08/08 07:11:40 rms Exp $
+;; $Id: vc-hooks.el,v 1.114 1999/06/30 07:10:20 spiegel Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -879,15 +879,16 @@ For CVS, the full name of CVS/Entries is returned."
 	   (file-directory-p (concat dirname "CVS/"))
 	   (file-readable-p (concat dirname "CVS/Entries")))
       (let ((file (concat dirname basename))
-            ;; make sure that the file name is searched 
-            ;; case-sensitively
-            (case-fold-search nil)
             buffer)
 	(unwind-protect
 	    (save-excursion
 	      (setq buffer (set-buffer (get-buffer-create "*vc-info*")))
 	      (vc-insert-file (concat dirname "CVS/Entries"))
 	      (goto-char (point-min))
+	      ;; make sure that the file name is searched 
+	      ;; case-sensitively - case-fold-search is a buffer-local
+	      ;; variable, so setting it here won't affect any other buffers
+	      (setq case-fold-search nil)
 	      (cond
 	       ;; entry for a "locally added" file (not yet committed)
 	       ((re-search-forward
@@ -962,7 +963,10 @@ For CVS, the full name of CVS/Entries is returned."
   "Change read-only status of current buffer, perhaps via version control.
 If the buffer is visiting a file registered with version control,
 then check the file in or out.  Otherwise, just change the read-only flag
-of the buffer.  With prefix argument, ask for version number."
+of the buffer.
+With prefix argument, ask for version number to check in or check out.
+Check-out of a specified version number does not lock the file;
+to do that, use this command a second time with no argument."
   (interactive "P")
   (if (or (and (boundp 'vc-dired-mode) vc-dired-mode)
           ;; use boundp because vc.el might not be loaded
@@ -1174,7 +1178,7 @@ Returns t if checkout was successful, nil otherwise."
     '("Retrieve Snapshot" . vc-retrieve-snapshot))
   (define-key vc-menu-map [vc-create-snapshot]
     '("Create Snapshot" . vc-create-snapshot))
-  (define-key vc-menu-map [vc-directory] '("Show Locked Files" . vc-directory))
+  (define-key vc-menu-map [vc-directory] '("VC Directory Listing" . vc-directory))
   (define-key vc-menu-map [separator1] '("----"))
   (define-key vc-menu-map [vc-annotate] '("Annotate" . vc-annotate))
   (define-key vc-menu-map [vc-rename-file] '("Rename File" . vc-rename-file))
@@ -1193,18 +1197,22 @@ Returns t if checkout was successful, nil otherwise."
   (define-key vc-menu-map [vc-next-action] '("Check In/Out" . vc-next-action))
   (define-key vc-menu-map [vc-register] '("Register" . vc-register)))
 
-(put 'vc-rename-file 'menu-enable 'vc-mode)
-(put 'vc-annotate 'menu-enable '(eq (vc-buffer-backend) 'CVS))
-(put 'vc-version-other-window 'menu-enable 'vc-mode)
-(put 'vc-diff 'menu-enable 'vc-mode)
-(put 'vc-update-change-log 'menu-enable
-     '(eq (vc-buffer-backend) 'RCS))
-(put 'vc-print-log 'menu-enable 'vc-mode)
-(put 'vc-cancel-version 'menu-enable 'vc-mode)
-(put 'vc-revert-buffer 'menu-enable 'vc-mode)
-(put 'vc-insert-headers 'menu-enable 'vc-mode)
-(put 'vc-next-action 'menu-enable 'vc-mode)
-(put 'vc-register 'menu-enable '(and buffer-file-name (not vc-mode)))
+;;; These are not correct and it's not currently clear how doing it
+;;; better (with more complicated expressions) might slow things down
+;;; on older systems.
+
+;;;(put 'vc-rename-file 'menu-enable 'vc-mode)
+;;;(put 'vc-annotate 'menu-enable '(eq (vc-buffer-backend) 'CVS))
+;;;(put 'vc-version-other-window 'menu-enable 'vc-mode)
+;;;(put 'vc-diff 'menu-enable 'vc-mode)
+;;;(put 'vc-update-change-log 'menu-enable
+;;;     '(eq (vc-buffer-backend) 'RCS))
+;;;(put 'vc-print-log 'menu-enable 'vc-mode)
+;;;(put 'vc-cancel-version 'menu-enable 'vc-mode)
+;;;(put 'vc-revert-buffer 'menu-enable 'vc-mode)
+;;;(put 'vc-insert-headers 'menu-enable 'vc-mode)
+;;;(put 'vc-next-action 'menu-enable 'vc-mode)
+;;;(put 'vc-register 'menu-enable '(and buffer-file-name (not vc-mode)))
 
 (provide 'vc-hooks)
 

@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1993, 94, 95, 96, 1997 by Free Software Foundation, Inc.
 
-;; Author: Daniel.Pfeiffer@Informatik.START.dbp.de, fax (+49 69) 7588-2389
+;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Version: 2.0e
 ;; Maintainer: FSF
 ;; Keywords: languages, unix
@@ -80,7 +80,8 @@
     (tcsh . csh)
     (wksh . ksh88)
     (wsh . sh)
-    (zsh . ksh88))
+    (zsh . ksh88)
+    (rpm . sh))
   "*Alist showing the direct ancestor of various shells.
 This is the basis for `sh-feature'.  See also `sh-alias-alist'.
 By default we have the following three hierarchies:
@@ -194,6 +195,8 @@ the car and cdr are the same symbol.")
 
 (defun sh-canonicalize-shell (shell)
   "Convert a shell name SHELL to the one we should handle it as."
+  (if (string-match "\\.exe\\'" shell)
+      (setq shell (substring shell 0 (match-beginning 0))))
   (or (symbolp shell)
       (setq shell (intern shell)))
   (or (cdr (assq shell sh-alias-alist))
@@ -632,7 +635,11 @@ See `sh-feature'.")
     (shell eval sh-append executable-font-lock-keywords
 	   '("\\\\[^A-Za-z0-9]" 0 font-lock-string-face)
 	   '("\\${?\\([A-Za-z_][A-Za-z0-9_]*\\|[0-9]+\\|[$*_]\\)" 1
-	     font-lock-variable-name-face)))
+	     font-lock-variable-name-face))
+    (rpm eval sh-append rpm2
+	 '("%{?\\(\\sw+\\)"  1 font-lock-keyword-face))
+    (rpm2 eval sh-append shell
+	  '("^\\(\\sw+\\):"  1 font-lock-variable-name-face)))
   "Default expressions to highlight in Shell Script modes.  See `sh-feature'.")
 
 (defvar sh-font-lock-keywords-1
@@ -766,14 +773,18 @@ with your script for an edit-interpret-debug cycle."
   (let ((interpreter
 	 (save-excursion
 	   (goto-char (point-min))
-	   (if (looking-at "#![ \t]?\\([^ \t\n]*/bin/env[ \t]\\)?\\([^ \t\n]+\\)")
-	       (match-string 2)))))
+	   (cond ((looking-at "#![ \t]?\\([^ \t\n]*/bin/env[ \t]\\)?\\([^ \t\n]+\\)")
+		  (match-string 2))
+		 ((and buffer-file-name
+		       (string-match "\\.m?spec$" buffer-file-name))
+		  "rpm")))))
     (if interpreter
 	(sh-set-shell interpreter nil nil)
       (progn
         ;; If we don't know the shell for this file, set the syntax
         ;; table anyway, for the user's normal choice of shell.
-        (set-syntax-table (sh-feature sh-mode-syntax-table))
+	(set-syntax-table (or (sh-feature sh-mode-syntax-table)
+			      (standard-syntax-table)))
         ;; And avoid indent-new-comment-line (at least) losing.
         (setq comment-start-skip "#+[\t ]*"))))
   (run-hooks 'sh-mode-hook))
@@ -785,11 +796,12 @@ with your script for an edit-interpret-debug cycle."
   "Function to get simple fontification based on `sh-font-lock-keywords'.
 This adds rules for comments and assignments."
   (sh-feature sh-font-lock-keywords
-	      (lambda (list)
-		`((,(sh-feature sh-assignment-regexp)
-		   1 font-lock-variable-name-face)
-		  ,@keywords
-		  ,@list))))
+	      (when (stringp (sh-feature sh-assignment-regexp))
+		(lambda (list)
+		  `((,(sh-feature sh-assignment-regexp)
+		     1 font-lock-variable-name-face)
+		    ,@keywords
+		    ,@list)))))
 
 (defun sh-font-lock-keywords-1 (&optional builtins)
   "Function to get better fontification including keywords."
@@ -830,6 +842,8 @@ Calls the value of `sh-set-shell-hook' if set."
 				      (lambda (x) (eq (cdr x) 'sh-mode)))
 		     (eq executable-query 'function)
 		     t))
+  (if (string-match "\\.exe\\'" shell)
+      (setq shell (substring shell 0 (match-beginning 0))))
   (setq sh-shell (intern (file-name-nondirectory shell))
 	sh-shell (or (cdr (assq sh-shell sh-alias-alist))
 		     sh-shell))
@@ -847,13 +861,13 @@ Calls the value of `sh-set-shell-hook' if set."
 	sh-shell-variables nil
 	sh-shell-variables-initialized nil
 	imenu-generic-expression (sh-feature sh-imenu-generic-expression)
-	imenu-case-fold-search nil
-	shell (sh-feature sh-variables))
+	imenu-case-fold-search nil)
   (set-syntax-table (or (sh-feature sh-mode-syntax-table)
 			(standard-syntax-table)))
-  (while shell
-    (sh-remember-variable (car shell))
-    (setq shell (cdr shell)))
+  (let ((vars (sh-feature sh-variables)))
+    (while vars
+      (sh-remember-variable (car vars))
+      (setq vars (cdr vars))))
 ;; Packages should not need to toggle Font Lock mode.  sm.
 ;  (and (boundp 'font-lock-mode)
 ;       font-lock-mode
@@ -869,6 +883,7 @@ Else indexing follows an inheritance logic which works in two ways:
 
   - Fall back on successive ancestors (see `sh-ancestor-alist') as long as
     the alist contains no value for the current shell.
+    The ultimate default is always `sh'.
 
   - If the value thus looked up is a list starting with `eval' its `cdr' is
     first evaluated.  If that is also a list and the first argument is a
@@ -892,6 +907,9 @@ in ALIST."
 	(while (and sh-shell
 		    (not (setq elt (assq sh-shell list))))
 	  (setq sh-shell (cdr (assq sh-shell sh-ancestor-alist))))
+	;; If the shell is not known, treat it as sh.
+	(unless elt
+	  (setq elt (assq 'sh list)))
 	(if (and (consp (setq val (cdr elt)))
 		 (eq (car val) 'eval))
 	    (setcdr elt

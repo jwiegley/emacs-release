@@ -183,6 +183,8 @@
 
 ;;; Code:
 
+(require 'bytecomp)
+
 (defun byte-compile-log-lap-1 (format &rest args)
   (if (aref byte-code-vector 0)
       (error "The old version of the disassembler is loaded.  Reload new-bytecomp as well."))
@@ -278,8 +280,10 @@
 	      (cons (list 'lambda (aref fn 0)
 			  (list 'byte-code string (aref fn 2) (aref fn 3)))
 		    (cdr form)))
-	  (if (not (eq (car fn) 'lambda)) (error "%s is not a lambda" name))
-	  (cons fn (cdr form)))))))
+	  (if (eq (car-safe fn) 'lambda)
+	      (cons fn (cdr form))
+	    ;; Give up on inlining.
+	    form))))))
 
 ;;; ((lambda ...) ...)
 ;;; 
@@ -696,6 +700,10 @@
 ;;; (actually, it would be safe if we know the sole arg
 ;;; is not a marker).
 ;;	((null (cdr (cdr form))) (nth 1 form))
+	((null (cddr form))
+	 (if (numberp (nth 1 form))
+	     (nth 1 form)
+	   form))
 	((and (null (nthcdr 3 form))
 	      (or (memq (nth 1 form) '(1 -1))
 		  (memq (nth 2 form) '(1 -1))))
@@ -1377,7 +1385,8 @@
     pop-up-frames pop-up-windows print-escape-multibyte
     print-escape-newlines
     print-escape-nonascii print-quoted scroll-preserve-screen-position
-    system-uses-terminfo truncate-partial-width-windows use-dialog-box
+    system-uses-terminfo truncate-partial-width-windows
+    unibyte-display-via-language-environment use-dialog-box
     visible-bell vms-stmlf-recfm words-include-escapes)
   "DEFVAR_BOOL variables.  Giving these any non-nil value sets them to t.
 If this does not enumerate all DEFVAR_BOOL variables, the byte-optimizer

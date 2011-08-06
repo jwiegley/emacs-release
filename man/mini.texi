@@ -103,8 +103,8 @@ Find File: /u2/emacs/src//etc/termcap
 @cindex // in file name
 @cindex double slash in file name
 @cindex slashes repeated in file name
-Two slashes in a row are not normally meaningful in a file name, but
-they are allowed in GNU Emacs.  They mean, ``ignore everything before
+GNU Emacs gives a special meaning to a double slash (which is not
+normally a useful thing to write): it means, ``ignore everything before
 the second slash in the pair.''  Thus, @samp{/u2/emacs/src/} is ignored
 in the example above, and you get the file @file{/etc/termcap}.
 
@@ -392,11 +392,11 @@ in the minibuffer.  They discard the old minibuffer contents, so you can
 think of them as moving through the history of previous arguments.
 
 @table @kbd
-@item @key{up}
+@item @key{UP}
 @itemx M-p
 Move to the next earlier argument string saved in the minibuffer history
 (@code{previous-history-element}).
-@item @key{down}
+@item @key{DOWN}
 @itemx M-n
 Move to the next later argument string saved in the minibuffer history
 (@code{next-history-element}).

@@ -630,7 +630,7 @@ to run it every morning at 1am."
 	(setq ndays diary-mail-days))
     (calendar)
     (view-diary-entries ndays)
-    (set-buffer "*Fancy Diary Entries*")
+    (set-buffer fancy-diary-buffer)
     (setq text (buffer-substring (point-min) (point-max)))
 
     ;; Now send text as a mail message.
@@ -765,18 +765,18 @@ After the entries are marked, the hooks `nongregorian-diary-marking-hook' and
                                      (string-to-int y-str)))))
                         (if dd-name
                             (mark-calendar-days-named
-                             (cdr (assoc (capitalize (substring dd-name 0 3))
-                                         (calendar-make-alist
-                                          calendar-day-name-array
-                                          0
-                                          '(lambda (x) (substring x 0 3))))))
+                             (cdr (assoc-ignore-case
+                                   (substring dd-name 0 3)
+                                   (calendar-make-alist
+                                    calendar-day-name-array
+                                    0
+                                    '(lambda (x) (substring x 0 3))))))
                           (if mm-name
                               (if (string-equal mm-name "*")
                                   (setq mm 0)
                                 (setq mm
-                                      (cdr (assoc
-                                            (capitalize
-                                             (substring mm-name 0 3))
+                                      (cdr (assoc-ignore-case
+                                            (substring mm-name 0 3)
                                             (calendar-make-alist
                                              calendar-month-name-array
                                              1
@@ -840,10 +840,14 @@ is marked.  See the documentation for the function `list-sexp-diary-entries'."
               (backward-char 1)
               (setq entry ""))
           (setq entry-start (point))
+          ;; Find end of entry
           (re-search-forward "\^M\\|\n" nil t)
           (while (looking-at " \\|\^I")
-            (re-search-forward "\^M\\|\n" nil t))
-          (backward-char 1)
+ 	    (or (re-search-forward "\^M\\|\n" nil t)
+ 		(re-search-forward "$" nil t)))
+          (if (or (char-equal (preceding-char) ?\^M)
+ 		  (char-equal (preceding-char) ?\n))
+ 	      (backward-char 1))
           (setq entry (buffer-substring-no-properties entry-start (point)))
           (while (string-match "[\^M]" entry)
             (aset entry (match-beginning 0) ?\n )))
@@ -1233,7 +1237,7 @@ all values."
 (defun diary-block (m1 d1 y1 m2 d2 y2)
   "Block diary entry.
 Entry applies if date is between two dates.  Order of the parameters is
-M1, D1, Y1, M2, D2, Y2 `european-calendar-style' is nil, and
+M1, D1, Y1, M2, D2, Y2 if `european-calendar-style' is nil, and
 D1, M1, Y1, D2, M2, Y2 if `european-calendar-style' is t."
   (let ((date1 (calendar-absolute-from-gregorian
                 (if european-calendar-style
@@ -1276,7 +1280,7 @@ An optional parameter DAY means the Nth DAYNAME on or after/before MONTH DAY."
               (m2 (extract-calendar-month last))
               (d2 (extract-calendar-day last))
               (y2 (extract-calendar-year last)))
-	 (if (or (and (= m1 m2)		; only possible base dates in one month
+	 (if (or (and (= m1 m2)	; only possible base dates in one month
 		      (or (and (listp month) (memq m1 month))
 			  (eq month t)
 			  (= m1 month))
@@ -1285,9 +1289,10 @@ An optional parameter DAY means the Nth DAYNAME on or after/before MONTH DAY."
 					 (calendar-last-day-of-month m1 y1)))))
 			(and (<= d1 d) (<= d d2))))
 		 ;; only possible base dates straddle two months
-		 (and (< m1 m2)
+		 (and (or (< y1 y2)
+ 			  (and (= y1 y2) (< m1 m2)))
 		      (or
-		       ;; m1, d1 works is a base date
+		       ;; m1, d1 works as a base date
 		       (and
 			(or (and (listp month) (memq m1 month))
 			    (eq month t)
@@ -1295,7 +1300,7 @@ An optional parameter DAY means the Nth DAYNAME on or after/before MONTH DAY."
 			(<= d1 (or day (if (> n 0)
 					   1
 					 (calendar-last-day-of-month m1 y1)))))
-		       ;; m2, d2 works is a base date
+		       ;; m2, d2 works as a base date
 		       (and (or (and (listp month) (memq m2 month))
 				(eq month t)
 				(= m2 month))
@@ -1382,27 +1387,32 @@ occur on.  If the current date is (one of) DAYS before the event indicated by
 SEXP, then a suitable message (as specified by `diary-remind-message' is
 returned.
 
-In addition to the reminders beforehand, the diary entry also appears on
-the date itself.
- 
-If optional parameter MARKING is non-nil then the reminders are marked on the
-calendar.  Marking of reminders is independent of whether the entry itself is
-a marking or nonmarking one."
-  (let ((diary-entry))
-    (if (or (not marking-diary-entries) marking)
-        (cond
-         ((integerp days)
-          (let ((date (calendar-gregorian-from-absolute
-                       (+ (calendar-absolute-from-gregorian date) days))))
-            (if (setq diary-entry (eval sexp))
-                (setq diary-entry (mapconcat 'eval diary-remind-message "")))))
-         ((and (listp days) days)
-          (setq diary-entry (diary-remind sexp (car days) marking))
-          (if (not diary-entry)
-              (setq diary-entry (diary-remind sexp (cdr days) marking))))))
-    (or diary-entry
-        (and (or (not marking-diary-entries) marking-diary-entry)
-             (eval sexp)))))
+In addition to the reminders beforehand, the diary entry also appears on the
+date itself.
+
+A `diary-nonmarking-symbol' at the beginning of the line of the diary-remind
+entry specifies that the diary entry (not the reminder) is non-marking.
+Marking of reminders is independent of whether the entry itself is a marking
+or nonmarking; if optional parameter MARKING is non-nil then the reminders are
+marked on the calendar."
+  (let ((diary-entry (eval sexp)))
+    (cond
+     ;; Diary entry applies on date
+     ((and diary-entry
+           (or (not marking-diary-entries) marking-diary-entry))
+      diary-entry)
+     ;; Diary entry may apply to `days' before date
+     ((and (integerp days)
+           (not diary-entry); Diary entry does not apply to date
+           (or (not marking-diary-entries) marking))
+      (let ((date (calendar-gregorian-from-absolute
+                   (+ (calendar-absolute-from-gregorian date) days))))
+        (if (setq diary-entry (eval sexp))
+            (mapconcat 'eval diary-remind-message ""))))
+     ;; Diary entry may apply to one of a list of days before date
+     ((and (listp days) days)
+      (or (diary-remind sexp (car days) marking)
+          (diary-remind sexp (cdr days) marking))))))
 
 (defun add-to-diary-list (date string specifier)
   "Add the entry (DATE STRING SPECIFIER) to `diary-entries-list'.

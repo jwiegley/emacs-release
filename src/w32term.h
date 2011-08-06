@@ -28,9 +28,15 @@ Boston, MA 02111-1307, USA.  */
 #define BLACK_PIX_DEFAULT(f) PALETTERGB(0,0,0)
 #define WHITE_PIX_DEFAULT(f) PALETTERGB(255,255,255)
 
-#define FONT_WIDTH(f)	((f)->tm.tmAveCharWidth)
-#define FONT_HEIGHT(f)	((f)->tm.tmHeight)
-#define FONT_BASE(f)    ((f)->tm.tmAscent)
+#define FONT_WIDTH(f)       \
+  ((f)->bdf ? (f)->bdf->width : (f)->tm.tmAveCharWidth)
+#define FONT_HEIGHT(f)      \
+   ((f)->bdf ? (f)->bdf->height : (f)->tm.tmHeight)
+/* No idea why 5 seems to work in here, but it does */
+#define FONT_BASE(f)        \
+  ((f)->bdf ? (f)->bdf->ury : (f)->tm.tmAscent)
+#define FONT_MAX_WIDTH(f)   \
+  ((f)->bdf ? (f)->bdf->width : (f)->tm.tmMaxCharWidth)
 
 #define CHECK_W32_FRAME(f, frame)		\
   if (NILP (frame))				\
@@ -52,15 +58,6 @@ extern struct frame *x_window_to_frame ();
 
 enum text_cursor_kinds {
   filled_box_cursor, hollow_box_cursor, bar_cursor
-};
-
-/* This data type is used for the font_table field
-   of struct w32_display_info.  */
-
-struct font_info 
-{
-  XFontStruct *font;
-  char *name;
 };
 
 /* Structure recording bitmaps and reference count.
@@ -119,19 +116,23 @@ struct w32_display_info
   /* The cursor to use for vertical scroll bars.  */
   Cursor vertical_scroll_bar_cursor;
 
-  /* color palette information */
+  /* color palette information.  */
   int has_palette;
   struct w32_palette_entry * color_list;
   unsigned num_colors;
   HPALETTE palette;
 
-  /* deferred action flags checked when starting frame update */
+  /* deferred action flags checked when starting frame update.  */
   int regen_palette;
+
+  /* Keystroke that has been faked by Emacs and will be ignored when
+     received; value is reset after key is received.  */
+  int faked_key;
 
   /* A table of all the fonts we have already loaded.  */
   struct font_info *font_table;
 
-  /* The current capacity of x_font_table.  */
+  /* The current capacity of font_table.  */
   int font_table_size;
 
   /* These variables describe the range of text currently shown
@@ -202,10 +203,20 @@ extern struct w32_display_info one_w32_display_info;
    FONT-LIST-CACHE records previous values returned by x-list-fonts.  */
 extern Lisp_Object w32_display_name_list;
 
+/* Regexp matching a font name whose width is the same as `PIXEL_SIZE'.  */
+extern Lisp_Object Vx_pixel_size_width_font_regexp;
+
+/* A flag to control how to display unibyte 8-bit character.  */
+extern int unibyte_display_via_language_environment;
+
 extern struct w32_display_info *x_display_info_for_display ();
 extern struct w32_display_info *x_display_info_for_name ();
 
 extern struct w32_display_info *w32_term_init ();
+
+extern Lisp_Object w32_list_fonts ();
+extern struct font_info *w32_get_font_info (), *w32_query_font ();
+extern void w32_find_ccl_program();
 
 /* Each W32 frame object points to its own struct w32_display object
    in the output_data.w32 field.  The w32_display structure contains all
@@ -248,7 +259,15 @@ struct w32_output
      (see the explicit_parent field, below).  */
   Window parent_desc;
 
+  /* Default ASCII font of this frame. */
   XFontStruct *font;
+
+  /* The baseline position of the default ASCII font.  */
+  int font_baseline;
+
+  /* If a fontset is specified for this frame instead of font, this
+     value contains an ID of the fontset, else -1.  */
+  int fontset;
 
   /* Pixel values used for various purposes.
      border_pixel may be -1 meaning use a gray tile.  */
@@ -342,10 +361,14 @@ struct w32_output
 #define FRAME_FOREGROUND_PIXEL(f) ((f)->output_data.w32->foreground_pixel)
 #define FRAME_BACKGROUND_PIXEL(f) ((f)->output_data.w32->background_pixel)
 #define FRAME_FONT(f) ((f)->output_data.w32->font)
+#define FRAME_FONTSET(f) ((f)->output_data.w32->fontset)
 #define FRAME_INTERNAL_BORDER_WIDTH(f) ((f)->output_data.w32->internal_border_width)
 
 /* This gives the w32_display_info structure for the display F is on.  */
 #define FRAME_W32_DISPLAY_INFO(f) (&one_w32_display_info)
+
+/* This is the 'font_info *' which frame F has.  */
+#define FRAME_W32_FONT_TABLE(f) (FRAME_W32_DISPLAY_INFO (f)->font_table)
 
 /* These two really ought to be called FRAME_PIXEL_{WIDTH,HEIGHT}.  */
 #define PIXEL_WIDTH(f) ((f)->output_data.w32->pixel_width)
@@ -585,7 +608,7 @@ w32_fill_rect (f,hdc,f->output_data.w32->background_pixel,lprect)
 #define w32_clear_area(f,hdc,x,y,nx,ny) \
 w32_fill_area (f,hdc,f->output_data.w32->background_pixel,x,y,nx,ny)
 
-extern XFontStruct *w32_load_font ();
+extern struct font_info *w32_load_font ();
 extern void w32_unload_font ();
 
 /* Define for earlier versions of Visual C */
@@ -597,18 +620,22 @@ extern void w32_unload_font ();
 #endif /* MSH_MOUSEWHEEL */
 
 #define WM_EMACS_START                 (WM_USER + 1)
-#define WM_EMACS_KILL                  (WM_EMACS_START + 0x00)
-#define WM_EMACS_CREATEWINDOW          (WM_EMACS_START + 0x01)
-#define WM_EMACS_DONE                  (WM_EMACS_START + 0x02)
-#define WM_EMACS_CREATESCROLLBAR       (WM_EMACS_START + 0x03)
-#define WM_EMACS_SHOWWINDOW            (WM_EMACS_START + 0x04)
-#define WM_EMACS_SETWINDOWPOS          (WM_EMACS_START + 0x05)
-#define WM_EMACS_DESTROYWINDOW         (WM_EMACS_START + 0x06)
-#define WM_EMACS_TRACKPOPUPMENU        (WM_EMACS_START + 0x07)
-#define WM_EMACS_SETFOCUS              (WM_EMACS_START + 0x08)
-#define WM_EMACS_SETFOREGROUND         (WM_EMACS_START + 0x09)
-#define WM_EMACS_SETLOCALE             (WM_EMACS_START + 0x0a)
-#define WM_EMACS_END                   (WM_EMACS_START + 0x0b)
+#define WM_EMACS_KILL                  (WM_EMACS_START + 0)
+#define WM_EMACS_CREATEWINDOW          (WM_EMACS_START + 1)
+#define WM_EMACS_DONE                  (WM_EMACS_START + 2)
+#define WM_EMACS_CREATESCROLLBAR       (WM_EMACS_START + 3)
+#define WM_EMACS_SHOWWINDOW            (WM_EMACS_START + 4)
+#define WM_EMACS_SETWINDOWPOS          (WM_EMACS_START + 5)
+#define WM_EMACS_DESTROYWINDOW         (WM_EMACS_START + 6)
+#define WM_EMACS_TRACKPOPUPMENU        (WM_EMACS_START + 7)
+#define WM_EMACS_SETFOCUS              (WM_EMACS_START + 8)
+#define WM_EMACS_SETFOREGROUND         (WM_EMACS_START + 9)
+#define WM_EMACS_SETLOCALE             (WM_EMACS_START + 10)
+#define WM_EMACS_SETKEYBOARDLAYOUT     (WM_EMACS_START + 11)
+#define WM_EMACS_REGISTER_HOT_KEY      (WM_EMACS_START + 12)
+#define WM_EMACS_UNREGISTER_HOT_KEY    (WM_EMACS_START + 13)
+#define WM_EMACS_TOGGLE_LOCK_KEY       (WM_EMACS_START + 14)
+#define WM_EMACS_END                   (WM_EMACS_START + 15)
 
 #define WND_FONTWIDTH_INDEX    (0) 
 #define WND_LINEHEIGHT_INDEX   (4) 
@@ -656,6 +683,8 @@ extern void deselect_palette (struct frame * f, HDC hdc);
 extern HDC get_frame_dc (struct frame * f);
 extern int release_frame_dc (struct frame * f, HDC hDC);
 
+extern void drain_message_queue ();
+
 extern BOOL get_next_msg ();
 extern BOOL post_msg ();
 extern void complete_deferred_msg (HWND hwnd, UINT msg, LRESULT result);
@@ -686,3 +715,10 @@ extern BOOL parse_button ();
 #define VK_RWIN			0x5C
 #define VK_APPS			0x5D
 #endif
+
+/* Support for treating Windows and Apps keys as modifiers.  These
+   constants must not overlap with any of the dwControlKeyState flags in
+   KEY_EVENT_RECORD.  */
+#define LEFT_WIN_PRESSED       0x8000
+#define RIGHT_WIN_PRESSED      0x4000
+#define APPS_PRESSED           0x2000

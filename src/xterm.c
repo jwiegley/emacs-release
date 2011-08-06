@@ -70,8 +70,8 @@ Boston, MA 02111-1307, USA.  */
 
 #include "charset.h"
 #include "ccl.h"
-#include "fontset.h"
 #include "frame.h"
+#include "fontset.h"
 #include "dispextern.h"
 #include "termhooks.h"
 #include "termopts.h"
@@ -582,7 +582,8 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
       ch = FAST_GLYPH_CHAR (g);
       if (unibyte_display_via_language_environment
 	  && SINGLE_BYTE_CHAR_P (ch)
-	  && ch >= 160)
+	  && (ch >= 0240
+	      || (ch >= 0200 && !NILP (Vnonascii_translation_table))))
 	ch = unibyte_char_to_multibyte (ch);
       if (gidx == 0) XSETFASTINT (first_ch, ch);
       charset = CHAR_CHARSET (ch);
@@ -623,7 +624,8 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 	  ch = FAST_GLYPH_CHAR (g);
 	  if (unibyte_display_via_language_environment
 	      && SINGLE_BYTE_CHAR_P (ch)
-	      && ch >= 160)
+	      && (ch >= 0240
+		  || (ch >= 0200 && !NILP (Vnonascii_translation_table))))
 	    ch = unibyte_char_to_multibyte (ch);
 	  SPLIT_CHAR (ch, this_charset, c1, c2);
 	  if (this_charset != charset
@@ -894,7 +896,9 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 	    background_filled = 1;
 	  }
 	else if (!font
-		 || FONT_HEIGHT (font) < line_height
+		 || FONT_BASE (font) < baseline
+		 || (FONT_HEIGHT (font) - FONT_BASE (font)
+		     < line_height - baseline)
 		 || FONT_WIDTH (font) < glyph_width
 		 || cmpcharp)
 	  {
@@ -4239,6 +4243,13 @@ XTread_socket (sd, bufp, numchars, expected)
 						&event.xkey, copy_buffer,
 						80, &keysym,
 						&status_return);
+		      if (status_return == XLookupNone)
+			break;
+		      else if (status_return == XLookupChars)
+			keysym = NoSymbol;
+		      else if (status_return != XLookupKeySym
+			       && status_return != XLookupBoth)
+			abort ();
 		    }
 		  else
 		    nbytes = XLookupString (&event.xkey, copy_buffer,
@@ -4357,6 +4368,9 @@ XTread_socket (sd, bufp, numchars, expected)
 
 			  count += nbytes;
 			  numchars -= nbytes;
+
+			  if (keysym == NoSymbol)
+			    break;
 			}
 		      else
 			abort ();
@@ -4472,13 +4486,12 @@ XTread_socket (sd, bufp, numchars, expected)
 	      f = x_top_window_to_frame (dpyinfo, event.xconfigure.window);
 	      if (f)
 		{
+		  int rows = PIXEL_TO_CHAR_HEIGHT (f, event.xconfigure.height);
+		  int columns = PIXEL_TO_CHAR_WIDTH (f, event.xconfigure.width);
 #ifndef USE_X_TOOLKIT
 		  /* In the toolkit version, change_frame_size
 		     is called by the code that handles resizing
 		     of the EmacsFrame widget.  */
-
-		  int rows = PIXEL_TO_CHAR_HEIGHT (f, event.xconfigure.height);
-		  int columns = PIXEL_TO_CHAR_WIDTH (f, event.xconfigure.width);
 
 		  /* Even if the number of character rows and columns has
 		     not changed, the font size may have changed, so we need
@@ -4519,7 +4532,16 @@ XTread_socket (sd, bufp, numchars, expected)
 		      event.xconfigure.y = f->output_data.x->widget->core.y;
 		    }
 #endif
+		  /* If cursor was outside the new size, mark it as off.  */
+		  if (f->phys_cursor_y >= rows
+		      || f->phys_cursor_x >= columns)
+		    {
+		      f->phys_cursor_x = 0;
+		      f->phys_cursor_y = 0;
+		      f->phys_cursor_on = 0;
+		    }
 		}
+
 	      goto OTHER;
 
 	    case ButtonPress:
@@ -4556,6 +4578,12 @@ XTread_socket (sd, bufp, numchars, expected)
 		  {
 		    dpyinfo->grabbed |= (1 << event.xbutton.button);
 		    last_mouse_frame = f;
+		    /* Ignore any mouse motion that happened
+		       before this event; any subsequent mouse-movement
+		       Emacs events should reflect only motion after
+		       the ButtonPress.  */
+		    if (f != 0)
+		      f->mouse_moved = 0;
 		  }
 		else
 		  {
@@ -4800,8 +4828,27 @@ x_display_bar_cursor (f, on, x, y)
 	    && x < current_glyphs->used[y])
 	   ? current_glyphs->glyphs[y][x]
 	   : SPACEGLYPH);
+
+      {
+	XGCValues xgcv;
+	unsigned long mask;
+
+	xgcv.background = f->output_data.x->cursor_pixel;
+	xgcv.foreground = f->output_data.x->cursor_pixel;
+	xgcv.graphics_exposures = 0;
+	mask = GCForeground | GCBackground | GCGraphicsExposures;
+
+	if (FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc)
+	  XChangeGC (FRAME_X_DISPLAY (f),
+		     FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc,
+		     mask, &xgcv);
+	else
+	  FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc
+	    = XCreateGC (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f), mask, &xgcv);
+      }
+
       XFillRectangle (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
-		      f->output_data.x->cursor_gc,
+		      FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc,
 		      CHAR_TO_PIXEL_COL (f, x),
 		      CHAR_TO_PIXEL_ROW (f, y),
 		      max (f->output_data.x->cursor_width, 1),
@@ -5414,7 +5461,7 @@ x_new_fontset (f, fontsetname)
   /* Since x_new_font doesn't update any fontset information, do it now.  */
   f->output_data.x->fontset = fontset;
   FS_LOAD_FONT (f, FRAME_X_FONT_TABLE (f),
-		CHARSET_ASCII, XSTRING (result)->data, fontset);
+		CHARSET_ASCII, fontsetp->fontname[CHARSET_ASCII], fontset);
 
   return build_string (fontsetname);
 }
@@ -5475,7 +5522,7 @@ x_calc_absolute_position (f)
 				&newparent, &newchildren, &nchildren))
 		break;
 
-	      XFree (newchildren);
+	      XFree ((char *) newchildren);
 
 	      f->output_data.x->parent_desc = newparent;
 	    }
@@ -6446,6 +6493,7 @@ x_list_fonts (f, pattern, size, maxnames)
   Lisp_Object list = Qnil, patterns, newlist = Qnil, key, tem, second_best;
   Display *dpy = f != NULL ? FRAME_X_DISPLAY (f) : x_display_list->display;
   int try_XLoadQueryFont = 0;
+  int count;
 
   patterns = Fassoc (pattern, Valternate_fontname_alist);
   if (NILP (patterns))
@@ -6454,12 +6502,6 @@ x_list_fonts (f, pattern, size, maxnames)
   if (maxnames == 1 && !size)
     /* We can return any single font matching PATTERN.  */
     try_XLoadQueryFont = 1;
-  else
-    {
-      /* We try at least 10 fonts because XListFonts will return
-	 auto-scaled fonts at the head.  */
-      if (maxnames < 10) maxnames = 10;
-    }
 
   for (; CONSP (patterns); patterns = XCONS (patterns)->cdr)
     {
@@ -6483,12 +6525,22 @@ x_list_fonts (f, pattern, size, maxnames)
       /* At first, put PATTERN in the cache.  */
 
       BLOCK_INPUT;
+      count = x_catch_errors (dpy);
+
       if (try_XLoadQueryFont)
 	{
 	  XFontStruct *font;
 	  unsigned long value;
 
 	  font = XLoadQueryFont (dpy, XSTRING (pattern)->data);
+	  if (x_had_errors_p (dpy))
+	    {
+	      /* This error is perhaps due to insufficient memory on X
+                 server.  Let's just ignore it.  */
+	      font = NULL;
+	      x_clear_errors (dpy);
+	    }
+
 	  if (font
 	      && XGetFontProperty (font, XA_FONT, &value))
 	    {
@@ -6496,12 +6548,21 @@ x_list_fonts (f, pattern, size, maxnames)
 	      int len = strlen (name);
 	      char *tmp;
 
-	      num_fonts = 1;
-	      names = (char **) alloca (sizeof (char *));
-	      /* Some systems only allow alloca assigned to a simple var.  */
-	      tmp = (char *) alloca (len + 1);  names[0] = tmp;
-	      bcopy (name, names[0], len + 1);
-	      XFree (name);
+	      /* If DXPC (a Differential X Protocol Compressor)
+                 Ver.3.7 is running, XGetAtomName will return null
+                 string.  We must avoid such a name.  */
+	      if (len == 0)
+		try_XLoadQueryFont = 0;
+	      else
+		{
+		  num_fonts = 1;
+		  names = (char **) alloca (sizeof (char *));
+		  /* Some systems only allow alloca assigned to a
+                     simple var.  */
+		  tmp = (char *) alloca (len + 1);  names[0] = tmp;
+		  bcopy (name, names[0], len + 1);
+		  XFree (name);
+		}
 	    }
 	  else
 	    try_XLoadQueryFont = 0;
@@ -6511,8 +6572,21 @@ x_list_fonts (f, pattern, size, maxnames)
 	}
 
       if (!try_XLoadQueryFont)
-	names = XListFonts (dpy, XSTRING (pattern)->data, maxnames,
-			    &num_fonts);
+	{
+	  /* We try at least 10 fonts because XListFonts will return
+	     auto-scaled fonts at the head.  */
+	  names = XListFonts (dpy, XSTRING (pattern)->data, max (maxnames, 10),
+			      &num_fonts);
+	  if (x_had_errors_p (dpy))
+	    {
+	      /* This error is perhaps due to insufficient memory on X
+                 server.  Let's just ignore it.  */
+	      names = NULL;
+	      x_clear_errors (dpy);
+	    }
+	}
+
+      x_uncatch_errors (dpy, count);
       UNBLOCK_INPUT;
 
       if (names)
@@ -6594,8 +6668,17 @@ x_list_fonts (f, pattern, size, maxnames)
 	      XFontStruct *thisinfo;
 
 	      BLOCK_INPUT;
+	      count = x_catch_errors (dpy);
 	      thisinfo = XLoadQueryFont (dpy,
 					 XSTRING (XCONS (tem)->car)->data);
+	      if (x_had_errors_p (dpy))
+		{
+		  /* This error is perhaps due to insufficient memory on X
+		     server.  Let's just ignore it.  */
+		  thisinfo = NULL;
+		  x_clear_errors (dpy);
+		}
+	      x_uncatch_errors (dpy, count);
 	      UNBLOCK_INPUT;
 
 	      if (thisinfo)
@@ -6659,6 +6742,7 @@ x_load_font (f, fontname, size)
 {
   struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
   Lisp_Object font_names;
+  int count;
 
   /* Get a list of all the fonts that match this name.  Once we
      have a list of matching fonts, we compare them against the fonts
@@ -6691,11 +6775,20 @@ x_load_font (f, fontname, size)
        because XListFonts (called in x_list_font) of some X server has
        a bug of not finding a font even if the font surely exists and
        is loadable by XLoadQueryFont.  */
-    if (!NILP (font_names))
+    if (size > 0 && !NILP (font_names))
       fontname = (char *) XSTRING (XCONS (font_names)->car)->data;
 
     BLOCK_INPUT;
+    count = x_catch_errors (FRAME_X_DISPLAY (f));
     font = (XFontStruct *) XLoadQueryFont (FRAME_X_DISPLAY (f), fontname);
+    if (x_had_errors_p (FRAME_X_DISPLAY (f)))
+      {
+	/* This error is perhaps due to insufficient memory on X
+	   server.  Let's just ignore it.  */
+	font = NULL;
+	x_clear_errors (FRAME_X_DISPLAY (f));
+      }
+    x_uncatch_errors (FRAME_X_DISPLAY (f), count);
     UNBLOCK_INPUT;
     if (!font)
       return NULL;
@@ -6763,7 +6856,14 @@ x_load_font (f, fontname, size)
       fontp->full_name = fontp->name;
 
     fontp->size = font->max_bounds.width;
-    fontp->height = font->max_bounds.ascent + font->max_bounds.descent;
+    fontp->height = FONT_HEIGHT (font);
+    {
+      /* For some font, ascent and descent in max_bounds field is
+	 larger than the above value.  */
+      int max_height = font->max_bounds.ascent + font->max_bounds.descent;
+      if (max_height > fontp->height)
+	fontp->height = max_height;
+    }
 
     if (NILP (font_names))
       {
@@ -6928,6 +7028,34 @@ same_x_server (name1, name2)
      char *name1, *name2;
 {
   int seen_colon = 0;
+  unsigned char *system_name = XSTRING (Vsystem_name)->data;
+  int system_name_length = strlen (system_name);
+  int length_until_period = 0;
+
+  while (system_name[length_until_period] != 0
+	 && system_name[length_until_period] != '.')
+    length_until_period++;
+
+  /* Treat `unix' like an empty host name.  */
+  if (! strncmp (name1, "unix:", 5))
+    name1 += 4;
+  if (! strncmp (name2, "unix:", 5))
+    name2 += 4;
+  /* Treat this host's name like an empty host name.  */
+  if (! strncmp (name1, system_name, system_name_length)
+      && name1[system_name_length] == ':')
+    name1 += system_name_length;
+  if (! strncmp (name2, system_name, system_name_length)
+      && name2[system_name_length] == ':')
+    name2 += system_name_length;
+  /* Treat this host's domainless name like an empty host name.  */
+  if (! strncmp (name1, system_name, length_until_period)
+      && name1[length_until_period] == ':')
+    name1 += length_until_period;
+  if (! strncmp (name2, system_name, length_until_period)
+      && name2[length_until_period] == ':')
+    name2 += length_until_period;
+
   for (; *name1 != '\0' && *name1 == *name2; name1++, name2++)
     {
       if (*name1 == ':')
@@ -6938,6 +7066,28 @@ same_x_server (name1, name2)
   return (seen_colon
 	  && (*name1 == '.' || *name1 == '\0')
 	  && (*name2 == '.' || *name2 == '\0'));
+}
+#endif
+
+#if defined (HAVE_X_I18N) || (defined (USE_X_TOOLKIT) && defined (HAVE_X11XTR6))
+/* Recover from setlocale (LC_ALL, "").  */
+static void
+fixup_locale ()
+{
+  /* Currently we require strerror to use the "C" locale,
+     since we don't yet support decoding its string result.  */
+#ifdef LC_MESSAGES
+  setlocale (LC_MESSAGES, "C");
+#endif
+
+  /* The Emacs Lisp reader needs LC_NUMERIC to be "C",
+     so that numbers are read and printed properly for Emacs Lisp.  */
+  setlocale (LC_NUMERIC, "C");
+
+  /* Currently we require strftime to use the "C" locale,
+     since we don't yet support encoding its format argument,
+     or decoding its string result.  */
+  setlocale (LC_TIME, "C");
 }
 #endif
 
@@ -6964,8 +7114,7 @@ x_term_init (display_name, xrm_option, resource_name)
 
 #ifdef HAVE_X_I18N
   setlocale (LC_ALL, "");
-  /* In case we just overrode what init_lread did, redo it.  */
-  setlocale (LC_NUMERIC, "C");
+  fixup_locale ();
 #endif
 
 #ifdef USE_X_TOOLKIT
@@ -6996,7 +7145,7 @@ x_term_init (display_name, xrm_option, resource_name)
 
 #ifdef HAVE_X11XTR6
     /* I think this is to compensate for XtSetLanguageProc.  */
-    setlocale (LC_NUMERIC, "C");
+    fixup_locale ();
 #endif
   }
 

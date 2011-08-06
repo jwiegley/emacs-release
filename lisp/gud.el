@@ -110,6 +110,7 @@ optional doc string DOC.  Certain %-escapes in the string arguments
 are interpreted specially if present.  These are:
 
   %f	name (without directory) of current source file.
+  %F	name (without directory or extension) of current source file.
   %d	directory of current source file.
   %l	number of current source line
   %e	text of the C lvalue or function-call expression surrounding point.
@@ -1574,11 +1575,10 @@ The file names should be absolute, or relative to the current directory.")
 ;; Move point past a string literal.
 (defun gud-jdb-skip-string-literal ()
   (forward-char)
-  (while
-      (progn
-	(if (eq (following-char) ?\\)
-	    (forward-char 2))
-	(not (eq (following-char) ?\042)))
+  (while (not (cond
+	       ((eq (following-char) ?\\)
+		(forward-char))
+	       ((eq (following-char) ?\042))))
     (forward-char))
   (forward-char))
 
@@ -1766,7 +1766,7 @@ The file names should be absolute, or relative to the current directory.")
 	(if user-error
 	    (progn
 	      (kill-buffer (current-buffer))
-	      (error "Error: Omit whitespace between '-classpath' and it's value")))
+	      (error "Error: Omit whitespace between '-classpath' and its value")))
 
 	(if args
 	    (setq massaged-args
@@ -1881,13 +1881,13 @@ between it and it's value."
   (gud-common-init command-line 'gud-jdb-massage-args
 	   'gud-jdb-marker-filter 'gud-jdb-find-file)
 
-  (gud-def gud-break  "stop at %l" "\C-b" "Set breakpoint at current line.")
+  (gud-def gud-break  "stop at %F:%l" "\C-b" "Set breakpoint at current line.")
   (gud-def gud-remove "clear %l" "\C-d" "Remove breakpoint at current line")
   (gud-def gud-step   "step"    "\C-s" "Step one source line with display.")
   (gud-def gud-next   "next"    "\C-n" "Step one line (skip functions).")
   (gud-def gud-cont   "cont"    "\C-r" "Continue with display.")
 
-  (setq comint-prompt-regexp "^> \|^.+\[[0-9]+\] ")
+  (setq comint-prompt-regexp "^> \\|^.+\\[[0-9]+\\] ")
   (setq paragraph-start comint-prompt-regexp)
   (run-hooks 'jdb-mode-hook)
 
@@ -2042,6 +2042,10 @@ comint mode, which see."
 	(setq words (cons (substring string beg) words)))
     (nreverse words)))
 
+;; Cause our buffers to be displayed, by default,
+;; in the selected window.
+;;;###autoload (add-hook 'same-window-regexps "\\*gud-.*\\*\\(\\|<[0-9]+>\\)")
+
 ;; Perform initializations common to all debuggers.
 ;; The first arg is the specified command line,
 ;; which starts with the program to debug.
@@ -2072,7 +2076,7 @@ comint mode, which see."
 			(expand-file-name file-subst)
 		      file-subst)))
 	 (filepart (and file-word (concat "-" (file-name-nondirectory file)))))
-    (switch-to-buffer (concat "*gud" filepart "*"))
+    (pop-to-buffer (concat "*gud" filepart "*"))
     ;; Set default-directory to the file's directory.
     (and file-word
 	 ;; Don't set default-directory if no directory was specified.
@@ -2275,6 +2279,11 @@ Obeying it means displaying in another window the specified file and line."
 	  (setq subst (file-name-nondirectory (if insource
 						  (buffer-file-name)
 						(car frame)))))
+	 ((eq key ?F)
+	  (setq subst (file-name-sans-extension
+		       (file-name-nondirectory (if insource
+						   (buffer-file-name)
+						 (car frame))))))
 	 ((eq key ?d)
 	  (setq subst (file-name-directory (if insource
 					       (buffer-file-name)

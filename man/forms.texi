@@ -295,7 +295,7 @@ Similar to @code{forms-next-field} but moves backwards.
 @findex forms-save-buffer
 @item M-x forms-save-buffer
 @kindex C-x C-s
-@item C-x C-s
+@itemx C-x C-s
 Forms mode replacement for @code{save-buffer}. When executed in the
 forms buffer it will save the contents of the (modified) data buffer
 instead. In Forms mode this function will be bound to @kbd{C-x C-s}.

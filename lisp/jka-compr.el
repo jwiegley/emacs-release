@@ -131,9 +131,12 @@ for `jka-compr-compression-info-list')."
      "compressing"    "compress"     ("-c")
      "uncompressing"  "uncompress"   ("-c")
      nil t]
+     ;; Formerly, these had an additional arg "-c", but that fails with
+     ;; "Version 0.1pl2, 29-Aug-97." (RedHat 5.1 GNU/Linux) and
+     ;; "Version 0.9.0b, 9-Sept-98".
     ["\\.bz2\\'"
-     "bzip2ing"        "bzip2"         ("-c")
-     "bunzip2ing"      "bzip2"         ("-d" "-c")
+     "bzip2ing"        "bzip2"         nil
+     "bunzip2ing"      "bzip2"         ("-d")
      nil t]
     ["\\.tgz\\'"
      "zipping"        "gzip"         ("-c" "-q")
@@ -519,7 +522,9 @@ There should be no more than seven characters after the final `/'."
 		   ;; If multibyte characters are disabled,
 		   ;; don't do that conversion.
 		   (and (null enable-multibyte-characters)
-			'raw-text)
+			(or (auto-coding-alist-lookup
+			     (jka-compr-byte-compiler-base-file-name file))
+			    'raw-text))
 		   (let ((coding (find-operation-coding-system
 				  'insert-file-contents
 				  (jka-compr-byte-compiler-base-file-name file))))

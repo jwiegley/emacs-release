@@ -47,19 +47,20 @@
 ;; Certainly it should not specify auto-lower and auto-raise
 ;; since most users won't like that.
 (defvar diary-frame-parameters
-  '((name . "Diary") (height . 10) (width . 80) (unsplittable . t)
-    (minibuffer . nil))
+  '((name . "Diary") (title . "Diary") (height . 10) (width . 80)
+    (unsplittable . t) (minibuffer . nil))
   "Parameters of the diary frame, if the diary is in its own frame.
 Location and color should be set in .Xdefaults.")
                                  
 (defvar calendar-frame-parameters
-  '((name . "Calendar") (minibuffer . nil) (height . 10) (width . 80)
-    (unsplittable . t) (vertical-scroll-bars . nil))
+  '((name . "Calendar") (title . "Calendar") (minibuffer . nil)
+    (height . 10) (width . 80) (unsplittable . t) (vertical-scroll-bars . nil))
   "Parameters of the calendar frame, if the calendar is in a separate frame.
 Location and color should be set in .Xdefaults.")
 
 (defvar calendar-and-diary-frame-parameters
-  '((name . "Calendar") (height . 28) (width . 80) (minibuffer . nil))
+  '((name . "Calendar") (title . "Calendar") (height . 28) (width . 80)
+    (minibuffer . nil))
   "Parameters of the frame that displays both the calendar and the diary.
 Location and color should be set in .Xdefaults.")
   
@@ -94,6 +95,25 @@ Can be used to change frame parameters, such as font, color, location, etc.")
                   (make-fancy-diary-buffer))
               fancy-diary-buffer))
            'diary))))))
+
+(defun calendar-only-one-frame-setup (&optional arg)
+  "Start calendar and display it in a dedicated frame."
+  (if (not window-system)
+      (calendar-basic-setup arg)
+    (if (frame-live-p calendar-frame) (delete-frame calendar-frame))
+    (let ((special-display-buffer-names nil)
+          (view-diary-entries-initially nil))
+      (save-window-excursion
+        (save-excursion
+          (setq calendar-frame
+		(make-frame calendar-frame-parameters))
+          (run-hooks 'calendar-after-frame-setup-hooks)
+          (select-frame calendar-frame)
+          (if (eq 'icon (cdr (assoc 'visibility
+                                     (frame-parameters calendar-frame))))
+              (iconify-or-deiconify-frame))
+          (calendar-basic-setup arg)
+          (set-window-dedicated-p (selected-window) 'calendar))))))
 
 (defun calendar-two-frame-setup (&optional arg)
   "Start calendar and diary in separate, dedicated frames."
@@ -130,10 +150,12 @@ Can be used to change frame parameters, such as font, color, location, etc.")
             fancy-diary-buffer))
          'diary)))))
 
+;; Formerly (get-file-buffer diary-file) was added to the list here,
+;; but that isn't clean, and the value could even be nil.
 (setq special-display-buffer-names
       (append special-display-buffer-names
               (list "*Yahrzeits*" lunar-phases-buffer holiday-buffer
-                    fancy-diary-buffer (get-file-buffer diary-file)
+                    fancy-diary-buffer
                     other-calendars-buffer calendar-buffer)))
 
 (run-hooks 'cal-x-load-hook)

@@ -354,6 +354,10 @@ internal_self_insert (c, noautofill)
     {
       c = unibyte_char_to_multibyte (c);
       len = CHAR_STRING (c, workbuf, str);
+      if (len == 1)
+	/* If C has modifier bits, this makes C an appropriate
+           one-byte char.  */
+	c = *str;
     }
   else
     {
@@ -394,7 +398,7 @@ internal_self_insert (c, noautofill)
 		    && XINT (current_buffer->tab_width) > 0
 		    && XFASTINT (current_buffer->tab_width) < 20
 		    && (target_clm = (current_column () 
-				      + XINT (Fchar_width (make_number (c2)))),
+				      + XINT (Fchar_width (make_number (c)))),
 			target_clm % XFASTINT (current_buffer->tab_width)))))
 	{
 	  int pos = PT;
@@ -468,7 +472,9 @@ internal_self_insert (c, noautofill)
   else
     insert_and_inherit (str, len);
 
-  if ((c == ' ' || c == '\n')
+  if ((CHAR_TABLE_P (Vauto_fill_chars)
+       ? !NILP (CHAR_TABLE_REF (Vauto_fill_chars, c))
+       : (c == ' ' || c == '\n'))
       && !noautofill
       && !NILP (current_buffer->auto_fill_function))
     {

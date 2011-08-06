@@ -109,8 +109,8 @@ static void describe_map ();
 /* Keymap object support - constructors and predicates.			*/
 
 DEFUN ("make-keymap", Fmake_keymap, Smake_keymap, 0, 1, 0,
-  "Construct and return a new keymap, of the form (keymap VECTOR . ALIST).\n\
-VECTOR is a vector which holds the bindings for the ASCII\n\
+  "Construct and return a new keymap, of the form (keymap CHARTABLE . ALIST).\n\
+CHARTABLE is a char-table that holds the bindings for the ASCII\n\
 characters.  ALIST is an assoc-list which holds bindings for function keys,\n\
 mouse events, and any other things that appear in the input stream.\n\
 All entries in it are initially nil, meaning \"command undefined\".\n\n\
@@ -1357,17 +1357,19 @@ bindings; see the description of `lookup-key' for more details about this.")
   return Flist (j, maps);
 }
 
-DEFUN ("define-prefix-command", Fdefine_prefix_command, Sdefine_prefix_command, 1, 2, 0,
+DEFUN ("define-prefix-command", Fdefine_prefix_command, Sdefine_prefix_command, 1, 3, 0,
   "Define COMMAND as a prefix command.  COMMAND should be a symbol.\n\
 A new sparse keymap is stored as COMMAND's function definition and its value.\n\
 If a second optional argument MAPVAR is given, the map is stored as\n\
 its value instead of as COMMAND's value; but COMMAND is still defined\n\
-as a function.")
-  (command, mapvar)
-     Lisp_Object command, mapvar;
+as a function.\n\
+The third optional argument NAME, if given, supplies a menu name\n\
+string for the map.  This is required to use the keymap as a menu.")
+  (command, mapvar, name)
+     Lisp_Object command, mapvar, name;
 {
   Lisp_Object map;
-  map = Fmake_sparse_keymap (Qnil);
+  map = Fmake_sparse_keymap (name);
   Ffset (command, map);
   if (!NILP (mapvar))
     Fset (mapvar, map);
@@ -1470,15 +1472,17 @@ then the value includes only maps for prefixes that start with PREFIX.")
 	      Lisp_Object copy;
 
 	      copy = Fmake_vector (make_number (XSTRING (prefix)->size), Qnil);
-	      for (i = 0, i_byte; i < XSTRING (prefix)->size;)
+	      for (i = 0, i_byte = 0; i < XSTRING (prefix)->size;)
 		{
 		  int i_before = i;
 		  if (STRING_MULTIBYTE (prefix))
 		    FETCH_STRING_CHAR_ADVANCE (c, prefix, i, i_byte);
 		  else
-		    c = XSTRING (prefix)->data[i++];
-		  if (c & 0200)
-		    c ^= 0200 | meta_modifier;
+		    {
+		      c = XSTRING (prefix)->data[i++];
+		      if (c & 0200)
+			c ^= 0200 | meta_modifier;
+		    }
 		  XVECTOR (copy)->contents[i_before] = make_number (c);
 		}
 	      prefix = copy;
@@ -1702,7 +1706,7 @@ spaces are put between sequence elements, etc.")
     {
       Lisp_Object vector;
       vector = Fmake_vector (Flength (keys), Qnil);
-      for (i = 0; i < XSTRING (keys)->size; )
+      for (i = 0, i_byte = 0; i < XSTRING (keys)->size; )
 	{
 	  int c;
 	  int i_before = i;
@@ -1710,33 +1714,54 @@ spaces are put between sequence elements, etc.")
 	  if (STRING_MULTIBYTE (keys))
 	    FETCH_STRING_CHAR_ADVANCE (c, keys, i, i_byte);
 	  else
-	    c = XSTRING (keys)->data[i++];
+	    {
+	      c = XSTRING (keys)->data[i++];
+	      if (c & 0200)
+		c ^= 0200 | meta_modifier;
+	    }
 
-	  if (c & 0x80)
-	    XSETFASTINT (XVECTOR (vector)->contents[i_before],
-			 meta_modifier | (c & ~0x80));
-	  else
-	    XSETFASTINT (XVECTOR (vector)->contents[i_before], c);
+	  XSETFASTINT (XVECTOR (vector)->contents[i_before], c);
 	}
       keys = vector;
     }
-  else if (!VECTORP (keys))
-    keys = wrong_type_argument (Qarrayp, keys);
 
-  /* In effect, this computes
-     (mapconcat 'single-key-description keys " ")
-     but we shouldn't use mapconcat because it can do GC.  */
-
-  len = XVECTOR (keys)->size;
-  sep = build_string (" ");
-  /* This has one extra element at the end that we don't pass to Fconcat.  */
-  args = (Lisp_Object *) alloca (len * 2 * sizeof (Lisp_Object));
-
-  for (i = 0; i < len; i++)
+  if (VECTORP (keys))
     {
-      args[i * 2] = Fsingle_key_description (XVECTOR (keys)->contents[i]);
-      args[i * 2 + 1] = sep;
+      /* In effect, this computes
+	 (mapconcat 'single-key-description keys " ")
+	 but we shouldn't use mapconcat because it can do GC.  */
+
+      len = XVECTOR (keys)->size;
+      sep = build_string (" ");
+      /* This has one extra element at the end that we don't pass to Fconcat.  */
+      args = (Lisp_Object *) alloca (len * 2 * sizeof (Lisp_Object));
+
+      for (i = 0; i < len; i++)
+	{
+	  args[i * 2] = Fsingle_key_description (XVECTOR (keys)->contents[i]);
+	  args[i * 2 + 1] = sep;
+	}
     }
+  else if (CONSP (keys))
+    {
+      /* In effect, this computes
+	 (mapconcat 'single-key-description keys " ")
+	 but we shouldn't use mapconcat because it can do GC.  */
+
+      len = XFASTINT (Flength (keys));
+      sep = build_string (" ");
+      /* This has one extra element at the end that we don't pass to Fconcat.  */
+      args = (Lisp_Object *) alloca (len * 2 * sizeof (Lisp_Object));
+
+      for (i = 0; i < len; i++)
+	{
+	  args[i * 2] = Fsingle_key_description (XCONS (keys)->car);
+	  args[i * 2 + 1] = sep;
+	  keys = XCONS (keys)->cdr;
+	}
+    }
+  else
+    keys = wrong_type_argument (Qarrayp, keys);
 
   return Fconcat (len * 2 - 1, args);
 }
@@ -1822,27 +1847,40 @@ push_key_description (c, p)
       *p++ = 'L';
     }
   else if (c == ' ')
-    {
+   {
       *p++ = 'S';
       *p++ = 'P';
       *p++ = 'C';
     }
-  else if (c < 128)
+  else if (c < 128
+	   || (NILP (current_buffer->enable_multibyte_characters)
+	       && SINGLE_BYTE_CHAR_P (c)))
     *p++ = c;
-  else if (c < 512)
-    {
-      *p++ = '\\';
-      *p++ = (7 & (c >> 6)) + '0';
-      *p++ = (7 & (c >> 3)) + '0';
-      *p++ = (7 & (c >> 0)) + '0';
-    }
   else
     {
-      unsigned char work[4], *str;
-      int i = CHAR_STRING (c, work, str);
+      if (! NILP (current_buffer->enable_multibyte_characters))
+	c = unibyte_char_to_multibyte (c);
 
-      bcopy (str, p, i);
-      p += i;
+      if (NILP (current_buffer->enable_multibyte_characters)
+	  || SINGLE_BYTE_CHAR_P (c)
+	  || ! char_valid_p (c, 0))
+	{
+	  int bit_offset;
+	  *p++ = '\\';
+	  /* The biggest character code uses 19 bits.  */
+	  for (bit_offset = 18; bit_offset >= 0; bit_offset -= 3)
+	    {
+	      if (c >= (1 << bit_offset))
+		*p++ = ((c & (7 << bit_offset)) >> bit_offset) + '0';
+	    }
+	}
+      else
+	{
+	  unsigned char work[4], *str;
+	  int i = CHAR_STRING (c, work, str);
+	  bcopy (str, p, i);
+	  p += i;
+	}
     }
 
   return p;  
@@ -1856,14 +1894,39 @@ Control characters turn into C-whatever, etc.")
   (key)
      Lisp_Object key;
 {
-  char tem[20];
+  if (CONSP (key) && lucid_event_type_list_p (key))
+    key = Fevent_convert_list (key);
 
   key = EVENT_HEAD (key);
 
   if (INTEGERP (key))		/* Normal character */
     {
-      *push_key_description (XUINT (key), tem) = 0;
-      return build_string (tem);
+      unsigned int charset, c1, c2;
+      int without_bits = XINT (key) & ~((-1) << CHARACTERBITS);
+
+      if (SINGLE_BYTE_CHAR_P (without_bits))
+	charset = 0;
+      else
+	SPLIT_NON_ASCII_CHAR (without_bits, charset, c1, c2);
+
+      if (charset
+	  && CHARSET_DEFINED_P (charset)
+	  && ((c1 >= 0 && c1 < 32)
+	      || (c2 >= 0 && c2 < 32)))
+	{
+	  /* Handle a generic character.  */
+	  Lisp_Object name;
+	  name = CHARSET_TABLE_INFO (charset, CHARSET_LONG_NAME_IDX);
+	  CHECK_STRING (name, 0);
+	  return concat2 (build_string ("Character set "), name);
+	}
+      else
+	{
+	  char tem[20];
+
+	  *push_key_description (XUINT (key), tem) = 0;
+	  return build_string (tem);
+	}
     }
   else if (SYMBOLP (key))	/* Function key or event-symbol */
     return Fsymbol_name (key);

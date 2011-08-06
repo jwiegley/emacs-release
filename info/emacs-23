@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,318 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Mouse Buttons,  Next: Disabling,  Prev: Non-ASCII Rebinding,  Up: Key Bindings
+
+Rebinding Mouse Buttons
+-----------------------
+
+   Emacs uses Lisp symbols to designate mouse buttons, too.  The
+ordinary mouse events in Emacs are "click" events; these happen when you
+press a button and release it without moving the mouse.  You can also
+get "drag" events, when you move the mouse while holding the button
+down.  Drag events happen when you finally let go of the button.
+
+   The symbols for basic click events are `mouse-1' for the leftmost
+button, `mouse-2' for the next, and so on.  Here is how you can
+redefine the second mouse button to split the current window:
+
+     (global-set-key [mouse-2] 'split-window-vertically)
+
+   The symbols for drag events are similar, but have the prefix `drag-'
+before the word `mouse'.  For example, dragging the first button
+generates a `drag-mouse-1' event.
+
+   You can also define bindings for events that occur when a mouse
+button is pressed down.  These events start with `down-' instead of
+`drag-'.  Such events are generated only if they have key bindings.
+When you get a button-down event, a corresponding click or drag event
+will always follow.
+
+   If you wish, you can distinguish single, double, and triple clicks.
+A double click means clicking a mouse button twice in approximately the
+same place.  The first click generates an ordinary click event.  The
+second click, if it comes soon enough, generates a double-click event
+instead.  The event type for a double-click event starts with
+`double-': for example, `double-mouse-3'.
+
+   This means that you can give a special meaning to the second click at
+the same place, but it must act on the assumption that the ordinary
+single click definition has run when the first click was received.
+
+   This constrains what you can do with double clicks, but user
+interface designers say that this constraint ought to be followed in
+any case.  A double click should do something similar to the single
+click, only "more so."  The command for the double-click event should
+perform the extra work for the double click.
+
+   If a double-click event has no binding, it changes to the
+corresponding single-click event.  Thus, if you don't define a
+particular double click specially, it executes the single-click command
+twice.
+
+   Emacs also supports triple-click events whose names start with
+`triple-'.  Emacs does not distinguish quadruple clicks as event types;
+clicks beyond the third generate additional triple-click events.
+However, the full number of clicks is recorded in the event list, so you
+can distinguish if you really want to.  We don't recommend distinct
+meanings for more than three clicks, but sometimes it is useful for
+subsequent clicks to cycle through the same set of three meanings, so
+that four clicks are equivalent to one click, five are equivalent to
+two, and six are equivalent to three.
+
+   Emacs also records multiple presses in drag and button-down events.
+For example, when you press a button twice, then move the mouse while
+holding the button, Emacs gets a `double-drag-' event.  And at the
+moment when you press it down for the second time, Emacs gets a
+`double-down-' event (which is ignored, like all button-down events, if
+it has no binding).
+
+   The variable `double-click-time' specifies how long may elapse
+between clicks that are recognized as a pair.  Its value is measured in
+milliseconds.  If the value is `nil', double clicks are not detected at
+all.  If the value is `t', then there is no time limit.
+
+   The symbols for mouse events also indicate the status of the modifier
+keys, with the usual prefixes `C-', `M-', `H-', `s-', `A-' and `S-'.
+These always precede `double-' or `triple-', which always precede
+`drag-' or `down-'.
+
+   A frame includes areas that don't show text from the buffer, such as
+the mode line and the scroll bar.  You can tell whether a mouse button
+comes from a special area of the screen by means of dummy "prefix
+keys."  For example, if you click the mouse in the mode line, you get
+the prefix key `mode-line' before the ordinary mouse-button symbol.
+Thus, here is how to define the command for clicking the first button in
+a mode line to run `scroll-up':
+
+     (global-set-key [mode-line mouse-1] 'scroll-up)
+
+   Here is the complete list of these dummy prefix keys and their
+meanings:
+
+`mode-line'
+     The mouse was in the mode line of a window.
+
+`vertical-line'
+     The mouse was in the vertical line separating side-by-side
+     windows.  (If you use scroll bars, they appear in place of these
+     vertical lines.)
+
+`vertical-scroll-bar'
+     The mouse was in a vertical scroll bar.  (This is the only kind of
+     scroll bar Emacs currently supports.)
+
+   You can put more than one mouse button in a key sequence, but it
+isn't usual to do so.
+
+
+File: emacs,  Node: Disabling,  Prev: Mouse Buttons,  Up: Key Bindings
+
+Disabling Commands
+------------------
+
+   Disabling a command marks the command as requiring confirmation
+before it can be executed.  The purpose of disabling a command is to
+prevent beginning users from executing it by accident and being
+confused.
+
+   An attempt to invoke a disabled command interactively in Emacs
+displays a window containing the command's name, its documentation, and
+some instructions on what to do immediately; then Emacs asks for input
+saying whether to execute the command as requested, enable it and
+execute it, or cancel.  If you decide to enable the command, you are
+asked whether to do this permanently or just for the current session.
+Enabling permanently works by automatically editing your `.emacs' file.
+
+   The direct mechanism for disabling a command is to put a non-`nil'
+`disabled' property on the Lisp symbol for the command.  Here is the
+Lisp program to do this:
+
+     (put 'delete-region 'disabled t)
+
+   If the value of the `disabled' property is a string, that string is
+included in the message printed when the command is used:
+
+     (put 'delete-region 'disabled
+          "It's better to use `kill-region' instead.\n")
+
+   You can make a command disabled either by editing the `.emacs' file
+directly or with the command `M-x disable-command', which edits the
+`.emacs' file for you.  Likewise, `M-x enable-command' edits `.emacs'
+to enable a command permanently.  *Note Init File::.
+
+   Whether a command is disabled is independent of what key is used to
+invoke it; disabling also applies if the command is invoked using
+`M-x'.  Disabling a command has no effect on calling it as a function
+from Lisp programs.
+
+
+File: emacs,  Node: Keyboard Translations,  Next: Syntax,  Prev: Key Bindings,  Up: Customization
+
+Keyboard Translations
+=====================
+
+   Some keyboards do not make it convenient to send all the special
+characters that Emacs uses.  The most common problem case is the <DEL>
+character.  Some keyboards provide no convenient way to type this very
+important character--usually because they were designed to expect the
+character `C-h' to be used for deletion.  On these keyboards, if you
+press the key normally used for deletion, Emacs handles the `C-h' as a
+prefix character and offers you a list of help options, which is not
+what you want.
+
+   You can work around this problem within Emacs by setting up keyboard
+translations to turn `C-h' into <DEL> and <DEL> into `C-h', as follows:
+
+     ;; Translate `C-h' to <DEL>.
+     (keyboard-translate ?\C-h ?\C-?)
+     
+     ;; Translate <DEL> to `C-h'.
+     (keyboard-translate ?\C-? ?\C-h)
+
+   Keyboard translations are not the same as key bindings in keymaps
+(*note Keymaps::.).  Emacs contains numerous keymaps that apply in
+different situations, but there is only one set of keyboard
+translations, and it applies to every character that Emacs reads from
+the terminal.  Keyboard translations take place at the lowest level of
+input processing; the keys that are looked up in keymaps contain the
+characters that result from keyboard translation.
+
+   Under X, the keyboard key named <DELETE> is a function key and is
+distinct from the ASCII character named <DEL>.  *Note Named ASCII
+Chars::.  Keyboard translations affect only ASCII character input, not
+function keys; thus, the above example used under X does not affect the
+<DELETE> key.  However, the translation above isn't necessary under X,
+because Emacs can also distinguish between the <BACKSPACE> key and
+`C-h'; and it normally treats <BACKSPACE> as <DEL>.
+
+   For full information about how to use keyboard translations, see
+*Note Translating Input: (elisp)Translating Input.
+
+
+File: emacs,  Node: Syntax,  Next: Init File,  Prev: Keyboard Translations,  Up: Customization
+
+The Syntax Table
+================
+
+   All the Emacs commands which parse words or balance parentheses are
+controlled by the "syntax table".  The syntax table says which
+characters are opening delimiters, which are parts of words, which are
+string quotes, and so on.  Each major mode has its own syntax table
+(though sometimes related major modes use the same one) which it
+installs in each buffer that uses that major mode.  The syntax table
+installed in the current buffer is the one that all commands use, so we
+call it "the" syntax table.  A syntax table is a Lisp object, a
+char-table, whose elements are numbers.
+
+   To display a description of the contents of the current syntax table,
+type `C-h s' (`describe-syntax').  The description of each character
+includes both the string you would have to give to
+`modify-syntax-entry' to set up that character's current syntax, and
+some English to explain that string if necessary.
+
+   For full information on the syntax table, see *Note Syntax Tables:
+(elisp)Syntax Tables.
+
+
+File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
+
+The Init File, `~/.emacs'
+=========================
+
+   When Emacs is started, it normally loads a Lisp program from the file
+`.emacs' or `.emacs.el' in your home directory.  We call this file your
+"init file" because it specifies how to initialize Emacs for you.  You
+can use the command line switch `-q' to prevent loading your init file,
+and `-u' (or `--user') to specify a different user's init file (*note
+Entering Emacs::.).
+
+   There can also be a "default init file", which is the library named
+`default.el', found via the standard search path for libraries.  The
+Emacs distribution contains no such library; your site may create one
+for local customizations.  If this library exists, it is loaded
+whenever you start Emacs (except when you specify `-q').  But your init
+file, if any, is loaded first; if it sets `inhibit-default-init'
+non-`nil', then `default' is not loaded.
+
+   Your site may also have a "site startup file"; this is named
+`site-start.el', if it exists.  Emacs loads this library before it
+loads your init file.  To inhibit loading of this library, use the
+option `-no-site-file'.
+
+   If you have a large amount of code in your `.emacs' file, you should
+rename it to `~/.emacs.el', and byte-compile it.  *Note Byte
+Compilation: (elisp)Byte Compilation, for more information about
+compiling Emacs Lisp programs.
+
+   If you are going to write actual Emacs Lisp programs that go beyond
+minor customization, you should read the `Emacs Lisp Reference Manual'.
+*Note Emacs Lisp: (elisp)Top.
+
+* Menu:
+
+* Init Syntax::	        Syntax of constants in Emacs Lisp.
+* Init Examples::       How to do some things with an init file.
+* Terminal Init::       Each terminal type can have an init file.
+* Find Init::	        How Emacs finds the init file.
+
+
+File: emacs,  Node: Init Syntax,  Next: Init Examples,  Up: Init File
+
+Init File Syntax
+----------------
+
+   The `.emacs' file contains one or more Lisp function call
+expressions.  Each of these consists of a function name followed by
+arguments, all surrounded by parentheses.  For example, `(setq
+fill-column 60)' calls the function `setq' to set the variable
+`fill-column' (*note Filling::.) to 60.
+
+   The second argument to `setq' is an expression for the new value of
+the variable.  This can be a constant, a variable, or a function call
+expression.  In `.emacs', constants are used most of the time.  They
+can be:
+
+Numbers:
+     Numbers are written in decimal, with an optional initial minus
+     sign.
+
+Strings:
+     Lisp string syntax is the same as C string syntax with a few extra
+     features.  Use a double-quote character to begin and end a string
+     constant.
+
+     In a string, you can include newlines and special characters
+     literally.  But often it is cleaner to use backslash sequences for
+     them: `\n' for newline, `\b' for backspace, `\r' for carriage
+     return, `\t' for tab, `\f' for formfeed (control-L), `\e' for
+     escape, `\\' for a backslash, `\"' for a double-quote, or `\OOO'
+     for the character whose octal code is OOO.  Backslash and
+     double-quote are the only characters for which backslash sequences
+     are mandatory.
+
+     `\C-' can be used as a prefix for a control character, as in
+     `\C-s' for ASCII control-S, and `\M-' can be used as a prefix for
+     a Meta character, as in `\M-a' for `Meta-A' or `\M-\C-a' for
+     `Control-Meta-A'.
+
+Characters:
+     Lisp character constant syntax consists of a `?' followed by
+     either a character or an escape sequence starting with `\'.
+     Examples: `?x', `?\n', `?\"', `?\)'.  Note that strings and
+     characters are not interchangeable in Lisp; some contexts require
+     one and some contexts require the other.
+
+True:
+     `t' stands for `true'.
+
+False:
+     `nil' stands for `false'.
+
+Other Lisp objects:
+     Write a single-quote (') followed by the Lisp object you want.
 
 
 File: emacs,  Node: Init Examples,  Next: Terminal Init,  Prev: Init Syntax,  Up: Init File
@@ -676,478 +988,4 @@ entered the text.
    So please don't guess any explanations when you report a bug.  If you
 want to actually *debug* the problem, and report explanations that are
 more than guesses, that is useful--but please include the facts as well.
-
-
-File: emacs,  Node: Checklist,  Next: Sending Patches,  Prev: Understanding Bug Reporting,  Up: Bugs
-
-Checklist for Bug Reports
--------------------------
-
-   The best way to send a bug report is to mail it electronically to the
-Emacs maintainers at `bug-gnu-emacs@gnu.org'.  (If you want to suggest
-a change as an improvement, use the same address.)
-
-   If you'd like to read the bug reports, you can find them on the
-newsgroup `gnu.emacs.bug'; keep in mind, however, that as a spectator
-you should not criticize anything about what you see there.  The
-purpose of bug reports is to give information to the Emacs maintainers.
-Spectators are welcome only as long as they do not interfere with
-this.  In particular, some bug reports contain large amounts of data;
-spectators should not complain about this.
-
-   Please do not post bug reports using netnews; mail is more reliable
-than netnews about reporting your correct address, which we may need in
-order to ask you for more information.
-
-   If you can't send electronic mail, then mail the bug report on paper
-or machine-readable media to this address:
-
-GNU Emacs Bugs
-Free Software Foundation
-59 Temple Place, Suite 330
-Boston, MA 02111-1307 USA
-
-   We do not promise to fix the bug; but if the bug is serious, or
-ugly, or easy to fix, chances are we will want to.
-
-   A convenient way to send a bug report for Emacs is to use the command
-`M-x report-emacs-bug'.  This sets up a mail buffer (*note Sending
-Mail::.) and automatically inserts *some* of the essential information.
-However, it cannot supply all the necessary information; you should
-still read and follow the guidelines below, so you can enter the other
-crucial information by hand before you send the message.
-
-   To enable maintainers to investigate a bug, your report should
-include all these things:
-
-   * The version number of Emacs.  Without this, we won't know whether
-     there is any point in looking for the bug in the current version
-     of GNU Emacs.
-
-     You can get the version number by typing `M-x emacs-version
-     <RET>'.  If that command does not work, you probably have something
-     other than GNU Emacs, so you will have to report the bug somewhere
-     else.
-
-   * The type of machine you are using, and the operating system name
-     and version number.  `M-x emacs-version <RET>' provides this
-     information too.  Copy its output from the `*Messages*' buffer, so
-     that you get it all and get it accurately.
-
-   * The operands given to the `configure' command when Emacs was
-     installed.
-
-   * A complete list of any modifications you have made to the Emacs
-     source.  (We may not have time to investigate the bug unless it
-     happens in an unmodified Emacs.  But if you've made modifications
-     and you don't tell us, you are sending us on a wild goose chase.)
-
-     Be precise about these changes.  A description in English is not
-     enough--send a context diff for them.
-
-     Adding files of your own, or porting to another machine, is a
-     modification of the source.
-
-   * Details of any other deviations from the standard procedure for
-     installing GNU Emacs.
-
-   * The complete text of any files needed to reproduce the bug.
-
-     If you can tell us a way to cause the problem without visiting any
-     files, please do so.  This makes it much easier to debug.  If you
-     do need files, make sure you arrange for us to see their exact
-     contents.  For example, it can often matter whether there are
-     spaces at the ends of lines, or a newline after the last line in
-     the buffer (nothing ought to care whether the last line is
-     terminated, but try telling the bugs that).
-
-   * The precise commands we need to type to reproduce the bug.
-
-     The easy way to record the input to Emacs precisely is to write a
-     dribble file.  To start the file, execute the Lisp expression
-
-          (open-dribble-file "~/dribble")
-
-     using `M-:' or from the `*scratch*' buffer just after starting
-     Emacs.  From then on, Emacs copies all your input to the specified
-     dribble file until the Emacs process is killed.
-
-   * For possible display bugs, the terminal type (the value of
-     environment variable `TERM'), the complete termcap entry for the
-     terminal from `/etc/termcap' (since that file is not identical on
-     all machines), and the output that Emacs actually sent to the
-     terminal.
-
-     The way to collect the terminal output is to execute the Lisp
-     expression
-
-          (open-termscript "~/termscript")
-
-     using `M-:' or from the `*scratch*' buffer just after starting
-     Emacs.  From then on, Emacs copies all terminal output to the
-     specified termscript file as well, until the Emacs process is
-     killed.  If the problem happens when Emacs starts up, put this
-     expression into your `.emacs' file so that the termscript file
-     will be open when Emacs displays the screen for the first time.
-
-     Be warned: it is often difficult, and sometimes impossible, to fix
-     a terminal-dependent bug without access to a terminal of the type
-     that stimulates the bug.
-
-   * A description of what behavior you observe that you believe is
-     incorrect.  For example, "The Emacs process gets a fatal signal,"
-     or, "The resulting text is as follows, which I think is wrong."
-
-     Of course, if the bug is that Emacs gets a fatal signal, then one
-     can't miss it.  But if the bug is incorrect text, the maintainer
-     might fail to notice what is wrong.  Why leave it to chance?
-
-     Even if the problem you experience is a fatal signal, you should
-     still say so explicitly.  Suppose something strange is going on,
-     such as, your copy of the source is out of sync, or you have
-     encountered a bug in the C library on your system.  (This has
-     happened!)  Your copy might crash and the copy here might not.  If
-     you *said* to expect a crash, then when Emacs here fails to crash,
-     we would know that the bug was not happening.  If you don't say to
-     expect a crash, then we would not know whether the bug was
-     happening--we would not be able to draw any conclusion from our
-     observations.
-
-   * If the manifestation of the bug is an Emacs error message, it is
-     important to report the precise text of the error message, and a
-     backtrace showing how the Lisp program in Emacs arrived at the
-     error.
-
-     To get the error message text accurately, copy it from the
-     `*Messages*' buffer into the bug report.  Copy all of it, not just
-     part.
-
-     To make a backtrace for the error, evaluate the Lisp expression
-     `(setq debug-on-error t)' before the error happens (that is to
-     say, you must execute that expression and then make the bug
-     happen).  This causes the error to run the Lisp debugger, which
-     shows you a backtrace.  Copy the text of the debugger's backtrace
-     into the bug report.
-
-     This use of the debugger is possible only if you know how to make
-     the bug happen again.  If you can't make it happen again, at least
-     copy the whole error message.
-
-   * Check whether any programs you have loaded into the Lisp world,
-     including your `.emacs' file, set any variables that may affect the
-     functioning of Emacs.  Also, see whether the problem happens in a
-     freshly started Emacs without loading your `.emacs' file (start
-     Emacs with the `-q' switch to prevent loading the init file).  If
-     the problem does *not* occur then, you must report the precise
-     contents of any programs that you must load into the Lisp world in
-     order to cause the problem to occur.
-
-   * If the problem does depend on an init file or other Lisp programs
-     that are not part of the standard Emacs system, then you should
-     make sure it is not a bug in those programs by complaining to
-     their maintainers first.  After they verify that they are using
-     Emacs in a way that is supposed to work, they should report the
-     bug.
-
-   * If you wish to mention something in the GNU Emacs source, show the
-     line of code with a few lines of context.  Don't just give a line
-     number.
-
-     The line numbers in the development sources don't match those in
-     your sources.  It would take extra work for the maintainers to
-     determine what code is in your version at a given line number, and
-     we could not be certain.
-
-   * Additional information from a C debugger such as GDB might enable
-     someone to find a problem on a machine which he does not have
-     available.  If you don't know how to use GDB, please read the GDB
-     manual--it is not very long, and using GDB is easy.  You can find
-     the GDB distribution, including the GDB manual in online form, in
-     most of the same places you can find the Emacs distribution.
-
-     However, you need to think when you collect the additional
-     information if you want it to show what causes the bug.
-
-     For example, many people send just a backtrace, but that is not
-     very useful by itself.  A simple backtrace with arguments often
-     conveys little about what is happening inside GNU Emacs, because
-     most of the arguments listed in the backtrace are pointers to Lisp
-     objects.  The numeric values of these pointers have no
-     significance whatever; all that matters is the contents of the
-     objects they point to (and most of the contents are themselves
-     pointers).
-
-     To provide useful information, you need to show the values of Lisp
-     objects in Lisp notation.  Do this for each variable which is a
-     Lisp object, in several stack frames near the bottom of the stack.
-     Look at the source to see which variables are Lisp objects,
-     because the debugger thinks of them as integers.
-
-     To show a variable's value in Lisp syntax, first print its value,
-     then use the user-defined GDB command `pr' to print the Lisp
-     object in Lisp syntax.  (If you must use another debugger, call
-     the function `debug_print' with the object as an argument.)  The
-     `pr' command is defined by the file `.gdbinit' in the `src'
-     subdirectory, and it works only if you are debugging a running
-     process (not with a core dump).
-
-     To make Lisp errors stop Emacs and return to GDB, put a breakpoint
-     at `Fsignal'.
-
-     To find out which Lisp functions are running, using GDB, move up
-     the stack, and each time you get to a frame for the function
-     `Ffuncall', type these GDB commands:
-
-          p *args
-          pr
-
-     To print the first argument that the function received, use these
-     commands:
-
-          p args[1]
-          pr
-
-     You can print the other arguments likewise.  The argument `nargs'
-     of `Ffuncall' says how many arguments `Ffuncall' received; these
-     include the Lisp function itself and the arguments for that
-     function.
-
-     The file `src/.gdbinit' includes several other commands that are
-     useful for examining the data types and contents of Lisp objects.
-     These commands work at a lower level than `pr', and are less
-     convenient, but they may work even when `pr' does not.
-
-   * If the symptom of the bug is that Emacs fails to respond, don't
-     assume Emacs is "hung"--it may instead be in an infinite loop.  To
-     find out which, make the problem happen under GDB and stop Emacs
-     once it is not responding.  (If Emacs is using X Windows directly,
-     you can stop Emacs by typing `C-c' at the GDB job.)  Then try
-     stepping with `step'.  If Emacs is hung, the `step' command won't
-     return.  If it is looping, `step' will return.
-
-     If this shows Emacs is hung in a system call, stop it again and
-     examine the arguments of the call.  In your bug report, state
-     exactly where in the source the system call is, and what the
-     arguments are.
-
-     If Emacs is in an infinite loop, please determine where the loop
-     starts and ends.  The easiest way to do this is to use the GDB
-     command `finish'.  Each time you use it, Emacs resumes execution
-     until it exits one stack frame.  Keep typing `finish' until it
-     doesn't return--that means the infinite loop is in the stack frame
-     which you just tried to finish.
-
-     Stop Emacs again, and use `finish' repeatedly again until you get
-     *back to* that frame.  Then use `next' to step through that frame.
-     By stepping, you will see where the loop starts and ends.  Also
-     please examine the data being used in the loop and try to
-     determine why the loop does not exit when it should.  Include all
-     of this information in your bug report.
-
-   Here are some things that are not necessary in a bug report:
-
-   * A description of the envelope of the bug--this is not necessary
-     for a reproducible bug.
-
-     Often people who encounter a bug spend a lot of time investigating
-     which changes to the input file will make the bug go away and which
-     changes will not affect it.
-
-     This is often time-consuming and not very useful, because the way
-     we will find the bug is by running a single example under the
-     debugger with breakpoints, not by pure deduction from a series of
-     examples.  You might as well save time by not searching for
-     additional examples.
-
-     Of course, if you can find a simpler example to report *instead* of
-     the original one, that is a convenience.  Errors in the output
-     will be easier to spot, running under the debugger will take less
-     time, etc.
-
-     However, simplification is not vital; if you can't do this or
-     don't have time to try, please report the bug with your original
-     test case.
-
-   * A system-call trace of Emacs execution.
-
-     System-call traces are very useful for certain special kinds of
-     debugging, but in most cases they give little useful information.
-     It is therefore strange that many people seem to think that *the*
-     way to report information about a crash is to send a system-call
-     trace.  Perhaps this is a habit formed from experience debugging
-     programs that don't have source code or debugging symbols.
-
-     In most programs, a backtrace is normally far, far more
-     informative than a system-call trace.  Even in Emacs, a simple
-     backtrace is generally more informative, though to give full
-     information you should supplement the backtrace by displaying
-     variable values and printing them as Lisp objects with `pr' (see
-     above).
-
-   * A patch for the bug.
-
-     A patch for the bug is useful if it is a good one.  But don't omit
-     the other information that a bug report needs, such as the test
-     case, on the assumption that a patch is sufficient.  We might see
-     problems with your patch and decide to fix the problem another
-     way, or we might not understand it at all.  And if we can't
-     understand what bug you are trying to fix, or why your patch
-     should be an improvement, we mustn't install it.
-
-     *Note Sending Patches::, for guidelines on how to make it easy for
-     us to understand and install your patches.
-
-   * A guess about what the bug is or what it depends on.
-
-     Such guesses are usually wrong.  Even experts can't guess right
-     about such things without first using the debugger to find the
-     facts.
-
-
-File: emacs,  Node: Sending Patches,  Prev: Checklist,  Up: Bugs
-
-Sending Patches for GNU Emacs
------------------------------
-
-   If you would like to write bug fixes or improvements for GNU Emacs,
-that is very helpful.  When you send your changes, please follow these
-guidelines to make it easy for the maintainers to use them.  If you
-don't follow these guidelines, your information might still be useful,
-but using it will take extra work.  Maintaining GNU Emacs is a lot of
-work in the best of circumstances, and we can't keep up unless you do
-your best to help.
-
-   * Send an explanation with your changes of what problem they fix or
-     what improvement they bring about.  For a bug fix, just include a
-     copy of the bug report, and explain why the change fixes the bug.
-
-     (Referring to a bug report is not as good as including it, because
-     then we will have to look it up, and we have probably already
-     deleted it if we've already fixed the bug.)
-
-   * Always include a proper bug report for the problem you think you
-     have fixed.  We need to convince ourselves that the change is
-     right before installing it.  Even if it is correct, we might have
-     trouble understanding it if we don't have a way to reproduce the
-     problem.
-
-   * Include all the comments that are appropriate to help people
-     reading the source in the future understand why this change was
-     needed.
-
-   * Don't mix together changes made for different reasons.  Send them
-     *individually*.
-
-     If you make two changes for separate reasons, then we might not
-     want to install them both.  We might want to install just one.  If
-     you send them all jumbled together in a single set of diffs, we
-     have to do extra work to disentangle them--to figure out which
-     parts of the change serve which purpose.  If we don't have time
-     for this, we might have to ignore your changes entirely.
-
-     If you send each change as soon as you have written it, with its
-     own explanation, then two changes never get tangled up, and we can
-     consider each one properly without any extra work to disentangle
-     them.
-
-   * Send each change as soon as that change is finished.  Sometimes
-     people think they are helping us by accumulating many changes to
-     send them all together.  As explained above, this is absolutely
-     the worst thing you could do.
-
-     Since you should send each change separately, you might as well
-     send it right away.  That gives us the option of installing it
-     immediately if it is important.
-
-   * Use `diff -c' to make your diffs.  Diffs without context are hard
-     to install reliably.  More than that, they are hard to study; we
-     must always study a patch to decide whether we want to install it.
-     Unidiff format is better than contextless diffs, but not as easy
-     to read as `-c' format.
-
-     If you have GNU diff, use `diff -c -F'^[_a-zA-Z0-9$]+ *('' when
-     making diffs of C code.  This shows the name of the function that
-     each change occurs in.
-
-   * Avoid any ambiguity as to which is the old version and which is
-     the new.  Please make the old version the first argument to diff,
-     and the new version the second argument.  And please give one
-     version or the other a name that indicates whether it is the old
-     version or your new changed one.
-
-   * Write the change log entries for your changes.  This is both to
-     save us the extra work of writing them, and to help explain your
-     changes so we can understand them.
-
-     The purpose of the change log is to show people where to find what
-     was changed.  So you need to be specific about what functions you
-     changed; in large functions, it's often helpful to indicate where
-     within the function the change was.
-
-     On the other hand, once you have shown people where to find the
-     change, you need not explain its purpose in the change log.  Thus,
-     if you add a new function, all you need to say about it is that it
-     is new.  If you feel that the purpose needs explaining, it
-     probably does--but put the explanation in comments in the code.
-     It will be more useful there.
-
-     Please read the `ChangeLog' files in the `src' and `lisp'
-     directories to see what sorts of information to put in, and to
-     learn the style that we use.  If you would like your name to
-     appear in the header line, showing who made the change, send us
-     the header line.  *Note Change Log::.
-
-   * When you write the fix, keep in mind that we can't install a
-     change that would break other systems.  Please think about what
-     effect your change will have if compiled on another type of system.
-
-     Sometimes people send fixes that *might* be an improvement in
-     general--but it is hard to be sure of this.  It's hard to install
-     such changes because we have to study them very carefully.  Of
-     course, a good explanation of the reasoning by which you concluded
-     the change was correct can help convince us.
-
-     The safest changes are changes to the configuration files for a
-     particular machine.  These are safe because they can't create new
-     bugs on other machines.
-
-     Please help us keep up with the workload by designing the patch in
-     a form that is clearly safe to install.
-
-
-File: emacs,  Node: Contributing,  Next: Service,  Prev: Bugs,  Up: Top
-
-Contributing to Emacs Development
-=================================
-
-   If you would like to help pretest Emacs releases to assure they work
-well, or if you would like to work on improving Emacs, please contact
-the maintainers at `bug-gnu-emacs@gnu.org'.  A pretester should be
-prepared to investigate bugs as well as report them.  If you'd like to
-work on improving Emacs, please ask for suggested projects or suggest
-your own ideas.
-
-   If you have already written an improvement, please tell us about it.
-If you have not yet started work, it is useful to contact
-`bug-gnu-emacs@gnu.org' before you start; it might be possible to
-suggest ways to make your extension fit in better with the rest of
-Emacs.
-
-
-File: emacs,  Node: Service,  Next: Command Arguments,  Prev: Contributing,  Up: Top
-
-How To Get Help with GNU Emacs
-==============================
-
-   If you need help installing, using or changing GNU Emacs, there are
-two ways to find it:
-
-   * Send a message to the mailing list `help-gnu-emacs@gnu.org', or
-     post your request on newsgroup `gnu.emacs.help'.  (This mailing
-     list and newsgroup interconnect, so it does not matter which one
-     you use.)
-
-   * Look in the service directory for someone who might help you for a
-     fee.  The service directory is found in the file named
-     `etc/SERVICE' in the Emacs distribution.
 

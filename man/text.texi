@@ -1172,7 +1172,7 @@ Insert, according to context, either @samp{``} or @samp{"} or
 Insert a paragraph break (two newlines) and check the previous
 paragraph for unbalanced braces or dollar signs
 (@code{tex-terminate-paragraph}).
-@item M-x validate-tex-region
+@item M-x tex-validate-region
 Check each paragraph in the region for unbalanced braces or dollar signs.
 @item C-c @{
 Insert @samp{@{@}} and position point between them (@code{tex-insert-braces}).
@@ -1195,7 +1195,7 @@ character.
 @kbd{C-q} to insert it.  Also, @kbd{"} with a numeric argument always
 inserts that number of @samp{"} characters.  You can turn off the
 feature of @kbd{"} expansion by eliminating that binding in the local
-map (@xref{Key Bindings}).
+map (@pxref{Key Bindings}).
 
   In @TeX{} mode, @samp{$} has a special syntax code which attempts to
 understand the way @TeX{} math mode delimiters match.  When you insert a
@@ -1218,19 +1218,16 @@ braces.  It leaves point between the two braces so you can insert the
 text that belongs inside.  Afterward, use the command @kbd{C-c @}}
 (@code{up-list}) to move forward past the close brace.
 
-@findex validate-tex-region
+@findex tex-validate-region
 @findex tex-terminate-paragraph
 @kindex C-j @r{(@TeX{} mode)}
   There are two commands for checking the matching of braces.  @kbd{C-j}
 (@code{tex-terminate-paragraph}) checks the paragraph before point, and
 inserts two newlines to start a new paragraph.  It prints a message in
-the echo area if any mismatch is found.  @kbd{M-x validate-tex-region}
-checks a region, paragraph by paragraph.  When it finds a paragraph that
-contains a mismatch, it displays point at the beginning of the paragraph
-for a few seconds and sets the mark at that spot.  Scanning continues
-until the whole buffer has been checked or until you type another key.
-Afterward, you can use the mark ring to find the last several paragraphs
-that had mismatches (@pxref{Mark Ring}).
+the echo area if any mismatch is found.  @kbd{M-x tex-validate-region}
+checks a region, paragraph by paragraph.  The errors are listed in the
+@samp{*Occur*} buffer, and you can use @kbd{C-c C-c} or @kbd{Mouse-2} in
+that buffer to go to a particular mismatch.
 
   Note that Emacs commands count square brackets and parentheses in
 @TeX{} mode, not just braces.  This is not strictly correct for the
@@ -1417,6 +1414,11 @@ C-f} (@code{tex-file}) which runs @TeX{} on the current buffer's file,
 in that file's directory.  Before running @TeX{}, it offers to save any
 modified buffers.  Generally, you need to use (@code{tex-file}) twice to
 get the cross-references right.
+
+@vindex tex-start-options-string
+  The value of the variable @code{tex-start-options-string} specifies
+options for the @TeX{} run.  The default value causes @TeX{} to run in
+nonstopmode.  To run @TeX{} interactively, set the variable to @code{""}.
 
 @vindex tex-main-file
   Large @TeX{} documents are often split into several files---one main

@@ -77,13 +77,19 @@ and \"-de\" when dehexlifying a buffer."
   :group 'hexl)
 
 (defcustom hexlify-command
-  (format "%s%s %s" exec-directory hexl-program hexl-options)
+  (format "%s %s"
+	  (shell-quote-argument
+	   (expand-file-name hexl-program exec-directory))
+	  hexl-options)
   "The command to use to hexlify a buffer."
   :type 'string
   :group 'hexl)
 
 (defcustom dehexlify-command
-  (format "%s%s -de %s" exec-directory hexl-program hexl-options)
+  (format "%s -de %s"
+	  (shell-quote-argument
+	   (expand-file-name hexl-program exec-directory))
+	  hexl-options)
   "The command to use to unhexlify a buffer."
   :type 'string
   :group 'hexl)
@@ -812,48 +818,26 @@ Customize the variable `hexl-follow-ascii' to disable this feature."
 
   (define-key hexl-mode-map "\e\C-a" 'hexl-beginning-of-512b-page)
   (define-key hexl-mode-map "\e\C-b" 'hexl-backward-short)
-  (define-key hexl-mode-map "\e\C-c" 'undefined)
   (define-key hexl-mode-map "\e\C-d" 'hexl-insert-decimal-char)
   (define-key hexl-mode-map "\e\C-e" 'hexl-end-of-512b-page)
   (define-key hexl-mode-map "\e\C-f" 'hexl-forward-short)
-  (define-key hexl-mode-map "\e\C-g" 'undefined)
-  (define-key hexl-mode-map "\e\C-h" 'undefined)
   (define-key hexl-mode-map "\e\C-i" 'undefined)
   (define-key hexl-mode-map "\e\C-j" 'undefined)
   (define-key hexl-mode-map "\e\C-k" 'undefined)
-  (define-key hexl-mode-map "\e\C-l" 'undefined)
-  (define-key hexl-mode-map "\e\C-m" 'undefined)
-  (define-key hexl-mode-map "\e\C-n" 'undefined)
   (define-key hexl-mode-map "\e\C-o" 'hexl-insert-octal-char)
-  (define-key hexl-mode-map "\e\C-p" 'undefined)
   (define-key hexl-mode-map "\e\C-q" 'undefined)
-  (define-key hexl-mode-map "\e\C-r" 'undefined)
-  (define-key hexl-mode-map "\e\C-s" 'undefined)
   (define-key hexl-mode-map "\e\C-t" 'undefined)
-  (define-key hexl-mode-map "\e\C-u" 'undefined)
-
-  (define-key hexl-mode-map "\e\C-w" 'undefined)
   (define-key hexl-mode-map "\e\C-x" 'hexl-insert-hex-char)
-  (define-key hexl-mode-map "\e\C-y" 'undefined)
-
-  (define-key hexl-mode-map "\ea" 'undefined)
   (define-key hexl-mode-map "\eb" 'hexl-backward-word)
   (define-key hexl-mode-map "\ec" 'undefined)
   (define-key hexl-mode-map "\ed" 'undefined)
-  (define-key hexl-mode-map "\ee" 'undefined)
   (define-key hexl-mode-map "\ef" 'hexl-forward-word)
   (define-key hexl-mode-map "\eg" 'hexl-goto-hex-address)
-  (define-key hexl-mode-map "\eh" 'undefined)
   (define-key hexl-mode-map "\ei" 'undefined)
   (define-key hexl-mode-map "\ej" 'hexl-goto-address)
   (define-key hexl-mode-map "\ek" 'undefined)
   (define-key hexl-mode-map "\el" 'undefined)
-  (define-key hexl-mode-map "\em" 'undefined)
-  (define-key hexl-mode-map "\en" 'undefined)
-  (define-key hexl-mode-map "\eo" 'undefined)
-  (define-key hexl-mode-map "\ep" 'undefined)
   (define-key hexl-mode-map "\eq" 'undefined)
-  (define-key hexl-mode-map "\er" 'undefined)
   (define-key hexl-mode-map "\es" 'undefined)
   (define-key hexl-mode-map "\et" 'undefined)
   (define-key hexl-mode-map "\eu" 'undefined)

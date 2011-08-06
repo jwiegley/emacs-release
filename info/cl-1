@@ -34,11 +34,9 @@ Common Lisp Extensions
 **********************
 
 This document describes a set of Emacs Lisp facilities borrowed from
-Common Lisp.  All the facilities are described here in detail; for more
-discussion and examples, Guy L. Steele's `Common Lisp, the Language',
-second edition, is the definitive book on Common Lisp.  While this
-document does not assume any prior knowledge of Common Lisp, it does
-assume a basic familiarity with Emacs Lisp.
+Common Lisp.  All the facilities are described here in detail.  While
+this document does not assume any prior knowledge of Common Lisp, it
+does assume a basic familiarity with Emacs Lisp.
 
 * Menu:
 
@@ -420,11 +418,6 @@ This function takes a `:need' keyword argument, but also accepts other
 keyword arguments which are passed on to the `member*' function.
 `allow-other-keys' is used to keep both `find-thing' and `member*' from
 complaining about each others' keywords in the arguments.
-
-   In Common Lisp, keywords are recognized by the Lisp parser itself
-and treated as special entities.  In Emacs, keywords are just symbols
-whose names begin with colons, which `defun*' has arranged to set equal
-to themselves so that they will essentially be self-quoting.
 
    As a (significant) performance optimization, this package implements
 the scan for keyword arguments by calling `memq' to search for keywords

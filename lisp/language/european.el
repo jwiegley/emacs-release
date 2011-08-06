@@ -1,4 +1,4 @@
-;;; european.el --- Support for European languages
+;;; european.el --- European languages -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1995, 1997 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -66,9 +66,11 @@
 	     (sample-text
 	      . "Hello, Hej, Tere, Hei, Bonjour, Gr,A|_(B Gott, Ciao, ,A!(BHola!")
 	     (documentation . "\
-These languages are supported with the Latin-1 (ISO-8859-1) character set:
+This language environment is a generic one for Latin-1 (ISO-8859-1)
+character set which supports the following languages:
  Danish, Dutch, English, Faeroese, Finnish, French, German, Icelandic,
- Irish, Italian, Norwegian, Portuguese, Spanish, and Swedish."))
+ Irish, Italian, Norwegian, Portuguese, Spanish, and Swedish.
+We also have a German specific language environment \"German\"."))
  '("European"))
 
 
@@ -99,10 +101,15 @@ These languages are supported with the Latin-1 (ISO-8859-1) character set:
 	     (unibyte-display . iso-latin-2)
 	     (input-method . "latin-2-prefix")
 	     (documentation . "\
-These languages are supported with the Latin-2 (ISO-8859-2) character set:
+This language environment is a generic one for Latin-2 (ISO-8859-2)
+character set which supports the following languages:
  Albanian, Czech, English, German, Hungarian, Polish, Romanian,
  Serbo-Croatian or Croatian, Slovak, Slovene, Sorbian (upper and lower),
- and Swedish."))
+ and Swedish.
+We also have specific language environments for the following languages:
+  For Czech, \"Czech\".
+  For Romanian, \"Romanian\".
+  For Slovak, \"Slovak\"."))
  '("European"))
 
 
@@ -224,5 +231,25 @@ German (Deutsch S,A|(Bd)	Gr,A|_(B Gott")
 This language environment is almost the same as Latin-1,
 but default input method is set to \"german-postfix\"."))
  '("European"))
+
+(defun setup-slovenian-environment ()
+  "Setup multilingual environment (MULE) for Slovenian."
+  (interactive)
+  (set-language-environment "Slovenian"))
+
+(set-language-info-alist
+ "Slovenian" '((charset . (ascii latin-iso8859-2))
+	      (coding-system . (iso-8859-2))
+	      (coding-priority . (iso-8859-2))
+	      (nonascii-translation . latin-iso8859-2)
+	      (input-method . "latin-2-postfix")
+	      (unibyte-syntax . "latin-2")
+	      (unibyte-display . iso-8859-2)
+	      (tutorial . "TUTORIAL.sl")
+	      (sample-text . ",B.(Belimo vam uspe,B9(Ben dan!")
+	      (documentation . t))
+ '("European"))
+
+(provide 'slovenian)
 
 ;;; european.el ends here

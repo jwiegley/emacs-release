@@ -1,9 +1,8 @@
 This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
 the input file gnus.texi.
 
-INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
-* Gnus: (gnus).		The news reader Gnus.
+* Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
 
    This file documents Gnus, the GNU Emacs newsreader.
@@ -24,6 +23,493 @@ manual into another language, under the above conditions for modified
 versions.
 
 
+File: gnus,  Node: Tree Display,  Next: Mail Group Commands,  Prev: Alternative Approaches,  Up: The Summary Buffer
+
+Tree Display
+============
+
+   If you don't like the normal Gnus summary display, you might try
+setting `gnus-use-trees' to `t'.  This will create (by default) an
+additional "tree buffer".  You can execute all summary mode commands in
+the tree buffer.
+
+   There are a few variables to customize the tree display, of course:
+
+`gnus-tree-mode-hook'
+     A hook called in all tree mode buffers.
+
+`gnus-tree-mode-line-format'
+     A format string for the mode bar in the tree mode buffers (*note
+     Mode Line Formatting::.).  The default is `Gnus: %%b %S %Z'.  For
+     a list of valid specs, *note Summary Buffer Mode Line::..
+
+`gnus-selected-tree-face'
+     Face used for highlighting the selected article in the tree
+     buffer.  The default is `modeline'.
+
+`gnus-tree-line-format'
+     A format string for the tree nodes.  The name is a bit of a
+     misnomer, though--it doesn't define a line, but just the node.
+     The default value is `%(%[%3,3n%]%)', which displays the first
+     three characters of the name of the poster.  It is vital that all
+     nodes are of the same length, so you *must* use `%4,4n'-like
+     specifiers.
+
+     Valid specs are:
+
+    `n'
+          The name of the poster.
+
+    `f'
+          The `From' header.
+
+    `N'
+          The number of the article.
+
+    `['
+          The opening bracket.
+
+    `]'
+          The closing bracket.
+
+    `s'
+          The subject.
+
+     *Note Formatting Variables::.
+
+     Variables related to the display are:
+
+    `gnus-tree-brackets'
+          This is used for differentiating between "real" articles and
+          "sparse" articles.  The format is ((REAL-OPEN . REAL-CLOSE)
+          (SPARSE-OPEN . SPARSE-CLOSE) (DUMMY-OPEN . DUMMY-CLOSE)), and
+          the default is `((?[ . ?]) (?( . ?)) (?{ . ?}) (?< . ?>))'.
+
+    `gnus-tree-parent-child-edges'
+          This is a list that contains the characters used for
+          connecting parent nodes to their children.  The default is
+          `(?- ?\\ ?|)'.
+
+`gnus-tree-minimize-window'
+     If this variable is non-`nil', Gnus will try to keep the tree
+     buffer as small as possible to allow more room for the other Gnus
+     windows.  If this variable is a number, the tree buffer will never
+     be higher than that number.  The default is `t'.  Note that if you
+     have several windows displayed side-by-side in a frame and the tree
+     buffer is one of these, minimizing the tree window will also
+     resize all other windows displayed next to it.
+
+`gnus-generate-tree-function'
+     The function that actually generates the thread tree.  Two
+     predefined functions are available:
+     `gnus-generate-horizontal-tree' and `gnus-generate-vertical-tree'
+     (which is the default).
+
+   Here's an example from a horizontal tree buffer:
+
+     {***}-(***)-[odd]-[Gun]
+          |      \[Jan]
+          |      \[odd]-[Eri]
+          |      \(***)-[Eri]
+          |            \[odd]-[Paa]
+          \[Bjo]
+          \[Gun]
+          \[Gun]-[Jor]
+
+   Here's the same thread displayed in a vertical tree buffer:
+
+     {***}
+       |--------------------------\-----\-----\
+     (***)                         [Bjo] [Gun] [Gun]
+       |--\-----\-----\                          |
+     [odd] [Jan] [odd] (***)                   [Jor]
+       |           |     |--\
+     [Gun]       [Eri] [Eri] [odd]
+                               |
+                             [Paa]
+
+   If you're using horizontal trees, it might be nice to display the
+trees side-by-side with the summary buffer.  You could add something
+like the following to your `.gnus.el' file:
+
+     (setq gnus-use-trees t
+           gnus-generate-tree-function 'gnus-generate-horizontal-tree
+           gnus-tree-minimize-window nil)
+     (gnus-add-configuration
+      '(article
+        (vertical 1.0
+                  (horizontal 0.25
+                              (summary 0.75 point)
+                              (tree 1.0))
+                  (article 1.0))))
+
+   *Note Windows Configuration::.
+
+
+File: gnus,  Node: Mail Group Commands,  Next: Various Summary Stuff,  Prev: Tree Display,  Up: The Summary Buffer
+
+Mail Group Commands
+===================
+
+   Some commands only make sense in mail groups.  If these commands are
+invalid in the current group, they will raise a hell and let you know.
+
+   All these commands (except the expiry and edit commands) use the
+process/prefix convention (*note Process/Prefix::.).
+
+`B e'
+     Expire all expirable articles in the group
+     (`gnus-summary-expire-articles').
+
+`B M-C-e'
+     Delete all the expirable articles in the group
+     (`gnus-summary-expire-articles-now').  This means that *all*
+     articles eligible for expiry in the current group will disappear
+     forever into that big `/dev/null' in the sky.
+
+`B DEL'
+     Delete the mail article.  This is "delete" as in "delete it from
+     your disk forever and ever, never to return again." Use with
+     caution.  (`gnus-summary-delete-article').
+
+`B m'
+     Move the article from one mail group to another
+     (`gnus-summary-move-article').
+
+`B c'
+     Copy the article from one group (mail group or not) to a mail group
+     (`gnus-summary-copy-article').
+
+`B B'
+     Crosspost the current article to some other group
+     (`gnus-summary-crosspost-article').  This will create a new copy of
+     the article in the other group, and the Xref headers of the
+     article will be properly updated.
+
+`B i'
+     Import an arbitrary file into the current mail newsgroup
+     (`gnus-summary-import-article').  You will be prompted for a file
+     name, a `From' header and a `Subject' header.
+
+`B r'
+     Respool the mail article (`gnus-summary-respool-article').
+     `gnus-summary-respool-default-method' will be used as the default
+     select method when respooling.  This variable is `nil' by default,
+     which means that the current group select method will be used
+     instead.
+
+`B w'
+`e'
+     Edit the current article (`gnus-summary-edit-article').  To finish
+     editing and make the changes permanent, type `C-c C-c'
+     (`gnus-summary-edit-article-done').  If you give a prefix to the
+     `C-c C-c' command, Gnus won't re-highlight the article.
+
+`B q'
+     If you want to re-spool an article, you might be curious as to
+     what group the article will end up in before you do the
+     re-spooling.  This command will tell you
+     (`gnus-summary-respool-query').
+
+`B t'
+     Similarly, this command will display all fancy splitting patterns
+     used when repooling, if any (`gnus-summary-respool-trace').
+
+`B p'
+     Some people have a tendency to send you "courtesy" copies when they
+     follow up to articles you have posted.  These usually have a
+     `Newsgroups' header in them, but not always.  This command
+     (`gnus-summary-article-posted-p') will try to fetch the current
+     article from your news server (or rather, from
+     `gnus-refer-article-method' or `gnus-select-method') and will
+     report back whether it found the article or not.  Even if it says
+     that it didn't find the article, it may have been posted
+     anyway--mail propagation is much faster than news propagation, and
+     the news copy may just not have arrived yet.
+
+   If you move (or copy) articles regularly, you might wish to have Gnus
+suggest where to put the articles.  `gnus-move-split-methods' is a
+variable that uses the same syntax as `gnus-split-methods' (*note
+Saving Articles::.).  You may customize that variable to create
+suggestions you find reasonable.
+
+     (setq gnus-move-split-methods
+           '(("^From:.*Lars Magne" "nnml:junk")
+             ("^Subject:.*gnus" "nnfolder:important")
+             (".*" "nnml:misc")))
+
+
+File: gnus,  Node: Various Summary Stuff,  Next: Exiting the Summary Buffer,  Prev: Mail Group Commands,  Up: The Summary Buffer
+
+Various Summary Stuff
+=====================
+
+* Menu:
+
+* Summary Group Information::         Information oriented commands.
+* Searching for Articles::            Multiple article commands.
+* Summary Generation Commands::       (Re)generating the summary buffer.
+* Really Various Summary Commands::   Those pesky non-conformant commands.
+
+`gnus-summary-mode-hook'
+     This hook is called when creating a summary mode buffer.
+
+`gnus-summary-generate-hook'
+     This is called as the last thing before doing the threading and the
+     generation of the summary buffer.  It's quite convenient for
+     customizing the threading variables based on what data the
+     newsgroup has.  This hook is called from the summary buffer after
+     most summary buffer variables have been set.
+
+`gnus-summary-prepare-hook'
+     It is called after the summary buffer has been generated.  You
+     might use it to, for instance, highlight lines or modify the look
+     of the buffer in some other ungodly manner.  I don't care.
+
+`gnus-summary-ignore-duplicates'
+     When Gnus discovers two articles that have the same `Message-ID',
+     it has to do something drastic.  No articles are allowed to have
+     the same `Message-ID', but this may happen when reading mail from
+     some sources.  Gnus allows you to customize what happens with this
+     variable.  If it is `nil' (which is the default), Gnus will rename
+     the `Message-ID' (for display purposes only) and display the
+     article as any other article.  If this variable is `t', it won't
+     display the article--it'll be as if it never existed.
+
+
+File: gnus,  Node: Summary Group Information,  Next: Searching for Articles,  Up: Various Summary Stuff
+
+Summary Group Information
+-------------------------
+
+`H f'
+     Try to fetch the FAQ (list of frequently asked questions) for the
+     current group (`gnus-summary-fetch-faq').  Gnus will try to get the
+     FAQ from `gnus-group-faq-directory', which is usually a directory
+     on a remote machine.  This variable can also be a list of
+     directories.  In that case, giving a prefix to this command will
+     allow you to choose between the various sites.  `ange-ftp' or
+     `efs' will probably be used for fetching the file.
+
+`H d'
+     Give a brief description of the current group
+     (`gnus-summary-describe-group').  If given a prefix, force
+     rereading the description from the server.
+
+`H h'
+     Give an extremely brief description of the most important summary
+     keystrokes (`gnus-summary-describe-briefly').
+
+`H i'
+     Go to the Gnus info node (`gnus-info-find-node').
+
+
+File: gnus,  Node: Searching for Articles,  Next: Summary Generation Commands,  Prev: Summary Group Information,  Up: Various Summary Stuff
+
+Searching for Articles
+----------------------
+
+`M-s'
+     Search through all subsequent articles for a regexp
+     (`gnus-summary-search-article-forward').
+
+`M-r'
+     Search through all previous articles for a regexp
+     (`gnus-summary-search-article-backward').
+
+`&'
+     This command will prompt you for a header field, a regular
+     expression to match on this field, and a command to be executed if
+     the match is made (`gnus-summary-execute-command').  If given a
+     prefix, search backward instead.
+
+`M-&'
+     Perform any operation on all articles that have been marked with
+     the process mark (`gnus-summary-universal-argument').
+
+
+File: gnus,  Node: Summary Generation Commands,  Next: Really Various Summary Commands,  Prev: Searching for Articles,  Up: Various Summary Stuff
+
+Summary Generation Commands
+---------------------------
+
+`Y g'
+     Regenerate the current summary buffer (`gnus-summary-prepare').
+
+`Y c'
+     Pull all cached articles (for the current group) into the summary
+     buffer (`gnus-summary-insert-cached-articles').
+
+
+File: gnus,  Node: Really Various Summary Commands,  Prev: Summary Generation Commands,  Up: Various Summary Stuff
+
+Really Various Summary Commands
+-------------------------------
+
+`C-d'
+     If the current article is a collection of other articles (for
+     instance, a digest), you might use this command to enter a group
+     based on the that article (`gnus-summary-enter-digest-group').
+     Gnus will try to guess what article type is currently displayed
+     unless you give a prefix to this command, which forces a "digest"
+     interpretation.  Basically, whenever you see a message that is a
+     collection of other messages of some format, you `C-d' and read
+     these messages in a more convenient fashion.
+
+`M-C-d'
+     This command is very similar to the one above, but lets you gather
+     several documents into one biiig group
+     (`gnus-summary-read-document').  It does this by opening several
+     `nndoc' groups for each document, and then opening an `nnvirtual'
+     group on top of these `nndoc' groups.  This command understands
+     the process/prefix convention (*note Process/Prefix::.).
+
+`C-t'
+     Toggle truncation of summary lines
+     (`gnus-summary-toggle-truncation').  This will probably confuse the
+     line centering function in the summary buffer, so it's not a good
+     idea to have truncation switched off while reading articles.
+
+`='
+     Expand the summary buffer window (`gnus-summary-expand-window').
+     If given a prefix, force an `article' window configuration.
+
+`M-C-e'
+     Edit the group parameters (*note Group Parameters::.) of the
+     current group (`gnus-summary-edit-parameters').
+
+
+File: gnus,  Node: Exiting the Summary Buffer,  Next: Crosspost Handling,  Prev: Various Summary Stuff,  Up: The Summary Buffer
+
+Exiting the Summary Buffer
+==========================
+
+   Exiting from the summary buffer will normally update all info on the
+group and return you to the group buffer.
+
+`Z Z'
+`q'
+     Exit the current group and update all information on the group
+     (`gnus-summary-exit'). `gnus-summary-prepare-exit-hook' is called
+     before doing much of the exiting, which calls
+     `gnus-summary-expire-articles' by default.
+     `gnus-summary-exit-hook' is called after finishing the exit
+     process.  `gnus-group-no-more-groups-hook' is run when returning to
+     group mode having no more (unread) groups.
+
+`Z E'
+`Q'
+     Exit the current group without updating any information on the
+     group (`gnus-summary-exit-no-update').
+
+`Z c'
+`c'
+     Mark all unticked articles in the group as read and then exit
+     (`gnus-summary-catchup-and-exit').
+
+`Z C'
+     Mark all articles, even the ticked ones, as read and then exit
+     (`gnus-summary-catchup-all-and-exit').
+
+`Z n'
+     Mark all articles as read and go to the next group
+     (`gnus-summary-catchup-and-goto-next-group').
+
+`Z R'
+     Exit this group, and then enter it again
+     (`gnus-summary-reselect-current-group').  If given a prefix, select
+     all articles, both read and unread.
+
+`Z G'
+`M-g'
+     Exit the group, check for new articles in the group, and select the
+     group (`gnus-summary-rescan-group').  If given a prefix, select all
+     articles, both read and unread.
+
+`Z N'
+     Exit the group and go to the next group
+     (`gnus-summary-next-group').
+
+`Z P'
+     Exit the group and go to the previous group
+     (`gnus-summary-prev-group').
+
+`Z s'
+     Save the current number of read/marked articles in the dribble
+     buffer and then save the dribble buffer
+     (`gnus-summary-save-newsrc').  If given a prefix, also save the
+     `.newsrc' file(s).  Using this command will make exit without
+     updating (the `Q' command) worthless.
+
+   `gnus-exit-group-hook' is called when you exit the current group.
+
+   If you're in the habit of exiting groups, and then changing your mind
+about it, you might set `gnus-kill-summary-on-exit' to `nil'.  If you
+do that, Gnus won't kill the summary buffer when you exit it.  (Quelle
+surprise!)  Instead it will change the name of the buffer to something
+like `*Dead Summary ... *' and install a minor mode called
+`gnus-dead-summary-mode'.  Now, if you switch back to this buffer,
+you'll find that all keys are mapped to a function called
+`gnus-summary-wake-up-the-dead'.  So tapping any keys in a dead summary
+buffer will result in a live, normal summary buffer.
+
+   There will never be more than one dead summary buffer at any one
+time.
+
+   The data on the current group will be updated (which articles you
+have read, which articles you have replied to, etc.) when you exit the
+summary buffer.  If the `gnus-use-cross-reference' variable is `t'
+(which is the default), articles that are cross-referenced to this
+group and are marked as read, will also be marked as read in the other
+subscribed groups they were cross-posted to.  If this variable is
+neither `nil' nor `t', the article will be marked as read in both
+subscribed and unsubscribed groups (*note Crosspost Handling::.).
+
+
+File: gnus,  Node: Crosspost Handling,  Next: Duplicate Suppression,  Prev: Exiting the Summary Buffer,  Up: The Summary Buffer
+
+Crosspost Handling
+==================
+
+   Marking cross-posted articles as read ensures that you'll never have
+to read the same article more than once.  Unless, of course, somebody
+has posted it to several groups separately.  Posting the same article to
+several groups (not cross-posting) is called "spamming", and you are by
+law required to send nasty-grams to anyone who perpetrates such a
+heinous crime.  You may want to try NoCeM handling to filter out spam
+(*note NoCeM::.).
+
+   Remember: Cross-posting is kinda ok, but posting the same article
+separately to several groups is not.  Massive cross-posting (aka.
+"velveeta") is to be avoided at all costs, and you can even use the
+`gnus-summary-mail-crosspost-complaint' command to complain about
+excessive crossposting (*note Summary Mail Commands::.).
+
+   One thing that may cause Gnus to not do the cross-posting thing
+correctly is if you use an NNTP server that supports XOVER (which is
+very nice, because it speeds things up considerably) which does not
+include the `Xref' header in its NOV lines.  This is Evil, but all too
+common, alas, alack.  Gnus tries to Do The Right Thing even with XOVER
+by registering the `Xref' lines of all articles you actually read, but
+if you kill the articles, or just mark them as read without reading
+them, Gnus will not get a chance to snoop the `Xref' lines out of these
+articles, and will be unable to use the cross reference mechanism.
+
+   To check whether your NNTP server includes the `Xref' header in its
+overview files, try `telnet your.nntp.server nntp', `MODE READER' on
+`inn' servers, and then say `LIST overview.fmt'.  This may not work,
+but if it does, and the last line you get does not read `Xref:full',
+then you should shout and whine at your news admin until she includes
+the `Xref' header in the overview files.
+
+   If you want Gnus to get the `Xref's right all the time, you have to
+set `gnus-nov-is-evil' to `t', which slows things down considerably.
+
+   C'est la vie.
+
+   For an alternative approach, *note Duplicate Suppression::..
+
+
 File: gnus,  Node: Duplicate Suppression,  Prev: Crosspost Handling,  Up: The Summary Buffer
 
 Duplicate Suppression
@@ -32,7 +518,7 @@ Duplicate Suppression
    By default, Gnus tries to make sure that you don't have to read the
 same article more than once by utilizing the crossposting mechanism
 (*note Crosspost Handling::.).  However, that simple and efficient
-approach may not work satisfactorily for some users for various reasons.
+approach may not work satisfactory for some users for various reasons.
 
   1. The NNTP server may fail to generate the `Xref' header.  This is
      evil and not very common.
@@ -45,7 +531,7 @@ approach may not work satisfactorily for some users for various reasons.
 
   4. You may be getting mail that duplicates articles posted to groups.
 
-   I'm sure there are other situations that `Xref' handling fails as
+   I'm sure there are other situations where `Xref' handling fails as
 well, but these four are the most common situations.
 
    If, and only if, `Xref' handling fails for you, then you may
@@ -60,7 +546,7 @@ certainly preferable to reading the same articles more than once.
 like a sledge hammer than anything else.  It works in a very simple
 fashion--if you have marked an article as read, it adds this Message-ID
 to a cache.  The next time it sees this Message-ID, it will mark the
-article as read the the `M' mark.  It doesn't care what group it saw
+article as read with the `M' mark.  It doesn't care what group it saw
 the article in.
 
 `gnus-suppress-duplicates'
@@ -69,16 +555,16 @@ the article in.
 `gnus-save-duplicate-list'
      If non-`nil', save the list of duplicates to a file.  This will
      make startup and shutdown take longer, so the default is `nil'.
-     However, this means that only duplicate articles that is read in a
-     single Gnus session are suppressed.
+     However, this means that only duplicate articles read in a single
+     Gnus session are suppressed.
 
 `gnus-duplicate-list-length'
-     This variables says how many `Message-ID's to keep in the duplicate
+     This variable says how many `Message-ID's to keep in the duplicate
      suppression list.  The default is 10000.
 
 `gnus-duplicate-file'
-     The name of the file to store the duplicate suppression list.  The
-     default is `~/News/suppression'.
+     The name of the file to store the duplicate suppression list in.
+     The default is `~/News/suppression'.
 
    If you have a tendency to stop and start Gnus often, setting
 `gnus-save-duplicate-list' to `t' is probably a good idea.  If you
@@ -136,8 +622,8 @@ article buffer, you can set `gnus-show-all-headers' to `t'.
 
           (setq gnus-visible-headers "^From:\\|^Subject:")
 
-     This variable can also be a list of regexps to match headers that
-     are to remain visible.
+     This variable can also be a list of regexps to match headers to
+     remain visible.
 
 `gnus-ignored-headers'
      This variable is the reverse of `gnus-visible-headers'.  If this
@@ -151,8 +637,8 @@ article buffer, you can set `gnus-show-all-headers' to `t'.
 
           (setq gnus-ignored-headers "^References:\\|^Xref:")
 
-     This variable can also be a list of regexps to match headers that
-     are to be removed.
+     This variable can also be a list of regexps to match headers to be
+     removed.
 
      Note that if `gnus-visible-headers' is non-`nil', this variable
      will have no effect.
@@ -168,8 +654,8 @@ first, and then the subject, you might say something like:
      (setq gnus-sorted-header-list '("^From:" "^Subject:"))
 
    Any headers that are to remain visible, but are not listed in this
-variable, will be displayed in random order after all the headers that
-are listed in this variable.
+variable, will be displayed in random order after all the headers
+listed in this variable.
 
    You can hide further boring headers by entering
 `gnus-article-hide-boring-headers' into `gnus-article-display-hook'.
@@ -182,10 +668,6 @@ check and remove from sight.
 `empty'
      Remove all empty headers.
 
-`newsgroups'
-     Remove the `Newsgroups' header if it only contains the current
-     group name.
-
 `followup-to'
      Remove the `Followup-To' header if it is identical to the
      `Newsgroups' header.
@@ -194,14 +676,24 @@ check and remove from sight.
      Remove the `Reply-To' header if it lists the same address as the
      `From' header.
 
+`newsgroups'
+     Remove the `Newsgroups' header if it only contains the current
+     group name.
+
 `date'
      Remove the `Date' header if the article is less than three days
      old.
 
-   To include the four first elements, you could say something like;
+`long-to'
+     Remove the `To' header if it is very long.
+
+`many-to'
+     Remove all `To' headers if there are more than one.
+
+   To include the four three elements, you could say something like;
 
      (setq gnus-boring-article-headers
-           '(empty newsgroups followup-to reply-to))
+           '(empty followup-to reply-to))
 
    This is also the default value for this variable.
 
@@ -222,18 +714,28 @@ of the characters, and it also makes it possible to embed pictures and
 other naughty stuff in innocent-looking articles.
 
    Gnus handles MIME by pushing the articles through
-`gnus-show-mime-method', which is `metamail-buffer' by default.  Set
-`gnus-show-mime' to `t' if you want to use MIME all the time.  However,
-if `gnus-strict-mime' is non-`nil', the MIME method will only be used
-if there are MIME headers in the article.  If you have `gnus-show-mime'
-set, then you'll see some unfortunate display glitches in the article
-buffer.  These can't be avoided.
+`gnus-show-mime-method', which is `metamail-buffer' by default.  This
+function calls the external `metamail' program to actually do the work.
+One common problem with this program is that is thinks that it can't
+display 8-bit things in the Emacs buffer.  To tell it the truth, put
+something like the following in your `.bash_profile' file.  (You do use
+`bash', don't you?)
+
+     export MM_CHARSET="iso-8859-1"
+
+   For more information on `metamail', see its manual page.
+
+   Set `gnus-show-mime' to `t' if you want to use MIME all the time.
+However, if `gnus-strict-mime' is non-`nil', the MIME method will only
+be used if there are MIME headers in the article.  If you have
+`gnus-show-mime' set, then you'll see some unfortunate display glitches
+in the article buffer.  These can't be avoided.
 
    It might be best to just use the toggling functions from the summary
 buffer to avoid getting nasty surprises. (For instance, you enter the
 group `alt.sing-a-long' and, before you know it, MIME has decoded the
 sound file in the article and some horrible sing-a-long song comes
-streaming out out your speakers, and you can't find the volume button,
+screaming out your speakers, and you can't find the volume button,
 because there isn't one, and people are starting to look at you, and
 you try to stop the program, but you can't, and you can't find the
 program to control the volume, and everybody else in the room suddenly
@@ -252,14 +754,15 @@ Customizing Articles
 inserted into the article buffer.  It is meant to handle all treatment
 of the article before it is displayed.
 
-   By default this hook just contains `gnus-article-hide-headers',
-`gnus-article-treat-overstrike', and `gnus-article-maybe-highlight',
-but there are thousands, nay millions, of functions you can put in this
-hook.  For an overview of functions *note Article Highlighting::.,
-*note Article Hiding::., *note Article Washing::., *note Article
-Buttons::. and *note Article Date::..  Note that the order of functions
-in this hook might affect things, so you may have to fiddle a bit to
-get the desired results.
+   By default this hook just contains `gnus-article-maybe-hide-headers',
+`gnus-hide-boring-headers', `gnus-article-treat-overstrike', and
+`gnus-article-maybe-highlight' (and under XEmacs,
+`gnus-article-display-x-face'), but there are thousands, nay millions,
+of functions you can put in this hook.  For an overview of functions
+*note Article Highlighting::., *note Article Hiding::., *note Article
+Washing::., *note Article Buttons::. and *note Article Date::..  Note
+that the order of functions in this hook might affect things, so you
+may have to fiddle a bit to get the desired results.
 
    You can, of course, write your own functions.  The functions are
 called from the article buffer, and you can do anything you like,
@@ -289,7 +792,7 @@ buffer.
 
 `C-c ^'
      If point is in the neighborhood of a `Message-ID' and you press
-     `r', Gnus will try to get that article from the server
+     `C-c ^', Gnus will try to get that article from the server
      (`gnus-article-refer-article').
 
 `C-c C-m'
@@ -305,11 +808,11 @@ buffer.
      (`gnus-article-describe-briefly').
 
 `TAB'
-     Go to the next button, if any (`gnus-article-next-button'.  This
+     Go to the next button, if any (`gnus-article-next-button').  This
      only makes sense if you have buttonizing turned on.
 
 `M-TAB'
-     Go to the previous button, if any (`gnus-article-prev-button'.
+     Go to the previous button, if any (`gnus-article-prev-button').
 
 
 File: gnus,  Node: Misc Article,  Prev: Article Keymap,  Up: The Article Buffer
@@ -342,8 +845,9 @@ Misc Article
 
 `gnus-article-mode-line-format'
      This variable is a format string along the same lines as
-     `gnus-summary-mode-line-format'.  It accepts the same format
-     specifications as that variable, with one extension:
+     `gnus-summary-mode-line-format' (*note Mode Line Formatting::.).
+     It accepts the same format specifications as that variable, with
+     one extension:
 
     `w'
           The "wash status" of the article.  This is a short string
@@ -358,7 +862,7 @@ Misc Article
 
 `gnus-page-delimiter'
      This is the delimiter mentioned above.  By default, it is `^L'
-     (form linefeed).
+     (formfeed).
 
 
 File: gnus,  Node: Composing Messages,  Next: Select Methods,  Prev: The Article Buffer,  Up: Top
@@ -380,6 +884,9 @@ using the foreign server.
 * Posting Server::       What server should you post via?
 * Mail and Post::        Mailing and posting at the same time.
 * Archived Messages::    Where Gnus stores the messages you've sent.
+* Posting Styles::       An easier way to specify who you are.
+* Drafts::               Postponing messages and rejected messages.
+* Rejected Articles::    What happens if the server doesn't like your article?
 
    Also see *note Canceling and Superseding::. for information on how to
 remove articles you shouldn't have posted.
@@ -413,7 +920,7 @@ Post
      sent.  If it discovers that it has already sent a mail, it will
      ask the user whether to re-send the mail.  (This is primarily
      useful when dealing with SOUP packets and the like where one is
-     apt to sent the same packet multiple times.)  This variable says
+     apt to send the same packet multiple times.)  This variable says
      what the name of this history file is.  It is
      `~/News/Sent-Message-IDs' by default.  Set this variable to `nil'
      if you don't want Gnus to keep a history file.
@@ -453,22 +960,26 @@ Gnus will prompt you for what method to use for posting.
 that's the case, Gnus will always prompt you for what method to use for
 posting.
 
+   Finally, if you want to always post using the same select method as
+you're reading from (which might be convenient if you're reading lots of
+groups from different private servers), you can set this variable to
+`current'.
+
 
 File: gnus,  Node: Mail and Post,  Next: Archived Messages,  Prev: Posting Server,  Up: Composing Messages
 
 Mail and Post
 =============
 
-   Here's a list of variables that are relevant to both mailing and
-posting:
+   Here's a list of variables relevant to both mailing and posting:
 
 `gnus-mailing-list-groups'
      If your news server offers groups that are really mailing lists
-     that are gatewayed to the NNTP server, you can read those groups
-     without problems, but you can't post/followup to them without some
+     gatewayed to the NNTP server, you can read those groups without
+     problems, but you can't post/followup to them without some
      difficulty.  One solution is to add a `to-address' to the group
      parameters (*note Group Parameters::.).  An easier thing to do is
-     set the `gnus-mailing-list-groups' to a regexp that match the
+     set the `gnus-mailing-list-groups' to a regexp that matches the
      groups that really are mailing lists.  Then, at least, followups
      to the mailing lists will work most of the time.  Posting to these
      groups (`a') is still a pain, though.
@@ -480,7 +991,7 @@ spell-checking via the `ispell' package:
      (add-hook 'message-send-hook 'ispell-message)
 
 
-File: gnus,  Node: Archived Messages,  Prev: Mail and Post,  Up: Composing Messages
+File: gnus,  Node: Archived Messages,  Next: Posting Styles,  Prev: Mail and Post,  Up: Composing Messages
 
 Archived Messages
 =================
@@ -495,7 +1006,10 @@ default.
 use to store sent messages.  The default is:
 
      (nnfolder "archive"
-               (nnfolder-directory "~/Mail/archive/"))
+               (nnfolder-directory   "~/Mail/archive")
+               (nnfolder-active-file "~/Mail/archive/active")
+               (nnfolder-get-new-mail nil)
+               (nnfolder-inhibit-expiry t))
 
    You can, however, use any mail select method (`nnml', `nnmbox',
 etc.).  `nnfolder' is a quite likeable select method for doing this
@@ -512,7 +1026,7 @@ you could say something like:
 to one or more group(s) on that server.  Which group to use is
 determined by the `gnus-message-archive-group' variable.
 
-   This variable can be:
+   This variable can be used to do the following:
 
    * a string Messages will be saved in that group.
 
@@ -552,6 +1066,9 @@ messages in one file per month:
                (concat "mail." (format-time-string
                                 "%Y-%m" (current-time))))))
 
+   (XEmacs 19.13 doesn't have `format-time-string', so you'll have to
+use a different value for `gnus-message-archive-group' there.)
+
    Now, when you send a message off, it will be stored in the
 appropriate group.  (If you want to disable storing for just one
 particular message, you can just remove the `Gcc' header that has been
@@ -563,13 +1080,10 @@ can simply rename if (using `G r' in the group buffer) to something
 nice--`misc-mail-september-1995', or whatever.  New messages will
 continue to be stored in the old (now empty) group.
 
-   That's the default method of archiving sent messages.  Gnus also a
+   That's the default method of archiving sent messages.  Gnus offers a
 different way for the people who don't like the default method.  In that
 case you should set `gnus-message-archive-group' to `nil'; this will
 disable archiving.
-
-   XEmacs 19.13 doesn't have `format-time-string', so you'll have to
-use a different value for `gnus-message-archive-group' there.
 
 `gnus-outgoing-message-group'
      All outgoing messages will be put in this group.  If you want to
@@ -586,701 +1100,152 @@ use a different value for `gnus-message-archive-group' there.
      but the latter is the preferred method.
 
 
-File: gnus,  Node: Select Methods,  Next: Scoring,  Prev: Composing Messages,  Up: Top
+File: gnus,  Node: Posting Styles,  Next: Drafts,  Prev: Archived Messages,  Up: Composing Messages
 
-Select Methods
-**************
+Posting Styles
+==============
 
-   A "foreign group" is a group that is not read by the usual (or
-default) means.  It could be, for instance, a group from a different
-NNTP server, it could be a virtual group, or it could be your own
-personal mail group.
+   All them variables, they make my head swim.
 
-   A foreign group (or any group, really) is specified by a "name" and
-a "select method".  To take the latter first, a select method is a list
-where the first element says what backend to use (e.g. `nntp',
-`nnspool', `nnml') and the second element is the "server name".  There
-may be additional elements in the select method, where the value may
-have special meaning for the backend in question.
+   So what if you want a different `Organization' and signature based
+on what groups you post to?  And you post both from your home machine
+and your work machine, and you want different `From' lines, and so on?
 
-   One could say that a select method defines a "virtual server"--so we
-do just that (*note The Server Buffer::.).
+   One way to do stuff like that is to write clever hooks that change
+the variables you need to have changed.  That's a bit boring, so
+somebody came up with the bright idea of letting the user specify these
+things in a handy alist.  Here's an example of a `gnus-posting-styles'
+variable:
 
-   The "name" of the group is the name the backend will recognize the
-group as.
+     ((".*"
+       (signature "Peace and happiness")
+       (organization "What me?"))
+      ("^comp"
+       (signature "Death to everybody"))
+      ("comp.emacs.i-love-it"
+       (organization "Emacs is it")))
 
-   For instance, the group `soc.motss' on the NNTP server
-`some.where.edu' will have the name `soc.motss' and select method
-`(nntp "some.where.edu")'.  Gnus will call this group
-`nntp+some.where.edu:soc.motss', even though the `nntp' backend just
-knows this group as `soc.motss'.
+   As you might surmise from this example, this alist consists of
+several "styles".  Each style will be applicable if the first element
+"matches", in some form or other.  The entire alist will be iterated
+over, from the beginning towards the end, and each match will be
+applied, which means that attributes in later styles that match override
+the same attributes in earlier matching styles.  So
+`comp.programming.literate' will have the `Death to everybody'
+signature and the `What me?' `Organization' header.
 
-   The different methods all have their peculiarities, of course.
+   The first element in each style is called the `match'.  If it's a
+string, then Gnus will try to regexp match it against the group name.
+If it's a function symbol, that function will be called with no
+arguments.  If it's a variable symbol, then the variable will be
+referenced.  If it's a list, then that list will be `eval'ed.  In any
+case, if this returns a non-`nil' value, then the style is said to
+"match".
 
-* Menu:
+   Each style may contain a arbitrary amount of "attributes".  Each
+attribute consists of a (NAME . VALUE) pair.  The attribute name can be
+one of `signature', `signature-file', `organization', `address', `name'
+or `body'.  The attribute name can also be a string.  In that case,
+this will be used as a header name, and the value will be inserted in
+the headers of the article.
 
-* The Server Buffer::     Making and editing virtual servers.
-* Getting News::          Reading USENET news with Gnus.
-* Getting Mail::          Reading your personal mail with Gnus.
-* Other Sources::         Reading directories, files, SOUP packets.
-* Combined Groups::       Combining groups into one group.
+   The attribute value can be a string (used verbatim), a function (the
+return value will be used), a variable (its value will be used) or a
+list (it will be `eval'ed and the return value will be used).
+
+   If you wish to check whether the message you are about to compose is
+meant to be a news article or a mail message, you can check the values
+of the two dynamically bound variables `message-this-is-news' and
+`message-this-is-mail'.
+
+   So here's a new example:
+
+     (setq gnus-posting-styles
+           '((".*"
+              (signature-file "~/.signature")
+              (name "User Name")
+              ("X-Home-Page" (getenv "WWW_HOME"))
+              (organization "People's Front Against MWM"))
+             ("^rec.humor"
+              (signature my-funny-signature-randomizer))
+             ((equal (system-name) "gnarly")
+              (signature my-quote-randomizer))
+             (message-this-is-news
+              (signature my-news-signature))
+             (posting-from-work-p
+              (signature-file "~/.work-signature")
+              (address "user@bar.foo")
+              (body "You are fired.\n\nSincerely, your boss.")
+              (organization "Important Work, Inc"))
+             ("^nn.+:"
+              (signature-file "~/.mail-signature"))))
 
 
-File: gnus,  Node: The Server Buffer,  Next: Getting News,  Up: Select Methods
+File: gnus,  Node: Drafts,  Next: Rejected Articles,  Prev: Posting Styles,  Up: Composing Messages
 
-The Server Buffer
+Drafts
+======
+
+   If you are writing a message (mail or news) and suddenly remember
+that you have a steak in the oven (or some pesto in the food processor,
+you craaazy vegetarians), you'll probably wish there was a method to
+save the message you are writing so that you can continue editing it
+some other day, and send it when you feel its finished.
+
+   Well, don't worry about it.  Whenever you start composing a message
+of some sort using the Gnus mail and post commands, the buffer you get
+will automatically associate to an article in a special "draft" group.
+If you save the buffer the normal way (`C-x C-s', for instance), the
+article will be saved there.  (Auto-save files also go to the draft
+group.)
+
+   The draft group is a special group (which is implemented as an
+`nndraft' group, if you absolutely have to know) called
+`nndraft:drafts'.  The variable `nndraft-directory' says where
+`nndraft' is to store its files.  What makes this group special is that
+you can't tick any articles in it or mark any articles as read--all
+articles in the group are permanently unread.
+
+   If the group doesn't exist, it will be created and you'll be
+subscribed to it.  The only way to make it disappear from the Group
+buffer is to unsubscribe it.
+
+   When you want to continue editing the article, you simply enter the
+draft group and push `D e' (`gnus-draft-edit-message') to do that.  You
+will be placed in a buffer where you left off.
+
+   Rejected articles will also be put in this draft group (*note
+Rejected Articles::.).
+
+   If you have lots of rejected messages you want to post (or mail)
+without doing further editing, you can use the `D s' command
+(`gnus-draft-send-message').  This command understands the
+process/prefix convention (*note Process/Prefix::.).  The `D S' command
+(`gnus-draft-send-all-messages') will ship off all messages in the
+buffer.
+
+   If you have some messages that you wish not to send, you can use the
+`D t' (`gnus-draft-toggle-sending') command to mark the message as
+unsendable.  This is a toggling command.
+
+
+File: gnus,  Node: Rejected Articles,  Prev: Drafts,  Up: Composing Messages
+
+Rejected Articles
 =================
 
-   Traditionally, a "server" is a machine or a piece of software that
-one connects to, and then requests information from.  Gnus does not
-connect directly to any real servers, but does all transactions through
-one backend or other.  But that's just putting one layer more between
-the actual media and Gnus, so we might just as well say that each
-backend represents a virtual server.
-
-   For instance, the `nntp' backend may be used to connect to several
-different actual NNTP servers, or, perhaps, to many different ports on
-the same actual NNTP server.  You tell Gnus which backend to use, and
-what parameters to set by specifying a "select method".
-
-   These select methods specifications can sometimes become quite
-complicated--say, for instance, that you want to read from the NNTP
-server `news.funet.fi' on port number 13, which hangs if queried for
-NOV headers and has a buggy select.  Ahem.  Anyways, if you had to
-specify that for each group that used this server, that would be too
-much work, so Gnus offers a way of naming select methods, which is what
-you do in the server buffer.
-
-   To enter the server buffer, user the `^'
-(`gnus-group-enter-server-mode') command in the group buffer.
-
-* Menu:
-
-* Server Buffer Format::      You can customize the look of this buffer.
-* Server Commands::           Commands to manipulate servers.
-* Example Methods::           Examples server specifications.
-* Creating a Virtual Server:: An example session.
-* Server Variables::          Which variables to set.
-* Servers and Methods::       You can use server names as select methods.
-* Unavailable Servers::       Some servers you try to contact may be down.
-
-   `gnus-server-mode-hook' is run when creating the server buffer.
-
-
-File: gnus,  Node: Server Buffer Format,  Next: Server Commands,  Up: The Server Buffer
-
-Server Buffer Format
---------------------
-
-   You can change the look of the server buffer lines by changing the
-`gnus-server-line-format' variable.  This is a `format'-like variable,
-with some simple extensions:
-
-`h'
-     How the news is fetched--the backend name.
-
-`n'
-     The name of this server.
-
-`w'
-     Where the news is to be fetched from--the address.
-
-`s'
-     The opened/closed/denied status of the server.
-
-   The mode line can also be customized by using the
-`gnus-server-mode-line-format' variable.  The following specs are
-understood:
-
-`S'
-     Server name.
-
-`M'
-     Server method.
-
-   Also *note Formatting Variables::..
-
-
-File: gnus,  Node: Server Commands,  Next: Example Methods,  Prev: Server Buffer Format,  Up: The Server Buffer
-
-Server Commands
----------------
-
-`a'
-     Add a new server (`gnus-server-add-server').
-
-`e'
-     Edit a server (`gnus-server-edit-server').
-
-`SPACE'
-     Browse the current server (`gnus-server-read-server').
-
-`q'
-     Return to the group buffer (`gnus-server-exit').
-
-`k'
-     Kill the current server (`gnus-server-kill-server').
-
-`y'
-     Yank the previously killed server (`gnus-server-yank-server').
-
-`c'
-     Copy the current server (`gnus-server-copy-server').
-
-`l'
-     List all servers (`gnus-server-list-servers').
-
-`s'
-     Request that the server scan its sources for new articles
-     (`gnus-server-scan-server').  This is mainly sensible with mail
-     servers.
-
-`g'
-     Request that the server regenerate all its data structures
-     (`gnus-server-regenerate-server').  This can be useful if you have
-     a mail backend that has gotten out of synch.
-
-
-File: gnus,  Node: Example Methods,  Next: Creating a Virtual Server,  Prev: Server Commands,  Up: The Server Buffer
-
-Example Methods
----------------
-
-   Most select methods are pretty simple and self-explanatory:
-
-     (nntp "news.funet.fi")
-
-   Reading directly from the spool is even simpler:
-
-     (nnspool "")
-
-   As you can see, the first element in a select method is the name of
-the backend, and the second is the "address", or "name", if you will.
-
-   After these two elements, there may be a arbitrary number of
-(VARIABLE FORM) pairs.
-
-   To go back to the first example--imagine that you want to read from
-port 15 from that machine.  This is what the select method should look
-like then:
-
-     (nntp "news.funet.fi" (nntp-port-number 15))
-
-   You should read the documentation to each backend to find out what
-variables are relevant, but here's an `nnmh' example.
-
-   `nnmh' is a mail backend that reads a spool-like structure.  Say you
-have two structures that you wish to access: One is your private mail
-spool, and the other is a public one.  Here's the possible spec for you
-private mail:
-
-     (nnmh "private" (nnmh-directory "~/private/mail/"))
-
-   (This server is then called `private', but you may have guessed
-that.)
-
-   Here's the method for a public spool:
-
-     (nnmh "public"
-           (nnmh-directory "/usr/information/spool/")
-           (nnmh-get-new-mail nil))
-
-   If you are behind a firewall and only have access to the NNTP server
-from the firewall machine, you can instruct Gnus to `rlogin' on the
-firewall machine and telnet from there to the NNTP server.  Doing this
-can be rather fiddly, but your virtual server definition should
-probably look something like this:
-
-     (nntp "firewall"
-           (nntp-address "the.firewall.machine")
-           (nntp-open-connection-function nntp-open-rlogin)
-           (nntp-end-of-line "\n")
-           (nntp-rlogin-parameters
-            ("telnet" "the.real.nntp.host" "nntp")))
-
-
-File: gnus,  Node: Creating a Virtual Server,  Next: Server Variables,  Prev: Example Methods,  Up: The Server Buffer
-
-Creating a Virtual Server
--------------------------
-
-   If you're saving lots of articles in the cache by using persistent
-articles, you may want to create a virtual server to read the cache.
-
-   First you need to add a new server.  The `a' command does that.  It
-would probably be best to use `nnspool' to read the cache.  You could
-also use `nnml' or `nnmh', though.
-
-   Type `a nnspool RET cache RET'.
-
-   You should now have a brand new `nnspool' virtual server called
-`cache'.  You now need to edit it to have the right definitions.  Type
-`e' to edit the server.  You'll be entered into a buffer that will
-contain the following:
-
-     (nnspool "cache")
-
-   Change that to:
-
-     (nnspool "cache"
-              (nnspool-spool-directory "~/News/cache/")
-              (nnspool-nov-directory "~/News/cache/")
-              (nnspool-active-file "~/News/cache/active"))
-
-   Type `C-c C-c' to return to the server buffer.  If you now press
-`RET' over this virtual server, you should be entered into a browse
-buffer, and you should be able to enter any of the groups displayed.
-
-
-File: gnus,  Node: Server Variables,  Next: Servers and Methods,  Prev: Creating a Virtual Server,  Up: The Server Buffer
-
-Server Variables
-----------------
-
-   One sticky point when defining variables (both on backends and in
-Emacs in general) is that some variables are typically initialized from
-other variables when the definition of the variables is being loaded.
-If you change the "base" variable after the variables have been loaded,
-you won't change the "derived" variables.
-
-   This typically affects directory and file variables.  For instance,
-`nnml-directory' is `~/Mail/' by default, and all `nnml' directory
-variables are initialized from that variable, so `nnml-active-file'
-will be `~/Mail/active'.  If you define a new virtual `nnml' server, it
-will *not* suffice to set just `nnml-directory'--you have to explicitly
-set all the file variables to be what you want them to be.  For a
-complete list of variables for each backend, see each backend's section
-later in this manual, but here's an example `nnml' definition:
-
-     (nnml "public"
-           (nnml-directory "~/my-mail/")
-           (nnml-active-file "~/my-mail/active")
-           (nnml-newsgroups-file "~/my-mail/newsgroups"))
-
-
-File: gnus,  Node: Servers and Methods,  Next: Unavailable Servers,  Prev: Server Variables,  Up: The Server Buffer
-
-Servers and Methods
--------------------
-
-   Wherever you would normally use a select method (e.g.
-`gnus-secondary-select-method', in the group select method, when
-browsing a foreign server) you can use a virtual server name instead.
-This could potentially save lots of typing.  And it's nice all over.
-
-
-File: gnus,  Node: Unavailable Servers,  Prev: Servers and Methods,  Up: The Server Buffer
-
-Unavailable Servers
--------------------
-
-   If a server seems to be unreachable, Gnus will mark that server as
-`denied'.  That means that any subsequent attempt to make contact with
-that server will just be ignored.  "It can't be opened," Gnus will tell
-you, without making the least effort to see whether that is actually
-the case or not.
-
-   That might seem quite naughty, but it does make sense most of the
-time.  Let's say you have 10 groups subscribed to the server
-`nephelococcygia.com'.  This server is located somewhere quite far away
-from you and the machine is quite slow, so it takes 1 minute just to
-find out that it refuses connection from you today.  If Gnus were to
-attempt to do that 10 times, you'd be quite annoyed, so Gnus won't
-attempt to do that.  Once it has gotten a single "connection refused",
-it will regard that server as "down".
-
-   So, what happens if the machine was only feeling unwell temporarily?
-How do you test to see whether the machine has come up again?
-
-   You jump to the server buffer (*note The Server Buffer::.) and poke
-it with the following commands:
-
-`O'
-     Try to establish connection to the server on the current line
-     (`gnus-server-open-server').
-
-`C'
-     Close the connection (if any) to the server
-     (`gnus-server-close-server').
-
-`D'
-     Mark the current server as unreachable (`gnus-server-deny-server').
-
-`M-o'
-     Open the connections to all servers in the buffer
-     (`gnus-server-open-all-servers').
-
-`M-c'
-     Close the connections to all servers in the buffer
-     (`gnus-server-close-all-servers').
-
-`R'
-     Remove all marks to whether Gnus was denied connection from all
-     servers (`gnus-server-remove-denials').
-
-
-File: gnus,  Node: Getting News,  Next: Getting Mail,  Prev: The Server Buffer,  Up: Select Methods
-
-Getting News
-============
-
-   A newsreader is normally used for reading news.  Gnus currently
-provides only two methods of getting news--it can read from an NNTP
-server, or it can read from a local spool.
-
-* Menu:
-
-* NNTP::               Reading news from an NNTP server.
-* News Spool::         Reading news from the local spool.
-
-
-File: gnus,  Node: NNTP,  Next: News Spool,  Up: Getting News
-
-NNTP
-----
-
-   Subscribing to a foreign group from an NNTP server is rather easy.
-You just specify `nntp' as method and the address of the NNTP server as
-the, uhm, address.
-
-   If the NNTP server is located at a non-standard port, setting the
-third element of the select method to this port number should allow you
-to connect to the right port.  You'll have to edit the group info for
-that (*note Foreign Groups::.).
-
-   The name of the foreign group can be the same as a native group.  In
-fact, you can subscribe to the same group from as many different servers
-you feel like.  There will be no name collisions.
-
-   The following variables can be used to create a virtual `nntp'
-server:
-
-`nntp-server-opened-hook'
-     `nntp-server-opened-hook' is run after a connection has been made.
-     It can be used to send commands to the NNTP server after it has
-     been contacted.  By default is sends the command `MODE READER' to
-     the server with the `nntp-send-mode-reader' function.
-
-`nntp-authinfo-function'
-     This function will be used to send `AUTHINFO' to the NNTP server.
-     Available functions include:
-
-    `nntp-send-authinfo'
-          This function will used you current login name as the user
-          name and will prompt you for the password.  This is the
-          default.
-
-    `nntp-send-nosy-authinfo'
-          This function will prompt you for both user name and password.
-
-    `nntp-send-authinfo-from-file'
-          This function will use your current login name as the user
-          name and will read the NNTP password from `~/.nntp-authinfo'.
-
-`nntp-server-action-alist'
-     This is an list of regexps to match on server types and actions to
-     be taken when matches are made.  For instance, if you want Gnus to
-     beep every time you connect to innd, you could say something like:
-
-          (setq nntp-server-action-alist
-                '(("innd" (ding))))
-
-     You probably don't want to do that, though.
-
-     The default value is
-
-            '(("nntpd 1\\.5\\.11t"
-               (remove-hook 'nntp-server-opened-hook nntp-send-mode-reader)))
-
-     This ensures that Gnus doesn't send the `MODE READER' command to
-     nntpd 1.5.11t, since that command chokes that server, I've been
-     told.
-
-`nntp-maximum-request'
-     If the NNTP server doesn't support NOV headers, this backend will
-     collect headers by sending a series of `head' commands.  To speed
-     things up, the backend sends lots of these commands without
-     waiting for reply, and then reads all the replies.  This is
-     controlled by the `nntp-maximum-request' variable, and is 400 by
-     default.  If your network is buggy, you should set this to 1.
-
-`nntp-connection-timeout'
-     If you have lots of foreign `nntp' groups that you connect to
-     regularly, you're sure to have problems with NNTP servers not
-     responding properly, or being too loaded to reply within reasonable
-     time.  This is can lead to awkward problems, which can be helped
-     somewhat by setting `nntp-connection-timeout'.  This is an integer
-     that says how many seconds the `nntp' backend should wait for a
-     connection before giving up.  If it is `nil', which is the default,
-     no timeouts are done.
-
-`nntp-command-timeout'
-     If you're running Gnus on a machine that has a dynamically assigned
-     address, Gnus may become confused.  If the address of your machine
-     changes after connecting to the NNTP server, Gnus will simply sit
-     waiting forever for replies from the server.  To help with this
-     unfortunate problem, you can set this command to a number.  Gnus
-     will then, if it sits waiting longer than that number of seconds
-     for a reply from the server, shut down the connection, start a new
-     one, and resend the command.  This should hopefully be transparent
-     to the user.  A likely number is 30 seconds.
-
-`nntp-retry-on-break'
-     If this variable is non-`nil', you can also `C-g' if Gnus hangs.
-     This will have much the same effect as the command timeout
-     described above.
-
-`nntp-server-hook'
-     This hook is run as the last step when connecting to an NNTP
-     server.
-
-`nntp-open-connection-function'
-     This function is used to connect to the remote system.  Two
-     pre-made functions are `nntp-open-network-stream', which is the
-     default, and simply connects to some port or other on the remote
-     system.  The other is `nntp-open-rlogin', which does an rlogin on
-     the remote system, and then does a telnet to the NNTP server
-     available there.
-
-`nntp-rlogin-parameters'
-     If you use `nntp-open-rlogin' as the
-     `nntp-open-connection-function', this list will be used as the
-     parameter list given to `rsh'.
-
-`nntp-end-of-line'
-     String to use as end-of-line markers when talking to the NNTP
-     server.  This is `\r\n' by default, but should be `\n' when using
-     `rlogin' to talk to the server.
-
-`nntp-rlogin-user-name'
-     User name on the remote system when using the `rlogin' connect
-     function.
-
-`nntp-address'
-     The address of the remote system running the NNTP server.
-
-`nntp-port-number'
-     Port number to connect to when using the `nntp-open-network-stream'
-     connect function.
-
-`nntp-buggy-select'
-     Set this to non-`nil' if your select routine is buggy.
-
-`nntp-nov-is-evil'
-     If the NNTP server does not support NOV, you could set this
-     variable to `t', but `nntp' usually checks whether NOV can be used
-     automatically.
-
-`nntp-xover-commands'
-     List of strings that are used as commands to fetch NOV lines from a
-     server.  The default value of this variable is `("XOVER"
-     "XOVERVIEW")'.
-
-`nntp-nov-gap'
-     `nntp' normally sends just one big request for NOV lines to the
-     server.  The server responds with one huge list of lines.  However,
-     if you have read articles 2-5000 in the group, and only want to
-     read article 1 and 5001, that means that `nntp' will fetch 4999 NOV
-     lines that you do not want, and will not use.  This variable says
-     how big a gap between two consecutive articles is allowed to be
-     before the `XOVER' request is split into several request.  Note
-     that if your network is fast, setting this variable to a really
-     small number means that fetching will probably be slower.  If this
-     variable is `nil', `nntp' will never split requests.
-
-`nntp-prepare-server-hook'
-     A hook run before attempting to connect to an NNTP server.
-
-`nntp-warn-about-losing-connection'
-     If this variable is non-`nil', some noise will be made when a
-     server closes connection.
-
-
-File: gnus,  Node: News Spool,  Prev: NNTP,  Up: Getting News
-
-News Spool
-----------
-
-   Subscribing to a foreign group from the local spool is extremely
-easy, and might be useful, for instance, to speed up reading groups that
-contain very big articles--`alt.binaries.pictures.furniture', for
-instance.
-
-   Anyways, you just specify `nnspool' as the method and `' (or
-anything else) as the address.
-
-   If you have access to a local spool, you should probably use that as
-the native select method (*note Finding the News::.).  It is normally
-faster than using an `nntp' select method, but might not be.  It
-depends.  You just have to try to find out what's best at your site.
-
-`nnspool-inews-program'
-     Program used to post an article.
-
-`nnspool-inews-switches'
-     Parameters given to the inews program when posting an article.
-
-`nnspool-spool-directory'
-     Where `nnspool' looks for the articles.  This is normally
-     `/usr/spool/news/'.
-
-`nnspool-nov-directory'
-     Where `nnspool' will look for NOV files.  This is normally
-     `/usr/spool/news/over.view/'.
-
-`nnspool-lib-dir'
-     Where the news lib dir is (`/usr/lib/news/' by default).
-
-`nnspool-active-file'
-     The path of the active file.
-
-`nnspool-newsgroups-file'
-     The path of the group descriptions file.
-
-`nnspool-history-file'
-     The path of the news history file.
-
-`nnspool-active-times-file'
-     The path of the active date file.
-
-`nnspool-nov-is-evil'
-     If non-`nil', `nnspool' won't try to use any NOV files that it
-     finds.
-
-`nnspool-sift-nov-with-sed'
-     If non-`nil', which is the default, use `sed' to get the relevant
-     portion from the overview file.  If nil, `nnspool' will load the
-     entire file into a buffer and process it there.
-
-
-File: gnus,  Node: Getting Mail,  Next: Other Sources,  Prev: Getting News,  Up: Select Methods
-
-Getting Mail
-============
-
-   Reading mail with a newsreader--isn't that just plain WeIrD? But of
-course.
-
-* Menu:
-
-* Getting Started Reading Mail:: A simple cookbook example.
-* Splitting Mail::               How to create mail groups.
-* Mail Backend Variables::       Variables for customizing mail handling.
-* Fancy Mail Splitting::         Gnus can do hairy splitting of incoming mail.
-* Mail and Procmail::            Reading mail groups that procmail create.
-* Incorporating Old Mail::       What about the old mail you have?
-* Expiring Mail::                Getting rid of unwanted mail.
-* Washing Mail::                 Removing gruft from the mail you get.
-* Duplicates::                   Dealing with duplicated mail.
-* Not Reading Mail::             Using mail backends for reading other files.
-* Choosing a Mail Backend::      Gnus can read a variety of mail formats.
-
-
-File: gnus,  Node: Getting Started Reading Mail,  Next: Splitting Mail,  Up: Getting Mail
-
-Getting Started Reading Mail
-----------------------------
-
-   It's quite easy to use Gnus to read your new mail.  You just plonk
-the mail backend of your choice into `gnus-secondary-select-methods',
-and things will happen automatically.
-
-   For instance, if you want to use `nnml' (which is a one file per
-mail backend), you could put the following in your `.gnus' file:
-
-     (setq gnus-secondary-select-methods
-           '((nnml "private")))
-
-   Now, the next time you start Gnus, this backend will be queried for
-new articles, and it will move all the messages in your spool file to
-its directory, which is `~/Mail/' by default.  The new group that will
-be created (`mail.misc') will be subscribed, and you can read it like
-any other group.
-
-   You will probably want to split the mail into several groups, though:
-
-     (setq nnmail-split-methods
-           '(("junk" "^From:.*Lars Ingebrigtsen")
-            ("crazy" "^Subject:.*die\\|^Organization:.*flabby")
-            ("other" "")))
-
-   This will result in three new `nnml' mail groups being created:
-`nnml:junk', `nnml:crazy', and `nnml:other'.  All the mail that doesn't
-fit into the first two groups will be placed in the latter group.
-
-   This should be sufficient for reading mail with Gnus.  You might
-want to give the other sections in this part of the manual a perusal,
-though, especially *note Choosing a Mail Backend::. and *note Expiring
-Mail::..
-
-
-File: gnus,  Node: Splitting Mail,  Next: Mail Backend Variables,  Prev: Getting Started Reading Mail,  Up: Getting Mail
-
-Splitting Mail
---------------
-
-   The `nnmail-split-methods' variable says how the incoming mail is to
-be split into groups.
-
-     (setq nnmail-split-methods
-       '(("mail.junk" "^From:.*Lars Ingebrigtsen")
-         ("mail.crazy" "^Subject:.*die\\|^Organization:.*flabby")
-         ("mail.other" "")))
-
-   This variable is a list of lists, where the first element of each of
-these lists is the name of the mail group (they do not have to be called
-something beginning with `mail', by the way), and the second element is
-a regular expression used on the header of each mail to determine if it
-belongs in this mail group.
-
-   If the first element is the special symbol `junk', then messages
-that match the regexp will disappear into the aether.  Use with extreme
-caution.
-
-   The second element can also be a function.  In that case, it will be
-called narrowed to the headers with the first element of the rule as the
-argument.  It should return a non-`nil' value if it thinks that the
-mail belongs in that group.
-
-   The last of these groups should always be a general one, and the
-regular expression should *always* be `' so that it matches any mails
-that haven't been matched by any of the other regexps.  (These rules are
-processed from the beginning of the alist toward the end.  The first
-rule to make a match will "win", unless you have crossposting enabled.
-In that case, all matching rules will "win".)
-
-   If you like to tinker with this yourself, you can set this variable
-to a function of your choice.  This function will be called without any
-arguments in a buffer narrowed to the headers of an incoming mail
-message.  The function should return a list of groups names that it
-thinks should carry this mail message.
-
-   Note that the mail backends are free to maul the poor, innocent
-incoming headers all they want to.  They all add `Lines' headers; some
-add `X-Gnus-Group' headers; most rename the Unix mbox `From<SPACE>'
-line to something else.
-
-   The mail backends all support cross-posting.  If several regexps
-match, the mail will be "cross-posted" to all those groups.
-`nnmail-crosspost' says whether to use this mechanism or not.  Note
-that no articles are crossposted to the general (`') group.
-
-   `nnmh' and `nnml' makes crossposts by creating hard links to the
-crossposted articles.  However, not all files systems support hard
-links.  If that's the case for you, set
-`nnmail-crosspost-link-function' to `copy-file'.  (This variable is
-`add-name-to-file' by default.)
-
-   If you wish to see where the previous mail split put the messages,
-you can use the `M-x nnmail-split-history' command.
-
-   Gnus gives you all the opportunity you could possibly want for
-shooting yourself in the foot.  Let's say you create a group that will
-contain all the mail you get from your boss.  And then you accidentally
-unsubscribe from the group.  Gnus will still put all the mail from your
-boss in the unsubscribed group, and so, when your boss mails you "Have
-that report ready by Monday or you're fired!", you'll never see it and,
-come Tuesday, you'll still believe that you're gainfully employed while
-you really should be out collecting empty bottles to save up for next
-month's rent money.
+   Sometimes a news server will reject an article.  Perhaps the server
+doesn't like your face.  Perhaps it just feels miserable.  Perhaps
+*there be demons*.  Perhaps you have included too much cited text.
+Perhaps the disk is full.  Perhaps the server is down.
+
+   These situations are, of course, totally beyond the control of Gnus.
+(Gnus, of course, loves the way you look, always feels great, has angels
+fluttering around inside of it, doesn't care about how much cited text
+you include, never runs full and never goes down.)  So Gnus saves these
+articles until some later time when the server feels better.
+
+   The rejected articles will automatically be put in a special draft
+group (*note Drafts::.).  When the server comes back up again, you'd
+then typically enter that group and send all the articles off.
 

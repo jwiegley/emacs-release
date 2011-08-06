@@ -1,6 +1,220 @@
 This file describes various problems that have been encountered
 in compiling, installing and running GNU Emacs.
 
+* With X11R6.4, public-patch-3, Emacs crashes at startup.
+
+Reportedly this patch in X fixes the problem.
+
+    --- xc/lib/X11/imInt.c~	Wed Jun 30 13:31:56 1999
+    +++ xc/lib/X11/imInt.c	Thu Jul  1 15:10:27 1999
+    @@ -1,4 +1,4 @@
+    -/* $TOG: imInt.c /main/5 1998/05/30 21:11:16 kaleb $ */
+    +/* $TOG: imInt.c /main/5 1998/05/30 21:11:16 kaleb $  */
+     /******************************************************************
+
+		Copyright 1992, 1993, 1994 by FUJITSU LIMITED
+    @@ -166,8 +166,8 @@
+     _XimMakeImName(lcd)
+	 XLCd	   lcd;
+     {
+    -    char* begin;
+    -    char* end;
+    +    char* begin = NULL;
+    +    char* end = NULL;
+	 char* ret;
+	 int	i = 0;
+	 char* ximmodifier = XIMMODIFIER;
+    @@ -182,7 +182,11 @@
+	 }
+	 ret = Xmalloc(end - begin + 2);
+	 if (ret != NULL) {
+    -    	(void)strncpy(ret, begin, end - begin + 1);
+    +	if (begin != NULL) {
+    +      	  (void)strncpy(ret, begin, end - begin + 1);
+    +        } else {
+    +	  ret[0] = '\0';
+    +	}
+	    ret[end - begin + 1] = '\0';
+	 }
+	 return ret;
+
+
+* On Solaris 2.7, the Compose key does not work *except* when the
+system is quite heavily loaded.
+
+This is a bug in Motif in Solaris.  Supposedly it has been fixed for
+the next major release of Solaris.  However, if someone with Sun
+support complains to Sun about the bug, they may release a patch for
+Solaris 2.7.  If you do this, mention Sun bug #4188711.
+
+* Emacs crashes on Irix 6.5 on the SGI R10K, when compiled with GCC.
+
+This seems to be due a bug in GCC; no fix has been identified
+as yet, and no version of GCC seems to be free of the bug.
+It may be that the problem happens on any Irix version with this
+hardware.
+
+People are working on the problem; in the mean time, it is
+necessary to use some other compiler.
+
+* Emacs crashes in utmpname on Irix 5.3.
+
+This problem is fixed in Patch 3175 for Irix 5.3.
+It is also fixed in Irix versions 6.2 and up.
+
+* On Solaris, CTRL-t is ignored by Emacs when you use
+the fr.ISO-8859-15 locale (and maybe other related locales).
+
+You can fix this by editing the file:
+
+	/usr/openwin/lib/locale/iso8859-15/Compose
+	
+Near the bottom there is a line that reads:
+
+	Ctrl<t> <quotedbl> <Y>                  : "\276"        threequarters
+
+that should read:
+
+	Ctrl<T> <quotedbl> <Y>                  : "\276"        threequarters
+
+Note the lower case <t>.  Changing this line should make C-t work.
+
+* Emacs on Digital Unix 4.0 fails to build, giving error message
+     Invalid dimension for the charset-ID 160
+
+This is due to a bug or an installation problem in GCC 2.8.0.
+Installing a more recent version of GCC fixes the problem.
+
+* Buffers from `with-output-to-temp-buffer' get set up in Help mode.
+
+Changes in Emacs 20.4 to the hooks used by that function cause
+problems for some packages, specifically BBDB.  See the function's
+documentation for the hooks involved.  BBDB 2.00.06 fixes the problem.
+
+* Under X, C-v and/or other keys don't work.
+
+These may have been intercepted by your window manager.  In
+particular, AfterStep 1.6 is reported to steal C-v in its default
+configuration.  Various Meta keys are also likely to be taken by the
+configuration of the `feel'.  See the WM's documentation for how to
+change this.
+
+* When using Exceed, fonts sometimes appear too tall.
+
+When the display is set to an Exceed X-server and fonts are specified
+(either explicitly with the -fn option or implicitly with X resources)
+then the fonts may appear "too tall".  The actual character sizes are
+correct but there is too much vertical spacing between rows,  which 
+gives the appearance of "double spacing".  
+
+To prevent this,  turn off the Exceed's "automatic font substitution"
+feature (in the font part of the configuration window).
+
+* On Solaris 7 or later, the compiler complains about the struct member `_ptr'.
+
+This suggests that you are trying to build Emacs in 64 bit mode
+(e.g. with cc -xarch=v9).  Emacs does not yet support this on Solaris.
+Build Emacs in the default 32 bit mode instead.
+
+* Failure in unexec while dumping emacs on Digital Unix 4.0
+
+This problem manifests itself as an error message
+
+    unexec: Bad address, writing data section to ...
+
+The user suspects that this happened because his X libraries
+were built for an older system version,
+
+    ./configure --x-includes=/usr/include --x-libraries=/usr/shlib
+
+made the problem go away.
+
+* No visible display on mips-sgi-irix6.2 when compiling with GCC 2.8.1.
+
+This problem went away after installing the latest IRIX patches
+as of 8 Dec 1998.
+
+The same problem has been reported on Irix 6.3.
+
+* As of version 20.4, Emacs doesn't work properly if configured for
+the Motif toolkit and linked against the free LessTif library.  The
+next Emacs release is expected to work with LessTif.
+
+* Emacs gives the error, Couldn't find per display information.
+
+This can result if the X server runs out of memory because Emacs uses
+a large number of fonts.  On systems where this happens, C-h h is
+likely to cause it.
+
+We do not know of a way to prevent the problem.
+
+* Emacs makes HPUX 11.0 crash.
+
+This is a bug in HPUX; HPUX patch PHKL_16260 is said to fix it.
+
+* Emacs crashes during dumping on the HPPA machine (HPUX 10.20).
+
+This seems to be due to a GCC bug; it is fixed in GCC 2.8.1.
+
+* The Hyperbole package causes *Help* buffers not to be displayed in
+Help mode due to setting `temp-buffer-show-hook' rather than using
+`add-hook'.  Using `(add-hook 'temp-buffer-show-hook
+'help-mode-maybe)' after loading Hyperbole should fix this.
+
+* Versions of the PSGML package earlier than 1.0.3 (stable) or 1.1.2
+(alpha) fail to parse DTD files correctly in Emacs 20.3 and later.
+Here is a patch for psgml-parse.el from PSGML 1.0.1 and, probably,
+earlier versions.
+
+--- psgml-parse.el	1998/08/21 19:18:18	1.1
++++ psgml-parse.el	1998/08/21 19:20:00
+@@ -2383,7 +2383,7 @@ (defun sgml-push-to-entity (entity &opti
+       (setq sgml-buffer-parse-state nil))
+     (cond
+      ((stringp entity)			; a file name
+-      (save-excursion (insert-file-contents entity))
++      (insert-file-contents entity)
+       (setq default-directory (file-name-directory entity)))
+      ((consp (sgml-entity-text entity)) ; external id?
+       (let* ((extid (sgml-entity-text entity))
+
+* Running TeX from AUXTeX package with Emacs 20.3 gives a Lisp error
+about a read-only tex output buffer.
+
+This problem appeared for AUC TeX version 9.9j and some earlier
+versions.  Here is a patch for the file tex-buf.el in the AUC TeX
+package.
+
+diff -c auctex/tex-buf.el~ auctex/tex-buf.el
+*** auctex/tex-buf.el~	Wed Jul 29 18:35:32 1998
+--- auctex/tex-buf.el	Sat Sep  5 15:20:38 1998
+***************
+*** 545,551 ****
+  	(dir (TeX-master-directory)))
+      (TeX-process-check file)		; Check that no process is running
+      (setq TeX-command-buffer (current-buffer))
+!     (with-output-to-temp-buffer buffer)
+      (set-buffer buffer)
+      (if dir (cd dir))
+      (insert "Running `" name "' on `" file "' with ``" command "''\n")
+- --- 545,552 ----
+  	(dir (TeX-master-directory)))
+      (TeX-process-check file)		; Check that no process is running
+      (setq TeX-command-buffer (current-buffer))
+!     (let (temp-buffer-show-function temp-buffer-show-hook)
+!       (with-output-to-temp-buffer buffer))
+      (set-buffer buffer)
+      (if dir (cd dir))
+      (insert "Running `" name "' on `" file "' with ``" command "''\n")
+
+* On Irix 6.3, substituting environment variables in file names
+in the minibuffer gives peculiar error messages such as
+
+   Substituting nonexistent environment variable ""
+
+This is not an Emacs bug; it is caused by something in SGI patch
+003082 August 11, 1998.
+
 * After a while, Emacs slips into unibyte mode.
 
 The VM mail package, which is not part of Emacs, sometimes does
@@ -46,7 +260,7 @@ work-around is to rename the problem directory to another name.
 See if your X server is set up to use this as a command
 for character composition.
 
-* Emacs startup on GNU/Linux systems is slow.
+* Emacs startup on GNU/Linux systems (and possibly other systems) is slow.
 
 This can happen if the system is misconfigured and Emacs can't get the
 full qualified domain name, FQDN.  You should have your FQDN in the
@@ -54,6 +268,8 @@ full qualified domain name, FQDN.  You should have your FQDN in the
 
 127.0.0.1	localhost
 129.187.137.82	nuc04.t30.physik.tu-muenchen.de	nuc04
+
+The way to set this up may vary on non-GNU systems.
 
 * Garbled display on non-X terminals when Emacs runs on Digital Unix 4.0.
 
@@ -99,9 +315,17 @@ display or when killing a region).  M-x recenter will cause the screen
 to be completely redisplayed and the "extra" characters will disappear.
 
 This is known to occur under Exceed 6, and possibly earlier versions as
-well.  The problem lies in the X-server settings; please call support
-for your X-server and describe the above problem.  If you don't have
-access to support, you'll have to try playing with the server settings.
+well.  The problem lies in the X-server settings.
+
+There are reports that you can solve the problem with Exceed by
+running `Xconfig' from within NT, choosing "X selection", then
+un-checking the boxes "auto-copy X selection" and "auto-paste to X
+selection".
+
+Of this does not work, please inform bug-gnu-emacs@gnu.org.  Then
+please call support for your X-server and see if you can get a fix.
+If you do, please send it to bug-gnu-emacs@gnu.org so we can list it
+here.
 
 * On Solaris 2, Emacs dumps core when built with Motif.
 
@@ -113,11 +337,23 @@ You can obtain Sun patches from ftp://sunsolve.sun.com/pub/patches/;
 look for files with names ending in `.PatchReport' to see which patches
 are currently recommended for your host.
 
-* On Solaris 2.6 beta versions, the Compose key does not work.
+On Solaris 2.6, Emacs is said to work with Motif when Solaris patch
+105284-12 is installed, but fail when 105284-15 is installed.
+105284-18 might fix it again.
+
+* On Solaris 2.6, the Compose key does not work.
+
+One workaround is to use a locale that allows non-ASCII characters.
+For example, before invoking emacs, set the LC_ALL environment
+variable to "en_US" (American English).  The directory /usr/lib/locale
+lists the supported locales; any locale other than "C" or "POSIX"
+should do.
 
 pen@lysator.liu.se says (Feb 1998) that this is a bug in the Solaris
 2.6 X libraries, and that the Compose key does work if you link with
 the MIT X11 libraries instead.
+
+Sun has accepted this as a bug; see Sun bug 4188711.
 
 * Emacs does not know your host's fully-qualified domain name.
 
@@ -209,7 +445,7 @@ link, so that it cannot be removed by anyone else.
 If you don't like those useless links, you can let Emacs not to using
 file lock by adding #undef CLASH_DETECTION to config.h.
 
-* When using M-x with the SparcWorks debugger, the `up' and `down'
+* When using M-x dbx with the SparcWorks debugger, the `up' and `down'
 commands do not move the arrow in Emacs.
 
 You can fix this by adding the following line to `~/.dbxinit':
@@ -780,7 +1016,7 @@ Then do `make Everything' in the top directory of X11R6, to rebuild
 the makefiles and rebuild X.  The X built this way work only on
 Solaris 2.4, not on 2.3.
 
-For multithreaded X to work it necessary to install patch
+For multithreaded X to work it is necessary to install patch
 101925-02 to fix problems in header files [2.4].  You need
 to reinstall gcc or re-run just-fixinc after installing that
 patch.
@@ -846,6 +1082,16 @@ The fix is to reinstall GCC, and this time do not specify --includedir
 when you configure it.  Then recompile Emacs.  Specifying --includedir
 is appropriate only in very special cases and it should *never* be the
 same directory where system header files are kept.
+
+* On Solaris 2.x, GCC complains "64 bit integer types not supported"
+
+This suggests that GCC is not installed correctly.  Most likely you
+are using GCC 2.7.2.3 (or earlier) on Solaris 2.6 (or later); this
+does not work without patching.  To run GCC 2.7.2.3 on Solaris 2.6 or
+later, you must patch fixinc.svr4 and reinstall GCC from scratch as
+described in the Solaris FAQ
+<http://www.wins.uva.nl/pub/solaris/solaris2.html>.  A better fix is
+to upgrade to GCC 2.8.1 or later.
 
 * The Compose key on a DEC keyboard does not work as Meta key.
 

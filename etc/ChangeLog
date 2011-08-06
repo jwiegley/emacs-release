@@ -1,3 +1,31 @@
+1999-07-12  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+1999-06-27  Karl Heuer  <kwzh@gnu.org>
+
+	* yow.lines: Fix indentation.  Fix typo.
+
+1999-01-19  Dave Love  <fx@gnu.org>
+
+	* MORE.STUFF: Revamped.
+
+1999-01-14  Dave Love  <fx@gnu.org>
+
+	* FAQ: Merge posted updates.
+
+1998-12-14  Dave Love  <fx@gnu.org>
+
+	* FAQ: Somewhat edited copy of the most recently posted version.
+
+1998-11-04  Kenichi Handa  <handa@etl.go.jp>
+
+	* MACHINES (NEC EWS4800): New section.
+
+1998-09-04  Karl Heuer  <kwzh@gnu.org>
+
+	* TUTORIAL: Use C-x C-l, not M-:, as example of disabled command.
+
 1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
 	* Version 20.3 released.

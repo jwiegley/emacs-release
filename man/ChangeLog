@@ -1,3 +1,49 @@
+1999-07-12  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+1999-02-22  Andreas Schwab  <schwab@gnu.org>
+
+	* gnus.texi: Fix punctuation after @xref.
+
+1999-01-18  Eli Zaretskii  <eliz@gnu.org>
+
+	* msdog.texi (MS-DOS and MULE): dos-unsupported-character-glyph is
+	a triangle by default, not a solid box.
+
+1999-01-17  Andrew Innes  <andrewi@gnu.org>
+
+	* msdog.texi (MS-DOS Printing): Rewrite section.
+
+	* emacs.texi (Top): Include Windows 98 in the MS-DOS section.
+
+1998-12-04  Markus Rost  <rost@delysid.gnu.org>
+
+	* Makefile.in (INFO_TARGETS): Delete customize.info.
+	(DVI_TARGETS): Delete customize.dvi.
+	(../info/customize, customize.dvi): Targets deleted.
+	
+1998-11-18  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* customize.texi: File deleted.
+
+1998-11-08  Eli Zaretskii  <eliz@mescaline.gnu.org>
+
+	* frames.texi: Change @xref to @pxref and add comma after @xref.
+	* custom.texi (Locals): Likewise.
+	* programs.texi (Fortran Autofill): Likewise.
+	* text.texi (TeX Editing): Likewise.
+	* viper.texi: Likewise.
+
+1998-08-24  Andreas Schwab  <schwab@delysid.gnu.org>
+
+	* reftex.texi: Fix info file name.
+
+	* forms.texi (Forms Commands): Change @item to @itemx for
+	secondary items.
+	* viper.texi (Groundwork): Likewise.
+	(Commands): Remove extra Top from @node.
+
 1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
 	* Version 20.3 released.

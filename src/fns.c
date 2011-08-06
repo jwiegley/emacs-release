@@ -1,5 +1,5 @@
 /* Random utility Lisp functions.
-   Copyright (C) 1985, 86, 87, 93, 94, 95, 97, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 87, 93, 94, 95, 97, 98, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -584,7 +584,7 @@ concat (nargs, args, target_type, last_special)
 		ch = XVECTOR (this)->contents[i];
 		if (! INTEGERP (ch))
 		  wrong_type_argument (Qintegerp, ch);
-		this_len_byte = XFASTINT (Fchar_bytes (ch));
+		this_len_byte = CHAR_BYTES (XINT (ch));
 		result_len_byte += this_len_byte;
 		if (this_len_byte > 1)
 		  some_multibyte = 1;
@@ -597,7 +597,7 @@ concat (nargs, args, target_type, last_special)
 		ch = XCONS (this)->car;
 		if (! INTEGERP (ch))
 		  wrong_type_argument (Qintegerp, ch);
-		this_len_byte = XFASTINT (Fchar_bytes (ch));
+		this_len_byte = CHAR_BYTES (XINT (ch));
 		result_len_byte += this_len_byte;
 		if (this_len_byte > 1)
 		  some_multibyte = 1;
@@ -709,7 +709,10 @@ concat (nargs, args, target_type, last_special)
 		else
 		  {
 		    XSETFASTINT (elt, XSTRING (this)->data[thisindex++]);
-		    if (some_multibyte && XINT (elt) >= 0200
+		    if (some_multibyte
+			&& (XINT (elt) >= 0240
+			    || (XINT (elt) >= 0200
+				&& ! NILP (Vnonascii_translation_table)))
 			&& XINT (elt) < 0400)
 		      {
 			c = unibyte_char_to_multibyte (XINT (elt));
@@ -786,6 +789,12 @@ static Lisp_Object string_char_byte_cache_string;
 static int string_char_byte_cache_charpos;
 static int string_char_byte_cache_bytepos;
 
+void
+clear_string_char_byte_cache ()
+{
+  string_char_byte_cache_string = Qnil;
+}
+
 /* Return the character index corresponding to CHAR_INDEX in STRING.  */
 
 int
@@ -837,7 +846,7 @@ string_char_to_byte (string, char_index)
 	  while (best_above_byte > 0
 		 && !CHAR_HEAD_P (XSTRING (string)->data[best_above_byte]))
 	    best_above_byte--;
-	  if (XSTRING (string)->data[best_above_byte] < 0x80)
+	  if (!BASE_LEADING_CODE_P (XSTRING (string)->data[best_above_byte]))
 	    best_above_byte = best_above_byte_saved;
 	  best_above--;
 	}
@@ -903,7 +912,7 @@ string_byte_to_char (string, byte_index)
 	  while (best_above_byte > 0
 		 && !CHAR_HEAD_P (XSTRING (string)->data[best_above_byte]))
 	    best_above_byte--;
-	  if (XSTRING (string)->data[best_above_byte] < 0x80)
+	  if (!BASE_LEADING_CODE_P (XSTRING (string)->data[best_above_byte]))
 	    best_above_byte = best_above_byte_saved;
 	  best_above--;
 	}
@@ -994,7 +1003,8 @@ by using just the low 8 bits.")
 DEFUN ("string-as-unibyte", Fstring_as_unibyte, Sstring_as_unibyte,
        1, 1, 0,
   "Return a unibyte string with the same individual bytes as STRING.\n\
-If STRING is unibyte, the result is STRING itself.")
+If STRING is unibyte, the result is STRING itself.\n\
+Otherwise it is a newly created string, with no text properties.")
   (string)
      Lisp_Object string;
 {
@@ -1004,6 +1014,7 @@ If STRING is unibyte, the result is STRING itself.")
     {
       string = Fcopy_sequence (string);
       XSTRING (string)->size = STRING_BYTES (XSTRING (string));
+      XSTRING (string)->intervals = NULL_INTERVAL;
       SET_STRING_BYTES (XSTRING (string), -1);
     }
   return string;
@@ -1012,7 +1023,8 @@ If STRING is unibyte, the result is STRING itself.")
 DEFUN ("string-as-multibyte", Fstring_as_multibyte, Sstring_as_multibyte,
        1, 1, 0,
   "Return a multibyte string with the same individual bytes as STRING.\n\
-If STRING is multibyte, the result is STRING itself.")
+If STRING is multibyte, the result is STRING itself.\n\
+Otherwise it is a newly created string, with no text properties.")
   (string)
      Lisp_Object string;
 {
@@ -1026,6 +1038,7 @@ If STRING is multibyte, the result is STRING itself.")
       string = Fcopy_sequence (string);
       XSTRING (string)->size = newlen;
       XSTRING (string)->size_byte = nbytes;
+      XSTRING (string)->intervals = NULL_INTERVAL;
     }
   return string;
 }
@@ -1780,8 +1793,28 @@ ARRAY is a vector, string, char-table, or bool-vector.")
       CHECK_NUMBER (item, 1);
       charval = XINT (item);
       size = XSTRING (array)->size;
-      for (index = 0; index < size; index++)
-	p[index] = charval;
+      if (STRING_MULTIBYTE (array))
+	{
+	  unsigned char workbuf[4], *str;
+	  int len = CHAR_STRING (charval, workbuf, str);
+	  int size_byte = STRING_BYTES (XSTRING (array));
+	  unsigned char *p1 = p, *endp = p + size_byte;
+	  int i;
+
+	  if (size != size_byte)
+	    while (p1 < endp)
+	      {
+		int this_len = MULTIBYTE_FORM_LENGTH (p1, endp - p1);
+		if (len != this_len)
+		  error ("Attempt to change byte length of a string");
+		p1 += this_len;
+	      }
+	  for (i = 0; i < size_byte; i++)
+	    *p++ = str[i % len];
+	}
+      else
+	for (index = 0; index < size; index++)
+	  p[index] = charval;
     }
   else if (BOOL_VECTOR_P (array))
     {
@@ -1999,7 +2032,7 @@ See also the documentation of make-char.")
   CHECK_NUMBER (ch, 1);
 
   c = XINT (ch);
-  SPLIT_NON_ASCII_CHAR (c, charset, code1, code2);
+  SPLIT_CHAR (c, charset, code1, code2);
 
   /* Since we may want to set the default value for a character set
      not yet defined, we check only if the character set is in the
@@ -2343,7 +2376,10 @@ DEFUN ("y-or-n-p", Fy_or_n_p, Sy_or_n_p, 1, 1, 0,
 Takes one argument, which is the string to display to ask the question.\n\
 It should end in a space; `y-or-n-p' adds `(y or n) ' to it.\n\
 No confirmation of the answer is requested; a single character is enough.\n\
-Also accepts Space to mean yes, or Delete to mean no.")
+Also accepts Space to mean yes, or Delete to mean no.\n\
+\n\
+Under a windowing system a dialog box will be used if `last-nonmenu-event'\n\
+is nil.")
   (prompt)
      Lisp_Object prompt;
 {
@@ -2473,7 +2509,10 @@ DEFUN ("yes-or-no-p", Fyes_or_no_p, Syes_or_no_p, 1, 1, 0,
 Takes one argument, which is the string to display to ask the question.\n\
 It should end in a space; `yes-or-no-p' adds `(yes or no) ' to it.\n\
 The user must confirm the answer with RET,\n\
-and can edit it until it has been confirmed.")
+and can edit it until it has been confirmed.\n\
+\n\
+Under a windowing system a dialog box will be used if `last-nonmenu-event'\n\
+is nil.")
   (prompt)
      Lisp_Object prompt;
 {
@@ -2593,14 +2632,17 @@ DEFUN ("provide", Fprovide, Sprovide, 1, 1, 0,
   return feature;
 }
 
-DEFUN ("require", Frequire, Srequire, 1, 2, 0,
+DEFUN ("require", Frequire, Srequire, 1, 3, 0,
   "If feature FEATURE is not loaded, load it from FILENAME.\n\
 If FEATURE is not a member of the list `features', then the feature\n\
 is not loaded; so load the file FILENAME.\n\
 If FILENAME is omitted, the printname of FEATURE is used as the file name,\n\
-but in this case `load' insists on adding the suffix `.el' or `.elc'.")
-  (feature, file_name)
-     Lisp_Object feature, file_name;
+but in this case `load' insists on adding the suffix `.el' or `.elc'.\n\
+If the optional third argument NOERROR is non-nil,\n\
+then return nil if the file is not found.\n\
+Normally the return value is FEATURE.")
+  (feature, file_name, noerror)
+     Lisp_Object feature, file_name, noerror;
 {
   register Lisp_Object tem;
   CHECK_SYMBOL (feature, 0);
@@ -2614,8 +2656,11 @@ but in this case `load' insists on adding the suffix `.el' or `.elc'.")
       record_unwind_protect (un_autoload, Vautoload_queue);
       Vautoload_queue = Qt;
 
-      Fload (NILP (file_name) ? Fsymbol_name (feature) : file_name,
-	     Qnil, Qt, Qnil, (NILP (file_name) ? Qt : Qnil));
+      tem = Fload (NILP (file_name) ? Fsymbol_name (feature) : file_name,
+		     noerror, Qt, Qnil, (NILP (file_name) ? Qt : Qnil));
+      /* If load failed entirely, return nil.  */
+      if (NILP (tem))
+	return unbind_to (count, Qnil);
 
       tem = Fmemq (feature, Vfeatures);
       if (NILP (tem))
@@ -2663,6 +2708,7 @@ The value can later be retrieved with `widget-get'.")
 {
   CHECK_CONS (widget, 1);
   XCDR (widget) = Fplist_put (XCDR (widget), property, value);
+  return value;
 }
 
 DEFUN ("widget-get", Fwidget_get, Swidget_get, 2, 2, 0,
@@ -2711,6 +2757,422 @@ ARGS are passed as extra arguments to the function.")
   result = Fapply (3, newargs);
   UNGCPRO;
   return result;
+}
+
+/* base64 encode/decode functions.
+   Based on code from GNU recode. */
+
+#define MIME_LINE_LENGTH 76
+
+#define IS_ASCII(Character) \
+  ((Character) < 128)
+#define IS_BASE64(Character) \
+  (IS_ASCII (Character) && base64_char_to_value[Character] >= 0)
+#define IS_BASE64_IGNORABLE(Character) \
+  ((Character) == ' ' || (Character) == '\t' || (Character) == '\n' \
+   || (Character) == '\f' || (Character) == '\r')
+
+/* Used by base64_decode_1 to retrieve a non-base64-ignorable
+   character or return retval if there are no characters left to
+   process. */
+#define READ_QUADRUPLET_BYTE(retval) \
+  do \
+    { \
+      if (i == length) \
+        return (retval); \
+      c = from[i++]; \
+    } \
+  while (IS_BASE64_IGNORABLE (c))
+
+/* Don't use alloca for regions larger than this, lest we overflow
+   their stack.  */
+#define MAX_ALLOCA 16*1024
+
+/* Table of characters coding the 64 values.  */
+static char base64_value_to_char[64] =
+{
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',	/*  0- 9 */
+  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',	/* 10-19 */
+  'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',	/* 20-29 */
+  'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',	/* 30-39 */
+  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',	/* 40-49 */
+  'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',	/* 50-59 */
+  '8', '9', '+', '/'					/* 60-63 */
+};
+
+/* Table of base64 values for first 128 characters.  */
+static short base64_char_to_value[128] =
+{
+  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,	/*   0-  9 */
+  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,	/*  10- 19 */
+  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,	/*  20- 29 */
+  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,	/*  30- 39 */
+  -1,  -1,  -1,  62,  -1,  -1,  -1,  63,  52,  53,	/*  40- 49 */
+  54,  55,  56,  57,  58,  59,  60,  61,  -1,  -1,	/*  50- 59 */
+  -1,  -1,  -1,  -1,  -1,  0,   1,   2,   3,   4,	/*  60- 69 */
+  5,   6,   7,   8,   9,   10,  11,  12,  13,  14,	/*  70- 79 */
+  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,	/*  80- 89 */
+  25,  -1,  -1,  -1,  -1,  -1,  -1,  26,  27,  28,	/*  90- 99 */
+  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,	/* 100-109 */
+  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,	/* 110-119 */
+  49,  50,  51,  -1,  -1,  -1,  -1,  -1			/* 120-127 */
+};
+
+/* The following diagram shows the logical steps by which three octets
+   get transformed into four base64 characters.
+
+		 .--------.  .--------.  .--------.
+		 |aaaaaabb|  |bbbbcccc|  |ccdddddd|
+		 `--------'  `--------'  `--------'
+                    6   2      4   4       2   6
+	       .--------+--------+--------+--------.
+	       |00aaaaaa|00bbbbbb|00cccccc|00dddddd|
+	       `--------+--------+--------+--------'
+
+	       .--------+--------+--------+--------.
+	       |AAAAAAAA|BBBBBBBB|CCCCCCCC|DDDDDDDD|
+	       `--------+--------+--------+--------'
+
+   The octets are divided into 6 bit chunks, which are then encoded into
+   base64 characters.  */
+
+
+static int base64_encode_1 P_ ((const char *, char *, int, int));
+static int base64_decode_1 P_ ((const char *, char *, int));
+
+DEFUN ("base64-encode-region", Fbase64_encode_region, Sbase64_encode_region,
+       2, 3, "r",
+       "Base64-encode the region between BEG and END.\n\
+Return the length of the encoded text.\n\
+Optional third argument NO-LINE-BREAK means do not break long lines\n\
+into shorter lines.")
+     (beg, end, no_line_break)
+     Lisp_Object beg, end, no_line_break;
+{
+  char *encoded;
+  int allength, length;
+  int ibeg, iend, encoded_length;
+  int old_pos = PT;
+
+  validate_region (&beg, &end);
+
+  ibeg = CHAR_TO_BYTE (XFASTINT (beg));
+  iend = CHAR_TO_BYTE (XFASTINT (end));
+  move_gap_both (XFASTINT (beg), ibeg);
+
+  /* We need to allocate enough room for encoding the text.
+     We need 33 1/3% more space, plus a newline every 76
+     characters, and then we round up. */
+  length = iend - ibeg;
+  allength = length + length/3 + 1;
+  allength += allength / MIME_LINE_LENGTH + 1 + 6;
+
+  if (allength <= MAX_ALLOCA)
+    encoded = (char *) alloca (allength);
+  else
+    encoded = (char *) xmalloc (allength);
+  encoded_length = base64_encode_1 (BYTE_POS_ADDR (ibeg), encoded, length,
+				    NILP (no_line_break));
+  if (encoded_length > allength)
+    abort ();
+
+  /* Now we have encoded the region, so we insert the new contents
+     and delete the old.  (Insert first in order to preserve markers.)  */
+  SET_PT_BOTH (XFASTINT (beg), ibeg);
+  insert (encoded, encoded_length);
+  if (allength > MAX_ALLOCA)
+    xfree (encoded);
+  del_range_byte (ibeg + encoded_length, iend + encoded_length, 1);
+
+  /* If point was outside of the region, restore it exactly; else just
+     move to the beginning of the region.  */
+  if (old_pos >= XFASTINT (end))
+    old_pos += encoded_length - (XFASTINT (end) - XFASTINT (beg));
+  else if (old_pos > XFASTINT (beg))
+    old_pos = XFASTINT (beg);
+  SET_PT (old_pos);
+
+  /* We return the length of the encoded text. */
+  return make_number (encoded_length);
+}
+
+DEFUN ("base64-encode-string", Fbase64_encode_string, Sbase64_encode_string,
+       1, 2, 0,
+       "Base64-encode STRING and return the result.\n\
+Optional second argument NO-LINE-BREAK means do not break long lines\n\
+into shorter lines.")
+     (string, no_line_break)
+     Lisp_Object string, no_line_break;
+{
+  int allength, length, encoded_length;
+  char *encoded;
+  Lisp_Object encoded_string;
+
+  CHECK_STRING (string, 1);
+
+  /* We need to allocate enough room for encoding the text.
+     We need 33 1/3% more space, plus a newline every 76
+     characters, and then we round up. */
+  length = STRING_BYTES (XSTRING (string));
+  allength = length + length/3 + 1;
+  allength += allength / MIME_LINE_LENGTH + 1 + 6;
+
+  /* We need to allocate enough room for decoding the text. */
+  if (allength <= MAX_ALLOCA)
+    encoded = (char *) alloca (allength);
+  else
+    encoded = (char *) xmalloc (allength);
+
+  encoded_length = base64_encode_1 (XSTRING (string)->data,
+				    encoded, length, NILP (no_line_break));
+  if (encoded_length > allength)
+    abort ();
+
+  encoded_string = make_unibyte_string (encoded, encoded_length);
+  if (allength > MAX_ALLOCA)
+    xfree (encoded);
+
+  return encoded_string;
+}
+
+static int
+base64_encode_1 (from, to, length, line_break)
+     const char *from;
+     char *to;
+     int length;
+     int line_break;
+{
+  int counter = 0, i = 0;
+  char *e = to;
+  unsigned char c;
+  unsigned int value;
+
+  while (i < length)
+    {
+      c = from[i++];
+
+      /* Wrap line every 76 characters.  */
+
+      if (line_break)
+	{
+	  if (counter < MIME_LINE_LENGTH / 4)
+	    counter++;
+	  else
+	    {
+	      *e++ = '\n';
+	      counter = 1;
+	    }
+	}
+
+      /* Process first byte of a triplet.  */
+
+      *e++ = base64_value_to_char[0x3f & c >> 2];
+      value = (0x03 & c) << 4;
+
+      /* Process second byte of a triplet.  */
+
+      if (i == length)
+	{
+	  *e++ = base64_value_to_char[value];
+	  *e++ = '=';
+	  *e++ = '=';
+	  break;
+	}
+
+      c = from[i++];
+
+      *e++ = base64_value_to_char[value | (0x0f & c >> 4)];
+      value = (0x0f & c) << 2;
+
+      /* Process third byte of a triplet.  */
+
+      if (i == length)
+	{
+	  *e++ = base64_value_to_char[value];
+	  *e++ = '=';
+	  break;
+	}
+
+      c = from[i++];
+
+      *e++ = base64_value_to_char[value | (0x03 & c >> 6)];
+      *e++ = base64_value_to_char[0x3f & c];
+    }
+
+  return e - to;
+}
+
+
+DEFUN ("base64-decode-region", Fbase64_decode_region, Sbase64_decode_region,
+  2, 2, "r",
+  "Base64-decode the region between BEG and END.\n\
+Return the length of the decoded text.\n\
+If the region can't be decoded, return nil and don't modify the buffer.")
+     (beg, end)
+     Lisp_Object beg, end;
+{
+  int ibeg, iend, length;
+  char *decoded;
+  int old_pos = PT;
+  int decoded_length;
+  int inserted_chars;
+
+  validate_region (&beg, &end);
+
+  ibeg = CHAR_TO_BYTE (XFASTINT (beg));
+  iend = CHAR_TO_BYTE (XFASTINT (end));
+
+  length = iend - ibeg;
+  /* We need to allocate enough room for decoding the text. */
+  if (length <= MAX_ALLOCA)
+    decoded = (char *) alloca (length);
+  else
+    decoded = (char *) xmalloc (length);
+
+  move_gap_both (XFASTINT (beg), ibeg);
+  decoded_length = base64_decode_1 (BYTE_POS_ADDR (ibeg), decoded, length);
+  if (decoded_length > length)
+    abort ();
+
+  if (decoded_length < 0)
+    {
+      /* The decoding wasn't possible. */
+      if (length > MAX_ALLOCA)
+	xfree (decoded);
+      return Qnil;
+    }
+
+  /* Now we have decoded the region, so we insert the new contents
+     and delete the old.  (Insert first in order to preserve markers.)  */
+  /* We insert two spaces, then insert the decoded text in between
+     them, at last, delete those extra two spaces.  This is to avoid
+     byte combining while inserting.  */
+  TEMP_SET_PT_BOTH (XFASTINT (beg), ibeg);
+  insert_1_both ("  ", 2, 2, 0, 1, 0);
+  TEMP_SET_PT_BOTH (XFASTINT (beg) + 1, ibeg + 1);  
+  insert (decoded, decoded_length);
+  inserted_chars = PT - (XFASTINT (beg) + 1);
+  if (length > MAX_ALLOCA)
+    xfree (decoded);
+  /* At first delete the original text.  This never cause byte
+     combining.  */
+  del_range_both (PT + 1, PT_BYTE + 1, XFASTINT (end) + inserted_chars + 2,
+		  iend + decoded_length + 2, 1);
+  /* Next delete the extra spaces.  This will cause byte combining
+     error.  */
+  del_range_both (PT, PT_BYTE, PT + 1, PT_BYTE + 1, 0);
+  del_range_both (XFASTINT (beg), ibeg, XFASTINT (beg) + 1, ibeg + 1, 0);
+  inserted_chars = PT - XFASTINT (beg);
+
+  /* If point was outside of the region, restore it exactly; else just
+     move to the beginning of the region.  */
+  if (old_pos >= XFASTINT (end))
+    old_pos += inserted_chars - (XFASTINT (end) - XFASTINT (beg));
+  else if (old_pos > XFASTINT (beg))
+    old_pos = XFASTINT (beg);
+  SET_PT (old_pos);
+
+  return make_number (inserted_chars);
+}
+
+DEFUN ("base64-decode-string", Fbase64_decode_string, Sbase64_decode_string,
+       1, 1, 0,
+       "Base64-decode STRING and return the result.")
+     (string)
+     Lisp_Object string;
+{
+  char *decoded;
+  int length, decoded_length;
+  Lisp_Object decoded_string;
+
+  CHECK_STRING (string, 1);
+
+  length = STRING_BYTES (XSTRING (string));
+  /* We need to allocate enough room for decoding the text. */
+  if (length <= MAX_ALLOCA)
+    decoded = (char *) alloca (length);
+  else
+    decoded = (char *) xmalloc (length);
+
+  decoded_length = base64_decode_1 (XSTRING (string)->data, decoded, length);
+  if (decoded_length > length)
+    abort ();
+
+  if (decoded_length < 0)
+    /* The decoding wasn't possible. */
+    decoded_string = Qnil;
+  else
+    decoded_string = make_string (decoded, decoded_length);
+
+  if (length > MAX_ALLOCA)
+    xfree (decoded);
+
+  return decoded_string;
+}
+
+static int
+base64_decode_1 (from, to, length)
+     const char *from;
+     char *to;
+     int length;
+{
+  int i = 0;
+  char *e = to;
+  unsigned char c;
+  unsigned long value;
+
+  while (1)
+    {
+      /* Process first byte of a quadruplet. */
+
+      READ_QUADRUPLET_BYTE (e-to);
+
+      if (!IS_BASE64 (c))
+	return -1;
+      value = base64_char_to_value[c] << 18;
+
+      /* Process second byte of a quadruplet.  */
+
+      READ_QUADRUPLET_BYTE (-1);
+
+      if (!IS_BASE64 (c))
+	return -1;
+      value |= base64_char_to_value[c] << 12;
+
+      *e++ = (unsigned char) (value >> 16);
+
+      /* Process third byte of a quadruplet.  */
+      
+      READ_QUADRUPLET_BYTE (-1);
+
+      if (c == '=')
+	{
+	  READ_QUADRUPLET_BYTE (-1);
+	  
+	  if (c != '=')
+	    return -1;
+	  continue;
+	}
+
+      if (!IS_BASE64 (c))
+	return -1;
+      value |= base64_char_to_value[c] << 6;
+
+      *e++ = (unsigned char) (0xff & value >> 8);
+
+      /* Process fourth byte of a quadruplet.  */
+
+      READ_QUADRUPLET_BYTE (-1);
+
+      if (c == '=')
+	continue;
+
+      if (!IS_BASE64 (c))
+	return -1;
+      value |= base64_char_to_value[c];
+
+      *e++ = (unsigned char) (0xff & value);
+    }
 }
 
 void
@@ -2805,4 +3267,8 @@ invoked by mouse clicks and mouse menu items.");
   defsubr (&Swidget_put);
   defsubr (&Swidget_get);
   defsubr (&Swidget_apply);
+  defsubr (&Sbase64_encode_region);
+  defsubr (&Sbase64_decode_region);
+  defsubr (&Sbase64_encode_string);
+  defsubr (&Sbase64_decode_string);
 }

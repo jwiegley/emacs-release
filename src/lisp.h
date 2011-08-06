@@ -545,20 +545,6 @@ struct Lisp_Buffer_Cons
     int bufpos;
   };
 
-#if 0
-
-/* Nonzero if STR is a multibyte string.  */
-#define STRING_MULTIBYTE(STR)  \
-  (XSTRING (STR)->size_byte != XSTRING (STR)->size)
-
-/* Return the length in bytes of STR.  */
-#define STRING_BYTES(STR)  ((STR)->size_byte + 0)
-
-/* Set the length in bytes of STR.  */
-#define SET_STRING_BYTES(STR, SIZE)  ((STR)->size_byte = (SIZE))
-
-#else
-
 /* Nonzero if STR is a multibyte string.  */
 #define STRING_MULTIBYTE(STR)  \
   (XSTRING (STR)->size_byte >= 0)
@@ -569,8 +555,6 @@ struct Lisp_Buffer_Cons
 
 /* Set the length in bytes of STR.  */
 #define SET_STRING_BYTES(STR, SIZE)  ((STR)->size_byte = (SIZE))
-
-#endif /* 0 */
 
 /* In a string or vector, the sign bit of the `size' is the gc mark bit */
 
@@ -641,7 +625,7 @@ struct Lisp_Vector
    and 8-bit Europeans characters.  For these characters, do not check
    validity of CT.  Do not follow parent.  */
 #define CHAR_TABLE_REF(CT, IDX)				\
-  ((IDX) < CHAR_TABLE_SINGLE_BYTE_SLOTS			\
+  ((IDX) >= 0 && (IDX) < CHAR_TABLE_SINGLE_BYTE_SLOTS	\
    ? (!NILP (XCHAR_TABLE (CT)->contents[IDX])		\
       ? XCHAR_TABLE (CT)->contents[IDX]			\
       : XCHAR_TABLE (CT)->defalt)			\
@@ -1727,12 +1711,13 @@ EXFUN (Fmapconcat, 3);
 EXFUN (Fy_or_n_p, 1);
 extern Lisp_Object do_yes_or_no_p P_ ((Lisp_Object));
 EXFUN (Ffeaturep, 1);
-EXFUN (Frequire, 2);
+EXFUN (Frequire, 3);
 EXFUN (Fprovide, 1);
 extern Lisp_Object concat2 P_ ((Lisp_Object, Lisp_Object));
 extern Lisp_Object concat3 P_ ((Lisp_Object, Lisp_Object, Lisp_Object));
 extern Lisp_Object nconc2 P_ ((Lisp_Object, Lisp_Object));
 extern Lisp_Object assq_no_quit P_ ((Lisp_Object, Lisp_Object));
+extern void clear_string_char_byte_cache P_ (());
 extern int string_char_to_byte P_ ((Lisp_Object, int));
 extern int string_byte_to_char P_ ((Lisp_Object, int));
 extern Lisp_Object string_make_multibyte P_ ((Lisp_Object));

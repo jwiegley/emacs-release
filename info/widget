@@ -1,6 +1,12 @@
 This is Info file ../info/widget, produced by Makeinfo version 1.68
 from the input file widget.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Widget: (widget).      Documenting the "widget" package used by the
+                           Emacs Custom facility.
+END-INFO-DIR-ENTRY
+
 
 File: widget,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 
@@ -269,8 +275,8 @@ File: widget,  Node: Programming Example,  Next: Setting Up the Buffer,  Prev: U
 Programming Example
 ===================
 
-   Here is the code to implement the user interface example (see *Note
-User Interface::).
+   Here is the code to implement the user interface example (*note User
+Interface::.).
 
      (require 'widget)
      
@@ -1502,37 +1508,37 @@ Wishlist
 
 
 Tag Table:
-Node: Top102
-Node: Introduction497
-Node: User Interface3975
-Node: Programming Example8865
-Node: Setting Up the Buffer12158
-Node: Basic Types13870
-Node: link19910
-Node: url-link20419
-Node: info-link20726
-Node: push-button21012
-Node: editable-field21580
-Node: text22914
-Node: menu-choice23207
-Node: radio-button-choice24067
-Node: item25641
-Node: choice-item26024
-Node: toggle26517
-Node: checkbox27237
-Node: checklist27538
-Node: editable-list28977
-Node: group30154
-Node: Sexp Types30436
-Node: constants30744
-Node: generic31818
-Node: atoms32346
-Node: composite34288
-Node: Widget Properties36749
-Node: Defining New Widgets39807
-Node: Widget Browser45103
-Node: Widget Minor Mode45956
-Node: Utilities46508
-Node: Widget Wishlist46981
+Node: Top288
+Node: Introduction683
+Node: User Interface4161
+Node: Programming Example9051
+Node: Setting Up the Buffer12341
+Node: Basic Types14053
+Node: link20093
+Node: url-link20602
+Node: info-link20909
+Node: push-button21195
+Node: editable-field21763
+Node: text23097
+Node: menu-choice23390
+Node: radio-button-choice24250
+Node: item25824
+Node: choice-item26207
+Node: toggle26700
+Node: checkbox27420
+Node: checklist27721
+Node: editable-list29160
+Node: group30337
+Node: Sexp Types30619
+Node: constants30927
+Node: generic32001
+Node: atoms32529
+Node: composite34471
+Node: Widget Properties36932
+Node: Defining New Widgets39990
+Node: Widget Browser45286
+Node: Widget Minor Mode46139
+Node: Utilities46691
+Node: Widget Wishlist47164
 
 End Tag Table

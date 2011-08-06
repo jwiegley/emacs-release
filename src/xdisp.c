@@ -112,6 +112,9 @@ char *previous_echo_glyphs;
 /* Nonzero means truncate lines in all windows less wide than the frame */
 int truncate_partial_width_windows;
 
+/* A flag to control how to display unibyte 8-bit character.  */
+int unibyte_display_via_language_environment;
+
 /* Nonzero means we have more than one non-minibuffer-only frame.
    Not guaranteed to be accurate except while parsing frame-title-format.  */
 int multiple_frames;
@@ -329,31 +332,32 @@ message_dolog (m, len, nlflag, multibyte)
       if (multibyte
 	  && NILP (current_buffer->enable_multibyte_characters))
 	{
-	  int c, i = 0, nbytes;
+	  int i, c, nbytes;
+	  unsigned char work[1];
 	  /* Convert a multibyte string to single-byte
 	     for the *Message* buffer.  */
-	  while (i < len)
+	  for (i = 0; i < len; i += nbytes)
 	    {
-	      c = STRING_CHAR (m + i, len - i);
-	      i += XFASTINT (Fchar_bytes (make_number (c)));
-	      /* Truncate the character to its last byte--we can only hope
-		 the user is happy with the character he gets,
-		 since if it isn't right, there is no way to do it right.  */
-	      c &= 0xff;
-	      insert_char (c);
+	      c = STRING_CHAR_AND_LENGTH (m + i, len - i, nbytes);
+	      work[0] = (SINGLE_BYTE_CHAR_P (c)
+			 ? c
+			 : multibyte_char_to_unibyte (c, Qnil));
+	      insert_1_both (work, 1, 1, 1, 0, 0);
 	    }
 	}
       else if (! multibyte
 	       && ! NILP (current_buffer->enable_multibyte_characters))
 	{
-	  int i = 0;
+	  int i, c, nbytes;
 	  unsigned char *msg = (unsigned char *) m;
+	  unsigned char *str, work[4];
 	  /* Convert a single-byte string to multibyte
 	     for the *Message* buffer.  */
-	  while (i < len)
+	  for (i = 0; i < len; i++)
 	    {
-	      int c = unibyte_char_to_multibyte (msg[i++]);
-	      insert_char (c);
+	      c = unibyte_char_to_multibyte (msg[i]);
+	      nbytes = CHAR_STRING (c, work, str);
+	      insert_1_both (work, 1, nbytes, 1, 0, 0);
 	    }
 	}
       else if (len)
@@ -419,7 +423,10 @@ message_dolog (m, len, nlflag, multibyte)
       if (point_at_end)
 	TEMP_SET_PT_BOTH (Z, Z_BYTE);
       else
-	Fgoto_char (oldpoint);
+	/* We can't do Fgoto_char (oldpoint) because it will run some
+           Lisp code.  */
+	TEMP_SET_PT_BOTH (XMARKER (oldpoint)->charpos,
+			  XMARKER (oldpoint)->bytepos);
 
       UNGCPRO;
       free_marker (oldpoint);
@@ -447,7 +454,7 @@ message_log_check_duplicate (prev_bol, prev_bol_byte, this_bol, this_bol_byte)
      int prev_bol_byte, this_bol_byte;
 {
   int i;
-  int len = Z - 1 - this_bol;
+  int len = Z_BYTE - 1 - this_bol_byte;
   int seen_dots = 0;
   unsigned char *p1 = BUF_BYTE_ADDRESS (current_buffer, prev_bol_byte);
   unsigned char *p2 = BUF_BYTE_ADDRESS (current_buffer, this_bol_byte);
@@ -1206,7 +1213,7 @@ redisplay_internal (preserve_echo_area)
 				 1 << (BITS_PER_SHORT - 1),
 				 window_internal_width (w) - 1,
 				 XINT (w->hscroll), 0, w);
-	  SET_PT_BOTH (opoint, opoint_byte);
+	  TEMP_SET_PT_BOTH (opoint, opoint_byte);
 	  if (val.hpos != this_line_start_hpos)
 	    goto cancel;
 
@@ -1951,6 +1958,8 @@ redisplay_window (window, just_this_one, preserve_echo_area)
       w->force_start = Qnil;
       /* Forget any recorded base line for line number display.  */
       w->base_line_number = Qnil;
+      /* The old bottom-of-screen position is no longer valid.  */
+      w->window_end_valid = Qnil;
       /* Redisplay the mode line.  Select the buffer properly for that.
 	 Also, run the hook window-scroll-functions
 	 because we have scrolled.  */
@@ -2083,7 +2092,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 	  int tab_offset = (pos_tab_offset (w, last_point, last_point_byte)
 			    - (last_point_x + hscroll - !! hscroll));
 
-	  pos = *compute_motion (last_point, last_point_y, last_point_x, 0,
+	  pos = *compute_motion (last_point, last_point_y, last_point_x, 1,
 				 PT, height,
 				 /* BUG FIX: See the comment of	
 				    Fpos_visible_in_window_p (window.c).  */
@@ -2275,6 +2284,8 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 			  scroll_conservatively ? pos.vpos + 1 : scroll_step,
 			  w);
 
+	  /* The old bottom-of-screen position is no longer valid.  */
+	  w->window_end_valid = Qnil;
 	  if (! NILP (Vwindow_scroll_functions))
 	    {
 	      set_marker_both (w->start, Qnil, pos.bufpos, pos.bytepos);
@@ -2316,6 +2327,8 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 			  scroll_conservatively ? -pos.vpos : - scroll_step,
 			  w);
 
+	  /* The old bottom-of-screen position is no longer valid.  */
+	  w->window_end_valid = Qnil;
 	  if (! NILP (Vwindow_scroll_functions))
 	    {
 	      set_marker_both (w->start, Qnil, pos.bufpos, pos.bytepos);
@@ -2356,6 +2369,9 @@ redisplay_window (window, just_this_one, preserve_echo_area)
 
       if (PT >= pos.bufpos)
 	{
+	  /* The old bottom-of-screen position is no longer valid.  */
+	  w->window_end_valid = Qnil;
+
 	  if (! NILP (Vwindow_scroll_functions))
 	    {
 	      set_marker_both (w->start, Qnil, pos.bufpos, pos.bytepos);
@@ -2406,6 +2422,9 @@ recenter:
   /* Set startp here explicitly in case that helps avoid an infinite loop
      in case the window-scroll-functions functions get errors.  */
   set_marker_both (w->start, Qnil, pos.bufpos, pos.bytepos);
+
+  /* The old bottom-of-screen position is no longer valid.  */
+  w->window_end_valid = Qnil;
   if (! NILP (Vwindow_scroll_functions))
     {
       run_hook_with_args_2 (Qwindow_scroll_functions, window,
@@ -2689,7 +2708,7 @@ try_window_id (window)
   if (bp.contin && bp.hpos != lmargin)
     {
       val.hpos = bp.prevhpos - width + lmargin;
-      val.tab_offset = bp.tab_offset + bp.prevhpos - width;
+      val.tab_offset = bp.tab_offset + width - bp.prevhpos;
       did_motion = 1;
       DEC_BOTH (pos, pos_byte);
     }
@@ -2698,13 +2717,13 @@ try_window_id (window)
 
   /* Find first visible newline after which no more is changed.  */
   opoint = PT, opoint_byte = PT_BYTE;
-  SET_PT (Z - max (end_unchanged, Z - ZV));
+  TEMP_SET_PT (Z - max (end_unchanged, Z - ZV));
   scan_newline (PT, PT_BYTE, ZV, ZV_BYTE, 1, 1);
   if (selective > 0)
     while (PT < ZV - 1 && indented_beyond_p (PT, PT_BYTE, selective))
       scan_newline (PT, PT_BYTE, ZV, ZV_BYTE, 1, 1);
   tem = PT;
-  SET_PT_BOTH (opoint, opoint_byte);
+  TEMP_SET_PT_BOTH (opoint, opoint_byte);
 
   /* Compute the cursor position after that newline.  */
   ep = *compute_motion (pos, vpos, val.hpos, did_motion, tem,
@@ -2882,6 +2901,7 @@ try_window_id (window)
     Fset_marker (w->start, make_number (pos), Qnil);
 
   val.bytepos = pos_byte;
+  val.ovstring_chars_done = 0;
 
   /* Redisplay the lines where the text was changed */
   last_text_vpos = vpos;
@@ -3359,8 +3379,9 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
          compute_motion may have moved us past the screen position we
          requested, if we hit a multi-column character, or the end of
          the line.  If so, back up.  */
-      if (left_edge->vpos > vpos
-          || left_edge->hpos > 0)
+      if ((left_edge->vpos > vpos
+	   || left_edge->hpos > 0)
+	  && left_edge->bufpos > pos)
         {
           pos = left_edge->bufpos;
 	  pos_byte = left_edge->bytepos;
@@ -3439,7 +3460,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 		      ovstr += ovstr_done;
 		      ovlen -= ovstr_done;
 
-		      while (ovlen > 0)
+		      while (ovlen > 0 && p1 < endp)
 			{
 			  int charset, cols;
 			  GLYPH g;
@@ -3668,7 +3689,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 		  pos--;
 		  pos_byte--;
 		}
-	      SET_PT_BOTH (opoint, opoint_byte);
+	      TEMP_SET_PT_BOTH (opoint, opoint_byte);
 	    }
 	  if (invis && selective_rlen > 0 && p1 >= leftmargin)
 	    {
@@ -3744,7 +3765,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 	  int opoint = PT, opoint_byte = PT_BYTE;
 	  scan_newline (pos, pos_byte, ZV, ZV_BYTE, 1, 1);
 	  pos = PT, pos_byte = PT_BYTE;
-	  SET_PT_BOTH (opoint, opoint_byte);
+	  TEMP_SET_PT_BOTH (opoint, opoint_byte);
 
 	  if (FETCH_BYTE (pos_byte - 1) == '\n')
 	    pos--, pos_byte--;
@@ -3807,7 +3828,13 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
              by octal form.  */
 	  int remaining_bytes = len;
 
-	  if (c >= 0400)
+	  if (unibyte_display_via_language_environment
+	      && SINGLE_BYTE_CHAR_P (c)
+	      && (c >= 0240
+		  || (c >= 0200 && !NILP (Vnonascii_translation_table))))
+	    c = unibyte_char_to_multibyte (c);
+
+	  if (c >= 0400 && CHAR_VALID_P (c, 0))
 	    {
 	      /* C is a multibyte character.  */
 	      int charset = CHAR_CHARSET (c);
@@ -3962,7 +3989,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 	  int opoint = PT, opoint_byte = PT_BYTE;
 
 	  /* If stopped due to a newline, start next line after it */
-	  SET_PT_BOTH (pos + 1, pos_byte + 1);
+	  TEMP_SET_PT_BOTH (pos + 1, pos_byte + 1);
 
 	  val.tab_offset = 0;
 	  /* Check again for hidden lines, in case the newline occurred exactly
@@ -3972,7 +3999,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 	    scan_newline (PT, PT_BYTE, ZV, ZV_BYTE, 1, 1);
 
 	  pos = PT, pos_byte = PT_BYTE;
-	  SET_PT_BOTH (opoint, opoint_byte);
+	  TEMP_SET_PT_BOTH (opoint, opoint_byte);
 	}
       else
 	/* Stopped due to right margin of window */
@@ -3981,7 +4008,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 	    {
 	      int opoint = PT, opoint_byte = PT_BYTE;
 
-	      SET_PT_BOTH (pos, pos_byte);
+	      TEMP_SET_PT_BOTH (pos, pos_byte);
 	      *p1++ = fix_glyph (f, truncator, 0);
 	      /* Truncating => start next line after next newline,
 		 and point is on this line if it is before the newline,
@@ -3992,7 +4019,7 @@ display_text_line (w, start, start_byte, vpos, hpos, taboffset, ovstr_done)
 		     && indented_beyond_p (PT, PT_BYTE, selective));
 	      pos = PT, pos_byte = PT_BYTE;
 	      val.hpos = XINT (w->hscroll) ? 1 - XINT (w->hscroll) : 0;
-	      SET_PT_BOTH (opoint, opoint_byte);
+	      TEMP_SET_PT_BOTH (opoint, opoint_byte);
 
 	      lastpos = pos - (FETCH_BYTE (pos_byte - 1) == '\n');
 	      lastpos_byte = CHAR_TO_BYTE (lastpos);
@@ -4539,6 +4566,8 @@ pint2str (buf, width, d)
    If EOL_FLAG is 1, set also a mnemonic character for end-of-line
    type of CODING_SYSTEM.  Return updated pointer into BUF.  */
 
+static unsigned char invalid_eol_type[] = "(*invalid*)";
+
 static char *
 decode_mode_spec_coding (coding_system, buf, eol_flag)
      Lisp_Object coding_system;
@@ -4547,6 +4576,10 @@ decode_mode_spec_coding (coding_system, buf, eol_flag)
 {
   Lisp_Object val;
   int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+  unsigned char *eol_str;
+  int eol_str_len;
+  /* The EOL conversion we are using.  */
+  Lisp_Object eoltype;
 
   val = coding_system;
 
@@ -4555,7 +4588,7 @@ decode_mode_spec_coding (coding_system, buf, eol_flag)
       if (multibyte)
 	*buf++ = '-';
       if (eol_flag)
-	*buf++ = eol_mnemonic_undecided;
+	eoltype = eol_mnemonic_undecided;
       /* Don't mention EOL conversion if it isn't decided.  */
     }
   else
@@ -4576,8 +4609,6 @@ decode_mode_spec_coding (coding_system, buf, eol_flag)
 
       if (eol_flag)
 	{
-	  /* The EOL conversion we are using.  */
-	  int eoltype;
 	  /* The EOL conversion that is normal on this system.  */
 
 	  if (NILP (eolvalue))	/* Not yet decided.  */
@@ -4589,11 +4620,34 @@ decode_mode_spec_coding (coding_system, buf, eol_flag)
 		       ? eol_mnemonic_unix
 		       : (XFASTINT (eolvalue) == 1
 			  ? eol_mnemonic_dos : eol_mnemonic_mac));
-
-	  /* Mention the EOL conversion if it is not the usual one.  */
-	  *buf++ = eoltype;
 	}
     }
+
+  if (eol_flag)
+    {
+      /* Mention the EOL conversion if it is not the usual one.  */
+      if (STRINGP (eoltype))
+	{
+	  eol_str = XSTRING (eoltype)->data;
+	  eol_str_len = XSTRING (eoltype)->size;
+	}
+      else if (INTEGERP (eoltype)
+	       && CHAR_VALID_P (XINT (eoltype), 0))
+	{
+	  int c = XINT (eoltype);
+	  unsigned char work[4];
+
+	  eol_str_len = CHAR_STRING (XINT (eoltype), work, eol_str);
+	}
+      else
+	{
+	  eol_str = invalid_eol_type;
+	  eol_str_len = sizeof (invalid_eol_type) - 1;
+	}
+      bcopy (eol_str, buf, eol_str_len);
+      buf += eol_str_len;
+    }
+
   return buf;
 }
 
@@ -5237,66 +5291,76 @@ display_string (w, vpos, string, length, hpos, truncate,
 	    *p1 = c ^ 0100;
 	  p1++;
 	}
-      else if (len == 1)
-	{
-	  /* C is a control character or a binary byte data.  */
-	  if (p1 >= start)
-	    *p1 = (fix_glyph
-		   (f, (dp && INTEGERP (DISP_ESCAPE_GLYPH (dp))
-			&& GLYPH_CHAR_VALID_P (XINT (DISP_ESCAPE_GLYPH (dp)))
-			? XINT (DISP_ESCAPE_GLYPH (dp)) : '\\'),
-		    0));
-	  p1++;
-	  if (p1 >= start && p1 < end)
-	    *p1 = (c >> 6) + '0';
-	  p1++;
-	  if (p1 >= start && p1 < end)
-	    *p1 = (7 & (c >> 3)) + '0';
-	  p1++;
-	  if (p1 >= start && p1 < end)
-	    *p1 = (7 & c) + '0';
-	  p1++;
-	}
       else
 	{
-	  /* C is a multibyte character.  */	  
-	  int charset = CHAR_CHARSET (c);
-	  int columns = (charset == CHARSET_COMPOSITION
-			 ? cmpchar_table[COMPOSITE_CHAR_ID (c)]->width
-			 : CHARSET_WIDTH (charset));
+	  /* C is a multibyte character, control character or a binary
+             byte data.  */
+	  int remaining_bytes = len;
 
-	  if (p1 < start)
+	  if (c >= 0400 && CHAR_VALID_P (c, 0))
 	    {
-	      /* Since we can't show the left part of C, fill all
-                 columns with spaces.  */
-	      columns -= start - p1;
-	      p1 = start;
-	      while (columns--)
+	      /* C is a multibyte character.  */	  
+	      int charset = CHAR_CHARSET (c);
+	      int columns = (charset == CHARSET_COMPOSITION
+			     ? cmpchar_table[COMPOSITE_CHAR_ID (c)]->width
+			     : CHARSET_WIDTH (charset));
+
+	      remaining_bytes -= CHARSET_BYTES (charset);
+	      if (p1 < start)
 		{
-		  if (p1 < end)
-		    *p1 = SPACEGLYPH;
-		  p1++;
+		  /* Since we can't show the left part of C, fill all
+		     columns with spaces.  */
+		  columns -= start - p1;
+		  p1 = start;
+		  while (columns--)
+		    {
+		      if (p1 < end)
+			*p1 = SPACEGLYPH;
+		      p1++;
+		    }
+		}
+	      else if (p1 + columns > end)
+		{
+		  /* Since we can't show the right part of C, fill all
+		     columns with TRUNCATE if TRUNCATE is specified.  */
+		  if (truncate)
+		    {
+		      while (p1 < end)
+			*p1++ = fix_glyph (f, truncate, 0);
+		      /* And tell the line is truncated.  */
+		      truncated = 1;
+		    }
+		  break;
+		}
+	      else
+		{
+		  /* We can show the whole glyph of C.  */
+		  *p1++ = c;
+		  while (--columns)
+		    *p1++ = c | GLYPH_MASK_PADDING;
 		}
 	    }
-	  else if (p1 + columns > end)
+
+	  while (remaining_bytes > 0)
 	    {
-	      /* Since we can't show the right part of C, fill all
-                 columns with TRUNCATE if TRUNCATE is specified.  */
-	      if (truncate)
-		{
-		  while (p1 < end)
-		    *p1++ = fix_glyph (f, truncate, 0);
-		  /* And tell the line is truncated.  */
-		  truncated = 1;
-		}
-	      break;
-	    }
-	  else
-	    {
-	      /* We can show the whole glyph of C.  */
-	      *p1++ = c;
-	      while (--columns)
-		*p1++ = c | GLYPH_MASK_PADDING;
+	      c = *(string - remaining_bytes--);
+
+	      if (p1 >= start)
+		*p1 = (fix_glyph
+		       (f, (dp && INTEGERP (DISP_ESCAPE_GLYPH (dp))
+			    && GLYPH_CHAR_VALID_P (XINT (DISP_ESCAPE_GLYPH (dp)))
+			    ? XINT (DISP_ESCAPE_GLYPH (dp)) : '\\'),
+			0));
+	      p1++;
+	      if (p1 >= start && p1 < end)
+		*p1 = (c >> 6) + '0';
+	      p1++;
+	      if (p1 >= start && p1 < end)
+		*p1 = (7 & (c >> 3)) + '0';
+	      p1++;
+	      if (p1 >= start && p1 < end)
+		*p1 = (7 & c) + '0';
+	      p1++;
 	    }
 	}
     }
@@ -5481,7 +5545,7 @@ of the top or bottom of the window.");
   DEFVAR_INT ("line-number-display-limit", &line_number_display_limit,
     "*Maximum buffer size (in characters) for line number display\n\
 If the buffer is bigger than this, the line number does not appear\n\
-in the mode line..");
+in the mode line.");
   line_number_display_limit = 1000000;
 
   DEFVAR_BOOL ("highlight-nonselected-windows", &highlight_nonselected_windows,
@@ -5542,6 +5606,15 @@ is not valid when these functions are called.");
     "*Number of characters of overlap when scrolling a one-line window.\n\
 This commonly affects the minibuffer window, hence the name of the variable.");
   minibuffer_scroll_overlap = 20;
+
+  DEFVAR_BOOL ("unibyte-display-via-language-environment",
+	       &unibyte_display_via_language_environment,
+   "*Non-nil means display unibyte text according to language environment.\n\
+Specifically this means that unibyte non-ASCII characters\n\
+are displayed by converting them to the equivalent multibyte characters\n\
+according to the current language environment.  As a result, they are\n\
+displayed according to the current fontset.");
+  unibyte_display_via_language_environment = 0;
 }
 
 /* initialize the window system */

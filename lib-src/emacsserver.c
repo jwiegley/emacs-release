@@ -213,7 +213,8 @@ main (argc, argv)
      int argc;
      char **argv;
 {
-  char system_name[32];
+  char *system_name;
+  int system_name_length;
   int s, infd;
 #ifdef SOCKLEN_TYPE
   SOCKLEN_TYPE fromlen;
@@ -250,7 +251,22 @@ main (argc, argv)
     }
   server.sun_family = AF_UNIX;
 #ifndef SERVER_HOME_DIR
-  gethostname (system_name, sizeof (system_name));
+  system_name_length = 32;
+
+  while (1)
+    {
+      system_name = (char *) xmalloc (system_name_length + 1);
+
+      /* system_name must be null-terminated string.  */
+      system_name[system_name_length] = '\0';
+
+      if (gethostname (system_name, system_name_length) == 0)
+	break;
+
+      free (system_name);
+      system_name_length *= 2;
+    }
+
   sprintf (server.sun_path, "/tmp/esrv%d-%s", geteuid (), system_name);
 
   if (unlink (server.sun_path) == -1 && errno != ENOENT)
@@ -553,7 +569,6 @@ main ()
 
 #endif /* HAVE_SYSVIPC */
 
-#endif /* HAVE_SOCKETS or HAVE_SYSVIPC */
 
 /* This is like perror but puts `Error: ' at the beginning.  */
 
@@ -578,3 +593,4 @@ fatal_error (string)
   fprintf (stderr, string);
   exit (1);
 }
+#endif /* HAVE_SOCKETS or HAVE_SYSVIPC */

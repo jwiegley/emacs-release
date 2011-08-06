@@ -4,6 +4,10 @@
 @settitle Info 1.0
 @comment %**end of header 
 
+@direntry
+* Info: (info).		Documentation browsing system.
+@end direntry
+
 @iftex
 @finalout
 @end iftex

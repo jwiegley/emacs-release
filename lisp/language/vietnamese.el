@@ -1,4 +1,4 @@
-;;; vietnamese.el --- Support for Vietnamese
+;;; vietnamese.el --- Support for Vietnamese -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1995 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -183,7 +183,7 @@ Both tables are indexed by the position code of Vietnamese characters.")
 		       (;; Vietnamese upper
 			(read r0)
 			(r0 -= 128)
-			(write-read-repeat r0 ,(cdr viet-viscii-encode-table)))
+			(write-read-repeat r0 ,(cdr viet-vscii-encode-table)))
 		     ;; not Vietnamese
 		     (write-read-repeat r0))))))))
   "CCL program to encode VSCII-1.")
@@ -225,7 +225,11 @@ Both tables are indexed by the position code of Vietnamese characters.")
  nil
  '((safe-charsets ascii vietnamese-viscii-lower vietnamese-viscii-upper)
    (post-read-conversion . viqr-post-read-conversion)
-   (pre-write-conversion . viqr-pre-write-conversion)))
+   (pre-write-conversion . viqr-pre-write-conversion)
+   (charset-origin-alist
+    (vietnamese-viscii-lower "VISCII" viet-encode-viscii-char)
+    (vietnamese-viscii-upper "VISCII" viet-encode-viscii-char))))
+
 
 (define-coding-system-alias 'viqr 'vietnamese-viqr)
 
@@ -243,9 +247,6 @@ Both tables are indexed by the position code of Vietnamese characters.")
  "Vietnamese" `((charset vietnamese-viscii-lower vietnamese-viscii-upper)
 		(nonascii-translation
 		 . ,viet-viscii-nonascii-translation-table)
-		(charset-origin-alist
-		 (vietnamese-viscii-lower "VISCII" viet-encode-viscii-char)
-		 (vietnamese-viscii-upper "VISCII" viet-encode-viscii-char))
 		(coding-system vietnamese-viscii vietnamese-vscii
 			       vietnamese-viqr)
 		(coding-priority vietnamese-viscii)

@@ -353,7 +353,7 @@ Fourth argument TYPE is the custom option type."
 	((eq keyword :tag)
 	 (put symbol 'custom-tag value))
 	(t
-	 (error "Unknown keyword %s" symbol))))  
+	 (error "Unknown keyword %s" keyword))))
 
 (defun custom-add-option (symbol option)
   "To the variable SYMBOL add OPTION.
@@ -408,18 +408,23 @@ the default value for the SYMBOL."
 		 (value (nth 1 entry))
 		 (now (nth 2 entry))
 		 (requests (nth 3 entry))
-		 (set (or (get symbol 'custom-set) 'custom-set-default)))
-	    (put symbol 'saved-value (list value))
-	    (cond (now 
-		   ;; Rogue variable, set it now.
-		   (put symbol 'force-value t)
-		   (funcall set symbol (eval value)))
-		  ((default-boundp symbol)
-		   ;; Something already set this, overwrite it.
-		   (funcall set symbol (eval value))))
+		 set)
 	    (when requests
 	      (put symbol 'custom-requests requests)
 	      (mapcar 'require requests))
+	    (setq set (or (get symbol 'custom-set) 'custom-set-default))
+	    (put symbol 'saved-value (list value))
+	    ;; Allow for errors in the case where the setter has
+	    ;; changed between versions, say.
+	    (condition-case nil
+		(cond (now
+		       ;; Rogue variable, set it now.
+		       (put symbol 'force-value t)
+		       (funcall set symbol (eval value)))
+		      ((default-boundp symbol)
+		       ;; Something already set this, overwrite it.
+		       (funcall set symbol (eval value))))
+	      (error nil))
 	    (setq args (cdr args)))
 	;; Old format, a plist of SYMBOL VALUE pairs.
 	(message "Warning: old format `custom-set-variables'")

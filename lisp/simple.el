@@ -1,6 +1,6 @@
 ;;; simple.el --- basic editing commands for Emacs
 
-;; Copyright (C) 1985, 86, 87, 93, 94, 95, 96, 97, 1998
+;; Copyright (C) 1985, 86, 87, 93, 94, 95, 96, 97, 98, 1999
 ;;        Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
@@ -214,6 +214,8 @@ With argument, join this line to following line."
 	    (delete-region (point) (+ (point) (length fill-prefix))))
 	(fixup-whitespace))))
 
+(defalias 'join-line #'delete-indentation) ; easier to find
+
 (defun fixup-whitespace ()
   "Fixup white space between objects around point.
 Leave one space or none, according to the context."
@@ -361,6 +363,7 @@ and KILLP is t if a prefix arg was specified."
 
 (defun zap-to-char (arg char)
   "Kill up to and including ARG'th occurrence of CHAR.
+Case is ignored if `case-fold-search' is non-nil in the current buffer.
 Goes backward if ARG is negative; error if CHAR not found."
   (interactive "p\ncZap to char: ")
   (kill-region (point) (progn
@@ -484,15 +487,19 @@ and the greater of them is not at the start of a line."
 
 (defun what-cursor-position (&optional detail)
   "Print info on cursor position (on screen and within buffer).
-With prefix argument, print detailed info of a character on cursor position.
+Also describe the character after point, and give its character code
+in octal, decimal and hex.
 
-For the detailed information, Emacs internal character code, Emacs
-internal character components (the character set name and position
-code(s)), and the corresponding external character components (the
-external character set name and external character code(s)) are shown
-in this order.
+For a non-ASCII multibyte character, also give its encoding in the
+buffer's selected coding system if the coding system encodes the
+character safely.  If the character is encoded into one byte, that
+code is shown in hex.  If the character is encoded into more than one
+byte, just \"...\" is shown.
 
-Each language environment may show different external character components."
+With prefix argument, print additional details about that character,
+instead of the cursor position.  This includes the character set name,
+the codes that identify the character within that character set.  In
+addition, the encoding is fully shown."
   (interactive "P")
   (let* ((char (following-char))
 	 (beg (point-min))
@@ -513,39 +520,52 @@ Each language environment may show different external character components."
 		     pos total percent beg end col hscroll)
 	  (message "point=%d of %d(%d%%)  column %d %s"
 		   pos total percent col hscroll))
-      (if detail
-	  (let* ((internal (split-char char))
-		 (charset (char-charset char))
-		 (slot (assq charset charset-origin-alist))
-		 external)
-	    (if slot
-		(setq external (list (nth 1 slot) (funcall (nth 2 slot) char)))
-	      (if (eq charset 'composition)
-		  (setq internal '("composite-character"))
-		(setq external (cons (charset-short-name charset)
-				     (copy-sequence (cdr internal))))
-		(if (= (charset-iso-graphic-plane charset) 1)
-		    (progn
-		      (setcar (cdr external) (+ (nth 1 external) 128))
-		      (if (nth 2 external)
-			  (setcar (nthcdr 2 external)
-				  (+ (nth 2 external) 128)))))))
-	    (message "Char: %s (0%o, %d, 0x%x) %s %s"
+      (let ((coding buffer-file-coding-system)
+	    encoded encoding-msg)
+	(if (or (not coding)
+		(eq (coding-system-type coding) t))
+	    (setq coding default-buffer-file-coding-system))
+	(if (not (char-valid-p char))
+	    (setq encoding-msg
+		  (format "(0%o, %d, 0x%x, invalid)" char char char))
+	  (setq encoded (and (>= char 128) (encode-coding-char char coding)))
+	  (setq encoding-msg
+		(if encoded
+		    (format "(0%o, %d, 0x%x, ext %s)"
+			    char char char
+			    (if (and (not detail)
+				     (> (length encoded) 1))
+				"..."
+			      (concat
+			       (encoded-string-description encoded coding)
+			       (if (cmpcharp char) "..." ""))))
+		  (format "(0%o, %d, 0x%x)" char char char))))
+	(if detail
+	    ;; We show the detailed information of CHAR.
+	    (let ((internal
+		   (if (cmpcharp char)
+		       ;; For a composite character, we show the
+		       ;; components only.
+		       (concat "(composed \""
+			       (decompose-composite-char char)
+			       "\")")
+		     (split-char char))))
+	      (message "Char: %s %s %s"
+		       (if (< char 256)
+			   (single-key-description char)
+			 (buffer-substring (point) (1+ (point))))
+		       encoding-msg internal))
+	  (if (or (/= beg 1) (/= end (1+ total)))
+	      (message "Char: %s %s point=%d of %d(%d%%) <%d - %d>  column %d %s"
+		       (if (< char 256)
+			   (single-key-description char)
+			 (buffer-substring (point) (1+ (point))))
+		       encoding-msg pos total percent beg end col hscroll)
+	    (message "Char: %s %s point=%d of %d(%d%%)  column %d %s"
 		     (if (< char 256)
 			 (single-key-description char)
-		       (char-to-string char))
-		     char char char (or internal "") (or external "")))
-	(if (or (/= beg 1) (/= end (1+ total)))
-	    (message "Char: %s (0%o, %d, 0x%x) point=%d of %d(%d%%) <%d - %d>  column %d %s"
-		     (if (< char 256)
-			 (single-key-description char)
-		       (char-to-string char))
-		     char char char pos total percent beg end col hscroll)
-	  (message "Char: %s (0%o, %d, 0x%x) point=%d of %d(%d%%)  column %d %s"
-		   (if (< char 256)
-		       (single-key-description char)
-		     (char-to-string char))
-		   char char char pos total percent col hscroll))))))
+		       (buffer-substring (point) (1+ (point))))
+		     encoding-msg pos total percent col hscroll)))))))
 
 (defun fundamental-mode ()
   "Major mode not specialized for anything in particular.
@@ -778,12 +798,14 @@ An uppercase letter in REGEXP makes the search case-sensitive."
   (or (zerop n)
       (let ((narg (- minibuffer-history-position n))
 	    (minimum (if minibuffer-default -1 0))
-	    elt)
+	    elt minibuffer-returned-to-present)
 	(if (and (zerop minibuffer-history-position)
 		 (null minibuffer-text-before-history))
 	    (setq minibuffer-text-before-history (buffer-string)))
 	(if (< narg minimum)
-	    (error "End of history; no next item"))
+	    (if minibuffer-default
+		(error "End of history; no next item")
+	      (error "End of history; no default available")))
 	(if (> narg (length (symbol-value minibuffer-history-variable)))
 	    (error "Beginning of history; no preceding item"))
 	(erase-buffer)
@@ -792,11 +814,13 @@ An uppercase letter in REGEXP makes the search case-sensitive."
 	       (setq elt minibuffer-default))
 	      ((= narg 0)
 	       (setq elt (or minibuffer-text-before-history ""))
+	       (setq minibuffer-returned-to-present t)
 	       (setq minibuffer-text-before-history nil))
 	      (t (setq elt (nth (1- minibuffer-history-position)
 				(symbol-value minibuffer-history-variable)))))
 	(insert
-	 (if (eq minibuffer-history-sexp-flag (minibuffer-depth))
+	 (if (and (eq minibuffer-history-sexp-flag (minibuffer-depth))
+		  (not minibuffer-returned-to-present))
 	     (let ((print-level nil))
 	       (prin1-to-string elt))
 	   elt))
@@ -1059,7 +1083,13 @@ is not *inside* the region START...END."
 (defvar shell-command-switch "-c"
   "Switch used to have the shell execute its command line argument.")
 
-(defun shell-command (command &optional output-buffer)
+(defvar shell-command-default-error-buffer nil
+  "*Buffer name for `shell-command' and `shell-command-on-region' error output.
+This buffer is used when `shell-command' or 'shell-command-on-region'
+is run interactively.  A value of nil means that output to stderr and
+stdout will be intermixed in the output stream.")
+
+(defun shell-command (command &optional output-buffer error-buffer)
   "Execute string COMMAND in inferior shell; display output, if any.
 
 If COMMAND ends in ampersand, execute it asynchronously.
@@ -1086,34 +1116,64 @@ says to put the output in some other buffer.
 If OUTPUT-BUFFER is a buffer or buffer name, put the output there.
 If OUTPUT-BUFFER is not a buffer and not nil,
 insert output in current buffer.  (This cannot be done asynchronously.)
-In either case, the output is inserted after point (leaving mark after it)."
+In either case, the output is inserted after point (leaving mark after it).
+
+If the optional third argument ERROR-BUFFER is non-nil, it is a buffer
+or buffer name to which to direct the command's standard error output.
+If it is nil, error output is mingled with regular output.
+In an interactive call, the variable `shell-command-default-error-buffer'
+specifies the value of ERROR-BUFFER."
+
   (interactive (list (read-from-minibuffer "Shell command: "
 					   nil nil nil 'shell-command-history)
-		     current-prefix-arg))
+		     current-prefix-arg
+		     shell-command-default-error-buffer))
   ;; Look for a handler in case default-directory is a remote file name.
   (let ((handler
 	 (find-file-name-handler (directory-file-name default-directory)
 				 'shell-command)))
     (if handler
-	(funcall handler 'shell-command command output-buffer)
+	(funcall handler 'shell-command command output-buffer error-buffer)
       (if (and output-buffer
 	       (not (or (bufferp output-buffer)  (stringp output-buffer))))
-	  (progn (barf-if-buffer-read-only)
-		 (push-mark)
-		 ;; We do not use -f for csh; we will not support broken use of
-		 ;; .cshrcs.  Even the BSD csh manual says to use
-		 ;; "if ($?prompt) exit" before things which are not useful
-		 ;; non-interactively.  Besides, if someone wants their other
-		 ;; aliases for shell commands then they can still have them.
-		 (call-process shell-file-name nil t nil
-			       shell-command-switch command)
-		 ;; This is like exchange-point-and-mark, but doesn't
-		 ;; activate the mark.  It is cleaner to avoid activation,
-		 ;; even though the command loop would deactivate the mark
-		 ;; because we inserted text.
-		 (goto-char (prog1 (mark t)
-			      (set-marker (mark-marker) (point)
-					  (current-buffer)))))
+	  (let ((error-file
+		 (if error-buffer 
+		     (concat (file-name-directory temp-file-name-pattern)
+			     (make-temp-name "scor"))
+		   nil)))
+	    (barf-if-buffer-read-only)
+	    (push-mark nil t)
+	    ;; We do not use -f for csh; we will not support broken use of
+	    ;; .cshrcs.  Even the BSD csh manual says to use
+	    ;; "if ($?prompt) exit" before things which are not useful
+	    ;; non-interactively.  Besides, if someone wants their other
+	    ;; aliases for shell commands then they can still have them.
+	    (call-process shell-file-name nil 
+			  (if error-file
+			      (list t error-file)
+			    t)
+			  nil shell-command-switch command)
+	    (when (and error-file (file-exists-p error-file))
+	      (if (< 0 (nth 7 (file-attributes error-file)))
+		  (with-current-buffer (get-buffer-create error-buffer)
+		    (let ((pos-from-end (- (point-max) (point))))
+		      (or (bobp)
+			  (insert "\f\n"))
+		      ;; Do no formatting while reading error file,
+		      ;; because that can run a shell command, and we
+		      ;; don't want that to cause an infinite recursion.
+		      (format-insert-file error-file nil)
+		      ;; Put point after the inserted errors.
+		      (goto-char (- (point-max) pos-from-end)))
+		    (display-buffer (current-buffer))))
+	      (delete-file error-file))
+	    ;; This is like exchange-point-and-mark, but doesn't
+	    ;; activate the mark.  It is cleaner to avoid activation,
+	    ;; even though the command loop would deactivate the mark
+	    ;; because we inserted text.
+	    (goto-char (prog1 (mark t)
+			 (set-marker (mark-marker) (point)
+				     (current-buffer)))))
 	;; Preserve the match data in case called from a program.
 	(save-match-data
 	  (if (string-match "[ \t]*&[ \t]*$" command)
@@ -1142,8 +1202,8 @@ In either case, the output is inserted after point (leaving mark after it)."
 		  (require 'shell) (shell-mode)
 		  (set-process-sentinel proc 'shell-command-sentinel)
 		  ))
-	    (shell-command-on-region (point) (point) command output-buffer)
-	    ))))))
+	    (shell-command-on-region (point) (point) command
+				     output-buffer nil error-buffer)))))))
 
 ;; We have a sentinel to prevent insertion of a termination message
 ;; in the buffer itself.
@@ -1158,7 +1218,8 @@ In either case, the output is inserted after point (leaving mark after it)."
 				      error-buffer)
   "Execute string COMMAND in inferior shell with region as input.
 Normally display output (if any) in temp buffer `*Shell Command Output*';
-Prefix arg means replace the region with it.
+Prefix arg means replace the region with it.  Return the exit code of
+COMMAND.
 
 To specify a coding system for converting non-ASCII characters
 in the input and output to the shell command, use \\[universal-coding-system-argument]
@@ -1167,11 +1228,10 @@ is encoded in the same coding system that will be used to save the file,
 `buffer-file-coding-system'.  If the output is going to replace the region,
 then it is decoded from that same coding system.
 
-The noninteractive arguments are START, END, COMMAND, OUTPUT-BUFFER, REPLACE,
-ERROR-BUFFER.  If REPLACE is non-nil, that means insert the output
-in place of text from START to END, putting point and mark around it.
-Noninteractive callers can specify coding systems by binding
-`coding-system-for-read' and `coding-system-for-write'.
+The noninteractive arguments are START, END, COMMAND, OUTPUT-BUFFER,
+REPLACE, ERROR-BUFFER.  Noninteractive callers can specify coding
+systems by binding `coding-system-for-read' and
+`coding-system-for-write'.
 
 If the output is one line, it is displayed in the echo area,
 but it is nonetheless available in buffer `*Shell Command Output*'
@@ -1186,9 +1246,15 @@ If OUTPUT-BUFFER is not a buffer and not nil,
 insert output in the current buffer.
 In either case, the output is inserted after point (leaving mark after it).
 
-If optional fifth argument ERROR-BUFFER is non-nil, it is a buffer
+If REPLACE, the optional fifth argument, is non-nil, that means insert
+the output in place of text from START to END, putting point and mark
+around it.
+
+If optional sixth argument ERROR-BUFFER is non-nil, it is a buffer
 or buffer name to which to direct the command's standard error output.
-If it is nil, error output is mingled with regular output."
+If it is nil, error output is mingled with regular output.
+In an interactive call, the variable `shell-command-default-error-buffer'
+specifies the value of ERROR-BUFFER."
   (interactive (let ((string
 		      ;; Do this before calling region-beginning
 		      ;; and region-end, in case subprocess output
@@ -1201,96 +1267,112 @@ If it is nil, error output is mingled with regular output."
 		 (list (region-beginning) (region-end)
 		       string
 		       current-prefix-arg
-		       current-prefix-arg)))
+		       current-prefix-arg
+		       shell-command-default-error-buffer)))
   (let ((error-file
 	 (if error-buffer 
 	     (concat (file-name-directory temp-file-name-pattern)
 		     (make-temp-name "scor"))
-	   nil)))
-  (if (or replace
-	  (and output-buffer
-	       (not (or (bufferp output-buffer) (stringp output-buffer))))
-	  (equal (buffer-name (current-buffer)) "*Shell Command Output*"))
-      ;; Replace specified region with output from command.
-      (let ((swap (and replace (< start end))))
-	;; Don't muck with mark unless REPLACE says we should.
-	(goto-char start)
-	(and replace (push-mark))
-	(call-process-region start end shell-file-name t
-			     (if error-file
-				 (list t error-file)
-			       t)
-			     nil shell-command-switch command)
-	(let ((shell-buffer (get-buffer "*Shell Command Output*")))
-	  (and shell-buffer (not (eq shell-buffer (current-buffer)))
-	       (kill-buffer shell-buffer)))
-	;; Don't muck with mark unless REPLACE says we should.
-	(and replace swap (exchange-point-and-mark)))
-    ;; No prefix argument: put the output in a temp buffer,
-    ;; replacing its entire contents.
-    (let ((buffer (get-buffer-create
-		   (or output-buffer "*Shell Command Output*")))
-	  (success nil)
-          (exit-status nil))
-      (unwind-protect
-	  (if (eq buffer (current-buffer))
-	      ;; If the input is the same buffer as the output,
-	      ;; delete everything but the specified region,
-	      ;; then replace that region with the output.
-	      (progn (setq buffer-read-only nil)
-		     (delete-region (max start end) (point-max))
-		     (delete-region (point-min) (min start end))
-		     (setq exit-status
-                           (call-process-region (point-min) (point-max)
-                                                shell-file-name t 
-                                                (if error-file
-                                                    (list t error-file)
-                                                  t)
-                                                nil shell-command-switch command))
-		     (setq success t))
-	    ;; Clear the output buffer, then run the command with output there.
-	    (save-excursion
-	      (set-buffer buffer)
-	      (setq buffer-read-only nil)
-	      (erase-buffer))
-	    (setq exit-status
-                  (call-process-region start end shell-file-name nil
-                                       (if error-file
-                                           (list buffer error-file)
-                                         buffer)
-                                       nil shell-command-switch command))
-	    (setq success t))
-	;; Report the amount of output.
-	(let ((lines (save-excursion
-		       (set-buffer buffer)
-		       (if (= (buffer-size) 0)
-			   0
-			 (count-lines (point-min) (point-max))))))
-	  (cond ((= lines 0)
-		 (if success
+	   nil))
+	exit-status)
+    (if (or replace
+	    (and output-buffer
+		 (not (or (bufferp output-buffer) (stringp output-buffer)))))
+	;; Replace specified region with output from command.
+	(let ((swap (and replace (< start end))))
+	  ;; Don't muck with mark unless REPLACE says we should.
+	  (goto-char start)
+	  (and replace (push-mark))
+	  (setq exit-status
+		(call-process-region start end shell-file-name t
+				     (if error-file
+					 (list t error-file)
+				       t)
+				     nil shell-command-switch command))
+	  (let ((shell-buffer (get-buffer "*Shell Command Output*")))
+	    (and shell-buffer (not (eq shell-buffer (current-buffer)))
+		 (kill-buffer shell-buffer)))
+	  ;; Don't muck with mark unless REPLACE says we should.
+	  (and replace swap (exchange-point-and-mark)))
+      ;; No prefix argument: put the output in a temp buffer,
+      ;; replacing its entire contents.
+      (let ((buffer (get-buffer-create
+		     (or output-buffer "*Shell Command Output*")))
+	    (success nil))
+	(unwind-protect
+	    (if (eq buffer (current-buffer))
+		;; If the input is the same buffer as the output,
+		;; delete everything but the specified region,
+		;; then replace that region with the output.
+		(progn (setq buffer-read-only nil)
+		       (delete-region (max start end) (point-max))
+		       (delete-region (point-min) (min start end))
+		       (setq exit-status
+			     (call-process-region (point-min) (point-max)
+						  shell-file-name t 
+						  (if error-file
+						      (list t error-file)
+						    t)
+						  nil shell-command-switch
+						  command)))
+	      ;; Clear the output buffer, then run the command with
+	      ;; output there.
+	      (save-excursion
+		(set-buffer buffer)
+		(setq buffer-read-only nil)
+		(erase-buffer))
+	      (setq exit-status
+		    (call-process-region start end shell-file-name nil
+					 (if error-file
+					     (list buffer error-file)
+					   buffer)
+					 nil shell-command-switch command)))
+	  (setq success (and exit-status (zerop exit-status)))
+	  ;; Report the amount of output.
+	  (let ((lines (save-excursion
+			 (set-buffer buffer)
+			 (if (= (buffer-size) 0)
+			     0
+			   (count-lines (point-min) (point-max))))))
+	    (cond ((= lines 0)
+		   (if (and error-file
+			    (< 0 (nth 7 (file-attributes error-file))))
+		       (message "(Shell command %sed with some error output)"
+				(if (equal 0 exit-status)
+				    "succeed"
+				  "fail"))
 		     (message "(Shell command %sed with no output)"
-                              (if (equal 0 exit-status)
-                                  "succeed"
-                                "fail")))
-		 (kill-buffer buffer))
-		((and success (= lines 1))
-		 (message "%s"
-			  (save-excursion
-			    (set-buffer buffer)
-			    (goto-char (point-min))
-			    (buffer-substring (point)
-					      (progn (end-of-line) (point))))))
-		(t 
-		 (save-excursion
-		   (set-buffer buffer)
-		   (goto-char (point-min)))
-		 (display-buffer buffer)))))))
-  (if (and error-file (file-exists-p error-file))
-      (save-excursion
-	(set-buffer (get-buffer-create error-buffer))
-	;; Do no formatting while reading error file, for fear of looping.
-	(format-insert-file error-file nil)
-	(delete-file error-file)))))
+			      (if (equal 0 exit-status)
+				  "succeed"
+				"fail")))
+		   (kill-buffer buffer))
+		  ((= lines 1)
+		   (message "%s"
+			    (save-excursion
+			      (set-buffer buffer)
+			      (goto-char (point-min))
+			      (buffer-substring (point)
+						(progn (end-of-line) (point))))))
+		  (t 
+		   (save-excursion
+		     (set-buffer buffer)
+		     (goto-char (point-min)))
+		   (display-buffer buffer)))))))
+    (when (and error-file (file-exists-p error-file))
+      (if (< 0 (nth 7 (file-attributes error-file)))
+	  (with-current-buffer (get-buffer-create error-buffer)
+	    (let ((pos-from-end (- (point-max) (point))))
+	      (or (bobp)
+		  (insert "\f\n"))
+	      ;; Do no formatting while reading error file,
+	      ;; because that can run a shell command, and we
+	      ;; don't want that to cause an infinite recursion.
+	      (format-insert-file error-file nil)
+	      ;; Put point after the inserted errors.
+	      (goto-char (- (point-max) pos-from-end)))
+	    (display-buffer (current-buffer))))
+      (delete-file error-file))
+    exit-status))
        
 (defun shell-command-to-string (command)
   "Execute shell command COMMAND and return its output as a string."
@@ -1571,7 +1653,7 @@ interact nicely with `interprogram-cut-function' and
 interaction; you may want to use them instead of manipulating the kill
 ring directly.")
 
-(defcustom kill-ring-max 30
+(defcustom kill-ring-max 60
   "*Maximum length of kill ring before oldest elements are thrown away."
   :type 'integer
   :group 'killing)
@@ -1758,10 +1840,12 @@ visual feedback indicating the extent of the region being copied."
 	      (message "Saved text from \"%s\""
 		      (substring killed-text 0 message-len))))))))
 
-(defun append-next-kill ()
-  "Cause following command, if it kills, to append to previous kill."
-  (interactive)
-  (if (interactive-p)
+(defun append-next-kill (&optional interactive)
+  "Cause following command, if it kills, to append to previous kill.
+The argument is used for internal purposes; do not supply one."
+  (interactive "p")
+  ;; We don't use (interactive-p), since that breaks kbd macros.
+  (if interactive
       (progn
 	(setq this-command 'kill-region)
 	(message "If the next command is a kill, it will append"))
@@ -2519,56 +2603,66 @@ With argument 0, interchanges line point is in with line mark is in."
 		       (forward-line arg))))
 		  arg))
 
+(defvar transpose-subr-start1)
+(defvar transpose-subr-start2)
+(defvar transpose-subr-end1)
+(defvar transpose-subr-end2)
+
 (defun transpose-subr (mover arg)
-  (let (start1 end1 start2 end2)
+  (let (transpose-subr-start1
+	transpose-subr-end1
+	transpose-subr-start2
+	transpose-subr-end2)
     (if (= arg 0)
 	(progn
 	  (save-excursion
 	    (funcall mover 1)
-	    (setq end2 (point))
+	    (setq transpose-subr-end2 (point))
 	    (funcall mover -1)
-	    (setq start2 (point))
+	    (setq transpose-subr-start2 (point))
 	    (goto-char (mark))
 	    (funcall mover 1)
-	    (setq end1 (point))
+	    (setq transpose-subr-end1 (point))
 	    (funcall mover -1)
-	    (setq start1 (point))
+	    (setq transpose-subr-start1 (point))
 	    (transpose-subr-1))
 	  (exchange-point-and-mark))
       (if (> arg 0)
 	  (progn
 	    (funcall mover -1)
-	    (setq start1 (point))
+	    (setq transpose-subr-start1 (point))
 	    (funcall mover 1)
-	    (setq end1 (point))
+	    (setq transpose-subr-end1 (point))
 	    (funcall mover arg)
-	    (setq end2 (point))
+	    (setq transpose-subr-end2 (point))
 	    (funcall mover (- arg))
-	    (setq start2 (point))
+	    (setq transpose-subr-start2 (point))
 	    (transpose-subr-1)
-	    (goto-char end2))
+	    (goto-char transpose-subr-end2))
 	(funcall mover -1)
-	(setq start2 (point))
+	(setq transpose-subr-start2 (point))
 	(funcall mover 1)
-	(setq end2 (point))
+	(setq transpose-subr-end2 (point))
 	(funcall mover (1- arg))
-	(setq start1 (point))
+	(setq transpose-subr-start1 (point))
 	(funcall mover (- arg))
-	(setq end1 (point))
+	(setq transpose-subr-end1 (point))
 	(transpose-subr-1)))))
 
 (defun transpose-subr-1 ()
-  (if (> (min end1 end2) (max start1 start2))
+  (if (> (min transpose-subr-end1 transpose-subr-end2)
+	 (max transpose-subr-start1 transpose-subr-start2))
       (error "Don't have two things to transpose"))
-  (let* ((word1 (buffer-substring start1 end1))
+  (let* ((word1 (buffer-substring transpose-subr-start1 transpose-subr-end1))
 	 (len1 (length word1))
-	 (word2 (buffer-substring start2 end2))
+	 (word2 (buffer-substring transpose-subr-start2 transpose-subr-end2))
 	 (len2 (length word2)))
-    (delete-region start2 end2)
-    (goto-char start2)
+    (delete-region transpose-subr-start2 transpose-subr-end2)
+    (goto-char transpose-subr-start2)
     (insert word1)
-    (goto-char (if (< start1 start2) start1
-		 (+ start1 (- len1 len2))))
+    (goto-char (if (< transpose-subr-start1 transpose-subr-start2)
+		   transpose-subr-start1
+		 (+ transpose-subr-start1 (- len1 len2))))
     (delete-region (point) (+ (point) len1))
     (insert word2)))
 
@@ -2757,8 +2851,10 @@ not end the comment.  Blank lines do not get comments."
   (save-excursion
     (save-restriction
       (let ((cs comment-start) (ce comment-end)
+	    (cp (when comment-padding
+		  (make-string comment-padding ? )))
 	    numarg)
-        (if (consp arg) (setq numarg t)
+	(if (consp arg) (setq numarg t)
 	  (setq numarg (prefix-numeric-value arg))
 	  ;; For positive arg > 1, replicate the comment delims now,
 	  ;; then insert the replicated strings just once.
@@ -2766,24 +2862,28 @@ not end the comment.  Blank lines do not get comments."
 	    (setq cs (concat cs comment-start)
 		  ce (concat ce comment-end))
 	    (setq numarg (1- numarg))))
-	(when comment-padding
-	  (setq cs (concat cs (make-string comment-padding ? ))))
 	;; Loop over all lines from BEG to END.
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (not (eobp))
-          (if (or (eq numarg t) (< numarg 0))
-	      (progn
+	(narrow-to-region beg end)
+	(goto-char beg)
+	(if (or (eq numarg t) (< numarg 0))
+	    (while (not (eobp))
+	      (let (found-comment)
 		;; Delete comment start from beginning of line.
 		(if (eq numarg t)
 		    (while (looking-at (regexp-quote cs))
+		      (setq found-comment t)
 		      (delete-char (length cs)))
 		  (let ((count numarg))
 		    (while (and (> 1 (setq count (1+ count)))
 				(looking-at (regexp-quote cs)))
+		      (setq found-comment t)
 		      (delete-char (length cs)))))
+		;; Delete comment padding from beginning of line
+		(when (and found-comment comment-padding
+			   (looking-at (regexp-quote cp)))
+		  (delete-char comment-padding))
 		;; Delete comment end from end of line.
-                (if (string= "" ce)
+		(if (string= "" ce)
 		    nil
 		  (if (eq numarg t)
 		      (progn
@@ -2808,14 +2908,18 @@ not end the comment.  Blank lines do not get comments."
 			      (backward-char (length ce))
 			      (if (looking-at (regexp-quote ce))
 				  (delete-char (length ce)))))))))
-		(forward-line 1))
+		(forward-line 1)))
+
+	  (when comment-padding
+	    (setq cs (concat cs cp)))
+	  (while (not (eobp))
 	    ;; Insert at beginning and at end.
-            (if (looking-at "[ \t]*$") ()
-              (insert cs)
-              (if (string= "" ce) ()
-                (end-of-line)
-                (insert ce)))
-            (search-forward "\n" nil 'move)))))))
+	    (if (looking-at "[ \t]*$") ()
+	      (insert cs)
+	      (if (string= "" ce) ()
+		(end-of-line)
+		(insert ce)))
+	    (search-forward "\n" nil 'move)))))))
 
 (defun backward-word (arg)
   "Move backward until encountering the end of a word.
@@ -2981,9 +3085,16 @@ Setting this variable automatically makes it local to the current buffer.")
 			    (skip-chars-backward " \t")
 			  ;; Break the line after/before \c|.
 			  (forward-char 1))))
-		    (if (and enable-kinsoku enable-multibyte-characters)
-			(kinsoku (save-excursion
-				   (forward-line 0) (point))))
+		    (if enable-multibyte-characters
+			;; If we are going to break the line after or
+			;; before a non-ascii character, we may have
+			;; to run a special function for the charset
+			;; of the character to find the correct break
+			;; point.
+			(if (not (and (eq (charset-after (1- (point))) 'ascii)
+				      (eq (charset-after (point)) 'ascii)))
+			    (fill-find-break-point after-prefix)))
+
 		    ;; Let fill-point be set to the place where we end up.
 		    ;; But move back before any whitespace here.
 		    (skip-chars-backward " \t")
@@ -3063,9 +3174,11 @@ for `auto-fill-function' when turning Auto Fill mode on."
 (defun turn-on-auto-fill ()
   "Unconditionally turn on Auto Fill mode."
   (auto-fill-mode 1))
+(custom-add-option 'text-mode-hook 'turn-on-auto-fill)
 
 (defun set-fill-column (arg)
   "Set `fill-column' to specified argument.
+Use \\[universal-argument] followed by a number to specify a column.
 Just \\[universal-argument] as argument means to use the current column."
   (interactive "P")
   (if (consp arg)
@@ -3111,10 +3224,16 @@ unless optional argument SOFT is non-nil."
       (if (not comment-multi-line)
 	  (save-excursion
 	    (if (and comment-start-skip
-		     (let ((opoint (point)))
+		     (let ((opoint (1- (point)))
+			   inside)
 		       (forward-line -1)
-		       (re-search-forward comment-start-skip opoint t)))
-		;; The old line is a comment.
+		       ;; Determine (more or less) whether
+		       ;; target position is inside a comment.
+		       (while (and (re-search-forward comment-start-skip opoint t)
+				   (not (setq inside (or (equal comment-end "")
+							 (not (search-forward comment-end opoint t)))))))
+		       inside))
+		;; The old line has a comment and point was inside the comment.
 		;; Set WIN to the pos of the comment-start.
 		;; But if the comment is empty, look at preceding lines
 		;; to find one that has a nonempty comment.
@@ -3232,7 +3351,10 @@ specialization of overwrite-mode, entered by setting the
   "Toggle Line Number mode.
 With arg, turn Line Number mode on iff arg is positive.
 When Line Number mode is enabled, the line number appears
-in the mode line."
+in the mode line.
+
+Line numbers do not appear for very large buffers, see variable
+`line-number-display-limit'."
   (interactive "P")
   (setq line-number-mode
 	(if (null arg) (not line-number-mode)
@@ -3322,7 +3444,8 @@ when it is off screen)."
 			      (matching-paren (char-after blinkpos))))))
 	   (if mismatch (setq blinkpos nil))
 	   (if blinkpos
-	       (progn
+	       ;; Don't log messages about paren matching.
+	       (let (message-log-max)
 		(goto-char blinkpos)
 		(if (pos-visible-in-window-p)
 		    (and blink-matching-paren-on-screen
@@ -3525,7 +3648,8 @@ Unibyte strings are converted to multibyte for comparison."
     (save-excursion
       (rfc822-goto-eoh)
       (while other-headers
-	(if (not (member (car (car other-headers)) '("in-reply-to" "cc")))
+	(if (not (assoc-ignore-case (car (car other-headers))
+				    '(("in-reply-to") ("cc"))))
 	    (insert (car (car other-headers)) ": "
 		    (cdr (car other-headers)) "\n"))
 	(setq other-headers (cdr other-headers)))
@@ -3802,13 +3926,6 @@ Use \\<completion-list-mode-map>\\[mouse-choose-completion] to select one\
   (setq completion-base-size nil)
   (run-hooks 'completion-list-mode-hook))
 
-(defvar completion-fixup-function nil
-  "A function to customize how completions are identified in completion lists.
-`completion-setup-function' calls this function with no arguments
-each time it has found what it thinks is one completion.
-Point is at the end of the completion in the completion list buffer.
-If this function moves point, it can alter the end of that completion.")
-
 (defvar completion-setup-hook nil
   "Normal hook run at the end of setting up a completion list buffer.
 When this hook is run, the current buffer is the one in which the
@@ -3846,15 +3963,7 @@ The completion list buffer is available as the value of `standard-output'.")
 		   "Click \\[mouse-choose-completion] on a completion to select it.\n")))
       (insert (substitute-command-keys
 	       "In this buffer, type \\[choose-completion] to \
-select the completion near point.\n\n"))
-      (forward-line 1)
-      (while (re-search-forward "[^ \t\n]+\\( [^ \t\n]+\\)*" nil t)
-	(let ((beg (match-beginning 0))
-	      (end (point)))
-	  (if completion-fixup-function
-	      (funcall completion-fixup-function))
-	  (put-text-property beg (point) 'mouse-face 'highlight)
-	  (goto-char end))))))
+select the completion near point.\n\n")))))
 
 (add-hook 'completion-setup-hook 'completion-setup-function)
 

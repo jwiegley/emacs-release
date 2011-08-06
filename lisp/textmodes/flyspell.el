@@ -133,7 +133,7 @@ Each function is given two arguments: the beginning and the end
 of the incorrect region."
   :group 'flyspell)
 
-(defcustom flyspell-multi-language-p t
+(defcustom flyspell-multi-language-p nil
   "*Non-nil means that Flyspell can be used with multiple languages.
 This mode works by starting a separate Ispell process for each buffer,
 so that each buffer can use its own language."
@@ -203,6 +203,10 @@ property of the major mode name.")
     'emacs))
   "The type of Emacs we are currently running.")
 
+(defvar flyspell-use-local-map
+  (or (eq flyspell-emacs 'xemacs)
+      (not (string< emacs-version "20"))))
+
 ;*---------------------------------------------------------------------*/
 ;*    The minor mode declaration.                                      */
 ;*---------------------------------------------------------------------*/
@@ -216,19 +220,22 @@ property of the major mode name.")
     (setq minor-mode-alist
 	  (cons '(flyspell-mode " Fly") minor-mode-alist)))
 
-(or (assoc 'flyspell-mode minor-mode-map-alist)
-    (setq minor-mode-map-alist
-	  (cons (cons 'flyspell-mode flyspell-mode-map)
-		minor-mode-map-alist)))
-
-(define-key flyspell-mode-map "\M-\t" 'flyspell-auto-correct-word)
-
-;; mouse bindings
+;; mouse or local-map bindings
 (cond
  ((eq flyspell-emacs 'xemacs)
   (define-key flyspell-mouse-map [(button2)]
-    (function flyspell-correct-word/mouse-keymap)))
+    (function flyspell-correct-word/mouse-keymap))
+  (define-key flyspell-mouse-map "\M-\t" 'flyspell-auto-correct-word))
+ (flyspell-use-local-map
+  (define-key flyspell-mouse-map [(mouse-2)]
+    (function flyspell-correct-word/mouse-keymap))
+  (define-key flyspell-mouse-map "\M-\t" 'flyspell-auto-correct-word))
  (t
+  (or (assoc 'flyspell-mode minor-mode-map-alist)
+      (setq minor-mode-map-alist
+  	  (cons (cons 'flyspell-mode flyspell-mode-map)
+  		minor-mode-map-alist)))
+  (define-key flyspell-mode-map "\M-\t" 'flyspell-auto-correct-word)
   (define-key flyspell-mode-map [(mouse-2)]
     (function flyspell-correct-word/local-keymap))))
 
@@ -273,7 +280,7 @@ Bindings:
 \\[flyspell-correct-word] (or mouse-2): popup correct words.
 
 Hooks:
-flyspell-mode-hook is runner after flyspell is entered.
+flyspell-mode-hook is run after flyspell is entered.
 
 Remark:
 `flyspell-mode' uses `ispell-mode'.  Thus all Ispell options are
@@ -289,20 +296,23 @@ flyspell-region checks all words inside a region.
 
 flyspell-buffer checks the whole buffer."
   (interactive "P")
-  ;; we set the mode on or off
-  (setq flyspell-mode (not (or (and (null arg) flyspell-mode)
-			       (<= (prefix-numeric-value arg) 0))))
-  (if flyspell-mode
-      (flyspell-mode-on)
-    (flyspell-mode-off))
-  ;; we force the modeline re-printing
-  (set-buffer-modified-p (buffer-modified-p)))
+  (let ((old-flyspell-mode flyspell-mode))
+    ;; Mark the mode as on or off.
+    (setq flyspell-mode (not (or (and (null arg) flyspell-mode)
+				 (<= (prefix-numeric-value arg) 0))))
+    ;; Do the real work.
+    (unless (eq flyspell-mode old-flyspell-mode)
+      (if flyspell-mode
+	  (flyspell-mode-on)
+	(flyspell-mode-off))
+      ;; Force modeline redisplay.
+      (set-buffer-modified-p (buffer-modified-p)))))
 
 ;*---------------------------------------------------------------------*/
 ;*    flyspell-mode-on ...                                             */
 ;*---------------------------------------------------------------------*/
 (defun flyspell-mode-on ()
-  "Turn flyspell mode on.  Do not use this; use `flyspell-mode' instead."
+  "Turn Flyspell mode on.  Do not use this; use `flyspell-mode' instead."
   (setq ispell-highlight-face 'flyspell-incorrect-face)
   ;; ispell initialization
   (if flyspell-multi-language-p
@@ -312,8 +322,14 @@ flyspell-buffer checks the whole buffer."
 	(make-variable-buffer-local 'ispell-filter)
 	(make-variable-buffer-local 'ispell-filter-continue)
 	(make-variable-buffer-local 'ispell-process-directory)
-	(make-variable-buffer-local 'ispell-parser)))
-  ;; We put the `flyspel-delayed' property on some commands.
+	(make-variable-buffer-local 'ispell-parser)
+	(put 'ispell-dictionary 'permanent-local t)
+	(put 'ispell-process 'permanent-local t)
+	(put 'ispell-filter 'permanent-local t)
+	(put 'ispell-filter-continue 'permanent-local t)
+	(put 'ispell-process-directory 'permanent-local t)
+	(put 'ispell-parser 'permanent-local t)))
+  ;; We put the `flyspell-delayed' property on some commands.
   (flyspell-delay-commands)
   ;; we bound flyspell action to post-command hook
   (make-local-hook 'post-command-hook)
@@ -341,8 +357,10 @@ flyspell-buffer checks the whole buffer."
   ;; improvement).
   (add-hook 'kill-buffer-hook
 	    '(lambda ()
-	       (if flyspell-mode
-		   (flyspell-mode-off))))
+	       (if (and flyspell-multi-language-p ispell-process)
+		   (ispell-kill-ispell t))))
+  (make-local-hook 'change-major-mode-hook)
+  (add-hook 'change-major-mode-hook 'flyspell-mode-off)
   ;; we end with the flyspell hooks
   (run-hooks 'flyspell-mode-hook))
 
@@ -350,7 +368,7 @@ flyspell-buffer checks the whole buffer."
 ;*    flyspell-delay-commands ...                                      */
 ;*---------------------------------------------------------------------*/
 (defun flyspell-delay-commands ()
-  "Install the standard set of delayed commands."
+  "Install the standard set of Flyspell delayed commands."
   (mapcar 'flyspell-delay-command flyspell-default-delayed-commands)
   (mapcar 'flyspell-delay-command flyspell-delayed-commands))
 
@@ -358,7 +376,7 @@ flyspell-buffer checks the whole buffer."
 ;*    flyspell-delay-command ...                                       */
 ;*---------------------------------------------------------------------*/
 (defun flyspell-delay-command (command)
-  "Set COMMAND to be delayed.
+  "Set COMMAND to be delayed, for Flyspell.
 When flyspell `post-command-hook' is invoked because a delayed command
 as been used the current word is not immediatly checked.
 It will be checked only after `flyspell-delay' seconds."
@@ -413,8 +431,9 @@ COMMAND is the name of the command to be delayed."
 ;*---------------------------------------------------------------------*/
 ;*    flyspell-mode-off ...                                            */
 ;*---------------------------------------------------------------------*/
+;;;###autoload
 (defun flyspell-mode-off ()
-  "Turn flyspell mode off.  Do not use this--use `flyspell-mode' instead."
+  "Turn Flyspell mode off."
   ;; If we have an Ispell process for each buffer,
   ;; kill the one for this buffer.
   (if flyspell-multi-language-p
@@ -455,6 +474,9 @@ Mostly we check word delimiters."
     t)
    ((not (integerp flyspell-delay))
     ;; yes because the user had set up a no-delay configuration.
+    t)
+   (executing-kbd-macro
+    ;; Don't delay inside a keyboard macro.
     t)
    (t
     (if (fboundp 'about-xemacs)
@@ -709,14 +731,17 @@ Word syntax described by `ispell-dictionary-alist' (which see)."
 	 (flyspell-not-casechars (flyspell-get-not-casechars))
 	 (ispell-otherchars (ispell-get-otherchars))
 	 (ispell-many-otherchars-p (ispell-get-many-otherchars-p))
-	 (word-regexp (concat flyspell-casechars
-			      "+\\("
-			      ispell-otherchars
-			      "?"
-			      flyspell-casechars
-			      "+\\)"
-			      (if ispell-many-otherchars-p
-				  "*" "?")))
+	 (word-regexp (if (not (string= "" ispell-otherchars))
+			  (concat 
+			   flyspell-casechars
+			   "+\\("
+			   ispell-otherchars
+			   "?"
+			   flyspell-casechars
+			   "+\\)"
+			   (if ispell-many-otherchars-p
+			       "*" "?"))
+			(concat flyspell-casechars "+")))
 	 (tex-prelude "[\\\\{]")
 	 (tex-regexp  (if (eq ispell-parser 'tex)
 			  (concat tex-prelude "?" word-regexp "}?")
@@ -733,18 +758,19 @@ Word syntax described by `ispell-dictionary-alist' (which see)."
 	  (re-search-backward flyspell-casechars (point-min) t)))
     ;; move to front of word
     (re-search-backward flyspell-not-casechars (point-min) 'start)
-    (let ((pos nil))
-      (while (and (looking-at ispell-otherchars)
-		  (not (bobp))
-		  (or (not did-it-once)
-		      ispell-many-otherchars-p)
-		  (not (eq pos (point))))
-	(setq pos (point))
-	(setq did-it-once t)
-	(backward-char 1)
-	(if (looking-at flyspell-casechars)
-	    (re-search-backward flyspell-not-casechars (point-min) 'move)
-	  (backward-char -1))))
+    (if (not (string= "" ispell-otherchars))
+	(let ((pos nil))
+	  (while (and (looking-at ispell-otherchars)
+		      (not (bobp))
+		      (or (not did-it-once)
+			  ispell-many-otherchars-p)
+		      (not (eq pos (point))))
+	    (setq pos (point))
+	    (setq did-it-once t)
+	    (backward-char 1)
+	    (if (looking-at flyspell-casechars)
+		(re-search-backward flyspell-not-casechars (point-min) 'move)
+	      (backward-char -1)))))
     ;; Now mark the word and save to string.
     (if (eq (re-search-forward tex-regexp (point-max) t) nil)
 	nil
@@ -851,11 +877,11 @@ if the character at POS has any other property."
 BEG and END specify the range in the buffer of that word.
 FACE and MOUSE-FACE specify the `face' and `mouse-face' properties
 for the overlay."
-  (let ((flyspell-overlay (make-overlay beg end)))
+  (let ((flyspell-overlay (make-overlay beg end nil t nil)))
     (overlay-put flyspell-overlay 'face face)
     (overlay-put flyspell-overlay 'mouse-face mouse-face)
     (overlay-put flyspell-overlay 'flyspell-overlay t)
-    (if (eq flyspell-emacs 'xemacs)
+    (if flyspell-use-local-map
 	(overlay-put flyspell-overlay
 		     flyspell-overlay-keymap-property-name
 		     flyspell-mouse-map))))
@@ -1001,9 +1027,9 @@ Word syntax described by `ispell-dictionary-alist' (which see).
 This will check or reload the dictionary.  Use \\[ispell-change-dictionary]
 or \\[ispell-region] to update the Ispell process."
   (interactive "e")
-  (if (eq flyspell-emacs 'xemacs)
+  (if flyspell-use-local-map
       (flyspell-correct-word/mouse-keymap event)
-      (flyspell-correct-word/local-keymap event)))
+    (flyspell-correct-word/local-keymap event)))
     
 ;*---------------------------------------------------------------------*/
 ;*    flyspell-correct-word/local-keymap ...                           */

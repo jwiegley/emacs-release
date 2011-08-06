@@ -29,6 +29,19 @@
 # make extraclean
 #      Still more severe - delete backup and autosave files, too.
 
+# This gork is required for those who use a Unix-style shell, and
+# have SHELL in the environment pointing to it.  Here we force
+# Make to use COMMAND.COM instead.  This Makefile won't work otherwise.
+# (The /xyzzy directory is used to minimize the chance that someone
+# actually has such a directory with an incompatible command.com.  We
+# used to have /dos there, but some Windows installations have an old
+# version of DOS stashed in that directory, and command.com from there
+# won't run on Windows, complaining about "Incorrect DOS version".
+# Make will look up PATH for the shell executable, so the directory name
+# is not important.)
+SHELL=/xyzzy/command
+MAKESHELL=/xyzzy/command
+
 # Generate a full pathname of the top-level installation directory
 top_srcdir := $(subst \,/,$(shell cd))
 
@@ -56,6 +69,7 @@ src: FRC
 	update gdb.tmp gdb.ini
 	rm -f gdb.tmp gdb.sed
 	cd ..
+	if exist leim\Makefile redir $(MAKE) -C leim top_srcdir=${top_srcdir}
 
 man:	FRC
 	cd man
@@ -69,6 +83,7 @@ install: all
 	if exist etags.exe mv -f etags.exe ../bin
 	if exist ctags.exe mv -f ctags.exe ../bin
 	if exist b2m.exe mv -f b2m.exe ../bin
+	if exist fns.el update fns.el ../bin/fns.el
 	cd ..
 	cd src
 	stubify emacs
@@ -103,4 +118,7 @@ clean:
 	cd ..
 	cd oldxmenu
 	-$(MAKE) clean
+	cd ..
+	cd leim
+	if exist Makefile redir $(MAKE) clean
 	cd ..

@@ -3,7 +3,7 @@
 ;; Copyright (C) 1992, 1995, 1996, 1998 Free Software Foundation, Inc.
 
 ;; Author: James Clark <jjc@jclark.com>
-;; Adapted-By: ESR; Daniel.Pfeiffer@Informatik.START.dbp.de
+;; Adapted-By: ESR, Daniel Pfeiffer <occitan@esperanto.org>,
 ;;             F.Potorti@cnuce.cnr.it
 ;; Keywords: wp, hypermedia, comm, languages
 
@@ -31,6 +31,8 @@
 ;; HTML hypertext markup language.
 
 ;;; Code:
+
+(eval-when-compile (require 'skeleton))
 
 (defgroup sgml nil
   "SGML editing mode"
@@ -207,9 +209,9 @@ Any terminating `>' or `/' is not matched.")
 
 ;; internal
 (defconst sgml-font-lock-keywords-1
-  '(("<\\([!?][a-z][-.a-z0-9]+\\)" 1 font-lock-keyword-face)
-    ("<\\(/?[a-z][-.a-z0-9]+\\)" 1 font-lock-function-name-face)
-    ("[&%][a-z][-.a-z0-9]+;?" . font-lock-variable-name-face)
+  '(("<\\([!?][a-z][-.a-z0-9]*\\)" 1 font-lock-keyword-face)
+    ("<\\(/?[a-z][-.a-z0-9]*\\)" 1 font-lock-function-name-face)
+    ("[&%][a-z][-.a-z0-9]*;?" . font-lock-variable-name-face)
     ("<! *--.*-- *>" . font-lock-comment-face)))
 
 (defconst sgml-font-lock-keywords-2 ())
@@ -275,6 +277,8 @@ an optional alist of possible values."
   :type '(repeat (cons (string :tag "Tag Name")
 		       (string :tag "Description")))
   :group 'sgml)
+
+(defvar v2)				; free for skeleton
 
 (defun sgml-mode-common (sgml-tag-face-alist sgml-display-text)
   "Common code for setting up `sgml-mode' and derived modes.
@@ -481,7 +485,7 @@ or M-- for a soft hyphen."
   "Toggle insertion of 8 bit characters."
   (interactive)
   (setq sgml-name-8bit-mode (not sgml-name-8bit-mode))
-  (message "sgml name 8 bit mode  is now %"
+  (message "sgml name 8 bit mode  is now %s"
 	   (if sgml-name-8bit-mode "ON" "OFF")))
 
 
@@ -772,9 +776,7 @@ and move to the line in the SGML document that caused it."
 				    (and name
 					 (file-name-nondirectory name))))))))
   (setq sgml-saved-validate-command command)
-  (if (or (not compilation-ask-about-save)
-	  (y-or-n-p (message "Save buffer %s? " (buffer-name))))
-      (save-buffer))
+  (save-some-buffers (not compilation-ask-about-save) nil)
   (compile-internal command "No more errors"))
 
 
@@ -1018,10 +1020,13 @@ This takes effect when first loading the library.")
       ("html" (\n
 	       "<head>\n"
 	       "<title>" (setq str (read-input "Title: ")) "</title>\n"
+	       "</head>\n"
 	       "<body>\n<h1>" str "</h1>\n" _
 	       "\n<address>\n<a href=\"mailto:"
 	       user-mail-address
-	       "\">" (user-full-name) "</a>\n</address>"))
+	       "\">" (user-full-name) "</a>\n</address>\n"
+	       "</body>"
+		))
       ("i")
       ("ins")
       ("isindex" t ("action") ("prompt"))
@@ -1144,7 +1149,7 @@ This takes effect when first loading the library.")
 ;;;###autoload
 (defun html-mode ()
   "Major mode based on SGML mode for editing HTML documents.
-This allows inserting skeleton costructs used in hypertext documents with
+This allows inserting skeleton constructs used in hypertext documents with
 completion.  See below for an introduction to HTML.  Use
 \\[browse-url-of-buffer] to see how this comes out.  See also `sgml-mode' on
 which this is based.
@@ -1192,7 +1197,10 @@ To work around that, do:
   (make-local-variable 'outline-level)
   (make-local-variable 'sentence-end)
   (setq sentence-end
-	"[.?!][]\"')}]*\\(<[^>]*>\\)*\\($\\| $\\|\t\\|  \\)[ \t\n]*")
+	(if sentence-end-double-space
+	    "[.?!][]\"')}]*\\(<[^>]*>\\)*\\($\\| $\\|\t\\|  \\)[ \t\n]*"
+	    
+	  "[.?!][]\"')}]*\\(<[^>]*>\\)*\\($\\| \\|\t\\)[ \t\n]*"))
   (setq sgml-tag-alist html-tag-alist
 	sgml-face-tag-alist html-face-tag-alist
 	sgml-tag-help html-tag-help

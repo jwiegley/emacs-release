@@ -32,6 +32,12 @@
 
 ;; Setting information of Thai characters.
 
+(defvar thai-category-table (copy-category-table))
+(or (category-docstring ?+ thai-category-table)
+    (define-category ?+ "Thai consonant" thai-category-table))
+(or (category-docstring ?- thai-category-table)
+    (define-category ?- "Thai diacritical mark" thai-category-table))
+
 (let ((l '((?,T!(B consonant "LETTER KO KAI")				; 0xA1
 	   (?,T"(B consonant "LETTER KHO KHAI")				; 0xA2
 	   (?,T#(B consonant "LETTER KHO KHUAT")				; 0xA3
@@ -130,9 +136,15 @@
       elm)
   (while l
     (setq elm (car l))
-    (put-char-code-property (car elm) 'phonetic-type (car (cdr elm)))
+    (let ((ptype (nth 1 elm)))
+      (put-char-code-property (car elm) 'phonetic-type ptype)
+      (if (eq ptype 'consonant)
+	  (modify-category-entry (car elm) ?+ thai-category-table)
+	(if (memq ptype '(vowel-upper vowel-lower tone))
+	  (modify-category-entry (car elm) ?- thai-category-table))))
     (put-char-code-property (car elm) 'name (nth 2 elm))
     (setq l (cdr l))))
+
 
 ;;;###autoload
 (defun thai-compose-region (beg end)
@@ -144,10 +156,32 @@ positions (integers or markers) specifying the region."
     (narrow-to-region beg end)
     (decompose-region (point-min) (point-max))
     (goto-char (point-min))
-    (while (re-search-forward "\\c0\\(\\c2\\|\\c3\\|\\c4\\)+" nil t)
-      (if (aref (char-category-set (char-after (match-beginning 0))) ?t)
-	  (compose-region (match-beginning 0) (match-end 0))))))
+    (let ((current-ctbl (category-table)))
+      (set-category-table thai-category-table)
+      (unwind-protect
+	  (while (re-search-forward "\\c+\\c-+" nil t)
+	    (compose-region (match-beginning 0) (match-end 0)))
+	(set-category-table current-ctbl)))))
 
+;;;###autoload
+(defun thai-compose-string (string)
+  "Compose Thai characters in STRING and return the resulting string."
+  (let ((current-ctbl (category-table)))
+    (set-category-table thai-category-table)
+    (unwind-protect
+	(let ((idx 0)
+	      (new ""))
+	  (while (string-match "\\c+\\c-+" string idx)
+	    (if (< idx (match-beginning 0))
+		(setq new
+		      (concat new (substring string idx (match-beginning 0)))))
+	    (setq new (concat new (compose-string (match-string 0 string))))
+	    (setq idx (match-end 0)))
+	  (if (< idx (length string))
+	      (setq new (concat new (substring string idx))))
+	  new)
+      (set-category-table current-ctbl))))
+      
 ;;;###autoload
 (defun thai-compose-buffer ()
   "Compose Thai characters in the current buffer."
@@ -158,18 +192,40 @@ positions (integers or markers) specifying the region."
 (defun thai-post-read-conversion (len)
   (save-excursion
     (save-restriction
-      (let ((buffer-modified-p (buffer-modified-p)))
-	(narrow-to-region (point) (+ (point) len))
-	(thai-compose-region (point-min) (point-max))
+      (let ((buffer-modified-p (buffer-modified-p))
+	    (category-table (category-table))
+	    (buf (current-buffer))
+	    (workbuf (generate-new-buffer "*thai-work*"))
+	    (pos (point))
+	    start end str)
+	(save-excursion
+	  (set-buffer workbuf)
+	  (setq buffer-undo-list t))
+	(narrow-to-region pos (+ pos len))
+	(set-category-table thai-category-table)
+	(unwind-protect
+	    (progn
+	      (while (re-search-forward "\\c+\\c-+" nil t)
+		(setq start (match-beginning 0)
+		      end (point)
+		      str (compose-string (buffer-substring start end)))
+		(set-buffer workbuf)
+		(if (< pos start)
+		    (insert-buffer-substring buf pos start))
+		(insert str)
+		(set-buffer buf)
+		(setq pos end))
+	      (delete-region (point-min) (point))
+	      (insert-buffer-substring workbuf))
+	  (set-category-table category-table)
+	  (kill-buffer workbuf))
 	(set-buffer-modified-p buffer-modified-p)
 	(- (point-max) (point-min))))))
 
 ;;;###autoload
 (defun thai-pre-write-conversion (from to)
-  (let ((old-buf (current-buffer))
-	(work-buf (get-buffer-create " *thai-work*")))
-    (set-buffer work-buf)
-    (erase-buffer)
+  (let ((old-buf (current-buffer)))
+    (set-buffer (generate-new-buffer " *temp*"))
     (if (stringp from)
 	(insert from)
       (insert-buffer-substring old-buf from to))

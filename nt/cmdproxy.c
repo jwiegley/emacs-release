@@ -369,7 +369,7 @@ console_event_handler (DWORD event)
 /* Change from normal usage; return value indicates whether spawn
    succeeded or failed - program return code is returned separately.  */
 int
-spawn (char * progname, char * cmdline, int * retcode)
+spawn (char * progname, char * cmdline, char * dir, int * retcode)
 {
   BOOL success = FALSE;
   SECURITY_ATTRIBUTES sec_attrs;
@@ -388,7 +388,7 @@ spawn (char * progname, char * cmdline, int * retcode)
   start.cb = sizeof (start);
 
   if (CreateProcess (progname, cmdline, &sec_attrs, NULL, TRUE,
-		     0, envblock, NULL, &start, &child))
+		     0, envblock, dir, &start, &child))
   {
     success = TRUE;
     /* wait for completion and pass on return code */
@@ -432,11 +432,15 @@ main (int argc, char ** argv)
   int num_pass_through_args;
   char modname[MAX_PATH];
   char path[MAX_PATH];
+  char dir[MAX_PATH];
 
 
   interactive = TRUE;
 
   SetConsoleCtrlHandler ((PHANDLER_ROUTINE) console_event_handler, TRUE);
+
+  if (!GetCurrentDirectory (sizeof (dir), dir))
+    fail ("error: GetCurrentDirectory failed\n");
 
   /* We serve double duty: we can be called either as a proxy for the
      real shell (that is, because we are defined to be the user shell),
@@ -453,16 +457,27 @@ main (int argc, char ** argv)
   if (!GetModuleFileName (NULL, modname, sizeof (modname)))
     fail ("error: GetModuleFileName failed\n");
 
+  /* Change directory to location of .exe so startup directory can be
+     deleted.  */
+  progname = strrchr (modname, '\\');
+  *progname = '\0';
+  SetCurrentDirectory (modname);
+  *progname = '\\';
+
   /* Although Emacs always sets argv[0] to an absolute pathname, we
      might get run in other ways as well, so convert argv[0] to an
-     absolute name before comparing to the module name.  */
+     absolute name before comparing to the module name.  Don't get
+     caught out by mixed short and long names.  */
+  GetShortPathName (modname, modname, sizeof (modname));
+  path[0] = '\0';
   if (!SearchPath (NULL, argv[0], ".exe", sizeof (path), path, &progname)
+      || !GetShortPathName (path, path, sizeof (path))
       || stricmp (modname, path) != 0)
     {
       /* We are being used as a helper to run a DOS app; just pass
 	 command line to DOS app without change.  */
       /* TODO: fill in progname.  */
-      if (spawn (NULL, GetCommandLine (), &rc))
+      if (spawn (NULL, GetCommandLine (), dir, &rc))
 	return rc;
       fail ("Could not run %s\n", GetCommandLine ());
     }
@@ -496,21 +511,21 @@ main (int argc, char ** argv)
 	 passed on to real shell if used (only really of benefit for
 	 interactive use, but allow for batch use as well).  Accept / as
 	 switch char for compatability with cmd.exe.  */
-      if ( ((*argv)[0] == '-' || (*argv)[0] == '/') && (*argv)[1] != '\0' )
+      if (((*argv)[0] == '-' || (*argv)[0] == '/') && (*argv)[1] != '\0')
 	{
-	  if ( ((*argv)[1] == 'c') && ((*argv)[2] == '\0')  )
+	  if (((*argv)[1] == 'c' || (*argv)[1] == 'C') && ((*argv)[2] == '\0'))
 	    {
 	      if (--argc == 0)
 		fail ("error: expecting arg for %s\n", *argv);
 	      cmdline = *(++argv);
 	      interactive = FALSE;
 	    }
-	  else if ( ((*argv)[1] == 'i') && ((*argv)[2] == '\0')  )
+	  else if (((*argv)[1] == 'i' || (*argv)[1] == 'I') && ((*argv)[2] == '\0'))
 	    {
 	      if (cmdline)
 		warn ("warning: %s ignored because of -c\n", *argv);
 	    }
-	  else if ( ((*argv)[1] == 'e') && ((*argv)[2] == ':')  )
+	  else if (((*argv)[1] == 'e' || (*argv)[1] == 'E') && ((*argv)[2] == ':'))
 	    {
 	      int requested_envsize = atoi (*argv + 3);
 	      /* Enforce a reasonable minimum size, as above.  */
@@ -583,6 +598,7 @@ main (int argc, char ** argv)
     {
       char * p;
       int    extra_arg_space = 0;
+      int    run_command_dot_com;
 
       progname = getenv ("COMSPEC");
       if (!progname)
@@ -593,6 +609,10 @@ main (int argc, char ** argv)
 
       if (progname == NULL || strchr (progname, '\\') == NULL)
 	fail ("error: the program %s could not be found.\n", getenv ("COMSPEC"));
+
+      /* Need to set environment size when running command.com.  */
+      run_command_dot_com =
+	(stricmp (strrchr (progname, '\\'), "command.com") == 0);
 
       /* Work out how much extra space is required for
          pass_through_args.  */
@@ -620,8 +640,7 @@ main (int argc, char ** argv)
 	  for (argv = pass_through_args; *argv != NULL; ++argv)
 	    p += wsprintf (p, " %s", *argv);
 
-	  if (GetVersion () & 0x80000000)
-	    /* Set environment size to something reasonable on Windows 95.  */
+	  if (run_command_dot_com)
 	    wsprintf(p, " /e:%d /c %s", envsize, cmdline);
 	  else
 	    wsprintf(p, " /c %s", cmdline);
@@ -629,12 +648,10 @@ main (int argc, char ** argv)
 	}
       else
 	{
-	  if (GetVersion () & 0x80000000)
+	  if (run_command_dot_com)
 	    {
 	      /* Provide dir arg expected by command.com when first
-		 started interactively (the "command search path").
-		 cmd.exe does not require it, but accepts it silently -
-		 presumably other DOS compatible shells do the same.  To
+		 started interactively (the "command search path").  To
 		 avoid potential problems with spaces in command dir
 		 (which cannot be quoted - command.com doesn't like it),
 		 we always use the 8.3 form.  */
@@ -644,7 +661,6 @@ main (int argc, char ** argv)
 	      *(++p) = '\0';
 	    }
 	  else
-	    /* Dir arg not needed on NT.  */
 	    path[0] = '\0';
 
 	  cmdline = p = alloca (strlen (progname) + extra_arg_space +
@@ -658,8 +674,7 @@ main (int argc, char ** argv)
 	  for (argv = pass_through_args; *argv != NULL; ++argv)
 	    p += wsprintf (p, " %s", *argv);
 
-	  if (GetVersion () & 0x80000000)
-	    /* Set environment size to something reasonable on Windows 95.  */
+	  if (run_command_dot_com)
 	    wsprintf (p, " /e:%d", envsize);
 	}
     }
@@ -670,7 +685,7 @@ main (int argc, char ** argv)
   if (!cmdline)
     cmdline = progname;
 
-  if (spawn (progname, cmdline, &rc))
+  if (spawn (progname, cmdline, dir, &rc))
     return rc;
 
   if (!need_shell)

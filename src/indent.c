@@ -308,13 +308,17 @@ skip_invisible (pos, next_boundary_p, to, window)
 	bytes = BYTES_BY_CHAR_HEAD (c);					\
 	if (bytes >= 2 && bytes <= pend - p)				\
 	  {								\
-	    int ch;							\
+	    int ch = STRING_CHAR (p, bytes);				\
 	    								\
-	    if (dp && (ch = STRING_CHAR (p, bytes),			\
-		       VECTORP (DISP_CHAR_VECTOR (dp, ch))))		\
-	      width = XVECTOR (DISP_CHAR_VECTOR (dp, ch))->size;	\
+	    if (CHAR_VALID_P (ch, 0))					\
+	      {								\
+		if (dp && VECTORP (DISP_CHAR_VECTOR (dp, ch)))		\
+		  width = XVECTOR (DISP_CHAR_VECTOR (dp, ch))->size;	\
+		else							\
+		  width = WIDTH_BY_CHAR_HEAD (c);			\
+	      }								\
 	    else							\
-	      width = WIDTH_BY_CHAR_HEAD (c);				\
+	      width = bytes * 4;					\
 	    if (width > 1)						\
 	      wide_column = width;					\
 	  }								\
@@ -1414,7 +1418,9 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 		      /* Skip any number of invisible lines all at once */
 		      do
 			{
-			  pos = find_before_next_newline (pos, to, 1) + 1;
+			  pos = find_before_next_newline (pos, to, 1);
+			  if (pos < to)
+			    pos++;
 			  pos_byte = CHAR_TO_BYTE (pos);
 			}
 		      while (pos < to

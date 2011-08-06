@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -688,15 +688,19 @@ levels affect Emacs globally, not just one buffer, the square brackets
 appear in every window's mode line or not in any of them.  *Note
 Recursive Edit::.
 
+   Non-windowing terminals can only show a single Emacs frame at a time
+(*note Frames::.).  On such terminals, the mode line displays the name
+of the selected frame, after CH.  The initial frame's name is `F1'.
+
    CS states the coding system used for the file you are editing.  A
 dash indicates the default state of affairs: no code conversion, except
 for end-of-line translation if the file contents call for that.  `='
 means no conversion whatsoever.  Nontrivial code conversions are
 represented by various letters--for example, `1' refers to ISO Latin-1.
 *Note Coding Systems::, for more information.  If you are using an
-input method, CS starts with a string such as `I>', where I identifies
-the input method.  (Some input methods show `+' or `@' instead of `>'.)
-*Note Input Methods::.
+input method, a string of the form `I>' is added to the beginning of
+CS; I identifies the input method.  (Some input methods show `+' or `@'
+instead of `>'.)  *Note Input Methods::.
 
    When you are using a character-only terminal (not a window system),
 CS uses three characters to describe, respectively, the coding system
@@ -706,14 +710,22 @@ coding system used for the file you are editing.
    When multibyte characters are not enabled, CS does not appear at
 all.  *Note Enabling Multibyte::.
 
-   The colon after CS can change to another character in certain
+   The colon after CS can change to another string in certain
 circumstances.  Emacs uses newline to separate lines in the buffer.
 Some files use different conventions for separating lines: either
 carriage-return linefeed (the MS-DOS convention) or just carriage-return
 (the Macintosh convention).  If the buffer's file uses carriage-return
-linefeed, the colon changes to a backslash (`\').  If the file uses
-just carriage-return, the colon indicator changes to a forward slash
-(`/').
+linefeed, the colon changes to either a backslash (`\') or `(DOS)',
+depending on the operating system.  If the file uses just
+carriage-return, the colon indicator changes to either a forward slash
+(`/') or `(Mac)'.  On some systems, Emacs displays `(Unix)' instead of
+the colon even for files that use newline to separate lines.
+
+   You can customize the mode line display for each of the end-of-line
+formats by setting each of the variables `eol-mnemonic-unix',
+`eol-mnemonic-dos', `eol-mnemonic-mac', and `eol-mnemonic-undecided' to
+any string you find appropriate.  *Note Variables::, for an explanation
+how to set variables.
 
    *Note Optional Mode Line::, for features that add other handy
 information to the mode line, such as the current column number of

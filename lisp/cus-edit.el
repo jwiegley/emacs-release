@@ -248,7 +248,7 @@
 
 (defgroup customize '((widgets custom-group))
   "Customization of the Customization support."
-  :link '(custom-manual "(custom)Top")
+  :link '(custom-manual "(elisp)Customization")
   :link '(url-link :tag "Development Page" 
 		   "http://www.dina.kvl.dk/~abraham/custom/")
   :prefix "custom-"
@@ -412,6 +412,7 @@ Return a list suitable for use in `interactive'."
 		obarray (lambda (symbol)
 			  (and (boundp symbol)
 			       (or (get symbol 'custom-type)
+				   (get symbol 'custom-loads)
 				   (user-variable-p symbol)))) t))
      (list (if (equal val "")
 	       (if (symbolp v) v nil)
@@ -659,7 +660,8 @@ groups after non-groups, if nil do not order groups at all."
   (interactive)
   (let ((children custom-options))
     (mapcar (lambda (child)
-	      (when (memq (widget-get child :custom-state) '(modified set))
+	      (when (memq (widget-get child :custom-state)
+			  '(modified set changed rogue))
 		(widget-apply child :custom-save)))
 	    children))
   (custom-save-all))
@@ -686,27 +688,33 @@ when the action is chosen.")
   "Reset all modified group members to their current value."
   (interactive)
   (let ((children custom-options))
-    (mapcar (lambda (child)
-	      (when (eq (widget-get child :custom-state) 'modified)
-		(widget-apply child :custom-reset-current)))
+    (mapcar (lambda (widget)
+	      (and (default-boundp (widget-value widget))
+		   (if (memq (widget-get widget :custom-state) 
+			     '(modified changed))
+		       (widget-apply widget :custom-reset-current))))
 	    children)))
 
 (defun Custom-reset-saved (&rest ignore)
   "Reset all modified or set group members to their saved value."
   (interactive)
   (let ((children custom-options))
-    (mapcar (lambda (child)
-	      (when (eq (widget-get child :custom-state) 'modified)
-		(widget-apply child :custom-reset-saved)))
+    (mapcar (lambda (widget)
+	      (and (get (widget-value widget) 'saved-value)
+		   (if (memq (widget-get widget :custom-state)
+			     '(modified set changed rogue))
+		       (widget-apply widget :custom-reset-saved))))
 	    children)))
 
 (defun Custom-reset-standard (&rest ignore)
   "Reset all modified, set, or saved group members to their standard settings."
   (interactive)
   (let ((children custom-options))
-    (mapcar (lambda (child)
-	      (when (eq (widget-get child :custom-state) 'modified)
-		(widget-apply child :custom-reset-standard)))
+    (mapcar (lambda (widget)
+	      (and (get (widget-value widget) 'standard-value)
+		   (if (memq (widget-get widget :custom-state)
+			     '(modified set changed saved rogue))
+		       (widget-apply widget :custom-reset-standard))))
 	    children)))
 
 ;;; The Customize Commands
@@ -868,18 +876,51 @@ are shown; the contents of those subgroups are initially hidden."
 (defun customize-option (symbol)
   "Customize SYMBOL, which must be a user option variable."
   (interactive (custom-variable-prompt))
+  ;; If we don't have SYMBOL's real definition loaded,
+  ;; try to load it.
+  (unless (get symbol 'custom-type)
+    (let ((loaddefs-file (locate-library "loaddefs.el" t))
+	  file)
+      ;; See if it is autoloaded from some library.
+      (when loaddefs-file
+	(with-temp-buffer
+	  (insert-file-contents loaddefs-file)
+	  (when (re-search-forward (concat "^(defvar " (symbol-name symbol))
+				   nil t)
+	    (search-backward "\n;;; Generated autoloads from ")
+	    (goto-char (match-end 0))
+	    (setq file (buffer-substring (point)
+					 (progn (end-of-line) (point)))))))
+      ;; If it is, load that library.
+      (when file
+	(when (string-match "\\.el\\'" file)
+	  (setq file (substring file 0 (match-beginning 0))))
+	(load file))))
+  (unless (get symbol 'custom-type)
+    (error "Variable %s cannot be customized" symbol))
   (custom-buffer-create (list (list symbol 'custom-variable))
 			(format "*Customize Option: %s*"
 				(custom-unlispify-tag-name symbol))))
 
+(defvar customize-changed-options-previous-release "20.2"
+  "Version for `customize-changed-options' to refer back to by default.")
+
 ;;;###autoload
 (defun customize-changed-options (since-version)
-  "Customize all user option variables whose default values changed recently.
-This means, in other words, variables and groups defined with a `:version' 
-option."
+  "Customize all user option variables changed in Emacs itself.
+This includes new user option variables and faces, and new
+customization groups, as well as older options and faces whose default
+values have changed since the previous major Emacs release.
+
+With argument SINCE-VERSION (a string), customize all user option
+variables that were added (or their meanings were changed) since that
+version."
+
   (interactive "sCustomize options changed, since version (default all versions): ")
   (if (equal since-version "")
       (setq since-version nil))
+  (unless since-version
+    (setq since-version customize-changed-options-previous-release))
   (let ((found nil)
 	(versions nil))
     (mapatoms (lambda (symbol)
@@ -906,7 +947,8 @@ option."
 			       (cons (list symbol 'custom-group) found)
 			     (cons (list symbol 'custom-variable) found))))))
     (if (not found)
-	(error "No user options have changed defaults in recent Emacs versions")
+	(error "No user option defaults have been changed since Emacs %s"
+	       since-version)
       (let ((flist nil))
 	(while versions
 	  (push (copy-sequence 
@@ -927,6 +969,10 @@ option."
 			    "*Customize Changed Options*"))))
 
 (defun customize-version-lessp (version1 version2)
+  ;; In case someone made a mistake and left out the quotes
+  ;; in the :version value.
+  (if (numberp version2)
+      (setq version2 (prin1-to-string version2)))
   (let (major1 major2 minor1 minor2)
     (string-match "\\([0-9]+\\)[.]\\([0-9]+\\)" version1)
     (setq major1 (read (match-string 1 version1)))
@@ -3055,17 +3101,18 @@ Leave point at the location of the call, or after the last expression."
   (let ((default-major-mode))
     (set-buffer (find-file-noselect (custom-file))))
   (goto-char (point-min))
+  (save-excursion (forward-sexp (buffer-size)))	; Test for scan errors.
   (catch 'found
     (while t
-      (let ((sexp (condition-case nil
+      ;; Skip all whitespace and comments.
+      (while (forward-comment 1))
+      (let ((start (point))
+	    (sexp (condition-case nil
 		      (read (current-buffer))
 		    (end-of-file (throw 'found nil)))))
 	(when (and (listp sexp)
 		   (eq (car sexp) symbol))
-	  (delete-region (save-excursion
-			   (backward-sexp)
-			   (point))
-			 (point))
+	  (delete-region start (point))
 	  (throw 'found nil))))))
 
 (defun custom-save-variables ()
@@ -3292,7 +3339,7 @@ The format is suitable for use with `easy-menu-define'."
     ["Reset to Current" Custom-reset-current t]
     ["Reset to Saved" Custom-reset-saved t]
     ["Reset to Standard Settings" Custom-reset-standard t]
-    ["Info" (Info-goto-node "(custom)The Customization Buffer") t]))
+    ["Info" (Info-goto-node "(emacs)Easy Customization") t]))
 
 (defun Custom-goto-parent ()
   "Go to the parent group listed at the top of this buffer.

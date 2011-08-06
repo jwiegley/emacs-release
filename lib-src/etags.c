@@ -4111,7 +4111,7 @@ erlang_attribute (s)
 
   if (strneq (s, "-define", 7) || strneq (s, "-record", 7))
     {
-      pos = 7 + eat_white (s, pos);
+      pos = 7 + eat_white (s, 7);
       if (s[pos++] == '(') 
 	{
 	  pos += eat_white (s, pos);
@@ -4664,6 +4664,9 @@ etags_getcwd ()
     for (p = path; *p != '\0'; p++)
       if (*p == '\\')
 	*p = '/';
+    /* Canonicalize drive letter case.  */
+    if (islower (path[0]))
+      path[0] = toupper (path[0]);
   }
 #endif
 
@@ -4714,9 +4717,10 @@ relative_filename (file, dir)
   while (*fp++ == *dp++)
     continue;
   fp--, dp--;			/* back to the first differing char */
-  do				/* look at the equal chars until '/' */
+  do {				/* look at the equal chars until '/' */
+    if (fp == abs) return abs;	/* first char differs, give up */
     fp--, dp--;
-  while (*fp != '/');
+  } while (*fp != '/');
 
   /* Build a sequence of "../" strings for the resulting relative file name. */
   i = 0;
@@ -4789,6 +4793,12 @@ absolute_filename (file, cwd)
 
       slashp = etags_strchr (slashp + 1, '/');
     }
+
+#ifdef DOS_NT
+  /* Canonicalize drive letter case.  */
+  if (res[0] && islower (res[0]))
+    res[0] = toupper (res[0]);
+#endif
   
   if (res[0] == '\0')
     return savestr ("/");

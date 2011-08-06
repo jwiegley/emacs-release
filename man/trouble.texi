@@ -663,7 +663,11 @@ someone to find a problem on a machine which he does not have available.
 If you don't know how to use GDB, please read the GDB manual---it is not
 very long, and using GDB is easy.  You can find the GDB distribution,
 including the GDB manual in online form, in most of the same places you
-can find the Emacs distribution.
+can find the Emacs distribution.  To run Emacs under GDB, you should
+switch to the @file{src} subdirectory in which Emacs was compiled, then
+do @samp{gdb emacs}.  It is important for the directory @file{src} to be
+current so that GDB will read the @file{.gdbinit} file in this
+directory.
 
 However, you need to think when you collect the additional information
 if you want it to show what causes the bug.
@@ -688,9 +692,8 @@ To show a variable's value in Lisp syntax, first print its value, then
 use the user-defined GDB command @code{pr} to print the Lisp object in
 Lisp syntax.  (If you must use another debugger, call the function
 @code{debug_print} with the object as an argument.)  The @code{pr}
-command is defined by the file @file{.gdbinit} in the @file{src}
-subdirectory, and it works only if you are debugging a running process
-(not with a core dump).
+command is defined by the file @file{.gdbinit}, and it works only if you
+are debugging a running process (not with a core dump).
 
 To make Lisp errors stop Emacs and return to GDB, put a breakpoint at
 @code{Fsignal}.
@@ -719,17 +722,19 @@ of @code{Ffuncall} says how many arguments @code{Ffuncall} received;
 these include the Lisp function itself and the arguments for that
 function.
 
-The file @file{src/.gdbinit} includes several other commands that are
-useful for examining the data types and contents of Lisp objects.  These
-commands work at a lower level than @code{pr}, and are less convenient,
-but they may work even when @code{pr} does not.
+The file @file{.gdbinit} defines several other commands that are useful
+for examining the data types and contents of Lisp objects.  Their names
+begin with @samp{x}.  These commands work at a lower level than
+@code{pr}, and are less convenient, but they may work even when
+@code{pr} does not, such as when debugging a core dump or when Emacs has
+had a fatal signal.
 
 @item
 If the symptom of the bug is that Emacs fails to respond, don't assume
 Emacs is ``hung''---it may instead be in an infinite loop.  To find out
 which, make the problem happen under GDB and stop Emacs once it is not
 responding.  (If Emacs is using X Windows directly, you can stop Emacs
-by typing @kbd{C-c} at the GDB job.)  Then try stepping with
+by typing @kbd{C-z} at the GDB job.)  Then try stepping with
 @samp{step}.  If Emacs is hung, the @samp{step} command won't return.
 If it is looping, @samp{step} will return.
 

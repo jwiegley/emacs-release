@@ -72,6 +72,8 @@ A large number or nil slows down menu responsiveness."
   '("--"))
 
 (define-key menu-bar-tools-menu [calendar] '("Display Calendar" . calendar))
+(define-key menu-bar-tools-menu [speedbar]
+  '("Display Speedbar" . speedbar-frame-mode))
 (define-key menu-bar-tools-menu [compose-mail] '("Send Mail" . compose-mail))
 (define-key menu-bar-tools-menu [rmail] '("Read Mail" . rmail))
 (define-key menu-bar-tools-menu [gnus] '("Read Net News" . gnus))
@@ -309,7 +311,7 @@ A large number or nil slows down menu responsiveness."
      '(or (x-selection-exists-p) (x-selection-exists-p 'CLIPBOARD)))
 
 (defun clipboard-yank ()
-  "Reinsert the last stretch of killed text, or the clipboard contents."
+  "Insert the clipboard contents, or the last stretch of killed text."
   (interactive)
   (let ((x-select-enable-clipboard t))
     (yank)))
@@ -418,6 +420,12 @@ Do the same for the keys of the same name."
   (menu-bar-make-toggle toggle-case-fold-search case-fold-search
 			"Case folding in searches"
 			"Case folding in searches %s"))
+(define-key menu-bar-options-menu [truncate-lines]
+  (menu-bar-make-toggle
+   toggle-truncate-lines truncate-lines
+   "Line Truncation" "Line Truncation %s"
+   (prog1 (setq truncate-lines (not truncate-lines))
+     (set-buffer-modified-p (buffer-modified-p)))))
 (define-key menu-bar-options-menu [transient-mark-mode]
   (menu-bar-make-toggle toggle-transient-mark-mode transient-mark-mode
 			"Transient Mark Mode (highlights region)"

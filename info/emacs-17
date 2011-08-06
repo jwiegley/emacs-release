@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,218 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Sending Mail,  Next: Rmail,  Prev: Picture,  Up: Top
+
+Sending Mail
+************
+
+   To send a message in Emacs, you start by typing a command (`C-x m')
+to select and initialize the `*mail*' buffer.  Then you edit the text
+and headers of the message in this buffer, and type another command
+(`C-c C-s' or `C-c C-c') to send the message.
+
+`C-x m'
+     Begin composing a message to send (`compose-mail').
+
+`C-x 4 m'
+     Likewise, but display the message in another window
+     (`compose-mail-other-window').
+
+`C-x 5 m'
+     Likewise, but make a new frame (`compose-mail-other-frame').
+
+`C-c C-s'
+     In Mail mode, send the message (`mail-send').
+
+`C-c C-c'
+     Send the message and bury the mail buffer (`mail-send-and-exit').
+
+   The command `C-x m' (`compose-mail') selects a buffer named `*mail*'
+and initializes it with the skeleton of an outgoing message.  `C-x 4 m'
+(`compose-mail-other-window') selects the `*mail*' buffer in a
+different window, leaving the previous current buffer visible.  `C-x 5
+m' (`compose-mail-other-frame') creates a new frame to select the
+`*mail*' buffer.
+
+   Because the mail-composition buffer is an ordinary Emacs buffer, you
+can switch to other buffers while in the middle of composing mail, and
+switch back later (or never).  If you use the `C-x m' command again
+when you have been composing another message but have not sent it, you
+are asked to confirm before the old message is erased.  If you answer
+`n', the `*mail*' buffer is left selected with its old contents, so you
+can finish the old message and send it.  `C-u C-x m' is another way to
+do this.  Sending the message marks the `*mail*' buffer "unmodified,"
+which avoids the need for confirmation when `C-x m' is next used.
+
+   If you are composing a message in the `*mail*' buffer and want to
+send another message before finishing the first, rename the `*mail*'
+buffer using `M-x rename-uniquely' (*note Misc Buffer::.).  Then you
+can use `C-x m' or its variants described above to make a new `*mail*'
+buffer.  Once you've done that, you can work with each mail buffer
+independently.
+
+* Menu:
+
+* Format: Mail Format.	     Format of the mail being composed.
+* Headers: Mail Headers.     Details of permitted mail header fields.
+* Aliases: Mail Aliases.     Abbreviating and grouping mail addresses.
+* Mode: Mail Mode.	     Special commands for editing mail being composed.
+* Spook: Distracting NSA.    How to distract the NSA's attention.
+* Mail Methods::             Using alternative mail-composition methods.
+
+
+File: emacs,  Node: Mail Format,  Next: Mail Headers,  Up: Sending Mail
+
+The Format of the Mail Buffer
+=============================
+
+   In addition to the "text" or "body", a message has "header fields"
+which say who sent it, when, to whom, why, and so on.  Some header
+fields, such as `Date' and `Sender', are created automatically when you
+send the message.  Others, such as the recipient names, must be
+specified by you in order to send the message properly.
+
+   Mail mode provides a few commands to help you edit some header
+fields, and some are preinitialized in the buffer automatically at
+times.  You can insert and edit header fields using ordinary editing
+commands.
+
+   The line in the buffer that says
+
+     --text follows this line--
+
+is a special delimiter that separates the headers you have specified
+from the text.  Whatever follows this line is the text of the message;
+the headers precede it.  The delimiter line itself does not appear in
+the message actually sent.  The text used for the delimiter line is
+controlled by the variable `mail-header-separator'.
+
+   Here is an example of what the headers and text in the mail buffer
+might look like.
+
+     To: gnu@gnu.org
+     CC: lungfish@spam.org, byob@spam.org
+     Subject: The Emacs Manual
+     --Text follows this line--
+     Please ignore this message.
+
+
+File: emacs,  Node: Mail Headers,  Next: Mail Aliases,  Prev: Mail Format,  Up: Sending Mail
+
+Mail Header Fields
+==================
+
+   A header field in the mail buffer starts with a field name at the
+beginning of a line, terminated by a colon.  Upper and lower case are
+equivalent in field names (and in mailing addresses also).  After the
+colon and optional whitespace comes the contents of the field.
+
+   You can use any name you like for a header field, but normally people
+use only standard field names with accepted meanings.  Here is a table
+of fields commonly used in outgoing messages.
+
+`To'
+     This field contains the mailing addresses to which the message is
+     addressed.  If you list more than one address, use commas, not
+     spaces, to separate them.
+
+`Subject'
+     The contents of the `Subject' field should be a piece of text that
+     says what the message is about.  The reason `Subject' fields are
+     useful is that most mail-reading programs can provide a summary of
+     messages, listing the subject of each message but not its text.
+
+`CC'
+     This field contains additional mailing addresses to send the
+     message to, like `To' except that these readers should not regard
+     the message as directed at them.
+
+`BCC'
+     This field contains additional mailing addresses to send the
+     message to, which should not appear in the header of the message
+     actually sent.  Copies sent this way are called "blind carbon
+     copies".
+
+     To send a blind carbon copy of every outgoing message to yourself,
+     set the variable `mail-self-blind' to `t'.
+
+`FCC'
+     This field contains the name of one file and directs Emacs to
+     append a copy of the message to that file when you send the
+     message.  If the file is in Rmail format, Emacs writes the message
+     in Rmail format; otherwise, Emacs writes the message in system
+     mail file format.
+
+     To put a fixed file name in the `FCC' field each time you start
+     editing an outgoing message, set the variable
+     `mail-archive-file-name' to that file name.  Unless you remove the
+     `FCC' field before sending, the message will be written into that
+     file when it is sent.
+
+`From'
+     Use the `From' field to say who you are, when the account you are
+     using to send the mail is not your own.  The contents of the `From'
+     field should be a valid mailing address, since replies will
+     normally go there.  If you don't specify the `From' field
+     yourself, Emacs uses the value of `user-mail-address' as the
+     default.
+
+`Reply-to'
+     Use this field to direct replies to a different address.  Most
+     mail-reading programs (including Rmail) automatically send replies
+     to the `Reply-to' address in preference to the `From' address.  By
+     adding a `Reply-to' field to your header, you can work around any
+     problems your `From' address may cause for replies.
+
+     To put a fixed `Reply-to' address into every outgoing message, set
+     the variable `mail-default-reply-to' to that address (as a string).
+     Then `mail' initializes the message with a `Reply-to' field as
+     specified.  You can delete or alter that header field before you
+     send the message, if you wish.  When Emacs starts up, if the
+     environment variable `REPLYTO' is set, `mail-default-reply-to' is
+     initialized from that environment variable.
+
+`In-reply-to'
+     This field contains a piece of text describing a message you are
+     replying to.  Some mail systems can use this information to
+     correlate related pieces of mail.  Normally this field is filled
+     in by Rmail when you reply to a message in Rmail, and you never
+     need to think about it (*note Rmail::.).
+
+`References'
+     This field lists the message IDs of related previous messages.
+     Rmail sets up this field automatically when you reply to a message.
+
+   The `To', `CC', `BCC' and `FCC' header fields can appear any number
+of times, and each such header field can contain multiple addresses,
+separated by commas.  This way, you can specify any number of places to
+send the message.  A `To', `CC', or `BCC' field can also have
+continuation lines: one or more lines starting with whitespace,
+following the starting line of the field, are considered part of the
+field.  Here's an example of a `To' field with a continuation line:
+
+     To: foo@here.net, this@there.net,
+       me@gnu.cambridge.mass.usa.earth.spiral3281
+
+   When you send the message, if you didn't write a `From' field
+yourself, Emacs puts in one for you.  The variable `mail-from-style'
+controls the format:
+
+`nil'
+     Use just the email address, as in `king@grassland.com'.
+
+`parens'
+     Use both email address and full name, as in `king@grassland.com
+     (Elvis Parsley)'.
+
+`angles'
+     Use both email address and full name, as in `Elvis Parsley
+     <king@grassland.com>'.
+
+`system-default'
+     Allow the system to insert the `From' field.
 
 
 File: emacs,  Node: Mail Aliases,  Next: Mail Mode,  Prev: Mail Headers,  Up: Sending Mail
@@ -176,6 +388,17 @@ the usual way to send the message.
 modified flag, because only saving the file should do that.  As a
 result, you don't get a warning if you try to send the same message
 twice.
+
+   When you send a message that contains non-ASCII characters, they need
+to be encoded with a coding system (*note Coding Systems::.).  Usually
+the coding system is specified automatically by your chosen language
+environment (*note Language Environments::.).  You can explicitly
+specify the coding system for outgoing mail by setting the variable
+`sendmail-coding-system'.
+
+   If the coding system thus determined does not handle the characters
+in a particular message, Emacs asks you to select the coding system to
+use, showing a list of possible coding systems.
 
 
 File: emacs,  Node: Header Editing,  Next: Citing Mail,  Prev: Mail Sending,  Up: Mail Mode
@@ -404,8 +627,8 @@ Reading the message in an Rmail file is done in a special major mode,
 Rmail mode, which redefines most letters to run commands for managing
 mail.  The command `rmail-mode' is used to switch into Rmail mode, and
 it runs the hook `rmail-mode-hook' as usual, but don't run this command
-by hand; it can't do a reasonable job unless unless the buffer is
-visiting a proper Rmail file.
+by hand; it can't do a reasonable job unless the buffer is visiting a
+proper Rmail file.
 
 * Menu:
 
@@ -617,8 +840,8 @@ current message and select another message.  `d'
 messages already deleted, while `C-d' (`rmail-delete-backward') moves
 to the previous nondeleted message.  If there is no nondeleted message
 to move to in the specified direction, the message that was just
-deleted remains current.  A numeric argument acts as a repeat count, and
-a negative argument reverses direction.
+deleted remains current.  A numeric argument to either command reverses
+the direction of motion after deletion.
 
    Whenever Rmail deletes a message, it invokes the function(s) listed
 in `rmail-delete-message-hook'.  When the hook functions are invoked,
@@ -669,8 +892,12 @@ variable explicitly, it is initialized from the `MAIL' environment
 variable, or, as a last resort, set to `nil', which means to use the
 default inbox.  The default inbox is `/var/mail/USERNAME',
 `/usr/spool/mail/USERNAME', or `/usr/mail/USERNAME', depending on your
-operating system.  You can specify the inbox file(s) for any Rmail file
-with the command `set-rmail-inbox-list'; see *Note Rmail Files::.
+operating system.
+
+   To see what the default is on your system, use `C-h v
+rmail-primary-inbox <RET>'.  You can specify the inbox file(s) for any
+Rmail file with the command `set-rmail-inbox-list'; see *Note Rmail
+Files::.
 
    There are two reasons for having separate Rmail files and inboxes.
 
@@ -812,9 +1039,9 @@ specify a different name if you wish.
 
    You can also output a message to an Rmail file chosen with a menu.
 Choose first the menu bar Classify item, then from the Classify menu
-choose the Output Rmail Menu item; then choose the Rmail file you want.
-This outputs the current message to that file, like the `o' command.
-The variables `rmail-secondary-file-directory' and
+choose the Output Rmail File menu item; then choose the Rmail file you
+want.  This outputs the current message to that file, like the `o'
+command.  The variables `rmail-secondary-file-directory' and
 `rmail-secondary-file-regexp' specify which files to offer in the menu:
 the first variable says which directory to find them in; the second
 says which files in that directory to offer (all those that match the
@@ -946,197 +1173,4 @@ attributes:
 
    All other labels are assigned or removed only by the user, and have
 no standard meaning.
-
-
-File: emacs,  Node: Rmail Reply,  Next: Rmail Summary,  Prev: Rmail Attributes,  Up: Rmail
-
-Sending Replies
-===============
-
-   Rmail has several commands that use Mail mode to send outgoing mail.
-*Note Sending Mail::, for information on using Mail mode, including
-certain features meant to work with Rmail.  What this section documents
-are the special commands of Rmail for entering Mail mode.  Note that the
-usual keys for sending mail--`C-x m', `C-x 4 m', and `C-x 5 m'--are
-available in Rmail mode and work just as they usually do.
-
-`m'
-     Send a message (`rmail-mail').
-
-`c'
-     Continue editing the already started outgoing message
-     (`rmail-continue').
-
-`r'
-     Send a reply to the current Rmail message (`rmail-reply').
-
-`f'
-     Forward the current message to other users (`rmail-forward').
-
-`C-u f'
-     Resend the current message to other users (`rmail-resend').
-
-`M-m'
-     Try sending a bounced message a second time
-     (`rmail-retry-failure').
-
-   The most common reason to send a message while in Rmail is to reply
-to the message you are reading.  To do this, type `r' (`rmail-reply').
-This displays the `*mail*' buffer in another window, much like `C-x 4
-m', but preinitializes the `Subject', `To', `CC' and `In-reply-to'
-header fields based on the message you are replying to.  The `To' field
-starts out as the address of the person who sent the message you
-received, and the `CC' field starts out with all the other recipients
-of that message.
-
-   You can exclude certain recipients from being placed automatically in
-the `CC', using the variable `rmail-dont-reply-to-names'.  Its value
-should be a regular expression (as a string); any recipient that the
-regular expression matches, is excluded from the `CC' field.  The
-default value matches your own name, and any name starting with
-`info-'.  (Those names are excluded because there is a convention of
-using them for large mailing lists to broadcast announcements.)
-
-   To omit the `CC' field completely for a particular reply, enter the
-reply command with a numeric argument: `C-u r' or `1 r'.
-
-   Once the `*mail*' buffer has been initialized, editing and sending
-the mail goes as usual (*note Sending Mail::.).  You can edit the
-presupplied header fields if they are not right for you.  You can also
-use the commands of Mail mode (*note Mail Mode::.), including `C-c C-y'
-which yanks in the message that you are replying to.  You can switch to
-the Rmail buffer, select a different message there, switch back, and
-yank the new current message.
-
-   Sometimes a message does not reach its destination.  Mailers usually
-send the failed message back to you, enclosed in a "failure message".
-The Rmail command `M-m' (`rmail-retry-failure') prepares to send the
-same message a second time: it sets up a `*mail*' buffer with the same
-text and header fields as before.  If you type `C-c C-c' right away,
-you send the message again exactly the same as the first time.
-Alternatively, you can edit the text or headers and then send it.  The
-variable `rmail-retry-ignored-headers', in the same format as
-`rmail-ignored-headers' (*note Rmail Display::.), controls which
-headers are stripped from the failed message when retrying it; it
-defaults to `nil'.
-
-   Another frequent reason to send mail in Rmail is to "forward" the
-current message to other users.  `f' (`rmail-forward') makes this easy
-by preinitializing the `*mail*' buffer with the current message as the
-text, and a subject designating a forwarded message.  All you have to
-do is fill in the recipients and send.  When you forward a message,
-recipients get a message which is "from" you, and which has the
-original message in its contents.
-
-   Forwarding a message encloses it between two delimiter lines.  It
-also modifies every line that starts with a dash, by inserting `- ' at
-the start of the line.  When you receive a forwarded message, if it
-contains something besides ordinary text--for example, program source
-code--you might find it useful to undo that transformation.  You can do
-this by selecting the forwarded message and typing `M-x
-unforward-rmail-message'.  This command extracts the original forwarded
-message, deleting the inserted `- ' strings, and inserts it into the
-Rmail file as a separate message immediately following the current one.
-
-   "Resending" is an alternative similar to forwarding; the difference
-is that resending sends a message that is "from" the original sender,
-just as it reached you--with a few added header fields `Resent-from'
-and `Resent-to' to indicate that it came via you.  To resend a message
-in Rmail, use `C-u f'.  (`f' runs `rmail-forward', which is programmed
-to invoke `rmail-resend' if you provide a numeric argument.)
-
-   The `m' (`rmail-mail') command is used to start editing an outgoing
-message that is not a reply.  It leaves the header fields empty.  Its
-only difference from `C-x 4 m' is that it makes the Rmail buffer
-accessible for `C-c C-y', just as `r' does.  Thus, `m' can be used to
-reply to or forward a message; it can do anything `r' or `f' can do.
-
-   The `c' (`rmail-continue') command resumes editing the `*mail*'
-buffer, to finish editing an outgoing message you were already
-composing, or to alter a message you have sent.
-
-   If you set the variable `rmail-mail-new-frame' to a non-`nil' value,
-then all the Rmail commands to start sending a message create a new
-frame to edit it in.  This frame is deleted when you send the message,
-or when you use the `Don't Send' item in the `Mail' menu.
-
-   All the Rmail commands to send a message use the mail-composition
-method that you have chosen (*note Mail Methods::.).
-
-
-File: emacs,  Node: Rmail Summary,  Next: Rmail Sorting,  Prev: Rmail Reply,  Up: Rmail
-
-Summaries
-=========
-
-   A "summary" is a buffer containing one line per message to give you
-an overview of the mail in an Rmail file.  Each line shows the message
-number, the sender, the labels, and the subject.  Almost all Rmail
-commands are valid in the summary buffer also; these apply to the
-message described by the current line of the summary.  Moving point in
-the summary buffer selects messages as you move to their summary lines.
-
-   A summary buffer applies to a single Rmail file only; if you are
-editing multiple Rmail files, each one can have its own summary buffer.
-The summary buffer name is made by appending `-summary' to the Rmail
-buffer's name.  Normally only one summary buffer is displayed at a time.
-
-* Menu:
-
-* Rmail Make Summary::	     Making various sorts of summaries.
-* Rmail Summary Edit::	     Manipulating messages from the summary.
-
-
-File: emacs,  Node: Rmail Make Summary,  Next: Rmail Summary Edit,  Up: Rmail Summary
-
-Making Summaries
-----------------
-
-   Here are the commands to create a summary for the current Rmail file.
-Once the Rmail file has a summary buffer, changes in the Rmail file
-(such as deleting or expunging messages, and getting new mail)
-automatically update the summary.
-
-`h'
-`C-M-h'
-     Summarize all messages (`rmail-summary').
-
-`l LABELS <RET>'
-`C-M-l LABELS <RET>'
-     Summarize messages that have one or more of the specified labels
-     (`rmail-summary-by-labels').
-
-`C-M-r RCPTS <RET>'
-     Summarize messages that have one or more of the specified
-     recipients (`rmail-summary-by-recipients').
-
-`C-M-t TOPIC <RET>'
-     Summarize messages that have a match for the specified regexp
-     TOPIC in their subjects (`rmail-summary-by-topic').
-
-   The `h' or `C-M-h' (`rmail-summary') command fills the summary buffer
-for the current Rmail file with a summary of all the messages in the
-file.  It then displays and selects the summary buffer in another
-window.
-
-   `C-M-l LABELS <RET>' (`rmail-summary-by-labels') makes a partial
-summary mentioning only the messages that have one or more of the
-labels LABELS.  LABELS should contain label names separated by commas.
-
-   `C-M-r RCPTS <RET>' (`rmail-summary-by-recipients') makes a partial
-summary mentioning only the messages that have one or more of the
-recipients RCPTS.  RCPTS should contain mailing addresses separated by
-commas.
-
-   `C-M-t TOPIC <RET>' (`rmail-summary-by-topic') makes a partial
-summary mentioning only the messages whose subjects have a match for
-the regular expression TOPIC.
-
-   Note that there is only one summary buffer for any Rmail file;
-making one kind of summary discards any previously made summary.
-
-   The variable `rmail-summary-window-size' says how many lines to use
-for the summary window.  The variable `rmail-summary-line-count-flag'
-controls whether the summary line for a message should include the line
-count of the message.
 

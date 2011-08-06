@@ -199,6 +199,18 @@ message is printed.  @xref{Interlocking,,Simultaneous Editing}.
 you had visited an existing empty file.  If you make any changes and
 save them, the file is created.
 
+  Emacs recognizes from the contents of a file which convention it uses
+to separate lines---newline (used on GNU/Linux and on Unix),
+carriage-return linefeed (used on Microsoft systems), or just
+carriage-return (used on the Macintosh)---and automatically converts the
+contents to the normal Emacs convention, which is that the newline
+character separates lines.  This is a part of the general feature of
+coding system conversion (@pxref{Coding Systems}), and makes it possible
+to edit files imported from various different operating systems with
+equal convenience.  If you change the text and save the file, Emacs
+performs the inverse conversion, changing newlines back into
+carriage-return linefeed or just carriage-return if appropriate.
+
 @vindex find-file-run-dired
   If the file you specify is actually a directory, @kbd{C-x C-f} invokes
 Dired, the Emacs directory browser, so that you can ``edit'' the contents
@@ -206,6 +218,10 @@ of the directory (@pxref{Dired}).  Dired is a convenient way to delete,
 look at, or operate on the files in the directory.  However, if the
 variable @code{find-file-run-dired} is @code{nil}, then it is an error
 to try to visit a directory.
+
+  If the file name you specify contains wildcard characters, Emacs
+visits all the files that match it.  @xref{Quoted File Names}, if you
+want to visit a file whose name actually contains wildcard characters.
 
   If you visit a file that the operating system won't let you modify,
 Emacs makes the buffer read-only, so that you won't go ahead and make
@@ -410,15 +426,27 @@ every time a file is saved or written.  The default is @code{nil}.
 @subsection Backup Files
 @cindex backup file
 @vindex make-backup-files
+@vindex vc-make-backup-files
+@vindex backup-enable-predicate
 
   On most operating systems, rewriting a file automatically destroys all
 record of what the file used to contain.  Thus, saving a file from Emacs
 throws away the old contents of the file---or it would, except that
 Emacs carefully copies the old contents to another file, called the
-@dfn{backup} file, before actually saving.  (This assumes that the
-variable @code{make-backup-files} is non-@code{nil}.  Backup files are
-not written if this variable is @code{nil}.)  Emacs does not normally
-make backup files for files in @file{/tmp}.
+@dfn{backup} file, before actually saving.
+
+  For most files, the variable @code{make-backup-files} determines
+whether to make backup files.  On most operating systems, its default
+value is @code{t}, so that Emacs does write backup files.
+
+  For files managed by a version control system (@pxref{Version
+Control}), the variable @code{vc-make-backup-files} determines whether
+to make backup files.  By default, it is @code{nil}, since backup files
+are redundant when you store all the previous versions in a version
+control system.  @xref{VC Workfile Handling}.
+
+  The default value of the @code{backup-enable-predicate} variable
+prevents backup files being written for files in @file{/tmp}.
 
   At your option, Emacs can keep either a single backup file or a series of
 numbered backup files for each file that you edit.
@@ -494,12 +522,6 @@ or @samp{numbered}, then @code{version-control} becomes @code{t}; if the
 value is @samp{nil} or @samp{existing}, then @code{version-control}
 becomes @code{nil}; if it is @samp{never} or @samp{simple}, then
 @code{version-control} becomes @code{never}.
-
-  For files managed by a version control system (@pxref{Version
-Control}), the variable @code{vc-make-backup-files} determines whether
-to make backup files.  By default, it is @code{nil}, since backup files
-are redundant when you store all the previous versions in a version
-control system.  @xref{VC Workfile Handling}.
 
 @node Backup Deletion
 @subsubsection Automatic Deletion of Backups
@@ -1025,7 +1047,6 @@ instance, @samp{jim}), that is displayed as @samp{RCS:jim:1.3}.
   The principal VC command is an all-purpose command that performs
 either locking or check-in, depending on the situation.
 
-@kindex C-x C-q
 @table @kbd
 @item C-x C-q
 @itemx C-x v v
@@ -1087,7 +1108,7 @@ that there is no such thing as stealing a lock.
 @node Without Locking
 @subsubsection Basic Version Control without Locking
 
-  When there is no locking--the default for CVS--work files are always
+  When there is no locking---the default for CVS---work files are always
 writable; you do not need to do anything before you begin to edit a
 file.  The status indicator on the mode line is @samp{-} if the file is
 unmodified; it flips to @samp{:} as soon as you save any changes in the
@@ -1256,7 +1277,7 @@ Otherwise, if there is a subdirectory named @file{RCS}, @file{SCCS}, or
 absence of any specification, the default choice is RCS if RCS is
 installed, otherwise SCCS.
 
-  If locking is in use,@kbd{C-x v i} leaves the file unlocked and
+  If locking is in use, @kbd{C-x v i} leaves the file unlocked and
 read-only.  Type @kbd{C-x C-q} if you wish to start editing it.  After
 registering a file with CVS, you must subsequently commit the initial
 version by typing @kbd{C-x C-q}.
@@ -1415,7 +1436,7 @@ By default, this includes Version Control subdirectories such as
 @samp{RCS} and @samp{CVS}; you can customize this by setting the
 variable @code{vc-directory-exclusion-list}.
 
-  You can fine-tune VC Dired's format by typing @kbd{C-u x v d}---as in
+  You can fine-tune VC Dired's format by typing @kbd{C-u C-x v d}---as in
 ordinary Dired, that allows you to specify additional switches for the
 @samp{ls} command.
 
@@ -1517,10 +1538,11 @@ For example, if the current version is 2.5, the branch number should be
 that point.
 
   To create a new branch at an older version (one that is no longer the
-head of a branch), first select that version, then lock it with @kbd{C-x
-C-q}.  You'll be asked to confirm, when you lock the old version, that
-you really mean to create a new branch---if you say no, you'll be offered
-a chance to lock the latest version instead.
+head of a branch), first select that version (@pxref{Switching
+Branches}), then lock it with @kbd{C-x C-q}.  You'll be asked to
+confirm, when you lock the old version, that you really mean to create a
+new branch---if you say no, you'll be offered a chance to lock the
+latest version instead.
 
   Then make your changes and type @kbd{C-x C-q} again to check in a new
 version.  This automatically creates a new branch starting from the
@@ -1756,9 +1778,9 @@ all entries in the log for the default directory, which may not be
 appropriate.
 @end table
 
-  For example, suppose the first line of @file{ChangeLog} is dated 10
-April 1992, and that the only check-in since then was by Nathaniel
-Bowditch to @file{rcs2log} on 8 May 1992 with log text @samp{Ignore log
+  For example, suppose the first line of @file{ChangeLog} is dated
+1999-04-10, and that the only check-in since then was by Nathaniel
+Bowditch to @file{rcs2log} on 1999-05-22 with log text @samp{Ignore log
 messages that start with `#'.}.  Then @kbd{C-x v a} visits
 @file{ChangeLog} and inserts text like this:
 
@@ -1767,7 +1789,7 @@ messages that start with `#'.}.  Then @kbd{C-x v a} visits
 @end iftex
 @smallexample
 @group
-Fri May  8 21:45:00 1992  Nathaniel Bowditch  <nat@@apn.org>
+1999-05-22  Nathaniel Bowditch  <nat@@apn.org>
 
         * rcs2log: Ignore log messages that start with `#'.
 @end group
@@ -1778,6 +1800,10 @@ Fri May  8 21:45:00 1992  Nathaniel Bowditch  <nat@@apn.org>
 
 @noindent
 You can then edit the new change log entry further as you wish.
+
+  Unfortunately, timestamps in ChangeLog files are only dates, so some
+of the new change log entry may duplicate what's already in ChangeLog.
+You will have to remove these duplicates by hand.
 
   Normally, the log entry for file @file{foo} is displayed as @samp{*
 foo: @var{text of log entry}}.  The @samp{:} after @file{foo} is omitted
@@ -1791,7 +1817,7 @@ if the text of the log entry starts with @w{@samp{(@var{functionname}):
 @end iftex
 @smallexample
 @group
-Wed May  6 10:53:00 1992  Nathaniel Bowditch  <nat@@apn.org>
+1999-05-06  Nathaniel Bowditch  <nat@@apn.org>
 
         * vc.el (vc-do-command): Check call-process status.
 @end group
@@ -1821,7 +1847,7 @@ They appear like this in @file{ChangeLog}:
 @end iftex
 @smallexample
 @group
-Wed Apr  1 08:57:59 1992  Nathaniel Bowditch  <nat@@apn.org>
+1999-04-01  Nathaniel Bowditch  <nat@@apn.org>
 
         * vc.texinfo: Fix expansion typos.
 
@@ -1853,7 +1879,7 @@ Then the text in @file{ChangeLog} looks like this:
 @end iftex
 @smallexample
 @group
-Wed Apr  1 08:57:59 1992  Nathaniel Bowditch  <nat@@apn.org>
+1999-04-01  Nathaniel Bowditch  <nat@@apn.org>
 
         * vc.texinfo: Fix expansion typos.
         * vc.el, vc-hooks.el: Don't call expand-file-name.
@@ -1932,7 +1958,7 @@ Emacs Lisp file containing it is maintained with version control.
 
 @vindex vc-comment-alist
   Each header is inserted surrounded by tabs, inside comment delimiters,
-on a new line at the start of the buffer.  Normally the ordinary comment
+on a new line at point.  Normally the ordinary comment
 start and comment end strings of the current mode are used, but for
 certain modes, there are special comment delimiters for this purpose;
 the variable @code{vc-comment-alist} specifies them.  Each element of
@@ -2374,3 +2400,11 @@ refers to a file whose name is @file{~hack} in directory @file{/tmp}.
   Likewise, quoting with @samp{/:} is one way to enter in the minibuffer
 a file name that contains @samp{$}.  However, the @samp{/:} must be at
 the beginning of the buffer in order to quote @samp{$}.
+
+  You can also quote wildcard characters with @samp{/:}, for visiting.
+For example, @file{/:/tmp/foo*bar} visits the file @file{/tmp/foo*bar}.
+However, in most cases you can simply type the wildcard characters for
+themselves.  For example, if the only file name in @file{/tmp} that
+starts with @samp{foo} and ends with @samp{bar} is @file{foo*bar}, then
+specifying @file{/tmp/foo*bar} will visit just @file{/tmp/foo*bar}.
+

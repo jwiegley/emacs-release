@@ -1,6 +1,10 @@
 This is Info file ../info/info, produced by Makeinfo version 1.68 from
 the input file info.texi.
 
+START-INFO-DIR-ENTRY
+* Info: (info).		Documentation browsing system.
+END-INFO-DIR-ENTRY
+
    This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
@@ -1786,41 +1790,41 @@ environment and info file reading manner.
 
 
 Tag Table:
-Node: Top924
-Node: Getting Started1629
-Node: Help-Small-Screen2440
-Node: Help4176
-Node: Help-P5293
-Node: Help-^L6140
-Node: Help-M9216
-Node: Help-FOO15021
-Node: Help-Adv15749
-Node: Help-Cross18399
-Node: Help-Q19035
-Node: Advanced Info19654
-Node: Expert20626
-Node: Add23274
-Node: Menus26628
-Node: Cross-refs29497
-Node: Tags30194
-Node: Checking31501
-Node: Emacs Info Variables32449
-Node: Create an Info File33433
-Node: Using Stand-alone Info33967
-Node: Options35244
-Node: Cursor Commands38434
-Node: Scrolling Commands41099
-Node: Node Commands43584
-Node: Searching Commands47592
-Node: Xref Commands49207
-Node: Parts of an Xref49810
-Node: Selecting Xrefs51740
-Node: Window Commands53323
-Node: The Mode Line54229
-Node: Basic Windows55866
-Node: The Echo Area58380
-Node: Printing Nodes62559
-Node: Miscellaneous Commands63213
-Node: Variables66431
+Node: Top1013
+Node: Getting Started1718
+Node: Help-Small-Screen2529
+Node: Help4265
+Node: Help-P5382
+Node: Help-^L6229
+Node: Help-M9305
+Node: Help-FOO15110
+Node: Help-Adv15838
+Node: Help-Cross18488
+Node: Help-Q19124
+Node: Advanced Info19743
+Node: Expert20715
+Node: Add23363
+Node: Menus26717
+Node: Cross-refs29586
+Node: Tags30283
+Node: Checking31590
+Node: Emacs Info Variables32538
+Node: Create an Info File33522
+Node: Using Stand-alone Info34056
+Node: Options35333
+Node: Cursor Commands38523
+Node: Scrolling Commands41188
+Node: Node Commands43673
+Node: Searching Commands47681
+Node: Xref Commands49296
+Node: Parts of an Xref49899
+Node: Selecting Xrefs51829
+Node: Window Commands53412
+Node: The Mode Line54318
+Node: Basic Windows55955
+Node: The Echo Area58469
+Node: Printing Nodes62648
+Node: Miscellaneous Commands63302
+Node: Variables66520
 
 End Tag Table

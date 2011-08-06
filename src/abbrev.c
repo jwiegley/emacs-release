@@ -25,6 +25,7 @@ Boston, MA 02111-1307, USA.  */
 #include "commands.h"
 #include "buffer.h"
 #include "window.h"
+#include "charset.h"
 #include "syntax.h"
 
 /* An abbrev table is an obarray.
@@ -110,7 +111,9 @@ To undefine an abbrev, define it with EXPANSION = nil.\n\
 If HOOK is non-nil, it should be a function of no arguments;\n\
 it is called after EXPANSION is inserted.\n\
 If EXPANSION is not a string, the abbrev is a special one,\n\
- which does not expand in the usual way but only runs HOOK.")
+ which does not expand in the usual way but only runs HOOK.\n\
+COUNT, if specified, initializes the abbrev's usage-count\n\
+which is incremented each time the abbrev is used.")
   (table, name, expansion, hook, count)
      Lisp_Object table, name, expansion, hook, count;
 {

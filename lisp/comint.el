@@ -1,6 +1,6 @@
 ;;; comint.el --- general command interpreter in a window stuff
 
-;; Copyright (C) 1988, 90, 92, 93, 94, 95, 96, 97, 98 Free Software Foundation, Inc.
+;; Copyright (C) 1988, 90, 92, 93, 94, 95, 96, 97, 98, 99 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu> then
 ;;	Simon Marshall <simon@gnu.ai.mit.edu>
@@ -277,9 +277,15 @@ This variable is buffer-local."
   :type 'boolean
   :group 'comint)
 
-;; AIX puts the name of the person being su'd to in from of the prompt.
+;; AIX puts the name of the person being su'd to in front of the prompt.
+;; kinit prints a prompt like `Password for devnull@GNU.ORG: '.
+;; ksu prints a prompt like `Kerberos password for devnull/root@GNU.ORG: '.
+;; ssh-add prints a prompt like `Enter passphrase: '.
+;; Some implementations of passwd use "Password (again)" as the 2nd prompt.
 (defcustom comint-password-prompt-regexp
-  "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|^\\)[Pp]assword\\|pass phrase\\):\\s *\\'"
+  "\\(\\([Oo]ld \\|[Nn]ew \\|Kerberos \\|'s \\|login \\|^\\)\
+[Pp]assword\\( (again)\\)?\\|pass phrase\\|Enter passphrase\\)\
+\\( for [^@ \t\n]+@[^@ \t\n]+\\)?:\\s *\\'"
   "*Regexp matching prompts for passwords in the inferior process.
 This is used by `comint-watch-for-password-prompt'."
   :type 'regexp
@@ -467,11 +473,11 @@ Entry to this mode runs the hooks on `comint-mode-hook'."
   (make-local-variable 'comint-scroll-to-bottom-on-input)
   (make-local-variable 'comint-scroll-to-bottom-on-output)
   (make-local-variable 'comint-scroll-show-maximum-output)
-  (make-local-variable 'pre-command-hook)
-  (add-hook 'pre-command-hook 'comint-preinput-scroll-to-bottom)
+  (make-local-hook 'pre-command-hook)
+  (add-hook 'pre-command-hook 'comint-preinput-scroll-to-bottom t t)
   (make-local-hook 'comint-output-filter-functions)
+  (make-local-hook 'comint-exec-hook)
   (make-local-variable 'comint-ptyp)
-  (make-local-variable 'comint-exec-hook)
   (make-local-variable 'comint-process-echoes)
   (make-local-variable 'comint-file-name-chars)
   (make-local-variable 'comint-file-name-quote-list)
@@ -1180,18 +1186,23 @@ We assume whitespace separates arguments, except within quotes.
 Also, a run of one or more of a single character
 in `comint-delimiter-argument-list' is a separate argument.
 Argument 0 is the command name."
-  ;; The first line handles ordinary characters and backslash-sequences.
+  ;; The first line handles ordinary characters and backslash-sequences
+  ;; (except with w32 msdos-like shells, where backslashes are valid).
   ;; The second matches "-quoted strings.
   ;; The third matches '-quoted strings.
   ;; The fourth matches `-quoted strings.
   ;; This seems to fit the syntax of BASH 2.0.
-  (let ((argpart "[^ \n\t\"'`\\]+\\|\\\\[\"'`\\]+\\|\
-\\(\"\\([^\"\\]\\|\\\\.\\)*\"\\|\
+  (let* ((first (if (and (eq system-type 'windows-nt) 
+			 (w32-shell-dos-semantics))
+		    "[^ \n\t\"'`]+\\|"
+		  "[^ \n\t\"'`\\]+\\|\\\\[\"'`\\]+\\|"))
+	 (argpart (concat first
+			  "\\(\"\\([^\"\\]\\|\\\\.\\)*\"\\|\
 '[^']*'\\|\
-`[^`]*`\\)") 
-	(args ()) (pos 0)
-	(count 0)
-	beg str value quotes)
+`[^`]*`\\)"))
+	 (args ()) (pos 0)
+	 (count 0)
+	 beg str value quotes)
     ;; Build a list of all the args until we have as many as we want.
     (while (and (or (null mth) (<= count mth))
 		(string-match argpart string pos))
@@ -2008,7 +2019,7 @@ regardless of what this variable says.
 This is a good thing to set in mode hooks.")
 
 (defvar comint-file-name-quote-list nil
-  "List of characters to quote with `\' when in a file name.
+  "List of characters to quote with `\\' when in a file name.
 
 This is a good thing to set in mode hooks.")
 
@@ -2328,7 +2339,7 @@ from input that has not yet been sent."
     (message "Point is now at the process mark")))
 
 (defun comint-bol-or-process-mark ()
-  "Move point beginning of line (after prompt) or to the process mark.
+  "Move point to beginning of line (after prompt) or to the process mark.
 The first time you use this command, it moves to the beginning of the line
 \(but after the prompt, if any).  If you repeat it again immediately,
 it moves point to the process mark.

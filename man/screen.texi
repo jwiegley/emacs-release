@@ -240,15 +240,21 @@ editing levels affect Emacs globally, not just one buffer, the square
 brackets appear in every window's mode line or not in any of them.
 @xref{Recursive Edit}.@refill
 
+  Non-windowing terminals can only show a single Emacs frame at a time
+(@pxref{Frames}).  On such terminals, the mode line displays the name of
+the selected frame, after @var{ch}.  The initial frame's name is
+@samp{F1}.
+
   @var{cs} states the coding system used for the file you are editing.
 A dash indicates the default state of affairs: no code conversion,
 except for end-of-line translation if the file contents call for that.
 @samp{=} means no conversion whatsoever.  Nontrivial code conversions
 are represented by various letters---for example, @samp{1} refers to ISO
 Latin-1.  @xref{Coding Systems}, for more information.  If you are using
-an input method, @var{cs} starts with a string such as @samp{@var{i}>},
-where @var{i} identifies the input method.  (Some input methods show
-@samp{+} or @samp{@@} instead of @samp{>}.)  @xref{Input Methods}.
+an input method, a string of the form @samp{@var{i}>} is added to the
+beginning of @var{cs}; @var{i} identifies the input method.  (Some input
+methods show @samp{+} or @samp{@@} instead of @samp{>}.)  @xref{Input
+Methods}.
 
   When you are using a character-only terminal (not a window system),
 @var{cs} uses three characters to describe, respectively, the coding
@@ -258,14 +264,28 @@ the coding system used for the file you are editing.
   When multibyte characters are not enabled, @var{cs} does not appear at
 all.  @xref{Enabling Multibyte}.
 
-  The colon after @var{cs} can change to another character in certain
+@cindex end-of-line conversion, mode-line indication
+  The colon after @var{cs} can change to another string in certain
 circumstances.  Emacs uses newline to separate lines in the buffer.
 Some files use different conventions for separating lines: either
 carriage-return linefeed (the MS-DOS convention) or just carriage-return
 (the Macintosh convention).  If the buffer's file uses carriage-return
-linefeed, the colon changes to a backslash (@samp{\}).  If the file uses
-just carriage-return, the colon indicator changes to a forward slash
-(@samp{/}).
+linefeed, the colon changes to either a backslash (@samp{\}) or
+@samp{(DOS)}, depending on the operating system.  If the file uses just
+carriage-return, the colon indicator changes to either a forward slash
+(@samp{/}) or @samp{(Mac)}.  On some systems, Emacs displays
+@samp{(Unix)} instead of the colon even for files that use newline to
+separate lines.
+
+@vindex eol-mnemonic-unix
+@vindex eol-mnemonic-dos
+@vindex eol-mnemonic-mac
+@vindex eol-mnemonic-undecided
+  You can customize the mode line display for each of the end-of-line
+formats by setting each of the variables @code{eol-mnemonic-unix},
+@code{eol-mnemonic-dos}, @code{eol-mnemonic-mac}, and
+@code{eol-mnemonic-undecided} to any string you find appropriate.
+@xref{Variables}, for an explanation how to set variables.
 
   @xref{Optional Mode Line}, for features that add other handy
 information to the mode line, such as the current column number of

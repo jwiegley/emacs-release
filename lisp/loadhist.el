@@ -31,15 +31,6 @@
 
 ;;; Code:
 
-(defun symbol-file (sym)
-  "Return the input source from which SYM was loaded.
-This is a file name, or nil if the source was a buffer with no associated file."
-  (catch 'foundit
-    (mapcar
-     (function (lambda (x) (if (memq sym (cdr x)) (throw 'foundit (car x)))))
-     load-history)
-    nil))
-
 (defun feature-symbols (feature)
   "Return the file and list of symbols associated with a given FEATURE."
    (catch 'foundit

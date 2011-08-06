@@ -755,7 +755,7 @@ x_handle_selection_request (event)
   }
 }
 
-/* Handle a SelectionClear event EVENT, which indicates that some other
+/* Handle a SelectionClear event EVENT, which indicates that some
    client cleared out our previously asserted selection.
    This is called from keyboard.c when such an event is found in the queue.  */
 
@@ -770,6 +770,26 @@ x_handle_selection_clear (event)
   Lisp_Object selection_symbol, local_selection_data;
   Time local_selection_time;
   struct x_display_info *dpyinfo = x_display_info_for_display (display);
+  struct x_display_info *t_dpyinfo;
+
+  /* If the new selection owner is also Emacs,
+     don't clear the new selection.  */
+  BLOCK_INPUT;
+  /* Check each display on the same terminal,
+     to see if this Emacs job now owns the selection
+     through that display.  */
+  for (t_dpyinfo = x_display_list; t_dpyinfo; t_dpyinfo = t_dpyinfo->next)
+    if (t_dpyinfo->kboard == dpyinfo->kboard)
+      {
+	Window owner_window
+	  = XGetSelectionOwner (t_dpyinfo->display, selection);
+	if (x_window_to_frame (t_dpyinfo, owner_window) != 0)
+	  {
+	    UNBLOCK_INPUT;
+	    return;
+	  }
+      }
+  UNBLOCK_INPUT;
 
   selection_symbol = x_atom_to_symbol (dpyinfo, display, selection);
 
@@ -1637,7 +1657,7 @@ lisp_data_to_selection_data (display, obj,
 	      || !STRING_MULTIBYTE (obj)
 	      || *size_ret == XSTRING (obj)->size)
 	     ? 0
-	     : find_charset_in_str (*data_ret, *size_ret, charsets, Qnil, 1));
+	     : find_charset_in_str (*data_ret, *size_ret, charsets, Qnil, 0, 1));
 
       if (!num || (num == 1 && charsets[CHARSET_ASCII]))
 	{
@@ -2301,7 +2321,7 @@ it merely informs you that they have happened.");
     "Coding system for communicating with other X clients.\n\
 When sending or receiving text via cut_buffer, selection, and clipboard,\n\
 the text is encoded or decoded by this coding system.\n\
-A default value is `compound-text'");
+The default value is `compound-text'.");
   Vselection_coding_system = intern ("compound-text");
 
   DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,

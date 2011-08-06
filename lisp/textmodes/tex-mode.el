@@ -1,6 +1,6 @@
 ;;; tex-mode.el --- TeX, LaTeX, and SliTeX mode commands.
 
-;; Copyright (C) 1985, 86, 89, 92, 94, 95, 96, 1997
+;; Copyright (C) 1985, 86, 89, 92, 94, 95, 96, 97, 98, 1999
 ;;       Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -27,6 +27,11 @@
 ;; Boston, MA 02111-1307, USA.
 
 ;;; Code:
+
+;; Pacify the byte-compiler
+(eval-when-compile
+  (require 'compare-w)
+  (require 'skeleton))
 
 (require 'shell)
 (require 'compile)
@@ -90,29 +95,49 @@ if the variable is non-nil."
 ;;;###autoload
 (defcustom tex-run-command "tex"
   "*Command used to run TeX subjob.
-If this string contains an asterisk (`*'), that is replaced by the file name;
-otherwise, the file name, preceded by blank, is added at the end."
+TeX Mode sets `tex-command' to this string.
+See the documentation of that variable."
   :type 'string
   :group 'tex-run)
 
 ;;;###autoload
 (defcustom latex-run-command "latex"
   "*Command used to run LaTeX subjob.
-If this string contains an asterisk (`*'), that is replaced by the file name;
-otherwise, the file name, preceded by blank, is added at the end."
+LaTeX Mode sets `tex-command' to this string.
+See the documentation of that variable."
   :type 'string
   :group 'tex-run)
 
+;;;###autoload
+(defcustom slitex-run-command "slitex"
+  "*Command used to run SliTeX subjob.
+SliTeX Mode sets `tex-command' to this string.
+See the documentation of that variable."
+  :type 'string
+  :group 'tex-run)
+
+;;;###autoload
+(defcustom tex-start-options-string "\\nonstopmode\\input"
+  "*TeX options to use when running TeX.
+These precede the input file name. If nil, TeX runs without option.
+See the documentation of `tex-command'."
+  :type '(radio (const :tag "Interactive \(nil\)" nil)
+		(const :tag "Nonstop \(\"\\nonstopmode\\input\"\)"
+		       "\\nonstopmode\\input")
+		(string :tag "String at your choice"))
+  :group 'tex-run
+  :version "20.4")
+
 (defvar standard-latex-block-names
-      '("abstract"         "array"            "center"       "description"
-        "displaymath"      "document"         "enumerate"    "eqnarray"
-        "eqnarray*"        "equation"         "figure"       "figure*"
-        "flushleft"        "flushright"       "itemize"      "letter"
-        "list"             "minipage"         "picture"      "quotation"
-        "quote"            "slide"            "sloppypar"     "tabbing"
-        "table"            "table*"           "tabular"       "tabular*"
-        "thebibliography"  "theindex*"        "titlepage"     "trivlist"
-        "verbatim"         "verbatim*"        "verse")
+  '("abstract"         "array"            "center"       "description"
+    "displaymath"      "document"         "enumerate"    "eqnarray"
+    "eqnarray*"        "equation"         "figure"       "figure*"
+    "flushleft"        "flushright"       "itemize"      "letter"
+    "list"             "minipage"         "picture"      "quotation"
+    "quote"            "slide"            "sloppypar"    "tabbing"
+    "table"            "table*"           "tabular"      "tabular*"
+    "thebibliography"  "theindex*"        "titlepage"    "trivlist"
+    "verbatim"         "verbatim*"        "verse")
   "Standard LaTeX block names.")
 
 ;;;###autoload
@@ -120,14 +145,6 @@ otherwise, the file name, preceded by blank, is added at the end."
   "*User defined LaTeX block names.
 Combined with `standard-latex-block-names' for minibuffer completion."
   :type '(repeat string)
-  :group 'tex-run)
-
-;;;###autoload
-(defcustom slitex-run-command "slitex"
-  "*Command used to run SliTeX subjob.
-If this string contains an asterisk (`*'), that is replaced by the file name;
-otherwise, the file name, preceded by blank, is added at the end."
-  :type 'string
   :group 'tex-run)
 
 ;;;###autoload
@@ -216,8 +233,14 @@ Deleted when the \\[tex-region] or \\[tex-buffer] is next run, or when the
 tex shell terminates.")
 
 (defvar tex-command nil
-  "Command to run TeX.
-The name of the file, preceded by a blank, will be added to this string.")
+  "*Command to run TeX.
+If this string contains an asterisk \(`*'\), that is replaced by the file name\;
+otherwise the \(shell-quoted\) value of `tex-start-options-string' and
+the file name are added at the end, with blanks as separators.
+
+In TeX, LaTeX, and SliTeX Mode this variable becomes buffer local.
+In these modes, use \\[set-variable] if you want to change it for the
+current buffer.")
 
 (defvar tex-trailer nil
   "String appended after the end of a region sent to TeX by \\[tex-region].")
@@ -348,7 +371,7 @@ subsubsection\\|paragraph\\|subparagraph\\)\\*?[ \t]*{" nil t)
 
 (defvar tex-mode-map nil "Keymap for TeX mode.")
 
-(if tex-mode-map 
+(if tex-mode-map
     nil
   (setq tex-mode-map (make-sparse-keymap))
   (tex-define-common-keys tex-mode-map)
@@ -363,12 +386,14 @@ subsubsection\\|paragraph\\|subparagraph\\)\\*?[ \t]*{" nil t)
   (define-key tex-mode-map "\C-c\C-o" 'tex-latex-block)
   (define-key tex-mode-map "\C-c\C-e" 'tex-close-latex-block)
   (define-key tex-mode-map "\C-c\C-u" 'tex-goto-last-unclosed-latex-block)
+  (define-key tex-mode-map "\C-c\C-m" 'tex-feed-input)
+  (define-key tex-mode-map [(control return)] 'tex-feed-input)
   (define-key tex-mode-map [menu-bar tex tex-bibtex-file]
     '("BibTeX File" . tex-bibtex-file))
   (define-key tex-mode-map [menu-bar tex tex-validate-region]
     '("Validate Region" . tex-validate-region))
-  (define-key tex-mode-map [menu-bar tex validate-tex-buffer]
-    '("Validate Buffer" . validate-tex-buffer))
+  (define-key tex-mode-map [menu-bar tex tex-validate-buffer]
+    '("Validate Buffer" . tex-validate-buffer))
   (define-key tex-mode-map [menu-bar tex tex-region]
     '("TeX Region" . tex-region))
   (define-key tex-mode-map [menu-bar tex tex-buffer]
@@ -382,7 +407,6 @@ subsubsection\\|paragraph\\|subparagraph\\)\\*?[ \t]*{" nil t)
 (put 'tex-view 'menu-enable '(stringp tex-print-file))
 (put 'tex-recenter-output-buffer 'menu-enable '(get-buffer "*tex-shell*"))
 (put 'tex-kill-job 'menu-enable '(tex-shell-running))
-
 
 (defvar tex-shell-map nil
   "Keymap for the TeX shell.
@@ -400,9 +424,6 @@ Inherits `shell-mode-map' with a few additions.")
   `((italic . "{\\em ")
     ,@tex-face-alist)
   "Alist of face and LaTeX font name for facemenu.")
-
-
-(defvar compare-windows-whitespace)	; Pacify the byte-compiler
 
 ;;; This would be a lot simpler if we just used a regexp search,
 ;;; but then it would be too slow.
@@ -436,6 +457,8 @@ says which mode to use."
 ;;;###autoload
 (defalias 'TeX-mode 'tex-mode)
 ;;;###autoload
+(defalias 'plain-TeX-mode 'plain-tex-mode)
+;;;###autoload
 (defalias 'LaTeX-mode 'latex-mode)
 
 ;;;###autoload
@@ -453,7 +476,7 @@ running TeX under a special subshell.  \\[tex-buffer] does the whole buffer.
 \\[tex-view] previews the .dvi file made by any of these.
 \\[tex-bibtex-file] runs bibtex on the file of the current buffer.
 
-Use \\[validate-tex-buffer] to check buffer for paragraphs containing
+Use \\[tex-validate-buffer] to check buffer for paragraphs containing
 mismatched $'s or braces.
 
 Special commands:
@@ -489,8 +512,6 @@ special subshell is initiated, the hook `tex-shell-hook' is run."
   (setq tex-end-of-header "%\\*\\*end of header")
   (setq tex-trailer "\\bye\n")
   (run-hooks 'text-mode-hook 'tex-mode-hook 'plain-tex-mode-hook))
-;;;###autoload
-(defalias 'plain-TeX-mode 'plain-tex-mode)
 
 ;;;###autoload
 (defun latex-mode ()
@@ -507,7 +528,7 @@ running LaTeX under a special subshell.  \\[tex-buffer] does the whole buffer.
 \\[tex-view] previews the .dvi file made by any of these.
 \\[tex-bibtex-file] runs bibtex on the file of the current buffer.
 
-Use \\[validate-tex-buffer] to check buffer for paragraphs containing
+Use \\[tex-validate-buffer] to check buffer for paragraphs containing
 mismatched $'s or braces.
 
 Special commands:
@@ -530,7 +551,7 @@ tex-show-queue-command
 	Command string used by \\[tex-show-print-queue] to show the print
 	queue that \\[tex-print] put your job on.
 
-Entering Latex mode runs the hook `text-mode-hook', then 
+Entering Latex mode runs the hook `text-mode-hook', then
 `tex-mode-hook', and finally `latex-mode-hook'.  When the special
 subshell is initiated, `tex-shell-hook' is run."
   (interactive)
@@ -585,7 +606,7 @@ running SliTeX under a special subshell.  \\[tex-buffer] does the whole buffer.
 \\[tex-view] previews the .dvi file made by any of these.
 \\[tex-bibtex-file] runs bibtex on the file of the current buffer.
 
-Use \\[validate-tex-buffer] to check buffer for paragraphs containing
+Use \\[tex-validate-buffer] to check buffer for paragraphs containing
 mismatched $'s or braces.
 
 Special commands:
@@ -697,7 +718,7 @@ Entering SliTeX mode runs the hook `text-mode-hook', then the hook
   (setq compare-windows-whitespace 'tex-categorize-whitespace)
   (make-local-variable 'skeleton-further-elements)
   (setq skeleton-further-elements
-	  '((indent-line-function 'indent-relative-maybe)))
+	'((indent-line-function 'indent-relative-maybe)))
   (make-local-variable 'facemenu-add-face-function)
   (make-local-variable 'facemenu-end-add-face)
   (make-local-variable 'facemenu-remove-face-function)
@@ -770,24 +791,24 @@ inserts \" characters."
 	   (t
 	    tex-close-quote)))))
 
-(defun validate-tex-buffer ()
-  "Check current buffer for paragraphs containing mismatched $s.
+(defun tex-validate-buffer ()
+  "Check current buffer for paragraphs containing mismatched braces or $s.
 Their positions are recorded in the buffer `*Occur*'.
-To find a particular invalidity from `*Occur*',
-switch to to that buffer and type C-c C-c on the line
-for the invalidity you want to see."
+To find a particular invalidity from `*Occur*', switch to that buffer
+and type C-c C-c or click with mouse-2
+on the line for the invalidity you want to see."
   (interactive)
   (let ((buffer (current-buffer))
 	(prevpos (point-min))
-	(linenum nil))
+	(linenum nil)
+	(num-matches 0))
     (with-output-to-temp-buffer "*Occur*"
       (princ "Mismatches:\n")
       (save-excursion
 	(set-buffer standard-output)
 	(occur-mode)
 	(setq occur-buffer buffer)
-	(setq occur-nlines 0)
-	(setq occur-pos-list nil))
+	(setq occur-nlines 0))
       (save-excursion
 	(goto-char (point-max))
 	(while (and (not (input-pending-p)) (not (bobp)))
@@ -811,27 +832,34 @@ for the invalidity you want to see."
 		      (setq linenum (- linenum (count-lines prevpos (point))))
 		    (setq linenum (1+ (count-lines 1 start))))
 		  (setq prevpos (point))
-		  ;; Mention this mismatch in *Occur*.  
+		  ;; Mention this mismatch in *Occur*.
 		  ;; Since we scan from end of buffer to beginning,
-		  ;; add each mismatch at the beginning of *Occur*
-		  ;; and at the beginning of occur-pos-list.
+		  ;; add each mismatch at the beginning of *Occur*.
 		  (save-excursion
 		    (setq tem (point-marker))
 		    (set-buffer standard-output)
 		    (goto-char (point-min))
 		    ;; Skip "Mismatches:" header line.
 		    (forward-line 1)
-		    (setq occur-pos-list (cons tem occur-pos-list))
+		    (setq num-matches (1+ num-matches))
 		    (insert-buffer-substring buffer start end)
-		    (forward-char (- start end))
-		    (insert (format "%3d: " linenum)))))
+		    (let (text-beg (text-end (point-marker)))
+		      (forward-char (- start end))
+		      (setq text-beg (point-marker))
+		      (insert (format "%3d: " linenum))
+		      (put-text-property (marker-position text-beg)
+					 (- (marker-position text-end) 1)
+					 'mouse-face 'highlight)
+		      (put-text-property (marker-position text-beg)
+					 (- (marker-position text-end) 1)
+					 'occur tem)))))
 	    (goto-char prev-end))))
       (save-excursion
 	(set-buffer standard-output)
-	(if (null occur-pos-list)
+	(if (eq num-matches 0)
 	    (insert "None!\n"))
 	(if (interactive-p)
-	    (message "%d mismatches found" (length occur-pos-list)))))))
+	    (message "%d mismatches found" num-matches))))))
 
 (defun tex-validate-region (start end)
   "Check for mismatched braces or $'s in region.
@@ -845,7 +873,7 @@ area if a mismatch is found."
 	    (narrow-to-region start end)
 	    ;; First check that the open and close parens balance in numbers.
 	    (goto-char start)
-	    (while (< 0 (setq max-possible-sexps (1- max-possible-sexps)))
+	    (while (<= 0 (setq max-possible-sexps (1- max-possible-sexps)))
 	      (forward-sexp 1))
 	    ;; Now check that like matches like.
 	    (goto-char start)
@@ -858,8 +886,8 @@ area if a mismatch is found."
 		      (error "Mismatched parentheses"))))
 	      (forward-char 1)))
 	(error
-	  (skip-syntax-forward " .>")
-	  (setq failure-point (point)))))
+	 (skip-syntax-forward " .>")
+	 (setq failure-point (point)))))
     (if failure-point
 	(progn
 	  (goto-char failure-point)
@@ -874,10 +902,10 @@ A prefix arg inhibits the checking."
   (or inhibit-validation
       (save-excursion
 	(tex-validate-region
-	  (save-excursion
-	    (search-backward "\n\n" nil 'move)
-	    (point))
-	  (point)))
+	 (save-excursion
+	   (search-backward "\n\n" nil 'move)
+	   (point))
+	 (point)))
       (message "Paragraph being closed appears to contain a mismatch"))
   (insert "\n\n"))
 
@@ -894,7 +922,7 @@ A prefix arg inhibits the checking."
 (defun latex-fill-nobreak-predicate ()
   (let ((opoint (point))
 	inside)
-    (save-excursion 
+    (save-excursion
       (save-restriction
 	(beginning-of-line)
 	(narrow-to-region (point) opoint)
@@ -976,10 +1004,24 @@ Mark is left at original location."
       (setq tex-shell-map (nconc (make-sparse-keymap) shell-mode-map))
       (tex-define-common-keys tex-shell-map)
       (use-local-map tex-shell-map)
-      (compilation-minor-mode)
+      (compilation-shell-minor-mode t)
+      (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t)
+      (make-local-variable 'list-buffers-directory)
+      (make-local-variable 'shell-dirstack)
+      (make-local-variable 'shell-last-dir)
+      (make-local-variable 'shell-dirtrackp)
       (run-hooks 'tex-shell-hook)
       (while (zerop (buffer-size))
 	(sleep-for 1)))))
+
+(defun tex-feed-input ()
+  "Send input to the tex shell process.
+In the tex buffer this can be used to continue an interactive tex run.
+In the tex shell buffer this command behaves like `comint-send-input'."
+  (interactive)
+  (set-buffer (process-buffer (get-process "tex-shell")))
+  (comint-send-input)
+  (tex-recenter-output-buffer nil))
 
 (defun tex-display-shell ()
   "Make the TeX shell buffer visible in a window."
@@ -1065,116 +1107,118 @@ If NOT-ALL is non-nil, save the `.dvi' file."
 
 (defun tex-start-tex (command file)
   "Start a TeX run, using COMMAND on FILE."
-  (let* ((cmd (concat command " \\\\nonstopmode\\\\input"))
-         (star (string-match "\\*" cmd))
+  (let* ((star (string-match "\\*" command))
          (compile-command
-          (if star (concat (substring cmd 0 star)
-                           file (substring cmd (1+ star)))
-            (concat cmd " " file))))
+          (if star
+	      (concat (substring command 0 star)
+		      (comint-quote-filename file)
+		      (substring command (1+ star)))
+            (concat command " "
+		    (if (< 0 (length tex-start-options-string))
+			(concat
+			 (shell-quote-argument tex-start-options-string) " "))
+		    (comint-quote-filename file)))))
     (with-current-buffer (process-buffer (tex-send-command compile-command))
       (save-excursion
 	(forward-line -1)
 	(setq tex-start-tex-marker (point-marker)))
       (make-local-variable 'compilation-parse-errors-function)
-      (setq compilation-parse-errors-function 'tex-compilation-parse-errors))))
+      (setq compilation-parse-errors-function 'tex-compilation-parse-errors)
+      (compilation-forget-errors))))
 
 (defun tex-compilation-parse-errors (limit-search find-at-least)
-  "Parse the current buffer as error messages.
-This makes a list of error descriptors, `compilation-error-list'.
-For each source-file, line-number pair in the buffer,
-the source file is read in, and the text location is saved in
-`compilation-error-list'.  The function `next-error', assigned to
-\\[next-error], takes the next error off the list and visits its location.
+  "Parse the current buffer as TeX error messages.
+See the variable `compilation-parse-errors-function' for the interface it uses.
 
-If LIMIT-SEARCH is non-nil, don't bother parsing past that location.
-If FIND-AT-LEAST is non-nil, don't bother parsing after finding that
-
-This function works on TeX compilations only.  It is necessary for
-that purpose, since TeX does not put file names on the same line as
-line numbers for the errors."
+This function parses only the last TeX compilation.
+It works on TeX compilations only.  It is necessary for that purpose,
+since TeX does not put file names and line numbers on the same line as
+for the error messages."
   (require 'thingatpt)
   (setq compilation-error-list nil)
   (message "Parsing error messages...")
-  (let ((old-lc-syntax (char-syntax ?\{))
-        (old-rc-syntax (char-syntax ?\}))
-        (old-lb-syntax (char-syntax ?\[))
-        (old-rb-syntax (char-syntax ?\]))
-        (num-found 0) last-filename last-linenum last-position)
-    (unwind-protect
-        (progn
-          (modify-syntax-entry ?\{ "_")
-          (modify-syntax-entry ?\} "_")
-          (modify-syntax-entry ?\[ "_")
-          (modify-syntax-entry ?\] "_")
-          ;; Don't reparse messages already seen at last parse.
-          (goto-char (max (or compilation-parsing-end 0)
-			  tex-start-tex-marker))
-          ;; Don't parse the first two lines as error messages.
-          ;; This matters for grep.
-          (if (bobp) (forward-line 2))
-          (while (re-search-forward
-                  "^l\\.\\([0-9]+\\) \\(\\.\\.\\.\\)?\\(.*\\)$"
-                  (and (or (null find-at-least)
-                           (>= num-found find-at-least)) limit-search) t)
-            ;; Extract file name and line number from error message.
-            ;; Line number is 2 away from beginning of line: "l.23"
-            ;; The file is the one that was opened last and is still open.
-            ;; We need to find the last open parenthesis.
-            (let* ((linenum (string-to-int (match-string 1)))
-                   (error-text (regexp-quote (match-string 3)))
-                   (filename
-                    (save-excursion
-                      (backward-up-list 1)
-                      (skip-syntax-forward "(_")
-                      (while (not (file-readable-p
-                                   (thing-at-point 'filename)))
-                        (skip-syntax-backward "(_")
-                        (backward-up-list 1)
-                        (skip-syntax-forward "(_"))
-                      (thing-at-point 'filename)))
-                   (error-marker 
-                    (save-excursion
-                      (re-search-backward "^! " nil t)
-                      (point-marker)))
-                   (new-file (or (null last-filename)
-                                 (not (string-equal last-filename filename))))
-                   (error-location
-                    (save-excursion
-		      (if (equal filename
-				 (expand-file-name (concat tex-zap-file ".tex")))
-			  (set-buffer tex-last-buffer-texed)
-			(set-buffer (find-file-noselect filename)))
-                      (if new-file
-			  (goto-line linenum)
-                        (goto-char last-position)
-                        (forward-line (- linenum last-linenum)))
-                                        ;first try a forward search
-                                        ;for the error text, then a
-                                        ;backward search limited by
-                                        ;the last error
-                      (let ((starting-point (point)))
-                        (or (re-search-forward error-text nil t)
-			    (re-search-backward
-			     error-text
-			     (marker-position last-position) t)
-			    (goto-char starting-point)))
-                      (point-marker))))
-              (setq last-filename filename)
-              (if (or new-file
-                      (not (= last-position error-location)))
-                  (progn
-                    (setq num-found (1+ num-found))
-                    (setq last-position error-location)
-                    (setq last-linenum linenum)
-                    (setq compilation-error-list
-                          (nconc compilation-error-list
-                                 (list (cons error-marker
-                                             error-location)))))))))
-      (modify-syntax-entry ?\{ (char-to-string old-lc-syntax))
-      (modify-syntax-entry ?\} (char-to-string old-rc-syntax))
-      (modify-syntax-entry ?\[ (char-to-string old-lb-syntax))
-      (modify-syntax-entry ?\] (char-to-string old-rb-syntax))))
+  (let ((default-directory		; Perhaps dir has changed meanwhile.
+	  (file-name-directory (buffer-file-name tex-last-buffer-texed)))
+	(old-syntax-table (syntax-table))
+	(tex-error-parse-syntax-table (copy-syntax-table (syntax-table)))
+	found-desired (num-errors-found 0)
+	last-filename last-linenum last-position
+	begin-of-error end-of-error)
+    (modify-syntax-entry ?\{ "_" tex-error-parse-syntax-table)
+    (modify-syntax-entry ?\} "_" tex-error-parse-syntax-table)
+    (modify-syntax-entry ?\[ "_" tex-error-parse-syntax-table)
+    (modify-syntax-entry ?\] "_" tex-error-parse-syntax-table)
+    ;; Single quotations may appear in errors
+    (modify-syntax-entry ?\" "_" tex-error-parse-syntax-table)
+    ;; Don't parse previous compilations.
+    (setq compilation-parsing-end
+	  (max compilation-parsing-end tex-start-tex-marker))
+    ;; Don't reparse messages already seen at last parse.
+    (goto-char compilation-parsing-end)
+    ;; Parse messages.
+    (while (and (not (or found-desired (eobp)))
+		(prog1 (re-search-forward "^! " nil 'move)
+		  (setq begin-of-error (match-beginning 0)
+			end-of-error (match-end 0)))
+		(re-search-forward
+		 "^l\\.\\([0-9]+\\) \\(\\.\\.\\.\\)?\\(.*\\)$" nil 'move))
+      (let* ((this-error (set-marker (make-marker) begin-of-error))
+	     (linenum (string-to-int (match-string 1)))
+	     (error-text (regexp-quote (match-string 3)))
+	     (filename
+	      (save-excursion
+		(unwind-protect
+		    (progn
+		      (set-syntax-table tex-error-parse-syntax-table)
+		      (backward-up-list 1)
+		      (skip-syntax-forward "(_")
+		      (while (not (file-readable-p
+				   (thing-at-point 'filename)))
+			(skip-syntax-backward "(_")
+			(backward-up-list 1)
+			(skip-syntax-forward "(_"))
+		      (thing-at-point 'filename))
+		  (set-syntax-table old-syntax-table))))
+	     (new-file
+	      (or (null last-filename)
+		  (not (string-equal last-filename filename))))
+	     (error-location
+	      (save-excursion
+		(if (equal filename (concat tex-zap-file ".tex"))
+		    (set-buffer tex-last-buffer-texed)
+		  (set-buffer (find-file-noselect filename)))
+		(if new-file
+		    (goto-line linenum)
+		  (goto-char last-position)
+		  (forward-line (- linenum last-linenum)))
+		;; first try a forward search for the error text,
+		;; then a backward search limited by the last error.
+		(let ((starting-point (point)))
+		  (or (re-search-forward error-text nil t)
+		      (re-search-backward
+		       error-text
+		       (marker-position last-position) t)
+		      (goto-char starting-point)))
+		(point-marker))))
+	(goto-char this-error)
+	(if (and compilation-error-list
+		 (or (and find-at-least
+			  (>= num-errors-found
+			      find-at-least))
+		     (and limit-search
+			  (>= end-of-error limit-search)))
+		 new-file)
+	    (setq found-desired t)
+	  (setq num-errors-found (1+ num-errors-found)
+		last-filename filename
+		last-linenum linenum
+		last-position error-location
+		compilation-error-list	; Add the new error
+		(cons (cons this-error error-location)
+		      compilation-error-list))
+	  (goto-char end-of-error)))))
   (setq compilation-parsing-end (point))
+  (setq compilation-error-list (nreverse compilation-error-list))
   (message "Parsing error messages...done"))
 
 ;;; The commands:
@@ -1223,7 +1267,7 @@ The value of `tex-command' specifies the command to use to run TeX."
           ;; Maybe copy first line, such as `\input texinfo', to temp file.
 	  (and tex-first-line-header-regexp
 	       (looking-at tex-first-line-header-regexp)
-	       (write-region (point) 
+	       (write-region (point)
 			     (progn (forward-line 1)
 				    (setq already-output (point)))
 			     tex-out-file nil nil))
@@ -1238,7 +1282,7 @@ The value of `tex-command' specifies the command to use to run TeX."
 		(if (re-search-forward tex-end-of-header nil t)
 		    (let (hend)
 		      (forward-line 1)
-		      (setq hend (point))	;mark end of header
+		      (setq hend (point)) ;mark end of header
 		      (write-region (max (min hbeg beg) already-output)
 				    hend
 				    tex-out-file
@@ -1258,8 +1302,12 @@ The value of `tex-command' specifies the command to use to run TeX."
 			  tex-out-file t nil))))
     ;; Record the file name to be deleted afterward.
     (setq tex-last-temp-file tex-out-file)
-    (tex-send-command tex-shell-cd-command zap-directory)
-    (tex-start-tex tex-command tex-out-file)
+    (let (shell-dirtrack-verbose)
+      (tex-send-command tex-shell-cd-command zap-directory))
+    ;; Use a relative file name here because (1) the proper dir
+    ;; is already current, and (2) the abs file name is sometimes
+    ;; too long and can make tex crash.
+    (tex-start-tex tex-command (concat tex-zap-file ".tex"))
     (tex-display-shell)
     (setq tex-print-file tex-out-file)
     (setq tex-last-buffer-texed (current-buffer))))
@@ -1277,7 +1325,7 @@ This function is more useful than \\[tex-buffer] when you need the
 `.aux' file of LaTeX to have the correct name."
   (interactive)
   (let ((source-file
-	 (or tex-main-file 
+	 (or tex-main-file
 	     (if (buffer-file-name)
 		 (file-name-nondirectory (buffer-file-name))
 	       (error "Buffer does not seem to be associated with any file"))))
@@ -1287,17 +1335,20 @@ This function is more useful than \\[tex-buffer] when you need the
     (if (tex-shell-running)
         (tex-kill-job)
       (tex-start-shell))
-    (tex-send-command tex-shell-cd-command file-dir)
+    (let (shell-dirtrack-verbose)
+      (tex-send-command tex-shell-cd-command file-dir))
     (tex-start-tex tex-command source-file)
     (tex-display-shell)
     (setq tex-last-buffer-texed (current-buffer))
-    (setq tex-print-file source-file)))
+    (setq tex-print-file (expand-file-name source-file))))
 
 (defun tex-generate-zap-file-name ()
   "Generate a unique name suitable for use as a file name."
   ;; Include the shell process number and host name
   ;; in case there are multiple shells (for same or different user).
-  (format "#tz%d%s"
+  ;; Dec 1998: There is a report that some versions of xdvi
+  ;; don't work with file names that start with #.
+  (format "_TZ_%d-%s"
           (process-id (get-buffer-process "*tex-shell*"))
 	  (tex-strip-dots (system-name))))
 
@@ -1316,7 +1367,9 @@ This function is more useful than \\[tex-buffer] when you need the
       (setq start (match-end 0)))
     (or (= start 0)
 	(setq elts (cons (substring s start) elts)))
-    (mapconcat 'expand-file-name (nreverse elts) ":")))
+    (mapconcat '(lambda (elt)
+		  (if (= (length elt) 0) elt (expand-file-name elt)))
+	       (nreverse elts) ":")))
 
 (defun tex-shell-running ()
   (and (get-process "tex-shell")
@@ -1325,6 +1378,10 @@ This function is more useful than \\[tex-buffer] when you need the
 (defun tex-kill-job ()
   "Kill the currently running TeX job."
   (interactive)
+  ;; quit-process leads to core dumps of the tex process (except if
+  ;; coredumpsize has limit 0kb as on many environments).  One would
+  ;; like to use (kill-process proc 'lambda), however that construct
+  ;; does not work on some systems and kills the shell itself.
   (quit-process (get-process "tex-shell") t))
 
 (defun tex-recenter-output-buffer (linenum)
@@ -1366,8 +1423,8 @@ is provided, use the alternative command, `tex-alt-dvi-print-command'."
           (tex-kill-job)
         (tex-start-shell))
       (tex-send-command
-        (if alt tex-alt-dvi-print-command tex-dvi-print-command)
-        print-file-name-dvi t))))
+       (if alt tex-alt-dvi-print-command tex-dvi-print-command)
+       print-file-name-dvi t))))
 
 (defun tex-alt-print ()
   "Print the .dvi file made by \\[tex-region], \\[tex-buffer] or \\[tex-file].
@@ -1430,7 +1487,8 @@ Runs the shell command defined by `tex-show-queue-command'."
   (if (tex-shell-running)
       (tex-kill-job)
     (tex-start-shell))
-  (let ((tex-out-file
+  (let (shell-dirtrack-verbose
+	(tex-out-file
          (tex-append (file-name-nondirectory (buffer-file-name)) ""))
 	(file-dir (file-name-directory (buffer-file-name))))
     (tex-send-command tex-shell-cd-command file-dir)
@@ -1442,4 +1500,3 @@ Runs the shell command defined by `tex-show-queue-command'."
 (provide 'tex-mode)
 
 ;;; tex-mode.el ends here
-

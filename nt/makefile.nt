@@ -22,15 +22,12 @@
 #						  9-6-94
 !include makefile.def
 
-ALL		= $(BLD)\addpm.exe $(BLD)\ddeclient.exe $(BLD)\runemacs.exe $(BLD)\cmdproxy.exe
+ALL		= addpm ddeclient runemacs cmdproxy addsection preprep
 !if $(MSVCNT11)
 TRES		= $(BLD)\emacs.res
 !else
 TRES		= $(BLD)\emacs.rbj
 !endif
-
-.c{$(BLD)}.obj:
-		  $(CC) $(CFLAGS) -Fo$@ $<
 
 addpm:		  $(BLD) $(BLD)\addpm.exe
 $(BLD)\addpm.obj: addpm.c
@@ -49,6 +46,18 @@ $(BLD)\cmdproxy.obj: cmdproxy.c
 $(BLD)\cmdproxy.exe: $(BLD)\cmdproxy.obj
 		  $(LINK) -out:$@ -subsystem:console -entry:mainCRTStartup \
 		  $(SYS_LDFLAGS) $** $(BASE_LIBS) user32.lib
+
+addsection:	  $(BLD) $(BLD)\addsection.exe
+$(BLD)\addsection.obj: addsection.c
+$(BLD)\addsection.exe: $(BLD)\addsection.obj
+		  $(LINK) -debug:full -out:$@ -subsystem:console -entry:mainCRTStartup \
+		  $(SYS_LDFLAGS) $** $(BASE_LIBS) user32.lib
+
+preprep:	  $(BLD) $(BLD)\preprep.exe
+$(BLD)\preprep.obj: preprep.c
+$(BLD)\preprep.exe: $(BLD)\preprep.obj
+		  $(LINK) -debug:full -out:$@ -subsystem:console -entry:mainCRTStartup \
+		  $(SYS_LDFLAGS) $** $(BASE_LIBS)
 
 #
 # The resource file.  NT 3.10 requires the use of cvtres; even though
@@ -83,6 +92,9 @@ all:		$(BLD) $(ALL)
 		$(BUILD_CMD)
 		cd ..\nt
 
+$(INSTALL_DIR):
+		- mkdir $(INSTALL_DIR)
+
 $(INSTALL_DIR)\bin:
 		- mkdir $(INSTALL_DIR)\bin
 
@@ -98,7 +110,8 @@ $(INSTALL_DIR)\bin\debug.bat:	debug.bat.in
 		echo set emacs_dir=$(INSTALL_DIR)>> $@
 		type debug.bat.in >> $@
 
-batch_files: $(INSTALL_DIR)\bin \
+batch_files: $(INSTALL_DIR) \
+	     $(INSTALL_DIR)\bin \
 	     $(INSTALL_DIR)\bin\emacs.bat \
 	     $(INSTALL_DIR)\bin\debug.bat
 
@@ -106,8 +119,7 @@ batch_files: $(INSTALL_DIR)\bin \
 # Build and install emacs in INSTALL_DIR
 #
 INSTALL_CMD	= $(MAKE) -f makefile.nt install
-install:	all batch_files
-		- mkdir $(INSTALL_DIR)
+install:	all $(INSTALL_DIR) batch_files
 		cd ..\lib-src
 		$(INSTALL_CMD)
 		cd ..\src
@@ -119,9 +131,12 @@ install:	all batch_files
 		- $(CP) $(BLD)\ddeclient.exe $(INSTALL_DIR)\bin
 		- $(CP) $(BLD)\cmdproxy.exe $(INSTALL_DIR)\bin
 		- $(CP) $(BLD)\runemacs.exe $(INSTALL_DIR)\bin
+		- $(CP) ..\lib-src\fns-*.el $(INSTALL_DIR)\bin
 		- $(ADDPM) $(INSTALL_DIR)
 		- $(DEL) ..\same-dir.tst
 		- $(DEL) $(INSTALL_DIR)\same-dir.tst
+		- mkdir $(INSTALL_DIR)\etc\icons
+		- $(CP_DIR) icons $(INSTALL_DIR)\etc\icons
 		echo SameDirTest > $(INSTALL_DIR)\same-dir.tst
 		if not exist ..\same-dir.tst $(MAKE) -f makefile.nt real_install
 		- $(DEL) ..\same-dir.tst
@@ -156,6 +171,8 @@ real_install:
 		- mkdir $(INSTALL_DIR)\lock
 		- mkdir $(INSTALL_DIR)\data
 		- mkdir $(INSTALL_DIR)\site-lisp
+		- mkdir $(INSTALL_DIR)\etc\icons
+		- $(CP_DIR) icons $(INSTALL_DIR)\etc\icons
 		if not exist ..\same-dir.tst $(CP_DIR) ..\etc $(INSTALL_DIR)\etc
 		if not exist ..\same-dir.tst $(CP_DIR) ..\info $(INSTALL_DIR)\info
 		- $(DEL) ..\same-dir.tst

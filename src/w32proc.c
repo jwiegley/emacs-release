@@ -63,6 +63,11 @@ Lisp_Object Vw32_start_process_show_window;
    consoles also allows Emacs to cleanly terminate process groups.  */
 Lisp_Object Vw32_start_process_share_console;
 
+/* Control whether create_child cause the process to inherit Emacs'
+   error mode setting.  The default is t, to minimize the possibility of
+   subprocesses blocking when accessing unmounted drives.  */
+Lisp_Object Vw32_start_process_inherit_error_mode;
+
 /* Time to sleep before reading from a subprocess output pipe - this
    avoids the inefficiency of frequently reading small amounts of data.
    This is primarily necessary for handling DOS processes on Windows 95,
@@ -304,6 +309,7 @@ create_child (char *exe, char *cmdline, char *env,
   STARTUPINFO start;
   SECURITY_ATTRIBUTES sec_attrs;
   SECURITY_DESCRIPTOR sec_desc;
+  DWORD flags;
   char dir[ MAXPATHLEN ];
   
   if (cp == NULL) abort ();
@@ -334,13 +340,14 @@ create_child (char *exe, char *cmdline, char *env,
   
   strcpy (dir, process_dir);
   unixtodos_filename (dir);
-  
+
+  flags = (!NILP (Vw32_start_process_share_console)
+	   ? CREATE_NEW_PROCESS_GROUP
+	   : CREATE_NEW_CONSOLE);
+  if (NILP (Vw32_start_process_inherit_error_mode))
+    flags |= CREATE_DEFAULT_ERROR_MODE;
   if (!CreateProcess (exe, cmdline, &sec_attrs, NULL, TRUE,
-		      (!NILP (Vw32_start_process_share_console)
-		       ? CREATE_NEW_PROCESS_GROUP
-		       : CREATE_NEW_CONSOLE),
-		      env, dir,
-		      &start, &cp->procinfo))
+		      flags, env, dir, &start, &cp->procinfo))
     goto EH_Fail;
 
   cp->pid = (int) cp->procinfo.dwProcessId;
@@ -632,7 +639,10 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app)
   	    {
 	      char * dllname = RVA_TO_PTR (imports->Name, section, executable);
 
-	      if (strcmp (dllname, "cygwin.dll") == 0)
+	      /* The exact name of the cygwin dll has changed with
+	         various releases, but hopefully this will be reasonably
+	         future proof.  */
+	      if (strncmp (dllname, "cygwin", 6) == 0)
 		{
 		  *is_cygnus_app = TRUE;
 		  break;
@@ -1165,9 +1175,15 @@ count_children:
       return 0;
     }
   
-  /* Wait for input or child death to be signalled.  */
   start_time = GetTickCount ();
-  active = WaitForMultipleObjects (nh + nc, wait_hnd, FALSE, timeout_ms);
+
+  /* Wait for input or child death to be signalled.  If user input is
+     allowed, then also accept window messages.  */
+  if (FD_ISSET (0, &orfds))
+    active = MsgWaitForMultipleObjects (nh + nc, wait_hnd, FALSE, timeout_ms,
+					QS_ALLINPUT);
+  else
+    active = WaitForMultipleObjects (nh + nc, wait_hnd, FALSE, timeout_ms);
 
   if (active == WAIT_FAILED)
     {
@@ -1203,7 +1219,26 @@ count_children:
      processed - otherwise higher numbered channels could be starved. */
   do
     {
-      if (active >= nh)
+      if (active == nh + nc)
+	{
+	  /* There are messages in the lisp thread's queue; we must
+             drain the queue now to ensure they are processed promptly,
+             because if we don't do so, we will not be woken again until
+             further messages arrive.
+
+	     NB. If ever we allow window message procedures to callback
+	     into lisp, we will need to ensure messages are dispatched
+	     at a safe time for lisp code to be run (*), and we may also
+	     want to provide some hooks in the dispatch loop to cater
+	     for modeless dialogs created by lisp (ie. to register
+	     window handles to pass to IsDialogMessage).
+
+	     (*) Note that MsgWaitForMultipleObjects above is an
+	     internal dispatch point for messages that are sent to
+	     windows created by this thread.  */
+	  drain_message_queue ();
+	}
+      else if (active >= nh)
 	{
 	  cp = cps[active - nh];
 
@@ -1349,21 +1384,58 @@ sys_kill (int pid, int sig)
 	    }
 
 	  foreground_window = GetForegroundWindow ();
-	  if (foreground_window && SetForegroundWindow (cp->hwnd))
+	  if (foreground_window)
 	    {
-	      /* Generate keystrokes as if user had typed Ctrl-Break or Ctrl-C.  */
-	      keybd_event (VK_CONTROL, control_scan_code, 0, 0);
-	      keybd_event (vk_break_code, break_scan_code, 0, 0);
-	      keybd_event (vk_break_code, break_scan_code, KEYEVENTF_KEYUP, 0);
-	      keybd_event (VK_CONTROL, control_scan_code, KEYEVENTF_KEYUP, 0);
+              /* NT 5.0, and apparently also Windows 98, will not allow
+		 a Window to be set to foreground directly without the
+		 user's involvement. The workaround is to attach
+		 ourselves to the thread that owns the foreground
+		 window, since that is the only thread that can set the
+		 foreground window.  */
+              DWORD foreground_thread, child_thread;
+              foreground_thread =
+		GetWindowThreadProcessId (foreground_window, NULL);
+	      if (foreground_thread == GetCurrentThreadId ()
+                  || !AttachThreadInput (GetCurrentThreadId (),
+                                         foreground_thread, TRUE))
+                foreground_thread = 0;
 
-	      /* Sleep for a bit to give time for Emacs frame to respond
-		 to focus change events (if Emacs was active app).  */
-	      Sleep (10);
+              child_thread = GetWindowThreadProcessId (cp->hwnd, NULL);
+	      if (child_thread == GetCurrentThreadId ()
+                  || !AttachThreadInput (GetCurrentThreadId (),
+                                         child_thread, TRUE))
+                child_thread = 0;
 
-	      SetForegroundWindow (foreground_window);
-	    }
-	}
+              /* Set the foreground window to the child.  */
+              if (SetForegroundWindow (cp->hwnd))
+                {
+                  /* Generate keystrokes as if user had typed Ctrl-Break or
+                     Ctrl-C.  */
+                  keybd_event (VK_CONTROL, control_scan_code, 0, 0);
+                  keybd_event (vk_break_code, break_scan_code,
+		    (vk_break_code == 'C' ? 0 : KEYEVENTF_EXTENDEDKEY), 0);
+                  keybd_event (vk_break_code, break_scan_code,
+                    (vk_break_code == 'C' ? 0 : KEYEVENTF_EXTENDEDKEY)
+                    | KEYEVENTF_KEYUP, 0);
+                  keybd_event (VK_CONTROL, control_scan_code,
+                               KEYEVENTF_KEYUP, 0);
+
+                  /* Sleep for a bit to give time for Emacs frame to respond
+                     to focus change events (if Emacs was active app).  */
+                  Sleep (100);
+
+                  SetForegroundWindow (foreground_window);
+                }
+              /* Detach from the foreground and child threads now that
+                 the foreground switching is over.  */
+              if (foreground_thread)
+                AttachThreadInput (GetCurrentThreadId (),
+                                   foreground_thread, FALSE);
+              if (child_thread)
+                AttachThreadInput (GetCurrentThreadId (),
+                                   child_thread, FALSE);
+            }
+        }
       /* Ctrl-Break is NT equivalent of SIGINT.  */
       else if (!GenerateConsoleCtrlEvent (CTRL_BREAK_EVENT, pid))
         {
@@ -1713,8 +1785,10 @@ language as the first two characters, and the country or regionial variant\n\
 as the third letter.  For example, ENU refers to `English (United States)',\n\
 while ENC means `English (Canadian)'.\n\
 \n\
-If the optional argument LONGFORM is non-nil, the long form of the locale\n\
-name is returned, e.g. `English (United States)' instead.\n\
+If the optional argument LONGFORM is t, the long form of the locale\n\
+name is returned, e.g. `English (United States)' instead; if LONGFORM\n\
+is a number, it is interpreted as an LCTYPE constant and the corresponding\n\
+locale information is returned.\n\
 \n\
 If LCID (a 16-bit number) is not a valid locale, the result is nil.")
      (lcid, longform)
@@ -1738,13 +1812,21 @@ If LCID (a 16-bit number) is not a valid locale, the result is nil.")
       if (got_abbrev)
 	return build_string (abbrev_name);
     }
-  else
+  else if (EQ (longform, Qt))
     {
       got_full = GetLocaleInfo (XINT (lcid),
 				LOCALE_SLANGUAGE | LOCALE_USE_CP_ACP,
 				full_name, sizeof (full_name));
       if (got_full)
 	return build_string (full_name);
+    }
+  else if (NUMBERP (longform))
+    {
+      got_full = GetLocaleInfo (XINT (lcid),
+				XINT (longform),
+				full_name, sizeof (full_name));
+      if (got_full)
+	return make_unibyte_string (full_name, got_full);
     }
 
   return Qnil;
@@ -1840,6 +1922,177 @@ If successful, the new locale id is returned, otherwise nil.")
   return make_number (GetThreadLocale ());
 }
 
+
+/* We need to build a global list, since the EnumCodePages callback
+   function isn't given a context pointer.  */
+Lisp_Object Vw32_valid_codepages;
+
+BOOL CALLBACK enum_codepage_fn (LPTSTR codepageNum)
+{
+  DWORD id = atoi (codepageNum);
+  Vw32_valid_codepages = Fcons (make_number (id), Vw32_valid_codepages);
+  return TRUE;
+}
+
+DEFUN ("w32-get-valid-codepages", Fw32_get_valid_codepages, Sw32_get_valid_codepages, 0, 0, 0,
+  "Return list of all valid Windows codepages.")
+     ()
+{
+  Vw32_valid_codepages = Qnil;
+
+  EnumSystemCodePages (enum_codepage_fn, CP_SUPPORTED);
+
+  Vw32_valid_codepages = Fnreverse (Vw32_valid_codepages);
+  return Vw32_valid_codepages;
+}
+
+
+DEFUN ("w32-get-console-codepage", Fw32_get_console_codepage, Sw32_get_console_codepage, 0, 0, 0,
+  "Return current Windows codepage for console input.")
+     ()
+{
+  return make_number (GetConsoleCP ());
+}
+
+  
+DEFUN ("w32-set-console-codepage", Fw32_set_console_codepage, Sw32_set_console_codepage, 1, 1, 0,
+  "Make Windows codepage CP be the current codepage setting for Emacs.\n\
+The codepage setting affects keyboard input and display in tty mode.\n\
+If successful, the new CP is returned, otherwise nil.")
+     (cp)
+     Lisp_Object cp;
+{
+  CHECK_NUMBER (cp, 0);
+
+  if (!IsValidCodePage (XINT (cp)))
+    return Qnil;
+
+  if (!SetConsoleCP (XINT (cp)))
+    return Qnil;
+
+  return make_number (GetConsoleCP ());
+}
+
+
+DEFUN ("w32-get-console-output-codepage", Fw32_get_console_output_codepage, Sw32_get_console_output_codepage, 0, 0, 0,
+  "Return current Windows codepage for console output.")
+     ()
+{
+  return make_number (GetConsoleOutputCP ());
+}
+
+  
+DEFUN ("w32-set-console-output-codepage", Fw32_set_console_output_codepage, Sw32_set_console_output_codepage, 1, 1, 0,
+  "Make Windows codepage CP be the current codepage setting for Emacs.\n\
+The codepage setting affects keyboard input and display in tty mode.\n\
+If successful, the new CP is returned, otherwise nil.")
+     (cp)
+     Lisp_Object cp;
+{
+  CHECK_NUMBER (cp, 0);
+
+  if (!IsValidCodePage (XINT (cp)))
+    return Qnil;
+
+  if (!SetConsoleOutputCP (XINT (cp)))
+    return Qnil;
+
+  return make_number (GetConsoleOutputCP ());
+}
+
+
+DEFUN ("w32-get-codepage-charset", Fw32_get_codepage_charset, Sw32_get_codepage_charset, 1, 1, 0,
+  "Return charset of codepage CP.\n\
+Returns nil if the codepage is not valid.")
+     (cp)
+     Lisp_Object cp;
+{
+  CHARSETINFO info;
+
+  CHECK_NUMBER (cp, 0);
+
+  if (!IsValidCodePage (XINT (cp)))
+    return Qnil;
+
+  if (TranslateCharsetInfo ((DWORD *) XINT (cp), &info, TCI_SRCCODEPAGE))
+    return make_number (info.ciCharset);
+
+  return Qnil;
+}
+
+
+DEFUN ("w32-get-valid-keyboard-layouts", Fw32_get_valid_keyboard_layouts, Sw32_get_valid_keyboard_layouts, 0, 0, 0,
+  "Return list of Windows keyboard languages and layouts.\n\
+The return value is a list of pairs of language id and layout id.")
+     ()
+{
+  int num_layouts = GetKeyboardLayoutList (0, NULL);
+  HKL * layouts = (HKL *) alloca (num_layouts * sizeof (HKL));
+  Lisp_Object obj = Qnil;
+
+  if (GetKeyboardLayoutList (num_layouts, layouts) == num_layouts)
+    {
+      while (--num_layouts >= 0)
+	{
+	  DWORD kl = (DWORD) layouts[num_layouts];
+
+	  obj = Fcons (Fcons (make_number (kl & 0xffff),
+			      make_number ((kl >> 16) & 0xffff)),
+		       obj);
+	}
+    }
+
+  return obj;
+}
+
+
+DEFUN ("w32-get-keyboard-layout", Fw32_get_keyboard_layout, Sw32_get_keyboard_layout, 0, 0, 0,
+  "Return current Windows keyboard language and layout.\n\
+The return value is the cons of the language id and the layout id.")
+     ()
+{
+  DWORD kl = (DWORD) GetKeyboardLayout (dwWindowsThreadId);
+
+  return Fcons (make_number (kl & 0xffff),
+		make_number ((kl >> 16) & 0xffff));
+}
+
+  
+DEFUN ("w32-set-keyboard-layout", Fw32_set_keyboard_layout, Sw32_set_keyboard_layout, 1, 1, 0,
+  "Make LAYOUT be the current keyboard layout for Emacs.\n\
+The keyboard layout setting affects interpretation of keyboard input.\n\
+If successful, the new layout id is returned, otherwise nil.")
+     (layout)
+     Lisp_Object layout;
+{
+  DWORD kl;
+
+  CHECK_CONS (layout, 0);
+  CHECK_NUMBER (XCONS (layout)->car, 0);
+  CHECK_NUMBER (XCONS (layout)->cdr, 0);
+
+  kl = (XINT (XCONS (layout)->car) & 0xffff)
+    | (XINT (XCONS (layout)->cdr) << 16);
+
+  /* Synchronize layout with input thread.  */
+  if (dwWindowsThreadId)
+    {
+      if (PostThreadMessage (dwWindowsThreadId, WM_EMACS_SETKEYBOARDLAYOUT,
+			     (WPARAM) kl, 0))
+	{
+	  MSG msg;
+	  GetMessage (&msg, NULL, WM_EMACS_DONE, WM_EMACS_DONE);
+
+	  if (msg.wParam == 0)
+	    return Qnil;
+	}
+    }
+  else if (!ActivateKeyboardLayout ((HKL) kl, 0))
+    return Qnil;
+
+  return Fw32_get_keyboard_layout ();
+}
+
 
 syms_of_ntproc ()
 {
@@ -1859,6 +2112,17 @@ syms_of_ntproc ()
   defsubr (&Sw32_get_valid_locale_ids);
   defsubr (&Sw32_set_current_locale);
 
+  defsubr (&Sw32_get_console_codepage);
+  defsubr (&Sw32_set_console_codepage);
+  defsubr (&Sw32_get_console_output_codepage);
+  defsubr (&Sw32_set_console_output_codepage);
+  defsubr (&Sw32_get_valid_codepages);
+  defsubr (&Sw32_get_codepage_charset);
+
+  defsubr (&Sw32_get_valid_keyboard_layouts);
+  defsubr (&Sw32_get_keyboard_layout);
+  defsubr (&Sw32_set_keyboard_layout);
+
   DEFVAR_LISP ("w32-quote-process-args", &Vw32_quote_process_args,
     "Non-nil enables quoting of process arguments to ensure correct parsing.\n\
 Because Windows does not directly pass argv arrays to child processes,\n\
@@ -1873,19 +2137,26 @@ will be chosen based on the type of the program.");
 
   DEFVAR_LISP ("w32-start-process-show-window",
 	       &Vw32_start_process_show_window,
-    "When nil, processes started via start-process hide their windows.\n\
+    "When nil, new child processes hide their windows.\n\
 When non-nil, they show their window in the method of their choice.");
   Vw32_start_process_show_window = Qnil;
 
   DEFVAR_LISP ("w32-start-process-share-console",
 	       &Vw32_start_process_share_console,
-    "When nil, processes started via start-process are given a new console.\n\
+    "When nil, new child processes are given a new console.\n\
 When non-nil, they share the Emacs console; this has the limitation of\n\
 allowing only only DOS subprocess to run at a time (whether started directly\n\
 or indirectly by Emacs), and preventing Emacs from cleanly terminating the\n\
 subprocess group, but may allow Emacs to interrupt a subprocess that doesn't\n\
 otherwise respond to interrupts from Emacs.");
   Vw32_start_process_share_console = Qnil;
+
+  DEFVAR_LISP ("w32-start-process-inherit-error-mode",
+	       &Vw32_start_process_inherit_error_mode,
+    "When nil, new child processes revert to the default error mode.\n\
+When non-nil, they inherit their error mode setting from Emacs, which stops\n\
+them blocking when trying to access unmounted drives etc.");
+  Vw32_start_process_inherit_error_mode = Qt;
 
   DEFVAR_INT ("w32-pipe-read-delay", &Vw32_pipe_read_delay,
     "Forced delay before reading subprocess output.\n\

@@ -1379,21 +1379,22 @@ for daylight savings time vary from place to place and have also varied
 historically from year to year.  To do the job properly, Emacs needs to
 know which rules to use.
 
+@vindex calendar-daylight-savings-starts
+@vindex calendar-daylight-savings-ends
   Some operating systems keep track of the rules that apply to the place
 where you are; on these systems, Emacs gets the information it needs
 from the system automatically.  If some or all of this information is
 missing, Emacs fills in the gaps with the rules currently used in
 Cambridge, Massachusetts.  If the resulting rules are not what you want,
-you can tell Emacs the rules to use by setting certain variables.
+you can tell Emacs the rules to use by setting certain variables:
+@code{calendar-daylight-savings-starts} and
+@code{calendar-daylight-savings-ends}.
 
-@vindex calendar-daylight-savings-starts
-@vindex calendar-daylight-savings-ends
-  These values should be Lisp
-expressions that refer to the variable @code{year}, and evaluate to the
-Gregorian date on which daylight savings time starts or (respectively)
-ends, in the form of a list @code{(@var{month} @var{day} @var{year})}.
-The values should be @code{nil} if your area does not use daylight
-savings time.
+  These values should be Lisp expressions that refer to the variable
+@code{year}, and evaluate to the Gregorian date on which daylight
+savings time starts or (respectively) ends, in the form of a list
+@code{(@var{month} @var{day} @var{year})}.  The values should be
+@code{nil} if your area does not use daylight savings time.
 
   Emacs uses these expressions to determine the starting date of
 daylight savings time for the holiday list and for correcting times of

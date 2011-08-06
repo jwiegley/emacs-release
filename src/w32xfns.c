@@ -23,6 +23,8 @@ Boston, MA 02111-1307, USA.  */
 #include <stdio.h>
 #include "lisp.h"
 #include "frame.h"
+#include "charset.h"
+#include "fontset.h"
 #include "blockinput.h"
 #include "w32term.h"
 #include "windowsx.h"
@@ -237,6 +239,19 @@ prepend_msg (W32Msg *lpmsg)
   return (TRUE);
 }
 
+/* Process all messages in the current thread's queue.  */
+void
+drain_message_queue ()
+{
+  MSG msg;
+  while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
+    {
+      TranslateMessage (&msg);
+      DispatchMessage (&msg);
+    }
+}
+
+
 /*
  *    XParseGeometry parses strings of the form
  *   "=<width>x<height>{+-}<xoffset>{+-}<yoffset>", where
@@ -378,4 +393,3 @@ x_sync (f)
      void *f;
 {
 }
-

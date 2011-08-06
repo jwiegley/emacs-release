@@ -1,9 +1,8 @@
 This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
 the input file gnus.texi.
 
-INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
-* Gnus: (gnus).		The news reader Gnus.
+* Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
 
    This file documents Gnus, the GNU Emacs newsreader.
@@ -34,7 +33,7 @@ news can be gotten by any nefarious means you can think of--NNTP, local
 spool or your mbox file.  All at the same time, if you want to push your
 luck.
 
-   This manual corresponds to Gnus 5.5.
+   This manual corresponds to Gnus 5.7.
 
 * Menu:
 
@@ -65,7 +64,11 @@ your Emacs.
 command `M-x gnus-other-frame' instead.
 
    If things do not go smoothly at startup, you have to twiddle some
-variables.
+variables in your `~/.gnus' file.  This file is similar to `~/.emacs',
+but is read when gnus starts.
+
+   If you puzzle at any terms used in this manual, please refer to the
+terminology section (*note Terminology::.).
 
 * Menu:
 
@@ -90,8 +93,7 @@ Finding the News
    The `gnus-select-method' variable says where Gnus should look for
 news.  This variable should be a list where the first element says
 "how" and the second element says "where".  This method is your native
-method.  All groups that are not fetched with this method are foreign
-groups.
+method.  All groups not fetched with this method are foreign groups.
 
    For instance, if the `news.somewhere.edu' NNTP server is where you
 want to get your daily dosage of news from, you'd say:
@@ -108,9 +110,9 @@ certainly be much faster.
    If this variable is not set, Gnus will take a look at the
 `NNTPSERVER' environment variable.  If that variable isn't set, Gnus
 will see whether `gnus-nntpserver-file' (`/etc/nntpserver' by default)
-has any opinions on the matter.  If that fails as well, Gnus will will
-try to use the machine that is running Emacs as an NNTP server.  That's
-a long shot, though.
+has any opinions on the matter.  If that fails as well, Gnus will try
+to use the machine running Emacs as an NNTP server.  That's a long
+shot, though.
 
    If `gnus-nntp-server' is set, this variable will override
 `gnus-select-method'.  You should therefore set `gnus-nntp-server' to
@@ -157,7 +159,7 @@ killed.  Your system administrator should have set this variable to
 something useful.
 
    Since she hasn't, Gnus will just subscribe you to a few arbitrarily
-picked groups (i.e., `*.newusers').  ("Arbitrary" is here defined as
+picked groups (i.e., `*.newusers').  ("Arbitrary" is defined here as
 "whatever Lars thinks you should read".)
 
    You'll also be subscribed to the Gnus documentation group, which
@@ -233,7 +235,7 @@ File: gnus,  Node: Fetching a Group,  Next: New Groups,  Prev: Slave Gnusae,  Up
 Fetching a Group
 ================
 
-   It it sometimes convenient to be able to just say "I want to read
+   It is sometimes convenient to be able to just say "I want to read
 this group and I don't care whether Gnus has been started or not".
 This is perhaps more useful for people who write code than for users,
 but the command `gnus-fetch-group' provides this functionality in any
@@ -249,10 +251,10 @@ New Groups
 groups, you can set `gnus-check-new-newsgroups' to `nil'.  This will
 also save you some time at startup.  Even if this variable is `nil',
 you can always subscribe to the new groups just by pressing `U' in the
-group buffer (*note Group Maintenance::.).  This variable is `t' by
-default.  If you set this variable to `always', then Gnus will query
-the backends for new groups even when you do the `g' command (*note
-Scanning New Messages::.).
+group buffer (*note Group Maintenance::.).  This variable is
+`ask-server' by default.  If you set this variable to `always', then
+Gnus will query the backends for new groups even when you do the `g'
+command (*note Scanning New Messages::.).
 
 * Menu:
 
@@ -316,10 +318,11 @@ called with the name of the new group as the only parameter.
      properly (with `S z'), or subscribe to them (with `u').
 
 `gnus-subscribe-randomly'
-     Subscribe all new groups randomly.
+     Subscribe all new groups in arbitrary order.  This really means
+     that all new groups will be added at "the top" of the group buffer.
 
 `gnus-subscribe-alphabetically'
-     Subscribe all new groups alphabetically.
+     Subscribe all new groups in alphabetical order.
 
 `gnus-subscribe-hierarchically'
      Subscribe all new groups hierarchically.  The difference between
@@ -332,7 +335,8 @@ called with the name of the new group as the only parameter.
 
 `gnus-subscribe-interactively'
      Subscribe new groups interactively.  This means that Gnus will ask
-     you about *all* new groups.
+     you about *all* new groups.  The groups you choose to subscribe to
+     will be subscribed hierarchically.
 
 `gnus-subscribe-killed'
      Kill all new groups.
@@ -343,7 +347,8 @@ If this variable is non-`nil', Gnus will ask you in a hierarchical
 fashion whether to subscribe to new groups or not.  Gnus will ask you
 for each sub-hierarchy whether you want to descend the hierarchy or not.
 
-   One common mistake is to set the variable a few paragraphs above to
+   One common mistake is to set the variable a few paragraphs above
+(`gnus-subscribe-newsgroup-method') to
 `gnus-subscribe-hierarchical-interactive'.  This is an error.  This
 will not work.  This is ga-ga.  So don't do it.
 
@@ -371,9 +376,9 @@ used instead.  This variable defaults to
    If you don't want to mess with your `.newsrc' file, you can just set
 the two variables `gnus-options-subscribe' and
 `gnus-options-not-subscribe'.  These two variables do exactly the same
-as the `.newsrc' `options -n' trick.  Both are regexps, and if the the
-new group matches the former, it will be unconditionally subscribed,
-and if it matches the latter, it will be ignored.
+as the `.newsrc' `options -n' trick.  Both are regexps, and if the new
+group matches the former, it will be unconditionally subscribed, and if
+it matches the latter, it will be ignored.
 
    Yet another variable that meddles here is
 `gnus-auto-subscribed-groups'.  It works exactly like
@@ -447,11 +452,13 @@ which enabled people to swap between GNUS and other newsreaders.
    That was kinda silly, so Gnus went one better: In addition to the
 `.newsrc' and `.newsrc.el' files, Gnus also has a file called
 `.newsrc.eld'.  It will read whichever of these files that are most
-recent, but it will never write a `.newsrc.el' file.
+recent, but it will never write a `.newsrc.el' file.  You should never
+delete the `.newsrc.eld' file--it contains much information not stored
+in the `.newsrc' file.
 
    You can turn off writing the `.newsrc' file by setting
 `gnus-save-newsrc-file' to `nil', which means you can delete the file
-and save some space, as well as making exit from Gnus faster.  However,
+and save some space, as well as exiting from Gnus faster.  However,
 this will make it impossible to use other newsreaders than Gnus.  But
 hey, who would want to, right?
 
@@ -469,7 +476,7 @@ all servers support `ask-server'.
 
    The `gnus-startup-file' variable says where the startup files are.
 The default value is `~/.newsrc', with the Gnus (El Dingo) startup file
-being whatever that one is with a `.eld' appended.
+being whatever that one is, with a `.eld' appended.
 
    `gnus-save-newsrc-hook' is called before saving any of the newsrc
 files, while `gnus-save-quick-newsrc-hook' is called just before saving
@@ -520,6 +527,9 @@ the directory where the `.newsrc' file is located.  (This is normally
 the user's home directory.)  The dribble file will get the same file
 permissions as the `.newsrc' file.
 
+   If `gnus-always-read-dribble-file' is non-`nil', Gnus will read the
+dribble file on startup without querying the user.
+
 
 File: gnus,  Node: The Active File,  Next: Changing Servers,  Prev: Auto Save,  Up: Starting Up
 
@@ -539,7 +549,7 @@ Groups::. for an overview of other variables that can be used instead.
 
    The active file can be rather Huge, so if you have a slow network,
 you can set `gnus-read-active-file' to `nil' to prevent Gnus from
-reading the active file.  This variable is `t' by default.
+reading the active file.  This variable is `some' by default.
 
    Gnus will try to make do by getting information just on the groups
 that you actually subscribe to.
@@ -576,16 +586,23 @@ Startup Variables
 =================
 
 `gnus-load-hook'
-     A hook that is run while Gnus is being loaded.  Note that this
-     hook will normally be run just once in each Emacs session, no
-     matter how many times you start Gnus.
+     A hook run while Gnus is being loaded.  Note that this hook will
+     normally be run just once in each Emacs session, no matter how many
+     times you start Gnus.
+
+`gnus-before-startup-hook'
+     A hook run after starting up Gnus successfully.
 
 `gnus-startup-hook'
-     A hook that is run after starting up Gnus successfully.
+     A hook run as the very last thing after starting up Gnus
 
 `gnus-started-hook'
      A hook that is run as the very last thing after starting up Gnus
      successfully.
+
+`gnus-started-hook'
+     A hook that is run after reading the `.newsrc' file(s), but before
+     generating the group buffer.
 
 `gnus-check-bogus-newsgroups'
      If non-`nil', Gnus will check for and delete all bogus groups at
@@ -673,7 +690,7 @@ make it as exciting and ugly as you feel like.
    You can see that there are 25 unread articles in
 `news.announce.newusers'.  There are no unread articles, but some
 ticked articles, in `alt.fan.andrea-dworkin' (see that little asterisk
-at the beginning of the line?)
+at the beginning of the line?).
 
    You can change that format to whatever you want by fiddling with the
 `gnus-group-line-format' variable.  This variable works along the lines
@@ -771,7 +788,7 @@ instead of wasting time reading news.)
 
 `u'
      User defined specifier.  The next character in the format string
-     should be a letter.  GNUS will call the function
+     should be a letter.  Gnus will call the function
      `gnus-user-format-function-'`X', where `X' is the letter following
      `%u'.  The function will be passed a single dummy parameter as
      argument.  The function should return a string, which will be
@@ -789,7 +806,7 @@ Group Modeline Specification
 ----------------------------
 
    The mode line can be changed by setting
-`gnus-group-mode-line-format' (*note Formatting Variables::.).  It
+`gnus-group-mode-line-format' (*note Mode Line Formatting::.).  It
 doesn't understand that many format specifiers:
 
 `S'
@@ -812,17 +829,25 @@ FACE will be used on the line.
    Here's an example value for this variable that might look nice if the
 background is dark:
 
+     (face-spec-set 'my-group-face-1
+                    '((t (:foreground "Red" :bold t))))
+     (face-spec-set 'my-group-face-2
+                    '((t (:foreground "SeaGreen" :bold t))))
+     (face-spec-set 'my-group-face-3
+                    '((t (:foreground "SpringGreen" :bold t))))
+     (face-spec-set 'my-group-face-4
+                    '((t (:foreground "SteelBlue" :bold t))))
+     (face-spec-set 'my-group-face-5
+                    '((t (:foreground "SkyBlue" :bold t))))
+     
      (setq gnus-group-highlight
-           `(((> unread 200) .
-              ,(custom-face-lookup "Red" nil nil t nil nil))
-             ((and (< level 3) (zerop unread)) .
-              ,(custom-face-lookup "SeaGreen" nil nil t nil nil))
-             ((< level 3) .
-              ,(custom-face-lookup "SpringGreen" nil nil t nil nil))
-             ((zerop unread) .
-              ,(custom-face-lookup "SteelBlue" nil nil t nil nil))
-             (t .
-              ,(custom-face-lookup "SkyBlue" nil nil t nil nil))))
+           '(((> unread 200) . my-group-face-1)
+             ((and (< level 3) (zerop unread)) . my-group-face-2)
+             ((< level 3) . my-group-face-3)
+             ((zerop unread) . my-group-face-4)
+             (t . my-group-face-5)))
+
+   Also *note Faces and Fonts::..
 
    Variables that are dynamically bound when the forms are evaluated
 include:
@@ -850,7 +875,7 @@ include:
 
 `total'
      The total number of articles in the group.  Or rather, MAX-NUMBER
-     minus MIN-NUMBER.
+     minus MIN-NUMBER plus one.
 
 `topic'
      When using the topic minor mode, this variable is bound to the
@@ -888,11 +913,11 @@ as expected, hopefully.
 `P'
      Go to the previous group (`gnus-group-prev-group').
 
-`M-p'
+`M-n'
      Go to the next unread group on the same (or lower) level
      (`gnus-group-next-unread-group-same-level').
 
-`M-n'
+`M-p'
      Go to the previous unread group on the same (or lower) level
      (`gnus-group-prev-unread-group-same-level').
 
@@ -945,8 +970,9 @@ Selecting a Group
      no expunging.  This might be useful if you're in a real hurry and
      have to enter some humongous group.  If you give a 0 prefix to
      this command (i.e., `0 M-RET'), Gnus won't even generate the
-     summary buffer.  This might be useful if you want to toggle
-     threading before entering the group.
+     summary buffer, which is useful if you want to toggle threading
+     before generating the summary buffer (*note Summary Generation
+     Commands::.).
 
 `M-SPACE'
      This is yet one more command that does the same as the `RET'
@@ -980,7 +1006,7 @@ automatically when entering a group with the `SPACE' command.
      Select the first unread article when entering the group.
 
 `best'
-     Select the most high-scored article in the group when entering the
+     Select the highest scored article in the group when entering the
      group.
 
    If you want to prevent automatic selection in some group (say, in a
@@ -1080,16 +1106,16 @@ is.
      the next N groups will have their levels set.  The user will be
      prompted for a level.
 
-   Gnus considers groups on between levels 1 and
-`gnus-level-subscribed' (inclusive) (default 5) to be subscribed,
-`gnus-level-subscribed' (exclusive) and `gnus-level-unsubscribed'
-(inclusive) (default 7) to be unsubscribed, `gnus-level-zombie' to be
-zombies (walking dead) (default 8) and `gnus-level-killed' to be killed
-(default 9), completely dead.  Gnus treats subscribed and unsubscribed
-groups exactly the same, but zombie and killed groups have no
-information on what articles you have read, etc, stored.  This
-distinction between dead and living groups isn't done because it is
-nice or clever, it is done purely for reasons of efficiency.
+   Gnus considers groups from levels 1 to `gnus-level-subscribed'
+(inclusive) (default 5) to be subscribed, `gnus-level-subscribed'
+(exclusive) and `gnus-level-unsubscribed' (inclusive) (default 7) to be
+unsubscribed, `gnus-level-zombie' to be zombies (walking dead) (default
+8) and `gnus-level-killed' to be killed (completely dead) (default 9).
+Gnus treats subscribed and unsubscribed groups exactly the same, but
+zombie and killed groups have no information on what articles you have
+read, etc, stored.  This distinction between dead and living groups
+isn't done because it is nice or clever, it is done purely for reasons
+of efficiency.
 
    It is recommended that you keep all your mail groups (if any) on
 quite low levels (e.g. 1 or 2).
@@ -1102,14 +1128,13 @@ don't touch them at all unless you know exactly what you're doing.
 (default 3) and `gnus-level-default-unsubscribed' (default 6), which
 are the levels that new groups will be put on if they are
 (un)subscribed.  These two variables should, of course, be inside the
-relevant legal ranges.
+relevant valid ranges.
 
    If `gnus-keep-same-level' is non-`nil', some movement commands will
-only move to groups that are of the same level (or lower).  In
-particular, going from the last article in one group to the next group
-will go to the next group of the same level (or lower).  This might be
-handy if you want to read the most important groups before you read the
-rest.
+only move to groups of the same level (or lower).  In particular, going
+from the last article in one group to the next group will go to the
+next group of the same level (or lower).  This might be handy if you
+want to read the most important groups before you read the rest.
 
    All groups with a level less than or equal to
 `gnus-group-default-list-level' will be listed in the group buffer by
@@ -1123,10 +1148,10 @@ default.  If it is `nil', inactive groups won't be listed.
 level prefix to `g' or `l', all subsequent commands will use this level
 as the "work" level.
 
-   Gnus will normally just activate groups that are on level
-`gnus-activate-level' or less.  If you don't want to activate
-unsubscribed groups, for instance, you might set this variable to 5.
-The default is 6.
+   Gnus will normally just activate (i. e., query the server about)
+groups on level `gnus-activate-level' or less.  If you don't want to
+activate unsubscribed groups, for instance, you might set this variable
+to 5.  The default is 6.
 
 
 File: gnus,  Node: Group Score,  Next: Marking Groups,  Prev: Group Levels,  Up: The Group Buffer
@@ -1197,106 +1222,4 @@ with the process mark and then execute the command.
 marked with the process mark, you can use the `M-&'
 (`gnus-group-universal-argument') command.  It will prompt you for the
 command to be executed.
-
-
-File: gnus,  Node: Foreign Groups,  Next: Group Parameters,  Prev: Marking Groups,  Up: The Group Buffer
-
-Foreign Groups
-==============
-
-   Below are some group mode commands for making and editing general
-foreign groups, as well as commands to ease the creation of a few
-special-purpose groups.  All these commands insert the newly created
-groups under point--`gnus-subscribe-newsgroup-method' is not consulted.
-
-`G m'
-     Make a new group (`gnus-group-make-group').  Gnus will prompt you
-     for a name, a method and possibly an "address".  For an easier way
-     to subscribe to NNTP groups, *note Browse Foreign Server::..
-
-`G r'
-     Rename the current group to something else
-     (`gnus-group-rename-group').  This is legal only on some
-     groups--mail groups mostly.  This command might very well be quite
-     slow on some backends.
-
-`G c'
-     Customize the group parameters (`gnus-group-customize').
-
-`G e'
-     Enter a buffer where you can edit the select method of the current
-     group (`gnus-group-edit-group-method').
-
-`G p'
-     Enter a buffer where you can edit the group parameters
-     (`gnus-group-edit-group-parameters').
-
-`G E'
-     Enter a buffer where you can edit the group info
-     (`gnus-group-edit-group').
-
-`G d'
-     Make a directory group (*note Directory Groups::.).  You will be
-     prompted for a directory name (`gnus-group-make-directory-group').
-
-`G h'
-     Make the Gnus help group (`gnus-group-make-help-group').
-
-`G a'
-     Make a Gnus archive group (`gnus-group-make-archive-group').  By
-     default a group pointing to the most recent articles will be
-     created (`gnus-group-recent-archive-directory'), but given a
-     prefix, a full group will be created from
-     `gnus-group-archive-directory'.
-
-`G k'
-     Make a kiboze group.  You will be prompted for a name, for a
-     regexp to match groups to be "included" in the kiboze group, and a
-     series of strings to match on headers
-     (`gnus-group-make-kiboze-group').  *Note Kibozed Groups::.
-
-`G D'
-     Read an arbitrary directory as if with were a newsgroup with the
-     `nneething' backend (`gnus-group-enter-directory').  *Note
-     Anything Groups::.
-
-`G f'
-     Make a group based on some file or other
-     (`gnus-group-make-doc-group').  If you give a prefix to this
-     command, you will be prompted for a file name and a file type.
-     Currently supported types are `babyl', `mbox', `digest', `mmdf',
-     `news', `rnews', `clari-briefs', `rfc934', `rfc822-forward', and
-     `forward'.  If you run this command without a prefix, Gnus will
-     guess at the file type.  *Note Document Groups::.
-
-`G w'
-     Make an ephemeral group based on a web search
-     (`gnus-group-make-web-group').  If you give a prefix to this
-     command, make a solid group instead.  You will be prompted for the
-     search engine type and the search string.  Legal search engine
-     types include `dejanews', `altavista' and `reference'.  *Note Web
-     Searches::.
-
-`G DEL'
-     This function will delete the current group
-     (`gnus-group-delete-group').  If given a prefix, this function will
-     actually delete all the articles in the group, and forcibly remove
-     the group itself from the face of the Earth.  Use a prefix only if
-     you are absolutely sure of what you are doing.
-
-`G V'
-     Make a new, fresh, empty `nnvirtual' group
-     (`gnus-group-make-empty-virtual').  *Note Virtual Groups::.
-
-`G v'
-     Add the current group to an `nnvirtual' group
-     (`gnus-group-add-to-virtual').  Uses the process/prefix convention.
-
-   *Note Select Methods:: for more information on the various select
-methods.
-
-   If `gnus-activate-foreign-newsgroups' is a positive number, Gnus
-will check all foreign groups with this level or lower at startup.
-This might take quite a while, especially if you subscribe to lots of
-groups from different NNTP servers.
 

@@ -2,7 +2,7 @@ File:  edt-user.doc  ---  EDT Emulation User Instructions
 
                                 For GNU Emacs 19
 
-Copyright (C) 1986, 1992, 1994, 1995 Free Software Foundation, Inc.
+Copyright (C) 1986, 1992, 1994, 1995, 1999 Free Software Foundation, Inc.
 
 Author: Kevin Gallagher <kevingal@onramp.net>
 Maintainer: Kevin Gallagher <kevingal@onramp.net>
@@ -179,12 +179,16 @@ IV.   SPECIAL NOTES FOR SOME PLATFORMS:
 
          keycode 105 = F24
 
-     modifies the NumLock key to be the F24 key which can then be configured
-     to behave as the PF1 key.  In doing so, you will no longer have a NumLock
-     key.  If you are using other software under X which requires a NumLock
-     key, then examine your keyboard and look for one you don't use and
-     redefine it to be the NumLock key.  (See the man page on xmodmap for for
-     further help on how to do this.)
+     modifies the NumLock key to be the F24 key which can then be configured 
+     to behave as the PF1 (Gold) key.  In doing so, you will no longer
+     have a NumLock key.  If you are using other software under X
+     which requires a NumLock key, then examine your keyboard and look
+     for one you don't use and redefine it to be the NumLock key.
+     Basically, you need to clear the NumLock key from being assigned
+     as a modifier, assign it to the key of your choice, and then add
+     it back as a modifier.  (See the "General Notes on Using NumLock
+     for the PF1 Key on a Unix System" section below for further help
+     on how to do this.)
 
   PC users running MS-DOS:
 
@@ -194,7 +198,7 @@ IV.   SPECIAL NOTES FOR SOME PLATFORMS:
      and comes with the source code as well as a loadable binary image. 
      (See edt-pc.el for more information.)
 
-  PC users running Linux:
+  PC users running GNU/Linux:
 
      The default X server configuration of three keys PC AT keyboard keys
      needs to be modified to permit the PC keyboard to emulate an LK-201
@@ -203,23 +207,95 @@ IV.   SPECIAL NOTES FOR SOME PLATFORMS:
 
          ! File:  .xmodmaprc
          !
-         ! Set up PC keypad under Linux for the GNU Emacs EDT Emulation 
+         ! Set up PC keypad under GNU/Linux for the GNU Emacs EDT Emulation 
          !
-         keycode  22 = BackSpace
-         keycode  77 = F12
-         keycode  96 = Num_Lock
+	 clear  mod2
+	 keycode  77 = F12
+	 keycode  96 = Num_Lock Pointer_EnableKeys
+	 add mod2 = Num_Lock
 
-     Feed the file to the xmodmap command and all the PC keypad keys will now
-     be configurable for the emulation of an LK-201 keypad (less the comma
+     Feed the file to the xmodmap command and the PC NumLock keypad
+     key will now be configurable for the emulation of the PF1 key.
+     The PC keypad can now emulate an LK-201 keypad (less the comma
      key), the standard keyboard supplied with DEC terminals VT-200 and above.
-     This file switches the role of the F12 and NumLock keys.  It also
-     modifies the definition of the Delete key above the arrow keys so that it
-     can be assigned a keybinding independently of the the BackSpace key.
+     This .xmodmaprc file switches the role of the F12 and NumLock
+     keys.  It has been tested on RedHat GNU/Linux 5.2.  Other
+     versions of GNU/Linux may require different keycodes.  (See the
+     "General Notes on Using NumLock for the PF1 Key on a Unix System"
+     section below for further help on how to do this.) 
 
      NOTE: It is necessary to have NumLock ON for the PC keypad to emulate the
      LK-201 keypad properly.
 
+  General Notes on Using NumLock for the PF1 Key on a Unix System:
 
+     Making the physical NumLock key available for use in the EDT
+     Emulation requires some modification to the default X Window
+     settings.  Since the keycode assignments vary from system to
+     system, some investigation is needed to see how to do this on
+     a particular system.
+
+     The following commands should be run and the output examined.
+     On RedHat GNU/Linux 5.2 on a PC, we get the following output when
+     running xmodmap.
+
+     "xmodmap -pm"  yields:
+
+          xmodmap:  up to 2 keys per modifier, (keycodes in parentheses):
+
+          shift       Shift_L (0x32),  Shift_R (0x3e)
+          lock        Caps_Lock (0x42)
+          control     Control_L (0x25),  Control_R (0x6d)
+          mod1        Alt_L (0x40),  Alt_R (0x71)
+          mod2        Num_Lock (0x4d)
+          mod3
+          mod4
+          mod5        Scroll_Lock (0x4e)
+
+
+     Note that Num_Lock is assigned to the modifier mod2.  This is
+     what hides Num_Lock from being seen by Emacs.
+
+     Now, "xmodmap -pke" yields:
+
+             .
+             .
+             .
+          keycode  77 = Num_Lock Pointer_EnableKeys
+             .
+             .
+             .
+          keycode  96 = F12
+             .
+             .
+             .
+
+     So, in RedHat GNU/Linux 5.2 on a PC, Num_Lock generates keycode
+     77.  The following steps are taken:
+
+         1.  clear the assignment of Num_Lock to mod2;
+         2.  swap the keycodes assigned to F12 and Num_Lock;
+         3.  assign Num_Lock back to mod2.
+
+     The .xmodmaprc file looks like this:
+
+         ! File:  .xmodmaprc
+         !
+         ! Set up PC keypad under GNU/Linux for the GNU Emacs EDT Emulation 
+         !
+	 clear  mod2
+	 keycode  77 = F12
+	 keycode  96 = Num_Lock Pointer_EnableKeys
+	 add mod2 = Num_Lock
+
+     So, after executing "xmodmap .xmodmaprc", a press of the physical
+     F12 key looks like a Num_Lock keypress to X.  Also, a press of the
+     physical NumLock key looks like a press of the F12 key to X.
+
+     Now, edt-mapper.el will see "f12" when the physical NumLock key
+     is pressed, allowing the NumLock key to be used as the EDT PF1
+     (Gold) key. 
+
 V.    HOW DOES THIS EDT EMULATION DIFFER FROM REAL EDT?:
 
 In general, you will find that this emulation of EDT replicates most, but not
@@ -259,7 +335,7 @@ if you are to use the EDT Emulation effectively.
     more than make up for this omission.
 
     To enter Emacs commands not bound to keys, you can press GOLD KP7 or the
-    DO key.  Emacs will display it's own command prompt called Meta-x (M-x).
+    DO key.  Emacs will display its own command prompt called Meta-x (M-x).
     You can also invoke this prompt the normal Emacs way by entering ESC x.
 
 4.  Selected text is highlighted ONLY when running under X Windows.  Gnu Emacs

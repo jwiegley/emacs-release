@@ -93,8 +93,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 ;;;;; ************************* USER OPTIONS ************************** ;;;;;
 
 (defcustom repeat-too-dangerous '(kill-this-buffer)
@@ -149,14 +147,6 @@ member of that sequence.  If this variable is nil, no re-execution occurs."
 ;; true-last-command by putting something in post-command-hook, but that
 ;; entails a performance hit; the approach taken below avoids that.
 
-;; First cope with (kill-region).  It's straightforward to advise it to save
-;; the true value of this-command before clobbering it.
-
-(require 'advice)
-
-(defvar repeat-last-kill-command nil
-  "True value of `this-command' before (`kill-region') clobbered it.")
-
 ;; Coping with strings of self-insert commands gets hairy when they interact
 ;; with auto-filling.  Most problems are eliminated by remembering what we're
 ;; self-inserting, so we only need to get it from the undo information once.
@@ -201,12 +191,15 @@ this function is always whether the value of `this-command' would've been
 
 ;;;;; ******************* THE REPEAT COMMAND ITSELF ******************* ;;;;;
 
+(defvar repeat-previous-repeated-command nil
+  "The previous repeated command.")
+
 ;;;###autoload
 (defun repeat (repeat-arg)
   "Repeat most recently executed command.
-With prefix arg, apply new prefix arg to that command; otherwise, maintain
-prefix arg of most recently executed command if it had one.
-This command is named after the `.' command in the vi editor.
+With prefix arg, apply new prefix arg to that command; otherwise, use
+the prefix arg that was used before (if any).
+This command is like the `.' command in the vi editor.
 
 If this command is invoked by a multi-character key sequence, it can then
 be repeated by repeating the final character of that sequence.  This behavior
@@ -220,12 +213,17 @@ can be modified by the global variable `repeat-on-final-keystroke'."
   ;; "repeat-" prefix, reserved by this package, for *local* variables that
   ;; might be visible to re-executed commands, including this function's arg.
   (interactive "P")
-  (setq this-command                      real-last-command
-        repeat-num-input-keys-at-repeat   num-input-keys)
+  (when (eq real-last-command 'repeat)
+    (setq real-last-command repeat-previous-repeated-command))
+  (when (null real-last-command)
+    (error "There is nothing to repeat"))
   (when (eq real-last-command 'mode-exit)
     (error "real-last-command is mode-exit & can't be repeated"))
   (when (memq real-last-command repeat-too-dangerous)
     (error "Command %S too dangerous to repeat automatically" real-last-command))
+  (setq this-command                      real-last-command
+        repeat-num-input-keys-at-repeat   num-input-keys)
+  (setq repeat-previous-repeated-command this-command)
   (when (null repeat-arg)
     (setq repeat-arg last-prefix-arg))
   ;; Now determine whether to loop on repeated taps of the final character
@@ -269,9 +267,21 @@ can be modified by the global variable `repeat-on-final-keystroke'."
                                      "inserted before auto-fill"
                                      "clobbered it, sorry")))))))
             (setq repeat-num-input-keys-at-self-insert num-input-keys)
-            (loop repeat (prefix-numeric-value repeat-arg) do
-                  (repeat-self-insert insertion)))
-        (call-interactively real-last-command)))
+	    ;; If the self-insert had a repeat count, INSERTION
+	    ;; includes that many copies of the same character.
+	    ;; So use just the first character
+	    ;; and repeat it the right number of times.
+	    (setq insertion (substring insertion -1))
+	    (let ((count (prefix-numeric-value repeat-arg))
+		  (i 0))
+	      (while (< i count)
+		(repeat-self-insert insertion)
+		(setq i (1+ i)))))
+	(let ((indirect (indirect-function real-last-command)))
+	  (if (or (stringp indirect)
+		  (vectorp indirect))
+	      (execute-kbd-macro real-last-command)
+	    (call-interactively real-last-command)))))
     (when repeat-repeat-char
       ;; A simple recursion here gets into trouble with max-lisp-eval-depth
       ;; on long sequences of repetitions of a command like `forward-word'

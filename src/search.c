@@ -415,6 +415,7 @@ string_match_1 (regexp, string, start, posix)
 
 DEFUN ("string-match", Fstring_match, Sstring_match, 2, 3, 0,
   "Return index of start of first match for REGEXP in STRING, or nil.\n\
+Case is ignored if `case-fold-search' is non-nil in the current buffer.\n\
 If third arg START is non-nil, start search at that index in STRING.\n\
 For index of first char beyond the match, do (match-end 0).\n\
 `match-end' and `match-beginning' also give indices of substrings\n\
@@ -428,6 +429,7 @@ matched by parenthesis constructs in the pattern.")
 DEFUN ("posix-string-match", Fposix_string_match, Sposix_string_match, 2, 3, 0,
   "Return index of start of first match for REGEXP in STRING, or nil.\n\
 Find the longest match, in accord with Posix regular expression rules.\n\
+Case is ignored if `case-fold-search' is non-nil in the current buffer.\n\
 If third arg START is non-nil, start search at that index in STRING.\n\
 For index of first char beyond the match, do (match-end 0).\n\
 `match-end' and `match-beginning' also give indices of substrings\n\
@@ -1142,7 +1144,7 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
       int multibyte = !NILP (current_buffer->enable_multibyte_characters);
       unsigned char *base_pat = XSTRING (string)->data;
       int charset_base = -1;
-      int simple = 1;
+      int boyer_moore_ok = 1;
 
       /* MULTIBYTE says whether the text to be searched is multibyte.
 	 We must convert PATTERN to match that, or we will not really
@@ -1204,6 +1206,7 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
 		}
 
 	      c = STRING_CHAR_AND_LENGTH (base_pat, len_byte, in_charlen);
+
 	      /* Translate the character, if requested.  */
 	      TRANSLATE (translated, trt, c);
 	      /* If translation changed the byte-length, go back
@@ -1215,6 +1218,14 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
 		  charlen = CHAR_STRING (c, workbuf, str);
 		}
 
+	      /* If we are searching for something strange,
+		 an invalid multibyte code, don't use boyer-moore.  */
+	      if (! ASCII_BYTE_P (translated)
+		  && (charlen == 1 /* 8bit code */
+		      || charlen != in_charlen /* invalid multibyte code */
+		      ))
+		boyer_moore_ok = 0;
+
 	      TRANSLATE (inverse, inverse_trt, c);
 
 	      /* Did this char actually get translated?
@@ -1223,14 +1234,14 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
 		{
 		  /* Keep track of which character set row
 		     contains the characters that need translation.  */
-		  int charset_base_code = c & ~0xff;
+		  int charset_base_code = c & ~CHAR_FIELD3_MASK;
 		  if (charset_base == -1)
 		    charset_base = charset_base_code;
 		  else if (charset_base != charset_base_code)
 		    /* If two different rows appear, needing translation,
 		       then we cannot use boyer_moore search.  */
-		    simple = 0;
-		    /* ??? Handa: this must do simple = 0
+		    boyer_moore_ok = 0;
+		    /* ??? Handa: this must do boyer_moore_ok = 0
 		       if c is a composite character.  */
 		}
 
@@ -1243,9 +1254,11 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
 	}
       else
 	{
+	  /* Unibyte buffer.  */
+	  charset_base = 0;
 	  while (--len >= 0)
 	    {
-	      int c, translated, inverse;
+	      int c, translated;
 
 	      /* If we got here and the RE flag is set, it's because we're
 		 dealing with a regexp known to be trivial, so the backslash
@@ -1257,22 +1270,6 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
 		}
 	      c = *base_pat++;
 	      TRANSLATE (translated, trt, c);
-	      TRANSLATE (inverse, inverse_trt, c);
-
-	      /* Did this char actually get translated?
-		 Would any other char get translated into it?  */
-	      if (translated != c || inverse != c)
-		{
-		  /* Keep track of which character set row
-		     contains the characters that need translation.  */
-		  int charset_base_code = c & ~0xff;
-		  if (charset_base == -1)
-		    charset_base = charset_base_code;
-		  else if (charset_base != charset_base_code)
-		    /* If two different rows appear, needing translation,
-		       then we cannot use boyer_moore search.  */
-		    simple = 0;
-		}
 	      *pat++ = translated;
 	    }
 	}
@@ -1281,7 +1278,7 @@ search_buffer (string, pos, pos_byte, lim, lim_byte, n,
       len = raw_pattern_size;
       pat = base_pat = patbuf;
 
-      if (simple)
+      if (boyer_moore_ok)
 	return boyer_moore (n, pat, len, len_byte, trt, inverse_trt,
 			    pos, pos_byte, lim, lim_byte,
 			    charset_base);
@@ -1626,7 +1623,7 @@ boyer_moore (n, base_pat, len, len_byte, trt, inverse_trt,
 	      while (! CHAR_HEAD_P (*charstart))
 		charstart--;
 	      untranslated = STRING_CHAR (charstart, ptr - charstart + 1);
-	      if (charset_base == (untranslated & ~0xff))
+	      if (charset_base == (untranslated & ~CHAR_FIELD3_MASK))
 		{
 		  TRANSLATE (ch, trt, untranslated);
 		  if (! CHAR_HEAD_P (*ptr))
@@ -2417,8 +2414,10 @@ since only regular expressions have distinguished subexpressions.")
     }
 
   /* Record point, the move (quietly) to the start of the match.  */
-  if (PT > search_regs.start[sub])
+  if (PT >= search_regs.end[sub])
     opoint = PT - ZV;
+  else if (PT > search_regs.start[sub])
+    opoint = search_regs.end[sub] - ZV;
   else
     opoint = PT;
 

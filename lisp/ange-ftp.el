@@ -560,15 +560,15 @@
 ;;       ange-ftp-dired-host-type for local buffers.
 ;;
 ;; t = a remote host of unknown type. Think t as in true, it's remote.
-;;     Currently, 'unix is used as the default remote host type.
+;;     Currently, `unix' is used as the default remote host type.
 ;;     Maybe we should use t.
 ;;
-;; 'type = a remote host of TYPE type.
+;; TYPE = a remote host of TYPE type.
 ;;
-;; 'type:list = a remote host of TYPE type, using a specialized ftp listing
-;;              program called list. This is currently only used for Unix
-;;              dl (descriptive listings), when ange-ftp-dired-host-type
-;;              is set to 'unix:dl.
+;; TYPE:LIST = a remote host of TYPE type, using a specialized ftp listing
+;;             program called list. This is currently only used for Unix
+;;             dl (descriptive listings), when ange-ftp-dired-host-type
+;;             is set to `unix:dl'.
 
 ;; Bug report codes:
 ;;
@@ -1128,29 +1128,6 @@ only return the directory part of FILE."
 ;;;; Password support.
 ;;;; ------------------------------------------------------------
 
-(defun ange-ftp-read-passwd (prompt &optional default)
-  "Read a password, echoing `.' for each character typed.
-End with RET, LFD, or ESC.  DEL or C-h rubs out.  C-u kills line.
-Optional DEFAULT is password to start with."
-  (let ((pass nil)
-	(c 0)
-	(echo-keystrokes 0)
-	(cursor-in-echo-area t))
-    (while (progn (message "%s%s"
-			   prompt
-			   (make-string (length pass) ?.))
-		  (setq c (read-char))
-		  (and (/= c ?\r) (/= c ?\n) (/= c ?\e)))
-      (if (= c ?\C-u)
-	  (setq pass "")
-	(if (and (/= c ?\b) (/= c ?\177))
-	    (setq pass (concat pass (char-to-string c)))
-	  (if (> (length pass) 0)
-	      (setq pass (substring pass 0 -1))))))
-    (message "")
-    (ange-ftp-repaint-minibuffer)
-    (or pass default "")))
-
 (defmacro ange-ftp-generate-passwd-key (host user)
   (` (concat (downcase (, host)) "/" (, user))))
 
@@ -1162,7 +1139,7 @@ Optional DEFAULT is password to start with."
   "For a given HOST and USER, set or change the associated PASSWORD."
   (interactive (list (read-string "Host: ")
 		     (read-string "User: ")
-		     (ange-ftp-read-passwd "Password: ")))
+		     (read-passwd "Password: ")))
   (ange-ftp-put-hash-entry (ange-ftp-generate-passwd-key host user)
 			   passwd
 			   ange-ftp-passwd-hashtable))
@@ -1225,13 +1202,14 @@ Optional DEFAULT is password to start with."
 			    
 			    ;; found another machine with the same user.
 			    ;; Try that account.
-			    (ange-ftp-read-passwd
+			    (read-passwd
 			     (format "passwd for %s@%s (default same as %s@%s): "
 				     user host user other)
+			     nil
 			     (ange-ftp-lookup-passwd other user))
 			  
 			  ;; I give up.  Ask the user for the password.
-			  (ange-ftp-read-passwd
+			  (read-passwd
 			   (format "Password for %s@%s: " user host)))))
 	   (ange-ftp-set-passwd host user passwd)
 	   passwd))))
@@ -1249,7 +1227,7 @@ Optional DEFAULT is password to start with."
   "For a given HOST and USER, set or change the associated ACCOUNT password."
   (interactive (list (read-string "Host: ")
 		     (read-string "User: ")
-		     (ange-ftp-read-passwd "Account password: ")))
+		     (read-passwd "Account password: ")))
   (ange-ftp-put-hash-entry (ange-ftp-generate-passwd-key host user)
 			   account
 			   ange-ftp-account-hashtable))
@@ -2157,29 +2135,33 @@ Create a new process if needed."
   "Return a symbol which represents the type of the HOST given.
 If the optional argument USER is given, attempts to guess the
 host-type by logging in as USER."
-  (if (eq host ange-ftp-host-cache)
-      ange-ftp-host-type-cache
-    ;; Trigger an ftp connection, in case we need to guess at the host type.
-    (if (and user (ange-ftp-get-process host user) (eq host ange-ftp-host-cache))
-	ange-ftp-host-type-cache
-      (setq ange-ftp-host-cache host
-	    ange-ftp-host-type-cache
-	    (cond ((ange-ftp-dumb-unix-host host)
-		   'dumb-unix)
-;;		  ((and (fboundp 'ange-ftp-vos-host)
-;;			(ange-ftp-vos-host host))
-;;		   'vos)
-		  ((and (fboundp 'ange-ftp-vms-host)
-			(ange-ftp-vms-host host))
-		   'vms)
-		  ((and (fboundp 'ange-ftp-mts-host)
-			(ange-ftp-mts-host host))
-		   'mts)
-		  ((and (fboundp 'ange-ftp-cms-host)
-			(ange-ftp-cms-host host))
-		   'cms)
-		  (t
-		   'unix))))))
+  (cond ((null host) 'unix)
+	;; Return `unix' if HOST is nil, since that's the most vanilla
+	;; possible return value.
+	((eq host ange-ftp-host-cache)
+	 ange-ftp-host-type-cache)
+	;; Trigger an ftp connection, in case we need to guess at the host type.
+	((and user (ange-ftp-get-process host user) (eq host ange-ftp-host-cache))
+	 ange-ftp-host-type-cache)
+	(t
+         (setq ange-ftp-host-cache host
+	       ange-ftp-host-type-cache
+	       (cond ((ange-ftp-dumb-unix-host host)
+		      'dumb-unix)
+		     ;;		  ((and (fboundp 'ange-ftp-vos-host)
+		     ;;			(ange-ftp-vos-host host))
+		     ;;		   'vos)
+		     ((and (fboundp 'ange-ftp-vms-host)
+			   (ange-ftp-vms-host host))
+		      'vms)
+		     ((and (fboundp 'ange-ftp-mts-host)
+			   (ange-ftp-mts-host host))
+		      'mts)
+		     ((and (fboundp 'ange-ftp-cms-host)
+			   (ange-ftp-cms-host host))
+		      'cms)
+		     (t
+		      'unix))))))
 
 ;; It would be nice to abstract the functions ange-ftp-TYPE-host and
 ;; ange-ftp-add-TYPE-host. The trick is to abstract these functions
@@ -2802,11 +2784,10 @@ NO-ERROR, if a listing for DIRECTORY cannot be obtained."
 	     (host-type (ange-ftp-host-type
 			 (car parsed))))
 	(or
-;;; This variable seems not to exist in Emacs 19 -- rms.
-;;;	 ;; Deal with dired
-;;;	 (and (boundp 'dired-local-variables-file)
-;;;	      (stringp dired-local-variables-file)
-;;;	      (string-equal dired-local-variables-file efile))
+	 ;; Deal with dired
+	 (and (boundp 'dired-local-variables-file) ; in the dired-x package
+	      (stringp dired-local-variables-file)
+	      (string-equal dired-local-variables-file efile))
 	 ;; No dots in dir names in vms.
 	 (and (eq host-type 'vms)
 	      (string-match "\\." efile))
@@ -3036,11 +3017,15 @@ logged in as user USER and cd'd to directory DIR."
 	  ;; If name starts with //, preserve that, for apollo system.
 	  (if (not (string-match "^//" name))
 	      (progn
-		(setq name (ange-ftp-real-expand-file-name name))
-		;; Strip off drive specifier added on windows-nt
-		(if (and (eq system-type 'windows-nt)
-			 (string-match "^[a-zA-Z]:" name))
-		    (setq name (substring name 2)))
+		(if (not (eq system-type 'windows-nt))
+		    (setq name (ange-ftp-real-expand-file-name name))
+		  ;; Windows UNC default dirs do not make sense for ftp.
+		  (if (string-match "^//" default-directory)
+		      (setq name (ange-ftp-real-expand-file-name name "c:/"))
+		    (setq name (ange-ftp-real-expand-file-name name)))
+		  ;; Strip off possible drive specifier.
+		  (if (string-match "^[a-zA-Z]:" name)
+		      (setq name (substring name 2))))
 		(if (string-match "^//" name)
 		    (setq name (substring name 1)))))
 	  
@@ -3061,6 +3046,9 @@ logged in as user USER and cd'd to directory DIR."
     (cond ((eq (string-to-char name) ?~)
 	   (ange-ftp-real-expand-file-name name))
 	  ((eq (string-to-char name) ?/)
+	   (ange-ftp-canonize-filename name))
+	  ((and (eq system-type 'windows-nt)
+		(eq (string-to-char name) ?\\))
 	   (ange-ftp-canonize-filename name))
 	  ((and (eq system-type 'windows-nt)
 		(or (string-match "^[a-zA-Z]:" name)
@@ -3144,7 +3132,8 @@ system TYPE.")
 	       ;; of the transfer is irrelevant, i.e. we can use binary mode
 	       ;; regardless. Maybe a system-type to host-type lookup?
 	       (binary (or (ange-ftp-binary-file filename)
-			   (eq (ange-ftp-host-type host user) 'unix)))
+			   (memq (ange-ftp-host-type host user)
+				 '(unix dumb-unix))))
 	       (cmd (if append 'append 'put))
 	       (abbr (ange-ftp-abbreviate-filename filename))
 	       ;; we need to reset `last-coding-system-used' to its
@@ -3216,7 +3205,8 @@ system TYPE.")
 		     (name (ange-ftp-quote-string (nth 2 parsed)))
 		     (temp (ange-ftp-make-tmp-name host))
 		     (binary (or (ange-ftp-binary-file filename)
-				 (eq (ange-ftp-host-type host user) 'unix)))
+				 (memq (ange-ftp-host-type host user)
+				       '(unix dumb-unix))))
 		     (abbr (ange-ftp-abbreviate-filename filename))
 		     size)
 		(unwind-protect
@@ -3501,8 +3491,10 @@ system TYPE.")
 	     (t-abbr (ange-ftp-abbreviate-filename newname filename))
 	     (binary (or (ange-ftp-binary-file filename)
 			 (ange-ftp-binary-file newname)
-			 (and (eq (ange-ftp-host-type f-host f-user) 'unix)
-			      (eq (ange-ftp-host-type t-host t-user) 'unix))))
+			 (and (memq (ange-ftp-host-type f-host f-user)
+				    '(unix dumb-unix))
+			      (memq (ange-ftp-host-type t-host t-user)
+				    '(unix dumb-unix)))))
 	     temp1
 	     temp2)
 
@@ -3548,6 +3540,8 @@ system TYPE.")
 			f-parsed f-host f-user f-name f-abbr
 			t-parsed t-host t-user t-name t-abbr
 			nil nil cont nowait))))))
+
+(defvar ange-ftp-waiting-flag nil)
 
 ;; next part of copying routine.
 (defun ange-ftp-cf1 (result line
@@ -3951,13 +3945,13 @@ directory, so that Emacs will know its current contents."
 				       (format "Getting %s" fn1))
 	  tmp1))))
 
-(defvar ange-ftp-waiting-flag nil)
-
 (defun ange-ftp-load (file &optional noerror nomessage nosuffix)
   (if (ange-ftp-ftp-name file)
       (let ((tryfiles (if nosuffix
 			  (list file)
 			(list (concat file ".elc") (concat file ".el") file)))
+	    ;; make sure there are no references to temp files
+	    (load-force-doc-strings t)
 	    copy)
 	(while (and tryfiles (not copy))
 	  (catch 'ftp-error
@@ -4294,13 +4288,13 @@ NEWNAME should be the name to give the new compressed or uncompressed file.")
       (ange-ftp-real-file-name-sans-versions file keep-backup-version))))
 
 ;; This is the handler for shell-command.
-(defun ange-ftp-shell-command (command &optional output-buffer)
+(defun ange-ftp-shell-command (command &optional output-buffer error-buffer)
   (let* ((parsed (ange-ftp-ftp-name default-directory))
 	 (host (nth 0 parsed))
 	 (user (nth 1 parsed))
 	 (name (nth 2 parsed)))
     (if (not parsed)
-	(ange-ftp-real-shell-command command output-buffer)
+	(ange-ftp-real-shell-command command output-buffer error-buffer)
       (if (> (length name) 0)		; else it's $HOME
 	  (setq command (concat "cd " name "; " command)))
       (setq command
@@ -4311,7 +4305,7 @@ NEWNAME should be the name to give the new compressed or uncompressed file.")
       ;; Cannot call ange-ftp-real-dired-run-shell-command here as it
       ;; would prepend "cd default-directory" --- which bombs because
       ;; default-directory is in ange-ftp syntax for remote file names.
-      (ange-ftp-real-shell-command command output-buffer))))
+      (ange-ftp-real-shell-command command output-buffer error-buffer))))
 
 ;;; This is the handler for call-process.
 (defun ange-ftp-dired-call-process (program discard &rest arguments)

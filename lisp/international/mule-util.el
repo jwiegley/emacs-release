@@ -124,7 +124,7 @@ the resulting string may be narrower than END-COLUMN."
 	  (concat head-padding str tail-padding)
 	str))))
 
-;;; For backward compatiblity ...
+;;; For backward compatibility ...
 ;;;###autoload
 (defalias 'truncate-string 'truncate-string-to-width)
 (make-obsolete 'truncate-string 'truncate-string-to-width)
@@ -134,7 +134,7 @@ the resulting string may be narrower than END-COLUMN."
 
 ;;;###autoload
 (defsubst nested-alist-p (obj)
-  "Return t if OBJ is a nesetd alist.
+  "Return t if OBJ is a nested alist.
 
 Nested alist is a list of the form (ENTRY . BRANCHES), where ENTRY is
 any Lisp object, and BRANCHES is a list of cons cells of the form
@@ -148,13 +148,13 @@ can be a string, a vector, or a list."
 ;;;###autoload
 (defun set-nested-alist (keyseq entry alist &optional len branches)
   "Set ENTRY for KEYSEQ in a nested alist ALIST.
-Optional 4th arg LEN non-nil means the firlst LEN elements in KEYSEQ
+Optional 4th arg LEN non-nil means the first LEN elements in KEYSEQ
  is considered.
 Optional argument BRANCHES if non-nil is branches for a keyseq
 longer than KEYSEQ.
 See the documentation of `nested-alist-p' for more detail."
   (or (nested-alist-p alist)
-      (error "Invalid arguement %s" alist))
+      (error "Invalid argument %s" alist))
   (let ((islist (listp keyseq))
 	(len (or len (length keyseq)))
 	(i 0)
@@ -189,7 +189,7 @@ If ALIST is not deep enough for KEYSEQ, return number which is
 Optional 3rd argument NIL-FOR-TOO-LONG non-nil means return nil
  even if ALIST is not deep enough."
   (or (nested-alist-p alist)
-      (error "invalid arguement %s" alist))
+      (error "invalid argument %s" alist))
   (or len
       (setq len (length keyseq)))
   (let ((i (or start 0)))
@@ -212,13 +212,16 @@ Optional 3rd argument NIL-FOR-TOO-LONG non-nil means return nil
 
 ;;;###autoload
 (defun coding-system-eol-type-mnemonic (coding-system)
-  "Return mnemonic letter of eol-type of CODING-SYSTEM."
-  (let ((eol-type (coding-system-eol-type coding-system)))
-    (cond ((vectorp eol-type) eol-mnemonic-undecided)
-	  ((eq eol-type 0) eol-mnemonic-unix)
-	  ((eq eol-type 1) eol-mnemonic-dos)
-	  ((eq eol-type 2) eol-mnemonic-mac)
-	  (t ?-))))
+  "Return the string indicating end-of-line format of CODING-SYSTEM."
+  (let* ((eol-type (coding-system-eol-type coding-system))
+	 (val (cond ((vectorp eol-type) eol-mnemonic-undecided)
+		    ((eq eol-type 0) eol-mnemonic-unix)
+		    ((eq eol-type 1) eol-mnemonic-dos)
+		    ((eq eol-type 2) eol-mnemonic-mac)
+		    (t "-"))))
+    (if (stringp val)
+	val
+      (char-to-string val))))
 
 ;;;###autoload
 (defun coding-system-post-read-conversion (coding-system)
@@ -240,40 +243,6 @@ Optional 3rd argument NIL-FOR-TOO-LONG non-nil means return nil
   "Return the value of CODING-SYSTEM's translation-table-for-encode property."
   (coding-system-get coding-system 'translation-table-for-encode))
 
-(defun coding-system-lessp (x y)
-  (cond ((eq x 'no-conversion) t)
-	((eq y 'no-conversion) nil)
-	((eq x 'emacs-mule) t)
-	((eq y 'emacs-mule) nil)
-	((eq x 'undecided) t)
-	((eq y 'undecided) nil)
-	(t (let ((c1 (coding-system-mnemonic x))
-		 (c2 (coding-system-mnemonic y)))
-	     (or (< (downcase c1) (downcase c2))
-		 (and (not (> (downcase c1) (downcase c2)))
-		      (< c1 c2)))))))
-
-;;;###autoload
-(defun coding-system-list (&optional base-only)
-  "Return a list of all existing coding systems.
-If optional arg BASE-ONLY is non-nil, only base coding systems are listed."
-  (let* ((codings (sort (copy-sequence coding-system-list)
-			'coding-system-lessp))
-	 (tail (cons nil codings)))
-    ;; Remove subsidiary coding systems (eol variants) and alias
-    ;; coding systems (if necessary).
-    (while (cdr tail)
-      (let* ((coding (car (cdr tail)))
-	     (aliases (coding-system-get coding 'alias-coding-systems)))
-	(if (or
-	     ;; CODING is an eol varinant if not in ALIASES.
-	     (not (memq coding aliases))
-	     ;; CODING is an alias if it is not car of ALISES.
-	     (and base-only (not (eq coding (car aliases)))))
-	    (setcdr tail (cdr (cdr tail)))
-	  (setq tail (cdr tail)))))
-    codings))
-
 ;;;###autoload
 (defun coding-system-equal (coding-system-1 coding-system-2)
   "Return t if and only if CODING-SYSTEM-1 and CODING-SYSTEM-2 are identical.
@@ -288,66 +257,28 @@ or one is an alias of the other."
 		 (and (vectorp eol-type-1) (vectorp eol-type-2)))))))
 
 ;;;###autoload
-(defun coding-system-change-eol-conversion (coding-system eol-type)
-  "Return a coding system which differs from CODING-SYSTEM in eol conversion.
-The returned coding system converts end-of-line by EOL-TYPE
-but text as the same way as CODING-SYSTEM.
-EOL-TYPE should be `unix', `dos', `mac', or nil.
-If EOL-TYPE is nil, the returned coding system detects
-how end-of-line is formatted automatically while decoding.
-
-EOL-TYPE can be specified by an integer 0, 1, or 2.
-They means `unix', `dos', and `mac' respectively."
-  (if (symbolp eol-type)
-      (setq eol-type (cond ((eq eol-type 'unix) 0)
-			   ((eq eol-type 'dos) 1)
-			   ((eq eol-type 'mac) 2)
-			   (t eol-type))))
-  (let ((orig-eol-type (coding-system-eol-type coding-system)))
-    (if (vectorp orig-eol-type)
-	(if (not eol-type)
-	    coding-system
-	  (aref orig-eol-type eol-type))
-      (let ((base (coding-system-base coding-system)))
-	(if (not eol-type)
-	    base
-	  (if (= eol-type orig-eol-type)
-	      coding-system
-	    (setq orig-eol-type (coding-system-eol-type base))
-	    (if (vectorp orig-eol-type)
-		(aref orig-eol-type eol-type))))))))
-
-;;;###autoload
-(defun coding-system-change-text-conversion (coding-system coding)
-  "Return a coding system which differs from CODING-SYSTEM in text conversion.
-The returned coding system converts text by CODING
-but end-of-line as the same way as CODING-SYSTEM.
-If CODING is nil, the returned coding system detects
-how text is formatted automatically while decoding."
-  (if (not coding)
-      (coding-system-base coding-system)
-    (let ((eol-type (coding-system-eol-type coding-system)))
-      (coding-system-change-eol-conversion
-       coding
-       (if (numberp eol-type) (aref [unix dos mac] eol-type))))))
-
-;;;###autoload
 (defmacro detect-coding-with-priority (from to priority-list)
   "Detect a coding system of the text between FROM and TO with PRIORITY-LIST.
 PRIORITY-LIST is an alist of coding categories vs the corresponding
 coding systems ordered by priority."
-  `(let* ((prio-list ,priority-list)
-	  (coding-category-list coding-category-list)
-	  ,@(mapcar (function (lambda (x) (list x x))) coding-category-list))
-     (mapcar (function (lambda (x) (set (car x) (cdr x))))
-	     prio-list)
-     (set-coding-priority (mapcar (function (lambda (x) (car x))) prio-list))
-     (detect-coding-region ,from ,to)))
+  `(unwind-protect
+       (let* ((prio-list ,priority-list)
+	      (coding-category-list coding-category-list)
+	      ,@(mapcar (function (lambda (x) (list x x)))
+			coding-category-list))
+	 (mapcar (function (lambda (x) (set (car x) (cdr x))))
+		 prio-list)
+	 (set-coding-priority (mapcar (function (lambda (x) (car x)))
+				      prio-list))
+	 (detect-coding-region ,from ,to))
+     ;; We must restore the internal database.
+     (set-coding-priority coding-category-list)
+     (update-coding-systems-internal)))
 
 ;;;###autoload
 (defun detect-coding-with-language-environment (from to lang-env)
   "Detect a coding system of the text between FROM and TO with LANG-ENV.
-The detection takes into accont the coding system priorities for the
+The detection takes into account the coding system priorities for the
 language environment LANG-ENV."
   (let ((coding-priority (get-language-info lang-env 'coding-priority)))
     (if coding-priority
@@ -359,7 +290,7 @@ language environment LANG-ENV."
       (detect-coding-region from to))))
 
 
-;;; Composite charcater manipulations.
+;;; Composite character manipulations.
 
 ;;;###autoload
 (defun compose-region (start end)
@@ -370,8 +301,8 @@ positions (integers or markers) specifying the region."
   (save-excursion
     (let ((str (buffer-substring start end)))
       (goto-char start)
-      (delete-region start end)
-      (insert (compose-string str)))))
+      (insert (compose-string str))
+      (delete-char (- end start)))))
 
 ;;;###autoload
 (defun decompose-region (start end)
@@ -380,17 +311,29 @@ Composite characters are broken up into individual components.
 When called from a program, expects two arguments,
 positions (integers or markers) specifying the region."
   (interactive "r")
-  (save-excursion
-    (save-restriction
-      (narrow-to-region start end)
+  (let ((buf (current-buffer))
+	(cmpchar-head (char-to-string leading-code-composition)))
+    (with-temp-buffer
+      (insert-buffer-substring buf start end)
+      (set-buffer-multibyte nil)
       (goto-char (point-min))
-      (while (not (eobp))
-	(let ((ch (following-char)))
-	  (if (>= ch min-composite-char)
-	      (progn
-		(delete-char 1)
-		(insert (decompose-composite-char ch)))
-	    (forward-char 1)))))))
+      (while (search-forward cmpchar-head nil t)
+	(if (looking-at "[\240-\377][\240-\377][\240-\377][\240-\377]+")
+	    (let* ((from (1- (point)))
+		   (to (match-end 0))
+		   (str (string-as-multibyte (buffer-substring from to))))
+	      (if (cmpcharp (string-to-char str))
+		  (progn
+		    (delete-region from to)
+		    (insert (string-as-unibyte (decompose-string str))))
+		(goto-char to)))))
+      (set-buffer-multibyte t)
+      (let ((tempbuf (current-buffer)))
+	(save-excursion
+	  (set-buffer buf)
+	  (goto-char start)
+	  (delete-region start end)
+	  (insert-buffer-substring tempbuf))))))
 
 ;;;###autoload
 (defun decompose-string (string)
@@ -464,12 +407,15 @@ overall glyph is updated as follows:
 
 ;; Return a string for char CH to be embedded in multibyte form of
 ;; composite character.
+;;;###autoload
 (defun compose-chars-component (ch)
   (if (< ch 128)
       (format "\240%c" (+ ch 128))
     (let ((str (string-as-unibyte (char-to-string ch))))
       (if (cmpcharp ch)
-	  (substring str (if (= (aref str 1) ?\xFF) 2 1))
+	  (if (= (aref str 1) ?\xFF)
+	      (error "Can't compose a rule-based composition character")
+	    (substring str (if (= (aref str 1) ?\xFF) 2 1)))
 	(aset str 0 (+ (aref str 0) ?\x20))
 	str))))
 
@@ -483,26 +429,44 @@ overall glyph is updated as follows:
 ;;;###autoload
 (defun compose-chars (first-component &rest args)
   "Return one char string composed from the arguments.
-Each argument is a character (including a composite chararacter)
-or a composition rule.
+For relative composition, each argument should be a non-composition character
+or a relative-composition character.
+For rule-based composition, Nth (where N is odd) argument should be
+a non-composition character or a rule-based-composition character,
+and Mth (where M is even) argument should be a composition rule.
 A composition rule has the form \(GLOBAL-REF-POINT . NEW-REF-POINT).
 See the documentation of `reference-point-alist' for more detail."
   (if (= (length args) 0)
       (char-to-string first-component)
     (let* ((with-rule (consp (car args)))
-	   (str (if with-rule (concat (vector leading-code-composition ?\xFF))
-		  (char-to-string leading-code-composition))))
-      (setq str (concat str (compose-chars-component first-component)))
+	   (str (if (cmpcharp first-component)
+		    (string-as-unibyte (char-to-string first-component))
+		  (if with-rule
+		      (concat (vector leading-code-composition ?\xFF)
+			      (compose-chars-component first-component))
+		    (concat (char-to-string leading-code-composition)
+			    (compose-chars-component first-component))))))
+      (if (and (cmpcharp first-component)
+	       (eq with-rule (/= (aref str 1) ?\xFF)))
+	  (error "%s-compostion-character is not allowed in %s composition: %c"
+		 (if with-rule "relative" "rule-based")
+		 (if with-rule "rule-based" "relative")
+		 first-component))
       (while args
 	(if with-rule
-	    (progn
-	      (if (not (consp (car args)))
-		  (error "Invalid composition rule: %s" (car args)))
-	      (setq str (concat str (compose-chars-rule (car args))
-				(compose-chars-component (car (cdr args))))
-		    args (cdr (cdr args))))
-	  (setq str (concat str (compose-chars-component (car args)))
-		args (cdr args))))
+	    (setq str (concat str (compose-chars-rule (car args)))
+		  args (cdr args)))
+	(if (cmpcharp (car args))
+	    (let ((cmp-str (string-as-unibyte (char-to-string (car args)))))
+	      (if (eq with-rule (/= (aref cmp-str 1) ?\xFF))
+		  (error "%s-compostion-character is not allowed in %s composition: %c"
+			 (if with-rule "relative" "rule-based")
+			 (if with-rule "rule-based" "relative")
+			 (car args)))
+	      (setq str (concat str (substring cmp-str
+					       (if with-rule 2 1)))))
+	  (setq str (concat str (compose-chars-component (car args)))))
+	(setq args (cdr args)))
       (string-as-multibyte str))))
 
 ;;;###autoload

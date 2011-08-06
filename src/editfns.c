@@ -154,7 +154,12 @@ A multibyte character is handled correctly.")
   CHECK_STRING (string, 0);
   p = XSTRING (string);
   if (p->size)
-    XSETFASTINT (val, STRING_CHAR (p->data, STRING_BYTES (p)));
+    {
+      if (STRING_MULTIBYTE (string))
+	XSETFASTINT (val, STRING_CHAR (p->data, STRING_BYTES (p)));
+      else
+	XSETFASTINT (val, p->data[0]);
+    }
   else
     XSETFASTINT (val, 0);
   return val;
@@ -490,20 +495,26 @@ See also `gap-position'.")
 }
 
 DEFUN ("position-bytes", Fposition_bytes, Sposition_bytes, 1, 1, 0,
-  "Return the byte position for character position POSITION.")
+  "Return the byte position for character position POSITION.\n\
+If POSITION is out of range, the value is nil.")
   (position)
      Lisp_Object position;
 {
   CHECK_NUMBER_COERCE_MARKER (position, 1);
+  if (XINT (position) < BEG || XINT (position) > Z)
+    return Qnil;
   return make_number (CHAR_TO_BYTE (XINT (position)));
 }
 
 DEFUN ("byte-to-position", Fbyte_to_position, Sbyte_to_position, 1, 1, 0,
-  "Return the character position for byte position BYTEPOS.")
+  "Return the character position for byte position BYTEPOS.\n\
+If BYTEPOS is out of range, the value is nil.")
   (bytepos)
      Lisp_Object bytepos;
 {
   CHECK_NUMBER (bytepos, 1);
+  if (XINT (bytepos) < BEG_BYTE || XINT (bytepos) > Z_BYTE)
+    return Qnil;
   return make_number (BYTE_TO_CHAR (XINT (bytepos)));
 }
 
@@ -597,7 +608,7 @@ If POS is out of range, the value is nil.")
   if (NILP (pos))
     {
       pos_byte = PT_BYTE;
-      pos = PT;
+      XSETFASTINT (pos, PT);
     }
 
   if (MARKERP (pos))
@@ -631,7 +642,7 @@ If POS is out of range, the value is nil.")
   if (NILP (pos))
     {
       pos_byte = PT_BYTE;
-      pos = PT;
+      XSETFASTINT (pos, PT);
     }
 
   if (MARKERP (pos))
@@ -721,10 +732,13 @@ DEFUN ("user-real-uid", Fuser_real_uid, Suser_real_uid, 0, 0, 0,
 
 DEFUN ("user-full-name", Fuser_full_name, Suser_full_name, 0, 1, 0,
   "Return the full name of the user logged in, as a string.\n\
+If the full name corresponding to Emacs's userid is not known,\n\
+return \"unknown\".\n\
+\n\
 If optional argument UID is an integer, return the full name of the user\n\
-with that uid, or \"unknown\" if there is no such user.\n\
+with that uid, or nil if there is no such user.\n\
 If UID is a string, return the full name of the user with that login\n\
-name, or \"unknown\" if no such user could be found.")
+name, or nil if there is no such user.")
   (uid)
      Lisp_Object uid;
 {
@@ -841,6 +855,58 @@ lisp_time_argument (specified_time, result)
     }
 }
 
+/* Write information into buffer S of size MAXSIZE, according to the
+   FORMAT of length FORMAT_LEN, using time information taken from *TP.
+   Return the number of bytes written, not including the terminating
+   '\0'.  If S is NULL, nothing will be written anywhere; so to
+   determine how many bytes would be written, use NULL for S and
+   ((size_t) -1) for MAXSIZE.
+
+   This function behaves like emacs_strftime, except it allows null
+   bytes in FORMAT.  */
+static size_t
+emacs_memftime (s, maxsize, format, format_len, tp)
+      char *s;
+      size_t maxsize;
+      const char *format;
+      size_t format_len;
+      const struct tm *tp;
+{
+  size_t total = 0;
+
+  /* Loop through all the null-terminated strings in the format
+     argument.  Normally there's just one null-terminated string, but
+     there can be arbitrarily many, concatenated together, if the
+     format contains '\0' bytes.  emacs_strftime stops at the first
+     '\0' byte so we must invoke it separately for each such string.  */
+  for (;;)
+    {
+      size_t len;
+      size_t result;
+
+      if (s)
+	s[0] = '\1';
+
+      result = emacs_strftime (s, maxsize, format, tp);
+
+      if (s)
+	{
+	  if (result == 0 && s[0] != '\0')
+	    return 0;
+	  s += result + 1;
+	}
+
+      maxsize -= result + 1;
+      total += result;
+      len = strlen (format);
+      if (len == format_len)
+	return total;
+      total++;
+      format += len + 1;
+      format_len -= len + 1;
+    }
+}
+
 /*
 DEFUN ("format-time-string", Fformat_time_string, Sformat_time_string, 1, 3, 0,
   "Use FORMAT-STRING to format the time TIME, or now if omitted.\n\
@@ -899,6 +965,7 @@ DEFUN ("format-time-string", Fformat_time_string, Sformat_time_string, 1, 3, 0,
 {
   time_t value;
   int size;
+  struct tm *tm;
 
   CHECK_STRING (format_string, 1);
 
@@ -908,22 +975,27 @@ DEFUN ("format-time-string", Fformat_time_string, Sformat_time_string, 1, 3, 0,
   /* This is probably enough.  */
   size = STRING_BYTES (XSTRING (format_string)) * 6 + 50;
 
+  tm = NILP (universal) ? localtime (&value) : gmtime (&value);
+  if (! tm)
+    error ("Specified time is not representable");
+
   while (1)
     {
       char *buf = (char *) alloca (size + 1);
       int result;
 
       buf[0] = '\1';
-      result = emacs_strftime (buf, size, XSTRING (format_string)->data,
-			       (NILP (universal) ? localtime (&value)
-				: gmtime (&value)));
+      result = emacs_memftime (buf, size, XSTRING (format_string)->data,
+			       STRING_BYTES (XSTRING (format_string)),
+			       tm);
       if ((result > 0 && result < size) || (result == 0 && buf[0] == '\0'))
-	return build_string (buf);
+	return make_string (buf, result);
 
       /* If buffer was too small, make it bigger and try again.  */
-      result = emacs_strftime (NULL, 0x7fffffff, XSTRING (format_string)->data,
-			       (NILP (universal) ? localtime (&value)
-				: gmtime (&value)));
+      result = emacs_memftime (NULL, (size_t) -1,
+			       XSTRING (format_string)->data,
+			       STRING_BYTES (XSTRING (format_string)),
+			       tm);
       size = result + 1;
     }
 }
@@ -953,6 +1025,8 @@ ZONE is an integer indicating the number of seconds east of Greenwich.\n\
     error ("Invalid time specification");
 
   decoded_time = localtime (&time_spec);
+  if (! decoded_time)
+    error ("Specified time is not representable");
   XSETFASTINT (list_args[0], decoded_time->tm_sec);
   XSETFASTINT (list_args[1], decoded_time->tm_min);
   XSETFASTINT (list_args[2], decoded_time->tm_hour);
@@ -1137,18 +1211,15 @@ the data it can't find.")
 {
   time_t value;
   struct tm *t;
+  struct tm gmt;
 
   if (lisp_time_argument (specified_time, &value)
-      && (t = gmtime (&value)) != 0)
+      && (t = gmtime (&value)) != 0
+      && (gmt = *t, t = localtime (&value)) != 0)
     {
-      struct tm gmt;
-      int offset;
-      char *s, buf[6];
-
-      gmt = *t;		/* Make a copy, in case localtime modifies *t.  */
-      t = localtime (&value);
-      offset = tm_diff (t, &gmt);
-      s = 0;
+      int offset = tm_diff (t, &gmt);
+      char *s = 0;
+      char buf[6];
 #ifdef HAVE_TM_ZONE
       if (t->tm_zone)
 	s = (char *)t->tm_zone;
@@ -1875,6 +1946,7 @@ Both characters must have the same length of multi-byte form.")
   int changed = 0;
   unsigned char fromwork[4], *fromstr, towork[4], *tostr, *p;
   int count = specpdl_ptr - specpdl;
+  int maybe_byte_combining = 0;
 
   validate_region (&start, &end);
   CHECK_NUMBER (fromchar, 2);
@@ -1885,6 +1957,11 @@ Both characters must have the same length of multi-byte form.")
       len = CHAR_STRING (XFASTINT (fromchar), fromwork, fromstr);
       if (CHAR_STRING (XFASTINT (tochar), towork, tostr) != len)
 	error ("Characters in subst-char-in-region have different byte-lengths");
+      if (len == 1)
+	/* If *TOSTR is in the range 0x80..0x9F, it may be combined
+           with the after bytes.  If it is in the range 0xA0..0xFF, it
+           may be combined with the before bytes.  */
+	maybe_byte_combining = !ASCII_BYTE_P (*tostr);
     }
   else
     {
@@ -1917,13 +1994,17 @@ Both characters must have the same length of multi-byte form.")
     stop = min (stop, GPT_BYTE);
   while (1)
     {
+      int pos_byte_next = pos_byte;
+
       if (pos_byte >= stop)
 	{
 	  if (pos_byte >= end_byte) break;
 	  stop = end_byte;
 	}
       p = BYTE_POS_ADDR (pos_byte);
-      if (p[0] == fromstr[0]
+      INC_POS (pos_byte_next);
+      if (pos_byte_next - pos_byte == len
+	  && p[0] == fromstr[0]
 	  && (len == 1
 	      || (p[1] == fromstr[1]
 		  && (len == 2 || (p[2] == fromstr[2]
@@ -1946,14 +2027,11 @@ Both characters must have the same length of multi-byte form.")
 
 	  /* Take care of the case where the new character
 	     combines with neighboring bytes.  */ 
-	  if (len == 1
-	      && ((! CHAR_HEAD_P (tostr[0])
-		   && pos_byte > BEGV_BYTE
-		   && ! ASCII_BYTE_P (FETCH_BYTE (pos_byte - 1)))
-		  ||
-		  (! ASCII_BYTE_P (tostr[0])
-		   && pos_byte + 1 < ZV_BYTE
-		   && ! CHAR_HEAD_P (FETCH_BYTE (pos_byte + 1)))))
+	  if (maybe_byte_combining
+	      && (CHAR_HEAD_P (*tostr)
+		  ? ! CHAR_HEAD_P (FETCH_BYTE (pos_byte + 1))
+		  : (pos_byte > BEG_BYTE
+		     && ! ASCII_BYTE_P (FETCH_BYTE (pos_byte - 1)))))
 	    {
 	      Lisp_Object tem, string;
 
@@ -1962,15 +2040,22 @@ Both characters must have the same length of multi-byte form.")
 	      tem = current_buffer->undo_list;
 	      GCPRO1 (tem);
 
-	      /* Make a multibyte string containing this
-		 single-byte character.  */
-	      string = Fmake_string (make_number (1),
-				     make_number (tochar));
-	      SET_STRING_BYTES (XSTRING (string), 1);
+	      /* Make a multibyte string containing this single-byte
+		  character.  */
+	      string = make_multibyte_string (tostr, 1, 1);
 	      /* replace_range is less efficient, because it moves the gap,
 		 but it handles combining correctly.  */
 	      replace_range (pos, pos + 1, string,
-			     0, 0, 0);
+			     0, 0, 1);
+	      pos_byte_next = CHAR_TO_BYTE (pos);
+	      if (pos_byte_next > pos_byte)
+		/* Before combining happened.  We should not increment
+		   POS.  So, to cancel the later increment of POS,
+		   decrease it now.  */
+		pos--;
+	      else
+		INC_POS (pos_byte_next);
+		
 	      if (! NILP (noundo))
 		current_buffer->undo_list = tem;
 
@@ -1983,7 +2068,8 @@ Both characters must have the same length of multi-byte form.")
 	      for (i = 0; i < len; i++) *p++ = tostr[i];
 	    }
 	}
-      INC_BOTH (pos, pos_byte);
+      pos_byte = pos_byte_next;
+      pos++;
     }
 
   if (changed)
@@ -2029,8 +2115,10 @@ It returns the number of characters changed.")
       register unsigned char *p = BYTE_POS_ADDR (pos_byte);
       int len;
       int oc;
+      int pos_byte_next;
 
       oc = STRING_CHAR_AND_LENGTH (p, stop - pos_byte, len);
+      pos_byte_next = pos_byte + len;
       if (oc < size && len == 1)
 	{
 	  nc = tt[oc];
@@ -2038,24 +2126,27 @@ It returns the number of characters changed.")
 	    {
 	      /* Take care of the case where the new character
 		 combines with neighboring bytes.  */ 
-	      if ((! CHAR_HEAD_P (nc)
-		   && pos_byte > BEGV_BYTE
-		   && ! ASCII_BYTE_P (FETCH_BYTE (pos_byte - 1)))
-		  ||
-		  (! ASCII_BYTE_P (nc)
-		   && pos_byte + 1 < ZV_BYTE
-		   && ! CHAR_HEAD_P (FETCH_BYTE (pos_byte + 1))))
+	      if (!ASCII_BYTE_P (nc)
+		  && (CHAR_HEAD_P (nc)
+		      ? ! CHAR_HEAD_P (FETCH_BYTE (pos_byte + 1))
+		      : (pos_byte > BEG_BYTE
+			 && ! ASCII_BYTE_P (FETCH_BYTE (pos_byte - 1)))))
 		{
 		  Lisp_Object string;
 
-		  string = Fmake_string (make_number (1),
-					 make_number (nc));
-		  SET_STRING_BYTES (XSTRING (string), 1);
-
+		  string = make_multibyte_string (tt + oc, 1, 1);
 		  /* This is less efficient, because it moves the gap,
 		     but it handles combining correctly.  */
 		  replace_range (pos, pos + 1, string,
-				 1, 0, 0);
+				 1, 0, 1);
+		  pos_byte_next = CHAR_TO_BYTE (pos);
+		  if (pos_byte_next > pos_byte)
+		    /* Before combining happened.  We should not
+		       increment POS.  So, to cancel the later
+		       increment of POS, we decrease it now.  */
+		    pos--;
+		  else
+		    INC_POS (pos_byte_next);
 		}
 	      else
 		{
@@ -2066,7 +2157,7 @@ It returns the number of characters changed.")
 	      ++cnt;
 	    }
 	}
-      pos_byte += len;
+      pos_byte = pos_byte_next;
       pos++;
     }
 
@@ -2206,6 +2297,7 @@ The value returned is the value of the last form in BODY.\n\
 \n\
 `save-restriction' can get confused if, within the BODY, you widen\n\
 and then make changes outside the area within the saved restrictions.\n\
+See Info node `(elisp)Narrowing' for details and an appropriate technique.\n\
 \n\
 Note: if you are using both `save-excursion' and `save-restriction',\n\
 use `save-excursion' outermost:\n\
@@ -2370,7 +2462,7 @@ It may contain %-sequences meaning to substitute the next argument.\n\
 %g means print a number in exponential notation\n\
   or decimal-point notation, whichever uses fewer characters.\n\
 %c means print a number as a single character.\n\
-%S means print any object as an s-expression (using prin1).\n\
+%S means print any object as an s-expression (using `prin1').\n\
   The argument used for %d, %o, %x, %e, %f, %g or %c must be a number.\n\
 Use %% to put a single % into the output.")
   (nargs, args)
@@ -2441,6 +2533,8 @@ Use %% to put a single % into the output.")
 	if (format - this_format_start + 1 > longest_format)
 	  longest_format = format - this_format_start + 1;
 
+	if (format == end)
+	  error ("Format string ends in middle of format specifier");
 	if (*format == '%')
 	  format++;
 	else if (++n >= nargs)
@@ -2472,7 +2566,7 @@ Use %% to put a single % into the output.")
 	  {
 	  string:
 	    if (*format != 's' && *format != 'S')
-	      error ("format specifier doesn't match argument type");
+	      error ("Format specifier doesn't match argument type");
 	    thissize = CONVERTED_BYTE_SIZE (multibyte, args[n]);
 	  }
 	/* Would get MPV otherwise, since Lisp_Int's `point' to low memory.  */
@@ -2485,7 +2579,12 @@ Use %% to put a single % into the output.")
 	       be a double.  */
 	    if (*format == 'e' || *format == 'f' || *format == 'g')
 	      args[n] = Ffloat (args[n]);
+	    else
 #endif
+	      if (*format != 'd' && *format != 'o' && *format != 'x'
+		  && *format != 'i' && *format != 'X' && *format != 'c')
+		error ("Invalid format operation %%%c", *format);
+
 	    thissize = 30;	
 	    if (*format == 'c'
 		&& (! SINGLE_BYTE_CHAR_P (XINT (args[n]))
@@ -2505,7 +2604,7 @@ Use %% to put a single % into the output.")
 	  {
 	    if (! (*format == 'e' || *format == 'f' || *format == 'g'))
 	      args[n] = Ftruncate (args[n], Qnil);
-	    thissize = 60;
+	    thissize = 200;
 	  }
 #endif
 	else
@@ -2979,8 +3078,8 @@ Transposing beyond buffer boundaries is an error.")
 	  /* Don't precompute these addresses.  We have to compute them
 	     at the last minute, because the relocating allocator might
 	     have moved the buffer around during the xmalloc.  */
-	  start1_addr = BUF_CHAR_ADDRESS (current_buffer, start1_byte);
-	  start2_addr = BUF_CHAR_ADDRESS (current_buffer, start2_byte);
+	  start1_addr = BYTE_POS_ADDR (start1_byte);
+	  start2_addr = BYTE_POS_ADDR (start2_byte);
 
           bcopy (start2_addr, temp, len2_byte);
           bcopy (start1_addr, start1_addr + len2_byte, len1_byte);
@@ -2995,8 +3094,8 @@ Transposing beyond buffer boundaries is an error.")
 	    temp = (unsigned char *) xmalloc (len1_byte);
 	  else
 	    temp = (unsigned char *) alloca (len1_byte);
-	  start1_addr = BUF_CHAR_ADDRESS (current_buffer, start1_byte);
-	  start2_addr = BUF_CHAR_ADDRESS (current_buffer, start2_byte);
+	  start1_addr = BYTE_POS_ADDR (start1_byte);
+	  start2_addr = BYTE_POS_ADDR (start2_byte);
           bcopy (start1_addr, temp, len1_byte);
           bcopy (start2_addr, start1_addr, len2_byte);
           bcopy (temp, start1_addr + len2_byte, len1_byte);
@@ -3035,8 +3134,8 @@ Transposing beyond buffer boundaries is an error.")
 	    temp = (unsigned char *) xmalloc (len1_byte);
 	  else
 	    temp = (unsigned char *) alloca (len1_byte);
-	  start1_addr = BUF_CHAR_ADDRESS (current_buffer, start1_byte);
-	  start2_addr = BUF_CHAR_ADDRESS (current_buffer, start2_byte);
+	  start1_addr = BYTE_POS_ADDR (start1_byte);
+	  start2_addr = BYTE_POS_ADDR (start2_byte);
           bcopy (start1_addr, temp, len1_byte);
           bcopy (start2_addr, start1_addr, len2_byte);
           bcopy (temp, start2_addr, len1_byte);
@@ -3068,8 +3167,8 @@ Transposing beyond buffer boundaries is an error.")
 	    temp = (unsigned char *) xmalloc (len2_byte);
 	  else
 	    temp = (unsigned char *) alloca (len2_byte);
-	  start1_addr = BUF_CHAR_ADDRESS (current_buffer, start1_byte);
-	  start2_addr = BUF_CHAR_ADDRESS (current_buffer, start2_byte);
+	  start1_addr = BYTE_POS_ADDR (start1_byte);
+	  start2_addr = BYTE_POS_ADDR (start2_byte);
           bcopy (start2_addr, temp, len2_byte);
           bcopy (start1_addr, start1_addr + len_mid + len2_byte, len1_byte);
           safe_bcopy (start1_addr + len1_byte, start1_addr + len2_byte, len_mid);
@@ -3104,8 +3203,8 @@ Transposing beyond buffer boundaries is an error.")
 	    temp = (unsigned char *) xmalloc (len1_byte);
 	  else
 	    temp = (unsigned char *) alloca (len1_byte);
-	  start1_addr = BUF_CHAR_ADDRESS (current_buffer, start1_byte);
-	  start2_addr = BUF_CHAR_ADDRESS (current_buffer, start2_byte);
+	  start1_addr = BYTE_POS_ADDR (start1_byte);
+	  start2_addr = BYTE_POS_ADDR (start2_byte);
           bcopy (start1_addr, temp, len1_byte);
           bcopy (start2_addr, start1_addr, len2_byte);
           bcopy (start1_addr + len1_byte, start1_addr + len2_byte, len_mid);

@@ -5,7 +5,7 @@
 ;; Author: Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Sun Nov 17 1996
 ;; Keywords: processes
-;; Time-stamp: <1998-03-14 09:24:38 pbreton>
+;; Time-stamp: <1999-02-21 01:27:24 pbreton>
 
 ;; This file is part of GNU Emacs.
 
@@ -59,15 +59,16 @@
 ;; 
 ;; Determining this information may take some experimentation. Setting
 ;; the variable `dirtrack-debug' may help; it causes the directory-tracking
-;; filter to log messages to the buffer `dirtrack-debug-buffer'.
+;; filter to log messages to the buffer `dirtrack-debug-buffer'. You can easily
+;; toggle this setting with the `dirtrack-debug-toggle' function.
 ;; 
 ;; 3) Add a hook to shell-mode to enable the directory tracking:
 ;;
 ;; (add-hook 'shell-mode-hook
 ;;   (function (lambda ()
-;; 	      (setq comint-output-filter-functions
+;; 	      (setq comint-preoutput-filter-functions
 ;; 		    (append (list 'dirtrack)
-;; 			    comint-output-filter-functions)))))
+;; 			    comint-preoutput-filter-functions)))))
 ;;
 ;; You may wish to turn ordinary shell tracking off by calling
 ;; `shell-dirtrack-toggle' or setting `shell-dirtrackp'.
@@ -99,6 +100,21 @@
 ;;   
 ;;   This saves me from having to use the %E prefix in other non-emacs
 ;;   shells.
+;;
+;; A final note:
+;; 
+;;   I run LOTS of shell buffers through Emacs, sometimes as different users
+;;   (eg, when logged in as myself, I'll run a root shell in the same Emacs).
+;;   If you do this, and the shell prompt contains a ~, Emacs will interpret
+;;   this relative to the user which owns the Emacs process, not the user
+;;   who owns the shell buffer. This may cause dirtrack to behave strangely
+;;   (typically it reports that it is unable to cd to a directory
+;;   with a ~ in it).
+;;
+;;   The same behavior can occur if you use dirtrack with remote filesystems
+;;   (using telnet, rlogin, etc) as Emacs will be checking the local
+;;   filesystem, not the remote one. This problem is not specific to dirtrack,
+;;   but also affects file completion, etc.
 
 ;;; Code:
 
@@ -167,6 +183,13 @@ be on a single line."
   :type  'function
   )
 
+(defcustom dirtrack-directory-change-hook nil
+  "Hook that is called when a directory change is made."
+  :group 'dirtrack
+  :type 'function
+  )
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -215,6 +238,14 @@ forward ones."
   (setq dirtrackp (not dirtrackp))
   (message "Directory tracking %s" (if dirtrackp "ON" "OFF")))
 
+(defun dirtrack-debug-toggle ()
+  "Enable or disable Dirtrack debugging."
+  (interactive)
+  (setq dirtrack-debug (not dirtrack-debug))
+  (message "Directory debugging %s" (if dirtrack-debug "ON" "OFF"))
+  (and dirtrack-debug
+       (display-buffer (get-buffer-create dirtrack-debug-buffer))))
+
 (defun dirtrack-debug-message (string)
   (let ((buf (current-buffer))
 	(debug-buf (get-buffer-create dirtrack-debug-buffer))
@@ -227,11 +258,22 @@ forward ones."
 
 ;;;###autoload
 (defun dirtrack (input)
+  "Determine the current directory by scanning the process output for a prompt.
+The prompt to look for is the first item in `dirtrack-list'.
+
+You can toggle directory tracking by using the function `dirtrack-toggle'.
+
+If directory tracking does not seem to be working, you can use the
+function `dirtrack-debug-toggle' to turn on debugging output.
+
+You can enable directory tracking by adding this function to 
+`comint-output-filter-functions'.
+"
   (if (null dirtrackp)
       nil
-    (let ((prompt-path)
+    (let (prompt-path
+	  matched
 	  (current-dir default-directory)
-	  (matched)
 	  (dirtrack-regexp    (nth 0 dirtrack-list))
 	  (match-num	      (nth 1 dirtrack-list))
 	  (multi-line	      (nth 2 dirtrack-list))
@@ -240,25 +282,16 @@ forward ones."
       (if (eq (point) (point-min))
 	  nil
 	(save-excursion
-	  (goto-char (point-max))
-	  ;; Look for the prompt
-	  (if multi-line
-	      (setq matched 
-		    (re-search-backward 
-		     dirtrack-regexp 
-		     comint-last-output-start
-		     t))
-	    (beginning-of-line)
-	    (setq matched (looking-at dirtrack-regexp)))
+	  (setq matched (string-match dirtrack-regexp input)))
 	  ;; No match
 	  (if (null matched)
 	      (and dirtrack-debug
 		   (dirtrack-debug-message 
 		    (format 
-		     "Failed to match regexp: %s" 
-		    dirtrack-regexp)))
+		     "Input `%s' failed to match regexp: %s" 
+		    input dirtrack-regexp)))
 	    (setq prompt-path 
-		  (buffer-substring-no-properties
+		  (substring input
 		   (match-beginning match-num) (match-end match-num)))
 	    ;; Empty string
 	    (if (not (> (length prompt-path) 0))
@@ -286,11 +319,13 @@ forward ones."
 		(if (file-accessible-directory-p prompt-path)
 		    ;; Change directory
 		    (and (shell-process-cd prompt-path)
+			 (run-hooks dirtrack-directory-change-hook)
 			 dirtrack-debug
 			 (dirtrack-debug-message 
 			  (format "Changing directory to %s" prompt-path)))
 		  (error "Directory %s does not exist" prompt-path)))
-	      )))))))
+	      )))))
+  input)
 
 (provide 'dirtrack)
 

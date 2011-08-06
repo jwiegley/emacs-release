@@ -3,7 +3,7 @@
 ;; Copyright (C) 1989, 1994, 1995 Free Software Foundation, Inc.
 
 ;; Author: Joe Wells <jbw@bigbird.bu.edu>
-;; Rewritten: Daniel.Pfeiffer@Informatik.START.dbp.de, fax (+49 69) 7588-2389
+;; Rewritten: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Keywords: help
 
 ;; This file is part of GNU Emacs.
@@ -558,7 +558,9 @@ alphabetically by symbol name; but this function also sets
 		   (insert
 		    (mapconcat
 		     (lambda (key)
-		       (setq key (key-description key))
+		       (setq key (condition-case () 
+				     (key-description key)
+				   (error)))
 		       (if apropos-keybinding-face
 			   (put-text-property 0 (length key)
 					      'face apropos-keybinding-face

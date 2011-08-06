@@ -980,7 +980,7 @@ set_internal (symbol, newval, bindflag)
       register int idx = XBUFFER_OBJFWD (valcontents)->offset;
       register int mask = XINT (*((Lisp_Object *)
 				  (idx + (char *)&buffer_local_flags)));
-      if (mask > 0)
+      if (mask > 0 && ! bindflag)
 	current_buffer->local_var_flags |= mask;
     }
 
@@ -1312,10 +1312,15 @@ DEFUN ("make-local-variable", Fmake_local_variable, Smake_local_variable,
 Other buffers will continue to share a common default value.\n\
 \(The buffer-local value of VARIABLE starts out as the same value\n\
 VARIABLE previously had.  If VARIABLE was void, it remains void.\)\n\
-See also `make-variable-buffer-local'.\n\n\
+See also `make-variable-buffer-local'.\n\
+\n\
 If the variable is already arranged to become local when set,\n\
 this function causes a local value to exist for this buffer,\n\
 just as setting the variable would do.\n\
+\n\
+This function returns VARIABLE, and therefore\n\
+  (set (make-local-variable 'VARIABLE) VALUE-EXP)\n\
+works.\n\
 \n\
 Do not use `make-local-variable' to make a hook variable buffer-local.\n\
 Use `make-local-hook' instead.")
@@ -1847,9 +1852,9 @@ IDX starts at 0.")
     }
   else if (STRING_MULTIBYTE (array))
     {
-      Lisp_Object new_len;
-      int c, idxval_byte, actual_len;
-      unsigned char *p, *str;
+      int c, idxval_byte, new_len, actual_len;
+      int prev_byte;
+      unsigned char *p, workbuf[4], *str;
 
       if (idxval < 0 || idxval >= XSTRING (array)->size)
 	args_out_of_range (array, idx);
@@ -1857,15 +1862,23 @@ IDX starts at 0.")
       idxval_byte = string_char_to_byte (array, idxval);
       p = &XSTRING (array)->data[idxval_byte];
 
-      actual_len
-	= MULTIBYTE_FORM_LENGTH (p, STRING_BYTES (XSTRING (array)) - idxval_byte);
-      new_len = Fchar_bytes (newelt);
-      if (actual_len != XINT (new_len))
+      actual_len = MULTIBYTE_FORM_LENGTH (p, STRING_BYTES (XSTRING (array)));
+      CHECK_NUMBER (newelt, 2);
+      new_len = CHAR_STRING (XINT (newelt), workbuf, str);
+      if (actual_len != new_len)
 	error ("Attempt to change byte length of a string");
 
-      CHAR_STRING (XINT (newelt), p, str);
-      if (p != str)
-	bcopy (str, p, actual_len);
+      /* We can't accept a change causing byte combining.  */
+      if ((idxval > 0 && !CHAR_HEAD_P (*str)
+	   && (prev_byte = string_char_to_byte (array, idxval - 1),
+	       (prev_byte + 1 < idxval_byte
+		|| (p[-1] >= 0x80 && p[-1] < 0xA0))))
+	  || (idxval < XSTRING (array)->size - 1
+	      && (*str >=0x80 && *str < 0xA0)
+	      && !CHAR_HEAD_P (p[actual_len])))
+	error ("Attempt to change char length of a string");
+      while (new_len--)
+	*p++ = *str++;
     }
   else
     {
@@ -2103,7 +2116,7 @@ It ignores leading spaces and tabs.\n\
 \n\
 If BASE, interpret STRING as a number in that base.  If BASE isn't\n\
 present, base 10 is used.  BASE must be between 2 and 16 (inclusive).\n\
-Floating point numbers always use base 10.")
+If the base used is not 10, floating point is not recognized.")
    (string, base)
      register Lisp_Object string, base;
 {
@@ -2139,7 +2152,7 @@ Floating point numbers always use base 10.")
     p++;
   
 #ifdef LISP_FLOAT_TYPE
-  if (isfloat_string (p))
+  if (isfloat_string (p) && b == 10)
     return make_float (negative * atof (p));
 #endif /* LISP_FLOAT_TYPE */
 
@@ -2203,9 +2216,7 @@ arith_driver (code, nargs, args)
 	{
 	case Aadd: accum += next; break;
 	case Asub:
-	  if (!argnum && nargs != 1)
-	    next = - next;
-	  accum -= next;
+	  accum = argnum ? accum - next : nargs == 1 ? - next : next;
 	  break;
 	case Amult: accum *= next; break;
 	case Adiv:
@@ -2265,9 +2276,7 @@ float_arith_driver (accum, argnum, code, nargs, args)
 	  accum += next;
 	  break;
 	case Asub:
-	  if (!argnum && nargs != 1)
-	    next = - next;
-	  accum -= next;
+	  accum = argnum ? accum - next : nargs == 1 ? - next : next;
 	  break;
 	case Amult:
 	  accum *= next;

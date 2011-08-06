@@ -28,7 +28,7 @@
 ;; Boston, MA 02111-1307, USA.
 
 ;; LCD Archive Entry
-;; supercite|Barry A. Warsaw|supercite-help@anthem.nlm.nih.gov
+;; supercite|Barry A. Warsaw|supercite-help@python.org
 ;; |Mail and news reply citation package
 ;; |1993/09/22 18:58:46|3.1|
 
@@ -419,9 +419,10 @@ and the return value must be a string, which is used as the selected
 attribution.  Note that the variable `sc-preferred-attribution-list'
 must contain an element of the string \"sc-consult\" for this variable
 to be consulted during attribution selection."
-  :type '(repeat (list symbol (repeat (cons regexp
-					    (choice (repeat (repeat sexp))
-						    symbol)))))
+  :type '(repeat (list string
+		       (repeat (cons regexp
+				     (choice (sexp :tag "List to eval")
+					     string)))))
   :group 'supercite-attr)
 
 (defcustom sc-attribs-preselect-hook nil
@@ -510,7 +511,9 @@ string."
 (defconst sc-emacs-features
   (let ((version 'v18)
 	(flavor  'GNU))
-    (if (string= (substring emacs-version 0 2) "19")
+    (if (or
+	 (string= (substring emacs-version 0 2) "19")
+	 (string= (substring emacs-version 0 2) "20"))
 	(setq version 'v19))
     (if (string-match "Lucid" emacs-version)
 	(setq flavor 'Lucid))
@@ -519,9 +522,9 @@ string."
   "A list describing what version of Emacs we're running on.
 Known flavors are:
 
-All GNU18's: (v18 GNU)
-FSF19.x    : (v19 GNU)
-Lucid19.x  : (v19 Lucid)")
+Emacs 18        : (v18 GNU)
+Emacs 19 or 20  : (v19 GNU)
+Lucid 19 or 20  : (v19 Lucid)")
 
 
 (defvar sc-tmp-nested-regexp nil
@@ -647,8 +650,7 @@ In version 18, the HISTORY argument is ignored."
   "Compatibility between Emacs 18 and 19 `read-string'.
 In version 18, the HISTORY argument is ignored."
   (if (memq 'v19 sc-emacs-features)
-      ;; maybe future versions will take a `history' argument:
-      (read-string prompt initial-contents)
+      (read-string prompt initial-contents history)
     (read-string prompt initial-contents)))
 
 (if (fboundp 'match-string)
@@ -714,7 +716,7 @@ the list should be unique."
 	      (setq event (read-char)))
 	     ((memq 'Lucid sc-emacs-features)
 	      (next-command-event event))
-	     (t				; must be FSF19
+	     (t				; must be Emacs 19
 	      (setq event (read-event))))
 	    (prog1 quit-flag (setq quit-flag nil)))
 	  (progn
@@ -2010,7 +2012,7 @@ before, and `sc-post-hook' is run after the guts of this function."
   ;; this function gets automatically called. we want point to be a
   ;; mark so any deleting before point works properly
   (let* ((zmacs-regions nil)		; for Lemacs
-	 (mark-active t)		; for FSFmacs
+	 (mark-active t)		; for Emacs
 	 (point (point-marker))
 	 (mark  (copy-marker (mark-marker))))
   

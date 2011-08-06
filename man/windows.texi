@@ -125,7 +125,7 @@ inevitable.  If this variable is @code{nil}, then @kbd{C-x 2} tries to
 avoid shifting any text the screen, by putting point in each window at a
 position already visible in the window.  It also selects whichever
 window contain the screen line that the cursor was previously on.  Some
-users prefer the latter mode slow terminals.
+users prefer the latter mode on slow terminals.
 
 @node Other Window
 @section Using Other Windows
@@ -169,7 +169,7 @@ like @kbd{C-v}.  (In the minibuffer, @kbd{C-M-v} scrolls the window
 that contains the minibuffer help display, if any, rather than the
 next window in the standard cyclic order.)
 
-  The command @code{M-x compare-windows} lets you compare two files or
+  The command @kbd{M-x compare-windows} lets you compare two files or
 buffers visible in two windows, by moving through them to the next
 mismatch.  @xref{Comparing Files}, for details.
 

@@ -21,7 +21,7 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;;; Commentary:a
+;;; Commentary:
 ;;
 ;;    Automatically scroll horizontally when the point moves off the
 ;;    left or right edge of the window.  
@@ -61,7 +61,8 @@
 
 (defcustom hscroll-global-mode nil
   "Toggle horizontal scrolling.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `hscroll-global-mode'."
   :set (lambda (symbol value)
 	 (hscroll-global-mode (if value 1 -1)))
   :initialize 'custom-initialize-default
@@ -108,7 +109,12 @@ Set this to nil to conserve valuable mode line space."
 (defvar hscroll-mode nil 
   "Non-nil if HScroll mode is enabled.")
 (make-variable-buffer-local 'hscroll-mode)
+;; Make it a permanent local
+;; so it will only turn off when WE turn it off.
+(put 'hscroll-mode 'permanent-local t)
 
+(defvar hscroll-timer nil
+  "Timer used by HScroll mode.")
 
 (defvar hscroll-old-truncate-local nil)
 (defvar hscroll-old-truncate-was-global nil)
@@ -134,45 +140,45 @@ In HScroll mode, truncated lines will automatically scroll left or
 right when point gets near either edge of the window.
   See also \\[hscroll-global-mode]."
   (interactive "P")
-  (make-local-hook 'post-command-hook)
   (let ((newmode (if (null arg)
 		      (not hscroll-mode)
 		    (> (prefix-numeric-value arg) 0))))
 
     (if newmode
-	;; turn it on
+	;; Turn it on.
 	(if (not hscroll-mode)
-	    ;; it was off
+	    ;; It was off.
 	    (let ((localp (local-variable-p 'truncate-lines)))
 	      (if localp
 		  (setq hscroll-old-truncate-local truncate-lines))
 	      (setq hscroll-old-truncate-was-global (not localp))
 	      (setq truncate-lines t)
-	      (add-hook 'post-command-hook 
-			(function hscroll-window-maybe) nil t)
-	      ))
-      ;; turn it off
+              (setq hscroll-timer
+                    (run-with-idle-timer 0 t 'hscroll-window-maybe))))
+      ;; Turn it off.
       (if hscroll-mode
-	  ;; it was on
+	  ;; It was on.
 	  (progn
 	    (if hscroll-old-truncate-was-global
 		(kill-local-variable 'truncate-lines)
 	      (setq truncate-lines hscroll-old-truncate-local))
 	    (if (not truncate-lines)
 		(set-window-hscroll (selected-window) 0))
-	    (remove-hook 'post-command-hook
-			 (function hscroll-window-maybe) t)
-	    ))
-      )
+	    ;; If hscroll is not enabled in any buffer now,
+	    ;; turn off the timer.
+	    (unless (memq t (mapcar (lambda (buffer)
+				      (with-current-buffer buffer
+					hscroll-mode))
+				    (buffer-list)))
+	      (cancel-timer hscroll-timer)))))
 
     (setq hscroll-mode newmode)
-    (force-mode-line-update nil)
-    ))
+    (force-mode-line-update nil)))
 
 
 ;;;###autoload
 (defun hscroll-global-mode  (&optional arg)
-  "Toggle HScroll mode in all buffers.
+  "Toggle HScroll mode in all buffers (excepting minibuffers).
 With ARG, turn HScroll mode on if ARG is positive, off otherwise.
 If a buffer ever has HScroll mode set locally (via \\[hscroll-mode]), 
 it will forever use the local value (i.e., \\[hscroll-global-mode] 
@@ -190,39 +196,42 @@ will have no effect on it).
 	    ;; it was off
 	    (progn
 	      (setq hscroll-old-truncate-default (default-value truncate-lines))
-	      (setq hscroll-old-truncate-was-global t)
+	      (setq-default hscroll-old-truncate-was-global t)
 	      (setq-default truncate-lines t)
-	      (add-hook 'post-command-hook (function hscroll-window-maybe))
-	      ))
+	      (add-hook 'minibuffer-setup-hook 'hscroll-minibuffer-hook)
+              (setq hscroll-timer
+                    (run-with-idle-timer 0 t 'hscroll-window-maybe))))
       ;; turn it off
       (if hscroll-mode
 	  ;; it was on
 	  (progn
+	    (remove-hook 'minibuffer-setup-hook 'hscroll-minibuffer-hook)
 	    (setq-default truncate-lines hscroll-old-truncate-default)
-	    (remove-hook 'post-command-hook (function hscroll-window-maybe))
-	    ))
-      )
+            (cancel-timer hscroll-timer))))
 
     (setq-default hscroll-mode newmode)
-    (force-mode-line-update t)
-    ))
+    (force-mode-line-update t)))
+
+(defun hscroll-minibuffer-hook ()
+  (setq truncate-lines hscroll-old-truncate-default))
 
 (defun hscroll-window-maybe ()
   "Scroll horizontally if point is off or nearly off the edge of the window.
 This is called automatically when in HScroll mode, but it can be explicitly
-invoked as well (i.e., it can be bound to a key)."
+invoked as well (i.e., it can be bound to a key).
+This does nothing in the minibuffer."
   (interactive)
   ;; Only consider scrolling if truncate-lines is true, 
   ;; the window is already scrolled or partial-widths is true and this is
-  ;; a partial width window.  See display_text_line() in xdisp.c.
+  ;; a partial width window.  See display_text_line in xdisp.c.
   (if (and hscroll-mode
+           (not (window-minibuffer-p (selected-window)))
 	   (or truncate-lines
 	       (not (zerop (window-hscroll)))
 	       (and truncate-partial-width-windows
 		    (< (window-width) (frame-width)))))
       (let ((linelen (save-excursion (end-of-line) (current-column)))
-	    (rightmost-char (+ (window-width) (window-hscroll)))
-	    )
+	    (rightmost-char (+ (window-width) (window-hscroll))))
  	(if (< (current-column) hscroll-snap-threshold)
  	    (set-window-hscroll 
  	     (selected-window) 
@@ -244,9 +253,7 @@ invoked as well (i.e., it can be bound to a key)."
 	      ;; Scroll to the right a proportion of the window's width.
 	      (set-window-hscroll
 	       (selected-window)
-	       (- (current-column) (/ (* (window-width) hscroll-step-percent) 100)))
-	    )))
-	)))
+	       (- (current-column) (/ (* (window-width) hscroll-step-percent) 100)))))))))
 
 ;;; 
 ;;; It's not a bug, it's a *feature*

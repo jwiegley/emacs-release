@@ -39,8 +39,9 @@
 ;;; Code:
 
 (eval-when-compile
- (require 'cl)
- (require 'timer))
+ (require 'cl))
+
+(require 'timer)
 
 (defgroup midnight nil
   "Run something every day at midnight."
@@ -103,12 +104,12 @@ displayed more than this many seconds ago."
 If buffer name matches a regexp in the list and the buffer was not displayed
 in the last `clean-buffer-list-delay-special' seconds, it is killed by
 `clean-buffer-list' when is it in `midnight-hook'.
-If a member of the list is a cons, it's `car' is the regexp and its `cdr' is
+If a member of the list is a cons, its `car' is the regexp and its `cdr' is
 the number of seconds to use instead of `clean-buffer-list-delay-special'.
 See also `clean-buffer-list-kill-buffer-names',
 `clean-buffer-list-kill-never-regexps' and
 `clean-buffer-list-kill-never-buffer-names'."
-  :type 'list
+  :type '(repeat (regexp :tag "Regexp matching Buffer Name"))
   :group 'midnight)
 
 (defcustom clean-buffer-list-kill-buffer-names
@@ -118,12 +119,12 @@ See also `clean-buffer-list-kill-buffer-names',
 Buffers with names in this list, which were not displayed in the last
 `clean-buffer-list-delay-special' seconds, are killed by `clean-buffer-list'
 when is it in `midnight-hook'.
-If a member of the list is a cons, it's `car' is the name and its `cdr' is
+If a member of the list is a cons, its `car' is the name and its `cdr' is
 the number of seconds to use instead of `clean-buffer-list-delay-special'.
 See also `clean-buffer-list-kill-regexps',
 `clean-buffer-list-kill-never-regexps' and
 `clean-buffer-list-kill-never-buffer-names'."
-  :type 'list
+  :type '(repeat (string :tag "Buffer Name"))
   :group 'midnight)
 
 (defcustom clean-buffer-list-kill-never-buffer-names
@@ -133,7 +134,7 @@ See also `clean-buffer-list-kill-never-regexps'.
 Note that this does override `clean-buffer-list-kill-regexps' and
 `clean-buffer-list-kill-buffer-names' so a buffer matching any of these
 two lists will NOT be killed if it is also present in this list."
-  :type 'list
+  :type '(repeat (string :tag "Buffer Name"))
   :group 'midnight)
 
 
@@ -144,7 +145,7 @@ Killing is done by `clean-buffer-list'.
 Note that this does override `clean-buffer-list-kill-regexps' and
 `clean-buffer-list-kill-buffer-names' so a buffer matching any of these
 two lists will NOT be killed if it also matches anything in this list."
-  :type 'list
+  :type '(repeat (regexp :tag "Regexp matching Buffer Name"))
   :group 'midnight)
 
 (defun midnight-find (el ls test &optional key)
@@ -164,6 +165,7 @@ Autokilling is done by `clean-buffer-list'."
                      clean-buffer-list-delay-special)
       (* clean-buffer-list-delay-general 24 60 60)))
 
+;;;###autoload
 (defun clean-buffer-list ()
   "Kill old buffers that have not been displayed recently.
 The relevant variables are `clean-buffer-list-delay-general',
@@ -176,8 +178,8 @@ the current date/time, buffer name, how many seconds ago it was
 displayed (can be nil if the buffer was never displayed) and its
 lifetime, i.e., its \"age\" when it will be purged."
   (interactive)
-  (let ((tm (midnight-float-time)) bts (ts (format-time-string "%Y-%m-%d %T")) bn
-        (bufs (buffer-list)) buf delay cbld)
+  (let ((tm (midnight-float-time)) bts (ts (format-time-string "%Y-%m-%d %T"))
+        (bufs (buffer-list)) buf delay cbld bn)
     (while (setq buf (pop bufs))
       (setq bts (midnight-buffer-display-time buf) bn (buffer-name buf)
             delay (if bts (- tm bts) 0) cbld (clean-buffer-list-delay bn))
@@ -186,6 +188,7 @@ lifetime, i.e., its \"age\" when it will be purged."
                                  'string-match)
                   (midnight-find bn clean-buffer-list-kill-never-buffer-names
                                  'string-equal)
+                  (get-buffer-process buf)
                   (and (buffer-file-name buf) (buffer-modified-p buf))
                   (get-buffer-window buf 'visible) (< delay cbld))
         (message "[%s] killing `%s'" ts bn)

@@ -1,6 +1,6 @@
 ;;; bytecomp.el --- compilation of Lisp code into byte code.
 
-;; Copyright (C) 1985, 1986, 1987, 1992, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1998 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -9,7 +9,7 @@
 
 ;;; This version incorporates changes up to version 2.10 of the 
 ;;; Zawinski-Furuseth compiler.
-(defconst byte-compile-version "$Revision: 2.50 $")
+(defconst byte-compile-version "$Revision: 2.56 $")
 
 ;; This file is part of GNU Emacs.
 
@@ -278,7 +278,8 @@ This includes variable references and calls to functions such as `car'."
 
 (defvar byte-compile-dynamic nil
   "If non-nil, compile function bodies so they load lazily.
-They are hidden comments in the compiled file, and brought into core when the
+They are hidden in comments in the compiled file,
+and each one is brought into core when the
 function is called.
 
 To enable this option, make it a file-local variable
@@ -332,9 +333,7 @@ Elements of the list may be be:
   callargs    lambda calls with args that don't match the definition.
   redefine    function cell redefined from a macro to a lambda or vice
               versa, or redefined to take a different number of arguments.
-  obsolete      obsolete variables and functions.
-
-See also the macro `byte-compiler-options'."
+  obsolete    obsolete variables and functions."
   :group 'bytecomp
   :type '(choice (const :tag "All" t)
 		 (set :menu-tag "Some"
@@ -1198,7 +1197,7 @@ recompile every `.el' file that already has a `.elc' file."
     (displaying-byte-compile-warnings
      (while directories
        (setq directory (car directories))
-       (or noninteractive (message "Checking %s..." directory))
+       (message "Checking %s..." directory)
        (let ((files (directory-files directory))
 	     source dest)
 	 (while files
@@ -1207,11 +1206,11 @@ recompile every `.el' file that already has a `.elc' file."
 		    (file-directory-p source)
 		    (not (file-symlink-p source)))
 	       ;; This file is a subdirectory.  Handle them differently.
-	       (if (or (null arg)
-		       (eq 0 arg)
-		       (y-or-n-p (concat "Check " source "? ")))
-		   (setq directories
-			 (nconc directories (list source))))
+	       (when (or (null arg)
+			 (eq 0 arg)
+			 (y-or-n-p (concat "Check " source "? ")))
+		 (setq directories
+		       (nconc directories (list source))))
 	     ;; It is an ordinary file.  Decide whether to compile it.
 	     (if (and (string-match emacs-lisp-file-regexp source)
 		      (not (auto-save-file-name-p source))
@@ -1283,10 +1282,18 @@ The value is t if there were no errors, nil if errors."
       (setq input-buffer (get-buffer-create " *Compiler Input*"))
       (set-buffer input-buffer)
       (erase-buffer)
+      (setq buffer-file-coding-system nil)
       ;; Always compile an Emacs Lisp file as multibyte
       ;; unless the file itself forces unibyte with -*-coding: raw-text;-*-x
       (set-buffer-multibyte t)
       (insert-file-contents filename)
+      ;; Mimic the way after-insert-file-set-buffer-file-coding-system
+      ;; can make the buffer unibyte when visiting this file.
+      (when (or (eq last-coding-system-used 'no-conversion)
+		(eq (coding-system-type last-coding-system-used) 5))
+	;; For coding systems no-conversion and raw-text...,
+	;; edit the buffer as unibyte.
+	(set-buffer-multibyte nil))
       ;; Run hooks including the uncompression hook.
       ;; If they change the file name, then change it for the output also.
       (let ((buffer-file-name filename)
@@ -1907,8 +1914,7 @@ list that represents a doc string reference.
 ;; and return the file position it will have.
 ;; If QUOTED is non-nil, print with quoting; otherwise, print without quoting.
 (defun byte-compile-output-as-comment (exp quoted)
-  (let ((position (point))
-	total-bytes)
+  (let ((position (point)))
     (set-buffer
      (prog1 (current-buffer)
        (set-buffer outbuffer)
@@ -1932,12 +1938,8 @@ list that represents a doc string reference.
        (goto-char (point-max))
        (insert "\037")
        (goto-char position)
-       (setq total-bytes 0)
-       (while (not (eobp))
-	 (setq total-bytes (+ total-bytes (char-bytes (char-after (point)))))
-	 (forward-char 1))
-       (goto-char position)
-       (insert "#@" (format "%d" total-bytes))
+       (insert "#@" (format "%d" (- (position-bytes (point-max))
+				    (position-bytes position))))
 
        ;; Save the file position of the object.
        ;; Note we should add 1 to skip the space
@@ -3481,8 +3483,6 @@ For example, invoke `emacs -batch -f batch-byte-recompile-directory .'."
 (make-obsolete-variable 'auto-fill-hook 'auto-fill-function)
 (make-obsolete-variable 'blink-paren-hook 'blink-paren-function)
 (make-obsolete-variable 'lisp-indent-hook 'lisp-indent-function)
-(make-obsolete-variable 'temp-buffer-show-hook
-			'temp-buffer-show-function)
 (make-obsolete-variable 'inhibit-local-variables
 		"use enable-local-variables (with the reversed sense).")
 (make-obsolete-variable 'unread-command-char

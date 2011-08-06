@@ -26,8 +26,8 @@ Boston, MA 02111-1307, USA.  */
 #include "lisp.h"
 #include "charset.h"
 #include "ccl.h"
-#include "fontset.h"
 #include "frame.h"
+#include "fontset.h"
 
 Lisp_Object Vglobal_fontset_alist;
 Lisp_Object Vfont_encoding_alist;
@@ -64,8 +64,10 @@ struct font_info *(*get_font_info_func) P_ ((FRAME_PTR f, int font_idx));
 
 /* Return a list of font names which matches PATTERN.  See the document of
    `x-list-fonts' for more detail.  */
-Lisp_Object (*list_fonts_func) P_ ((Lisp_Object pattern, Lisp_Object face,
-				    Lisp_Object frame, Lisp_Object width));
+Lisp_Object (*list_fonts_func) P_ ((struct frame *f,
+				    Lisp_Object pattern,
+				    int size,
+				    int maxnames));
 
 /* Load a font named NAME for frame F and return a pointer to the
    information of the loaded font.  If loading is failed, return 0.  */
@@ -445,11 +447,11 @@ fontset_pattern_regexp (pattern)
 }
 
 DEFUN ("query-fontset", Fquery_fontset, Squery_fontset, 1, 2, 0,
-  "Return a fontset name which matches PATTERN, nil if no matching fontset.\n\
-PATTERN can contain `*' or `?' as a wild card\n\
-just like X's font name matching algorithm allows.\n\
-If REGEXPP is non-nil, pattern is regexp;\n\
-so PATTERN is considered as regular expression.")
+  "Return the name of an existing fontset which matches PATTERN.\n\
+The value is nil if there is no matching fontset.\n\
+PATTERN can contain `*' or `?' as a wildcard\n\
+just as X font name matching algorithm allows.\n\
+If REGEXPP is non-nil, PATTERN is a regular expression.")
   (pattern, regexpp)
      Lisp_Object pattern, regexpp;
 {
@@ -568,7 +570,7 @@ FONTLIST is an alist of charsets vs corresponding font names.")
 
   fullname = Fquery_fontset (name, Qnil);
   if (!NILP (fullname))
-    error ("Fontset \"%s\" matches the existing fontset \"%s\"",
+    error ("Fontset `%s' matches the existing fontset `%s'",
 	   XSTRING (name)->data, XSTRING (fullname)->data);
 
   /* Check the validity of FONTLIST.  */
@@ -623,7 +625,7 @@ If FRAME is omitted or nil, all frames are affected.")
 
   fullname = Fquery_fontset (name, Qnil);
   if (NILP (fullname))
-    error ("Fontset \"%s\" does not exist", XSTRING (name)->data);
+    error ("Fontset `%s' does not exist", XSTRING (name)->data);
 
   /* If FRAME is not specified, we must, at first, update contents of
      `global-fontset-alist' for a frame created in the future.  */
@@ -768,7 +770,7 @@ loading failed.")
 
   fontset = fs_query_fontset (f, XSTRING (name)->data);
   if (fontset < 0)
-    error ("Fontset \"%s\" does not exist", XSTRING (name)->data);
+    error ("Fontset `%s' does not exist", XSTRING (name)->data);
 
   info = Fmake_vector (make_number (3), Qnil);
 

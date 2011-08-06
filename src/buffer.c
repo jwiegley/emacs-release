@@ -1,5 +1,5 @@
 /* Buffer manipulation primitives for GNU Emacs.
-   Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994, 1995, 1997, 1998
+   Copyright (C) 1985,86,87,88,89,93,94,95,97,98, 1999
 	Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -152,6 +152,9 @@ Lisp_Object Vfirst_change_hook;
 Lisp_Object Qfirst_change_hook;
 Lisp_Object Qbefore_change_functions;
 Lisp_Object Qafter_change_functions;
+
+/* If nonzero, all modification hooks are suppressed.  */
+int inhibit_modification_hooks;
 
 Lisp_Object Qfundamental_mode, Qmode_class, Qpermanent_local;
 
@@ -462,6 +465,9 @@ NAME should be a string which is not the name of an existing buffer.")
 
   b->mark = Fmake_marker ();
   b->name = name;
+
+  /* The multibyte status belongs to the base buffer.  */
+  b->enable_multibyte_characters = b->base_buffer->enable_multibyte_characters;
 
   /* Make sure the base buffer has markers for its narrowing.  */
   if (NILP (b->base_buffer->pt_marker))
@@ -804,7 +810,8 @@ A non-nil FLAG means mark the buffer modified.")
      If buffer becoming unmodified, unlock the file.  */
 
   fn = current_buffer->file_truename;
-  if (!NILP (fn))
+  /* Test buffer-file-name so that binding it to nil is effective.  */
+  if (!NILP (fn) && ! NILP (current_buffer->filename))
     {
       already = SAVE_MODIFF < MODIFF;
       if (!already && !NILP (flag))
@@ -1731,6 +1738,10 @@ but the contents viewed as characters do change.")
      Lisp_Object flag;
 {
   Lisp_Object tail, markers;
+  struct buffer *other;
+
+  if (current_buffer->base_buffer)
+    error ("Cannot do `set-buffer-multibyte' on an indirect buffer");
 
   /* Do nothing if nothing actually changes.  */
   if (NILP (flag) == NILP (current_buffer->enable_multibyte_characters))
@@ -1844,6 +1855,13 @@ but the contents viewed as characters do change.")
 	 between chars and bytes.  */
       set_intervals_multibyte (1);
     }
+
+  /* Copy this buffer's new multibyte status
+     into all of its indirect buffers.  */
+  for (other = all_buffers; other; other = other->next)
+    if (other->base_buffer == current_buffer && !NILP (other->name))
+      other->enable_multibyte_characters
+	= current_buffer->enable_multibyte_characters;
 
   return flag;
 }
@@ -3943,6 +3961,8 @@ init_buffer_once ()
   Vbuffer_alist = Qnil;
 
   Fset_buffer (Fget_buffer_create (build_string ("*scratch*")));
+
+  inhibit_modification_hooks = 0;
 }
 
 void
@@ -4082,12 +4102,12 @@ This is the same as (default-value 'ctl-arrow).");
    DEFVAR_LISP_NOPRO ("default-enable-multibyte-characters",
  	      &buffer_defaults.enable_multibyte_characters,
      "Default value of `enable-multibyte-characters' for buffers not overriding it.\n\
- This is the same as (default-value 'enable-multibyte-characters).");
+This is the same as (default-value 'enable-multibyte-characters).");
  
    DEFVAR_LISP_NOPRO ("default-buffer-file-coding-system",
  	      &buffer_defaults.buffer_file_coding_system,
      "Default value of `buffer-file-coding-system' for buffers not overriding it.\n\
- This is the same as (default-value 'buffer-file-coding-system).");
+This is the same as (default-value 'buffer-file-coding-system).");
  
   DEFVAR_LISP_NOPRO ("default-truncate-lines",
 	      &buffer_defaults.truncate_lines,
@@ -4183,7 +4203,7 @@ Automatically becomes buffer-local when set in any fashion.");
 
   DEFVAR_PER_BUFFER ("case-fold-search", &current_buffer->case_fold_search,
 		     Qnil,
-    "*Non-nil if searches should ignore case.\n\
+    "*Non-nil if searches and matches should ignore case.\n\
 Automatically becomes buffer-local when set in any fashion.");
 
   DEFVAR_PER_BUFFER ("fill-column", &current_buffer->fill_column,
@@ -4212,16 +4232,28 @@ in the current display table (if there is one).");
   DEFVAR_PER_BUFFER ("enable-multibyte-characters",
 		     &current_buffer->enable_multibyte_characters,
 		     make_number (-1),
-    "*Non-nil means the buffer contents are regarded as multi-byte form\n\
-of characters, not a binary code.  This affects the display, file I/O,\n\
-and behaviors of various editing commands.");
+    "Non-nil means the buffer contents are regarded as multi-byte characters.\n\
+Otherwise they are regarded as unibyte.  This affects the display,\n\
+file I/O and the behavior of various editing commands.\n\
+\n\
+This variable is buffer-local but you cannot set it directly;\n\
+use the function `set-buffer-multibyte' to change a buffer's representation.\n\
+Changing its default value with `setq-default' is supported.\n\
+See also variable `default-enable-multibyte-characters' and Info node\n\
+`(elisp)Text Representations'.");
 
   DEFVAR_PER_BUFFER ("buffer-file-coding-system",
 		     &current_buffer->buffer_file_coding_system, Qnil,
     "Coding system to be used for encoding the buffer contents on saving.\n\
-If it is nil, the buffer is saved without any code conversion unless\n\
-some coding system is specified in `file-coding-system-alist'\n\
+This variable applies to saving the buffer, and also to `write-region'\n\
+and other functions that use `write-region'.\n\
+It does not apply to sending output to subprocesses, however.\n\
+\n\
+If this is nil, the buffer is saved without any code conversion\n\
+unless some coding system is specified in `file-coding-system-alist'\n\
 for the buffer file.\n\
+\n\
+The variable `coding-system-for-write', if non-nil, overrides this variable.\n\
 \n\
 This variable is never applied to a way of decoding\n\
 a file while reading it.");
@@ -4399,7 +4431,11 @@ don't call any before-change or after-change functions.\n\
 That's because these variables are temporarily set to nil.\n\
 As a result, a hook function cannot straightforwardly alter the value of\n\
 these variables.  See the Emacs Lisp manual for a way of\n\
-accomplishing an equivalent result by using other variables.");
+accomplishing an equivalent result by using other variables.\n\
+\n\
+If an unhandled error happens in running these functions,\n\
+the variable's value remains nil.  That prevents the error\n\
+from happening repeatedly and making Emacs nonfunctional.");
   Vbefore_change_functions = Qnil;
 
   DEFVAR_LISP ("after-change-functions", &Vafter_change_functions,
@@ -4416,8 +4452,11 @@ don't call any before-change or after-change functions.\n\
 That's because these variables are temporarily set to nil.\n\
 As a result, a hook function cannot straightforwardly alter the value of\n\
 these variables.  See the Emacs Lisp manual for a way of\n\
-accomplishing an equivalent result by using other variables.");
-
+accomplishing an equivalent result by using other variables.\n\
+\n\
+If an unhandled error happens in running these functions,\n\
+the variable's value remains nil.  That prevents the error\n\
+from happening repeatedly and making Emacs nonfunctional.");
   Vafter_change_functions = Qnil;
 
   DEFVAR_LISP ("first-change-hook", &Vfirst_change_hook,

@@ -131,7 +131,7 @@ SUBJECT is a string of regexps separated by commas."
 (defun rmail-message-subject-p (msg subject &optional whole-message)
   (save-restriction
     (goto-char (rmail-msgbeg msg))
-    (search-forward "\n*** EOOH ***\n")
+    (search-forward "\n*** EOOH ***\n" (rmail-msgend msg) 'move)
     (narrow-to-region
      (point)
      (progn (search-forward (if whole-message "\^_" "\n\n")) (point)))
@@ -1456,20 +1456,54 @@ see the documentation of `rmail-resend'."
 
 ;; Summary output commands.
 
-(defun rmail-summary-output-to-rmail-file (&optional file-name)
+(defun rmail-summary-output-to-rmail-file (&optional file-name n)
   "Append the current message to an Rmail file named FILE-NAME.
 If the file does not exist, ask if it should be created.
 If file is being visited, the message is appended to the Emacs
-buffer visiting that file."
-  (interactive)
-  (save-excursion
-    (set-buffer rmail-buffer)
-    (let ((rmail-delete-after-output nil))
-      (if file-name
-	  (rmail-output-to-rmail-file file-name)
-	(call-interactively 'rmail-output-to-rmail-file))))
-  (if rmail-delete-after-output
-      (rmail-summary-delete-forward nil)))
+buffer visiting that file.
+
+A prefix argument N says to output N consecutive messages
+starting with the current one.  Deleted messages are skipped and don't count."
+  (interactive
+   (progn (require 'rmailout)
+	  (list (rmail-output-read-rmail-file-name)
+		(prefix-numeric-value current-prefix-arg))))
+  (let ((i 0) prev-msg)
+    (while 
+	(and (< i n)
+	     (progn (rmail-summary-goto-msg)
+		    (not (eq prev-msg
+			     (setq prev-msg
+				   (with-current-buffer rmail-buffer 
+				     rmail-current-message))))))
+      (setq i (1+ i))
+      (with-current-buffer rmail-buffer
+	(let ((rmail-delete-after-output nil))
+	  (rmail-output-to-rmail-file file-name 1)))
+      (if rmail-delete-after-output
+	  (rmail-summary-delete-forward nil)
+	(if (< i n)
+	    (rmail-summary-next-msg 1))))))
+
+(defun rmail-summary-output (&optional file-name n)
+  "Append this message to Unix mail file named FILE-NAME.
+
+A prefix argument N says to output N consecutive messages
+starting with the current one.  Deleted messages are skipped and don't count."
+  (interactive
+   (progn (require 'rmailout)
+	  (list (rmail-output-read-file-name)
+		(prefix-numeric-value current-prefix-arg))))
+  (let ((i 0))
+    (while (< i n)
+      (setq i (1+ i))
+      (with-current-buffer rmail-buffer
+	(let ((rmail-delete-after-output nil))
+	  (rmail-output file-name 1)))
+      (if rmail-delete-after-output
+	  (rmail-summary-delete-forward nil)
+	(if (< i n)
+	    (rmail-summary-next-msg 1))))))
 
 (defun rmail-summary-output-menu ()
   "Output current message to another Rmail file, chosen with a menu.
@@ -1481,16 +1515,6 @@ The variables `rmail-secondary-file-directory' and
     (set-buffer rmail-buffer)
     (let ((rmail-delete-after-output nil))
       (call-interactively 'rmail-output-menu)))
-  (if rmail-delete-after-output
-      (rmail-summary-delete-forward nil)))
-
-(defun rmail-summary-output ()
-  "Append this message to Unix mail file named FILE-NAME."
-  (interactive)
-  (save-excursion
-    (set-buffer rmail-buffer)
-    (let ((rmail-delete-after-output nil))
-      (call-interactively 'rmail-output)))
   (if rmail-delete-after-output
       (rmail-summary-delete-forward nil)))
 

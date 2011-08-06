@@ -44,8 +44,7 @@
 
 ;;; Code:
 (eval-when-compile
-  (require 'comint)
-  (require 'ffap))
+  (require 'comint))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization Variables
@@ -77,7 +76,7 @@
 (defcustom traceroute-program-options nil
   "Options for the traceroute program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom ping-program "ping"
@@ -94,7 +93,7 @@
   "Options for the ping program.
 These options can be used to limit how many ICMP packets are emitted."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom ipconfig-program  
@@ -112,7 +111,7 @@ These options can be used to limit how many ICMP packets are emitted."
 	"/all" "-a"))
   "Options for ipconfig-program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom netstat-program  "netstat"
@@ -121,10 +120,11 @@ These options can be used to limit how many ICMP packets are emitted."
   :type  'string
   )
 
-(defcustom netstat-program-options nil
+(defcustom netstat-program-options 
+  (list "-a")
   "Options for netstat-program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom arp-program  "arp"
@@ -137,7 +137,7 @@ These options can be used to limit how many ICMP packets are emitted."
   (list "-a")
   "Options for arp-program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom route-program  
@@ -155,7 +155,7 @@ These options can be used to limit how many ICMP packets are emitted."
     (list "-r"))
   "Options for route-program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom nslookup-program  "nslookup"
@@ -167,7 +167,7 @@ These options can be used to limit how many ICMP packets are emitted."
 (defcustom nslookup-program-options  nil
   "List of options to pass to the nslookup program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom nslookup-prompt-regexp "^> "
@@ -185,7 +185,7 @@ These options can be used to limit how many ICMP packets are emitted."
 (defcustom ftp-program-options nil
   "List of options to pass to the FTP program."
   :group 'net-utils
-  :type  '(repeat 'string)
+  :type  '(repeat string)
   )
 
 (defcustom ftp-prompt-regexp "^ftp>"
@@ -262,6 +262,32 @@ These options can be used to limit how many ICMP packets are emitted."
 ;; Utility functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Simplified versions of some at-point functions from ffap.el.
+;; It's not worth loading all of ffap just for these.
+(defun net-utils-machine-at-point ()
+  (let ((pt (point)))
+    (buffer-substring-no-properties
+     (save-excursion
+       (skip-chars-backward "-a-zA-Z0-9.")
+       (point))
+     (save-excursion
+       (skip-chars-forward "-a-zA-Z0-9.")
+       (skip-chars-backward "." pt)
+       (point)))))
+
+(defun net-utils-url-at-point ()
+  (let ((pt (point)))
+    (buffer-substring-no-properties
+     (save-excursion
+       (skip-chars-backward "--:=&?$+@-Z_a-z~#,%")
+       (skip-chars-forward "^A-Za-z0-9" pt)
+       (point))
+     (save-excursion
+       (skip-chars-forward "--:=&?$+@-Z_a-z~#,%")
+       (skip-chars-backward ":;.,!?" pt)
+       (point)))))
+
+
 (defun net-utils-remove-ctrl-m-filter (process output-string)
   "Remove trailing control Ms."
   (let ((old-buffer (current-buffer))
@@ -320,12 +346,7 @@ These options can be used to limit how many ICMP packets are emitted."
 If your system's ping continues until interrupted, you can try setting 
 `ping-program-options'."
   (interactive 
-   (list
-    (progn
-      (require 'ffap)
-      (read-from-minibuffer 
-       "Ping host: " 
-       (or (ffap-string-at-point 'machine) "")))))
+   (list (read-from-minibuffer "Ping host: " (net-utils-machine-at-point))))
   (let ((options 
 	 (if ping-program-options
 	     (append ping-program-options (list host))
@@ -399,10 +420,7 @@ If your system's ping continues until interrupted, you can try setting
 (defun nslookup-host (host)
   "Lookup the DNS information for HOST."
   (interactive
-   (list
-    (read-from-minibuffer 
-     "Lookup host: " 
-     (or (ffap-string-at-point 'machine) ""))))
+   (list (read-from-minibuffer "Lookup host: " (net-utils-machine-at-point))))
   (let ((options 
 	 (if nslookup-program-options
 	     (append nslookup-program-options (list host))
@@ -422,6 +440,7 @@ If your system's ping continues until interrupted, you can try setting
 (defun nslookup ()
   "Run nslookup program."
   (interactive)
+  (require 'comint)
   (comint-run nslookup-program)
   (set-process-filter (get-buffer-process "*nslookup*")
    'net-utils-remove-ctrl-m-filter)
@@ -441,6 +460,7 @@ If your system's ping continues until interrupted, you can try setting
 (defun ftp (host)
   "Run ftp program."
   (interactive "sFtp to Host: ")
+  (require 'comint)
   (let ((buf (get-buffer-create (concat "*ftp [" host "]*"))))
     (set-buffer buf)
     (comint-mode)
@@ -538,21 +558,16 @@ This list in not complete.")
   ;; uses a string like "pbreton@cs.umb.edu", we won't ask for the
   ;; host name. If we don't see an "@", we'll prompt for the host.
   (interactive
-    (progn
-      (require 'ffap)
-      (let* ((answer (read-from-minibuffer "Finger User: " 
-					   (ffap-string-at-point 'url))) 
-	     (index  (string-match (regexp-quote "@") answer))
-	     )
-	(if index
-	    (list 
-	     (substring answer 0 index)
-	     (substring answer (1+ index)))
-	  (list
-	   answer
-	   (read-from-minibuffer 
-	    "At Host: " 
-	    (or (ffap-string-at-point 'machine) "")))))))
+    (let* ((answer (read-from-minibuffer "Finger User: "
+					 (net-utils-url-at-point)))
+	   (index  (string-match (regexp-quote "@") answer)))
+      (if index
+	  (list 
+	   (substring answer 0 index)
+	   (substring answer (1+ index)))
+	(list
+	 answer
+	 (read-from-minibuffer "At Host: " (net-utils-machine-at-point))))))
   (let* (
 	 (user-and-host (concat user "@" host))
 	 (process-name 
@@ -565,23 +580,81 @@ This list in not complete.")
      user-and-host
      )))
 
-(defcustom whois-server-name "whois.internic.net"
-  "Host name for the whois service."
+(defcustom whois-server-name "whois.arin.net"
+  "Default host name for the whois service."
   :group 'net-utils
   :type  'string
   )
+
+(defcustom whois-server-list
+  '(("whois.arin.net")     ; Networks, ASN's, and related POC's (numbers)
+    ("rs.internic.net")  ; domain related info
+    ("whois.abuse.net")
+    ("whois.apnic.net")
+    ("nic.ddn.mil")
+    ("whois.nic.mil")
+    ("whois.nic.gov")
+    ("whois.ripe.net"))
+  "A list of whois servers that can be queried."
+  :group 'net-utils
+  :type '(repeat (list string)))
+
+(defcustom whois-server-tld
+  '(("rs.internic.net" . "com")
+    ("rs.internic.net" . "org")
+    ("whois.ripe.net" . "be")
+    ("whois.ripe.net" . "de")
+    ("whois.ripe.net" . "dk")
+    ("whois.ripe.net" . "it")
+    ("whois.ripe.net" . "fi")
+    ("whois.ripe.net" . "fr")
+    ("whois.ripe.net" . "uk")
+    ("whois.apnic.net" . "au")
+    ("whois.apnic.net" . "ch")
+    ("whois.apnic.net" . "hk")
+    ("whois.apnic.net" . "jp")
+    ("whois.nic.gov" . "gov")
+    ("whois.nic.mil" . "mil"))
+  "Alist to map top level domains to whois servers."
+  :group 'net-utils
+  :type '(repeat (cons string string)))
+
+(defcustom whois-guess-server t
+  "If non-nil then whois will try to deduce the appropriate whois
+server from the query.  If the query doesn't look like a domain or hostname
+then the server named by whois-server-name is used."
+  :group 'net-utils
+  :type 'boolean)
+
+(defun whois-get-tld (host)
+  "Return the top level domain of `host', or nil if it isn't a domain name."
+  (let ((i (1- (length host)))
+	(max-len (- (length host) 5)))
+    (while (not (or (= i max-len) (char-equal (aref host i) ?.)))
+      (setq i (1- i)))
+    (if (= i max-len)
+	nil
+      (substring host (1+ i)))))
 
 ;; Whois protocol
 ;;;###autoload
 (defun whois (arg search-string)
   "Send SEARCH-STRING to server defined by the `whois-server-name' variable.
-With argument, prompt for whois server."
+If `whois-guess-server' is non-nil, then try to deduce the correct server
+from SEARCH-STRING.  With argument, prompt for whois server."
   (interactive "P\nsWhois: ")
-  (let ((host 
-	 (if arg
-	     (read-from-minibuffer "Whois server name: ")
-	   whois-server-name))
-	)
+  (let* ((whois-apropos-host (if whois-guess-server
+				 (rassoc (whois-get-tld search-string)
+					 whois-server-tld)
+			       nil))
+	 (server-name (if whois-apropos-host
+			  (car whois-apropos-host)
+			whois-server-name))
+	 (host
+	  (if arg
+	      (completing-read "Whois server name: "
+			       whois-server-list nil nil "whois.")
+	    server-name)))
     (run-network-program 
      "Whois"
      host
@@ -610,10 +683,7 @@ With argument, prompt for whois server."
   "Open a network connection to SERVICE on HOST."
   (interactive 
    (list
-    (progn
-      (require 'ffap)
-      (read-from-minibuffer "Host: " 
-			    (ffap-string-at-point 'machine)))
+    (read-from-minibuffer "Host: " (net-utils-machine-at-point))
     (completing-read "Service: " 
 		     (mapcar 
 		      (function 
@@ -633,6 +703,7 @@ With argument, prompt for whois server."
 
 (defun network-service-connection (host service)
   "Open a network connection to SERVICE on HOST."
+  (require 'comint)
   (let (
 	(process-name (concat "Network Connection [" host " " service "]"))
 	(portnum (string-to-number service))

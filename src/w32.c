@@ -57,6 +57,8 @@ Boston, MA 02111-1307, USA.
 #undef read
 #undef write
 
+#undef strerror
+
 #include "lisp.h"
 
 #include <pwd.h>
@@ -503,9 +505,10 @@ w32_get_long_filename (char * name, char * buf, int size)
   len = parse_root (full, &p);
   memcpy (o, full, len);
   o += len;
+  *o = '\0';
   size -= len;
 
-  do
+  while (p != NULL && *p)
     {
       q = p;
       p = strchr (q, '\\');
@@ -528,7 +531,6 @@ w32_get_long_filename (char * name, char * buf, int size)
       else
 	return FALSE;
     }
-  while (p != NULL && *p);
 
   return TRUE;
 }
@@ -639,7 +641,7 @@ char *get_emacs_configuration (void);
 extern Lisp_Object Vsystem_configuration;
 
 void
-init_environment ()
+init_environment (char ** argv)
 {
   int len;
   static const char * const tempdirs[] = {
@@ -758,7 +760,7 @@ init_environment ()
 
   {
     char *p;
-    char modname[MAX_PATH];
+    static char modname[MAX_PATH];
 
     if (!GetModuleFileName (NULL, modname, MAX_PATH))
       abort ();
@@ -767,6 +769,10 @@ init_environment ()
     *p = 0;
 
     SetCurrentDirectory (modname);
+
+    /* Ensure argv[0] has the full path to Emacs.  */
+    *p = '\\';
+    argv[0] = modname;
   }
 
   init_user_info ();
@@ -783,6 +789,7 @@ char *
 get_emacs_configuration (void)
 {
   char *arch, *oem, *os;
+  int build_num;
 
   /* Determine the processor type.  */
   switch (get_processor_type ()) 
@@ -824,10 +831,37 @@ get_emacs_configuration (void)
   /* Let oem be "*" until we figure out how to decode the OEM field.  */
   oem = "*";
 
-  os = (GetVersion () & OS_WIN95) ? "windows95" : "nt";
+  switch (osinfo_cache.dwPlatformId) {
+  case VER_PLATFORM_WIN32_NT:
+    os = "nt";
+    build_num = osinfo_cache.dwBuildNumber;
+    break;
+  case VER_PLATFORM_WIN32_WINDOWS:
+    if (osinfo_cache.dwMinorVersion == 0) {
+      os = "windows95";
+    } else {
+      os = "windows98";
+    }
+    build_num = LOWORD (osinfo_cache.dwBuildNumber);
+    break;
+  case VER_PLATFORM_WIN32s:
+    /* Not supported, should not happen. */
+    os = "windows32s";
+    build_num = LOWORD (osinfo_cache.dwBuildNumber);
+    break;
+  default:
+    os = "unknown";
+    build_num = 0;
+    break;
+  }
 
-  sprintf (configuration_buffer, "%s-%s-%s%d.%d", arch, oem, os,
-	   get_w32_major_version (), get_w32_minor_version ());
+  if (osinfo_cache.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+    sprintf (configuration_buffer, "%s-%s-%s%d.%d.%d", arch, oem, os,
+	     get_w32_major_version (), get_w32_minor_version (), build_num);
+  } else {
+    sprintf (configuration_buffer, "%s-%s-%s.%d", arch, oem, os, build_num);
+  }
+
   return configuration_buffer;
 }
 
@@ -1960,19 +1994,6 @@ stat (const char * path, struct stat * buf)
 
       if (GetFileInformationByHandle (fh, &info))
 	{
-	  switch (GetFileType (fh))
-	    {
-	    case FILE_TYPE_DISK:
-	      buf->st_mode = _S_IFREG;
-	      break;
-	    case FILE_TYPE_PIPE:
-	      buf->st_mode = _S_IFIFO;
-	      break;
-	    case FILE_TYPE_CHAR:
-	    case FILE_TYPE_UNKNOWN:
-	    default:
-	      buf->st_mode = _S_IFCHR;
-	    }
 	  buf->st_nlink = info.nNumberOfLinks;
 	  /* Might as well use file index to fake inode values, but this
 	     is not guaranteed to be unique unless we keep a handle open
@@ -1980,13 +2001,27 @@ stat (const char * path, struct stat * buf)
 	     not unique).  Reputedly, there are at most 48 bits of info
 	     (on NTFS, presumably less on FAT). */
 	  fake_inode = info.nFileIndexLow ^ info.nFileIndexHigh;
-	  CloseHandle (fh);
 	}
       else
 	{
-	  errno = EACCES;
-	  return -1;
+	  buf->st_nlink = 1;
+	  fake_inode = 0;
 	}
+
+      switch (GetFileType (fh))
+	{
+	case FILE_TYPE_DISK:
+	  buf->st_mode = _S_IFREG;
+	  break;
+	case FILE_TYPE_PIPE:
+	  buf->st_mode = _S_IFIFO;
+	  break;
+	case FILE_TYPE_CHAR:
+	case FILE_TYPE_UNKNOWN:
+	default:
+	  buf->st_mode = _S_IFCHR;
+	}
+      CloseHandle (fh);
     }
   else
     {
@@ -2349,6 +2384,99 @@ static void check_errno ()
 {
   if (h_errno == 0 && winsock_lib != NULL)
     pfn_WSASetLastError (0);
+}
+
+/* Extend strerror to handle the winsock-specific error codes.  */
+struct {
+  int errnum;
+  char * msg;
+} _wsa_errlist[] = {
+  WSAEINTR                , "Interrupted function call",
+  WSAEBADF                , "Bad file descriptor",
+  WSAEACCES               , "Permission denied",
+  WSAEFAULT               , "Bad address",
+  WSAEINVAL               , "Invalid argument",
+  WSAEMFILE               , "Too many open files",
+			
+  WSAEWOULDBLOCK          , "Resource temporarily unavailable",
+  WSAEINPROGRESS          , "Operation now in progress",
+  WSAEALREADY             , "Operation already in progress",
+  WSAENOTSOCK             , "Socket operation on non-socket",
+  WSAEDESTADDRREQ         , "Destination address required",
+  WSAEMSGSIZE             , "Message too long",
+  WSAEPROTOTYPE           , "Protocol wrong type for socket",
+  WSAENOPROTOOPT          , "Bad protocol option",
+  WSAEPROTONOSUPPORT      , "Protocol not supported",
+  WSAESOCKTNOSUPPORT      , "Socket type not supported",
+  WSAEOPNOTSUPP           , "Operation not supported",
+  WSAEPFNOSUPPORT         , "Protocol family not supported",
+  WSAEAFNOSUPPORT         , "Address family not supported by protocol family",
+  WSAEADDRINUSE           , "Address already in use",
+  WSAEADDRNOTAVAIL        , "Cannot assign requested address",
+  WSAENETDOWN             , "Network is down",
+  WSAENETUNREACH          , "Network is unreachable",
+  WSAENETRESET            , "Network dropped connection on reset",
+  WSAECONNABORTED         , "Software caused connection abort",
+  WSAECONNRESET           , "Connection reset by peer",
+  WSAENOBUFS              , "No buffer space available",
+  WSAEISCONN              , "Socket is already connected",
+  WSAENOTCONN             , "Socket is not connected",
+  WSAESHUTDOWN            , "Cannot send after socket shutdown",
+  WSAETOOMANYREFS         , "Too many references",	    /* not sure */
+  WSAETIMEDOUT            , "Connection timed out",
+  WSAECONNREFUSED         , "Connection refused",
+  WSAELOOP                , "Network loop",		    /* not sure */
+  WSAENAMETOOLONG         , "Name is too long",
+  WSAEHOSTDOWN            , "Host is down",
+  WSAEHOSTUNREACH         , "No route to host",
+  WSAENOTEMPTY            , "Buffer not empty",		    /* not sure */
+  WSAEPROCLIM             , "Too many processes",
+  WSAEUSERS               , "Too many users",		    /* not sure */
+  WSAEDQUOT               , "Double quote in host name",    /* really not sure */
+  WSAESTALE               , "Data is stale",		    /* not sure */
+  WSAEREMOTE              , "Remote error",		    /* not sure */
+			
+  WSASYSNOTREADY          , "Network subsystem is unavailable",
+  WSAVERNOTSUPPORTED      , "WINSOCK.DLL version out of range",
+  WSANOTINITIALISED       , "Winsock not initialized successfully",
+  WSAEDISCON              , "Graceful shutdown in progress",
+#ifdef WSAENOMORE
+  WSAENOMORE              , "No more operations allowed",   /* not sure */
+  WSAECANCELLED           , "Operation cancelled",	    /* not sure */
+  WSAEINVALIDPROCTABLE    , "Invalid procedure table from service provider",
+  WSAEINVALIDPROVIDER     , "Invalid service provider version number",
+  WSAEPROVIDERFAILEDINIT  , "Unable to initialize a service provider",
+  WSASYSCALLFAILURE       , "System call failured",
+  WSASERVICE_NOT_FOUND    , "Service not found",	    /* not sure */
+  WSATYPE_NOT_FOUND       , "Class type not found",
+  WSA_E_NO_MORE           , "No more resources available",  /* really not sure */
+  WSA_E_CANCELLED         , "Operation already cancelled",  /* really not sure */
+  WSAEREFUSED             , "Operation refused",	    /* not sure */
+#endif
+			
+  WSAHOST_NOT_FOUND       , "Host not found",
+  WSATRY_AGAIN            , "Authoritative host not found during name lookup",
+  WSANO_RECOVERY          , "Non-recoverable error during name lookup",
+  WSANO_DATA              , "Valid name, no data record of requested type",
+
+  -1, NULL
+};
+
+char *
+sys_strerror(int error_no)
+{
+  int i;
+  static char unknown_msg[40];
+
+  if (error_no >= 0 && error_no < _sys_nerr)
+    return _sys_errlist[error_no];
+
+  for (i = 0; _wsa_errlist[i].errnum >= 0; i++)
+    if (_wsa_errlist[i].errnum == error_no)
+      return _wsa_errlist[i].msg;
+
+  sprintf(unknown_msg, "Unidentified error: %d", error_no);
+  return unknown_msg;
 }
 
 /* [andrewi 3-May-96] I've had conflicting results using both methods,
@@ -3024,40 +3152,49 @@ check_windows_init_file ()
      it cannot find the Windows installation file.  If this file does
      not exist in the expected place, tell the user.  */
 
-  if (!noninteractive && !inhibit_window_system) {
-    extern Lisp_Object Vwindow_system, Vload_path;
-    Lisp_Object init_file;
-    int fd;
+  if (!noninteractive && !inhibit_window_system) 
+    {
+      extern Lisp_Object Vwindow_system, Vload_path, Qfile_exists_p;
+      Lisp_Object objs[2];
+      Lisp_Object full_load_path;
+      Lisp_Object init_file;
+      int fd;
 
-    init_file = build_string ("term/w32-win");
-    fd = openp (Vload_path, init_file, ".el:.elc", NULL, 0);
-    if (fd < 0) {
-      Lisp_Object load_path_print = Fprin1_to_string (Vload_path, Qnil);
-      char *init_file_name = XSTRING (init_file)->data;
-      char *load_path = XSTRING (load_path_print)->data;
-      char *buffer = alloca (1024);
+      objs[0] = Vload_path;
+      objs[1] = decode_env_path (0, (getenv ("EMACSLOADPATH")));
+      full_load_path = Fappend (2, objs);
+      init_file = build_string ("term/w32-win");
+      fd = openp (full_load_path, init_file, ".el:.elc", NULL, 0);
+      if (fd < 0) 
+	{
+	  Lisp_Object load_path_print = Fprin1_to_string (full_load_path, Qnil);
+	  char *init_file_name = XSTRING (init_file)->data;
+	  char *load_path = XSTRING (load_path_print)->data;
+	  char *buffer = alloca (1024);
 
-      sprintf (buffer, 
-	       "The Emacs Windows initialization file \"%s.el\" "
-	       "could not be found in your Emacs installation.  "
-	       "Emacs checked the following directories for this file:\n"
-	       "\n%s\n\n"
-	       "When Emacs cannot find this file, it usually means that it "
-	       "was not installed properly, or its distribution file was "
-	       "not unpacked properly.\nSee the README.W32 file in the "
-	       "top-level Emacs directory for more information.",
-	       init_file_name, load_path);
-      MessageBox (NULL,
-		  buffer,
-		  "Emacs Abort Dialog",
-		  MB_OK | MB_ICONEXCLAMATION | MB_TASKMODAL);
-      close (fd);
-
+	  sprintf (buffer, 
+		   "The Emacs Windows initialization file \"%s.el\" "
+		   "could not be found in your Emacs installation.  "
+		   "Emacs checked the following directories for this file:\n"
+		   "\n%s\n\n"
+		   "When Emacs cannot find this file, it usually means that it "
+		   "was not installed properly, or its distribution file was "
+		   "not unpacked properly.\nSee the README.W32 file in the "
+		   "top-level Emacs directory for more information.",
+		   init_file_name, load_path);
+	  MessageBox (NULL,
+		      buffer,
+		      "Emacs Abort Dialog",
+		      MB_OK | MB_ICONEXCLAMATION | MB_TASKMODAL);
       /* Use the low-level Emacs abort. */
 #undef abort
-      abort ();
+	  abort ();
+	}
+      else
+	{
+	  close (fd);
+	}
     }
-  }
 }
 
 void
@@ -3067,12 +3204,6 @@ term_ntproc ()
   /* shutdown the socket interface if necessary */
   term_winsock ();
 #endif
-
-  /* Check whether we are shutting down because we cannot find the
-     Windows initialization file.  Do this during shutdown so that
-     Emacs is initialized as possible, and so that it is out of the 
-     critical startup path.  */
-  check_windows_init_file ();
 }
 
 void
@@ -3172,6 +3303,9 @@ init_ntproc ()
       (*drive)++;
     }
   }
+  
+  /* Check to see if Emacs has been installed correctly.  */
+  check_windows_init_file ();
 }
 
 /* end of nt.c */

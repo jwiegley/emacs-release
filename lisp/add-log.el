@@ -111,22 +111,35 @@ this variable."
   :type 'boolean
   :group 'change-log)
 
+(defcustom add-log-file-name-function nil
+  "*If non-nil, function to call to identify the filename for a ChangeLog entry.
+This function is called with one argument, `buffer-file-name' in that buffer.
+If this is nil, the default is to use the file's name
+relative to the directory of the change log file."
+  :type 'function
+  :group 'change-log)
+
 (defvar change-log-font-lock-keywords
   '(;;
     ;; Date lines, new and old styles.
     ("^\\sw.........[0-9:+ ]*"
      (0 font-lock-string-face)
-     ("\\([^<]+\\)<\\([A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+\\)>" nil nil
+     ;; Name and e-mail; some people put e-mail in parens, not angles.
+     ("\\([^<(]+\\)[(<]\\([A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+\\)[>)]" nil nil
       (1 font-lock-constant-face)
       (2 font-lock-variable-name-face)))
     ;;
     ;; File names.
     ("^\t\\* \\([^ ,:([\n]+\\)"
      (1 font-lock-function-name-face)
-     ("\\=, \\([^ ,:([\n]+\\)" nil nil (1 font-lock-function-name-face)))
+     ;; Possibly further names in a list:
+     ("\\=, \\([^ ,:([\n]+\\)" nil nil (1 font-lock-function-name-face))
+     ;; Possibly a parenthesized list of names:
+     ("\\= (\\([^) ,:\n]+\\)" nil nil (1 font-lock-keyword-face))
+     ("\\=, *\\([^) ,:\n]+\\)" nil nil (1 font-lock-keyword-face)))
     ;;
     ;; Function or variable names.
-    ("(\\([^) ,:\n]+\\)"
+    ("^\t(\\([^) ,:\n]+\\)"
      (1 font-lock-keyword-face)
      ("\\=, *\\([^) ,:\n]+\\)" nil nil (1 font-lock-keyword-face)))
     ;;
@@ -300,12 +313,15 @@ non-nil, otherwise in local time."
     (and buffer-file-name
 	 ;; Never want to add a change log entry for the ChangeLog file itself.
 	 (not (string= buffer-file-name file-name))
-	 (setq entry (if (string-match
-			  (concat "^" (regexp-quote (file-name-directory
-						     file-name)))
-			  buffer-file-name)
-			 (substring buffer-file-name (match-end 0))
-		       (file-name-nondirectory buffer-file-name))))
+	 (setq entry
+	       (if add-log-file-name-function
+		   (funcall add-log-file-name-function buffer-file-name)
+		 (if (string-match
+		      (concat "^" (regexp-quote (file-name-directory
+						 file-name)))
+		      buffer-file-name)
+		     (substring buffer-file-name (match-end 0))
+		   (file-name-nondirectory buffer-file-name)))))
 
     (let ((buffer (find-buffer-visiting file-name)))
       (setq add-log-debugging (list (gap-position) (gap-size))))
@@ -618,6 +634,11 @@ Has a preference of looking backwards."
 				   (and (bolp)
 					(looking-at "struct \\|union \\|class ")
 					(setq middle (point)))
+				   (goto-char end)
+				   (when (eq (preceding-char) ?=)
+				     (forward-char -1)
+				     (skip-chars-backward " \t")
+				     (setq end (point)))
 				   (buffer-substring middle end)))))))))
 		((memq major-mode add-log-tex-like-modes)
 		 (if (re-search-backward

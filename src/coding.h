@@ -282,6 +282,7 @@ enum coding_type
 #define CODING_FINISH_INSUFFICIENT_SRC	1
 #define CODING_FINISH_INSUFFICIENT_DST	2
 #define CODING_FINISH_INCONSISTENT_EOL	3
+#define CODING_FINISH_INTERRUPT		4
 
 /* Macros used for the member `mode' of the struct coding_system.  */
 
@@ -332,6 +333,9 @@ struct coding_system
      decoding or encoding.  See macros COMPOSING_XXXX above for the
      meaing of each non-zero value.  */
   int composing;
+
+  /* Number of composed characters in the current composing sequence.  */
+  int composed_chars;
 
   /* Detailed information specific to each type of coding system.  */
   union spec
@@ -537,10 +541,10 @@ extern Lisp_Object Vcoding_category_list;
 extern Lisp_Object Qtranslation_table;
 extern Lisp_Object Qtranslation_table_id;
 
-/* Mnemonic character to indicate each type of end-of-line.  */
-extern int eol_mnemonic_unix, eol_mnemonic_dos, eol_mnemonic_mac;
-/* Mnemonic character to indicate type of end-of-line is not yet decided.  */
-extern int eol_mnemonic_undecided;
+/* Mnemonic strings to indicate each type of end-of-line.  */
+extern Lisp_Object eol_mnemonic_unix, eol_mnemonic_dos, eol_mnemonic_mac;
+/* Mnemonic string to indicate type of end-of-line is not yet decided.  */
+extern Lisp_Object eol_mnemonic_undecided;
 
 #ifdef emacs
 extern Lisp_Object Qfile_coding_system;

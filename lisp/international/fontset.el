@@ -27,10 +27,10 @@
 ;; Set standard REGISTRY property of charset to find an appropriate
 ;; font for each charset.  This is used to generate a font name in a
 ;; fontset.  If the value contains a character `-', the string before
-;; that is embeded in `CHARSET_REGISTRY' field, and the string after
-;; that is embeded in `CHARSET_ENCODING' field.  If the value does not
-;; contain `-', the whole string is embeded in `CHARSET_REGISTRY'
-;; field, and a wild card character `*' is embeded in
+;; that is embedded in `CHARSET_REGISTRY' field, and the string after
+;; that is embedded in `CHARSET_ENCODING' field.  If the value does not
+;; contain `-', the whole string is embedded in `CHARSET_REGISTRY'
+;; field, and a wild card character `*' is embedded in
 ;; `CHARSET_ENCODING' field.
 
 (defvar x-charset-registries
@@ -181,15 +181,20 @@ PATTERN.  If no full XLFD name is gotten, return nil."
 		       (error)))
       (if (and fontname
 	       (string-match xlfd-tight-regexp fontname))
+	  ;; We get a full XLFD name.
 	  (let ((len (length pattern))
 		(i 0)
 		l)
+	    ;; Setup xlfd-fields by the full XLFD name.  Each element
+	    ;; should be a cons of matched index and matched string.
 	    (setq xlfd-fields (make-vector 14 nil))
 	    (while (< i 14)
 	      (aset xlfd-fields i
 		    (cons (match-beginning (1+ i))
 			  (match-string (1+ i) fontname)))
 	      (setq i (1+ i)))
+
+	    ;; Replace wild cards in PATTERN by regexp codes.
 	    (setq i 0)
 	    (while (< i len)
 	      (let ((ch (aref pattern i)))
@@ -206,19 +211,31 @@ PATTERN.  If no full XLFD name is gotten, return nil."
 			    len (+ len 5)
 			    i (+ i 5))
 		    (setq i (1+ i))))))
-	    (string-match pattern fontname)
-	    (setq l (cdr (cdr (match-data))))
-	    (setq i 0)
-	    (while (< i 14)
-	      (if (or (null l) (< (car (aref xlfd-fields i)) (car l)))
-		  (progn
-		    (aset xlfd-fields i (cdr (aref xlfd-fields i)))
-		    (setq i (1+ i)))
-		(if (< (car (aref xlfd-fields i)) (car (cdr l)))
-		    (progn
-		      (aset xlfd-fields i "*")
-		      (setq i (1+ i)))
-		  (setq l (cdr (cdr l))))))
+
+	    ;; Set each element of xlfd-fields to proper strings.
+	    (if (string-match pattern fontname)
+		;; The regular expression PATTERN matchs the full XLFD
+		;; name.  Set elements that correspond to a wild card
+		;; in PATTERN to "*", set the other elements to the
+		;; exact strings in PATTERN.
+		(let ((l (cdr (cdr (match-data)))))
+		  (setq i 0)
+		  (while (< i 14)
+		    (if (or (null l) (< (car (aref xlfd-fields i)) (car l)))
+			(progn
+			  (aset xlfd-fields i (cdr (aref xlfd-fields i)))
+			  (setq i (1+ i)))
+		      (if (< (car (aref xlfd-fields i)) (car (cdr l)))
+			  (progn
+			    (aset xlfd-fields i "*")
+			    (setq i (1+ i)))
+			(setq l (cdr (cdr l)))))))
+	      ;; Set each element of xlfd-fields to the exact string
+	      ;; in the corresonding fields in full XLFD name.
+	      (setq i 0)
+	      (while (< i 14)
+		(aset xlfd-fields i (cdr (aref xlfd-fields i)))
+		(setq i (1+ i))))
 	    xlfd-fields)))))
 
 ;; Replace consecutive wild-cards (`*') in NAME to one.
@@ -282,6 +299,9 @@ Emacs tries to open fonts in this order."
 	      (cons (list fontname style-ignored size-ignored both-ignored)
 		    alternate-fontname-alist))))))
 
+;; Just to avoid compiler waring.  The gloval value is never used.
+(defvar resolved-ascii-font nil)
+
 (defun x-complement-fontset-spec (xlfd-fields fontlist)
   "Complement FONTLIST for all charsets based on XLFD-FIELDS and return it.
 XLFD-FIELDS is a vector of XLFD (X Logical Font Description) fields.
@@ -289,7 +309,10 @@ FONTLIST is an alist of charsets vs the corresponding font names.
 
 Font names for charsets not listed in FONTLIST are generated from
 XLFD-FIELDS and a property of x-charset-registry of each charset
-automatically."
+automatically.
+
+By side effect, this sets `resolved-ascii-font' to the resolved name
+of ASCII font."
   (let ((charsets charset-list)
 	(xlfd-fields-non-ascii (copy-sequence xlfd-fields))
 	(new-fontlist nil))
@@ -320,25 +343,26 @@ automatically."
     ;; Be sure that ASCII font is available.
     (let ((slot (or (assq 'ascii fontlist) (assq 'ascii new-fontlist)))
 	  ascii-font)
-      (if (setq ascii-font (condition-case nil
-			       (x-resolve-font-name (cdr slot))
-			     (error nil)))
-	  (setcdr slot ascii-font))
+      (setq ascii-font (condition-case nil
+			   (x-resolve-font-name (cdr slot))
+			 (error nil)))
       (if ascii-font
 	  (let ((l x-font-name-charset-alist))
 	    ;; If the ASCII font can also be used for another
 	    ;; charsets, use that font instead of what generated based
-	    ;; on x-charset-registery in the previous code.
+	    ;; on x-charset-registry in the previous code.
 	    (while l
 	      (if (string-match (car (car l)) ascii-font)
-		  (let ((charsets (cdr (car l))))
+		  (let ((charsets (cdr (car l)))
+			slot2)
 		    (while charsets
 		      (if (and (not (eq (car charsets) 'ascii))
-			       (setq slot (assq (car charsets) new-fontlist)))
-			  (setcdr slot ascii-font))
+			       (setq slot2 (assq (car charsets) new-fontlist)))
+			  (setcdr slot2 (cdr slot)))
 		      (setq charsets (cdr charsets)))
 		    (setq l nil))
 		(setq l (cdr l))))
+	    (setq resolved-ascii-font ascii-font)
 	    (append fontlist new-fontlist))))))
 
 (defun fontset-name-p (fontset)
@@ -358,7 +382,8 @@ with \"fontset\" in `<CHARSET_REGISTRY> field."
     (while fontsets
       (setq fontset-name (car (car fontsets)) fontsets (cdr fontsets))
       (setq l (cons (list (fontset-plain-name fontset-name) fontset-name) l)))
-    (cons "Fontset" l)))
+    (cons "Fontset"
+	  (sort l (function (lambda (x y) (string< (car x) (car y))))))))
 
 (defun fontset-plain-name (fontset)
   "Return a plain and descriptive name of FONTSET."
@@ -466,7 +491,7 @@ It returns a name of the created fontset."
 	fontlist full-fontlist ascii-font resolved-ascii-font charset)
     (if (query-fontset name)
 	(or noerror 
-	    (error "Fontset \"%s\" already exists"))
+	    (error "Fontset \"%s\" already exists" name))
       ;; At first, extract pairs of charset and fontname from FONTSET-SPEC.
       (while (string-match "[, \t\n]*\\([^:]+\\):\\([^,]+\\)" fontset-spec idx)
 	(setq idx (match-end 0))
@@ -495,11 +520,12 @@ It returns a name of the created fontset."
 	      (or (rassoc alias fontset-alias-alist)
 		  (setq fontset-alias-alist
 			(cons (cons name alias) fontset-alias-alist)))))
-	(setq resolved-ascii-font (cdr (assq 'ascii full-fontlist)))
-	(setq fontset-alias-alist
-	      (cons (cons name resolved-ascii-font)
-		    fontset-alias-alist))
+	(or (rassoc resolved-ascii-font fontset-alias-alist)
+	    (setq fontset-alias-alist
+		  (cons (cons name resolved-ascii-font)
+			fontset-alias-alist)))
 	(or (equal ascii-font resolved-ascii-font)
+	    (rassoc ascii-font fontset-alias-alist)
 	    (setq fontset-alias-alist
 		  (cons (cons name ascii-font)
 			fontset-alias-alist)))
@@ -531,7 +557,7 @@ It returns a name of the created fontset."
 			(or font
 			    (x-modify-font-name resolved-ascii-font style)))
 		  ;; but leave fonts for the other charsets unmodified
-		  ;; for the momemnt.  They are modified for the style
+		  ;; for the moment.  They are modified for the style
 		  ;; in instantiate-fontset.
 		  (setq uninstantiated-fontset-alist
 			(cons (list new-name
@@ -539,9 +565,10 @@ It returns a name of the created fontset."
 				    (cons (cons 'ascii new-ascii-font)
 					  nonascii-fontlist))
 			      uninstantiated-fontset-alist))
-		  (setq fontset-alias-alist
-			(cons (cons new-name new-ascii-font)
-			      fontset-alias-alist)))
+		  (or (rassoc new-ascii-font fontset-alias-alist)
+		      (setq fontset-alias-alist
+			    (cons (cons new-name new-ascii-font)
+				  fontset-alias-alist))))
 		(setq style-variant (cdr style-variant)))))))
     name))
 
@@ -558,8 +585,8 @@ Optional 2nd arg FONTSET-NAME is a string to be used in
 an appropriate name is generated automatically.
 
 Style variants of the fontset is created too.  Font names in the
-variants are generated automatially from FONT unless X resources
-XXX.attribyteFont explicitly specify them.
+variants are generated automatically from FONT unless X resources
+XXX.attributeFont explicitly specify them.
 
 It returns a name of the created fontset."
   (or resolved-font
@@ -603,7 +630,7 @@ It returns a name of the created fontset."
 					  styles))))
 
 (defun instantiate-fontset (fontset)
-  "Make FONTSET be readly to use.
+  "Make FONTSET be ready to use.
 FONTSET should be in the variable `uninstantiated-fontset-alist' in advance.
 Return FONTSET if it is created successfully, else return nil."
   (let ((fontset-data (assoc fontset uninstantiated-fontset-alist)))
@@ -669,7 +696,7 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 	fontset-spec)
     (while (setq fontset-spec (x-get-resource (concat "fontset-" idx)
 					      (concat "Fontset-" idx)))
-      (create-fontset-from-fontset-spec fontset-spec nil 'noerror)
+      (create-fontset-from-fontset-spec fontset-spec t 'noerror)
       (setq idx (1+ idx)))))
 
 (defsubst fontset-list ()

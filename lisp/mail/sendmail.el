@@ -453,7 +453,7 @@ Here are commands that move to a header field (and create it if there isn't):
   ;; Lines containing just >= 3 dashes, perhaps after whitespace,
   ;; are also sometimes used and should be separators.
   (setq paragraph-start (concat (regexp-quote mail-header-separator)
-				"$\\|[ \t]*\\([-|#;>*]+ *\\|(?[0-9]+[.)] *\\)*$"
+				"$\\|\t*\\([-|#;>* ]\\|(?[0-9]+[.)]\\)+$"
 				"\\|[ \t]*[a-z0-9A-Z]*>+[ \t]*$\\|[ \t]*$\\|"
 				"-- $\\|---+$\\|"
 				page-delimiter))
@@ -701,7 +701,7 @@ the user from the mailer."
 	    (error))
 	  (setq mail-send-actions (cdr mail-send-actions)))
 	(message "Sending...done")
-	;; If buffer has no file, mark it as unmodified and delete autosave.
+	;; If buffer has no file, mark it as unmodified and delete auto-save.
 	(if (not buffer-file-name)
 	    (progn
 	      (set-buffer-modified-p nil)
@@ -712,7 +712,22 @@ the user from the mailer."
 
 ;;;###autoload
 (defvar sendmail-coding-system nil
-  "Coding system to encode the outgoing mail.")
+  "*Coding system for encoding the outgoing mail.
+This has higher priority than `default-buffer-file-coding-system'
+and `default-sendmail-coding-system',
+but lower priority than the local value of `buffer-file-coding-system'.
+See also the function `select-sendmail-coding-system'.")
+
+;;;###autoload
+(defvar default-sendmail-coding-system 'iso-latin-1
+  "Default coding system for encoding the outgoing mail.
+This variable is used only when `sendmail-coding-system' is nil.
+
+This variable is set/changed by the command set-language-environment.
+User should not set this variable manually,
+instead use sendmail-coding-system to get a constant encoding
+of outgoing mails regardless of the current language environment.
+See also the function `select-sendmail-coding-system'.")
 
 (defun sendmail-send-it ()
   (require 'mail-utils)
@@ -724,17 +739,7 @@ the user from the mailer."
 	resend-to-addresses
 	delimline
 	fcc-was-found
-	(mailbuf (current-buffer))
-	(sendmail-coding-system
-	 (if (local-variable-p 'buffer-file-coding-system)
-	     buffer-file-coding-system
-	   (or sendmail-coding-system
-	       default-buffer-file-coding-system
-	       'iso-latin-1))))
-    (if (fboundp select-safe-coding-system-function)
-	(setq sendmail-coding-system
-	      (funcall select-safe-coding-system-function
-		       (point-min) (point-max) sendmail-coding-system)))
+	(mailbuf (current-buffer)))
     (unwind-protect
 	(save-excursion
 	  (set-buffer tembuf)
@@ -855,7 +860,7 @@ the user from the mailer."
 			 (insert "From: " login "\n"))
 			((eq mail-from-style 'system-default)
 			 nil)
-			(t (error "Invalid value for `system-default'")))))
+			(t (error "Invalid value for `mail-from-style'")))))
 	    ;; Insert an extra newline if we need it to work around
 	    ;; Sun's bug that swallows newlines.
 	    (goto-char (1+ delimline))
@@ -876,38 +881,41 @@ the user from the mailer."
 		(re-search-forward "^To:\\|^cc:\\|^bcc:\\|^resent-to:\
 \\|^resent-cc:\\|^resent-bcc:"
 				   delimline t))
-	      (let ((default-directory "/")
-		    (coding-system-for-write sendmail-coding-system))
-		(apply 'call-process-region
-		       (append (list (point-min) (point-max)
-				     (if (boundp 'sendmail-program)
-					 sendmail-program
-				       "/usr/lib/sendmail")
-				     nil errbuf nil "-oi")
-			       ;; Always specify who from,
-			       ;; since some systems have broken sendmails.
-			       ;; unless user has said no.
-			       (if (memq mail-from-style '(angles parens nil))
-				   (list "-f" user-mail-address))
-;;; 			       ;; Don't say "from root" if running under su.
-;;; 			       (and (equal (user-real-login-name) "root")
-;;; 				    (list "-f" (user-login-name)))
-			       (and mail-alias-file
-				    (list (concat "-oA" mail-alias-file)))
-			       (if mail-interactive
-				   ;; These mean "report errors to terminal"
-				   ;; and "deliver interactively"
-				   '("-oep" "-odi")
-				 ;; These mean "report errors by mail"
-				 ;; and "deliver in background".
-				 '("-oem" "-odb"))
-			       ;; Get the addresses from the message
-			       ;; unless this is a resend.
-			       ;; We must not do that for a resend
-			       ;; because we would find the original addresses.
-			       ;; For a resend, include the specific addresses.
-			       (or resend-to-addresses
-				   '("-t")))))
+	      (let* ((default-directory "/")
+		     (coding-system-for-write (select-message-coding-system))
+		     (args 
+		      (append (list (point-min) (point-max)
+				    (if (boundp 'sendmail-program)
+					sendmail-program
+				      "/usr/lib/sendmail")
+				    nil errbuf nil "-oi")
+			      ;; Always specify who from,
+			      ;; since some systems have broken sendmails.
+			      ;; unless user has said no.
+			      (if (memq mail-from-style '(angles parens nil))
+				  (list "-f" user-mail-address))
+;;; 			      ;; Don't say "from root" if running under su.
+;;; 			      (and (equal (user-real-login-name) "root")
+;;; 				   (list "-f" (user-login-name)))
+			      (and mail-alias-file
+				   (list (concat "-oA" mail-alias-file)))
+			      (if mail-interactive
+				  ;; These mean "report errors to terminal"
+				  ;; and "deliver interactively"
+				  '("-oep" "-odi")
+				;; These mean "report errors by mail"
+				;; and "deliver in background".
+				'("-oem" "-odb"))
+			      ;; Get the addresses from the message
+			      ;; unless this is a resend.
+			      ;; We must not do that for a resend
+			      ;; because we would find the original addresses.
+			      ;; For a resend, include the specific addresses.
+			      (or resend-to-addresses
+				  '("-t"))))
+		     (exit-value (apply 'call-process-region args)))
+		(or (null exit-value) (zerop exit-value)
+		    (error "Sending...failed with exit value %d" exit-value)))
 	    (or fcc-was-found
 		(error "No recipients")))
 	  (if mail-interactive
@@ -1050,7 +1058,7 @@ the user from the mailer."
   (interactive)
   (save-excursion
     ;; put a marker at the end of the header
-    (let ((end (make-marker (mail-header-end)))
+    (let ((end (copy-marker (mail-header-end)))
 	  (case-fold-search t)
 	  to-line)
       (goto-char (point-min))
@@ -1196,7 +1204,8 @@ and don't delete any header fields."
 	  ;; delete that window to save screen space.
 	  ;; t means don't alter other frames.
 	  (delete-windows-on original t)
-	  (insert-buffer original))
+	  (insert-buffer original)
+	  (set-text-properties (point) (mark t) nil))
 	(if (consp arg)
 	    nil
 	  (goto-char start)
@@ -1257,6 +1266,9 @@ and don't delete any header fields."
   (interactive "P")
   (and (consp mail-reply-action)
        (eq (car mail-reply-action) 'insert-buffer)
+       (with-current-buffer (nth 1 mail-reply-action)
+	 (or (mark t)
+	     (error "No mark set: %S" (current-buffer))))
        (let ((buffer (nth 1 mail-reply-action))
 	     (start (point))
 	     ;; Avoid error in Transient Mark mode

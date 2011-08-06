@@ -1,3 +1,43 @@
+1999-07-12  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+1999-07-01  Eli Zaretskii  <eliz@gnu.org>
+
+	* mainmake.v2 (SHELL, MAKESHELL): Don't use /dos/command, it can
+	invoke an incompatible version of COMAMND.COM.
+
+1999-05-19  Eli Zaretskii  <eliz@gnu.org>
+
+	* sed1v2.inp: Use -gcoff instead of -g in CFLAGS, for those who
+	have GCC configured by default to use stabs, which unexec.c
+	doesn't currently support.
+
+1999-01-14  Eli Zaretskii  <eliz@gnu.org>
+
+	* mainmake.v2 (install): Use update instead of sed to install fns.el.
+
+1999-01-11  Eli Zaretskii  <eliz@gnu.org>
+
+	* mainmake.v2 (install): Install fns.el in ../bin, since Emacs
+	looks for it in exec-directory.
+
+1999-01-07  Eli Zaretskii  <eliz@gnu.org>
+
+	* sedleim.inp: New file, for configuring the leim directory.
+
+	* mainmake.v2 (src): Build files in leim if leim/Makefile exists.
+	(clean): Add clean in leim.
+
+1998-11-08  Eli Zaretskii  <eliz@mescaline.gnu.org>
+
+	* mainmake.v2 (SHELL, MAKESHELL): Don't use `override'.
+
+1998-10-20  Eli Zaretskii  <eliz@mescaline.gnu.org>
+
+	* mainmake.v2: Forcibly set SHELL and MAKESHELL to force Make to
+	use COMMAND.COM as the shell.
+
 1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
 	* Version 20.3 released.

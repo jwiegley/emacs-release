@@ -1827,11 +1827,16 @@ scan_lists (from, count, depth, sexpflag)
   int temp_pos;
   int last_good = from;
   int found;
-  int from_byte = CHAR_TO_BYTE (from);
+  int from_byte;
   int out_bytepos, out_charpos;
   int temp;
 
   if (depth > 0) min_depth = 0;
+
+  if (from > ZV) from = ZV;
+  if (from < BEGV) from = BEGV;
+
+  from_byte = CHAR_TO_BYTE (from);
 
   immediate_quit = 1;
   QUIT;
@@ -2401,9 +2406,11 @@ do { prev_from = from;				\
   else if (start_quoted)
     goto startquoted;
 
+#if 0 /* This seems to be redundant with the identical code above.  */
   SETUP_SYNTAX_TABLE (prev_from, 1);
   prev_from_syntax = SYNTAX_WITH_FLAGS (FETCH_CHAR (prev_from_byte));
   UPDATE_SYNTAX_TABLE_FORWARD (from);
+#endif
 
   while (from < end)
     {
@@ -2573,10 +2580,15 @@ do { prev_from = from;				\
 
 		if (from >= end) goto done;
 		c = FETCH_CHAR (from_byte);
-		if (nofence && c == state.instring) break;
-
 		/* Some compilers can't handle this inside the switch.  */
 		temp = SYNTAX (c);
+
+		/* Check TEMP here so that if the char has
+		   a syntax-table property which says it is NOT
+		   a string character, it does not end the string.  */
+		if (nofence && c == state.instring && temp == Sstring)
+		  break;
+
 		switch (temp)
 		  {
 		  case Sstring_fence:
@@ -2701,7 +2713,8 @@ DEFUN ("parse-partial-sexp", Fparse_partial_sexp, Sparse_partial_sexp, 2, 6, 0,
 			       ? (state.comstyle == ST_COMMENT_STYLE
 				  ? Qsyntax_table : Qt) :
 			       Qnil),
-			      Fcons ((state.incomment || state.instring
+			      Fcons (((state.incomment
+				       || (state.instring >= 0))
 				      ? make_number (state.comstr_start)
 				      : Qnil),
 				     Fcons (state.levelstarts, Qnil))))))))));
@@ -2790,7 +2803,7 @@ syms_of_syntax ()
   Qscan_error = intern ("scan-error");
   staticpro (&Qscan_error);
   Fput (Qscan_error, Qerror_conditions,
-	Fcons (Qerror, Qnil));
+	Fcons (Qscan_error, Fcons (Qerror, Qnil)));
   Fput (Qscan_error, Qerror_message,
 	build_string ("Scan error"));
 

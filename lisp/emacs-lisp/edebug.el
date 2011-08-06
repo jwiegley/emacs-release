@@ -1,6 +1,6 @@
 ;;; edebug.el --- a source-level debugger for Emacs Lisp
 
-;; Copyright (C) 1988, 89, 90, 91, 92, 93, 94, 95, 1997
+;; Copyright (C) 1988, 89, 90, 91, 92, 93, 94, 95, 97, 1999
 ;;       Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <dlaliberte@gte.com>
@@ -181,7 +181,7 @@ Go-nonstop, trace, Trace-fast, continue, and Continue-fast."
   :type '(choice (const step) (const next) (const go)
 		 (const Go-nonstop) (const trace)
 		 (const Trace-fast) (const continue)
-		 (const continue-fast))
+		 (const Continue-fast))
   :group 'edebug)
 
 (defcustom edebug-trace nil
@@ -243,7 +243,11 @@ these errors are signaled from Lisp code whether or not the signal is
 handled by a `condition-case'.  This option is useful for debugging
 signals that *are* handled since they would otherwise be missed.
 After execution is resumed, the error is signaled again."
-  :type '(choice boolean (repeat string))
+  :type '(choice (const :tag "off")
+		 (repeat :menu-tag "When"
+			 :value (nil)
+			 (symbol :format "%v"))
+		 (const :tag "always" t))
   :group 'edebug)
 
 (defcustom edebug-on-quit t
@@ -554,9 +558,14 @@ Otherwise, it prints in the minibuffer."
 	  (let ((edebug-all-forms edebugging)
 		(edebug-all-defs (eq edebug-all-defs (not edebug-it))))
 	    (edebug-read-top-level-form))))
-    (if (and (eq (car form) 'defvar)
-	     (cdr-safe (cdr-safe form)))
-	(setq form (cons 'defconst (cdr form))))
+    (cond ((and (eq (car form) 'defvar)
+		(cdr-safe (cdr-safe form)))
+	   ;; Force variable to be bound.
+	   (setq form (cons 'defconst (cdr form))))
+	  ((and (eq (car form) 'defcustom)
+		(default-boundp (nth 1 form)))
+	   ;; Force variable to be bound.
+	   (set-default (nth 1 form) (eval (nth 2 form)))))
     (setq edebug-result (eval form))
     (if (not edebugging)
 	(princ edebug-result)
@@ -2119,6 +2128,7 @@ expressions; a `progn' form will be returned enclosing these forms."
 (def-edebug-spec combine-after-change-calls t)
 (def-edebug-spec with-temp-file t)
 (def-edebug-spec with-temp-buffer t)
+(def-edebug-spec with-temp-message t)
 
 ;; Anything else?
 

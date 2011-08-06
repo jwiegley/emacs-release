@@ -625,8 +625,6 @@ definitions, type `M-x viper-describe-kbd-macros'.
 
 File: viper,  Node: Commands,  Prev: Customization,  Up: Top
 
-   Top
-
 Commands
 ********
 
@@ -668,12 +666,12 @@ commands" and "line commands".
      `j', `k', `+', `-', `H', `M', `L', `{', `}', `G', `'',  `[[',
      `]]', `[]'
 
-Text Deletion Commands (*Note Deleting Text::), Change commands (*Note
-Changing Text::), even Shell Commands (*Note Shell Commands::) use
+Text Deletion Commands (*note Deleting Text::.), Change commands (*note
+Changing Text::.), even Shell Commands (*note Shell Commands::.)  use
 these commands to describe a region of text to operate on.
 
    Viper adds two region descriptors, `r' and `R'.  These describe the
-Emacs regions (*Note Basics::), but they are not movement commands.
+Emacs regions (*note Basics::.), but they are not movement commands.
 
    The command description uses angle brackets `<>' to indicate
 metasyntactic variables, since the normal conventions of using simple
@@ -709,7 +707,6 @@ refers to Ex line addresses, which include
      For the whole file, same as (1,$).
 
 `/<pat>/'
-
 `?<pat>?'
      Next or previous line with pattern <pat>.
 
@@ -1010,14 +1007,14 @@ Marking
 -------
 
    Emacs mark is referred to in the region specifiers `r' and `R'.
-*Note Emacs Preliminaries:: and *note Basics::. for explanation.  Also
+*Note Emacs Preliminaries::, and *Note Basics::, for explanation.  Also
 see *Note Mark: (emacs)Mark, for an explanation of the Emacs mark ring.
 
 `m<a-z>'
      Mark the current file and position with the specified letter.
 
 `m .'
-     Set the Emacs mark (*Note Emacs Preliminaries::) at point.
+     Set the Emacs mark (*note Emacs Preliminaries::.) at point.
 
 `m <'
      Set the Emacs mark at beginning of buffer.
@@ -1053,7 +1050,7 @@ File: viper,  Node: Appending Text,  Next: Editing in Insert State,  Prev: Marki
 Appending Text
 --------------
 
-   *Note Options:: to see how to change tab and shiftwidth size.  See
+   *Note Options::, to see how to change tab and shiftwidth size.  See
 the GNU Emacs manual, or try `C-ha tabs' (If you have turned Emacs help
 on).  Check out the variable `indent-tabs-mode' to put in just spaces.
 Also see options for word-wrap.

@@ -1,4 +1,4 @@
-;;; mule-diag.el --- Show diagnosis of multilingual environment (MULE)
+;;; mule-diag.el --- Show diagnosis of multilingual environment (Mule)
 
 ;; Copyright (C) 1995 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -184,8 +184,12 @@ but still shows the full information."
 		 (if (aref flags 8) (princ ", use-locking-shift"))
 		 (if (aref flags 9) (princ ", use-single-shift"))
 		 (if (aref flags 10) (princ ", use-roman"))
-		 (if (aref flags 10) (princ ", use-old-jis"))
-		 (if (aref flags 11) (princ ", no-ISO6429"))
+		 (if (aref flags 11) (princ ", use-old-jis"))
+		 (if (aref flags 12) (princ ", no-ISO6429"))
+		 (if (aref flags 13) (princ ", init-bol"))
+		 (if (aref flags 14) (princ ", designation-bol"))
+		 (if (aref flags 15) (princ ", convert-unsafe"))
+		 (if (aref flags 16) (princ ", accept-latin-extra-code"))
 		 (princ "."))
 		((eq type 3)
 		 (princ " (Big5)"))
@@ -221,7 +225,7 @@ but still shows the full information."
       (let ((charsets (coding-system-get coding-system 'safe-charsets)))
 	(when charsets
 	  (if (eq charsets t)
-	      (princ "This coding system can encode charsets:\n")	      
+	      (princ "This coding system can encode all charsets.\n")
 	    (princ "This coding system encode the following charsets:\n")
 	    (princ " ")
 	    (while charsets
@@ -259,7 +263,7 @@ at the place of `..':
   (let* ((proc (get-buffer-process (current-buffer)))
 	 (process-coding-systems (if proc (process-coding-system proc))))
     (message
-     "F[%c%c],K[%c%c],T[%c%c],P>[%c%c],P<[%c%c], default F[%c%c],P>[%c%c],P<[%c%c]"
+     "F[%c%s],K[%c%s],T[%c%s],P>[%c%s],P<[%c%s], default F[%c%s],P>[%c%s],P<[%c%s]"
      (coding-system-mnemonic buffer-file-coding-system)
      (coding-system-eol-type-mnemonic buffer-file-coding-system)
      (coding-system-mnemonic (keyboard-coding-system))
@@ -672,7 +676,11 @@ see the function `describe-fontset' for the format of the list."
 	(set-buffer standard-output)
 	(insert "Fontset-Name\t\t\t\t\t\t  WDxHT Style\n")
 	(insert "------------\t\t\t\t\t\t  ----- -----\n")
-	(let ((fontsets (fontset-list)))
+	(let ((fontsets
+	       (sort (fontset-list)
+		     (function (lambda (x y)
+				 (string< (fontset-plain-name x)
+					  (fontset-plain-name y)))))))
 	  (while fontsets
 	    (print-fontset (car fontsets) arg)
 	    (setq fontsets (cdr fontsets))))))))
@@ -729,7 +737,7 @@ Emacs again, you should be able to use various input methods."))
 
 ;;;###autoload
 (defun mule-diag ()
-  "Display diagnosis of the multilingual environment (MULE).
+  "Display diagnosis of the multilingual environment (Mule).
 
 This shows various information related to the current multilingual
 environment, including lists of input methods, coding systems,

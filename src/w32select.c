@@ -36,6 +36,9 @@ Lisp_Object QCLIPBOARD;
    clipboard.  */
 static Lisp_Object Vselection_coding_system;
 
+/* Coding system for the next communicating with other X clients.  */
+static Lisp_Object Vnext_selection_coding_system;
+
 #if 0
 DEFUN ("w32-open-clipboard", Fw32_open_clipboard, Sw32_open_clipboard, 0, 1, 0,
        "This opens the clipboard with the given frame pointer.")
@@ -96,10 +99,10 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
   BOOL ok = TRUE;
   HANDLE htext;
   int nbytes;
-  int truelen;
+  int truelen, nlines = 0;
   unsigned char *src;
   unsigned char *dst;
-  
+
   CHECK_STRING (string, 0);
   
   if (!NILP (frame))
@@ -109,6 +112,16 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
 
   nbytes = STRING_BYTES (XSTRING (string)) + 1;
   src = XSTRING (string)->data;
+  dst = src;
+
+  /* We need to know how many lines there are, since we need CRLF line
+     termination for compatibility with other Windows Programs.
+     avoid using strchr because it recomputes the length every time */
+  while ((dst = memchr (dst, '\n', nbytes - (dst - src))) != NULL)
+    {
+      nlines++;
+      dst++;
+    }
 
   {
     /* Since we are now handling multilingual text, we must consider
@@ -117,27 +130,21 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
     int num;
 
     bzero (charsets, (MAX_CHARSET + 1) * sizeof (int));
-    num = ((nbytes <= 2	/* Check the possibility of short cut.  */
-	    || NILP (buffer_defaults.enable_multibyte_characters))
+    num = ((nbytes <= 1	/* Check the possibility of short cut.  */
+	    || !STRING_MULTIBYTE (string)
+	    || nbytes == XSTRING (string)->size)
 	   ? 0
-	   : find_charset_in_str (src, nbytes, charsets, Qnil, 1));
+	   : find_charset_in_str (src, nbytes, charsets, Qnil, 0, 1));
 
     if (!num || (num == 1 && charsets[CHARSET_ASCII]))
       {
 	/* No multibyte character in OBJ.  We need not encode it.  */
 
-	/* need to know final size after '\r' chars are inserted (the
+	/* Need to know final size after CR chars are inserted (the
 	   standard CF_TEXT clipboard format uses CRLF line endings,
-	   while Emacs uses just LF internally) */
+	   while Emacs uses just LF internally).  */
 
-	truelen = nbytes;
-	dst = src;
-	/* avoid using strchr because it recomputes the length everytime */
-	while ((dst = memchr (dst, '\n', nbytes - (dst - src))) != NULL)
-	  {
-	    truelen++;
-	    dst++;
-	  }
+	truelen = nbytes + nlines;
 
 	if ((htext = GlobalAlloc (GMEM_MOVEABLE | GMEM_DDESHARE, truelen)) == NULL)
 	  goto error;
@@ -181,8 +188,11 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
 	struct coding_system coding;
 	HANDLE htext2;
 
+	if (NILP (Vnext_selection_coding_system))
+	  Vnext_selection_coding_system = Vselection_coding_system;
 	setup_coding_system
-	  (Fcheck_coding_system (Vselection_coding_system), &coding);
+	  (Fcheck_coding_system (Vnext_selection_coding_system), &coding);
+	Vnext_selection_coding_system = Qnil;
 	coding.mode |= CODING_MODE_LAST_BLOCK;
 	bufsize = encoding_buffer_size (&coding, nbytes);
 	if ((htext = GlobalAlloc (GMEM_MOVEABLE | GMEM_DDESHARE, bufsize)) == NULL)
@@ -242,20 +252,46 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
     unsigned char *dst;
     int nbytes;
     int truelen;
+    int require_decoding = 0;
     
     if ((src = (unsigned char *) GlobalLock (htext)) == NULL)
       goto closeclip;
     
     nbytes = strlen (src);
 
-    if (! NILP (buffer_defaults.enable_multibyte_characters))
+    if (
+#if 1
+	1
+#else
+	! NILP (buffer_defaults.enable_multibyte_characters)
+#endif
+	)
+      {
+	/* If the clipboard data contains any non-ascii code, we
+	   need to decode it.  */
+	int i;
+
+	for (i = 0; i < nbytes; i++)
+	  {
+	    if (src[i] >= 0x80)
+	      {
+		require_decoding = 1;
+		break;
+	      }
+	  }
+      }
+    
+    if (require_decoding)
       {
 	int bufsize;
 	unsigned char *buf;
 	struct coding_system coding;
 
+	if (NILP (Vnext_selection_coding_system))
+	  Vnext_selection_coding_system = Vselection_coding_system;
 	setup_coding_system
-	  (Fcheck_coding_system(Vselection_coding_system), &coding);
+	  (Fcheck_coding_system (Vnext_selection_coding_system), &coding);
+	Vnext_selection_coding_system = Qnil;
 	coding.mode |= CODING_MODE_LAST_BLOCK;
 	bufsize = decoding_buffer_size (&coding, nbytes);
 	buf = (unsigned char *) xmalloc (bufsize);
@@ -269,23 +305,25 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
       }
     else
       {
-	/* need to know final size after '\r' chars are removed because
-	   we can't change the string size manually, and doing an extra
-	   copy is silly */
+	/* Need to know final size after CR chars are removed because we
+	   can't change the string size manually, and doing an extra
+	   copy is silly.  Note that we only remove CR when it appears
+	   as part of CRLF.  */
 
 	truelen = nbytes;
 	dst = src;
 	/* avoid using strchr because it recomputes the length everytime */
 	while ((dst = memchr (dst, '\r', nbytes - (dst - src))) != NULL)
 	  {
-	    truelen--;
+	    if (dst[1] == '\n')	/* safe because of trailing '\0' */
+	      truelen--;
 	    dst++;
 	  }
 
 	ret = make_uninit_string (truelen);
 
-	/* convert CRLF line endings (the standard CF_TEXT clipboard
-	   format) to LF endings as used internally by Emacs */
+	/* Convert CRLF line endings (the standard CF_TEXT clipboard
+	   format) to LF endings as used internally by Emacs.  */
 
 	dst = XSTRING (ret)->data;
 	while (1)
@@ -298,9 +336,11 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 		/* copied one line ending with '\r' */
 		int copied = next - dst;
 		nbytes -= copied;
-		dst += copied - 1;		/* overwrite '\r' */
+		dst += copied;
 		src += copied;
-	      }	    
+		if (*src == '\n')
+		  dst--;	/* overwrite '\r' with '\n' */
+	      }
 	    else
 	      /* copied remaining partial line -> now finished */
 	      break;
@@ -377,6 +417,14 @@ When sending or receiving text via cut_buffer, selection, and clipboard,\n\
 the text is encoded or decoded by this coding system.\n\
 A default value is `compound-text'");
   Vselection_coding_system=intern ("iso-latin-1-dos");
+
+  DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
+    "Coding system for the next communication with other X clients.\n\
+Usually, `selection-coding-system' is used for communicating with\n\
+other X clients.   But, if this variable is set, it is used for the\n\
+next communication only.   After the communication, this variable is\n\
+set to nil.");
+  Vnext_selection_coding_system = Qnil;
 
   QCLIPBOARD = intern ("CLIPBOARD");	staticpro (&QCLIPBOARD);
 }

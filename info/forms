@@ -209,7 +209,6 @@ provide its own menu with a number of Forms mode commands.
      Similar to `forms-next-field' but moves backwards.
 
 `M-x forms-save-buffer'
-
 `C-x C-s'
      Forms mode replacement for `save-buffer'. When executed in the
      forms buffer it will save the contents of the (modified) data
@@ -850,14 +849,14 @@ Node: Top490
 Node: Forms Example1896
 Node: Entering and Exiting Forms Mode3115
 Node: Forms Commands5321
-Node: Data File Format9122
-Node: Control File Format10461
-Node: Format Description15089
-Node: Modifying Forms Contents18431
-Node: Miscellaneous20318
-Node: Error Messages21856
-Node: Long Example26099
-Node: Credits29190
-Node: Index29943
+Node: Data File Format9121
+Node: Control File Format10460
+Node: Format Description15088
+Node: Modifying Forms Contents18430
+Node: Miscellaneous20317
+Node: Error Messages21855
+Node: Long Example26098
+Node: Credits29189
+Node: Index29942
 
 End Tag Table

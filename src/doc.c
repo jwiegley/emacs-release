@@ -275,8 +275,15 @@ get_doc_string (filepos, unibyte, definition)
     return make_unibyte_string (get_doc_string_buffer + offset,
 				to - (get_doc_string_buffer + offset));
   else
-    return make_string (get_doc_string_buffer + offset,
-			to - (get_doc_string_buffer + offset));
+    {
+      /* Let the data determine whether the string is multibyte,
+	 even if Emacs is running in --unibyte mode.  */
+      int nchars = multibyte_chars_in_text (get_doc_string_buffer + offset,
+					    to - (get_doc_string_buffer + offset));
+      return make_string_from_bytes (get_doc_string_buffer + offset,
+				     nchars,
+				     to - (get_doc_string_buffer + offset));
+    }
 }
 
 /* Get a string from position FILEPOS and pass it through the Lisp reader.
@@ -334,8 +341,7 @@ string is passed through `substitute-command-keys'.")
       if (!SYMBOLP (funcar))
 	return Fsignal (Qinvalid_function, Fcons (fun, Qnil));
       else if (EQ (funcar, Qkeymap))
-	return build_string ("Prefix command (definition is a keymap associating keystrokes with\n\
-subcommands.)");
+	return build_string ("Prefix command (definition is a keymap associating keystrokes with commands).");
       else if (EQ (funcar, Qlambda)
 	       || EQ (funcar, Qautoload))
 	{

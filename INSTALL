@@ -20,18 +20,20 @@ ADDITIONAL DISTRIBUTION FILES
 * leim-M.N.tar.gz
 
 The Emacs Lisp code for input methods for various international
-character scripts is distributed in a separate tar file because of its
-large size.  This file is called leim-M.N.tar.gz, with the same
-version number as Emacs, and it unpacks into the directory
-emacs-M.N/leim.  Thus, if you unpack it in the same directory where
-you unpacked the Emacs distribution, it fills in a subdirectory
-of the Emacs distribution.
+character scripts is distributed in a separate tar file because it
+amounts to a significant fraction of the size of the distribution.
+This tar file is called leim-M.N.tar.gz, with the same version number
+as Emacs, and it unpacks into the directory emacs-M.N/leim.
 
-If you have already unpacked the Leim tar file into a subdirectory of
-the Emacs sources, building and installing Emacs automatically
-installs the input method support as well.  If you unpack the Leim tar
-file into the Emacs sources after building and installing Emacs, just
-build Emacs again and install it again.
+You should unpack leim-M.N.tar.gz into the same directory where you
+have previously unpacked the main Emacs distribution.  It fills in the
+contents of one subdirectory, which is present in the main Emacs
+distribution only in dummy form.
+
+Once you have unpacked the Leim tar file into the Emacs source tree,
+building and installing Emacs automatically installs the input method
+support as well.  If you have built Emacs without unpacking Leim
+first, just unpack Leim, build Emacs again, and install it again.
 
 * intlfonts-VERSION.tar.gz
 
@@ -41,6 +43,11 @@ character appear as a hollow box, that means you don't have a font for
 it.  You might find a font in the intlfonts distribution.  If some
 characters don't look right, or appear improperly aligned, a font
 from the intlfonts distribution might look better.
+
+The fonts in the intlfonts distribution are also used by the ps-print
+package for printing international characters.  The file
+lisp/ps-mule.el defines the .bdf font files required for printing
+each character set.
 
 The intlfonts distribution contains its own installation instructions,
 in the intlfonts/README file.
@@ -206,7 +213,8 @@ Lisp code you want Emacs to load before it is dumped out.  Use
 site-load.el for additional libraries if you arrange for their
 documentation strings to be in the etc/DOC file (see
 src/Makefile.in if you wish to figure out how to do that).  For all
-else, use site-init.el.
+else, use site-init.el.  Do not load byte-compiled code which
+was build with a non-nil value of `byte-compile-dynamic'.
 
 If you set load-path to a different value in site-init.el or
 site-load.el, Emacs will use *precisely* that value when it starts up
@@ -263,10 +271,6 @@ are installed in the following directories:
 		file, the `yow' database, and other
 		architecture-independent files Emacs might need while
 		running.  VERSION is as specified for `.../lisp'.
-
-`/usr/local/com/emacs/lock' contains files indicating who is editing
-		what, so Emacs can detect editing clashes between
-		users.
 
 `/usr/local/libexec/emacs/VERSION/CONFIGURATION-NAME' contains executable
 		programs used by Emacs that users are not expected to
@@ -343,14 +347,6 @@ Here is a complete list of the variables you may want to set.
 	allows you to have several versions of Emacs installed at the
 	same time; this means that you don't have to make Emacs
 	unavailable while installing a new version.
-
-`sharedstatedir' indicates where to put architecture-independent data files
-	that Emacs modifies while it runs; it defaults to
-	/usr/local/com.  We create the following
-	subdirectories under `sharedstatedir':
-	- `emacs/lock', containing files indicating who is editing
-		what, so Emacs can detect editing clashes between
-		users.
 
 `libexecdir' indicates where to put architecture-specific data files that
 	Emacs refers to as it runs; it defaults to `/usr/local/libexec'.
@@ -517,10 +513,7 @@ probably don't want to replace it with the `dir' file in the Emacs
 distribution.  Instead, you should make sure that the existing `dir'
 file contains an appropriate menu entry for the Emacs info.
 
-3) Create a directory for Emacs to use for clash detection, named as
-indicated by the PATH_LOCK macro in `./src/paths.h'.
-
-4) Copy `./src/emacs' to `/usr/local/bin', or to some other directory
+3) Copy `./src/emacs' to `/usr/local/bin', or to some other directory
 in users' search paths.  `./src/emacs' has an alternate name
 `./src/emacs-EMACSVERSION'; you may wish to make a symbolic link named
 `/usr/local/bin/emacs' pointing to that alternate name, as an easy way
@@ -528,14 +521,14 @@ of installing different versions.
 
 You can delete `./src/temacs'.
 
-5) Copy the programs `b2m', `emacsclient', `ctags', `etags', and
+4) Copy the programs `b2m', `emacsclient', `ctags', `etags', and
 `rcs-checkin' from `./lib-src' to `/usr/local/bin'.  These programs are
 intended for users to run.
 
-6) Copy the man pages in `./etc' for emacs, ctags, and etags into the
+5) Copy the man pages in `./etc' for emacs, ctags, and etags into the
 appropriate man directories.
 
-7) The files in the `./src' subdirectory, except for `emacs', are not
+6) The files in the `./src' subdirectory, except for `emacs', are not
 used by Emacs once it is built.  However, it is very desirable to keep
 the source on line for debugging.
 
@@ -597,6 +590,22 @@ To unpack Emacs with djtar, type this command:
 (This assumes that the Emacs distribution is called `emacs.tgz' on
 your system.)
 
+If you need to type international characters, you will need to unpack
+the Leim distribution (see the description near the beginning of this
+file).  You unpack it from the same directory where you unpacked
+Emacs.  To unpack Leim with djtar, assuming the Leim distribution is
+called `leim.tgz', type this command:
+
+    djtar -x leim.tgz
+
+If you want to print international characters, install the intlfonts
+distribution.  For this, create a directory called `fonts' under the
+Emacs top-level directory (usually called `emacs-XX.YY') created by
+unpacking emacs.tgz, chdir into the directory emacs-XX.YY/fonts, and
+type this:
+
+    djtar -x intlfonts.tgz
+
 When unpacking is done, a directory called `emacs-XX.YY' will be
 created, where XX.YY is the Emacs version.  To build and install
 Emacs, chdir to that directory and type these commands:
@@ -604,16 +613,30 @@ Emacs, chdir to that directory and type these commands:
     config msdos
     make install
 
+To install the international fonts, chdir to the intlfonts-X.Y
+directory created when you unpacked the intlfonts distribution (X.Y is
+the version number of the fonts' distribution), and type the following
+command:
+
+    make bdf INSTALLDIR=..
+
+After Make finishes, you may remove the directory intlfonts-X.Y; the
+fonts are installed into the fonts/bdf subdirectory of the top-level
+Emacs directory, and that is where Emacs will look for them by
+default.
+
 Building Emacs creates executable files in the src and lib-src
 directories.  Installing Emacs on MSDOS moves these executables to a
 sibling directory called bin.  For example, if you build in directory
 /emacs, installing moves the executables from /emacs/src and
 /emacs/lib-src to the directory /emacs/bin, so you can then delete the
 subdirectories /emacs/src and /emacs/lib-src if you wish.  The only
-subdirectories you need to keep are bin, lisp, etc and info.  The bin
-subdirectory should be added to your PATH.  The msdos subdirectory
-includes a PIF and an icon file for Emacs which you might find useful
-if you run Emacs under MS Windows.
+subdirectories you need to keep are bin, lisp, etc and info.  (If you
+installed Leim, keep the leim subdirectory, and if you installed
+intlfonts, keep the fonts directory and all its sibdirectories as well.)
+The bin subdirectory should be added to your PATH.  The msdos
+subdirectory includes a PIF and an icon file for Emacs which you might
+find useful if you run Emacs under MS Windows.
 
 Emacs on MSDOS finds the lisp, etc and info directories by looking in
 ../lisp, ../etc and ../info, starting from the directory where the

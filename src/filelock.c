@@ -1,4 +1,5 @@
-/* Copyright (C) 1985, 86, 87, 93, 94, 96 Free Software Foundation, Inc.
+/* Lock files for editing.
+   Copyright (C) 1985, 86, 87, 93, 94, 96, 98, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -39,10 +40,17 @@ Boston, MA 02111-1307, USA.  */
 #include <unistd.h>
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif /* __FreeBSD__ */
+
 #include "lisp.h"
 #include "buffer.h"
 #include "charset.h"
 #include "coding.h"
+#include "systime.h"
 
 #include <time.h>
 #include <errno.h>
@@ -53,6 +61,16 @@ extern int errno;
 #ifdef CLASH_DETECTION
 
 #include <utmp.h>
+
+/* A file whose last-modified time is just after the most recent boot.
+   Define this to be NULL to disable checking for this file.  */
+#ifndef BOOT_TIME_FILE
+#define BOOT_TIME_FILE "/var/run/random-seed"
+#endif
+
+#ifndef WTMP_FILE
+#define WTMP_FILE "/var/log/wtmp"
+#endif
   
 /* The strategy: to lock a file FN, create a symlink .#FN in FN's
    directory, with link data `user@host.pid'.  This avoids a single
@@ -93,19 +111,149 @@ extern int errno;
 /* Return the time of the last system boot.  */
 
 static time_t boot_time;
+static int boot_time_initialized;
+
+extern Lisp_Object Vshell_file_name;
 
 static time_t
 get_boot_time ()
 {
-#ifdef BOOT_TIME
-  struct utmp ut, *utp;
+  int counter;
 
+  if (boot_time_initialized)
+    return boot_time;
+  boot_time_initialized = 1;
+
+#if defined (CTL_KERN) && defined (KERN_BOOTTIME)
+  {
+    int mib[2];
+    size_t size;
+    struct timeval boottime_val;
+
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_BOOTTIME;
+    size = sizeof (boottime_val);
+
+    if (sysctl (mib, 2, &boottime_val, &size, NULL, 0) >= 0)
+      {
+	boot_time = boottime_val.tv_sec;
+	return boot_time;
+      }
+  }
+#endif /* defined (CTL_KERN) && defined (KERN_BOOTTIME) */
+
+  if (BOOT_TIME_FILE)
+    {
+      struct stat st;
+      if (stat (BOOT_TIME_FILE, &st) == 0)
+	{
+	  boot_time = st.st_mtime;
+	  return boot_time;
+	}
+    }
+
+#if defined (BOOT_TIME) && ! defined (NO_WTMP_FILE)
+#ifndef CANNOT_DUMP
+  /* The utmp routines maintain static state.
+     Don't touch that state unless we are initialized,
+     since it might not survive dumping.  */
+  if (! initialized)
+    return boot_time;
+#endif /* not CANNOT_DUMP */
+
+  /* Try to get boot time from utmp before wtmp,
+     since utmp is typically much smaller than wtmp.
+     Passing a null pointer causes get_boot_time_1
+     to inspect the default file, namely utmp.  */
+  get_boot_time_1 ((char *) 0, 0);
   if (boot_time)
     return boot_time;
 
-  utmpname ("/var/log/wtmp");
+  /* Try to get boot time from the current wtmp file.  */
+  get_boot_time_1 (WTMP_FILE, 1);
+
+  /* If we did not find a boot time in wtmp, look at wtmp, and so on.  */
+  for (counter = 0; counter < 20 && ! boot_time; counter++)
+    {
+      char cmd_string[100];
+      Lisp_Object tempname, filename;
+      int delete_flag = 0;
+
+      filename = Qnil;
+
+      sprintf (cmd_string, "%s.%d", WTMP_FILE, counter);
+      tempname = build_string (cmd_string);
+      if (! NILP (Ffile_exists_p (tempname)))
+	filename = tempname;
+      else
+	{
+	  sprintf (cmd_string, "%s.%d.gz", WTMP_FILE, counter);
+	  tempname = build_string (cmd_string);
+	  if (! NILP (Ffile_exists_p (tempname)))
+	    {
+	      Lisp_Object args[6];
+	      tempname = Fmake_temp_name (build_string ("wtmp"));
+	      args[0] = Vshell_file_name;
+	      args[1] = Qnil;
+	      args[2] = Qnil;
+	      args[3] = Qnil;
+	      args[4] = build_string ("-c");
+	      sprintf (cmd_string, "gunzip < %s.%d.gz > %s",
+		       WTMP_FILE, counter, XSTRING (tempname)->data);
+	      args[5] = build_string (cmd_string);
+	      Fcall_process (6, args);
+	      filename = tempname;
+	      delete_flag = 1;
+	    }
+	}
+
+      if (! NILP (filename))
+	{
+	  get_boot_time_1 (XSTRING (filename)->data, 1);
+	  if (delete_flag)
+	    unlink (XSTRING (filename)->data);
+	}
+    }
+
+  return boot_time;
+#else
+  return 0;
+#endif
+}
+
+#ifdef BOOT_TIME
+/* Try to get the boot time from wtmp file FILENAME.
+   This succeeds if that file contains a reboot record.
+
+   If FILENAME is zero, use the same file as before;
+   if no FILENAME has ever been specified, this is the utmp file.
+   Use the newest reboot record if NEWEST is nonzero,
+   the first reboot record otherwise.
+   Ignore all reboot records on or before BOOT_TIME.
+   Success is indicated by setting BOOT_TIME to a larger value.  */
+
+get_boot_time_1 (filename, newest)
+     char *filename;
+     int newest;
+{
+  struct utmp ut, *utp;
+  int desc;
+
+  if (filename)
+    {
+      /* On some versions of IRIX, opening a nonexistent file name
+	 is likely to crash in the utmp routines.  */
+      desc = open (filename, O_RDONLY);
+      if (desc < 0)
+	return;
+
+      close (desc);
+
+      utmpname (filename);
+    }
+
   setutent ();
-  boot_time = 1;
+
   while (1)
     {
       /* Find the next reboot record.  */
@@ -115,7 +263,11 @@ get_boot_time ()
 	break;
       /* Compare reboot times and use the newest one.  */
       if (utp->ut_time > boot_time)
-	boot_time = utp->ut_time;
+	{
+	  boot_time = utp->ut_time;
+	  if (! newest)
+	    break;
+	}
       /* Advance on element in the file
 	 so that getutid won't repeat the same one.  */
       utp = getutent ();
@@ -123,12 +275,8 @@ get_boot_time ()
 	break;
     }
   endutent ();
-
-  return boot_time;
-#else
-  return 0;
-#endif
 }
+#endif /* BOOT_TIME */
 
 /* Here is the structure that stores information about a lock.  */
 
@@ -218,7 +366,14 @@ lock_file_1 (lfname, force)
   return err == 0;
 }
 
+/* Return 1 if times A and B are no more than one second apart.  */
 
+int
+within_one_second (a, b)
+     time_t a, b;
+{
+  return (a - b >= -1 && a - b <= 1);
+}
 
 /* Return 0 if nobody owns the lock file LFNAME or the lock is obsolete,
    1 if another process owns it (and set OWNER (if non-null) to info),
@@ -309,7 +464,7 @@ current_lock_owner (owner, lfname)
       else if (owner->pid > 0
                && (kill (owner->pid, 0) >= 0 || errno == EPERM)
 	       && (owner->boot_time == 0
-		   || owner->boot_time == get_boot_time ()))
+		   || within_one_second (owner->boot_time, get_boot_time ())))
         ret = 1; /* An existing process on this machine owns it.  */
       /* The owner process is dead or has a strange pid (<=0), so try to
          zap the lockfile.  */
@@ -344,7 +499,7 @@ lock_if_free (clasher, lfname)
      lock_info_type *clasher;
      register char *lfname; 
 {
-  if (lock_file_1 (lfname, 0) == 0)
+  while (lock_file_1 (lfname, 0) == 0)
     {
       int locker;
 
@@ -360,7 +515,7 @@ lock_if_free (clasher, lfname)
       else if (locker == 1)
         return 1;  /* Someone else has it.  */
 
-      return -1; /* Something's wrong.  */
+      /* We deleted a stale lock; try again to lock the file.  */
     }
   return 0;
 }
@@ -389,6 +544,12 @@ lock_file (fn)
   register Lisp_Object attack, orig_fn, encoded_fn;
   register char *lfname, *locker;
   lock_info_type lock_info;
+
+  /* Don't do locking while dumping Emacs.
+     Uncompressing wtmp files uses call-process, which does not work
+     in an uninitialized Emacs.  */
+  if (! NILP (Vpurify_flag))
+    return;
 
   orig_fn = fn;
   fn = Fexpand_file_name (fn, Qnil);
@@ -543,6 +704,13 @@ t if it is locked by you, else a string of the name of the locker.")
 }
 
 /* Initialization functions.  */
+
+void
+init_filelock ()
+{
+  boot_time = 0;
+  boot_time_initialized = 0;
+}
 
 void
 syms_of_filelock ()

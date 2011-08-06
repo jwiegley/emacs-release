@@ -52,12 +52,6 @@
 	     (tab-width editing-basics integer)
 	     (ctl-arrow display boolean)
 	     (truncate-lines display boolean)
-	     (selective-display display 
-				(choice (const :tag "off" nil)
-					(integer :tag "space"
-						 :format "%v"
-						 1)
-					(other :tag "on" t)))
 	     (selective-display-ellipses display boolean)
 	     (transient-mark-mode editing-basics boolean)
 	     ;; callint.c
@@ -67,6 +61,12 @@
 	     (exec-path execute
 			(repeat (choice (const :tag "default" nil)
 					(file :format "%v"))))
+	     ;; coding.c
+	     (inhibit-eol-conversion mule boolean)
+	     (eol-mnemonic-undecided mule string)
+	     (eol-mnemonic-unix mule string)
+	     (eol-mnemonic-dos mule string)
+	     (eol-mnemonic-mac mule string)
 	     ;; dired.c
 	     (completion-ignored-extensions dired 
 					    (repeat (string :format "%v")))
@@ -134,6 +134,8 @@
 	     (completion-auto-help minibuffer boolean)
 	     (enable-recursive-minibuffers minibuffer boolean)
 	     (minibuffer-auto-raise minibuffer boolean)
+	     ;; msdos.c
+	     (dos-unsupported-char-glyph display integer)
 	     ;; process.c
 	     (delete-exited-processes processes-basics boolean)
 	     ;; syntax.c
@@ -178,8 +180,11 @@
 	     (split-height-threshold windows integer)
 	     (window-min-height windows integer)
 	     (window-min-width windows integer)
+	     (scroll-preserve-screen-position windows boolean)
 	     ;; xdisp.c
 	     (scroll-step windows integer)
+	     (scroll-conservatively windows integer)
+	     (scroll-margin windows integer)
 	     (truncate-partial-width-windows display boolean)
 	     (mode-line-inverse-video modeline boolean)
 	     (line-number-display-limit display integer)
@@ -188,10 +193,11 @@
 					    (integer :menu-tag "lines"
 						     :format "%v")
 					    (other :tag "Unlimited" t)))
+	     (unibyte-display-via-language-environment mule boolean)
 	     ;; xfns.c
 	     (x-bitmap-file-path installation
 				 (repeat (directory :format "%v")))))
-      this symbol group type
+      this symbol group type native-p
       ;; This function turns a value
       ;; into an expression which produces that value.
       (quoter (lambda (sexp)
@@ -211,10 +217,20 @@
 	  all (cdr all)
 	  symbol (nth 0 this)
 	  group (nth 1 this)
-	  type (nth 2 this))
+	  type (nth 2 this)
+	  ;; Don't complain about missing variables which are
+	  ;; irrelevant to this platform.
+	  native-p (save-match-data
+		     (cond
+		      ((string-match "\\`dos-" (symbol-name symbol))
+		       (eq system-type 'ms-dos))
+		      ((string-match "\\`w32-" (symbol-name symbol))
+		       (eq system-type 'windows-nt))
+		      (t t))))
     (if (not (boundp symbol))
 	;; If variables are removed from C code, give an error here!
-	(message "Note, built-in variable `%S' not bound" symbol)
+	(and native-p
+	     (message "Note, built-in variable `%S' not bound" symbol))
       ;; Save the standard value, unless we already did.
       (or (get symbol 'standard-value)
 	  (put symbol 'standard-value 

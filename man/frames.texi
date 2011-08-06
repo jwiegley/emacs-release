@@ -324,7 +324,7 @@ vertically.  @xref{Split Window}.
 @kindex C-x 5
   The prefix key @kbd{C-x 5} is analogous to @kbd{C-x 4}, with parallel
 subcommands.  The difference is that @kbd{C-x 5} commands create a new
-frame rather than just a new window in the selected frame (@xref{Pop
+frame rather than just a new window in the selected frame (@pxref{Pop
 Up Window}).  If an existing visible or iconified frame already displays
 the requested material, these commands use the existing frame, after
 raising or deiconifying as necessary. 
@@ -335,8 +335,8 @@ buffer to select:
 @table @kbd
 @item C-x 5 2
 @kindex C-x 5 2
-@findex make-frame
-Create a new frame (@code{make-frame}).
+@findex make-frame-command
+Create a new frame (@code{make-frame-command}).
 @item C-x 5 b @var{bufname} @key{RET}
 Select buffer @var{bufname} in another frame.  This runs
 @code{switch-to-buffer-other-frame}.
@@ -369,6 +369,16 @@ frame parameters in @code{default-frame-alist}.  You can use the
 variable @code{initial-frame-alist} to specify parameters that affect
 only the initial frame.  @xref{Initial Parameters,,, elisp, The Emacs
 Lisp Reference Manual}, for more information.
+
+@cindex font (default)
+  The easiest way to specify the principal font for all your Emacs
+frames is with an X resource (@pxref{Font X}), but you can also do it by
+modifying @code{default-frame-alist} to specify the @code{font}
+parameter, as shown here:
+
+@example
+(add-to-list 'default-frame-alist '(font . "10x20"))
+@end example
 
 @node Speedbar
 @section Making and Using a Speedbar Frame
@@ -558,10 +568,12 @@ the appropriate window manager features.
 
 @findex set-frame-font
 @item M-x set-frame-font @key{RET} @var{font} @key{RET}
+@cindex font (principal)
 Specify font @var{font} as the principal font for the selected frame.
 The principal font is used for all text displayed in the frame, except
-when a face specifies a different font to use.  @xref{Font X}, for ways
-to list the available fonts on your system.
+when a face (@pxref{Faces}) specifies a different font to use for
+certain text.  @xref{Font X}, for ways to list the available fonts on
+your system.
 
 @kindex S-Mouse-1
 You can also set a frame's principal font through a pop-up menu.
@@ -632,7 +644,7 @@ Menu Bar mode.  @xref{Resources X}.  Expert users often turn off the
 menu bar, especially on text-only terminals, where this makes one
 additional line available for text.
 
-  @xref{Menu Bar} for information on how to invoke commands with the
+  @xref{Menu Bar}, for information on how to invoke commands with the
 menu bar.
 
 @node Faces
@@ -649,7 +661,8 @@ control the foreground and background colors of each face
   The way you control display style is by defining named @dfn{faces}.
 Each face can specify a type font, a foreground color, a background
 color, and an underline flag; but it does not have to specify all of
-them.
+them.  Then by specifying the face or faces to use for a given part
+of the text in the buffer, you control how that text appears.
 
   The style of display used for a given character in the text is
 determined by combining several faces.  Any aspect of the display style
@@ -747,7 +760,7 @@ Font Lock mode whenever you edit a C file, you can do this:
 use the function @code{global-font-lock-mode}, like this:
 
 @example
-(global-font-lock-mode t)
+(global-font-lock-mode 1)
 @end example
 
 @kindex M-g M-g

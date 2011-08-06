@@ -2,8 +2,9 @@
 
 ;; Copyright (C) 1994, 1995, 1997 Free Software Foundation, Inc.
 
-;; Authors: Rolf Ebert      <ebert@inf.enst.fr>
+;; Authors: Rolf Ebert      <re@waporo.muc.de>
 ;;          Markus Heritsch <Markus.Heritsch@studbox.uni-stuttgart.de>
+;; Maintainer: Emmanual Briot <briot@gnat.com>
 ;; Keywords: languages oop ada
 ;; Rolf Ebert's version: 2.27
 
@@ -3022,9 +3023,10 @@ This works by two steps:
             (progn
               (re-search-backward "--" nil 1)
               (goto-char (match-beginning 0)))
-          (progn
-            (forward-line 1)
-            (beginning-of-line))))
+	  (forward-line 1)
+	  ;; Used to have (beginning-of-line) here,
+	  ;; but that caused trouble at end of buffer with no newline.
+	  ))
        ;;
        ;; found in string => skip it
        ;;
@@ -3820,9 +3822,11 @@ If that is the case remember the name of that function."
 
 ;; used by outline-minor-mode
 (defun ada-outline-level ()
-  (save-excursion
-    (skip-chars-forward "\t ")
-    (current-column)))
+  ;; This so that `current-column' DTRT in otherwise-hidden text.
+  (let (buffer-invisibility-spec)
+    (save-excursion
+      (skip-chars-forward "\t ")
+      (current-column))))
 
 ;;;
 ;;; generate body

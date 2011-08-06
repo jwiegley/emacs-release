@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,63 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Yanking,  Next: Accumulating Text,  Prev: Killing,  Up: Top
+
+Yanking
+=======
+
+   "Yanking" means reinserting text previously killed.  This is what
+some systems call "pasting."  The usual way to move or copy text is to
+kill it and then yank it elsewhere one or more times.
+
+`C-y'
+     Yank last killed text (`yank').
+
+`M-y'
+     Replace text just yanked with an earlier batch of killed text
+     (`yank-pop').
+
+`M-w'
+     Save region as last killed text without actually killing it
+     (`kill-ring-save').
+
+`C-M-w'
+     Append next kill to last batch of killed text (`append-next-kill').
+
+* Menu:
+
+* Kill Ring::		Where killed text is stored.  Basic yanking.
+* Appending Kills::	Several kills in a row all yank together.
+* Earlier Kills::	Yanking something killed some time ago.
+
+
+File: emacs,  Node: Kill Ring,  Next: Appending Kills,  Up: Yanking
+
+The Kill Ring
+-------------
+
+   All killed text is recorded in the "kill ring", a list of blocks of
+text that have been killed.  There is only one kill ring, shared by all
+buffers, so you can kill text in one buffer and yank it in another
+buffer.  This is the usual way to move text from one file to another.
+(*Note Accumulating Text::, for some other ways.)
+
+   The command `C-y' (`yank') reinserts the text of the most recent
+kill.  It leaves the cursor at the end of the text.  It sets the mark at
+the beginning of the text.  *Note Mark::.
+
+   `C-u C-y' leaves the cursor in front of the text, and sets the mark
+after it.  This happens only if the argument is specified with just a
+`C-u', precisely.  Any other sort of argument, including `C-u' and
+digits, specifies an earlier kill to yank (*note Earlier Kills::.).
+
+   To copy a block of text, you can use `M-w' (`kill-ring-save'), which
+copies the region into the kill ring without removing it from the
+buffer.  This is approximately equivalent to `C-w' followed by `C-x u',
+except that `M-w' does not alter the undo history and does not
+temporarily change the screen.
 
 
 File: emacs,  Node: Appending Kills,  Next: Earlier Kills,  Prev: Kill Ring,  Up: Yanking
@@ -306,9 +363,9 @@ any difference to this command.
 
    The command `C-x r t' (`M-x string-rectangle') replaces the
 rectangle with a specified string (inserted once on each line).  The
-string's width need not be the same as the width of the rectangle.  if
+string's width need not be the same as the width of the rectangle.  If
 the string's width is less, the text after the rectangle shifts left; if
-the stringis wider than the rectangle, the text after the rectangle
+the string is wider than the rectangle, the text after the rectangle
 shifts right.
 
 
@@ -662,12 +719,12 @@ overlap similarly.  The number of lines of overlap across a `C-v' or
 default, it is 2.
 
    Some users like the full-screen scroll commands to keep point at the
-same screen position.  To enable this behavior, set the variable
+same screen line.  To enable this behavior, set the variable
 `scroll-preserve-screen-position' to a non-`nil' value.  This mode is
 convenient for browsing through a file by scrolling by screenfuls; if
-you come back to the screen where you started, point goes back to its
-starting value.  However, this mode is inconvenient when you move to
-the next screen in order to move point to the text there.
+you come back to the screen where you started, point goes back to the
+line where it started.  However, this mode is inconvenient when you
+move to the next screen in order to move point to the text there.
 
    Another way to do scrolling is with `C-l' with a numeric argument.
 `C-l' does not clear the screen when given an argument; it only scrolls
@@ -961,170 +1018,4 @@ interactively which occurrences to replace.
 * Search Case::		   To ignore case while searching, or not.
 * Replace::		   Search, and replace some or all matches.
 * Other Repeating Search:: Operating on all matches for some regexp.
-
-
-File: emacs,  Node: Incremental Search,  Next: Nonincremental Search,  Prev: Search,  Up: Search
-
-Incremental Search
-==================
-
-   An incremental search begins searching as soon as you type the first
-character of the search string.  As you type in the search string, Emacs
-shows you where the string (as you have typed it so far) would be
-found.  When you have typed enough characters to identify the place you
-want, you can stop.  Depending on what you plan to do next, you may or
-may not need to terminate the search explicitly with <RET>.
-
-`C-s'
-     Incremental search forward (`isearch-forward').
-
-`C-r'
-     Incremental search backward (`isearch-backward').
-
-   `C-s' starts an incremental search.  `C-s' reads characters from the
-keyboard and positions the cursor at the first occurrence of the
-characters that you have typed.  If you type `C-s' and then `F', the
-cursor moves right after the first `F'.  Type an `O', and see the
-cursor move to after the first `FO'.  After another `O', the cursor is
-after the first `FOO' after the place where you started the search.  At
-each step, the buffer text that matches the search string is
-highlighted, if the terminal can do that; at each step, the current
-search string is updated in the echo area.
-
-   If you make a mistake in typing the search string, you can cancel
-characters with <DEL>.  Each <DEL> cancels the last character of search
-string.  This does not happen until Emacs is ready to read another
-input character; first it must either find, or fail to find, the
-character you want to erase.  If you do not want to wait for this to
-happen, use `C-g' as described below.
-
-   When you are satisfied with the place you have reached, you can type
-<RET>, which stops searching, leaving the cursor where the search
-brought it.  Also, any command not specially meaningful in searches
-stops the searching and is then executed.  Thus, typing `C-a' would
-exit the search and then move to the beginning of the line.  <RET> is
-necessary only if the next command you want to type is a printing
-character, <DEL>, <RET>, or another control character that is special
-within searches (`C-q', `C-w', `C-r', `C-s', `C-y', `M-y', `M-r', or
-`M-s').
-
-   Sometimes you search for `FOO' and find it, but not the one you
-expected to find.  There was a second `FOO' that you forgot about,
-before the one you were aiming for.  In this event, type another `C-s'
-to move to the next occurrence of the search string.  This can be done
-any number of times.  If you overshoot, you can cancel some `C-s'
-characters with <DEL>.
-
-   After you exit a search, you can search for the same string again by
-typing just `C-s C-s': the first `C-s' is the key that invokes
-incremental search, and the second `C-s' means "search again."
-
-   To reuse earlier search strings, use the "search ring".  The
-commands `M-p' and `M-n' move through the ring to pick a search string
-to reuse.  These commands leave the selected search ring element in the
-minibuffer, where you can edit it.  Type `C-s' or `C-r' to terminate
-editing the string and search for it.
-
-   If your string is not found at all, the echo area says `Failing
-I-Search'.  The cursor is after the place where Emacs found as much of
-your string as it could.  Thus, if you search for `FOOT', and there is
-no `FOOT', you might see the cursor after the `FOO' in `FOOL'.  At this
-point there are several things you can do.  If your string was
-mistyped, you can rub some of it out and correct it.  If you like the
-place you have found, you can type <RET> or some other Emacs command to
-"accept what the search offered."  Or you can type `C-g', which removes
-from the search string the characters that could not be found (the `T'
-in `FOOT'), leaving those that were found (the `FOO' in `FOOT').  A
-second `C-g' at that point cancels the search entirely, returning point
-to where it was when the search started.
-
-   An upper-case letter in the search string makes the search
-case-sensitive.  If you delete the upper-case character from the search
-string, it ceases to have this effect.  *Note Search Case::.
-
-   If a search is failing and you ask to repeat it by typing another
-`C-s', it starts again from the beginning of the buffer.  Repeating a
-failing reverse search with `C-r' starts again from the end.  This is
-called "wrapping around".  `Wrapped' appears in the search prompt once
-this has happened.  If you keep on going past the original starting
-point of the search, it changes to `Overwrapped', which means that you
-are revisiting matches that you have already seen.
-
-   The `C-g' "quit" character does special things during searches; just
-what it does depends on the status of the search.  If the search has
-found what you specified and is waiting for input, `C-g' cancels the
-entire search.  The cursor moves back to where you started the search.
-If `C-g' is typed when there are characters in the search string that
-have not been found--because Emacs is still searching for them, or
-because it has failed to find them--then the search string characters
-which have not been found are discarded from the search string.  With
-them gone, the search is now successful and waiting for more input, so
-a second `C-g' will cancel the entire search.
-
-   To search for a newline, type `C-j'.  To search for another control
-character, such as control-S or carriage return, you must quote it by
-typing `C-q' first.  This function of `C-q' is analogous to its use for
-insertion (*note Inserting Text::.): it causes the following character
-to be treated the way any "ordinary" character is treated in the same
-context.  You can also specify a character by its octal code: enter
-`C-q' followed by a sequence of octal digits.
-
-   You can change to searching backwards with `C-r'.  If a search fails
-because the place you started was too late in the file, you should do
-this.  Repeated `C-r' keeps looking for more occurrences backwards.  A
-`C-s' starts going forwards again.  `C-r' in a search can be canceled
-with <DEL>.
-
-   If you know initially that you want to search backwards, you can use
-`C-r' instead of `C-s' to start the search, because `C-r' as a key runs
-a command (`isearch-backward') to search backward.  A backward search
-finds matches that are entirely before the starting point, just as a
-forward search finds matches that begin after it.
-
-   The characters `C-y' and `C-w' can be used in incremental search to
-grab text from the buffer into the search string.  This makes it
-convenient to search for another occurrence of text at point.  `C-w'
-copies the word after point as part of the search string, advancing
-point over that word.  Another `C-s' to repeat the search will then
-search for a string including that word.  `C-y' is similar to `C-w' but
-copies all the rest of the current line into the search string.  Both
-`C-y' and `C-w' convert the text they copy to lower case if the search
-is currently not case-sensitive; this is so the search remains
-case-insensitive.
-
-   The character `M-y' copies text from the kill ring into the search
-string.  It uses the same text that `C-y' as a command would yank.
-*Note Yanking::.
-
-   When you exit the incremental search, it sets the mark to where point
-*was*, before the search.  That is convenient for moving back there.
-In Transient Mark mode, incremental search sets the mark without
-activating it, and does so only if the mark is not already active.
-
-   To customize the special characters that incremental search
-understands, alter their bindings in the keymap `isearch-mode-map'.
-For a list of bindings, look at the documentation of `isearch-mode' with
-`C-h f isearch-mode <RET>'.
-
-Slow Terminal Incremental Search
---------------------------------
-
-   Incremental search on a slow terminal uses a modified style of
-display that is designed to take less time.  Instead of redisplaying
-the buffer at each place the search gets to, it creates a new
-single-line window and uses that to display the line that the search
-has found.  The single-line window comes into play as soon as point
-gets outside of the text that is already on the screen.
-
-   When you terminate the search, the single-line window is removed.
-Then Emacs redisplays the window in which the search was done, to show
-its new position of point.
-
-   The slow terminal style of display is used when the terminal baud
-rate is less than or equal to the value of the variable
-`search-slow-speed', initially 1200.
-
-   The number of lines to use in slow terminal search display is
-controlled by the variable `search-slow-window-lines'.  Its normal
-value is 1.
 

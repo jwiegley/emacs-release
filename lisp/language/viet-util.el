@@ -283,10 +283,8 @@ positions (integers or markers) specifying the stretch of the region."
 
 ;;;###autoload
 (defun viqr-pre-write-conversion (from to)
-  (let ((old-buf (current-buffer))
-	(work-buf (get-buffer-create " *viet-work*")))
-    (set-buffer work-buf)
-    (erase-buffer)
+  (let ((old-buf (current-buffer)))
+    (set-buffer (generate-new-buffer " *temp*"))
     (if (stringp from)
 	(insert from)
       (insert-buffer-substring old-buf from to))

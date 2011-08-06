@@ -146,14 +146,13 @@ quote_file_name (name)
   return copy;
 }
 
-#ifdef C_ALLOCA
 /* Like malloc but get fatal error if memory is exhausted.  */
 
-char *
+long *
 xmalloc (size)
      unsigned int size;
 {
-  char *result = (char *) malloc (size);
+  long *result = (long *) malloc (size);
   if (result == NULL)
   {
     perror ("malloc");
@@ -161,7 +160,6 @@ xmalloc (size)
   }
   return result;
 }
-#endif /* C_ALLOCA */
 
 #if !defined (HAVE_SOCKETS) && !defined (HAVE_SYSVIPC)
 
@@ -194,7 +192,8 @@ main (argc, argv)
      int argc;
      char **argv;
 {
-  char system_name[32];
+  char *system_name;
+  int system_name_length;
   int s, i;
   FILE *out, *in;
   struct sockaddr_un server;
@@ -223,8 +222,22 @@ main (argc, argv)
 #ifndef SERVER_HOME_DIR
   {
     struct stat statbfr;
+    system_name_length = 32;
 
-    gethostname (system_name, sizeof (system_name));
+    while (1)
+      {
+	system_name = (char *) xmalloc (system_name_length + 1);
+
+	/* system_name must be null-terminated string.  */
+	system_name[system_name_length] = '\0';
+
+ 	if (gethostname (system_name, system_name_length) == 0)
+	  break;
+
+	free (system_name);
+	system_name_length *= 2;
+      }
+
     sprintf (server.sun_path, "/tmp/esrv%d-%s", geteuid (), system_name);
 
     if (stat (server.sun_path, &statbfr) == -1)
@@ -312,10 +325,10 @@ main (argc, argv)
 	  char *p = argv[i] + 1;
 	  while (*p >= '0' && *p <= '9') p++;
 	  if (*p != 0)
-	    fprintf (out, "%s/", cwd);
+	    fprintf (out, "%s/", quote_file_name (cwd));
 	}
       else if (*argv[i] != '/')
-	fprintf (out, "%s/", cwd);
+	fprintf (out, "%s/", quote_file_name (cwd));
 
       fprintf (out, "%s ", quote_file_name (argv[i]));
     }
@@ -463,7 +476,8 @@ main (argc, argv)
       modified_arg = quote_file_name (modified_arg);
 
       if (need_cwd)
-	used += strlen (cwd);
+	/* Overestimate in case we have to quote something in CWD.  */
+	used += 2 * strlen (cwd);
       used += strlen (modified_arg) + 1;
       while (used + 2 > size_allocated)
 	{
@@ -474,7 +488,7 @@ main (argc, argv)
 	}
 
       if (need_cwd)
-	strcat (msgp->mtext, cwd);
+	strcat (msgp->mtext, quote_file_name (cwd));
 
       strcat (msgp->mtext, modified_arg);
       strcat (msgp->mtext, " ");

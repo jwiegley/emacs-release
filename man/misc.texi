@@ -346,6 +346,9 @@ In that case, point is left before the output and the mark is set after
 the output.
 
   If the shell command line ends in @samp{&}, it runs asynchronously.
+For a synchronous shell command, @code{shell-command} returns the
+command's exit status (0 means success), when it is called from a Lisp
+program.
 
 @kindex M-|
 @findex shell-command-on-region
@@ -353,7 +356,8 @@ the output.
 passes the contents of the region as the standard input to the shell
 command, instead of no input.  If a numeric argument is used, meaning
 insert the output in the current buffer, then the old region is deleted
-first and the output replaces it as the contents of the region.
+first and the output replaces it as the contents of the region.  It
+returns the command's exit status when it is called from a Lisp program.
 
 @vindex shell-file-name
 @cindex environment
@@ -375,6 +379,12 @@ terminates.  If the shell command doesn't stop (because it ignores the
 
   To specify a coding system for @kbd{M-!} or @kbd{M-|}, use the command
 @kbd{C-x @key{RET} c} immediately beforehand.  @xref{Specify Coding}.
+
+@vindex shell-command-default-error-buffer
+  Error output from the command is normally intermixed with the regular
+output.  If you set the variable
+@code{shell-command-default-error-buffer} to a string, which is a buffer
+name, error output is inserted before point in the buffer of that name.
 
 @node Interactive Shell
 @subsection Interactive Inferior Shell
@@ -523,7 +533,7 @@ the same place---the end of the prompt on this line---but after @kbd{C-c
 @item C-c @key{SPC}
 Accumulate multiple lines of input, then send them together.  This
 command inserts a newline before point, but does not send the preceding
-text as input to the subshell--at least, not yet.  Both lines, the one
+text as input to the subshell---at least, not yet.  Both lines, the one
 before this newline and the one after, will be sent together (along with
 the newline that separates them), when you type @key{RET}.
 
@@ -1669,7 +1679,8 @@ Viper is the newest emulator for vi.  It implements several levels of
 emulation; level 1 is closest to vi itself, while level 5 departs
 somewhat from strict emulation to take advantage of the capabilities of
 Emacs.  To invoke Viper, type @kbd{M-x viper-mode}; it will guide you
-the rest of the way and ask for the emulation level.
+the rest of the way and ask for the emulation level.  @inforef{Top,
+Viper, viper}.
 
 @item vi (another emulator)
 @findex vi-mode
@@ -1698,8 +1709,7 @@ so necessary to assign a key to the command @code{vip-mode} as
 it is with @code{vi-mode} because terminating insert mode does
 not use it.
 
-For full information, see the long comment at the beginning of the
-source file, which is @file{lisp/vip.el} in the Emacs distribution.
+@inforef{Top, VIP, vip}, for full information.
 @end table
 
 @node Dissociated Press, Amusements, Emulation, Top

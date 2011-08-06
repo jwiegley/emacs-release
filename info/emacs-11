@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,251 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Recognize Coding,  Next: Specify Coding,  Prev: Coding Systems,  Up: International
+
+Recognizing Coding Systems
+==========================
+
+   Most of the time, Emacs can recognize which coding system to use for
+any given file--once you have specified your preferences.
+
+   Some coding systems can be recognized or distinguished by which byte
+sequences appear in the data.  However, there are coding systems that
+cannot be distinguished, not even potentially.  For example, there is no
+way to distinguish between Latin-1 and Latin-2; they use the same byte
+values with different meanings.
+
+   Emacs handles this situation by means of a priority list of coding
+systems.  Whenever Emacs reads a file, if you do not specify the coding
+system to use, Emacs checks the data against each coding system,
+starting with the first in priority and working down the list, until it
+finds a coding system that fits the data.  Then it converts the file
+contents assuming that they are represented in this coding system.
+
+   The priority list of coding systems depends on the selected language
+environment (*note Language Environments::.).  For example, if you use
+French, you probably want Emacs to prefer Latin-1 to Latin-2; if you use
+Czech, you probably want Latin-2 to be preferred.  This is one of the
+reasons to specify a language environment.
+
+   However, you can alter the priority list in detail with the command
+`M-x prefer-coding-system'.  This command reads the name of a coding
+system from the minibuffer, and adds it to the front of the priority
+list, so that it is preferred to all others.  If you use this command
+several times, each use adds one element to the front of the priority
+list.
+
+   If you use a coding system that specifies the end-of-line conversion
+type, such as `iso-8859-1-dos', what that means is that Emacs should
+attempt to recognize `iso-8859-1' with priority, and should use DOS
+end-of-line conversion in case it recognizes `iso-8859-1'.
+
+   Sometimes a file name indicates which coding system to use for the
+file.  The variable `file-coding-system-alist' specifies this
+correspondence.  There is a special function
+`modify-coding-system-alist' for adding elements to this list.  For
+example, to read and write all `.txt' files using the coding system
+`china-iso-8bit', you can execute this Lisp expression:
+
+     (modify-coding-system-alist 'file "\\.txt\\'" 'china-iso-8bit)
+
+The first argument should be `file', the second argument should be a
+regular expression that determines which files this applies to, and the
+third argument says which coding system to use for these files.
+
+   Emacs recognizes which kind of end-of-line conversion to use based on
+the contents of the file: if it sees only carriage-returns, or only
+carriage-return linefeed sequences, then it chooses the end-of-line
+conversion accordingly.  You can inhibit the automatic use of
+end-of-line conversion by setting the variable `inhibit-eol-conversion'
+to non-`nil'.
+
+   You can specify the coding system for a particular file using the
+`-*-...-*-' construct at the beginning of a file, or a local variables
+list at the end (*note File Variables::.).  You do this by defining a
+value for the "variable" named `coding'.  Emacs does not really have a
+variable `coding'; instead of setting a variable, it uses the specified
+coding system for the file.  For example, `-*-mode: C; coding:
+latin-1;-*-' specifies use of the Latin-1 coding system, as well as C
+mode.  If you specify the coding explicitly in the file, that overrides
+`file-coding-system-alist'.
+
+   The variable `auto-coding-alist' is the strongest way to specify the
+coding system for certain patterns of file names; this variable even
+overrides `-*-coding:-*-' tags in the file itself.  Emacs uses this
+feature for tar and archive files, to prevent Emacs from being confused
+by a `-*-coding:-*-' tag in a member of the archive and thinking it
+applies to the archive file as a whole.
+
+   Once Emacs has chosen a coding system for a buffer, it stores that
+coding system in `buffer-file-coding-system' and uses that coding
+system, by default, for operations that write from this buffer into a
+file.  This includes the commands `save-buffer' and `write-region'.  If
+you want to write files from this buffer using a different coding
+system, you can specify a different coding system for the buffer using
+`set-buffer-file-coding-system' (*note Specify Coding::.).
+
+   When you send a message with Mail mode (*note Sending Mail::.),
+Emacs has four different ways to determine the coding system to use for
+encoding the message text.  It tries the buffer's own value of
+`buffer-file-coding-system', if that is non-`nil'.  Otherwise, it uses
+the value of `sendmail-coding-system', if that is non-`nil'.  The third
+way is to use the default coding system for new files, which is
+controlled by your choice of language environment, if that is
+non-`nil'.  If all of these three values are `nil', Emacs encodes
+outgoing mail using the Latin-1 coding system.
+
+   When you get new mail in Rmail, each message is translated
+automatically from the coding system it is written in--as if it were a
+separate file.  This uses the priority list of coding systems that you
+have specified.  If a MIME message specifies a character set, Rmail
+obeys that specification, unless `rmail-decode-mime-charset' is `nil'.
+
+   For reading and saving Rmail files themselves, Emacs uses the coding
+system specified by the variable `rmail-file-coding-system'.  The
+default value is `nil', which means that Rmail files are not translated
+(they are read and written in the Emacs internal character code).
+
+
+File: emacs,  Node: Specify Coding,  Next: Fontsets,  Prev: Recognize Coding,  Up: International
+
+Specifying a Coding System
+==========================
+
+   In cases where Emacs does not automatically choose the right coding
+system, you can use these commands to specify one:
+
+`C-x <RET> f CODING <RET>'
+     Use coding system CODING for the visited file in the current
+     buffer.
+
+`C-x <RET> c CODING <RET>'
+     Specify coding system CODING for the immediately following command.
+
+`C-x <RET> k CODING <RET>'
+     Use coding system CODING for keyboard input.
+
+`C-x <RET> t CODING <RET>'
+     Use coding system CODING for terminal output.
+
+`C-x <RET> p INPUT-CODING <RET> OUTPUT-CODING <RET>'
+     Use coding systems INPUT-CODING and OUTPUT-CODING for subprocess
+     input and output in the current buffer.
+
+`C-x <RET> x CODING <RET>'
+     Use coding system CODING for transferring selections to and from
+     other programs through the window system.
+
+`C-x <RET> X CODING <RET>'
+     Use coding system CODING for transferring *one* selection--the
+     next one--to or from the window system.
+
+   The command `C-x <RET> f' (`set-buffer-file-coding-system')
+specifies the file coding system for the current buffer--in other
+words, which coding system to use when saving or rereading the visited
+file.  You specify which coding system using the minibuffer.  Since this
+command applies to a file you have already visited, it affects only the
+way the file is saved.
+
+   Another way to specify the coding system for a file is when you visit
+the file.  First use the command `C-x <RET> c'
+(`universal-coding-system-argument'); this command uses the minibuffer
+to read a coding system name.  After you exit the minibuffer, the
+specified coding system is used for *the immediately following command*.
+
+   So if the immediately following command is `C-x C-f', for example,
+it reads the file using that coding system (and records the coding
+system for when the file is saved).  Or if the immediately following
+command is `C-x C-w', it writes the file using that coding system.
+Other file commands affected by a specified coding system include `C-x
+C-i' and `C-x C-v', as well as the other-window variants of `C-x C-f'.
+
+   `C-x <RET> c' also affects commands that start subprocesses,
+including `M-x shell' (*note Shell::.).
+
+   However, if the immediately following command does not use the coding
+system, then `C-x <RET> c' ultimately has no effect.
+
+   An easy way to visit a file with no conversion is with the `M-x
+find-file-literally' command.  *Note Visiting::.
+
+   The variable `default-buffer-file-coding-system' specifies the
+choice of coding system to use when you create a new file.  It applies
+when you find a new file, and when you create a buffer and then save it
+in a file.  Selecting a language environment typically sets this
+variable to a good choice of default coding system for that language
+environment.
+
+   The command `C-x <RET> t' (`set-terminal-coding-system') specifies
+the coding system for terminal output.  If you specify a character code
+for terminal output, all characters output to the terminal are
+translated into that coding system.
+
+   This feature is useful for certain character-only terminals built to
+support specific languages or character sets--for example, European
+terminals that support one of the ISO Latin character sets.  You need to
+specify the terminal coding system when using multibyte text, so that
+Emacs knows which characters the terminal can actually handle.
+
+   By default, output to the terminal is not translated at all, unless
+Emacs can deduce the proper coding system from your terminal type.
+
+   The command `C-x <RET> k' (`set-keyboard-coding-system') specifies
+the coding system for keyboard input.  Character-code translation of
+keyboard input is useful for terminals with keys that send non-ASCII
+graphic characters--for example, some terminals designed for ISO
+Latin-1 or subsets of it.
+
+   By default, keyboard input is not translated at all.
+
+   There is a similarity between using a coding system translation for
+keyboard input, and using an input method: both define sequences of
+keyboard input that translate into single characters.  However, input
+methods are designed to be convenient for interactive use by humans, and
+the sequences that are translated are typically sequences of ASCII
+printing characters.  Coding systems typically translate sequences of
+non-graphic characters.
+
+   The command `C-x <RET> x' (`set-selection-coding-system') specifies
+the coding system for sending selected text to the window system, and
+for receiving the text of selections made in other applications.  This
+command applies to all subsequent selections, until you override it by
+using the command again.  The command `C-x <RET> X'
+(`set-next-selection-coding-system') specifies the coding system for
+the next selection made in Emacs or read by Emacs.
+
+   The command `C-x <RET> p' (`set-buffer-process-coding-system')
+specifies the coding system for input and output to a subprocess.  This
+command applies to the current buffer; normally, each subprocess has its
+own buffer, and thus you can use this command to specify translation to
+and from a particular subprocess by giving the command in the
+corresponding buffer.
+
+   By default, process input and output are not translated at all.
+
+   The variable `file-name-coding-system' specifies a coding system to
+use for encoding file names.  If you set the variable to a coding
+system name (as a Lisp symbol or a string), Emacs encodes file names
+using that coding system for all file operations.  This makes it
+possible to use non-ASCII characters in file names--or, at least, those
+non-ASCII characters which the specified coding system can encode.
+
+   If `file-name-coding-system' is `nil', Emacs uses a default coding
+system determined by the selected language environment.  In the default
+language environment, any non-ASCII characters in file names are not
+encoded specially; they appear in the file system using the internal
+Emacs representation.
+
+   *Warning:* if you change `file-name-coding-system' (or the language
+environment) in the middle of an Emacs session, problems can result if
+you have already visited files whose names were encoded using the
+earlier coding system and cannot be encoded (or are encoded
+differently) under the new coding system.  If you try to save one of
+these buffers under the visited file name, saving may use the wrong file
+name, or it may get an error.  If such a problem happens, use `C-x C-w'
+to specify a new file name for that buffer.
 
 
 File: emacs,  Node: Fontsets,  Next: Defining Fontsets,  Prev: Specify Coding,  Up: International
@@ -59,14 +304,16 @@ the "startup fontset".  The standard fontset is most likely to have
 fonts for a wide variety of non-ASCII characters; however, this is not
 the default for Emacs to use.  (By default, Emacs tries to find a font
 which has bold and italic variants.)  You can specify use of the
-standard fontset by starting Emacs in this way:
+standard fontset with the `-fn' option, or with the `Font' X resource
+(*note Font X::.).  For example,
 
      emacs -fn fontset-standard
 
-   A fontset does not necessarily specify a font for all character
-codes.  If a fontset specifies no font for a certain character, or if it
+   A fontset does not necessarily specify a font for every character
+code.  If a fontset specifies no font for a certain character, or if it
 specifies a font that does not exist on your system, then it cannot
-display that character.  It will display an empty box instead.
+display that character properly.  It will display that character as an
+empty box instead.
 
    The fontset height and width are determined by the ASCII characters
 (that is, by the font used for ASCII characters in that fontset).  If
@@ -182,11 +429,16 @@ Single-byte European Character Support
 
    The ISO 8859 Latin-N character sets define character codes in the
 range 160 to 255 to handle the accented letters and punctuation needed
-by various European languages.  If you disable multibyte characters
-with `--unibyte', Emacs can still handle *one* of these character codes
-at a time.  To specify *which* of these codes to use, invoke `M-x
+by various European languages.  If you disable multibyte characters,
+Emacs can still handle *one* of these character codes at a time.  To
+specify *which* of these codes to use, invoke `M-x
 set-language-environment' and specify a suitable language environment
 such as `Latin-N'.
+
+   For more information about unibyte operation, see *Note Enabling
+Multibyte::.  Note particularly that you probably want to ensure that
+your initialization files are read as unibyte if they contain non-ASCII
+characters.
 
    Emacs can also display those characters, provided the terminal or
 font in use supports them.  This works automatically.  Alternatively,
@@ -202,8 +454,13 @@ least give you a clear idea of what the characters are.  To do this,
 load the library `iso-ascii'.  Similar libraries for other Latin-N
 character sets could be implemented, but we don't have them yet.
 
-   There are three different ways you can input single-byte non-ASCI
-characters characters:
+   Normally non-ISO-8859 characters (between characters 128 and 159
+inclusive) are displayed as octal escapes.  You can change this for
+non-standard `extended' versions of ISO-8859 character sets by using the
+function `standard-display-8bit' in the `disp-table' library.
+
+   There are three different ways you can input single-byte non-ASCII
+characters:
 
    * If your keyboard can generate character codes 128 and up,
      representing non-ASCII characters, execute the following
@@ -214,17 +471,23 @@ characters characters:
                           0)
 
    * You can use an input method for the selected language environment.
-     When you use an input method in a unibyte buffer, the non-ASCII
-     character you specify with it is converted to unibyte.
+     *Note Input Methods::.  When you use an input method in a unibyte
+     buffer, the non-ASCII character you specify with it is converted
+     to unibyte.
 
-   * For Latin-1 only, you can load the library `iso-transl' to turn the
-     key `C-x 8' into a "compose character" prefix for entry of
-     non-ASCII Latin-1 printing characters.  `C-x 8' is good for
-     insertion (in the minibuffer as well as other buffers), for
-     searching, and in any other context where a key sequence is
-     allowed.  The <ALT> modifier key, if you have one, serves the same
-     purpose as `C-x 8'; use <ALT> together with an accent character to
-     modify the following letter.
+   * For Latin-1 only, you can use the key `C-x 8' as a "compose
+     character" prefix for entry of non-ASCII Latin-1 printing
+     characters.  `C-x 8' is good for insertion (in the minibuffer as
+     well as other buffers), for searching, and in any other context
+     where a key sequence is allowed.
+
+     `C-x 8' works by loading the `iso-transl' library.  Once that
+     library is loaded, the <ALT> modifier key, if you have one, serves
+     the same purpose as `C-x 8'; use <ALT> together with an accent
+     character to modify the following letter.  In addition, if you
+     have keys for the Latin-1 "dead accent characters", they too are
+     defined to compose with the following character, once `iso-transl'
+     is loaded.
 
 
 File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: International,  Up: Top
@@ -343,6 +606,11 @@ interpreter program, such as `perl' or `tcl', Emacs uses a mode
 appropriate for programs for that interpreter.  The variable
 `interpreter-mode-alist' specifies the correspondence between
 interpreter program names and major modes.
+
+   When the first line starts with `#!', you cannot (on many systems)
+use the `-*-' feature on the first line, because the system would get
+confused when running the interpreter.  So Emacs looks for `-*-' on the
+second line in such files as well as on the first line.
 
    When you visit a file that does not specify a major mode to use, or
 when you create a new buffer with `C-x b', the variable
@@ -867,296 +1135,4 @@ the beginning of a line.
 is a regexp that matches the beginning of a line that separates pages.
 The normal value of this variable is `"^\f"', which matches a formfeed
 character at the beginning of a line.
-
-
-File: emacs,  Node: Filling,  Next: Case,  Prev: Pages,  Up: Text
-
-Filling Text
-============
-
-   "Filling" text means breaking it up into lines that fit a specified
-width.  Emacs does filling in two ways.  In Auto Fill mode, inserting
-text with self-inserting characters also automatically fills it.  There
-are also explicit fill commands that you can use when editing text
-leaves it unfilled.  When you edit formatted text, you can specify a
-style of filling for each portion of the text (*note Formatted Text::.).
-
-* Menu:
-
-* Auto Fill::	        Auto Fill mode breaks long lines automatically.
-* Fill Commands::       Commands to refill paragraphs and center lines.
-* Fill Prefix::	        Filling paragraphs that are indented
-                          or in a comment, etc.
-* Adaptive Fill::       How Emacs can determine the fill prefix automatically.
-
-
-File: emacs,  Node: Auto Fill,  Next: Fill Commands,  Up: Filling
-
-Auto Fill Mode
---------------
-
-   "Auto Fill" mode is a minor mode in which lines are broken
-automatically when they become too wide.  Breaking happens only when
-you type a <SPC> or <RET>.
-
-`M-x auto-fill-mode'
-     Enable or disable Auto Fill mode.
-
-`<SPC>'
-`<RET>'
-     In Auto Fill mode, break lines when appropriate.
-
-   `M-x auto-fill-mode' turns Auto Fill mode on if it was off, or off
-if it was on.  With a positive numeric argument it always turns Auto
-Fill mode on, and with a negative argument always turns it off.  You can
-see when Auto Fill mode is in effect by the presence of the word `Fill'
-in the mode line, inside the parentheses.  Auto Fill mode is a minor
-mode which is enabled or disabled for each buffer individually.  *Note
-Minor Modes::.
-
-   In Auto Fill mode, lines are broken automatically at spaces when they
-get longer than the desired width.  Line breaking and rearrangement
-takes place only when you type <SPC> or <RET>.  If you wish to insert a
-space or newline without permitting line-breaking, type `C-q <SPC>' or
-`C-q C-j' (recall that a newline is really a control-J).  Also, `C-o'
-inserts a newline without line breaking.
-
-   Auto Fill mode works well with programming-language modes, because it
-indents new lines with <TAB>.  If a line ending in a comment gets too
-long, the text of the comment is split into two comment lines.
-Optionally, new comment delimiters are inserted at the end of the first
-line and the beginning of the second so that each line is a separate
-comment; the variable `comment-multi-line' controls the choice (*note
-Comments::.).
-
-   Adaptive filling (see the following section) works for Auto Filling
-as well as for explicit fill commands.  It takes a fill prefix
-automatically from the second or first line of a paragraph.
-
-   Auto Fill mode does not refill entire paragraphs; it can break lines
-but cannot merge lines.  So editing in the middle of a paragraph can
-result in a paragraph that is not correctly filled.  The easiest way to
-make the paragraph properly filled again is usually with the explicit
-fill commands.  *Note Fill Commands::.
-
-   Many users like Auto Fill mode and want to use it in all text files.
-The section on init files says how to arrange this permanently for
-yourself.  *Note Init File::.
-
-
-File: emacs,  Node: Fill Commands,  Next: Fill Prefix,  Prev: Auto Fill,  Up: Filling
-
-Explicit Fill Commands
-----------------------
-
-`M-q'
-     Fill current paragraph (`fill-paragraph').
-
-`C-x f'
-     Set the fill column (`set-fill-column').
-
-`M-x fill-region'
-     Fill each paragraph in the region (`fill-region').
-
-`M-x fill-region-as-paragraph'
-     Fill the region, considering it as one paragraph.
-
-`M-s'
-     Center a line.
-
-   To refill a paragraph, use the command `M-q' (`fill-paragraph').
-This operates on the paragraph that point is inside, or the one after
-point if point is between paragraphs.  Refilling works by removing all
-the line-breaks, then inserting new ones where necessary.
-
-   To refill many paragraphs, use `M-x fill-region', which divides the
-region into paragraphs and fills each of them.
-
-   `M-q' and `fill-region' use the same criteria as `M-h' for finding
-paragraph boundaries (*note Paragraphs::.).  For more control, you can
-use `M-x fill-region-as-paragraph', which refills everything between
-point and mark.  This command deletes any blank lines within the
-region, so separate blocks of text end up combined into one block.
-
-   A numeric argument to `M-q' causes it to "justify" the text as well
-as filling it.  This means that extra spaces are inserted to make the
-right margin line up exactly at the fill column.  To remove the extra
-spaces, use `M-q' with no argument.  (Likewise for `fill-region'.)
-Another way to control justification, and choose other styles of
-filling, is with the `justification' text property; see *Note Format
-Justification::.
-
-   The command `M-s' (`center-line') centers the current line within
-the current fill column.  With an argument N, it centers N lines
-individually and moves past them.
-
-   The maximum line width for filling is in the variable `fill-column'.
-Altering the value of `fill-column' makes it local to the current
-buffer; until that time, the default value is in effect.  The default
-is initially 70.  *Note Locals::.  The easiest way to set `fill-column'
-is to use the command `C-x f' (`set-fill-column').  With a numeric
-argument, it uses that as the new fill column.  With just `C-u' as
-argument, it sets `fill-column' to the current horizontal position of
-point.
-
-   Emacs commands normally consider a period followed by two spaces or
-by a newline as the end of a sentence; a period followed by just one
-space indicates an abbreviation and not the end of a sentence.  To
-preserve the distinction between these two ways of using a period, the
-fill commands do not break a line after a period followed by just one
-space.
-
-   If the variable `sentence-end-double-space' is `nil', the fill
-commands expect and leave just one space at the end of a sentence.
-Ordinarily this variable is `t', so the fill commands insist on two
-spaces for the end of a sentence, as explained above.  *Note
-Sentences::.
-
-   If the variable `colon-double-space' is non-`nil', the fill commands
-put two spaces after a colon.
-
-
-File: emacs,  Node: Fill Prefix,  Next: Adaptive Fill,  Prev: Fill Commands,  Up: Filling
-
-The Fill Prefix
----------------
-
-   To fill a paragraph in which each line starts with a special marker
-(which might be a few spaces, giving an indented paragraph), you can use
-the "fill prefix" feature.  The fill prefix is a string that Emacs
-expects every line to start with, and which is not included in filling.
-You can specify a fill prefix explicitly; Emacs can also deduce the
-fill prefix automatically (*note Adaptive Fill::.).
-
-`C-x .'
-     Set the fill prefix (`set-fill-prefix').
-
-`M-q'
-     Fill a paragraph using current fill prefix (`fill-paragraph').
-
-`M-x fill-individual-paragraphs'
-     Fill the region, considering each change of indentation as
-     starting a new paragraph.
-
-`M-x fill-nonuniform-paragraphs'
-     Fill the region, considering only paragraph-separator lines as
-     starting a new paragraph.
-
-   To specify a fill prefix, move to a line that starts with the desired
-prefix, put point at the end of the prefix, and give the command
-`C-x .' (`set-fill-prefix').  That's a period after the `C-x'.  To turn
-off the fill prefix, specify an empty prefix: type `C-x .' with point
-at the beginning of a line.
-
-   When a fill prefix is in effect, the fill commands remove the fill
-prefix from each line before filling and insert it on each line after
-filling.  Auto Fill mode also inserts the fill prefix automatically when
-it makes a new line.  The `C-o' command inserts the fill prefix on new
-lines it creates, when you use it at the beginning of a line (*note
-Blank Lines::.).  Conversely, the command `M-^' deletes the prefix (if
-it occurs) after the newline that it deletes (*note Indentation::.).
-
-   For example, if `fill-column' is 40 and you set the fill prefix to
-`;; ', then `M-q' in the following text
-
-     ;; This is an
-     ;; example of a paragraph
-     ;; inside a Lisp-style comment.
-
-produces this:
-
-     ;; This is an example of a paragraph
-     ;; inside a Lisp-style comment.
-
-   Lines that do not start with the fill prefix are considered to start
-paragraphs, both in `M-q' and the paragraph commands; this gives good
-results for paragraphs with hanging indentation (every line indented
-except the first one).  Lines which are blank or indented once the
-prefix is removed also separate or start paragraphs; this is what you
-want if you are writing multi-paragraph comments with a comment
-delimiter on each line.
-
-   You can use `M-x fill-individual-paragraphs' to set the fill prefix
-for each paragraph automatically.  This command divides the region into
-paragraphs, treating every change in the amount of indentation as the
-start of a new paragraph, and fills each of these paragraphs.  Thus,
-all the lines in one "paragraph" have the same amount of indentation.
-That indentation serves as the fill prefix for that paragraph.
-
-   `M-x fill-nonuniform-paragraphs' is a similar command that divides
-the region into paragraphs in a different way.  It considers only
-paragraph-separating lines (as defined by `paragraph-separate') as
-starting a new paragraph.  Since this means that the lines of one
-paragraph may have different amounts of indentation, the fill prefix
-used is the smallest amount of indentation of any of the lines of the
-paragraph.  This gives good results with styles that indent a
-paragraph's first line more or less that the rest of the paragraph.
-
-   The fill prefix is stored in the variable `fill-prefix'.  Its value
-is a string, or `nil' when there is no fill prefix.  This is a
-per-buffer variable; altering the variable affects only the current
-buffer, but there is a default value which you can change as well.
-*Note Locals::.
-
-   The `indentation' text property provides another way to control the
-amount of indentation paragraphs receive.  *Note Format Indentation::.
-
-
-File: emacs,  Node: Adaptive Fill,  Prev: Fill Prefix,  Up: Filling
-
-Adaptive Filling
-----------------
-
-   The fill commands can deduce the proper fill prefix for a paragraph
-automatically in certain cases: either whitespace or certain punctuation
-characters at the beginning of a line are propagated to all lines of the
-paragraph.
-
-   If the paragraph has two or more lines, the fill prefix is taken from
-the paragraph's second line, but only if it appears on the first line as
-well.
-
-   If a paragraph has just one line, fill commands *may* take a prefix
-from that line.  The decision is complicated because there are three
-reasonable things to do in such a case:
-
-   * Use the first line's prefix on all the lines of the paragraph.
-
-   * Indent subsequent lines with whitespace, so that they line up
-     under the text that follows the prefix on the first line, but
-     don't actually copy the prefix from the first line.
-
-   * Don't do anything special with the second and following lines.
-
-   All three of these styles of formatting are commonly used.  So the
-fill commands try to determine what you would like, based on the prefix
-that appears and on the major mode.  Here is how.
-
-   If the prefix found on the first line matches
-`adaptive-fill-first-line-regexp', or if it appears to be a
-comment-starting sequence (this depends on the major mode), then the
-prefix found is used for filling the paragraph, provided it would not
-act as a paragraph starter on subsequent lines.
-
-   Otherwise, the prefix found is converted to an equivalent number of
-spaces, and those spaces are used as the fill prefix for the rest of the
-lines, provided they would not act as a paragraph starter on subsequent
-lines.
-
-   In Text mode, and other modes where only blank lines and page
-delimiters separate paragraphs, the prefix chosen by adaptive filling
-never acts as a paragraph starter, so it can always be used for filling.
-
-   The variable `adaptive-fill-regexp' determines what kinds of line
-beginnings can serve as a fill prefix: any characters at the start of
-the line that match this regular expression are used.  If you set the
-variable `adaptive-fill-mode' to `nil', the fill prefix is never chosen
-automatically.
-
-   You can specify more complex ways of choosing a fill prefix
-automatically by setting the variable `adaptive-fill-function' to a
-function.  This function is called with point after the left margin of a
-line, and it should return the appropriate fill prefix based on that
-line.  If it returns `nil', that means it sees no fill prefix in that
-line.
 

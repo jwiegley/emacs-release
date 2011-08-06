@@ -35,7 +35,7 @@ Boston, MA 02111-1307, USA.  */
 #include "xterm.h"
 #endif
 
-Lisp_Object Qwindowp, Qwindow_live_p;
+Lisp_Object Qwindowp, Qwindow_live_p, Qwindow_configuration_p;
 
 static struct window *decode_window P_ ((Lisp_Object));
 
@@ -620,7 +620,8 @@ DEFUN ("set-window-point", Fset_window_point, Sset_window_point, 2, 2, 0,
   register struct window *w = decode_window (window);
 
   CHECK_NUMBER_COERCE_MARKER (pos, 1);
-  if (w == XWINDOW (selected_window))
+  if (w == XWINDOW (selected_window)
+      && XBUFFER (w->buffer) == current_buffer)
     Fgoto_char (pos);
   else
     set_marker_restricted (w->pointm, pos, w->buffer);
@@ -1307,7 +1308,8 @@ enum window_loop
   DELETE_OTHER_WINDOWS,		/* Arg is window not to delete */
   DELETE_BUFFER_WINDOWS,	/* Arg is buffer */
   GET_LARGEST_WINDOW,
-  UNSHOW_BUFFER		/* Arg is buffer */
+  UNSHOW_BUFFER,		/* Arg is buffer */
+  CHECK_ALL_WINDOWS
 };
 
 static Lisp_Object
@@ -1374,6 +1376,8 @@ window_loop (type, obj, mini, frames)
 	 the frame is visible, since Fnext_window skips non-visible frames
 	 if that is desired, under the control of frame_arg.  */
       if (! MINI_WINDOW_P (XWINDOW (w))
+	  /* For UNSHOW_BUFFER, we must always consider all windows.  */
+	  || type == UNSHOW_BUFFER
 	  || (mini && minibuf_level > 0))
 	switch (type)
 	  {
@@ -1516,6 +1520,12 @@ window_loop (type, obj, mini, frames)
 		  }
 	      }
 	    break;
+
+	    /* Check for a window that has a killed buffer.  */
+	  case CHECK_ALL_WINDOWS:
+	    if (! NILP (XWINDOW (w)->buffer)
+		&& NILP (XBUFFER (XWINDOW (w)->buffer)->name))
+	      abort ();
 	  }
 
       if (EQ (w, last_window))
@@ -1525,6 +1535,13 @@ window_loop (type, obj, mini, frames)
     }
 
   return best_window;
+}
+
+/* Used for debugging.  Abort if any window has a dead buffer.  */
+
+check_all_windows ()
+{
+  window_loop (CHECK_ALL_WINDOWS, Qnil, 1, Qt);
 }
 
 DEFUN ("get-lru-window", Fget_lru_window, Sget_lru_window, 0, 1, 0,
@@ -2380,9 +2397,7 @@ temp_output_buffer_show (buf)
 		  prev_window = selected_window;
 
 		  /* Select the window that was chosen, for running the hook.  */
-		  record_unwind_protect (Fset_window_configuration,
-					 Fcurrent_window_configuration (Qnil));
-
+		  record_unwind_protect (Fselect_window, prev_window);
 		  select_window_1 (window, 0);
 		  Fset_buffer (w->buffer);
 		  call1 (Vrun_hooks, Qtemp_buffer_show_hook);
@@ -3278,12 +3293,31 @@ DEFUN ("window-configuration-p", Fwindow_configuration_p, Swindow_configuration_
   return Qnil;
 }
 
+DEFUN ("window-configuration-frame", Fwindow_configuration_frame, Swindow_configuration_frame, 1, 1, 0,
+  "Return the frame that CONFIG, a window-configuration object, is about.")
+  (config)
+     Lisp_Object config;
+{
+  register struct save_window_data *data;
+  struct Lisp_Vector *saved_windows;
+
+  if (! WINDOW_CONFIGURATIONP (config))
+    wrong_type_argument (Qwindow_configuration_p, config);
+
+  data = (struct save_window_data *) XVECTOR (config);
+  saved_windows = XVECTOR (data->saved_windows);
+  return XWINDOW (SAVED_WINDOW_N (saved_windows, 0)->window)->frame;
+}
+
 DEFUN ("set-window-configuration", Fset_window_configuration,
   Sset_window_configuration, 1, 1, 0,
   "Set the configuration of windows and buffers as specified by CONFIGURATION.\n\
 CONFIGURATION must be a value previously returned\n\
-by `current-window-configuration' (which see).")
-     (configuration)
+by `current-window-configuration' (which see).\n\
+If CONFIGURATION was made from a frame that is now deleted,\n\
+only frame-independent values can be restored.  In this case,\n\
+the return value is nil.  Otherwise the value is t.")
+  (configuration)
      Lisp_Object configuration;
 {
   register struct save_window_data *data;
@@ -3294,10 +3328,7 @@ by `current-window-configuration' (which see).")
   int old_point = -1;
 
   while (!WINDOW_CONFIGURATIONP (configuration))
-    {
-      configuration = wrong_type_argument (intern ("window-configuration-p"),
-					   configuration);
-    }
+    wrong_type_argument (Qwindow_configuration_p, configuration);
 
   data = (struct save_window_data *) XVECTOR (configuration);
   saved_windows = XVECTOR (data->saved_windows);
@@ -3529,7 +3560,7 @@ by `current-window-configuration' (which see).")
 
   Vminibuf_scroll_window = data->minibuf_scroll_window;
 
-  return Qnil;
+  return (FRAME_LIVE_P (f) ? Qt : Qnil);
 }
 
 /* Mark all windows now on frame as deleted
@@ -3857,6 +3888,9 @@ syms_of_window ()
   Qwindowp = intern ("windowp");
   staticpro (&Qwindowp);
 
+  Qwindow_configuration_p = intern ("window-configuration-p");
+  staticpro (&Qwindow_configuration_p);
+
   Qwindow_live_p = intern ("window-live-p");
   staticpro (&Qwindow_live_p);
 
@@ -4061,6 +4095,7 @@ The selected frame is the one whose configuration has changed.");
   defsubr (&Srecenter);
   defsubr (&Smove_to_window_line);
   defsubr (&Swindow_configuration_p);
+  defsubr (&Swindow_configuration_frame);
   defsubr (&Sset_window_configuration);
   defsubr (&Scurrent_window_configuration);
   defsubr (&Ssave_window_excursion);

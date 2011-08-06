@@ -4,7 +4,7 @@
 # Created: 1993-05-16
 # Public domain
 
-# $Id: mkinstalldirs,v 1.10 1996/05/03 07:37:52 friedman Exp $
+# $Id: mkinstalldirs,v 1.11 1998/05/19 07:05:25 drepper dead $
 
 errstatus=0
 

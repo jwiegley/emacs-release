@@ -28,16 +28,13 @@
 
 ;; Send Mail to smtp host from smtpmail temp buffer.
 
-;; Please add these lines in your .emacs(_emacs).
+;; Please add these lines in your .emacs(_emacs) or use customize.
 ;;
-;;(setq send-mail-function 'smtpmail-send-it)
+;;(setq send-mail-function 'smtpmail-send-it) ; if you use `mail'
+;;(setq message-send-mail-function 'smtpmail-send-it) ; if you use `message'
 ;;(setq smtpmail-default-smtp-server "YOUR SMTP HOST")
-;;(setq smtpmail-smtp-service "smtp")
 ;;(setq smtpmail-local-domain "YOUR DOMAIN NAME")
-;;(setq smtpmail-debug-info t)
-;;(load-library "smtpmail")
-;;(setq smtpmail-code-conv-from nil)
-;;(setq user-full-name "YOUR NAME HERE")
+;;(setq smtpmail-debug-info t) ; only to debug problems
 
 ;; To queue mail, set smtpmail-queue-mail to t and use 
 ;; smtpmail-send-queued-mail to send.
@@ -103,6 +100,12 @@ and sent with `smtpmail-send-queued-mail'."
   "File name of queued mail index,
 This is relative to `smtpmail-queue-dir'.")
 
+(defvar smtpmail-address-buffer)
+(defvar smtpmail-recipient-address-list)
+
+;; Buffer-local variable.
+(defvar smtpmail-read-point)
+
 (defvar smtpmail-queue-index (concat smtpmail-queue-dir
 				     smtpmail-queue-index-file))
 
@@ -110,6 +113,7 @@ This is relative to `smtpmail-queue-dir'.")
 ;;;
 ;;;
 
+;;;###autoload
 (defun smtpmail-send-it ()
   (require 'mail-utils)
   (let ((errbuf (if mail-interactive
@@ -118,7 +122,11 @@ This is relative to `smtpmail-queue-dir'.")
 	(tembuf (generate-new-buffer " smtpmail temp"))
 	(case-fold-search nil)
 	delimline
-	(mailbuf (current-buffer)))
+	(mailbuf (current-buffer))
+	(smtpmail-code-conv-from
+	 (if enable-multibyte-characters
+	     (let ((sendmail-coding-system smtpmail-code-conv-from))
+	       (select-message-coding-system)))))
     (unwind-protect
 	(save-excursion
 	  (set-buffer tembuf)
@@ -230,7 +238,8 @@ This is relative to `smtpmail-queue-dir'.")
 			       smtpmail-queue-dir
 			       (concat (time-stamp-yyyy-mm-dd)
 				       "_" (time-stamp-hh:mm:ss))))
-		   (file-elisp (concat file-data ".el"))
+		      (file-data (convert-standard-filename file-data))
+		      (file-elisp (concat file-data ".el"))
 		   (buffer-data (create-file-buffer file-data))
 		   (buffer-elisp (create-file-buffer file-elisp))
 		   (buffer-scratch "*queue-mail*"))
@@ -298,7 +307,8 @@ This is relative to `smtpmail-queue-dir'.")
 
 (defun smtpmail-via-smtp (recipient smtpmail-text-buffer)
   (let ((process nil)
-	(host smtpmail-smtp-server)
+	(host (or smtpmail-smtp-server
+		  (error "`smtpmail-smtp-server' not defined")))
 	(port smtpmail-smtp-service)
 	response-code
 	greeting
@@ -351,7 +361,7 @@ This is relative to `smtpmail-queue-dir'.")
 		      (throw 'done nil)))
 	      (let ((extension-lines (cdr (cdr response-code))))
 		(while extension-lines
-		  (let ((name (intern (downcase (substring (car extension-lines) 4)))))
+		  (let ((name (intern (downcase (car (split-string (substring (car extension-lines) 4) "[ ]"))))))
 		    (and name
 			 (cond ((memq name '(verb xvrb 8bitmime onex xone
 						  expn size dsn etrn
@@ -559,8 +569,10 @@ This is relative to `smtpmail-queue-dir'.")
 (defun smtpmail-send-data-1 (process data)
   (goto-char (point-max))
 
-  (if (not (null smtpmail-code-conv-from))
-      (setq data (code-convert-string data smtpmail-code-conv-from *internal*)))
+  (if (and (multibyte-string-p data)
+	   smtpmail-code-conv-from)
+      (setq data (string-as-multibyte
+		  (encode-coding-string data smtpmail-code-conv-from))))
 	
   (if smtpmail-debug-info
       (insert data "\r\n"))
@@ -605,17 +617,16 @@ This is relative to `smtpmail-queue-dir'.")
 (defun smtpmail-deduce-address-list (smtpmail-text-buffer header-start header-end)
   "Get address list suitable for smtp RCPT TO: <address>."
   (require 'mail-utils)  ;; pick up mail-strip-quoted-names
-  (let
-      ((case-fold-search t)
-       (simple-address-list "")
-       this-line
-       this-line-end
-       addr-regexp)
     
-    (unwind-protect
-	(save-excursion
-	  ;;
-	  (set-buffer smtpmail-address-buffer) (erase-buffer)
+  (unwind-protect
+      (save-excursion
+	(set-buffer smtpmail-address-buffer) (erase-buffer)
+	(let
+	    ((case-fold-search t)
+	     (simple-address-list "")
+	     this-line
+	     this-line-end
+	     addr-regexp)
 	  (insert-buffer-substring smtpmail-text-buffer header-start header-end)
 	  (goto-char (point-min))
 	  ;; RESENT-* fields should stop processing of regular fields.
@@ -658,7 +669,7 @@ This is relative to `smtpmail-queue-dir'.")
 	    (setq smtpmail-recipient-address-list recipient-address-list))
 
 	  )
-      )
+	)
     )
   )
 
@@ -668,18 +679,15 @@ This is relative to `smtpmail-queue-dir'.")
 There may be multiple BCC: lines, and each may have arbitrarily
 many continuation lines."
   (let ((case-fold-search t))
-	(save-excursion (goto-char (point-min))
-	  ;; iterate over all BCC: lines
-	  (while (re-search-forward "^\(RESENT-\)?BCC:" header-end t)
-	        (delete-region (match-beginning 0) (progn (forward-line 1) (point)))
-		;; get rid of any continuation lines
-		(while (and (looking-at "^[ \t].*\n") (< (point) header-end))
-		  (replace-match ""))
-		)
-	  ) ;; save-excursion
-	) ;; let
-  )
-
+    (save-excursion
+      (goto-char (point-min))
+      ;; iterate over all BCC: lines
+      (while (re-search-forward "^\\(RESENT-\\)?BCC:" header-end t)
+	(delete-region (match-beginning 0)
+		       (progn (forward-line 1) (point)))
+	;; get rid of any continuation lines
+	(while (and (looking-at "^[ \t].*\n") (< (point) header-end))
+	  (replace-match ""))))))
 
 
 (provide 'smtpmail)

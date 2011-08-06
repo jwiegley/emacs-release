@@ -295,7 +295,7 @@ chapter."
     ("@\\(file\\|kbd\\|key\\|url\\|email\\){\\([^}]+\\)" 2 font-lock-string-face)
     ("@\\(samp\\|code\\|var\\|math\\){\\([^}]+\\)"
      2 font-lock-variable-name-face)
-    ("@\\(cite\\|xref\\|pxref\\){\\([^}]+\\)" 2 font-lock-constant-face)
+    ("@\\(cite\\|x?ref\\|pxref\\){\\([^}]+\\)" 2 font-lock-constant-face)
     ("@\\(end\\|itemx?\\) +\\(.+\\)" 2 font-lock-function-name-face keep)
     )
   "Additional expressions to highlight in TeXinfo mode.")
@@ -541,32 +541,46 @@ value of texinfo-mode-hook."
 ;; Keep as concatinated lists for ease of maintenance
 (defconst texinfo-environment-regexp
   (concat
-   "^@"
-   "\\("
-   "cartouche\\|"
-   "display\\|"
-   "end\\|"
-   "enumerate\\|"
-   "example\\|"
-   "f?table\\|"
-   "flushleft\\|"
-   "flushright\\|"
-   "format\\|"
-   "group\\|"
-   "ifhtml\\|"
-   "ifinfo\\|"
-   "iftex\\|"
-   "ignore\\|"
-   "itemize\\|"
-   "lisp\\|"
-   "macro\\|"
-   "multitable\\|"
-   "quotation\\|"
-   "smalldisplay\\|"
-   "smallexample\\|"
-   "smallformat\\|"
-   "smalllisp\\|"
-   "tex"
+   "^@\\("
+   (mapconcat 'identity
+	      '("cartouche"
+		"display"
+		"end"
+		"enumerate"
+		"example"
+		"deffn"
+		"defun"
+		"defmac"
+		"defspec"
+		"defva?r"
+		"defopt"
+		"deftypefu?n"
+		"deftypeva?r"
+		"defcv"
+		"defivar"
+		"defop"
+		"defmethod"
+		"deftp"
+		"f?table"
+		"flushleft"
+		"flushright"
+		"format"
+		"group"
+		"ifhtml"
+		"ifinfo"
+		"iftex"
+		"ignore"
+		"itemize"
+		"lisp"
+		"macro"
+		"multitable"
+		"quotation"
+		"smalldisplay"
+		"smallexample"
+		"smallformat"
+		"smalllisp"
+		"tex")
+	      "\\|")
    "\\)")
   "Regexp for environment-like TexInfo list commands.
    Subexpression 1 is what goes into the corresponding `@end' statement.")
@@ -729,46 +743,47 @@ to jump to the corresponding spot in the Texinfo source file."
       (occur texinfo-section-types-regexp)))
   (pop-to-buffer "*Occur*")
   (goto-char (point-min))
-  (flush-lines "-----")
-  ;; Now format the "*Occur*" buffer to show the structure.
-  ;; Thanks to ceder@signum.se (Per Cederqvist)
-  (goto-char (point-max))
-  (let ((margin 5))
-    (while (re-search-backward "^ *[0-9]*:" nil 0)
-      (re-search-forward ":")
-      (setq margin
-            (cond
-             ((looking-at
-               (concat "@\\(" texinfo-chapter-level-regexp "\\)")) 5)
-             ;; ((looking-at "@chapter ") 5)
-             ;; ((looking-at "@unnumbered ") 5)
-             ;; ((looking-at "@appendix ") 5)
-             ;; ((looking-at "@majorheading ") 5)
-             ;; ((looking-at "@chapheading ") 5)
+  (let ((inhibit-read-only t))
+    (flush-lines "-----")
+    ;; Now format the "*Occur*" buffer to show the structure.
+    ;; Thanks to ceder@signum.se (Per Cederqvist)
+    (goto-char (point-max))
+    (let ((margin 5))
+      (while (re-search-backward "^ *[0-9]*:" nil 0)
+	(re-search-forward ":")
+	(setq margin
+	      (cond
+	       ((looking-at
+		 (concat "@\\(" texinfo-chapter-level-regexp "\\)")) 5)
+	       ;; ((looking-at "@chapter ") 5)
+	       ;; ((looking-at "@unnumbered ") 5)
+	       ;; ((looking-at "@appendix ") 5)
+	       ;; ((looking-at "@majorheading ") 5)
+	       ;; ((looking-at "@chapheading ") 5)
 
-             ((looking-at
-               (concat "@\\(" texinfo-section-level-regexp "\\)")) 9)
-             ;; ((looking-at "@section ") 9)
-             ;; ((looking-at "@unnumberedsec ") 9)
-             ;; ((looking-at "@appendixsec ") 9)
-             ;; ((looking-at "@heading ") 9)
+	       ((looking-at
+		 (concat "@\\(" texinfo-section-level-regexp "\\)")) 9)
+	       ;; ((looking-at "@section ") 9)
+	       ;; ((looking-at "@unnumberedsec ") 9)
+	       ;; ((looking-at "@appendixsec ") 9)
+	       ;; ((looking-at "@heading ") 9)
 
-             ((looking-at
-               (concat "@\\(" texinfo-subsection-level-regexp "\\)")) 13)
-             ;; ((looking-at "@subsection ") 13)
-             ;; ((looking-at "@unnumberedsubsec ") 13)
-             ;; ((looking-at "@appendixsubsec ") 13)
-             ;; ((looking-at "@subheading ") 13)
+	       ((looking-at
+		 (concat "@\\(" texinfo-subsection-level-regexp "\\)")) 13)
+	       ;; ((looking-at "@subsection ") 13)
+	       ;; ((looking-at "@unnumberedsubsec ") 13)
+	       ;; ((looking-at "@appendixsubsec ") 13)
+	       ;; ((looking-at "@subheading ") 13)
 
-             ((looking-at
-               (concat "@\\(" texinfo-subsubsection-level-regexp "\\)")) 17)
-             ;; ((looking-at "@subsubsection ") 17)
-             ;; ((looking-at "@unnumberedsubsubsec ") 17)
-             ;; ((looking-at "@appendixsubsubsec ") 17)
-             ;; ((looking-at "@subsubheading ") 17)
-             (t margin)))
-      (indent-to-column margin)
-      (beginning-of-line))))
+	       ((looking-at
+		 (concat "@\\(" texinfo-subsubsection-level-regexp "\\)")) 17)
+	       ;; ((looking-at "@subsubsection ") 17)
+	       ;; ((looking-at "@unnumberedsubsubsec ") 17)
+	       ;; ((looking-at "@appendixsubsubsec ") 17)
+	       ;; ((looking-at "@subsubheading ") 17)
+	       (t margin)))
+	(indent-to-column margin)
+	(beginning-of-line)))))
 
 ;;; The  tex  and  print  function definitions:
 
@@ -813,14 +828,17 @@ The value of `texinfo-tex-trailer' is appended to the temporary file after the r
   (interactive "r")
   (require 'tex-mode)
   (let ((tex-command texinfo-tex-command)
-	(tex-trailer "@bye\n"))
+	(tex-trailer texinfo-tex-trailer))
     (tex-region beg end)))
 
 (defun texinfo-tex-buffer ()
   "Run TeX on visited file, once or twice, to make a correct `.dvi' file."
   (interactive)
   (require 'tex-mode)
-  (let ((tex-command texinfo-texi2dvi-command))
+  (let ((tex-command texinfo-texi2dvi-command)
+	;; Disable tex-start-options-string.  texi2dvi would not
+	;; understand anything specified here.
+	(tex-start-options-string ""))
     (tex-buffer)))
 
 (defun texinfo-texindex ()

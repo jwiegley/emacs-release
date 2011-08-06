@@ -213,15 +213,22 @@ encode_coding_XXX (coding, source, destination, src_bytes, dst_bytes)
 
 /* Decode one ASCII character C.  */
 
-#define DECODE_CHARACTER_ASCII(c)				\
-  do {								\
-    if (COMPOSING_P (coding->composing))			\
-      *dst++ = 0xA0, *dst++ = (c) | 0x80;			\
-    else							\
-      {								\
-	*dst++ = (c);						\
-	coding->produced_char++;				\
-      }								\
+#define DECODE_CHARACTER_ASCII(c)		\
+  do {						\
+    if (COMPOSING_P (coding->composing))	\
+      {						\
+	*dst++ = 0xA0, *dst++ = (c) | 0x80;	\
+	coding->composed_chars++;		\
+	if (((c) | 0x80) < 0xA0)		\
+	  coding->fake_multibyte = 1;		\
+      }						\
+    else					\
+      {						\
+	*dst++ = (c);				\
+	coding->produced_char++;		\
+	if ((c) >= 0x80)			\
+	  coding->fake_multibyte = 1;		\
+      }						\
   } while (0)
 
 /* Decode one DIMENSION1 character whose charset is CHARSET and whose
@@ -231,7 +238,10 @@ encode_coding_XXX (coding, source, destination, src_bytes, dst_bytes)
   do {									\
     unsigned char leading_code = CHARSET_LEADING_CODE_BASE (charset);	\
     if (COMPOSING_P (coding->composing))				\
-      *dst++ = leading_code + 0x20;					\
+      {									\
+	*dst++ = leading_code + 0x20;					\
+	coding->composed_chars++;					\
+      }									\
     else								\
       {									\
 	*dst++ = leading_code;						\
@@ -240,6 +250,8 @@ encode_coding_XXX (coding, source, destination, src_bytes, dst_bytes)
     if (leading_code = CHARSET_LEADING_CODE_EXT (charset))		\
       *dst++ = leading_code;						\
     *dst++ = (c) | 0x80;						\
+    if (((c) | 0x80)  < 0xA0)						\
+      coding->fake_multibyte = 1; 					\
   } while (0)
 
 /* Decode one DIMENSION2 character whose charset is CHARSET and whose
@@ -249,6 +261,8 @@ encode_coding_XXX (coding, source, destination, src_bytes, dst_bytes)
   do {							\
     DECODE_CHARACTER_DIMENSION1 (charset, c1);		\
     *dst++ = (c2) | 0x80;				\
+    if (((c2) | 0x80) < 0xA0)				\
+      coding->fake_multibyte = 1;			\
   } while (0)
 
 
@@ -287,11 +301,11 @@ Lisp_Object Qtarget_idx;
 
 Lisp_Object Vselect_safe_coding_system_function;
 
-/* Mnemonic character of each format of end-of-line.  */
-int eol_mnemonic_unix, eol_mnemonic_dos, eol_mnemonic_mac;
-/* Mnemonic character to indicate format of end-of-line is not yet
+/* Mnemonic string for each format of end-of-line.  */
+Lisp_Object eol_mnemonic_unix, eol_mnemonic_dos, eol_mnemonic_mac;
+/* Mnemonic string to indicate format of end-of-line is not yet
    decided.  */
-int eol_mnemonic_undecided;
+Lisp_Object eol_mnemonic_undecided;
 
 /* Format of end-of-line decided by system.  This is CODING_EOL_LF on
    Unix, CODING_EOL_CRLF on DOS/Windows, and CODING_EOL_CR on Mac.  */
@@ -511,33 +525,37 @@ detect_coding_emacs_mule (src, src_end)
 /*** 3. ISO2022 handlers ***/
 
 /* The following note describes the coding system ISO2022 briefly.
-   Since the intention of this note is to help in understanding of
-   the programs in this file, some parts are NOT ACCURATE or OVERLY
-   SIMPLIFIED.  For the thorough understanding, please refer to the
+   Since the intention of this note is to help understand the
+   functions in this file, some parts are NOT ACCURATE or OVERLY
+   SIMPLIFIED.  For thorough understanding, please refer to the
    original document of ISO2022.
 
    ISO2022 provides many mechanisms to encode several character sets
-   in 7-bit and 8-bit environment.  If one chooses 7-bite environment,
-   all text is encoded by codes of less than 128.  This may make the
-   encoded text a little bit longer, but the text gets more stability
-   to pass through several gateways (some of them strip off the MSB).
-
-   There are two kinds of character set: control character set and
+   in 7-bit and 8-bit environments.  For 7-bite environments, all text
+   is encoded using bytes less than 128.  This may make the encoded
+   text a little bit longer, but the text passes more easily through
+   several gateways, some of which strip off MSB (Most Signigant Bit).
+ 
+   There are two kinds of character sets: control character set and
    graphic character set.  The former contains control characters such
    as `newline' and `escape' to provide control functions (control
-   functions are provided also by escape sequences).  The latter
-   contains graphic characters such as ' A' and '-'.  Emacs recognizes
+   functions are also provided by escape sequences).  The latter
+   contains graphic characters such as 'A' and '-'.  Emacs recognizes
    two control character sets and many graphic character sets.
 
    Graphic character sets are classified into one of the following
-   four classes, DIMENSION1_CHARS94, DIMENSION1_CHARS96,
-   DIMENSION2_CHARS94, DIMENSION2_CHARS96 according to the number of
-   bytes (DIMENSION) and the number of characters in one dimension
-   (CHARS) of the set.  In addition, each character set is assigned an
-   identification tag (called "final character" and denoted as <F>
-   here after) which is unique in each class.  <F> of each character
-   set is decided by ECMA(*) when it is registered in ISO.  Code range
-   of <F> is 0x30..0x7F (0x30..0x3F are for private use only).
+   four classes, according to the number of bytes (DIMENSION) and
+   number of characters in one dimension (CHARS) of the set:
+   - DIMENSION1_CHARS94
+   - DIMENSION1_CHARS96
+   - DIMENSION2_CHARS94
+   - DIMENSION2_CHARS96
+
+   In addition, each character set is assigned an identification tag,
+   unique for each set, called "final character" (denoted as <F>
+   hereafter).  The <F> of each character set is decided by ECMA(*)
+   when it is registered in ISO.  The code range of <F> is 0x30..0x7F
+   (0x30..0x3F are for private use only).
 
    Note (*): ECMA = European Computer Manufacturers Association
 
@@ -547,55 +565,61 @@ detect_coding_emacs_mule (src, src_end)
 	o DIMENSION2_CHARS94 -- GB2312('A'), JISX0208('B'), ...
 	o DIMENSION2_CHARS96 -- none for the moment
 
-   A code area (1byte=8bits) is divided into 4 areas, C0, GL, C1, and GR.
+   A code area (1 byte=8 bits) is divided into 4 areas, C0, GL, C1, and GR.
 	C0 [0x00..0x1F] -- control character plane 0
 	GL [0x20..0x7F] -- graphic character plane 0
 	C1 [0x80..0x9F] -- control character plane 1
 	GR [0xA0..0xFF] -- graphic character plane 1
 
    A control character set is directly designated and invoked to C0 or
-   C1 by an escape sequence.  The most common case is that ISO646's
-   control character set is designated/invoked to C0 and ISO6429's
-   control character set is designated/invoked to C1, and usually
-   these designations/invocations are omitted in a coded text.  With
-   7-bit environment, only C0 can be used, and a control character for
-   C1 is encoded by an appropriate escape sequence to fit in the
-   environment.  All control characters for C1 are defined the
-   corresponding escape sequences.
+   C1 by an escape sequence.  The most common case is that:
+   - ISO646's  control character set is designated/invoked to C0, and
+   - ISO6429's control character set is designated/invoked to C1,
+   and usually these designations/invocations are omitted in encoded
+   text.  In a 7-bit environment, only C0 can be used, and a control
+   character for C1 is encoded by an appropriate escape sequence to
+   fit into the environment.  All control characters for C1 are
+   defined to have corresponding escape sequences.
 
    A graphic character set is at first designated to one of four
    graphic registers (G0 through G3), then these graphic registers are
    invoked to GL or GR.  These designations and invocations can be
    done independently.  The most common case is that G0 is invoked to
-   GL, G1 is invoked to GR, and ASCII is designated to G0, and usually
-   these invocations and designations are omitted in a coded text.
-   With 7-bit environment, only GL can be used.
+   GL, G1 is invoked to GR, and ASCII is designated to G0.  Usually
+   these invocations and designations are omitted in encoded text.
+   In a 7-bit environment, only GL can be used.
 
-   When a graphic character set of CHARS94 is invoked to GL, code 0x20
-   and 0x7F of GL area work as control characters SPACE and DEL
-   respectively, and code 0xA0 and 0xFF of GR area should not be used.
+   When a graphic character set of CHARS94 is invoked to GL, codes
+   0x20 and 0x7F of the GL area work as control characters SPACE and
+   DEL respectively, and codes 0xA0 and 0xFF of the GR area should not
+   be used.
 
    There are two ways of invocation: locking-shift and single-shift.
    With locking-shift, the invocation lasts until the next different
-   invocation, whereas with single-shift, the invocation works only
-   for the following character and doesn't affect locking-shift.
-   Invocations are done by the following control characters or escape
-   sequences.
+   invocation, whereas with single-shift, the invocation affects the
+   following character only and doesn't affect the locking-shift
+   state.  Invocations are done by the following control characters or
+   escape sequences:
 
    ----------------------------------------------------------------------
-   function		control char	escape sequence	description
+   abbrev  function	             cntrl escape seq	description
    ----------------------------------------------------------------------
-   SI  (shift-in)		0x0F	none		invoke G0 to GL
-   SO  (shift-out)		0x0E	none		invoke G1 to GL
-   LS2 (locking-shift-2)	none	ESC 'n'		invoke G2 into GL
-   LS3 (locking-shift-3)	none	ESC 'o'		invoke G3 into GL
-   SS2 (single-shift-2)		0x8E	ESC 'N'		invoke G2 into GL
-   SS3 (single-shift-3)		0x8F	ESC 'O'		invoke G3 into GL
+   SI/LS0  (shift-in)		     0x0F  none		invoke G0 into GL
+   SO/LS1  (shift-out)		     0x0E  none		invoke G1 into GL
+   LS2     (locking-shift-2)	     none  ESC 'n'	invoke G2 into GL
+   LS3     (locking-shift-3)	     none  ESC 'o'	invoke G3 into GL
+   LS1R    (locking-shift-1 right)   none  ESC '~'      invoke G1 into GR (*)
+   LS2R    (locking-shift-2 right)   none  ESC '}'      invoke G2 into GR (*)
+   LS3R    (locking-shift 3 right)   none  ESC '|'      invoke G3 into GR (*)
+   SS2     (single-shift-2)	     0x8E  ESC 'N'	invoke G2 for one char
+   SS3     (single-shift-3)	     0x8F  ESC 'O'	invoke G3 for one char
    ----------------------------------------------------------------------
-   The first four are for locking-shift.  Control characters for these
-   functions are defined by macros ISO_CODE_XXX in `coding.h'.
+   (*) These are not used by any known coding system.
 
-   Designations are done by the following escape sequences.
+   Control characters for these functions are defined by macros
+   ISO_CODE_XXX in `coding.h'.
+
+   Designations are done by the following escape sequences:
    ----------------------------------------------------------------------
    escape sequence	description
    ----------------------------------------------------------------------
@@ -618,40 +642,40 @@ detect_coding_emacs_mule (src, src_end)
    ----------------------------------------------------------------------
 
    In this list, "DIMENSION1_CHARS94<F>" means a graphic character set
-   of dimension 1, chars 94, and final character <F>, and etc.
+   of dimension 1, chars 94, and final character <F>, etc...
 
    Note (*): Although these designations are not allowed in ISO2022,
    Emacs accepts them on decoding, and produces them on encoding
-   CHARS96 character set in a coding system which is characterized as
+   CHARS96 character sets in a coding system which is characterized as
    7-bit environment, non-locking-shift, and non-single-shift.
 
    Note (**): If <F> is '@', 'A', or 'B', the intermediate character
-   '(' can be omitted.  We call this as "short-form" here after.
+   '(' can be omitted.  We refer to this as "short-form" hereafter.
 
    Now you may notice that there are a lot of ways for encoding the
-   same multilingual text in ISO2022.  Actually, there exists many
-   coding systems such as Compound Text (used in X's inter client
-   communication, ISO-2022-JP (used in Japanese Internet), ISO-2022-KR
-   (used in Korean Internet), EUC (Extended UNIX Code, used in Asian
+   same multilingual text in ISO2022.  Actually, there exist many
+   coding systems such as Compound Text (used in X11's inter client
+   communication, ISO-2022-JP (used in Japanese internet), ISO-2022-KR
+   (used in Korean internet), EUC (Extended UNIX Code, used in Asian
    localized platforms), and all of these are variants of ISO2022.
 
    In addition to the above, Emacs handles two more kinds of escape
    sequences: ISO6429's direction specification and Emacs' private
    sequence for specifying character composition.
 
-   ISO6429's direction specification takes the following format:
+   ISO6429's direction specification takes the following form:
 	o CSI ']'      -- end of the current direction
 	o CSI '0' ']'  -- end of the current direction
 	o CSI '1' ']'  -- start of left-to-right text
 	o CSI '2' ']'  -- start of right-to-left text
    The control character CSI (0x9B: control sequence introducer) is
-   abbreviated to the escape sequence ESC '[' in 7-bit environment.
-   
-   Character composition specification takes the following format:
+   abbreviated to the escape sequence ESC '[' in a 7-bit environment.
+
+   Character composition specification takes the following form:
 	o ESC '0' -- start character composition
 	o ESC '1' -- end character composition
-   Since these are not standard escape sequences of any ISO, the use
-   of them for these meaning is restricted to Emacs only.  */
+   Since these are not standard escape sequences of any ISO standard,
+   the use of them for these meaning is restricted to Emacs only.  */
 
 enum iso_code_class_type iso_code_class[256];
 
@@ -683,7 +707,7 @@ detect_coding_iso2022 (src, src_end)
 {
   int mask = CODING_CATEGORY_MASK_ISO;
   int mask_found = 0;
-  int reg[4], shift_out = 0;
+  int reg[4], shift_out = 0, single_shifting = 0;
   int c, c1, i, charset;
 
   reg[0] = CHARSET_ASCII, reg[1] = reg[2] = reg[3] = -1;
@@ -693,6 +717,7 @@ detect_coding_iso2022 (src, src_end)
       switch (c)
 	{
 	case ISO_CODE_ESC:
+	  single_shifting = 0;
 	  if (src >= src_end)
 	    break;
 	  c = *src++;
@@ -732,33 +757,14 @@ detect_coding_iso2022 (src, src_end)
 		/* Invalid designation sequence.  Just ignore.  */
 		break;
 	    }
-	  else if (c == 'N' || c == 'n')
+	  else if (c == 'N' || c == 'O')
 	    {
-	      if (shift_out == 0
-		  && (reg[1] >= 0
-		      || SHIFT_OUT_OK (CODING_CATEGORY_IDX_ISO_7_ELSE)
-		      || SHIFT_OUT_OK (CODING_CATEGORY_IDX_ISO_8_ELSE)))
-		{
-		  /* Locking shift out.  */
-		  mask &= ~CODING_CATEGORY_MASK_ISO_7BIT;
-		  mask_found |= CODING_CATEGORY_MASK_ISO_SHIFT;
-		  shift_out = 1;
-		}
-	      break;
-	    }
-	  else if (c == 'O' || c == 'o')
-	    {
-	      if (shift_out == 1)
-		{
-		  /* Locking shift in.  */
-		  mask &= ~CODING_CATEGORY_MASK_ISO_7BIT;
-		  mask_found |= CODING_CATEGORY_MASK_ISO_SHIFT;
-		  shift_out = 0;
-		}
+	      /* ESC <Fe> for SS2 or SS3.  */
+	      mask &= CODING_CATEGORY_MASK_ISO_7_ELSE;
 	      break;
 	    }
 	  else if (c == '0' || c == '1' || c == '2')
-	    /* Start/end composition.  Just ignore.  */
+	    /* ESC <Fp> for start/end composition.  Just ignore.  */
 	    break;
 	  else
 	    /* Invalid escape sequence.  Just ignore.  */
@@ -774,13 +780,18 @@ detect_coding_iso2022 (src, src_end)
 	    mask_found |= CODING_CATEGORY_MASK_ISO_7_TIGHT;
 	  else
 	    mask &= ~CODING_CATEGORY_MASK_ISO_7_TIGHT;
-	  if (! CHARSET_OK (CODING_CATEGORY_IDX_ISO_7_ELSE, charset))
+	  if (CHARSET_OK (CODING_CATEGORY_IDX_ISO_7_ELSE, charset))
+	    mask_found |= CODING_CATEGORY_MASK_ISO_7_ELSE;
+	  else
 	    mask &= ~CODING_CATEGORY_MASK_ISO_7_ELSE;
-	  if (! CHARSET_OK (CODING_CATEGORY_IDX_ISO_8_ELSE, charset))
+	  if (CHARSET_OK (CODING_CATEGORY_IDX_ISO_8_ELSE, charset))
+	    mask_found |= CODING_CATEGORY_MASK_ISO_8_ELSE;
+	  else
 	    mask &= ~CODING_CATEGORY_MASK_ISO_8_ELSE;
 	  break;
 
 	case ISO_CODE_SO:
+	  single_shifting = 0;
 	  if (shift_out == 0
 	      && (reg[1] >= 0
 		  || SHIFT_OUT_OK (CODING_CATEGORY_IDX_ISO_7_ELSE)
@@ -793,6 +804,7 @@ detect_coding_iso2022 (src, src_end)
 	  break;
 	  
 	case ISO_CODE_SI:
+	  single_shifting = 0;
 	  if (shift_out == 1)
 	    {
 	      /* Locking shift in.  */
@@ -802,6 +814,7 @@ detect_coding_iso2022 (src, src_end)
 	  break;
 
 	case ISO_CODE_CSI:
+	  single_shifting = 0;
 	case ISO_CODE_SS2:
 	case ISO_CODE_SS3:
 	  {
@@ -815,6 +828,7 @@ detect_coding_iso2022 (src, src_end)
 		if (coding_system_table[CODING_CATEGORY_IDX_ISO_8_2]->flags
 		    & CODING_FLAG_ISO_SINGLE_SHIFT)
 		  newmask |= CODING_CATEGORY_MASK_ISO_8_2;
+		single_shifting = 1;
 	      }
 	    if (VECTORP (Vlatin_extra_code_table)
 		&& !NILP (XVECTOR (Vlatin_extra_code_table)->contents[c]))
@@ -833,9 +847,13 @@ detect_coding_iso2022 (src, src_end)
 
 	default:
 	  if (c < 0x80)
-	    break;
+	    {
+	      single_shifting = 0;
+	      break;
+	    }
 	  else if (c < 0xA0)
 	    {
+	      single_shifting = 0;
 	      if (VECTORP (Vlatin_extra_code_table)
 		  && !NILP (XVECTOR (Vlatin_extra_code_table)->contents[c]))
 		{
@@ -860,12 +878,19 @@ detect_coding_iso2022 (src, src_end)
 	      mask &= ~(CODING_CATEGORY_MASK_ISO_7BIT
 			| CODING_CATEGORY_MASK_ISO_7_ELSE);
 	      mask_found |= CODING_CATEGORY_MASK_ISO_8_1;
-	      while (src < src_end && *src >= 0xA0)
-		src++;
-	      if ((src - src_begin - 1) & 1 && src < src_end)
-		mask &= ~CODING_CATEGORY_MASK_ISO_8_2;
-	      else
-		mask_found |= CODING_CATEGORY_MASK_ISO_8_2;
+	      /* Check the length of succeeding codes of the range
+                 0xA0..0FF.  If the byte length is odd, we exclude
+                 CODING_CATEGORY_MASK_ISO_8_2.  We can check this only
+                 when we are not single shifting.  */
+	      if (!single_shifting)
+		{
+		  while (src < src_end && *src >= 0xA0)
+		    src++;
+		  if ((src - src_begin - 1) & 1 && src < src_end)
+		    mask &= ~CODING_CATEGORY_MASK_ISO_8_2;
+		  else
+		    mask_found |= CODING_CATEGORY_MASK_ISO_8_2;
+		}
 	    }
 	  break;
 	}
@@ -922,9 +947,13 @@ detect_coding_iso2022 (src, src_end)
 /* Set designation state into CODING.  */
 #define DECODE_DESIGNATION(reg, dimension, chars, final_char)		   \
   do {									   \
-    int charset = ISO_CHARSET_TABLE (make_number (dimension),		   \
-				     make_number (chars),		   \
-				     make_number (final_char));		   \
+    int charset;							   \
+    									   \
+    if (final_char < '0' || final_char >= 128)				   \
+      goto label_invalid_code;						   \
+    charset = ISO_CHARSET_TABLE (make_number (dimension),		   \
+				 make_number (chars),			   \
+				 make_number (final_char));		   \
     if (charset >= 0							   \
 	&& (CODING_SPEC_ISO_REQUESTED_DESIGNATION (coding, charset) == reg \
 	    || coding->safe_charsets[charset]))				   \
@@ -951,54 +980,49 @@ detect_coding_iso2022 (src, src_end)
       }									   \
   } while (0)
 
-/* Check if the current composing sequence contains only valid codes.
-   If the composing sequence doesn't end before SRC_END, return -1.
-   Else, if it contains only valid codes, return 0.
-   Else return the length of the composing sequence.  */
+/* Return 0 if there's a valid composing sequence starting at SRC and
+   ending before SRC_END, else return -1.  */
 
 int
 check_composing_code (coding, src, src_end)
      struct coding_system *coding;
      unsigned char *src, *src_end;
 {
-  unsigned char *src_start = src;
-  int invalid_code_found = 0;
   int charset, c, c1, dim;
 
   while (src < src_end)
     {
-      if (*src++ != ISO_CODE_ESC) continue;
-      if (src >= src_end) break;
-      if ((c = *src++) == '1') /* end of compsition */
-	return (invalid_code_found ? src - src_start : 0);
-      if (src + 2 >= src_end) break;
-      if (!coding->flags & CODING_FLAG_ISO_DESIGNATION)
-	invalid_code_found = 1;
-      else
+      c = *src++;
+      if (c >= 0x20)
+	continue;
+      if (c != ISO_CODE_ESC || src >= src_end)
+	return -1;
+      c = *src++;
+      if (c == '1') /* end of compsition */
+	return 0;
+      if (src + 2 >= src_end
+	  || !coding->flags & CODING_FLAG_ISO_DESIGNATION)
+	return -1;
+
+      dim = (c == '$');
+      if (dim == 1)
+	c = (*src >= '@' && *src <= 'B') ? '(' : *src++;
+      if (c >= '(' && c <= '/')
 	{
-	  dim = 0;
-	  if (c == '$')
-	    {
-	      dim = 1;
-	      c = (*src >= '@' && *src <= 'B') ? '(' : *src++;
-	    }
-	  if (c >= '(' && c <= '/')
-	    {
-	      c1 = *src++;
-	      if ((c1 < ' ' || c1 >= 0x80)
-		  || (charset = iso_charset_table[dim][c >= ','][c1]) < 0
-		  || ! coding->safe_charsets[charset]
-		  || (CODING_SPEC_ISO_REQUESTED_DESIGNATION (coding, charset)
-		      == CODING_SPEC_ISO_NO_REQUESTED_DESIGNATION))
-		invalid_code_found = 1;
-	    }
-	  else
-	    invalid_code_found = 1;
+	  c1 = *src++;
+	  if ((c1 < ' ' || c1 >= 0x80)
+	      || (charset = iso_charset_table[dim][c >= ','][c1]) < 0
+	      || ! coding->safe_charsets[charset]
+	      || (CODING_SPEC_ISO_REQUESTED_DESIGNATION (coding, charset)
+		  == CODING_SPEC_ISO_NO_REQUESTED_DESIGNATION))
+	    return -1;
 	}
+      else
+	return -1;
     }
-  return (invalid_code_found
-	  ? src - src_start
-	  : (coding->mode & CODING_MODE_LAST_BLOCK ? 0 : -1));
+
+  /* We have not found the sequence "ESC 1".  */
+  return -1;
 }
 
 /* See the above "GENERAL NOTES on `decode_coding_XXX ()' functions".  */
@@ -1092,6 +1116,8 @@ decode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 	    }
 	  *dst++ = c1;
 	  coding->produced_char++;
+	  if (c1 >= 0x80)
+	    coding->fake_multibyte = 1;
 	  break;
 
 	case ISO_carriage_return:
@@ -1177,7 +1203,7 @@ decode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 	      ONE_MORE_BYTE (c1);
 	      if (c1 >= '@' && c1 <= 'B')
 		{	/* designation of JISX0208.1978, GB2312.1980,
-				   or JISX0208.1980 */
+			   or JISX0208.1980 */
 		  DECODE_DESIGNATION (0, 2, 94, c1);
 		}
 	      else if (c1 >= 0x28 && c1 <= 0x2B)
@@ -1231,40 +1257,54 @@ decode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 	    case '0': case '2':	/* start composing */
 	      /* Before processing composing, we must be sure that all
 		 characters being composed are supported by CODING.
-		 If not, we must give up composing and insert the
-		 bunch of codes for composing as is without decoding.  */
-	      {
-		int result1;
-
-		result1 = check_composing_code (coding, src, src_end);
-		if (result1 == 0)
-		  {
-		    coding->composing = (c1 == '0'
-					 ? COMPOSING_NO_RULE_HEAD
-					 : COMPOSING_WITH_RULE_HEAD);
-		    coding->produced_char++;
-		  }
-		else if (result1 > 0)
-		  {
-		    if (result1 + 2 < (dst_bytes ? dst_end : src_base) - dst)
-		      {
-			bcopy (src_base, dst, result1 + 2);
-			src += result1;
-			dst += result1 + 2;
-			coding->produced_char += result1 + 2;
-		      }
-		    else
-		      {
-			result = CODING_FINISH_INSUFFICIENT_DST;
-			goto label_end_of_loop_2;
-		      }
-		  }
-		else
-		  goto label_end_of_loop;
-	      }
+		 If not, we must give up composing.  */
+	      if (check_composing_code (coding, src, src_end) == 0)
+		{
+		  /* We are looking at a valid composition sequence.  */
+		  coding->composing = (c1 == '0'
+				       ? COMPOSING_NO_RULE_HEAD
+				       : COMPOSING_WITH_RULE_HEAD);
+		  coding->composed_chars = 0;
+		}
+	      else
+		{
+		  *dst++ = ISO_CODE_ESC;
+		  *dst++ = c1;
+		  coding->produced_char += 2;
+		}
 	      break;
 
 	    case '1':		/* end composing */
+	      if (!coding->composing)
+		{
+		  *dst++ = ISO_CODE_ESC;
+		  *dst++ = c1;
+		  coding->produced_char += 2;
+		  break;
+		}
+
+	      if (coding->composed_chars > 0)
+		{
+		  if (coding->composed_chars == 1)
+		    {
+		      unsigned char *this_char_start = dst;
+		      int this_bytes;
+
+		      /* Only one character is in the composing
+			 sequence.  Make it a normal character.  */
+		      while (*--this_char_start != LEADING_CODE_COMPOSITION);
+		      dst = (this_char_start
+			     + (coding->composing == COMPOSING_NO_RULE_TAIL
+				? 1 : 2));
+		      *dst -= 0x20;
+		      if (*dst == 0x80)
+			*++dst &= 0x7F;
+		      this_bytes = BYTES_BY_CHAR_HEAD (*dst);
+		      while (this_bytes--) *this_char_start++ = *dst++;
+		      dst = this_char_start;
+		    }
+		  coding->produced_char++;
+		}
 	      coding->composing = COMPOSING_NO;
 	      break;
 
@@ -1570,32 +1610,52 @@ decode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
       dst = encode_invocation_designation (charset, coding, dst);	\
   } while (1)
 
-#define ENCODE_ISO_CHARACTER(charset, c1, c2)			\
-  do {								\
-    int c_alt, charset_alt;					\
-    if (!NILP (translation_table)				\
-	&& ((c_alt = translate_char (translation_table, -1,	\
-				     charset, c1, c2))		\
-	    >= 0))						\
-      SPLIT_CHAR (c_alt, charset_alt, c1, c2);			\
-    else							\
-      charset_alt = charset;					\
-    if (CHARSET_DIMENSION (charset_alt) == 1)			\
-      {								\
-	if (charset == CHARSET_ASCII				\
-	    && coding->flags & CODING_FLAG_ISO_USE_ROMAN)	\
-	  charset_alt = charset_latin_jisx0201;			\
-	ENCODE_ISO_CHARACTER_DIMENSION1 (charset_alt, c1);	\
-      }								\
-    else							\
-      {								\
-	if (charset == charset_jisx0208				\
-	    && coding->flags & CODING_FLAG_ISO_USE_OLDJIS)	\
-	  charset_alt = charset_jisx0208_1978;			\
-	ENCODE_ISO_CHARACTER_DIMENSION2 (charset_alt, c1, c2);	\
-      }								\
-    if (! COMPOSING_P (coding->composing))			\
-      coding->consumed_char++;					\
+#define ENCODE_ISO_CHARACTER(charset, c1, c2)				\
+  do {									\
+    int c_alt, charset_alt;						\
+    if (!NILP (translation_table)					\
+	&& ((c_alt = translate_char (translation_table, -1,		\
+				     charset, c1, c2))			\
+	    >= 0))							\
+      SPLIT_CHAR (c_alt, charset_alt, c1, c2);				\
+    else								\
+      charset_alt = charset;						\
+    if (CHARSET_DEFINED_P (charset_alt))				\
+      {									\
+	if (CHARSET_DIMENSION (charset_alt) == 1)			\
+	  {								\
+	    if (charset == CHARSET_ASCII				\
+		&& coding->flags & CODING_FLAG_ISO_USE_ROMAN)		\
+	      charset_alt = charset_latin_jisx0201;			\
+	    ENCODE_ISO_CHARACTER_DIMENSION1 (charset_alt, c1);		\
+	  }								\
+	else								\
+	  {								\
+	    if (charset == charset_jisx0208				\
+		&& coding->flags & CODING_FLAG_ISO_USE_OLDJIS)		\
+	      charset_alt = charset_jisx0208_1978;			\
+	    ENCODE_ISO_CHARACTER_DIMENSION2 (charset_alt, c1, c2);	\
+	  }								\
+      }									\
+    else								\
+      {									\
+	if (coding->flags & CODING_FLAG_ISO_SEVEN_BITS)			\
+	  {								\
+	    *dst++ = charset & 0x7f;					\
+	    *dst++ = c1 & 0x7f;						\
+	    if (c2)							\
+	      *dst++ = c2 & 0x7f;					\
+	  }								\
+	else								\
+	  {								\
+	    *dst++ = charset;						\
+	    *dst++ = c1;						\
+	    if (c2)							\
+	      *dst++ = c2;						\
+	  }								\
+      }									\
+    if (! COMPOSING_P (coding->composing))				\
+      coding->consumed_char++;						\
   } while (0)
 
 /* Produce designation and invocation codes at a place pointed by DST
@@ -1842,6 +1902,7 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
       switch (emacs_code_class[c1])
 	{
 	case EMACS_ascii_code:
+	  c2 = 0;
 	  ENCODE_ISO_CHARACTER (CHARSET_ASCII, c1, /* dummy */ c2);
 	  break;
 
@@ -1883,6 +1944,7 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 
 	case EMACS_leading_code_2:
 	  ONE_MORE_BYTE (c2);
+	  c3 = 0;
 	  if (c2 < 0xA0)
 	    {
 	      /* invalid sequence */
@@ -1896,6 +1958,7 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 
 	case EMACS_leading_code_3:
 	  TWO_MORE_BYTES (c2, c3);
+	  c4 = 0;
 	  if (c2 < 0xA0 || c3 < 0xA0)
 	    {
 	      /* invalid sequence */
@@ -1951,6 +2014,8 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 	  break;
 
 	case EMACS_invalid_code:
+	  if (coding->flags & CODING_FLAG_ISO_RESET_AT_CNTL)
+	    ENCODE_RESET_PLANE_AND_REGISTER;
 	  *dst++ = c1;
 	  coding->consumed_char++;
 	  break;
@@ -1973,6 +2038,11 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
       ENCODE_RESET_PLANE_AND_REGISTER;
       if (COMPOSING_P (coding->composing))
 	ENCODE_COMPOSITION_END;
+      if (result == CODING_FINISH_INSUFFICIENT_SRC)
+	{
+	  while (src < src_end && dst < dst_end)
+	    *dst++ = *src++;
+	}
     }
   coding->consumed = src - source;
   coding->produced = coding->produced_char = dst - destination;
@@ -1997,8 +2067,8 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
    (character set)	(range)
    ASCII		0x00 .. 0x7F
    KATAKANA-JISX0201	0xA0 .. 0xDF
-   JISX0208 (1st byte)	0x80 .. 0x9F and 0xE0 .. 0xEF
-	    (2nd byte)	0x40 .. 0xFF
+   JISX0208 (1st byte)	0x81 .. 0x9F and 0xE0 .. 0xEF
+	    (2nd byte)	0x40 .. 0x7E and 0x80 .. 0xFC
    -------------------------------
 
 */
@@ -2060,7 +2130,7 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
     if (!NILP (translation_table)					\
 	&& ((c_alt = translate_char (translation_table,			\
 				     -1, (charset), c1, c2)) >= 0))	\
-	  SPLIT_CHAR (c_alt, charset_alt, c1, c2);			\
+      SPLIT_CHAR (c_alt, charset_alt, c1, c2);				\
     if (charset_alt == CHARSET_ASCII || charset_alt < 0)		\
       DECODE_CHARACTER_ASCII (c1);					\
     else if (CHARSET_DIMENSION (charset_alt) == 1)			\
@@ -2085,6 +2155,8 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
       {								\
 	if (sjis_p && charset_alt == charset_katakana_jisx0201)	\
 	  *dst++ = c1;						\
+	else if (sjis_p && charset_alt == charset_latin_jisx0201) \
+	  *dst++ = c1 & 0x7F;					\
 	else							\
 	  {							\
 	    *dst++ = charset_alt, *dst++ = c1;			\
@@ -2094,7 +2166,8 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
     else							\
       {								\
 	c1 &= 0x7F, c2 &= 0x7F;					\
-	if (sjis_p && charset_alt == charset_jisx0208)		\
+	if (sjis_p && (charset_alt == charset_jisx0208		\
+		       || charset_alt == charset_jisx0208_1978))\
 	  {							\
 	    unsigned char s1, s2;				\
 	    							\
@@ -2242,7 +2315,10 @@ decode_coding_sjis_big5 (coding, source, destination,
 	  coding->produced_char++;
 	}
       else if (c1 < 0x80)
-	DECODE_SJIS_BIG5_CHARACTER (charset_ascii, c1, /* dummy */ c2);
+        {
+          c2 = 0;               /* avoid warning */
+          DECODE_SJIS_BIG5_CHARACTER (charset_ascii, c1, /* dummy */ c2);
+        }
       else
 	{
 	  if (sjis_p)
@@ -2251,7 +2327,7 @@ decode_coding_sjis_big5 (coding, source, destination,
 		{
 		  /* SJIS -> JISX0208 */
 		  ONE_MORE_BYTE (c2);
-		  if (c2 >= 0x40)
+		  if (c2 >= 0x40 && c2 != 0x7F && c2 <= 0xFC)
 		    {
 		      DECODE_SJIS (c1, c2, c3, c4);
 		      DECODE_SJIS_BIG5_CHARACTER (charset_jisx0208, c3, c4);
@@ -2261,8 +2337,11 @@ decode_coding_sjis_big5 (coding, source, destination,
 		}
 	      else if (c1 < 0xE0)
 		/* SJIS -> JISX0201-Kana */
-		DECODE_SJIS_BIG5_CHARACTER (charset_katakana_jisx0201, c1,
-					    /* dummy */ c2);
+		{
+		  c2 = 0;	/* avoid warning */
+		  DECODE_SJIS_BIG5_CHARACTER (charset_katakana_jisx0201, c1,
+					      /* dummy */ c2);
+		}
 	      else
 		goto label_invalid_code_1;
 	    }
@@ -2507,7 +2586,11 @@ decode_eol (coding, source, destination, src_bytes, dst_bytes)
   coding->fake_multibyte = 0;
 
   if (src_bytes <= 0)
-    return result;
+    {
+      coding->produced = coding->produced_char = 0;
+      coding->consumed = coding->consumed_char = 0;
+      return result;
+    }
 
   switch (coding->eol_type)
     {
@@ -2528,18 +2611,20 @@ decode_eol (coding, source, destination, src_bytes, dst_bytes)
 	    if (c == '\r')
 	      {
 		ONE_MORE_BYTE (c);
-		if (c != '\n')
+		if (c == '\n')
+		  *dst++ = c;
+		else
 		  {
 		    if (coding->mode & CODING_MODE_INHIBIT_INCONSISTENT_EOL)
 		      {
 			result = CODING_FINISH_INCONSISTENT_EOL;
 			goto label_end_of_loop_2;
 		      }
+		    src--;
 		    *dst++ = '\r';
 		    if (BASE_LEADING_CODE_P (c))
 		      coding->fake_multibyte = 1;
 		  }
-		*dst++ = c;
 	      }
 	    else if (c == '\n'
 		     && (coding->mode & CODING_MODE_INHIBIT_INCONSISTENT_EOL))
@@ -2561,9 +2646,23 @@ decode_eol (coding, source, destination, src_bytes, dst_bytes)
 	    src = src_base;
 	    break;
 	  }
-	if (result == CODING_FINISH_NORMAL
-	    && src < src_end)
-	  result = CODING_FINISH_INSUFFICIENT_DST;
+	if (src < src_end)
+	  {
+	    if (result == CODING_FINISH_NORMAL)
+	      result = CODING_FINISH_INSUFFICIENT_DST;
+	    else if (result != CODING_FINISH_INCONSISTENT_EOL
+		     && coding->mode & CODING_MODE_LAST_BLOCK)
+	      {
+		/* This is the last block of the text to be decoded.
+		   We flush out all remaining codes.  */
+		src_bytes = src_end - src;
+		if (dst_bytes && (dst_end - dst < src_bytes))
+		  src_bytes = dst_end - dst;
+		bcopy (src, dst, src_bytes);
+		dst += src_bytes;
+		src += src_bytes;
+	      }
+	  }
       }
       break;
 
@@ -2788,7 +2887,12 @@ setup_coding_system (coding_system, coding)
   coding->mode = 0;
   coding->heading_ascii = -1;
   coding->post_read_conversion = coding->pre_write_conversion = Qnil;
+
+  if (NILP (coding_system))
+    goto label_invalid_coding_system;
+
   coding_spec = Fget (coding_system, Qcoding_system);
+
   if (!VECTORP (coding_spec)
       || XVECTOR (coding_spec)->size != 5
       || !CONSP (XVECTOR (coding_spec)->contents[3]))
@@ -2831,8 +2935,7 @@ setup_coding_system (coding_system, coding)
 
   /* Initialize remaining fields.  */
   coding->composing = 0;
-  coding->translation_table_for_decode = Qnil;
-  coding->translation_table_for_encode = Qnil;
+  coding->composed_chars = 0;
 
   /* Get values of coding system properties:
      `post-read-conversion', `pre-write-conversion',
@@ -3100,7 +3203,7 @@ setup_coding_system (coding_system, coding)
 		    int end = XINT (XCONS (this)->cdr);
 
 		    if (start >= 0 && start <= end && end < 256)
-		      while (start < end)
+		      while (start <= end)
 			coding->spec.ccl.valid_codes[start++] = 1;
 		  }
 	      }
@@ -3150,6 +3253,7 @@ setup_raw_text_coding_system (coding)
 	    coding->symbol
 	      = XVECTOR (subsidiaries)->contents[coding->eol_type];
 	}
+      setup_coding_system (coding->symbol, coding);
     }
   return;
 }
@@ -3607,23 +3711,17 @@ ccl_coding_driver (coding, source, destination, src_bytes, dst_bytes, encodep)
     = encodep ? &coding->spec.ccl.encoder : &coding->spec.ccl.decoder;
   int result;
 
-  if (encodep)
-    ccl->last_block = coding->mode & CODING_MODE_LAST_BLOCK;
+  ccl->last_block = coding->mode & CODING_MODE_LAST_BLOCK;
 
   coding->produced = ccl_driver (ccl, source, destination,
 				 src_bytes, dst_bytes, &(coding->consumed));
-  if (encodep)
-    {
-      coding->produced_char = coding->produced;
-      coding->consumed_char
-	= multibyte_chars_in_text (source, coding->consumed);
-    }
-  else
-    {
-      coding->produced_char
-	= multibyte_chars_in_text (destination, coding->produced);
-      coding->consumed_char = coding->consumed;
-    }
+  coding->produced_char
+    = (encodep
+       ? coding->produced
+       : multibyte_chars_in_text (destination, coding->produced));
+  coding->consumed_char
+    = multibyte_chars_in_text (source, coding->consumed);
+
   switch (ccl->status)
     {
     case CCL_STAT_SUSPEND_BY_SRC:
@@ -3631,6 +3729,10 @@ ccl_coding_driver (coding, source, destination, src_bytes, dst_bytes, encodep)
       break;
     case CCL_STAT_SUSPEND_BY_DST:
       result = CODING_FINISH_INSUFFICIENT_DST;
+      break;
+    case CCL_STAT_QUIT:
+    case CCL_STAT_INVALID_CMD:
+      result = CODING_FINISH_INTERRUPT;
       break;
     default:
       result = CODING_FINISH_NORMAL;
@@ -3641,7 +3743,17 @@ ccl_coding_driver (coding, source, destination, src_bytes, dst_bytes, encodep)
 
 /* See "GENERAL NOTES about `decode_coding_XXX ()' functions".  Before
    decoding, it may detect coding system and format of end-of-line if
-   those are not yet decided.  */
+   those are not yet decided.
+
+   This function does not make full use of DESTINATION buffer.  For
+   instance, if coding->type is coding_type_iso2022, it uses only
+   (DST_BYTES - 7) bytes of DESTINATION buffer.  In the case that
+   DST_BYTES is decided by the function decoding_buffer_size, it
+   contains extra 256 bytes (defined by CONVERSION_BUFFER_EXTRA_ROOM).
+   So, this function can decode the full SOURCE.  But, in the other
+   case, if you want to avoid carry over, you must supply at least 7
+   bytes more area in DESTINATION buffer than expected maximum bytes
+   that will be produced by this function.  */
 
 int
 decode_coding (coding, source, destination, src_bytes, dst_bytes)
@@ -3651,7 +3763,10 @@ decode_coding (coding, source, destination, src_bytes, dst_bytes)
 {
   int result;
 
-  if (src_bytes <= 0)
+  if (src_bytes <= 0
+      && coding->type != coding_type_ccl
+      && ! (coding->mode & CODING_MODE_LAST_BLOCK
+	    && CODING_REQUIRE_FLUSHING (coding)))
     {
       coding->produced = coding->produced_char = 0;
       coding->consumed = coding->consumed_char = 0;
@@ -3721,7 +3836,17 @@ decode_coding (coding, source, destination, src_bytes, dst_bytes)
   return result;
 }
 
-/* See "GENERAL NOTES about `encode_coding_XXX ()' functions".  */
+/* See "GENERAL NOTES about `encode_coding_XXX ()' functions".
+
+   This function does not make full use of DESTINATION buffer.  For
+   instance, if coding->type is coding_type_iso2022, it uses only
+   (DST_BYTES - 20) bytes of DESTINATION buffer.  In the case that
+   DST_BYTES is decided by the function encoding_buffer_size, it
+   contains extra 256 bytes (defined by CONVERSION_BUFFER_EXTRA_ROOM).
+   So, this function can encode the full SOURCE.  But, in the other
+   case, if you want to avoid carry over, you must supply at least 20
+   bytes more area in DESTINATION buffer than expected maximum bytes
+   that will be produced by this function.  */
 
 int
 encode_coding (coding, source, destination, src_bytes, dst_bytes)
@@ -3731,7 +3856,9 @@ encode_coding (coding, source, destination, src_bytes, dst_bytes)
 {
   int result;
 
-  if (src_bytes <= 0)
+  if (src_bytes <= 0
+      && ! (coding->mode & CODING_MODE_LAST_BLOCK
+	    && CODING_REQUIRE_FLUSHING (coding)))
     {
       coding->produced = coding->produced_char = 0;
       coding->consumed = coding->consumed_char = 0;
@@ -3817,6 +3944,7 @@ shrink_decoding_region (beg, end, coding, str)
 {
   unsigned char *begp_orig, *begp, *endp_orig, *endp, c;
   int eol_conversion;
+  Lisp_Object translation_table;
 
   if (coding->type == coding_type_ccl
       || coding->type == coding_type_undecided
@@ -3830,6 +3958,21 @@ shrink_decoding_region (beg, end, coding, str)
       /* We need no conversion, but don't have to skip any data here.
          Decoding routine handles them effectively anyway.  */
       return;
+    }
+
+  translation_table = coding->translation_table_for_decode;
+  if (NILP (translation_table) && !NILP (Venable_character_translation))
+    translation_table = Vstandard_translation_table_for_decode;
+  if (CHAR_TABLE_P (translation_table))
+    {
+      int i;
+      for (i = 0; i < 128; i++)
+	if (!NILP (CHAR_TABLE_REF (translation_table, i)))
+	  break;
+      if (i < 128)
+	/* Some ASCII character should be tranlsated.  We give up
+	   shrinking.  */
+	return;
     }
 
   eol_conversion = (coding->eol_type != CODING_EOL_LF);
@@ -3894,6 +4037,9 @@ shrink_decoding_region (beg, end, coding, str)
       break;
 
     default:		/* i.e. case coding_type_iso2022: */
+      if (CODING_SPEC_ISO_INITIAL_DESIGNATION (coding, 0) != CHARSET_ASCII)
+	/* We can't skip any data.  */
+	break;
       if (coding->heading_ascii < 0)
 	{
 	  /* We can skip all ASCII characters at the head except for a
@@ -3921,30 +4067,45 @@ shrink_decoding_region (beg, end, coding, str)
 
 	case CODING_CATEGORY_IDX_ISO_7:
 	case CODING_CATEGORY_IDX_ISO_7_TIGHT:
-	  /* We can skip all charactes at the tail except for ESC and
-             the following 2-byte at the tail.  */
-	  if (eol_conversion)
-	    while (begp < endp
-		   && (c = endp[-1]) < 0x80 && c != ISO_CODE_ESC && c != '\r')
-	      endp--;
-	  else
-	    while (begp < endp
-		   && (c = endp[-1]) < 0x80 && c != ISO_CODE_ESC)
-	      endp--;
-	  /* Do not consider LF as ascii if preceded by CR, since that
-             confuses eol decoding. */
-	  if (begp < endp && endp < endp_orig && endp[-1] == '\r' && endp[0] == '\n')
-	    endp++;
-	  if (begp < endp && endp[-1] == ISO_CODE_ESC)
-	    {
-	      if (endp + 1 < endp_orig && end[0] == '(' && end[1] == 'B')
-		/* This is an ASCII designation sequence.  We can
-                    surely skip the tail.  */
-		endp += 2;
-	      else
-		/* Hmmm, we can't skip the tail.  */
-		endp = endp_orig;
-	    }
+	  {
+	    /* We can skip all charactes at the tail except for 8-bit
+	       codes and ESC and the following 2-byte at the tail.  */
+	    unsigned char *eight_bit = NULL;
+
+	    if (eol_conversion)
+	      while (begp < endp
+		     && (c = endp[-1]) != ISO_CODE_ESC && c != '\r')
+		{
+		  if (!eight_bit && c & 0x80) eight_bit = endp;
+		  endp--;
+		}
+	    else
+	      while (begp < endp
+		     && (c = endp[-1]) != ISO_CODE_ESC)
+		{
+		  if (!eight_bit && c & 0x80) eight_bit = endp;
+		  endp--;
+		}
+	    /* Do not consider LF as ascii if preceded by CR, since that
+	       confuses eol decoding. */
+	    if (begp < endp && endp < endp_orig
+		&& endp[-1] == '\r' && endp[0] == '\n')
+	      endp++;
+	    if (begp < endp && endp[-1] == ISO_CODE_ESC)
+	      {
+		if (endp + 1 < endp_orig && end[0] == '(' && end[1] == 'B')
+		  /* This is an ASCII designation sequence.  We can
+		     surely skip the tail.  But, if we have
+		     encountered an 8-bit code, skip only the codes
+		     after that.  */
+		  endp = eight_bit ? eight_bit : endp + 2;
+		else
+		  /* Hmmm, we can't skip the tail.  */
+		  endp = endp_orig;
+	      }
+	    else if (eight_bit)
+	      endp = eight_bit;
+	  }
 	}
     }
   *beg += begp - begp_orig;
@@ -3962,6 +4123,7 @@ shrink_encoding_region (beg, end, coding, str)
 {
   unsigned char *begp_orig, *begp, *endp_orig, *endp;
   int eol_conversion;
+  Lisp_Object translation_table;
 
   if (coding->type == coding_type_ccl)
     /* We can't skip any data.  */
@@ -3971,6 +4133,21 @@ shrink_encoding_region (beg, end, coding, str)
       /* We need no conversion.  */
       *beg = *end;
       return;
+    }
+
+  translation_table = coding->translation_table_for_encode;
+  if (NILP (translation_table) && !NILP (Venable_character_translation))
+    translation_table = Vstandard_translation_table_for_encode;
+  if (CHAR_TABLE_P (translation_table))
+    {
+      int i;
+      for (i = 0; i < 128; i++)
+	if (!NILP (CHAR_TABLE_REF (translation_table, i)))
+	  break;
+      if (i < 128)
+	/* Some ASCII character should be tranlsated.  We give up
+	   shrinking.  */
+	return;
     }
 
   if (str)
@@ -4004,6 +4181,9 @@ shrink_encoding_region (beg, end, coding, str)
       break;
 
     case coding_type_iso2022:
+      if (CODING_SPEC_ISO_INITIAL_DESIGNATION (coding, 0) != CHARSET_ASCII)
+	/* We can't skip any data.  */
+	break;
       if (coding->flags & CODING_FLAG_ISO_DESIGNATE_AT_BOL)
 	{
 	  unsigned char *bol = begp; 
@@ -4037,6 +4217,20 @@ shrink_encoding_region (beg, end, coding, str)
   return;
 }
 
+/* As shrinking conversion region requires some overhead, we don't try
+   shrinking if the length of conversion region is less than this
+   value.  */
+static int shrink_conversion_region_threshhold = 1024;
+
+#define SHRINK_CONVERSION_REGION(beg, end, coding, str, encodep)	\
+  do {									\
+    if (*(end) - *(beg) > shrink_conversion_region_threshhold)		\
+      {									\
+        if (encodep) shrink_encoding_region (beg, end, coding, str);	\
+        else shrink_decoding_region (beg, end, coding, str);		\
+      }									\
+  } while (0)
+
 /* Decode (if ENCODEP is zero) or encode (if ENCODEP is nonzero) the
    text from FROM to TO (byte positions are FROM_BYTE and TO_BYTE) by
    coding system CODING, and return the status code of code conversion
@@ -4064,12 +4258,17 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
   int fake_multibyte = 0;
   unsigned char *src, *dst;
   Lisp_Object deletion;
+  int orig_point = PT, orig_len = len;
+  int prev_Z;
 
   deletion = Qnil;
   saved_coding_symbol = Qnil;
 
   if (from < PT && PT < to)
-    SET_PT_BOTH (from, from_byte);
+    {
+      TEMP_SET_PT_BOTH (from, from_byte);
+      orig_point = from;
+    }
 
   if (replace)
     {
@@ -4154,20 +4353,30 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
     {
       /* The function in pre-write-conversion may put a new text in a
          new buffer.  */
-      struct buffer *prev = current_buffer, *new;
+      struct buffer *prev = current_buffer;
+      Lisp_Object new;
 
       call2 (coding->pre_write_conversion,
 	     make_number (from), make_number (to));
       if (current_buffer != prev)
 	{
 	  len = ZV - BEGV;
-	  new = current_buffer;
+	  new = Fcurrent_buffer ();
 	  set_buffer_internal_1 (prev);
 	  del_range_2 (from, from_byte, to, to_byte);
-	  insert_from_buffer (new, BEG, len, 0);
+	  TEMP_SET_PT_BOTH (from, from_byte);
+	  insert_from_buffer (XBUFFER (new), 1, len, 0);
+	  Fkill_buffer (new);
+	  if (orig_point >= to)
+	    orig_point += len - orig_len;
+	  else if (orig_point > from)
+	    orig_point = from;
+	  orig_len = len;
 	  to = from + len;
+	  from_byte = multibyte ? CHAR_TO_BYTE (from) : from_byte;
 	  to_byte = multibyte ? CHAR_TO_BYTE (to) : to;
 	  len_byte = to_byte - from_byte;
+	  TEMP_SET_PT_BOTH (from, from_byte);
 	}
     }
 
@@ -4180,11 +4389,11 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
 
     if (from < GPT && GPT < to)
       move_gap_both (from, from_byte);
-    if (encodep)
-      shrink_encoding_region (&from_byte, &to_byte, coding, NULL);
-    else
-      shrink_decoding_region (&from_byte, &to_byte, coding, NULL);
-    if (from_byte == to_byte)
+    SHRINK_CONVERSION_REGION (&from_byte, &to_byte, coding, NULL, encodep);
+    if (from_byte == to_byte
+	&& coding->type != coding_type_ccl
+	&& ! (coding->mode & CODING_MODE_LAST_BLOCK
+	      && CODING_REQUIRE_FLUSHING (coding)))
       {
 	coding->produced = len_byte;
 	coding->produced_char = multibyte ? len : len_byte;
@@ -4202,6 +4411,17 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
     len -= total_skip; len_byte -= total_skip;
   }
 
+  /* The code conversion routine can not preserve text properties for
+     now.  So, we must remove all text properties in the region.
+     Here, we must suppress all modification hooks.  */
+  if (replace)
+    {
+      int saved_inhibit_modification_hooks = inhibit_modification_hooks;
+      inhibit_modification_hooks = 1;
+      Fset_text_properties (make_number (from), make_number (to), Qnil, Qnil);
+      inhibit_modification_hooks = saved_inhibit_modification_hooks;
+    }
+
   /* For converion, we must put the gap before the text in addition to
      making the gap larger for efficient decoding.  The required gap
      size starts from 2000 which is the magic number used in make_gap.
@@ -4213,11 +4433,6 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
     make_gap (require - GAP_SIZE);
   move_gap_both (from, from_byte);
 
-  if (GPT - BEG < beg_unchanged)
-    beg_unchanged = GPT - BEG;
-  if (Z - GPT < end_unchanged)
-    end_unchanged = Z - GPT;
-
   inserted = inserted_byte = 0;
   src = GAP_END_ADDR, dst = GPT_ADDR;
 
@@ -4226,6 +4441,11 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
   Z -= len;
   ZV_BYTE -= len_byte;
   Z_BYTE -= len_byte;
+
+  if (GPT - BEG < beg_unchanged)
+    beg_unchanged = GPT - BEG;
+  if (Z - GPT < end_unchanged)
+    end_unchanged = Z - GPT;
 
   for (;;)
     {
@@ -4254,9 +4474,15 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
       src += coding->consumed;
       dst += inserted_byte;
 
+      if (result == CODING_FINISH_NORMAL)
+	{
+	  src += len_byte;
+	  break;
+	}
       if (! encodep && result == CODING_FINISH_INCONSISTENT_EOL)
 	{
 	  unsigned char *pend = dst, *p = pend - inserted_byte;
+	  Lisp_Object eol_type;
 
 	  /* Encode LFs back to the original eol format (CR or CRLF).  */
 	  if (coding->eol_type == CODING_EOL_CR)
@@ -4270,7 +4496,7 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
 	      while (p < pend) if (*p++ == '\n') count++;
 	      if (src - dst < count)
 		{
-		  /* We don't have sufficient room for putting LFs
+		  /* We don't have sufficient room for encoding LFs
 		     back to CRLF.  We must record converted and
 		     not-yet-converted text back to the buffer
 		     content, enlarge the gap, then record them out of
@@ -4303,13 +4529,25 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
 	  /* Suppress eol-format conversion in the further conversion.  */
 	  coding->eol_type = CODING_EOL_LF;
 
-	  /* Restore the original symbol.  */
-	  coding->symbol = saved_coding_symbol;
+	  /* Set the coding system symbol to that for Unix-like EOL.  */
+	  eol_type = Fget (saved_coding_symbol, Qeol_type);
+	  if (VECTORP (eol_type)
+	      && XVECTOR (eol_type)->size == 3
+	      && SYMBOLP (XVECTOR (eol_type)->contents[CODING_EOL_LF]))
+	    coding->symbol = XVECTOR (eol_type)->contents[CODING_EOL_LF];
+	  else
+	    coding->symbol = saved_coding_symbol;
 	  
 	  continue;
 	}
       if (len_byte <= 0)
-	break;
+	{
+	  if (coding->type != coding_type_ccl
+	      || coding->mode & CODING_MODE_LAST_BLOCK)
+	    break;
+	  coding->mode |= CODING_MODE_LAST_BLOCK;
+	  continue;
+	}
       if (result == CODING_FINISH_INSUFFICIENT_SRC)
 	{
 	  /* The source text ends in invalid codes.  Let's just
@@ -4318,6 +4556,20 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
 	  inserted_byte += len_byte;
 	  while (len_byte--)
 	    *dst++ = *src++;
+	  fake_multibyte = 1;
+	  break;
+	}
+      if (result == CODING_FINISH_INTERRUPT)
+	{
+	  /* The conversion procedure was interrupted by a user.  */
+	  fake_multibyte = 1;
+	  break;
+	}
+      /* Now RESULT == CODING_FINISH_INSUFFICIENT_DST  */
+      if (coding->consumed < 1)
+	{
+	  /* It's quite strange to require more memory without
+	     consuming any bytes.  Perhaps CCL program bug.  */
 	  fake_multibyte = 1;
 	  break;
 	}
@@ -4358,8 +4610,9 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
   if (src - dst > 0) *dst = 0; /* Put an anchor.  */
 
   if (multibyte
-      && (fake_multibyte
-	  || !encodep && (to - from) != (to_byte - from_byte)))
+      && (encodep
+	  || fake_multibyte
+	  || (to - from) != (to_byte - from_byte)))
     inserted = multibyte_chars_in_text (GPT_ADDR, inserted_byte);
 
   /* If we have shrinked the conversion area, adjust it now.  */ 
@@ -4376,23 +4629,29 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
       to += tail_skip; to_byte += tail_skip;
     }
 
+  prev_Z = Z;
   adjust_after_replace (from, from_byte, deletion, inserted, inserted_byte);
+  inserted = Z - prev_Z;
 
   if (! encodep && ! NILP (coding->post_read_conversion))
     {
       Lisp_Object val;
-      int orig_inserted = inserted, pos = PT;
 
-      if (from != pos)
-	temp_set_point_both (current_buffer, from, from_byte);
+      if (from != PT)
+	TEMP_SET_PT_BOTH (from, from_byte);
+      prev_Z = Z;
       val = call1 (coding->post_read_conversion, make_number (inserted));
-      if (! NILP (val))
-	{
-	  CHECK_NUMBER (val, 0);
-	  inserted = XFASTINT (val);
-	}
-      if (pos >= from + orig_inserted)
-	temp_set_point (current_buffer, pos + (inserted - orig_inserted));
+      CHECK_NUMBER (val, 0);
+      inserted += Z - prev_Z;
+    }
+
+  if (orig_point >= from)
+    {
+      if (orig_point >= from + orig_len)
+	orig_point += inserted - orig_len;
+      else
+	orig_point = from;
+      TEMP_SET_PT (orig_point);
     }
 
   signal_after_change (from, to - from, inserted);
@@ -4430,7 +4689,7 @@ code_convert_string (str, coding, encodep, nocopy)
          code_convert_region.  */
       int count = specpdl_ptr - specpdl;
       struct buffer *prev = current_buffer;
-      
+
       record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
       temp_output_buffer_setup (" *code-converting-work*");
       set_buffer_internal (XBUFFER (Vstandard_output));
@@ -4481,12 +4740,11 @@ code_convert_string (str, coding, encodep, nocopy)
   else
     {
       /* Try to skip the heading and tailing ASCIIs.  */
-      if (encodep)
-	shrink_encoding_region (&from, &to_byte, coding, XSTRING (str)->data);
-      else
-	shrink_decoding_region (&from, &to_byte, coding, XSTRING (str)->data);
+      SHRINK_CONVERSION_REGION (&from, &to_byte, coding, XSTRING (str)->data,
+				encodep);
     }
-  if (from == to_byte)
+  if (from == to_byte
+      && coding->type != coding_type_ccl)
     return (nocopy ? str : Fcopy_sequence (str));
 
   if (encodep)
@@ -4611,7 +4869,7 @@ detect_coding_system (src, src_bytes, highest)
   coding_mask = detect_coding_mask (src, src_bytes, NULL, &dummy);
   eol_type  = detect_eol_type (src, src_bytes, &dummy);
   if (eol_type == CODING_EOL_INCONSISTENT)
-    eol_type == CODING_EOL_UNDECIDED;
+    eol_type = CODING_EOL_UNDECIDED;
 
   if (!coding_mask)
     {
@@ -4843,8 +5101,7 @@ code_convert_string_norecord (string, coding_system, encodep)
 }
 
 DEFUN ("decode-sjis-char", Fdecode_sjis_char, Sdecode_sjis_char, 1, 1, 0,
-  "Decode a JISX0208 character of shift-jis encoding.\n\
-CODE is the character code in SJIS.\n\
+  "Decode a Japanese character which has CODE in shift_jis encoding.\n\
 Return the corresponding character.")
   (code)
      Lisp_Object code;
@@ -4854,14 +5111,30 @@ Return the corresponding character.")
 
   CHECK_NUMBER (code, 0);
   s1 = (XFASTINT (code)) >> 8, s2 = (XFASTINT (code)) & 0xFF;
-  DECODE_SJIS (s1, s2, c1, c2);
-  XSETFASTINT (val, MAKE_NON_ASCII_CHAR (charset_jisx0208, c1, c2));
+  if (s1 == 0)
+    {
+      if (s2 < 0x80)
+	XSETFASTINT (val, s2);
+      else if (s2 >= 0xA0 || s2 <= 0xDF)
+	XSETFASTINT (val,
+		     MAKE_NON_ASCII_CHAR (charset_katakana_jisx0201, s2, 0));
+      else
+	error ("Invalid Shift JIS code: %x", XFASTINT (code));
+    }
+  else
+    {
+      if ((s1 < 0x80 || s1 > 0x9F && s1 < 0xE0 || s1 > 0xEF)
+	  || (s2 < 0x40 || s2 == 0x7F || s2 > 0xFC))
+	error ("Invalid Shift JIS code: %x", XFASTINT (code));
+      DECODE_SJIS (s1, s2, c1, c2);
+      XSETFASTINT (val, MAKE_NON_ASCII_CHAR (charset_jisx0208, c1, c2));
+    }
   return val;
 }
 
 DEFUN ("encode-sjis-char", Fencode_sjis_char, Sencode_sjis_char, 1, 1, 0,
-  "Encode a JISX0208 character CHAR to SJIS coding system.\n\
-Return the corresponding character code in SJIS.")
+  "Encode a Japanese character CHAR to shift_jis encoding.\n\
+Return the corresponding code in SJIS.")
   (ch)
      Lisp_Object ch;
 {
@@ -4870,19 +5143,28 @@ Return the corresponding character code in SJIS.")
 
   CHECK_NUMBER (ch, 0);
   SPLIT_CHAR (XFASTINT (ch), charset, c1, c2);
-  if (charset == charset_jisx0208)
+  if (charset == CHARSET_ASCII)
+    {
+      val = ch;
+    }
+  else if (charset == charset_jisx0208
+	   && c1 > 0x20 && c1 < 0x7F && c2 > 0x20 && c2 < 0x7F)
     {
       ENCODE_SJIS (c1, c2, s1, s2);
       XSETFASTINT (val, (s1 << 8) | s2);
     }
+  else if (charset == charset_katakana_jisx0201
+	   && c1 > 0x20 && c2 < 0xE0)
+    {
+      XSETFASTINT (val, c1 | 0x80);
+    }
   else
-    XSETFASTINT (val, 0);
+    error ("Can't encode to shift_jis: %d", XFASTINT (ch));
   return val;
 }
 
 DEFUN ("decode-big5-char", Fdecode_big5_char, Sdecode_big5_char, 1, 1, 0,
-  "Decode a Big5 character CODE of BIG5 coding system.\n\
-CODE is the character code in BIG5.\n\
+  "Decode a Big5 character which has CODE in BIG5 coding system.\n\
 Return the corresponding character.")
   (code)
      Lisp_Object code;
@@ -4893,8 +5175,20 @@ Return the corresponding character.")
 
   CHECK_NUMBER (code, 0);
   b1 = (XFASTINT (code)) >> 8, b2 = (XFASTINT (code)) & 0xFF;
-  DECODE_BIG5 (b1, b2, charset, c1, c2);
-  XSETFASTINT (val, MAKE_NON_ASCII_CHAR (charset, c1, c2));
+  if (b1 == 0)
+    {
+      if (b2 >= 0x80)
+	error ("Invalid BIG5 code: %x", XFASTINT (code));
+      val = code;
+    }
+  else
+    {
+      if ((b1 < 0xA1 || b1 > 0xFE)
+	  || (b2 < 0x40 || (b2 > 0x7E && b2 < 0xA1) || b2 > 0xFE))
+	error ("Invalid BIG5 code: %x", XFASTINT (code));
+      DECODE_BIG5 (b1, b2, charset, c1, c2);
+      XSETFASTINT (val, MAKE_NON_ASCII_CHAR (charset, c1, c2));
+    }
   return val;
 }
 
@@ -4909,13 +5203,20 @@ Return the corresponding character code in Big5.")
 
   CHECK_NUMBER (ch, 0);
   SPLIT_CHAR (XFASTINT (ch), charset, c1, c2);
-  if (charset == charset_big5_1 || charset == charset_big5_2)
+  if (charset == CHARSET_ASCII)
+    {
+      val = ch;
+    }
+  else if ((charset == charset_big5_1
+	    && (XFASTINT (ch) >= 0x250a1 && XFASTINT (ch) <= 0x271ec))
+	   || (charset == charset_big5_2
+	       && XFASTINT (ch) >= 0x290a1 && XFASTINT (ch) <= 0x2bdb2))
     {
       ENCODE_BIG5 (charset, c1, c2, b1, b2);
       XSETFASTINT (val, (b1 << 8) | b2);
     }
   else
-    XSETFASTINT (val, 0);
+    error ("Can't encode to Big5: %d", XFASTINT (ch));
   return val;
 }
 
@@ -4976,7 +5277,7 @@ DEFUN ("keyboard-coding-system",
 DEFUN ("find-operation-coding-system", Ffind_operation_coding_system,
        Sfind_operation_coding_system,  1, MANY, 0,
   "Choose a coding system for an operation based on the target name.\n\
-The value names a pair of coding systems: (DECODING-SYSTEM ENCODING-SYSTEM).\n\
+The value names a pair of coding systems: (DECODING-SYSTEM . ENCODING-SYSTEM).\n\
 DECODING-SYSTEM is the coding system to use for decoding\n\
 \(in case OPERATION does decoding), and ENCODING-SYSTEM is the coding system\n\
 for encoding (in case OPERATION does encoding).\n\
@@ -5381,11 +5682,16 @@ There are three such tables, `file-coding-system-alist',\n\
 
   DEFVAR_LISP ("coding-system-for-write", &Vcoding_system_for_write,
     "Specify the coding system for write operations.\n\
-It is useful to bind this variable with `let', but do not set it globally.\n\
-If the value is a coding system, it is used for encoding on write operation.\n\
-If not, an appropriate element is used from one of the coding system alists:\n\
+Programs bind this variable with `let', but you should not set it globally.\n\
+If the value is a coding system, it is used for encoding of output,\n\
+when writing it to a file and when sending it to a file or subprocess.\n\
+\n\
+If this does not specify a coding system, an appropriate element\n\
+is used from one of the coding system alists:\n\
 There are three such tables, `file-coding-system-alist',\n\
-`process-coding-system-alist', and `network-coding-system-alist'.");
+`process-coding-system-alist', and `network-coding-system-alist'.\n\
+For output to files, if the above procedure does not specify a coding system,\n\
+the value of `buffer-file-coding-system' is used.");
   Vcoding_system_for_write = Qnil;
 
   DEFVAR_LISP ("last-coding-system-used", &Vlast_coding_system_used,
@@ -5393,7 +5699,9 @@ There are three such tables, `file-coding-system-alist',\n\
   Vlast_coding_system_used = Qnil;
 
   DEFVAR_BOOL ("inhibit-eol-conversion", &inhibit_eol_conversion,
-    "*Non-nil inhibit code conversion of end-of-line format in any cases.");
+    "*Non-nil means always inhibit code conversion of end-of-line format.\n\
+See info node `Coding Systems' and info node `Text and Binary' concerning\n\
+such conversion.");
   inhibit_eol_conversion = 0;
 
   DEFVAR_BOOL ("inherit-process-coding-system", &inherit_process_coding_system,
@@ -5414,7 +5722,7 @@ and the cdr part is used for encoding.\n\
 If VAL is a function symbol, the function must return a coding system\n\
 or a cons of coding systems which are used as above.\n\
 \n\
-See also the function `find-operation-coding-system'.\n\
+See also the function `find-operation-coding-system'\n\
 and the variable `auto-coding-alist'.");
   Vfile_coding_system_alist = Qnil;
 
@@ -5449,21 +5757,21 @@ or a cons of coding systems which are used as above.\n\
 See also the function `find-operation-coding-system'.");
   Vnetwork_coding_system_alist = Qnil;
 
-  DEFVAR_INT ("eol-mnemonic-unix", &eol_mnemonic_unix,
-    "Mnemonic character indicating UNIX-like end-of-line format (i.e. LF) .");
-  eol_mnemonic_unix = ':';
+  DEFVAR_LISP ("eol-mnemonic-unix", &eol_mnemonic_unix,
+    "*String displayed in mode line for UNIX-like (LF) end-of-line format.");
+  eol_mnemonic_unix = build_string (":");
 
-  DEFVAR_INT ("eol-mnemonic-dos", &eol_mnemonic_dos,
-    "Mnemonic character indicating DOS-like end-of-line format (i.e. CRLF).");
-  eol_mnemonic_dos = '\\';
+  DEFVAR_LISP ("eol-mnemonic-dos", &eol_mnemonic_dos,
+    "*String displayed in mode line for DOS-like (CRLF) end-of-line format.");
+  eol_mnemonic_dos = build_string ("\\");
 
-  DEFVAR_INT ("eol-mnemonic-mac", &eol_mnemonic_mac,
-    "Mnemonic character indicating MAC-like end-of-line format (i.e. CR).");
-  eol_mnemonic_mac = '/';
+  DEFVAR_LISP ("eol-mnemonic-mac", &eol_mnemonic_mac,
+    "*String displayed in mode line for MAC-like (CR) end-of-line format.");
+  eol_mnemonic_mac = build_string ("/");
 
-  DEFVAR_INT ("eol-mnemonic-undecided", &eol_mnemonic_undecided,
-    "Mnemonic character indicating end-of-line format is not yet decided.");
-  eol_mnemonic_undecided = ':';
+  DEFVAR_LISP ("eol-mnemonic-undecided", &eol_mnemonic_undecided,
+    "*String displayed in mode line when end-of-line format is not yet determined.");
+  eol_mnemonic_undecided = build_string (":");
 
   DEFVAR_LISP ("enable-character-translation", &Venable_character_translation,
     "*Non-nil enables character translation while encoding and decoding.");
@@ -5511,7 +5819,7 @@ If set, this function is called to force a user to select a proper\n\
 coding system which can encode the text in the case that a default\n\
 coding system used in each operation can't encode the text.\n\
 \n\
-The default value is `select-safe-codign-system' (which see).");
+The default value is `select-safe-coding-system' (which see).");
   Vselect_safe_coding_system_function = Qnil;
 
 }

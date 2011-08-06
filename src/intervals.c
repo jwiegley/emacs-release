@@ -1579,10 +1579,13 @@ graft_intervals_into_buffer (source, position, length, buffer, inherit)
       Lisp_Object buf;
       if (!inherit && ! NULL_INTERVAL_P (tree))
 	{
+	  int saved_inhibit_modification_hooks = inhibit_modification_hooks;
 	  XSETBUFFER (buf, buffer);
+	  inhibit_modification_hooks = 1;
 	  Fset_text_properties (make_number (position),
 				make_number (position + length),
 				Qnil, buf);
+	  inhibit_modification_hooks = saved_inhibit_modification_hooks;
 	}
       if (! NULL_INTERVAL_P (BUF_INTERVALS (buffer)))
 	BUF_INTERVALS (buffer) = balance_an_interval (BUF_INTERVALS (buffer));
@@ -1883,7 +1886,7 @@ set_point_both (buffer, charpos, bytepos)
 						   Qintangible, Qnil);
 
 	  /* If following char is intangible,
-	     skip back over all chars with matching intangible property.  */
+	     skip forward over all chars with matching intangible property.  */
 	  if (! NILP (intangible_propval))
 	    while (XINT (pos) < BUF_ZV (buffer)
 		   && EQ (Fget_char_property (pos, Qintangible, Qnil),
@@ -1998,7 +2001,7 @@ move_if_not_intangible (position)
 					       Qintangible, Qnil);
 
       /* If following char is intangible,
-	 skip back over all chars with matching intangible property.  */
+	 skip forward over all chars with matching intangible property.  */
       if (! NILP (intangible_propval))
 	while (XINT (pos) < ZV
 	       && EQ (Fget_char_property (pos, Qintangible, Qnil),

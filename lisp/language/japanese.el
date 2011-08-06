@@ -1,4 +1,4 @@
-;;; japanese.el --- Japanese support
+;;; japanese.el --- Japanese support -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1995 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -42,12 +42,28 @@
 (define-coding-system-alias 'junet 'iso-2022-jp)
 
 (make-coding-system
+ 'iso-2022-jp-2 2 ?J
+ "ISO 2022 based 7bit encoding for CJK, Latin-1, and Greek (MIME:ISO-2022-JP-2)"
+ '((ascii japanese-jisx0208-1978 japanese-jisx0208
+	  latin-jisx0201 japanese-jisx0212 katakana-jisx0201
+	  chinese-gb2312 korean-ksc5601) nil
+	  (nil latin-iso8859-1 greek-iso8859-7) nil
+ short ascii-eol ascii-cntl seven nil single-shift)
+ '((safe-charsets ascii japanese-jisx0208-1978 japanese-jisx0208
+		  latin-jisx0201 japanese-jisx0212 katakana-jisx0201
+		  chinese-gb2312 korean-ksc5601
+		  latin-iso8859-1 greek-iso8859-7)
+   (mime-charset . iso-2022-jp-2)))
+
+(make-coding-system
  'japanese-shift-jis 1 ?S
  "Shift-JIS 8-bit encoding for Japanese (MIME:SHIFT_JIS)"
  nil
  '((safe-charsets ascii japanese-jisx0208 japanese-jisx0208-1978
 		  latin-jisx0201 katakana-jisx0201)
-   (mime-charset . shift_jis)))
+   (mime-charset . shift_jis)
+   (charset-origin-alist (japanese-jisx0208 "SJIS" encode-sjis-char)
+			 (katakana-jisx0201 "SJIS" encode-sjis-char))))
 
 (define-coding-system-alias 'shift_jis 'japanese-shift-jis)
 (define-coding-system-alias 'sjis 'japanese-shift-jis)
@@ -85,7 +101,7 @@
 	      (coding-system iso-2022-jp japanese-iso-8bit
 			     japanese-shift-jis japanese-iso-7bit-1978-irv)
 	      (coding-priority iso-2022-jp japanese-iso-8bit
-			       japanese-shift-jis)
+			       japanese-shift-jis iso-2022-jp-2)
 	      (input-method . "japanese")
 	      (features japan-util)
 	      (sample-text . "Japanese (日本語)	こんにちは, ｺﾝﾆﾁﾊ")

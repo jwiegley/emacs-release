@@ -760,30 +760,6 @@ Lisp code into Emacs.
      form which establishes a Common Lisp-style lexical binding, and
      some examples of how it differs from Emacs' regular `let'.
 
-   * Common Lisp allows the shorthand `#'x' to stand for `(function
-     x)', just as `'x' stands for `(quote x)'.  In Common Lisp, one
-     traditionally uses `#'' notation when referring to the name of a
-     function.  In Emacs Lisp, it works just as well to use a regular
-     quote:
-
-          (loop for x in y by #'cddr collect (mapcar #'plusp x))  ; Common Lisp
-          (loop for x in y by 'cddr collect (mapcar 'plusp x))    ; Emacs Lisp
-
-     When `#'' introduces a `lambda' form, it is best to write out
-     `(function ...)' longhand in Emacs Lisp.  You can use a regular
-     quote, but then the byte-compiler won't know that the `lambda'
-     expression is code that can be compiled.
-
-          (mapcar #'(lambda (x) (* x 2)) list)            ; Common Lisp
-          (mapcar (function (lambda (x) (* x 2))) list)   ; Emacs Lisp
-
-     Lucid Emacs supports `#'' notation starting with version 19.8.
-
-   * The "backquote" feature uses a different syntax in Emacs Lisp.
-
-          (defmacro foo (v &rest body) `(let ((,v 0)) @,body))  ; Common Lisp
-          (defmacro foo (v &rest body) (` (let (((, v) 0)) (@, body)))  ; Emacs
-
    * Reader macros.  Common Lisp includes a second type of macro that
      works at the level of individual characters.  For example, Common
      Lisp implements the quote notation by a reader macro called `'',
@@ -828,21 +804,6 @@ Lisp code into Emacs.
      package-like collections of symbols, but this feature is not
      strong enough to be used as a true package mechanism.
 
-   * Keywords.  The notation `:test-not' in Common Lisp really is a
-     shorthand for `keyword:test-not'; keywords are just symbols in a
-     built-in `keyword' package with the special property that all its
-     symbols are automatically self-evaluating.  Common Lisp programs
-     often use keywords liberally to avoid having to use quotes.
-
-     In Emacs Lisp a keyword is just a symbol whose name begins with a
-     colon; since the Emacs parser does not treat them specially, they
-     have to be explicitly made self-evaluating by a statement like
-     `(setq :test-not ':test-not)'.  This package arranges to execute
-     such a statement whenever `defun*' or some other form sees a
-     keyword being used as an argument.  Common Lisp code that assumes
-     that a symbol `:mumble' will be self-evaluating even though it was
-     never introduced by a `defun*' will have to be fixed.
-
    * The `format' function is quite different between Common Lisp and
      Emacs Lisp.  It takes an additional "destination" argument before
      the format string.  A destination of `nil' means to format to a
@@ -882,7 +843,9 @@ Lisp code into Emacs.
      distinct types.
 
    * The Common Lisp Object System (CLOS) is not implemented, nor is
-     the Common Lisp Condition System.
+     the Common Lisp Condition System.  However, the EIEIO package from
+     `ftp://ftp.ultranet.com/pub/zappo' does implement some CLOS
+     functionality.
 
    * Common Lisp features that are completely redundant with Emacs Lisp
      features of a different name generally have not been implemented.

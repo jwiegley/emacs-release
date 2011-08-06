@@ -29,6 +29,7 @@ Boston, MA 02111-1307, USA.  */
 #include "lisp.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/param.h>
 #include <sys/time.h>
 #include <dos.h>
@@ -49,8 +50,12 @@ Boston, MA 02111-1307, USA.  */
 #include "msdos.h"
 #include "systime.h"
 #include "termhooks.h"
+#include "termchar.h"
 #include "dispextern.h"
 #include "termopts.h"
+#include "charset.h"
+#include "coding.h"
+#include "disptab.h"
 #include "frame.h"
 #include "window.h"
 #include "buffer.h"
@@ -214,6 +219,25 @@ mouse_released (b, xp, yp)
   return (regs.x.bx != 0);
 }
 
+static int
+mouse_button_depressed (b, xp, yp)
+     int b, *xp, *yp;
+{
+  union REGS regs;
+
+  if (b >= mouse_button_count)
+    return 0;
+  regs.x.ax = 0x0003;
+  int86 (0x33, &regs, &regs);
+  if ((regs.x.bx & (1 << mouse_button_translate[b])) != 0)
+    {
+      *xp = regs.x.cx / 8;
+      *yp = regs.x.dx / 8;
+      return 1;
+    }
+  return 0;
+}
+
 void
 mouse_get_pos (f, insist, bar_window, part, x, y, time)
      FRAME_PTR *f;
@@ -252,12 +276,25 @@ void
 mouse_init ()
 {
   union REGS regs;
+  int b;
 
   if (termscript)
     fprintf (termscript, "<M_INIT>");
 
   regs.x.ax = 0x0021;
   int86 (0x33, &regs, &regs);
+
+  /* Reset the mouse last press/release info.  It seems that Windows
+     doesn't do that automatically when function 21h is called, which
+     causes Emacs to ``remember'' the click that switched focus to the
+     window just before Emacs was started from that window.  */
+  for (b = 0; b < mouse_button_count; b++)
+    {
+      int dummy_x, dummy_y;
+
+      (void) mouse_pressed (b, &dummy_x, &dummy_y);
+      (void) mouse_released (b, &dummy_x, &dummy_y);
+    }
 
   regs.x.ax = 0x0007;
   regs.x.cx = 0;
@@ -300,6 +337,8 @@ static int startup_pos_X;
 static int startup_pos_Y;
 static unsigned char startup_screen_attrib;
 
+static clock_t startup_time;
+
 static int term_setup_done;
 
 /* Similar to the_only_frame.  */
@@ -316,6 +355,8 @@ static unsigned long screen_old_address = 0;
 /* Segment and offset of the virtual screen.  If 0, DOS/V is NOT loaded.  */
 static unsigned short screen_virtual_segment = 0;
 static unsigned short screen_virtual_offset = 0;
+/* A flag to control how to display unibyte 8-bit characters.  */
+extern int unibyte_display_via_language_environment;
 
 #if __DJGPP__ > 1
 /* Update the screen from a part of relocated DOS/V screen buffer which
@@ -336,7 +377,7 @@ dosv_refresh_virtual_screen (int offset, int count)
 }
 #endif
 
-static
+static void
 dos_direct_output (y, x, buf, len)
      int y;
      int x;
@@ -636,37 +677,212 @@ IT_set_face (int face)
   ScreenAttrib = (FACE_BACKGROUND (fp) << 4) | FACE_FOREGROUND (fp);
 }
 
-static void
-IT_write_glyphs (GLYPH *str, int len)
-{
-  int newface;
-  int ch, l = len;
-  unsigned char *buf, *bp;
-  int offset = 2 * (new_pos_X + screen_size_X * new_pos_Y);
+Lisp_Object Vdos_unsupported_char_glyph;
 
-  if (len == 0) return;
+static void
+IT_write_glyphs (GLYPH *str, int str_len)
+{
+  unsigned char *screen_buf, *screen_bp, *screen_buf_end, *bp;
+  int unsupported_face = FAST_GLYPH_FACE (Vdos_unsupported_char_glyph);
+  unsigned unsupported_char= FAST_GLYPH_CHAR (Vdos_unsupported_char_glyph);
+  int offset = 2 * (new_pos_X + screen_size_X * new_pos_Y);
+  register int sl = str_len;
+  register int tlen = GLYPH_TABLE_LENGTH;
+  register Lisp_Object *tbase = GLYPH_TABLE_BASE;
+
+  struct coding_system *coding = (CODING_REQUIRE_ENCODING (&terminal_coding)
+				  ? &terminal_coding
+				  : &safe_terminal_coding);
+
+  /* Do we need to consider conversion of unibyte characters to
+     multibyte?  */
+  int convert_unibyte_characters
+    = (NILP (current_buffer->enable_multibyte_characters)
+       && unibyte_display_via_language_environment);
+
+  if (str_len == 0) return;
   
-  buf = bp = alloca (len * 2);
+  screen_buf = screen_bp = alloca (str_len * 2);
+  screen_buf_end = screen_buf + str_len * 2;
   
-  while (--l >= 0)
+  /* The mode bit CODING_MODE_LAST_BLOCK should be set to 1 only at
+     the tail.  */
+  terminal_coding.mode &= ~CODING_MODE_LAST_BLOCK;
+  while (sl)
     {
-      newface = FAST_GLYPH_FACE (*str);
-      if (newface != screen_face)
-	IT_set_face (newface);
-      ch = FAST_GLYPH_CHAR (*str);
-      *bp++ = (unsigned char)ch;
-      *bp++ = ScreenAttrib;
-      
-      if (termscript)
-	fputc (ch, termscript);
-      str++;
+      int cf, ch, chlen, enclen;
+      unsigned char workbuf[4], *buf;
+      register GLYPH g = *str;
+
+      /* Find the actual glyph to display by traversing the entire
+	 aliases chain for this glyph.  */
+      GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
+
+      /* Glyphs with GLYPH_MASK_PADDING bit set are actually there
+	 only for the redisplay code to know how many columns does
+         this character occupy on the screen.  Skip padding glyphs.  */
+      if ((g & GLYPH_MASK_PADDING))
+	{
+	  str++;
+	  sl--;
+	}
+      else
+	{
+	  /* Convert the character code to multibyte, if they
+	     requested display via language environment.  */
+	  ch = FAST_GLYPH_CHAR (g);
+	  /* We only want to convert unibyte characters to multibyte
+	     in unibyte buffers!  Otherwise, the 8-bit code might come
+	     from the display table set up to display foreign characters.  */
+	  if (SINGLE_BYTE_CHAR_P (ch) && convert_unibyte_characters
+	      && (ch >= 0240
+		  || (ch >= 0200 && !NILP (Vnonascii_translation_table))))
+	    ch = unibyte_char_to_multibyte (ch);
+
+	  /* Invalid characters are displayed with a special glyph.  */
+	  if (ch > MAX_CHAR)
+	    {
+	      g = !NILP (Vdos_unsupported_char_glyph)
+		? Vdos_unsupported_char_glyph
+		: MAKE_GLYPH (selected_frame, '\177',
+			      GLYPH_FACE (selected_frame, g));
+	      ch = FAST_GLYPH_CHAR (g);
+	    }
+	  if (COMPOSITE_CHAR_P (ch))
+	    {
+	      /* If CH is a composite character, we can display
+		 only the first component.  */
+	      g = cmpchar_table[COMPOSITE_CHAR_ID (ch)]->glyph[0],
+	      ch = GLYPH_CHAR (selected_frame, g);
+	      cf = FAST_GLYPH_FACE (g);
+	    }
+
+	  /* If the face of this glyph is different from the current
+	     screen face, update the screen attribute byte.  */
+	  cf = FAST_GLYPH_FACE (g);
+	  if (cf != screen_face)
+	    IT_set_face (cf);	/* handles invalid faces gracefully */
+
+	  if (GLYPH_SIMPLE_P (tbase, tlen, g))
+	    /* We generate the multi-byte form of CH in BUF.  */
+	    chlen = CHAR_STRING (ch, workbuf, buf);
+	  else
+	    {
+	      /* We have a string in Vglyph_table.  */
+	      chlen = GLYPH_LENGTH (tbase, g);
+	      buf = GLYPH_STRING (tbase, g);
+	    }
+
+	  /* If the character is not multibyte, don't bother converting it.
+	     FIXME: what about "emacs --unibyte"  */
+	  if (chlen == 1)
+	    {
+	      *conversion_buffer = (unsigned char)ch;
+	      chlen = 0;
+	      enclen = 1;
+	    }
+	  else
+	    {
+	      encode_coding (coding, buf, conversion_buffer, chlen,
+			     conversion_buffer_size);
+	      chlen -= coding->consumed;
+	      enclen = coding->produced;
+
+	      /* Replace glyph codes that cannot be converted by
+		 terminal_coding with Vdos_unsupported_char_glyph.  */
+	      if (*conversion_buffer == '?')
+		{
+		  char *cbp = conversion_buffer;
+
+		  while (cbp < conversion_buffer + enclen && *cbp == '?')
+		    *cbp++ = unsupported_char;
+		  if (unsupported_face != screen_face)
+		    IT_set_face (unsupported_face);
+		}
+	    }
+
+	  if (enclen + chlen > screen_buf_end - screen_bp)
+	    {
+	      /* The allocated buffer for screen writes is too small.
+		 Flush it and loop again without incrementing STR, so
+		 that the next loop will begin with the same glyph.  */
+	      int nbytes = screen_bp - screen_buf;
+
+	      mouse_off_maybe ();
+	      dosmemput (screen_buf, nbytes, (int)ScreenPrimary + offset);
+	      if (screen_virtual_segment)
+		dosv_refresh_virtual_screen (offset, nbytes / 2);
+	      new_pos_X += nbytes / 2;
+	      offset += nbytes;
+
+	      /* Prepare to reuse the same buffer again.  */
+	      screen_bp = screen_buf;
+	    }
+	  else
+	    {
+	      /* There's enough place in the allocated buffer to add
+		 the encoding of this glyph.  */
+
+	      /* First, copy the encoded bytes.  */
+	      for (bp = conversion_buffer; enclen--; bp++)
+		{
+		  *screen_bp++ = (unsigned char)*bp;
+		  *screen_bp++ = ScreenAttrib;
+		  if (termscript)
+		    fputc (*bp, termscript);
+		}
+
+	      /* Now copy the bytes not consumed by the encoding.  */
+	      if (chlen > 0)
+		{
+		  buf += coding->consumed;
+		  while (chlen--)
+		    {
+		      if (termscript)
+			fputc (*buf, termscript);
+		      *screen_bp++ = (unsigned char)*buf++;
+		      *screen_bp++ = ScreenAttrib;
+		    }
+		}
+
+	      /* Update STR and its remaining length.  */
+	      str++;
+	      sl--;
+	    }
+	}
     }
 
+  /* Dump whatever is left in the screen buffer.  */
   mouse_off_maybe ();
-  dosmemput (buf, 2 * len, (int)ScreenPrimary + offset);
+  dosmemput (screen_buf, screen_bp - screen_buf, (int)ScreenPrimary + offset);
   if (screen_virtual_segment)
-    dosv_refresh_virtual_screen (offset, len);
-  new_pos_X += len;
+    dosv_refresh_virtual_screen (offset, (screen_bp - screen_buf) / 2);
+  new_pos_X += (screen_bp - screen_buf) / 2;
+
+  /* We may have to output some codes to terminate the writing.  */
+  if (CODING_REQUIRE_FLUSHING (coding))
+    {
+      coding->mode |= CODING_MODE_LAST_BLOCK;
+      encode_coding (coding, "", conversion_buffer, 0, conversion_buffer_size);
+      if (coding->produced > 0)
+	{
+	  for (screen_bp = screen_buf, bp = conversion_buffer;
+	       coding->produced--; bp++)
+	    {
+	      *screen_bp++ = (unsigned char)*bp;
+	      *screen_bp++ = ScreenAttrib;
+	      if (termscript)
+		fputc (*bp, termscript);
+	    }
+	  offset += screen_bp - screen_buf;
+	  mouse_off_maybe ();
+	  dosmemput (screen_buf, screen_bp - screen_buf,
+		     (int)ScreenPrimary + offset);
+	  if (screen_virtual_segment)
+	    dosv_refresh_virtual_screen (offset, (screen_bp - screen_buf) / 2);
+	  new_pos_X += (screen_bp - screen_buf) / 2;
+	}
+    }
 }
 
 static void
@@ -675,6 +891,10 @@ IT_clear_end_of_line (int first_unused)
   char *spaces, *sp;
   int i, j;
   int offset = 2 * (new_pos_X + screen_size_X * new_pos_Y);
+  extern int fatal_error_in_progress;
+
+  if (fatal_error_in_progress)
+    return;
 
   IT_set_face (0);
   if (termscript)
@@ -731,7 +951,7 @@ IT_cursor_to (int y, int x)
 
 static int cursor_cleared;
 
-static
+static void
 IT_display_cursor (int on)
 {
   if (on && cursor_cleared)
@@ -771,15 +991,38 @@ IT_cmgoto (FRAME_PTR f)
   /* Only set the cursor to where it should be if the display is
      already in sync with the window contents.  */
   int update_cursor_pos = MODIFF == unchanged_modified;
+  static int previous_pos_X = -1;
 
-  /* If we are in the echo area, and the cursor is beyond the end of
-     the text, put the cursor at the end of text.  */
+  /* If the display is in sync, forget any previous knowledge about
+     cursor position.  This is primarily for unexpected events like
+     C-g in the minibuffer.  */
+  if (update_cursor_pos && previous_pos_X >= 0)
+    previous_pos_X = -1;
+  /* If we are in the echo area, put the cursor at the
+     end of the echo area message.  */
   if (!update_cursor_pos
       && XFASTINT (XWINDOW (FRAME_MINIBUF_WINDOW (f))->top) <= new_pos_Y)
     {
-      int tem_X = FRAME_DESIRED_GLYPHS (f)->used[new_pos_Y];
+      int tem_X = current_pos_X, dummy;
 
-      if (current_pos_X > tem_X)
+      if (echo_area_glyphs)
+	{
+	  tem_X = echo_area_glyphs_length;
+	  /* Save current cursor position, to be restored after the
+	     echo area message is erased.  Only remember one level
+	     of previous cursor position.  */
+	  if (previous_pos_X == -1)
+	    ScreenGetCursor (&dummy, &previous_pos_X);
+	}
+      else if (previous_pos_X >= 0)
+	{
+	  /* We wind up here after the echo area message is erased.
+	     Restore the cursor position we remembered above.  */
+	  tem_X = previous_pos_X;
+	  previous_pos_X = -1;
+	}
+
+      if (current_pos_X != tem_X)
 	{
 	  new_pos_X = tem_X;
 	  update_cursor_pos = 1;
@@ -830,6 +1073,24 @@ IT_update_begin (struct frame *foo)
 static void
 IT_update_end (struct frame *foo)
 {
+}
+
+/* Insert and delete characters.  These are not supposed to be used
+   because we are supposed to turn off the feature of using them by
+   setting char_ins_del_ok to zero (see internal_terminal_init).  */
+static void
+IT_insert_glyphs (start, len)
+     register char *start;
+     register int len;
+{
+  abort ();
+}
+
+static void
+IT_delete_glyphs (n)
+     register int n;
+{
+  abort ();
 }
 
 /* set-window-configuration on window.c needs this.  */
@@ -890,9 +1151,14 @@ IT_set_terminal_modes (void)
     es_value = regs.x.es;
     __dpmi_int (0x10, &regs);
 
-    if (regs.x.es != es_value && regs.x.es != (ScreenPrimary >> 4) & 0xffff)
+    if (regs.x.es != es_value)
       {
-	screen_old_address = ScreenPrimary;
+	/* screen_old_address is only set if ScreenPrimary does NOT
+	   already point to the relocated buffer address returned by
+	   the Int 10h/AX=FEh call above.  DJGPP v2.02 and later sets
+	   ScreenPrimary to that address at startup under DOS/V.  */
+	if (regs.x.es != (ScreenPrimary >> 4) & 0xffff)
+	  screen_old_address = ScreenPrimary;
 	screen_virtual_segment = regs.x.es;
 	screen_virtual_offset  = regs.x.di;
 	ScreenPrimary = (screen_virtual_segment << 4) + screen_virtual_offset;
@@ -938,7 +1204,7 @@ IT_reset_terminal_modes (void)
   /* Leave the video system in the same state as we found it,
      as far as the blink/bright-background bit is concerned.  */
   maybe_enable_blinking ();
- 
+
   /* We have a situation here.
      We cannot just do ScreenUpdate(startup_screen_buffer) because
      the luser could have changed screen dimensions inside Emacs
@@ -952,27 +1218,34 @@ IT_reset_terminal_modes (void)
      is also restored within the visible dimensions.  */
 
   ScreenAttrib = startup_screen_attrib;
-  ScreenClear ();
-  if (screen_virtual_segment)
-    dosv_refresh_virtual_screen (0, screen_size);
 
-  if (update_row_len > saved_row_len)
-    update_row_len = saved_row_len;
-  if (current_rows > startup_screen_size_Y)
-    current_rows = startup_screen_size_Y;
-
-  if (termscript)
-    fprintf (termscript, "<SCREEN RESTORED (dimensions=%dx%d)>\n",
-             update_row_len / 2, current_rows);
-
-  while (current_rows--)
+  /* Don't restore the screen if we are exiting less than 2 seconds
+     after startup: we might be crashing, and the screen might show
+     some vital clues to what's wrong.  */
+  if (clock () - startup_time >= 2*CLOCKS_PER_SEC)
     {
-      dosmemput (saved_row, update_row_len, display_row_start);
+      ScreenClear ();
       if (screen_virtual_segment)
-	dosv_refresh_virtual_screen (display_row_start - ScreenPrimary,
-				     update_row_len / 2);
-      saved_row         += saved_row_len;
-      display_row_start += to_next_row;
+	dosv_refresh_virtual_screen (0, screen_size);
+
+      if (update_row_len > saved_row_len)
+	update_row_len = saved_row_len;
+      if (current_rows > startup_screen_size_Y)
+	current_rows = startup_screen_size_Y;
+
+      if (termscript)
+	fprintf (termscript, "<SCREEN RESTORED (dimensions=%dx%d)>\n",
+		 update_row_len / 2, current_rows);
+
+      while (current_rows--)
+	{
+	  dosmemput (saved_row, update_row_len, display_row_start);
+	  if (screen_virtual_segment)
+	    dosv_refresh_virtual_screen (display_row_start - ScreenPrimary,
+					 update_row_len / 2);
+	  saved_row         += saved_row_len;
+	  display_row_start += to_next_row;
+	}
     }
   if (startup_pos_X < cursor_pos_X)
     cursor_pos_X = startup_pos_X;
@@ -1143,6 +1416,8 @@ internal_terminal_init ()
   init_frame_faces (selected_frame);
 
   ring_bell_hook = IT_ring_bell;
+  insert_glyphs_hook = IT_insert_glyphs;
+  delete_glyphs_hook = IT_delete_glyphs;
   write_glyphs_hook = IT_write_glyphs;
   cursor_to_hook = raw_cursor_to_hook = IT_cursor_to;
   clear_to_end_hook = IT_clear_to_end;
@@ -1158,6 +1433,8 @@ internal_terminal_init ()
   set_terminal_modes_hook = IT_set_terminal_modes;
   reset_terminal_modes_hook = IT_reset_terminal_modes;
   set_terminal_window_hook = IT_set_terminal_window;
+
+  char_ins_del_ok = 0;		/* just as fast to write the line */
 #endif
 }
 
@@ -1200,13 +1477,33 @@ check_x (void)
  *                    SPACE
  */
 
+#define Ignore	0x0000
+#define Normal	0x0000	/* normal key - alt changes scan-code */
+#define FctKey	0x1000	/* func key if c == 0, else c */
+#define Special	0x2000	/* func key even if c != 0 */
+#define ModFct	0x3000	/* special if mod-keys, else 'c' */
+#define Map	0x4000	/* alt scan-code, map to unshift/shift key */
+#define KeyPad	0x5000	/* map to insert/kp-0 depending on c == 0xe0 */
+#define Grey	0x6000	/* Grey keypad key */
+
+#define Alt	0x0100	/* alt scan-code */
+#define Ctrl	0x0200	/* ctrl scan-code */
+#define Shift	0x0400	/* shift scan-code */
+
 static int extended_kbd; /* 101 (102) keyboard present.	*/
+
+struct kbd_translate {
+  unsigned char  sc;
+  unsigned char  ch;
+  unsigned short code;
+};
 
 struct dos_keyboard_map
 {
   char *unshifted;
   char *shifted;
   char *alt_gr;
+  struct kbd_translate *translate_table;
 };
 
 
@@ -1216,7 +1513,8 @@ static struct dos_keyboard_map us_keyboard = {
   "`1234567890-=  qwertyuiop[]   asdfghjkl;'\\   zxcvbnm,./  ",
 /* 0123456789012345678901234567890123456789 012345678901234 */
   "~!@#$%^&*()_+  QWERTYUIOP{}   ASDFGHJKL:\"|   ZXCVBNM<>?  ",
-  0				/* no Alt-Gr key */
+  0,				/* no Alt-Gr key */
+  0				/* no translate table */
 };
 
 static struct dos_keyboard_map fr_keyboard = {
@@ -1226,7 +1524,8 @@ static struct dos_keyboard_map fr_keyboard = {
 /* 0123456789012345678901234567890123456789012345678901234 */
   " 1234567890¯+  AZERTYUIOP˘ú   QSDFGHJKLM%Ê   WXCVBN?./ı  ",
 /* 01234567 89012345678901234567890123456789012345678901234 */
-  "  ~#{[|`\\^@]}             œ                              "
+  "  ~#{[|`\\^@]}             œ                              ",
+  0				/* no translate table */
 };
 
 /*
@@ -1236,14 +1535,21 @@ static struct dos_keyboard_map fr_keyboard = {
  * added also {,},` as, respectively, AltGr-8, AltGr-9, AltGr-'
  * Donated by Stefano Brozzi <brozzis@mag00.cedi.unipr.it>
  */
+
+static struct kbd_translate it_kbd_translate_table[] = {
+  { 0x56, 0x3c, Normal | 13 },
+  { 0x56, 0x3e, Normal | 27 },
+  { 0, 0, 0 }
+};
 static struct dos_keyboard_map it_keyboard = {
 /* 0          1         2         3         4         5     */
 /* 0 123456789012345678901234567890123456789012345678901234 */
-  "\\1234567890'ç  qwertyuiopä+   asdfghjklïÖó   zxcvbnm,.-  ",
+  "\\1234567890'ç< qwertyuiopä+>  asdfghjklïÖó   zxcvbnm,.-  ",
 /* 01 23456789012345678901234567890123456789012345678901234 */
-  "|!\"ú$%&/()=?^  QWERTYUIOPÇ*   ASDFGHJKLá¯ı   ZXCVBNM;:_  ",
+  "|!\"ú$%&/()=?^> QWERTYUIOPÇ*   ASDFGHJKLá¯ı   ZXCVBNM;:_  ",
 /* 0123456789012345678901234567890123456789012345678901234 */
-  "        {}~`             []             @#               "
+  "        {}~`             []             @#               ",
+  it_kbd_translate_table
 };
 
 static struct dos_keyboard_map dk_keyboard = {
@@ -1253,7 +1559,27 @@ static struct dos_keyboard_map dk_keyboard = {
 /* 01 23456789012345678901234567890123456789012345678901234 */
   "ı!\"#$%&/()=?`  QWERTYUIOPè^   ASDFGHJKLíù*   ZXCVBNM;:_  ",
 /* 0123456789012345678901234567890123456789012345678901234 */
-  "  @ú$  {[]} |                                             "
+  "  @ú$  {[]} |                                             ",
+  0				/* no translate table */
+};
+
+static struct kbd_translate jp_kbd_translate_table[] = {
+  { 0x73, 0x5c, Normal | 0 },
+  { 0x73, 0x5f, Normal | 0 },
+  { 0x73, 0x1c, Map | 0 },
+  { 0x7d, 0x5c, Normal | 13 },
+  { 0x7d, 0x7c, Normal | 13 },
+  { 0x7d, 0x1c, Map | 13 },
+  { 0, 0, 0 }
+};
+static struct dos_keyboard_map jp_keyboard = {
+/*  0         1          2         3         4         5     */
+/*  0123456789012 345678901234567890123456789012345678901234 */
+  "\\1234567890-^\\ qwertyuiop@[   asdfghjkl;:]   zxcvbnm,./  ",
+/*  01 23456789012345678901234567890123456789012345678901234 */
+   "_!\"#$%&'()~=~| QWERTYUIOP`{   ASDFGHJKL+*}   ZXCVBNM<>?  ",
+  0,				/* no Alt-Gr key */
+  jp_kbd_translate_table
 };
 
 static struct keyboard_layout_list
@@ -1265,7 +1591,8 @@ static struct keyboard_layout_list
   1, &us_keyboard,
   33, &fr_keyboard,
   39, &it_keyboard,
-  45, &dk_keyboard
+  45, &dk_keyboard,
+  81, &jp_keyboard
 };
 
 static struct dos_keyboard_map *keyboard;
@@ -1305,19 +1632,6 @@ dos_set_keyboard (code, always)
   return 0;
 }
 
-#define Ignore	0x0000
-#define Normal	0x0000	/* normal key - alt changes scan-code */
-#define FctKey	0x1000	/* func key if c == 0, else c */
-#define Special	0x2000	/* func key even if c != 0 */
-#define ModFct	0x3000	/* special if mod-keys, else 'c' */
-#define Map	0x4000	/* alt scan-code, map to unshift/shift key */
-#define KeyPad	0x5000	/* map to insert/kp-0 depending on c == 0xe0 */
-#define Grey	0x6000	/* Grey keypad key */
-
-#define Alt	0x0100	/* alt scan-code */
-#define Ctrl	0x0200	/* ctrl scan-code */
-#define Shift	0x0400	/* shift scan-code */
-
 static struct
 {
   unsigned char char_code;	/* normal code	*/
@@ -1417,7 +1731,7 @@ ibmpc_translate_map[] =
   Ignore,			/* Right shift */
   Grey | 1,			/* Grey * */
   Ignore,			/* Alt */
-  Normal |  ' ',		/* ' ' */
+  Normal | 55,			/* ' ' */
   Ignore,			/* Caps Lock */
   FctKey | 0xbe,		/* F1 */
   FctKey | 0xbf,		/* F2 */
@@ -1668,6 +1982,7 @@ and then the scan code.")
 /* Get a char from keyboard.  Function keys are put into the event queue.  */
 
 extern void kbd_buffer_store_event (struct input_event *);
+static int mouse_preempted = 0;	/* non-zero when XMenu gobbles mouse events */
 
 static int
 dos_rawgetc ()
@@ -1688,7 +2003,7 @@ dos_rawgetc ()
     {
       union REGS regs;
       register unsigned char c;
-      int sc, code, mask, kp_mode;
+      int sc, code = -1, mask, kp_mode;
       int modifiers;
 
       regs.h.ah = extended_kbd ? 0x10 : 0x00;
@@ -1738,10 +2053,30 @@ dos_rawgetc ()
 	}
       else
 	{
-	  if (sc >= (sizeof (ibmpc_translate_map) / sizeof (short)))
-	    continue;
-	  if ((code = ibmpc_translate_map[sc]) == Ignore)
-	    continue;
+	  /* Try the keyboard-private translation table first.  */
+	  if (keyboard->translate_table)
+	    {
+	      struct kbd_translate *p = keyboard->translate_table;
+
+	      while (p->sc)
+		{
+		  if (p->sc == sc && p->ch == c)
+		    {
+		      code = p->code;
+		      break;
+		    }
+		  p++;
+		}
+	    }
+	  /* If the private table didn't translate it, use the general
+             one.  */
+	  if (code == -1)
+	    {
+	      if (sc >= (sizeof (ibmpc_translate_map) / sizeof (short)))
+		continue;
+	      if ((code = ibmpc_translate_map[sc]) == Ignore)
+		continue;
+	    }
 	}
       
       if (c == 0)
@@ -1875,7 +2210,7 @@ dos_rawgetc ()
       kbd_buffer_store_event (&event);
     }
 
-  if (have_mouse > 0)
+  if (have_mouse > 0 && !mouse_preempted)
     {
       int but, press, x, y, ok;
 
@@ -2241,6 +2576,10 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
   if (y0 <= 0)
     y0 = 1;
 
+  /* We will process all the mouse events directly, so we had
+     better prevented dos_rawgetc from stealing them from us.  */
+  mouse_preempted++;
+
   state = alloca (menu->panecount * sizeof (struct IT_menu_state));
   screensize = screen_size * 2;
   faces[0]
@@ -2363,11 +2702,22 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
 			   state[statecount - 1].x,
 			   faces);
 	}
-      for (b = 0; b < mouse_button_count; b++)
+      else
+	/* We are busy-waiting for the mouse to move, so let's be nice
+	   to other Windows applications by releasing our time slice.  */
+	__dpmi_yield ();
+      for (b = 0; b < mouse_button_count && !leave; b++)
 	{
-	  (void) mouse_pressed (b, &x, &y);
-	  if (mouse_released (b, &x, &y))
-	    leave = 1;
+	  /* Only leave if user both pressed and released the mouse, and in
+	     that order.  This avoids popping down the menu pane unless
+	     the user is really done with it.  */
+	  if (mouse_pressed (b, &x, &y))
+	    {
+	      while (mouse_button_depressed (b, &x, &y))
+		__dpmi_yield ();
+	      leave = 1;
+	    }
+	  (void) mouse_released (b, &x, &y);
 	}
     }
 
@@ -2378,6 +2728,14 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
   while (statecount--)
     xfree (state[statecount].screen_behind);
   IT_display_cursor (1);	/* turn cursor back on */
+  /* Clean up any mouse events that are waiting inside Emacs event queue.
+     These events are likely to be generated before the menu was even
+     displayed, probably because the user pressed and released the button
+     (which invoked the menu) too quickly.  If we don't remove these events,
+     Emacs will process them after we return and surprise the user.  */
+  discard_mouse_events ();
+  /* Allow mouse events generation by dos_rawgetc.  */
+  mouse_preempted--;
   return result;
 }
 
@@ -2810,6 +3168,12 @@ init_environment (argc, argv, skip_args)
 	      Fcons (build_string ("no usable temporary directories found!!"),
 		     Qnil)),
        "While setting TMPDIR: ");
+
+  /* Note the startup time, so we know not to clear the screen if we
+     exit immediately; see IT_reset_terminal_modes.
+     (Yes, I know `clock' returns zero the first time it's called, but
+     I do this anyway, in case some wiseguy changes that at some point.)  */
+  startup_time = clock ();
 
   /* Find our root from argv[0].  Assuming argv[0] is, say,
      "c:/emacs/bin/emacs.exe" our root will be "c:/emacs".  */
@@ -3605,10 +3969,12 @@ abort ()
 #if __DJGPP__ == 2 && __DJGPP_MINOR__ < 2
   if (screen_virtual_segment)
     dosv_refresh_virtual_screen (2 * 10 * screen_size_X, 4 * screen_size_X);
-#endif /* __DJGPP_MINOR__ < 2 */
   /* Generate traceback, so we could tell whodunit.  */
   signal (SIGINT, SIG_DFL);
   __asm__ __volatile__ ("movb $0x1b,%al;call ___djgpp_hw_exception");
+#else  /* __DJGPP_MINOR__ >= 2 */
+  raise (SIGABRT);
+#endif /* __DJGPP_MINOR__ >= 2 */
 #endif
   exit (2);
 }
@@ -3634,11 +4000,17 @@ syms_of_msdos ()
     "List of directories to search for bitmap files for X.");
   Vx_bitmap_file_path = decode_env_path ((char *) 0, ".");
 
-  /* The following two are from xfns.c:  */
+  /* The following three are from xfns.c:  */
   Qbackground_color = intern ("background-color");
   staticpro (&Qbackground_color);
   Qforeground_color = intern ("foreground-color");
   staticpro (&Qforeground_color);
+
+  DEFVAR_LISP ("dos-unsupported-char-glyph", &Vdos_unsupported_char_glyph,
+   "*Glyph to display instead of chars not supported by current codepage.\n\
+
+This variable is used only by MSDOS terminals.");
+    Vdos_unsupported_char_glyph = '\177';
 #endif
 #ifndef subprocesses
   DEFVAR_BOOL ("delete-exited-processes", &delete_exited_processes,

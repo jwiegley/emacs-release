@@ -93,12 +93,13 @@ default, it is 2.
 
 @vindex scroll-preserve-screen-position
   Some users like the full-screen scroll commands to keep point at the
-same screen position.  To enable this behavior, set the variable
+same screen line.  To enable this behavior, set the variable
 @code{scroll-preserve-screen-position} to a non-@code{nil} value.  This
 mode is convenient for browsing through a file by scrolling by
 screenfuls; if you come back to the screen where you started, point goes
-back to its starting value.  However, this mode is inconvenient when you
-move to the next screen in order to move point to the text there.
+back to the line where it started.  However, this mode is inconvenient
+when you move to the next screen in order to move point to the text
+there.
 
   Another way to do scrolling is with @kbd{C-l} with a numeric argument.
 @kbd{C-l} does not clear the screen when given an argument; it only scrolls

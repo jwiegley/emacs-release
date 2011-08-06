@@ -175,6 +175,8 @@ Restart the Ispell process, using @var{dict} as the dictionary.
 Kill the Ispell subprocess.
 @end table
 
+@cindex Flyspell mode
+@findex flyspell-mode
   Flyspell mode is a fully-automatic way to check spelling as you edit
 in Emacs.  It operates by checking words as you change or insert them.
 When it finds a word that it does not recognize, it highlights that

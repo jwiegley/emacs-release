@@ -31,7 +31,7 @@ Boston, MA 02111-1307, USA.  */
 #ifndef standalone
 #include "buffer.h"
 #include "charset.h"
-#include <paths.h>
+#include <epaths.h>
 #include "commands.h"
 #include "keyboard.h"
 #include "termhooks.h"
@@ -91,6 +91,9 @@ Lisp_Object Vsource_directory;
 
 /* Search path for files to be loaded. */
 Lisp_Object Vload_path;
+
+/* File name of user's init file.  */
+Lisp_Object Vuser_init_file;
 
 /* This is the user-visible association list that maps features to
    lists of defs in their load files. */
@@ -510,27 +513,29 @@ If you want to read non-character events, or ignore them, call\n\
 `read-event' or `read-char-exclusive' instead.\n\
 \n\
 If the optional argument PROMPT is non-nil, display that as a prompt.\n\
-If the optional argument SUPPRESS-INPUT-METHOD is non-nil,\n\
-disable input method processing for this character.")
-  (prompt, suppress_input_method)
-     Lisp_Object prompt, suppress_input_method;
+If the optional argument INHERIT-INPUT-METHOD is non-nil and some\n\
+input method is turned on in the current buffer, that input method\n\
+is used for reading a character.")
+  (prompt, inherit_input_method)
+     Lisp_Object prompt, inherit_input_method;
 {
   if (! NILP (prompt))
     message_with_string ("%s", prompt, 0);
-  return read_filtered_event (1, 1, 1, NILP (suppress_input_method));
+  return read_filtered_event (1, 1, 1, ! NILP (inherit_input_method));
 }
 
 DEFUN ("read-event", Fread_event, Sread_event, 0, 2, 0,
   "Read an event object from the input stream.\n\
 If the optional argument PROMPT is non-nil, display that as a prompt.\n\
-If the optional argument SUPPRESS-INPUT-METHOD is non-nil,\n\
-disable input method processing for this character.")
-  (prompt, suppress_input_method)
-     Lisp_Object prompt, suppress_input_method;
+If the optional argument INHERIT-INPUT-METHOD is non-nil and some\n\
+input method is turned on in the current buffer, that input method\n\
+is used for reading a character.")
+  (prompt, inherit_input_method)
+     Lisp_Object prompt, inherit_input_method;
 {
   if (! NILP (prompt))
     message_with_string ("%s", prompt, 0);
-  return read_filtered_event (0, 0, 0, NILP (suppress_input_method));
+  return read_filtered_event (0, 0, 0, ! NILP (inherit_input_method));
 }
 
 DEFUN ("read-char-exclusive", Fread_char_exclusive, Sread_char_exclusive, 0, 2, 0,
@@ -538,14 +543,15 @@ DEFUN ("read-char-exclusive", Fread_char_exclusive, Sread_char_exclusive, 0, 2, 
 It is returned as a number.  Non-character events are ignored.\n\
 \n\
 If the optional argument PROMPT is non-nil, display that as a prompt.\n\
-If the optional argument SUPPRESS-INPUT-METHOD is non-nil,\n\
-disable input method processing for this character.")
-  (prompt, suppress_input_method)
-     Lisp_Object prompt, suppress_input_method;
+If the optional argument INHERIT-INPUT-METHOD is non-nil and some\n\
+input method is turned on in the current buffer, that input method\n\
+is used for reading a character.")
+  (prompt, inherit_input_method)
+     Lisp_Object prompt, inherit_input_method;
 {
   if (! NILP (prompt))
     message_with_string ("%s", prompt, 0);
-  return read_filtered_event (1, 1, 0, NILP (suppress_input_method));
+  return read_filtered_event (1, 1, 0, ! NILP (inherit_input_method));
 }
 
 DEFUN ("get-file-char", Fget_file_char, Sget_file_char, 0, 0, 0,
@@ -649,15 +655,28 @@ Return t if file exists.")
 	return Qnil;
     }
 
-  /* If FD is 0, that means openp found a remote file.  */
+  if (EQ (Qt, Vuser_init_file))
+    Vuser_init_file = found;
+
+  /* If FD is 0, that means openp found a magic file.  */
   if (fd == 0)
     {
-      handler = Ffind_file_name_handler (found, Qload);
-      return call5 (handler, Qload, found, noerror, nomessage, Qt);
+      if (NILP (Fequal (found, file)))
+	/* If FOUND is a different file name from FILE,
+	   find its handler even if we have already inhibited
+	   the `load' operation on FILE.  */
+	handler = Ffind_file_name_handler (found, Qt);
+      else
+	handler = Ffind_file_name_handler (found, Qload);
+      if (! NILP (handler))
+	return call5 (handler, Qload, found, noerror, nomessage, Qt);
     }
 
+  /* Load .elc files directly, but not when they are
+     remote and have no handler!  */
   if (!bcmp (&(XSTRING (found)->data[XSTRING (found)->size - 4]),
-	     ".elc", 4))
+	     ".elc", 4)
+      && fd != 0)
     {
       struct stat s1, s2;
       int result;
@@ -687,7 +706,8 @@ Return t if file exists.")
       /* We are loading a source file (*.el).  */
       if (!NILP (Vload_source_file_function))
 	{
-	  close (fd);
+	  if (fd != 0)
+	    close (fd);
 	  return call4 (Vload_source_file_function, found, file,
 			NILP (noerror) ? Qnil : Qt,
 			NILP (nomessage) ? Qnil : Qt);
@@ -977,10 +997,6 @@ build_load_history (stream, source)
   register Lisp_Object tail, prev, newelt;
   register Lisp_Object tem, tem2;
   register int foundit, loading;
-
-  /* Don't bother recording anything for preloaded files.  */
-  if (!NILP (Vpurify_flag))
-    return;
 
   loading = stream || !NARROWED;
 
@@ -2106,22 +2122,35 @@ read1 (readcharfun, pch, first_in_list)
 #ifdef LISP_FLOAT_TYPE
 	    if (isfloat_string (read_buffer))
 	      {
+		/* Compute NaN and infinities using 0.0 in a variable,
+		   to cope with compilers that think they are smarter
+		   than we are.  */
 		double zero = 0.0;
-		double value = atof (read_buffer);
-		if (read_buffer[0] == '-' && value == 0.0)
-		  value *= -1.0;
-		/* The only way this can be true, after isfloat_string
+
+		double value;
+
+		/* Negate the value ourselves.  This treats 0, NaNs,
+		   and infinity properly on IEEE floating point hosts,
+		   and works around a common bug where atof ("-0.0")
+		   drops the sign.  */
+		int negative = read_buffer[0] == '-';
+
+		/* The only way p[-1] can be 'F' or 'N', after isfloat_string
 		   returns 1, is if the input ends in e+INF or e+NaN.  */
-		if (p[-1] == 'F' || p[-1] == 'N')
+		switch (p[-1])
 		  {
-		    if (p[-1] == 'N')
-		      value = zero / zero;
-		    else if (read_buffer[0] == '-')
-		      value = - 1.0 / zero;
-		    else
-		      value = 1.0 / zero;
+		  case 'F':
+		    value = 1.0 / zero;
+		    break;
+		  case 'N':
+		    value = zero / zero;
+		    break;
+		  default:
+		    value = atof (read_buffer + negative);
+		    break;
 		  }
-		return make_float (value);
+
+		return make_float (negative ? - value : value);
 	      }
 #endif
 	  }
@@ -3159,7 +3188,7 @@ See documentation of `read' for possible values.");
     "*List of directories to search for files to load.\n\
 Each element is a string (directory name) or nil (try default directory).\n\
 Initialized based on EMACSLOADPATH environment variable, if any,\n\
-otherwise to default specified by file `paths.h' when Emacs was built.");
+otherwise to default specified by file `epaths.h' when Emacs was built.");
 
   DEFVAR_BOOL ("load-in-progress", &load_in_progress,
     "Non-nil iff inside of `load'.");
@@ -3187,6 +3216,10 @@ or variables, and cons cells `(provide . FEATURE)' and `(require . FEATURE)'.");
   DEFVAR_LISP ("load-file-name", &Vload_file_name,
     "Full name of file being loaded by `load'.");
   Vload_file_name = Qnil;
+
+  DEFVAR_LISP ("user-init-file", &Vuser_init_file,
+    "File name, including directory, of user's initialization file.");
+  Vuser_init_file = Qnil;
 
   DEFVAR_LISP ("current-load-list", &Vcurrent_load_list,
     "Used for internal purposes by `load'.");

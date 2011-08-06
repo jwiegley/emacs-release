@@ -1,7 +1,12 @@
       GNU Project Electronic Mailing Lists and gnUSENET Newsgroups
-			 Last Updated 26 November 1997
+			 Last Updated 1999-05-06
 
 	   Please report improvements to: gnu@gnu.org
+
+* Mailing list archives
+
+The GNU mailing lists are archived at
+ftp://ftp-mailing-list-archives.gnu.org/
 
 * GNU mailing lists are also distributed as USENET news groups
 
@@ -95,7 +100,8 @@ proprietary books on GNU software.  (Using them to post ordering
 information is the ultimate faux pas.)  If there is no free program to
 do a certain task, then somebody should write one!  Similarly, free
 documentation that is inadequate should be improved--a way in which
-non-programmers can make a valuable contribution.
+non-programmers can make a valuable contribution.  See also the article
+at <URL:http://www.gnu.org/philosophy/free-doc.html>.
 
 * General Information about info-* lists
 
@@ -192,11 +198,6 @@ newsgroups, they never make it to the GNU maintainers at all.  Please
 mail them to bug-*@gnu.org instead!
 
 See section '* General Information about all lists'.
-
-* Mailing list archives
-
-The GNU mailing lists are archived at
-ftp://ftp-mailing-list-archives.gnu.org/
 
 * info-gnu-request@gnu.org to subscribe to info-gnu
 ** gnUSENET newsgroup: gnu.announce
@@ -406,6 +407,30 @@ See section '* General Information about help-* lists'.
 This list is dead.  Announcements about the GNU Hurd will be made to the
 list info-gnu@gnu.org (see above).
 
+* discuss-gnu-electric-request@gnu.org to subscribe to discuss-gnu-electric
+** gnUSENET newsgroup: NONE
+** Send contributions to: discuss-gnu-electric@gnu.org
+
+This list is the place for user discussion of Gnu Electric, a 
+sophisticated electrical CAD system that can handle many forms of
+circuit design.  Please send bug reports to bug-gnu-electric@gnu.org
+(see next entry).
+
+* bug-gnu-electric-request@gnu.org to subscribe to bug-gnu-electric
+** gnUSENET newsgroup: NONE
+** Gnu Electric bug reports to: bug-gnu-electric@gnu.org
+
+This list distributes, to the active maintainers of GNU Electric, bug
+reports and fixes for, and suggestions for improvements in GNU Electric,
+a sophisticated electrical CAD system that can handle many forms of
+circuit design.
+
+No info-gnu-electric list exists; announcements of new releases are
+made to info-gnu@gnu.org (see above).
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
 * bug-gnu-emacs-request@gnu.org to subscribe to bug-gnu-emacs
 ** gnUSENET newsgroup: gnu.emacs.bug
 ** Gnu Emacs bug reports to: bug-gnu-emacs@gnu.org
@@ -546,9 +571,44 @@ program bugs'.
 
 This list distributes, to the active maintainers of GDB (Gnu's
 DeBugger), bug reports and fixes for, and suggestions for improvements
-in GDB.
+in GDB.  This list is also for user discussion.
 
 There are no other GNU mailing lists or gnUSENET newsgroups for GDB.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* bug-ncurses-request@gnu.org to subscribe to bug-ncurses
+** gnUSENET newsgroup: none
+** NCURSES bug reports to: bug-ncurses@gnu.org
+
+This list distributes, to the active maintainers of ncurses
+(a free implementation of the Unix curses API) bug reports and fixes 
+for, and suggestions for improvements in ncurses.  Users can also
+subscribe to this list.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-ncurses-request@gnu.org to subscribe to help-ncurses
+** gnUSENET newsgroup: none
+** posts go to: help-ncurses@gnu.org
+
+This list is the place for users and installers of ncurses to ask for
+help.  Please send bug reports to bug-ncurses instead of posting them
+here.
+
+See section '* General Information about help-* lists'
+
+* bug-gnats-request@gnu.org to subscribe to bug-gnats
+** gnUSENET newsgroup: None
+** GNATS bug reports to: bug-gnats@gnu.org
+
+This list distributes, to the active maintainers of GNATS (GNats: A
+Tracking System), bug reports and fixes for, and suggestions for improvements
+in GNATS.  This list is also for user discussion.
+
+There are no other GNU mailing lists or gnUSENET newsgroups for GNATS.
 
 See section '* General Information about bug-* lists and reporting
 program bugs'.
@@ -812,20 +872,40 @@ program bugs'.
 ** gnUSENET newsgroup: NONE YET
 ** Send announcements to: info-gnu-fortran@gnu.org
 
-This list is for progress reports about the GNU Fortran compiler.  In
-the future it will also be used for release notices.
+This list is for progress reports and release notices for G77/GNU
+Fortran.
 
 The list is filtered to remove items meant for info-gnu-fortran-request,
-that can be answered by the moderator without bothering the list, or
+that can be answered by the moderator without bothering the list, or that
 should have been sent to another list.
 
 People on the Internet can get a current status report by fingering the
-address fortran@gnu.ai.mit.edu.
+address fortran@gnu.org or by looking at the GNU Fortran web pages at
+http://www.gnu.org/software/fortran/fortran.html.
+
+Users looking for help should ask the help-gnu-fortran@gnu.org list.
+Bug reports should go to bug-gnu-fortran@gnu.org.
 
 See section '* General Information about info-* lists'.
 
-There are no other GNU mailing lists or gnUSENET newsgroups for GNU
-Fortran (yet).
+* help-gnu-fortran-request@gnu.org to subscribe to help-gnu-fortran
+** gnUSENET newsgroup:  NONE YET
+** Send messages to: help-gnu-fortran@gnu.org
+
+This list is for user requests for help and discussion about GNU
+Fortran (G77).  Bug reports should go to bug-gnu-fortran@gnu.org.
+
+See section '* General Information about help-* lists'.
+
+* bug-gnu-fortran@@gnu.org to subscribe to bug-gnu-fortran
+** gnUSENET newsgroup:  NONE YET
+** Send messages to: help-gnu-fortran@gnu.org
+
+This list is for bug-reports and patches for GNU Fortran
+(G77).  Requests for help should go to help-gnu-fortran@gnu.org.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
 
 * bug-oleo-request@gnu.org to subscribe to bug-oleo
 ** gnUSENET newsgroup: NONE PLANNED
@@ -835,7 +915,7 @@ This list distributes, to the active maintainers of Oleo (the GNU
 spreadsheet), bug reports and fixes for, and suggestions for
 improvements to Oleo.  User discussion of Oleo also occurs here.
 
-There are no other GNU mailing lists or gnUSENET newsgroups for Oleo .
+There are no other GNU mailing lists or gnUSENET newsgroups for Oleo.
 
 See section '* General Information about bug-* lists and reporting
 program bugs'.
@@ -853,15 +933,54 @@ There are no other GNU mailing lists or gnUSENET newsgroups for gmp .
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-pine-request@gnu.org to subscribe to bug-pine
+* bug-panorama-request@gnu.org to subscribe to bug-panorama
 ** gnUSENET newsgroup: NONE PLANNED
-** pine bug reports to: bug-pine@gnu.org
+** panorama bug reports to: bug-panorama@gnu.org
 
-This list distributes, to the active maintainers of pine (the GNU
-version of the pine mail reader), bug reports and fixes for, and suggestions
-for improvements to pine.  User discussion of pine also occurs here.
+This list is a place for users of Panorama to send bug reports, fixes
+for them, and suggestions for improvements.
 
-There are no other GNU mailing lists or gnUSENET newsgroups for pine .
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-panorama-request@gnu.org to subscribe to help-panorama
+** gnUSENET newsgroup: NONE PLANNED
+** articles to: help-panorama@gnu.org
+
+This list is the place for users and installers of Panorama to ask for
+help. Please send bug reports to bug-panorama instead of posting them
+here.
+
+* devel-panorama-request@gnu.org to subscribe to devel-panorama
+** gnUSENET newsgroup: NONE PLANNED
+** articles to: devel-panorama@gnu.org
+
+This list is a place for discussion among active developers of Panorama
+API or any of its plugins.
+
+* bug-mana-request@gnu.org to subscribe to bug-mana
+** gnUSENET newsgroup: NONE PLANNED
+** mana bug reports to: bug-mana@gnu.org
+
+This list distributes, to the active maintainers of mana (the GNU
+stand-alone mail reader), bug reports and fixes for, and suggestions
+for improvements to mana.  User discussion of mana also occurs here.
+
+There are no other GNU mailing lists or gnUSENET newsgroups for mana.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* bug-zebra-request@gnu.org to subscribe to bug-zebra
+** gnUSENET newsgroup: NONE PLANNED
+** zebra bug reports to: bug-zebra@gnu.org
+
+This list distributes, to the active maintainers of zebra (a GPLed
+program to manage TCP/IP based routing protocols), bug reports, bug fixes,
+and suggestions for improvements to zebra.  User discussion of zebra 
+also occurs here.
+
+There are no other GNU mailing lists or gnUSENET newsgroups for zebra.
 
 See section '* General Information about bug-* lists and reporting
 program bugs'.
@@ -1006,6 +1125,16 @@ CVS.  Please check the FAQ before posting questions, however.
 
 This list distributes bug reports, fixes, and suggestions for
 improvements to the maintainers of CVS.
+
+* bug-dr-geo-request@gnu.org to subscribe to bug-dr-geo
+** gnUSENET newsgroup: NONE
+** Dr. Geo bug reports to: bug-dr-geo@gnu.org
+
+This list distributes bug reports for, fixes for bugs in, and
+suggestions for improvements in Dr. Geo to its active developers.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
 
 * bug-fortran-mode-request@erl.mit.edu to subscribe to bug-fortran-mode
 ** USENET newsgroup: (none)
@@ -1198,20 +1327,104 @@ This list is also used for announcements about MCSim and related
 programs, and small but important patches.  Announcements of MCSim
 releases are also made to info-gnu@gnu.org (see above)
 
-* gpc-request@hut.fi to subscribe to gpc 
+* bug-m4-request@gnu.org to subscribe to bug-m4
 ** gnUSENET newsgroup: None at present.
-** Send contributions to: gpc@hut.fi
+** Send contributions to: bug-m4@gnu.org
 
-This list is the user mailing list for GNU Pascal.  Announcements about
-GNU Pascal releases are sent to this list as well as to info-gnu@gnu.org.
+This list is used for bug reports concerning m4, the GNU implementation
+of the traditional Unix macro processor.  It is also for user
+discussion of bug fixes and patches.
+
+This list is unmoderated.
+
+* gpc-request@gnu.de to subscribe to gpc 
+** gnUSENET newsgroup: None at present.
+** Send contributions to: gpc@gnu.de
+
+This list is the user mailing list for GNU Pascal.
+*NOTE* This list was formerly at gpc@hut.fi, and moved as of 1999-05-13.
+Announcements will now be sent to an announcements list (see next entry)
+as well as to this list and info-gnu@gnu.org.
+
+* gpc-announce-request@gnu.de to subscribe to gpc-announce
+** gnUSENET newsgroup: None at present.
+** Send contributions to: gpc-announce@gnu.de
+
+This list will have announcements to interest to users of GNU Pascal,
+including new releases.
+
+* autoconf-request@gnu.org to subscribe to automake
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: autoconf@gnu.org
+
+The list can be used to discuss the autoconf build system and related
+tools (eg config.guess).  The discussion can range from simple "how-to"
+questions up to patches and future directions for this tool.
 
 * automake-request@gnu.org to subscribe to automake
 ** gnUSENET newsgroup: NONE PLANNED
 ** Send contributions to: automake@gnu.org
 
-The list can be used to discusse automake, autoconf, and related tools
-(eg libtool).  The discussion can range from simple "how-to" questions
-up to patches and configuration philosophy.
+The list can be used to discuss automake and related tools (eg libtool).
+The discussion can range from simple "how-to" questions up to patches
+and configuration philosophy.
+
+* libtool-request@gnu.org to subscribe to libtool
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: libtool@gnu.org
+
+The list can be used to discuss development and porting of libtool, and
+anything else that the libtool developers might find interesting (excepting
+bug-reports which have a list of their own).
+
+This list is unmoderated.
+
+* bug-libtool-request@gnu.org to subscribe to bug-libtool
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: bug-libtool@gnu.org
+
+The list can be used to submit and to discuss bugs in libtool.  The
+discussion can range from bug reports and patches themselves to discourse
+related to specific bugs and patches.
+
+This list is unmoderated.
+
+* libtool-commit-request@gnu.org to subscribe to libtool
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: libtool-commit@gnu.org
+
+The list distributes automatic reports of cvs commits to the libtool
+development sources to the  list subscribers.  Probably, any discussion
+related to these automatic submissions should go to the libtool list which
+has more subscribers who will see the submission.
+
+This list is unmoderated.
+
+* bug-a2ps-request@gnu.org to subscribe to bug-a2ps
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: bug-a2ps@gnu.org
+
+This list is used for bug reports concerning GNU a2ps, an Any to
+PostScript filter.  People willing to help (debugging, or helping users)
+may subscribe to this list.
+
+This list is unmoderated.
+
+* a2ps-request@gnu.org to subscribe to a2ps
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: a2ps@gnu.org
+
+On this list are sent announcements about GNU a2ps --included betas--,
+discussions on the interface, implementations etc.  It is by no means a
+bug reporting address, and its volume should be kept moderate.  To this
+end, and to avoid `accidents' (bug reports and spam), this list is not
+moderated but members only can post.
+
+* wget-subscribe@sunsite.auc.dk to subscribe to wget@sunsite.auc.dk
+** gnUSENET newsgroup: NONE PLANNED
+** Send contributions to: wget@sunsite.auc.dk
+
+This list is for user discussion of wget.  This list is not moderated.
 
 * help-gnu-shogi-request@gnu.org IS NOW DEFUNCT
 ** gnUSENET newsgroup: NONE PLANNED
@@ -1245,6 +1458,29 @@ sites.
 
 See section '* General Information about help-* lists'.
 Also see section '* General Information about info-* lists'.
+
+* bug-texinfo-request@gnu.org to subscribe to bug-texinfo
+** gnUSENET newsgroup: NONE
+** GNU Texinfo bug reports to: bug-texinfo@gnu.org
+
+This list distributes, to the active maintainers of these programs, bug
+reports and fixes for, and suggestions for improvements in GNU Texinfo,
+both the programs and the language.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-texinfo-request@gnu.org to subscribe to help-texinfo
+** gnUSENET newsgroup: NONE
+** Send contributions to: help-texinfo@gnu.org
+
+This list is the place for authors, users and installers of GNU Texinfo
+to ask for help.
+
+Don't send bug reports to help-texinfo; mail them to
+bug-texinfo@gnu.org instead.
+
+See section '* General Information about help-* lists'.
 
 * gnu-manual-request@a.cs.uiuc.edu IS NOW DEFUNCT
 ** DEAD: Gnusenet newsgroup: gnu.emacs.lisp.manual

@@ -342,9 +342,10 @@ variable overrides the setting in @file{paths.el} when Emacs was built.
 @itemx LC_ALL
 @itemx LC_CTYPE
 The user's preferred locale.  A locale name which contains
-@samp{8859-@var{n}}, @samp{8859_@var{n}} or @samp{8859@var{n}}
-automatically specifies the @samp{Latin-@var{n}} language environment
-when Emacs starts up.
+@samp{8859-@var{n}}, @samp{8859_@var{n}} or @samp{8859@var{n}}, where
+@var{n} is between 1 and 4, automatically specifies the
+@samp{Latin-@var{n}} language environment when Emacs starts up.  If
+@var{n} is 9, that specifies @samp{Latin-5}.
 @item LOGNAME
 The user's login name.  See also @code{USER}.
 @item MAIL
@@ -434,8 +435,10 @@ character) colors of the default face.  Each character should be the
 hexadecimal code for the desired color on a standard PC text-mode
 display.
 
-Only the low three bits of the background color are actually used,
-because the PC display supports only eight background colors.
+The PC display usually supports only eight background colors.  However,
+Emacs switches the DOS display to a mode where all 16 colors can be used
+for the background, so all four bits of the background color are
+actually used.
 
 @item WINDOW_GFX
 Used when initializing the Sun windows system.
@@ -588,7 +591,7 @@ to use the @code{xlsfonts} program to list all the fixed-width fonts
 available on your system:
 
 @example
-xlsfonts -fn '*x*'
+xlsfonts -fn '*x*' | egrep "^[0-9]+x[0-9]+"
 xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-m*'
 xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-c*'
 @end example
@@ -729,11 +732,11 @@ the window.
 
 @table @samp
 @item -ib @var{width}
-@item --internal-border=@var{width}
+@itemx --internal-border=@var{width}
 Specify @var{width} as the width of the internal border.
 
 @item -bw @var{width}
-@item --border-width=@var{width}
+@itemx --border-width=@var{width}
 Specify @var{width} as the width of the main border.
 @end table
 
@@ -1151,5 +1154,5 @@ The width of the border shadow.
 @item bottomShadowColor
 The color for the border shadow, on the bottom and the right.
 @item topShadowColor
-The color for the border shadow, on the bottom and the right.
+The color for the border shadow, on the top and the left.
 @end table

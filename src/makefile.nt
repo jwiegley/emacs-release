@@ -37,8 +37,18 @@ LOCAL_FLAGS     = -Demacs=1 -DWINDOWSNT -DDOS_NT -DHAVE_CONFIG_H -I..\nt\inc
 LOCAL_FLAGS     = $(LOCAL_FLAGS) -DHAVE_NTGUI=1
 !endif
 
+# From MSVC 5.0 onwards, it seem base relocation information is not included,
+# at least in release builds.  We need to ensure the reloc info is included
+# in order to use the MSVC profiler.
+!IF ("$(_NMAKE_VER)" == "$(_NMAKE_VER_4)")
+EXTRA_LINK      =
+!ELSE
+EXTRA_LINK      = -profile
+!ENDIF
+
 EMACS           = $(BLD)\emacs.exe
 TEMACS          = $(BLD)\temacs.exe
+TEMACS_TMP      = $(BLD)\temacs.bin
 TLIB0           = $(BLD)\temacs0.lib
 TLIB1           = $(BLD)\temacs1.lib
 TLIB2           = $(BLD)\temacs2.lib
@@ -60,7 +70,7 @@ TLASTLIB	= $(BLD)\lastfile.lib
 !if "$(BUILD_TYPE)" == "spd"
 LINK_FLAGS      = $(ARCH_LDFLAGS) -stack:0x00800000 -heap:0x00100000 -base:0x01000000 -debug:full -pdb:$(BLD)\temacs.pdb -machine:$(ARCH) -subsystem:$(SUBSYSTEM) -entry:_start -map:$(BLD)\temacs.map -swaprun:net -swaprun:cd
 !else
-LINK_FLAGS      = $(ARCH_LDFLAGS) -stack:0x00800000 -heap:0x00100000 -base:0x01000000 -debug:full -pdb:none -machine:$(ARCH) -subsystem:$(SUBSYSTEM) -entry:_start -map:$(BLD)\temacs.map -swaprun:net -swaprun:cd
+LINK_FLAGS      = $(ARCH_LDFLAGS) -stack:0x00800000 -heap:0x00100000 -base:0x01000000 -debug:full -debugtype:both -pdb:none -machine:$(ARCH) -subsystem:$(SUBSYSTEM) -entry:_start -map:$(BLD)\temacs.map -swaprun:net -swaprun:cd $(EXTRA_LINK)
 !endif
 
 #
@@ -144,7 +154,8 @@ WIN32OBJ = $(BLD)\w32term.obj	\
 	   $(BLD)\w32faces.obj	\
 	   $(BLD)\w32select.obj	\
 	   $(BLD)\w32menu.obj	\
-	   $(BLD)\w32reg.obj
+	   $(BLD)\w32reg.obj    \
+	   $(BLD)\w32bdf.obj
 
 LIBS =  $(TLIB0)	\
 	$(TLIB1)	\
@@ -173,10 +184,10 @@ all:            $(BLD) $(EMACS)
 #
 # Headers we would preprocess if we could.
 #
-PREPARED_HEADERS = config.h paths.h
+PREPARED_HEADERS = config.h epaths.h
 config.h:	..\nt\$(CONFIG_H)
 		$(CP) $** $@
-paths.h:	..\nt\paths.h
+epaths.h:	..\nt\paths.h
 		$(CP) $** $@
 
 #
@@ -194,16 +205,19 @@ $(DOC):;	cd ..\lib-src
 emacs:          $(EMACS)
 $(EMACS):       $(PREPARED_HEADERS) $(DOC) $(TEMACS)
 		cd $(BLD)
-		temacs.exe -batch -l loadup dump
-		copy temacs.map emacs.map
+		$(MAKEDIR)\$(BLD)\temacs.exe -batch -l loadup dump
 		cd ..\..
 
 #
 # The undumped executable
+# Note the extra post-link step to insert a static preload heap section.
+# If preload runs out of memory, increase the last argument to addsection
+# (it is the preload heap size in MB).
 #
 temacs:         $(BLD) $(TEMACS)
 $(TEMACS):      $(TLIB0) $(TLIB1) $(TLIB2) $(TLIBW32) $(TLASTLIB) $(TOBJ) $(TRES)
-		$(LINK) -out:$(TEMACS) $(LINK_FLAGS) $(TOBJ) $(TRES) $(LIBS)
+		$(LINK) -out:$(TEMACS_TMP) $(LINK_FLAGS) $(TOBJ) $(TRES) $(LIBS)
+		..\nt\$(BLD)\addsection $(TEMACS_TMP) $(TEMACS) EMHEAP 16
 
 #
 # The resource file.  NT 3.10 requires the use of cvtres; even though
@@ -239,12 +253,6 @@ $(TLASTLIB):	$(BLD)\lastfile.obj
   		@- $(AR) -out:$@ $**
 
 #
-# Object files.
-#
-.c{$(BLD)}.obj:
-		$(CC) $(CFLAGS) -Fo$@ $<
-
-#
 # Assuming INSTALL_DIR is defined, build and install emacs in it.
 #
 install:        all
@@ -255,7 +263,7 @@ install:        all
 # Maintenance
 # 
 clean:;         - $(DEL) *~ s\*~
-		- $(DEL) *.pdb config.h paths.h
+		- $(DEL) *.pdb config.h epaths.h
 		- $(DEL) *.orig *.rej *.crlf
 		- $(DEL) s\*.orig s\*.rej s\*.crlf
 		- $(DEL_TREE) deleted
@@ -549,7 +557,7 @@ $(BLD)\filelock.obj : \
 	$(EMACS_ROOT)\nt\inc\pwd.h \
 	$(EMACS_ROOT)\nt\inc\sys\file.h \
 	$(SRC)\lisp.h \
-	$(EMACS_ROOT)\src\paths.h \
+	$(EMACS_ROOT)\src\epaths.h \
 	$(SRC)\buffer.h \
 	$(SRC)\vmsdir.h \
 	$(SRC)\ndir.h
@@ -725,7 +733,7 @@ $(BLD)\lread.obj : \
 	$(EMACS_ROOT)\nt\inc\sys\file.h \
 	$(SRC)\lisp.h \
 	$(SRC)\buffer.h \
-	$(EMACS_ROOT)\src\paths.h \
+	$(EMACS_ROOT)\src\epaths.h \
 	$(SRC)\commands.h \
 	$(SRC)\keyboard.h \
 	$(SRC)\termhooks.h \
@@ -796,7 +804,9 @@ $(BLD)\w32inevt.obj : \
 	$(SRC)\lisp.h \
 	$(SRC)\frame.h \
 	$(SRC)\blockinput.h \
-	$(SRC)\termhooks.h
+	$(SRC)\termhooks.h \
+	$(SRC)\w32heap.h \
+	$(SRC)\w32term.h
 
 $(BLD)\w32proc.obj : \
 	$(SRC)\w32proc.c \
@@ -1104,6 +1114,7 @@ $(BLD)\w32fns.obj: \
 	$(EMACS_ROOT)\src\m\intel386.h \
 	$(EMACS_ROOT)\src\config.h \
 	$(SRC)\w32fns.c \
+	$(SRC)\x-list-font.c \
 	$(SRC)\lisp.h \
 	$(SRC)\w32term.h \
 	$(SRC)\w32gui.h \
@@ -1113,7 +1124,7 @@ $(BLD)\w32fns.obj: \
 	$(SRC)\dispextern.h \
 	$(SRC)\keyboard.h \
 	$(SRC)\blockinput.h \
-	$(SRC)\paths.h \
+	$(SRC)\epaths.h \
 	$(SRC)\w32heap.h \
 	$(SRC)\termhooks.h
 
@@ -1137,6 +1148,7 @@ $(BLD)\w32term.obj: \
 	$(SRC)\w32term.c \
 	$(SRC)\lisp.h \
 	$(SRC)\blockinput.h \
+	$(SRC)\w32heap.h \
 	$(SRC)\w32term.h \
 	$(SRC)\w32gui.h \
 	$(SRC)\systty.h \
@@ -1180,6 +1192,19 @@ $(BLD)\w32xfns.obj: \
 	$(EMACS_ROOT)\src\m\intel386.h \
 	$(EMACS_ROOT)\src\config.h \
 	$(SRC)\w32xfns.c \
+
+$(BLD)\w32bdf.obj: \
+	$(EMACS_ROOT)\src/s\ms-w32.h \
+	$(EMACS_ROOT)\src/m\intel386.h \
+	$(EMACS_ROOT)\src/config.h \
+	$(SRC)\w32bdf.c \
+	$(SRC)\lisp.h \
+	$(SRC)\charset.h \
+	$(SRC)\fontset.h \
+	$(SRC)\blockinput.h \
+	$(SRC)\w32gui.h \
+	$(SRC)\w32term.h \
+	$(SRC)\w32bdf.h \
 	$(SRC)\lisp.h \
 	$(SRC)\w32term.h \
 	$(SRC)\w32.h \

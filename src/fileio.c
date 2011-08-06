@@ -149,6 +149,10 @@ extern char *strerror ();
 #define O_RDONLY 0
 #endif
 
+#ifndef S_ISLNK
+#  define lstat stat
+#endif
+
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
@@ -2111,7 +2115,7 @@ duplicates what `expand-file-name' does.")
       xnm = p;
 #ifdef DOS_NT
     else if (IS_DRIVE (p[0]) && p[1] == ':'
-	     && p > nm && IS_DIRECTORY_SEP (p[-1]))
+	     && p > xnm && IS_DIRECTORY_SEP (p[-1]))
       xnm = p;
 #endif
 
@@ -3020,7 +3024,9 @@ Otherwise returns nil.")
 }
 
 DEFUN ("file-directory-p", Ffile_directory_p, Sfile_directory_p, 1, 1, 0,
-  "Return t if FILENAME names an existing directory.")
+  "Return t if FILENAME names an existing directory.\n\
+Symbolic links to directories count as directories.\n\
+See `file-symlink-p' to distinguish symlinks.")
   (filename)
      Lisp_Object filename;
 {
@@ -3471,7 +3477,7 @@ actually used.")
 	      /* Find a coding system specified in the heading two
 		 lines or in the tailing several lines of the file.
 		 We assume that the 1K-byte and 3K-byte for heading
-		 and tailing respectively are sufficient fot this
+		 and tailing respectively are sufficient for this
 		 purpose.  */
 	      int how_many, nread;
 
@@ -3533,10 +3539,10 @@ actually used.")
 
       setup_coding_system (Fcheck_coding_system (val), &coding);
 
-      if (NILP (Vcoding_system_for_read)
-	  && NILP (current_buffer->enable_multibyte_characters))
-	/* We must suppress all text conversion except for end-of-line
-	   conversion.  */
+      if (NILP (current_buffer->enable_multibyte_characters)
+	  && ! NILP (val))
+	/* We must suppress all character code conversion except for
+	   end-of-line conversion.  */
 	setup_raw_text_coding_system (&coding);
 
       coding_system_decided = 1;
@@ -3762,7 +3768,7 @@ actually used.")
 
       if (lseek (fd, XINT (beg), 0) < 0)
 	{
-	  free (conversion_buffer);
+	  xfree (conversion_buffer);
 	  report_file_error ("Setting file position",
 			     Fcons (orig_filename, Qnil));
 	}
@@ -3857,7 +3863,8 @@ actually used.")
 	  close (fd);
 	  specpdl_ptr--;
 	  /* Truncate the buffer to the size of the file.  */
-	  del_range_1 (same_at_start, same_at_end, 0);
+	  del_range_byte (same_at_start, same_at_end, 0);
+	  inserted = 0;
 	  goto handled;
 	}
 
@@ -3899,18 +3906,23 @@ actually used.")
 	 and update INSERTED to equal the number of bytes
 	 we are taking from the file.  */
       inserted -= (Z_BYTE - same_at_end) + (same_at_start - BEG_BYTE);
-      del_range_byte (same_at_start, same_at_end, 0);
+
       if (same_at_end != same_at_start)
-	SET_PT_BOTH (GPT, GPT_BYTE);
+	{
+	  del_range_byte (same_at_start, same_at_end, 0);
+	  temp = GPT;
+	  same_at_start = GPT_BYTE;
+	}
       else
 	{
-	  /* Insert from the file at the proper position.  */
 	  temp = BYTE_TO_CHAR (same_at_start);
-	  SET_PT_BOTH (temp, same_at_start);
 	}
-
+      /* Insert from the file at the proper position.  */
+      SET_PT_BOTH (temp, same_at_start);
       insert_1 (conversion_buffer + same_at_start - BEG_BYTE, inserted,
 		0, 0, 0);
+      /* Set `inserted' to the number of inserted characters.  */
+      inserted = PT - temp;
 
       free (conversion_buffer);
       close (fd);
@@ -4068,14 +4080,14 @@ actually used.")
 	bcopy (&temp_coding, &coding, sizeof coding);
       }
 
-      if (NILP (Vcoding_system_for_read)
-	  && NILP (current_buffer->enable_multibyte_characters))
-	/* We must suppress all text conversion except for
+      if (NILP (current_buffer->enable_multibyte_characters)
+	  && ! NILP (val))
+	/* We must suppress all character code conversion except for
 	   end-of-line conversion.  */
 	setup_raw_text_coding_system (&coding);
     }
 
-  if (inserted > 0)
+  if (inserted > 0 || coding.type == coding_type_ccl)
     {
       if (CODING_MAY_REQUIRE_DECODING (&coding))
 	{
@@ -5395,7 +5407,7 @@ DIR defaults to current buffer's directory default.")
   (prompt, dir, default_filename, mustmatch, initial)
      Lisp_Object prompt, dir, default_filename, mustmatch, initial;
 {
-  Lisp_Object val, insdef, insdef1, tem;
+  Lisp_Object val, insdef, tem;
   struct gcpro gcpro1, gcpro2;
   register char *homedir;
   int replace_in_history = 0;
@@ -5427,6 +5439,22 @@ DIR defaults to current buffer's directory default.")
 			 STRING_BYTES (XSTRING (dir)) - strlen (homedir) + 1);
       XSTRING (dir)->data[0] = '~';
     }
+  /* Likewise for default_filename.  */
+  if (homedir != 0
+      && STRINGP (default_filename)
+      && !strncmp (homedir, XSTRING (default_filename)->data, strlen (homedir))
+      && IS_DIRECTORY_SEP (XSTRING (default_filename)->data[strlen (homedir)]))
+    {
+      default_filename
+	= make_string (XSTRING (default_filename)->data + strlen (homedir) - 1,
+		       STRING_BYTES (XSTRING (default_filename)) - strlen (homedir) + 1);
+      XSTRING (default_filename)->data[0] = '~';
+    }
+  if (!NILP (default_filename))
+    {
+      CHECK_STRING (default_filename, 3);
+      default_filename = double_dollars (default_filename);
+    }
 
   if (insert_default_directory && STRINGP (dir))
     {
@@ -5439,18 +5467,15 @@ DIR defaults to current buffer's directory default.")
 	  args[1] = initial;
 	  insdef = Fconcat (2, args);
 	  pos = make_number (XSTRING (double_dollars (dir))->size);
-	  insdef1 = Fcons (double_dollars (insdef), pos);
+	  insdef = Fcons (double_dollars (insdef), pos);
 	}
       else
-	insdef1 = double_dollars (insdef);
+	insdef = double_dollars (insdef);
     }
   else if (STRINGP (initial))
-    {
-      insdef = initial;
-      insdef1 = Fcons (double_dollars (insdef), make_number (0));
-    }
+    insdef = Fcons (double_dollars (initial), make_number (0));
   else
-    insdef = Qnil, insdef1 = Qnil;
+    insdef = Qnil;
 
   count = specpdl_ptr - specpdl;
 #ifdef VMS
@@ -5461,7 +5486,7 @@ DIR defaults to current buffer's directory default.")
 
   GCPRO2 (insdef, default_filename);
   val = Fcompleting_read (prompt, intern ("read-file-name-internal"),
-			  dir, mustmatch, insdef1,
+			  dir, mustmatch, insdef,
 			  Qfile_name_history, default_filename, Qnil);
 
   tem = Fsymbol_value (Qfile_name_history);
@@ -5488,7 +5513,7 @@ DIR defaults to current buffer's directory default.")
   if (NILP (val))
     error ("No file name specified");
 
-  tem = Fstring_equal (val, insdef);
+  tem = Fstring_equal (val, CONSP (insdef) ? XCAR (insdef) : insdef);
 
   if (!NILP (tem) && !NILP (default_filename))
     val = default_filename;
@@ -5504,19 +5529,27 @@ DIR defaults to current buffer's directory default.")
   if (replace_in_history)
     /* Replace what Fcompleting_read added to the history
        with what we will actually return.  */
-    XCONS (Fsymbol_value (Qfile_name_history))->car = val;
+    XCONS (Fsymbol_value (Qfile_name_history))->car = double_dollars (val);
   else if (add_to_history)
     {
       /* Add the value to the history--but not if it matches
 	 the last value already there.  */
+      Lisp_Object val1 = double_dollars (val);
       tem = Fsymbol_value (Qfile_name_history);
-      if (! CONSP (tem) || NILP (Fequal (XCONS (tem)->car, val)))
+      if (! CONSP (tem) || NILP (Fequal (XCONS (tem)->car, val1)))
 	Fset (Qfile_name_history,
-	      Fcons (val, tem));
+	      Fcons (val1, tem));
     }
   return val;
 }
 
+void
+init_fileio_once ()
+{
+  /* Must be set before any path manipulation is performed.  */
+  XSETFASTINT (Vdirectory_sep_char, '/');
+}
+
 void
 syms_of_fileio ()
 {
@@ -5661,7 +5694,6 @@ The value should be either ?/ or ?\\ (any other value is treated as ?\\).\n\
 This variable affects the built-in functions only on Windows,\n\
 on other platforms, it is initialized so that Lisp code can find out\n\
 what the normal separator is.");
-  XSETFASTINT (Vdirectory_sep_char, '/');
 
   DEFVAR_LISP ("file-name-handler-alist", &Vfile_name_handler_alist,
     "*Alist of elements (REGEXP . HANDLER) for file names handled specially.\n\

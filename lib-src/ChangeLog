@@ -1,3 +1,109 @@
+1999-07-12  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+1999-06-30  Markus Rost  <markus.rost@mathematik.uni-regensburg.de>
+
+	* Makefile.in (clean): Remove fns*.el.  
+
+1999-06-23  Dave Love  <fx@gnu.org>
+
+	* etags.c (erlang_attribute): Fix undefined variable usage (after
+	Potorti).
+
+1999-05-2  Andrew Innes  <andrewi@gnu.org>
+
+	* movemail.c (main) [WINDOWSNT]: Call ftruncate, which is now
+	mapped to _chsize.
+
+1999-04-29  Richard M. Stallman  <rms@gnu.org>
+
+	* emacsclient.c (main, both versions): Use quote_file_name on cwd.
+
+1999-03-30  Dave Love  <fx@gnu.org>
+
+	* sorted-doc.c (main): Split up tables.  Modify the preamble
+	somewhat.
+
+1999-03-05  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt: Remove common multiple file compilation commands.
+
+1999-02-26  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+	* Makefile.in (yow): Depend on epaths.h, not paths.h.
+
+	* yow.c: Refer to epaths.h.
+
+1999-02-22  Simon Josefsson  <jas@pdc.kth.se>
+
+	* emacsserver.c (perror_1, fatal_error): Don't compile unless needed.
+
+1999-01-27  Andrew Innes  <andrewi@gnu.org>
+
+	* makefile.nt: Do make version comparison as strings.
+
+1999-01-25  Richard Stallman  <rms@gnu.org>
+
+	* emacsclient.c (xmalloc): Fix previous change.
+
+1999-01-24  Richard M. Stallman  <rms@borg.ai.mit.edu>
+
+	* emacsclient.c (xmalloc): Declare to return long.
+
+1999-01-22  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* etags.c (etags_getcwd, absolute_filename) [DOS_NT]: Canonicalize
+	the case of the drive letter.
+
+1999-01-15  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* emacsserver.c (main): Eliminate arbitrary limit on
+	length of system_name.
+
+	* emacsclient.c (main): Eliminate arbitrary limit on
+	length of system_name.
+	(xmalloc): Define unconditionally.
+
+1999-01-12  Darrin B. Jewell  <jewell@mit.edu>
+
+	* etags.c (relative_filename): Stop backward search at beginning
+	of string, since non-Unix systems can have absolute paths with no
+	initial slash.
+
+1998-12-08  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt: Do string comparision of _NMAKE_VER.
+
+1998-11-03  Theodore Jump <tjump@cais.com>
+
+	* makefile.nt: Compile multiple source files when possible.
+
+1998-10-13  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in: Replace tabs with spaces
+	when they might confuse some Make versions.
+
+1998-10-10  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* emacsclient.c (main): Null-terminate system_name.
+
+	* emacsserver.c (main): Null-terminate system_name.
+
+1998-09-21  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* movemail.c (popmail, pop_retr) [MAIL_USE_POP]: When displaying
+	an error message from POP, mention that it's from POP, to
+	distinguish it from local error messages.
+
+1998-09-04  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* movemail.c [MAIL_USE_POP]: Add the "-r" flag to reverse the
+	order of messages downloaded from a POP server (e.g., if the
+	server stores messages in mailboxes in reverse order).
+
 1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
 	* Version 20.3 released.

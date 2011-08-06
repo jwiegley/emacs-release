@@ -228,12 +228,16 @@
 
 (put 'undecided 'coding-system
      (vector t ?- "No conversion on encoding, automatic conversion on decoding"
-	     (list 'alias-coding-systems '(undecided))
+	     (list 'alias-coding-systems '(undecided)
+		   'safe-charsets '(ascii))
 	     nil))
 (setq coding-system-list (cons 'undecided coding-system-list))
 (setq coding-system-alist (cons '("undecided") coding-system-alist))
 (put 'undecided 'eol-type
      (make-subsidiary-coding-system 'undecided))
+
+(define-coding-system-alias 'dos 'undecided-dos)
+(define-coding-system-alias 'mac 'undecided-mac)
 
 ;; Coding systems not specific to each language environment.
 
@@ -282,7 +286,7 @@
 	chinese-cns11643-6 chinese-cns11643-7)
    short ascii-eol ascii-cntl seven locking-shift single-shift nil nil nil
    init-bol)
- '((safe-charsets ascii japanesejisx0208 japanese-jisx0208-1978 latin-jisx0201
+ '((safe-charsets ascii japanese-jisx0208 japanese-jisx0208-1978 latin-jisx0201
 		  korean-ksc5601 chinese-gb2312 chinese-cns11643-1
 		  chinese-cns11643-2 chinese-cns11643-3 chinese-cns11643-4
 		  chinese-cns11643-5 chinese-cns11643-6 chinese-cns11643-7)))
@@ -297,6 +301,15 @@
  '((safe-charsets . t)))
 
 (make-coding-system
+ 'x-ctext 2 ?x
+ "Compound text based generic encoding for decoding unknown messages."
+ '((ascii t) (latin-iso8859-1 t) t t
+   nil ascii-eol ascii-cntl nil locking-shift single-shift nil nil nil
+   init-bol nil nil)
+ '((safe-charsets . t)
+   (mime-charset . x-ctext)))
+
+(make-coding-system
  'iso-safe 2 ?-
  "Convert all characters but ASCII to `?'."
  '(ascii nil nil nil
@@ -304,7 +317,7 @@
  '((safe-charsets ascii)))
 
 ;; Use iso-safe for terminal output if some other coding system is not
-;; specified explicitely.
+;; specified explicitly.
 (set-safe-terminal-coding-system-internal 'iso-safe)
 
 ;; The other coding-systems are defined in each language specific
@@ -359,5 +372,7 @@
 
 ;;; Miscellaneous settings.
 (aset latin-extra-code-table ?\222 t)
+
+(update-coding-systems-internal)
 
 ;;; mule-conf.el ends here

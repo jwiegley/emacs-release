@@ -36,7 +36,7 @@ Boston, MA 02111-1307, USA.  */
 #include "dispextern.h"
 #include "keyboard.h"
 #include "blockinput.h"
-#include <paths.h>
+#include <epaths.h>
 #include "charset.h"
 #include "fontset.h"
 
@@ -136,9 +136,6 @@ Lisp_Object Vx_bitmap_file_path;
 /* Regexp matching a font name whose width is the same as `PIXEL_SIZE'.  */
 Lisp_Object Vx_pixel_size_width_font_regexp;
 
-/* A flag to control how to display unibyte 8-bit character.  */
-int unibyte_display_via_language_environment;
-
 /* Evaluate this expression to rebuild the section of syms_of_xfns
    that initializes and staticpros the symbols declared below.  Note
    that Emacs 18 has a bug that keeps C-x C-e from being able to
@@ -194,6 +191,7 @@ Lisp_Object Qleft;
 Lisp_Object Qright;
 Lisp_Object Qmouse_color;
 Lisp_Object Qnone;
+Lisp_Object Qouter_window_id;
 Lisp_Object Qparent_id;
 Lisp_Object Qscroll_bar_width;
 Lisp_Object Qsuppress_icon;
@@ -264,7 +262,8 @@ check_x_display_info (frame)
 {
   if (NILP (frame))
     {
-      if (FRAME_X_P (selected_frame))
+      if (FRAME_X_P (selected_frame)
+	  && FRAME_LIVE_P (selected_frame))
 	return FRAME_X_DISPLAY_INFO (selected_frame);
       else if (x_display_list != 0)
 	return x_display_list;
@@ -590,6 +589,9 @@ x_create_bitmap_from_file (f, file)
   fd = openp (Vx_bitmap_file_path, file, "", &found, 0);
   if (fd < 0)
     return -1;
+  /* XReadBitmapFile won't handle magic file names.  */
+  if (fd == 0)
+    return -1;
   close (fd);
 
   filename = (char *) XSTRING (found)->data;
@@ -755,6 +757,8 @@ x_set_frame_parameters (f, alist)
   int left_no_change = 0, top_no_change = 0;
   int icon_left_no_change = 0, icon_top_no_change = 0;
 
+  struct gcpro gcpro1, gcpro2;
+
   i = 0;
   for (tail = alist; CONSP (tail); tail = Fcdr (tail))
     i++;
@@ -774,7 +778,15 @@ x_set_frame_parameters (f, alist)
       values[i] = Fcdr (elt);
       i++;
     }
+  /* TAIL and ALIST are not used again below here.  */
+  alist = tail = Qnil;
 
+  GCPRO2 (*parms, *values);
+  gcpro1.nvars = i;
+  gcpro2.nvars = i;
+
+  /* There is no need to gcpro LEFT, TOP, ICON_LEFT, or ICON_TOP,
+     because their values appear in VALUES and strings are not valid.  */
   top = left = Qunbound;
   icon_left = icon_top = Qunbound;
 
@@ -946,6 +958,8 @@ x_set_frame_parameters (f, alist)
 	&& ! (icon_left_no_change && icon_top_no_change))
       x_wm_set_icon_position (f, XINT (icon_left), XINT (icon_top));
   }
+
+  UNGCPRO;
 }
 
 /* Store the screen positions of frame F into XPTR and YPTR.
@@ -1055,6 +1069,9 @@ x_report_frame_params (f, alistptr)
        	   make_number (f->output_data.x->internal_border_width));
   sprintf (buf, "%ld", (long) FRAME_X_WINDOW (f));
   store_in_alist (alistptr, Qwindow_id,
+       	   build_string (buf));
+  sprintf (buf, "%ld", (long) FRAME_OUTER_WINDOW (f));
+  store_in_alist (alistptr, Qouter_window_id,
        	   build_string (buf));
   store_in_alist (alistptr, Qicon_name, f->icon_name);
   FRAME_SAMPLE_VISIBILITY (f);
@@ -1646,7 +1663,7 @@ x_set_font (f, arg, oldval)
   if (EQ (result, Qnil))
     error ("Font `%s' is not defined", XSTRING (arg)->data);
   else if (EQ (result, Qt))
-    error ("the characters of the given font have varying widths");
+    error ("The characters of the given font have varying widths");
   else if (STRINGP (result))
     {
       recompute_basic_faces (f);
@@ -3165,7 +3182,7 @@ x_make_gc (f)
   f->output_data.x->cursor_gc
     = XCreateGC (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
 		 (GCFont | GCForeground | GCBackground
-		  | GCFillStyle | GCStipple | GCLineWidth),
+		  | GCFillStyle /* | GCStipple */ | GCLineWidth),
 		 &gc_values);
 
   /* Create the gray border tile used when the pointer is not in
@@ -5286,6 +5303,8 @@ syms_of_xfns ()
   staticpro (&Qvisibility);
   Qwindow_id = intern ("window-id");
   staticpro (&Qwindow_id);
+  Qouter_window_id = intern ("outer-window-id");
+  staticpro (&Qouter_window_id);
   Qx_frame_parameter = intern ("x-frame-parameter");
   staticpro (&Qx_frame_parameter);
   Qx_resource_name = intern ("x-resource-name");
@@ -5385,15 +5404,6 @@ PIXEL_SIZE field of the name, font finding mechanism gets faster for\n\
 such a font.  This is especially effective for such large fonts as\n\
 Chinese, Japanese, and Korean.");
   Vx_pixel_size_width_font_regexp = Qnil;
-
-  DEFVAR_BOOL ("unibyte-display-via-language-environment",
-	       &unibyte_display_via_language_environment,
-   "*Non-nil means display unibyte text according to language environment.\n\
-Specifically this means that unibyte non-ASCII characters\n\
-are displayed by converting them to the equivalent multibyte characters\n\
-according to the current language environment.  As a result, they are\n\
-displayed according to the current fontset.");
-  unibyte_display_via_language_environment = 0;
 
 #ifdef USE_X_TOOLKIT
   Fprovide (intern ("x-toolkit"));

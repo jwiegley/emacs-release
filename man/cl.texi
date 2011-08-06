@@ -84,15 +84,9 @@ original English.
 
 @noindent
 This document describes a set of Emacs Lisp facilities borrowed from
-Common Lisp.  All the facilities are described here in detail; for
-more discussion and examples, Guy L. Steele's @cite{Common Lisp, the
-Language}, second edition, is the definitive book on Common Lisp.
-@iftex
-Chapter numbers and most section numbers of this document parallel
-those of Steele's book.
-@end iftex
-While this document does not assume any prior knowledge of Common
-Lisp, it does assume a basic familiarity with Emacs Lisp.
+Common Lisp.  All the facilities are described here in detail.  While
+this document does not assume any prior knowledge of Common Lisp, it
+does assume a basic familiarity with Emacs Lisp.
 
 @menu
 * Overview::             Installation, usage, etc.
@@ -526,12 +520,6 @@ accepts other keyword arguments which are passed on to the
 @code{member*} function.  @code{allow-other-keys} is used to
 keep both @code{find-thing} and @code{member*} from complaining
 about each others' keywords in the arguments.
-
-In Common Lisp, keywords are recognized by the Lisp parser itself
-and treated as special entities.  In Emacs, keywords are just
-symbols whose names begin with colons, which @code{defun*} has
-arranged to set equal to themselves so that they will essentially
-be self-quoting.
 
 As a (significant) performance optimization, this package
 implements the scan for keyword arguments by calling @code{memq}
@@ -5589,38 +5577,6 @@ form which establishes a Common Lisp-style lexical binding, and some
 examples of how it differs from Emacs' regular @code{let}.
 
 @item
-Common Lisp allows the shorthand @code{#'x} to stand for
-@code{(function x)}, just as @code{'x} stands for @code{(quote x)}.
-In Common Lisp, one traditionally uses @code{#'} notation when
-referring to the name of a function.  In Emacs Lisp, it works
-just as well to use a regular quote:
-
-@example
-(loop for x in y by #'cddr collect (mapcar #'plusp x))  ; Common Lisp
-(loop for x in y by 'cddr collect (mapcar 'plusp x))    ; Emacs Lisp
-@end example
-
-When @code{#'} introduces a @code{lambda} form, it is best to
-write out @code{(function ...)} longhand in Emacs Lisp.  You can
-use a regular quote, but then the byte-compiler won't know that
-the @code{lambda} expression is code that can be compiled.
-
-@example
-(mapcar #'(lambda (x) (* x 2)) list)            ; Common Lisp
-(mapcar (function (lambda (x) (* x 2))) list)   ; Emacs Lisp
-@end example
-
-Lucid Emacs supports @code{#'} notation starting with version 19.8.
-
-@item
-The ``backquote'' feature uses a different syntax in Emacs Lisp.
-
-@example
-(defmacro foo (v &rest body) `(let ((,v 0)) @@,body))  ; Common Lisp
-(defmacro foo (v &rest body) (` (let (((, v) 0)) (@@, body)))  ; Emacs
-@end example
-
-@item
 Reader macros.  Common Lisp includes a second type of macro that
 works at the level of individual characters.  For example, Common
 Lisp implements the quote notation by a reader macro called @code{'},
@@ -5669,24 +5625,6 @@ package-like collections of symbols, but this feature is not
 strong enough to be used as a true package mechanism.
 
 @item
-Keywords.  The notation @code{:test-not} in Common Lisp really
-is a shorthand for @code{keyword:test-not}; keywords are just
-symbols in a built-in @code{keyword} package with the special
-property that all its symbols are automatically self-evaluating.
-Common Lisp programs often use keywords liberally to avoid
-having to use quotes.
-
-In Emacs Lisp a keyword is just a symbol whose name begins with
-a colon; since the Emacs parser does not treat them specially,
-they have to be explicitly made self-evaluating by a statement
-like @code{(setq :test-not ':test-not)}.  This package arranges
-to execute such a statement whenever @code{defun*} or some
-other form sees a keyword being used as an argument.  Common
-Lisp code that assumes that a symbol @code{:mumble} will be
-self-evaluating even though it was never introduced by a
-@code{defun*} will have to be fixed.
-
-@item
 The @code{format} function is quite different between Common
 Lisp and Emacs Lisp.  It takes an additional ``destination''
 argument before the format string.  A destination of @code{nil}
@@ -5733,7 +5671,9 @@ than being distinct types.
 
 @item
 The Common Lisp Object System (CLOS) is not implemented,
-nor is the Common Lisp Condition System.
+nor is the Common Lisp Condition System.  However, the EIEIO package
+from @uref{ftp://ftp.ultranet.com/pub/zappo} does implement some
+CLOS functionality.
 
 @item
 Common Lisp features that are completely redundant with Emacs

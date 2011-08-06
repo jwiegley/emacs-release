@@ -9,6 +9,12 @@
 @end iftex
 @c %**end of header
 
+@dircategory Editors
+@direntry
+* Widget: (widget).      Documenting the "widget" package used by the
+                           Emacs Custom facility.
+@end direntry
+
 @node Top, Introduction, (dir), (dir)
 @comment  node-name,  next,  previous,  up
 @top The Emacs Widget Library
@@ -273,7 +279,7 @@ Move point @var{count} buttons or editing fields backward.
 @comment  node-name,  next,  previous,  up
 @section Programming Example
 
-Here is the code to implement the user interface example (see @ref{User
+Here is the code to implement the user interface example (@pxref{User
 Interface}).
 
 @lisp

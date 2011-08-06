@@ -8,7 +8,7 @@
 @ifinfo
 @c The edition number appears in several places in this file
 This is the thirteenth edition of the @cite{GNU Emacs Manual},
-updated for Emacs version 20.3
+updated for Emacs version 20.4
 @c Please REMEMBER to update edition number in *three* places in this file.
 
 @dircategory Editors
@@ -20,7 +20,7 @@ Published by the Free Software Foundation
 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999
    Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
@@ -71,17 +71,17 @@ original English.
 @sp 6
 @center @titlefont{GNU Emacs Manual}
 @sp 4
-@center Thirteenth Edition, Updated for Emacs Version 20.3
+@center Thirteenth Edition, Updated for Emacs Version 20.4
 @sp 5
 @center Richard Stallman
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Copyright @copyright{} 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999
    Free Software Foundation, Inc.
 @sp 2
 Thirteenth Edition @*
-Updated for Emacs Version 20.3, @*
-August 1998
+Updated for Emacs Version 20.4, @*
+February 1999
 
 ISBN 1-882114-06-X
 @sp 1
@@ -118,8 +118,8 @@ Cover art by Etienne Suvasa.
 
 Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
-some of how to customize it; it corresponds to GNU Emacs version 20.3.
-For information on extending Emacs, see @ref{Emacs Lisp,,, elisp, The
+some of how to customize it; it corresponds to GNU Emacs version 20.4.
+For information on extending Emacs, see @ref{,Emacs Lisp,, elisp, The
 Emacs Lisp Reference Manual}.
 @end ifinfo
 
@@ -197,7 +197,7 @@ Major Structures of Emacs
 * Buffers::	        Multiple buffers; editing several files at once.
 * Windows::	        Viewing two pieces of text at once.
 * Frames::	        Running the same Emacs session in multiple X windows.
-* International::       Using non-ASCII character sets.
+* International::       Using non-ASCII character sets (the MULE features).
 
 Advanced Features
 * Major Modes::	        Text mode vs. Lisp mode vs. C mode ...
@@ -503,7 +503,7 @@ Editing Programs
 * Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
 * Emerge::	        A convenient way of merging two versions of a program.
-* C/Java Modes::        Special commands of C, C++, Objective-C and Java modes.
+* C Modes::             Special commands of C, C++, Objective-C and Java modes.
 * Fortran::	        Fortran mode and its special features.
 * Asm Mode::	        Asm mode and its special features.
 
@@ -780,7 +780,7 @@ Environment Variables
 * General Variables::	Environment variables that all versions of Emacs use.
 * Misc Variables::	Certain system specific variables.
 
-MS-DOS and Windows NT/95
+MS-DOS and Windows 95/98/NT
 
 * MS-DOS Input::        Keyboard and mouse usage on MS-DOS.
 * MS-DOS Display::      Fonts, frames and display size on MS-DOS.
@@ -914,43 +914,45 @@ occasionally, or subscribing to periodic updates.
 @iftex
 Contributors to GNU Emacs include Per Abrahamsen, Jay K. Adams, Joe
 Arceneaux, Boaz Ben-Zvi, Jim Blandy, Terrence Brannon, Frank Bresz,
-Peter Breton, Kevin Broadey, Vincent Broman, David M. Brown, Hans
-Chalupsky, Bob Chassell, James Clark, Mike Clarkson, Andrew Csillag,
-Doug Cutting, Michael DeCorte, Gary Delp, Matthieu Devin, Eri Ding,
-Carsten Dominik, Scott Draves, Viktor Dukhovni, John Eaton, Rolf Ebert,
-Stephen Eglen, Torbj@"orn Einarsson, Tsugumoto Enami, Hans Henrik
-Eriksen, Michael Ernst, Ata Etemadi, Frederick Farnback, Fred Fish, Karl
-Fogel, Gary Foster, Noah Friedman, Keith Gabryelski, Kevin Gallagher,
-Kevin Gallo, Howard Gayle, Stephen Gildea, David Gillespie, Boris
-Goldowsky, Michelangelo Grigni, Michael Gschwind, Henry Guillaume, Doug
-Gwyn, Ken'ichi Handa , Chris Hanson, K. Shane Hartman, John Heidemann,
-Markus Heritsch, Karl Heuer, Manabu Higashida, Anders Holst, Kurt
-Hornik, Tom Houlder, Lars Ingebrigtsen, Andrew Innes, Michael
-K. Johnson, Kyle Jones, Tomoji Kagatani, Brewster Kahle, David Kaufman,
-Henry Kautz, Howard Kaye, Michael Kifer, Richard King, Larry
-K. Kolodney, Robert Krawitz, Sebastian Kremer, Geoff Kuenning, David
-K@aa gedal, Daniel LaLiberte, Aaron Larson, James R. Larus, Frederic
-Lepied, Lars Lindberg, Neil M. Mager, Ken Manheimer, Bill Mann, Brian
-Marick, Simon Marshall, Bengt Martensson, Charlie Martin, Thomas May,
-Roland McGrath, David Megginson, Wayne Mesard, Richard Mlynarik, Keith
-Moore, Erik Naggum, Thomas Neumann, Mike Newton, Jurgen Nickelsen, Jeff
-Norden, Andrew Norman, Jeff Peck, Damon Anton Permezel, Tom Perrine,
-Daniel Pfeiffer, Fred Pierresteguy, Christian Plaunt, Francesco
-A. Potorti, Michael D. Prange, Ashwin Ram, Eric S. Raymond, Paul Reilly,
-Edward M. Reingold, Rob Riepel, Roland B. Roberts, John Robinson, Danny
-Roozendaal, William Rosenblatt, Guillermo J. Rozas, Ivar Rummelhoff,
-Wolfgang Rupprecht, James B. Salem, Masahiko Sato, William Schelter,
-Ralph Schleicher, Gregor Schmid, Michael Schmidt, Ronald S. Schnell,
-Philippe Schnoebelen, Stephen Schoef, Randal Schwartz, Stanislav
-Shalunov, Mark Shapiro, Olin Shivers, Sam Shteingold, Espen Skoglund,
-Rick Sladkey, Lynn Slater, Chris Smith, David Smith, William Sommerfeld,
-Michael Staats, Ake Stenhoff, Peter Stephenson, Jonathan Stigelman,
-Steve Strassman, Jens T. Berger Thielemann, Spencer Thomas, Jim
-Thompson, Masanobu Umeda, Neil W. Van Dyke, Ulrik Vieth, Geoffrey
-Voelker, Johan Vromans, Barry Warsaw, Morten Welinder, Joseph Brian
-Wells, Ed Wilkinson, Mike Williams, Steven A. Wood, Dale R. Worley,
-Felix S. T. Wu, Tom Wurgler, Eli Zaretskii, Jamie Zawinski, and Neal
-Ziring.
+Peter Breton, Kevin Broadey, Vincent Broman, David M. Brown, Bill
+Carpenter, Hans Chalupsky, Bob Chassell, James Clark, Mike Clarkson,
+Glynn Clements, Andrew Csillag, Doug Cutting, Michael DeCorte, Gary
+Delp, Matthieu Devin, Eri Ding, Carsten Dominik, Scott Draves, Viktor
+Dukhovni, John Eaton, Rolf Ebert, Stephen Eglen, Torbj@"orn Einarsson,
+Tsugumoto Enami, Hans Henrik Eriksen, Michael Ernst, Ata Etemadi,
+Frederick Farnback, Fred Fish, Karl Fogel, Gary Foster, Noah Friedman,
+Keith Gabryelski, Kevin Gallagher, Kevin Gallo, Howard Gayle, Stephen
+Gildea, David Gillespie, Bob Glickstein, Boris Goldowsky, Michelangelo
+Grigni, Michael Gschwind, Henry Guillaume, Doug Gwyn, Ken'ichi Handa,
+Chris Hanson, K. Shane Hartman, John Heidemann, Markus Heritsch, Karl
+Heuer, Manabu Higashida, Anders Holst, Kurt Hornik, Tom Houlder, Lars
+Ingebrigtsen, Andrew Innes, Michael K. Johnson, Kyle Jones, Tomoji
+Kagatani, Brewster Kahle, David Kaufman, Henry Kautz, Howard Kaye,
+Michael Kifer, Richard King, Larry K. Kolodney, Robert Krawitz,
+Sebastian Kremer, Geoff Kuenning, David K@aa gedal, Daniel LaLiberte,
+Aaron Larson, James R. Larus, Frederic Lepied, Lars Lindberg, Eric
+Ludlam, Neil M. Mager, Ken Manheimer, Bill Mann, Brian Marick, Simon
+Marshall, Bengt Martensson, Charlie Martin, Thomas May, Roland McGrath,
+David Megginson, Wayne Mesard, Richard Mlynarik, Keith Moore, Erik
+Naggum, Thomas Neumann, Mike Newton, Jurgen Nickelsen, Jeff Norden,
+Andrew Norman, Jeff Peck, Damon Anton Permezel, Tom Perrine, Jens
+Petersen, Daniel Pfeiffer, Fred Pierresteguy, Christian Plaunt,
+Francesco A. Potorti, Michael D. Prange, Ashwin Ram, Eric S. Raymond,
+Paul Reilly, Edward M. Reingold, Rob Riepel, Roland B. Roberts, John
+Robinson, Danny Roozendaal, William Rosenblatt, Guillermo J. Rozas, Ivar
+Rummelhoff, Wolfgang Rupprecht, James B. Salem, Masahiko Sato, William
+Schelter, Ralph Schleicher, Gregor Schmid, Michael Schmidt, Ronald
+S. Schnell, Philippe Schnoebelen, Stephen Schoef, Randal Schwartz,
+Manuel Serrano, Stanislav Shalunov, Mark Shapiro, Richard Sharman, Olin
+Shivers, Espen Skoglund, Rick Sladkey, Lynn Slater, Chris Smith, David
+Smith, Paul D. Smith, William Sommerfeld, Michael Staats, Sam Steingold,
+Ake Stenhoff, Peter Stephenson, Jonathan Stigelman, Steve Strassman,
+Jens T. Berger Thielemann, Spencer Thomas, Jim Thompson, Masanobu Umeda,
+Neil W. Van Dyke, Ulrik Vieth, Geoffrey Voelker, Johan Vromans, Barry
+Warsaw, Morten Welinder, Joseph Brian Wells, Rodney Whitby, Ed
+Wilkinson, Mike Williams, Steven A. Wood, Dale R. Worley, Felix
+S. T. Wu, Tom Wurgler, Eli Zaretskii, Jamie Zawinski, Ian T. Zimmermann,
+Reto Zimmermann, and Neal Ziring.
 @end iftex
 
 @node Copying, Intro, Distrib, Top

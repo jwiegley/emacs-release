@@ -29,10 +29,10 @@ versions.
 
 Indirect:
 viper-1: 989
-viper-2: 50399
-viper-3: 90731
-viper-4: 140503
-viper-5: 183596
+viper-2: 50405
+viper-3: 90740
+viper-4: 140511
+viper-5: 183605
 
 Tag Table:
 (Indirect)
@@ -42,53 +42,53 @@ Node: Emacs Preliminaries4394
 Node: Loading Viper9744
 Node: States in Viper11906
 Node: Emacs State16972
-Node: Vi State18526
-Node: Insert State25358
-Node: Replace State28224
-Node: The Minibuffer29879
-Node: Multiple Files in Viper31531
-Node: Unimplemented Features34905
-Node: Improvements over Vi35655
-Node: Basics36740
-Node: Undo and Backups39186
-Node: History40354
-Node: Macros and Registers41955
-Node: Completion43634
-Node: Improved Search44057
-Node: Abbreviation Facilities46377
-Node: Movement and Markers47352
-Node: New Commands50399
-Node: Useful Packages56220
-Node: Customization58275
-Node: Rudimentary Changes59887
-Node: Keybindings75578
-Node: Packages that Change Keymaps85346
-Node: Viper Specials90731
-Node: Vi Macros108075
-Node: Commands121407
-Node: Groundwork122153
-Node: Text Handling128434
-Node: Move Commands128988
-Node: Marking132719
-Node: Appending Text133679
-Node: Editing in Insert State136004
-Node: Deleting Text136581
-Node: Changing Text137914
-Node: Search and Replace140503
-Node: Yanking142467
-Node: Undoing143376
-Node: Display143707
-Node: File and Buffer Handling145011
-Node: Mapping148849
-Node: Shell Commands150539
-Node: Options152079
-Node: Emacs Related Commands154274
-Node: Mouse-bound Commands155842
-Node: Acknowledgments156704
-Node: Key Index159238
-Node: Function Index171500
-Node: Variable Index178760
-Node: Package Index183059
-Node: Concept Index183596
+Node: Vi State18527
+Node: Insert State25359
+Node: Replace State28225
+Node: The Minibuffer29880
+Node: Multiple Files in Viper31532
+Node: Unimplemented Features34906
+Node: Improvements over Vi35656
+Node: Basics36741
+Node: Undo and Backups39192
+Node: History40360
+Node: Macros and Registers41961
+Node: Completion43640
+Node: Improved Search44063
+Node: Abbreviation Facilities46383
+Node: Movement and Markers47358
+Node: New Commands50405
+Node: Useful Packages56226
+Node: Customization58281
+Node: Rudimentary Changes59893
+Node: Keybindings75584
+Node: Packages that Change Keymaps85353
+Node: Viper Specials90740
+Node: Vi Macros108084
+Node: Commands121416
+Node: Groundwork122154
+Node: Text Handling128439
+Node: Move Commands128993
+Node: Marking132724
+Node: Appending Text133686
+Node: Editing in Insert State136012
+Node: Deleting Text136589
+Node: Changing Text137922
+Node: Search and Replace140511
+Node: Yanking142476
+Node: Undoing143385
+Node: Display143716
+Node: File and Buffer Handling145020
+Node: Mapping148858
+Node: Shell Commands150548
+Node: Options152088
+Node: Emacs Related Commands154283
+Node: Mouse-bound Commands155851
+Node: Acknowledgments156713
+Node: Key Index159247
+Node: Function Index171509
+Node: Variable Index178769
+Node: Package Index183068
+Node: Concept Index183605
 
 End Tag Table

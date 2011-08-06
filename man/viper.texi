@@ -486,7 +486,7 @@ Emacs is normally in (imagine!!).  Now leave it as soon as possible by
 typing @kbd{C-z}.  Then you will be in Vi state (sigh of relief) :-).
 
 Emacs state is actually a Viperism to denote all the major and minor modes
-(@xref{Emacs Preliminaries}) other than Viper that Emacs can be in.  Emacs
+(@pxref{Emacs Preliminaries}) other than Viper that Emacs can be in.  Emacs
 can have several modes, such as C mode for editing C programs, LaTeX mode
 for editing LaTeX documents, Dired for directory editing, etc.  These are
 major modes, each with a different set of key-bindings.  Viper states are
@@ -964,8 +964,8 @@ enlarged so that it will become the smallest region properly containing the
 region and consisting of whole lines (we call this process @dfn{expanding
 the region}), and then the enlarged region will be affected by the modifying
 command.
-Text Deletion Commands (@xref{Deleting Text}), Change commands
-(@xref{Changing Text}), even Shell Commands (@xref{Shell Commands})
+Text Deletion Commands (@pxref{Deleting Text}), Change commands
+(@pxref{Changing Text}), even Shell Commands (@pxref{Shell Commands})
 use these commands to describe a region of text to operate on.
 Thus, type @kbd{dw} to delete a word, @kbd{>@}} to shift a paragraph, or
 @kbd{!'afmt} to format a region from @samp{point} to textmarker
@@ -986,7 +986,7 @@ region).
 Viper also adds counts to most commands for which it would make sense.
 
 In the Overview chapter, some Multiple File issues were discussed
-(@xref{Multiple Files in Viper}).  In addition to the files, Emacs has
+(@pxref{Multiple Files in Viper}).  In addition to the files, Emacs has
 buffers.  These can be seen in the @kbd{:args} list and switched using
 @kbd{:next} if you type @kbd{:set ex-cycle-through-non-files t}, or
 specify @code{(setq ex-cycle-through-non-files t)} in your @file{.viper}
@@ -2046,7 +2046,7 @@ To customize the binding for @kbd{C-h} in Insert state:
 @noindent
 
 Each Emacs command key calls some lisp function.  If you have enabled the
-Help, (@xref{Rudimentary Changes}) @kbd{C-h k} will show you the function
+Help, (@pxref{Rudimentary Changes}) @kbd{C-h k} will show you the function
 for each specific key; @kbd{C-h b} will show all bindings, and @kbd{C-h m}
 will provide information on the major mode in effect.  If Help is not
 enabled, you can still get help in Vi state by prefixing the above commands
@@ -2212,7 +2212,7 @@ It is common for language-specific major modes to bind @key{TAB} and
 @kbd{C-j} (the line feed) keys to various formatting functions.  This is
 extremely useful, but may require some getting used to for a Vi user.  If you
 decide that this feature is not for you, you can re-bind these keys as
-explained earlier (@xref{Customization}).
+explained earlier (@pxref{Customization}).
 
 Binding for @key{TAB} is one of the most unusual aspects of Viper for many
 novice users.  In Emacs, @key{TAB} is used to format text and programs, and
@@ -2264,7 +2264,7 @@ bind common keys to specialized commands.  This might make sense for modes
 that bind only a small number of common keys.  For instance, Viper subverts
 the Shell mode by changing the bindings for @kbd{C-m} and @kbd{C-d} using
 @code{viper-add-local-keys} described in section on customization
-(@xref{Customization}).
+(@pxref{Customization}).
 
 In some cases, some @emph{minor} modes might override certain essential
 bindings in Vi command state.  This is not a big priblem because this
@@ -2963,7 +2963,7 @@ Finally, Viper provides a function that conveniently displays all macros
 currently defined.  To see all macros along with their definitions, type
 @kbd{M-x viper-describe-kbd-macros}.
 
-@node Commands,,Customization,Top,Top
+@node Commands,,Customization,Top
 @chapter Commands
 
 This section is a semi-automatically bowdlerized version of the Vi
@@ -3012,14 +3012,14 @@ The line commands are:
 @end quotation
 @noindent
 
-Text Deletion Commands (@xref{Deleting Text}), Change commands
-(@xref{Changing Text}), even Shell Commands (@xref{Shell Commands})
+Text Deletion Commands (@pxref{Deleting Text}), Change commands
+(@pxref{Changing Text}), even Shell Commands (@pxref{Shell Commands})
 use these commands to describe a region of text to operate on.
 
 @cindex r and R region specifiers
 
 Viper adds two region descriptors, @kbd{r} and @kbd{R}.  These describe
-the Emacs regions (@xref{Basics}), but they are not movement commands.
+the Emacs regions (@pxref{Basics}), but they are not movement commands.
 
 The command description uses angle brackets @samp{<>} to indicate
 metasyntactic variables, since the normal conventions of using simple
@@ -3059,7 +3059,7 @@ Where x and y are one of the above
 @cindex % (Ex address)
 For the whole file, same as (1,$).
 @item /<pat>/
-@item ?<pat>?
+@itemx ?<pat>?
 Next or previous line with pattern <pat>.
 
 Note that the pattern is allowed to contain newline character (inserted as
@@ -3404,7 +3404,7 @@ in your @file{~/.viper} file.
 @subsection Marking
 
 Emacs mark is referred to in the region specifiers @kbd{r} and @kbd{R}.
-@xref{Emacs Preliminaries} and @pxref{Basics} for explanation.  Also
+@xref{Emacs Preliminaries}, and @xref{Basics}, for explanation.  Also
 see @ref{Mark,,Mark,emacs,The GNU Emacs manual}, for an explanation of
 the Emacs mark ring.
 
@@ -3414,7 +3414,7 @@ the Emacs mark ring.
 @item m<a-z>
 Mark the current file and position with the specified letter.
 @item m .
-Set the Emacs mark (@xref{Emacs Preliminaries}) at point.
+Set the Emacs mark (@pxref{Emacs Preliminaries}) at point.
 @item m <
 Set the Emacs mark at beginning of buffer.
 @item m >
@@ -3449,7 +3449,7 @@ Go to specified Viper mark and go to the first CHAR on line.
 @node  Appending Text, Editing in Insert State, Marking,Text Handling
 @subsection Appending Text
 
-@xref{Options} to see how to change tab and shiftwidth size.  See the GNU
+@xref{Options}, to see how to change tab and shiftwidth size.  See the GNU
 Emacs manual, or try @kbd{C-ha tabs} (If you have turned Emacs help on).
 Check out the variable @code{indent-tabs-mode} to put in just spaces.
 Also see options for word-wrap.
@@ -3699,7 +3699,7 @@ destructive Vi commands.
 @node Search and Replace, Yanking, Changing Text,Text Handling
 @subsection Search and Replace
 
-@xref{Groundwork}, for Ex address syntax.  @xref{Options} to see how to
+@xref{Groundwork}, for Ex address syntax.  @xref{Options}, to see how to
 get literal (non-regular-expression) search and how to stop search from
 wrapping around.
 

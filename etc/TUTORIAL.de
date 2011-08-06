@@ -1,4 +1,4 @@
-Einführung in Emacs.  Copyright (c)1997 Free Software Foundation, Inc.
+Einführung in Emacs.  (c) 1997, 1999 Free Software Foundation, Inc.
 
 Emacs-Befehle beinhalten im allgemeinen die CONTROL-Taste (manchmal
 auch als CTRL, CTL oder STRG beschriftet) sowie die META-Taste (auch
@@ -7,7 +7,7 @@ EDIT oder ALT genannt).  Folgende Abkürzungen werden verwendet:
  C-<Zeichen>  bedeutet, daß die CONTROL-Taste gedrückt sein muß,
               während man das Zeichen <Zeichen> eingibt.  Beispiel:
                 C-f  Halten Sie die CONTROL-Taste gedrückt und drücken
-                     Sie dann die f-Taste
+                     Sie dann die f-Taste.
  M-<Zeichen>  bedeutet, daß die META-Taste gedrückt sein muß,
               während man das Zeichen <Zeichen> eingibt.  Statt dessen
               kann man auch die ESC-Taste und anschließend <Zeichen>
@@ -23,7 +23,7 @@ EDIT oder ALT genannt).  Folgende Abkürzungen werden verwendet:
 
 Beachten Sie bitte, daß beim Blättern die untersten zwei Zeilen der
 vorigen Bildschirmseite als die zwei obersten Zeilen der neuen Seite
-erscheinen werden, um eine gewisse Kontinuität während des Lesens zu
+erscheinen, um eine gewisse Kontinuität während des Lesens zu
 ermöglichen.
 
 Wichtig: Sie können Emacs mit der Befehlsfolge C-x C-c beenden.
@@ -59,7 +59,7 @@ betrachten:
         C-l     lösche den Bildschirm und stelle den ganzen Text
                 erneut dar, wobei der Text rund um den Cursor zur
                 Mitte des Bildschirms bewegt wird.
-                (`l' ist der Buchstabe klein L, nicht die Ziffer 1.)
+                (`l' ist der Buchstabe `klein L', nicht die Ziffer 1.)
 
 
 >> Lokalisieren Sie den Cursor und merken sich den Text in dessen
@@ -90,7 +90,7 @@ Befehl den Cursor wohin bewegt:
 
 
 [Die Buchstaben p, b, f und n stehen für die englischen Worte
-previous, backward, forward und next.]
+`previous', `backward', `forward' und `next'.]
 
 >> Bewegen Sie den Cursor zur Zeile in der Mitte des Diagramms mittels
    C-n oder C-p.  Geben Sie dann C-l ein, und das ganze Diagramm ist
@@ -130,6 +130,9 @@ C-f überspringt Zeilenvorschub-Zeichen analog zu C-b.
    der Zeile.  Geben Sie jetzt noch einmal C-f ein, um zur nächsten
    Zeile zu springen.
 
+>> Falls die Pfeiltasten funktionieren, können Sie mit diesen das
+   gleiche probieren und üben.
+
 Wenn Sie den Cursor entweder nach oben oder nach unten über den
 Bildschirmrand hinaus bewegen wollen, dann wird statt dessen Text in
 den Bildschirm hineingeschoben.  Dies nennt man `scrolling'.  Auf
@@ -155,7 +158,7 @@ analog, aber in die entgegengesetzte Richtung.
    zwischen Wörtern zu beobachten.
 
 Beachten Sie die Parallele zwischen C-f und C-b einerseits und M-f und
-M-b andererseits.  Sehr oft werden mit Meta beginnende Befehle für
+M-b andererseits.  Sehr oft werden mit `Meta-' beginnende Befehle für
 Operationen verwendet, die mit Sprache zu tun haben (Wörter, Sätze,
 Absätze), während Control-Befehle mit den Text-Basiseinheiten
 operieren, unabhängig davon, was Sie gerade editieren (Zeichen,
@@ -179,7 +182,7 @@ werden (z.B. durch ein Textformatierprogramm wie TeX), dann sollten
 Sie sich angewöhnen, nach einem Satzende stets ZWEI Leerzeichen zu
 lassen.  Dadurch ermöglichen Sie u.a., daß Emacs zwischen
 Abkürzungspunkten und dem Satzende unterscheiden kann, was für
-Textsuche oft vorteilhaft ist.]
+Textsuche in wissenschaftlichen Texten oft vorteilhaft ist.]
 
 [Anmerkung 2: Die Tasten `Home' (Pos1) und `End' (Ende) verhalten sich
 standardmäßig nicht wie C-a und C-e, wie wohl die meisten Benutzer
@@ -196,14 +199,14 @@ Cursor-Kästchen.
 Hier ist eine Zusammenfassung von einfachen Bewegungsbefehlen für den
 Cursor einschließlich der Wort- und Satzbewegungsbefehle:
 
-        C-f     ein Zeichen vorwärts
-        C-b     ein Zeichen zurück
+        C-f     ein Zeichen vorwärts (auch `Pfeil rechts'-Taste)
+        C-b     ein Zeichen zurück (auch `Pfeil links'-Taste)
 
         M-f     ein Wort vorwärts
         M-b     ein Wort zurück
 
-        C-n     eine Zeile vorwärts
-        C-p     eine Zeile zurück
+        C-n     eine Zeile vorwärts (auch `Pfeil hinunter'-Taste)
+        C-p     eine Zeile zurück (auch `Pfeil hinauf'-Taste)
 
         C-a     zum Zeilenanfang
         C-e     zum Zeilenende
@@ -227,8 +230,8 @@ eingeben.
 [Standardmäßig sind die Tasten `Pos1' und `Ende' mit M-< bzw. M->
 belegt.]
 
->> Testen Sie nun M-<, um an den Anfang der Einführung zu
-   gelangen.  Verwenden Sie dann C-v, um wieder hierher zu kommen.
+>> Testen Sie nun M-< (bzw. `Pos1'), um an den Anfang der Einführung
+   zu gelangen.  Verwenden Sie dann C-v, um wieder hierher zu kommen.
 
 Ein weiteres, oft benütztes Konzept in Emacs ist die Markierung
 (`mark').  Der Grundbefehl dazu ist C-SPC (oder gleichwertig C-@); mit
@@ -236,24 +239,21 @@ ihm kann eine Markierung gesetzt werden.  Mit C-u C-SPC kommt man zu
 dieser Markierung zurück, falls man den Cursor inzwischen weiterbewegt
 hat.  Viele Befehle, die große Sprünge in einem Text ausführen (so
 auch M-> und M-<) setzen eine Markierung implizit, was in der
-untersten Zeile (dem Echobereich, s.u.) als `Mark set' ersichtlich
-ist.
+untersten Zeile (dem Echobereich, s.u.) als `Mark set' angezeigt wird.
 
->> Verwenden Sie jetzt M->, um zum Ende der Einführung zu springen und
-   benützen Sie C-u C-SPC, um hierher zurückzukehren.
+>> Verwenden Sie jetzt M-> (bzw. `Ende'), um zum Ende der Einführung
+   zu springen und benützen Sie C-u C-SPC, um hierher zurückzukehren.
 
-[Unter dem X Window System ist oft M-< mit `Pos1' (auch mit Home
-beschriftet) und M-> mit `Ende' (End) identisch.]
-
-Markierungen werden in einem Ring gespeichert (d.h.  die zuletzt in
-den Ring eingehängte Markierung wird als erste zurückgeholt und am
-Ende wieder in den Ring eingefügt).  Mit C-u C-SPC können Sie Stück
-für Stück alle Markierungen im Markierungsring ansteuern.
+Markierungen werden in einem Ring gespeichert (d.h., die zuletzt in
+den Ring eingehängte Markierung wird als erste zurückgeholt und wie
+bei einem Schlüsselbund am Ende wieder in den Ring eingefügt).  Mit
+C-u C-SPC können Sie Stück für Stück alle Markierungen im
+Markierungsring ansteuern.
 
 >> Drücken Sie hier C-SPC, gehen Sie dann zu verschiedenen Positionen
    innerhalb dieses Dokuments und verwenden Sie C-SPC, um weitere
    Markierungen zu setzen.  Geben Sie anschließend C-u C-SPC so oft
-   ein, bis Sie wieder an diese Position angelangt sind.
+   ein, bis Sie wieder an dieser Position angelangt sind.
 
 Die meisten Emacs-Befehle akzeptieren ein numerisches Argument, das in
 der Regel als Wiederholungszähler dient (d.h. wie oft der Befehl
@@ -342,7 +342,7 @@ Sie den Befehl ausführen wollen, sonst mit n.
 Emacs kann mehrere Fenster (`windows') haben, von denen jedes seinen
 eigenen Text darstellt.  Später erklären wir, wie man mit Fenstern
 umgeht.  Hier wollen wir nur erklären, wie man ein (vielleicht
-irrtümlicher erzeugtes) Fenster wieder entfernt und zum normalen
+irrtümlich erzeugtes) Fenster wieder entfernt und zum normalen
 Ein-Fenster-Editieren zurückkommt.  Der Befehl ist einfach:
 
         C-x 1   Ein Fenster (d.h., schließe alle anderen Fenster)
@@ -361,9 +361,10 @@ Analogie zum Textmodus.  Für (graphische) Fenster im herkömmlichen
 Sinn verwenden die Emacs-Entwickler den Ausdruck Rahmen (`frame').]
 
 >> Bewegen Sie den Cursor zu dieser Zeile und geben Sie C-u 0 C-l ein.
+
 >> Drücken Sie jetzt C-h k C-f.
    Beachten Sie, wie das Fenster schrumpft und ein neues dazukommt,
-   welches die Dokumentation des C-f Befehls anzeigt.
+   welches die (englische) Dokumentation des C-f Befehls anzeigt.
 
 >> Geben Sie jetzt C-x 1 ein.  Das Dokumentationsfenster verschwindet
    wieder.
@@ -379,10 +380,10 @@ mit `Enter' oder nur mit einem Rückwärts-Hakenpfeil beschriftet), um
 ein Zeilenvorschubzeichen einzufügen.
 
 Sie können das zuletzt eingegebene Zeichen löschen, indem Sie <Delete>
-drücken.  <Delete> ist ein Taste auf der Tastatur, die mit `Del' oder
-`Entf' beschriftet ist.  In manchen Fällen dient die Backspace-Taste
-(oft auch nur als Rückwärtspfeil beschriftet) als <Delete>, aber nicht
-immer!
+drücken.  <Delete> ist einer Taste auf der Tastatur zugeordnet, die
+mit `Del' oder `Entf' beschriftet ist.  In manchen Fällen dient die
+Backspace-Taste (oft auch nur als Rückwärtspfeil beschriftet) als
+<Delete>, aber nicht immer!
 
 Allgemein gesprochen löscht <Delete> das Zeichen unmittelbar vor der
 aktuellen Cursorposition.
@@ -392,14 +393,14 @@ jeweilige Tastatur abgebildet wird.  Lesen Sie im Abschnitt `Rebinding
 Keys in Your Init File' des Emacs-Handbuches nach, wie Sie
 gegebenenfalls die Tastaturbelegung verändern können.]
 
->> Probieren Sie das jetzt aus: geben Sie ein paar Zeichen ein und
+>> Probieren Sie das jetzt aus: Geben Sie ein paar Zeichen ein und
    löschen Sie sie wieder mit <Delete>.  Sie brauchen sich keine
-   Sorgen zu machen, dieses Dokument zu verändern: Was Sie hier lesen
+   Sorgen zu machen, dieses Dokument zu verändern: Was Sie hier lesen,
    ist nur eine (persönliche) Kopie des originalen Dokuments.
 
 Wenn eine Textzeile zu lang wird für eine Bildschirmzeile, dann wird
 sie auf einer zweiten Bildschirmzeile `fortgesetzt'.  Ein
-`Backslash'-Zeichen (`\') am rechten Rand markiert dies.
+`Backslash'-Zeichen (`\') am rechten Rand verdeutlicht das.
 
 >> Fügen Sie Text ein, bis Sie den rechten Rand erreicht haben.  Fügen
    Sie weiter Text ein.  Beobachten Sie, wie eine Fortsetzungszeile
@@ -409,7 +410,7 @@ sie auf einer zweiten Bildschirmzeile `fortgesetzt'.  Ein
    Bildschirmzeile paßt.  Die Fortsetzungszeile verschwindet wieder.
 
 Sie können das Zeilenvorschubzeichen wie jedes andere Zeichen löschen:
-die Zeilen vor und nach ihm werdan dann zu einer zusammengehängt.  Ist
+Die Zeilen vor und nach ihm werdan dann zu einer zusammengehängt.  Ist
 diese länger als die Bildschirmbreite, erscheint eine
 Fortsetzungszeile.
 
@@ -448,11 +449,12 @@ Beachten Sie bitte, daß <Delete> je nach Tastaturbelegung die Del-
 
 Löschen Sie mehr als ein Zeichen auf einmal, dann speichert Emacs den
 gelöschten Text, damit Sie ihn bei Bedarf wieder zurückholen können.
-Einfügen von bereits gelöschtem Text wird im Englischen als `yanking'
-(wörtlich `herausreißen') bezeichnet.  Sie können den gelöschten Text
-an einer beliebigen Stelle wieder einzufügen.  Solange Sie nichts
-neues löschen, steht Ihnen dieser gelöschte Textteil immer wieder zu
-Verfügung.  Der Befehl dazu ist C-y (y steht für `yank').
+Einfügen von bereits gelöschtem Text wird im englischen Dokumentation
+von Emacs als `yanking' (wörtlich `herausreißen') bezeichnet.  Sie
+können den gelöschten Text an einer beliebigen Stelle wieder
+einzufügen.  Solange Sie nichts neues löschen, steht Ihnen dieser
+gelöschte Textteil immer wieder zu Verfügung.  Der Befehl dazu ist C-y
+(das Ypsilon steht für `yank').
 
 Emacs unterscheidet zwei Klassen von Löschbefehlen (was man im
 Deutschen leider nicht gut wiedergeben kann): `killing' (umbringen)
@@ -497,10 +499,11 @@ Holen Sie jetzt den Text `von den Toten' zurück:
 Wie können Sie gelöschten Text wieder einfügen, wenn Sie in der
 Zwischenzeit noch etwas anderes `gekillt' haben?  C-y würde das
 zuletzt gelöschte Textstück zurückholen, was aber nicht das gewünschte
-ist.  Verwenden Sie nun M-y, um den gerade mit C-y eingefügten
-Textteil durch ein früher gelöschtes Textstück zu ersetzen.  Durch
-wiederholtes Betätigen von M-y kommen immer ältere gelöschte Textteile
-zum Vorschein.  Haben Sie das gewünschte gefunden, dann brauchen Sie
+ist.  Verwenden Sie nun M-y (unmittelbar nach der erstmaligen
+Ausführung von C-y), um den gerade mit C-y eingefügten Textteil durch
+ein früher gelöschtes Textstück zu ersetzen.  Durch wiederholtes
+Betätigen von M-y kommen immer ältere gelöschte Textteile zum
+Vorschein.  Haben Sie das gewünschte gefunden, dann brauchen Sie
 nichts weiter zu tun.  Lassen Sie den eingefügten Text so wie er ist
 und setzen Sie das Editieren fort.
 
@@ -518,19 +521,21 @@ durchgesehen.
    das Ergebnis.  Wiederholen Sie das solange, bis die zweite Zeile
    wieder erscheint.
    Wenn Sie wollen, dann können Sie M-y mit positiven oder negativen
-   Argumenten aufrufen.
+   Argumenten aufrufen, um direkt zu einem bestimmten Eintrag im
+   Löschring zu kommen.
 
 Unter dem X Window System besteht auch die Möglichkeit, mit der linken
 Maustaste einen Textteil zu markieren (er erscheint dann normalerweise
-grau unterlegt).  Der Befehl C-w löscht diesen Textteil (in Emacs auch
-Region genannt) und fügt ihn in den Löschring ein.
+grau unterlegt).  Der Befehl C-w löscht diesen markierten Textteil (in
+Emacs auch Region genannt) und fügt ihn in den Löschring ein.
 
 Dasselbe geht auch ohne Maus: bewegen Sie den Cursor zum Beginn des zu
 löschenden Textteils, drücken Sie C-SPC, um eine Markierung für den
 Beginn einer Region zu setzen, gehen Sie dann zum Ende des zu
 löschenden Textes und drücken Sie C-w.
 
-Der lange Name für C-w ist kill-region.
+Der lange Name für C-w ist kill-region (weiter unten wird erklärt, wie
+man Befehle mit langen Namen ausführen kann).
 
 
 * UNDO
@@ -546,7 +551,7 @@ jeweiligen vorigen Befehle widerrufen.
 
 Es gibt jedoch zwei Ausnahmen: Befehle, die den Text nicht ändern,
 werden nicht gezählt (z.B. Cursorbewegungen und Blättern im Text).
-Und Befehle, die sich selbst einfügen (`self-inserting': drücken Sie
+Und Befehle, die sich selbst einfügen (`self-inserting': Drücken Sie
 zum Beispiel die `u'-Taste, dann wird der Buchstabe u eingefügt)
 werden in Gruppen von bis zu 20 Zeichen wiederhergestellt, um die
 Anzahl der notwendigen C-x u-Befehle zu reduzieren.
@@ -565,13 +570,18 @@ Eine weitere Eingabemöglichkeit bei vielen Terminals ist C-/.
 Ein numerisches Argument für C-_, C-x u oder C-/ wird als
 Wiederholungszähler interpretiert.
 
+Der Unterschied zwischen der Undo-Funktion und dem oben erklärten C-y
+ist, daß erstere gelöschten Text an exakt der gleichen Position wie
+vorher wiederherstellt, wohingegen C-y den gelöschten Text an der
+momentanen Cursorposition einfügt.
+
 
 * DATEIEN
 ---------
 
 Um editierten Text zu sichern, muß man ihn in einer Datei (`file')
 speichern (`save').  Wird Emacs beendet, ohne daß man vorher den Text
-gespeichert hat, dann ist er verloren.
+gespeichert hat, dann ist der Text verloren.
 
 Will man andererseits bereits gesicherten Text mit Emacs editieren, so
 muß die entsprechende Datei in Emacs geladen werden (im Englischen
@@ -588,22 +598,22 @@ Namen gesichert, falls Sie später entscheiden sollten, daß die
 Änderungen ein Fehler sind.
 
 Wenn Sie die untere Bildschirmkante genauer betrachten, dann werden
-Sie eine Zeile finden, die mit Bindestrichen beginnt und endet; sie
-enthält unter anderem die Zeichenkette `TUTORIAL.de'.  An dieser
-Position befindet sich immer der Name der Datei, die Sie momentan
-bearbeiten (`visit').  Gerade in diesem Augenblick bearbeiten Sie eine
-Datei mit dem Namen `TUTORIAL.de' (genauer gesagt, Emacs hat eine
-identische Kopie geladen).
+Sie eine Zeile finden, die mit einem oder mehreren Bindestrichen
+beginnt und endet; sie enthält unter anderem die Zeichenkette
+`TUTORIAL.de'.  An dieser Position befindet sich immer der Name der
+Datei, die Sie momentan bearbeiten (`visit').  Gerade in diesem
+Augenblick bearbeiten Sie eine Datei mit dem Namen `TUTORIAL.de'
+(genauer gesagt, Emacs hat eine identische Kopie geladen).
 
 Die Befehle für das Laden und Speichern von Dateien bestehen aus zwei
-Zeichen: beide beginnen mit Control-x.  Es gibt eine ganze Reihe von
+Zeichen: Beide beginnen mit Control-x.  Es gibt eine ganze Reihe von
 Kommandos, die mit C-x beginnen; viele von ihnen haben mit Dateien,
-Puffern und ähnlichem zu tun.  All diese Befehle sind zwei, drei oder
-vier Zeichen lang (Sie haben bereits C-x u kennengelernt).
+Puffern (s.u.) und ähnlichem zu tun.  All diese Befehle sind zwei,
+drei oder vier Zeichen lang -- Sie haben bereits C-x u kennengelernt.
 
-Um eine Datei in Emacs laden zu können, muß man dem Lade-Befehl ihren
-Namen mitteilen.  Der Befehl `liest ein Argument vom Terminal' (in
-diesem Fall ist das der Name der Datei).  Nachdem Sie
+Um eine Datei in Emacs laden zu können, muß man dem Lade-Befehl den
+Namen der Datei mitteilen.  Der Befehl `liest ein Argument vom
+Terminal' (in diesem Fall ist das der Name der Datei).  Nachdem Sie
 
         C-x C-f                   (lade Datei)
 
@@ -655,9 +665,9 @@ Bildschirm wieder zum Leben zu erwecken, geben Sie C-q ein, und lesen
 Sie dann den Abschnitt `Spontaneous Entry to Incremental Search' im
 Emacs-Handbuch, was man am besten tun kann.  Das Emacs-Handbuch ist
 übrigens auch online verfügbar mittels C-h i, und zwar im Abschnitt
-`Emacs' (unter der Voraussetzung natürlich, daß die Info-Dateien auch
-installiert wurden.  Wenn nicht, beschweren Sie sich bei Ihrem
-System-Administrator).
+`Emacs' (unter der Voraussetzung natürlich, daß die Info-Dateien von
+Emacs auch installiert wurden.  Wenn nicht, beschweren Sie sich bei
+Ihrem System-Administrator).
 
 [Eine erste Abhilfe zur Umschiffung des C-s-Problems schafft die
 Befehlsfolge `M-x save-buffer', welche exakt das gleiche wie C-x C-s
@@ -702,10 +712,10 @@ ein.
 >> Probieren Sie jetzt C-x C-b.
 
 Beachten Sie, daß jeder Puffer einen Namen hat und manche auch mit dem
-Namen einer Datei assoziiert sind, dessen Inhalt sie beinhalten.
-Manche Puffer haben keinen zugehörige Datei, z.B. der mit dem Namen
-`*Buffer List*'.  Er wurde von dem Befehl C-x C-b erzeugt, um die
-Pufferliste darzustellen.  JEDER Text, den Sie innerhalb Emacs in
+Namen einer Datei assoziiert sind, dessen Inhalt sie enthalten.
+Manche Puffer aber haben keinen zugehörige Datei, z.B. der mit dem
+Namen `*Buffer List*'.  Er wurde von dem Befehl C-x C-b erzeugt, um
+die Pufferliste darzustellen.  JEDER Text, den Sie innerhalb Emacs in
 einem Fenster sehen, ist immer ein Ausschnitt eines Puffers.
 
 >> Geben Sie jetzt C-x 1 ein, um die Pufferliste wieder verschwinden
@@ -732,6 +742,7 @@ Sie ihn speichern wollen.
 [Anmerkung: Sie verändern nicht die Originaldatei, sondern eine
 persönliche Kopie.]
 
+
 * WEITERE BEFEHLE
 -----------------
 
@@ -744,28 +755,32 @@ sie trotzdem alle benutzen zu können, gibt es zwei Erweiterungen:
 [Das `x' steht für das englische Wort `extension'.]  Diese beiden
 Befehle sind prinzipiell sehr nützlich, werden aber weniger oft
 benötigt als die bisher vorgestellten.  Sie haben bereits zwei Befehle
-aus dieser Kategorie kennengelernt: C-x C-f, um eine Datei zu laden,
-und C-x C-s, um sie abzuspeichern.  Ein weiteres Beispiel ist C-x C-c,
-um Emacs zu beenden.  (Sie brauchen sich keine Gedanken zu machen, ob
-Sie beim Beenden von Emacs vielleicht vergessen haben, Daten oder Text
-zu sichern -- Emacs fragt bei jedem geändertem Puffer (bzw. Datei), ob
-er gespeichert werden soll.)
+aus der ersten Kategorie kennengelernt: C-x C-f, um eine Datei zu
+laden, und C-x C-s, um sie zu speichern.  Ein weiteres Beispiel ist
+C-x C-c, um Emacs zu beenden -- Sie brauchen sich keine Gedanken zu
+machen, ob Sie beim Beenden von Emacs vielleicht vergessen haben,
+Daten oder Text zu sichern -- Emacs fragt bei jedem geändertem Puffer
+(bzw. Datei), ob er gespeichert werden soll.
 
 C-z ist der Befehl um Emacs *zeitweise* zu verlassen; es ist also
 möglich, später an der unterbrochenen Stelle nahtlos weiterzuarbeiten.
 
-Auf den meisten Systemen wird Emacs `suspendiert', wenn Sie C-z
-drücken, d.h. Sie kehren zurück zur Eingabezeile des Betriebssystems,
-ohne Emacs zu beenden.  In der Regel können Sie dann mittels des
-Befehls `fg' bzw. `%emacs' wieder zu Emacs umschalten.
+Auf den meisten Systemen wie Linux oder FreeBSD wird Emacs
+`suspendiert', wenn Sie C-z drücken, d.h., Sie kehren zurück zur
+Eingabezeile des Betriebssystems, ohne Emacs zu beenden.  In der Regel
+können Sie dann mittels des Befehls `fg' bzw. `%emacs' wieder zu Emacs
+umschalten.  Bei X bewirkt C-z in der Regel, daß Emacs ikonofiziert
+wird, also als Ikone (`Icon') darauf wartet, mit einem Mausklick bei
+Bedarf wieder vergrößert zu werden.
 
 Bei Betriebssystemen bzw. Shells, die Suspension von Programmen nicht
-implementiert haben, startet C-z einen System-Befehlsinterpreter
-innerhalb Emacs (`subshell').  Normalerweise müssen Sie dann `exit' in
-die Befehlszeile schreiben, um zu Emacs zurückzukehren.
+implementiert haben (z.B. MS-DOS), startet C-z einen
+System-Befehlsinterpreter innerhalb von Emacs (`subshell').
+Normalerweise müssen Sie dann `exit' in die Befehlszeile schreiben, um
+zu Emacs zurückzukehren.
 
 Der beste Zeitpunkt für C-x C-c ist, wenn Sie sich ausloggen
-(bzw. Ihren Computer ausschalten); sie sollten Emacs ebenfalls
+(bzw. Ihren Computer ausschalten); Sie sollten Emacs ebenfalls
 beenden, wenn Sie Emacs von einem anderen Programm aus aufgerufen
 haben (z.B. einem Programm, das E-mails liest), da solche Programme
 oft nicht wissen, wie sie mit Emacs im Suspend-Modus umgehen sollen.
@@ -781,7 +796,6 @@ haben:
         C-x C-b         zeige Pufferliste an
         C-x C-c         beende Emacs
         C-x u           widerrufen
-
 
 Ein Beispiel für einen Befehl mit langen Namen ist replace-string, der
 global (also in der ganzen Datei bzw. Puffer) eine Zeichenkette durch
@@ -811,7 +825,7 @@ vervollständigt den Namen.  Schließen Sie die Eingabe mit <Return> ab.
 
 Haben Sie Änderungen an einem Dokument vorgenommen, sie jedoch nicht
 gespeichert, dann können sie verloren gehen, falls der Computer
-abstürzen.  Um Sie davor zu schützen, sichert Emacs in bestimmten
+abstürzt.  Um Sie davor zu schützen, sichert Emacs in bestimmten
 Zeitintervallen jede von Ihnen editierte Datei in sogenannten
 `auto-save'-Dateien.  Sie sind daran zu erkennen, daß sie mit einem #
 beginnen und enden; z.B. ist `#hello.c#' der Name der Auto-save-Datei
@@ -845,7 +859,7 @@ werden kann.]
 Die Bildschirmzeile unmittelbar über dem Echo-Bereich ist die
 Statuszeile (`mode line').  Sie schaut ungefähr so aus:
 
--1:**  TUTORIAL.de       (Fundamental)--L830--65%----------------
+-1:**  TUTORIAL.de       (Fundamental)--L865--58%----------------
 
 Diese Zeile gibt nützliche Hinweise über den momentanen Zustand von
 Emacs und den Text, den Sie gerade editieren.
@@ -891,14 +905,14 @@ Quellcode eines Computerprogramm einzufügen -- die Tastenfolge dafür
 ist zwar (in der Regel) die gleiche, doch wird ein Kommentar mit der
 für die aktuelle Programmiersprache gültigen Syntax eingefügt
 (z.B. `// ...' für ein Programm in C++ oder `; ...' für Lisp).  Um in
-einen Hauptmodus zu schalten, hängen Sie einfache das englische Wort
+einen Hauptmodus zu schalten, hängen Sie einfach das englische Wort
 `-mode' an den (kleingeschriebenen) Namen des Modus an und führen den
-Befehl mittels M-x aus.  Beispiel: M-x fundamental-mode schaltet in
+Befehl mittels M-x aus.  Beispiel: `M-x fundamental-mode' schaltet in
 den Fundamental-Modus.  Weitere wichtige Modi sind c-mode, perl-mode,
 lisp-mode, text-mode u.a.  Die meisten davon werden automatisch
-aktiviert entsprechend der Namenserweiterung der zu ladenden Datei: So
-wird z.B. durch das Laden der Datei foo.c automatisch der C-Modus
-aktiviert.
+aktiviert, und zwar entsprechend der Namenserweiterung der zu ladenden
+Datei: So wird z.B. durch das Laden der Datei foo.c automatisch der
+C-Modus aktiviert.
 
 Wenn Sie deutschen oder englischen Text bearbeiten, dann sollten Sie
 den Textmodus verwenden.  [Falls Ihre Tastatur keine Umlaut-Tasten
@@ -915,18 +929,19 @@ Fundamentalmodus Apostrophe als Worttrenner (`word-separator')
 behandelt werden.
 
 Normalerweise ist das eben genannte Beispiel die Methode von
-Hauptmodi: die meisten Befehle tun `das gleiche', arbeiten aber
+Hauptmodi: Die meisten Befehle tun `das gleiche', arbeiten aber
 jeweils ein bißchen anders.
 
 Dokumentation zum derzeit aktuellen Hauptmodus bekommen Sie mit C-h m.
 
 >> Drücken Sie C-u C-v ein- oder mehrmals, um diese Zeile in die Nähe
    des oberen Bildschirmrands zu bringen.
->> Lesen Sie nun mittels C-h m die Dokumentation zum Textmodus.
+>> Lesen Sie nun mittels C-h m die englischeDokumentation zum
+   Textmodus.
 >> Entfernen Sie schließlich das Dokumentationsfenster mit C-x 1.
 
 Neben den Hauptmodi gibt es auch Nebenmodi (`minor modes').  Nebenmodi
-sind keine Alternativen zu Hauptmodi, sondern stellen Ergänzungen zu
+sind keine Alternativen zu Hauptmodi, sondern stellen Ergänzungen zur
 Verfügung, die (normalerweise) in allen Hauptmodi funktionieren
 (z.B. der Überschreibmodus: Zeichen werden nicht eingefügt, sondern
 überschreiben den Text).  Man kann Nebenmodi ein- und ausschalten
@@ -935,12 +950,12 @@ Sie können zu Ihrem Hauptmodus, keinen, einen oder sogar mehrere
 Nebenmodi haben.
 
 Ein Nebenmodus, welcher äußerst nützlich ist, besonders für das
-Editieren Text, ist der automatische Zeilenumbruch (`Auto Fill mode').
-Ist dieser Modus aktiviert, dann bricht Emacs die laufende Zeile
-selbsttätig zwischen Wörtern um, sobald sie zu lang wird.
+Editieren von Text, ist der automatische Zeilenumbruch (`Auto Fill
+mode').  Ist dieser Modus aktiviert, dann bricht Emacs die laufende
+Zeile selbsttätig zwischen Wörtern um, sobald sie zu lang wird.
 
-Sie können den Zeilenumbruchmodus einschalten mittels M-x
-auto-fill-mode<Return>.  Wenn der Modus aktiviert ist, können Sie ihn
+Sie können den Zeilenumbruchmodus einschalten mittels `M-x
+auto-fill-mode<Return>'.  Wenn der Modus aktiviert ist, können Sie ihn
 mit dem gleichen Befehl wieder ausschalten.  Mit anderen Worten, der
 Befehl verhält sich wie ein Lichttaster, der bei Betätigung entweder
 das Licht ein- oder ausschaltet, je nachdem, ob das Licht vorher
@@ -953,7 +968,7 @@ den Modus umschaltet (`toggle').
    Vergessen Sie nicht, Leerzeichen einzugeben, da nur dort ein
    Umbruch erfolgt.
 
-Normalerweise ist die maximale Zeilenlänge 70 Zeichen (d.h. der linke
+Normalerweise ist die maximale Zeilenlänge 70 Zeichen (d.h., der linke
 Rand ist ganz links auf Position 1 und der rechte Rand auf
 Position 70), jedoch können Sie das mit dem Befehl C-x f ändern.
 Geben Sie den neuen (rechten) Rand als numerischen Parameter ein.
@@ -980,7 +995,7 @@ oder rückwärts (`backward') suchen.  Gleichzeitig wird der Cursor an
 die nächste Stelle bewegt, wo diese Zeichenkette erscheint.
 
 Hier unterscheidet sich Emacs von vielen anderen Editoren, da nämlich
-die Standard-Suchoperation inkrementelles Suchen ist, d.h. die Suche
+die Standard-Suchoperation inkrementelles Suchen ist, d.h., die Suche
 beginnt dann, wenn Sie die Zeichen eingeben.
 
 Der Befehl für Vorwärtssuchen ist C-s, und C-r für Rückwärtssuchen.
@@ -1009,14 +1024,15 @@ betätigen.  Wenn es keine nächste Position gibt, dann ertönt ein
 kurzer Ton, und Emacs sagt Ihnen, daß die Suche im Augenblick
 fehlschlägt (`failing').  C-g beendet ebenfalls einen Suchvorgang.
 
-Anmerkung: Bei einigen Systemen scheint es, als ob das Ausführen von
-C-s Emacs abstürzen läßt (Emacs reagiert mit keinen Meldungen mehr;
-der Bildschirm scheint eingefroren).  Dieser Effekt tritt auf, wenn
-das Betriebssystem das Zeichen C-s abfängt (es wird für `flow control'
-verwendet) und nicht an Emacs weiterreicht.  Um den Bildschirm wieder
-zum Leben zu erwecken, geben Sie C-q ein, und lesen Sie dann den
-Abschnitt `Spontaneous Entry to Incremental Search' im Emacs-Handbuch,
-was man am besten tun kann.
+Anmerkung: Wie weiter oben schon einmal erwähnt, scheint es bei
+einigen Systemen, als ob das Ausführen von C-s Emacs abstürzen läßt
+(Emacs reagiert mit keinen Meldungen mehr; der Bildschirm wirkt
+eingefroren).  Dieser Effekt tritt auf, wenn das Betriebssystem das
+Zeichen C-s abfängt (es wird für `flow control' verwendet) und nicht
+an Emacs weiterreicht.  Um den Bildschirm wieder zum Leben zu
+erwecken, geben Sie C-q ein, und lesen Sie dann den Abschnitt
+`Spontaneous Entry to Incremental Search' im Emacs-Handbuch, was man
+am besten tun kann.
 
 Wenn Sie sich mitten in einer inkrementellen Suche befinden und
 <Delete> drücken, dann wird das letzte Zeichen im Suchstring gelöscht,
@@ -1043,7 +1059,7 @@ Suchrichtung.
 * MEHRFACHE FENSTER
 -------------------
 
-Eine weitere, nützlichen Fähigkeit von Emacs ist die Möglichkeit, mehr
+Eine weitere, nützliche Fähigkeit von Emacs ist die Möglichkeit, mehr
 als ein Fenster zur gleichen Zeit auf dem Bildschirm darzustellen.
 
 >> Bewegen Sie den Cursor zu dieser Zeile und geben Sie C-u 0 C-l ein.
@@ -1054,7 +1070,7 @@ als ein Fenster zur gleichen Zeit auf dem Bildschirm darzustellen.
 
 >> Verwenden Sie C-M-v, um im unteren Fenster zu blättern (Sie können
    statt dessen auch ESC C-v verwenden, falls Sie keine Meta-Taste
-   haben).
+   haben; siehe auch weiter unten).
 
 >> Mittels C-x o (das `o' steht für das englische Wort `other', `das
    andere') können Sie den Cursor in das untere Fenster bewegen.
@@ -1084,14 +1100,14 @@ gleichzeitig niedergedrückt hält, während man v eintippt.  Es ist
 egal, ob zuerst CTRL oder META niedergedrückt wird, da beide Tasten
 gleichberechtigt das jeweils einzugebende Zeichen modifizieren.
 
-Haben Sie keine META-Taste, und Sie verwenden statt dessen ESC, dann
+Haben Sie keine META-Taste, und Sie verwenden stattdessen ESC, dann
 ist die Reihenfolge nicht mehr egal: Sie müssen zuerst ESC drücken,
 gefolgt von CTRL-v.  CTRL-ESC v funktioniert nicht!  Der Grund dafür
 ist, daß ESC ein eigenes Zeichen ist und keine Modifizier-Taste wie
 META oder CTRL.
 
 Der umgekehrte Befehl zu M-C-v ist M-C-S-v, um im anderen Fenster
-rückwärts zu blättern (d.h. Sie müssen die Meta-Taste sowie die
+rückwärts zu blättern (d.h., Sie müssen die Meta-Taste sowie die
 Control- und Shift-Taste zusammen mit `v' betätigen) -- jetzt werden
 Sie wahrscheinlich verstehen, warum manche Kritiker das Wort Emacs als
 Abkürzung von Escape-Meta-Alt-Control-Shift betrachten.  Leider
@@ -1099,9 +1115,10 @@ funktioniert diese Befehlsfolge normalerweise nur mit dem X Window
 System, da C-v von C-S-v auf den meisten Textterminals nicht
 unterschieden werden kann.
 
-[Unter X kann man außerdem in der Regel mit den Tastenkombinationen
-META-`Bild mit Aufwärtspfeil' bzw. META-`Bild mit Abwärtspfeil'
-ebenfalls im anderen Fenster rück- bzw. vorwärts blättern.]
+[Unter X kann man außerdem in der Regel mit den bequemeren
+Tastenkombinationen META-`Bild mit Aufwärtspfeil' bzw. META-`Bild mit
+Abwärtspfeil' ebenfalls im anderen Fenster rück- bzw. vorwärts
+blättern.]
 
 >> Entfernen Sie mit C-x 1 (eingegeben im oberen Fenster) das untere
    Fenster.
@@ -1117,7 +1134,7 @@ Fenster eine andere Datei anzeigen lassen, unabhängig vom anderen
 Fenster.
 
 Hier eine andere Möglichkeit, in zwei Fenstern zwei verschiedene
-Sachen darzustellen:
+Texte darzustellen:
 
 >> Geben Sie C-x 4 C-f ein, gefolgt vom Namen einer Ihrer Dateien.
    Schließen Sie ab mit <Return>.  Beobachten Sie, wie die
@@ -1155,7 +1172,7 @@ dargestellt.  Details finden Sie im Emacs-Handbuch beschrieben.
 * MULE
 ------
 
-MULE ist die Abkürzung für `Multi-lingual Enhancement to GNU Emacs'.
+Mule ist die Abkürzung für `Multi-lingual Enhancement to GNU Emacs'.
 Früher wurde damit eine spezielle Emacs-Variante bezeichnet, die
 allerdings seit der Version 20 mit Emacs verschmolzen ist.
 
@@ -1167,39 +1184,43 @@ Eingabemöglichkeiten für Deutsch näher eingegangen.
 
 Der Standard-Zeichensatz für Deutsch ist Latin-1 (auch bekannt unter
 dem Namen ISO-8859-1).  Wenn anstelle der deutschen Umlaute
-unansehnliche Konstrukte wie `\201\344' dargestellt werden, dann ist
+unansehnliche Konstrukte wie `\201ä' dargestellt werden, dann ist
 die sogenannte Multibyte-Zeichenunterstützung deaktiviert (intern
 werden in Emacs nicht-ASCII Zeichensätze durch mehr als ein Byte
-repräsentiert).  Durch den Befehl C-x <Return> m wird die
+repräsentiert).  Durch den Befehl `M-x
+toggle-enable-multibyte-characters' wird die
 Multibyte-Zeichenunterstützung aktiviert.
 
 Wenn anstelle der Umlaute `ä', `ö' oder `ü' die Zeichen `d', `v' und
-`|' erscheinen, dann wird das achte Bit von jedem Byte abgeschnitten,
-sodaß nur ASCII-Zeichen dargestellt werden können.  In der Regel gibt
-es zwei Ursachen für dieses Problem: Sie haben sich nicht `8-bit
-clean' (z.B. mittels `telnet -8 ...') eingeloggt oder Ihr
+`|' erscheinen (also `kleines D', `kleines V', und ein senkrechter
+Strich), dann wird das achte Bit von jedem Byte abgeschnitten, sodaß
+nur ASCII-Zeichen dargestellt werden können.  In der Regel gibt es
+zwei Ursachen für dieses Problem: Sie haben sich nicht `8-bit clean'
+(z.B. mittels `telnet -8 ...') eingeloggt oder Ihr
 Telekommunikationsprogramm ist nicht für 8-bit konfiguriert.
 
 >> Geben Sie C-x <Return> m ein.  Die deutschen Umlaute (so sie von
    Ihrem Terminal darstellbar sind) verschwinden und werden durch
-   Zahlenkonstrukte ersetzt.  So wird zum Beispiel Umlaut a (ä)
-   dargestellt als \201\344.
+   Zahlenkonstrukte ersetzt.  So wird zum Beispiel Umlaut a (`ä')
+   dargestellt als `\201ä'.
 
 >> Aktivieren Sie wieder die Multibyte-Zeichenunterstützung mittels
    C-x <Return> m.
 
 Sehen Sie anstelle der Umlaute leere Kästchen (unter X), dann sollten
-Sie Emacs beenden und folgendermaßen neu starten:
+Sie mit C-x C-c Emacs beenden und folgendermaßen neu starten:
 
     emacs -fn fontset-standard
 
 Bei einem Textterminal gibt es weiter die Möglichkeit, die
-Befehlsfolge M-x standard-display-european auszuführen, wodurch Emacs
-die Multibyte-Zeichenunterstützung deaktiviert und direkt
-Latin-1-Zeichen darzustellen versucht.
+Befehlsfolge `M-x standard-display-european' auszuführen, wodurch
+Emacs die Multibyte-Zeichenunterstützung deaktiviert und direkt
+Latin-1-Zeichen darzustellen versucht.  Sie können auch probieren,
+Emacs mit der `--unibyte'-Option zu starten, was einen ähnlichen
+Effekt bewirkt.
 
-Falls das alles nichts nützt oder Sie Fragezeichen anstelle der Umlaute
-auf ihrem Textterminal sehen, sollten Sie sich an Ihren
+Falls das alles nichts nützt oder Sie Fragezeichen anstelle der
+Umlaute auf ihrem Textterminal sehen, sollten Sie sich an Ihren
 Systemadministrator wenden und sich beschweren, daß kein
 Latin-1-Zeichensatz installiert ist (was heutzutage eigentlich eine
 Selbstverständlichkeit sein sollte).  Falls statt der Umlaute andere
@@ -1255,12 +1276,11 @@ Aktiviert wird die jeweilige Eingabe mit dem Befehl
     C-u C-\ Eingabemethode <Return>
 
 (z.B. C-u C-\ german <Return>).  Durch diese Befehlsfolge wird der
-sogenannte Quail-Nebenmodus aktiviert, was sich durch zwei
-Veränderungen in der Statuszeile zeigt: einerseits erscheint das Wort
-`Quail' in der Modus-Liste, und andererseits wird durch zwei oder drei
-Zeichen unmittelbar vor der Pufferkodierung die aktuelle
-Eingabemethode angezeigt.  Ist der Eingabemodus einmal gewählt, kann
-man mit C-\ ihn ein- und ausschalten.
+sogenannte Quail-Nebenmodus aktiviert, was sich durch eine kleine
+Veränderung in der Statuszeile zeigt: Durch zwei oder drei Zeichen
+unmittelbar vor der Pufferkodierung wird die aktuelle Eingabemethode
+angezeigt.  Ist der Eingabemodus einmal gewählt, kann man mit C-\ ihn
+ein- und ausschalten.
 
 >> Geben Sie C-u C-\ latin-1-postfix <Return> ein.  Beobachten Sie,
    wie links unten in der Statuszeile die Anzeige von `1:**' auf
@@ -1346,11 +1366,11 @@ Hier einige weitere nützliche Optionen von C-h:
    Alle Information über den C-p-Befehl wird angezeigt.
 
 Sie können die Tabulator-Taste stets benützen, um den Namen des
-jeweiligen Befehls zu vervollständigen.  Geben Sie z.B. C-h f
-previous<TAB> ein, dann werden alle Befehle angezeigt, deren Namen mit
-`previous-' beginnen.  Ergänzen Sie die Zeichenkette auf `previous-l'
-und drücken Sie dann <TAB>, bleibt nur noch der Befehl `previous-line'
-übrig, und Sie können mit <Return> abschließen.
+jeweiligen Befehls zu vervollständigen.  Geben Sie z.B. `C-h f
+previous<TAB>' ein, dann werden alle Befehle angezeigt, deren Namen
+mit `previous-' beginnen.  Ergänzen Sie die Zeichenkette auf
+`previous-l' und drücken Sie dann <TAB>, bleibt nur noch der Befehl
+`previous-line' übrig, und Sie können mit <Return> abschließen.
 
    C-h a        Ein Befehls-Apropos.  Gibt man ein Schlüsselwort ein,
                 dann zeigt Emacs alle Befehle, die dieses
@@ -1358,7 +1378,7 @@ und drücken Sie dann <TAB>, bleibt nur noch der Befehl `previous-line'
                 können mit M-x aufgerufen werden.  Für einige
                 Kommandos wird zusätzlich eine Zeichensequenz
                 (meistens bestehend aus einem oder zwei Zeichen)
-                aufgelistet, welche den gleichen Befehlen startet.
+                aufgelistet, welche den gleichen Befehl startet.
 
 >> Geben Sie C-h a file<Return> ein.
 
@@ -1391,7 +1411,7 @@ RECHTLICHES
 
 Die englische Version dieser Einführung hat eine lange Vorgeschichte.
 Stuart Cracraft hat für die Urversion von Emacs das erste Tutorial
-geschrieben.  Übersetzer ins Deutsche ist Werner Lemberg.
+geschrieben.  Übersetzer ins Deutsche ist Werner Lemberg (wl@gnu.org).
 
 Beachten Sie bitte, daß im Zweifelsfalle das englische Original dieser
 Urheberrechtsnotiz gültig ist (zu finden in der Datei TUTORIAL).

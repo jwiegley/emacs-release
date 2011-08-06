@@ -72,13 +72,26 @@ Lisp_Object QCLIPBOARD, QPRIMARY;
    clipboard.  */
 static Lisp_Object Vselection_coding_system;
 
+/* Coding system for the next communicating with other Windows programs.  */
+static Lisp_Object Vnext_selection_coding_system;
+
 /* The segment address and the size of the buffer in low
    memory used to move data between us and WinOldAp module.  */
-
 static struct {
   unsigned long size;
   unsigned short rm_segment;
 } clipboard_xfer_buf_info;
+
+/* The last text we put into the clipboard.  This is used to prevent
+   passing back our own text from the clipboard, instead of using the
+   kill ring.  The former is undesirable because the clipboard data
+   could be MULEtilated by inappropriately chosen
+   (next-)selection-coding-system.  For this reason, we must store the
+   text *after* it was encoded/Unix-to-DOS-converted.  */
+static unsigned char *last_clipboard_text;
+
+/* The size of allocated storage for storing the clipboard data.  */
+static size_t clipboard_storage_size;
 
 /* Emulation of `__dpmi_int' and friends for DJGPP v1.x  */
 
@@ -221,7 +234,7 @@ free_xfer_buf ()
     }
 }
 
-/* Copy data into the clipboard, return non-zero if successfull.  */
+/* Copy data into the clipboard, return zero if successfull.  */
 unsigned
 set_clipboard_data (Format, Data, Size, Raw)
      unsigned Format;
@@ -240,7 +253,7 @@ set_clipboard_data (Format, Data, Size, Raw)
   /* need to know final size after '\r' chars are inserted (the
      standard CF_OEMTEXT clipboard format uses CRLF line endings,
      while Emacs uses just LF internally).  */
-  truelen = Size;
+  truelen = Size + 1;		/* +1 for the terminating null */
 
   if (!Raw)
     {
@@ -260,7 +273,13 @@ set_clipboard_data (Format, Data, Size, Raw)
 
   /* Move the buffer into the low memory, convert LF into CR-LF if needed.  */
   if (Raw)
-    dosmemput (Data, truelen, __tb);
+    {
+      dosmemput (Data, Size, xbuf_addr);
+
+      /* Terminate with a null, otherwise Windows does strange things
+	 when the text size is an integral multiple of 32 bytes. */
+      _farpokeb (_dos_ds, xbuf_addr + Size, '\0');
+    }
   else
     {
       dp = Data;
@@ -268,11 +287,31 @@ set_clipboard_data (Format, Data, Size, Raw)
       _farsetsel (_dos_ds);
       while (Size--)
 	{
+	  /* Don't allow them to put binary data into the clipboard, since
+	     it will cause yanked data to be truncated at the first null.  */
+	  if (*dp == '\0')
+	    return 2;
 	  if (*dp == '\n')
 	    _farnspokeb (buf_offset++, '\r');
 	  _farnspokeb (buf_offset++, *dp++);
 	}
+
+      /* Terminate with a null, otherwise Windows does strange things
+	 when the text size is an integral multiple of 32 bytes. */
+      _farnspokeb (buf_offset, '\0');
     }
+
+  /* Stash away the data we are about to put into the clipboard, so we
+     could later check inside get_clipboard_data whether the clipboard
+     still holds our data.  */
+  if (clipboard_storage_size < truelen)
+    {
+      clipboard_storage_size = truelen + 100;
+      last_clipboard_text =
+	(char *) xrealloc (last_clipboard_text, clipboard_storage_size);
+    }
+  if (last_clipboard_text)
+    dosmemget (xbuf_addr, truelen, last_clipboard_text);
 
   /* Calls Int 2Fh/AX=1703h with:
 	             DX = WinOldAp-Supported Clipboard format
@@ -290,7 +329,12 @@ set_clipboard_data (Format, Data, Size, Raw)
 
   free_xfer_buf ();
 
-  return regs.x.ax;
+  /* If the above failed, invalidate the local copy of the clipboard.  */
+  if (regs.x.ax == 0)
+    *last_clipboard_text = '\0';
+
+  /* Zero means success, otherwise (1 or 2) it's an error.  */
+  return regs.x.ax > 0 ? 0 : 1;
 }
 
 /* Return the size of the clipboard data of format FORMAT.  */
@@ -323,7 +367,6 @@ get_clipboard_data (Format, Data, Size, Raw)
      int Raw;
 {
   __dpmi_regs regs;
-  unsigned datalen = 0;
   unsigned long xbuf_addr;
   unsigned char *dp = Data;
 
@@ -349,6 +392,14 @@ get_clipboard_data (Format, Data, Size, Raw)
   __dpmi_int(0x2f, &regs);
   if (regs.x.ax != 0)
     {
+      unsigned char null_char = '\0';
+      unsigned long xbuf_beg = xbuf_addr;
+
+      /* If last_clipboard_text is NULL, we don't want to slow down
+	 the next loop by an additional test.  */
+      register unsigned char *lcdp =
+	last_clipboard_text == NULL ? &null_char : last_clipboard_text;
+	
       /* Copy data from low memory, remove CR
 	 characters before LF if needed.  */
       _farsetsel (_dos_ds);
@@ -356,26 +407,38 @@ get_clipboard_data (Format, Data, Size, Raw)
 	{
 	  register unsigned char c = _farnspeekb (xbuf_addr++);
 
+	  if (*lcdp == c)
+	    lcdp++;
+
 	  if ((*dp++ = c) == '\r' && !Raw && _farnspeekb (xbuf_addr) == '\n')
 	    {
 	      dp--;
 	      *dp++ = '\n';
 	      xbuf_addr++;
+	      if (*lcdp == '\n')
+		lcdp++;
 	    }
 	  /* Windows reportedly rounds up the size of clipboard data
-	     (passed in SIZE) to a multiple of 32.  We therefore bail
-	     out when we see the first null character.  */
+	     (passed in SIZE) to a multiple of 32, and removes trailing
+	     spaces from each line without updating SIZE.  We therefore
+	     bail out when we see the first null character.  */
 	  else if (c == '\0')
-	    {
-	      datalen = dp - (unsigned char *)Data - 1;
-	      break;
-	    }
+	    break;
 	}
+
+      /* If the text in clipboard is identical to what we put there
+	 last time set_clipboard_data was called, pretend there's no
+	 data in the clipboard.  This is so we don't pass our own text
+	 from the clipboard (which might be troublesome if the killed
+	 text includes null characters).  */
+      if (last_clipboard_text &&
+	  xbuf_addr - xbuf_beg == (long)(lcdp - last_clipboard_text))
+	dp = (unsigned char *)Data + 1;
     }
 
   free_xfer_buf ();
 
-  return datalen;
+  return (unsigned) (dp - (unsigned char *)Data - 1);
 }
 
 /* Close clipboard, return non-zero if successfull.  */
@@ -412,13 +475,15 @@ clipboard_compact (Size)
 
 static char no_mem_msg[] =
   "(Not enough DOS memory to put saved text into clipboard.)";
+static char binary_msg[] =
+  "(Binary characters in saved text; clipboard data not set.)";
 
 DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_data, 1, 2, 0,
        "This sets the clipboard data to the given text.")
     (string, frame)
     Lisp_Object string, frame;
 {
-  int ok = 1, ok1 = 1;
+  unsigned ok = 1, put_status = 0;
   int nbytes;
   unsigned char *src, *dst = NULL;
   int charsets[MAX_CHARSET + 1];
@@ -441,12 +506,12 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
 
   /* Since we are now handling multilingual text, we must consider
      encoding text for the clipboard.  */
-
   bzero (charsets, (MAX_CHARSET + 1) * sizeof (int));
   num = ((nbytes <= 1	/* Check the possibility of short cut.  */
-	  || NILP (buffer_defaults.enable_multibyte_characters))
+	  || !STRING_MULTIBYTE (string)
+	  || nbytes == XSTRING (string)->size)
 	 ? 0
-	 : find_charset_in_str (src, nbytes, charsets, Qnil, 1));
+	 : find_charset_in_str (src, nbytes, charsets, Qnil, 0, 1));
 
   if (!num || (num == 1 && charsets[CHARSET_ASCII]))
     {
@@ -462,21 +527,28 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
       struct coding_system coding;
       unsigned char *htext2;
 
+      if (NILP (Vnext_selection_coding_system))
+	Vnext_selection_coding_system = Vselection_coding_system;
       setup_coding_system
-	(Fcheck_coding_system (Vselection_coding_system), &coding);
+	(Fcheck_coding_system (Vnext_selection_coding_system), &coding);
+      Vnext_selection_coding_system = Qnil;
       coding.mode |= CODING_MODE_LAST_BLOCK;
       Vlast_coding_system_used = coding.symbol;
       bufsize = encoding_buffer_size (&coding, nbytes);
       dst = (unsigned char *) xmalloc (bufsize);
       encode_coding (&coding, src, dst, nbytes, bufsize);
       no_crlf_conversion = 1;
+      nbytes = coding.produced;
+      src = dst;
     }
 
   if (!open_clipboard ())
     goto error;
   
   ok = empty_clipboard ()
-    && (ok1 = set_clipboard_data (CF_OEMTEXT, src, nbytes, no_crlf_conversion));
+    && ((put_status
+	 = set_clipboard_data (CF_OEMTEXT, src, nbytes, no_crlf_conversion))
+	== 0);
 
   if (!no_crlf_conversion)
     Vlast_coding_system_used = Qraw_text;
@@ -498,15 +570,23 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
      depending on user system configuration.)  If we just silently
      fail the function, people might wonder why their text sometimes
      doesn't make it to the clipboard.  */
-  if (ok1 == 0)
+  if (put_status)
     {
-      message2 (no_mem_msg, sizeof (no_mem_msg) - 1, 0);
+      switch (put_status)
+	{
+	  case 1:
+	    message2 (no_mem_msg, sizeof (no_mem_msg) - 1, 0);
+	    break;
+	  case 2:
+	    message2 (binary_msg, sizeof (binary_msg) - 1, 0);
+	    break;
+	}
       sit_for (2, 0, 0, 1, 1);
     }
   
  done:
 
-  return (ok ? string : Qnil);
+  return (ok && put_status == 0 ? string : Qnil);
 }
 
 DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_data, 0, 1, 0,
@@ -543,7 +623,13 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
     goto closeclip;
 
   /* Do we need to decode it?  */
-  if (! NILP (buffer_defaults.enable_multibyte_characters))
+  if (
+#if 1
+      1
+#else
+      ! NILP (buffer_defaults.enable_multibyte_characters)
+#endif
+      )
     {
       /* If the clipboard data contains any 8-bit Latin-1 code, we
 	 need to decode it.  */
@@ -564,8 +650,11 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
       unsigned char *buf;
       struct coding_system coding;
 
+      if (NILP (Vnext_selection_coding_system))
+	Vnext_selection_coding_system = Vselection_coding_system;
       setup_coding_system
-	(Fcheck_coding_system (Vselection_coding_system), &coding);
+	(Fcheck_coding_system (Vnext_selection_coding_system), &coding);
+      Vnext_selection_coding_system = Qnil;
       coding.mode |= CODING_MODE_LAST_BLOCK;
       truelen = get_clipboard_data (CF_OEMTEXT, htext, data_size, 1);
       bufsize = decoding_buffer_size (&coding, truelen);
@@ -655,7 +744,14 @@ When sending or receiving text via cut_buffer, selection, and clipboard,\n\
 the text is encoded or decoded by this coding system.\n\
 A default value is `iso-latin-1-dos'");
   Vselection_coding_system=intern ("iso-latin-1-dos");
-  staticpro(&Vselection_coding_system);
+
+  DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
+    "Coding system for the next communication with other X clients.\n\
+Usually, `selection-coding-system' is used for communicating with\n\
+other X clients.   But, if this variable is set, it is used for the\n\
+next communication only.   After the communication, this variable is\n\
+set to nil.");
+  Vnext_selection_coding_system = Qnil;
 
   QPRIMARY   = intern ("PRIMARY");	staticpro (&QPRIMARY);
   QCLIPBOARD = intern ("CLIPBOARD");	staticpro (&QCLIPBOARD);

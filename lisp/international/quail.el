@@ -96,7 +96,7 @@ BLOCKS is a number of  blocks of translation.")
 (defvar quail-current-data nil
   "Any Lisp object holding information of current translation status.
 When a key sequence is mapped to TRANS and TRANS is a cons
-of actual translation and some Lisp object to be refered
+of actual translation and some Lisp object to be referred
 for translating the longer key sequence, this variable is set
 to that Lisp object.")
 (make-variable-buffer-local 'quail-current-data)
@@ -310,7 +310,7 @@ This map is activated while translation region is active.")
     (define-key map [backspace] 'quail-conversion-backward-delete-char)
     map)
   "Keymap used for processing conversion in Quail mode.
-This map is activated while convesion region is active but translation
+This map is activated while conversion region is active but translation
 region is not active.")
 
 ;;;###autoload
@@ -382,8 +382,8 @@ OVERLAY-PLIST if non-nil is a property list put on an overlay which
 covers Quail translation region.
 
 UPDATE-TRANSLATION-FUNCTION if non-nil is a function to call to update
-the current translation region accoding to a new translation data.  By
-default, a translated text or a user's key sequence (if no transltion
+the current translation region according to a new translation data.  By
+default, a translated text or a user's key sequence (if no translation
 for it) is inserted.
 
 CONVERSION-KEYS specifies additional key bindings used while
@@ -614,7 +614,7 @@ you type is correctly handled."
 	  ch
 	(let ((char (aref quail-keyboard-layout-standard i)))
 	  (if (= char ?\ )
-	      ;; A user typed a key at the location not convered by
+	      ;; A user typed a key at the location not converted by
 	      ;; quail-keyboard-layout-standard.  Just return CH as
 	      ;; well as above.
 	      ch
@@ -656,7 +656,7 @@ format \(INDEX . VECTOR), as described above."
 Each argument is a list of KEY and TRANSLATION.
 KEY is a string meaning a sequence of keystrokes to be translated.
 TRANSLATION is a character, a string, a vector, a Quail map, or a function.
-It it is a character, it is the sole translation of KEY.
+If it is a character, it is the sole translation of KEY.
 If it is a string, each character is a candidate for the translation.
 If it is a vector, each element (string or character) is a candidate
   for the translation.
@@ -683,7 +683,7 @@ The installed map can be referred by the function `quail-map'."
   (setcar (cdr (cdr quail-current-package)) map))
 
 ;;;###autoload
-(defun quail-defrule (key translation &optional name)
+(defun quail-defrule (key translation &optional name append)
   "Add one translation rule, KEY to TRANSLATION, in the current Quail package.
 KEY is a string meaning a sequence of keystrokes to be translated.
 TRANSLATION is a character, a string, a vector, a Quail map,
@@ -700,15 +700,19 @@ In these cases, a key specific Quail map is generated and assigned to KEY.
 
 If TRANSLATION is a Quail map or a function symbol which returns a Quail map,
  it is used to handle KEY.
-Optional argument NAME, if specified, says which Quail package
+
+Optional 3rd argument NAME, if specified, says which Quail package
 to define this translation rule in.  The default is to define it in the
-current Quail package."
+current Quail package.
+
+Optional 4th argument APPEND, if non-nil, appends TRANSLATION
+to the current translations for KEY instead of replacing them."
   (if name
       (let ((package (quail-package name)))
 	(if (null package)
 	    (error "No Quail package `%s'" name))
 	(setq quail-current-package package)))
-  (quail-defrule-internal key translation (quail-map)))
+  (quail-defrule-internal key translation (quail-map) append))
 
 ;;;###autoload
 (defun quail-defrule-internal (key trans map &optional append)
@@ -761,9 +765,19 @@ current Quail package."
 		    (error "Quail key %s is too short" key)
 		  (setcdr entry trans))
 	      (setcdr entry (append trans (cdr map)))))
-	(if (and append (stringp (car map)) (stringp trans))
-	    (setcar map (concat (car map) trans))
-	  (setcar map trans))))))
+	(if (and (car map) append)
+	    (let ((prev (quail-get-translation (car map) key len)))
+	      (if (integerp prev)
+		  (setq prev (vector prev))
+		(setq prev (cdr prev)))
+	      (if (integerp trans)
+		  (setq trans (vector trans))
+		(if (stringp trans)
+		    (setq trans (string-to-vector trans))))
+	      (setq trans
+		    (cons (list 0 0 0 0 nil)
+			  (vconcat prev trans)))))
+	(setcar map trans)))))
 
 (defun quail-get-translation (def key len)
   "Return the translation specified as DEF for KEY of length LEN.
@@ -842,12 +856,10 @@ The returned value is a Quail map specific to KEY."
 	      (progn
 		(setq quail-current-translations translation)
 		(if (quail-forget-last-selection)
-		    (setcar (car quail-current-translations) 0))))
-	  ;; We may have to reform cdr part of MAP.
-	  (if (and (cdr map) (symbolp (cdr map)))
-	      (progn
-		(setcdr map (funcall (cdr map) key len))))
-	  ))
+		    (setcar (car quail-current-translations) 0))))))
+    ;; We may have to reform cdr part of MAP.
+    (if (and (cdr map) (functionp (cdr map)))
+	(setcdr map (funcall (cdr map) key len)))
     map))
 
 (put 'quail-error 'error-conditions '(quail-error error))
@@ -912,7 +924,7 @@ The returned value is a Quail map specific to KEY."
 			 (quail-keyboard-translate key) key)
 		     (cdr (quail-map))))
 	  (null key))
-      ;; Ok, we can start translation.
+      ;; OK, we can start translation.
       (let* ((echo-keystrokes 0)
 	     (help-char nil)
 	     (overriding-terminal-local-map (quail-translation-keymap))
@@ -927,7 +939,8 @@ The returned value is a Quail map specific to KEY."
 	  (let* ((keyseq (read-key-sequence
 			  (and input-method-use-echo-area
 			       (concat input-method-previous-message
-				       quail-current-str))))
+				       quail-current-str))
+			  nil nil t))
 		 (cmd (lookup-key (quail-translation-keymap) keyseq)))
 	    (if (if key
 		    (and (commandp cmd) (not (eq cmd 'quail-other-command)))
@@ -993,7 +1006,8 @@ The returned value is a Quail map specific to KEY."
 			  (and input-method-use-echo-area
 			       (concat input-method-previous-message
 				       quail-conversion-str
-				       quail-current-str))))
+				       quail-current-str))
+			  nil nil t))
 		 (cmd (lookup-key (quail-conversion-keymap) keyseq)))
 	    (if (if key (commandp cmd) (eq cmd 'quail-self-insert-command))
 		(progn
@@ -1066,25 +1080,29 @@ The returned value is a Quail map specific to KEY."
 	    (if (= len 1)
 		(setq control-flag t
 		      quail-current-str quail-current-key)
-	      (while (> len control-flag)
-		(setq len (1- len))
-		(setq unread-command-events
-		      (cons (aref quail-current-key len)
-			    unread-command-events)))
+	      (if input-method-exit-on-first-char
+		  (setq len control-flag)
+		(while (> len control-flag)
+		  (setq len (1- len))
+		  (setq unread-command-events
+			(cons (aref quail-current-key len)
+			      unread-command-events))))
 	      (if quail-current-str
 		  (if input-method-exit-on-first-char
 		      (setq control-flag t))
 		(setq quail-current-str
 		      (substring quail-current-key 0 len)))))
 	(if quail-current-str
-	    (if input-method-exit-on-first-char
+	    (if (and input-method-exit-on-first-char
+		     (quail-simple))
 		(setq control-flag t))
-	  (setq quail-current-str quail-current-key))))
-    (if (not input-method-use-echo-area)
-	(progn
-	  (quail-delete-region)
-	  (insert quail-current-str))))
-  (quail-update-guidance)
+	  (setq quail-current-str quail-current-key)))))
+  (or input-method-use-echo-area
+      (progn
+	(quail-delete-region)
+	(insert quail-current-str)))
+  (let (quail-current-str)
+    (quail-update-guidance))
   (or (stringp quail-current-str)
       (setq quail-current-str (char-to-string quail-current-str)))
   (if control-flag
@@ -1325,6 +1343,13 @@ sequence counting from the head."
 
 ;; For conversion mode.
 
+(defsubst quail-point-in-conversion-region ()
+  "Return non-nil value if the point is in conversion region of Quail mode."
+  (let (start pos)
+    (and (setq start (overlay-start quail-conv-overlay))
+	 (>= (setq pos (point)) start)
+	 (<= pos (overlay-end quail-conv-overlay)))))
+
 (defun quail-conversion-backward-char ()
   (interactive)
   (if (<= (point) (overlay-start quail-conv-overlay))
@@ -1374,14 +1399,16 @@ sequence counting from the head."
 
 (defun quail-conversion-backward-delete-char ()
   (interactive)
-  (if (<= (point) (overlay-start quail-conv-overlay))
-      (quail-error "Beginning of conversion region"))
-  (delete-char -1)
-  (let ((start (overlay-start quail-conv-overlay))
-	(end (overlay-end quail-conv-overlay)))
-    (setq quail-conversion-str (buffer-substring start end))
-    (if (= start end)
-	(setq quail-converting nil))))
+  (if (> (length quail-current-key) 0)
+      (quail-delete-last-char)
+    (if (<= (point) (overlay-start quail-conv-overlay))
+	(quail-error "Beginning of conversion region"))
+    (delete-char -1)
+    (let ((start (overlay-start quail-conv-overlay))
+	  (end (overlay-end quail-conv-overlay)))
+      (setq quail-conversion-str (buffer-substring start end))
+      (if (= start end)
+	  (setq quail-converting nil)))))
 
 (defun quail-do-conversion (func &rest args)
   "Call FUNC to convert text in the current conversion region of Quail.
@@ -1460,6 +1487,14 @@ or in a newly created frame (if the selected frame has no other windows)."
 	(set-buffer-modified-p nil)))
     (bury-buffer quail-guidance-buf)
 
+    ;; Assign the buffer " *Minibuf-N*" to all windows which are now
+    ;; displaying quail-guidance-buf.
+    (let ((win-list (get-buffer-window-list quail-guidance-buf t t)))
+      (while win-list
+	(set-window-buffer (car win-list)
+			   (format " *Minibuf-%d*" (minibuffer-depth)))
+	(setq win-list (cdr win-list))))
+
     ;; Then, display it in an appropriate window.
     (let ((win (minibuffer-window)))
       (if (or (eq (selected-window) win)
@@ -1483,7 +1518,8 @@ or in a newly created frame (if the selected frame has no other windows)."
 	      (set-window-buffer win quail-guidance-buf)
 	      ;;(set-window-dedicated-p win t)
 	      ))
-	(set-window-buffer win quail-guidance-buf))
+	(set-window-buffer win quail-guidance-buf)
+	(set-minibuffer-window win))
       (setq quail-guidance-win win)))
 
   ;; And, create a buffer for completion.
@@ -1497,7 +1533,7 @@ or in a newly created frame (if the selected frame has no other windows)."
 	    win)
 	(while win-list
 	  (setq win (car win-list) win-list (cdr win-list))
-	  (if (eq win (minibuffer-window))
+	  (if (window-minibuffer-p win)
 	      ;; We are using echo area for the guidance buffer.
 	      ;; Vacate it to the deepest minibuffer.
 	      (set-window-buffer win
@@ -1508,15 +1544,19 @@ or in a newly created frame (if the selected frame has no other windows)."
 		  ;;(set-window-dedicated-p win nil)
 		  (delete-frame (window-frame win)))
 	      ;;(set-window-dedicated-p win nil)
-	      (delete-window win)))))))
+	      (delete-window win))))
+	(setq quail-guidance-win nil))))
 
 (defun quail-update-guidance ()
   "Update the Quail guidance buffer and completion buffer (if displayed now)."
   ;; Update guidance buffer.
   (if (quail-require-guidance-buf)
       (let ((guidance (quail-guidance)))
+	(or (and (eq (selected-frame) (window-frame (minibuffer-window)))
+		 (eq (selected-frame) (window-frame quail-guidance-win)))
+	    (quail-show-guidance-buf))
 	(cond ((or (eq guidance t)
-		   (listp guidance))
+		   (consp guidance))
 	       ;; Show the current possible translations.
 	       (quail-show-translations))
 	      ((null guidance)
@@ -1769,14 +1809,14 @@ All possible translations of the current key and whole possible longer keys
 		 (not (equal buffer
 			     (window-buffer (active-minibuffer-window))))))
 	(quail-error "Minibuffer is not active for completion")
-      ;; Insert the completion into the buffer where completion was requested.
+      ;; Store the completion in `quail-current-str', which will later
+      ;; be converted to a character event list, then inserted into
+      ;; the buffer where completion was requested.
       (set-buffer buffer)
 ;      (if base-size
 ;	  (delete-region (+ base-size (point-min)) (point))
 ;	(choose-completion-delete-max-match choice))
-      (insert choice)
-      (remove-text-properties (- (point) (length choice)) (point)
-			      '(mouse-face nil))
+      (setq quail-current-str choice)
       ;; Update point in the window that BUFFER is showing in.
       (let ((window (get-buffer-window buffer t)))
 	(set-window-point window (point)))
@@ -1840,7 +1880,9 @@ key		binding
 (defun quail-show-kbd-layout ()
   "Show keyboard layout with key tops of multilingual characters."
   (insert "--- Keyboard layout ---\n")
-  (let* ((i 0) ch)
+  (let ((blink-matching-paren nil)
+	(i 0)
+	ch)
     (while (< i quail-keyboard-layout-len)
       (if (= (% i 30) 0)
 	  (progn
@@ -1926,7 +1968,7 @@ key		binding
 
 
 (defvar quail-directory-name "quail"
-  "Name of Quail directory which cotains Quail packages.
+  "Name of Quail directory which contains Quail packages.
 This is a sub-directory of LEIM directory.")
 
 ;;;###autoload
@@ -1984,7 +2026,7 @@ of each directory."
 	     (message "Garbage in %s deleted" leim-list)
 	     (delete-region pos (point-max)))))))
 
-    ;; Search for `quail' subdirector under each DIRNAMES.
+    ;; Search for `quail' subdirectory under each DIRNAMES.
     (setq dirnames (cons dirname dirnames))
     (let ((l dirnames))
       (while l

@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,121 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Files,  Next: Buffers,  Prev: Fixit,  Up: Top
+
+File Handling
+*************
+
+   The operating system stores data permanently in named "files".  So
+most of the text you edit with Emacs comes from a file and is ultimately
+stored in a file.
+
+   To edit a file, you must tell Emacs to read the file and prepare a
+buffer containing a copy of the file's text.  This is called "visiting"
+the file.  Editing commands apply directly to text in the buffer; that
+is, to the copy inside Emacs.  Your changes appear in the file itself
+only when you "save" the buffer back into the file.
+
+   In addition to visiting and saving files, Emacs can delete, copy,
+rename, and append to files, keep multiple versions of them, and operate
+on file directories.
+
+* Menu:
+
+* File Names::          How to type and edit file-name arguments.
+* Visiting::            Visiting a file prepares Emacs to edit the file.
+* Saving::              Saving makes your changes permanent.
+* Reverting::           Reverting cancels all the changes not saved.
+* Auto Save::           Auto Save periodically protects against loss of data.
+* File Aliases::        Handling multiple names for one file.
+* Version Control::     Version control systems (RCS, CVS and SCCS).
+* Directories::         Creating, deleting, and listing file directories.
+* Comparing Files::     Finding where two files differ.
+* Misc File Ops::       Other things you can do on files.
+* Compressed Files::    Accessing compressed files.
+* Remote Files::        Accessing files on other sites.
+* Quoted File Names::   Quoting special characters in file names.
+
+
+File: emacs,  Node: File Names,  Next: Visiting,  Up: Files
+
+File Names
+==========
+
+   Most Emacs commands that operate on a file require you to specify the
+file name.  (Saving and reverting are exceptions; the buffer knows which
+file name to use for them.)  You enter the file name using the
+minibuffer (*note Minibuffer::.).  "Completion" is available, to make
+it easier to specify long file names.  *Note Completion::.
+
+   For most operations, there is a "default file name" which is used if
+you type just <RET> to enter an empty argument.  Normally the default
+file name is the name of the file visited in the current buffer; this
+makes it easy to operate on that file with any of the Emacs file
+commands.
+
+   Each buffer has a default directory, normally the same as the
+directory of the file visited in that buffer.  When you enter a file
+name without a directory, the default directory is used.  If you specify
+a directory in a relative fashion, with a name that does not start with
+a slash, it is interpreted with respect to the default directory.  The
+default directory is kept in the variable `default-directory', which
+has a separate value in every buffer.
+
+   For example, if the default file name is `/u/rms/gnu/gnu.tasks' then
+the default directory is `/u/rms/gnu/'.  If you type just `foo', which
+does not specify a directory, it is short for `/u/rms/gnu/foo'.
+`../.login' would stand for `/u/rms/.login'.  `new/foo' would stand for
+the file name `/u/rms/gnu/new/foo'.
+
+   The command `M-x pwd' prints the current buffer's default directory,
+and the command `M-x cd' sets it (to a value read using the
+minibuffer).  A buffer's default directory changes only when the `cd'
+command is used.  A file-visiting buffer's default directory is
+initialized to the directory of the file that is visited there.  If you
+create a buffer with `C-x b', its default directory is copied from that
+of the buffer that was current at the time.
+
+   The default directory actually appears in the minibuffer when the
+minibuffer becomes active to read a file name.  This serves two
+purposes: it *shows* you what the default is, so that you can type a
+relative file name and know with certainty what it will mean, and it
+allows you to *edit* the default to specify a different directory.
+This insertion of the default directory is inhibited if the variable
+`insert-default-directory' is set to `nil'.
+
+   Note that it is legitimate to type an absolute file name after you
+enter the minibuffer, ignoring the presence of the default directory
+name as part of the text.  The final minibuffer contents may look
+invalid, but that is not so.  For example, if the minibuffer starts out
+with `/usr/tmp/' and you add `/x1/rms/foo', you get
+`/usr/tmp//x1/rms/foo'; but Emacs ignores everything through the first
+slash in the double slash; the result is `/x1/rms/foo'.  *Note
+Minibuffer File::.
+
+   `$' in a file name is used to substitute environment variables.  For
+example, if you have used the shell command `export FOO=rms/hacks' to
+set up an environment variable named `FOO', then you can use
+`/u/$FOO/test.c' or `/u/${FOO}/test.c' as an abbreviation for
+`/u/rms/hacks/test.c'.  The environment variable name consists of all
+the alphanumeric characters after the `$'; alternatively, it may be
+enclosed in braces after the `$'.  Note that shell commands to set
+environment variables affect Emacs only if done before Emacs is started.
+
+   To access a file with `$' in its name, type `$$'.  This pair is
+converted to a single `$' at the same time as variable substitution is
+performed for single `$'.  Alternatively, quote the whole file name
+with `/:' (*note Quoted File Names::.).
+
+   The Lisp function that performs the substitution is called
+`substitute-in-file-name'.  The substitution is performed only on file
+names read as such using the minibuffer.
+
+   You can include non-ASCII characters in file names if you set the
+variable `file-name-coding-system' to a non-`nil' value.  *Note Specify
+Coding::.
 
 
 File: emacs,  Node: Visiting,  Next: Saving,  Prev: File Names,  Up: Files
@@ -113,12 +228,28 @@ message is printed.  *Note Simultaneous Editing: Interlocking.
 had visited an existing empty file.  If you make any changes and save
 them, the file is created.
 
+   Emacs recognizes from the contents of a file which convention it uses
+to separate lines--newline (used on GNU/Linux and on Unix),
+carriage-return linefeed (used on Microsoft systems), or just
+carriage-return (used on the Macintosh)--and automatically converts the
+contents to the normal Emacs convention, which is that the newline
+character separates lines.  This is a part of the general feature of
+coding system conversion (*note Coding Systems::.), and makes it
+possible to edit files imported from various different operating
+systems with equal convenience.  If you change the text and save the
+file, Emacs performs the inverse conversion, changing newlines back into
+carriage-return linefeed or just carriage-return if appropriate.
+
    If the file you specify is actually a directory, `C-x C-f' invokes
 Dired, the Emacs directory browser, so that you can "edit" the contents
 of the directory (*note Dired::.).  Dired is a convenient way to delete,
 look at, or operate on the files in the directory.  However, if the
 variable `find-file-run-dired' is `nil', then it is an error to try to
 visit a directory.
+
+   If the file name you specify contains wildcard characters, Emacs
+visits all the files that match it.  *Note Quoted File Names::, if you
+want to visit a file whose name actually contains wildcard characters.
 
    If you visit a file that the operating system won't let you modify,
 Emacs makes the buffer read-only, so that you won't go ahead and make
@@ -312,10 +443,20 @@ Backup Files
 all record of what the file used to contain.  Thus, saving a file from
 Emacs throws away the old contents of the file--or it would, except that
 Emacs carefully copies the old contents to another file, called the
-"backup" file, before actually saving.  (This assumes that the variable
-`make-backup-files' is non-`nil'.  Backup files are not written if this
-variable is `nil'.)  Emacs does not normally make backup files for
-files in `/tmp'.
+"backup" file, before actually saving.
+
+   For most files, the variable `make-backup-files' determines whether
+to make backup files.  On most operating systems, its default value is
+`t', so that Emacs does write backup files.
+
+   For files managed by a version control system (*note Version
+Control::.), the variable `vc-make-backup-files' determines whether to
+make backup files.  By default, it is `nil', since backup files are
+redundant when you store all the previous versions in a version control
+system.  *Note VC Workfile Handling::.
+
+   The default value of the `backup-enable-predicate' variable prevents
+backup files being written for files in `/tmp'.
 
    At your option, Emacs can keep either a single backup file or a
 series of numbered backup files for each file that you edit.
@@ -391,12 +532,6 @@ accordingly at startup.  If the environment variable's value is `t' or
 `numbered', then `version-control' becomes `t'; if the value is `nil'
 or `existing', then `version-control' becomes `nil'; if it is `never'
 or `simple', then `version-control' becomes `never'.
-
-   For files managed by a version control system (*note Version
-Control::.), the variable `vc-make-backup-files' determines whether to
-make backup files.  By default, it is `nil', since backup files are
-redundant when you store all the previous versions in a version control
-system.  *Note VC Workfile Handling::.
 
 
 File: emacs,  Node: Backup Deletion,  Next: Backup Copying,  Prev: Backup Names,  Up: Backup
@@ -975,150 +1110,4 @@ mode), `C-x C-q' can either lock a file or check it in:
 
    These rules also apply when you use CVS in locking mode, except that
 there is no such thing as stealing a lock.
-
-
-File: emacs,  Node: Without Locking,  Next: Log Buffer,  Prev: VC with Locking,  Up: Basic VC Editing
-
-Basic Version Control without Locking
-.....................................
-
-   When there is no locking-the default for CVS-work files are always
-writable; you do not need to do anything before you begin to edit a
-file.  The status indicator on the mode line is `-' if the file is
-unmodified; it flips to `:' as soon as you save any changes in the work
-file.
-
-   Here is what `C-x C-q' does when using CVS:
-
-   * If some other user has checked in changes into the master file,
-     Emacs asks you whether you want to merge those changes into your
-     own work file (*note Merging::.).  You must do this before you can
-     check in your own changes.
-
-   * If there are no new changes in the master file, but you have made
-     modifications in your work file, `C-x C-q' checks in your changes.
-     In order to do this, it first reads the log entry for the new
-     version.  *Note Log Buffer::.
-
-   * If the file is not modified, the `C-x C-q' does nothing.
-
-   These rules also apply when you use RCS in the mode that does not
-require locking, except that automatic merging of changes from the
-master file is not implemented.  Unfortunately, this means that nothing
-informs you if another user has checked in changes in the same file
-since you began editing it, and when this happens, his changes will be
-effectively removed when you check in your version (though they will
-remain in the master file, so they will not be entirely lost).  You must
-therefore verify the current version is unchanged, before you check in
-your changes.  We hope to eliminate this risk and provide automatic
-merging with RCS in a future Emacs version.
-
-   In addition, locking is possible with RCS even in this mode, although
-it is not required; `C-x C-q' with an unmodified file locks the file,
-just as it does with RCS in its normal (locking) mode.
-
-
-File: emacs,  Node: Log Buffer,  Prev: Without Locking,  Up: Basic VC Editing
-
-Features of the Log Entry Buffer
-................................
-
-   When you check in changes, `C-x C-q' first reads a log entry.  It
-pops up a buffer called `*VC-Log*' for you to enter the log entry.
-When you are finished, type `C-c C-c' in the `*VC-Log*' buffer.  That
-is when check-in really happens.
-
-   To abort check-in, just *don't* type `C-c C-c' in that buffer.  You
-can switch buffers and do other editing.  As long as you don't try to
-check in another file, the entry you were editing remains in the
-`*VC-Log*' buffer, and you can go back to that buffer at any time to
-complete the check-in.
-
-   If you change several source files for the same reason, it is often
-convenient to specify the same log entry for many of the files.  To do
-this, use the history of previous log entries.  The commands `M-n',
-`M-p', `M-s' and `M-r' for doing this work just like the minibuffer
-history commands (except that these versions are used outside the
-minibuffer).
-
-   Each time you check in a file, the log entry buffer is put into VC
-Log mode, which involves running two hooks: `text-mode-hook' and
-`vc-log-mode-hook'.  *Note Hooks::.
-
-
-File: emacs,  Node: Old Versions,  Next: Secondary VC Commands,  Prev: Basic VC Editing,  Up: Version Control
-
-Examining And Comparing Old Versions
-------------------------------------
-
-   One of the convenient features of version control is the ability to
-examine any version of a file, or compare two versions.
-
-`C-x v ~ VERSION <RET>'
-     Examine version VERSION of the visited file, in a buffer of its
-     own.
-
-`C-x v ='
-     Compare the current buffer contents with the latest checked-in
-     version of the file.
-
-`C-u C-x v = FILE <RET> OLDVERS <RET> NEWVERS <RET>'
-     Compare the specified two versions of FILE.
-
-`C-x v g'
-     Display the result of the CVS annotate command using colors.
-
-   To examine an old version in toto, visit the file and then type `C-x
-v ~ VERSION <RET>' (`vc-version-other-window').  This puts the text of
-version VERSION in a file named `FILENAME.~VERSION~', and visits it in
-its own buffer in a separate window.  (In RCS, you can also select an
-old version and create a branch from it.  *Note Branches::.)
-
-   But usually it is more convenient to compare two versions of the
-file, with the command `C-x v =' (`vc-diff').  Plain `C-x v =' compares
-the current buffer contents (saving them in the file if necessary) with
-the last checked-in version of the file.  `C-u C-x v =', with a numeric
-argument, reads a file name and two version numbers, then compares
-those versions of the specified file.
-
-   If you supply a directory name instead of the name of a registered
-file, this command compares the two specified versions of all registered
-files in that directory and its subdirectories.
-
-   You can specify a checked-in version by its number; an empty input
-specifies the current contents of the work file (which may be different
-from all the checked-in versions).  You can also specify a snapshot name
-(*note Snapshots::.) instead of one or both version numbers.
-
-   This command works by running the `diff' utility, getting the
-options from the variable `diff-switches'.  It displays the output in a
-special buffer in another window.  Unlike the `M-x diff' command, `C-x
-v =' does not try to locate the changes in the old and new versions.
-This is because normally one or both versions do not exist as files
-when you compare them; they exist only in the records of the master
-file.  *Note Comparing Files::, for more information about `M-x diff'.
-
-   For CVS-controlled files, you can display the result of the CVS
-annotate command, using colors to enhance the visual appearance.  Use
-the command `M-x vc-annotate' to do this.  Red means new, blue means
-old, and intermediate colors indicate intermediate ages.  A prefix
-argument N specifies a stretch factor for the time scale; it makes each
-color cover a period N times as long.
-
-
-File: emacs,  Node: Secondary VC Commands,  Next: Branches,  Prev: Old Versions,  Up: Version Control
-
-The Secondary Commands of VC
-----------------------------
-
-   This section explains the secondary commands of VC; those that you
-might use once a day.
-
-* Menu:
-
-* Registering::         Putting a file under version control.
-* VC Status::           Viewing the VC status of files.
-* VC Undo::             Cancelling changes before or after check-in.
-* VC Dired Mode::       Listing files managed by version control.
-* VC Dired Commands::   Commands to use in a VC Dired buffer.
 

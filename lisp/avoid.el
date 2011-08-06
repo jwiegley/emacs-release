@@ -80,7 +80,8 @@
 (defcustom mouse-avoidance-mode nil
   "Activate mouse avoidance mode.  
 See function `mouse-avoidance-mode' for possible values.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `mouse-avoidance-mode'."
   :set (lambda (symbol value)
 	 ;; 'none below prevents toggling when value is nil.
 	 (mouse-avoidance-mode (or value 'none))) 
@@ -268,6 +269,7 @@ redefine this function to suit your own tastes."
 
 (defun mouse-avoidance-banish-hook ()
   (if (and (not executing-kbd-macro)	; don't check inside macro
+	   (cadr (mouse-position))      ; don't move unless in an Emacs frame
 	   ;; Don't do anything if last event was a mouse event.
 	   (not (and (consp last-input-event)
 		     (symbolp (car last-input-event))

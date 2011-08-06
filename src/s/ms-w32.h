@@ -237,6 +237,7 @@ Boston, MA 02111-1307, USA.  */
 #define HAVE_DUP2 1
 #define HAVE_RENAME 1
 #define HAVE_CLOSEDIR 1
+#define HAVE_FSYNC 1		/* fsync is called _commit in MSVC.  */
 
 #undef  TM_IN_SYS_TIME
 #undef  HAVE_TM_ZONE
@@ -273,7 +274,7 @@ Boston, MA 02111-1307, USA.  */
 #define HAVE_SHUTDOWN 1
 #define HAVE_STRFTIME 1
 
-#undef  LOCALTIME_CACHE
+#define LOCALTIME_CACHE
 #undef  HAVE_INET_SOCKETS
 
 #undef  HAVE_AIX_SMT_EXP
@@ -300,7 +301,7 @@ Boston, MA 02111-1307, USA.  */
 
 #ifdef emacs
 
-/* IO calls that are emulated or shadowed */
+/* calls that are emulated or shadowed */
 #undef access
 #define access  sys_access
 #undef chdir
@@ -330,6 +331,7 @@ Boston, MA 02111-1307, USA.  */
 #define rmdir   sys_rmdir
 #define select  sys_select
 #define sleep   sys_sleep
+#define strerror sys_strerror
 #undef unlink
 #define unlink  sys_unlink
 #undef write
@@ -352,6 +354,8 @@ Boston, MA 02111-1307, USA.  */
 #define fileno	  _fileno
 #define flushall  _flushall
 #define fputchar  _fputchar
+#define fsync	  _commit
+#define ftruncate _chsize
 #define getw	  _getw
 #define getpid    _getpid
 #define isatty    _isatty

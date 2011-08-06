@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,184 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Remote Files,  Next: Quoted File Names,  Prev: Compressed Files,  Up: Files
+
+Remote Files
+============
+
+   You can refer to files on other machines using a special file name
+syntax:
+
+     /HOST:FILENAME
+     /USER@HOST:FILENAME
+
+When you do this, Emacs uses the FTP program to read and write files on
+the specified host.  It logs in through FTP using your user name or the
+name USER.  It may ask you for a password from time to time; this is
+used for logging in on HOST.
+
+   Normally, if you do not specify a user name in a remote file name,
+that means to use your own user name.  But if you set the variable
+`ange-ftp-default-user' to a string, that string is used instead.  (The
+Emacs package that implements FTP file access is called `ange-ftp'.)
+
+   You can entirely turn off the FTP file name feature by setting the
+variable `file-name-handler-alist' to `nil'.
+
+
+File: emacs,  Node: Quoted File Names,  Prev: Remote Files,  Up: Files
+
+Quoted File Names
+=================
+
+   You can "quote" an absolute file name to prevent special characters
+and syntax in it from having their special effects.  The way to do this
+is to add `/:' at the beginning.
+
+   For example, you can quote a local file name which appears remote, to
+prevent it from being treated as a remote file name.  Thus, if you have
+a directory named `/foo:' and a file named `bar' in it, you can refer
+to that file in Emacs as `/:/foo:/bar'.
+
+   `/:' can also prevent `~' from being treated as a special character
+for a user's home directory.  For example, `/:/tmp/~hack' refers to a
+file whose name is `~hack' in directory `/tmp'.
+
+   Likewise, quoting with `/:' is one way to enter in the minibuffer a
+file name that contains `$'.  However, the `/:' must be at the
+beginning of the buffer in order to quote `$'.
+
+   You can also quote wildcard characters with `/:', for visiting.  For
+example, `/:/tmp/foo*bar' visits the file `/tmp/foo*bar'.  However, in
+most cases you can simply type the wildcard characters for themselves.
+For example, if the only file name in `/tmp' that starts with `foo' and
+ends with `bar' is `foo*bar', then specifying `/tmp/foo*bar' will visit
+just `/tmp/foo*bar'.
+
+
+File: emacs,  Node: Buffers,  Next: Windows,  Prev: Files,  Up: Top
+
+Using Multiple Buffers
+**********************
+
+   The text you are editing in Emacs resides in an object called a
+"buffer".  Each time you visit a file, a buffer is created to hold the
+file's text.  Each time you invoke Dired, a buffer is created to hold
+the directory listing.  If you send a message with `C-x m', a buffer
+named `*mail*' is used to hold the text of the message.  When you ask
+for a command's documentation, that appears in a buffer called `*Help*'.
+
+   At any time, one and only one buffer is "selected".  It is also
+called the "current buffer".  Often we say that a command operates on
+"the buffer" as if there were only one; but really this means that the
+command operates on the selected buffer (most commands do).
+
+   When Emacs has multiple windows, each window has a chosen buffer
+which is displayed there, but at any time only one of the windows is
+selected and its chosen buffer is the selected buffer.  Each window's
+mode line displays the name of the buffer that the window is displaying
+(*note Windows::.).
+
+   Each buffer has a name, which can be of any length, and you can
+select any buffer by giving its name.  Most buffers are made by
+visiting files, and their names are derived from the files' names.  But
+you can also create an empty buffer with any name you want.  A newly
+started Emacs has a buffer named `*scratch*' which can be used for
+evaluating Lisp expressions in Emacs.  The distinction between upper
+and lower case matters in buffer names.
+
+   Each buffer records individually what file it is visiting, whether
+it is modified, and what major mode and minor modes are in effect in it
+(*note Major Modes::.).  Any Emacs variable can be made "local to" a
+particular buffer, meaning its value in that buffer can be different
+from the value in other buffers.  *Note Locals::.
+
+* Menu:
+
+* Select Buffer::       Creating a new buffer or reselecting an old one.
+* List Buffers::        Getting a list of buffers that exist.
+* Misc Buffer::	        Renaming; changing read-onlyness; copying text.
+* Kill Buffer::	        Killing buffers you no longer need.
+* Several Buffers::     How to go through the list of all buffers
+			  and operate variously on several of them.
+* Indirect Buffers::    An indirect buffer shares the text of another buffer.
+
+
+File: emacs,  Node: Select Buffer,  Next: List Buffers,  Up: Buffers
+
+Creating and Selecting Buffers
+==============================
+
+`C-x b BUFFER <RET>'
+     Select or create a buffer named BUFFER (`switch-to-buffer').
+
+`C-x 4 b BUFFER <RET>'
+     Similar, but select BUFFER in another window
+     (`switch-to-buffer-other-window').
+
+`C-x 5 b BUFFER <RET>'
+     Similar, but select BUFFER in a separate frame
+     (`switch-to-buffer-other-frame').
+
+   To select the buffer named BUFNAME, type `C-x b BUFNAME <RET>'.
+This runs the command `switch-to-buffer' with argument BUFNAME.  You
+can use completion on an abbreviation for the buffer name you want
+(*note Completion::.).  An empty argument to `C-x b' specifies the most
+recently selected buffer that is not displayed in any window.
+
+   Most buffers are created by visiting files, or by Emacs commands that
+want to display some text, but you can also create a buffer explicitly
+by typing `C-x b BUFNAME <RET>'.  This makes a new, empty buffer that
+is not visiting any file, and selects it for editing.  Such buffers are
+used for making notes to yourself.  If you try to save one, you are
+asked for the file name to use.  The new buffer's major mode is
+determined by the value of `default-major-mode' (*note Major Modes::.).
+
+   Note that `C-x C-f', and any other command for visiting a file, can
+also be used to switch to an existing file-visiting buffer.  *Note
+Visiting::.
+
+   Emacs uses buffer names that start with a space for internal
+purposes.  It treats these buffers specially in minor ways--for
+example, by default they do not record undo information.  It is best to
+avoid using such buffer names yourself.
+
+
+File: emacs,  Node: List Buffers,  Next: Misc Buffer,  Prev: Select Buffer,  Up: Buffers
+
+Listing Existing Buffers
+========================
+
+`C-x C-b'
+     List the existing buffers (`list-buffers').
+
+   To display a list of all the buffers that exist, type `C-x C-b'.
+Each line in the list shows one buffer's name, major mode and visited
+file.  The buffers are listed in the order that they were current; the
+buffers that were current most recently come first.
+
+   `*' at the beginning of a line indicates the buffer is "modified."
+If several buffers are modified, it may be time to save some with `C-x
+s' (*note Saving::.).  `%' indicates a read-only buffer.  `.' marks the
+selected buffer.  Here is an example of a buffer list:
+
+      MR Buffer         Size  Mode           File
+      -- ------         ----  ----           ----
+     .*  emacs.tex      383402 Texinfo       /u2/emacs/man/emacs.tex
+         *Help*         1287  Fundamental
+         files.el       23076 Emacs-Lisp     /u2/emacs/lisp/files.el
+       % RMAIL          64042 RMAIL          /u/rms/RMAIL
+      *% man            747   Dired          /u2/emacs/man/
+         net.emacs      343885 Fundamental   /u/rms/net.emacs
+         fileio.c       27691 C              /u2/emacs/src/fileio.c
+         NEWS           67340 Text           /u2/emacs/etc/NEWS
+         *scratch*	   0	 Lisp Interaction
+
+Note that the buffer `*Help*' was made by a help request; it is not
+visiting any file.  The buffer `man' was made by Dired on the directory
+`/u2/emacs/man/'.
 
 
 File: emacs,  Node: Misc Buffer,  Next: Kill Buffer,  Prev: List Buffers,  Up: Buffers
@@ -421,7 +599,7 @@ this variable is `nil', then `C-x 2' tries to avoid shifting any text
 the screen, by putting point in each window at a position already
 visible in the window.  It also selects whichever window contain the
 screen line that the cursor was previously on.  Some users prefer the
-latter mode slow terminals.
+latter mode on slow terminals.
 
 
 File: emacs,  Node: Other Window,  Next: Pop Up Window,  Prev: Split Window,  Up: Windows
@@ -956,8 +1134,8 @@ Creating Frames
 
    The prefix key `C-x 5' is analogous to `C-x 4', with parallel
 subcommands.  The difference is that `C-x 5' commands create a new
-frame rather than just a new window in the selected frame (*Note Pop Up
-Window::).  If an existing visible or iconified frame already displays
+frame rather than just a new window in the selected frame (*note Pop Up
+Window::.).  If an existing visible or iconified frame already displays
 the requested material, these commands use the existing frame, after
 raising or deiconifying as necessary.
 
@@ -965,7 +1143,7 @@ raising or deiconifying as necessary.
 buffer to select:
 
 `C-x 5 2'
-     Create a new frame (`make-frame').
+     Create a new frame (`make-frame-command').
 
 `C-x 5 b BUFNAME <RET>'
      Select buffer BUFNAME in another frame.  This runs
@@ -1000,195 +1178,10 @@ variable `initial-frame-alist' to specify parameters that affect only
 the initial frame.  *Note Initial Parameters: (elisp)Initial
 Parameters, for more information.
 
-
-File: emacs,  Node: Speedbar,  Next: Creating Frames,  Prev: Mode Line Mouse,  Up: Frames
+   The easiest way to specify the principal font for all your Emacs
+frames is with an X resource (*note Font X::.), but you can also do it
+by modifying `default-frame-alist' to specify the `font' parameter, as
+shown here:
 
-Making and Using a Speedbar Frame
-=================================
-
-   An Emacs frame can have a "speedbar", which is a vertical window
-that serves as a scrollable menu of files you could visit and tags
-within those files.  To create a speedbar, type `M-x speedbar'; this
-creates a speedbar window for the selected frame.  From then on, you can
-click on a file name in the speedbar to visit that file in the
-corresponding Emacs frame, or click on a tag name to jump to that tag in
-the Emacs frame.
-
-   Initially the speedbar lists the immediate contents of the current
-directory, one file per line.  Each line also has a box, `[+]' or
-`<+>', that you can click on with `Mouse-2' to "open up" the contents
-of that item.  If the line names a directory, opening it adds the
-contents of that directory to the speedbar display, underneath the
-directory's own line.  If the line lists an ordinary file, opening it up
-adds a list of the tags in that file to the speedbar display.  When a
-file is opened up, the `[+]' changes to `[-]'; you can click on that
-box to "close up" that file (hide its contents).
-
-   Some major modes, including Rmail mode, Info, and GUD, have
-specialized ways of putting useful items into the speedbar for you to
-select.  For example, in Rmail mode, the speedbar shows a list of Rmail
-files, and lets you move the current message to another Rmail file by
-clicking on its `<M>' box.
-
-   A speedbar belongs to one Emacs frame, and always operates on that
-frame.  If you use multiple frames, you can make a speedbar for some or
-all of the frames; type `M-x speedbar' in any given frame to make a
-speedbar for it.
-
-
-File: emacs,  Node: Multiple Displays,  Next: Special Buffer Frames,  Prev: Creating Frames,  Up: Frames
-
-Multiple Displays
-=================
-
-   A single Emacs can talk to more than one X Windows display.
-Initially, Emacs uses just one display--the one specified with the
-`DISPLAY' environment variable or with the `--display' option (*note
-Initial Options::.).  To connect to another display, use the command
-`make-frame-on-display':
-
-`M-x make-frame-on-display <RET> DISPLAY <RET>'
-     Create a new frame on display DISPLAY.
-
-   A single X server can handle more than one screen.  When you open
-frames on two screens belonging to one server, Emacs knows they share a
-single keyboard, and it treats all the commands arriving from these
-screens as a single stream of input.
-
-   When you open frames on different X servers, Emacs makes a separate
-input stream for each server.  This way, two users can type
-simultaneously on the two displays, and Emacs will not garble their
-input.  Each server also has its own selected frame.  The commands you
-enter with a particular X server apply to that server's selected frame.
-
-   Despite these features, people using the same Emacs job from
-different displays can still interfere with each other if they are not
-careful.  For example, if any one types `C-x C-c', that exits the Emacs
-job for all of them!
-
-
-File: emacs,  Node: Special Buffer Frames,  Next: Frame Parameters,  Prev: Multiple Displays,  Up: Frames
-
-Special Buffer Frames
-=====================
-
-   You can make certain chosen buffers, for which Emacs normally creates
-a second window when you have just one window, appear in special frames
-of their own.  To do this, set the variable
-`special-display-buffer-names' to a list of buffer names; any buffer
-whose name is in that list automatically gets a special frame, when an
-Emacs command wants to display it "in another window."
-
-   For example, if you set the variable this way,
-
-     (setq special-display-buffer-names
-           '("*Completions*" "*grep*" "*tex-shell*"))
-
-then completion lists, `grep' output and the TeX mode shell buffer get
-individual frames of their own.  These frames, and the windows in them,
-are never automatically split or reused for any other buffers.  They
-continue to show the buffers they were created for, unless you alter
-them by hand.  Killing the special buffer deletes its frame
-automatically.
-
-   More generally, you can set `special-display-regexps' to a list of
-regular expressions; then a buffer gets its own frame if its name
-matches any of those regular expressions.  (Once again, this applies
-only to buffers that normally get displayed for you in a separate
-window.)
-
-   The variable `special-display-frame-alist' specifies the frame
-parameters for these frames.  It has a default value, so you don't need
-to set it.
-
-   For those who know Lisp, an element of
-`special-display-buffer-names' or `special-display-regexps' can also be
-a list.  Then the first element is the buffer name or regular
-expression; the rest of the list specifies how to create the frame.  It
-can be an association list specifying frame parameter values; these
-values take precedence over parameter values specified in
-`special-display-frame-alist'.  Alternatively, it can have this form:
-
-     (FUNCTION ARGS...)
-
-where FUNCTION is a symbol.  Then the frame is constructed by calling
-FUNCTION; its first argument is the buffer, and its remaining arguments
-are ARGS.
-
-   An analogous feature lets you specify buffers which should be
-displayed in the selected window.  *Note Force Same Window::.  The
-same-window feature takes precedence over the special-frame feature;
-therefore, if you add a buffer name to `special-display-buffer-names'
-and it has no effect, check to see whether that feature is also in use
-for the same buffer name.
-
-
-File: emacs,  Node: Frame Parameters,  Next: Scroll Bars,  Prev: Special Buffer Frames,  Up: Frames
-
-Setting Frame Parameters
-========================
-
-   This section describes commands for altering the display style and
-window management behavior of the selected frame.
-
-`M-x set-foreground-color <RET> COLOR <RET>'
-     Specify color COLOR for the foreground of the selected frame.
-
-`M-x set-background-color <RET> COLOR <RET>'
-     Specify color COLOR for the background of the selected frame.
-     This changes the foreground color of the `modeline' face also, so
-     that it remains in inverse video compared with the default.
-
-`M-x set-cursor-color <RET> COLOR <RET>'
-     Specify color COLOR for the cursor of the selected frame.
-
-`M-x set-mouse-color <RET> COLOR <RET>'
-     Specify color COLOR for the mouse cursor when it is over the
-     selected frame.
-
-`M-x set-border-color <RET> COLOR <RET>'
-     Specify color COLOR for the border of the selected frame.
-
-`M-x list-colors-display'
-     Display the defined color names and show what the colors look like.
-     This command is somewhat slow.
-
-`M-x auto-raise-mode'
-     Toggle whether or not the selected frame should auto-raise.
-     Auto-raise means that every time you move the mouse onto the
-     frame, it raises the frame.
-
-     Note that this auto-raise feature is implemented by Emacs itself.
-     Some window managers also implement auto-raise.  If you enable
-     auto-raise for Emacs frames in your X window manager, it should
-     work, but it is beyond Emacs's control and therefore
-     `auto-raise-mode' has no effect on it.
-
-`M-x auto-lower-mode'
-     Toggle whether or not the selected frame should auto-lower.
-     Auto-lower means that every time you move the mouse off the frame,
-     the frame moves to the bottom of the stack of X windows.
-
-     The command `auto-lower-mode' has no effect on auto-lower
-     implemented by the X window manager.  To control that, you must use
-     the appropriate window manager features.
-
-`M-x set-frame-font <RET> FONT <RET>'
-     Specify font FONT as the principal font for the selected frame.
-     The principal font is used for all text displayed in the frame,
-     except when a face specifies a different font to use.  *Note Font
-     X::, for ways to list the available fonts on your system.
-
-     You can also set a frame's principal font through a pop-up menu.
-     Press `S-Mouse-1' to activate this menu.
-
-   In Emacs versions that use an X toolkit, the color-setting and
-font-setting functions don't affect menus and the menu bar, since they
-are displayed by their own widget classes.  To change the appearance of
-the menus and menu bar, you must use X resources (*note Resources X::.).
-*Note Colors X::, regarding colors.  *Note Font X::, regarding choice of
-font.
-
-   For information on frame parameters and customization, see *Note
-Frame Parameters: (elisp)Frame Parameters.
+     (add-to-list 'default-frame-alist '(font . "10x20"))
 

@@ -32,8 +32,8 @@ function, which should take an alist of parameters as its argument.")
 ;;; The initial value given here for used to ask for a minibuffer.
 ;;; But that's not necessary, because the default is to have one.
 ;;; By not specifying it here, we let an X resource specify it.
-(defvar initial-frame-alist nil
-  "Alist of frame parameters for creating the initial X window frame.
+(defcustom initial-frame-alist nil
+  "*Alist of frame parameters for creating the initial X window frame.
 You can set this in your `.emacs' file; for example,
  (setq initial-frame-alist '((top . 1) (left . 1) (width . 80) (height . 55)))
 Parameters specified here supersede the values given in `default-frame-alist'.
@@ -51,22 +51,35 @@ as it appears, you need to use this three-step process:
 * Set `default-frame-alist' to override these options so that they
   don't affect subsequent frames.
 * Set `initial-frame-alist' in a way that matches the X resources,
-  to override what you put in `default-frame-alist'.")
+  to override what you put in `default-frame-alist'."
+  :type '(repeat (cons :format "%v"
+		       (symbol :tag "Parameter")
+		       (sexp :tag "Value")))
+  :group 'frames)
 
-(defvar minibuffer-frame-alist '((width . 80) (height . 2))
-  "Alist of frame parameters for initially creating a minibuffer frame.
+(defcustom minibuffer-frame-alist '((width . 80) (height . 2))
+  "*Alist of frame parameters for initially creating a minibuffer frame.
 You can set this in your `.emacs' file; for example,
  (setq minibuffer-frame-alist
    '((top . 1) (left . 1) (width . 80) (height . 2)))
 Parameters specified here supersede the values given in
-`default-frame-alist'.")
+`default-frame-alist', for a minibuffer frame."
+  :type '(repeat (cons :format "%v"
+		       (symbol :tag "Parameter")
+		       (sexp :tag "Value")))
+  :group 'frames)
 
-(defvar pop-up-frame-alist nil
-  "Alist of frame parameters used when creating pop-up frames.
+(defcustom pop-up-frame-alist nil
+  "*Alist of frame parameters used when creating pop-up frames.
 Pop-up frames are used for completions, help, and the like.
 This variable can be set in your init file, like this:
   (setq pop-up-frame-alist '((width . 80) (height . 20)))
-These supersede the values given in `default-frame-alist'.")
+These supersede the values given in `default-frame-alist',
+for pop-up frames."
+  :type '(repeat (cons :format "%v"
+		       (symbol :tag "Parameter")
+		       (sexp :tag "Value")))
+  :group 'frames)
 
 (setq pop-up-frame-function
       (function (lambda ()
@@ -561,7 +574,12 @@ If there is no frame by that name, signal an error."
 	(error "There is no frame named `%s'" name))
     (make-frame-visible frame)
     (raise-frame frame)
-    (select-frame frame)))
+    (select-frame frame)
+    ;; Ensure, if possible, that frame gets input focus.
+    (if (eq window-system 'w32)
+	(w32-focus-frame frame)
+      (when focus-follows-mouse
+	(set-mouse-position (selected-frame) (1- (frame-width)) 0)))))
 
 ;;;; Frame configurations
 
@@ -622,7 +640,7 @@ is given and non-nil, the unwanted frames are iconified instead."
 
 (defun frame-parameter (frame parameter)
   "Return FRAME's value for parameter PARAMETER.
-If FRAME is omitted, describe the currently selected frame."
+If FRAME is nil, describe the currently selected frame."
   (cdr (assq parameter (frame-parameters frame))))
 
 (defun frame-height (&optional frame)

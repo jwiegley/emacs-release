@@ -78,7 +78,7 @@
 ;; c-c c-\ comint-quit-subjob	    	   ^\
 ;; c-c c-o comint-kill-output		   Delete last batch of process output
 ;; c-c c-r comint-show-output		   Show last batch of process output
-;; c-c c-h comint-dynamic-list-input-ring  List input history
+;; c-c c-l comint-dynamic-list-input-ring  List input history
 ;;         send-invisible                  Read line w/o echo & send to proc
 ;;         comint-continue-subjob	   Useful if you accidentally suspend
 ;;					        top-level job
@@ -121,7 +121,7 @@
   :group 'shell)
 
 ;;;###autoload
-(defvar shell-prompt-pattern "^[^#$%>\n]*[#$%>] *"
+(defcustom shell-prompt-pattern "^[^#$%>\n]*[#$%>] *"
   "Regexp to match prompts in the inferior shell.
 Defaults to \"^[^#$%>\\n]*[#$%>] *\", which works pretty well.
 This variable is used to initialise `comint-prompt-regexp' in the 
@@ -131,7 +131,9 @@ The pattern should probably not match more than one line.  If it does,
 Shell mode may become confused trying to distinguish prompt from input
 on lines which don't start with a prompt.
 
-This is a fine thing to set in your `.emacs' file.")
+This is a fine thing to set in your `.emacs' file."
+  :type 'regexp
+  :group 'shell)
 
 (defcustom shell-completion-fignore nil
   "*List of suffixes to be disregarded during file/command completion.
@@ -163,7 +165,7 @@ This is a fine thing to set in your `.emacs' file.")
 (defvar shell-file-name-quote-list
   (if (memq system-type '(ms-dos windows-nt))
       nil
-    (append shell-delimiter-argument-list '(?\  ?\* ?\! ?\" ?\' ?\`)))
+    (append shell-delimiter-argument-list '(?\  ?\* ?\! ?\" ?\' ?\` ?\#)))
   "List of characters to quote when in a file name.
 This variable is used to initialize `comint-file-name-quote-list' in the
 shell buffer.  The value may depend on the operating system or shell.
@@ -239,6 +241,12 @@ This mirrors the optional behavior of tcsh."
 		 (const nil))
   :group 'shell-directories)
 
+(defcustom shell-dirtrack-verbose t
+  "*If non-nil, show the directory stack following directory change.
+This is effective only if directory tracking is enabled."
+  :type 'boolean
+  :group 'shell-directories)
+
 (defcustom explicit-shell-file-name nil
   "*If non-nil, is file name to use for explicitly requested inferior shell."
   :type '(choice (const :tag "None" nil) file)
@@ -266,8 +274,11 @@ into the buffer's input ring.  See also `comint-magic-space' and
 
 This variable supplies a default for `comint-input-autoexpand',
 for Shell mode only."
-  :type '(choice (const nil) (const input) (const history))
-  :type 'shell)
+  :type '(choice (const :tag "off" nil)
+		 (const input)
+		 (const history)
+		 (const :tag "on" t))
+  :group 'shell)
 
 (defvar shell-dirstack nil
   "List of directories saved by pushd in this buffer's shell.
@@ -715,24 +726,26 @@ command again."
 ;;; All the commands that mung the buffer's dirstack finish by calling
 ;;; this guy.
 (defun shell-dirstack-message ()
-  (let* ((msg "")
-	 (ds (cons default-directory shell-dirstack))
-	 (home (expand-file-name (concat comint-file-name-prefix "~/")))
-	 (homelen (length home)))
-    (while ds
-      (let ((dir (car ds)))
-	(and (>= (length dir) homelen) (string= home (substring dir 0 homelen))
-	    (setq dir (concat "~/" (substring dir homelen))))
-	;; Strip off comint-file-name-prefix if present.
-	(and comint-file-name-prefix
-	     (>= (length dir) (length comint-file-name-prefix))
-	     (string= comint-file-name-prefix
-		      (substring dir 0 (length comint-file-name-prefix)))
-	     (setq dir (substring dir (length comint-file-name-prefix)))
-	     (setcar ds dir))
-	(setq msg (concat msg (directory-file-name dir) " "))
-	(setq ds (cdr ds))))
-    (message "%s" msg)))
+  (when shell-dirtrack-verbose
+    (let* ((msg "")
+	   (ds (cons default-directory shell-dirstack))
+	   (home (expand-file-name (concat comint-file-name-prefix "~/")))
+	   (homelen (length home)))
+      (while ds
+	(let ((dir (car ds)))
+	  (and (>= (length dir) homelen)
+	       (string= home (substring dir 0 homelen))
+	       (setq dir (concat "~/" (substring dir homelen))))
+	  ;; Strip off comint-file-name-prefix if present.
+	  (and comint-file-name-prefix
+	       (>= (length dir) (length comint-file-name-prefix))
+	       (string= comint-file-name-prefix
+			(substring dir 0 (length comint-file-name-prefix)))
+	       (setq dir (substring dir (length comint-file-name-prefix)))
+	       (setcar ds dir))
+	  (setq msg (concat msg (directory-file-name dir) " "))
+	  (setq ds (cdr ds))))
+      (message "%s" msg))))
 
 ;; This was mostly copied from shell-resync-dirs.
 (defun shell-snarf-envar (var)

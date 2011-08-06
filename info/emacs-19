@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,224 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Dired Updating,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired
+
+Updating the Dired Buffer
+=========================
+
+   This section describes commands to update the Dired buffer to reflect
+outside (non-Dired) changes in the directories and files, and to delete
+part of the Dired buffer.
+
+`g'
+     Update the entire contents of the Dired buffer (`revert-buffer').
+
+`l'
+     Update the specified files (`dired-do-redisplay').
+
+`k'
+     Delete the specified *file lines*--not the files, just the lines
+     (`dired-do-kill-lines').
+
+`s'
+     Toggle between alphabetical order and date/time order
+     (`dired-sort-toggle-or-edit').
+
+`C-u s SWITCHES <RET>'
+     Refresh the Dired buffer using SWITCHES as
+     `dired-listing-switches'.
+
+   Type `g' (`revert-buffer') to update the contents of the Dired
+buffer, based on changes in the files and directories listed.  This
+preserves all marks except for those on files that have vanished.
+Hidden subdirectories are updated but remain hidden.
+
+   To update only some of the files, type `l' (`dired-do-redisplay').
+This command applies to the next N files, or to the marked files if
+any, or to the current file.  Updating them means reading their current
+status from the file system and changing the buffer to reflect it
+properly.
+
+   If you use `l' on a subdirectory header line, it updates the
+contents of the corresponding subdirectory.
+
+   To delete the specified *file lines*--not the files, just the
+lines--type `k' (`dired-do-kill-lines').  With a numeric argument N,
+this command applies to the next N files; otherwise, it applies to the
+marked files.
+
+   If you kill the line for a file that is a directory, the directory's
+contents are also deleted from the buffer.  Typing `C-u k' on the
+header line for a subdirectory is another way to delete a subdirectory
+from the Dired buffer.
+
+   The `g' command brings back any individual lines that you have
+killed in this way, but not subdirectories--you must use `i' to
+reinsert each subdirectory.
+
+   The files in a Dired buffers are normally listed in alphabetical
+order by file names.  Alternatively Dired can sort them by date/time.
+The Dired command `s' (`dired-sort-toggle-or-edit') switches between
+these two sorting modes.  The mode line in a Dired buffer indicates
+which way it is currently sorted--by name, or by date.
+
+   `C-u s SWITCHES <RET>' lets you specify a new value for
+`dired-listing-switches'.
+
+
+File: emacs,  Node: Dired and Find,  Prev: Dired Updating,  Up: Dired
+
+Dired and `find'
+================
+
+   You can select a set of files for display in a Dired buffer more
+flexibly by using the `find' utility to choose the files.
+
+   To search for files with names matching a wildcard pattern use `M-x
+find-name-dired'.  It reads arguments DIRECTORY and PATTERN, and
+chooses all the files in DIRECTORY or its subdirectories whose
+individual names match PATTERN.
+
+   The files thus chosen are displayed in a Dired buffer in which the
+ordinary Dired commands are available.
+
+   If you want to test the contents of files, rather than their names,
+use `M-x find-grep-dired'.  This command reads two minibuffer
+arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
+or its subdirectories that contain a match for REGEXP.  It works by
+running the programs `find' and `grep'.  See also `M-x grep-find', in
+*Note Compilation::.  Remember to write the regular expression for
+`grep', not for Emacs.
+
+   The most general command in this series is `M-x find-dired', which
+lets you specify any condition that `find' can test.  It takes two
+minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
+DIRECTORY, passing FIND-ARGS to tell `find' what condition to test.  To
+use this command, you need to know how to use `find'.
+
+   The format of listing produced by these commands is controlled by the
+variable `find-ls-option', whose default value specifies using options
+`-ld' for `ls'.  If your listings are corrupted, you may need to change
+the value of this variable.
+
+
+File: emacs,  Node: Calendar/Diary,  Next: Gnus,  Prev: Dired,  Up: Top
+
+The Calendar and the Diary
+**************************
+
+   Emacs provides the functions of a desk calendar, with a diary of
+planned or past events.  To enter the calendar, type `M-x calendar';
+this displays a three-month calendar centered on the current month, with
+point on the current date.  With a numeric argument, as in `C-u M-x
+calendar', it prompts you for the month and year to be the center of the
+three-month calendar.  The calendar uses its own buffer, whose major
+mode is Calendar mode.
+
+   `Mouse-2' in the calendar brings up a menu of operations on a
+particular date; `C-Mouse-3' brings up a menu of commonly used calendar
+features that are independent of any particular date.  To exit the
+calendar, type `q'.  *Note Customizing the Calendar and Diary:
+(elisp)Calendar, for customization information about the calendar and
+diary.
+
+* Menu:
+
+* Calendar Motion::     Moving through the calendar; selecting a date.
+* Scroll Calendar::     Bringing earlier or later months onto the screen.
+* Counting Days::       How many days are there between two dates?
+* General Calendar::    Exiting or recomputing the calendar.
+* LaTeX Calendar::      Print a calendar using LaTeX.
+* Holidays::            Displaying dates of holidays.
+* Sunrise/Sunset::      Displaying local times of sunrise and sunset.
+* Lunar Phases::        Displaying phases of the moon.
+* Other Calendars::     Converting dates to other calendar systems.
+* Diary::               Displaying events from your diary.
+* Appointments::	Reminders when it's time to do something.
+* Daylight Savings::    How to specify when daylight savings time is active.
+
+
+File: emacs,  Node: Calendar Motion,  Next: Scroll Calendar,  Up: Calendar/Diary
+
+Movement in the Calendar
+========================
+
+   Calendar mode lets you move through the calendar in logical units of
+time such as days, weeks, months, and years.  If you move outside the
+three months originally displayed, the calendar display "scrolls"
+automatically through time to make the selected date visible.  Moving to
+a date lets you view its holidays or diary entries, or convert it to
+other calendars; moving longer time periods is also useful simply to
+scroll the calendar.
+
+* Menu:
+
+* Calendar Unit Motion::      Moving by days, weeks, months, and years.
+* Move to Beginning or End::  Moving to start/end of weeks, months, and years.
+* Specified Dates::           Moving to the current date or another
+                                specific date.
+
+
+File: emacs,  Node: Calendar Unit Motion,  Next: Move to Beginning or End,  Up: Calendar Motion
+
+Motion by Standard Lengths of Time
+----------------------------------
+
+   The commands for movement in the calendar buffer parallel the
+commands for movement in text.  You can move forward and backward by
+days, weeks, months, and years.
+
+`C-f'
+     Move point one day forward (`calendar-forward-day').
+
+`C-b'
+     Move point one day backward (`calendar-backward-day').
+
+`C-n'
+     Move point one week forward (`calendar-forward-week').
+
+`C-p'
+     Move point one week backward (`calendar-backward-week').
+
+`M-}'
+     Move point one month forward (`calendar-forward-month').
+
+`M-{'
+     Move point one month backward (`calendar-backward-month').
+
+`C-x ]'
+     Move point one year forward (`calendar-forward-year').
+
+`C-x ['
+     Move point one year backward (`calendar-backward-year').
+
+   The day and week commands are natural analogues of the usual Emacs
+commands for moving by characters and by lines.  Just as `C-n' usually
+moves to the same column in the following line, in Calendar mode it
+moves to the same day in the following week.  And `C-p' moves to the
+same day in the previous week.
+
+   The arrow keys are equivalent to `C-f', `C-b', `C-n' and `C-p', just
+as they normally are in other modes.
+
+   The commands for motion by months and years work like those for
+weeks, but move a larger distance.  The month commands `M-}' and `M-{'
+move forward or backward by an entire month's time.  The year commands
+`C-x ]' and `C-x [' move forward or backward a whole year.
+
+   The easiest way to remember these commands is to consider months and
+years analogous to paragraphs and pages of text, respectively.  But the
+commands themselves are not quite analogous.  The ordinary Emacs
+paragraph commands move to the beginning or end of a paragraph, whereas
+these month and year commands move by an entire month or an entire
+year, which usually involves skipping across the end of a month or year.
+
+   All these commands accept a numeric argument as a repeat count.  For
+convenience, the digit keys and the minus sign specify numeric
+arguments in Calendar mode even without the Meta modifier.  For example,
+`100 C-f' moves point 100 days forward from its present location.
 
 
 File: emacs,  Node: Move to Beginning or End,  Next: Specified Dates,  Prev: Calendar Unit Motion,  Up: Calendar Motion
@@ -1021,264 +1239,4 @@ For example, `C-u i w' makes a nonmarking weekly diary entry.
 
    When you modify the diary file, be sure to save the file before
 exiting Emacs.
-
-
-File: emacs,  Node: Special Diary Entries,  Prev: Adding to Diary,  Up: Diary
-
-Special Diary Entries
----------------------
-
-   In addition to entries based on calendar dates, the diary file can
-contain "sexp entries" for regular events such as anniversaries.  These
-entries are based on Lisp expressions (sexps) that Emacs evaluates as
-it scans the diary file.  Instead of a date, a sexp entry contains `%%'
-followed by a Lisp expression which must begin and end with
-parentheses.  The Lisp expression determines which dates the entry
-applies to.
-
-   Calendar mode provides commands to insert certain commonly used sexp
-entries:
-
-`i a'
-     Add an anniversary diary entry for the selected date
-     (`insert-anniversary-diary-entry').
-
-`i b'
-     Add a block diary entry for the current region
-     (`insert-block-diary-entry').
-
-`i c'
-     Add a cyclic diary entry starting at the date
-     (`insert-cyclic-diary-entry').
-
-   If you want to make a diary entry that applies to the anniversary of
-a specific date, move point to that date and use the `i a' command.
-This displays the end of your diary file in another window and inserts
-the anniversary description; you can then type the rest of the diary
-entry.  The entry looks like this:
-
-     %%(diary-anniversary 10 31 1948) Arthur's birthday
-
-This entry applies to October 31 in any year after 1948; `10 31 1948'
-specifies the date.  (If you are using the European calendar style, the
-month and day are interchanged.)  The reason this expression requires a
-beginning year is that advanced diary functions can use it to calculate
-the number of elapsed years.
-
-   A "block" diary entry applies to a specified range of consecutive
-dates.  Here is a block diary entry that applies to all dates from June
-24, 1990 through July 10, 1990:
-
-     %%(diary-block 6 24 1990 7 10 1990) Vacation
-
-The `6 24 1990' indicates the starting date and the `7 10 1990'
-indicates the stopping date.  (Again, if you are using the European
-calendar style, the month and day are interchanged.)
-
-   To insert a block entry, place point and the mark on the two dates
-that begin and end the range, and type `i b'.  This command displays
-the end of your diary file in another window and inserts the block
-description; you can then type the diary entry.
-
-   "Cyclic" diary entries repeat after a fixed interval of days.  To
-create one, select the starting date and use the `i c' command.  The
-command prompts for the length of interval, then inserts the entry,
-which looks like this:
-
-     %%(diary-cyclic 50 3 1 1990) Renew medication
-
-This entry applies to March 1, 1990 and every 50th day following; `3 1
-1990' specifies the starting date.  (If you are using the European
-calendar style, the month and day are interchanged.)
-
-   All three of these commands make marking diary entries.  To insert a
-nonmarking entry, give a numeric argument to the command.  For example,
-`C-u i a' makes a nonmarking anniversary diary entry.
-
-   Marking sexp diary entries in the calendar is *extremely*
-time-consuming, since every date visible in the calendar window must be
-individually checked.  So it's a good idea to make sexp diary entries
-nonmarking (with `&') when possible.
-
-   Another sophisticated kind of sexp entry, a "floating" diary entry,
-specifies a regularly occurring event by offsets specified in days,
-weeks, and months.  It is comparable to a crontab entry interpreted by
-the `cron' utility.  Here is a nonmarking, floating diary entry that
-applies to the last Thursday in November:
-
-     &%%(diary-float 11 4 -1) American Thanksgiving
-
-The 11 specifies November (the eleventh month), the 4 specifies Thursday
-(the fourth day of the week, where Sunday is numbered zero), and the -1
-specifies "last" (1 would mean "first," 2 would mean "second," -2 would
-mean "second-to-last," and so on).  The month can be a single month or
-a list of months.  Thus you could change the 11 above to `'(1 2 3)' and
-have the entry apply to the last Thursday of January, February, and
-March.  If the month is `t', the entry applies to all months of the
-year.
-
-   Most generally, sexp diary entries can perform arbitrary
-computations to determine when they apply.  *Note Sexp Diary Entries:
-(elisp)Sexp Diary Entries.
-
-
-File: emacs,  Node: Appointments,  Next: Daylight Savings,  Prev: Diary,  Up: Calendar/Diary
-
-Appointments
-============
-
-   If you have a diary entry for an appointment, and that diary entry
-begins with a recognizable time of day, Emacs can warn you, several
-minutes beforehand, that that appointment is pending.  Emacs alerts you
-to the appointment by displaying a message in the mode line.
-
-   To enable appointment notification, you must enable the time display
-feature of Emacs, `M-x display-time' (*note Mode Line::.).  You must
-also add the function `appt-make-list' to the `diary-hook', like this:
-
-     (add-hook 'diary-hook 'appt-make-list)
-
-Adding this text to your `.emacs' file does the whole job:
-
-     (display-time)
-     (add-hook 'diary-hook 'appt-make-list)
-     (diary 0)
-
-   With these preparations done, when you display the diary (either with
-the `d' command in the calendar window or with the `M-x diary'
-command), it sets up an appointment list of all the diary entries found
-with recognizable times of day, and reminds you just before each of
-them.
-
-   For example, suppose the diary file contains these lines:
-
-     Monday
-       9:30am Coffee break
-      12:00pm Lunch
-
-Then on Mondays, after you have displayed the diary, you will be
-reminded at 9:20am about your coffee break and at 11:50am about lunch.
-
-   You can write times in am/pm style (with `12:00am' standing for
-midnight and `12:00pm' standing for noon), or 24-hour European/military
-style.  You need not be consistent; your diary file can have a mixture
-of the two styles.
-
-   Emacs updates the appointments list automatically just after
-midnight.  This also displays the next day's diary entries in the diary
-buffer, unless you set `appt-display-diary' to `nil'.
-
-   You can also use the appointment notification facility like an alarm
-clock.  The command `M-x appt-add' adds entries to the appointment list
-without affecting your diary file.  You delete entries from the
-appointment list with `M-x appt-delete'.
-
-   You can turn off the appointment notification feature at any time by
-setting `appt-issue-message' to `nil'.
-
-
-File: emacs,  Node: Daylight Savings,  Prev: Appointments,  Up: Calendar/Diary
-
-Daylight Savings Time
-=====================
-
-   Emacs understands the difference between standard time and daylight
-savings time--the times given for sunrise, sunset, solstices,
-equinoxes, and the phases of the moon take that into account.  The rules
-for daylight savings time vary from place to place and have also varied
-historically from year to year.  To do the job properly, Emacs needs to
-know which rules to use.
-
-   Some operating systems keep track of the rules that apply to the
-place where you are; on these systems, Emacs gets the information it
-needs from the system automatically.  If some or all of this
-information is missing, Emacs fills in the gaps with the rules
-currently used in Cambridge, Massachusetts.  If the resulting rules are
-not what you want, you can tell Emacs the rules to use by setting
-certain variables.
-
-   These values should be Lisp expressions that refer to the variable
-`year', and evaluate to the Gregorian date on which daylight savings
-time starts or (respectively) ends, in the form of a list `(MONTH DAY
-YEAR)'.  The values should be `nil' if your area does not use daylight
-savings time.
-
-   Emacs uses these expressions to determine the starting date of
-daylight savings time for the holiday list and for correcting times of
-day in the solar and lunar calculations.
-
-   The values for Cambridge, Massachusetts are as follows:
-
-     (calendar-nth-named-day 1 0 4 year)
-     (calendar-nth-named-day -1 0 10 year)
-
-That is, the first 0th day (Sunday) of the fourth month (April) in the
-year specified by `year', and the last Sunday of the tenth month
-(October) of that year.  If daylight savings time were changed to start
-on October 1, you would set `calendar-daylight-savings-starts' to this:
-
-     (list 10 1 year)
-
-   If there is no daylight savings time at your location, or if you want
-all times in standard time, set `calendar-daylight-savings-starts' and
-`calendar-daylight-savings-ends' to `nil'.
-
-   The variable `calendar-daylight-time-offset' specifies the
-difference between daylight savings time and standard time, measured in
-minutes.  The value for Cambridge, Massachusetts is 60.
-
-   The two variables `calendar-daylight-savings-starts-time' and
-`calendar-daylight-savings-ends-time' specify the number of minutes
-after midnight local time when the transition to and from daylight
-savings time should occur.  For Cambridge, Massachusetts both variables'
-values are 120.
-
-
-File: emacs,  Node: Gnus,  Next: Shell,  Prev: Calendar/Diary,  Up: Top
-
-Gnus
-====
-
-   Gnus is an Emacs package primarily designed for reading and posting
-Usenet news.  It can also be used to read and respond to messages from a
-number of other sources--mail, remote directories, digests, and so on.
-
-   Here we introduce Gnus and describe several basic features.  For
-full details, see *Note Gnus: (gnus)Top.
-
-   To start Gnus, type `M-x gnus <RET>'.
-
-* Menu:
-
-* Buffers of Gnus::	The group, summary, and article buffers.
-* Gnus Startup::	What you should know about starting Gnus.
-* Summary of Gnus::	A short description of the basic Gnus commands.
-
-
-File: emacs,  Node: Buffers of Gnus,  Next: Gnus Startup,  Up: Gnus
-
-Gnus Buffers
-------------
-
-   As opposed to most normal Emacs packages, Gnus uses a number of
-different buffers to display information and to receive commands.  The
-three buffers users spend most of their time in are the "group buffer",
-the "summary buffer" and the "article buffer".
-
-   The "group buffer" contains a list of groups.  This is the first
-buffer Gnus displays when it starts up.  It normally displays only the
-groups to which you subscribe and that contain unread articles.  Use
-this buffer to select a specific group.
-
-   The "summary buffer" lists one line for each article in a single
-group.  By default, the author, the subject and the line number are
-displayed for each article, but this is customizable, like most aspects
-of Gnus display.  The summary buffer is created when you select a group
-in the group buffer, and is killed when you exit the group.  Use this
-buffer to select an article.
-
-   The "article buffer" displays the article.  In normal Gnus usage,
-you don't select this buffer--all useful article-oriented commands work
-in the summary buffer.  But you can select the article buffer, and
-execute all Gnus commands from that buffer, if you want to.
 

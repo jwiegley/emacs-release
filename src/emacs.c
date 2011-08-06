@@ -45,6 +45,7 @@ Boston, MA 02111-1307, USA.  */
 #include "blockinput.h"
 #include "syssignal.h"
 #include "process.h"
+#include "termhooks.h"
 #include "keyboard.h"
 
 #ifdef HAVE_SETRLIMIT
@@ -102,6 +103,9 @@ void *malloc_state_ptr;
 extern void *malloc_get_state ();
 /* From glibc, a routine that overwrites the malloc internal state.  */
 extern void malloc_set_state ();
+/* Non-zero if the MALLOC_CHECK_ enviroment variable was set while
+   dumping.  Used to work around a bug in glibc's malloc.  */
+int malloc_using_checking;
 #endif
 
 /* Variable whose value is symbol giving operating system type.  */
@@ -180,40 +184,38 @@ int fatal_error_code;
 int fatal_error_in_progress;
 
 #ifdef SIGUSR1
-int SIGUSR1_in_progress=0;
 SIGTYPE
 handle_USR1_signal (sig)
      int sig;
 {
-  if (! SIGUSR1_in_progress)
-    {
-      SIGUSR1_in_progress = 1;
-      
-      if (!NILP (Vrun_hooks) && !noninteractive)
-	call1 (Vrun_hooks, intern ("signal-USR1-hook"));
-      
-      SIGUSR1_in_progress = 0;
-    }
+  struct input_event buf;
+
+  buf.kind = user_signal;
+  buf.code = 0;
+  buf.frame_or_window = Fselected_frame ();
+  buf.modifiers = 0;
+  buf.timestamp = 0;
+
+  kbd_buffer_store_event (&buf);
 }
+#endif /* SIGUSR1 */
 
 #ifdef SIGUSR2
-int SIGUSR2_in_progress=0;
 SIGTYPE
 handle_USR2_signal (sig)
      int sig;
 {
-  if (! SIGUSR2_in_progress)
-    {
-      SIGUSR2_in_progress = 1;
-      
-      if (!NILP (Vrun_hooks) && !noninteractive)
-	call1 (Vrun_hooks, intern ("signal-USR2-hook"));
-      
-      SIGUSR2_in_progress = 0;
-    }
+  struct input_event buf;
+
+  buf.kind = user_signal;
+  buf.code = 1;
+  buf.frame_or_window = Fselected_frame ();
+  buf.modifiers = 0;
+  buf.timestamp = 0;
+
+  kbd_buffer_store_event (&buf);
 }
-#endif
-#endif 
+#endif /* SIGUSR2 */
 
 /* Handle bus errors, illegal instruction, etc. */
 SIGTYPE
@@ -543,6 +545,47 @@ argmatch (argv, argc, sstr, lstr, minlen, valptr, skipptr)
     }
 }
 
+#ifdef DOUG_LEA_MALLOC
+
+/* malloc can be invoked even before main (e.g. by the dynamic
+   linker), so the dumped malloc state must be restored as early as
+   possible using this special hook.  */
+
+static void
+malloc_initialize_hook ()
+{
+  extern char **environ;
+
+  if (initialized)
+    {
+      if (!malloc_using_checking)
+	/* Work around a bug in glibc's malloc.  MALLOC_CHECK_ must be
+	   ignored if the heap to be restored was constructed without
+	   malloc checking.  Can't use unsetenv, since that calls malloc.  */
+	{
+	  char **p;
+
+	  for (p = environ; *p; p++)
+	    if (strncmp (*p, "MALLOC_CHECK_=", 14) == 0)
+	      {
+		do
+		  *p = p[1];
+		while (*++p);
+		break;
+	      }
+	}
+
+      malloc_set_state (malloc_state_ptr);
+      free (malloc_state_ptr);
+    }
+  else
+    malloc_using_checking = getenv ("MALLOC_CHECK_") != NULL;
+}
+
+void (*__malloc_initialize_hook) () = malloc_initialize_hook;
+
+#endif /* DOUG_LEA_MALLOC */
+
 /* ARGSUSED */
 int
 main (argc, argv, envp)
@@ -561,16 +604,6 @@ main (argc, argv, envp)
 
 #ifdef LINUX_SBRK_BUG
   __sbrk (1);
-#endif
-
-#ifdef DOUG_LEA_MALLOC
-  if (initialized)
-    {
-      extern void r_alloc_reinit ();
-      malloc_set_state (malloc_state_ptr);
-      free (malloc_state_ptr);
-      r_alloc_reinit ();
-    }
 #endif
 
 #ifdef RUN_TIME_REMAP
@@ -597,7 +630,7 @@ main (argc, argv, envp)
       else
 	{
 	  printf ("GNU Emacs %s\n", XSTRING (tem)->data);
-	  printf ("Copyright (C) 1998 Free Software Foundation, Inc.\n");
+	  printf ("Copyright (C) 1999 Free Software Foundation, Inc.\n");
 	  printf ("GNU Emacs comes with ABSOLUTELY NO WARRANTY.\n");
 	  printf ("You may redistribute copies of Emacs\n");
 	  printf ("under the terms of the GNU General Public License.\n");
@@ -707,15 +740,15 @@ main (argc, argv, envp)
   clearerr (stdin);
 
 #ifndef SYSTEM_MALLOC
-  if (! initialized)
-    {
-      /* Arrange to get warning messages as memory fills up.  */
-      memory_warnings (0, malloc_warning);
+  /* Arrange to get warning messages as memory fills up.  */
+  memory_warnings (0, malloc_warning);
 
-      /* Arrange to disable interrupt input while malloc and friends are
-	 running.  */
-      uninterrupt_malloc ();
-    }
+  /* Call malloc at least once, to run the initial __malloc_hook.
+     Also call realloc and free for consistency.  */
+  free (realloc (malloc (4), 4));
+
+  /* Arrange to disable interrupt input inside malloc etc.  */
+  uninterrupt_malloc ();
 #endif	/* not SYSTEM_MALLOC */
 
 #ifdef MSDOS
@@ -793,11 +826,12 @@ main (argc, argv, envp)
   if (argmatch (argv, argc, "-help", "--help", 3, NULL, &skip_args))
     {
       printf ("\
-Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
+Usage: %s [--batch]  [-t term] [--terminal term]\n\
+      [-d display] [--display display]  [-nw] [--no-windows]\n\
       [-q] [--no-init-file]  [-u user] [--user user]  [--debug-init]\n\
       [--unibyte] [--multibyte] [--version] [--no-site-file]\n\
-      [-f func] [--funcall func]  [-l file] [--load file]  [--insert file]\n\
-      [+linenum] file-to-visit  [--kill]\n\
+      [-f func] [--funcall func]  [-l file] [--load file]  [--eval expr]\n\
+      [--insert file] [+linenum] file-to-visit  [--kill]\n\
 Report bugs to bug-gnu-emacs@gnu.org.  First, please see\n\
 the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       exit (0);
@@ -939,12 +973,16 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       init_minibuf_once ();	/* Create list of minibuffers */
 			      /* Must precede init_window_once */
       init_window_once ();	/* Init the window system */
+      init_fileio_once ();	/* Must precede any path manipulation.  */
     }
 
   init_alloc ();
   init_eval ();
   init_coding ();
   init_data ();
+#ifdef CLASH_DETECTION
+  init_filelock ();;
+#endif
   running_asynch_code = 0;
 
   /* Handle --unibyte and the EMACS_UNIBYTE envvar,
@@ -968,6 +1006,12 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
 	 buffers and strings.  We need to handle this before calling
 	 init_lread, init_editfns and other places that generate Lisp strings
 	 from text in the environment.  */
+      /* Actually this shouldn't be needed as of 20.4 in a generally
+	 unibyte environment.  As handa says, environment values
+	 aren't now decoded; also existing buffers are now made
+	 unibyte during startup if .emacs sets unibyte.  Tested with
+	 8-bit data in environment variables and /etc/passwd, setting
+	 unibyte and Latin-1 in .emacs. -- Dave Love */
       if (argmatch (argv, argc, "-unibyte", "--unibyte", 4, NULL, &skip_args)
 	  || argmatch (argv, argc, "-no-multibyte", "--no-multibyte", 4, NULL, &skip_args)
 	  || (getenv ("EMACS_UNIBYTE") && !inhibit_unibyte))
@@ -1075,7 +1119,7 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
 
 #ifdef WINDOWSNT
   /* Initialize environment from registry settings.  */
-  init_environment ();
+  init_environment (argv);
   init_ntproc ();	/* must precede init_editfns */
 #endif
 
@@ -1192,6 +1236,7 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       syms_of_w32faces ();
       syms_of_w32select ();
       syms_of_w32menu ();
+      syms_of_fontset ();
 #endif /* HAVE_NTGUI */
 
 #ifdef SYMS_SYSTEM
@@ -1539,6 +1584,10 @@ sort_args (argc, argv)
       for (i = 0; i < options[best]; i++)
 	argv[best + i + 1] = 0;
     }
+
+  /* If duplicate options were deleted, fill up extra space with null ptrs.  */
+  while (to < argc)
+    new[to++] = 0;
 
   bcopy (new, argv, sizeof (char *) * argc);
 

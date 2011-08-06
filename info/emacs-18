@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,199 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Rmail Reply,  Next: Rmail Summary,  Prev: Rmail Attributes,  Up: Rmail
+
+Sending Replies
+===============
+
+   Rmail has several commands that use Mail mode to send outgoing mail.
+*Note Sending Mail::, for information on using Mail mode, including
+certain features meant to work with Rmail.  What this section documents
+are the special commands of Rmail for entering Mail mode.  Note that the
+usual keys for sending mail--`C-x m', `C-x 4 m', and `C-x 5 m'--are
+available in Rmail mode and work just as they usually do.
+
+`m'
+     Send a message (`rmail-mail').
+
+`c'
+     Continue editing the already started outgoing message
+     (`rmail-continue').
+
+`r'
+     Send a reply to the current Rmail message (`rmail-reply').
+
+`f'
+     Forward the current message to other users (`rmail-forward').
+
+`C-u f'
+     Resend the current message to other users (`rmail-resend').
+
+`M-m'
+     Try sending a bounced message a second time
+     (`rmail-retry-failure').
+
+   The most common reason to send a message while in Rmail is to reply
+to the message you are reading.  To do this, type `r' (`rmail-reply').
+This displays the `*mail*' buffer in another window, much like `C-x 4
+m', but preinitializes the `Subject', `To', `CC' and `In-reply-to'
+header fields based on the message you are replying to.  The `To' field
+starts out as the address of the person who sent the message you
+received, and the `CC' field starts out with all the other recipients
+of that message.
+
+   You can exclude certain recipients from being placed automatically in
+the `CC', using the variable `rmail-dont-reply-to-names'.  Its value
+should be a regular expression (as a string); any recipient that the
+regular expression matches, is excluded from the `CC' field.  The
+default value matches your own name, and any name starting with
+`info-'.  (Those names are excluded because there is a convention of
+using them for large mailing lists to broadcast announcements.)
+
+   To omit the `CC' field completely for a particular reply, enter the
+reply command with a numeric argument: `C-u r' or `1 r'.
+
+   Once the `*mail*' buffer has been initialized, editing and sending
+the mail goes as usual (*note Sending Mail::.).  You can edit the
+presupplied header fields if they are not right for you.  You can also
+use the commands of Mail mode (*note Mail Mode::.), including `C-c C-y'
+which yanks in the message that you are replying to.  You can switch to
+the Rmail buffer, select a different message there, switch back, and
+yank the new current message.
+
+   Sometimes a message does not reach its destination.  Mailers usually
+send the failed message back to you, enclosed in a "failure message".
+The Rmail command `M-m' (`rmail-retry-failure') prepares to send the
+same message a second time: it sets up a `*mail*' buffer with the same
+text and header fields as before.  If you type `C-c C-c' right away,
+you send the message again exactly the same as the first time.
+Alternatively, you can edit the text or headers and then send it.  The
+variable `rmail-retry-ignored-headers', in the same format as
+`rmail-ignored-headers' (*note Rmail Display::.), controls which
+headers are stripped from the failed message when retrying it; it
+defaults to `nil'.
+
+   Another frequent reason to send mail in Rmail is to "forward" the
+current message to other users.  `f' (`rmail-forward') makes this easy
+by preinitializing the `*mail*' buffer with the current message as the
+text, and a subject designating a forwarded message.  All you have to
+do is fill in the recipients and send.  When you forward a message,
+recipients get a message which is "from" you, and which has the
+original message in its contents.
+
+   Forwarding a message encloses it between two delimiter lines.  It
+also modifies every line that starts with a dash, by inserting `- ' at
+the start of the line.  When you receive a forwarded message, if it
+contains something besides ordinary text--for example, program source
+code--you might find it useful to undo that transformation.  You can do
+this by selecting the forwarded message and typing `M-x
+unforward-rmail-message'.  This command extracts the original forwarded
+message, deleting the inserted `- ' strings, and inserts it into the
+Rmail file as a separate message immediately following the current one.
+
+   "Resending" is an alternative similar to forwarding; the difference
+is that resending sends a message that is "from" the original sender,
+just as it reached you--with a few added header fields `Resent-from'
+and `Resent-to' to indicate that it came via you.  To resend a message
+in Rmail, use `C-u f'.  (`f' runs `rmail-forward', which is programmed
+to invoke `rmail-resend' if you provide a numeric argument.)
+
+   The `m' (`rmail-mail') command is used to start editing an outgoing
+message that is not a reply.  It leaves the header fields empty.  Its
+only difference from `C-x 4 m' is that it makes the Rmail buffer
+accessible for `C-c C-y', just as `r' does.  Thus, `m' can be used to
+reply to or forward a message; it can do anything `r' or `f' can do.
+
+   The `c' (`rmail-continue') command resumes editing the `*mail*'
+buffer, to finish editing an outgoing message you were already
+composing, or to alter a message you have sent.
+
+   If you set the variable `rmail-mail-new-frame' to a non-`nil' value,
+then all the Rmail commands to start sending a message create a new
+frame to edit it in.  This frame is deleted when you send the message,
+or when you use the `Don't Send' item in the `Mail' menu.
+
+   All the Rmail commands to send a message use the mail-composition
+method that you have chosen (*note Mail Methods::.).
+
+
+File: emacs,  Node: Rmail Summary,  Next: Rmail Sorting,  Prev: Rmail Reply,  Up: Rmail
+
+Summaries
+=========
+
+   A "summary" is a buffer containing one line per message to give you
+an overview of the mail in an Rmail file.  Each line shows the message
+number, the sender, the labels, and the subject.  Almost all Rmail
+commands are valid in the summary buffer also; these apply to the
+message described by the current line of the summary.  Moving point in
+the summary buffer selects messages as you move to their summary lines.
+
+   A summary buffer applies to a single Rmail file only; if you are
+editing multiple Rmail files, each one can have its own summary buffer.
+The summary buffer name is made by appending `-summary' to the Rmail
+buffer's name.  Normally only one summary buffer is displayed at a time.
+
+* Menu:
+
+* Rmail Make Summary::	     Making various sorts of summaries.
+* Rmail Summary Edit::	     Manipulating messages from the summary.
+
+
+File: emacs,  Node: Rmail Make Summary,  Next: Rmail Summary Edit,  Up: Rmail Summary
+
+Making Summaries
+----------------
+
+   Here are the commands to create a summary for the current Rmail file.
+Once the Rmail file has a summary buffer, changes in the Rmail file
+(such as deleting or expunging messages, and getting new mail)
+automatically update the summary.
+
+`h'
+`C-M-h'
+     Summarize all messages (`rmail-summary').
+
+`l LABELS <RET>'
+`C-M-l LABELS <RET>'
+     Summarize messages that have one or more of the specified labels
+     (`rmail-summary-by-labels').
+
+`C-M-r RCPTS <RET>'
+     Summarize messages that have one or more of the specified
+     recipients (`rmail-summary-by-recipients').
+
+`C-M-t TOPIC <RET>'
+     Summarize messages that have a match for the specified regexp
+     TOPIC in their subjects (`rmail-summary-by-topic').
+
+   The `h' or `C-M-h' (`rmail-summary') command fills the summary buffer
+for the current Rmail file with a summary of all the messages in the
+file.  It then displays and selects the summary buffer in another
+window.
+
+   `C-M-l LABELS <RET>' (`rmail-summary-by-labels') makes a partial
+summary mentioning only the messages that have one or more of the
+labels LABELS.  LABELS should contain label names separated by commas.
+
+   `C-M-r RCPTS <RET>' (`rmail-summary-by-recipients') makes a partial
+summary mentioning only the messages that have one or more of the
+recipients RCPTS.  RCPTS should contain mailing addresses separated by
+commas.
+
+   `C-M-t TOPIC <RET>' (`rmail-summary-by-topic') makes a partial
+summary mentioning only the messages whose subjects have a match for
+the regular expression TOPIC.
+
+   Note that there is only one summary buffer for any Rmail file;
+making one kind of summary discards any previously made summary.
+
+   The variable `rmail-summary-window-size' says how many lines to use
+for the summary window.  The variable `rmail-summary-line-count-flag'
+controls whether the summary line for a message should include the line
+count of the message.
 
 
 File: emacs,  Node: Rmail Summary Edit,  Prev: Rmail Make Summary,  Up: Rmail Summary
@@ -312,14 +505,16 @@ can use `1 g' to get new mail from the corrected file.
 
    Some sites use a method called POP for accessing users' inbox data
 instead of storing the data in inbox files.  `movemail' can work with
-POP if you compile it with the macro `MAIL_USE_POP' defined.
-`movemail' only works with POP3, not with older versions of POP.
+POP if you compile it with the macro `MAIL_USE_POP' defined.  (You can
+achieve that by specifying `--with-pop' when you run `configure' during
+the installation of Emacs.)  `movemail' only works with POP3, not with
+older versions of POP.
 
    Assuming you have compiled and installed `movemail' appropriately,
-you can specify a POP inbox with a "file name" of the form
-`po:USERNAME'.  `movemail' handles such a name by opening a connection
-to the POP server.  The `MAILHOST' environment variable specifies the
-machine to look for the server on.
+you can specify a POP inbox by using a "file name" of the form
+`po:USERNAME', in the inbox list of an Rmail file.  `movemail' handles
+such a name by opening a connection to the POP server.  The `MAILHOST'
+environment variable specifies the machine to look for the server on.
 
    Accessing mail via POP may require a password.  If the variable
 `rmail-pop-password' is non-`nil', it specifies the password to use for
@@ -332,12 +527,14 @@ use.  Do not use this variable to pass the `-p' flag to preserve your
 inbox contents; use `rmail-preserve-inbox' instead.
 
    The `movemail' program installed at your site may support Kerberos
-and/or GSS-API authentication.  If only Kerberos or GSS-API is
-supported, it is used by default whenever you attempt to retrieve POP
-mail when `rmail-pop-password' and `rmail-pop-password-required' are
-unset.  If both are supported, then Kerberos is used by default; to use
-GSS-API instead, set `rmail-movemail-flags' to pass the flag `-g' to
-`movemail'.
+authentication.  If it is supported, it is used by default whenever you
+attempt to retrieve POP mail when `rmail-pop-password' and
+`rmail-pop-password-required' are unset.
+
+   Some POP servers store messages in reverse order.  If your server
+does this, and you would rather read your mail in the order in which it
+was received, you can tell `movemail' to reverse the order of
+downloaded messages by adding the `-r' flag to `rmail-movemail-flags'.
 
 
 File: emacs,  Node: Dired,  Next: Calendar/Diary,  Prev: Rmail,  Up: Top
@@ -505,7 +702,7 @@ files whose names begin and end with `#'.  `~'
 say they are backup files (*note Backup::.)--that is, whose names end
 in `~'.
 
-   `.' (period, `dired-clean-directory')) flags just some of the backup
+   `.' (period, `dired-clean-directory') flags just some of the backup
 files for deletion: all but the oldest few and newest few backups of
 any one file.  Normally `dired-kept-versions' (*not*
 `kept-new-versions'; that applies only when saving) specifies the
@@ -651,11 +848,13 @@ unflag files.)
      space (` '), then the command operates on all unmarked files; if
      NEW is a space, then the command unmarks the files it acts on.
 
-     To illustrate the power of this command, here is how to put `*'
-     marks on all the files that are unmarked, while unmarking all
-     those that have `*' marks:
+     To illustrate the power of this command, here is how to put `D'
+     flags on all the files that have no marks, while unflagging all
+     those that already have `D' flags:
 
-          * c * t  * c SPC *  * c t SPC
+          * c D t  * c SPC D  * c t SPC
+
+     This assumes that no files are marked with `t'.
 
 `% m REGEXP <RET>'
 `* % REGEXP <RET>'
@@ -1021,221 +1220,4 @@ without having to remove the markers.
 
    The subdirectory hiding commands toggle; that is, they hide what was
 visible, and show what was hidden.
-
-
-File: emacs,  Node: Dired Updating,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired
-
-Updating the Dired Buffer
-=========================
-
-   This section describes commands to update the Dired buffer to reflect
-outside (non-Dired) changes in the directories and files, and to delete
-part of the Dired buffer.
-
-`g'
-     Update the entire contents of the Dired buffer (`revert-buffer').
-
-`l'
-     Update the specified files (`dired-do-redisplay').
-
-`k'
-     Delete the specified *file lines*--not the files, just the lines
-     (`dired-do-kill-lines').
-
-`s'
-     Toggle between alphabetical order and date/time order
-     (`dired-sort-toggle-or-edit').
-
-`C-u s SWITCHES <RET>'
-     Refresh the Dired buffer using SWITCHES as
-     `dired-listing-switches'.
-
-   Type `g' (`revert-buffer') to update the contents of the Dired
-buffer, based on changes in the files and directories listed.  This
-preserves all marks except for those on files that have vanished.
-Hidden subdirectories are updated but remain hidden.
-
-   To update only some of the files, type `l' (`dired-do-redisplay').
-This command applies to the next N files, or to the marked files if
-any, or to the current file.  Updating them means reading their current
-status from the file system and changing the buffer to reflect it
-properly.
-
-   If you use `l' on a subdirectory header line, it updates the
-contents of the corresponding subdirectory.
-
-   To delete the specified *file lines*--not the files, just the
-lines--type `k' (`dired-do-kill-lines').  This command applies to the
-next N files, or to the marked files if any, or to the current file.
-
-   If you kill the line for a file that is a directory, the directory's
-contents are also deleted from the buffer.  Typing `C-u k' on the
-header line for a subdirectory is another way to delete a subdirectory
-from the Dired buffer.
-
-   The `g' command brings back any individual lines that you have
-killed in this way, but not subdirectories--you must use `i' to
-reinsert each subdirectory.
-
-   The files in a Dired buffers are normally listed in alphabetical
-order by file names.  Alternatively Dired can sort them by date/time.
-The Dired command `s' (`dired-sort-toggle-or-edit') switches between
-these two sorting modes.  The mode line in a Dired buffer indicates
-which way it is currently sorted--by name, or by date.
-
-   `C-u s SWITCHES <RET>' lets you specify a new value for
-`dired-listing-switches'.
-
-
-File: emacs,  Node: Dired and Find,  Prev: Dired Updating,  Up: Dired
-
-Dired and `find'
-================
-
-   You can select a set of files for display in a Dired buffer more
-flexibly by using the `find' utility to choose the files.
-
-   To search for files with names matching a wildcard pattern use `M-x
-find-name-dired'.  It reads arguments DIRECTORY and PATTERN, and
-chooses all the files in DIRECTORY or its subdirectories whose
-individual names match PATTERN.
-
-   The files thus chosen are displayed in a Dired buffer in which the
-ordinary Dired commands are available.
-
-   If you want to test the contents of files, rather than their names,
-use `M-x find-grep-dired'.  This command reads two minibuffer
-arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
-or its subdirectories that contain a match for REGEXP.  It works by
-running the programs `find' and `grep'.  See also `M-x grep-find', in
-*Note Compilation::.  Remember to write the regular expression for
-`grep', not for Emacs.
-
-   The most general command in this series is `M-x find-dired', which
-lets you specify any condition that `find' can test.  It takes two
-minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
-DIRECTORY, passing FIND-ARGS to tell `find' what condition to test.  To
-use this command, you need to know how to use `find'.
-
-   The format of listing produced by these commands is controlled by the
-variable `find-ls-option', whose default value specifies using options
-`-ld' for `ls'.  If your listings are corrupted, you may need to change
-the value of this variable.
-
-
-File: emacs,  Node: Calendar/Diary,  Next: Gnus,  Prev: Dired,  Up: Top
-
-The Calendar and the Diary
-**************************
-
-   Emacs provides the functions of a desk calendar, with a diary of
-planned or past events.  To enter the calendar, type `M-x calendar';
-this displays a three-month calendar centered on the current month, with
-point on the current date.  With a numeric argument, as in `C-u M-x
-calendar', it prompts you for the month and year to be the center of the
-three-month calendar.  The calendar uses its own buffer, whose major
-mode is Calendar mode.
-
-   `Mouse-2' in the calendar brings up a menu of operations on a
-particular date; `C-Mouse-3' brings up a menu of commonly used calendar
-features that are independent of any particular date.  To exit the
-calendar, type `q'.  *Note Customizing the Calendar and Diary:
-(elisp)Calendar, for customization information about the calendar and
-diary.
-
-* Menu:
-
-* Calendar Motion::     Moving through the calendar; selecting a date.
-* Scroll Calendar::     Bringing earlier or later months onto the screen.
-* Counting Days::       How many days are there between two dates?
-* General Calendar::    Exiting or recomputing the calendar.
-* LaTeX Calendar::      Print a calendar using LaTeX.
-* Holidays::            Displaying dates of holidays.
-* Sunrise/Sunset::      Displaying local times of sunrise and sunset.
-* Lunar Phases::        Displaying phases of the moon.
-* Other Calendars::     Converting dates to other calendar systems.
-* Diary::               Displaying events from your diary.
-* Appointments::	Reminders when it's time to do something.
-* Daylight Savings::    How to specify when daylight savings time is active.
-
-
-File: emacs,  Node: Calendar Motion,  Next: Scroll Calendar,  Up: Calendar/Diary
-
-Movement in the Calendar
-========================
-
-   Calendar mode lets you move through the calendar in logical units of
-time such as days, weeks, months, and years.  If you move outside the
-three months originally displayed, the calendar display "scrolls"
-automatically through time to make the selected date visible.  Moving to
-a date lets you view its holidays or diary entries, or convert it to
-other calendars; moving longer time periods is also useful simply to
-scroll the calendar.
-
-* Menu:
-
-* Calendar Unit Motion::      Moving by days, weeks, months, and years.
-* Move to Beginning or End::  Moving to start/end of weeks, months, and years.
-* Specified Dates::           Moving to the current date or another
-                                specific date.
-
-
-File: emacs,  Node: Calendar Unit Motion,  Next: Move to Beginning or End,  Up: Calendar Motion
-
-Motion by Standard Lengths of Time
-----------------------------------
-
-   The commands for movement in the calendar buffer parallel the
-commands for movement in text.  You can move forward and backward by
-days, weeks, months, and years.
-
-`C-f'
-     Move point one day forward (`calendar-forward-day').
-
-`C-b'
-     Move point one day backward (`calendar-backward-day').
-
-`C-n'
-     Move point one week forward (`calendar-forward-week').
-
-`C-p'
-     Move point one week backward (`calendar-backward-week').
-
-`M-}'
-     Move point one month forward (`calendar-forward-month').
-
-`M-{'
-     Move point one month backward (`calendar-backward-month').
-
-`C-x ]'
-     Move point one year forward (`calendar-forward-year').
-
-`C-x ['
-     Move point one year backward (`calendar-backward-year').
-
-   The day and week commands are natural analogues of the usual Emacs
-commands for moving by characters and by lines.  Just as `C-n' usually
-moves to the same column in the following line, in Calendar mode it
-moves to the same day in the following week.  And `C-p' moves to the
-same day in the previous week.
-
-   The arrow keys are equivalent to `C-f', `C-b', `C-n' and `C-p', just
-as they normally are in other modes.
-
-   The commands for motion by months and years work like those for
-weeks, but move a larger distance.  The month commands `M-}' and `M-{'
-move forward or backward by an entire month's time.  The year commands
-`C-x ]' and `C-x [' move forward or backward a whole year.
-
-   The easiest way to remember these commands is to consider months and
-years analogous to paragraphs and pages of text, respectively.  But the
-commands themselves are not quite analogous.  The ordinary Emacs
-paragraph commands move to the beginning or end of a paragraph, whereas
-these month and year commands move by an entire month or an entire
-year, which usually involves skipping across the end of a month or year.
-
-   All these commands accept a numeric argument as a repeat count.  For
-convenience, the digit keys and the minus sign specify numeric
-arguments in Calendar mode even without the Meta modifier.  For example,
-`100 C-f' moves point 100 days forward from its present location.
 

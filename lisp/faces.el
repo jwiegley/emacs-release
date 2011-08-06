@@ -149,8 +149,7 @@ If the optional FRAME argument is provided, change only
 in that frame; otherwise change each frame."
   (interactive (internal-face-interactive "font"))
   (if (stringp font)
-      (setq font (or (and (not (eq window-system 'w32))
-			  (resolve-fontset-name font))
+      (setq font (or (resolve-fontset-name font)
 		     (x-resolve-font-name font 'default frame))))
   (internal-set-face-1 face 'font font 3 frame)
   ;; Record that this face's font was set explicitly, not automatically,
@@ -165,8 +164,7 @@ If the optional FRAME argument is provided, change only
 in that frame; otherwise change each frame."
   (interactive (internal-face-interactive "font"))
   (if (stringp font)
-      (setq font (or (and (not (eq window-system 'w32))
-			  (resolve-fontset-name font))
+      (setq font (or (resolve-fontset-name font)
 		     (x-resolve-font-name font 'default frame))))
   (internal-set-face-1 face 'font font 3 frame))
 
@@ -283,7 +281,7 @@ in that frame; otherwise change each frame."
 	    (format "Set face %s %s: " face name))
 	  alist)))
     (cond ((equal value "none")
-	   nil)
+	   '(nil))
 	  ((equal value "")
 	   default)
 	  (t value))))
@@ -297,6 +295,7 @@ in that frame; otherwise change each frame.
 FOREGROUND and BACKGROUND should be a colour name string (or list of strings to
 try) or nil.  STIPPLE should be a stipple pattern name string or nil.
 If nil, means do not change the display attribute corresponding to that arg.
+If (nil), that means clear out the attribute.
 
 BOLD-P, ITALIC-P, UNDERLINE-P, and INVERSE-P specify whether
 the face should be set bold, italic, underlined or in inverse-video,
@@ -345,9 +344,15 @@ If called interactively, prompts for a face name and face attributes."
      (message "Face %s: %s" face
       (mapconcat 'identity
        (delq nil
-	(list (and foreground (concat (downcase foreground) " foreground"))
-	      (and background (concat (downcase background) " background"))
-	      (and stipple (concat (downcase new-stipple-string) " stipple"))
+	(list (if (equal foreground '(nil))
+		  " no foreground"
+		(and foreground (concat (downcase foreground) " foreground")))
+	      (if (equal background '(nil))
+		  " no background"
+		(and background (concat (downcase background) " background")))
+	      (if (equal stipple '(nil))
+		  " no stipple"
+		(and stipple (concat (downcase new-stipple-string) " stipple")))
 	      (and bold-p "bold") (and italic-p "italic")
 	      (and inverse-p "inverse")
 	      (and underline-p "underline"))) ", "))
@@ -1119,7 +1124,11 @@ selected frame."
   (let ((faces (sort (face-list) (function string-lessp)))
 	(face nil)
 	(frame (selected-frame))
-	disp-frame window)
+	disp-frame window
+        (face-name-max-length
+         (car (sort (mapcar (function string-width)
+			    (mapcar (function symbol-name) (face-list)))
+                    (function >)))))
     (with-output-to-temp-buffer "*Faces*"
       (save-excursion
 	(set-buffer standard-output)
@@ -1127,7 +1136,10 @@ selected frame."
 	(while faces
 	  (setq face (car faces))
 	  (setq faces (cdr faces))
-	  (insert (format "%25s " (symbol-name face)))
+	  (insert (format 
+                   (format "%%-%ds "
+                           face-name-max-length)
+                   (symbol-name face)))
 	  (let ((beg (point)))
 	    (insert list-faces-sample-text)
 	    (insert "\n")
@@ -1136,7 +1148,7 @@ selected frame."
 	    (goto-char beg)
 	    (forward-line 1)
 	    (while (not (eobp))
-	      (insert "                          ")
+	      (insert-char ?  (1+ face-name-max-length))
 	      (forward-line 1))))
 	(goto-char (point-min)))
       (print-help-return-message))
@@ -1431,7 +1443,8 @@ If FRAME is nil, the current FRAME is used."
       ;; Set up each face, first from the defface information,
       ;; then the global face data, and then the X resources.
       (let* ((face (car (car rest)))
-	     (spec (or (get face 'saved-face)
+	     (spec (or (get face 'customized-face)
+		       (get face 'saved-face)
 		       (get face 'face-defface-spec)))
 	     (global (cdr (assq face global-face-data)))
 	     (local (cdr (car rest))))
@@ -1457,30 +1470,31 @@ examine the brightness for you."
 
 (defun frame-set-background-mode (frame)
   "Set up the `background-mode' and `display-type' frame parameters for FRAME."
-  (let ((bg-resource (x-get-resource ".backgroundMode"
-				     "BackgroundMode"))
-	(params (frame-parameters frame))
-	(bg-mode))
-    (setq bg-mode
-	  (cond (frame-background-mode)
-		(bg-resource (intern (downcase bg-resource)))
-		((< (apply '+ (x-color-values
-			       (cdr (assq 'background-color params))
-			       frame))
-		    ;; Just looking at the screen,
-		    ;; colors whose values add up to .6 of the white total
-		    ;; still look dark to me.
-		    (* (apply '+ (x-color-values "white" frame)) .6))
-		 'dark)
-		(t 'light)))
-    (modify-frame-parameters frame
-			     (list (cons 'background-mode bg-mode)
-				   (cons 'display-type
-					 (cond ((x-display-color-p frame)
-						'color)
-					       ((x-display-grayscale-p frame)
-						'grayscale)
-					       (t 'mono)))))))
+  (unless (eq (framep frame) t)
+    (let ((bg-resource (x-get-resource ".backgroundMode"
+				       "BackgroundMode"))
+	  (params (frame-parameters frame))
+	  (bg-mode))
+      (setq bg-mode
+	    (cond (frame-background-mode)
+		  (bg-resource (intern (downcase bg-resource)))
+		  ((< (apply '+ (x-color-values
+				 (cdr (assq 'background-color params))
+				 frame))
+		      ;; Just looking at the screen,
+		      ;; colors whose values add up to .6 of the white total
+		      ;; still look dark to me.
+		      (* (apply '+ (x-color-values "white" frame)) .6))
+		   'dark)
+		  (t 'light)))
+      (modify-frame-parameters frame
+			       (list (cons 'background-mode bg-mode)
+				     (cons 'display-type
+					   (cond ((x-display-color-p frame)
+						  'color)
+						 ((x-display-grayscale-p frame)
+						  'grayscale)
+						 (t 'mono))))))))
 
 ;; Update a frame's faces when we change its default font.
 (defun frame-update-faces (frame) nil)
@@ -1580,7 +1594,7 @@ examine the brightness for you."
 	(set-face-inverse-video-p face t frame)
       (let (done)
 	(while (and colors (not done))
-	  (if (or (memq (car colors) '(t underline))
+	  (if (or (memq (car colors) '(t underline nil))
 		  (face-color-supported-p frame (car colors)
 					  (eq function 'set-face-background)))
 	      (if (cdr colors)

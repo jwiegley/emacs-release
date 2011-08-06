@@ -518,6 +518,7 @@ and use this command with a prefix argument (the value does not matter)."
     ;; For .z, try gunzip.  It might be an old gzip file,
     ;; or it might be from compact? pack? (which?) but gunzip handles both.
     ("\\.z\\'" "" "gunzip")
+    ("\\.bz2\\'" "" "bunzip2")
     ;; This item controls naming for compression.
     ("\\.tar\\'" ".tgz" nil))
   "Control changes in file name suffixes for compression and uncompression.
@@ -1381,7 +1382,7 @@ Normally, only the non-directory part of the file name is used and changed."
 ;;;###autoload
 (defun dired-do-copy-regexp (regexp newname &optional arg whole-path)
   "Copy all marked files containing REGEXP to NEWNAME.
-See function `dired-rename-regexp' for more info."
+See function `dired-do-rename-regexp' for more info."
   (interactive (dired-mark-read-regexp "Copy"))
   (dired-do-create-files-regexp
    (function dired-copy-file)
@@ -1391,7 +1392,7 @@ See function `dired-rename-regexp' for more info."
 ;;;###autoload
 (defun dired-do-hardlink-regexp (regexp newname &optional arg whole-path)
   "Hardlink all marked files containing REGEXP to NEWNAME.
-See function `dired-rename-regexp' for more info."
+See function `dired-do-rename-regexp' for more info."
   (interactive (dired-mark-read-regexp "HardLink"))
   (dired-do-create-files-regexp
    (function add-name-to-file)
@@ -1400,7 +1401,7 @@ See function `dired-rename-regexp' for more info."
 ;;;###autoload
 (defun dired-do-symlink-regexp (regexp newname &optional arg whole-path)
   "Symlink all marked files containing REGEXP to NEWNAME.
-See function `dired-rename-regexp' for more info."
+See function `dired-do-rename-regexp' for more info."
   (interactive (dired-mark-read-regexp "SymLink"))
   (dired-do-create-files-regexp
    (function make-symbolic-link)
@@ -1618,7 +1619,8 @@ This function takes some pains to conform to `ls -lR' output."
     ;;  moves point.
     ;;  Need a marker for END as this inserts text.
     (goto-char begin)
-    (dired-insert-headerline dirname)
+    (if (not (looking-at "^  /.*:$"))
+	(dired-insert-headerline dirname))
     ;; point is now like in dired-build-subdir-alist
     (prog1
 	(list begin (marker-position end))

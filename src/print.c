@@ -41,6 +41,8 @@ Boston, MA 02111-1307, USA.  */
 
 Lisp_Object Vstandard_output, Qstandard_output;
 
+Lisp_Object Qtemp_buffer_setup_hook;
+
 /* These are used to print like we read.  */
 extern Lisp_Object Qbackquote, Qcomma, Qcomma_at, Qcomma_dot, Qfunction;
 
@@ -413,33 +415,53 @@ printchar (ch, fun)
 	    }
 	}
 
+      if (len == 1
+	  && ! NILP (current_buffer->enable_multibyte_characters)
+	  && ! CHAR_HEAD_P (*str))
+	{
+	  /* Convert the unibyte character to multibyte.  */
+	  unsigned char c = *str;
+
+	  len = count_size_as_multibyte (&c, 1);
+	  copy_text (&c, work, 1, 0, 1);
+	  str = work;
+	}
+
       message_dolog (str, len, 0, len > 1);
 
-      /* Convert message to multibyte if we are now adding multibyte text.  */
       if (! NILP (current_buffer->enable_multibyte_characters)
-	  && ! message_enable_multibyte
-	  && printbufidx > 0)
+	  && ! message_enable_multibyte)
 	{
-	  int size = count_size_as_multibyte (FRAME_MESSAGE_BUF (mini_frame),
-					      printbufidx);
-	  unsigned char *tembuf = (unsigned char *) alloca (size + 1);
-	  copy_text (FRAME_MESSAGE_BUF (mini_frame), tembuf, printbufidx,
-		     0, 1);
-	  printbufidx = size;
-	  if (printbufidx > FRAME_MESSAGE_BUF_SIZE (mini_frame))
-	    {
-	      printbufidx = FRAME_MESSAGE_BUF_SIZE (mini_frame);
-	      /* Rewind incomplete multi-byte form.  */
-	      while (printbufidx > 0 && tembuf[printbufidx] >= 0xA0)
-		printbufidx--;
-	    }
-	  bcopy (tembuf, FRAME_MESSAGE_BUF (mini_frame), printbufidx);
+	  /* Record that the message buffer is multibyte.  */
 	  message_enable_multibyte = 1;
+
+	  /* If we have already had some message text in the messsage
+             buffer, we convert it to multibyte.  */
+	  if (printbufidx > 0)
+	    {
+	      int size
+		= count_size_as_multibyte (FRAME_MESSAGE_BUF (mini_frame),
+					   printbufidx);
+	      unsigned char *tembuf = (unsigned char *) alloca (size + 1);
+	      copy_text (FRAME_MESSAGE_BUF (mini_frame), tembuf, printbufidx,
+			 0, 1);
+	      printbufidx = size;
+	      if (printbufidx > FRAME_MESSAGE_BUF_SIZE (mini_frame))
+		{
+		  printbufidx = FRAME_MESSAGE_BUF_SIZE (mini_frame);
+		  /* Rewind incomplete multi-byte form.  */
+		  while (printbufidx > 0 && tembuf[printbufidx] >= 0xA0)
+		    printbufidx--;
+		}
+	      bcopy (tembuf, FRAME_MESSAGE_BUF (mini_frame), printbufidx);
+	    }
 	}
 
       if (printbufidx < FRAME_MESSAGE_BUF_SIZE (mini_frame) - len)
-	bcopy (str, &FRAME_MESSAGE_BUF (mini_frame)[printbufidx], len),
-	printbufidx += len;
+	{
+	  bcopy (str, &FRAME_MESSAGE_BUF (mini_frame)[printbufidx], len);
+	  printbufidx += len;
+	}
       FRAME_MESSAGE_BUF (mini_frame)[printbufidx] = 0;
       echo_area_glyphs_length = printbufidx;
 
@@ -635,7 +657,11 @@ print_string (string, printcharfun)
 	    int len;
 	    int ch = STRING_CHAR_AND_CHAR_LENGTH (XSTRING (string)->data + i,
 						  size_byte - i, len);
-
+	    if (!CHAR_VALID_P (ch, 0))
+	      {
+		ch = XSTRING (string)->data[i];
+		len = 1;
+	      }
 	    PRINTCHAR (ch);
 	    i += len;
 	  }
@@ -703,8 +729,11 @@ void
 temp_output_buffer_setup (bufname)
     char *bufname;
 {
+  int count = specpdl_ptr - specpdl;
   register struct buffer *old = current_buffer;
   register Lisp_Object buf;
+
+  record_unwind_protect (set_buffer_if_live, Fcurrent_buffer ());
 
   Fset_buffer (Fget_buffer_create (build_string (bufname)));
 
@@ -717,11 +746,13 @@ temp_output_buffer_setup (bufname)
   current_buffer->enable_multibyte_characters
     = buffer_defaults.enable_multibyte_characters;
   Ferase_buffer ();
-
   XSETBUFFER (buf, current_buffer);
-  specbind (Qstandard_output, buf);
 
-  set_buffer_internal (old);
+  call1 (Vrun_hooks, Qtemp_buffer_setup_hook);
+
+  unbind_to (count, Qnil);
+
+  specbind (Qstandard_output, buf);
 }
 
 Lisp_Object
@@ -756,9 +787,17 @@ The buffer is cleared out initially, and marked as unmodified when done.\n\
 All output done by BODY is inserted in that buffer by default.\n\
 The buffer is displayed in another window, but not selected.\n\
 The value of the last form in BODY is returned.\n\
-If BODY does not finish normally, the buffer BUFNAME is not displayed.\n\n\
+If BODY does not finish normally, the buffer BUFNAME is not displayed.\n\
+\n\
+The hook `temp-buffer-setup-hook' is run before BODY,\n\
+with the buffer BUFNAME temporarily current.\n\
+The hook `temp-buffer-show-hook' is run after the buffer is displayed,\n\
+with the buffer temporarily current, and the window that was used\n\
+to display it temporarily selected.\n\
+\n\
 If variable `temp-buffer-show-function' is non-nil, call it at the end\n\
-to get the buffer displayed.  It gets one argument, the buffer to display.")
+to get the buffer displayed instead of just displaying the non-selected\n\
+buffer and calling the hook.  It gets one argument, the buffer to display.")
   (args)
      Lisp_Object args;
 {
@@ -1015,7 +1054,7 @@ print_error_message (data, stream)
 
   /* For file-error, make error message by concatenating
      all the data items.  They are all strings.  */
-  if (!NILP (file_error) && !NILP (tail))
+  if (!NILP (file_error) && CONSP (tail))
     errmsg = XCONS (tail)->car, tail = XCONS (tail)->cdr;
 
   if (STRINGP (errmsg))
@@ -1263,7 +1302,10 @@ print (obj, printcharfun, escapeflag)
 		{
 		  c = STRING_CHAR_AND_CHAR_LENGTH (str + i_byte,
 						   size_byte - i_byte, len);
-		  i_byte += len;
+		  if (CHAR_VALID_P (c, 0))
+		    i_byte += len;
+		  else
+		    c = str[i_byte++];
 		}
 	      else
 		c = str[i_byte++];
@@ -1804,6 +1846,9 @@ print_interval (interval, printcharfun)
 void
 syms_of_print ()
 {
+  Qtemp_buffer_setup_hook = intern ("temp-buffer-setup-hook");
+  staticpro (&Qtemp_buffer_setup_hook);
+
   DEFVAR_LISP ("standard-output", &Vstandard_output,
     "Output stream `print' uses by default for outputting a character.\n\
 This may be any function of one argument.\n\

@@ -109,7 +109,7 @@ Describe an input method (@code{describe-input-method}).
 @item C-h L @var{language-env} @key{RET}
 Describe information on the character sets, coding systems and input
 methods used for language environment @var{language-env}
-(@code{describe-language-support}).
+(@code{describe-language-environment}).
 @item C-h C-c
 Display the copying conditions for GNU Emacs.
 @item C-h C-d
@@ -295,7 +295,7 @@ comm --- communications, networking, remote access to files.
 data --- support for editing files of data.
 docs --- support for Emacs documentation.
 emulations --- emulations of other editors.
-extensions --- emacs Lisp language extensions.
+extensions --- Emacs Lisp language extensions.
 faces --- support for using faces (fonts and colors; @pxref{Faces}).
 frames --- support for Emacs frames and window systems.
 games --- games, jokes and amusements.
@@ -451,6 +451,8 @@ this does not work---those that provide their own bindings for
 @kbd{C-h}.  One of these is @key{ESC}, because @kbd{@key{ESC} C-h} is
 actually @kbd{C-M-h}, which marks a defun.)
 
+@kindex C-h F
+@findex view-emacs-FAQ
 @kindex C-h n
 @findex view-emacs-news
 @kindex C-h C-c
@@ -465,11 +467,12 @@ actually @kbd{C-M-h}, which marks a defun.)
 information.  @kbd{C-h C-w} displays the full details on the complete
 absence of warranty for GNU Emacs.  @kbd{C-h n} (@code{view-emacs-news})
 displays the file @file{emacs/etc/NEWS}, which contains documentation on
-Emacs changes arranged chronologically.  @kbd{C-h t}
-(@code{help-with-tutorial}) displays the learn-by-doing Emacs tutorial.
-@kbd{C-h C-c} (@code{describe-copying}) displays the file
-@file{emacs/etc/COPYING}, which tells you the conditions you must obey
-in distributing copies of Emacs.  @kbd{C-h C-d}
+Emacs changes arranged chronologically.  @kbd{C-h F}
+(@code{view-emacs-FAQ}) displays the Emacs frequently-answered-questions
+list.  @kbd{C-h t} (@code{help-with-tutorial}) displays the
+learn-by-doing Emacs tutorial.  @kbd{C-h C-c} (@code{describe-copying})
+displays the file @file{emacs/etc/COPYING}, which tells you the
+conditions you must obey in distributing copies of Emacs.  @kbd{C-h C-d}
 (@code{describe-distribution}) displays the file
 @file{emacs/etc/DISTRIB}, which tells you how you can order a copy of
 the latest version of Emacs.  @kbd{C-h C-p} (@code{describe-project})

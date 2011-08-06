@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -34,1035 +34,595 @@ translation approved by the Free Software Foundation instead of in the
 original English.
 
 
-File: emacs,  Node: Glossary,  Next: Key Index,  Prev: Intro,  Up: Top
-
-Glossary
-********
-
-Abbrev
-     An abbrev is a text string which expands into a different text
-     string when present in the buffer.  For example, you might define
-     a few letters as an abbrev for a long phrase that you want to
-     insert frequently.  *Note Abbrevs::.
-
-Aborting
-     Aborting means getting out of a recursive edit (q.v.).  The
-     commands `C-]' and `M-x top-level' are used for this.  *Note
-     Quitting::.
-
-Alt
-     Alt is the name of a modifier bit which a keyboard input character
-     may have.  To make a character Alt, type it while holding down the
-     <ALT> key.  Such characters are given names that start with `Alt-'
-     (usually written `A-' for short).  (Note that many terminals have a
-     key labeled <ALT> which is really a <META> key.)  *Note Alt: User
-     Input.
-
-ASCII character
-     An ASCII character is either an ASCII control character or an ASCII
-     printing character.  *Note User Input::.
-
-ASCII control character
-     An ASCII control character is the Control version of an upper-case
-     letter, or the Control version of one of the characters `@[\]^_?'.
-
-ASCII printing character
-     ASCII printing characters include letters, digits, space, and these
-     punctuation characters: `!@#$%^& *()_-+=|\~` {}[]:;"' <>,.?/'.
-
-Auto Fill Mode
-     Auto Fill mode is a minor mode in which text that you insert is
-     automatically broken into lines of fixed width.  *Note Filling::.
-
-Auto Saving
-     Auto saving is the practice of saving the contents of an Emacs
-     buffer in a specially-named file, so that the information will not
-     be lost if the buffer is lost due to a system error or user error.
-     *Note Auto Save::.
-
-Backup File
-     A backup file records the contents that a file had before the
-     current editing session.  Emacs makes backup files automatically
-     to help you track down or cancel changes you later regret making.
-     *Note Backup::.
-
-Balance Parentheses
-     Emacs can balance parentheses manually or automatically.  Manual
-     balancing is done by the commands to move over balanced expressions
-     (*note Lists::.).  Automatic balancing is done by blinking or
-     highlighting the parenthesis that matches one just inserted (*note
-     Matching Parens: Matching.).
-
-Bind
-     To bind a key sequence means to give it a binding (q.v.).  *Note
-     Rebinding::.
-
-Binding
-     A key sequence gets its meaning in Emacs by having a binding,
-     which is a command (q.v.), a Lisp function that is run when the
-     user types that sequence.  *Note Binding: Commands.  Customization
-     often involves rebinding a character to a different command
-     function.  The bindings of all key sequences are recorded in the
-     keymaps (q.v.).  *Note Keymaps::.
-
-Blank Lines
-     Blank lines are lines that contain only whitespace.  Emacs has
-     several commands for operating on the blank lines in the buffer.
-
-Buffer
-     The buffer is the basic editing unit; one buffer corresponds to
-     one text being edited.  You can have several buffers, but at any
-     time you are editing only one, the `selected' buffer, though
-     several can be visible when you are using multiple windows (q.v.).
-     Most buffers are visiting (q.v.) some file.  *Note Buffers::.
-
-Buffer Selection History
-     Emacs keeps a buffer selection history which records how recently
-     each Emacs buffer has been selected.  This is used for choosing a
-     buffer to select.  *Note Buffers::.
-
-Button Down Event
-     A button down event is the kind of input event generated right
-     away when you press a mouse button.  *Note Mouse Buttons::.
-
-`C-'
-     `C-' in the name of a character is an abbreviation for Control.
-     *Note C-: User Input.
-
-`C-M-'
-     `C-M-' in the name of a character is an abbreviation for
-     Control-Meta.  *Note C-M-: User Input.
-
-Case Conversion
-     Case conversion means changing text from upper case to lower case
-     or vice versa.  *Note Case::, for the commands for case conversion.
-
-Character
-     Characters form the contents of an Emacs buffer; see *Note Text
-     Characters::.  Also, key sequences (q.v.) are usually made up of
-     characters (though they may include other input events as well).
-     *Note User Input::.
-
-Character Set
-     Emacs supports a number of character sets, each of which
-     represents a particular alphabet or script.  *Note International::.
-
-Click Event
-     A click event is the kind of input event generated when you press a
-     mouse button and release it without moving the mouse.  *Note Mouse
-     Buttons::.
-
-Coding System
-     A coding system is an encoding for representing text characters in
-     a file or in a stream of information.  Emacs has the ability to
-     convert text to or from a variety of coding systems when reading
-     or writing it.  *Note Coding Systems::.
-
-Command
-     A command is a Lisp function specially defined to be able to serve
-     as a key binding in Emacs.  When you type a key sequence (q.v.),
-     its binding (q.v.) is looked up in the relevant keymaps (q.v.) to
-     find the command to run.  *Note Commands::.
-
-Command Name
-     A command name is the name of a Lisp symbol which is a command
-     (*note Commands::.).  You can invoke any command by its name using
-     `M-x' (*note M-x::.).
-
-Comment
-     A comment is text in a program which is intended only for humans
-     reading the program, and which is marked specially so that it will
-     be ignored when the program is loaded or compiled.  Emacs offers
-     special commands for creating, aligning and killing comments.
-     *Note Comments::.
-
-Compilation
-     Compilation is the process of creating an executable program from
-     source code.  Emacs has commands for compiling files of Emacs Lisp
-     code (*note Byte Compilation: (elisp)Byte Compilation.) and
-     programs in C and other languages (*note Compilation::.).
-
-Complete Key
-     A complete key is a key sequence which fully specifies one action
-     to be performed by Emacs.  For example, `X' and `C-f' and `C-x m'
-     are complete keys.  Complete keys derive their meanings from being
-     bound (q.v.) to commands (q.v.).  Thus, `X' is conventionally
-     bound to a command to insert `X' in the buffer; `C-x m' is
-     conventionally bound to a command to begin composing a mail
-     message.  *Note Keys::.
-
-Completion
-     Completion is what Emacs does when it automatically fills out an
-     abbreviation for a name into the entire name.  Completion is done
-     for minibuffer (q.v.) arguments when the set of possible valid
-     inputs is known; for example, on command names, buffer names, and
-     file names.  Completion occurs when <TAB>, <SPC> or <RET> is
-     typed.  *Note Completion::.
-
-Continuation Line
-     When a line of text is longer than the width of the window, it
-     takes up more than one screen line when displayed.  We say that the
-     text line is continued, and all screen lines used for it after the
-     first are called continuation lines.  *Note Continuation: Basic.
-
-Control Character
-     A control character is a character that you type by holding down
-     the <CTRL> key.  Some control characters also have their own keys,
-     so that you can type them without using <CTRL>.  For example,
-     <RET>, <TAB>, <ESC> and <DEL> are all control characters.  *Note
-     User Input::.
-
-Copyleft
-     A copyleft is a notice giving the public legal permission to
-     redistribute a program or other work of art.  Copylefts are used by
-     left-wing programmers to promote freedom and cooperation, just as
-     copyrights are used by right-wing programmers to gain power over
-     other people.
-
-     The particular form of copyleft used by the GNU project is called
-     the GNU General Public License.  *Note Copying::.
-
-Current Buffer
-     The current buffer in Emacs is the Emacs buffer on which most
-     editing commands operate.  You can select any Emacs buffer as the
-     current one.  *Note Buffers::.
-
-Current Line
-     The line point is on (*note Point::.).
-
-Current Paragraph
-     The paragraph that point is in.  If point is between paragraphs,
-     the current paragraph is the one that follows point.  *Note
-     Paragraphs::.
-
-Current Defun
-     The defun (q.v.) that point is in.  If point is between defuns, the
-     current defun is the one that follows point.  *Note Defuns::.
-
-Cursor
-     The cursor is the rectangle on the screen which indicates the
-     position called point (q.v.) at which insertion and deletion takes
-     place.  The cursor is on or under the character that follows
-     point.  Often people speak of `the cursor' when, strictly
-     speaking, they mean `point'.  *Note Cursor: Basic.
-
-Customization
-     Customization is making minor changes in the way Emacs works.  It
-     is often done by setting variables (*note Variables::.) or by
-     rebinding key sequences (*note Keymaps::.).
-
-Default Argument
-     The default for an argument is the value that will be assumed if
-     you do not specify one.  When the minibuffer is used to read an
-     argument, the default argument is used if you just type <RET>.
-     *Note Minibuffer::.
-
-Default Directory
-     When you specify a file name that does not start with `/' or `~',
-     it is interpreted relative to the current buffer's default
-     directory.  *Note Default Directory: Minibuffer File.
-
-Defun
-     A defun is a list at the top level of parenthesis or bracket
-     structure in a program.  It is so named because most such lists in
-     Lisp programs are calls to the Lisp function `defun'.  *Note
-     Defuns::.
-
-<DEL>
-     <DEL> is a character that runs the command to delete one character
-     of text.  *Note DEL: Basic.
-
-Deletion
-     Deletion means erasing text without copying it into the kill ring
-     (q.v.).  The alternative is killing (q.v.).  *Note Deletion:
-     Killing.
-
-Deletion of Files
-     Deleting a file means erasing it from the file system.  *Note Misc
-     File Ops::.
-
-Deletion of Messages
-     Deleting a message means flagging it to be eliminated from your
-     mail file.  Until you expunge (q.v.) the Rmail file, you can still
-     undelete the messages you have deleted.  *Note Rmail Deletion::.
-
-Deletion of Windows
-     Deleting a window means eliminating it from the screen.  Other
-     windows expand to use up the space.  The deleted window can never
-     come back, but no actual text is thereby lost.  *Note Windows::.
-
-Directory
-     File directories are named collections in the file system, within
-     which you can place individual files or subdirectories.  *Note
-     Directories::.
-
-Dired
-     Dired is the Emacs facility that displays the contents of a file
-     directory and allows you to "edit the directory," performing
-     operations on the files in the directory.  *Note Dired::.
-
-Disabled Command
-     A disabled command is one that you may not run without special
-     confirmation.  The usual reason for disabling a command is that it
-     is confusing for beginning users.  *Note Disabling::.
-
-Down Event
-     Short for `button down event'.
-
-Drag Event
-     A drag event is the kind of input event generated when you press a
-     mouse button, move the mouse, and then release the button.  *Note
-     Mouse Buttons::.
-
-Dribble File
-     A file into which Emacs writes all the characters that the user
-     types on the keyboard.  Dribble files are used to make a record for
-     debugging Emacs bugs.  Emacs does not make a dribble file unless
-     you tell it to.  *Note Bugs::.
-
-Echo Area
-     The echo area is the bottom line of the screen, used for echoing
-     the arguments to commands, for asking questions, and printing
-     brief messages (including error messages).  The messages are
-     stored in the buffer `*Messages*' so you can review them later.
-     *Note Echo Area::.
-
-Echoing
-     Echoing is acknowledging the receipt of commands by displaying
-     them (in the echo area).  Emacs never echoes single-character key
-     sequences; longer key sequences echo only if you pause while
-     typing them.
-
-Electric
-     We say that a character is electric if it is normally
-     self-inserting (q.v.), but the current major mode (q.v.) redefines
-     it to do something else as well.  For example, some programming
-     language major modes define particular delimiter characters to
-     reindent the line or insert one or more newlines in addition to
-     self-insertion.
-
-Error
-     An error occurs when an Emacs command cannot execute in the current
-     circumstances.  When an error occurs, execution of the command
-     stops (unless the command has been programmed to do otherwise) and
-     Emacs reports the error by printing an error message (q.v.).
-     Type-ahead is discarded.  Then Emacs is ready to read another
-     editing command.
-
-Error Message
-     An error message is a single line of output displayed by Emacs
-     when the user asks for something impossible to do (such as,
-     killing text forward when point is at the end of the buffer).
-     They appear in the echo area, accompanied by a beep.
-
-<ESC>
-     <ESC> is a character used as a prefix for typing Meta characters on
-     keyboards lacking a <META> key.  Unlike the <META> key (which,
-     like the <SHIFT> key, is held down while another character is
-     typed), you press the <ESC> key as you would press a letter key,
-     and it applies to the next character you type.
-
-Expunging
-     Expunging an Rmail file or Dired buffer is an operation that truly
-     discards the messages or files you have previously flagged for
-     deletion.
-
-File Locking
-     Emacs used file locking to notice when two different users start
-     to edit one file at the same time.  *Note Interlocking::.
-
-File Name
-     A file name is a name that refers to a file.  File names may be
-     relative or absolute; the meaning of a relative file name depends
-     on the current directory, but an absolute file name refers to the
-     same file regardless of which directory is current.  On GNU and
-     Unix systems, an absolute file name starts with a slash (the root
-     directory) or with `~/' or `~USER/' (a home directory).
-
-     Some people use the term "pathname" for file names, but we do not;
-     we use the word "path" only in the term "search path" (q.v.).
-
-File-Name Component
-     A file-name component names a file directly within a particular
-     directory.  On GNU and Unix systems, a file name is a sequence of
-     file-name components, separated by slashes.  For example, `foo/bar'
-     is a file name containing two components, `foo' and `bar'; it
-     refers to the file named `bar' in the directory named `foo' in the
-     current directory.
-
-Fill Prefix
-     The fill prefix is a string that should be expected at the
-     beginning of each line when filling is done.  It is not regarded
-     as part of the text to be filled.  *Note Filling::.
-
-Filling
-     Filling text means shifting text between consecutive lines so that
-     all the lines are approximately the same length.  *Note Filling::.
-
-Formatted Text
-     Formatted text is text that displays with formatting information
-     while you edit.  Formatting information includes fonts, colors,
-     and specified margins.  *Note Formatted Text::.
-
-Frame
-     A frame is a rectangular cluster of Emacs windows.  Emacs starts
-     out with one frame, but you can create more.  You can subdivide
-     each frame into Emacs windows (q.v.).  When you are using X
-     windows, all the frames can be visible at the same time.  *Note
-     Frames::.
-
-Function Key
-     A function key is a key on the keyboard that sends input but does
-     not correspond to any character.  *Note Function Keys::.
-
-Global
-     Global means `independent of the current environment; in effect
-     throughout Emacs'.  It is the opposite of local (q.v.).  Particular
-     examples of the use of `global' appear below.
-
-Global Abbrev
-     A global definition of an abbrev (q.v.) is effective in all major
-     modes that do not have local (q.v.) definitions for the same
-     abbrev.  *Note Abbrevs::.
-
-Global Keymap
-     The global keymap (q.v.) contains key bindings that are in effect
-     except when overridden by local key bindings in a major mode's
-     local keymap (q.v.).  *Note Keymaps::.
-
-Global Mark Ring
-     The global mark ring records the series of buffers you have
-     recently set a mark in.  In many cases you can use this to
-     backtrack through buffers you have been editing in, or in which
-     you have found tags.  *Note Global Mark Ring::.
-
-Global Substitution
-     Global substitution means replacing each occurrence of one string
-     by another string through a large amount of text.  *Note Replace::.
-
-Global Variable
-     The global value of a variable (q.v.) takes effect in all buffers
-     that do not have their own local (q.v.) values for the variable.
-     *Note Variables::.
-
-Graphic Character
-     Graphic characters are those assigned pictorial images rather than
-     just names.  All the non-Meta (q.v.) characters except for the
-     Control (q.v.) characters are graphic characters.  These include
-     letters, digits, punctuation, and spaces; they do not include
-     <RET> or <ESC>.  In Emacs, typing a graphic character inserts that
-     character (in ordinary editing modes).  *Note Basic Editing: Basic.
-
-Highlighting
-     Highlighting text means displaying it with a different foreground
-     and/or background color to make it stand out from the rest of the
-     text in the buffer.
-
-Hardcopy
-     Hardcopy means printed output.  Emacs has commands for making
-     printed listings of text in Emacs buffers.  *Note Hardcopy::.
-
-<HELP>
-     <HELP> is the Emacs name for `C-h' or <F1>.  You can type <HELP>
-     at any time to ask what options you have, or to ask what any
-     command does.  *Note Help::.
-
-Hyper
-     Hyper is the name of a modifier bit which a keyboard input
-     character may have.  To make a character Hyper, type it while
-     holding down the <HYPER> key.  Such characters are given names
-     that start with `Hyper-' (usually written `H-' for short).  *Note
-     Hyper: User Input.
-
-Inbox
-     An inbox is a file in which mail is delivered by the operating
-     system.  Rmail transfers mail from inboxes to Rmail files (q.v.)
-     in which the mail is then stored permanently or until explicitly
-     deleted.  *Note Rmail Inbox::.
-
-Indentation
-     Indentation means blank space at the beginning of a line.  Most
-     programming languages have conventions for using indentation to
-     illuminate the structure of the program, and Emacs has special
-     commands to adjust indentation.  *Note Indentation::.
-
-Indirect Buffer
-     An indirect buffer is a buffer that shares the text of another
-     buffer, called its base buffer.  *Note Indirect Buffers::.
-
-Input Event
-     An input event represents, within Emacs, one action taken by the
-     user on the terminal.  Input events include typing characters,
-     typing function keys, pressing or releasing mouse buttons, and
-     switching between Emacs frames.  *Note User Input::.
-
-Input Method
-     An input method is a system for entering non-ASCII text characters
-     by typing sequences of ASCII characters (q.v.).  *Note Input
-     Methods::.
-
-Insertion
-     Insertion means copying text into the buffer, either from the
-     keyboard or from some other place in Emacs.
-
-Interlocking
-     Interlocking is a feature for warning when you start to alter a
-     file that someone else is already editing.  *Note Simultaneous
-     Editing: Interlocking.
-
-Justification
-     Justification means adding extra spaces to lines of text to make
-     them come exactly to a specified width.  *Note Justification:
-     Filling.
-
-Keyboard Macro
-     Keyboard macros are a way of defining new Emacs commands from
-     sequences of existing ones, with no need to write a Lisp program.
-     *Note Keyboard Macros::.
-
-Key Sequence
-     A key sequence (key, for short) is a sequence of input events
-     (q.v.)  that are meaningful as a single unit.  If the key sequence
-     is enough to specify one action, it is a complete key (q.v.); if
-     it is not enough, it is a prefix key (q.v.).  *Note Keys::.
-
-Keymap
-     The keymap is the data structure that records the bindings (q.v.)
-     of key sequences to the commands that they run.  For example, the
-     global keymap binds the character `C-n' to the command function
-     `next-line'.  *Note Keymaps::.
-
-Keyboard Translation Table
-     The keyboard translation table is an array that translates the
-     character codes that come from the terminal into the character
-     codes that make up key sequences.  *Note Keyboard Translations::.
-
-Kill Ring
-     The kill ring is where all text you have killed recently is saved.
-     You can reinsert any of the killed text still in the ring; this is
-     called yanking (q.v.).  *Note Yanking::.
-
-Killing
-     Killing means erasing text and saving it on the kill ring so it
-     can be yanked (q.v.) later.  Some other systems call this
-     "cutting."  Most Emacs commands to erase text do killing, as
-     opposed to deletion (q.v.).  *Note Killing::.
-
-Killing Jobs
-     Killing a job (such as, an invocation of Emacs) means making it
-     cease to exist.  Any data within it, if not saved in a file, is
-     lost.  *Note Exiting::.
-
-Language Environment
-     Your choice of language environment specifies defaults for the
-     input method (q.v.) and coding system (q.v.).  *Note Language
-     Environments::.  These defaults are relevant if you edit non-ASCII
-     text (*note International::.).
-
-List
-     A list is, approximately, a text string beginning with an open
-     parenthesis and ending with the matching close parenthesis.  In C
-     mode and other non-Lisp modes, groupings surrounded by other kinds
-     of matched delimiters appropriate to the language, such as braces,
-     are also considered lists.  Emacs has special commands for many
-     operations on lists.  *Note Lists::.
-
-Local
-     Local means `in effect only in a particular context'; the relevant
-     kind of context is a particular function execution, a particular
-     buffer, or a particular major mode.  It is the opposite of `global'
-     (q.v.).  Specific uses of `local' in Emacs terminology appear
-     below.
-
-Local Abbrev
-     A local abbrev definition is effective only if a particular major
-     mode is selected.  In that major mode, it overrides any global
-     definition for the same abbrev.  *Note Abbrevs::.
-
-Local Keymap
-     A local keymap is used in a particular major mode; the key bindings
-     (q.v.) in the current local keymap override global bindings of the
-     same key sequences.  *Note Keymaps::.
-
-Local Variable
-     A local value of a variable (q.v.) applies to only one buffer.
-     *Note Locals::.
-
-`M-'
-     `M-' in the name of a character is an abbreviation for <META>, one
-     of the modifier keys that can accompany any character.  *Note User
-     Input::.
-
-`M-C-'
-     `M-C-' in the name of a character is an abbreviation for
-     Control-Meta; it means the same thing as `C-M-'.  If your terminal
-     lacks a real <META> key, you type a Control-Meta character by
-     typing <ESC> and then typing the corresponding Control character.
-     *Note C-M-: User Input.
-
-`M-x'
-     `M-x' is the key sequence which is used to call an Emacs command by
-     name.  This is how you run commands that are not bound to key
-     sequences.  *Note M-x::.
-
-Mail
-     Mail means messages sent from one user to another through the
-     computer system, to be read at the recipient's convenience.  Emacs
-     has commands for composing and sending mail, and for reading and
-     editing the mail you have received.  *Note Sending Mail::.  *Note
-     Rmail::, for how to read mail.
-
-Mail Composition Method
-     A mail composition method is a program runnable within Emacs for
-     editing and sending a mail message.  Emacs lets you select from
-     several alternative mail composition methods.  *Note Mail
-     Methods::.
-
-Major Mode
-     The Emacs major modes are a mutually exclusive set of options,
-     each of which configures Emacs for editing a certain sort of text.
-     Ideally, each programming language has its own major mode.  *Note
-     Major Modes::.
-
-Mark
-     The mark points to a position in the text.  It specifies one end
-     of the region (q.v.), point being the other end.  Many commands
-     operate on all the text from point to the mark.  Each buffer has
-     its own mark.  *Note Mark::.
-
-Mark Ring
-     The mark ring is used to hold several recent previous locations of
-     the mark, just in case you want to move back to them.  Each buffer
-     has its own mark ring; in addition, there is a single global mark
-     ring (q.v.).  *Note Mark Ring::.
-
-Menu Bar
-     The menu bar is the line at the top of an Emacs frame.  It contains
-     words you can click on with the mouse to bring up menus.  The menu
-     bar feature is supported only with X.  *Note Menu Bars::.
-
-Message
-     See `mail'.
-
-Meta
-     Meta is the name of a modifier bit which a command character may
-     have.  It is present in a character if the character is typed with
-     the <META> key held down.  Such characters are given names that
-     start with `Meta-' (usually written `M-' for short).  For example,
-     `M-<' is typed by holding down <META> and at the same time typing
-     `<' (which itself is done, on most terminals, by holding down
-     <SHIFT> and typing `,').  *Note Meta: User Input.
-
-Meta Character
-     A Meta character is one whose character code includes the Meta bit.
-
-Minibuffer
-     The minibuffer is the window that appears when necessary inside the
-     echo area (q.v.), used for reading arguments to commands.  *Note
-     Minibuffer::.
-
-Minibuffer History
-     The minibuffer history records the text you have specified in the
-     past for minibuffer arguments, so you can conveniently use the
-     same text again.  *Note Minibuffer History::.
-
-Minor Mode
-     A minor mode is an optional feature of Emacs which can be switched
-     on or off independently of all other features.  Each minor mode
-     has a command to turn it on or off.  *Note Minor Modes::.
-
-Minor Mode Keymap
-     A keymap that belongs to a minor mode and is active when that mode
-     is enabled.  Minor mode keymaps take precedence over the buffer's
-     local keymap, just as the local keymap takes precedence over the
-     global keymap.  *Note Keymaps::.
-
-Mode Line
-     The mode line is the line at the bottom of each window (q.v.),
-     giving status information on the buffer displayed in that window.
-     *Note Mode Line::.
-
-Modified Buffer
-     A buffer (q.v.) is modified if its text has been changed since the
-     last time the buffer was saved (or since when it was created, if it
-     has never been saved).  *Note Saving::.
-
-Moving Text
-     Moving text means erasing it from one place and inserting it in
-     another.  The usual way to move text by killing (q.v.) and then
-     yanking (q.v.).  *Note Killing::.
-
-MULE
-     MULE refers to the Emacs features for editing non-ASCII text using
-     multibyte characters (q.v.).  *Note International::.
-
-Multibyte Character
-     A multibyte character is a character that takes up several buffer
-     positions.  Emacs uses multibyte characters to represent non-ASCII
-     text, since the number of non-ASCII characters is much more than
-     256.  *Note International Intro::.
-
-Named Mark
-     A named mark is a register (q.v.) in its role of recording a
-     location in text so that you can move point to that location.
-     *Note Registers::.
-
-Narrowing
-     Narrowing means creating a restriction (q.v.) that limits editing
-     in the current buffer to only a part of the text in the buffer.
-     Text outside that part is inaccessible to the user until the
-     boundaries are widened again, but it is still there, and saving
-     the file saves it all.  *Note Narrowing::.
-
-Newline
-     Control-J characters in the buffer terminate lines of text and are
-     therefore also called newlines.  *Note Newline: Text Characters.
-
-Numeric Argument
-     A numeric argument is a number, specified before a command, to
-     change the effect of the command.  Often the numeric argument
-     serves as a repeat count.  *Note Arguments::.
-
-Overwrite Mode
-     Overwrite mode is a minor mode.  When it is enabled, ordinary text
-     characters replace the existing text after point rather than
-     pushing it to the right.  *Note Minor Modes::.
-
-Page
-     A page is a unit of text, delimited by formfeed characters (ASCII
-     control-L, code 014) coming at the beginning of a line.  Some Emacs
-     commands are provided for moving over and operating on pages.
-     *Note Pages::.
-
-Paragraph
-     Paragraphs are the medium-size unit of English text.  There are
-     special Emacs commands for moving over and operating on paragraphs.
-     *Note Paragraphs::.
-
-Parsing
-     We say that certain Emacs commands parse words or expressions in
-     the text being edited.  Really, all they know how to do is find
-     the other end of a word or expression.  *Note Syntax::.
-
-Point
-     Point is the place in the buffer at which insertion and deletion
-     occur.  Point is considered to be between two characters, not at
-     one character.  The terminal's cursor (q.v.) indicates the
-     location of point.  *Note Point: Basic.
-
-Prefix Argument
-     See `numeric argument'.
-
-Prefix Key
-     A prefix key is a key sequence (q.v.) whose sole function is to
-     introduce a set of longer key sequences.  `C-x' is an example of
-     prefix key; any two-character sequence starting with `C-x' is
-     therefore a legitimate key sequence.  *Note Keys::.
-
-Primary Rmail File
-     Your primary Rmail file is the file named `RMAIL' in your home
-     directory.  That's where Rmail stores your incoming mail, unless
-     you specify a different file name.  *Note Rmail::.
-
-Primary Selection
-     The primary selection is one particular X selection (q.v.); it is
-     the selection that most X applications use for transferring text
-     to and from other applications.
-
-     The Emacs kill commands set the primary selection and the yank
-     command uses the primary selection when appropriate.  *Note
-     Killing::.
-
-Prompt
-     A prompt is text printed to ask the user for input.  Displaying a
-     prompt is called prompting.  Emacs prompts always appear in the
-     echo area (q.v.).  One kind of prompting happens when the
-     minibuffer is used to read an argument (*note Minibuffer::.); the
-     echoing which happens when you pause in the middle of typing a
-     multi-character key sequence is also a kind of prompting (*note
-     Echo Area::.).
-
-Quitting
-     Quitting means canceling a partially typed command or a running
-     command, using `C-g' (or `C-<BREAK>' on MS-DOS).  *Note Quitting::.
-
-Quoting
-     Quoting means depriving a character of its usual special
-     significance.  The most common kind of quoting in Emacs is with
-     `C-q'.  What constitutes special significance depends on the
-     context and on convention.  For example, an "ordinary" character
-     as an Emacs command inserts itself; so in this context, a special
-     character is any character that does not normally insert itself
-     (such as <DEL>, for example), and quoting it makes it insert
-     itself as if it were not special.  Not all contexts allow quoting.
-     *Note Quoting: Basic.
-
-Quoting File Names
-     Quoting a file name turns off the special significance of
-     constructs such as `$', `~' and `:'.  *Note Quoted File Names::.
-
-Read-Only Buffer
-     A read-only buffer is one whose text you are not allowed to change.
-     Normally Emacs makes buffers read-only when they contain text which
-     has a special significance to Emacs; for example, Dired buffers.
-     Visiting a file that is write-protected also makes a read-only
-     buffer.  *Note Buffers::.
-
-Rectangle
-     A rectangle consists of the text in a given range of columns on a
-     given range of lines.  Normally you specify a rectangle by putting
-     point at one corner and putting the mark at the opposite corner.
-     *Note Rectangles::.
-
-Recursive Editing Level
-     A recursive editing level is a state in which part of the
-     execution of a command involves asking the user to edit some text.
-     This text may or may not be the same as the text to which the
-     command was applied.  The mode line indicates recursive editing
-     levels with square brackets (`[' and `]').  *Note Recursive Edit::.
-
-Redisplay
-     Redisplay is the process of correcting the image on the screen to
-     correspond to changes that have been made in the text being edited.
-     *Note Redisplay: Screen.
-
-Regexp
-     See `regular expression'.
-
-Region
-     The region is the text between point (q.v.) and the mark (q.v.).
-     Many commands operate on the text of the region.  *Note Region:
-     Mark.
-
-Registers
-     Registers are named slots in which text or buffer positions or
-     rectangles can be saved for later use.  *Note Registers::.
-
-Regular Expression
-     A regular expression is a pattern that can match various text
-     strings; for example, `l[0-9]+' matches `l' followed by one or more
-     digits.  *Note Regexps::.
-
-Repeat Count
-     See `numeric argument'.
-
-Replacement
-     See `global substitution'.
-
-Restriction
-     A buffer's restriction is the amount of text, at the beginning or
-     the end of the buffer, that is temporarily inaccessible.  Giving a
-     buffer a nonzero amount of restriction is called narrowing (q.v.).
-     *Note Narrowing::.
-
-<RET>
-     <RET> is a character that in Emacs runs the command to insert a
-     newline into the text.  It is also used to terminate most arguments
-     read in the minibuffer (q.v.).  *Note Return: User Input.
-
-Rmail File
-     An Rmail file is a file containing text in a special format used by
-     Rmail for storing mail.  *Note Rmail::.
-
-Saving
-     Saving a buffer means copying its text into the file that was
-     visited (q.v.) in that buffer.  This is the way text in files
-     actually gets changed by your Emacs editing.  *Note Saving::.
-
-Scroll Bar
-     A scroll bar is a tall thin hollow box that appears at the side of
-     a window.  You can use mouse commands in the scroll bar to scroll
-     the window.  The scroll bar feature is supported only with X.
-     *Note Scroll Bars::.
-
-Scrolling
-     Scrolling means shifting the text in the Emacs window so as to see
-     a different part of the buffer.  *Note Scrolling: Display.
-
-Searching
-     Searching means moving point to the next occurrence of a specified
-     string or the next match for a specified regular expression.
-     *Note Search::.
-
-Search Path
-     A search path is a list of directory names, to be used for
-     searching for files for certain purposes.  For example, the
-     variable `load-path' holds a search path for finding Lisp library
-     files.  *Note Lisp Libraries::.
-
-Secondary Selection
-     The secondary selection is one particular X selection; some X
-     applications can use it for transferring text to and from other
-     applications.  Emacs has special mouse commands for transferring
-     text using the secondary selection.  *Note Secondary Selection::.
-
-Selecting
-     Selecting a buffer means making it the current (q.v.) buffer.
-     *Note Selecting: Buffers.
-
-Selection
-     The X window system allows an application program to specify named
-     selections whose values are text.  A program can also read the
-     selections that other programs have set up.  This is the principal
-     way of transferring text between window applications.  Emacs has
-     commands to work with the primary (q.v.) selection and the
-     secondary (q.v.)  selection.
-
-Self-Documentation
-     Self-documentation is the feature of Emacs which can tell you what
-     any command does, or give you a list of all commands related to a
-     topic you specify.  You ask for self-documentation with the help
-     character, `C-h'.  *Note Help::.
-
-Self-Inserting Character
-     A character is self-inserting if typing that character inserts that
-     character in the buffer.  Ordinary printing and whitespace
-     characters are self-inserting in Emacs, except in certain special
-     major modes.
-
-Sentences
-     Emacs has commands for moving by or killing by sentences.  *Note
-     Sentences::.
-
-Sexp
-     A sexp (short for `s-expression') is the basic syntactic unit of
-     Lisp in its textual form: either a list, or Lisp atom.  Many Emacs
-     commands operate on sexps.  The term `sexp' is generalized to
-     languages other than Lisp, to mean a syntactically recognizable
-     expression.  *Note Sexps: Lists.
-
-Simultaneous Editing
-     Simultaneous editing means two users modifying the same file at
-     once.  Simultaneous editing if not detected can cause one user to
-     lose his work.  Emacs detects all cases of simultaneous editing
-     and warns one of the users to investigate.  *Note Simultaneous
-     Editing: Interlocking.
-
-String
-     A string is a kind of Lisp data object which contains a sequence of
-     characters.  Many Emacs variables are intended to have strings as
-     values.  The Lisp syntax for a string consists of the characters
-     in the string with a `"' before and another `"' after.  A `"' that
-     is part of the string must be written as `\"' and a `\' that is
-     part of the string must be written as `\\'.  All other characters,
-     including newline, can be included just by writing them inside the
-     string; however, backslash sequences as in C, such as `\n' for
-     newline or `\241' using an octal character code, are allowed as
-     well.
-
-String Substitution
-     See `global substitution'.
-
-Syntax Table
-     The syntax table tells Emacs which characters are part of a word,
-     which characters balance each other like parentheses, etc.  *Note
-     Syntax::.
-
-Super
-     Super is the name of a modifier bit which a keyboard input
-     character may have.  To make a character Super, type it while
-     holding down the <SUPER> key.  Such characters are given names
-     that start with `Super-' (usually written `s-' for short).  *Note
-     Super: User Input.
-
-Tags Table
-     A tags table is a file that serves as an index to the function
-     definitions in one or more other files.  *Note Tags::.
-
-Termscript File
-     A termscript file contains a record of all characters sent by
-     Emacs to the terminal.  It is used for tracking down bugs in Emacs
-     redisplay.  Emacs does not make a termscript file unless you tell
-     it to.  *Note Bugs::.
-
-Text
-     Two meanings (*note Text::.):
-
-        * Data consisting of a sequence of characters, as opposed to
-          binary numbers, images, graphics commands, executable
-          programs, and the like.  The contents of an Emacs buffer are
-          always text in this sense.
-
-        * Data consisting of written human language, as opposed to
-          programs, or following the stylistic conventions of human
-          language.
-
-Top Level
-     Top level is the normal state of Emacs, in which you are editing
-     the text of the file you have visited.  You are at top level
-     whenever you are not in a recursive editing level (q.v.) or the
-     minibuffer (q.v.), and not in the middle of a command.  You can
-     get back to top level by aborting (q.v.) and quitting (q.v.).
-     *Note Quitting::.
-
-Transposition
-     Transposing two units of text means putting each one into the place
-     formerly occupied by the other.  There are Emacs commands to
-     transpose two adjacent characters, words, sexps (q.v.) or lines
-     (*note Transpose::.).
-
-Truncation
-     Truncating text lines in the display means leaving out any text on
-     a line that does not fit within the right margin of the window
-     displaying it.  See also `continuation line'.  *Note Truncation:
-     Basic.
-
-Undoing
-     Undoing means making your previous editing go in reverse, bringing
-     back the text that existed earlier in the editing session.  *Note
-     Undo::.
-
-User Option
-     A user option is a variable (q.v.) that exists so that you can
-     customize Emacs by setting it to a new value.  *Note Variables::.
-
-Variable
-     A variable is an object in Lisp that can store an arbitrary value.
-     Emacs uses some variables for internal purposes, and has others
-     (known as `user options' (q.v.)) just so that you can set their
-     values to control the behavior of Emacs.  The variables used in
-     Emacs that you are likely to be interested in are listed in the
-     Variables Index in this manual.  *Note Variables::, for
-     information on variables.
-
-Version Control
-     Version control systems keep track of multiple versions of a
-     source file.  They provide a more powerful alternative to keeping
-     backup files (q.v.).  *Note Version Control::.
-
-Visiting
-     Visiting a file means loading its contents into a buffer (q.v.)
-     where they can be edited.  *Note Visiting::.
-
-Whitespace
-     Whitespace is any run of consecutive formatting characters (space,
-     tab, newline, and backspace).
-
-Widening
-     Widening is removing any restriction (q.v.) on the current buffer;
-     it is the opposite of narrowing (q.v.).  *Note Narrowing::.
-
-Window
-     Emacs divides a frame (q.v.) into one or more windows, each of
-     which can display the contents of one buffer (q.v.) at any time.
-     *Note Screen::, for basic information on how Emacs uses the screen.
-     *Note Windows::, for commands to control the use of windows.
-
-Word Abbrev
-     Synonymous with `abbrev'.
-
-Word Search
-     Word search is searching for a sequence of words, considering the
-     punctuation between them as insignificant.  *Note Word Search::.
-
-WYSIWYG
-     WYSIWYG stands for `What you see is what you get.'  Emacs generally
-     provides WYSIWYG editing for files of characters; in Enriched mode
-     (*note Formatted Text::.), it provides WYSIWYG editing for files
-     that include text formatting information.
-
-Yanking
-     Yanking means reinserting text previously killed.  It can be used
-     to undo a mistaken kill, or for copying or moving text.  Some other
-     systems call this "pasting."  *Note Yanking::.
+File: emacs,  Node: Windows Processes,  Next: Windows System Menu,  Prev: MS-DOS Processes,  Up: MS-DOS
+
+Subprocesses on Windows 95 and NT
+=================================
+
+   Emacs compiled as a native Windows application (as opposed to the DOS
+version) includes full support for asynchronous subprocesses.  In the
+Windows version, synchronous and asynchronous subprocesses work fine on
+both Windows 95 and Windows NT as long as you run only 32-bit Windows
+applications.  However, when you run a DOS application in a subprocess,
+you may encounter problems or be unable to run the application at all;
+and if you run two DOS applications at the same time in two
+subprocesses, you may have to reboot your system.
+
+   Since the standard command interpreter (and most command line
+utilities) on Windows 95 are DOS applications, these problems are
+significant when using that system.  But there's nothing we can do
+about them; only Microsoft can fix them.
+
+   If you run just one DOS application subprocess, the subprocess should
+work as expected as long as it is "well-behaved" and does not perform
+direct screen access or other unusual actions.  If you have a CPU
+monitor application, your machine will appear to be 100% busy even when
+the DOS application is idle, but this is only an artifact of the way CPU
+monitors measure processor load.
+
+   You must terminate the DOS application before you start any other DOS
+application in a different subprocess.  Emacs is unable to interrupt or
+terminate a DOS subprocess.  The only way you can terminate such a
+subprocess is by giving it a command that tells its program to exit.
+
+   If you attempt to run two DOS applications at the same time in
+separate subprocesses, the second one that is started will be suspended
+until the first one finishes, even if either or both of them are
+asynchronous.
+
+   If you can go to the first subprocess, and tell it to exit, the
+second subprocess should continue normally.  However, if the second
+subprocess is synchronous, Emacs itself will be hung until the first
+subprocess finishes.  If it will not finish without user input, then
+you have no choice but to reboot if you are running on Windows 95.  If
+you are running on Windows NT, you can use a process viewer application
+to kill the appropriate instance of ntvdm instead (this will terminate
+both DOS subprocesses).
+
+   If you have to reboot Windows 95 in this situation, do not use the
+`Shutdown' command on the `Start' menu; that usually hangs the system.
+Instead, type `CTL-ALT-<DEL>' and then choose `Shutdown'.  That usually
+works, although it may take a few minutes to do its job.
+
+
+File: emacs,  Node: Windows System Menu,  Prev: Windows Processes,  Up: MS-DOS
+
+Using the System Menu on Windows
+================================
+
+   Emacs compiled as a native Windows application normally turns off the
+Windows feature that tapping the <ALT> key invokes the Windows menu.
+The reason is that the <ALT> also serves as <META> in Emacs.  When
+using Emacs, users often press the <META> key temporarily and then
+change their minds; if this has the effect of bringing up the Windows
+menu, it alters the meaning of subsequent commands.  Many users find
+this frustrating.
+
+   You can reenable Windows's default handling of tapping the <ALT> key
+by setting `w32-pass-alt-to-system' to a non-`nil' value.
+
+
+File: emacs,  Node: Manifesto,  Prev: MS-DOS,  Up: Top
+
+The GNU Manifesto
+*****************
+
+     The GNU Manifesto which appears below was written by Richard
+     Stallman at the beginning of the GNU project, to ask for
+     participation and support.  For the first few years, it was
+     updated in minor ways to account for developments, but now it
+     seems best to leave it unchanged as most people have seen it.
+
+     Since that time, we have learned about certain common
+     misunderstandings that different wording could help avoid.
+     Footnotes added in 1993 help clarify these points.
+
+     For up-to-date information about the available GNU software,
+     please see the latest issue of the GNU's Bulletin.  The list is
+     much too long to include here.
+
+What's GNU?  Gnu's Not Unix!
+============================
+
+   GNU, which stands for Gnu's Not Unix, is the name for the complete
+Unix-compatible software system which I am writing so that I can give it
+away free to everyone who can use it.(1) Several other volunteers are
+helping me.  Contributions of time, money, programs and equipment are
+greatly needed.
+
+   So far we have an Emacs text editor with Lisp for writing editor
+commands, a source level debugger, a yacc-compatible parser generator,
+a linker, and around 35 utilities.  A shell (command interpreter) is
+nearly completed.  A new portable optimizing C compiler has compiled
+itself and may be released this year.  An initial kernel exists but
+many more features are needed to emulate Unix.  When the kernel and
+compiler are finished, it will be possible to distribute a GNU system
+suitable for program development.  We will use TeX as our text
+formatter, but an nroff is being worked on.  We will use the free,
+portable X window system as well.  After this we will add a portable
+Common Lisp, an Empire game, a spreadsheet, and hundreds of other
+things, plus on-line documentation.  We hope to supply, eventually,
+everything useful that normally comes with a Unix system, and more.
+
+   GNU will be able to run Unix programs, but will not be identical to
+Unix.  We will make all improvements that are convenient, based on our
+experience with other operating systems.  In particular, we plan to
+have longer file names, file version numbers, a crashproof file system,
+file name completion perhaps, terminal-independent display support, and
+perhaps eventually a Lisp-based window system through which several
+Lisp programs and ordinary Unix programs can share a screen.  Both C
+and Lisp will be available as system programming languages.  We will
+try to support UUCP, MIT Chaosnet, and Internet protocols for
+communication.
+
+   GNU is aimed initially at machines in the 68000/16000 class with
+virtual memory, because they are the easiest machines to make it run
+on.  The extra effort to make it run on smaller machines will be left
+to someone who wants to use it on them.
+
+   To avoid horrible confusion, please pronounce the `G' in the word
+`GNU' when it is the name of this project.
+
+Why I Must Write GNU
+====================
+
+   I consider that the golden rule requires that if I like a program I
+must share it with other people who like it.  Software sellers want to
+divide the users and conquer them, making each user agree not to share
+with others.  I refuse to break solidarity with other users in this
+way.  I cannot in good conscience sign a nondisclosure agreement or a
+software license agreement.  For years I worked within the Artificial
+Intelligence Lab to resist such tendencies and other inhospitalities,
+but eventually they had gone too far: I could not remain in an
+institution where such things are done for me against my will.
+
+   So that I can continue to use computers without dishonor, I have
+decided to put together a sufficient body of free software so that I
+will be able to get along without any software that is not free.  I
+have resigned from the AI lab to deny MIT any legal excuse to prevent
+me from giving GNU away.
+
+Why GNU Will Be Compatible with Unix
+====================================
+
+   Unix is not my ideal system, but it is not too bad.  The essential
+features of Unix seem to be good ones, and I think I can fill in what
+Unix lacks without spoiling them.  And a system compatible with Unix
+would be convenient for many other people to adopt.
+
+How GNU Will Be Available
+=========================
+
+   GNU is not in the public domain.  Everyone will be permitted to
+modify and redistribute GNU, but no distributor will be allowed to
+restrict its further redistribution.  That is to say, proprietary
+modifications will not be allowed.  I want to make sure that all
+versions of GNU remain free.
+
+Why Many Other Programmers Want to Help
+=======================================
+
+   I have found many other programmers who are excited about GNU and
+want to help.
+
+   Many programmers are unhappy about the commercialization of system
+software.  It may enable them to make more money, but it requires them
+to feel in conflict with other programmers in general rather than feel
+as comrades.  The fundamental act of friendship among programmers is the
+sharing of programs; marketing arrangements now typically used
+essentially forbid programmers to treat others as friends.  The
+purchaser of software must choose between friendship and obeying the
+law.  Naturally, many decide that friendship is more important.  But
+those who believe in law often do not feel at ease with either choice.
+They become cynical and think that programming is just a way of making
+money.
+
+   By working on and using GNU rather than proprietary programs, we can
+be hospitable to everyone and obey the law.  In addition, GNU serves as
+an example to inspire and a banner to rally others to join us in
+sharing.  This can give us a feeling of harmony which is impossible if
+we use software that is not free.  For about half the programmers I
+talk to, this is an important happiness that money cannot replace.
+
+How You Can Contribute
+======================
+
+   I am asking computer manufacturers for donations of machines and
+money.  I'm asking individuals for donations of programs and work.
+
+   One consequence you can expect if you donate machines is that GNU
+will run on them at an early date.  The machines should be complete,
+ready to use systems, approved for use in a residential area, and not
+in need of sophisticated cooling or power.
+
+   I have found very many programmers eager to contribute part-time
+work for GNU.  For most projects, such part-time distributed work would
+be very hard to coordinate; the independently-written parts would not
+work together.  But for the particular task of replacing Unix, this
+problem is absent.  A complete Unix system contains hundreds of utility
+programs, each of which is documented separately.  Most interface
+specifications are fixed by Unix compatibility.  If each contributor
+can write a compatible replacement for a single Unix utility, and make
+it work properly in place of the original on a Unix system, then these
+utilities will work right when put together.  Even allowing for Murphy
+to create a few unexpected problems, assembling these components will
+be a feasible task.  (The kernel will require closer communication and
+will be worked on by a small, tight group.)
+
+   If I get donations of money, I may be able to hire a few people full
+or part time.  The salary won't be high by programmers' standards, but
+I'm looking for people for whom building community spirit is as
+important as making money.  I view this as a way of enabling dedicated
+people to devote their full energies to working on GNU by sparing them
+the need to make a living in another way.
+
+Why All Computer Users Will Benefit
+===================================
+
+   Once GNU is written, everyone will be able to obtain good system
+software free, just like air.(2)
+
+   This means much more than just saving everyone the price of a Unix
+license.  It means that much wasteful duplication of system programming
+effort will be avoided.  This effort can go instead into advancing the
+state of the art.
+
+   Complete system sources will be available to everyone.  As a result,
+a user who needs changes in the system will always be free to make them
+himself, or hire any available programmer or company to make them for
+him.  Users will no longer be at the mercy of one programmer or company
+which owns the sources and is in sole position to make changes.
+
+   Schools will be able to provide a much more educational environment
+by encouraging all students to study and improve the system code.
+Harvard's computer lab used to have the policy that no program could be
+installed on the system if its sources were not on public display, and
+upheld it by actually refusing to install certain programs.  I was very
+much inspired by this.
+
+   Finally, the overhead of considering who owns the system software
+and what one is or is not entitled to do with it will be lifted.
+
+   Arrangements to make people pay for using a program, including
+licensing of copies, always incur a tremendous cost to society through
+the cumbersome mechanisms necessary to figure out how much (that is,
+which programs) a person must pay for.  And only a police state can
+force everyone to obey them.  Consider a space station where air must
+be manufactured at great cost: charging each breather per liter of air
+may be fair, but wearing the metered gas mask all day and all night is
+intolerable even if everyone can afford to pay the air bill.  And the
+TV cameras everywhere to see if you ever take the mask off are
+outrageous.  It's better to support the air plant with a head tax and
+chuck the masks.
+
+   Copying all or parts of a program is as natural to a programmer as
+breathing, and as productive.  It ought to be as free.
+
+Some Easily Rebutted Objections to GNU's Goals
+==============================================
+
+     "Nobody will use it if it is free, because that means they can't
+     rely on any support."
+
+     "You have to charge for the program to pay for providing the
+     support."
+
+   If people would rather pay for GNU plus service than get GNU free
+without service, a company to provide just service to people who have
+obtained GNU free ought to be profitable.(3)
+
+   We must distinguish between support in the form of real programming
+work and mere handholding.  The former is something one cannot rely on
+from a software vendor.  If your problem is not shared by enough
+people, the vendor will tell you to get lost.
+
+   If your business needs to be able to rely on support, the only way
+is to have all the necessary sources and tools.  Then you can hire any
+available person to fix your problem; you are not at the mercy of any
+individual.  With Unix, the price of sources puts this out of
+consideration for most businesses.  With GNU this will be easy.  It is
+still possible for there to be no available competent person, but this
+problem cannot be blamed on distribution arrangements.  GNU does not
+eliminate all the world's problems, only some of them.
+
+   Meanwhile, the users who know nothing about computers need
+handholding: doing things for them which they could easily do
+themselves but don't know how.
+
+   Such services could be provided by companies that sell just
+hand-holding and repair service.  If it is true that users would rather
+spend money and get a product with service, they will also be willing
+to buy the service having got the product free.  The service companies
+will compete in quality and price; users will not be tied to any
+particular one.  Meanwhile, those of us who don't need the service
+should be able to use the program without paying for the service.
+
+     "You cannot reach many people without advertising, and you must
+     charge for the program to support that."
+
+     "It's no use advertising a program people can get free."
+
+   There are various forms of free or very cheap publicity that can be
+used to inform numbers of computer users about something like GNU.  But
+it may be true that one can reach more microcomputer users with
+advertising.  If this is really so, a business which advertises the
+service of copying and mailing GNU for a fee ought to be successful
+enough to pay for its advertising and more.  This way, only the users
+who benefit from the advertising pay for it.
+
+   On the other hand, if many people get GNU from their friends, and
+such companies don't succeed, this will show that advertising was not
+really necessary to spread GNU.  Why is it that free market advocates
+don't want to let the free market decide this?(4)
+
+     "My company needs a proprietary operating system to get a
+     competitive edge."
+
+   GNU will remove operating system software from the realm of
+competition.  You will not be able to get an edge in this area, but
+neither will your competitors be able to get an edge over you.  You and
+they will compete in other areas, while benefiting mutually in this
+one.  If your business is selling an operating system, you will not
+like GNU, but that's tough on you.  If your business is something else,
+GNU can save you from being pushed into the expensive business of
+selling operating systems.
+
+   I would like to see GNU development supported by gifts from many
+manufacturers and users, reducing the cost to each.(5)
+
+     "Don't programmers deserve a reward for their creativity?"
+
+   If anything deserves a reward, it is social contribution.
+Creativity can be a social contribution, but only in so far as society
+is free to use the results.  If programmers deserve to be rewarded for
+creating innovative programs, by the same token they deserve to be
+punished if they restrict the use of these programs.
+
+     "Shouldn't a programmer be able to ask for a reward for his
+     creativity?"
+
+   There is nothing wrong with wanting pay for work, or seeking to
+maximize one's income, as long as one does not use means that are
+destructive.  But the means customary in the field of software today
+are based on destruction.
+
+   Extracting money from users of a program by restricting their use of
+it is destructive because the restrictions reduce the amount and the
+ways that the program can be used.  This reduces the amount of wealth
+that humanity derives from the program.  When there is a deliberate
+choice to restrict, the harmful consequences are deliberate destruction.
+
+   The reason a good citizen does not use such destructive means to
+become wealthier is that, if everyone did so, we would all become
+poorer from the mutual destructiveness.  This is Kantian ethics; or,
+the Golden Rule.  Since I do not like the consequences that result if
+everyone hoards information, I am required to consider it wrong for one
+to do so.  Specifically, the desire to be rewarded for one's creativity
+does not justify depriving the world in general of all or part of that
+creativity.
+
+     "Won't programmers starve?"
+
+   I could answer that nobody is forced to be a programmer.  Most of us
+cannot manage to get any money for standing on the street and making
+faces.  But we are not, as a result, condemned to spend our lives
+standing on the street making faces, and starving.  We do something
+else.
+
+   But that is the wrong answer because it accepts the questioner's
+implicit assumption: that without ownership of software, programmers
+cannot possibly be paid a cent.  Supposedly it is all or nothing.
+
+   The real reason programmers will not starve is that it will still be
+possible for them to get paid for programming; just not paid as much as
+now.
+
+   Restricting copying is not the only basis for business in software.
+It is the most common basis because it brings in the most money.  If it
+were prohibited, or rejected by the customer, software business would
+move to other bases of organization which are now used less often.
+There are always numerous ways to organize any kind of business.
+
+   Probably programming will not be as lucrative on the new basis as it
+is now.  But that is not an argument against the change.  It is not
+considered an injustice that sales clerks make the salaries that they
+now do.  If programmers made the same, that would not be an injustice
+either.  (In practice they would still make considerably more than
+that.)
+
+     "Don't people have a right to control how their creativity is
+     used?"
+
+   "Control over the use of one's ideas" really constitutes control over
+other people's lives; and it is usually used to make their lives more
+difficult.
+
+   People who have studied the issue of intellectual property rights
+carefully (such as lawyers) say that there is no intrinsic right to
+intellectual property.  The kinds of supposed intellectual property
+rights that the government recognizes were created by specific acts of
+legislation for specific purposes.
+
+   For example, the patent system was established to encourage
+inventors to disclose the details of their inventions.  Its purpose was
+to help society rather than to help inventors.  At the time, the life
+span of 17 years for a patent was short compared with the rate of
+advance of the state of the art.  Since patents are an issue only among
+manufacturers, for whom the cost and effort of a license agreement are
+small compared with setting up production, the patents often do not do
+much harm.  They do not obstruct most individuals who use patented
+products.
+
+   The idea of copyright did not exist in ancient times, when authors
+frequently copied other authors at length in works of non-fiction.  This
+practice was useful, and is the only way many authors' works have
+survived even in part.  The copyright system was created expressly for
+the purpose of encouraging authorship.  In the domain for which it was
+invented--books, which could be copied economically only on a printing
+press--it did little harm, and did not obstruct most of the individuals
+who read the books.
+
+   All intellectual property rights are just licenses granted by society
+because it was thought, rightly or wrongly, that society as a whole
+would benefit by granting them.  But in any particular situation, we
+have to ask: are we really better off granting such license?  What kind
+of act are we licensing a person to do?
+
+   The case of programs today is very different from that of books a
+hundred years ago.  The fact that the easiest way to copy a program is
+from one neighbor to another, the fact that a program has both source
+code and object code which are distinct, and the fact that a program is
+used rather than read and enjoyed, combine to create a situation in
+which a person who enforces a copyright is harming society as a whole
+both materially and spiritually; in which a person should not do so
+regardless of whether the law enables him to.
+
+     "Competition makes things get done better."
+
+   The paradigm of competition is a race: by rewarding the winner, we
+encourage everyone to run faster.  When capitalism really works this
+way, it does a good job; but its defenders are wrong in assuming it
+always works this way.  If the runners forget why the reward is offered
+and become intent on winning, no matter how, they may find other
+strategies--such as, attacking other runners.  If the runners get into
+a fist fight, they will all finish late.
+
+   Proprietary and secret software is the moral equivalent of runners
+in a fist fight.  Sad to say, the only referee we've got does not seem
+to object to fights; he just regulates them ("For every ten yards you
+run, you can fire one shot").  He really ought to break them up, and
+penalize runners for even trying to fight.
+
+     "Won't everyone stop programming without a monetary incentive?"
+
+   Actually, many people will program with absolutely no monetary
+incentive.  Programming has an irresistible fascination for some
+people, usually the people who are best at it.  There is no shortage of
+professional musicians who keep at it even though they have no hope of
+making a living that way.
+
+   But really this question, though commonly asked, is not appropriate
+to the situation.  Pay for programmers will not disappear, only become
+less.  So the right question is, will anyone program with a reduced
+monetary incentive?  My experience shows that they will.
+
+   For more than ten years, many of the world's best programmers worked
+at the Artificial Intelligence Lab for far less money than they could
+have had anywhere else.  They got many kinds of non-monetary rewards:
+fame and appreciation, for example.  And creativity is also fun, a
+reward in itself.
+
+   Then most of them left when offered a chance to do the same
+interesting work for a lot of money.
+
+   What the facts show is that people will program for reasons other
+than riches; but if given a chance to make a lot of money as well, they
+will come to expect and demand it.  Low-paying organizations do poorly
+in competition with high-paying ones, but they do not have to do badly
+if the high-paying ones are banned.
+
+     "We need the programmers desperately.  If they demand that we stop
+     helping our neighbors, we have to obey."
+
+   You're never so desperate that you have to obey this sort of demand.
+Remember: millions for defense, but not a cent for tribute!
+
+     "Programmers need to make a living somehow."
+
+   In the short run, this is true.  However, there are plenty of ways
+that programmers could make a living without selling the right to use a
+program.  This way is customary now because it brings programmers and
+businessmen the most money, not because it is the only way to make a
+living.  It is easy to find other ways if you want to find them.  Here
+are a number of examples.
+
+   A manufacturer introducing a new computer will pay for the porting of
+operating systems onto the new hardware.
+
+   The sale of teaching, hand-holding and maintenance services could
+also employ programmers.
+
+   People with new ideas could distribute programs as freeware, asking
+for donations from satisfied users, or selling hand-holding services.
+I have met people who are already working this way successfully.
+
+   Users with related needs can form users' groups, and pay dues.  A
+group would contract with programming companies to write programs that
+the group's members would like to use.
+
+   All sorts of development can be funded with a Software Tax:
+
+     Suppose everyone who buys a computer has to pay x percent of the
+     price as a software tax.  The government gives this to an agency
+     like the NSF to spend on software development.
+
+     But if the computer buyer makes a donation to software development
+     himself, he can take a credit against the tax.  He can donate to
+     the project of his own choosing--often, chosen because he hopes to
+     use the results when it is done.  He can take a credit for any
+     amount of donation up to the total tax he had to pay.
+
+     The total tax rate could be decided by a vote of the payers of the
+     tax, weighted according to the amount they will be taxed on.
+
+     The consequences:
+
+        * The computer-using community supports software development.
+
+        * This community decides what level of support is needed.
+
+        * Users who care which projects their share is spent on can
+          choose this for themselves.
+
+   In the long run, making programs free is a step toward the
+post-scarcity world, where nobody will have to work very hard just to
+make a living.  People will be free to devote themselves to activities
+that are fun, such as programming, after spending the necessary ten
+hours a week on required tasks such as legislation, family counseling,
+robot repair and asteroid prospecting.  There will be no need to be
+able to make a living from programming.
+
+   We have already greatly reduced the amount of work that the whole
+society must do for its actual productivity, but only a little of this
+has translated itself into leisure for workers because much
+nonproductive activity is required to accompany productive activity.
+The main causes of this are bureaucracy and isometric struggles against
+competition.  Free software will greatly reduce these drains in the
+area of software production.  We must do this, in order for technical
+gains in productivity to translate into less work for us.
+
+   ---------- Footnotes ----------
+
+   (1) The wording here was careless.  The intention was that nobody
+would have to pay for *permission* to use the GNU system.  But the
+words don't make this clear, and people often interpret them as saying
+that copies of GNU should always be distributed at little or no charge.
+That was never the intent; later on, the manifesto mentions the
+possibility of companies providing the service of distribution for a
+profit.  Subsequently I have learned to distinguish carefully between
+"free" in the sense of freedom and "free" in the sense of price.  Free
+software is software that users have the freedom to distribute and
+change.  Some users may obtain copies at no charge, while others pay to
+obtain copies--and if the funds help support improving the software, so
+much the better.  The important thing is that everyone who has a copy
+has the freedom to cooperate with others in using it.
+
+   (2) This is another place I failed to distinguish carefully between
+the two different meanings of "free".  The statement as it stands is
+not false--you can get copies of GNU software at no charge, from your
+friends or over the net.  But it does suggest the wrong idea.
+
+   (3) Several such companies now exist.
+
+   (4) The Free Software Foundation raises most of its funds from a
+distribution service, although it is a charity rather than a company.
+If *no one* chooses to obtain copies by ordering from the FSF, it will
+be unable to do its work.  But this does not mean that proprietary
+restrictions are justified to force every user to pay.  If a small
+fraction of all the users order copies from the FSF, that is sufficient
+to keep the FSF afloat.  So we ask users to choose to support us in
+this way.  Have you done your part?
+
+   (5) A group of computer companies recently pooled funds to support
+maintenance of the GNU C Compiler.
 

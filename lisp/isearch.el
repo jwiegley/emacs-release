@@ -433,7 +433,8 @@ Type \\[isearch-yank-word] to yank word from buffer onto end of search\
  string and search for it.
 Type \\[isearch-yank-line] to yank rest of line onto end of search string\
  and search for it.
-Type \\[isearch-yank-kill] to yank the last string of killed text.
+Type \\[isearch-yank-kill] to yank last killed text onto end of search string\
+ and search for it.
 Type \\[isearch-quote-char] to quote control character to search for it.
 \\[isearch-abort] while searching or when search has failed cancels input\
  back to what has
@@ -645,6 +646,17 @@ is treated as a regexp.  See \\[isearch-forward] for more info."
     (kill-local-variable 'input-method-function))
 
   (force-mode-line-update)
+
+  ;; If we ended in the middle of some intangible text,
+  ;; move to the further end of that intangible text.
+  (let ((after (if (eobp) nil
+		 (get-text-property (point) 'intangible)))
+	(before (if (bobp) nil
+		  (get-text-property (1- (point)) 'intangible))))
+    (when (and before after (eq before after))
+      (if isearch-forward
+	  (goto-char (next-single-property-change (point) 'intangible))
+	(goto-char (previous-single-property-change (point) 'intangible)))))
 
   (if (and (> (length isearch-string) 0) (not nopush))
       ;; Update the ring data.
@@ -1031,6 +1043,9 @@ To do that, evaluate these expressions:
     (if (and (not isearch-forward) (not isearch-adjusted)
 	     (condition-case ()
 		 (let ((case-fold-search isearch-case-fold-search))
+		   (if (and (eq case-fold-search t) search-upper-case)
+		       (setq case-fold-search
+			     (isearch-no-upper-case-p isearch-string isearch-regexp)))
 		   (looking-at (if isearch-regexp isearch-string
 				 (regexp-quote isearch-string))))
 	       (error nil))
@@ -1185,13 +1200,13 @@ and the meta character is unread so that it applies to editing the string."
   "Quote special characters for incremental search."
   (interactive)
   (let ((char (read-quoted-char (isearch-message t))))
-    ;; Assume character codes 0200 - 0377 stand for 
-    ;; European characters in Latin-1, and convert them
-    ;; to Emacs characters.
+    ;; Assume character codes 0200 - 0377 stand for characters in some
+    ;; single-byte character set, and convert them to Emacs
+    ;; characters.
     (and enable-multibyte-characters
 	 (>= char ?\200)
 	 (<= char ?\377)
-	 (setq char (+ char nonascii-insert-offset)))
+	 (setq char (unibyte-char-to-multibyte char)))
     (isearch-process-search-char char)))
 
 (defun isearch-return-char ()
@@ -1209,7 +1224,7 @@ Obsolete."
     (if (and enable-multibyte-characters
 	     (>= char ?\200)
 	     (<= char ?\377))
-	(isearch-process-search-char (+ char nonascii-insert-offset))
+	(isearch-process-search-char (unibyte-char-to-multibyte char))
       (if current-input-method
 	  (isearch-process-search-multibyte-characters char)
 	(isearch-process-search-char char)))))
@@ -1234,7 +1249,7 @@ If you want to search for just a space, type C-q SPC."
   ;; Append the char to the search string, update the message and re-search.
   (isearch-process-search-string 
    (isearch-char-to-string char) 
-   (if (>= char 0200)
+   (if (>= char ?\200)
        (char-to-string char)
      (isearch-text-char-description char))))
 
@@ -1609,13 +1624,13 @@ If there is no completion possible, say so and continue searching."
        ;; Check that invisibility runs up to END.
        (save-excursion
 	 (goto-char beg)
-	 (let 
-	     ;; can-be-opened keeps track if we can open some overlays.
-	     ((can-be-opened (eq search-invisible 'open))
-	      ;; the list of overlays that could be opened
-	      (crt-overlays nil))
+	 (let (
+	       ;; can-be-opened keeps track if we can open some overlays.
+	       (can-be-opened (eq search-invisible 'open))
+	       ;; the list of overlays that could be opened
+	       (crt-overlays nil))
 	   (when (and can-be-opened isearch-hide-immediately) 
-	       (isearch-close-unecessary-overlays beg end))
+	     (isearch-close-unecessary-overlays beg end))
 	   ;; If the following character is currently invisible,
 	   ;; skip all characters with that same `invisible' property value.
 	   ;; Do that over and over.

@@ -1,6 +1,6 @@
 ;;; browse-url.el --- Pass a URL to a WWW browser
 
-;; Copyright 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
 
 ;; Author: Denis Howe <dbh@doc.ic.ac.uk>
 ;; Maintainer: Dave Love <fx@gnu.org>
@@ -46,9 +46,9 @@
 ;; browse-url-mmm        MMM         ?
 ;; browse-url-generic    arbitrary
 
-;; [The Netscape browser is now free software
+;; [A version of the Netscape browser is now free software
 ;; <URL:http://www.mozilla.org/>, albeit not GPLed, so it is
-;; reasonable to keep it as the default.]
+;; reasonable to have that as the default.]
 
 ;; Note that versions of Netscape before 1.1b1 did not have remote
 ;; control.  <URL:http://www.netscape.com/newsref/std/x-remote.html>.
@@ -222,7 +222,8 @@
 ;; Variables
 
 (eval-when-compile (require 'thingatpt)
-                   (require 'term))
+                   (require 'term)
+		   (require 'w3-auto nil t))
 
 (defgroup browse-url nil
   "Use a web browser to look at a URL."
@@ -231,7 +232,9 @@
 
 ;;;###autoload
 (defcustom browse-url-browser-function
-  'browse-url-netscape
+  (if (eq system-type 'windows-nt)
+      'browse-url-default-windows-browser
+    'browse-url-netscape)
   "*Function to display the current buffer in a WWW browser.
 This is used by the `browse-url-at-point', `browse-url-at-mouse', and
 `browse-url-of-file' commands.
@@ -257,20 +260,21 @@ regexp should probably be \".\" to specify a default browser."
            (function-item :tag "MMM" :value  browse-url-mmm)
            (function-item :tag "Specified by `Browse Url Generic Program'"
                           :value browse-url-generic)
+           (function-item :tag "Default Windows browser"
+                          :value  browse-url-default-windows-browser)
            (function :tag "Your own function"))
+  :version "20.4"
   :group 'browse-url)
 
 (defcustom browse-url-netscape-program "netscape"
-  ;; Info about netscape-remote from Kurt Swanson in gnu.emacs.gnus
+  ;; Info about netscape-remote from Karl Berry.
   "The name by which to invoke Netscape.
 
-It is said that source is available for a program `netscape-remote'
-which starts up very much quicker than `netscape' and that it is
-useful to set this variable to the name of a script which invokes that
-program like:
- #!/bin/sh
- /usr/local/bin/netscape-remote \"$@\" > /dev/null 2>&1
-"
+The free program `netscape-remote' from
+<URL:http://home.netscape.com/newsref/std/remote.c> is said to start
+up very much quicker than `netscape'.  Reported to compile on a GNU
+system, given vroot.h from the same directory, with cc flags
+ -DSTANDALONE -L/usr/X11R6/lib -lXmu -lX11."
   :type 'string
   :group 'browse-url)
 
@@ -491,11 +495,6 @@ negation if a prefix argument was given."
 	(not (eq (null browse-url-new-window-p)
 		 (null current-prefix-arg)))))
 
-(defun browse-url-maybe-new-window (arg)
-  (if (interactive-p)
-      arg
-    browse-url-new-window-p))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Browse current buffer
 
@@ -617,11 +616,12 @@ Prompts for a URL, defaulting to the URL at or before point.  Variable
 `browse-url-browser-function' says which browser to use."
   (interactive (browse-url-interactive-arg "URL: "))
   (let ((bf browse-url-browser-function) re)
-    (while (consp bf)
-      (setq re (car (car bf))
-	    bf (if (string-match re url)
-		   (cdr (car bf))	; The function
-		 (cdr bf))))		; More pairs
+    (unless (functionp bf)
+      (while (consp bf)
+	(setq re (car (car bf))
+	      bf (if (string-match re url)
+		     (cdr (car bf))	; The function
+		   (cdr bf)))))		; More pairs
     (or bf (error "No browser in browse-url-browser-function matching URL %s"
                   url))
     (apply bf url args)))
@@ -658,6 +658,12 @@ to use."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Browser-specific commands
+
+;; --- Default MS-Windows browser ---
+
+(defun browse-url-default-windows-browser (url &optional new-window)
+  (interactive (browse-url-interactive-arg "URL: "))
+  (w32-shell-execute "open" url))
 
 ;; --- Netscape ---
 
@@ -700,21 +706,21 @@ used instead of `browse-url-new-window-p'."
   ;; include at least commas; presumably also close parens.
   (while (string-match "[,)]" url)
     (setq url (replace-match
-	       (format "%x" (string-to-char (match-string 0 url))) t t url)))
+	       (format "%%%x" (string-to-char (match-string 0 url))) t t url)))
   (let* ((process-environment (browse-url-process-environment))
          (process (apply 'start-process
- 			(concat "netscape " url) nil
- 			browse-url-netscape-program
- 			(append browse-url-netscape-arguments
-				(if (eq window-system 'w32)
-				    (list url)
-				  (if new-window '("-noraise"))
-				  (list "-remote"
-					(concat "openURL(" url
-						(if (browse-url-maybe-new-window
-						     new-window)
-						    ",new-window")
-						")")))))))
+			 (concat "netscape " url) nil
+			 browse-url-netscape-program
+			 (append
+			  browse-url-netscape-arguments
+			  (if (eq window-system 'w32)
+			      (list url)
+			    (append
+			     (if new-window '("-noraise"))
+			     (list "-remote"
+				   (concat "openURL(" url
+					   (if new-window ",new-window")
+					   ")"))))))))
     (set-process-sentinel process
 			  (list 'lambda '(process change)
 				(list 'browse-url-netscape-sentinel 'process url)))))
@@ -751,7 +757,6 @@ How depends on `browse-url-netscape-version'."
 
 ;;;###autoload
 (defun browse-url-mosaic (url &optional new-window)
-  ;; new-window ignored
   "Ask the XMosaic WWW browser to load URL.
 
 Default to the URL around or before point.  The strings in variable
@@ -779,9 +784,9 @@ used instead of `browse-url-new-window-p'."
 	(save-excursion
 	  (find-file (format "/tmp/Mosaic.%d" pid))
 	  (erase-buffer)
-	  (insert (if (browse-url-maybe-new-window new-window)
+	  (insert (if new-window
 		      "newwin\n"
-		      "goto\n")
+		    "goto\n")
 		  url "\n")
 	  (save-buffer)
 	  (kill-buffer nil)
@@ -846,8 +851,7 @@ used instead of `browse-url-new-window-p'."
   ;; Todo: start browser if fails
   (process-send-string "browse-url"
 		       (concat "get url (" url ") output "
-			       (if (browse-url-maybe-new-window
-				    new-window)
+			       (if new-window
 				   "new"
 				 "current")
 			       "\r\n"))
@@ -879,8 +883,9 @@ prefix argument reverses the effect of `browse-url-new-window-p'.
 When called non-interactively, optional second argument NEW-WINDOW is
 used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "W3 URL: "))
-  (if (browse-url-maybe-new-window new-window)
-      (w3-fetch-other-window)
+  (require 'w3)				; w3-fetch-other-window not autoloaded
+  (if new-window
+      (w3-fetch-other-window url)
     (w3-fetch url)))
 
 ;;;###autoload
@@ -928,13 +933,13 @@ used instead of `browse-url-new-window-p'."
 	 (buf (get-buffer "*lynx*"))
 	 (proc (and buf (get-buffer-process buf)))
 	 (n browse-url-lynx-input-attempts))
-    (if (and (browse-url-maybe-new-window new-buffer) buf)
+    (if (and new-buffer buf)
 	;; Rename away the OLD buffer. This isn't very polite, but
 	;; term insists on working in a buffer named *lynx* and would
 	;; choke on *lynx*<1>
 	(progn (set-buffer buf)
 	       (rename-uniquely)))
-    (if (or (browse-url-maybe-new-window new-buffer)
+    (if (or new-buffer
 	    (not buf)
 	    (not proc)
 	    (not (memq (process-status proc) '(run stop))))
@@ -1010,15 +1015,14 @@ When called non-interactively, optional second argument NEW-WINDOW is
 used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "Mailto URL: "))
   (save-excursion
-    (let ((func (if (browse-url-maybe-new-window new-window)
-		    'compose-mail-other-window
-		  'compose-mail))
-	  (to (if (string-match "^mailto:" url)
+    (let ((to (if (string-match "^mailto:" url)
 		  (substring url 7)
 		url)))
-      (apply func
-	     (list to nil nil nil nil nil (cons 'insert-buffer
-						(current-buffer)))))))
+      (if new-window
+	  (compose-mail-other-window to nil nil nil
+				     (list 'insert-buffer (current-buffer)))
+	(compose-mail to nil nil nil nil
+		      (list 'insert-buffer (current-buffer)))))))
 
 ;; --- Random browser ---
 

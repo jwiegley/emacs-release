@@ -34,7 +34,8 @@
 (defvar generated-autoload-file "loaddefs.el"
    "*File \\[update-file-autoloads] puts autoloads into.
 A `.el' file can set this in its local variables section to make its
-autoloads go somewhere else.")
+autoloads go somewhere else.  The autoload file is assumed to contain a
+trailer starting with a FormFeed character.")
 
 (defconst generate-autoload-cookie ";;;###autoload"
   "Magic comment indicating the following form should be autoloaded.
@@ -132,7 +133,7 @@ or `easy-mmode-define-minor-mode'."
 (put 'defconst 'doc-string-elt 3)
 (put 'defmacro 'doc-string-elt 3)
 (put 'define-skeleton 'doc-string-elt 3)
-(put 'define-derived-mode 'doc-string-elt 4)
+(put 'define-derived-mode 'doc-string-elt 3)
 (put 'easy-mmode-define-minor-mode 'doc-string-elt 3)
 (put 'define-generic-mode 'doc-string-elt 3)
 

@@ -250,7 +250,7 @@ extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
 #define GENERIC_COMPOSITION_CHAR (GLYPH_MASK_CHAR)
 
 /* 1 if C is an ASCII character, else 0.  */
-#define SINGLE_BYTE_CHAR_P(c) ((c) < 0x100)
+#define SINGLE_BYTE_CHAR_P(c) ((c) >= 0 && (c) < 0x100)
 /* 1 if C is an composite character, else 0.  */
 #define COMPOSITE_CHAR_P(c) ((c) >= MIN_CHAR_COMPOSITION)
 
@@ -270,7 +270,7 @@ extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
 
    CHARSET-ID (integer) is the identification number of the charset.
 
-   BYTE (integer) is the length of multi-byte form of a character in
+   BYTES (integer) is the length of multi-byte form of a character in
    the charset: one of 1, 2, 3, and 4.
 
    DIMENSION (integer) is the number of bytes to represent a character: 1 or 2.
@@ -281,8 +281,8 @@ extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
    occupies on the screen: one of 0, 1, and 2.
 
    DIRECTION (integer) is the rendering direction of characters in the
-   charset when rendering.  If 0, render from right to left, else
-   render from left to right.
+   charset when rendering.  If 0, render from left to right, else
+   render from right to left.
 
    LEADING-CODE-BASE (integer) is the base leading-code for the
    charset.
@@ -449,13 +449,13 @@ extern int width_by_char_head[256];
 
 /* Return a non-ASCII character of which charset is CHARSET and
    position-codes are C1 and C2.  DIMENSION1 character ignores C2.  */
-#define MAKE_NON_ASCII_CHAR(charset, c1, c2)		    	\
-  ((charset) == CHARSET_COMPOSITION			    	\
-   ? MAKE_COMPOSITE_CHAR (((c1) << 7) + (c2))		    	\
-   : (CHARSET_DIMENSION (charset) == 1			    	\
-      ? (((charset) - 0x70) << 7) | (c1)		    	\
-      : ((charset) < MIN_CHARSET_PRIVATE_DIMENSION2	    	\
-	 ? (((charset) - 0x8F) << 14) | ((c1) << 7) | (c2)  	\
+#define MAKE_NON_ASCII_CHAR(charset, c1, c2)				\
+  ((charset) == CHARSET_COMPOSITION					\
+   ? MAKE_COMPOSITE_CHAR (((c1) << 7) + (c2))				\
+   : (! CHARSET_DEFINED_P (charset) || CHARSET_DIMENSION (charset) == 1	\
+      ? (((charset) - 0x70) << 7) | (c1)				\
+      : ((charset) < MIN_CHARSET_PRIVATE_DIMENSION2			\
+	 ? (((charset) - 0x8F) << 14) | ((c1) << 7) | (c2)		\
 	 : (((charset) - 0xE0) << 14) | ((c1) << 7) | (c2))))
 
 /* Return a composite character of which CMPCHAR-ID is ID.  */
@@ -508,16 +508,16 @@ extern int width_by_char_head[256];
    Do not use this macro for an ASCII character.  */
 
 #define SPLIT_NON_ASCII_CHAR(c, charset, c1, c2)			 \
-  ((c) < MIN_CHAR_OFFICIAL_DIMENSION2					 \
-   ? (charset = CHAR_FIELD2 (c) + 0x70,					 \
-      c1 = CHAR_FIELD3 (c),						 \
-      c2 = -1)								 \
-   : (charset = ((c) < MIN_CHAR_COMPOSITION				 \
+  ((c) & CHAR_FIELD1_MASK						 \
+   ? (charset = ((c) < MIN_CHAR_COMPOSITION				 \
 		 ? (CHAR_FIELD1 (c)					 \
 		    + ((c) < MIN_CHAR_PRIVATE_DIMENSION2 ? 0x8F : 0xE0)) \
 		 : CHARSET_COMPOSITION),				 \
       c1 = CHAR_FIELD2 (c),						 \
-      c2 = CHAR_FIELD3 (c)))
+      c2 = CHAR_FIELD3 (c))						 \
+   : (charset = CHAR_FIELD2 (c) + 0x70,					 \
+      c1 = CHAR_FIELD3 (c),						 \
+      c2 = -1))
 
 /* The charset of character C is stored in CHARSET, and the
    position-codes of C are stored in C1 and C2.
@@ -553,6 +553,10 @@ extern int iso_charset_table[2][2][128];
 
 #define BASE_LEADING_CODE_P(c) (BYTES_BY_CHAR_HEAD ((unsigned char) (c)) > 1)
 
+/* Return how many bytes C will occupy in a multibyte buffer.  */
+#define CHAR_BYTES(c) \
+  ((SINGLE_BYTE_CHAR_P ((c)) || ((c) & ~GLYPH_MASK_CHAR)) ? 1 : char_bytes (c))
+
 /* The following two macros CHAR_STRING and STRING_CHAR are the main
    entry points to convert between Emacs two types of character
    representations: multi-byte form and single-word form (character
@@ -573,10 +577,9 @@ extern int iso_charset_table[2][2][128];
    is at STR and the length is LEN.  If STR doesn't contain valid
    multi-byte form, only the first byte in STR is returned.  */
 
-#define STRING_CHAR(str, len)				    	\
-  ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	    	\
-    || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > (len))	\
-   ? (unsigned char) *(str)				    	\
+#define STRING_CHAR(str, len)				\
+  (BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	\
+   ? (unsigned char) *(str)				\
    : string_to_non_ascii_char (str, len, 0, 0))
 
 /* This is like STRING_CHAR but the third arg ACTUAL_LEN is set to
@@ -584,16 +587,14 @@ extern int iso_charset_table[2][2][128];
    MULTIBYTE_FORM_LENGTH.  */
 
 #define STRING_CHAR_AND_LENGTH(str, len, actual_len)	    	\
-  ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	    	\
-    || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > (len))	\
+  (BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1		\
    ? (actual_len = 1), (unsigned char) *(str)		    	\
    : string_to_non_ascii_char (str, len, &actual_len, 0))
 
 /* This is like STRING_CHAR_AND_LENGTH but the third arg ACTUAL_LEN
    does not include garbage bytes following the multibyte character.  */
-#define STRING_CHAR_AND_CHAR_LENGTH(str, len, actual_len)	    	\
-  ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	    	\
-    || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > (len))	\
+#define STRING_CHAR_AND_CHAR_LENGTH(str, len, actual_len)    	\
+  (BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1		\
    ? (actual_len = 1), (unsigned char) *(str)		    	\
    : string_to_non_ascii_char (str, len, &actual_len, 1))
 
@@ -811,16 +812,21 @@ extern int non_ascii_char_to_string P_ ((int, unsigned char *, unsigned char **)
 extern int multibyte_form_length P_ ((const unsigned char *, int));
 extern int str_cmpchar_id P_ ((const unsigned char *, int));
 extern int get_charset_id P_ ((Lisp_Object));
-extern int cmpchar_component P_ ((unsigned int, unsigned int));
+extern int cmpchar_component P_ ((int, int, int));
 extern int find_charset_in_str P_ ((unsigned char *, int, int *,
-				    Lisp_Object, int));
+				    Lisp_Object, int, int));
 extern int strwidth P_ ((unsigned char *, int));
+extern int char_bytes P_ ((int));
+extern int char_valid_p P_ ((int, int));
 
 extern Lisp_Object Vtranslation_table_vector;
 
 /* Return a translation table of id number ID.  */
 #define GET_TRANSLATION_TABLE(id) \
   (XCONS(XVECTOR(Vtranslation_table_vector)->contents[(id)])->cdr)
+
+/* A char-table for characters which may invoke auto-filling.  */
+extern Lisp_Object Vauto_fill_chars;
 
 /* Copy LEN bytes from FROM to TO.  This macro should be used only
    when a caller knows that LEN is short and the obvious copy loop is

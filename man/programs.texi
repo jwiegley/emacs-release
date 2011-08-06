@@ -58,7 +58,8 @@ on the screen.
 * Tags::	        Go direct to any function in your program in one
 			  command.  Tags remembers which file it is in.
 * Emerge::	        A convenient way of merging two versions of a program.
-* C/Java Modes::        Special commands of C, C++, Objective-C and Java modes.
+* C Modes::             Special commands of C, C++, Objective-C, 
+                          Java, and Pike modes.
 * Fortran::	        Fortran mode and its special features.
 * Asm Mode::	        Asm mode and its special features.
 @end menu
@@ -75,8 +76,9 @@ on the screen.
 @cindex CPerl mode
   Emacs also has major modes for the programming languages Lisp, Scheme
 (a variant of Lisp), Awk, C, C++, Fortran, Icon, Java, Objective-C,
-Pascal, Perl and Tcl.  There is also a major mode for makefiles, called
-Makefile mode.  An second alternative mode for Perl is called CPerl mode.
+Pascal, Perl, Pike, CORBA IDL, and Tcl.  There is also a major mode for
+makefiles, called Makefile mode.  An second alternative mode for Perl is
+called CPerl mode.
 
   Ideally, a major mode should be implemented for each programming
 language that you might want to edit with Emacs; but often the mode for
@@ -347,8 +349,8 @@ inside a single parenthetical grouping.
 * Basic Indent::	Indenting a single line.
 * Multi-line Indent::   Commands to reindent many lines at once.
 * Lisp Indent::		Specifying how each Lisp function should be indented.
-* C Indent::		Extra features for indenting C code.
-* Custom C Indent::	Controlling indentation style for C code.
+* C Indent::		Extra features for indenting C and related modes.
+* Custom C Indent::	Controlling indentation style for C and related modes.
 @end menu
 
   Emacs also provides a Lisp pretty-printer in the library @code{pp}.
@@ -587,18 +589,18 @@ indentation offset which you can customize.
 @subsubsection Step 1---Syntactic Analysis
 @cindex syntactic analysis
 
-  In the first step, the C indentation mechanism looks at the line you
-are currently indenting and determines the syntactic components of the
-construct on that line.  It builds a list of these syntactic components,
-where each component on the list contains a @dfn{syntactic symbol} and a
-relative buffer position.  Syntactic symbols describe grammatical
-elements, for example @code{statement} and @code{substatement}; others
-describe locations amidst grammatical elements, for example
-@code{class-open} and @code{knr-argdecl}.
+  In the first step, the C indentation mechanism looks at the line
+before the one you are currently indenting and determines the syntactic
+components of the construct on that line.  It builds a list of these
+syntactic components, each of which contains a @dfn{syntactic symbol}
+and sometimes also a buffer position.  Some syntactic symbols describe
+grammatical elements, for example @code{statement} and
+@code{substatement}; others describe locations amidst grammatical
+elements, for example @code{class-open} and @code{knr-argdecl}.
 
   Conceptually, a line of C code is always indented relative to the
 indentation of some line higher up in the buffer.  This is represented
-by the relative buffer positions in the syntactic component list.
+by the buffer positions in the syntactic component list.
 
   Here is an example.  Suppose we have the following code in a C++ mode
 buffer (the line numbers don't actually appear in the buffer):
@@ -650,15 +652,15 @@ Here is another example:
 @noindent
 Typing @kbd{C-c C-s} on line 4 displays this:
 
-@c ??? Check this
 @example
 ((substatement-open . 43))
 @end example
 
   This says that the brace @emph{opens} a substatement block.  By the
 way, a @dfn{substatement} indicates the line after an @code{if},
-@code{else}, @code{while}, @code{do}, @code{switch}, and @code{for}
-statements.
+@code{else}, @code{while}, @code{do}, @code{switch}, @code{for},
+@code{try}, @code{catch}, @code{finally}, or @code{synchronized}
+statement.
 
 @cindex syntactic component
 @cindex syntactic symbol
@@ -666,7 +668,7 @@ statements.
   Within the C indentation commands, after a line has been analyzed
 syntactically for indentation, the variable @code{c-syntactic-context}
 contains a list that describes the results.  Each element in this list
-is a a @dfn{syntactic component}: a cons cell containing a syntactic
+is a @dfn{syntactic component}: a cons cell containing a syntactic
 symbol and (optionally) its corresponding buffer position.  There may be
 several elements in a component list; typically only one element has a
 buffer position.
@@ -753,11 +755,12 @@ spaces.
 @node Changing Indent Style
 @subsubsection Changing Indentation Style
 
-   There are two ways to customize the indentation style for the C modes.
-First, you can select one of several predefined styles, each of which
-specifies offsets for all the syntactic symbols.  For more flexibility,
-you can customize the handling of individual syntactic symbols.
-@xref{Syntactic Symbols}, for a list of all defined syntactic symbols.
+   There are two ways to customize the indentation style for the C-like
+modes.  First, you can select one of several predefined styles, each of
+which specifies offsets for all the syntactic symbols.  For more
+flexibility, you can customize the handling of individual syntactic
+symbols.  @xref{Syntactic Symbols}, for a list of all defined syntactic
+symbols.
 
 @table @kbd
 @item M-x c-set-style @key{RET} @var{style} @key{RET}
@@ -779,8 +782,8 @@ for various syntactic symbols, you can customize indentation in fine
 detail.  To change this alist, use @code{c-set-offset} (see below).
 
    Each offset value in @code{c-offsets-alist} can be an integer, a
-function or variable name, or one of the following symbols: @code{+},
-@code{-}, @code{++}, or @code{--}, indicating positive or negative
+function or variable name, a list, or one of the following symbols: @code{+},
+@code{-}, @code{++}, @code{--}, @code{*}, or @code{/}, indicating positive or negative
 multiples of the variable @code{c-basic-offset}.  Thus, if you want to
 change the levels of indentation to be 3 spaces instead of 2 spaces, set
 @code{c-basic-offset} to 3.
@@ -788,8 +791,13 @@ change the levels of indentation to be 3 spaces instead of 2 spaces, set
    Using a function as the offset value provides the ultimate flexibility
 in customizing indentation.  The function is called with a single
 argument containing the @code{cons} of the syntactic symbol and
-the relative indent point.  The function should return an integer
+the buffer position, if any.  The function should return an integer
 offset.
+  
+   If the offset value is a list, its elements are processed according
+to the rules above until a non-@code{nil} value is found.  That value is
+then added to the total indentation in the normal manner.  The primary
+use for this is to combine the results of several functions.
 
 @kindex C-c C-o @r{(C mode)}
 @findex c-set-offset
@@ -801,8 +809,8 @@ Symbols}, for a list of valid syntactic symbols and their meanings.
 @node Syntactic Symbols
 @subsubsection Syntactic Symbols
 
-   Here is a table of valid syntactic symbols for C mode
-indentation, with their syntactic meanings.  Normally, most of these
+   Here is a table of valid syntactic symbols for indentation in C and
+related modes, with their syntactic meanings.  Normally, most of these
 symbols are assigned offsets in @code{c-offsets-alist}.
 
 @table @code
@@ -888,6 +896,10 @@ On the first line in an @code{enum} or @code{static} array list.
 On one of the subsequent lines in an @code{enum} or @code{static} array
 list.
 
+@item brace-entry-open
+On one of the subsequent lines in an @code{enum} or @code{static} array
+list, when the line begins with an open brace.
+
 @item statement
 On an ordinary statement.
 
@@ -902,6 +914,15 @@ On the first line in a @code{case} ``block.''
 
 @item statement-case-open
 On the first line in a @code{case} block starting with brace.
+
+@item inexpr-statement
+On a statement block inside an expression.  This is used for a GNU
+extension to the C language, and for Pike special functions that take a
+statement block as an argument.
+
+@item inexpr-class
+On a class definition inside an expression.  This is used for anonymous
+classes and anonymous array initializers in Java.
 
 @item substatement
 On the first line after an @code{if}, @code{while}, @code{for},
@@ -925,6 +946,10 @@ On the @code{while} that ends a @code{do}-@code{while} construct.
 @item else-clause
 On the @code{else} of an @code{if}-@code{else} construct.
 
+@item catch-clause
+On the @code{catch} and @code{finally} lines in
+@code{try}@dots{}@code{catch} constructs in C++ and Java.
+
 @item comment-intro
 On a line containing only a comment introduction.
 
@@ -946,10 +971,21 @@ On the closing parenthesis of an argument list.
 On one of the lines continuing a stream operator construct.
 
 @item inclass
-On a construct that is nested inside a class definition.
+On a construct that is nested inside a class definition.  The
+indentation is relative to the open brace of the class definition.
 
 @item inextern-lang
 On a construct that is nested inside an external language block.
+
+@item inexpr-statement
+On the first line of statement block inside an expression.  This is used
+for the GCC extension to C that uses the syntax @code{(@{ @dots{} @})}.
+It is also used for the special functions that takes a statement block
+as an argument in Pike.
+
+@item inexpr-class
+On the first line of a class definition inside an expression.  This is
+used for anonymous classes and anonymous array initializers in Java.
 
 @item cpp-macro
 On the start of a cpp macro.
@@ -965,6 +1001,14 @@ On one of the lines continuing an Objective-C method definition.
 
 @item objc-method-call-cont
 On one of the lines continuing an Objective-C method call.
+
+@item inlambda
+Like @code{inclass}, but used inside lambda (i.e. anonymous) functions.  Only
+used in Pike.
+
+@item lambda-intro-cont
+On a line continuing the header of a lambda function, between the
+@code{lambda} keyword and the function body.  Only used in Pike.
 @end table
 
 @node Variables for C Indent
@@ -1017,16 +1061,29 @@ the variable @code{c-comment-only-line-offset} (@pxref{Comments in C}).
 @cindex c indentation styles
 
   A @dfn{C style} is a collection of indentation style customizations.
-Emacs comes with several predefined indentation styles for C code
-including @code{gnu}, @code{k&r}, @code{bsd}, @code{stroustrup},
+Emacs comes with several predefined indentation styles for C and related
+modes, including @code{gnu}, @code{k&r}, @code{bsd}, @code{stroustrup},
 @code{linux}, @code{python}, @code{java}, @code{whitesmith},
 @code{ellemtel}, and @code{cc-mode}.  The default style is @code{gnu}.
 
 @findex c-set-style
+@vindex c-default-style
   To choose the style you want, use the command @kbd{M-x c-set-style}.
 Specify a style name as an argument (case is not significant in C style
 names).  The chosen style only affects newly visited buffers, not those
-you are already editing.
+you are already editing.  You can also set the variable
+@code{c-default-style} to specify the style for various major modes.
+Its value should be an alist, in which each element specifies one major
+mode and which indentation style to use for it.  For example,
+
+@example
+(setq c-default-style
+      '((java-mode . "java") (other . "gnu")))
+@end example
+
+@noindent
+specifies an explicit choice for Java mode, and the default @samp{gnu}
+style for the other C-like modes.
 
 @findex c-add-style
   To define a new C indentation style, call the function
@@ -1301,8 +1358,8 @@ of editing which keeps parentheses balanced at all times.  @kbd{M-(}
 inserts a pair of parentheses, either together as in @samp{()}, or, if
 given an argument, around the next several sexps.  It leaves point after
 the open parenthesis.  The command @kbd{M-)} moves past the close
-parenthesis, deleting any indentation preceding it (in this example
-there is none), and indenting with @kbd{C-j} after it.
+parenthesis, deleting any indentation preceding it, and indenting with
+@kbd{C-j} after it.
 
   For example, instead of typing @kbd{( F O O )}, you can type @kbd{M-(
 F O O}, which has the same effect except for leaving the cursor before
@@ -2013,7 +2070,7 @@ much like running a compilation; finding the source locations of the
 
 @table @kbd
 @item M-x list-tags @key{RET} @var{file} @key{RET}
-Display a list of the tags defined in the program file @file{file}.
+Display a list of the tags defined in the program file @var{file}.
 @item M-x tags-apropos @key{RET} @var{regexp} @key{RET}
 Display a list of all tags matching @var{regexp}.
 @end table
@@ -2426,18 +2483,24 @@ commands.
   After setting up the merge, Emerge runs the hook
 @code{emerge-startup-hook} (@pxref{Hooks}).
 
-@node C/Java Modes
-@section C Modes and Java Mode
+@node C Modes
+@section C and Related Modes
 @cindex C mode
 @cindex Java mode
+@cindex Pike mode
+@cindex IDL mode
+@cindex CORBA IDL mode
 @cindex Objective C mode
 @cindex C++ mode
 @cindex mode, Java
 @cindex mode, C
 @cindex mode, Objective C
+@cindex mode, CORBA IDL
+@cindex mode, Pike
 
   This section describes special features available in C, C++,
-Objective-C and Java modes.
+Objective-C, Java, CORBA IDL, and Pike modes.  When we say ``C mode and
+related modes,'' those are the modes we mean.
 
 @menu
 * Motion in C::
@@ -2451,7 +2514,7 @@ Objective-C and Java modes.
 @subsection C Mode Motion Commands
 
   This section describes commands for moving point, in C mode and
-  related modes.
+related modes.
 
 @table @code
 @item C-c C-u
@@ -2526,8 +2589,7 @@ With prefix argument @var{n}, move @var{n} times.
 the current line and may insert newlines.  This feature is controlled by
 the variable @code{c-auto-newline}.  The ``electric'' characters are
 @kbd{@{}, @kbd{@}}, @kbd{:}, @kbd{#}, @kbd{;}, @kbd{,}, @kbd{<},
-@kbd{>}, @kbd{/} and
-@kbd{*}.
+@kbd{>}, @kbd{/}, @kbd{*}, @kbd{(}, and @kbd{)}.
 
   Electric characters insert newlines only when the @dfn{auto-newline}
 feature is enabled (indicated by @samp{/a} in the mode line after the
@@ -2600,6 +2662,12 @@ describing one case for possible deletion of a newline.  Here are the
 meaningful symbols, and their meanings:
 
 @table @code
+@item brace-catch-brace
+Clean up @samp{@} catch (@var{condition}) @{} constructs by placing the
+entire construct on a single line.  The clean-up occurs when you type
+the @samp{@{}, if there is nothing between the braces aside from
+@code{catch} and @var{condition}.
+
 @item brace-else-brace
 Clean up @samp{@} else @{} constructs by placing the entire construct on
 a single line.  The clean-up occurs when you type the @samp{@{} after
@@ -3102,7 +3170,7 @@ Align the text as if it were a line of code, but with an additional
 @code{fortran-comment-line-extra-indent} columns of indentation.
 
 @item nil
-Don't move text in full-line columns automatically at all.
+Don't move text in full-line comments automatically at all.
 @end table
 
 @vindex fortran-comment-indent-char
@@ -3142,7 +3210,7 @@ clear from the context which one is meant.
   Fortran Auto Fill mode is a minor mode which automatically splits
 Fortran statements as you insert them when they become too wide.
 Splitting a statement involves making continuation lines using
-@code{fortran-continuation-string} (@xref{ForIndent Cont}).  This
+@code{fortran-continuation-string} (@pxref{ForIndent Cont}).  This
 splitting happens when you type @key{SPC}, @key{RET}, or @key{TAB}, and
 also in the Fortran indentation commands.
 
@@ -3241,7 +3309,7 @@ Fortran abbrevs and what they stand for.
 Narrow to the current Fortran subprogram.
 @end table
 
-@kindex C-x n d
+@kindex C-x n d @r{(Fortran mode)}
 @findex fortran-narrow-to-subprogram
   Fortran mode redefines the key @kbd{C-x n d} to run the command
 @code{fortran-narrow-to-subprogram}, which is the Fortran analogue

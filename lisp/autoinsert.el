@@ -3,7 +3,7 @@
 ;; Copyright (C) 1985, 86, 87, 94, 95, 98 Free Software Foundation, Inc.
 
 ;; Author: Charlie Martin <crm@cs.duke.edu>
-;; Adapted-By: Daniel.Pfeiffer@Informatik.START.dbp.de, fax (+49 69) 7588-2389
+;; Adapted-By: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Keywords: convenience
 ;; Maintainer: FSF
 
@@ -59,7 +59,8 @@
 
 (defcustom auto-insert-mode nil
   "Toggle auto-insert-mode.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `auto-insert-mode'."
   :set (lambda (symbol value)
 	 (auto-insert-mode (or value 0)))
   :initialize 'custom-initialize-default
@@ -151,7 +152,7 @@ If this contains a %s, that will be replaced by the matching rule."
 ;; Author: " (user-full-name)
 '(if (search-backward "&" (save-excursion (beginning-of-line 1) (point)) t)
      (replace-match (capitalize (user-login-name)) t t))
-'(end-of-line 1) " <" (user-login-name) ?@ (system-name) ">
+'(end-of-line 1) " <" (progn user-mail-address) ">
 ;; Keywords: "
  '(require 'finder)
  ;;'(setq v1 (apply 'vector (mapcar 'car finder-known-keywords)))
@@ -164,14 +165,12 @@ If this contains a %s, that will be replaced by the matching rule."
     (completing-read "Keyword, C-h: " v1 nil t))
     str ", ") & -2 "
 
-;; This file is part of GNU Emacs.
-
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
-;; GNU Emacs is distributed in the hope that it will be useful,
+;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.

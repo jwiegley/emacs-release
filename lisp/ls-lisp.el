@@ -66,14 +66,39 @@ package is used.")
 (defvar ls-lisp-dired-ignore-case nil
   "Non-nil causes dired buffers to sort alphabetically regardless of case.")
 
-(defun insert-directory (file &optional switches wildcard full-directory-p)
+(defvar ls-lisp-use-insert-directory-program nil
+  "Non-nil causes ls-lisp to revert back to using `insert-directory-program'.
+This is useful on platforms where ls-lisp is dumped into Emacs, such as
+Microsoft Windows, but you would still like to use a program to list
+the contents of a directory.")
+
+;; Remember the original insert-directory function.
+(fset 'original-insert-directory (symbol-function 'insert-directory))
+
+(defun insert-directory (file switches &optional wildcard full-directory-p)
+  "Insert directory listing for FILE, formatted according to SWITCHES.
+Leaves point after the inserted text.
+SWITCHES may be a string of options, or a list of strings.
+Optional third arg WILDCARD means treat FILE as shell wildcard.
+Optional fourth arg FULL-DIRECTORY-P means file is a directory and
+switches do not contain `d', so that a full listing is expected.
+
+This version of the function comes from `ls-lisp.el'.  Depending upon
+the value of `ls-lisp-use-insert-directory-program', it will use an
+external program if non-nil or the lisp function `ls-lisp-insert-directory'
+otherwise."
+  (if ls-lisp-use-insert-directory-program
+      (original-insert-directory file switches wildcard full-directory-p)
+    (ls-lisp-insert-directory file switches wildcard full-directory-p)))
+
+(defun ls-lisp-insert-directory (file switches &optional wildcard full-directory-p)
   "Insert directory listing for FILE, formatted according to SWITCHES.
 Leaves point after the inserted text.
 Optional third arg WILDCARD means treat FILE as shell wildcard.
 Optional fourth arg FULL-DIRECTORY-P means file is a directory and
 switches do not contain `d', so that a full listing is expected.
 
-This version of the function comes from `ls-lisp.el'.  It doesn not
+This version of the function comes from `ls-lisp.el'.  It does not
 run any external programs or shells.  It supports ordinary shell
 wildcards if `ls-lisp-support-shell-wildcards' variable is non-nil;
 otherwise, it interprets wildcards as regular expressions to match
@@ -113,6 +138,7 @@ are: A a c i r S s t u"
 		 file-alist 
 		 (now (current-time))
 		 ;; do all bindings here for speed
+		 file-size
 		 fil attr)
 	    (cond ((memq ?A switches)
 		   (setq file-list
@@ -143,21 +169,31 @@ are: A a c i r S s t u"
 	      (setq elt (car file-alist)
 		    file-alist (cdr file-alist)
 		    short (car elt)
-		    attr (cdr elt))
+		    attr (cdr elt)
+		    file-size (nth 7 attr))
 	      (and attr
-		   (setq sum (+ sum (nth 7 attr)))
-		   (insert (ls-lisp-format short attr switches now))))
+		   (setq sum
+			 ;; Even if neither SUM nor file's size
+			 ;; overflow, their sum could.
+			 (if (or (< sum (- 134217727 file-size))
+				 (floatp sum)
+				 (floatp file-size))
+			     (+ sum file-size)
+			   (+ (float sum) file-size)))
+		   (insert (ls-lisp-format short attr file-size switches now))
+		   ))
 	    ;; Fill in total size of all files:
 	    (save-excursion
 	      (search-backward "total \007")
 	      (goto-char (match-end 0))
 	      (delete-char -1)
-	      (insert (format "%d" (if (zerop sum) 0 (1+ (/ sum 1024)))))))
+	      (insert (format "%.0f" (fceiling (/ sum 1024.0))))))
 	;; if not full-directory-p, FILE *must not* end in /, as
 	;; file-attributes will not recognize a symlink to a directory
 	;; must make it a relative filename as ls does:
 	(setq file (file-name-nondirectory file))
-	(insert (ls-lisp-format file (file-attributes file) switches
+	(insert (ls-lisp-format file (file-attributes file)
+				(nth 7 (file-attributes file)) switches
 				(current-time)))))))
 
 (defun ls-lisp-delete-matching (regexp list)
@@ -215,19 +251,21 @@ are: A a c i r S s t u"
 	     (< lo0 lo1)))))
 
 
-(defun ls-lisp-format (file-name file-attr switches now)
+(defun ls-lisp-format (file-name file-attr file-size switches now)
   (let ((file-type (nth 0 file-attr)))
     (concat (if (memq ?i switches)	; inode number
 		(format "%6d " (nth 10 file-attr)))
 	    ;; nil is treated like "" in concat
 	    (if (memq ?s switches)	; size in K
-		(format "%4d " (1+ (/ (nth 7 file-attr) 1024))))
+		(format "%4.0f " (fceiling (/ file-size 1024.0))))
 	    (nth 8 file-attr)		; permission bits
 	    ;; numeric uid/gid are more confusing than helpful
 	    ;; Emacs should be able to make strings of them.
 	    ;; user-login-name and user-full-name could take an
 	    ;; optional arg.
-	    (format " %3d %-8s %-8s %8d "
+	    (format (if (floatp file-size)
+ 			" %3d %-8s %-8s %8.0f "
+ 		      " %3d %-8s %-8s %8d ")
 		    (nth 1 file-attr)	; no. of links
 		    (if (= (user-uid) (nth 2 file-attr))
 			(user-login-name)
@@ -235,7 +273,7 @@ are: A a c i r S s t u"
 		    (if (eq system-type 'ms-dos)
 			"root"		; everything is root on MSDOS.
 		      (int-to-string (nth 3 file-attr)))	; gid
-		    (nth 7 file-attr)	; size in bytes
+		    file-size
 		    )
 	    (ls-lisp-format-time file-attr switches now)
 	    " "
@@ -264,15 +302,17 @@ are: A a c i r S s t u"
 	 (diff (+ (ash diff16 16) (- (car (cdr time)) (car (cdr now)))))
 	 (past-cutoff (- (* 6 30 24 60 60)))	; 6 30-day months
 	 (future-cutoff (* 60 60)))		; 1 hour
-    (format-time-string
-     (if (and
-	  (<= past-cutoff diff) (<= diff future-cutoff)
-	  ;; Sanity check in case `diff' computation overflowed.
-	  (<= (1- (ash past-cutoff -16)) diff16)
-	  (<= diff16 (1+ (ash future-cutoff -16))))
-	 "%b %e %H:%M"
-       "%b %e  %Y")
-     time)))
+    (condition-case nil
+	(format-time-string
+	 (if (and
+	      (<= past-cutoff diff) (<= diff future-cutoff)
+	      ;; Sanity check in case `diff' computation overflowed.
+	      (<= (1- (ash past-cutoff -16)) diff16)
+	      (<= diff16 (1+ (ash future-cutoff -16))))
+	     "%b %e %H:%M"
+	   "%b %e  %Y")
+	 time)
+      (error "Unk  0  0000"))))
 
 (provide 'ls-lisp)
 

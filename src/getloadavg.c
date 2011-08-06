@@ -35,6 +35,7 @@
    LOAD_AVE_TYPE		Type of the load average array in the kernel.
 				Must be defined unless one of
 				apollo, DGUX, NeXT, or UMAX is defined;
+                                or we have libkstat;
 				otherwise, no load average is available.
    NLIST_STRUCT			Include nlist.h, not a.out.h, and
 				the nlist n_name element is a pointer,
@@ -130,6 +131,12 @@ extern int errno;
    defined to mean that the nlist method should be used, which is not true.  */
 #  undef FSCALE
 # endif
+
+/* Same issues as for NeXT apply to the HURD-based GNU system.  */
+# ifdef __GNU__
+#  undef BSD
+#  undef FSCALE
+# endif /* __GNU__ */
 
 /* Set values that are different from the defaults, which are
    set a little farther down with #ifndef.  */
@@ -500,6 +507,7 @@ extern int errno;
 #  include <sys/file.h>
 # endif
 
+
 /* Avoid static vars inside a function since in HPUX they dump as pure.  */
 
 # ifdef NeXT
@@ -516,7 +524,7 @@ static unsigned int samples;
 static struct dg_sys_info_load_info load_info;	/* what-a-mouthful! */
 # endif /* DGUX */
 
-# ifdef LOAD_AVE_TYPE
+#if !defined(HAVE_LIBKSTAT) && defined(LOAD_AVE_TYPE)
 /* File descriptor open to /dev/kmem or VMS load ave driver.  */
 static int channel;
 /* Nonzero iff channel is valid.  */
@@ -524,15 +532,15 @@ static int getloadavg_initialized;
 /* Offset in kmem to seek to read load average, or 0 means invalid.  */
 static long offset;
 
-#  if !defined(VMS) && !defined(sgi) && !defined(__linux__)
+#if !defined(VMS) && !defined(sgi) && !defined(__linux__)
 static struct nlist nl[2];
-#  endif /* Not VMS or sgi */
+#endif /* Not VMS or sgi */
 
-#  ifdef SUNOS_5
+#ifdef SUNOS_5
 static kvm_t *kd;
-#  endif /* SUNOS_5 */
+#endif /* SUNOS_5 */
 
-# endif /* LOAD_AVE_TYPE */
+#endif /* LOAD_AVE_TYPE && !HAVE_LIBKSTAT */
 
 /* Put the 1 minute, 5 minute and 15 minute load averages
    into the first NELEM elements of LOADAVG.
@@ -1030,7 +1038,7 @@ getloadavg (loadavg, nelem)
 #endif /* ! HAVE_GETLOADAVG */
 
 #ifdef TEST
-void
+int
 main (argc, argv)
      int argc;
      char **argv;

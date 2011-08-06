@@ -742,7 +742,7 @@ describes the style of such diary entries."
 ;;;###autoload
 (defcustom diary-list-include-blanks nil
   "*If nil, do not include days with no diary entry in the list of diary entries.
-Such days will then not be shown in the the fancy diary buffer, even if they
+Such days will then not be shown in the fancy diary buffer, even if they
 are holidays."
   :type 'boolean
   :group 'diary)
@@ -1326,8 +1326,9 @@ The Gregorian date Sunday, December 31, 1 BC is imaginary."
 (defvar calendar-setup nil
   "The frame set up of the calendar.
 The choices are `one-frame' (calendar and diary together in one separate,
-dedicated frame) or `two-frames' (calendar and diary in separate, dedicated
-frames); with any other value the current frame is used.")
+dedicated frame), `two-frames' (calendar and diary in separate, dedicated
+frames), `calendar-only' (calendar in a separate, dedicated frame); with
+any other value the current frame is used.")
 
 ;;;###autoload
 (defun calendar (&optional arg)
@@ -1336,6 +1337,8 @@ The original function `calendar' has been renamed `calendar-basic-setup'."
   (interactive "P")
   (cond ((equal calendar-setup 'one-frame) (calendar-one-frame-setup arg))
         ((equal calendar-setup 'two-frames) (calendar-two-frame-setup arg))
+        ((equal calendar-setup 'calendar-only)
+         (calendar-only-one-frame-setup arg))
         (t (calendar-basic-setup arg))))
 
 (defun calendar-basic-setup (&optional arg)
@@ -1917,8 +1920,8 @@ the inserted text.  Value is always t."
   (define-key calendar-mode-map "gmnh" 'calendar-next-haab-date)
   (define-key calendar-mode-map "gmpt" 'calendar-previous-tzolkin-date)
   (define-key calendar-mode-map "gmnt" 'calendar-next-tzolkin-date)
-  (define-key calendar-mode-map "A"   'appt-add)
-  (define-key calendar-mode-map "D"   'appt-delete)
+  (define-key calendar-mode-map "Aa"   'appt-add)
+  (define-key calendar-mode-map "Ad"   'appt-delete)
   (define-key calendar-mode-map "S"   'calendar-sunrise-sunset)
   (define-key calendar-mode-map "M"   'calendar-phases-of-moon)
   (define-key calendar-mode-map " "   'scroll-other-window)
@@ -2301,13 +2304,12 @@ If optional NODAY is t, does not ask for day, but just returns
                                 (calendar-current-date)))))
          (month-array calendar-month-name-array)
          (completion-ignore-case t)
-         (month (cdr (assoc
-                      (capitalize
+         (month (cdr (assoc-ignore-case
                        (completing-read
                         "Month name: "
                         (mapcar 'list (append month-array nil))
-                        nil t))
-                      (calendar-make-alist month-array 1 'capitalize))))
+                        nil t)
+                      (calendar-make-alist month-array 1))))
          (last (calendar-last-day-of-month month year)))
     (if noday
         (if (eq noday t)
@@ -2335,11 +2337,13 @@ rather than a date."
 	  (t (substring string 0 width)))))
 
 (defvar calendar-day-name-array
-  ["Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"])
+  ["Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"]
+  "Array of capitalized strings giving, in order, the day names.")
 
 (defvar calendar-month-name-array
   ["January" "February" "March"     "April"   "May"      "June"
-   "July"    "August"   "September" "October" "November" "December"])
+   "July"    "August"   "September" "October" "November" "December"]
+  "Array of capitalized strings giving, in order, the month names.")
 
 (defun calendar-make-alist (sequence &optional start-index filter)
   "Make an assoc list corresponding to SEQUENCE.

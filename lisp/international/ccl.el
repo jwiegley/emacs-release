@@ -100,7 +100,7 @@
 ;;	| < | > | == | <= | >= | != | de-sjis | en-sjis
 ;; ASSIGNMENT_OPERATOR :=
 ;;	+= | -= | *= | /= | %= | &= | '|=' | ^= | <<= | >>=
-;; ARRAY := '[' interger ... ']'
+;; ARRAY := '[' integer ... ']'
 
 ;;; Code:
 
@@ -332,7 +332,7 @@
 
 ;;;###autoload
 (defun ccl-compile (ccl-program)
-  "Return a comiled code of CCL-PROGRAM as a vector of integer."
+  "Return a compiled code of CCL-PROGRAM as a vector of integer."
   (if (or (null (consp ccl-program))
 	  (null (integerp (car ccl-program)))
 	  (null (listp (car (cdr ccl-program)))))
@@ -574,7 +574,9 @@
     (let ((unconditional-jump (ccl-compile-1 true-cmds)))
       (if (null false-cmds)
 	  ;; This is the place to jump to if condition is false.
-	  (ccl-embed-current-address jump-cond-address)
+	  (progn
+	    (ccl-embed-current-address jump-cond-address)
+	    (setq unconditional-jump nil))
 	(let (end-true-part-address)
 	  (if (not unconditional-jump)
 	      (progn
@@ -860,7 +862,8 @@
 	(rrr (nth 2 cmd)))
     (ccl-check-register rrr cmd)
     (ccl-check-register RRR cmd)
-    (ccl-embed-extended-command 'read-multibyte-character rrr RRR 0)))
+    (ccl-embed-extended-command 'read-multibyte-character rrr RRR 0))
+  nil)
 
 ;; Compile write-multibyte-character
 (defun ccl-compile-write-multibyte-character (cmd)
@@ -870,7 +873,8 @@
 	(rrr (nth 2 cmd)))
     (ccl-check-register rrr cmd)
     (ccl-check-register RRR cmd)
-    (ccl-embed-extended-command 'write-multibyte-character rrr RRR 0)))
+    (ccl-embed-extended-command 'write-multibyte-character rrr RRR 0))
+  nil)
 
 ;; Compile translate-character
 (defun ccl-compile-translate-character (cmd)
@@ -881,7 +885,7 @@
 	(rrr (nth 3 cmd)))
     (ccl-check-register rrr cmd)
     (ccl-check-register RRR cmd)
-    (cond ((symbolp Rrr)
+    (cond ((and (symbolp Rrr) (not (get Rrr 'ccl-register-number)))
 	   (if (not (get Rrr 'translation-table))
 	       (error "CCL: Invalid translation table %s in %s" Rrr cmd))
 	   (ccl-embed-extended-command 'translate-character-const-tbl
@@ -889,10 +893,12 @@
 	   (ccl-embed-data Rrr))
 	  (t
 	   (ccl-check-register Rrr cmd)
-	   (ccl-embed-extended-command 'translate-character rrr RRR Rrr)))))
+	   (ccl-embed-extended-command 'translate-character rrr RRR Rrr))))
+  nil)
 
 (defun ccl-compile-iterate-multiple-map (cmd)
-  (ccl-compile-multiple-map-function 'iterate-multiple-map cmd))
+  (ccl-compile-multiple-map-function 'iterate-multiple-map cmd)
+  nil)
 
 (defun ccl-compile-map-multiple (cmd)
   (if (/= (length cmd) 4)
@@ -916,7 +922,8 @@
 	arg)
     (setq arg (append (list (nth 0 cmd) (nth 1 cmd) (nth 2 cmd))
 		      (funcall func (nth 3 cmd) nil)))
-    (ccl-compile-multiple-map-function 'map-multiple arg)))
+    (ccl-compile-multiple-map-function 'map-multiple arg))
+  nil)
 
 (defun ccl-compile-map-single (cmd)
   (if (/= (length cmd) 4)
@@ -933,7 +940,8 @@
 	       (ccl-embed-data map)
 	     (error "CCL: Invalid map: %s" map)))
 	  (t
-	   (error "CCL: Invalid type of arguments: %s" cmd)))))
+	   (error "CCL: Invalid type of arguments: %s" cmd))))
+  nil)
 
 (defun ccl-compile-multiple-map-function (command cmd)
   (if (< (length cmd) 4)
@@ -1244,7 +1252,7 @@
 
 (defun ccl-dump-translate-character-const-tbl (rrr RRR Rrr)
   (let ((tbl (ccl-get-next-code)))
-    (insert (format "translation table(%d) r%d r%d\n" tbl RRR rrr))))
+    (insert (format "translation table(%S) r%d r%d\n" tbl RRR rrr))))
 
 (defun ccl-dump-iterate-multiple-map (rrr RRR Rrr)
   (let ((notbl (ccl-get-next-code))
@@ -1321,7 +1329,7 @@ register CCL-PROGRAM by name NAME, and return NAME."
 ;;;###autoload
 (defun ccl-execute-with-args (ccl-prog &rest args)
   "Execute CCL-PROGRAM with registers initialized by the remaining args.
-The return value is a vector of resulting CCL registeres."
+The return value is a vector of resulting CCL registers."
   (let ((reg (make-vector 8 0))
 	(i 0))
     (while (and args (< i 8))

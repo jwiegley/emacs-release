@@ -1,4 +1,4 @@
-;;; cyrillic.el --- Support for languages which use Cyrillic characters
+;;; cyrillic.el --- Support for Cyrillic -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1995 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -122,7 +122,9 @@
  '(ccl-decode-koi8 . ccl-encode-koi8)
  '((safe-charsets ascii cyrillic-iso8859-5)
    (mime-charset . koi8-r)
-   (valid-codes (0 . 127) 163 179 (192 . 255))))
+   (valid-codes (0 . 127) 163 179 (192 . 255))
+   (charset-origin-alist (cyrillic-iso8859-5 "KOI8-R"
+					     cyrillic-encode-koi8-r-char))))
 
 (define-coding-system-alias 'koi8-r 'cyrillic-koi8)
 (define-coding-system-alias 'koi8 'cyrillic-koi8)
@@ -144,11 +146,9 @@
  "Cyrillic-KOI8" `((charset cyrillic-iso8859-5)
 		   (nonascii-translation
 		    . ,cyrillic-koi8-r-nonascii-translation-table)
-		   (charset-origin-alist
-		    (cyrillic-iso8859-5 "KOI8-R" cyrillic-encode-koi8-r-char))
 		   (coding-system cyrillic-koi8)
 		   (coding-priority cyrillic-koi8)
-		   (input-method . "cyrillic-yawerty")
+		   (input-method . "cyrillic-jcuken")
 		   (features cyril-util)
 		   (unibyte-display . cyrillic-koi8)
 		   (sample-text . "Russian (,L@caaZXY(B)	,L7T`PRabRcYbU(B!")
@@ -218,7 +218,10 @@
  "ALTERNATIVNYJ 8-bit encoding for Cyrillic"
  '(ccl-decode-alternativnyj . ccl-encode-alternativnyj)
  '((safe-charsets ascii cyrillic-iso8859-5)
-   (valid-codes (0 . 175) (224 . 241) 255)))
+   (valid-codes (0 . 175) (224 . 241) 255)
+   (charset-origin-alist (cyrillic-iso8859-5 "ALTERNATIVNYJ"
+					     cyrillic-encode-koi8-r-char))))
+
 
 (define-coding-system-alias 'alternativnyj 'cyrillic-alternativnyj)
 
@@ -240,12 +243,9 @@
  "Cyrillic-ALT" `((charset cyrillic-iso8859-5)
 		  (nonascii-translation
 		   . ,cyrillic-alternativnyj-nonascii-translation-table)
-		  (charset-origin-alist
-		   (cyrillic-iso8859-5 "ALTERNATIVNYJ"
-				       cyrillic-encode-koi8-r-char))
 		  (coding-system cyrillic-alternativnyj)
 		  (coding-priority cyrillic-alternativnyj)
-		  (input-method . "cyrillic-yawerty")
+		  (input-method . "cyrillic-jcuken")
 		  (features cyril-util)
 		  (unibyte-display . cyrillic-alternativnyj)
 		  (sample-text . "Russian (,L@caaZXY(B)	,L7T`PRabRcYbU(B!")

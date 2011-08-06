@@ -250,7 +250,12 @@ The returned value is a list of strings, one per line."
 	   (looking-at lm-header-prefix)
 	   (progn (goto-char (match-end 0))
 		  (looking-at "[^ ]+[ \t]+--+[ \t]+\\(.*\\)")))
-	  (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
+	  (let ((summary (buffer-substring-no-properties (match-beginning 1)
+							 (match-end 1))))
+	    ;; Strip off -*- specifications.
+	    (if (string-match "[ \t]*-\\*-.*-\\*-" summary)
+		(substring summary 0 (match-beginning 0))
+	      summary)))
       (if file
 	  (kill-buffer (current-buffer)))
       )))
@@ -390,8 +395,9 @@ distribution."
 
 (defun lm-commentary (&optional file)
   "Return the commentary in file FILE, or current buffer if FILE is nil.
-The value is returned as a string.  In the text, the commentary starts
-with tag `Commentary' and ends with tag `Change Log' or `History'."
+The value is returned as a string.  In the file, the commentary starts
+with the tag `Commentary' or `Documentation' and ends with one of the
+tags `Code', `Change Log' or `History'."
   (save-excursion
     (if file
 	(find-file file))
@@ -419,7 +425,7 @@ with tag `Commentary' and ends with tag `Change Log' or `History'."
   (move-to-column col t)
   (apply 'insert strings))
 
-(defun lm-verify (&optional file showok &optional verb)
+(defun lm-verify (&optional file showok verb)
   "Check that the current buffer (or FILE if given) is in proper format.
 If FILE is a directory, recurse on its files and generate a report in
 a temporary buffer."
@@ -549,7 +555,7 @@ Prompts for bug subject TOPIC.  Leaves you in a mail buffer."
     (mail nil
 	  (if addr
 	      (concat (car addr) " <" (cdr addr) ">")
-	    bug-gnu-emacs)
+	    report-emacs-bug-address)
 	  topic)
     (goto-char (point-max))
     (insert "\nIn "

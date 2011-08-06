@@ -140,7 +140,7 @@ Should be a list of strings."
     (list
      ;;
      ;; Function name declarations.
-     '("\\<\\(itcl_class\\|method\\|proc\\)\\>[ \t]*\\(\\sw+\\)?"
+     '("\\<\\(itcl_class\\|class\\|method\\|proc\\|body\\)\\>[ \t]*\\(\\sw+\\)?"
        (1 font-lock-keyword-face) (2 font-lock-function-name-face nil t))
      ;;
      ;; Keywords.
@@ -150,24 +150,31 @@ Should be a list of strings."
 ;	       "destructor" "itcl_class" "loop" "for_array_keys"
 ;	       "for_recursive_glob" "for_file"))
      (concat "\\<\\("
-	     "break\\|c\\(ase\\|on\\(structor\\|tinue\\)\\)\\|"
-	     "de\\(fault\\|structor\\)\\|"
-	     "e\\(lse\\(\\|if\\)\\|rror\\|val\\|xit\\)\\|"
-	     "for\\(\\|_\\(array_keys\\|file\\|recursive_glob\\)\\|each\\)\\|"
-	     "i\\([fn]\\|tcl_class\\)\\|loop\\|proc\\|return\\|switch\\|"
-	     "then\\|uplevel\\|while"
+	     "break\\|c\\(ase\\|on\\(structor\\|tinue\\)\\)\\|de\\(fault\\|structor\\)"
+	     "\\|e\\(lse\\(\\|if\\)\\|rror\\|val\\|xit\\)"
+	     "\\|for\\(\\|_\\(array_keys\\|file\\|recursive_glob\\)"
+	     "\\|each\\)\\|i\\([fn]\\|tcl_class\\)\\|loop"
+	     "\\|namespace e\\(val\\|xport\\)"
+	     "\\|p\\(ackage \\(provide\\|require\\)\\|roc\\)"
+	     "\\|return\\|switch\\|then\\|uplevel\\|while"
 	     "\\)\\>")
      ;;
      ;; Types.
-;   (make-regexp '("global" "upvar" "inherit" "public" "protected" "common"))
-     (cons (concat "\\<\\(common\\|global\\|inherit\\|"
-		   "p\\(rotected\\|ublic\\)\\|upvar\\)\\>")
+;   (make-regexp '("global" "upvar" "variable" "inherit" "public"
+;		   "private" "protected" "common"))
+     (cons (concat "\\<\\("
+		   "common\\|global\\|inherit\\|p\\(r\\(ivate\\|otected\\)\\|ublic\\)"
+		   "\\|upvar\\|variable"
+		   "\\)\\>")
 	   'font-lock-type-face)
      ))
   "Default expressions to highlight in TCL modes.")
 
 (defvar tcl-imenu-generic-expression
-  '((nil "^[ \t]*proc[ \t]+\\(\\(\\s_\\|\\sw\\)+\\)" 1))
+  '(
+    (nil "^\\s-*\\(proc\\|body\\)\\s-+\\(\\(\\s_\\|\\sw\\)+\\)" 2)
+    ("Classes" "^\\s-*class\\s-+\\(\\(\\s_\\|\\sw\\)+\\)" 1))
+  
   "Imenu generic expression for tcl-mode.  See `imenu-generic-expression'.")
 
 
@@ -193,10 +200,11 @@ The following keys are bound:
     (set (make-local-variable 'comment-start) "# ")
     (set (make-local-variable 'comment-start-skip) "# *")
     (set (make-local-variable 'font-lock-defaults)
-	 '(tcl-font-lock-keywords nil nil ((?_ . "w"))))
+	 '(tcl-font-lock-keywords nil nil ((?_ . "w") (?: . "w"))))
     (set (make-local-variable 'imenu-generic-expression)
 	 tcl-imenu-generic-expression)
     (setq imenu-case-fold-search nil)
+    (setq imenu-syntax-alist '((?: . "w")))
     (make-local-variable 'tcl-default-eval)
     (or tcl-mode-map
 	(tcl-setup-keymap))

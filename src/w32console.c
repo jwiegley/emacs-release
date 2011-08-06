@@ -76,6 +76,12 @@ DWORD   prev_console_mode;
 CONSOLE_CURSOR_INFO prev_console_cursor;
 #endif
 
+/* Determine whether to make frame dimensions match the screen buffer,
+   or the current window size.  The former is desirable when running
+   over telnet, while the latter is more useful when working directly at
+   the console with a large scroll-back buffer.  */
+int w32_use_full_screen_buffer;
+
 
 /* Setting this as the ctrl handler prevents emacs from being killed when
    someone hits ^C in a 'suspended' session (child shell).
@@ -123,10 +129,14 @@ clear_frame (void)
   FRAME_PTR  f = PICK_FRAME ();
   COORD	     dest;
   int        n, r;
+  CONSOLE_SCREEN_BUFFER_INFO info;
+
+  GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &info);
 
   hl_mode (0);
   
-  n = FRAME_HEIGHT (f) * FRAME_WIDTH (f);
+  /* Remember that the screen buffer might be wider than the window.  */
+  n = FRAME_HEIGHT (f) * info.dwSize.X;
   dest.X = dest.Y = 0;
 
   FillConsoleOutputAttribute (cur_screen, char_attr, n, dest, &r);
@@ -333,16 +343,14 @@ write_glyphs (register GLYPH *string, register int len)
   FRAME_PTR f = PICK_FRAME ();
   register char *ptr;
   GLYPH glyph;
-  WORD *attrs;
   char *chars;
   int i;
   
   if (len <= 0)
     return;
 
-  attrs = alloca (len * sizeof (*attrs));
   chars = alloca (len * sizeof (*chars));
-  if (attrs == NULL || chars == NULL)
+  if (chars == NULL)
     {
       printf ("alloca failed in write_glyphs\n");
       return;
@@ -379,12 +387,8 @@ write_glyphs (register GLYPH *string, register int len)
   /* Number of characters we have in the buffer.  */
   len = ptr-chars;
   
-  /* Fill in the attributes for these characters.  */
-  for (i = 0; i < len; i++)
-    attrs[i] = char_attr;
-  
-  /* Write the attributes.  */
-  if (!WriteConsoleOutputAttribute (cur_screen, attrs, len, cursor_coords, &i))
+  /* Set the attribute for these characters.  */
+  if (!FillConsoleOutputAttribute (cur_screen, char_attr, len, cursor_coords, &i))
     {
       printf ("Failed writing console attributes: %d\n", GetLastError ());
       fflush (stdout);
@@ -412,20 +416,28 @@ delete_glyphs (int n)
 }
 
 static unsigned int sound_type = 0xFFFFFFFF;
+#define MB_EMACS_SILENT (0xFFFFFFFF - 1)
 
 void
 w32_sys_ring_bell (void)
 {
   if (sound_type == 0xFFFFFFFF) 
+    {
       Beep (666, 100);
+    }
+  else if (sound_type == MB_EMACS_SILENT)
+    {
+      /* Do nothing.  */
+    }
   else
-      MessageBeep (sound_type);
+    MessageBeep (sound_type);
 }
 
 DEFUN ("set-message-beep", Fset_message_beep, Sset_message_beep, 1, 1, 0,
        "Set the sound generated when the bell is rung.\n\
-SOUND is 'asterisk, 'exclamation, 'hand, 'question, or 'ok\n\
-to use the corresponding system sound for the bell.\n\
+SOUND is 'asterisk, 'exclamation, 'hand, 'question, 'ok, or 'silent\n\
+to use the corresponding system sound for the bell.  The 'silent sound\n\
+prevents Emacs from making any sound at all.\n\
 SOUND is nil to use the normal beep.")
      (sound)
      Lisp_Object sound;
@@ -444,6 +456,8 @@ SOUND is nil to use the normal beep.")
       sound_type = MB_ICONQUESTION;
   else if (EQ (sound, intern ("ok"))) 
       sound_type = MB_OK;
+  else if (EQ (sound, intern ("silent")))
+      sound_type = MB_EMACS_SILENT;
   else
       sound_type = 0xFFFFFFFF;
 
@@ -555,19 +569,61 @@ initialize_w32_display (void)
   GetConsoleCursorInfo (prev_screen, &prev_console_cursor);
 #endif
 
+  /* Respect setting of LINES and COLUMNS environment variables.  */
+  {
+    char * lines = getenv("LINES");
+    char * columns = getenv("COLUMNS");
+
+    if (lines != NULL && columns != NULL)
+      {
+	SMALL_RECT new_win_dims;
+	COORD new_size;
+
+	new_size.X = atoi (columns);
+	new_size.Y = atoi (lines);
+
+	GetConsoleScreenBufferInfo (cur_screen, &info);
+
+	/* Shrink the window first, so the buffer dimensions can be
+           reduced if necessary.  */
+	new_win_dims.Top = 0;
+	new_win_dims.Left = 0;
+	new_win_dims.Bottom = min (new_size.Y, info.dwSize.Y) - 1;
+	new_win_dims.Right = min (new_size.X, info.dwSize.X) - 1;
+	SetConsoleWindowInfo (cur_screen, TRUE, &new_win_dims);
+
+	SetConsoleScreenBufferSize (cur_screen, new_size);
+
+	/* Set the window size to match the buffer dimension.  */
+	new_win_dims.Top = 0;
+	new_win_dims.Left = 0;
+	new_win_dims.Bottom = new_size.Y - 1;
+	new_win_dims.Right = new_size.X - 1;
+	SetConsoleWindowInfo (cur_screen, TRUE, &new_win_dims);
+      }
+  }
+
   GetConsoleScreenBufferInfo (cur_screen, &info);
   
   meta_key = 1;
   char_attr = info.wAttributes & 0xFF;
   char_attr_normal = char_attr;
   char_attr_reverse = ((char_attr & 0xf) << 4) + ((char_attr & 0xf0) >> 4);
-  
-  FRAME_HEIGHT (selected_frame) = info.dwSize.Y;	/* lines per page */
-  SET_FRAME_WIDTH (selected_frame, info.dwSize.X); /* characters per line */
-  
-//  move_cursor (0, 0);
-  
-//  clear_frame ();
+
+  if (w32_use_full_screen_buffer)
+    {
+      FRAME_HEIGHT (selected_frame) = info.dwSize.Y;	/* lines per page */
+      SET_FRAME_WIDTH (selected_frame, info.dwSize.X);  /* characters per line */
+    }
+  else
+    {
+      /* Lines per page.  Use buffer coords instead of buffer size.  */
+      FRAME_HEIGHT (selected_frame) = 1 + info.srWindow.Bottom - 
+	info.srWindow.Top; 
+      /* Characters per line.  Use buffer coords instead of buffer size.  */
+      SET_FRAME_WIDTH (selected_frame, 1 + info.srWindow.Right - 
+		       info.srWindow.Left);
+    }
 }
 
 DEFUN ("set-screen-color", Fset_screen_color, Sset_screen_color, 2, 2, 0,
@@ -616,6 +672,15 @@ glyph_to_pixel_coords (FRAME_PTR f, int x, int y, int *pix_x, int *pix_y)
 void
 syms_of_ntterm ()
 {
+  DEFVAR_BOOL ("w32-use-full-screen-buffer",
+               &w32_use_full_screen_buffer,
+  "Non-nil means make terminal frames use the full screen buffer dimensions.\n\
+This is desirable when running Emacs over telnet, and is the default.\n\
+A value of nil means use the current console window dimensions; this\n\
+may be preferrable when working directly at the console with a large\n\
+scroll-back buffer.");
+  w32_use_full_screen_buffer = 1;
+
   defsubr (&Sset_screen_color);
   defsubr (&Sset_cursor_size);
   defsubr (&Sset_message_beep);

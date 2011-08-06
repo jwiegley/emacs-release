@@ -2,13 +2,13 @@
 
 ;; Copyright (C) 1994, 1995, 1997 Free Software Foundation, Inc.
 
-;; Author: Noah Friedman <friedman@prep.ai.mit.edu>
-;; Maintainer: friedman@prep.ai.mit.edu
+;; Author: Noah Friedman
+;; Maintainer: Noah Friedman <friedman@splode.com>
 ;; Keywords: extensions, timers
 ;; Status: Works in GNU Emacs 19.25 or later, some versions of XEmacs
 ;; Created: 1994-07-13
 
-;; $Id: type-break.el,v 1.17 1998/05/15 05:20:58 rms Exp $
+;; $Id: type-break.el,v 1.22 1999/04/27 19:00:42 fx Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -76,16 +76,16 @@
 
 ;;;###autoload
 (defcustom type-break-mode nil
-  "*Non-nil means typing break mode is enabled.
+  "Toggle typing break mode.
 See the docstring for the `type-break-mode' command for more information.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `type-break-mode'."
   :set (lambda (symbol value)
 	 (type-break-mode (if value 1 -1)))
-  :initialize 'custom-initialize-default  
+  :initialize 'custom-initialize-default
   :type 'boolean
   :group 'type-break
-  :require 'type-break
-  :version "20.3")
+  :require 'type-break)
 
 ;;;###autoload
 (defcustom type-break-interval (* 60 60)

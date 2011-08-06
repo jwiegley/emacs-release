@@ -32,7 +32,7 @@ File: viper,  Node: Search and Replace,  Next: Yanking,  Prev: Changing Text,  U
 Search and Replace
 ------------------
 
-   *Note Groundwork::, for Ex address syntax.  *Note Options:: to see
+   *Note Groundwork::, for Ex address syntax.  *Note Options::, to see
 how to get literal (non-regular-expression) search and how to stop
 search from wrapping around.
 

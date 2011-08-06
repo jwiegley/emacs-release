@@ -103,10 +103,11 @@ Zero means compute the Imenu menu regardless of size."
 
 ;;;###autoload
 (defcustom which-func-mode-global nil
-  "*Toggle `which-func-mode'.
-You must modify via \\[customize] for this variable to have an effect."
+  "*Toggle `which-func-mode' globally.
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `which-func-mode'."
   :set #'(lambda (symbol value)
-	   (which-func-mode (or value 0)))
+	   (which-func-mode (if value 1 0)))
   :initialize 'custom-initialize-default
   :type    'boolean
   :group   'which-func
@@ -204,8 +205,9 @@ is located before first function, returns nil."
    (let ((pair (car-safe imenu--index-alist))
          (rest (cdr-safe imenu--index-alist))
          (name nil))
-     (while (and pair (or (not (number-or-marker-p (cdr pair)))
-			  (> (point) (cdr pair))))
+     (while (and (or rest pair)
+		 (or (not (number-or-marker-p (cdr pair)))
+		     (> (point) (cdr pair))))
        (setq name (car pair))
        (setq pair (car-safe rest))
        (setq rest (cdr-safe rest)))

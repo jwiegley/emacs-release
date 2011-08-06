@@ -32,7 +32,7 @@
         (extensions))
     ("auto-show.el"
         "perform automatic horizontal scrolling as point moves"
-        (scroll display minor-mode))
+        (scroll display convenience))
     ("autoinsert.el"
         "automatic mode-dependent insertion of text into new files"
         (convenience))
@@ -121,7 +121,7 @@
         "Run `diff' in compilation-mode."
         (unix  tools))
     ("dired-aux.el"
-        "less commonly used parts of dired  -*-byte-compile-dynamic: t;-*-"
+        "less commonly used parts of dired"
         nil)
     ("dired-x.el"
         "Sebastian Kremer's Extra DIRED hacked up for GNU Emacs19"
@@ -336,9 +336,6 @@
     ("ispell.el"
         "Interface to International Ispell Version 3.1"
         nil)
-    ("ispell4.el"
-        "this is the GNU EMACS interface to GNU ISPELL version 4."
-        (wp))
     ("iswitchb.el"
         "switch between buffers using substrings"
         (extensions convenience))
@@ -432,6 +429,12 @@
     ("ph.el"
         "Client for the CCSO directory system (aka PH/QI)"
         (help))
+    ("ps-bdf.el"
+        "BDF font file handler for ps-print."
+        (bdf  font  postscript))
+    ("ps-mule.el"
+        "Provide multi-byte character facility to ps-print."
+        (print  postscript  multibyte  mule))
     ("ps-print.el"
         "Print text from the buffer as PostScript"
         (print  postscript))
@@ -504,6 +507,9 @@
     ("skeleton.el"
         "Lisp language extension for writing statement skeletons"
         (extensions  abbrev  languages  tools))
+    ("snmp-mode.el"
+        "SNMP & SNMPv2 MIB major mode."
+        (data))
     ("sort.el"
         "commands to sort text in an Emacs buffer."
         (unix))
@@ -679,22 +685,22 @@
         "Common Lisp extensions for GNU Emacs Lisp (compatibility)"
         (extensions))
     ("cl-extra.el"
-        "Common Lisp features, part 2 -*-byte-compile-dynamic: t;-*-"
+        "Common Lisp features, part 2"
         (extensions))
     ("cl-indent.el"
         "enhanced lisp-indent mode"
         (lisp  tools))
     ("cl-macs.el"
-        "Common Lisp macros -*-byte-compile-dynamic: t;-*-"
+        "Common Lisp macros"
         (extensions))
     ("cl-seq.el"
-        "Common Lisp features, part 3  -*-byte-compile-dynamic: t;-*-"
+        "Common Lisp features, part 3"
         (extensions))
     ("cl-specs.el"
         "Edebug specs for cl.el"
         (lisp  tools  maint))
     ("cl.el"
-        "Common Lisp extensions for Emacs -*-byte-compile-dynamic: t;-*-"
+        "Common Lisp extensions for Emacs"
         (extensions))
     ("copyright.el"
         "update the copyright notice in current buffer"
@@ -860,7 +866,10 @@
         (emulations))
     ("earcon.el"
         "Sound effects for messages"
-        (news fun sound))
+        nil)
+    ("gnus-agent.el"
+        "unplugged support for Gnus"
+        nil)
     ("gnus-art.el"
         "article mode commands for Gnus"
         (news))
@@ -869,7 +878,7 @@
         (news))
     ("gnus-audio.el"
         "Sound effects for Gnus"
-        (news))
+        nil)
     ("gnus-bcklg.el"
         "backlog functions for Gnus"
         (news))
@@ -878,12 +887,15 @@
         (news))
     ("gnus-cite.el"
         "parse citations in articles for Gnus"
-        (news  mail))
+        nil)
     ("gnus-cus.el"
         "customization commands for Gnus"
         (news))
     ("gnus-demon.el"
         "daemonic Gnus behaviour"
+        (news))
+    ("gnus-draft.el"
+        "draft message support for Gnus"
         (news))
     ("gnus-dup.el"
         "suppression of duplicate articles in Gnus"
@@ -932,7 +944,7 @@
         (news))
     ("gnus-salt.el"
         "alternate summary mode interfaces for Gnus"
-        nil)
+        (news))
     ("gnus-score.el"
         "scoring code for Gnus"
         (news))
@@ -981,6 +993,9 @@
     ("messcompat.el"
         "making message mode compatible with mail mode"
         (mail  news))
+    ("nnagent.el"
+        "offline backend for Gnus"
+        (news  mail))
     ("nnbabyl.el"
         "rmail mbox access for Gnus"
         (news  mail))
@@ -994,7 +1009,7 @@
         "draft article access for Gnus"
         (news))
     ("nneething.el"
-        "random file access for Gnus"
+        "arbitrary file access for Gnus"
         (news  mail))
     ("nnfolder.el"
         "mail folder access for Gnus"
@@ -1008,6 +1023,9 @@
     ("nnkiboze.el"
         "select virtual news access for Gnus"
         (news))
+    ("nnlistserv.el"
+        "retrieving articles via web mailing list archives"
+        (news  mail))
     ("nnmail.el"
         "mail support functions for the Gnus mail backends"
         (news  mail))
@@ -1030,7 +1048,7 @@
         "spool access for GNU Emacs"
         (news))
     ("nntp.el"
-        "nntp access for Gnus"
+        "nntp access for Gnus Copyright (C) 1987-90,92-97 Free"
         (news))
     ("nnvirtual.el"
         "virtual newsgroups access for Gnus"
@@ -1053,6 +1071,9 @@
     ("characters.el"
         "set syntax and category for multibyte characters"
         (multibyte character  character set  syntax  category))
+    ("codepage.el"
+        "MS-DOS specific coding systems."
+        (i18n ms-dos codepage))
     ("encoded-kb.el"
         "Handler to input multibyte characters encoded somehow"
         nil)
@@ -1081,7 +1102,7 @@
         "keyboard input definitions for ISO 8859/1."
         (i18n))
     ("kinsoku.el"
-        "`Kinsoku' processing functions."
+        "`Kinsoku' processing funcs."
         (mule  kinsoku))
     ("kkc.el"
         "Kana Kanji converter"
@@ -1108,7 +1129,7 @@
         "configure multilingual environment"
         (mule  multilingual  character set  coding system))
     ("mule-diag.el"
-        "Show diagnosis of multilingual environment (MULE)"
+        "Show diagnosis of multilingual environment (Mule)"
         (multilingual  charset  coding system  fontset  diagnosis))
     ("mule-util.el"
         "Utility functions for mulitilingual environment (mule)"
@@ -1144,7 +1165,7 @@
         "utilities for Cyrillic scripts"
         (mule  multilingual  cyrillic))
     ("cyrillic.el"
-        "Support for languages which use Cyrillic characters"
+        "Support for Cyrillic"
         (multilingual  cyrillic))
     ("czech.el"
         "support for Czech"
@@ -1153,7 +1174,7 @@
         "Support for Devanagari Script Composition"
         (multilingual  indian  devanagari))
     ("devanagari.el"
-        "Support for Devanagari Languages"
+        "Support for Devanagari"
         (multilingual  indian  devanagari))
     ("english.el"
         "English support"
@@ -1165,7 +1186,7 @@
         "Support for Ethiopic"
         (multilingual  ethiopic))
     ("european.el"
-        "Support for European languages"
+        "European languages"
         (multilingual  european))
     ("greek.el"
         "Support for Greek"
@@ -1198,7 +1219,7 @@
         "support for miscellaneous languages (characters)"
         (multilingual  character set  coding system))
     ("romanian.el"
-        "Support for Romanian -*- coding: iso-latin-2; -*-"
+        "Support for Romanian"
         (multilingual  romanian))
     ("slovak.el"
         "Support for Slovak"
@@ -1366,7 +1387,7 @@
         "Gomoku game between you and Emacs"
         (games))
     ("handwrite.el"
-        "turns your emacs buffer into a handwritten document."
+        "turns your emacs buffer into a handwritten document"
         (cursive writing))
     ("hanoi.el"
         "towers of hanoi in GNUmacs"
@@ -1423,7 +1444,7 @@
         "custom indentation functions for CC Mode"
         (c languages oop))
     ("cc-cmds.el"
-        "user level commands for CC Mode "
+        "user level commands for CC Mode"
         (c languages oop))
     ("cc-compat.el"
         "cc-mode compatibility with c-mode.el confusion"
@@ -1436,6 +1457,9 @@
         (c languages oop))
     ("cc-langs.el"
         "specific language support for CC Mode"
+        (c languages oop))
+    ("cc-make.el"
+        "Simplifies compilation."
         (c languages oop))
     ("cc-menus.el"
         "imenu support for CC Mode"
@@ -1530,6 +1554,9 @@
     ("simula.el"
         "SIMULA 87 code editing commands for Emacs"
         (languages))
+    ("sql.el"
+        "specialized comint.el for SQL interpreters"
+        (comm languages processes))
     ("tcl-mode.el"
         "a major-mode for editing tcl/tk scripts"
         (languages  processes  tools))
@@ -1549,7 +1576,7 @@
         nil
         nil)
     ("internal.el"
-        "support for PC internal terminal -*- coding: raw-text; -*-"
+        "support for PC internal terminal"
         nil)
     ("iris-ansi.el"
         "configure Emacs for SGI xwsh and winterm apps"

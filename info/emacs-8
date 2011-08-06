@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,152 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Without Locking,  Next: Log Buffer,  Prev: VC with Locking,  Up: Basic VC Editing
+
+Basic Version Control without Locking
+.....................................
+
+   When there is no locking--the default for CVS--work files are always
+writable; you do not need to do anything before you begin to edit a
+file.  The status indicator on the mode line is `-' if the file is
+unmodified; it flips to `:' as soon as you save any changes in the work
+file.
+
+   Here is what `C-x C-q' does when using CVS:
+
+   * If some other user has checked in changes into the master file,
+     Emacs asks you whether you want to merge those changes into your
+     own work file (*note Merging::.).  You must do this before you can
+     check in your own changes.
+
+   * If there are no new changes in the master file, but you have made
+     modifications in your work file, `C-x C-q' checks in your changes.
+     In order to do this, it first reads the log entry for the new
+     version.  *Note Log Buffer::.
+
+   * If the file is not modified, the `C-x C-q' does nothing.
+
+   These rules also apply when you use RCS in the mode that does not
+require locking, except that automatic merging of changes from the
+master file is not implemented.  Unfortunately, this means that nothing
+informs you if another user has checked in changes in the same file
+since you began editing it, and when this happens, his changes will be
+effectively removed when you check in your version (though they will
+remain in the master file, so they will not be entirely lost).  You must
+therefore verify the current version is unchanged, before you check in
+your changes.  We hope to eliminate this risk and provide automatic
+merging with RCS in a future Emacs version.
+
+   In addition, locking is possible with RCS even in this mode, although
+it is not required; `C-x C-q' with an unmodified file locks the file,
+just as it does with RCS in its normal (locking) mode.
+
+
+File: emacs,  Node: Log Buffer,  Prev: Without Locking,  Up: Basic VC Editing
+
+Features of the Log Entry Buffer
+................................
+
+   When you check in changes, `C-x C-q' first reads a log entry.  It
+pops up a buffer called `*VC-Log*' for you to enter the log entry.
+When you are finished, type `C-c C-c' in the `*VC-Log*' buffer.  That
+is when check-in really happens.
+
+   To abort check-in, just *don't* type `C-c C-c' in that buffer.  You
+can switch buffers and do other editing.  As long as you don't try to
+check in another file, the entry you were editing remains in the
+`*VC-Log*' buffer, and you can go back to that buffer at any time to
+complete the check-in.
+
+   If you change several source files for the same reason, it is often
+convenient to specify the same log entry for many of the files.  To do
+this, use the history of previous log entries.  The commands `M-n',
+`M-p', `M-s' and `M-r' for doing this work just like the minibuffer
+history commands (except that these versions are used outside the
+minibuffer).
+
+   Each time you check in a file, the log entry buffer is put into VC
+Log mode, which involves running two hooks: `text-mode-hook' and
+`vc-log-mode-hook'.  *Note Hooks::.
+
+
+File: emacs,  Node: Old Versions,  Next: Secondary VC Commands,  Prev: Basic VC Editing,  Up: Version Control
+
+Examining And Comparing Old Versions
+------------------------------------
+
+   One of the convenient features of version control is the ability to
+examine any version of a file, or compare two versions.
+
+`C-x v ~ VERSION <RET>'
+     Examine version VERSION of the visited file, in a buffer of its
+     own.
+
+`C-x v ='
+     Compare the current buffer contents with the latest checked-in
+     version of the file.
+
+`C-u C-x v = FILE <RET> OLDVERS <RET> NEWVERS <RET>'
+     Compare the specified two versions of FILE.
+
+`C-x v g'
+     Display the result of the CVS annotate command using colors.
+
+   To examine an old version in toto, visit the file and then type `C-x
+v ~ VERSION <RET>' (`vc-version-other-window').  This puts the text of
+version VERSION in a file named `FILENAME.~VERSION~', and visits it in
+its own buffer in a separate window.  (In RCS, you can also select an
+old version and create a branch from it.  *Note Branches::.)
+
+   But usually it is more convenient to compare two versions of the
+file, with the command `C-x v =' (`vc-diff').  Plain `C-x v =' compares
+the current buffer contents (saving them in the file if necessary) with
+the last checked-in version of the file.  `C-u C-x v =', with a numeric
+argument, reads a file name and two version numbers, then compares
+those versions of the specified file.
+
+   If you supply a directory name instead of the name of a registered
+file, this command compares the two specified versions of all registered
+files in that directory and its subdirectories.
+
+   You can specify a checked-in version by its number; an empty input
+specifies the current contents of the work file (which may be different
+from all the checked-in versions).  You can also specify a snapshot name
+(*note Snapshots::.) instead of one or both version numbers.
+
+   This command works by running the `diff' utility, getting the
+options from the variable `diff-switches'.  It displays the output in a
+special buffer in another window.  Unlike the `M-x diff' command, `C-x
+v =' does not try to locate the changes in the old and new versions.
+This is because normally one or both versions do not exist as files
+when you compare them; they exist only in the records of the master
+file.  *Note Comparing Files::, for more information about `M-x diff'.
+
+   For CVS-controlled files, you can display the result of the CVS
+annotate command, using colors to enhance the visual appearance.  Use
+the command `M-x vc-annotate' to do this.  Red means new, blue means
+old, and intermediate colors indicate intermediate ages.  A prefix
+argument N specifies a stretch factor for the time scale; it makes each
+color cover a period N times as long.
+
+
+File: emacs,  Node: Secondary VC Commands,  Next: Branches,  Prev: Old Versions,  Up: Version Control
+
+The Secondary Commands of VC
+----------------------------
+
+   This section explains the secondary commands of VC; those that you
+might use once a day.
+
+* Menu:
+
+* Registering::         Putting a file under version control.
+* VC Status::           Viewing the VC status of files.
+* VC Undo::             Cancelling changes before or after check-in.
+* VC Dired Mode::       Listing files managed by version control.
+* VC Dired Commands::   Commands to use in a VC Dired buffer.
 
 
 File: emacs,  Node: Registering,  Next: VC Status,  Up: Secondary VC Commands
@@ -53,7 +199,7 @@ corresponding version control system.  In the absence of any
 specification, the default choice is RCS if RCS is installed, otherwise
 SCCS.
 
-   If locking is in use,`C-x v i' leaves the file unlocked and
+   If locking is in use, `C-x v i' leaves the file unlocked and
 read-only.  Type `C-x C-q' if you wish to start editing it.  After
 registering a file with CVS, you must subsequently commit the initial
 version by typing `C-x C-q'.
@@ -194,7 +340,7 @@ By default, this includes Version Control subdirectories such as `RCS'
 and `CVS'; you can customize this by setting the variable
 `vc-directory-exclusion-list'.
 
-   You can fine-tune VC Dired's format by typing `C-u x v d'--as in
+   You can fine-tune VC Dired's format by typing `C-u C-x v d'--as in
 ordinary Dired, that allows you to specify additional switches for the
 `ls' command.
 
@@ -302,10 +448,11 @@ example, if the current version is 2.5, the branch number should be
 that point.
 
    To create a new branch at an older version (one that is no longer the
-head of a branch), first select that version, then lock it with `C-x
-C-q'.  You'll be asked to confirm, when you lock the old version, that
-you really mean to create a new branch--if you say no, you'll be offered
-a chance to lock the latest version instead.
+head of a branch), first select that version (*note Switching
+Branches::.), then lock it with `C-x C-q'.  You'll be asked to confirm,
+when you lock the old version, that you really mean to create a new
+branch--if you say no, you'll be offered a chance to lock the latest
+version instead.
 
    Then make your changes and type `C-x C-q' again to check in a new
 version.  This automatically creates a new branch starting from the
@@ -535,17 +682,21 @@ automatically from the version control log entries:
      RCS, and it puts all entries in the log for the default directory,
      which may not be appropriate.
 
-   For example, suppose the first line of `ChangeLog' is dated 10 April
-1992, and that the only check-in since then was by Nathaniel Bowditch
-to `rcs2log' on 8 May 1992 with log text `Ignore log messages that
-start with `#'.'.  Then `C-x v a' visits `ChangeLog' and inserts text
-like this:
+   For example, suppose the first line of `ChangeLog' is dated
+1999-04-10, and that the only check-in since then was by Nathaniel
+Bowditch to `rcs2log' on 1999-05-22 with log text `Ignore log messages
+that start with `#'.'.  Then `C-x v a' visits `ChangeLog' and inserts
+text like this:
 
-     Fri May  8 21:45:00 1992  Nathaniel Bowditch  <nat@apn.org>
+     1999-05-22  Nathaniel Bowditch  <nat@apn.org>
      
              * rcs2log: Ignore log messages that start with `#'.
 
 You can then edit the new change log entry further as you wish.
+
+   Unfortunately, timestamps in ChangeLog files are only dates, so some
+of the new change log entry may duplicate what's already in ChangeLog.
+You will have to remove these duplicates by hand.
 
    Normally, the log entry for file `foo' is displayed as `* foo: TEXT
 OF LOG ENTRY'.  The `:' after `foo' is omitted if the text of the log
@@ -553,7 +704,7 @@ entry starts with `(FUNCTIONNAME): '.  For example, if the log entry
 for `vc.el' is `(vc-do-command): Check call-process status.', then the
 text in `ChangeLog' looks like this:
 
-     Wed May  6 10:53:00 1992  Nathaniel Bowditch  <nat@apn.org>
+     1999-05-06  Nathaniel Bowditch  <nat@apn.org>
      
              * vc.el (vc-do-command): Check call-process status.
 
@@ -570,7 +721,7 @@ entries:
 
 They appear like this in `ChangeLog':
 
-     Wed Apr  1 08:57:59 1992  Nathaniel Bowditch  <nat@apn.org>
+     1999-04-01  Nathaniel Bowditch  <nat@apn.org>
      
              * vc.texinfo: Fix expansion typos.
      
@@ -588,7 +739,7 @@ copied to `ChangeLog'.  For example, suppose the log entries are:
 
 Then the text in `ChangeLog' looks like this:
 
-     Wed Apr  1 08:57:59 1992  Nathaniel Bowditch  <nat@apn.org>
+     1999-04-01  Nathaniel Bowditch  <nat@apn.org>
      
              * vc.texinfo: Fix expansion typos.
              * vc.el, vc-hooks.el: Don't call expand-file-name.
@@ -660,11 +811,11 @@ string in the constant from being interpreted as a header itself if the
 Emacs Lisp file containing it is maintained with version control.
 
    Each header is inserted surrounded by tabs, inside comment
-delimiters, on a new line at the start of the buffer.  Normally the
-ordinary comment start and comment end strings of the current mode are
-used, but for certain modes, there are special comment delimiters for
-this purpose; the variable `vc-comment-alist' specifies them.  Each
-element of this list has the form `(MODE STARTER ENDER)'.
+delimiters, on a new line at point.  Normally the ordinary comment
+start and comment end strings of the current mode are used, but for
+certain modes, there are special comment delimiters for this purpose;
+the variable `vc-comment-alist' specifies them.  Each element of this
+list has the form `(MODE STARTER ENDER)'.
 
    The variable `vc-static-header-alist' specifies further strings to
 add based on the name of the buffer.  Its value should be a list of
@@ -1003,175 +1154,4 @@ Other endings indicate other compression programs.
 in which Emacs uses the contents of a file.  This includes visiting it,
 saving it, inserting its contents into a buffer, loading it, and byte
 compiling it.
-
-
-File: emacs,  Node: Remote Files,  Next: Quoted File Names,  Prev: Compressed Files,  Up: Files
-
-Remote Files
-============
-
-   You can refer to files on other machines using a special file name
-syntax:
-
-     /HOST:FILENAME
-     /USER@HOST:FILENAME
-
-When you do this, Emacs uses the FTP program to read and write files on
-the specified host.  It logs in through FTP using your user name or the
-name USER.  It may ask you for a password from time to time; this is
-used for logging in on HOST.
-
-   Normally, if you do not specify a user name in a remote file name,
-that means to use your own user name.  But if you set the variable
-`ange-ftp-default-user' to a string, that string is used instead.  (The
-Emacs package that implements FTP file access is called `ange-ftp'.)
-
-   You can entirely turn off the FTP file name feature by setting the
-variable `file-name-handler-alist' to `nil'.
-
-
-File: emacs,  Node: Quoted File Names,  Prev: Remote Files,  Up: Files
-
-Quoted File Names
-=================
-
-   You can "quote" an absolute file name to prevent special characters
-and syntax in it from having their special effects.  The way to do this
-is to add `/:' at the beginning.
-
-   For example, you can quote a local file name which appears remote, to
-prevent it from being treated as a remote file name.  Thus, if you have
-a directory named `/foo:' and a file named `bar' in it, you can refer
-to that file in Emacs as `/:/foo:/bar'.
-
-   `/:' can also prevent `~' from being treated as a special character
-for a user's home directory.  For example, `/:/tmp/~hack' refers to a
-file whose name is `~hack' in directory `/tmp'.
-
-   Likewise, quoting with `/:' is one way to enter in the minibuffer a
-file name that contains `$'.  However, the `/:' must be at the
-beginning of the buffer in order to quote `$'.
-
-
-File: emacs,  Node: Buffers,  Next: Windows,  Prev: Files,  Up: Top
-
-Using Multiple Buffers
-**********************
-
-   The text you are editing in Emacs resides in an object called a
-"buffer".  Each time you visit a file, a buffer is created to hold the
-file's text.  Each time you invoke Dired, a buffer is created to hold
-the directory listing.  If you send a message with `C-x m', a buffer
-named `*mail*' is used to hold the text of the message.  When you ask
-for a command's documentation, that appears in a buffer called `*Help*'.
-
-   At any time, one and only one buffer is "selected".  It is also
-called the "current buffer".  Often we say that a command operates on
-"the buffer" as if there were only one; but really this means that the
-command operates on the selected buffer (most commands do).
-
-   When Emacs has multiple windows, each window has a chosen buffer
-which is displayed there, but at any time only one of the windows is
-selected and its chosen buffer is the selected buffer.  Each window's
-mode line displays the name of the buffer that the window is displaying
-(*note Windows::.).
-
-   Each buffer has a name, which can be of any length, and you can
-select any buffer by giving its name.  Most buffers are made by
-visiting files, and their names are derived from the files' names.  But
-you can also create an empty buffer with any name you want.  A newly
-started Emacs has a buffer named `*scratch*' which can be used for
-evaluating Lisp expressions in Emacs.  The distinction between upper
-and lower case matters in buffer names.
-
-   Each buffer records individually what file it is visiting, whether
-it is modified, and what major mode and minor modes are in effect in it
-(*note Major Modes::.).  Any Emacs variable can be made "local to" a
-particular buffer, meaning its value in that buffer can be different
-from the value in other buffers.  *Note Locals::.
-
-* Menu:
-
-* Select Buffer::       Creating a new buffer or reselecting an old one.
-* List Buffers::        Getting a list of buffers that exist.
-* Misc Buffer::	        Renaming; changing read-onlyness; copying text.
-* Kill Buffer::	        Killing buffers you no longer need.
-* Several Buffers::     How to go through the list of all buffers
-			  and operate variously on several of them.
-* Indirect Buffers::    An indirect buffer shares the text of another buffer.
-
-
-File: emacs,  Node: Select Buffer,  Next: List Buffers,  Up: Buffers
-
-Creating and Selecting Buffers
-==============================
-
-`C-x b BUFFER <RET>'
-     Select or create a buffer named BUFFER (`switch-to-buffer').
-
-`C-x 4 b BUFFER <RET>'
-     Similar, but select BUFFER in another window
-     (`switch-to-buffer-other-window').
-
-`C-x 5 b BUFFER <RET>'
-     Similar, but select BUFFER in a separate frame
-     (`switch-to-buffer-other-frame').
-
-   To select the buffer named BUFNAME, type `C-x b BUFNAME <RET>'.
-This runs the command `switch-to-buffer' with argument BUFNAME.  You
-can use completion on an abbreviation for the buffer name you want
-(*note Completion::.).  An empty argument to `C-x b' specifies the most
-recently selected buffer that is not displayed in any window.
-
-   Most buffers are created by visiting files, or by Emacs commands that
-want to display some text, but you can also create a buffer explicitly
-by typing `C-x b BUFNAME <RET>'.  This makes a new, empty buffer that
-is not visiting any file, and selects it for editing.  Such buffers are
-used for making notes to yourself.  If you try to save one, you are
-asked for the file name to use.  The new buffer's major mode is
-determined by the value of `default-major-mode' (*note Major Modes::.).
-
-   Note that `C-x C-f', and any other command for visiting a file, can
-also be used to switch to an existing file-visiting buffer.  *Note
-Visiting::.
-
-   Emacs uses buffer names that start with a space for internal
-purposes.  It treats these buffers specially in minor ways--for
-example, by default they do not record undo information.  It is best to
-avoid using such buffer names yourself.
-
-
-File: emacs,  Node: List Buffers,  Next: Misc Buffer,  Prev: Select Buffer,  Up: Buffers
-
-Listing Existing Buffers
-========================
-
-`C-x C-b'
-     List the existing buffers (`list-buffers').
-
-   To display a list of all the buffers that exist, type `C-x C-b'.
-Each line in the list shows one buffer's name, major mode and visited
-file.  The buffers are listed in the order that they were current; the
-buffers that were current most recently come first.
-
-   `*' at the beginning of a line indicates the buffer is "modified."
-If several buffers are modified, it may be time to save some with `C-x
-s' (*note Saving::.).  `%' indicates a read-only buffer.  `.' marks the
-selected buffer.  Here is an example of a buffer list:
-
-      MR Buffer         Size  Mode           File
-      -- ------         ----  ----           ----
-     .*  emacs.tex      383402 Texinfo       /u2/emacs/man/emacs.tex
-         *Help*         1287  Fundamental
-         files.el       23076 Emacs-Lisp     /u2/emacs/lisp/files.el
-       % RMAIL          64042 RMAIL          /u/rms/RMAIL
-      *% man            747   Dired          /u2/emacs/man/
-         net.emacs      343885 Fundamental   /u/rms/net.emacs
-         fileio.c       27691 C              /u2/emacs/src/fileio.c
-         NEWS           67340 Text           /u2/emacs/etc/NEWS
-         *scratch*	   0	 Lisp Interaction
-
-Note that the buffer `*Help*' was made by a help request; it is not
-visiting any file.  The buffer `man' was made by Dired on the directory
-`/u2/emacs/man/'.
 

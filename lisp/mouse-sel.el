@@ -152,7 +152,8 @@
 (defcustom mouse-sel-mode nil
   "Toggle Mouse Sel mode.
 When Mouse Sel mode is enabled, mouse selection is enhanced in various ways.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `mouse-sel-mode'."
   :set (lambda (symbol value)
 	 (mouse-sel-mode (or value 0)))
   :initialize 'custom-initialize-default

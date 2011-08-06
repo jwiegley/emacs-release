@@ -502,12 +502,8 @@
 
 ;; Tibetan character set
 
-(let ((row 33))
-  (while (< row 38)
-    (modify-category-entry (make-char 'tibetan row) ?q)
-    (setq row (1+ row))))
-
-(modify-category-entry (make-char 'tibetan-1-column 33) ?q)
+(modify-category-entry (make-char 'tibetan) ?q)
+(modify-category-entry (make-char 'tibetan-1-column) ?q)
 
 (let ((deflist	'(;; chars             syntax category
 		  ("$(7"!(B-$(7"J(B"        	"w"	?0) ; consonant
@@ -578,7 +574,7 @@
 
 
 ;; For each character set, put the information of the most proper
-;; coding system to encode it by `prefered-coding-system' property.
+;; coding system to encode it by `preferred-coding-system' property.
 
 (let ((l '((latin-iso8859-1	. iso-latin-1)
 	   (latin-iso8859-2	. iso-latin-2)
@@ -613,7 +609,7 @@
 	   (indian-is13194	. devanagari)
 	   (indian-1-column	. devanagari)
 	   (tibetan-1-column	. tibetan)
-	   (ethiopic		. iso-2022-jp)
+	   (ethiopic		. iso-2022-7bit)
 	   (chinese-cns11643-3	. iso-2022-cn)
 	   (chinese-cns11643-4	. iso-2022-cn)
 	   (chinese-cns11643-5	. iso-2022-cn)
@@ -622,9 +618,20 @@
 	   (indian-2-column	. devanagari)
 	   (tibetan		. tibetan))))
   (while l
-    (put-charset-property (car (car l)) 'prefered-coding-system (cdr (car l)))
+    (put-charset-property (car (car l)) 'preferred-coding-system (cdr (car l)))
     (setq l (cdr l))))
-  
+
+
+;; Setup auto-fill-chars for charsets that should invoke auto-filling.
+;; SPACE and NEWLIE are already set.  Also put `nospace-between-words'
+;; property to the charsets.
+(let ((l '(katakana-jisx0201
+	   japanese-jisx0208 japanese-jisx0212
+	   chinese-gb2312 chinese-big5-1 chinese-big5-2)))
+  (while l
+    (aset auto-fill-chars (make-char (car l)) t)
+    (put-charset-property (car l) 'nospace-between-words t)
+    (setq l (cdr l))))
 
 ;;; Local Variables:
 ;;; coding: iso-2022-7bit

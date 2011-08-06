@@ -66,6 +66,7 @@ If optional argument HERE is non-nil, insert info at point."
 (defvar texinfo-node-names)
 (defvar texinfo-enclosure-list)
 (defvar texinfo-alias-list)
+(defvar texinfo-fold-nodename-case nil)
 
 (defvar texinfo-command-start)
 (defvar texinfo-command-end)
@@ -112,7 +113,8 @@ Non-nil argument (prefix, if interactive) means don't make tag table
 and don't split the file if large.  You can use Info-tagify and
 Info-split to do these manually."
   (interactive "P")
-  (let ((lastmessage "Formatting Info file..."))
+  (let ((lastmessage "Formatting Info file...")
+	(coding-system-for-write buffer-file-coding-system))
     (message lastmessage)
     (widen)
     (texinfo-format-buffer-1)
@@ -617,17 +619,16 @@ Do not append @refill to paragraphs containing @w{TEXT} or @*."
           ;; 4. Else go to end of paragraph and insert @refill
           (forward-paragraph)
           (forward-line -1)
-          (end-of-line)
-          (delete-region
-           (point)
-           (save-excursion (skip-chars-backward " \t") (point)))
-          ;; `looking-at-backward' not available in v. 18.57
-          ;; (if (not (looking-at-backward "@refill\\|@bye")) ;)
-          (if (not (re-search-backward
-                    "@refill\\|@bye"
-                    (save-excursion (beginning-of-line) (point))
-                    t))
-              (insert "@refill"))
+	  (let ((line-beg (point)))
+	    (end-of-line)
+	    (delete-region
+	     (point)
+	     (save-excursion (skip-chars-backward " \t") (point)))
+	    (forward-char 1)
+	    (unless (re-search-backward "@c[ \t\n]\\|@comment[ \t\n]" line-beg t)
+	      (forward-char -1))
+	    (unless (re-search-backward "@refill\\|@bye" line-beg t)
+	      (insert "@refill")))
           (forward-line 1))))))
 
 
@@ -875,6 +876,11 @@ lower types.")
           (forward-word 1)
         (forward-char 1))
       (setq texinfo-command-end (point))
+      ;; Detect the case of two @-commands in a row;
+      ;; process just the first one.
+      (goto-char (1+ texinfo-command-start))
+      (skip-chars-forward "^@" texinfo-command-end)
+      (setq texinfo-command-end (point))
       ;; Handle let aliasing
       (setq texinfo-command-name
             (let (trial
@@ -1115,7 +1121,7 @@ Leave point after argument."
          (up (nth 3 args)))
     (texinfo-discard-command)
     (setq texinfo-last-node name)
-    (let ((tem (downcase name)))
+    (let ((tem (if texinfo-fold-nodename-case (downcase name) name)))
       (if (assoc tem texinfo-node-names)
           (error "Duplicate node name: %s" name)
         (setq texinfo-node-names (cons (list tem) texinfo-node-names))))
@@ -1137,7 +1143,8 @@ Leave point after argument."
   (let (anchor-string 
         (here (- (point) 7))  ; save location of beginning of `@anchor'
         (arg (texinfo-parse-arg-discard)))
-    (delete-char 1)           ; since a space is left after -discard
+    (if (looking-at " ")      ; since a space may be left after -discard
+      (delete-char 1))
     (forward-paragraph) 
     (let ((end (point)))
       (if (save-excursion 
@@ -2268,6 +2275,27 @@ This command is executed when texinfmt sees @item inside @multitable."
          texinfo-enclosure-list))))
 
 
+;;; @alias
+
+(put 'alias 'texinfo-format 'texinfo-alias)
+(defun texinfo-alias ()
+  (let ((start (1- (point)))
+        args)
+    (skip-chars-forward " ")
+    (save-excursion (end-of-line) (setq texinfo-command-end (point)))
+    (if (not (looking-at "\\([^=]+\\)=\\(.*\\)"))
+	(error "Invalid alias command")
+      (setq texinfo-alias-list
+	    (cons
+	     (cons
+	      (buffer-substring (match-beginning 1) (match-end 1))
+	      (buffer-substring (match-beginning 2) (match-end 2)))
+	     texinfo-alias-list))
+      (texinfo-discard-command))
+    )
+  )
+
+
 ;;; @var, @code and the like
 
 (put 'var 'texinfo-format 'texinfo-format-var)
@@ -2277,8 +2305,9 @@ This command is executed when texinfmt sees @item inside @multitable."
 ;;  Convert all letters to uppercase if they are not already.
 (put 'acronym 'texinfo-format 'texinfo-format-var)
 (defun texinfo-format-var ()
-  (insert (upcase (texinfo-parse-arg-discard)))
-  (goto-char texinfo-command-start))
+  (let ((arg (texinfo-parse-expanded-arg)))
+    (texinfo-discard-command)
+    (insert (upcase arg))))
 
 (put 'cite 'texinfo-format 'texinfo-format-code)
 (put 'code 'texinfo-format 'texinfo-format-code)
@@ -2444,7 +2473,7 @@ If used within a line, follow `@bullet' with braces."
 (defun texinfo-format-direntry ()
   (texinfo-push-stack 'direntry nil)
   (texinfo-discard-line)
-  (insert "START-INFO-DIR-ENTRY\n\n"))
+  (insert "START-INFO-DIR-ENTRY\n"))
 
 (put 'direntry 'texinfo-end 'texinfo-end-direntry)
 (defun texinfo-end-direntry ()
@@ -2603,41 +2632,43 @@ Default is to leave the number of spaces as is."
   "Refill paragraph. Also, indent first line as set by @paragraphindent.
 Default is to leave paragraph indentation as is."
   (texinfo-discard-command)
-  (forward-paragraph -1)     
-  (if (looking-at "[ \t\n]*$") (forward-line 1))
-  ;; Do not indent if an entry in a list, table, or deffn,
-  ;; or if paragraph is preceded by @noindent.
-  ;; Otherwise, indent
-  (cond 
-   ;; delete a @noindent line and do not indent paragraph
-   ((save-excursion (forward-line -1)
-                    (looking-at "^@noindent")) 
+  (let ((position (point-marker)))
+    (forward-paragraph -1)     
+    (if (looking-at "[ \t\n]*$") (forward-line 1))
+    ;; Do not indent if an entry in a list, table, or deffn,
+    ;; or if paragraph is preceded by @noindent.
+    ;; Otherwise, indent
+    (cond 
+     ;; delete a @noindent line and do not indent paragraph
+     ((save-excursion (forward-line -1)
+		      (looking-at "^@noindent")) 
+      (forward-line -1)
+      (delete-region (point) (progn (forward-line 1) (point))))
+     ;; do nothing if "asis"
+     ((equal texinfo-paragraph-indent "asis"))
+     ;; do no indenting in list, etc.
+     ((> texinfo-stack-depth 0))   
+     ;; otherwise delete existing whitespace and indent
+     (t 
+      (delete-region (point) (progn (skip-chars-forward " \t") (point)))
+      (insert (make-string texinfo-paragraph-indent ? ))))
+    (forward-paragraph 1) 
     (forward-line -1)
-    (delete-region (point) (progn (forward-line 1) (point))))
-   ;; do nothing if "asis"
-   ((equal texinfo-paragraph-indent "asis"))
-   ;; do no indenting in list, etc.
-   ((> texinfo-stack-depth 0))   
-   ;; otherwise delete existing whitespace and indent
-   (t 
-    (delete-region (point) (progn (skip-chars-forward " \t") (point)))
-    (insert (make-string texinfo-paragraph-indent ? ))))
-  (forward-paragraph 1) 
-  (forward-line -1)
-  (end-of-line)
-  ;; Do not fill a section title line with asterisks, hyphens, etc. that
-  ;; are used to underline it.  This could occur if the line following
-  ;; the underlining is not an index entry and has text within it.
-  (let* ((previous-paragraph-separate paragraph-separate)
-         (paragraph-separate
-          (concat paragraph-separate "\\|[-=.]+\\|\\*\\*+"))
-         (previous-paragraph-start paragraph-start)
-         (paragraph-start 
-          (concat paragraph-start "\\|[-=.]+\\|\\*\\*+")))
-    (unwind-protect
-        (fill-paragraph nil)
-      (setq paragraph-separate previous-paragraph-separate)
-      (setq paragraph-start previous-paragraph-start))))
+    (end-of-line)
+    ;; Do not fill a section title line with asterisks, hyphens, etc. that
+    ;; are used to underline it.  This could occur if the line following
+    ;; the underlining is not an index entry and has text within it.
+    (let* ((previous-paragraph-separate paragraph-separate)
+	   (paragraph-separate
+	    (concat paragraph-separate "\\|[-=.]+\\|\\*\\*+"))
+	   (previous-paragraph-start paragraph-start)
+	   (paragraph-start 
+	    (concat paragraph-start "\\|[-=.]+\\|\\*\\*+")))
+      (unwind-protect
+	  (fill-paragraph nil)
+	(setq paragraph-separate previous-paragraph-separate)
+	(setq paragraph-start previous-paragraph-start)))
+    (goto-char position)))
 
 (put 'noindent 'texinfo-format 'texinfo-noindent)
 (defun texinfo-noindent ()  

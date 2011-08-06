@@ -78,7 +78,7 @@ can move point away, leaving the mark behind.
 button one across a range of text; that puts point where you release the
 mouse button, and sets the mark at the other end of that range.  Or you
 can click mouse button three, which sets the mark at point (like
-@kbd{C-@key{SPC}}) and them moves point (like @kbd{Mouse-1}).  Both of
+@kbd{C-@key{SPC}}) and then moves point (like @kbd{Mouse-1}).  Both of
 these methods copy the region into the kill ring in addition to setting
 the mark; that gives behavior consistent with other window-driven
 applications, but if you don't want to modify the kill ring, you must
@@ -342,6 +342,8 @@ new mark position makes an entry on the global mark ring also.  The
 result is that the global mark ring records a sequence of buffers that
 you have been in, and, for each buffer, a place where you set the mark.
 
+@kindex C-x C-@key{SPC}
+@findex pop-global-mark
   The command @kbd{C-x C-@key{SPC}} (@code{pop-global-mark}) jumps to
 the buffer and position of the latest entry in the global ring.  It also
 rotates the ring, so that successive uses of @kbd{C-x C-@key{SPC}} take

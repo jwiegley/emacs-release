@@ -1,7 +1,6 @@
 \input texinfo  @c -*-texinfo-*-
 @c %**start of header
-@c $Id: reftex.texinfo,v 1.68 1998/08/10 13:07:32 dominik Exp dominik $
-@setfilename reftex
+@setfilename ../info/reftex
 @settitle RefTeX User Manual
 @dircategory Editors
 @direntry
@@ -11,15 +10,22 @@
 @synindex ky cp
 @syncodeindex vr cp
 @syncodeindex fn cp
+@set VERSION 3.43
+@set EDITION 3.43
+@set DATE December 1998
+@set AUTHOR Carsten Dominik
+@set AUTHOR-EMAIL dominik@@strw.leidenuniv.nl
+@set MAINTAINER Carsten Dominik
+@set MAINTAINER-EMAIL dominik@@strw.leidenuniv.nl
 @c %**end of header
 @finalout
-
 
 @ifinfo
 This file documents @b{Ref@TeX{}}, a package to do labels, references and
 citations for LaTeX documents with Emacs.@refill
 
-This is edition 3.34 of the @b{Ref@TeX{}} User Manual for @b{Ref@TeX{}} 3.34
+This is edition @value{EDITION} of the @b{Ref@TeX{}} User Manual for
+@b{Ref@TeX{}} @value{VERSION}@refill
 
 Copyright (c) 1997, 1998 Free Software Foundation, Inc.
 
@@ -51,15 +57,15 @@ translation approved by the Free Software Foundation.
 @titlepage
 @title Ref@TeX{} User Manual
 @subtitle Support for LaTeX labels, references, and citations with GNU Emacs
-@subtitle Edition 3.34, June 1998
+@subtitle Edition @value{EDITION}, @value{DATE}
 
 @author by Carsten Dominik
 @page
 Copyright @copyright{} 1997, 1998 Free Software Foundation, Inc.
 
 @sp 2
-This is edition 3.34 of the @cite{Ref@TeX{} User Manual} for @b{Ref@TeX{}}
-version 3.34, June 1998.@refill
+This is edition @value{EDITION} of the @cite{Ref@TeX{} User Manual} for
+@b{Ref@TeX{}} version @value{VERSION}, @value{DATE}.@refill
 
 @sp 2
 
@@ -85,27 +91,30 @@ translation approved by the Free Software Foundation.
 @ifinfo
 @node Top,,,(dir)
 
-@b{Ref@TeX{}} is a package for managing Labels, References and Citations
-with GNU Emacs.@refill
+@b{Ref@TeX{}} is a package for managing Labels, References and
+Citations with GNU Emacs.@refill
 
-Don't be discouraged by the size of this manual, which covers @b{Ref@TeX{}}
-in great depth.  All you need to know to use @b{Ref@TeX{}} can be
-summarized on a single page (@pxref{RefTeX in a Nutshell}).  You can go
-back later to other parts of this document when needed.@refill
+Don't be discouraged by the size of this manual, which covers
+@b{Ref@TeX{}} in great depth.  All you need to know to use
+@b{Ref@TeX{}} can be summarized on a single page (@pxref{RefTeX in a
+Nutshell}).  You can go back later to other parts of this document when
+needed.@refill
 
 @menu
 * Introduction::                     Quick-Start information.
 
+* Table of Contents::                A Tool to move around quickly.
 * Labels and References::            Creating and referencing labels.
 * Citations::                        Creating Citations.
-* Table of Contents::                A Tool to move around quickly.
+* Viewing Cross-References::         Who references or cites what?
 
 * RefTeXs Menu::                     The Ref menu in the menubar.
 * Keybindings::                      The default keybindings.
 * Faces::                            Fontification of RefTeX's buffers.
-* AUCTeX::                           Cooperation with AUCTeX.
 * Multifile Documents::              Document spread over many files.
 * Language Support::                 How to support other languages.
+* Finding Files::                    Included TeX files and BibTeX .bib files.
+* AUCTeX::                           Cooperation with AUCTeX.
 * Optimizations::                    When RefTeX is too slow.
 * Problems and Work-Arounds::        First Aid.
 * Imprint::                          Author, Web-site, Thanks
@@ -119,18 +128,20 @@ The Index
 
 * Index::                            The full index.
 
+@detailmenu
+
 Introduction
 
 * Installation::                     How to install and activate RefTeX.
 * RefTeX in a Nutshell::             A brief summary and quick guide.
-
+ 
 Labels and References
 
 * Creating Labels::
 * Referencing Labels::
 * Builtin Label Environments::       The environments RefTeX knows about.
 * Defining Label Environments::        ... and environments it doesn't.
-* Displaying Cross References::      View the label corresponding to a \ref.
+* Reference Info::                   View the label corresponding to a \ref.
 * xr (LaTeX package)::               References to external documents.
 * varioref (LaTeX package)::         How to create \vref instead of \ref.
 
@@ -147,7 +158,7 @@ Citations
 
 * Creating Citations::               How to create them.
 * Citation Styles::                  Natbib, Harvard, Chicago and CO.
-* Displaying Citations::             View the corresponding database entry.
+* Citation Info::                    View the corresponding database entry.
 * Chapterbib and Bibunits::          Multiple bibliographies in a Document.
 * Citations Outside LaTeX::          How to make citations in Emails etc.
 
@@ -159,21 +170,23 @@ AUCTeX
 
 Options, Keymaps, Hooks
 
+* Options (Table of Contents)::
 * Options (Defining Label Environments)::
 * Options (Creating Labels)::
 * Options (Referencing Labels)::
 * Options (Creating Citations)::
-* Options (Table of Contents)::
-* Options (Viewing Cross References)::
+* Options (Viewing Cross-References)::
+* Options (Finding Files)::
 * Options (Optimizations)::
 * Options (Fontification)::
 * Options (Misc)::
 
+@end detailmenu
 @end menu
 
 @end ifinfo
 
-@node Introduction, Labels and References, , Top
+@node Introduction, Table of Contents, , Top
 @chapter Introduction
 @cindex Introduction
 
@@ -193,6 +206,9 @@ summarized on a single page (@pxref{RefTeX in a Nutshell}).  You can go
 back later to other parts of this document when needed.
 @end iftex
 
+@xref{Imprint}, for information about who to contact for help, bug
+reports or suggestions.
+
 @menu
 * Installation::                     How to install and activate RefTeX.
 * RefTeX in a Nutshell::             A brief summary and quick guide.
@@ -202,13 +218,35 @@ back later to other parts of this document when needed.
 @section Installation
 @cindex Installation
 
-If you are using Emacs 20.2 and later or XEmacs 19.16 or 20.2 and
-later, @b{Ref@TeX{}} is installed already.@refill
+@b{Ref@TeX{}} is bundled and pre--installed with Emacs since version 20.2.
+
+Users of earlier Emacs distributions (including Emacs 19) can get a copy
+of the @b{Ref@TeX{}} distribution from the maintainers web-page.
+@xref{Imprint}, for more information.@refill
+
+@section Environment
+@cindex Finding files
+@cindex BibTeX database files, not found
+@cindex TeX files, not found
+@cindex @code{TEXINPUTS}, environment variable
+@cindex @code{BIBINPUTS}, environment variable
+
+@b{Ref@TeX{}} needs to access all files which are part of a multifile
+document, and the BibTeX database files requested by the
+@code{\bibliography} command.  To find these files, @b{Ref@TeX{}} will
+require a search path, i.e., a list of directories to check.  Normally
+this list is stored in the environment variables @code{TEXINPUTS} and
+@code{BIBINPUTS} which are also used by @b{Ref@TeX{}}.  However, on some
+systems these variables do not contain the full search path.  If
+@b{Ref@TeX{}} does not work for you because it cannot find some files,
+read @ref{Finding Files}.
 
 @section Entering @b{Ref@TeX{}} Mode
 
 @findex turn-on-reftex
 @findex reftex-mode
+@vindex LaTeX-mode-hook
+@vindex latex-mode-hook
 To turn @b{Ref@TeX{}} Mode on and off in a particular buffer, use
 @kbd{M-x reftex-mode}.  To turn on @b{Ref@TeX{}} Mode for all LaTeX
 files, add the following lines to your @file{.emacs} file:@refill
@@ -228,13 +266,18 @@ files, add the following lines to your @file{.emacs} file:@refill
 
 @enumerate
 @item
+@b{Table of Contents}@* 
+Typing @kbd{C-c =} (@code{reftex-toc}) will show a table of contents of
+the document.  From that buffer, you can jump quickly to every part of
+your document.  Press @kbd{?} to get help.@refill
+
+@item
 @b{Labels and References}@* 
 @b{Ref@TeX{}} distinguishes labels for different environments.  It knows
 about all standard environments (and many others), and can be configured
 to recognize any additional labeled environments you have defined
-yourself (variable @var{reftex-label-alist}).@refill
-@itemize @bullet
-@item
+yourself (variable @code{reftex-label-alist}).@refill
+
 @b{Creating Labels}@* 
 Type @kbd{C-c (} (@code{reftex-label}) to insert a label at point.
 @b{Ref@TeX{}} will either
@@ -243,77 +286,195 @@ Type @kbd{C-c (} (@code{reftex-label}) to insert a label at point.
 derive a label from context (default for section labels)
 @item
 prompt for a label string (default for figures and tables) or
-@item
+@item 
 insert a simple label made of a prefix and a number (all other
-environments).@refill
+environments)@refill
 @end itemize
 @noindent
-Which labels are created how is configurable (variable
-@var{reftex-insert-label-flags}).@refill
+This is configurable with the variable
+@code{reftex-insert-label-flags}.@refill
 
-@item
 @b{Referencing Labels}@* 
-In order to make a reference, type @kbd{C-c )}
-(@code{reftex-reference}).  This shows an outline of the document with
-all labels of a certain type (figure, equation,...) and context of the
-label definition.  Selecting a label inserts a @code{\ref@{LABEL@}}
-macro into the original buffer.@refill
-@end itemize
+To make a reference, type @kbd{C-c )} (@code{reftex-reference}).  This
+shows an outline of the document with all labels of a certain type
+(figure, equation,...) and some label context.  Selecting a
+label inserts a @code{\ref@{@var{label}@}} macro into the original
+buffer.@refill
 
 @item
-@b{Citations}@* 
-After typing @kbd{C-c [} (@code{reftex-citation}), @b{Ref@TeX{}} will
-let you specify a regular expression to search in current BibTeX
-database files (as specified in the @code{\bibliography} command) and
-pull out a list of matches for you to choose from.  The list is
-@emph{formatted} and sorted.  The selected article is referenced as
-@samp{\cite@{KEY@}} (customizable with variable
-@var{reftex-cite-format}).@refill
+@b{Citations}@*
+Typing @kbd{C-c [} (@code{reftex-citation}) will let you specify a
+regular expression to search in current BibTeX database files (as
+specified in the @code{\bibliography} command) and pull out a list of
+matches for you to choose from.  The list is @emph{formatted} and
+sorted.  The selected article is referenced as @samp{\cite@{@var{key}@}}
+(see variable @code{reftex-cite-format}).@refill
 
-@item
-@b{Viewing Cross References}@*
-When no other message occupies the echo area and point is idle on the
-argument of a @code{\ref} or @code{\cite} macro, the echo area will
-display information about the citation/cross reference.@* 
-With point on or anywhere before such a macro, press @kbd{C-c &}
-(@code{reftex-view-crossref}), or click with @kbd{S-mouse-2} on the
-macro argument.  This will display the corresponding label definition or
-BibTeX database entry in another window.  @refill
-
-@item
-@b{Table of Contents}@* 
-Typing @kbd{C-c =} (@code{reftex-toc}) will show a table of contents of
-the document.  From that buffer, you can jump quickly to every part of
-your document.@refill
+@item @b{Viewing Cross-References}@*
+When point is on the @var{key} argument of a cross--referencing macro
+(@code{\label}, @code{\ref}, @code{\cite}, @code{\bibitem},
+@code{\index}, and variations) or inside a BibTeX database entry, you
+can press @kbd{C-c &} (@code{reftex-view-crossref}) to display
+corresponding locations in the document and associated BibTeX database
+files.@refill @*
+When the enclosing macro is @code{\cite} or
+@code{\ref} and no other message occupies the echo area, information
+about the citation or label will automatically be displayed.@refill
 
 @item
 @b{Multifile Documents}@* Multifile Documents are fully
-supported. @b{Ref@TeX{}} will provide cross referencing information from
-all files which are part of the document, and even across document
-borders (@file{xr.sty}).@refill
+supported.  @b{Ref@TeX{}} provides cross-referencing information from all
+parts of the document, and across document borders
+(@file{xr.sty}).@refill
 
 @item
-@b{Document Parsing}@*
-@b{Ref@TeX{}} needs to parse the document in order to find labels and
-other information.  It does it automatically once, when you start
-working with a document.  @b{Ref@TeX{}} updates its lists internally
-when you make a new label with @code{reftex-label}.  To enforce
-reparsing, call any of the commands described above with a raw @kbd{C-u}
-prefix, or press the @kbd{r} key in the label selection buffer or the
-table of contents buffer.@refill
+@b{Document Parsing}@* @b{Ref@TeX{}} needs to parse the document in
+order to find labels and other information.  It does it automatically
+once and updates its list internally when @code{reftex-label} is used.
+To enforce reparsing, call any of the commands described above with a
+raw @kbd{C-u} prefix, or press the @kbd{r} key in the label selection
+buffer or the table of contents buffer.@refill
 
 @item
-@b{Speed Issues}@*
-Useful settings to make @b{Ref@TeX{}} faster for large
-(multifile) documents include:@refill
+@b{Useful Settings}@* To make @b{Ref@TeX{}} faster for large documents,
+and to integrate with AUCTeX, try these:@refill
 @lisp
 (setq reftex-enable-partial-scans t)
 (setq reftex-save-parse-info t)
 (setq reftex-use-multiple-selection-buffers t)
+(setq reftex-plug-into-AUCTeX t)
 @end lisp
 @end enumerate
 
-@node Labels and References, Citations, Introduction, Top
+@node Table of Contents, Labels and References, Introduction, Top
+@chapter Table of Contents
+@cindex @file{*toc*} buffer
+@cindex Table of contents buffer
+@findex reftex-toc
+@kindex C-c =
+
+Pressing the keys @kbd{C-c =} pops up a buffer showing
+the table of contents of the document.  By default, this @file{*toc*}
+buffer shows only the sections of a document.  Using the @kbd{l} and
+@kbd{c} keys you can have all labels defined in the document and some
+context of the label definition displayed as well.@refill
+
+With the cursor in any of the lines denoting a location in the
+document, simple key strokes will display the corresponding part in
+another window, jump to that location, or perform other actions.@refill
+
+@kindex ?
+Here is a list of special commands in the @file{*toc*} buffer.  A
+summary of this information is always available by pressing
+@kbd{?}.@refill
+
+@table @kbd
+
+@item 0-9, -
+Prefix argument.
+
+@item c
+@vindex reftex-toc-include-context
+Toggle the display of label context in the @file{*toc*} buffer.  The
+default for this flag can be set with the variable
+@code{reftex-toc-include-context}.@refill
+
+@item f
+@vindex reftex-toc-follow-mode
+@vindex reftex-revisit-to-follow
+Toggle follow mode.  When follow mode is active, the other window will
+always show the location corresponding to the line in the @file{*toc*}
+buffer at point.  This is similar to pressing @key{SPC} after each
+cursor motion.  The default for this flag can be set with the variable
+@code{reftex-toc-follow-mode}.  Note that only context in files already
+visited is shown.  @b{RefTeX} will not visit a file just for follow
+mode.  See, however, the variable @code{reftex-revisit-to-follow}.@refill
+
+@item g
+Rebuild the @file{*toc*} buffer.  This does @emph{not} rescan the
+document.@refill
+
+@item i
+@vindex reftex-toc-include-file-boundaries
+Toggle the display of the file borders of a multifile document in the
+@file{*toc*} buffer.  The default for this flag can be set with the
+variable @code{reftex-toc-include-file-boundaries}.@refill
+
+@item l
+@vindex reftex-toc-include-labels
+Toggle the display of labels @file{*toc*} buffer.  The default for this
+flag can be set with the variable
+@code{reftex-toc-include-labels}.@refill
+
+@item n
+Goto next entry in the table of context.
+
+@item p
+Goto previous entry in the table of context.
+
+@item q
+Hide the @file{*toc*} buffer, return to the position where
+@code{reftex-toc} was last called.@refill
+
+@item Q
+Kill the @file{*toc*} buffer, return to the position where
+@code{reftex-toc} was last called.@refill
+
+@item r
+@vindex reftex-enable-partial-scans
+Reparse the LaTeX document and rebuild the @file{*toc*} buffer.  When
+@code{reftex-enable-partial-scans} is non-nil, rescan only the file this
+location is defined in, not the entire document.@refill
+
+@item R
+Reparse the @emph{entire} LaTeX document and rebuild the @file{*toc*}
+buffer.@refill
+
+@item x
+Switch to the @file{*toc*} buffer of an external document.  When the
+current document is using the @code{xr} package (@pxref{xr (LaTeX
+package)}), @b{Ref@TeX{}} will switch to one of the external
+documents.@refill
+
+@item .
+Show calling point in another window.  This is the point from where
+@code{reftex-toc} was last called.
+
+@item @key{SPC}
+Show the corresponding location in another window.  This command does
+@emph{not} select that other window.@refill
+
+@item @key{TAB}
+Goto the location in another window.
+
+@item @key{RET}
+Go to the location and hide the @file{*toc*} buffer.  This will restore
+the window configuration before @code{reftex-toc} (@kbd{C-c =}) was
+called.@refill
+
+@item mouse-2
+@vindex reftex-highlight-selection
+Clicking with mouse button 2 on a line has the same effect as @key{RET}.
+See also variable @code{reftex-highlight-selection}, @ref{Options
+(Fontification)}.@refill
+
+@end table
+
+@vindex reftex-toc-map
+In order to define additional commands for the @file{*toc*} buffer, the
+keymap @code{reftex-toc-map} may be used.@refill
+
+@cindex Sectioning commands
+@cindex KOMA-Script, LaTeX classes
+@cindex LaTeX classes, KOMA-Script
+@vindex reftex-section-levels
+The section macros recognized by @b{Ref@TeX{}} are all LaTeX section
+macros (from @code{\part} to @code{\subsubparagraph}) and the commands
+@code{\addchap} and @code{\addsec} from the KOMA-Script classes.
+Additional macros can be configured with the variable
+@code{reftex-section-levels}.
+
+@node Labels and References, Citations, Table of Contents, Top
 @chapter Labels and References
 @cindex Labels in LaTeX
 @cindex References in LaTeX
@@ -321,7 +482,7 @@ Useful settings to make @b{Ref@TeX{}} faster for large
 @cindex Label environment
 @cindex @code{\label}
 
-LaTeX provides a powerful mechanism to deal with cross references in a
+LaTeX provides a powerful mechanism to deal with cross--references in a
 document.  When writing a document, any part of it can be marked with a
 label, like @samp{\label@{mark@}}.  LaTeX records the current value of a
 certain counter when a label is defined.  Later references to this label
@@ -335,7 +496,7 @@ records the figure counter, not the section counter.@refill
 
 Several different environments can share a common counter and therefore
 a common label category.  E.g.  labels in both @code{equation} and
-@code{eqnarray} environments record the value of the same counter - the
+@code{eqnarray} environments record the value of the same counter---the
 equation counter.@refill
 
 @menu
@@ -343,7 +504,7 @@ equation counter.@refill
 * Referencing Labels::
 * Builtin Label Environments::       The environments RefTeX knows about.
 * Defining Label Environments::        ... and environments it doesn't.
-* Displaying Cross References::      View the label corresponding to a \ref.
+* Reference Info::                   View the label corresponding to a \ref.
 * xr (LaTeX package)::               References to external documents.
 * varioref (LaTeX package)::         How to create \vref instead of \ref.
 @end menu
@@ -365,14 +526,24 @@ indicating the type of the label and a unique mark.  @b{Ref@TeX{}} has
 
 @enumerate
 @item
+@vindex reftex-translate-to-ascii-function
+@vindex reftex-derive-label-parameters
+@vindex reftex-label-illegal-re
+@vindex reftex-abbrev-parameters
 A label can be derived from context.  This means, @b{Ref@TeX{}} takes
-the context of the label definition and construct a label from
-that@footnote{Note that @b{Ref@TeX{}} will remove Mule characters from
-the string before converting it to a label. @xref{Language Support} for
-additional information.}.  This works best for section labels, where the
-section heading is used to construct a label.  In fact, @b{Ref@TeX{}}'s
-default settings use this method only for section labels.  You will be
-asked to confirm the derived label, or edit it.@refill
+the context of the label definition and constructs a label from
+that@footnote{Note that the context may contain constructs which are
+illegal in labels.  @b{Ref@TeX{}} will therefore strip the accent from
+accented Latin-1 characters and remove everything else which is not
+legal in labels.  This mechanism is safe, but may not be satisfactory
+for non-western languages.  Check the following variables if you need to
+change things: @code{reftex-translate-to-ascii-function},
+@code{reftex-derive-label-parameters}, @code{reftex-label-illegal-re},
+@code{reftex-abbrev-parameters}.}.  This works best for section labels,
+where the section heading is used to construct a label.  In fact,
+@b{Ref@TeX{}}'s default settings use this method only for section
+labels.  You will be asked to confirm the derived label, or edit
+it.@refill
 
 @item
 We may also use a simple unique number to identify a label.  This is
@@ -396,15 +567,15 @@ It will then not be necessary to rescan the document in order to access
 this label later.@refill
 @end enumerate
 
+@vindex reftex-insert-label-flags
 If you want to change the way certain labels are created, check out the
-variable @var{reftex-insert-label-flags} (@pxref{Options (Creating
+variable @code{reftex-insert-label-flags} (@pxref{Options (Creating
 Labels)}).@refill
 
 If you are using AUCTeX to write your LaTeX documents, you can
 set it up to delegate the creation of labels to
-@b{Ref@TeX{}}. @xref{AUCTeX} for more information.
+@b{Ref@TeX{}}. @xref{AUCTeX}, for more information.
 
-@page
 @node Referencing Labels, Builtin Label Environments, Creating Labels, Labels and References
 @section Referencing Labels
 @cindex Referencing labels
@@ -432,13 +603,15 @@ labels of the given label category.  In addition, next to the label
 there will be one line of context of the label definition, which is some
 text in the buffer near the label definition.  Usually this is
 sufficient to identify the label.  If you are unsure about a certain
-label, pressing @kbd{SPC} will show the label definition point in
+label, pressing @key{SPC} will show the label definition point in
 another window.@refill
 
 In order to reference a label, move to cursor to the correct label and
-press @kbd{RET}.@* Here is a list of special commands available in the
-selection buffer.  A summary of this information is always available
-from the selection process by pressing @kbd{?}.@refill
+press @key{RET}.@*
+@kindex ?
+Here is a list of special commands in the selection buffer.  A summary
+of this information is always available from the selection process by
+pressing @kbd{?}.@refill
 
 @table @kbd
 @item 0-9,-
@@ -453,12 +626,13 @@ Toggle the display of the one-line label definition context in the
 selection buffer.@refill
 
 @item f
+@vindex reftex-revisit-to-follow
 Toggle follow mode.  When follow mode is active, the other window will
 always display the full context of the current label.  This is similar
 to pressing @key{SPC} after each cursor motion.  Note that only context
 in files already visited is shown.  @b{RefTeX} will not visit a file
 just for follow mode.  See, however, the variable
-@var{reftex-revisit-to-follow}.@refill
+@code{reftex-revisit-to-follow}.@refill
 
 @item g
 Update the menu.  This will rebuilt the menu from the internal label
@@ -470,7 +644,7 @@ selection buffer.@refill
 
 @item l
 Use the last referenced label again.  This is equivalent to moving to
-that label again and pressing @kbd{RET}.@refill
+that label and pressing @key{RET}.@refill
 
 @item n
 Go to next label.
@@ -483,11 +657,12 @@ Exit the selection process without inserting any reference into the
 buffer.@refill
 
 @item r
+@vindex reftex-enable-partial-scans
 Reparse the document to update the information on all labels and rebuild
-the menu.  If the variable @var{reftex-enable-partial-scans} is
+the menu.  If the variable @code{reftex-enable-partial-scans} is
 non-@code{nil} and your document is a multifile document, this will
-reparse only a a part of the document (the file the label at point was
-defined in).@refill
+reparse only a part of the document (the file in which the label at
+point was defined).@refill
 
 @item R
 Reparse the @emph{entire} document.
@@ -517,21 +692,22 @@ package),,xr}).@refill
 Show insertion point in another window.  This is the point from where you
 called @code{reftex-reference}.@refill
 
-@item TAB
+@item @key{TAB}
 Enter a label with completion.  This may also be a label which does not
 yet exist in the document.
 
-@item SPC
+@item @key{SPC}
 Show the surroundings of the definition of the current label in another
 window.  See also the @kbd{f} key.@refill
 
-@item RET
+@item @key{RET}
 Insert a reference to the label at point into the buffer from which the
 selection process was started.@refill
 
 @item mouse-2
+@vindex reftex-highlight-selection
 Clicking with mouse button 2 on a label will accept it like @key{RET}
-would. See also variable @var{reftex-highlight-selection}, @ref{Options
+would. See also variable @code{reftex-highlight-selection}, @ref{Options
 (Misc)}.@refill
 
 @item #
@@ -554,11 +730,13 @@ Goto previous section heading (like outline mode).
 
 @end table
 
+@vindex reftex-label-menu-flags
+@vindex reftex-select-label-map
 Several of these keys toggle certain settings.  The default value for
 these flags can be preset by configuring the variable
-@var{reftex-label-menu-flags} (@pxref{Options (Referencing Labels)}).
+@code{reftex-label-menu-flags} (@pxref{Options (Referencing Labels)}).
 In order to define additional commands for the selection process, the
-keymap @var{reftex-select-label-map} may be used.@refill
+keymap @code{reftex-select-label-map} may be used.@refill
 
 @node Builtin Label Environments, Defining Label Environments, Referencing Labels, Labels and References
 @section Builtin Label Environments
@@ -661,18 +839,18 @@ the @code{\endnote} macro (from @file{endnotes.sty})
 @code{wrapfigure} (@file{wrapfig.sty})
 @end itemize
 
-If you want to use other labeled environments, for example some defined
-with @code{\newtheorem}, @b{Ref@TeX{}} needs to be configured to recognize them
-(@pxref{Defining Label Environments}).@refill
+If you want to use other labeled environments, defined with
+@code{\newtheorem}, @b{Ref@TeX{}} needs to be configured to recognize
+them (@pxref{Defining Label Environments}).@refill
 
-@node Defining Label Environments, Displaying Cross References, Builtin Label Environments, Labels and References
+@node Defining Label Environments, Reference Info, Builtin Label Environments, Labels and References
 @section Defining Label Environments
 @cindex Label environments, defining
-@vindex reftex-label-alist
 
+@vindex reftex-label-alist
 @b{Ref@TeX{}} can be configured to recognize additional labeled
 environments and macros.  This is done with the variable
-@var{reftex-label-alist} (@pxref{Options (Defining Label
+@code{reftex-label-alist} (@pxref{Options (Defining Label
 Environments)}).  If you are not familiar with Lisp, you should use the
 @code{custom} library to configure this rather complex variable.  To do
 this, use
@@ -681,9 +859,10 @@ this, use
 @kbd{M-x customize-variable @key{RET} reftex-label-alist @key{RET}}
 @end example
 
+@vindex reftex-label-alist-builtin
 Here we will discuss a few examples, in order to make things clearer.
 It can also be instructive to look at the constant
-@var{reftex-label-alist-builtin} which contains the entries for
+@code{reftex-label-alist-builtin} which contains the entries for
 all the builtin environments and macros (@pxref{Builtin Label
 Environments}).@refill
 
@@ -723,7 +902,7 @@ to be used like this:
 So we need to tell @b{Ref@TeX{}} that @code{theorem} and @code{axiom} are new
 labeled environments which define their own label categories.  We can
 either use Lisp to do this (e.g. in @file{.emacs}) or use the custom
-library.  With lisp it would look like this
+library.  With Lisp it would look like this
 
 @lisp
 (setq reftex-label-alist
@@ -732,14 +911,14 @@ library.  With lisp it would look like this
 @end lisp
 
 The type indicator characters @code{?a} and @code{?h} are used for
-prompts when @b{Ref@TeX{}} queries for a label type.  Note that @code{?h}
+prompts when @b{Ref@TeX{}} queries for a label type.  @code{?h}
 was chosen for @code{theorem} since @code{?t} is already taken by
 @code{table}.  Note that also @code{?s}, @code{?f}, @code{?e},
 @code{?i}, @code{?n} are already used for standard environments.@refill
 
 @noindent
 The labels for Axioms and Theorems will have the prefixes @samp{ax:} and
-@samp{thr:}, respectively.  @xref{AUCTeX} for information on how
+@samp{thr:}, respectively.  @xref{AUCTeX}, for information on how
 AUCTeX can use @b{Ref@TeX{}} to automatically create labels when a new
 environment is inserted into a buffer.@refill
 
@@ -758,7 +937,7 @@ a @code{\macro} or after the @code{\begin} statement).  @code{t} is
 @code{nil} means to use the text right after the label definition.@refill
 @item
 For more complex ways of getting context, see the variable
-@var{reftex-label-alist} (@pxref{Options (Defining Label
+@code{reftex-label-alist} (@pxref{Options (Defining Label
 Environments)}).@refill
 @end itemize
 
@@ -797,11 +976,13 @@ Reftex Label Alist: [Hide]
               [INS]
 @end example
 
+@vindex reftex-insert-label-flags
+@vindex reftex-label-menu-flags
 Depending on how you would like the label insertion and selection for
 the new environments to work, you might want to add the letters @samp{a}
 and @samp{h} to some of the flags in the variables
-@var{reftex-insert-label-flags} (@pxref{Options (Creating Labels)})
-and @var{reftex-label-menu-flags} (@pxref{Options (Referencing
+@code{reftex-insert-label-flags} (@pxref{Options (Creating Labels)})
+and @code{reftex-label-menu-flags} (@pxref{Options (Referencing
 Labels)}).@refill
 
 
@@ -844,7 +1025,7 @@ Here is again how this would look in the customization buffer:
 Reftex Label Alist: [Hide]
 [INS] [DEL] Package or Detailed   : [Value Menu] Detailed:
             Environment or \macro : [Value Menu] String: \quickeq@{@}
-            Type specification    : [Value Menu] Char  : h
+            Type specification    : [Value Menu] Char  : e
             Label prefix string   : [Value Menu] Default
             Label reference format: [Value Menu] Default
             Context method        : [Value Menu] Macro arg nr: 1
@@ -944,7 +1125,7 @@ predefined label categories.@refill
 Another case where one only wants to change the information associated
 with the label category is to change the macro which is used for
 referencing the label.  When working with the AMS-LaTeX stuff, you might
-prefer the @code{\eqref} for doing equation references.  Here is how to
+prefer @code{\eqref} for doing equation references.  Here is how to
 do this:
 
 @lisp
@@ -959,13 +1140,13 @@ following is equivalent to the line above.@refill
 @end lisp
 
 Note that this is automatically done by the @file{amsmath.el} style file
-of AUCTeX (@pxref{Style Files}) - so if you use AUCTeX,
+of AUCTeX (@pxref{Style Files})---so if you use AUCTeX,
 this configuration will not be necessary.@refill
 
 @node Putting it Together, , Using \eqref, Defining Label Environments
 @subsection Putting it all together
 
-When you have to put several entries into @var{reftex-label-alist}, just
+When you have to put several entries into @code{reftex-label-alist}, just
 put them after each other in a list, or create that many templates in
 the customization buffer.  Here is a lisp example which uses several of
 the entries described above:
@@ -979,33 +1160,28 @@ the entries described above:
     ("\\myfig[]@{@}@{@}@{*@}@{@}" ?f nil nil 3)))
 @end lisp
 
-@node Displaying Cross References, xr (LaTeX package), Defining Label Environments, Labels and References
-@section Displaying Cross References
+@node Reference Info, xr (LaTeX package), Defining Label Environments, Labels and References
+@section Reference Info
 @findex reftex-view-crossref
 @findex reftex-mouse-view-crossref
-@cindex Cross references, displaying
-@cindex Displaying cross references
-@cindex Viewing cross references
+@cindex Cross-references, displaying
+@cindex Reference info
+@cindex Displaying cross-references
+@cindex Viewing cross-references
 @kindex C-c &
+@kindex S-mouse-2
 
-@b{Ref@TeX{}} can display the definition site of a label which is
-referenced in the text.  With the cursor on or anywhere before a
-@code{\ref} macro, type @kbd{C-c &}.  Or klick with @kbd{S-mouse-2} on
-the argument of the macro.  @b{Ref@TeX{}} will then display the definition
-of the label in another window.  This works also with references to
-external labels (@pxref{xr (LaTeX package)}).@refill
+When point is idle on the argument of a @code{\ref} macro, the echo area
+will display some information about the label referenced there.  Note
+that the information is only displayed if the echo area is not occupied
+by a different message.  
 
-@b{Ref@TeX{}} also uses the echo area to display short information about
-the cross reference whenever the cursor is inside the argument of a
-@code{\ref} macro.  Note that the information is only displayed if the
-echo area is not occupied by a different message.  You can toggle this
-feature from the menu @w{(@code{Ref->Options->Crossref Viewing})}, or
-turn it off completely by configuring the variable
-@var{reftex-auto-view-crossref}.@refill
+@b{Ref@TeX{}} can also display the label definition corresponding to a
+@code{\ref} macro, or all reference locations corresponding to a
+@code{\label} macro.  @xref{Viewing Cross-References}, for more
+information.@refill
 
-See also @ref{Displaying Citations}.
-
-@node xr (LaTeX package), varioref (LaTeX package), Displaying Cross References, Labels and References
+@node xr (LaTeX package), varioref (LaTeX package), Reference Info, Labels and References
 @section @code{xr}: Cross-Document References
 @cindex @code{xr}, LaTeX package
 @cindex LaTeX packages, @code{xr}
@@ -1036,7 +1212,7 @@ type if necessary.  When you see the label selection buffer, pressing
 documents.  You may then select a label as before and @b{Ref@TeX{}} will
 insert it along with the required prefix.@refill
 
-For this kind of inter-document cross references, saving of parsing
+For this kind of inter-document cross--references, saving of parsing
 information and the use of multiple selection buffers can mean a large
 speed-up (@pxref{Optimizations}).@refill
 
@@ -1046,30 +1222,31 @@ speed-up (@pxref{Optimizations}).@refill
 @cindex @code{\vref}
 @cindex LaTeX packages, @code{varioref}
 
-@code{varioref} is a frequently used LaTeX package to create cross
-references with page information.  When you want to make a reference
-with the @code{\vref} macro, just press the @kbd{v} key in the selection
-buffer to toggle between the @code{\ref} and @code{\vref}
+@vindex reftex-vref-is-default
+@code{varioref} is a frequently used LaTeX package to create
+cross--references with page information.  When you want to make a
+reference with the @code{\vref} macro, just press the @kbd{v} key in the
+selection buffer to toggle between the @code{\ref} and @code{\vref}
 (@pxref{Referencing Labels}).  The mode line of the selection buffer
 shows the current status of this switch.  If you find that you almost
 always use @code{\vref}, you may want to make it the default by
-customizing the variable @var{reftex-vref-is-default}@refill
+customizing the variable @code{reftex-vref-is-default}.@refill
 
-@node Citations, Table of Contents, Labels and References, Top
+@node Citations, Viewing Cross-References, Labels and References, Top
 @chapter Citations
 @cindex Citations
 @cindex @code{\cite}
 
 Citations in LaTeX are done with the @code{\cite} macro or variations of
-it.  The argument of the macro is a citation key which identifies a piece
-of literature in either a BibTeX database file or in an explicit
-@code{thebibliography} environment in the document.  @b{Ref@TeX{}}'s support
-for citations helps to select the correct key quickly.@refill
+it.  The argument of the macro is a citation key which identifies an
+article or book in either a BibTeX database file or in an explicit
+@code{thebibliography} environment in the document.  @b{Ref@TeX{}}'s
+support for citations helps to select the correct key quickly.@refill
 
 @menu
 * Creating Citations::               How to create them.
 * Citation Styles::                  Natbib, Harvard, Chicago and CO.
-* Displaying Citations::             View the corresponding database entry.
+* Citation Info::                    View the corresponding database entry.
 * Chapterbib and Bibunits::          Multiple bibliographies in a Document.
 * Citations Outside LaTeX::          How to make citations in Emails etc.
 @end menu
@@ -1098,14 +1275,20 @@ known citation keys.@refill
 
 @cindex @code{\bibliography}
 @cindex @code{thebibliography}, LaTeX environment
+@cindex @code{BIBINPUTS}, environment variable
+@cindex @code{TEXBIB}, environment variable
 @b{Ref@TeX{}} prefers to use BibTeX database files specified with a
-@code{\bibliography} macro to collect its information.  However, if you
-have an explicit @code{thebibliography} environment in your document, it
-will be scanned instead.  Note that in this case the information
+@code{\bibliography} macro to collect its information.  Just like
+BibTeX, it will search for the specified files in the current directory
+and along the path given in the environment variable @code{BIBINPUTS}.
+If you do not use BibTeX, but the document contains an explicit
+@code{thebibliography} environment, @b{Ref@TeX{}} will collect its
+information from there.  Note that in this case the information
 presented in the selection buffer will just be a copy of relevant
-@code{\bibitems}, not the structured listing available with BibTeX
-database files.@refill
+@code{\bibitem} entries, not the structured listing available with
+BibTeX database files.@refill
 
+@kindex ?
 In the selection buffer, the following keys provide special commands.  A
 summary of this information is always available from the selection
 process by pressing @kbd{?}.@refill
@@ -1115,13 +1298,17 @@ process by pressing @kbd{?}.@refill
 Prefix argument.
 
 @item a
-Accept all entries in the selection buffer and create @code{\cite}
-macros referring to them.@refill
+Accept all entries in the selection buffer and create a single
+@code{\cite} macro referring to them.@refill
+
+@item A
+Accept all entries in the selection buffer and create a @code{\cite}
+macro for each of it.@refill
 
 @item f
 Toggle follow mode.  When follow mode is active, the other window will
 always display the full database entry of the current article.  This is
-equivalent to pressing SPC after each cursor motion.  With BibTeX
+equivalent to pressing @key{SPC} after each cursor motion.  With BibTeX
 entries, follow mode can be rather slow.@refill
 
 @item g
@@ -1148,31 +1335,33 @@ Show insertion point in another window.  This is the point from where you
 called @code{reftex-citation}.@refill
 
 
-@item TAB
+@item @key{TAB}
 Enter a citation key with completion.  This may also be a key which does
 not yet exist.
 
-@item SPC
+@item @key{SPC}
 Show the database entry corresponding to the article at point, in
 another window.  See also the @kbd{f} key.@refill
 
-@item RET
+@item @key{RET}
 Insert a citation referencing the article at point into the buffer from
 which the selection process was started.@refill
 
 @item mouse-2
+@vindex reftex-highlight-selection
 Clicking with mouse button 2 on a citation will accept it like @key{RET}
-would.  See also variable @var{reftex-highlight-selection}, @ref{Options
+would.  See also variable @code{reftex-highlight-selection}, @ref{Options
 (Misc)}.@refill
 
 @item ?
 Show a summary of the available keys.
 @end table
 
+@vindex reftex-select-bib-map
 In order to define additional commands for this selection process, the
-keymap @var{reftex-select-bib-map} may be used.@refill
+keymap @code{reftex-select-bib-map} may be used.@refill
 
-@node Citation Styles, Displaying Citations, Creating Citations, Citations
+@node Citation Styles, Citation Info, Creating Citations, Citations
 @section Citation Styles
 @cindex Citation styles
 @cindex Citation styles, @code{natbib}
@@ -1182,39 +1371,42 @@ keymap @var{reftex-select-bib-map} may be used.@refill
 @cindex @code{harvard}, citation style
 @cindex @code{chicago}, citation style
 
+@vindex reftex-cite-format
 The standard LaTeX macro @code{\cite} works well with numeric or simple
 key citations.  To deal with the more complex task of author-year
 citations as used in many natural sciences, a variety of packages has
 been developed which define derived forms of the @code{\cite} macro.
 @b{Ref@TeX{}} can be configured to produce these citation macros as well by
-setting the variable @var{reftex-cite-format}.  For the most commonly
+setting the variable @code{reftex-cite-format}.  For the most commonly
 used packages (@code{natbib}, @code{harvard}, @code{chicago}) this may
-be done from the menu, under @code{Ref->Options->Citations}.  Since there
+be done from the menu, under @code{Ref->Citation Styles}.  Since there
 are usually several macros to create the citations, executing
 @code{reftex-citation} (@kbd{C-c [}) starts by prompting for the correct
-macro.  For the Harvard style, this looks like this:
+macro.  For the Natbib style, this looks like this:
 
 @example
 SELECT A CITATION FORMAT
 
 [^M]   \cite@{%l@}
-[p]    \cite@{%l@}
-[t]    \citeasnoun@{%l@}
-[n]    \citeasnoun@{%l@}
-[s]    \possessivecite@{%l@}
-[e]    \citeaffixed@{%l@}@{?@}
+[t]    \citet@{%l@}
+[T]    \citet*@{%l@}
+[p]    \citep@{%l@}
+[P]    \citep*@{%l@}
+[e]    \citep[e.g.][]@{%l@}
+[s]    \citep[see][]@{%l@}
+[a]    \citeauthor@{%l@}
+[A]    \citeauthor*@{%l@}
 [y]    \citeyear@{%l@}
-[a]    \citename@{%l@}
 @end example
 
 Following the most generic of these packages, @code{natbib}, the builtin
-citation packages always accept the @kbd{t} for a @emph{textual}
+citation packages always accept the @kbd{t} key for a @emph{textual}
 citation (like: @code{Jones et al. (1997) have shown...})  as well as 
 the @kbd{p} key for a parenthetical citation (like: @code{As shown
 earlier (Jones et al, 1997)}).@refill
 
 To make one of these styles the default, customize the variable
-@var{reftex-cite-format} or put into @file{.emacs}:
+@code{reftex-cite-format} or put into @file{.emacs}:
 
 @lisp
 (setq reftex-cite-format 'natbib)
@@ -1222,38 +1414,31 @@ To make one of these styles the default, customize the variable
 
 You can also use AUCTeX style files to automatically set the
 citation style based on the @code{usepackage} commands in a given
-document.  @xref{Style Files} for information on how to set up the style
+document.  @xref{Style Files}, for information on how to set up the style
 files correctly.@refill
 
-@node Displaying Citations, Chapterbib and Bibunits, Citation Styles, Citations, Top
-@section Displaying Citations
+@node Citation Info, Chapterbib and Bibunits, Citation Styles, Citations, Top
+@section Citation Info
 @cindex Displaying citations
 @cindex Citations, displaying
+@cindex Citation info
 @cindex Viewing citations
 @kindex C-c &
+@kindex S-mouse-2
 @findex reftex-view-crossref
 @findex reftex-mouse-view-crossref
 
-@b{Ref@TeX{}} can display the full database entry for any citation key used
-in the document.  With the cursor on or anywhere before a @code{\cite}
-macro, type @kbd{C-c &}.  Or klick with @kbd{S-mouse-2} on the argument
-of the macro.  @b{Ref@TeX{}} will show the full database entry in another
-window.  If you press @kbd{C-c &} immediately again, @b{Ref@TeX{}} will
-move to the next following citation key - so this can be used to display
-the database entries for several keys in a single @code{\cite} macro, or
-in subsequent macros.@refill
+When point is idle on the argument of a @code{\cite} macro, the echo area
+will display some information about the article cited there.  Note
+that the information is only displayed if the echo area is not occupied
+by a different message.  
 
-@b{Ref@TeX{}} also uses the echo area to display short information about
-the citation whenever the cursor is inside the argument of a
-@code{\cite} macro.  Note that the information is only displayed if the
-echo area is not occupied by a different message.  You can toggle this
-feature from the menu @w{(@code{Ref->Options->Crossref Viewing})}, or
-turn it off completely by configuring the variable
-@var{reftex-auto-view-crossref}.@refill
+@b{Ref@TeX{}} can also display the @code{\bibitem} or BibTeX database
+entry corresponding to a @code{\cite} macro, or all citation locations
+corresponding to a @code{\bibitem} or BibTeX database entry.
+@xref{Viewing Cross-References}, for more information.@refill
 
-See also @ref{Displaying Cross References}.
-
-@node Chapterbib and Bibunits, Citations Outside LaTeX, Displaying Citations, Citations
+@node Chapterbib and Bibunits, Citations Outside LaTeX, Citation Info, Citations
 @section Chapterbib and Bibunits
 @cindex @code{chapterbib}, LaTeX package
 @cindex @code{bibunits}, LaTeX package
@@ -1268,19 +1453,21 @@ separate file (as it is required for @code{chapterbib} anyway).  Then
 you have multiple bibliographies within a @emph{single file}, this may
 or may not be the case.
 
-@node  Citations Outside LaTeX, , Chapterbib and Bibunits, Citations
+@node Citations Outside LaTeX, , Chapterbib and Bibunits, Citations
 @section Citations outside LaTeX
 @cindex Citations outside LaTeX
+@vindex reftex-default-bibliography
 
 The command @code{reftex-citation} can also be executed outside a LaTeX
-buffer.  This can be useful to reference articles in Emails and other
-documents.  The list of BibTeX files will in this case be taken from the
-variable @var{reftex-default-bibliography}.  Setting the variable
-@var{reftex-cite-format} to the symbol @code{'locally} does a decent job of
-putting all relevant information about a citation directly into the
-buffer.  Here is the lisp code to add the @kbd{C-c [} binding to the
-mail buffer.  It also provides a local binding for
-@var{reftex-cite-format}.@refill
+buffer.  This can be useful to reference articles in the mail buffer and
+other documents.  You should @emph{not} enter @code{reftex-mode} for
+this, just execute the command.  The list of BibTeX files will in this
+case be taken from the variable @code{reftex-default-bibliography}.
+Setting the variable @code{reftex-cite-format} to the symbol
+@code{locally} does a decent job of putting all relevant information
+about a citation directly into the buffer.  Here is the lisp code to add
+the @kbd{C-c [} binding to the mail buffer.  It also provides a local
+binding for @code{reftex-cite-format}.@refill
 
 @lisp
 (add-hook
@@ -1293,109 +1480,99 @@ mail buffer.  It also provides a local binding for
        (let ((reftex-cite-format 'locally))
          (reftex-citation))))))
 @end lisp
-    
 
-@node Table of Contents, RefTeXs Menu, Citations, Top
-@chapter Table of Contents
-@cindex @code{*toc*} buffer
-@cindex Table of contents buffer
-@findex reftex-toc
-@kindex C-c =
+@node Viewing Cross-References, RefTeXs Menu, Citations, Top
+@chapter Viewing Cross--References
+@findex reftex-view-crossref
+@findex reftex-mouse-view-crossref
+@kindex C-c &
+@kindex S-mouse-2
 
-When you press @kbd{C-c =}, @b{Ref@TeX{}} will pop up a buffer showing the
-table of contents of the document.  With the cursor in any of the lines
-denoting a section, simple key strokes will jump to that section or
-perform other actions.  Here is a list of available special commands.  A
-summary of this information is always available by pressing
-@kbd{?}.@refill
+@b{Ref@TeX{}} can display cross--referencing information.  This means,
+if two document locations are linked, @b{Ref@TeX{}} can display the
+matching location(s) in another window.  The @code{\label} and @code{\ref}
+macros are one way of estabishing such a link.  Also, a @code{\cite}
+macro is linked to the corresponding @code{\bibitem} macro or a BibTeX
+database entry.
 
-@table @kbd
+The feature is invoked by pressing @kbd{C-c &}
+(@code{reftex-view-crossref}) while point is on the @var{key} argument
+of a macro involved in cross--referencing.  You can also click with
+@kbd{S-mouse-2} on the macro argument.  Here is what will happen for
+individual classes of macros:
 
-@item 0-9, -
-Prefix argument.
+@table @asis
 
-@item f
-Toggle follow mode.  When follow mode is active, the other window will
-always show the section corresponding to the line in the @samp{*toc*}
-buffer at point.  This is similar to pressing @key{SPC} after each
-cursor motion.  The default for this flag can be set with the variable
-@var{reftex-toc-follow-mode}.  Note that only context in files already
-visited is shown.  @b{RefTeX} will not visit a file just for follow
-mode.  See, however, the variable @var{reftex-revisit-to-follow}.@refill
+@item @code{\ref}
+@cindex @code{\ref}
+Display the corresponding label definition.  All usual
+variants@footnote{all macros that either start or end with @samp{ref}}
+of the @code{\ref} macro are active for cross--reference display.  This
+works also for labels defined in an external document when the current
+document refers to them through the @code{xr} interface (@pxref{xr (LaTeX
+package)}).
 
-@item g
-Rebuild the @samp{*toc*} buffer.  This does @emph{not} rescan the
-document.@refill
+@item @code{\label}
+@cindex @code{\label}
+@vindex reftex-label-alist
+Display a document location which references this label.  Pressing
+@kbd{C-c &} several times moves through the entire document and finds
+all locations.  Not only the @code{\label} macro but also other macros
+with label arguments (as configured with @code{reftex-label-alist}) are
+active for cross--reference display.
 
-@item n
-Goto next line.
+@item @code{\cite}
+@cindex @code{\cite}
+Display the corresponding BibTeX database entry or @code{\bibitem}.
+All usual variants@footnote{all macros that either start or end with
+@samp{cite}} of the @code{\cite} macro are active for cross--reference
+display.
 
-@item p
-Goto previous line.
+@item @code{\bibitem}
+@cindex @code{\bibitem}
+Display a document location which cites this article. Pressing
+@kbd{C-c &} several times moves through the entire document and finds
+all locations.
 
-@item q
-Hide the @samp{*toc*} buffer, return to the position where
-@code{reftex-toc} was last called.@refill
+@item BibTeX
+@cindex BibTeX buffer, viewing cite locations from
+@cindex Viewing cite locations from BibTeX buffer
+@kbd{C-c &} is also active in BibTeX buffers.  All locations in a
+document where the database entry at point is cited will be displayed.
+On first use, @b{Ref@TeX{}} will prompt for a buffer which belongs to
+the document you want to search.  Subsequent calls will use the same
+document, unless you break this link with a prefix argument to @kbd{C-c
+&}.
 
-@item Q
-Kill the @samp{*toc*} buffer, return to the position where
-@code{reftex-toc} was last called.@refill
-
-@item r
-Reparse the LaTeX document and rebuild the @samp{*toc*} buffer.  When
-@var{reftex-enable-partial-scans} is non-nil, rescan only the file this
-section is defined in, not the entire document.@refill
-
-@item R
-Reparse the @emph{entire} LaTeX document and rebuild the @samp{*toc*}
-buffer.@refill
-
-@item x
-Switch to the @samp{*toc*} buffer of an external document.  When the
-current document is using the @code{xr} package (@pxref{xr (LaTeX
-package)}), @b{Ref@TeX{}} will switch to one of the external
-documents.@refill
-
-@item .
-Show calling point in another window.  This is the point from where
-@code{reftex-toc} was last called.
-
-@item SPC
-Show the corresponding section in another window.  This command does
-@emph{not} select that other window.@refill
-
-@item TAB
-Goto the section in another window.
-
-@item RET
-Go to the section and hide the @samp{*toc*} buffer.  This will restore
-the window configuration before @code{reftex-toc} (@kbd{C-c =}) was
-called.@refill
-
-@item mouse-2
-Clicking with mouse button 2 on a line has the same effect as @key{RET}.
-See also variable @var{reftex-highlight-selection}, @ref{Options
-(Misc)}.@refill
+@item @code{\index}
+@cindex @code{\index}
+Display other locations in the document which are marked by the same
+index entry.  The standard @code{\index} macro as well as many
+variants@footnote{all macros which contain either @samp{index} or
+@samp{idx} in their name} will be recognized.
 @end table
 
-In order to define additional commands for the @samp{*toc*} buffer, the
-keymap @var{reftex-toc-map} may be used.@refill
-
+@vindex reftex-view-crossref-macros
+While the display of cross reference information for citations and
+labels is hard--coded within @b{Ref@TeX{}}, the @samp{\index} stuff is
+configured in the variable @code{reftex-view-crossref-macros}.  You can
+customize this variable to add other sets of macros for which the
+display of cross--referencing information can be useful.
+    
 @iftex
 @chapter All the Rest
 @end iftex
 
-@node RefTeXs Menu, Keybindings, Table of Contents, Top
+@node RefTeXs Menu, Keybindings, Viewing Cross-References, Top
 @section @b{Ref@TeX{}}'s Menu
 @cindex RefTeXs Menu
 @cindex Menu, in the menu bar
 
-@b{Ref@TeX{}} installs a @code{Ref} menu in the menu bar on systems which
-support this.  From this menu you can access all of @b{Ref@TeX{}}'s
-commands and some of its options.  Note, however, that setting options
-in the menu is not permanent but applies only to the current editing
-session.  To make permanent changes, use Emacs Lisp in @file{.emacs}, or
-use @code{Customize}.
+@b{Ref@TeX{}} installs a @code{Ref} menu in the menu bar on systems
+which support this.  From this menu you can access all of
+@b{Ref@TeX{}}'s commands and a few of its options.  There is also a
+@code{Customize} submenu which can be used to access @b{Ref@TeX{}}'s
+entire set of options.@refill
 
 @node Keybindings, Faces, RefTeXs Menu, Top
 @section Default Keybindings
@@ -1403,6 +1580,12 @@ use @code{Customize}.
 
 Here is a summary of the available keybindings.
 
+@kindex C-c =
+@kindex C-c (
+@kindex C-c )
+@kindex C-c [
+@kindex C-c &
+@kindex S-mouse-2
 @example
 @kbd{C-c =}      @code{reftex-toc}
 @kbd{C-c (}      @code{reftex-label}
@@ -1416,9 +1599,9 @@ Note that the @kbd{S-mouse-2} binding is only provided if this key is
 not already used by some other package.  @b{Ref@TeX{}} will not override an
 existing binding to @kbd{S-mouse-2}.@refill
 
-The above keys were chosen to avoid interfering with AUCTeX's
-settings.  Personally, I also bind some functions in the @kbd{C-c
-@key{letter}} map for easier access:@refill
+The above keys were chosen to avoid interfering with AUCTeX's settings.
+Personally, I also bind some functions in the users @kbd{C-c} map for
+easier access:@refill
 
 @kindex C-c t
 @kindex C-c l
@@ -1445,8 +1628,9 @@ If you want to copy these as well, set in your @file{.emacs} file:
 (setq reftex-extra-bindings t)
 @end lisp
 
+@vindex reftex-load-hook
 Changing and adding to @b{Ref@TeX{}}'s keybindings is best done in the hook
-@var{reftex-load-hook}.  For information on the keymaps
+@code{reftex-load-hook}.  For information on the keymaps
 which should be used to add keys, see @ref{Keymaps and Hooks}.
 
 @node Faces, AUCTeX, Keybindings, Top
@@ -1460,210 +1644,6 @@ use faces only when @code{font-lock} is loaded.  This seems to be
 reasonable because people who like faces will very likely have it
 loaded.  If you wish to turn off fontification or change the involved
 faces, see @ref{Options (Fontification)}.@refill
-
-@node AUCTeX, Multifile Documents, Faces, Top
-@section @w{AUC @TeX{}}
-@cindex @code{AUCTeX}, Emacs package
-@cindex Emacs packages, @code{AUCTeX}
-
-AUCTeX is without doubt the best major mode for editing TeX and
-LaTeX files with Emacs.  AUCTeX is part of the XEmacs
-distribution.  It is also available from
-
-@example
-http://www.sunsite.auc.dk/auctex/
-@end example
-
-
-@menu
-* AUCTeX-RefTeX Interface::          How both packages work together
-* Style Files::                      AUCTeX's style files can support RefTeX
-* Bib-Cite::                         Hypertext reading of a document
-@end menu
-
-@node AUCTeX-RefTeX Interface, Style Files, , AUCTeX
-@subsection The AUC@TeX{}-@b{Ref@TeX{}} Interface
-
-@b{Ref@TeX{}} contains code to interface with AUCTeX.  When this
-interface is turned on, both packages will interact closely.  Instead of
-using @b{Ref@TeX{}}'s commands directly, you can then also use them
-indirectly as part of the AUCTeX
-environment@footnote{@b{Ref@TeX{}} 3.23 and AUCTeX 9.9c will be
-needed for all of this to work.  Parts of it work also with earlier
-versions.}.  The interface is turned on with@refill
-
-@lisp
-(setq reftex-plug-into-AUCTeX t)
-@end lisp
-
-If you need finer control about which parts of the interface are used
-and which not, customize this variable with @kbd{M-x customize-variable
-@key{RET} reftex-plug-into-AUCTeX @key{RET}}.
-
-The following list describes the individual parts of the interface.
-
-@itemize @bullet
-@item
-@findex reftex-label
-@vindex LaTeX-label-function
-@b{Inserting Labels for New Sections and Environments}@* When a new
-section is created with @kbd{C-c C-s}, or a new environment is inserted
-with @kbd{C-c C-e}, AUCTeX normally prompts for a label to go
-with it.  With @var{reftex-plug-into-AUCTeX} turned on,
-@code{reftex-label} is called instead.  For example, if you type
-@kbd{C-c C-e equation @key{RET}}, AUCTeX and @b{Ref@TeX{}} will
-insert
-
-@example
-\begin@{equation@}
-\label@{eq:1@}
-
-\end@{equation@}
-@end example
-
-@noindent
-without further prompts.
-
-Similarly, when you type @kbd{C-c C-s section @key{RET}}, @b{Ref@TeX{}}
-will offer its default label which is derived from the section title.
-
-@item
-@b{Notifying @b{Ref@TeX{}} about New Sections}@* When creating a new
-section with @kbd{C-c C-s}, @b{Ref@TeX{}} be notified about it, so that
-it does not have to rescan the buffer.@refill
-
-@item
-@findex reftex-arg-label
-@findex TeX-arg-label, AUCTeX function
-@findex reftex-arg-ref
-@findex TeX-arg-ref, AUCTeX function
-@findex reftex-arg-cite
-@findex TeX-arg-cite, AUCTeX function
-@b{Supplying Macro Arguments}@*
-When you insert a macro interactively with @kbd{C-c @key{RET}}, @w{AUC
-@TeX{}} normally prompts for macro arguments.  Internally, it uses the
-functions @code{TeX-arg-label} and @code{TeX-arg-cite} to prompt for
-arguments which are labels and citation keys.  When
-@var{reftex-plug-into-AUCTeX} is turned on, @b{Ref@TeX{}} takes over
-these functions@footnote{@code{fset} is used to do this, which is not
-reversible.  However, @b{Ref@TeX{}} implements the old functionality
-when you later decide to turn off the interface.} and supplies the macro
-arguments with its own mechanisms.  For example, when you type @kbd{C-c
-@key{RET} ref @key{RET}}, @b{Ref@TeX{}} will supply its label selection
-process just as if you had typed @kbd{C-c )} (@pxref{Referencing
-Labels}).@refill
-
-@item
-@b{Notifying AUCTeX about New Labels and Citations Keys}@*
-@b{Ref@TeX{}} will add all newly created labels to AUCTeX's completion list.
-@end itemize
-
-@node Style Files, Bib-Cite, AUCTeX-RefTeX Interface, AUCTeX
-@subsection Style Files
-@cindex Style files, AUCTeX
-Style files are Emacs Lisp files which are evaluated by AUCTeX in
-association with the @code{\documentclass} and @code{\usepackage}
-commands of a document.  Support for @b{Ref@TeX{}} in such a style file is
-useful when the LaTeX style defines macros or environments connected
-with labels and citations.  Before calling a @b{Ref@TeX{}} function the
-style hook should always test for the availability of the function, so
-that the style file will also work for people who do not use
-@b{Ref@TeX{}}.@refill
-
-Additions made with style files in the way described below remain local
-to the current document.  For example, if one package uses AMSTeX, the
-style file will make @b{Ref@TeX{}} switch over to @code{\eqref}, but this
-will not affect other documents.@refill
-
-@findex reftex-add-label-environments
-@findex reftex-add-to-label-alist
-A style hook may contain calls to
-@code{reftex-add-label-environments}@footnote{This used to be the
-function @code{reftex-add-to-label-alist} which is still available as an
-alias for compatibility.}  which defines additions to
-@var{reftex-label-alist}.  The argument taken by this function must have
-the same format as @var{reftex-label-alist}.  The @file{amsmath.el}
-style file of AUCTeX for example contains the following:@refill
-
-@lisp
-@group
-(TeX-add-style-hook "amsmath"
-   (lambda ()
-     (if (fboundp 'reftex-add-label-environments)
-         (reftex-add-label-environments '(AMSTeX)))))
-@end group
-@end lisp
-
-@noindent
-while a package @code{myprop} defining a @code{proposition} environment
-with @code{\newtheorem} might use@refill
-
-@lisp
-@group
-(TeX-add-style-hook "myprop"
-   (lambda ()
-     (LaTeX-add-environments '("proposition" LaTeX-env-label))
-     (if (fboundp 'reftex-add-label-environments)
-         (reftex-add-label-environments
-          '(("proposition" ?p "prop:" "~\\ref@{%s@}" t
-                           ("Proposition" "Prop.")))))))
-@end group
-@end lisp
-
-@findex reftex-set-cite-format
-Similarly, a style hook may contain a call to
-@code{reftex-set-cite-format} to set the citation format.  The style
-file @file{natbib.el} for the Natbib citation style does switch
-@b{Ref@TeX{}}'s citation format like this:@refill
-
-@lisp
-(TeX-add-style-hook "natbib"
-   (lambda ()
-     (if (fboundp 'reftex-set-cite-format)
-         (reftex-set-cite-format 'natbib))))
-@end lisp
-
-@findex reftex-add-section-levels
-Finally, the hook may contain a call to @code{reftex-add-section-levels}
-to define additional section statements.  For example, the FoilTeX class
-has just two headers, @code{\foilhead} and @code{\rotatefoilhead}.  Here
-is a style file @file{foils.el} that will inform @b{Ref@TeX{}} about these:
-
-@lisp
-(TeX-add-style-hook "foils"
-   (lambda ()
-     (if (fboundp 'reftex-add-section-levels)
-         (reftex-add-section-levels
-          '(("foilhead" . 3)
-            ("rotatefoilhead" . 3))))))
-@end lisp
-
-@node Bib-Cite, , Style Files, AUCTeX
-@subsection Bib-Cite
-@cindex @code{bib-cite}, Emacs package
-@cindex Emacs packages, @code{bib-cite}
-
-Once you have written a document with labels, references and citations,
-it can be nice to read it like a hypertext document.  @b{Ref@TeX{}} has
-some support for that: @code{reftex-view-crossref} (bound to @kbd{C-c
-&}), @code{reftex-mouse-view-crossref} (bound to @kbd{S-mouse-2}),
-and @code{reftex-search-document}.@*
-A somewhat fancier interface with mouse highlighting is provided (among
-other things) by Peter S. Galbraith's @file{bib-cite.el}.  There is some
-overlap in the functionalities of Bib-cite and @b{Ref@TeX{}}.  Bib-cite.el
-comes bundled with AUCTeX.
-
-Bib-cite version 3.06 and later can be configured so that bib-cite's
-mouse functions use @b{Ref@TeX{}} for displaying references and citations.
-This can be useful in particular when working with the LaTeX @code{xr}
-package or with an explicit @code{thebibliography} environment (rather
-than BibTeX).  Bib-cite cannot handle those, but @b{Ref@TeX{}} does.  To
-make use of this feature, try@refill
-
-@vindex bib-cite-use-reftex-view-crossref
-@lisp
-(setq bib-cite-use-reftex-view-crossref t)
-@end lisp
 
 @node Multifile Documents, Language Support, AUCTeX, Top
 @section Multifile Documents
@@ -1685,7 +1665,7 @@ document.@refill
 @vindex tex-main-file
 @vindex TeX-master
 All files belonging to a multifile document should have a File Variable
-(@var{TeX-master} for AUCTeX or @var{tex-main-file} for the
+(@code{TeX-master} for AUCTeX or @code{tex-main-file} for the
 standard Emacs LaTeX mode) set to the name of the master file.  See the
 documentation of your (La)TeX mode and @ref{File Variables,,,emacs, The
 GNU Emacs Manual}.@refill
@@ -1698,7 +1678,7 @@ outside the current file can still use that section title as
 context.@refill
 @end itemize
 
-@node Language Support, Optimizations, Multifile Documents, Top
+@node Language Support, Finding Files, Multifile Documents, Top
 @section Language Support
 @cindex Language support
 
@@ -1708,32 +1688,22 @@ language, the following hints may be useful:
 
 @itemize @bullet
 @item
+@vindex reftex-derive-label-parameters
+@vindex reftex-abbrev-parameters
 The mechanism to derive a label from context includes the abbreviation
 of words and omission of unimportant words.  These mechanisms may have
 to be changed for other languages.  See the variables
-@var{reftex-derive-label-parameters} and @var{reftex-abbrev-parameters}.
+@code{reftex-derive-label-parameters} and @code{reftex-abbrev-parameters}.
 
 @item
-@cindex Mule characters in labels
-@cindex Labels, missing Mule characters
-The regular expression @var{reftex-label-illegal-re} is used to remove
-characters which are illegal in labels from a label string.  This
-regular expression currently matches some ASCII characters and all Mule
-characters@footnote{Note that the default regexp allows the single byte
-representation of the European characters in ISO-8859-1.  So if you
-disable the Mule features in Emacs there should be no problems for these
-characters.}.  If you find out that your TeX and Emacs work well with
-labels containing funny Mule characters, try this setting to make
-@emph{all} Mule characters legal in labels:
-
-@lisp
-(setq reftex-label-illegal-re 
-      "[][\000-\037 !\"#$%&'()*,/<=>?@@\\^`@{|@}~\177]")
-@end lisp
-
-Alternatively the hook @var{reftex-translate-to-ascii-function} can be
-used to change Mule characters before the conversion to a label takes
-place.
+@vindex reftex-translate-to-ascii-function
+@vindex reftex-label-illegal-re
+Also, when a label is derived from context, @b{Ref@TeX{}} clears the
+context string from non-ASCII characters in order to make a legal
+label.  If you are using a special version of @TeX{} which allows
+extended characters @emph{in labels}, then you should look at the
+variables @code{reftex-translate-to-ascii-function} and
+@code{reftex-label-illegal-re}.
 
 @item
 When a label is referenced, @b{Ref@TeX{}} looks at the word before point
@@ -1742,7 +1712,76 @@ different in every language.  For an example of how to add magic words,
 see @ref{Adding Magic Words}.
 @end itemize
 
-@node Optimizations, Problems and Work-Arounds, Language Support, Top
+@node Finding Files, Optimizations, Language Support, Top
+@section Finding Files
+@cindex Finding files
+
+In order to find files included in a document via @code{\input} or
+@code{\include}, @b{Ref@TeX{}} searches all directories specified in the
+environment variable @code{TEXINPUTS}.  Similarly, it will search the
+path specified in the variables @code{BIBINPUTS} and @code{TEXBIB} for
+BibTeX database files.
+
+When searching, @b{Ref@TeX{}} will also expand recursive path
+definitions (directories ending in @samp{//} or @samp{!!}).  But it will
+only search and expand directories @emph{explicitly} given in these
+variables. This may cause problems under the following circumstances:
+
+@itemize @bullet
+@item
+Most TeX system have a default search path for both TeX files and BibTeX
+files which is defined in some setup file.  Usually this default path is
+for system files which @b{Ref@TeX{}} does not need to see.  But if your
+document needs TeX files or BibTeX database files in a directory only
+given in the default search path, @b{Ref@TeX{}} will fail to find them.
+@item
+Some TeX systems do not use environment variables at all in order to
+specify the search path.  Both default and user search path are then
+defined in setup files.
+@end itemize
+
+@noindent
+There are three ways to solve this problem:
+
+@itemize @bullet
+@item
+Specify all relevant directories explicitly in the environment
+variables.  If for some reason you don't want to mess with the default
+variables @code{TEXINPUTS} and @code{BIBINPUTS}, define your own
+variables and configure @b{Ref@TeX{}} to use them instead:
+
+@lisp
+(setq reftex-texpath-environment-variables '("MYTEXINPUTS"))
+(setq reftex-bibpath-environment-variables '("MYBIBINPUTS"))
+@end lisp
+
+@item
+Specify the full search path directly in @b{Ref@TeX{}}'s variables.
+
+@lisp
+(setq reftex-texpath-environment-variables 
+      '("./inp:/home/cd/tex//:/usr/local/tex//"))
+(setq reftex-bibpath-environment-variables
+      '("/home/cd/tex/lit/"))
+@end lisp
+
+@item
+Some TeX systems provide stand--alone programs to do the file search just
+like TeX and BibTeX.  E.g. Thomas Esser's @code{teTeX} uses the
+@code{kpathsearch} library which provides the command @code{kpsewhich}
+to search for files.  @b{Ref@TeX{}} can be configured to use this
+program.  Note that the exact syntax of the @code{kpsewhich}
+command depends upon the version of that program.
+
+@lisp
+(setq reftex-use-external-file-finders t)
+(setq reftex-external-file-finders
+      '(("tex" "kpsewhich -format=.tex %f")
+        ("bib" "kpsewhich -format=.bib %f")))      
+@end lisp
+@end itemize
+
+@node Optimizations, Problems and Work-Arounds, Finding Files, Top
 @section Optimizations
 @cindex Optimizations
 
@@ -1828,10 +1867,9 @@ manual document scan will fix this.@refill
 @b{Multiple Selection Buffers}@*
 @cindex Multiple selection buffers
 @cindex Selection buffers, multiple
-Normally, the selection buffer @code{*RefTeX Select*} is re-created
-newly for every selection process.  In documents with very many labels
-this can take several seconds - in particular with context
-refontification turned on.  @b{Ref@TeX{}} provides an option to create a
+Normally, the selection buffer @file{*RefTeX Select*} is re-created for
+every selection process.  In documents with very many labels this can
+take several seconds.  @b{Ref@TeX{}} provides an option to create a
 separate selection buffer for each label type and to keep this buffer
 from one selection to the next.  These buffers are updated automatically
 only when a new label has been added in the buffers category with
@@ -1867,9 +1905,216 @@ with the @kbd{g} key.  To get this behavior, use instead@refill
 @group
 (setq reftex-enable-partial-scans t
       reftex-save-parse-info t
-      reftex-use-multiple-selection-buffers t
-      reftex-plug-into-AUCTeX t)
+      reftex-use-multiple-selection-buffers t)
 @end group
+@end lisp
+
+@page
+@node AUCTeX, Multifile Documents, Faces, Top
+@section @w{AUC @TeX{}}
+@cindex @code{AUCTeX}, Emacs package
+@cindex Emacs packages, @code{AUCTeX}
+
+AUCTeX is without doubt the best major mode for editing TeX and LaTeX
+files with Emacs.  AUCTeX is part of the XEmacs distribution.  It is
+also available from the @uref{http://www.sunsite.auc.dk/auctex/,AUCTeX
+distribution site}.
+
+@menu
+* AUCTeX-RefTeX Interface::          How both packages work together
+* Style Files::                      AUCTeX's style files can support RefTeX
+* Bib-Cite::                         Hypertext reading of a document
+@end menu
+
+@node AUCTeX-RefTeX Interface, Style Files, , AUCTeX
+@subsection The AUC@TeX{}-@b{Ref@TeX{}} Interface
+
+@b{Ref@TeX{}} contains code to interface with AUCTeX.  When this
+interface is turned on, both packages will interact closely.  Instead of
+using @b{Ref@TeX{}}'s commands directly, you can then also use them
+indirectly as part of the AUCTeX
+environment@footnote{@b{Ref@TeX{}} 3.23 and AUCTeX 9.9c will be
+needed for all of this to work.  Parts of it work also with earlier
+versions.}.  The interface is turned on with@refill
+
+@lisp
+(setq reftex-plug-into-AUCTeX t)
+@end lisp
+
+If you need finer control about which parts of the interface are used
+and which not, customize this variable with @kbd{M-x customize-variable
+@key{RET} reftex-plug-into-AUCTeX @key{RET}}.
+
+The following list describes the individual parts of the interface.
+
+@itemize @bullet
+@item
+@findex reftex-label
+@vindex LaTeX-label-function, @r{AUCTeX}
+@kindex C-c C-e
+@kindex C-c C-s
+@findex LaTeX-section, @r{AUCTeX}
+@findex TeX-insert-macro, @r{AUCTeX}
+@b{AUCTeX calls @code{reftex-label} to insert labels}@*
+When a new section is created with @kbd{C-c C-s}, or a new environment
+is inserted with @kbd{C-c C-e}, AUCTeX normally prompts for a label to
+go with it.  With the interface, @code{reftex-label} is called instead.
+For example, if you type @kbd{C-c C-e equation @key{RET}}, AUCTeX and
+@b{Ref@TeX{}} will insert
+
+@example
+\begin@{equation@}
+\label@{eq:1@}
+
+\end@{equation@}
+@end example
+
+@noindent
+without further prompts.
+
+Similarly, when you type @kbd{C-c C-s section @key{RET}}, @b{Ref@TeX{}}
+will offer its default label which is derived from the section title.
+
+@item
+@b{AUCTeX tells @b{Ref@TeX{}} about new sections}@*
+When creating a new section with @kbd{C-c C-s}, @b{Ref@TeX{}} will not
+have to rescan the buffer in order to see it.@refill
+
+@item
+@findex reftex-arg-label
+@findex TeX-arg-label, @r{AUCTeX function}
+@findex reftex-arg-ref
+@findex TeX-arg-ref, @r{AUCTeX function}
+@findex reftex-arg-cite
+@findex TeX-arg-cite, @r{AUCTeX function}
+@findex TeX-insert-macro, @r{AUCTeX function}
+@kindex C-c @key{RET}
+@b{@b{Ref@TeX{}} supplies macro arguments}@*
+When you insert a macro interactively with @kbd{C-c @key{RET}}, AUCTeX
+normally prompts for macro arguments.  Internally, it uses the functions
+@code{TeX-arg-label} and @code{TeX-arg-cite} to prompt for arguments
+which are labels and citation keys.  The interface takes over these
+functions@footnote{@code{fset} is used to do this, which is not
+reversible.  However, @b{Ref@TeX{}} implements the old functionality
+when you later decide to turn off the interface.} and supplies the macro
+arguments with @b{Ref@TeX{}'s} mechanisms.  For example, when you
+type @kbd{C-c @key{RET} ref @key{RET}}, @b{Ref@TeX{}} will supply its
+label selection process (@pxref{Referencing Labels}).@refill
+
+@item
+@b{@b{Ref@TeX{}} tells AUCTeX about new labels and citations keys}@*
+@b{Ref@TeX{}} will add all newly created labels to AUCTeX's completion list.
+@end itemize
+
+@node Style Files, Bib-Cite, AUCTeX-RefTeX Interface, AUCTeX
+@subsection Style Files
+@cindex Style files, AUCTeX
+@findex TeX-add-style-hook, @r{AUCTeX}
+Style files are Emacs Lisp files which are evaluated by AUCTeX in
+association with the @code{\documentclass} and @code{\usepackage}
+commands of a document. Support for @b{Ref@TeX{}} in such a style file
+is useful when the LaTeX style defines macros or environments connected
+with labels and citations.  Some style files (e.g. @file{amsmath.el} or
+@file{natbib.el}) distributed with AUCTeX already support @b{Ref@TeX{}}
+in this way.
+
+Before calling a @b{Ref@TeX{}} function, the style hook should always
+test for the availability of the function, so that the style file will
+also work for people who do not use @b{Ref@TeX{}}. @refill
+
+Additions made with style files in the way described below remain local
+to the current document.  For example, if one package uses AMSTeX, the
+style file will make @b{Ref@TeX{}} switch over to @code{\eqref}, but
+this will not affect other documents.@refill
+
+@findex reftex-add-label-environments
+@findex reftex-add-to-label-alist
+A style hook may contain calls to
+@code{reftex-add-label-environments}@footnote{This used to be the
+function @code{reftex-add-to-label-alist} which is still available as an
+alias for compatibility.}  which defines additions to
+@code{reftex-label-alist}.  The argument taken by this function must have
+the same format as @code{reftex-label-alist}.  The @file{amsmath.el}
+style file of AUCTeX for example contains the following:@refill
+
+@lisp
+@group
+(TeX-add-style-hook "amsmath"
+   (lambda ()
+     (if (fboundp 'reftex-add-label-environments)
+         (reftex-add-label-environments '(AMSTeX)))))
+@end group
+@end lisp
+
+@noindent
+@findex LaTeX-add-environments, @r{AUCTeX}
+while a package @code{myprop} defining a @code{proposition} environment
+with @code{\newtheorem} might use@refill
+
+@lisp
+@group
+(TeX-add-style-hook "myprop"
+   (lambda ()
+     (LaTeX-add-environments '("proposition" LaTeX-env-label))
+     (if (fboundp 'reftex-add-label-environments)
+         (reftex-add-label-environments
+          '(("proposition" ?p "prop:" "~\\ref@{%s@}" t
+                           ("Proposition" "Prop.")))))))
+@end group
+@end lisp
+
+@findex reftex-set-cite-format
+Similarly, a style hook may contain a call to
+@code{reftex-set-cite-format} to set the citation format.  The style
+file @file{natbib.el} for the Natbib citation style does switch
+@b{Ref@TeX{}}'s citation format like this:@refill
+
+@lisp
+(TeX-add-style-hook "natbib"
+   (lambda ()
+     (if (fboundp 'reftex-set-cite-format)
+         (reftex-set-cite-format 'natbib))))
+@end lisp
+
+@findex reftex-add-section-levels
+Finally, the hook may contain a call to @code{reftex-add-section-levels}
+to define additional section statements.  For example, the FoilTeX class
+has just two headers, @code{\foilhead} and @code{\rotatefoilhead}.  Here
+is a style file @file{foils.el} that will inform @b{Ref@TeX{}} about these:
+
+@lisp
+(TeX-add-style-hook "foils"
+   (lambda ()
+     (if (fboundp 'reftex-add-section-levels)
+         (reftex-add-section-levels '(("foilhead" . 3)
+                                      ("rotatefoilhead" . 3))))))
+@end lisp
+
+@node Bib-Cite, , Style Files, AUCTeX
+@subsection Bib-Cite
+@cindex @code{bib-cite}, Emacs package
+@cindex Emacs packages, @code{bib-cite}
+
+Once you have written a document with labels, references and citations,
+it can be nice to read it like a hypertext document.  @b{Ref@TeX{}} has
+some support for that: @code{reftex-view-crossref} (bound to @kbd{C-c
+&}), @code{reftex-mouse-view-crossref} (bound to @kbd{S-mouse-2}), and
+@code{reftex-search-document}.  A somewhat fancier interface with mouse
+highlighting is provided (among other things) by Peter S. Galbraith's
+@file{bib-cite.el}.  There is some overlap in the functionalities of
+Bib-cite and @b{Ref@TeX{}}.  Bib-cite.el comes bundled with
+AUCTeX.@refill
+
+Bib-cite version 3.06 and later can be configured so that bib-cite's
+mouse functions use @b{Ref@TeX{}} for displaying references and citations.
+This can be useful in particular when working with the LaTeX @code{xr}
+package or with an explicit @code{thebibliography} environment (rather
+than BibTeX).  Bib-cite cannot handle those, but @b{Ref@TeX{}} does.  To
+make use of this feature, try@refill
+
+@vindex bib-cite-use-reftex-view-crossref
+@lisp
+(setq bib-cite-use-reftex-view-crossref t)
 @end lisp
 
 @node Problems and Work-Arounds, Imprint, Optimizations, Top
@@ -1878,36 +2123,50 @@ with the @kbd{g} key.  To get this behavior, use instead@refill
 
 @itemize @bullet
 @item
+@b{LaTeX commands}@*
+@cindex LaTeX commands, not found
 @code{\input}, @code{\include}, @code{\bibliography} and @code{\section}
 (etc.) statements have to be first on a line (except for white space).@refill
 
 @item
+@b{Command abbreviations}@*
+@cindex LaTeX commands, abbreviated
 Some people define abbreviations for environments, like @code{\be} for
 @code{\begin@{equation@}}, and @code{\ee} for @code{\end@{equation@}}.
-@b{Ref@TeX{}} cannot be configured to see these -- you will have to used
+@b{Ref@TeX{}} cannot be configured to see these---you will have to used
 the full @code{\begin} and @code{\end} statements.
 
 @item
+@b{Commented regions}@*
 @cindex Labels, commented out
 @b{Ref@TeX{}} sees also labels in regions commented out and will refuse to
-make duplicates of such a label.  This is considered to be a feature.@refill
+make duplicates of such labels.  This is considered to be a feature.@refill
 
 @item
-When using partial scans (@var{reftex-enable-partial-scans}), the section
+@b{Wrong section numbers}@*
+@cindex Section numbers, wrong
+@vindex reftex-enable-partial-scans
+When using partial scans (@code{reftex-enable-partial-scans}), the section
 numbers in the table of contents may eventually become wrong.  A full
 scan will fix this.@refill
 
 @item
-The label environment definitions in @var{reftex-label-alist} are global
+@b{Local settings}@*
+@cindex Settings, local
+@findex reftex-add-label-environments
+@findex reftex-set-cite-format
+@findex reftex-add-section-levels
+The label environment definitions in @code{reftex-label-alist} are global
 and apply to all documents.  If you need to make definitions local to a
-document, because they would interfere with other settings in other
-documents, you should use AUCTeX and set up style files with
-calls to @code{reftex-add-label-environments},
-@code{reftex-set-cite-format}, and @code{reftex-add-section-levels}.
-Settings made with these functions remain local to the current
-document. @xref{AUCTeX} for more information.@refill
+document, because they would interfere with settings in other documents,
+you should use AUCTeX and set up style files with calls to
+@code{reftex-add-label-environments}, @code{reftex-set-cite-format}, and
+@code{reftex-add-section-levels}.  Settings made with these functions
+remain local to the current document. @xref{AUCTeX}, for more
+information.@refill
 
 @item
+@b{Funny display in selection buffer}@*
 @cindex @code{x-symbol}, Emacs package
 @cindex Emacs packages, @code{x-symbol}
 @cindex @code{isotex}, Emacs package
@@ -1929,7 +2188,7 @@ this:@refill
 @vindex reftex-keep-temporary-buffers
 @code{(setq reftex-keep-temporary-buffers t)}@*
 This implies that @b{Ref@TeX{}} will load all parts of a multifile
-document into Emacs (i.e. there will be no temporary buffers).@refill
+document into Emacs (i.e. there won't be any temporary buffers).@refill
 @item
 @vindex reftex-initialize-temporary-buffers
 @code{(setq reftex-initialize-temporary-buffers t)}@*
@@ -1940,16 +2199,17 @@ Set @code{reftex-initialize-temporary-buffers} to a list of hook
 functions doing a minimal initialization.@refill
 @end itemize
 @vindex reftex-refontify-context
-See also the variable @var{reftex-refontify-context}.
+See also the variable @code{reftex-refontify-context}.
 
 @item
+@b{Labels as arguments to \begin}@*
 @cindex @code{pf}, LaTeX package
 @cindex LaTeX packages, @code{pf}
 Some packages use an additional argument to a @code{\begin} macro
 to specify a label.  E.g. Lamport's @file{pf.sty} uses both
 @example
-\step@{LABEL@}@{CLAIM@}   and      \begin@{step+@}@{LABEL@}
-                                  CLAIM
+\step@{@var{label}@}@{@var{claim}@}   and      \begin@{step+@}@{@var{label}@}
+                                  @var{claim}
                                \end@{step+@}
 @end example
 
@@ -1973,17 +2233,19 @@ after the @samp{@{step+@}}, also when specifying how to get
 context.@refill 
 
 @item
+@b{Idle timers in XEmacs}@*
 @cindex Idle timer restart
 @vindex reftex-use-itimer-in-xemacs
 In XEmacs, idle timer restart does not work reliably after fast
-keystrokes.  Therefore @b{Ref@TeX{}} currently uses the post command hook
-to start the timer used for automatic crossref information.  When this
-bug gets fixed, it will be possible to switch over to itimers with
+keystrokes.  Therefore @b{Ref@TeX{}} currently uses the post command
+hook to start the timer used for automatic crossref information.  When
+this bug gets fixed, a real idle timer can be requested with
 @lisp
 (setq reftex-use-itimer-in-xemacs t)
 @end lisp
 
 @item
+@b{Viper mode}@*
 @cindex Viper mode
 @cindex Keybindings, problems with Viper mode
 @findex viper-harness-minor-mode
@@ -2007,46 +2269,50 @@ With @i{Viper} mode prior to Vipers version 3.01, you need to protect
 @cindex @code{http}, @b{Ref@TeX{}} home page
 @cindex @code{ftp}, @b{Ref@TeX{}} site
 
-@b{Ref@TeX{}} was written by @i{Carsten Dominik}
-@t{<dominik@@strw.LeidenUniv.nl>}, with contributions by @i{Stephen
+@b{Ref@TeX{}} was written by @i{@value{AUTHOR}}
+@email{@value{AUTHOR-EMAIL}}, with contributions by @i{Stephen
 Eglen}.  @b{Ref@TeX{}} is currently maintained by @refill
 
-@example
-Carsten Dominik <dominik@@strw.LeidenUniv.nl>
-@end example
-
-If you find a bug in @b{Ref@TeX{}} or its documentation, or if you want to
-contribute code or ideas, please contact the maintainer.  Remember to
-provide all necessary information such as version numbers of Emacs and
-@b{Ref@TeX{}}, and the relevant part of your configuration in @file{.emacs}.
-When reporting a bug, please include a backtrace if you know how to
-produce one.
-
-@b{Ref@TeX{}} is distributed with Emacs (version 20.2 and later) and XEmacs
-(version 19.16 and 20.2 and later).  The latest version of @b{Ref@TeX{}}
-is available at@refill
-
-@example
-http://www.strw.leidenuniv.nl/~dominik/Tools/
-ftp://strw.leidenuniv.nl/pub/dominik/
-@end example
-
 @noindent
-At that site you can also find a version of @b{Ref@TeX{}} compatible
-with Emacs 19.@refill
+@value{MAINTAINER} @email{@value{MAINTAINER-EMAIL}}
+
+If you have questions about @b{Ref@TeX{}}, there are several Usenet
+groups which have competent readers: @code{comp.emacs},
+@code{gnu.emacs.help}, @code{comp.emacs.xemacs}, @code{comp.text.tex}.
+You can also write directly to the maintainer.
+
+If you find a bug in @b{Ref@TeX{}} or its documentation, or if you want
+to contribute code or ideas, please
+@uref{mailto:@value{MAINTAINER-EMAIL},contact the maintainer}.  Remember
+to provide all necessary information such as version numbers of Emacs
+and @b{Ref@TeX{}}, and the relevant part of your configuration in
+@file{.emacs}.  When reporting a bug which throws an exception, please
+include a backtrace if you know how to produce one.
+
+@b{Ref@TeX{}} is bundled and preinstalled with Emacs since version 20.2.
+It was also bundled and preinstalled with XEmacs 19.16--20.x.  XEmacs
+21.x users want to install the corresponding plugin package which is
+available from the XEmacs @code{ftp} site.  See the XEmacs 21.x
+documentation on package installation for details.@refill
+
+Users of earlier Emacs distributions (including Emacs 19) can get a
+@b{Ref@TeX{}} distribution from the
+@uref{http://www.strw.leidenuniv.nl/~dominik/Tools/,maintainers
+webpage}.@refill
 
 Thanks to the people on the Net who have used @b{Ref@TeX{}} and helped
 developing it with their reports.  In particular thanks to
-@i{F. Burstall, Alastair Burt, Soren Dayton, Stephen Eglen, Karl
-Eichwalder, Peter Galbraith, Dieter Kraft, Adrian Lanz, Rory Molinari,
-Laurent Mugnier, Sudeep Kumar Palat, Daniel Polani, Robin Socha, Richard
-Stanton, Allan Strand, Jan Vroonhof, Christoph Wedler}.@refill
+@i{Fran Burstall, Alastair Burt, Soren Dayton, Stephen Eglen, Karl
+Eichwalder, Peter Galbraith, Kai Grossjohann, Dieter Kraft, Adrian Lanz,
+Rory Molinari, Laurent Mugnier, Sudeep Kumar Palat, Daniel Polani, Robin
+Socha, Richard Stanton, Allan Strand, Jan Vroonhof, Christoph Wedler,
+Alan Williams}.@refill
 
 The @code{view-crossref} feature was inspired by @i{Peter Galbraith's}
 @file{bib-cite.el}.@refill
 
 Finally thanks to @i{Uwe Bolick} who first got me (some years ago) into
-supporting LaTeX labels and references with an Editor (which was
+supporting LaTeX labels and references with an editor (which was
 MicroEmacs at the time).@refill
 
 @node Commands, Options, Imprint, Top
@@ -2055,6 +2321,11 @@ MicroEmacs at the time).@refill
 
 Here is a summary of @b{Ref@TeX{}}'s commands.  All commands are available
 from the @code{Ref} menu.  For keybindings, @pxref{Keybindings}.
+
+@deffn Command reftex-toc
+Show the table of contents for the current document.  When called with
+one ore two @kbd{C-u} prefixes, rescan the document first.@refill
+@end deffn
 
 @deffn Command reftex-label
 Insert a unique label.  With one or two @kbd{C-u} prefixes, enforce
@@ -2067,45 +2338,42 @@ it.  With one or two @kbd{C-u} prefixes, enforce document rescan first.
 @end deffn
 
 @deffn Command reftex-citation
-Make a citation using BibTeX database files.  After asking for a Regular
-Expression, it scans the buffers with BibTeX entries (taken from the
+Make a citation using BibTeX database files.  After prompting for a regular
+expression, scans the buffers with BibTeX entries (taken from the
 @code{\bibliography} command or a @code{thebibliography} environment)
 and offers the matching entries for selection.  The selected entry is
-formated according to @var{reftex-cite-format} and inserted into the
+formated according to @code{reftex-cite-format} and inserted into the
 buffer.@refill @*
-When called with one or two @kbd{C-u} prefixes, first rescans the document.
-When called with a numeric prefix, make that many citations.  When
-called with point inside the braces of a @code{\cite} command, it will
-add another key, ignoring the value of @var{reftex-cite-format}.@refill @*
-The regular expression uses an expanded syntax: @samp{&&} is interpreted as
-@code{and}.  Thus, @samp{aaaa&&bbb} matches entries which contain both
-@samp{aaaa} and @samp{bbb}.  While entering the regexp, completion on knows citation keys is possible.@refill
+When called with one or two @kbd{C-u} prefixes, first rescans the
+document.  When called with a numeric prefix, make that many citations.
+When called with point inside the braces of a @code{\cite} command, it
+will add another key, ignoring the value of
+@code{reftex-cite-format}.@refill @* 
+The regular expression uses an expanded syntax: @samp{&&} is interpreted
+as @code{and}.  Thus, @samp{aaaa&&bbb} matches entries which contain
+both @samp{aaaa} and @samp{bbb}.  While entering the regexp, completion
+on knows citation keys is possible.  @samp{=} is a good regular
+expression to match all entries in all files.@refill
 @end deffn
 
 @deffn Command reftex-view-crossref
-View cross reference of @code{\ref} or @code{\cite} macro at point.  If
-the macro at point is a @code{\ref}, show the corresponding label
-definition.  If it is a @code{\cite}, show the BibTeX database entry or the
-@code{\bibitem}.  If there is no such macro at point, search forward to find
-one.  When you call this function several times in direct succession,
-point will move to view subsequent cross references further down in the
-buffer.  To cope with the plethora of variations in packages, this
-function assumes any macro either starting with or ending in @samp{ref} or
-@samp{cite} to contain cross references.  When the LaTeX package @code{xr} is
-being used, this command will also view cross-references in external
-documents.  However, this works correctly only when the
-@code{\externaldocument} macros are used with the optional label prefix
-argument.@*@refill
-With one or two @kbd{C-u} prefixes, enforce rescanning of the
-document.  With argument t or 1, select the window showing the cross
-reference.@refill
+View cross reference of macro at point.  Point must be on the @var{key}
+argument.  Works with the macros @code{\label}, @code{\ref},
+@code{\cite}, @code{\bibitem}, @code{\index} and many derivatives of
+these.  Where it makes sense, subsequent calls show additional
+locations.  See also the variable @code{reftex-view-crossref-extra} and
+the command @code{reftex-view-crossref-from-bibtex}.  With one or two
+@kbd{C-u} prefixes, enforce rescanning of the document.  With argument
+2, select the window showing the cross reference.
 @end deffn
 
-@deffn Command reftex-toc
-Show the table of contents for the current document.  When called with
-one ore two @kbd{C-u} prefixes, rescan the document first.@refill
+@deffn Command reftex-view-crossref-from-bibtex
+View location in a LaTeX document which cites the BibTeX entry at point.
+Since BibTeX files can be used by many LaTeX documents, this function
+promps upon first use for a buffer in @b{Ref@TeX{}} mode.  To reset this
+link to a document, call the function with with a prefix arg.  Calling
+this function several times find successive citation locations.
 @end deffn
-
 
 @deffn Command reftex-create-tags-file
 Create TAGS file by running @code{etags} on the current document.  The
@@ -2116,25 +2384,25 @@ TAGS file is also immediately visited with
 @deffn Command reftex-grep-document
 Run grep query through all files related to this document.
 With prefix arg, force to rescan document.
-This works also without an active TAGS table.@refill
+No active TAGS table is required.@refill
 @end deffn
 
 @deffn Command reftex-search-document
-Regexp search through all files of the current TeX document.
+Regexp search through all files of the current document.
 Starts always in the master file.  Stops when a match is found.
-This works also without an active TAGS table.@refill
+No active TAGS table is required.@refill
 @end deffn
 
 @deffn Command reftex-query-replace-document
-Run a query-replace-regexp of FROM with TO over the entire TeX document.
-With prefix arg, replace only word-delimited matches.
-This works also without an active TAGS table.@refill
+Run a query-replace-regexp of @var{from} with @var{to} over the entire
+document.  With prefix arg, replace only word-delimited matches.  No
+active TAGS table is required.@refill
 @end deffn
 
 @deffn Command reftex-change-label
-Query replace FROM with TO in all @code{\label} and @code{\ref} commands.
-Works on the entire multifile document.
-This works also without an active TAGS table.@refill
+Query replace @var{from} with @var{to} in all @code{\label} and
+@code{\ref} commands.  Works on the entire multifile document.  No
+active TAGS table is required.@refill
 @end deffn
 
 @deffn Command reftex-renumber-simple-labels
@@ -2175,36 +2443,88 @@ removes the parse file associated with the current document.
 @cindex Options, list of
 
 Here is a complete list of @b{Ref@TeX{}}'s configuration variables.  All
-variables have customize support - so if you are not familiar with Emacs
+variables have customize support---so if you are not familiar with Emacs
 Lisp (and even if you are) you might find it more comfortable to use
 @code{customize} to look at and change these variables. @kbd{M-x
 reftex-customize} will get you there.@refill
 
 @menu
+* Options (Table of Contents)::
 * Options (Defining Label Environments)::
 * Options (Creating Labels)::
 * Options (Referencing Labels)::
 * Options (Creating Citations)::
-* Options (Table of Contents)::
-* Options (Viewing Cross References)::
+* Options (Viewing Cross-References)::
+* Options (Finding Files)::
 * Options (Optimizations)::
 * Options (Fontification)::
 * Options (Misc)::
 @end menu
 
-@node Options (Defining Label Environments), Options (Creating Labels), , Options
+@node Options (Table of Contents), Options (Defining Label Environments), ,  Options
+@section Table of Contents
+@cindex Options, table of contents
+@cindex Table of contents, options
+
+@defopt reftex-toc-keep-other-windows
+Non-@code{nil} means, split the selected window to display the
+@file{*toc*} buffer.  This helps to keep the window configuration, but
+makes the *toc* small.  When @code{nil}, all other windows except the
+selected one will be deleted, so that the @file{*toc*} window fills half
+the frame.@refill
+@end defopt
+
+@defopt reftex-toc-include-labels
+Non-@code{nil} means, include labels in @file{*toc*} buffer.  This flag
+can be toggled from within the @file{*toc*} buffer with the @kbd{l}
+key.@refill
+@end defopt
+
+@defopt reftex-toc-include-context
+Non-@code{nil} means, include context with labels in the @file{*toc*}
+buffer.  Context will only be shown if the labels are visible as well.
+This flag can be toggled from within the @file{*toc*} buffer with the
+@kbd{c} key.@refill
+@end defopt
+
+@defopt reftex-toc-include-file-boundaries
+Non-@code{nil} means, include file boundaries in @file{*toc*} buffer.
+This flag can be toggled from within the @file{*toc*} buffer with the
+@kbd{i} key.@refill
+@end defopt
+
+@defopt reftex-toc-follow-mode
+Non-@code{nil} means, point in @file{*toc*} buffer (the
+table-of-contents buffer) will cause other window to follow.  The other
+window will show the corresponding part of the document.  This flag can
+be toggled from within the @file{*toc*} buffer with the @kbd{f}
+key.@refill
+@end defopt
+
+@deffn {Normal Hook} reftex-toc-mode-hook
+Normal hook which is run when a @file{*toc*} buffer is
+created.@refill
+@end deffn
+
+@deffn Keymap reftex-toc-map
+The keymap which is active in the @file{*toc*} buffer.
+(@pxref{Table of Contents}).@refill
+@end deffn
+
+@node Options (Defining Label Environments), Options (Creating Labels), Options (Table of Contents), Options
 @section Defining Label Environments
 @cindex Options, defining label environments
+@cindex Defining label environments, options
 
 @defopt reftex-default-label-alist-entries
 Default label alist specifications.  It is a list of symbols with
-associations in the constant @var{reftex-label-alist-builtin}.
+associations in the constant @code{reftex-label-alist-builtin}.
 @code{LaTeX} should always be the last entry.@refill
 @end defopt
 
 @defopt reftex-label-alist
 Set this variable to define additions and changes to the defaults in
-@var{reftex-default-label-alist-entries}.  The only things you
+@code{reftex-default-label-alist-entries}.  The only things you
 @emph{must not} change is that @code{?s} is the type indicator for
 section labels, and @key{SPC} for the @code{any} label type.  These are
 hard-coded at other places in the code.@refill
@@ -2213,8 +2533,8 @@ The value of the variable must be a list of items.  Each item is a list
 itself and has the following structure:
 
 @example
- (ENV-OR-MACRO  TYPE-KEY  LABEL-PREFIX  REFERENCE-FORMAT
-    CONTEXT-METHOD  (MAGIC-WORD ... ))
+ (@var{env-or-macro}  @var{type-key}  @var{label-prefix}  @var{reference-format}
+    @var{context-method}  (@var{magic-word} ... ))
 @end example
 
 Each list entry describes either an environment carrying a counter for
@@ -2223,12 +2543,12 @@ label as (or inside) one of its arguments.  The elements of each list
 entry are:@refill
 
 @table @asis
-@item ENV-OR-MACRO
+@item @var{env-or-macro}
 Name of the environment (like @samp{table}) or macro (like
 @samp{\myfig}).  For macros, indicate the arguments, as in
 @samp{\myfig[]@{@}@{@}@{*@}@{@}}.  Use square brackets for optional
 arguments, a star to mark the label argument, if any.  The macro does
-not have to have a label argument - you could also use
+not have to have a label argument---you could also use
 @samp{\label@{...@}} inside one of its arguments.@refill
 
 Special names: @code{section} for section labels, @code{any} to define a
@@ -2238,7 +2558,7 @@ This may also be @code{nil} if the entry is only meant to change some
 settings associated with the type indicator character (see
 below).@refill
 
-@item TYPE-KEY
+@item @var{type-key}
 Type indicator character, like @code{?t}, must be a printable ASCII
 character.  The type indicator is a single character which defines a
 label type.  Any label inside the environment or macro is assumed to
@@ -2249,7 +2569,7 @@ indicator is @code{nil} and the macro has a label argument @samp{@{*@}},
 the macro defines neutral labels just like @code{\label}.  In this case
 the reminder of this entry is ignored.@refill
 
-@item LABEL-PREFIX
+@item @var{label-prefix}
 Label prefix string, like @samp{tab:}.  The prefix is a short string
 used as the start of a label.  It may be the empty string.  The prefix
 may contain the following @samp{%} escapes:@refill
@@ -2264,13 +2584,13 @@ may contain the following @samp{%} escapes:@refill
 Example: In a file @file{intro.tex}, @samp{eq:%f:} will become
 @samp{eq:intro:}.@refill
 
-@item REFERENCE-FORMAT
+@item @var{reference-format}
 Format string for reference insert in buffer.  @samp{%s} will be
 replaced by the label.  When the format starts with @samp{~}, this
 @samp{~} will only be inserted when the character before point is
 @emph{not} a whitespace.@refill
 
-@item CONTEXT-METHOD
+@item @var{context-method}
 Indication on how to find the short context.
 @itemize @minus
 @item
@@ -2294,14 +2614,14 @@ If an integer, use the nth argument of the macro.  As a special case,
 @item
 If a string, use as regexp to search @emph{backward} from the label.
 Context is then the text following the end of the match.  E.g. putting
-this to @samp{\\caption[@{]]} will use the caption in a figure or table
+this to @samp{\\caption[[@{]} will use the caption in a figure or table
 environment.  @samp{\\begin@{eqnarray@}\|\\\\} works for
 eqnarrays.@refill
 @item
 If any of @code{caption}, @code{item}, @code{eqnarray-like},
 @code{alignat-like}, this symbol will internally be translated into an
 appropriate regexp (see also the variable
-@var{reftex-default-context-regexps}).@refill
+@code{reftex-default-context-regexps}).@refill
 @item
 If a function, call this function with the name of the environment/macro
 as argument.  On call, point will be just after the @code{\label} macro.
@@ -2325,10 +2645,7 @@ E.g. @code{(nil . t)} uses the text after the label (@code{nil}) for
 display, and text from the default position (@code{t}) to derive a label
 string.  This is actually used for section labels.@refill
 
-Setting the variable @var{reftex-use-text-after-label-as-context} to
-@code{t} overrides the setting here.@refill
-
-@item MAGIC-WORD-LIST
+@item @var{magic-word-list}
 List of magic words which identify a reference to be of this type.  If
 the word before point is equal to one of these words when calling
 @code{reftex-reference}, the label list offered will be automatically
@@ -2348,63 +2665,56 @@ the magic words of all involved entries.
 @end itemize
 
 Any list entry may also be a symbol.  If that has an association in
-@var{reftex-label-alist-builtin}, the @code{cddr} of that association is
+@code{reftex-label-alist-builtin}, the @code{cddr} of that association is
 spliced into the list.  However, builtin defaults should normally be set
-with the variable @var{reftex-default-label-alist-entries}.@refill
+with the variable @code{reftex-default-label-alist-entries}.@refill
 @end defopt
 
 @defopt reftex-section-levels
 Commands and levels used for defining sections in the document.  The
 @code{car} of each cons cell is the name of the section macro.  The
-@code{cdr} is a number indicating its level.@refill
+@code{cdr} is a number indicating its level.  A negative level means the
+same as the positive value, but the section will never get a
+number.@refill
 @end defopt
 
 @defopt reftex-default-context-regexps
 Alist with default regular expressions for finding context.  The emacs
 lisp form @w{@code{(format regexp (regexp-quote environment))}} is used
-to calculate the final regular expression - so @samp{%s} will be
+to calculate the final regular expression---so @samp{%s} will be
 replaced with the environment or macro.@refill
 @end defopt
   
-@defopt reftex-use-text-after-label-as-context
-Non-@code{nil} means, grab context from directly after the
-@samp{\label@{...@}} macro.  This is the fastest method for obtaining
-context of the label definition, but requires discipline when placing
-labels.  Setting this variable to @code{t} takes precedence over the
-individual settings in @var{reftex-label-alist}.  This variable may be
-set to @code{t}, @code{nil}, or a string of label type letters
-indicating the label types for which it should be true.@refill
-@end defopt
-
 @node Options (Creating Labels), Options (Referencing Labels), Options (Defining Label Environments), Options
 @section Creating Labels
 @cindex Options, creating labels
+@cindex Creating labels, options
 
 @defopt reftex-insert-label-flags
 Flags governing label insertion.  The value has the form
 
 @example
-(DERIVE PROMPT)
+(@var{derive} @var{prompt})
 @end example
 
-If DERIVE is @code{t}, @b{Ref@TeX{}} will try to derive a sensible label
-from context.  A section label for example will be derived from the
-section heading.  The conversion of the context to a legal label is
+If @var{derive}is @code{t}, @b{Ref@TeX{}} will try to derive a sensible
+label from context.  A section label for example will be derived from
+the section heading.  The conversion of the context to a legal label is
 governed by the specifications given in
-@var{reftex-derive-label-parameters}.  If DERIVE is @code{nil}, the
-default label will consist of the prefix and a unique number, like
+@code{reftex-derive-label-parameters}.  If @var{derive} is @code{nil},
+the default label will consist of the prefix and a unique number, like
 @samp{eq:23}.@refill
 
-If PROMPT is @code{t}, the user will be prompted for a label string.
-When PROMPT is @code{nil}, the default label will be inserted without
-query.@refill
+If @var{prompt} is @code{t}, the user will be prompted for a label
+string.  When @var{prompt} is @code{nil}, the default label will be
+inserted without query.@refill
 
-So the combination of DERIVE and PROMPT controls label insertion.  Here
-is a table describing all four possibilities:@refill
+So the combination of @var{derive} and @var{prompt} controls label
+insertion.  Here is a table describing all four possibilities:@refill
 
 @example
 @group
-DERIVE PROMPT ACTION
+@var{derive} @var{prompt} @var{action}
 -----------------------------------------------------------
 nil    nil    @r{Insert simple label, like @samp{eq:22} or @samp{sec:13}. No query.}
 nil    t      @r{Prompt for label.}
@@ -2422,13 +2732,13 @@ simple labels without confirmation for everything else.@refill
 
 The available label types are: @code{s} (section), @code{f} (figure),
 @code{t} (table), @code{i} (item), @code{e} (equation), @code{n}
-(footnote), plus any definitions in @var{reftex-label-alist}.@refill
+(footnote), plus any definitions in @code{reftex-label-alist}.@refill
 @end defopt
 
 @deffn Hook reftex-format-label-function
 If non-@code{nil}, should be a function which produces the string to
 insert as a label definition.  The function will be called with two
-arguments, the LABEL and the DEFAULT FORMAT (usually
+arguments, the @var{label} and the @var{default-format} (usually
 @samp{\label@{%s@}}).  It should return the string to insert into the
 buffer.@refill
 @end deffn
@@ -2436,58 +2746,56 @@ buffer.@refill
 @deffn Hook reftex-string-to-label-function
 Function to turn an arbitrary string into a legal label.
 @b{Ref@TeX{}}'s default function uses the variable
-@var{reftex-derive-label-parameters}.@refill
+@code{reftex-derive-label-parameters}.@refill
 @end deffn
 
 @deffn Hook reftex-translate-to-ascii-function
 Filter function which will process a context string before it is used to
-derive a label from it.  A useful application would be to convert ISO or
-Mule characters into something legal in labels.  By default,
-@b{Ref@TeX{}} just removes these characters.  @code{X-Symbol} (>=2.6)
-sets this variable to @code{x-symbol-translate-to-ascii}.@refill
+derive a label from it.  The intended application is to convert ISO or
+Mule characters into something legal in labels.  The default function
+@code{reftex-latin1-to-ascii} removes the accents from Latin-1
+characters.  X-Symbol (>=2.6) sets this variable to the much more
+general @code{x-symbol-translate-to-ascii}.@refill
 @end deffn
 
 @defopt reftex-derive-label-parameters
 Parameters for converting a string into a label.  This variable is a
 list of the following items:@refill
 @table @asis
-@item NWORDS
+@item @var{nwords}
 Number of words to use.
-@item MAXCHAR
+@item @var{maxchar}
 Maximum number of characters in a label string.
-@item ILLEGAL
+@item @var{illegal}
 @code{nil}: Throw away any words containing characters illegal in labels.@*
 @code{t}:   Throw away only the illegal characters, not the whole word.
-@item ABBREV
+@item @var{abbrev}
 @code{nil}: Never abbreviate words.@*
-@code{t}:   Always abbreviate words (see @var{reftex-abbrev-parameters}).@*
+@code{t}:   Always abbreviate words (see @code{reftex-abbrev-parameters}).@*
 @code{1}:   Abbreviate words if necessary to shorten label string.
-@item SEPARATOR
+@item @var{separator}
 String separating different words in the label.
-@item IGNOREWORDS
+@item @var{ignorewords}
 List of words which should not be part of labels.
-@item DOWNCASE
+@item @var{downcase}
 @code{t}:   Downcase words before putting them into the label.@*
 @end table
 @end defopt
 
 @defopt reftex-label-illegal-re
-Regexp matching characters not legal in labels.  For historic reasons,
-this character class comes @emph{with} the @code{[]} brackets.
-The default value allows the characters \300-\377 because these are the
-european letters in ISO 8859-1.@refill
+Regexp matching characters not legal in labels.
 @end defopt
 
 @defopt reftex-abbrev-parameters
 Parameters for abbreviation of words.  A list of four parameters.@refill
 @table @asis
-@item MIN-CHARS
+@item @var{min-chars}
 Minimum number of characters remaining after abbreviation.
-@item MIN-KILL
+@item @var{min-kill}
 Minimum number of characters to remove when abbreviating words.@refill
-@item BEFORE
+@item @var{before}
 Character class before abbrev point in word.@refill
-@item AFTER
+@item @var{after}
 Character class after  abbrev point in word.@refill
 @end table
 @end defopt
@@ -2495,25 +2803,26 @@ Character class after  abbrev point in word.@refill
 @node Options (Referencing Labels), Options (Creating Citations), Options (Creating Labels), Options
 @section Referencing Labels
 @cindex Options, referencing labels
+@cindex Referencing labels, options
 
 @defopt reftex-label-menu-flags
 List of flags governing the label menu makeup. The flags are:
 @table @asis
-@item TABLE-OF-CONTENTS
+@item @var{table-of-contents}
 Show the labels embedded in a table of context.@refill
-@item SECTION-NUMBERS
+@item @var{section-numbers}
 Include section numbers (like 4.1.3) in table of contents.@refill
-@item COUNTERS
+@item @var{counters}
 Show counters.  This just numbers the labels in the menu.@refill
-@item NO-CONTEXT
-Non-@code{nil} means do NOT show the short context.@refill
-@item FOLLOW
+@item @var{no-context}
+Non-@code{nil} means do @emph{not} show the short context.@refill
+@item @var{follow}
 Follow full context in other window.@refill
-@item SHOW-COMMENTED
+@item @var{show-commented}
 Show labels from regions which are commented out.@refill
-@item MATCH-EVERYWHERE
+@item @var{match-everywhere}
 Obsolete flag.@refill
-@item SHOW FILES
+@item @var{show-files}
 Show begin and end of included files.@refill
 @end table
 
@@ -2526,9 +2835,9 @@ and figure labels, @code{nil} for everything else.  Setting it to
 
 The available label types are: @code{s} (section), @code{f} (figure),
 @code{t} (table), @code{i} (item), @code{e} (equation), @code{n}
-(footnote), plus any definitions in @var{reftex-label-alist}.@refill
+(footnote), plus any definitions in @code{reftex-label-alist}.@refill
 
-Most options can also be switched from the label menu itself - so if you
+Most options can also be switched from the label menu itself---so if you
 decide here to not have a table of contents in the label menu, you can
 still get one interactively during selection from the label menu.@refill
 @end defopt
@@ -2536,8 +2845,8 @@ still get one interactively during selection from the label menu.@refill
 @deffn Hook reftex-format-ref-function
 If non-@code{nil}, should be a function which produces the string to
 insert as a reference.  Note that the insertion format can also be
-changed with @var{reftex-label-alist}.  The function will be called with
-two arguments, the LABEL and the DEFAULT FORMAT (usually
+changed with @code{reftex-label-alist}.  The function will be called with
+two arguments, the @var{label} and the @var{default-format} (usually
 @samp{~\ref@{%s@}}).  It should return the string to insert into the
 buffer.@refill
 @end deffn
@@ -2560,8 +2869,8 @@ Number of spaces to be used for indentation per section level.@refill
 Non-@code{nil} means, @code{reftex-reference} will try to guess the
 label type.  To do that, @b{Ref@TeX{}} will look at the word before the
 cursor and compare it with the magic words given in
-@var{reftex-label-alist}.  When it finds a match, @b{Ref@TeX{}} will
-immediately offer the correct label menu - otherwise it will prompt you
+@code{reftex-label-alist}.  When it finds a match, @b{Ref@TeX{}} will
+immediately offer the correct label menu---otherwise it will prompt you
 for a label type.  If you set this variable to @code{nil}, @b{Ref@TeX{}}
 will always prompt for a label type.@refill
 @end defopt
@@ -2588,15 +2897,10 @@ The keymap which is active in the labels selection process
 (@pxref{Referencing Labels}).@refill
 @end deffn
 
-@node Options (Creating Citations), Options (Table of Contents), Options (Referencing Labels), Options
+@node Options (Creating Citations), Options (Viewing Cross-References), Options (Referencing Labels), Options
 @section Creating Citations
 @cindex Options, creating citations
-
-@defopt reftex-bibpath-environment-variables
-List of environment variables which might contain the path to BibTeX
-database files.  Directories ending in @samp{//} or @samp{!!} will be
-expanded recursively when necessary to find files.@refill
-@end defopt
+@cindex Creating citations, options
 
 @defopt reftex-bibfile-ignore-regexps
 List of regular expressions to exclude files in
@@ -2607,11 +2911,12 @@ will not be parsed.  Intended for files which contain only
 @end defopt
 
 @defopt reftex-default-bibliography
-List of BibTeX database file which should be used if none are specified.
+List of BibTeX database files which should be used if none are specified.
 When @code{reftex-citation} is called from a document which has neither
 a @samp{\bibliography@{...@}} statement nor a @code{thebibliography}
 environment, @b{Ref@TeX{}} will scan these files instead.  Intended for
-using @code{reftex-citation} in non-LaTeX files.
+using @code{reftex-citation} in non-LaTeX files.  The files will be
+searched along the BIBINPUTS or TEXBIB path.@refill
 @end defopt
 
 @defopt reftex-sort-bibtex-matches
@@ -2629,16 +2934,16 @@ reverse-year @r{Sort entries by decreasing year.}
 The format of citations to be inserted into the buffer.  It can be a
 string or an alist.  In the simplest case this is just the string
 @samp{\cite@{%l@}}, which is also the default.  See the definition of
-@var{reftex-cite-format-builtin} for more complex examples.@refill
+@code{reftex-cite-format-builtin} for more complex examples.@refill
 
-If @var{reftex-cite-format} is a string, it will be used as the format.
+If @code{reftex-cite-format} is a string, it will be used as the format.
 In the format, the following percent escapes will be expanded.@refill
 
 @table @code
 @item %l
 The BibTeX label of the citation.
 @item %a
-List of author names, see also @var{reftex-cite-punctuation}.
+List of author names, see also @code{reftex-cite-punctuation}.
 @item %2a
 Like %a, but abbreviate more than 2 authors like Jones et al.
 @item %A
@@ -2670,35 +2975,36 @@ Beware that all this only works with BibTeX database files.  When
 citations are made from the @code{\bibitems} in an explicit
 @code{thebibliography} environment, only @samp{%l} is available.@refill
 
-If @var{reftex-cite-format} is an alist of characters and strings, the
+If @code{reftex-cite-format} is an alist of characters and strings, the
 user will be prompted for a character to select one of the possible
 format strings.@refill
 
 In order to configure this variable, you can either set
-@var{reftex-cite-format} directly yourself or set it to the
+@code{reftex-cite-format} directly yourself or set it to the
 @emph{symbol} of one of the predefined styles (see
-@var{reftex-cite-format-builtin}).  E.g.: @code{(setq reftex-cite-format
+@code{reftex-cite-format-builtin}).  E.g.: @code{(setq reftex-cite-format
 'natbib)}.@refill
 @end defopt
 
 @deffn Hook reftex-format-cite-function
+
 If non-@code{nil}, should be a function which produces the string to
 insert as a citation.  Note that the citation format can also be changed
-with the variable @var{reftex-cite-format}.  The function will be called
-with two arguments, the CITATION KEY and the DEFAULT FORMAT (taken from
-@var{reftex-cite-format}).  It should return the string to insert into
-the buffer.
+with the variable @code{reftex-cite-format}.  The function will be
+called with two arguments, the @var{citation-key} and the
+@var{default-format} (taken from @code{reftex-cite-format}).  It should
+return the string to insert into the buffer.@refill
 @end deffn
 
 @defopt reftex-comment-citations
 Non-@code{nil} means add a comment for each citation describing the full
 entry.  The comment is formatted according to
-@var{reftex-cite-comment-format}.@refill
+@code{reftex-cite-comment-format}.@refill
 @end defopt
 
 @defopt reftex-cite-comment-format
 Citation format used for commented citations.  Must @emph{not} contain
-@samp{%l}.  See the variable @var{reftex-cite-format} for possible
+@samp{%l}.  See the variable @code{reftex-cite-format} for possible
 percent escapes.@refill
 @end defopt
 
@@ -2726,40 +3032,33 @@ The keymap which is active in the citation-key selection process
 (@pxref{Creating Citations}).@refill
 @end deffn
 
-@node Options (Table of Contents), Options (Viewing Cross References), Options (Creating Citations),  Options
-@section Table of Contents
-@cindex Options, table of contents
+@node Options (Viewing Cross-References), Options (Finding Files), Options (Creating Citations),  Options
+@section Viewing Cross-References
+@cindex Options, viewing cross-references
+@cindex Viewing cross-references, options
 
-@defopt reftex-toc-follow-mode
-Non-@code{nil} means, point in @code{*toc*} buffer (the
-table-of-contents buffer) will cause other window to follow.  The other
-window will show the corresponding part of the document.  This flag can
-be toggled from within the @code{*toc*} buffer with the @kbd{f}
-key.@refill
+@defopt reftex-view-crossref-macros
+Macros which can be used for the display of cross references.  This is
+used when @code{reftex-view-crossref} is called with point in an
+argument of a macro.  Each entry has the structure (@var{macro-re}
+@var{search-re} @var{highlight}).  @var{macro-re} is matched against the
+macro.  @var{search-re} is the regexp used to search for cross
+references.  @samp{%s} in this regexp is replaced with with the argument
+at point.  @var{highlight} is an integer indicating which subgroup of
+the match should be highlighted.  @code{\ref} and @code{\\cite} macros
+(and their variations) are hard-coded and need no mentioning in this
+variable.
 @end defopt
-
-@deffn {Normal Hook} reftex-toc-mode-hook
-Normal hook which is run when a @code{*toc*} buffer is
-created.@refill
-@end deffn
-
-@deffn Keymap reftex-toc-map
-The keymap which is active in the @code{*toc*} buffer.
-(@pxref{Table of Contents}).@refill
-@end deffn
-
-@node Options (Viewing Cross References), Options (Optimizations), Options (Table of Contents),  Options
-@section Viewing Cross References and Citations
-@cindex Options, viewing cross references
 
 @defopt reftex-auto-view-crossref
 Non-@code{nil} means, initially turn automatic viewing of crossref info
-on.  Automatic viewing of crossref info uses the echo area.  Whenever
-point is in the argument of a @code{\ref} or @code{\cite} macro, and no other
-message is being displayed, the echo area will display information about
-that cross reference.  The function @code{reftex-toggle-auto-view-crossref}
-can be used to toggle this feature after startup.  See also the variable
-@var{reftex-revisit-to-echo}.
+on.  Automatic viewing of crossref info normally uses the echo area.
+Whenever point is on the argument of a @code{\ref} or @code{\cite}
+macro, and no other message is being displayed, the echo area will
+display information about that cross reference.  You can also set the
+variable to the symbol @code{window}.  In this case a small temporary
+window is used for the display.  This feature can be turned on and of
+from the menu (Ref->Options).@refill
 @end defopt
 
 @defopt reftex-idle-time
@@ -2769,28 +3068,119 @@ done.@refill
 
 @defopt reftex-cite-view-format
 Citation format used to display citation info in the message area.  See
-the variable @var{reftex-cite-format} for possible percent
+the variable @code{reftex-cite-format} for possible percent
 escapes.@refill
 @end defopt
 
 @defopt reftex-revisit-to-echo
 Non-@code{nil} means, automatic citation display will revisit files if
 necessary.  When nil, citation display in echo area will only be active
-for cached echo strings (see @var{reftex-cache-cite-echo}), or for
+for cached echo strings (see @code{reftex-cache-cite-echo}), or for
 BibTeX database files which are already visited by a live associated
 buffers.@refill
 @end defopt
 
 @defopt reftex-cache-cite-echo
 Non-@code{nil} means, the information displayed in the echo area for
-cite macros (see variable @var{reftex-auto-view-crossref}) is cached and
+cite macros (see variable @code{reftex-auto-view-crossref}) is cached and
 saved along with the parsing information.  The cache survives document
 scans.  In order to clear it, use @kbd{M-x reftex-reset-mode}.
 @end defopt
 
-@node Options (Optimizations), Options (Fontification), Options (Viewing Cross References), Options
+@node Options (Finding Files), Options (Optimizations), Options (Viewing Cross-References),  Options
+@section Finding Files
+@cindex Options, Finding Files
+@cindex Finding files, options
+
+@defopt reftex-texpath-environment-variables
+List of specifications how to retrieve the search path for TeX files.
+Several entries are possible.@refill
+@itemize @minus
+@item
+If an element is the name of an environment variable, its content is
+used.@refill
+@item
+If an element starts with an exclamation mark, it is used as a command
+to retrieve the path.  A typical command with the kpathsearch library
+would be @w{@code{"!kpsewhich -show-path=.tex"}}.
+@item
+Otherwise the element itself is interpreted as a path.
+@end itemize
+Multiple directories can be separated by the system dependent
+@code{path-separator}.  Directories ending in @samp{//} or @samp{!!} will
+be expanded recursively.  See also @code{reftex-use-external-file-finders}.
+@end defopt
+
+@defopt reftex-bibpath-environment-variables
+List of specifications how to retrieve the search path for BibTeX
+files.  Several entries are possible.@refill
+@itemize @minus
+@item
+If an element is the name of an environment variable, its content is
+used.@refill
+@item
+If an element starts with an exclamation mark, it is used as a command
+to retrieve the path.  A typical command with the kpathsearch library
+would be @w{@code{"!kpsewhich -show-path=.bib"}}.
+@item
+Otherwise the element itself is interpreted as a path.
+@end itemize
+Multiple directories can be separated by the system dependent
+@code{path-separator}.  Directories ending in @samp{//} or @samp{!!} will
+be expanded recursively.  See also @code{reftex-use-external-file-finders}.
+@end defopt
+
+@defopt reftex-file-extensions
+Association list with file extensions for different file types.
+This is a list of items, each item is like: 
+@code{(@var{type} . (@var{def-ext} @var{other-ext} ...))}
+@example
+@var{type}:       @r{File type like @code{"bib"} or @code{"tex"}.}
+@var{def-ext}:    @r{The default extension for that file type, like @code{".tex"} or @code{".bib"}.}
+@var{other-ext}:  @r{Any number of other legal extensions for this file type.}
+@end example
+When a files is searched and it does not have any of the legal extensions,
+we try the default extension first, and then the naked file name.@refill
+@end defopt
+
+@defopt reftex-search-unrecursed-path-first
+Non-@code{nil} means, search all specified directories before trying
+recursion.  Thus, in a path @samp{.//:/tex/}, search first @samp{./},
+then @samp{/tex/}, and then all subdirectories of @samp{./}.  If this
+option is @code{nil}, the subdirectories of @samp{./} are searched
+before @samp{/tex/}.  This is mainly for speed---most of the time the
+recursive path is for the system files and not for the user files.  Set
+this to @code{nil} if the default makes @b{Ref@TeX{}} finding files with
+equal names in wrong sequence.@refill
+@end defopt
+
+@defopt reftex-use-external-file-finders
+Non-@code{nil} means, use external programs to find files.  Normally,
+@b{Ref@TeX{}} searches the paths given in the environment variables
+@code{TEXINPUTS} and @code{BIBINPUTS} to find TeX files and BibTeX
+database files.  With this option turned on, it calls an external
+program specified in the option @code{reftex-external-file-finders}
+instead.  As a side effect, the variables
+@code{reftex-texpath-environment-variables} and
+@code{reftex-bibpath-environment-variables} will be ignored.
+@end defopt
+
+@defopt reftex-external-file-finders
+Association list with external programs to call for finding files.  Each
+entry is a cons cell @w{@code{(@var{type} . @var{program})}}.
+@var{type} is either @code{"tex"} or @code{"bib"}.  @var{program} is a
+string containing the external program to use with any arguments.
+@code{%f} will be replaced by the name of the file to be found.  Note
+that these commands will be executed directly, not via a shell.  Only
+relevant when @code{reftex-use-external-file-finders} is
+non-@code{nil}.@refill
+@end defopt
+
+@page
+@node Options (Optimizations), Options (Fontification), Options (Finding Files), Options
 @section Optimizations
 @cindex Options, optimizations
+@cindex Optimizations, options
 
 @defopt reftex-keep-temporary-buffers
 Non-@code{nil} means, keep buffers created for parsing and lookup.
@@ -2820,7 +3210,7 @@ lookup.@refill
 If a buffer is to be kept, the file is visited normally (which is
 potentially slow but will happen only once). If a buffer is to be thrown
 away, the initialization of the buffer depends upon the variable
-@var{reftex-initialize-temporary-buffers}.@refill
+@code{reftex-initialize-temporary-buffers}.@refill
 @end defopt
 
 @defopt reftex-initialize-temporary-buffers
@@ -2860,8 +3250,8 @@ accessing the parsing information for the first time in an editing
 session will read that file (if available) instead of parsing the
 document.@refill
 @item
-each time (part of) the document is rescanned, a new version of the file
-is written.@refill
+exiting Emacs or killing a buffer in reftex-mode will cause a new
+version of the file to be written.@refill
 @end itemize
 @end defopt
 
@@ -2874,10 +3264,10 @@ cannot be placed with certainty into the internal label list.
 @defopt reftex-use-multiple-selection-buffers
 Non-@code{nil} means use a separate selection buffer for each label
 type.  These buffers are kept from one selection to the next and need
-not to be created for each use - so the menu generally comes up faster.
+not to be created for each use---so the menu generally comes up faster.
 The selection buffers will be erased (and therefore updated)
 automatically when new labels in its category are added.  See the
-variable @var{reftex-auto-update-selection-buffers}.@refill
+variable @code{reftex-auto-update-selection-buffers}.@refill
 @end defopt
 
 @defopt reftex-auto-update-selection-buffers
@@ -2887,13 +3277,14 @@ buffers associated with that label category are emptied, in order to
 force an update upon next use.  When @code{nil}, the buffers are left
 alone and have to be updated by hand, with the @kbd{g} key from the
 label selection process.  The value of this variable will only have any
-effect when @var{reftex-use-multiple-selection-buffers} is
+effect when @code{reftex-use-multiple-selection-buffers} is
 non-@code{nil}.@refill
 @end defopt
 
 @node Options (Fontification), Options (Misc), Options (Optimizations), Options
 @section Fontification
 @cindex Options, fontification
+@cindex Fontification, options
 
 @defopt reftex-use-fonts
 Non-@code{nil} means, use fonts in label menu and on-the-fly help.
@@ -2917,14 +3308,14 @@ Always refontify.
 Refontify when necessary, e.g. with old versions of the x-symbol
 package.@refill
 @end table
-The option is ignored when @var{reftex-use-fonts} is @code{nil}.@refill
+The option is ignored when @code{reftex-use-fonts} is @code{nil}.@refill
 @end defopt
 
 @defopt reftex-highlight-selection
 Non-@code{nil} means, highlight selected text in selection and
-@code{*toc*} buffers.  Normally, the text near the cursor is the
+@file{*toc*} buffers.  Normally, the text near the cursor is the
 @emph{selected} text, and it is highlighted.  This is the entry most
-keys in the selection and @code{*toc*} buffers act on.  However, if you
+keys in the selection and @file{*toc*} buffers act on.  However, if you
 mainly use the mouse to select an item, you may find it nice to have
 mouse-triggered highlighting @emph{instead} or @emph{as well}. The
 variable may have one of these values:@refill
@@ -2942,11 +3333,11 @@ buffers to become effective (keys @kbd{g} or @kbd{r}).@refill
 
 @defopt reftex-cursor-selected-face
 Face name to highlight cursor selected item in toc and selection buffers.
-See also the variable @var{reftex-highlight-selection}.@refill
+See also the variable @code{reftex-highlight-selection}.@refill
 @end defopt
 @defopt reftex-mouse-selected-face
 Face name to highlight mouse selected item in toc and selection buffers.
-See also the variable @var{reftex-highlight-selection}.@refill
+See also the variable @code{reftex-highlight-selection}.@refill
 @end defopt
 @defopt reftex-file-boundary-face
 Face name for file boundaries in selection buffer.
@@ -2973,6 +3364,7 @@ Face name for article title in bib selection buffer.
 Face name for bibliographic information in bib selection buffer.
 @end defopt
 
+@page
 @node Options (Misc), , Options (Fontification), Options
 @section Miscellaneous
 @cindex Options, misc
@@ -2997,7 +3389,7 @@ will@refill
 
 You may also set the variable itself to t or nil in order to turn all
 options on or off, respectively.@*
-Supplying labels in new sections and environments aplies when creating
+Supplying labels in new sections and environments applies when creating
 sections with @kbd{C-c C-s} and environments with @kbd{C-c C-e}.@*
 Supplying macro arguments applies when you insert such a macro
 interactively with @kbd{C-c @key{RET}}.@*
@@ -3036,13 +3428,10 @@ Normal hook which is being run when turning on @b{Ref@TeX{}} mode.@refill
 @end deffn
 
 Furthermore, the 3 modes used for referencing labels, creating citations
-and fo the table of contents buffer have their own keymaps and mode
-hooks.  See the respective sections: @ref{Options (Referencing Labels)},
-@ref{Options (Creating Citations)}, and @ref{Options (Table of
-Contents)}.@refill
-
-There are many more hooks which are described in the relevant sections
-about options for a specific part of @b{Ref@TeX{}}.@refill
+and for the table of contents buffer have their own keymaps and mode
+hooks.  See the respective sections.  There are many more hooks which
+are described in the relevant sections about options for a specific part
+of @b{Ref@TeX{}}.@refill
 
 @node Changes, , Keymaps and Hooks, Top
 @chapter Changes
@@ -3079,8 +3468,8 @@ XEmacs port.
 @noindent @b{Version 1.09}
 @itemize @bullet
 @item
-Support for @var{tex-main-file}, an analogue for
-@var{TeX-master}.@refill
+Support for @code{tex-main-file}, an analogue for
+@code{TeX-master}.@refill
 @item
 MS-DOS support.
 @end itemize
@@ -3103,7 +3492,7 @@ Crossref fields in BibTeX database entries.
 @code{figure*}, @code{table*}, @code{sidewaysfigure/table} added to
 default environments.@refill
 @item
-@var{reftex-bibfile-ignore-list} introduced (thanks to Rory Molinari).
+@code{reftex-bibfile-ignore-list} introduced (thanks to Rory Molinari).
 @item
 New functions @code{reftex-arg-label}, @code{reftex-arg-ref},
 @code{reftex-arg-cite}.@refill
@@ -3144,7 +3533,7 @@ Submitted for inclusion to Emacs and XEmacs.
 @noindent @b{Version 2.14}
 @itemize @bullet
 @item
-Variable @var{reftex-plug-into-AUCTeX} simplifies cooperation with
+Variable @code{reftex-plug-into-AUCTeX} simplifies cooperation with
 AUCTeX.@refill
 @end itemize
 
@@ -3202,9 +3591,9 @@ references.@refill
 @item
 A few (minor) Mule-related changes.
 @item
-Fixed bug which could cause HUGE .rel files.
+Fixed bug which could cause @emph{huge} @file{.rel} files.
 @item
-Search for input and .bib files with recursive path definitions.
+Search for input and @file{.bib} files with recursive path definitions.
 @end itemize
 
 @noindent @b{Version 3.04}
@@ -3246,8 +3635,8 @@ Added scroll-other-window functions to RefTeX-Select.
 @noindent @b{Version 3.12}
 @itemize @bullet
 @item
-There are 3 new keymaps for customization: @var{reftex-toc-map},
-@var{reftex-select-label-map}, @var{reftex-select-bib-map}.
+There are 3 new keymaps for customization: @code{reftex-toc-map},
+@code{reftex-select-label-map}, @code{reftex-select-bib-map}.
 @item
 Refontification uses more standard font-lock stuff.
 @item
@@ -3259,7 +3648,7 @@ When no BibTeX database files are specified, citations can also use
 @itemize @bullet
 @item
 Selection buffers can be kept between selections: this is faster.
-See new variable @var{reftex-use-multiple-selection-buffers}.@refill
+See new variable @code{reftex-use-multiple-selection-buffers}.@refill
 @item
 Prefix interpretation of reftex-view-crossref changed.
 @item
@@ -3270,20 +3659,20 @@ buffer).@refill
 @noindent @b{Version 3.16}
 @itemize @bullet
 @item
-New hooks @var{reftex-format-label-function},
-@var{reftex-format-ref-function}, @var{reftex-format-cite-function}.@refill
+New hooks @code{reftex-format-label-function},
+@code{reftex-format-ref-function}, @code{reftex-format-cite-function}.@refill
 @item
 TeXInfo documentation completed.
 @item
 Some restrictions in Label inserting and referencing removed.
 @item
-New variable @var{reftex-default-bibliography}.
+New variable @code{reftex-default-bibliography}.
 @end itemize
 
 @noindent @b{Version 3.17}
 @itemize @bullet
 @item
-Additional bindings in selection and @code{*toc*} buffers.  @kbd{g}
+Additional bindings in selection and @file{*toc*} buffers.  @kbd{g}
 redefined.
 @item
 New command @code{reftex-save-all-document-buffers}.
@@ -3296,11 +3685,10 @@ Selection process can switch to completion (with @key{TAB}).
 @item
 File commentary shortened considerably (use Info documentation).
 @item
-New option @var{reftex-no-include-regexps} to skip some include files.
+New option @code{reftex-no-include-regexps} to skip some include files.
 @item
-New option @var{reftex-revisit-to-follow}.
+New option @code{reftex-revisit-to-follow}.
 @end itemize
-@end ignore
 
 @noindent @b{Version 3.18}
 @itemize @bullet
@@ -3309,9 +3697,9 @@ The selection now uses a recursive edit, much like minibuffer input.
 This removes all restrictions during selection.  E.g. you can now
 switch buffers at will, use the mouse etc.@refill
 @item
-New option @var{reftex-highlight-selection}.
+New option @code{reftex-highlight-selection}.
 @item
-@kbd{mouse-2} can be used to select in selection and @code{*toc*}
+@kbd{mouse-2} can be used to select in selection and @file{*toc*}
 buffers.@refill
 @item
 Fixed some problems regarding the interaction with VIPER mode.
@@ -3324,7 +3712,7 @@ Follow-mode is now only used after point motion.
 @noindent @b{Version 3.19}
 @itemize @bullet
 @item
-Fixed bug with AUCTeX @var{TeX-master}.
+Fixed bug with AUCTeX @code{TeX-master}.
 @end itemize
 
 @noindent @b{Version 3.21}
@@ -3353,7 +3741,7 @@ file.
 @item
 The cursor inside a @code{\ref} or @code{\cite} macro can now trigger
 automatic display of crossref information in the echo area.  See
-variable @var{reftex-auto-view-crossref}.
+variable @code{reftex-auto-view-crossref}.
 @item
 AUCTeX interface updates:
 @itemize @minus
@@ -3362,7 +3750,7 @@ AUCTeX 9.9c and later notifies @b{Ref@TeX{}} about new sections.
 @item
 @b{Ref@TeX{}} notifies AUCTeX about new labels.
 @item
-@code{TeX-arg-ref} no longer used (introduction was unnecessaary).
+@code{TeX-arg-ref} no longer used (introduction was unnecessary).
 @item
 @code{reftex-arg-label} and @code{reftex-arg-cite} fixed up.
 @item
@@ -3373,13 +3761,13 @@ Fixed bug with @code{reftex-citation} in non-latex buffers.
 @item
 Fixed bug with syntax table and context refontification.
 @item
-Safety-net for name change of @var{font-lock-reference-face}.
+Safety-net for name change of @code{font-lock-reference-face}.
 @end itemize
 
 @noindent @b{Version 3.24}
 @itemize @bullet
 @item
-New option @var{reftex-revisit-to-echo}.
+New option @code{reftex-revisit-to-echo}.
 @item
 Interface with X-Symbol (>=2.6) is now complete and stable.
 @item
@@ -3395,12 +3783,12 @@ Fixed Bug with parsing "single file" from master file buffer.
 @itemize @bullet
 @item
 Echoing of citation info caches the info for displayed entries.
-New option @var{reftex-cache-cite-echo}.@refill
+New option @code{reftex-cache-cite-echo}.@refill
 @item
 @kbd{M-x reftex-reset-mode} now also removes the file with parsing
 info.@refill
 @item
-Default of @var{reftex-revisit-to-follow} changed to nil.
+Default of @code{reftex-revisit-to-follow} changed to nil.
 @end itemize
 
 @noindent @b{Version 3.26}
@@ -3408,8 +3796,8 @@ Default of @var{reftex-revisit-to-follow} changed to nil.
 @item
 [X]Emacs 19 no longer supported.  Use 3.22 for Emacs 19.
 @item
-New hooks @var{reftex-translate-to-ascii-function},
-@var{reftex-string-to-label-function}.@refill
+New hooks @code{reftex-translate-to-ascii-function},
+@code{reftex-string-to-label-function}.@refill
 @item
 Made sure automatic crossref display will not visit/scan files.
 @end itemize
@@ -3420,16 +3808,16 @@ Made sure automatic crossref display will not visit/scan files.
 Macros can define @emph{neutral} labels, just like @code{\label}
 itself.@refill
 @item
-New option @var{reftex-allow-detached-macro-args}, default @code{nil}!
+New option @code{reftex-allow-detached-macro-args}, default @code{nil}!
 @end itemize
 
 @noindent @b{Version 3.28}
 @itemize @bullet
 @item
-Auto view crossref for XEmacs uses @var{post-command-hook} to restart the
+Auto view crossref for XEmacs uses @code{post-command-hook} to restart the
 timer, since itimer restart is not reliable.@refill
 @item
-Option @var{reftex-bibfile-ignore-list} renamed to @var{-regexps}.
+Option @code{reftex-bibfile-ignore-list} renamed to @code{-regexps}.
 @item
 Expansion of recursive tex and bib path rewritten.
 @item
@@ -3442,9 +3830,9 @@ Fixed bug with section numbering after *-red sections.
 @itemize @bullet
 @item
 In @code{reftex-citation}, the regular expression used to scan BibTeX
-files can be specified using copletion on known citation keys.
+files can be specified using completion on known citation keys.
 @item
-New keys @kbd{a} and @kbd{A} in BibTeX selecton process to cite @emph{all}
+New keys @kbd{a} and @kbd{A} in BibTeX selection process to cite @emph{all}
 entries.
 @item
 New command @code{reftex-renumber-simple-labels} to renumber simple
@@ -3454,20 +3842,77 @@ labels like @samp{eq:13} sequentially through a document.
 @itemize @bullet
 @item
 Multiple selection buffers are now hidden buffers (they start with a
-SPC).
+SPACE).
 @item 
 Fixed bug with file search when TEXINPUTS environment variable is empty.
 @end itemize
 @noindent @b{Version 3.34}
 @itemize @bullet
 @item
-Additional flag in @var{reftex-derive-label-parameters} do make only
+Additional flag in @code{reftex-derive-label-parameters} do make only
 lowercase labels (default @code{t}).
 @item
 All @file{.rel} files have a final newline to avoid queries.
 @item
 Single byte representations of accented European letters (ISO-8859-1)
 are now legal in labels.
+@end itemize
+@end ignore
+@noindent @b{Version 3.35}
+@itemize @bullet
+@item
+ISO 8859 Latin-1 chars are converted to ASCII to derive better labels.
+This takes back the related changes in 3.34 for safety reasons.@refill
+@end itemize
+@noindent @b{Version 3.36}
+@itemize @bullet
+@item
+New value @code{window} for option @code{reftex-auto-view-crossref}.
+@end itemize
+@noindent @b{Version 3.38}
+@itemize @bullet
+@item
+@code{reftex-view-crossref} no longer moves to find a macro.  Point has
+to be on the macro argument.
+@end itemize
+@noindent @b{Version 3.41}
+@itemize @bullet
+@item
+New options @code{reftex-texpath-environment-variables},
+@code{reftex-use-external-file-finders},
+@code{reftex-external-file-finders},
+@code{reftex-search-unrecursed-path-first}.
+@item
+@emph{kpathsearch} support.  See new options and
+@code{reftex-bibpath-environment-variables}.
+@end itemize
+@noindent @b{Version 3.42}
+@itemize @bullet
+@item
+File search further refined.  New option @code{reftex-file-extensions}.
+@item
+@file{*toc*} buffer can show the file boundaries of a multifile
+document, all labels and associated context.  New keys @kbd{i}, @kbd{l},
+and @kbd{c}.  New options @code{reftex-toc-include-labels},
+@code{reftex-toc-include-context},
+@code{reftex-toc-include-file-boundaries}. @refill
+@end itemize
+@noindent @b{Version 3.43}
+@itemize @bullet
+@item
+Viewing cross-references generalized.  Now works on @code{\label},
+@code{\ref}, @code{\cite}, @code{\bibitem}, @code{\index}, variations of
+these, and from BibTeX buffers.@refill
+@item
+New option @code{reftex-view-crossref-extra}.@refill
+@item
+Support for the additional sectioning commands @code{\addchap} and
+@code{\addsec} which are dfined in the LaTeX KOMA-Script classes.@refill
+@item
+Files in @code{reftex-default-bibliography} will be searched along
+@code{BIBINPUTS} path.@refill
+@item
+Reading a parse file now checks consistency.
 @end itemize
 
 @node Index,  , , Top

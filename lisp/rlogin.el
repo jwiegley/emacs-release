@@ -1,12 +1,12 @@
 ;;; rlogin.el --- remote login interface
 
-;; Copyright (C) 1992, 1993, 1994, 1995, 1997 Free Software Foundation, Inc.
+;; Copyright (C) 1992-1995, 1997, 1998 Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman
-;; Maintainer: Noah Friedman <friedman@prep.ai.mit.edu>
+;; Maintainer: Noah Friedman <friedman@splode.com>
 ;; Keywords: unix, comm
 
-;; $Id: rlogin.el,v 1.42 1998/06/24 09:23:00 schwab Exp $
+;; $Id: rlogin.el,v 1.44 1998/10/03 00:44:26 friedman Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -46,7 +46,6 @@
   "Remote login interface"
   :group 'processes
   :group 'unix)
-
 
 (defcustom rlogin-program "rlogin"
   "*Name of program to invoke rlogin"
@@ -215,15 +214,19 @@ variable."
       ;; buffer from a previous exited process.
       (set-marker (process-mark proc) (point-max))
 
-      ;; comint-output-filter-functions is just like a hook, except that the
-      ;; functions in that list are passed arguments.  add-hook serves well
-      ;; enough for modifying it.
+      ;; comint-output-filter-functions is treated like a hook: it is
+      ;; processed via run-hooks or run-hooks-with-args in later versions
+      ;; of emacs.
       ;; comint-output-filter-functions should already have a
       ;; permanent-local property, at least in emacs 19.27 or later.
-      (if (fboundp 'make-local-hook)
-          (make-local-hook 'comint-output-filter-functions)
-        (make-local-variable 'comint-output-filter-functions))
-      (add-hook 'comint-output-filter-functions 'rlogin-carriage-filter)
+      (cond
+       ((fboundp 'make-local-hook)
+        (make-local-hook 'comint-output-filter-functions)
+        (add-hook 'comint-output-filter-functions 'rlogin-carriage-filter
+                  nil t))
+       (t
+        (make-local-variable 'comint-output-filter-functions)
+        (add-hook 'comint-output-filter-functions 'rlogin-carriage-filter)))
 
       (rlogin-mode)
 
@@ -336,19 +339,19 @@ local one share the same directories (through NFS)."
 
 (defun rlogin-send-Ctrl-C ()
   (interactive)
-  (send-string nil "\C-c"))
+  (process-send-string nil "\C-c"))
 
 (defun rlogin-send-Ctrl-D ()
   (interactive)
-  (send-string nil "\C-d"))
+  (process-send-string nil "\C-d"))
 
 (defun rlogin-send-Ctrl-Z ()
   (interactive)
-  (send-string nil "\C-z"))
+  (process-send-string nil "\C-z"))
 
 (defun rlogin-send-Ctrl-backslash ()
   (interactive)
-  (send-string nil "\C-\\"))
+  (process-send-string nil "\C-\\"))
 
 (defun rlogin-delchar-or-send-Ctrl-D (arg)
   "\

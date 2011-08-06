@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,172 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Incremental Search,  Next: Nonincremental Search,  Prev: Search,  Up: Search
+
+Incremental Search
+==================
+
+   An incremental search begins searching as soon as you type the first
+character of the search string.  As you type in the search string, Emacs
+shows you where the string (as you have typed it so far) would be
+found.  When you have typed enough characters to identify the place you
+want, you can stop.  Depending on what you plan to do next, you may or
+may not need to terminate the search explicitly with <RET>.
+
+`C-s'
+     Incremental search forward (`isearch-forward').
+
+`C-r'
+     Incremental search backward (`isearch-backward').
+
+   `C-s' starts an incremental search.  `C-s' reads characters from the
+keyboard and positions the cursor at the first occurrence of the
+characters that you have typed.  If you type `C-s' and then `F', the
+cursor moves right after the first `F'.  Type an `O', and see the
+cursor move to after the first `FO'.  After another `O', the cursor is
+after the first `FOO' after the place where you started the search.  At
+each step, the buffer text that matches the search string is
+highlighted, if the terminal can do that; at each step, the current
+search string is updated in the echo area.
+
+   If you make a mistake in typing the search string, you can cancel
+characters with <DEL>.  Each <DEL> cancels the last character of search
+string.  This does not happen until Emacs is ready to read another
+input character; first it must either find, or fail to find, the
+character you want to erase.  If you do not want to wait for this to
+happen, use `C-g' as described below.
+
+   When you are satisfied with the place you have reached, you can type
+<RET>, which stops searching, leaving the cursor where the search
+brought it.  Also, any command not specially meaningful in searches
+stops the searching and is then executed.  Thus, typing `C-a' would
+exit the search and then move to the beginning of the line.  <RET> is
+necessary only if the next command you want to type is a printing
+character, <DEL>, <RET>, or another control character that is special
+within searches (`C-q', `C-w', `C-r', `C-s', `C-y', `M-y', `M-r', or
+`M-s').
+
+   Sometimes you search for `FOO' and find it, but not the one you
+expected to find.  There was a second `FOO' that you forgot about,
+before the one you were aiming for.  In this event, type another `C-s'
+to move to the next occurrence of the search string.  This can be done
+any number of times.  If you overshoot, you can cancel some `C-s'
+characters with <DEL>.
+
+   After you exit a search, you can search for the same string again by
+typing just `C-s C-s': the first `C-s' is the key that invokes
+incremental search, and the second `C-s' means "search again."
+
+   To reuse earlier search strings, use the "search ring".  The
+commands `M-p' and `M-n' move through the ring to pick a search string
+to reuse.  These commands leave the selected search ring element in the
+minibuffer, where you can edit it.  Type `C-s' or `C-r' to terminate
+editing the string and search for it.
+
+   If your string is not found at all, the echo area says `Failing
+I-Search'.  The cursor is after the place where Emacs found as much of
+your string as it could.  Thus, if you search for `FOOT', and there is
+no `FOOT', you might see the cursor after the `FOO' in `FOOL'.  At this
+point there are several things you can do.  If your string was
+mistyped, you can rub some of it out and correct it.  If you like the
+place you have found, you can type <RET> or some other Emacs command to
+"accept what the search offered."  Or you can type `C-g', which removes
+from the search string the characters that could not be found (the `T'
+in `FOOT'), leaving those that were found (the `FOO' in `FOOT').  A
+second `C-g' at that point cancels the search entirely, returning point
+to where it was when the search started.
+
+   An upper-case letter in the search string makes the search
+case-sensitive.  If you delete the upper-case character from the search
+string, it ceases to have this effect.  *Note Search Case::.
+
+   If a search is failing and you ask to repeat it by typing another
+`C-s', it starts again from the beginning of the buffer.  Repeating a
+failing reverse search with `C-r' starts again from the end.  This is
+called "wrapping around".  `Wrapped' appears in the search prompt once
+this has happened.  If you keep on going past the original starting
+point of the search, it changes to `Overwrapped', which means that you
+are revisiting matches that you have already seen.
+
+   The `C-g' "quit" character does special things during searches; just
+what it does depends on the status of the search.  If the search has
+found what you specified and is waiting for input, `C-g' cancels the
+entire search.  The cursor moves back to where you started the search.
+If `C-g' is typed when there are characters in the search string that
+have not been found--because Emacs is still searching for them, or
+because it has failed to find them--then the search string characters
+which have not been found are discarded from the search string.  With
+them gone, the search is now successful and waiting for more input, so
+a second `C-g' will cancel the entire search.
+
+   To search for a newline, type `C-j'.  To search for another control
+character, such as control-S or carriage return, you must quote it by
+typing `C-q' first.  This function of `C-q' is analogous to its use for
+insertion (*note Inserting Text::.): it causes the following character
+to be treated the way any "ordinary" character is treated in the same
+context.  You can also specify a character by its octal code: enter
+`C-q' followed by a sequence of octal digits.
+
+   You can change to searching backwards with `C-r'.  If a search fails
+because the place you started was too late in the file, you should do
+this.  Repeated `C-r' keeps looking for more occurrences backwards.  A
+`C-s' starts going forwards again.  `C-r' in a search can be canceled
+with <DEL>.
+
+   If you know initially that you want to search backwards, you can use
+`C-r' instead of `C-s' to start the search, because `C-r' as a key runs
+a command (`isearch-backward') to search backward.  A backward search
+finds matches that are entirely before the starting point, just as a
+forward search finds matches that begin after it.
+
+   The characters `C-y' and `C-w' can be used in incremental search to
+grab text from the buffer into the search string.  This makes it
+convenient to search for another occurrence of text at point.  `C-w'
+copies the word after point as part of the search string, advancing
+point over that word.  Another `C-s' to repeat the search will then
+search for a string including that word.  `C-y' is similar to `C-w' but
+copies all the rest of the current line into the search string.  Both
+`C-y' and `C-w' convert the text they copy to lower case if the search
+is currently not case-sensitive; this is so the search remains
+case-insensitive.
+
+   The character `M-y' copies text from the kill ring into the search
+string.  It uses the same text that `C-y' as a command would yank.
+*Note Yanking::.
+
+   When you exit the incremental search, it sets the mark to where point
+*was*, before the search.  That is convenient for moving back there.
+In Transient Mark mode, incremental search sets the mark without
+activating it, and does so only if the mark is not already active.
+
+   To customize the special characters that incremental search
+understands, alter their bindings in the keymap `isearch-mode-map'.
+For a list of bindings, look at the documentation of `isearch-mode' with
+`C-h f isearch-mode <RET>'.
+
+Slow Terminal Incremental Search
+--------------------------------
+
+   Incremental search on a slow terminal uses a modified style of
+display that is designed to take less time.  Instead of redisplaying
+the buffer at each place the search gets to, it creates a new
+single-line window and uses that to display the line that the search
+has found.  The single-line window comes into play as soon as point
+gets outside of the text that is already on the screen.
+
+   When you terminate the search, the single-line window is removed.
+Then Emacs redisplays the window in which the search was done, to show
+its new position of point.
+
+   The slow terminal style of display is used when the terminal baud
+rate is less than or equal to the value of the variable
+`search-slow-speed', initially 1200.
+
+   The number of lines to use in slow terminal search display is
+controlled by the variable `search-slow-window-lines'.  Its normal
+value is 1.
 
 
 File: emacs,  Node: Nonincremental Search,  Next: Word Search,  Prev: Incremental Search,  Up: Search
@@ -554,8 +720,15 @@ File: emacs,  Node: Replacement and Case,  Next: Query Replace,  Prev: Regexp Re
 Replace Commands and Case
 -------------------------
 
-   If the arguments to a replace command are in lower case, it preserves
-case when it makes a replacement.  Thus, the command
+   If the first argument of a replace command is all lower case, the
+commands ignores case while searching for occurrences to
+replace--provided `case-fold-search' is non-`nil'.  If
+`case-fold-search' is set to `nil', case is always significant in all
+searches.
+
+   In addition, when the NEWSTRING argument is all or partly lower
+case, replacement commands try to preserve the case pattern of each
+occurrence.  Thus, the command
 
      M-x replace-string <RET> foo <RET> bar <RET>
 
@@ -564,14 +737,12 @@ with `BAR', and a capitalized `Foo' with `Bar'.  (These three
 alternatives--lower case, all caps, and capitalized, are the only ones
 that `replace-string' can distinguish.)
 
-   If upper-case letters are used in the second argument, they remain
-upper case every time that argument is inserted.  If upper-case letters
-are used in the first argument, the second argument is always
-substituted exactly as given, with no case conversion.  Likewise, if the
-variable `case-replace' is set to `nil', replacement is done without
-case conversion.  If `case-fold-search' is set to `nil', case is
-significant in matching occurrences of `foo' to replace; this also
-inhibits case conversion of the replacement string.
+   If upper-case letters are used in the replacement string, they remain
+upper case every time that text is inserted.  If upper-case letters are
+used in the first argument, the second argument is always substituted
+exactly as given, with no case conversion.  Likewise, if either
+`case-replace' or `case-fold-search' is set to `nil', replacement is
+done without case conversion.
 
 
 File: emacs,  Node: Query Replace,  Prev: Replacement and Case,  Up: Replace
@@ -680,7 +851,9 @@ Other Search-and-Loop Commands
 ==============================
 
    Here are some other commands that find matches for a regular
-expression.  They all operate from point to the end of the buffer.
+expression.  They all operate from point to the end of the buffer, and
+all ignore case in matching, if the pattern contains no upper-case
+letters and `case-fold-search' is non-`nil'.
 
 `M-x occur <RET> REGEXP <RET>'
      Display a list showing each line in the buffer that contains a
@@ -688,10 +861,6 @@ expression.  They all operate from point to the end of the buffer.
      context lines to print before and after each matching line; the
      default is none.  To limit the search to part of the buffer,
      narrow to that part (*note Narrowing::.).
-
-     If REGEXP contains upper-case letters, then the matching is done
-     in a case-sensitive way.  Otherwise, `case-fold-search' controls
-     whether case is ignored.
 
      The buffer `*Occur*' containing the output serves as a menu for
      finding the occurrences in their original context.  Click `Mouse-2'
@@ -1007,119 +1176,4 @@ name of the standard dictionary to use.  A value of `nil' says to use
 the default dictionary.  The command `M-x ispell-change-dictionary'
 sets this variable and then restarts the Ispell subprocess, so that it
 will use a different dictionary.
-
-
-File: emacs,  Node: Files,  Next: Buffers,  Prev: Fixit,  Up: Top
-
-File Handling
-*************
-
-   The operating system stores data permanently in named "files".  So
-most of the text you edit with Emacs comes from a file and is ultimately
-stored in a file.
-
-   To edit a file, you must tell Emacs to read the file and prepare a
-buffer containing a copy of the file's text.  This is called "visiting"
-the file.  Editing commands apply directly to text in the buffer; that
-is, to the copy inside Emacs.  Your changes appear in the file itself
-only when you "save" the buffer back into the file.
-
-   In addition to visiting and saving files, Emacs can delete, copy,
-rename, and append to files, keep multiple versions of them, and operate
-on file directories.
-
-* Menu:
-
-* File Names::          How to type and edit file-name arguments.
-* Visiting::            Visiting a file prepares Emacs to edit the file.
-* Saving::              Saving makes your changes permanent.
-* Reverting::           Reverting cancels all the changes not saved.
-* Auto Save::           Auto Save periodically protects against loss of data.
-* File Aliases::        Handling multiple names for one file.
-* Version Control::     Version control systems (RCS, CVS and SCCS).
-* Directories::         Creating, deleting, and listing file directories.
-* Comparing Files::     Finding where two files differ.
-* Misc File Ops::       Other things you can do on files.
-* Compressed Files::    Accessing compressed files.
-* Remote Files::        Accessing files on other sites.
-* Quoted File Names::   Quoting special characters in file names.
-
-
-File: emacs,  Node: File Names,  Next: Visiting,  Up: Files
-
-File Names
-==========
-
-   Most Emacs commands that operate on a file require you to specify the
-file name.  (Saving and reverting are exceptions; the buffer knows which
-file name to use for them.)  You enter the file name using the
-minibuffer (*note Minibuffer::.).  "Completion" is available, to make
-it easier to specify long file names.  *Note Completion::.
-
-   For most operations, there is a "default file name" which is used if
-you type just <RET> to enter an empty argument.  Normally the default
-file name is the name of the file visited in the current buffer; this
-makes it easy to operate on that file with any of the Emacs file
-commands.
-
-   Each buffer has a default directory, normally the same as the
-directory of the file visited in that buffer.  When you enter a file
-name without a directory, the default directory is used.  If you specify
-a directory in a relative fashion, with a name that does not start with
-a slash, it is interpreted with respect to the default directory.  The
-default directory is kept in the variable `default-directory', which
-has a separate value in every buffer.
-
-   For example, if the default file name is `/u/rms/gnu/gnu.tasks' then
-the default directory is `/u/rms/gnu/'.  If you type just `foo', which
-does not specify a directory, it is short for `/u/rms/gnu/foo'.
-`../.login' would stand for `/u/rms/.login'.  `new/foo' would stand for
-the file name `/u/rms/gnu/new/foo'.
-
-   The command `M-x pwd' prints the current buffer's default directory,
-and the command `M-x cd' sets it (to a value read using the
-minibuffer).  A buffer's default directory changes only when the `cd'
-command is used.  A file-visiting buffer's default directory is
-initialized to the directory of the file that is visited there.  If you
-create a buffer with `C-x b', its default directory is copied from that
-of the buffer that was current at the time.
-
-   The default directory actually appears in the minibuffer when the
-minibuffer becomes active to read a file name.  This serves two
-purposes: it *shows* you what the default is, so that you can type a
-relative file name and know with certainty what it will mean, and it
-allows you to *edit* the default to specify a different directory.
-This insertion of the default directory is inhibited if the variable
-`insert-default-directory' is set to `nil'.
-
-   Note that it is legitimate to type an absolute file name after you
-enter the minibuffer, ignoring the presence of the default directory
-name as part of the text.  The final minibuffer contents may look
-invalid, but that is not so.  For example, if the minibuffer starts out
-with `/usr/tmp/' and you add `/x1/rms/foo', you get
-`/usr/tmp//x1/rms/foo'; but Emacs ignores everything through the first
-slash in the double slash; the result is `/x1/rms/foo'.  *Note
-Minibuffer File::.
-
-   `$' in a file name is used to substitute environment variables.  For
-example, if you have used the shell command `export FOO=rms/hacks' to
-set up an environment variable named `FOO', then you can use
-`/u/$FOO/test.c' or `/u/${FOO}/test.c' as an abbreviation for
-`/u/rms/hacks/test.c'.  The environment variable name consists of all
-the alphanumeric characters after the `$'; alternatively, it may be
-enclosed in braces after the `$'.  Note that shell commands to set
-environment variables affect Emacs only if done before Emacs is started.
-
-   To access a file with `$' in its name, type `$$'.  This pair is
-converted to a single `$' at the same time as variable substitution is
-performed for single `$'.  Alternatively, quote the whole file name
-with `/:' (*note Quoted File Names::.).
-
-   The Lisp function that performs the substitution is called
-`substitute-in-file-name'.  The substitution is performed only on file
-names read as such using the minibuffer.
-
-   You can include non-ASCII characters in file names if you set the
-variable `file-name-coding-system' to a non-`nil' value.  *Note Specify
-Coding::.
 

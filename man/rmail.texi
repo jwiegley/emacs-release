@@ -15,8 +15,8 @@ Reading the message in an Rmail file is done in a special major mode,
 Rmail mode, which redefines most letters to run commands for managing
 mail.  The command @code{rmail-mode} is used to switch into Rmail mode,
 and it runs the hook @code{rmail-mode-hook} as usual, but don't run this
-command by hand; it can't do a reasonable job unless unless the buffer
-is visiting a proper Rmail file.
+command by hand; it can't do a reasonable job unless the buffer is
+visiting a proper Rmail file.
 
 @menu
 * Basic: Rmail Basics.       Basic concepts of Rmail, and simple use.
@@ -251,8 +251,8 @@ current message and select another message.  @kbd{d}
 messages already deleted, while @kbd{C-d} (@code{rmail-delete-backward})
 moves to the previous nondeleted message.  If there is no nondeleted
 message to move to in the specified direction, the message that was just
-deleted remains current.  A numeric argument acts as a repeat count, and
-a negative argument reverses direction.
+deleted remains current.  A numeric argument to either command reverses
+the direction of motion after deletion.
 
 @vindex rmail-delete-message-hook
   Whenever Rmail deletes a message, it invokes the function(s) listed in
@@ -310,8 +310,11 @@ environment variable, or, as a last resort, set to @code{nil}, which
 means to use the default inbox.  The default inbox is
 @file{/var/mail/@var{username}}, @file{/usr/spool/mail/@var{username}},
 or @file{/usr/mail/@var{username}}, depending on your operating system.
-You can specify the inbox file(s) for any Rmail file with the command
-@code{set-rmail-inbox-list}; see @ref{Rmail Files}.
+
+  To see what the default is on your system, use @kbd{C-h v
+rmail-primary-inbox @key{RET}}.  You can specify the inbox file(s) for
+any Rmail file with the command @code{set-rmail-inbox-list}; see
+@ref{Rmail Files}.
 
   There are two reasons for having separate Rmail files and inboxes.
 
@@ -467,7 +470,7 @@ the minibuffer, so you can specify a different name if you wish.
 
   You can also output a message to an Rmail file chosen with a menu.
 Choose first the menu bar Classify item, then from the Classify menu
-choose the Output Rmail Menu item; then choose the Rmail file you want.
+choose the Output Rmail File menu item; then choose the Rmail file you want.
 This outputs the current message to that file, like the @kbd{o} command.
 The variables @code{rmail-secondary-file-directory} and
 @code{rmail-secondary-file-regexp} specify which files to offer in the
@@ -1050,6 +1053,7 @@ message itself is flagged as deleted.
 @node Out of Rmail
 @section Converting an Rmail File to Inbox Format
 
+@findex unrmail
   The command @kbd{M-x unrmail} converts a file in Rmail format to inbox
 format (also known as the system mailbox format), so that you can use it
 with other mail-editing tools.  You must specify two arguments, the name
@@ -1108,15 +1112,19 @@ the corrected file.
   Some sites use a method called POP for accessing users' inbox data
 instead of storing the data in inbox files.  @code{movemail} can work
 with POP if you compile it with the macro @code{MAIL_USE_POP} defined.
-@code{movemail} only works with POP3, not with older versions of POP.
+(You can achieve that by specifying @samp{--with-pop} when you run
+@code{configure} during the installation of Emacs.)
+@code{movemail} only works with POP3, not with older
+versions of POP.
 
 @cindex @code{MAILHOST} environment variable
 @cindex POP inboxes
   Assuming you have compiled and installed @code{movemail}
-appropriately, you can specify a POP inbox with a ``file name'' of the
-form @samp{po:@var{username}}.  @code{movemail} handles such a name by
-opening a connection to the POP server.  The @code{MAILHOST} environment
-variable specifies the machine to look for the server on.
+appropriately, you can specify a POP inbox by using a ``file name'' of
+the form @samp{po:@var{username}}, in the inbox list of an Rmail file.
+@code{movemail} handles such a name by opening a connection to the POP
+server.  The @code{MAILHOST} environment variable specifies the machine
+to look for the server on.
 
 @vindex rmail-pop-password
 @vindex rmail-pop-password-required
@@ -1132,11 +1140,15 @@ wish to use.  Do not use this variable to pass the @samp{-p} flag to
 preserve your inbox contents; use @code{rmail-preserve-inbox} instead.
 
 @cindex Kerberos POP authentication
-@cindex GSS-API POP authentication
   The @code{movemail} program installed at your site may support
-Kerberos and/or GSS-API authentication.  If only Kerberos or GSS-API is
+Kerberos authentication.  If it is
 supported, it is used by default whenever you attempt to retrieve
 POP mail when @code{rmail-pop-password} and
-@code{rmail-pop-password-required} are unset.  If both are supported,
-then Kerberos is used by default; to use GSS-API instead, set
-@code{rmail-movemail-flags} to pass the flag @samp{-g} to @code{movemail}.
+@code{rmail-pop-password-required} are unset.
+
+@cindex POP inboxes in reverse order
+  Some POP servers store messages in reverse order.  If your server does
+this, and you would rather read your mail in the order in which it was
+received, you can tell @code{movemail} to reverse the order of
+downloaded messages by adding the @samp{-r} flag to
+@code{rmail-movemail-flags}.

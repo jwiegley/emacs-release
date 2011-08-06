@@ -371,7 +371,7 @@ possible by typing `C-z'.  Then you will be in Vi state (sigh of
 relief) :-).
 
    Emacs state is actually a Viperism to denote all the major and minor
-modes (*Note Emacs Preliminaries::) other than Viper that Emacs can be
+modes (*note Emacs Preliminaries::.) other than Viper that Emacs can be
 in.  Emacs can have several modes, such as C mode for editing C
 programs, LaTeX mode for editing LaTeX documents, Dired for directory
 editing, etc.  These are major modes, each with a different set of
@@ -804,9 +804,9 @@ to a modifying command, the region determined by the line command will
 be enlarged so that it will become the smallest region properly
 containing the region and consisting of whole lines (we call this
 process "expanding the region"), and then the enlarged region will be
-affected by the modifying command.  Text Deletion Commands (*Note
-Deleting Text::), Change commands (*Note Changing Text::), even Shell
-Commands (*Note Shell Commands::) use these commands to describe a
+affected by the modifying command.  Text Deletion Commands (*note
+Deleting Text::.), Change commands (*note Changing Text::.), even Shell
+Commands (*note Shell Commands::.)  use these commands to describe a
 region of text to operate on.  Thus, type `dw' to delete a word, `>}'
 to shift a paragraph, or `!'afmt' to format a region from `point' to
 textmarker `a'.
@@ -824,7 +824,7 @@ commands.  *Note Marking::, for more info.
 sense.
 
    In the Overview chapter, some Multiple File issues were discussed
-(*Note Multiple Files in Viper::).  In addition to the files, Emacs has
+(*note Multiple Files in Viper::.).  In addition to the files, Emacs has
 buffers.  These can be seen in the `:args' list and switched using
 `:next' if you type `:set ex-cycle-through-non-files t', or specify
 `(setq ex-cycle-through-non-files t)' in your `.viper' file.  *Note

@@ -715,7 +715,7 @@ To customize the binding for `C-h' in Insert state:
      (define-key viper-insert-global-user-map "\C-h" 'my-del-backwards-function)
 
 Each Emacs command key calls some lisp function.  If you have enabled
-the Help, (*Note Rudimentary Changes::) `C-h k' will show you the
+the Help, (*note Rudimentary Changes::.) `C-h k' will show you the
 function for each specific key; `C-h b' will show all bindings, and
 `C-h m' will provide information on the major mode in effect.  If Help
 is not enabled, you can still get help in Vi state by prefixing the
@@ -853,7 +853,7 @@ language-specific major modes to bind <TAB> and `C-j' (the line feed)
 keys to various formatting functions.  This is extremely useful, but
 may require some getting used to for a Vi user.  If you decide that
 this feature is not for you, you can re-bind these keys as explained
-earlier (*Note Customization::).
+earlier (*note Customization::.).
 
    Binding for <TAB> is one of the most unusual aspects of Viper for
 many novice users.  In Emacs, <TAB> is used to format text and
@@ -903,7 +903,7 @@ they may bind common keys to specialized commands.  This might make
 sense for modes that bind only a small number of common keys.  For
 instance, Viper subverts the Shell mode by changing the bindings for
 `C-m' and `C-d' using `viper-add-local-keys' described in section on
-customization (*Note Customization::).
+customization (*note Customization::.).
 
    In some cases, some *minor* modes might override certain essential
 bindings in Vi command state.  This is not a big priblem because this

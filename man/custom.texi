@@ -481,7 +481,7 @@ previous active or editable field.
 @key{TAB}.  The reason for this is that people have a tendency to type
 @key{RET} when they are finished editing a field.  If you have occasion
 to insert a newline in an editable field, use @kbd{C-o} or @kbd{C-q
-C-j},
+C-j}.
 
 @cindex saving option value
   Setting the option changes its value in the current Emacs session;
@@ -769,7 +769,7 @@ always local in every buffer, but they are used for internal
 purposes.@refill
 
   A few variables cannot be local to a buffer because they are always
-local to each display instead (@xref{Multiple Displays}).  If you try to
+local to each display instead (@pxref{Multiple Displays}).  If you try to
 make one of these variables buffer-local, you'll get an error message.
 
 @findex kill-local-variable
@@ -899,10 +899,6 @@ particular files.  If you want to use Auto Fill, set up major mode hooks
 with your @file{.emacs} file to turn it on (when appropriate) for you
 alone (@pxref{Init File}).  Don't use a local variable list to impose
 your taste on everyone.
-
-  It does not work to specify the ``variable'' @code{coding} in a local
-variables list; @code{coding} is implemented in a special way and it
-works only in the @samp{-*-} construct.
 
   The start of the local variables list must be no more than 3000
 characters from the end of the file, and must be in the last page if the
@@ -1168,6 +1164,7 @@ name which usually consists of lower-case letters and hyphens.
 * Init Rebinding::      Rebinding keys with your init file, @file{.emacs}.
 * Function Keys::       Rebinding terminal function keys.
 * Named ASCII Chars::   Distinguishing @key{TAB} from @kbd{C-i}, and so on.
+* Non-ASCII Rebinding:: Rebinding non-ASCII characters such as Latin-1.
 * Mouse Buttons::       Rebinding mouse buttons in Emacs.
 * Disabling::           Disabling a command means confirmation is required
                           before it can be executed.  This is done to protect
@@ -1248,9 +1245,10 @@ sequences are inconvenient to type in.
   As a user, you can redefine any key; but it might be best to stick to
 key sequences that consist of @kbd{C-c} followed by a letter.  These
 keys are ``reserved for users,'' so they won't conflict with any
-properly designed Emacs extension.  If you redefine some other key, your
-definition may be overridden by certain extensions or major modes which
-redefine the same key.
+properly designed Emacs extension.  The function keys @key{F5} through
+@key{F9} are also reserved for users.  If you redefine some other key,
+your definition may be overridden by certain extensions or major modes
+which redefine the same key.
 
 @node Prefix Keymaps
 @subsection Prefix Keymaps
@@ -1399,18 +1397,17 @@ for cautious completion.
 @subsection Changing Key Bindings Interactively
 @cindex key rebinding, this session
 @cindex rebinding keys, this session
-@cindex rebinding keys, this session
 
   The way to redefine an Emacs key is to change its entry in a keymap.
 You can change the global keymap, in which case the change is effective in
 all major modes (except those that have their own overriding local
 definitions for the same key).  Or you can change the current buffer's
 local map, which affects all buffers using the same major mode.
+
 @findex global-set-key
 @findex local-set-key
 @findex global-unset-key
 @findex local-unset-key
-
 @table @kbd
 @item M-x global-set-key @key{RET} @var{key} @var{cmd} @key{RET}
 Define @var{key} globally to run @var{cmd}.
@@ -1531,7 +1528,7 @@ the character as it would appear in a string.
 
   Here are examples of using vectors to rebind @kbd{C-=} (a control
 character outside of ASCII), @kbd{H-a} (a Hyper character; ASCII doesn't
-have Hyper at all); @key{f7} (a function key), and @kbd{C-Mouse-1} (a
+have Hyper at all), @key{F7} (a function key), and @kbd{C-Mouse-1} (a
 keyboard-modified mouse button):
 
 @example
@@ -1665,6 +1662,39 @@ this ASCII character, and another for the ``function key'' @code{tab}.
   With an ordinary ASCII terminal, there is no way to distinguish
 between @key{TAB} and @kbd{C-i} (and likewise for other such pairs),
 because the terminal sends the same character in both cases.
+
+@node Non-ASCII Rebinding
+@subsection Non-ASCII Characters on the Keyboard
+
+If your keyboard has keys that send non-ASCII characters, such as
+accented letters, rebinding these keys is a bit tricky.  There are
+two solutions you can use.  One is to specify a keyboard coding system,
+using @code{set-keyboard-coding-system} (@pxref{Specify Coding}).
+Then you can bind these keys in the usual way, but writing
+
+@example
+(global-set-key [?@var{char}] 'some-function)
+@end example
+
+@noindent
+and typing the key you want to bind to insert @var{char}.
+
+If you don't specify the keyboard coding system, that approach won't
+work.  Instead, you need to find out the actual code that the terminal
+sends.  The easiest way to do this in Emacs is to create an empty buffer
+with @kbd{C-x b temp @key{RET}}, make it unibyte with @kbd{M-x
+toggle-enable-multibyte-characters @key{RET}}, then type the key to
+insert the character into this buffer.
+
+Move point before the character, then type @kbd{C-b C-x =}.  This
+displays a message in the minibuffer, showing the character code in
+three ways, octal, decimal and hexadecimal, all within a set of
+parentheses.  Use the second of the three numbers, the decimal one,
+inside the vector to bind:
+
+@example
+(global-set-key [@var{decimal-code}] 'some-function)
+@end example
 
 @node Mouse Buttons
 @subsection Rebinding Mouse Buttons
@@ -1911,11 +1941,11 @@ Syntax Tables, elisp, The Emacs Lisp Reference Manual}.
 @cindex startup (init file)
 
   When Emacs is started, it normally loads a Lisp program from the file
-@file{.emacs} in your home directory.  We call this file your @dfn{init
-file} because it specifies how to initialize Emacs for you.  You can use
-the command line switch @samp{-q} to prevent loading your init file, and
-@samp{-u} (or @samp{--user}) to specify a different user's init file
-(@pxref{Entering Emacs}).
+@file{.emacs} or @file{.emacs.el} in your home directory.  We call this
+file your @dfn{init file} because it specifies how to initialize Emacs
+for you.  You can use the command line switch @samp{-q} to prevent
+loading your init file, and @samp{-u} (or @samp{--user}) to specify a
+different user's init file (@pxref{Entering Emacs}).
 
   There can also be a @dfn{default init file}, which is the library
 named @file{default.el}, found via the standard search path for
@@ -1932,11 +1962,9 @@ loads your init file.  To inhibit loading of this library, use the
 option @samp{-no-site-file}.
 
   If you have a large amount of code in your @file{.emacs} file, you
-should move it into another file such as @file{~/@var{something}.el},
-byte-compile it, and make your @file{.emacs} file load it with
-@code{(load "~/@var{something}")}.  @xref{Byte Compilation,, Byte
-Compilation, elisp, the Emacs Lisp Reference Manual}, for more
-information about compiling Emacs Lisp programs.
+should rename it to @file{~/.emacs.el}, and byte-compile it.  @xref{Byte
+Compilation,, Byte Compilation, elisp, the Emacs Lisp Reference Manual},
+for more information about compiling Emacs Lisp programs.
 
   If you are going to write actual Emacs Lisp programs that go beyond
 minor customization, you should read the @cite{Emacs Lisp Reference Manual}.

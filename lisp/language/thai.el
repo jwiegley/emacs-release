@@ -1,4 +1,4 @@
-;;; thai.el --- Support for Thai
+;;; thai.el --- Support for Thai -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1995 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -39,6 +39,7 @@
 
 (define-coding-system-alias 'th-tis620 'thai-tis620)
 (define-coding-system-alias 'tis620 'thai-tis620)
+(define-coding-system-alias 'tis-620 'thai-tis620)
 
 (set-language-info-alist
  "Thai" '((tutorial . "TUTORIAL.th")

@@ -1,6 +1,6 @@
 ;;; compile.el --- run compiler as inferior of Emacs, parse error messages.
 
-;; Copyright (C) 1985, 86, 87, 93, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 87, 93, 94, 95, 96, 97, 98, 1999 Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@prep.ai.mit.edu>
 ;; Maintainer: FSF
@@ -49,7 +49,7 @@
 		 integer)
   :group 'compilation)
 
-(defvar compile-auto-highlight nil
+(defcustom compile-auto-highlight nil
   "*Specify how many compiler errors to highlight (and parse) initially.
 \(Highlighting applies to an error message when the mouse is over it.)
 If this is a number N, all compiler error messages in the first N lines
@@ -59,7 +59,11 @@ If nil, don't highlight or parse any of the buffer until you try to
 move to the error messages.
 
 Those messages which are not parsed and highlighted initially
-will be parsed and highlighted as soon as you try to move to them.")
+will be parsed and highlighted as soon as you try to move to them."
+  :type '(choice (const :tag "All" t)
+		 (const :tag "None" nil)
+		 (integer :tag "First N lines"))
+  :group 'compilation)
 
 (defvar compilation-error-list nil
   "List of error message descriptors for visiting erring functions.
@@ -156,8 +160,13 @@ or when it is used with \\[next-error] or \\[compile-goto-error].")
     ;; We'll insist that the number be followed by a colon or closing
     ;; paren, because otherwise this matches just about anything
     ;; containing a number with spaces around it.
-    ("\\([a-zA-Z]+:\\)?\\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\
-\\([) \t]\\|:\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 2 3 6)
+
+    ;; We insist on a non-digit in the file name
+    ;; so that we don't mistake the file name for a command name
+    ;; and take the line number as the file name.
+    ("\\([a-zA-Z][-a-zA-Z._0-9]+: ?\\)?\
+\\([a-zA-Z]?:?[^:( \t\n]*[^:( \t\n0-9][^:( \t\n]*\\)[:(][ \t]*\\([0-9]+\\)\
+\\([) \t]\\|:\\(\\([0-9]+:\\)\\|[0-9]*[^:0-9]\\)\\)" 2 3 6)
 
     ;; Microsoft C/C++:
     ;;  keyboard.c(537) : warning C4005: 'min' : macro redefinition
@@ -166,16 +175,19 @@ or when it is used with \\[next-error] or \\[compile-goto-error].")
     ;; parens around the line number, but that caused confusion for
     ;; GNU-style error messages.
     ;; This used to reject spaces and dashes in file names,
-    ;; but they are valudnow; so I made it more strict about the error
+    ;; but they are valid now; so I made it more strict about the error
     ;; message that follows.
     ("\\(\\([a-zA-Z]:\\)?[^:(\t\n]+\\)(\\([0-9]+\\)) \
 : \\(error\\|warning\\) C[0-9]+:" 1 3)
 
-    ;; Borland C++:
+    ;; Borland C++, C++Builder:
     ;;  Error ping.c 15: Unable to open include file 'sys/types.h'
     ;;  Warning ping.c 68: Call to function 'func' with no prototype
-    ("\\(Error\\|Warning\\) \\([a-zA-Z]?:?[^:( \t\n]+\\)\
- \\([0-9]+\\)\\([) \t]\\|:[^0-9\n]\\)" 2 3)
+    ;;  Error E2010 ping.c 15: Unable to open include file 'sys/types.h'
+    ;;  Warning W1022 ping.c 68: Call to function 'func' with no prototype
+    ("\\(Error\\|Warning\\) \\(\\([FEW][0-9]+\\) \\)?\
+\\([a-zA-Z]?:?[^:( \t\n]+\\)\
+ \\([0-9]+\\)\\([) \t]\\|:[^0-9\n]\\)" 4 5)
 
     ;; 4.3BSD lint pass 2
     ;; 	strcmp: variable # of args. llib-lc(359)  ::  /usr/src/foo/foo.c(8)
@@ -352,6 +364,17 @@ used with compilers that don't indicate file name in every error message.")
 Note that the match is done at the beginning of lines.
 Each elt has the form (REGEXP). This alist is by default empty, but if
 you have some good regexps here, the parsing of messages will be faster.")
+
+(defcustom compilation-error-screen-columns t
+  "*If non-nil, column numbers in error messages are screen columns.
+Otherwise they are interpreted as character positions, with
+each character occupying one column.
+The default is to use screen columns, which requires that the compilation
+program and Emacs agree about the display width of the characters,
+especially the TAB character."
+  :type 'boolean
+  :group 'compilation
+  :version "20.4")
 
 (defcustom compilation-read-command t
   "*If not nil, M-x compile reads the compilation command to use.
@@ -540,9 +563,13 @@ to a function that generates a unique name."
 	  (format "%s -n " grep-program)))
   (unless grep-find-use-xargs
     (setq grep-find-use-xargs
-	  (if (equal (call-process "find" nil nil nil
-				   null-device "-print0")
-		     0)
+	  (if (and
+               (equal (call-process "find" nil nil nil
+                                    null-device "-print0")
+                      0)
+               (equal (call-process "xargs" nil nil nil
+                                    "-0" "-e" "echo")
+		     0))
 	      'gnu)))
   (setq grep-find-command
 	(cond ((eq grep-find-use-xargs 'gnu)
@@ -796,10 +823,9 @@ exited abnormally with code %d\n"
 		   (compilation-handle-exit 'bizarre status status))))
 	  (message "Executing `%s'...done" command)))
       (if compilation-scroll-output
-          (let ((currbuf (current-buffer)))
+	  (save-selected-window
             (select-window outwin)
-            (goto-char (point-max))
-            (select-window (get-buffer-window currbuf)))))
+            (goto-char (point-max)))))
     ;; Make it so the next C-x ` will use this buffer.
     (setq compilation-last-buffer outbuf)))
 
@@ -921,7 +947,8 @@ Runs `compilation-mode-hook' with `run-hooks' (which see)."
   (set (make-local-variable 'compilation-error-list) nil)
   (set (make-local-variable 'compilation-old-error-list) nil)
   (set (make-local-variable 'compilation-parsing-end) 1)
-  (set (make-local-variable 'compilation-directory-stack) nil)
+  (set (make-local-variable 'compilation-directory-stack)
+       (list default-directory))
   (setq compilation-last-buffer (current-buffer)))
 
 (defvar compilation-shell-minor-mode nil
@@ -955,6 +982,20 @@ Compilation major mode are available.")
 				     minor-mode-map-alist)))
 
 ;;;###autoload
+(defun compilation-shell-minor-mode (&optional arg)
+  "Toggle compilation shell minor mode.
+With arg, turn compilation mode on if and only if arg is positive.
+See `compilation-mode'.
+Turning the mode on runs the normal hook `compilation-shell-minor-mode-hook'."
+  (interactive "P")
+  (if (setq compilation-shell-minor-mode (if (null arg)
+				       (null compilation-shell-minor-mode)
+				     (> (prefix-numeric-value arg) 0)))
+      (let ((mode-line-process))
+	(compilation-setup)
+	(run-hooks 'compilation-shell-minor-mode-hook))))
+
+;;;###autoload
 (defun compilation-minor-mode (&optional arg)
   "Toggle compilation minor mode.
 With arg, turn compilation mode on if and only if arg is positive.
@@ -981,9 +1022,10 @@ Turning the mode on runs the normal hook `compilation-minor-mode-hook'."
     ;; later on.
     (goto-char omax)
     (insert ?\n mode-name " " (car status))
-    (forward-char -1)
+    (if (bolp)
+	(forward-char -1))
     (insert " at " (substring (current-time-string) 0 19))
-    (forward-char 1)
+    (goto-char (point-max))
     (setq mode-line-process (format ":%s [%s]" process-status (cdr status)))
     ;; Force mode line redisplay soon.
     (force-mode-line-update)
@@ -1230,6 +1272,8 @@ Does NOT find the source line like \\[next-error]."
 	    ;; Mouse-Highlight (the first line of) each error message when the
 	    ;; mouse pointer moves over it:
 	    (let ((inhibit-read-only t)
+		  (buffer-undo-list t)
+		  deactivate-mark
 		  (error-list compilation-error-list))
 	      (while error-list
 		(save-excursion
@@ -1240,6 +1284,9 @@ Does NOT find the source line like \\[next-error]."
 	    )))))
 
 (defun compile-mouse-goto-error (event)
+  "Visit the source for the error message the mouse is pointing at.
+This is like `compile-goto-error' called without prefix arg
+at the end of the line."
   (interactive "e")
   (save-excursion
     (set-buffer (window-buffer (posn-window (event-end event))))
@@ -1262,19 +1309,15 @@ Does NOT find the source line like \\[next-error]."
     ;; we want.
     (setq compilation-error-list compilation-old-error-list)
     (while (and compilation-error-list
-		(> (point) (car (car compilation-error-list))))
+		;; The marker can point nowhere if we previously
+		;; failed to find the relevant file.  See
+		;; compilation-next-error-locus.
+		(or (null (marker-buffer (caar compilation-error-list)))
+		    (> (point) (caar compilation-error-list))))
       (setq compilation-error-list (cdr compilation-error-list)))
     (or compilation-error-list
 	(error "No error to go to")))
   (select-window (posn-window (event-end event)))
-  ;; Move to another window, so that next-error's window changes
-  ;; result in the desired setup.
-  (or (one-window-p)
-      (progn
-	(other-window -1)
-	;; other-window changed the selected buffer,
-	;; but we didn't want to do that.
-	(set-buffer compilation-last-buffer)))
 
   (push-mark)
   (next-error 1))
@@ -1297,17 +1340,12 @@ other kinds of prefix arguments are ignored."
   ;; we want.
   (setq compilation-error-list compilation-old-error-list)
   (while (and compilation-error-list
-	      (> (point) (car (car compilation-error-list))))
+	      ;; The marker can point nowhere if we previously
+	      ;; failed to find the relevant file.  See
+	      ;; compilation-next-error-locus.
+	      (or (null (marker-buffer (caar compilation-error-list)))
+		  (> (point) (caar compilation-error-list))))
     (setq compilation-error-list (cdr compilation-error-list)))
-
-  ;; Move to another window, so that next-error's window changes
-  ;; result in the desired setup.
-  (or (one-window-p)
-      (progn
-	(other-window -1)
-	;; other-window changed the selected buffer,
-	;; but we didn't want to do that.
-	(set-buffer compilation-last-buffer)))
 
   (push-mark)
   (next-error 1))
@@ -1412,8 +1450,7 @@ nil instead of raising an error if there are no more errors.
 
 The current buffer should be the desired compilation output buffer."
   (or move (setq move 1))
-  (compile-reinitialize-errors reparse nil (and (not reparse)
-						(if (< move 1) 0 (1- move))))
+  (compile-reinitialize-errors reparse nil (and (not reparse) (max 0 move)))
   (let (next-errors next-error)
     (catch 'no-next-error
       (save-excursion
@@ -1484,10 +1521,12 @@ The current buffer should be the desired compilation output buffer."
 			    ;; Look for the next error.
 			    t)
 			;; We found the file.  Get a marker for this error.
-			;; compilation-old-error-list is a buffer-local
-			;; variable, so we must be careful to extract its value
+			;; compilation-old-error-list and
+			;; compilation-error-screen-columns are buffer-local
+			;; so we must be careful to extract their value
 			;; before switching to the source file buffer.
 			(let ((errors compilation-old-error-list)
+			      (columns compilation-error-screen-columns)
 			      (last-line (nth 1 (cdr next-error)))
 			      (column (nth 2 (cdr next-error))))
 			  (set-buffer buffer)
@@ -1497,7 +1536,9 @@ The current buffer should be the desired compilation output buffer."
 			      (goto-line last-line)
 			      (if (and column (> column 0))
 				  ;; Columns in error msgs are 1-origin.
-				  (forward-char (1- column))
+				  (if columns
+				      (move-to-column (1- column))
+				    (forward-char (1- column)))
 				(beginning-of-line))
 			      (setcdr next-error (point-marker))
 			      ;; Make all the other error messages referring
@@ -1521,7 +1562,9 @@ The current buffer should be the desired compilation output buffer."
 								lines))
 					 (forward-line lines))
 				       (if (and column (> column 1))
-					   (forward-char (1- column))
+					   (if columns
+					       (move-to-column (1- column))
+					     (forward-char (1- column)))
 					 (beginning-of-line))
 				       (setq last-line this)
 				       (setcdr (car errors) (point-marker))))
@@ -1549,10 +1592,17 @@ The current buffer should be the desired compilation output buffer."
   "Jump to an error locus returned by `compilation-next-error-locus'.
 Takes one argument, a cons (ERROR . SOURCE) of two markers.
 Selects a window with point at SOURCE, with another window displaying ERROR."
-  (if (and (window-dedicated-p (selected-window))
-	   (eq (selected-window) (frame-root-window)))
-      (switch-to-buffer-other-frame (marker-buffer (cdr next-error)))
-    (switch-to-buffer (marker-buffer (cdr next-error))))
+  (if (eq (window-buffer (selected-window))
+	  (marker-buffer (car next-error)))
+      ;; If the compilation buffer window is selected,
+      ;; keep the compilation buffer in this window;
+      ;; display the source in another window.
+      (let ((pop-up-windows t))
+	(pop-to-buffer (marker-buffer (cdr next-error))))
+    (if (and (window-dedicated-p (selected-window))
+	     (eq (selected-window) (frame-root-window)))
+	(switch-to-buffer-other-frame (marker-buffer (cdr next-error)))
+      (switch-to-buffer (marker-buffer (cdr next-error)))))
   (goto-char (cdr next-error))
   ;; If narrowing got in the way of
   ;; going to the right place, widen.
@@ -1632,7 +1682,9 @@ Selects a window with point at SOURCE, with another window displaying ERROR."
 	compilation-directory-stack (list default-directory)
 	compilation-parsing-end 1)
   ;; Remove the highlighting added by compile-reinitialize-errors:
-  (let ((inhibit-read-only t))
+  (let ((inhibit-read-only t)
+	(buffer-undo-list t)
+	deactivate-mark)
     (remove-text-properties (point-min) (point-max) '(mouse-face highlight)))
   )
 

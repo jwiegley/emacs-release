@@ -1166,8 +1166,8 @@ Ligatures and special rules are processed."
   "This function re-orders glyph list for decomposition."
   (sort glyphlist 
 	'(lambda (x y) 
-	   (let ((xx (assoc x devanagari-decomposition-rules))
-		 (yy (assoc y devanagari-decomposition-rules)))
+	   (let ((xx (nth 1 (assoc x devanagari-decomposition-rules)))
+		 (yy (nth 1 (assoc y devanagari-decomposition-rules))))
 	     (if (null xx) (setq xx 0))
 	     (if (null yy) (setq yy 0))
 	     (< xx yy)))))
@@ -1277,10 +1277,8 @@ Ligatures and special rules are processed."
 
 ;;;###autoload
 (defun in-is13194-devanagari-pre-write-conversion (from to)
-  (let ((old-buf (current-buffer))
-	(work-buf (get-buffer-create " *devanagari-work*")))
-    (set-buffer work-buf)
-    (erase-buffer)
+  (let ((old-buf (current-buffer)))
+    (set-buffer (generate-new-buffer " *temp*"))
     (if (stringp from)
 	(insert from)
       (insert-buffer-substring old-buf from to))

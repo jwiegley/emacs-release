@@ -38,12 +38,21 @@ A value of nil means that any change in indentation starts a new paragraph."
   :group 'fill)
 
 (defcustom sentence-end-double-space t
-  "*Non-nil means a single space does not end a sentence."
+  "*Non-nil means a single space does not end a sentence.
+
+If you change this, you should also change `sentence-end'.
+See Info node `Sentences'."
   :type 'boolean
   :group 'fill)
 
 (defcustom colon-double-space nil
   "*Non-nil means put two spaces after a colon when filling."
+  :type 'boolean
+  :group 'fill)
+
+(defcustom sentence-end-without-period nil
+  "*Non-nil means a sentence will end without period.
+For example, Thai text ends with double space but without period."
   :type 'boolean
   :group 'fill)
 
@@ -136,7 +145,8 @@ number equals or exceeds the local fill-column - right-margin difference."
 (defun canonically-space-region (beg end)
   "Remove extra spaces between words in region.
 Leave one space between words, two at end of sentences or after colons
-\(depending on values of `sentence-end-double-space' and `colon-double-space').
+\(depending on values of `sentence-end-double-space', `colon-double-space',
+and `sentence-end-without-period').
 Remove indentation from each line."
   (interactive "r")
   (save-excursion
@@ -154,7 +164,9 @@ Remove indentation from each line."
 	  (save-excursion
 	    (skip-chars-backward " ]})\"'")
 	    (cond ((and sentence-end-double-space
-			(memq (preceding-char) '(?. ?? ?!)))  2)
+			(or (memq (preceding-char) '(?. ?? ?!))
+			    (and sentence-end-without-period
+				 (= (char-syntax (preceding-char)) ?w)))) 2)
 		  ((and colon-double-space
 			(= (preceding-char) ?:))  2)
 		  ((char-equal (preceding-char) ?\n)  0)
@@ -251,6 +263,42 @@ act as a paragraph-separator."
   "If non-nil, a predicate for recognizing places not to break a line.
 The predicate is called with no arguments, with point at the place
 to be tested.  If it returns t, fill commands do not break the line there.")
+
+;; Put `fill-find-break-point-function' property to charsets which
+;; require special functions to find line breaking point.
+(let ((alist '((katakana-jisx0201 . kinsoku)
+	       (chinese-gb2312 . kinsoku)
+	       (japanese-jisx0208 . kinsoku)
+	       (japanese-jisx0212 . kinsoku)
+	       (chinese-big5-1 . kinsoku)
+	       (chinese-big5-2 . kinsoku))))
+  (while alist
+    (put-charset-property (car (car alist)) 'fill-find-break-point-function
+			  (cdr (car alist)))
+    (setq alist (cdr alist))))
+
+(defun fill-find-break-point (limit)
+  "Move point to a proper line breaking position of the current line.
+Don't move back past the buffer position LIMIT.
+
+This function is called when we are going to break the current line
+after or before a non-ascii character.  If the charset of the
+character has the property `fill-find-break-point-function', this
+function calls the property value as a function with one arg LINEBEG.
+If the charset has no such property, do nothing."
+  (let* ((ch (following-char))
+	 (charset (char-charset ch))
+	 func)
+    (if (eq charset 'ascii)
+	(setq ch (preceding-char)
+	      charset (char-charset ch)))
+    (if (eq charset 'ascii)
+	nil
+      (if (eq charset 'composition)
+	  (setq charset (char-charset (composite-char-component ch 0)))))
+  (setq func (get-charset-property charset 'fill-find-break-point-function))
+  (if (and func (fboundp func))
+      (funcall func limit))))
 
 (defun fill-region-as-paragraph (from to &optional justify
 				      nosqueeze squeeze-after)
@@ -374,19 +422,33 @@ space does not end a sentence, so don't break a line there."
 	  ;; loses on split abbrevs ("Mr.\nSmith")
 	  (while (re-search-forward "[.?!][])}\"']*$" nil t)
 	    (or (eobp) (insert-and-inherit ?\ )))
-	  (goto-char from)
-	  ;; The character category `|' means that we can break a line
-	  ;; at the character.  Since we don't need a space between
-	  ;; them, delete all newlines between them ...
-	  (while (re-search-forward "\\c|\n\\|\n\\c|" nil t)
-	    (if (bolp)
-		(delete-char -1)
-	      (if (= (char-before (match-beginning 0)) ?\ )
-		  ;; ... except when there is end of sentence.  The
-		  ;; variable `sentence-end-double-space' is handled
-		  ;; properly later.
-		  nil
-		(delete-region (match-beginning 0) (1+ (match-beginning 0))))))
+
+	  (goto-char from)	  
+	  (if enable-multibyte-characters
+	      ;; Delete unnecessay newlines surrounded by words.  The
+	      ;; character category `|' means that we can break a line
+	      ;; at the character.  And, charset property
+	      ;; `nospace-between-words' tells how to concatenate
+	      ;; words.  If the value is non-nil, never put spaces
+	      ;; between words, thus delete a newline between them.
+	      ;; If the value is nil, delete a newline only when a
+	      ;; character preceding a newline has text property
+	      ;; `nospace-between-words'.
+	      (while (search-forward "\n" nil t)
+		(let ((prev (char-before (match-beginning 0)))
+		      (next (following-char)))
+		  (if (cmpcharp prev)
+		      (setq prev (composite-char-component prev 0)))
+		  (if (cmpcharp next)
+		      (setq next (composite-char-component next 0)))
+		  (if (and (or (aref (char-category-set next) ?|)
+			       (aref (char-category-set prev) ?|))
+			   (or (get-charset-property (char-charset prev)
+						     'nospace-between-words)
+			       (get-text-property (1- (match-beginning 0))
+						  'nospace-between-words)))
+		      (delete-char -1)))))
+
 	  (goto-char from)
 	  (skip-chars-forward " \t")
 	  ;; Then change all newlines to spaces.
@@ -474,13 +536,15 @@ space does not end a sentence, so don't break a line there."
 			(setq first nil)))
 		  ;; Normally, move back over the single space between the words.
 		  (if (= (preceding-char) ?\ ) (forward-char -1))
-		  ;; Do KINSOKU processing.
-		  (if (and enable-multibyte-characters enable-kinsoku
-			   (save-excursion
-			     (goto-char (point-min))
-			     (skip-chars-forward "\0-\177")
-			     (/= (point) (point-max))))
-		      (kinsoku linebeg)))
+
+		  (if enable-multibyte-characters
+		      ;; If we are going to break the line after or
+		      ;; before a non-ascii character, we may have to
+		      ;; run a special function for the charset of the
+		      ;; character to find the correct break point.
+		      (if (not (and (eq (charset-after (1- (point))) 'ascii)
+				    (eq (charset-after (point)) 'ascii)))
+			  (fill-find-break-point linebeg))))
 
 		;; If the left margin and fill prefix by themselves
 		;; pass the fill-column, keep at least one word.
@@ -1055,7 +1119,8 @@ Also, if CITATION-REGEXP is non-nil,  don't fill header lines."
 	  ;; Fill this paragraph, but don't add a newline at the end.
 	  (let ((had-newline (bolp)))
 	    (fill-region-as-paragraph start (point) justify)
-	    (or had-newline (delete-char -1))))))))
+	    (if (and (bolp) (not had-newline))
+		(delete-char -1))))))))
 
 (defun fill-individual-paragraphs-prefix (citation-regexp)
   (or (let ((adaptive-fill-first-line-regexp "")
@@ -1086,6 +1151,7 @@ Also, if CITATION-REGEXP is non-nil,  don't fill header lines."
 		    (fill-individual-paragraphs-citation two-lines-prefix
 							 citation-regexp)
 		  just-one-line-prefix))
+	  (or two-lines-citation-part (setq two-lines-citation-part ""))
 	  (setq adjusted-two-lines-citation-part
 		(substring two-lines-citation-part 0
 			   (string-match "[ \t]*\\'"

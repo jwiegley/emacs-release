@@ -38,7 +38,7 @@
 ;; because it is always buffer-local.
 (defvar use-hard-newlines nil
     "Non-nil means to distinguish hard and soft newlines.
-See documentation for the `use-hard-newlines' function.")
+See also the documentation for the function `use-hard-newlines'.")
 (make-variable-buffer-local 'use-hard-newlines)
 
 (defun use-hard-newlines (&optional arg insert)
@@ -119,7 +119,7 @@ hard newline are considered to match."
 
 (defcustom paragraph-separate "[ \t\f]*$"
   "*Regexp for beginning of a line that separates paragraphs.
-If you change this, you may have to change paragraph-start also.
+If you change this, you may have to change `paragraph-start' also.
 
 This is matched against the text at the left margin, which is not necessarily
 the beginning of the line, so it should not use \"^\" as an anchor.  This
@@ -132,9 +132,12 @@ text indented by a margin setting."
   "*Regexp describing the end of a sentence.
 All paragraph boundaries also end sentences, regardless.
 
-In order to be recognized as the end of a sentence, the ending period,
-question mark, or exclamation point must be followed by two spaces,
-unless it's inside some sort of quotes or parenthesis."
+The default value specifies that in order to be recognized as the end
+of a sentence, the ending period, question mark, or exclamation point
+must be followed by two spaces, unless it's inside some sort of quotes
+or parenthesis.
+
+See also the variable `sentence-end-double-space' and Info node `Sentences'."
   :group 'paragraphs
   :type 'regexp)
 

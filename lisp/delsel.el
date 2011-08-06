@@ -77,7 +77,8 @@ any selection."
 (defcustom delete-selection-mode nil
   "Toggle Delete Selection mode.
 See command `delete-selection-mode'.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `delete-selection-mode'."
   :set (lambda (symbol value)
 	 (delete-selection-mode (or value 0)))
   :initialize 'custom-initialize-default

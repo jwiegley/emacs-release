@@ -317,12 +317,12 @@ This command must be bound to a mouse click."
 	      'right)))
     (if (one-window-p t)
 	(error "Attempt to resize sole ordinary window"))
-    (if (eq which-side 'left)
-	(if (= (nth 0 (window-edges start-event-window)) 0)
-	    (error "Attempt to drag leftmost scrollbar"))
-      (if (= (nth 2 (window-edges start-event-window))
-	     (frame-width start-event-frame))
-	  (error "Attempt to drag rightmost scrollbar")))
+    (if (eq which-side 'right)
+	(if (= (nth 2 (window-edges start-event-window))
+	       (frame-width start-event-frame))
+	    (error "Attempt to drag rightmost scrollbar"))
+      (if (= (nth 0 (window-edges start-event-window)) 0)
+	  (error "Attempt to drag leftmost scrollbar")))
     (track-mouse
       (progn
 	;; enlarge-window only works on the selected window, so
@@ -363,10 +363,10 @@ This command must be bound to a mouse click."
 		 (save-selected-window
 		   ;; If the scroll bar is on the window's left,
 		   ;; adjust the window on the left.
-		   (if (eq which-side 'left)
-		       (select-window (previous-window)))
+		   (unless (eq which-side 'right)
+		     (select-window (previous-window)))
 		   (setq x (- (car (cdr mouse))
-			      (if (eq which-side 'left) 2 0))
+			      (if (eq which-side 'right) 0 2))
 			 edges (window-edges)
 			 left (nth 0 edges)
 			 right (nth 2 edges))
@@ -587,6 +587,25 @@ remains active.  Otherwise, it remains until the next input event."
 		  (mouse-scroll-subr start-window (1+ (- mouse-row bottom))
 				     mouse-drag-overlay start-point)
 		  (setq end-of-range (overlay-end mouse-drag-overlay))))))))))
+      ;; In case we did not get a mouse-motion event
+      ;; for the final move of the mouse before a drag event
+      ;; pretend that we did get one.
+      (when (and (memq 'drag (event-modifiers (car-safe event)))
+		 (setq end (event-end event)
+		       end-point (posn-point end))
+		 (eq (posn-window end) start-window)
+		 (integer-or-marker-p end-point))
+
+	;; Go to START-POINT first, so that when we move to END-POINT,
+	;; if it's in the middle of intangible text,
+	;; point jumps in the direction away from START-POINT.
+	(goto-char start-point)
+	(goto-char end-point)
+	(if (zerop (% click-count 3))
+	    (setq end-of-range (point)))
+	(let ((range (mouse-start-end start-point (point) click-count)))
+	  (move-overlay mouse-drag-overlay (car range) (nth 1 range))))
+
       (if (consp event)
 	  (let ((fun (key-binding (vector (car event)))))
 	    ;; Run the binding of the terminating up-event, if possible.

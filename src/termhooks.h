@@ -249,6 +249,10 @@ enum event_kind
 				   the wheel event occurred in.
 				   .timestamp gives a timestamp (in
 				   milliseconds) for the wheel event.  */
+  language_change_event,	/* A language_change event is generated
+				   on WINDOWSNT when the keyboard layout
+				   or input language is changed by the
+				   user.  */
 #endif
   scroll_bar_click,		/* .code gives the number of the mouse button
 				   that was clicked.
@@ -280,7 +284,7 @@ enum event_kind
   deiconify_event,		/* An X client deiconified this window.  */
   menu_bar_activate_event,       /* A button press in the menu bar
 				   (toolkit version only).  */
-  drag_n_drop			/* A drag-n-drop event is generated when
+  drag_n_drop,			/* A drag-n-drop event is generated when
 				   files selected outside of Emacs are dropped
 				   onto an Emacs window.
 				   Currently used only on Windows NT.
@@ -293,6 +297,9 @@ enum event_kind
 				   the filenames of the dropped files.
 				   .timestamp gives a timestamp (in
 				   milliseconds) for the click.  */
+  user_signal			/* A user signal.
+				   .code is a number identifying it,
+				   index into lispy_user_signals.  */
 };
 
 /* If a struct input_event has a kind which is selection_request_event

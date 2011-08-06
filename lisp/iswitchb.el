@@ -2,10 +2,10 @@
 
 ;; Copyright (C) 1996, 1997  Free Software Foundation, Inc.
 
-;; Author: Stephen Eglen <stephen@cns.ed.ac.uk>
-;; Maintainer: Stephen Eglen <stephen@cns.ed.ac.uk>
+;; Author: Stephen Eglen <stephen@anc.ed.ac.uk>
+;; Maintainer: Stephen Eglen <stephen@anc.ed.ac.uk>
 ;; Keywords: extensions convenience
-;; location: http://www.cns.ed.ac.uk/people/stephen/emacs/
+;; location: http://www.anc.ed.ac.uk/~stephen/emacs/
 
 ;; This file is part of GNU Emacs.
 
@@ -966,8 +966,10 @@ If BUFFER is visible in the current frame, return nil."
 ;;;###autoload
 (defun iswitchb-default-keybindings ()
   "Set up default keybindings for `iswitchb-buffer'.
-Call this function to override the normal bindings."
+Call this function to override the normal bindings.  This function also
+adds a hook to the minibuffer."
   (interactive)
+  (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)
   (global-set-key (read-kbd-macro "C-x b")  'iswitchb-buffer)
   (global-set-key (read-kbd-macro "C-x 4 b")  'iswitchb-buffer-other-window)
   (global-set-key (read-kbd-macro "C-x 4 C-o")  'iswitchb-display-buffer)
@@ -1243,9 +1245,6 @@ This is an example function which can be hooked on to
 				     x))
 			      iswitchb-temp-buflist))))
     (iswitchb-to-end summaries)))
-
-;;; HOOKS
-(add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)
 
 (provide 'iswitchb)
 

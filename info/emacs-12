@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,298 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Filling,  Next: Case,  Prev: Pages,  Up: Text
+
+Filling Text
+============
+
+   "Filling" text means breaking it up into lines that fit a specified
+width.  Emacs does filling in two ways.  In Auto Fill mode, inserting
+text with self-inserting characters also automatically fills it.  There
+are also explicit fill commands that you can use when editing text
+leaves it unfilled.  When you edit formatted text, you can specify a
+style of filling for each portion of the text (*note Formatted Text::.).
+
+* Menu:
+
+* Auto Fill::	        Auto Fill mode breaks long lines automatically.
+* Fill Commands::       Commands to refill paragraphs and center lines.
+* Fill Prefix::	        Filling paragraphs that are indented
+                          or in a comment, etc.
+* Adaptive Fill::       How Emacs can determine the fill prefix automatically.
+
+
+File: emacs,  Node: Auto Fill,  Next: Fill Commands,  Up: Filling
+
+Auto Fill Mode
+--------------
+
+   "Auto Fill" mode is a minor mode in which lines are broken
+automatically when they become too wide.  Breaking happens only when
+you type a <SPC> or <RET>.
+
+`M-x auto-fill-mode'
+     Enable or disable Auto Fill mode.
+
+`<SPC>'
+`<RET>'
+     In Auto Fill mode, break lines when appropriate.
+
+   `M-x auto-fill-mode' turns Auto Fill mode on if it was off, or off
+if it was on.  With a positive numeric argument it always turns Auto
+Fill mode on, and with a negative argument always turns it off.  You can
+see when Auto Fill mode is in effect by the presence of the word `Fill'
+in the mode line, inside the parentheses.  Auto Fill mode is a minor
+mode which is enabled or disabled for each buffer individually.  *Note
+Minor Modes::.
+
+   In Auto Fill mode, lines are broken automatically at spaces when they
+get longer than the desired width.  Line breaking and rearrangement
+takes place only when you type <SPC> or <RET>.  If you wish to insert a
+space or newline without permitting line-breaking, type `C-q <SPC>' or
+`C-q C-j' (recall that a newline is really a control-J).  Also, `C-o'
+inserts a newline without line breaking.
+
+   Auto Fill mode works well with programming-language modes, because it
+indents new lines with <TAB>.  If a line ending in a comment gets too
+long, the text of the comment is split into two comment lines.
+Optionally, new comment delimiters are inserted at the end of the first
+line and the beginning of the second so that each line is a separate
+comment; the variable `comment-multi-line' controls the choice (*note
+Comments::.).
+
+   Adaptive filling (see the following section) works for Auto Filling
+as well as for explicit fill commands.  It takes a fill prefix
+automatically from the second or first line of a paragraph.
+
+   Auto Fill mode does not refill entire paragraphs; it can break lines
+but cannot merge lines.  So editing in the middle of a paragraph can
+result in a paragraph that is not correctly filled.  The easiest way to
+make the paragraph properly filled again is usually with the explicit
+fill commands.  *Note Fill Commands::.
+
+   Many users like Auto Fill mode and want to use it in all text files.
+The section on init files says how to arrange this permanently for
+yourself.  *Note Init File::.
+
+
+File: emacs,  Node: Fill Commands,  Next: Fill Prefix,  Prev: Auto Fill,  Up: Filling
+
+Explicit Fill Commands
+----------------------
+
+`M-q'
+     Fill current paragraph (`fill-paragraph').
+
+`C-x f'
+     Set the fill column (`set-fill-column').
+
+`M-x fill-region'
+     Fill each paragraph in the region (`fill-region').
+
+`M-x fill-region-as-paragraph'
+     Fill the region, considering it as one paragraph.
+
+`M-s'
+     Center a line.
+
+   To refill a paragraph, use the command `M-q' (`fill-paragraph').
+This operates on the paragraph that point is inside, or the one after
+point if point is between paragraphs.  Refilling works by removing all
+the line-breaks, then inserting new ones where necessary.
+
+   To refill many paragraphs, use `M-x fill-region', which divides the
+region into paragraphs and fills each of them.
+
+   `M-q' and `fill-region' use the same criteria as `M-h' for finding
+paragraph boundaries (*note Paragraphs::.).  For more control, you can
+use `M-x fill-region-as-paragraph', which refills everything between
+point and mark.  This command deletes any blank lines within the
+region, so separate blocks of text end up combined into one block.
+
+   A numeric argument to `M-q' causes it to "justify" the text as well
+as filling it.  This means that extra spaces are inserted to make the
+right margin line up exactly at the fill column.  To remove the extra
+spaces, use `M-q' with no argument.  (Likewise for `fill-region'.)
+Another way to control justification, and choose other styles of
+filling, is with the `justification' text property; see *Note Format
+Justification::.
+
+   The command `M-s' (`center-line') centers the current line within
+the current fill column.  With an argument N, it centers N lines
+individually and moves past them.
+
+   The maximum line width for filling is in the variable `fill-column'.
+Altering the value of `fill-column' makes it local to the current
+buffer; until that time, the default value is in effect.  The default
+is initially 70.  *Note Locals::.  The easiest way to set `fill-column'
+is to use the command `C-x f' (`set-fill-column').  With a numeric
+argument, it uses that as the new fill column.  With just `C-u' as
+argument, it sets `fill-column' to the current horizontal position of
+point.
+
+   Emacs commands normally consider a period followed by two spaces or
+by a newline as the end of a sentence; a period followed by just one
+space indicates an abbreviation and not the end of a sentence.  To
+preserve the distinction between these two ways of using a period, the
+fill commands do not break a line after a period followed by just one
+space.
+
+   If the variable `sentence-end-double-space' is `nil', the fill
+commands expect and leave just one space at the end of a sentence.
+Ordinarily this variable is `t', so the fill commands insist on two
+spaces for the end of a sentence, as explained above.  *Note
+Sentences::.
+
+   If the variable `colon-double-space' is non-`nil', the fill commands
+put two spaces after a colon.
+
+
+File: emacs,  Node: Fill Prefix,  Next: Adaptive Fill,  Prev: Fill Commands,  Up: Filling
+
+The Fill Prefix
+---------------
+
+   To fill a paragraph in which each line starts with a special marker
+(which might be a few spaces, giving an indented paragraph), you can use
+the "fill prefix" feature.  The fill prefix is a string that Emacs
+expects every line to start with, and which is not included in filling.
+You can specify a fill prefix explicitly; Emacs can also deduce the
+fill prefix automatically (*note Adaptive Fill::.).
+
+`C-x .'
+     Set the fill prefix (`set-fill-prefix').
+
+`M-q'
+     Fill a paragraph using current fill prefix (`fill-paragraph').
+
+`M-x fill-individual-paragraphs'
+     Fill the region, considering each change of indentation as
+     starting a new paragraph.
+
+`M-x fill-nonuniform-paragraphs'
+     Fill the region, considering only paragraph-separator lines as
+     starting a new paragraph.
+
+   To specify a fill prefix, move to a line that starts with the desired
+prefix, put point at the end of the prefix, and give the command
+`C-x .' (`set-fill-prefix').  That's a period after the `C-x'.  To turn
+off the fill prefix, specify an empty prefix: type `C-x .' with point
+at the beginning of a line.
+
+   When a fill prefix is in effect, the fill commands remove the fill
+prefix from each line before filling and insert it on each line after
+filling.  Auto Fill mode also inserts the fill prefix automatically when
+it makes a new line.  The `C-o' command inserts the fill prefix on new
+lines it creates, when you use it at the beginning of a line (*note
+Blank Lines::.).  Conversely, the command `M-^' deletes the prefix (if
+it occurs) after the newline that it deletes (*note Indentation::.).
+
+   For example, if `fill-column' is 40 and you set the fill prefix to
+`;; ', then `M-q' in the following text
+
+     ;; This is an
+     ;; example of a paragraph
+     ;; inside a Lisp-style comment.
+
+produces this:
+
+     ;; This is an example of a paragraph
+     ;; inside a Lisp-style comment.
+
+   Lines that do not start with the fill prefix are considered to start
+paragraphs, both in `M-q' and the paragraph commands; this gives good
+results for paragraphs with hanging indentation (every line indented
+except the first one).  Lines which are blank or indented once the
+prefix is removed also separate or start paragraphs; this is what you
+want if you are writing multi-paragraph comments with a comment
+delimiter on each line.
+
+   You can use `M-x fill-individual-paragraphs' to set the fill prefix
+for each paragraph automatically.  This command divides the region into
+paragraphs, treating every change in the amount of indentation as the
+start of a new paragraph, and fills each of these paragraphs.  Thus,
+all the lines in one "paragraph" have the same amount of indentation.
+That indentation serves as the fill prefix for that paragraph.
+
+   `M-x fill-nonuniform-paragraphs' is a similar command that divides
+the region into paragraphs in a different way.  It considers only
+paragraph-separating lines (as defined by `paragraph-separate') as
+starting a new paragraph.  Since this means that the lines of one
+paragraph may have different amounts of indentation, the fill prefix
+used is the smallest amount of indentation of any of the lines of the
+paragraph.  This gives good results with styles that indent a
+paragraph's first line more or less that the rest of the paragraph.
+
+   The fill prefix is stored in the variable `fill-prefix'.  Its value
+is a string, or `nil' when there is no fill prefix.  This is a
+per-buffer variable; altering the variable affects only the current
+buffer, but there is a default value which you can change as well.
+*Note Locals::.
+
+   The `indentation' text property provides another way to control the
+amount of indentation paragraphs receive.  *Note Format Indentation::.
+
+
+File: emacs,  Node: Adaptive Fill,  Prev: Fill Prefix,  Up: Filling
+
+Adaptive Filling
+----------------
+
+   The fill commands can deduce the proper fill prefix for a paragraph
+automatically in certain cases: either whitespace or certain punctuation
+characters at the beginning of a line are propagated to all lines of the
+paragraph.
+
+   If the paragraph has two or more lines, the fill prefix is taken from
+the paragraph's second line, but only if it appears on the first line as
+well.
+
+   If a paragraph has just one line, fill commands *may* take a prefix
+from that line.  The decision is complicated because there are three
+reasonable things to do in such a case:
+
+   * Use the first line's prefix on all the lines of the paragraph.
+
+   * Indent subsequent lines with whitespace, so that they line up
+     under the text that follows the prefix on the first line, but
+     don't actually copy the prefix from the first line.
+
+   * Don't do anything special with the second and following lines.
+
+   All three of these styles of formatting are commonly used.  So the
+fill commands try to determine what you would like, based on the prefix
+that appears and on the major mode.  Here is how.
+
+   If the prefix found on the first line matches
+`adaptive-fill-first-line-regexp', or if it appears to be a
+comment-starting sequence (this depends on the major mode), then the
+prefix found is used for filling the paragraph, provided it would not
+act as a paragraph starter on subsequent lines.
+
+   Otherwise, the prefix found is converted to an equivalent number of
+spaces, and those spaces are used as the fill prefix for the rest of the
+lines, provided they would not act as a paragraph starter on subsequent
+lines.
+
+   In Text mode, and other modes where only blank lines and page
+delimiters separate paragraphs, the prefix chosen by adaptive filling
+never acts as a paragraph starter, so it can always be used for filling.
+
+   The variable `adaptive-fill-regexp' determines what kinds of line
+beginnings can serve as a fill prefix: any characters at the start of
+the line that match this regular expression are used.  If you set the
+variable `adaptive-fill-mode' to `nil', the fill prefix is never chosen
+automatically.
+
+   You can specify more complex ways of choosing a fill prefix
+automatically by setting the variable `adaptive-fill-function' to a
+function.  This function is called with point after the left margin of a
+line, and it should return the appropriate fill prefix based on that
+line.  If it returns `nil', that means it sees no fill prefix in that
+line.
 
 
 File: emacs,  Node: Case,  Next: Text Mode,  Prev: Filling,  Up: Text
@@ -465,7 +757,7 @@ text of the file.
      paragraph for unbalanced braces or dollar signs
      (`tex-terminate-paragraph').
 
-`M-x validate-tex-region'
+`M-x tex-validate-region'
      Check each paragraph in the region for unbalanced braces or dollar
      signs.
 
@@ -486,8 +778,8 @@ other character.
    If you need the character `"' itself in unusual contexts, use `C-q'
 to insert it.  Also, `"' with a numeric argument always inserts that
 number of `"' characters.  You can turn off the feature of `"'
-expansion by eliminating that binding in the local map (*Note Key
-Bindings::).
+expansion by eliminating that binding in the local map (*note Key
+Bindings::.).
 
    In TeX mode, `$' has a special syntax code which attempts to
 understand the way TeX math mode delimiters match.  When you insert a
@@ -509,13 +801,10 @@ forward past the close brace.
    There are two commands for checking the matching of braces.  `C-j'
 (`tex-terminate-paragraph') checks the paragraph before point, and
 inserts two newlines to start a new paragraph.  It prints a message in
-the echo area if any mismatch is found.  `M-x validate-tex-region'
-checks a region, paragraph by paragraph.  When it finds a paragraph that
-contains a mismatch, it displays point at the beginning of the paragraph
-for a few seconds and sets the mark at that spot.  Scanning continues
-until the whole buffer has been checked or until you type another key.
-Afterward, you can use the mark ring to find the last several paragraphs
-that had mismatches (*note Mark Ring::.).
+the echo area if any mismatch is found.  `M-x tex-validate-region'
+checks a region, paragraph by paragraph.  The errors are listed in the
+`*Occur*' buffer, and you can use `C-c C-c' or `Mouse-2' in that buffer
+to go to a particular mismatch.
 
    Note that Emacs commands count square brackets and parentheses in
 TeX mode, not just braces.  This is not strictly correct for the
@@ -675,6 +964,10 @@ C-f' (`tex-file') which runs TeX on the current buffer's file, in that
 file's directory.  Before running TeX, it offers to save any modified
 buffers.  Generally, you need to use (`tex-file') twice to get the
 cross-references right.
+
+   The value of the variable `tex-start-options-string' specifies
+options for the TeX run.  The default value causes TeX to run in
+nonstopmode.  To run TeX interactively, set the variable to `""'.
 
    Large TeX documents are often split into several files--one main
 file, plus subfiles.  Running TeX on a subfile typically does not work;
@@ -893,290 +1186,4 @@ commands directly:
 
 `Display Colors'
      Display a list of all the defined colors.
-
-
-File: emacs,  Node: Format Faces,  Next: Format Colors,  Prev: Editing Format Info,  Up: Formatted Text
-
-Faces in Formatted Text
------------------------
-
-   The Faces submenu lists various Emacs faces including `bold',
-`italic', and `underline'.  Selecting one of these adds the chosen face
-to the region.  *Note Faces::.  You can also specify a face with these
-keyboard commands:
-
-`M-g d'
-     Set the region, or the next inserted character, to the `default'
-     face (`facemenu-set-default').
-
-`M-g b'
-     Set the region, or the next inserted character, to the `bold' face
-     (`facemenu-set-bold').
-
-`M-g i'
-     Set the region, or the next inserted character, to the `italic'
-     face (`facemenu-set-italic').
-
-`M-g l'
-     Set the region, or the next inserted character, to the
-     `bold-italic' face (`facemenu-set-bold-italic').
-
-`M-g u'
-     Set the region, or the next inserted character, to the `underline'
-     face (`facemenu-set-underline').
-
-`M-g o FACE <RET>'
-     Set the region, or the next inserted character, to the face FACE
-     (`facemenu-set-face').
-
-   If you use these commands with a prefix argument--or, in Transient
-Mark mode, if the region is not active--then these commands specify a
-face to use for your next self-inserting input.  *Note Transient
-Mark::.  This applies to both the keyboard commands and the menu
-commands.
-
-   Enriched mode defines two additional faces: `excerpt' and `fixed'.
-These correspond to codes used in the text/enriched file format.
-
-   The `excerpt' face is intended for quotations.  This face is the
-same as `italic' unless you customize it (*note Face Customization::.).
-
-   The `fixed' face is meant to say, "Use a fixed-width font for this
-part of the text."  Emacs currently supports only fixed-width fonts;
-therefore, the `fixed' annotation is not necessary now.  However, we
-plan to support variable width fonts in future Emacs versions, and
-other systems that display text/enriched format may not use a
-fixed-width font as the default.  So if you specifically want a certain
-part of the text to use a fixed-width font, you should specify the
-`fixed' face for that part.
-
-   The `fixed' face is normally defined to use a different font from
-the default.  However, different systems have different fonts installed,
-so you may need to customize this.
-
-   If your terminal cannot display different faces, you will not be able
-to see them, but you can still edit documents containing faces.  You can
-even add faces and colors to documents.  They will be visible when the
-file is viewed on a terminal that can display them.
-
-
-File: emacs,  Node: Format Colors,  Next: Format Indentation,  Prev: Format Faces,  Up: Formatted Text
-
-Colors in Formatted Text
-------------------------
-
-   You can specify foreground and background colors for portions of the
-text.  There is a menu for specifying the foreground color and a menu
-for specifying the background color.  Each color menu lists all the
-colors that you have used in Enriched mode in the current Emacs session.
-
-   If you specify a color with a prefix argument--or, in Transient Mark
-mode, if the region is not active--then it applies to your next
-self-inserting input.  *Note Transient Mark::.  Otherwise, the command
-applies to the region.
-
-   Each color menu contains one additional item: `Other'.  You can use
-this item to specify a color that is not listed in the menu; it reads
-the color name with the minibuffer.  To display list of available colors
-and their names, use the `Display Colors' menu item in the Text
-Properties menu (*note Editing Format Info::.).
-
-   Any color that you specify in this way, or that is mentioned in a
-formatted text file that you read in, is added to both color menus for
-the duration of the Emacs session.
-
-   There are no key bindings for specifying colors, but you can do so
-with the extended commands `M-x facemenu-set-foreground' and `M-x
-facemenu-set-background'.  Both of these commands read the name of the
-color with the minibuffer.
-
-
-File: emacs,  Node: Format Indentation,  Next: Format Justification,  Prev: Format Colors,  Up: Formatted Text
-
-Indentation in Formatted Text
------------------------------
-
-   When editing formatted text, you can specify different amounts of
-indentation for the right or left margin of an entire paragraph or a
-part of a paragraph.  The margins you specify automatically affect the
-Emacs fill commands (*note Filling::.) and line-breaking commands.
-
-   The Indentation submenu provides a convenient interface for
-specifying these properties.  The submenu contains four items:
-
-`Indent More'
-     Indent the region by 4 columns (`increase-left-margin').  In
-     Enriched mode, this command is also available on `C-x <TAB>'; if
-     you supply a numeric argument, that says how many columns to add
-     to the margin (a negative argument reduces the number of columns).
-
-`Indent Less'
-     Remove 4 columns of indentation from the region.
-
-`Indent Right More'
-     Make the text narrower by indenting 4 columns at the right margin.
-
-`Indent Right Less'
-     Remove 4 columns of indentation from the right margin.
-
-   You can use these commands repeatedly to increase or decrease the
-indentation.
-
-   The most common way to use these commands is to change the
-indentation of an entire paragraph.  However, that is not the only use.
-You can change the margins at any point; the new values take effect at
-the end of the line (for right margins) or the beginning of the next
-line (for left margins).
-
-   This makes it possible to format paragraphs with "hanging indents",
-which means that the first line is indented less than subsequent lines.
-To set up a hanging indent, increase the indentation of the region
-starting after the first word of the paragraph and running until the end
-of the paragraph.
-
-   Indenting the first line of a paragraph is easier.  Set the margin
-for the whole paragraph where you want it to be for the body of the
-paragraph, then indent the first line by inserting extra spaces or tabs.
-
-   Sometimes, as a result of editing, the filling of a paragraph becomes
-messed up--parts of the paragraph may extend past the left or right
-margins.  When this happens, use `M-q' (`fill-paragraph') to refill the
-paragraph.
-
-   The variable `standard-indent' specifies how many columns these
-commands should add to or subtract from the indentation.  The default
-value is 4.  The overall default right margin for Enriched mode is
-controlled by the variable `fill-column', as usual.
-
-   The fill prefix, if any, works in addition to the specified paragraph
-indentation: `C-x .' does not include the specified indentation's
-whitespace in the new value for the fill prefix, and the fill commands
-look for the fill prefix after the indentation on each line.  *Note
-Fill Prefix::.
-
-
-File: emacs,  Node: Format Justification,  Next: Format Properties,  Prev: Format Indentation,  Up: Formatted Text
-
-Justification in Formatted Text
--------------------------------
-
-   When editing formatted text, you can specify various styles of
-justification for a paragraph.  The style you specify automatically
-affects the Emacs fill commands.
-
-   The Justification submenu provides a convenient interface for
-specifying the style.  The submenu contains five items:
-
-`Flush Left'
-     This is the most common style of justification (at least for
-     English).  Lines are aligned at the left margin but left uneven at
-     the right.
-
-`Flush Right'
-     This aligns each line with the right margin.  Spaces and tabs are
-     added on the left, if necessary, to make lines line up on the
-     right.
-
-`Full'
-     This justifies the text, aligning both edges of each line.
-     Justified text looks very nice in a printed book, where the spaces
-     can all be adjusted equally, but it does not look as nice with a
-     fixed-width font on the screen.  Perhaps a future version of Emacs
-     will be able to adjust the width of spaces in a line to achieve
-     elegant justification.
-
-`Center'
-     This centers every line between the current margins.
-
-`None'
-     This turns off filling entirely.  Each line will remain as you
-     wrote it; the fill and auto-fill functions will have no effect on
-     text which has this setting.  You can, however, still indent the
-     left margin.  In unfilled regions, all newlines are treated as
-     hard newlines (*note Hard and Soft Newlines::.) .
-
-   In Enriched mode, you can also specify justification from the
-keyboard using the `M-j' prefix character:
-
-`M-j l'
-     Make the region left-filled (`set-justification-left').
-
-`M-j r'
-     Make the region right-filled (`set-justification-right').
-
-`M-j f'
-     Make the region fully-justified (`set-justification-full').
-
-`M-j c'
-`M-S'
-     Make the region centered (`set-justification-center').
-
-`M-j u'
-     Make the region unfilled (`set-justification-none').
-
-   Justification styles apply to entire paragraphs.  All the
-justification-changing commands operate on the paragraph containing
-point, or, if the region is active, on all paragraphs which overlap the
-region.
-
-   The default justification style is specified by the variable
-`default-justification'.  Its value should be one of the symbols
-`left', `right', `full', `center', or `none'.
-
-
-File: emacs,  Node: Format Properties,  Next: Forcing Enriched Mode,  Prev: Format Justification,  Up: Formatted Text
-
-Setting Other Text Properties
------------------------------
-
-   The Other Properties menu lets you add or remove three other useful
-text properties: `read-only', `invisible' and `intangible'.  The
-`intangible' property disallows moving point within the text, the
-`invisible' text property hides text from display, and the `read-only'
-property disallows alteration of the text.
-
-   Each of these special properties has a menu item to add it to the
-region.  The last menu item, `Remove Special', removes all of these
-special properties from the text in the region.
-
-   Currently, the `invisible' and `intangible' properties are *not*
-saved in the text/enriched format.  The `read-only' property is saved,
-but it is not a standard part of the text/enriched format, so other
-editors may not respect it.
-
-
-File: emacs,  Node: Forcing Enriched Mode,  Prev: Format Properties,  Up: Formatted Text
-
-Forcing Enriched Mode
----------------------
-
-   Normally, Emacs knows when you are editing formatted text because it
-recognizes the special annotations used in the file that you visited.
-However, there are situations in which you must take special actions to
-convert file contents or turn on Enriched mode:
-
-   * When you visit a file that was created with some other editor,
-     Emacs may not recognize the file as being in the text/enriched
-     format.  In this case, when you visit the file you will see the
-     formatting commands rather than the formatted text.  Type `M-x
-     format-decode-buffer' to translate it.
-
-   * When you *insert* a file into a buffer, rather than visiting it.
-     Emacs does the necessary conversions on the text which you insert,
-     but it does not enable Enriched mode.  If you wish to do that,
-     type `M-x enriched-mode'.
-
-   The command `format-decode-buffer' translates text in various
-formats into Emacs's internal format.  It asks you to specify the format
-to translate from; however, normally you can type just <RET>, which
-tells Emacs to guess the format.
-
-   If you wish to look at text/enriched file in its raw form, as a
-sequence of characters rather than as formatted text, use the `M-x
-find-file-literally' command.  This visits a file, like `find-file',
-but does not do format conversion.  It also inhibits character code
-conversion (*note Coding Systems::.) and automatic uncompression (*note
-Compressed Files::.).  To disable format conversion but allow character
-code conversion and/or automatic uncompression if appropriate, use
-`format-find-file' with suitable arguments.
 

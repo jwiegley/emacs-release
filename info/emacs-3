@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -665,7 +665,11 @@ in the example.)
 
    The four values after `Char:' describe the character that follows
 point, first by showing it and then by giving its character code in
-octal, decimal and hex.
+octal, decimal and hex.  For a non-ASCII multibyte character, these are
+followed by `ext' and the character's representation, in hex, in the
+buffer's coding system, if that coding system encodes the character
+safely and with a single byte (*note Coding Systems::.).  If the
+character's encoding is longer than one byte, Emacs shows `ext ...'.
 
    `point=' is followed by the position of point expressed as a
 character count.  The front of the buffer counts as position 1, one
@@ -688,10 +692,27 @@ position that point is allowed to assume.  The characters between those
 two positions are the accessible ones.  *Note Narrowing::.
 
    If point is at the end of the buffer (or the end of the accessible
-part), `C-x =' omits any description of the character after point.  The
-output might look like this:
+part), the `C-x =' output does not describe a character after point.
+The output might look like this:
 
      point=26957 of 26956(100%)  column 0
+
+   `C-u C-x =' displays additional information about a character, in
+place of the buffer coordinates and column: the character set name and
+the codes that identify the character within that character set; ASCII
+characters are identified as belonging to the `ASCII' character set.
+In addition, the full character encoding, even if it takes more than a
+single byte, is shown after `ext'.  Here's an example for a Latin-1
+character A with a grave accent in a buffer whose coding system is
+iso-2022-7bit(1):
+
+     Char: `A (04300, 2240, 0x8c0, ext ESC , A @) (latin-iso8859-1 64)
+
+   ---------- Footnotes ----------
+
+   (1) On terminals that support Latin-1 characters, the character
+shown after `Char:' is displayed as the actual glyph of A with grave
+accent.
 
 
 File: emacs,  Node: Arguments,  Next: Repeating,  Prev: Position Info,  Up: Basic
@@ -879,8 +900,8 @@ after the default directory.  For example, to specify the file
 
      Find File: /u2/emacs/src//etc/termcap
 
-Two slashes in a row are not normally meaningful in a file name, but
-they are allowed in GNU Emacs.  They mean, "ignore everything before
+GNU Emacs gives a special meaning to a double slash (which is not
+normally a useful thing to write): it means, "ignore everything before
 the second slash in the pair."  Thus, `/u2/emacs/src/' is ignored in
 the example above, and you get the file `/etc/termcap'.
 
@@ -1110,37 +1131,4 @@ a window whenever there is more than one possibility for the very next
 character.  Also, typing `?' explicitly requests such a list.  If the
 list of completions is long, you can scroll it with `C-M-v' (*note
 Other Window::.).
-
-
-File: emacs,  Node: Completion Options,  Prev: Strict Completion,  Up: Completion
-
-Completion Options
-------------------
-
-   When completion is done on file names, certain file names are usually
-ignored.  The variable `completion-ignored-extensions' contains a list
-of strings; a file whose name ends in any of those strings is ignored
-as a possible completion.  The standard value of this variable has
-several elements including `".o"', `".elc"', `".dvi"' and `"~"'.  The
-effect is that, for example, `foo' can complete to `foo.c' even though
-`foo.o' exists as well.  However, if *all* the possible completions end
-in "ignored" strings, then they are not ignored.  Ignored extensions do
-not apply to lists of completions--those always mention all possible
-completions.
-
-   Normally, a completion command that finds the next character is
-undetermined automatically displays a list of all possible completions.
-If the variable `completion-auto-help' is set to `nil', this does not
-happen, and you must type `?' to display the possible completions.
-
-   The `complete' library implements a more powerful kind of completion
-that can complete multiple words at a time.  For example, it can
-complete the command name abbreviation `p-b' into `print-buffer',
-because no other command starts with two words whose initials are `p'
-and `b'.  To use this library, put `(load "complete")' in your
-`~/.emacs' file (*note Init File::.).
-
-   Icomplete mode presents a constantly-updated display that tells you
-what completions are available for the text you've entered so far.  The
-command to enable or disable this minor mode is `M-x icomplete-mode'.
 

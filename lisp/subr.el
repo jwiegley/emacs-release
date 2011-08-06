@@ -529,14 +529,9 @@ as returned by the `event-start' and `event-end' functions."
 (defalias 'compiled-function-p 'byte-code-function-p)
 (defalias 'define-function 'defalias)
 
-(defun sref (string byte-index)
-  "Obsolete function returning a character in STRING at BYTE-INDEX.
-Please convert your programs to use `aref' with character-base index."
-  (let ((byte 0) (char 0))
-    (while (< byte byte-index)
-      (setq byte (+ byte (char-bytes (aref string char)))
-	    char (1+ char)))
-    (aref string char)))
+(defalias 'sref 'aref)
+(make-obsolete 'sref 'aref)
+(make-obsolete 'char-bytes "Now this function always returns 1")
 
 ;; Some programs still use this as a function.
 (defun baud-rate ()
@@ -571,6 +566,8 @@ Please convert your programs to use the variable `baud-rate' directly."
 
 (defun make-local-hook (hook)
   "Make the hook HOOK local to the current buffer.
+The return value is HOOK.
+
 When a hook is local, its local and global values
 work in concert: running the hook actually runs all the hook
 functions listed in *either* the local value *or* the global value
@@ -591,7 +588,8 @@ Do not use `make-local-variable' to make a hook variable buffer-local."
       nil
     (or (boundp hook) (set hook nil))
     (make-local-variable hook)
-    (set hook (list t))))
+    (set hook (list t)))
+  hook)
 
 (defun add-hook (hook function &optional append local)
   "Add to the value of HOOK the function FUNCTION.
@@ -658,7 +656,8 @@ To make a hook variable buffer-local, always use
 	    ;; Detect the case where make-local-variable was used on a hook
 	    ;; and do what we used to do.
 	    (and (local-variable-p hook)
-		 (not (memq t (symbol-value hook)))))
+		  (consp (symbol-value hook))
+		  (not (memq t (symbol-value hook)))))
 	(let ((hook-value (symbol-value hook)))
 	  (if (consp hook-value)
 	      (if (member function hook-value)
@@ -667,7 +666,7 @@ To make a hook variable buffer-local, always use
 		(setq hook-value nil)))
 	  (set hook hook-value))
       (let ((hook-value (default-value hook)))
-	(if (consp hook-value)
+	(if (and (consp hook-value) (not (functionp hook-value)))
 	    (if (member function hook-value)
 		(setq hook-value (delete function (copy-sequence hook-value))))
 	  (if (equal hook-value function)
@@ -677,6 +676,8 @@ To make a hook variable buffer-local, always use
 (defun add-to-list (list-var element)
   "Add to the value of LIST-VAR the element ELEMENT if it isn't there yet.
 The test for presence of ELEMENT is done with `equal'.
+If ELEMENT is added, it is added at the beginning of the list.
+
 If you want to use `add-to-list' on a variable that is not defined
 until a certain package is loaded, you should put the call to `add-to-list'
 into a hook function that will be run only after loading the package.
@@ -796,6 +797,7 @@ Optional DEFAULT is a default password to use instead of empty input."
 	      (message "Password not repeated accurately; please start over")
 	      (sit-for 1))))
 	success)
+    (clear-this-command-keys)
     (let ((pass nil)
 	  (c 0)
 	  (echo-keystrokes 0)
@@ -803,7 +805,7 @@ Optional DEFAULT is a default password to use instead of empty input."
       (while (progn (message "%s%s"
 			     prompt
 			     (make-string (length pass) ?.))
-		    (setq c (read-char))
+		    (setq c (read-char nil t))
 		    (and (/= c ?\r) (/= c ?\n) (/= c ?\e)))
 	(if (= c ?\C-u)
 	    (setq pass "")
@@ -828,7 +830,7 @@ otherwise it is then available as input (as a command if nothing else).
 Display MESSAGE (optional fourth arg) in the echo area.
 If MESSAGE is nil, instructions to type EXIT-CHAR are displayed there."
   (or exit-char (setq exit-char ?\ ))
-  (let ((buffer-read-only nil)
+  (let ((inhibit-read-only t)
 	;; Don't modify the undo list at all.
 	(buffer-undo-list t)
 	(modified (buffer-modified-p))
@@ -940,9 +942,9 @@ See also `with-temp-buffer'."
     (set-buffer ,buffer)
     ,@body))
 
-(defmacro with-temp-file (file &rest forms)
-  "Create a new buffer, evaluate FORMS there, and write the buffer to FILE.
-The value of the last form in FORMS is returned, like `progn'.
+(defmacro with-temp-file (file &rest body)
+  "Create a new buffer, evaluate BODY there, and write the buffer to FILE.
+The value returned is the value of the last form in BODY.
 See also `with-temp-buffer'."
   (let ((temp-file (make-symbol "temp-file"))
 	(temp-buffer (make-symbol "temp-buffer")))
@@ -952,22 +954,42 @@ See also `with-temp-buffer'."
        (unwind-protect
 	   (prog1
 	       (with-current-buffer ,temp-buffer
-		 ,@forms)
+		 ,@body)
 	     (with-current-buffer ,temp-buffer
 	       (widen)
 	       (write-region (point-min) (point-max) ,temp-file nil 0)))
 	 (and (buffer-name ,temp-buffer)
 	      (kill-buffer ,temp-buffer))))))
 
-(defmacro with-temp-buffer (&rest forms)
-  "Create a temporary buffer, and evaluate FORMS there like `progn'.
+(defmacro with-temp-message (message &rest body)
+  "Display MESSAGE temporarily if non-nil while BODY is evaluated.
+The original message is restored to the echo area after BODY has finished.
+The value returned is the value of the last form in BODY.
+MESSAGE is written to the message log buffer if `message-log-max' is non-nil.
+If MESSAGE is nil, the echo area and message log buffer are unchanged.
+Use a MESSAGE of \"\" to temporarily clear the echo area."
+  (let ((current-message (make-symbol "current-message"))
+	(temp-message (make-symbol "with-temp-message")))
+    `(let ((,temp-message ,message)
+	   (,current-message))
+       (unwind-protect
+	   (progn
+	     (when ,temp-message
+	       (setq ,current-message (current-message))
+	       (message "%s" ,temp-message))
+	     ,@body)
+	 (and ,temp-message ,current-message
+	      (message "%s" ,current-message))))))
+
+(defmacro with-temp-buffer (&rest body)
+  "Create a temporary buffer, and evaluate BODY there like `progn'.
 See also `with-temp-file' and `with-output-to-string'."
   (let ((temp-buffer (make-symbol "temp-buffer")))
     `(let ((,temp-buffer
 	    (get-buffer-create (generate-new-buffer-name " *temp*"))))
        (unwind-protect
 	   (with-current-buffer ,temp-buffer
-	     ,@forms)
+	     ,@body)
 	 (and (buffer-name ,temp-buffer)
 	      (kill-buffer ,temp-buffer))))))
 
@@ -1072,6 +1094,17 @@ at the end of STRING, we don't include a null substring for that."
 	      (cons (substring string start)
 		    list)))
     (nreverse list)))
+
+(defun subst-char-in-string (fromchar tochar string &optional inplace)
+  "Replace FROMCHAR with TOCHAR in STRING each time it occurs.
+Unless optional argument INPLACE is non-nil, return a new string."
+  (let ((i (length string))
+	(newstr (if inplace string (copy-sequence string))))
+    (while (> i 0)
+      (setq i (1- i))
+      (if (eq (aref newstr i) fromchar)
+	  (aset newstr i tochar)))
+    newstr))
 
 (defun shell-quote-argument (argument)
   "Quote an argument for passing as argument to an inferior shell."
@@ -1133,7 +1166,7 @@ that can be added."
 
 (defun remove-from-invisibility-spec (arg)
   "Remove elements from `buffer-invisibility-spec'."
-  (if buffer-invisibility-spec
+  (if (consp buffer-invisibility-spec)
     (setq buffer-invisibility-spec (delete arg buffer-invisibility-spec))))
 
 (defun global-set-key (key command)

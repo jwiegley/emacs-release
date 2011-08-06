@@ -1,9 +1,560 @@
-GNU Emacs NEWS -- history of user-visible changes.  30 Jan 1998
-Copyright (C) 1996, 1997, 1998 Free Software Foundation, Inc.
+GNU Emacs NEWS -- history of user-visible changes.  23 Jan 1999
+Copyright (C) 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Emacs bug reports to bug-gnu-emacs@gnu.org.
 For older news, see the file ONEWS.
+
+* Changes in Emacs 20.4
+
+** Init file may be called .emacs.el.
+
+You can now call the Emacs init file `.emacs.el'.
+Formerly the name had to be `.emacs'.  If you use the name
+`.emacs.el', you can byte-compile the file in the usual way.
+
+If both `.emacs' and `.emacs.el' exist, the latter file
+is the one that is used.
+
+** shell-command, and shell-command-on-region, now return
+the exit code of the command (unless it is asynchronous).
+Also, you can specify a place to put the error output,
+separate from the command's regular output.
+Interactively, the variable shell-command-default-error-buffer
+says where to put error output; set it to a buffer name.
+In calls from Lisp, an optional argument ERROR-BUFFER specifies
+the buffer name.
+
+When you specify a non-nil error buffer (or buffer name), any error
+output is inserted before point in that buffer, with \f\n to separate
+it from the previous batch of error output.  The error buffer is not
+cleared, so error output from successive commands accumulates there.
+
+** Setting the default value of enable-multibyte-characters to nil in
+the .emacs file, either explicitly using setq-default, or via Custom,
+is now essentially equivalent to using --unibyte: all buffers
+created during startup will be made unibyte after loading .emacs.
+
+** C-x C-f now handles the wildcards * and ? in file names.  For
+example, typing C-x C-f c*.c RET visits all the files whose names
+match c*.c.  To visit a file whose name contains * or ?, add the
+quoting sequence /: to the beginning of the file name.
+
+** The M-x commands keep-lines, flush-lines and count-matches
+now have the same feature as occur and query-replace:
+if the pattern contains any upper case letters, then
+they never ignore case.
+
+** The end-of-line format conversion feature previously mentioned
+under `* Emacs 20.1 changes for MS-DOS and MS-Windows' actually
+applies to all operating systems.  Emacs recognizes from the contents
+of a file what convention it uses to separate lines--newline, CRLF, or
+just CR--and automatically converts the contents to the normal Emacs
+convention (using newline to separate lines) for editing.  This is a
+part of the general feature of coding system conversion.
+
+If you subsequently save the buffer, Emacs converts the text back to
+the same format that was used in the file before.
+
+You can turn off end-of-line conversion by setting the variable
+`inhibit-eol-conversion' to non-nil, e.g. with Custom in the MULE group.
+
+** The character set property `prefered-coding-system' has been
+renamed to `preferred-coding-system', for the sake of correct spelling.
+This is a fairly internal feature, so few programs should be affected.
+
+** Mode-line display of end-of-line format is changed.
+The indication of the end-of-line format of the file visited by a
+buffer is now more explicit when that format is not the usual one for
+your operating system.  For example, the DOS-style end-of-line format
+is displayed as "(DOS)" on Unix and GNU/Linux systems.  The usual
+end-of-line format is still displayed as a single character (colon for
+Unix, backslash for DOS and Windows, and forward slash for the Mac).
+
+The values of the variables eol-mnemonic-unix, eol-mnemonic-dos,
+eol-mnemonic-mac, and eol-mnemonic-undecided, which are strings,
+control what is displayed in the mode line for each end-of-line
+format.  You can now customize these variables.
+
+** In the previous version of Emacs, tar-mode didn't work well if a
+filename contained non-ASCII characters.  Now this is fixed.  Such a
+filename is decoded by file-name-coding-system if the default value of
+enable-multibyte-characters is non-nil.
+
+** The command temp-buffer-resize-mode toggles a minor mode
+in which temporary buffers (such as help buffers) are given
+windows just big enough to hold the whole contents.
+
+** If you use completion.el, you must now run the function
+dynamic-completion-mode to enable it.  Just loading the file
+doesn't have any effect.
+
+** In Flyspell mode, the default is now to make just one Ispell process,
+not one per buffer.
+
+** If you use iswitchb but do not call (iswitchb-default-keybindings) to
+use the default keybindings, you will need to add the following line:
+  (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)
+
+** Auto-show mode is no longer enabled just by loading auto-show.el.
+To control it, set `auto-show-mode' via Custom or use the
+`auto-show-mode' command.
+
+** Handling of X fonts' ascent/descent parameters has been changed to
+avoid redisplay problems.  As a consequence, compared with previous
+versions the line spacing and frame size now differ with some font
+choices, typically increasing by a pixel per line.  This change
+occurred in version 20.3 but was not documented then.
+
+** If you select the bar cursor style, it uses the frame's
+cursor-color, rather than the cursor foreground pixel.
+
+** In multibyte mode, Rmail decodes incoming MIME messages using the
+character set specified in the message.  If you want to disable this
+feature, set the variable rmail-decode-mime-charset to nil.
+
+** Not new, but not mentioned previously in NEWS: when you use #! at
+the beginning of a file to make it executable and specify an
+interpreter program, Emacs looks on the second line for the -*- mode
+and variable specification, as well as on the first line.
+
+** Support for IBM codepage encoding of non-ASCII characters.
+
+The new command M-x codepage-setup creates a special coding system
+that can be used to convert text between a specific IBM codepage and
+one of the character sets built into Emacs which matches that
+codepage.  For example, codepage 850 corresponds to Latin-1 character
+set, codepage 855 corresponds to Cyrillic-ISO character set, etc.
+
+Windows codepages 1250, 1251 and some others, where Windows deviates
+from the corresponding ISO character set, are also supported.
+
+IBM box-drawing characters and other glyphs which don't have
+equivalents in the corresponding ISO character set, are converted to
+a character defined by dos-unsupported-char-glyph on MS-DOS, and to
+`?' on other systems.
+
+IBM codepages are widely used on MS-DOS and MS-Windows, so this
+feature is most useful on those platforms, but it can also be used on
+Unix.
+
+Emacs compiled for MS-DOS automatically loads the support for the
+current codepage when it starts.
+
+** Mail changes
+
+*** The new variable default-sendmail-coding-system specifies the
+default way to encode outgoing mail.  This has higher priority than
+default-buffer-file-coding-system but has lower priority than
+sendmail-coding-system and the local value of
+buffer-file-coding-system.
+
+You should not set this variable manually.  Instead, set
+sendmail-coding-system to specify a fixed encoding for all outgoing
+mail.
+
+*** When you try to send a message that contains non-ASCII characters,
+if the coding system specified by those variables doesn't handle them,
+Emacs will ask you to select a suitable coding system while showing a
+list of possible coding systems.
+
+** CC Mode changes
+
+*** c-default-style can now take an association list that maps major
+modes to style names.  When this variable is an alist, Java mode no
+longer hardcodes a setting to "java" style.  See the variable's
+docstring for details.
+
+*** It's now possible to put a list as the offset on a syntactic
+symbol.  The list is evaluated recursively until a non-nil offset is
+found.  This is useful to combine several lineup functions to act in a
+prioritized order on a single line.  However, none of the supplied
+lineup functions use this feature currently.
+
+*** New syntactic symbol catch-clause, which is used on the "catch" and
+"finally" lines in try-catch constructs in C++ and Java.
+
+*** New cleanup brace-catch-brace on c-cleanup-list, which does for
+"catch" lines what brace-elseif-brace does for "else if" lines.
+
+*** The braces of Java anonymous inner classes are treated separately
+from the braces of other classes in auto-newline mode.  Two new
+symbols inexpr-class-open and inexpr-class-close may be used on
+c-hanging-braces-alist to control the automatic newlines used for
+anonymous classes.
+
+*** Support for the Pike language added, along with new Pike specific
+syntactic symbols: inlambda, lambda-intro-cont
+
+*** Support for Java anonymous classes via new syntactic symbol
+inexpr-class.  New syntactic symbol inexpr-statement for Pike
+support and gcc-style statements inside expressions.  New lineup
+function c-lineup-inexpr-block.
+
+*** New syntactic symbol brace-entry-open which is used in brace lists
+(i.e. static initializers) when a list entry starts with an open
+brace.  These used to be recognized as brace-list-entry's.
+c-electric-brace also recognizes brace-entry-open braces
+(brace-list-entry's can no longer be electrified).
+
+*** New command c-indent-line-or-region, not bound by default.
+
+*** `#' is only electric when typed in the indentation of a line.
+
+*** Parentheses are now electric (via the new command c-electric-paren)
+for auto-reindenting lines when parens are typed.
+
+*** In "gnu" style, inline-open offset is now set to zero.
+
+*** Uniform handling of the inclass syntactic symbol.  The indentation
+associated with it is now always relative to the class opening brace.
+This means that the indentation behavior has changed in some
+circumstances, but only if you've put anything besides 0 on the
+class-open syntactic symbol (none of the default styles do that).
+
+** Gnus changes.
+
+*** New functionality for using Gnus as an offline newsreader has been
+added.  A plethora of new commands and modes have been added.  See the
+Gnus manual for the full story.
+
+*** The nndraft backend has returned, but works differently than
+before.  All Message buffers are now also articles in the nndraft
+group, which is created automatically.
+
+*** `gnus-alter-header-function' can now be used to alter header
+values.
+
+*** `gnus-summary-goto-article' now accept Message-ID's.
+
+*** A new Message command for deleting text in the body of a message
+outside the region: `C-c C-v'.
+
+*** You can now post to component group in nnvirtual groups with
+`C-u C-c C-c'.
+
+*** `nntp-rlogin-program' -- new variable to ease customization.
+
+*** `C-u C-c C-c' in `gnus-article-edit-mode' will now inhibit
+re-highlighting of the article buffer.
+
+*** New element in `gnus-boring-article-headers' -- `long-to'.
+
+*** `M-i' symbolic prefix command.  See the section "Symbolic
+Prefixes" in the Gnus manual for details.
+
+*** `L' and `I' in the summary buffer now take the symbolic prefix
+`a' to add the score rule to the "all.SCORE" file.
+
+*** `gnus-simplify-subject-functions' variable to allow greater
+control over simplification.
+
+*** `A T' -- new command for fetching the current thread.
+
+*** `/ T' -- new command for including the current thread in the
+limit.
+
+*** `M-RET' is a new Message command for breaking cited text.
+
+*** \\1-expressions are now valid in `nnmail-split-methods'.
+
+*** The `custom-face-lookup' function has been removed.  
+If you used this function in your initialization files, you must
+rewrite them to use `face-spec-set' instead.
+
+*** Cancelling now uses the current select method.  Symbolic prefix
+`a' forces normal posting method.
+
+*** New command to translate M******** sm*rtq**t*s into proper text
+-- `W d'.
+
+*** For easier debugging of nntp, you can set `nntp-record-commands'
+to a non-nil value.
+
+*** nntp now uses ~/.authinfo, a .netrc-like file, for controlling
+where and how to send AUTHINFO to NNTP servers.
+
+*** A command for editing group parameters from the summary buffer
+has been added.
+
+*** A history of where mails have been split is available.
+
+*** A new article date command has been added -- `article-date-iso8601'.
+
+*** Subjects can be simplified when threading by setting
+`gnus-score-thread-simplify'.
+
+*** A new function for citing in Message has been added --
+`message-cite-original-without-signature'.
+
+*** `article-strip-all-blank-lines' -- new article command.
+
+*** A new Message command to kill to the end of the article has
+been added.
+
+*** A minimum adaptive score can be specified by using the
+`gnus-adaptive-word-minimum' variable.
+
+*** The "lapsed date" article header can be kept continually
+updated by the `gnus-start-date-timer' command.
+
+*** Web listserv archives can be read with the nnlistserv backend.
+
+*** Old dejanews archives can now be read by nnweb.
+
+*** `gnus-posting-styles' has been re-activated.
+
+** Changes to TeX and LaTeX mode
+
+*** The new variable `tex-start-options-string' can be used to give
+options for the TeX run.  The default value causes TeX to run in
+nonstopmode.  For an interactive TeX run set it to nil or "".
+
+*** The command `tex-feed-input' sends input to the Tex Shell.  In a
+TeX buffer it is bound to the keys C-RET, C-c RET, and C-c C-m (some
+of these keys may not work on all systems).  For instance, if you run
+TeX interactively and if the TeX run stops because of an error, you
+can continue it without leaving the TeX buffer by typing C-RET.
+
+*** The Tex Shell Buffer is now in `compilation-shell-minor-mode'.
+All error-parsing commands of the Compilation major mode are available
+but bound to keys that don't collide with the shell.  Thus you can use
+the Tex Shell for command line executions like a usual shell.
+
+*** The commands `tex-validate-region' and `tex-validate-buffer' check
+the matching of braces and $'s.  The errors are listed in a *Occur*
+buffer and you can use C-c C-c or mouse-2 to go to a particular
+mismatch.
+
+** Changes to RefTeX mode
+
+*** The table of contents buffer can now also display labels and
+file boundaries in addition to sections. Use `l', `i', and `c' keys.
+
+*** Labels derived from context (the section heading) are now
+lowercase by default.  To make the label legal in LaTeX, latin-1
+characters will lose their accent.  All Mule characters will be
+removed from the label.
+
+*** The automatic display of cross reference information can also use
+a window instead of the echo area.  See variable `reftex-auto-view-crossref'.
+
+*** kpsewhich can be used by RefTeX to find TeX and BibTeX files.  See the
+customization group `reftex-finding-files'.
+
+*** The option `reftex-bibfile-ignore-list' has been renamed to
+`reftex-bibfile-ignore-regexps' and indeed can be fed with regular
+expressions. 
+
+*** Multiple Selection buffers are now hidden buffers.
+
+** New/deleted modes and packages
+
+*** The package snmp-mode.el provides major modes for editing SNMP and
+SNMPv2 MIBs.  It has entries on `auto-mode-alist'.
+
+*** The package sql.el provides a major mode, M-x sql-mode, for
+editing SQL files, and M-x sql-interactive-mode for interacting with
+SQL interpreters.  It has an entry on `auto-mode-alist'.
+
+*** M-x highlight-changes-mode provides a minor mode displaying buffer
+changes with a special face.
+
+*** ispell4.el has been deleted.  It got in the way of ispell.el and
+this was hard to fix reliably.  It has long been obsolete -- use
+Ispell 3.1 and ispell.el.
+
+* MS-DOS changes in Emacs 20.4
+
+** Emacs compiled for MS-DOS now supports MULE features better.
+This includes support for display of all ISO 8859-N character sets,
+conversion to and from IBM codepage encoding of non-ASCII characters,
+and automatic setup of the MULE environment at startup.  For details,
+check out the section `MS-DOS and MULE' in the manual.
+
+The MS-DOS installation procedure automatically configures and builds
+Emacs with input method support if it finds an unpacked Leim
+distribution when the config.bat script is run.
+
+** Formerly, the value of lpr-command did not affect printing on
+MS-DOS unless print-region-function was set to nil, but now it
+controls whether an external program is invoked or output is written
+directly to a printer port.  Similarly, in the previous version of
+Emacs, the value of ps-lpr-command did not affect PostScript printing
+on MS-DOS unless ps-printer-name was set to something other than a
+string (eg. t or `pipe'), but now it controls whether an external
+program is used.  (These changes were made so that configuration of
+printing variables would be almost identical across all platforms.)
+
+** In the previous version of Emacs, PostScript and non-PostScript
+output was piped to external programs, but because most print programs
+available for MS-DOS and MS-Windows cannot read data from their standard
+input, on those systems the data to be output is now written to a
+temporary file whose name is passed as the last argument to the external
+program.
+
+An exception is made for `print', a standard program on Windows NT,
+and `nprint', a standard program on Novell Netware.  For both of these
+programs, the command line is constructed in the appropriate syntax
+automatically, using only the value of printer-name or ps-printer-name
+as appropriate--the value of the relevant `-switches' variable is
+ignored, as both programs have no useful switches.
+
+** The value of the variable dos-printer (cf. dos-ps-printer), if it has
+a value, overrides the value of printer-name (cf. ps-printer-name), on
+MS-DOS and MS-Windows only.  This has been true since version 20.3, but
+was not documented clearly before.
+
+** All the Emacs games now work on MS-DOS terminals.
+This includes Tetris and Snake.
+
+* Lisp changes in Emacs 20.4
+
+** New functions line-beginning-position and line-end-position
+return the position of the beginning or end of the current line.
+They both accept an optional argument, which has the same
+meaning as the argument to beginning-of-line or end-of-line.
+
+** find-file and allied functions now have an optional argument
+WILDCARD.  If this is non-nil, they do wildcard processing,
+and visit all files that match the wildcard pattern.
+
+** Changes in the file-attributes function.
+
+*** The file size returned by file-attributes may be an integer or a float.
+It is an integer if the size fits in a Lisp integer, float otherwise.
+
+*** The inode number returned by file-attributes may be an integer (if
+the number fits in a Lisp integer) or a cons cell containing two
+integers.
+
+** The new function file-expand-wildcards expands a wildcard-pattern
+to produce a list of existing files that match the pattern.
+
+** New functions for base64 conversion:
+
+The function base64-encode-region converts a part of the buffer
+into the base64 code used in MIME.  base64-decode-region
+performs the opposite conversion.  Line-breaking is supported
+optionally.
+
+Functions base64-encode-string and base64-decode-string do a similar
+job on the text in a string.  They return the value as a new string.
+
+**
+The new function process-running-child-p
+will tell you if a subprocess has given control of its
+terminal to its own child process.
+
+** interrupt-process and such functions have a new feature:
+when the second argument is `lambda', they send a signal
+to the running child of the subshell, if any, but if the shell
+itself owns its terminal, no signal is sent.
+
+** There are new widget types `plist' and `alist' which can
+be used for customizing variables whose values are plists or alists.
+
+** easymenu.el Now understands `:key-sequence' and `:style button'.
+:included is an alias for :visible.
+
+easy-menu-add-item now understands the values returned by
+easy-menu-remove-item and easy-menu-item-present-p.  This can be used
+to move or copy menu entries.
+
+** Multibyte editing changes
+
+*** The definitions of sref and char-bytes are changed.  Now, sref is
+an alias of aref and char-bytes always returns 1.  This change is to
+make some Emacs Lisp code which works on 20.2 and earlier also
+work on the latest Emacs.  Such code uses a combination of sref and
+char-bytes in a loop typically as below:
+	(setq char (sref str idx)
+	      idx (+ idx (char-bytes idx)))
+The byte-compiler now warns that this is obsolete.
+
+If you want to know how many bytes a specific multibyte character
+(say, CH) occupies in a multibyte buffer, use this code:
+	(charset-bytes (char-charset ch))
+
+*** In multibyte mode, when you narrow a buffer to some region, and the
+region is preceded or followed by non-ASCII codes, inserting or
+deleting at the head or the end of the region may signal this error:
+
+    Byte combining across boundary of accessible buffer text inhibitted
+
+This is to avoid some bytes being combined together into a character
+across the boundary.
+
+*** The functions find-charset-region and find-charset-string include
+`unknown' in the returned list in the following cases:
+    o The current buffer or the target string is unibyte and
+      contains 8-bit characters.
+    o The current buffer or the target string is multibyte and
+      contains invalid characters.
+
+*** The functions decode-coding-region and encode-coding-region remove
+text properties of the target region.  Ideally, they should correctly
+preserve text properties, but for the moment, it's hard.  Removing
+text properties is better than preserving them in a less-than-correct
+way.
+
+*** prefer-coding-system sets EOL conversion of default coding systems.
+If the argument to prefer-coding-system specifies a certain type of
+end of line conversion, the default coding systems set by
+prefer-coding-system will specify that conversion type for end of line.
+
+*** The new function thai-compose-string can be used to properly
+compose Thai characters in a string.
+
+** The primitive `define-prefix-command' now takes an optional third
+argument NAME, which should be a string.  It supplies the menu name
+for the created keymap.  Keymaps created in order to be displayed as
+menus should always use the third argument.
+
+** The meanings of optional second arguments for read-char,
+read-event, and read-char-exclusive are flipped.  Now the second
+arguments are INHERIT-INPUT-METHOD.  These functions use the current
+input method (if any) if and only if INHERIT-INPUT-METHOD is non-nil.
+
+** The new function clear-this-command-keys empties out the contents
+of the vector that (this-command-keys) returns.  This is useful in
+programs that read passwords, to prevent the passwords from echoing
+inadvertently as part of the next command in certain cases.
+
+** The new macro `with-temp-message' displays a temporary message in
+the echo area, while executing some Lisp code.  Like `progn', it
+returns the value of the last form, but it also restores the previous
+echo area contents.
+
+   (with-temp-message MESSAGE &rest BODY)
+
+** The function `require' now takes an optional third argument
+NOERROR.  If it is non-nil, then there is no error if the
+requested feature cannot be loaded.
+
+** In the function modify-face, an argument of (nil) for the
+foreground color, background color or stipple pattern
+means to clear out that attribute.  
+
+** The `outer-window-id' frame property of an X frame
+gives the window number of the outermost X window for the frame.
+
+** Temporary buffers made with with-output-to-temp-buffer are now
+read-only by default, and normally use the major mode Help mode
+unless you put them in some other non-Fundamental mode before the
+end of with-output-to-temp-buffer.
+
+** The new functions gap-position and gap-size return information on
+the gap of the current buffer.
+
+** The new functions position-bytes and byte-to-position provide a way
+to convert between character positions and byte positions in the
+current buffer.
+
+** vc.el defines two new macros, `edit-vc-file' and `with-vc-file', to
+facilitate working with version-controlled files from Lisp programs.
+These macros check out a given file automatically if needed, and check
+it back in after any modifications have been made.
 
 * Installation Changes in Emacs 20.3
 
@@ -63,7 +614,7 @@ Emacs to run normally in multibyte mode.
 The option --unibyte does not affect the reading of Emacs Lisp files,
 though.  If you want a Lisp file to be read in unibyte mode, use
 -*-unibyte: t;-*- on its first line.  That will force Emacs to
-read that file in unibyte mode regardless of how Emacs was started.
+load that file in unibyte mode, regardless of how Emacs was started.
 
 ** toggle-enable-multibyte-characters no longer has a key binding and
 no longer appears in the menu bar.  We've realized that changing the
@@ -4365,7 +4916,7 @@ lm-synopsis extracts first line "synopsis'"information.
 ----------------------------------------------------------------------
 Copyright information:
 
-Copyright (C) 1996, 1997, 1998 Free Software Foundation, Inc.
+Copyright (C) 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
@@ -4381,4 +4932,3 @@ Local variables:
 mode: outline
 paragraph-separate: "[ 	]*$"
 end:
-

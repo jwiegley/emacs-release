@@ -1,6 +1,6 @@
 ;;; paths.el --- define pathnames for use by various Emacs commands.
 
-;; Copyright (C) 1986, 1988, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1988, 1994, 1999 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -33,16 +33,27 @@
 ;;; Code:
 
 (defvar Info-default-directory-list
-  (let ((start (list "/usr/local/lib/info/"
-		     ;; This comes second so that, if it is the same
-		     ;; as configure-info-directory (which is usually true)
-		     ;; and Emacs has been installed (also usually true)
-		     ;; then the list will end with two copies of this;
-		     ;; which means that the last dir file Info-insert-dir
-		     ;; finds will be the one in this directory.
-		     "/usr/local/info/"))
-	(configdir (file-name-as-directory configure-info-directory)))
-    (setq start (nconc start (list configdir)))
+  (let* ((start (list "/usr/local/lib/info/"
+		      ;; This comes second so that, if it is the same
+		      ;; as configure-info-directory (which is usually true)
+		      ;; and Emacs has been installed (also usually true)
+		      ;; then the list will end with two copies of this;
+		      ;; which means that the last dir file Info-insert-dir
+		      ;; finds will be the one in this directory.
+		      "/usr/local/info/"))
+	 ;; Typically on a GNU system, installed info files are found
+	 ;; in /usr/info, but the default prefix is /usr/local.
+	 ;; (Standalone info has a long list of alternative
+	 ;; directories to search; perhaps we should try to be more
+	 ;; consistent.)
+	 (usrdir "/usr/info")
+	 (sysdir (and (file-directory-p usrdir)
+		      (not (string= configure-info-directory usrdir))
+		      (list usrdir)))
+	 (configdir (file-name-as-directory configure-info-directory)))
+    ;; configdir comes last so that we can identify it as such, but we
+    ;; also we override sysdir, hence the two occurrences.
+    (setq start (nconc start (list configdir) sysdir (list configdir)))
     start)
   "Default list of directories to search for Info documentation files.
 They are searched in the order they are given in the list.

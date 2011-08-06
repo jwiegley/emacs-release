@@ -154,9 +154,13 @@ Commands:
   ;; `help-mode-maybe'.
   (run-hooks 'help-mode-hook))
 
-(defun help-mode-maybe ()
-  (if (eq major-mode 'fundamental-mode)
-      (help-mode))
+(defun help-mode-setup ()
+  (help-mode)
+  (setq buffer-read-only nil))
+
+(add-hook 'temp-buffer-setup-hook 'help-mode-setup)
+
+(defun help-mode-finish ()
   (when (eq major-mode 'help-mode) 
     ;; View mode's read-only status of existing *Help* buffer is lost
     ;; by with-output-to-temp-buffer.
@@ -165,9 +169,10 @@ Commands:
   (setq view-return-to-alist
 	(list (cons (selected-window) help-return-method))))
 
-(add-hook 'temp-buffer-show-hook 'help-mode-maybe)
+(add-hook 'temp-buffer-show-hook 'help-mode-finish)
 
 (defun help-quit ()
+  "Just exit from the Help command's command loop."
   (interactive)
   nil)
 
@@ -322,18 +327,27 @@ If FUNCTION is nil, applies `message' to it, thus printing it."
 	    (princ " runs the command ")
 	    (prin1 defn)
 	    (princ "\n   which is ")
-	    (describe-function-1 defn nil)
+	    (describe-function-1 defn nil (interactive-p))
 	    (print-help-return-message)))))))
 
 (defun describe-mode ()
   "Display documentation of current major mode and minor modes.
+The major mode description comes first, followed by the minor modes,
+each on a separate page.
+
 For this to work correctly for a minor mode, the mode's indicator variable
 \(listed in `minor-mode-alist') must also be a function whose documentation
 describes the minor mode."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
-    (let ((minor-modes minor-mode-alist)
-	  (first t))
+    (when minor-mode-alist
+      (princ "The major mode is described first.
+For minor modes, see following pages.\n\n"))
+    (princ mode-name)
+    (princ " mode:\n")
+    (princ (documentation major-mode))
+    (help-setup-xref (list #'help-xref-mode (current-buffer)) (interactive-p))
+    (let ((minor-modes minor-mode-alist))
       (while minor-modes
 	(let* ((minor-mode (car (car minor-modes)))
 	       (indicator (car (cdr (car minor-modes)))))
@@ -348,24 +362,18 @@ describes the minor mode."
 			  (capitalize
 			   (substring (symbol-name minor-mode)
 				      0 (match-beginning 0)))))
-		(while (and indicator (symbolp indicator))
+		(while (and indicator (symbolp indicator)
+			    (boundp indicator)
+			    (not (eq indicator (symbol-value indicator))))
 		  (setq indicator (symbol-value indicator)))
-		(if first
-		    (princ "The minor modes are described first,
-followed by the major mode, which is described on the last page.\n\f\n"))
-		(setq first nil)
+		(princ "\n\f\n")
 		(princ (format "%s minor mode (%s):\n"
 			       pretty-minor-mode
 			       (if indicator
 				   (format "indicator%s" indicator)
 				 "no indicator")))
-		(princ (documentation minor-mode))
-		(princ "\n\f\n"))))
+		(princ (documentation minor-mode)))))
 	(setq minor-modes (cdr minor-modes))))
-    (princ mode-name)
-    (princ " mode:\n")
-    (princ (documentation major-mode))
-    (help-setup-xref (list #'help-xref-mode (current-buffer)) (interactive-p))
     (print-help-return-message)))
 
 ;; So keyboard macro definitions are documented correctly
@@ -457,7 +465,7 @@ With numeric argument display information on correspondingly older changes."
 (defalias 'help 'help-for-help)
 (make-help-screen help-for-help
   "a b c C f F C-f i I k C-k l L m n p s t v w C-c C-d C-n C-p C-w; ? for help:"
-  "You have typed \\[help-command], the help character.  Type a Help option:
+  "You have typed %THIS-KEY%, the help character.  Type a Help option:
 \(Use SPC or DEL to scroll through this text.  Type \\<help-map>\\[help-quit] to exit the Help command.)
 
 a  command-apropos.  Give a substring, and see a list of commands
@@ -475,17 +483,19 @@ C-f Info-goto-emacs-command-node.  Type a function name;
 i  info. The  info  documentation reader.
 I  describe-input-method.  Describe a specific input method (if you type
 	its name) or the current input method (if you type just RET).
+C-i  info-lookup-symbol.  Display the definition of a specific symbol
+        as found in the manual for the language this buffer is written in.
 k  describe-key.  Type a command key sequence;
 	it displays the full documentation.
 C-k Info-goto-emacs-key-command-node.  Type a command key sequence;
 	it takes you to the Info node for the command bound to that key.
-l  view-lossage.  Shows last 100 characters you typed.
+l  view-lossage.  Show last 100 characters you typed.
 L  describe-language-environment.  This describes either the a
 	specific language environment (if you type its name)
 	or the current language environment (if you type just RET).
 m  describe-mode.  Print documentation of current minor modes,
 	and the current major mode, including their special commands.
-n  view-emacs-news.  Shows emacs news file.
+n  view-emacs-news.  Display news of recent Emacs changes.
 p  finder-by-keyword. Find packages matching a given topic keyword.
 s  describe-syntax.  Display contents of syntax table, plus explanations
 t  help-with-tutorial.  Select the Emacs learn-by-doing tutorial.
@@ -503,14 +513,23 @@ C-p Display information about the GNU project.
 C-w Display information on absence of warranty for GNU Emacs."
   help-map)
 
-;; Return a function which is called by the list containing point.
-;; If that gives no function, return a function whose name is around point.
-;; If that doesn't give a function, return nil.
 (defun function-called-at-point ()
+  "Return a function around point or else called by the list containing point.
+If that doesn't give a function, return nil."
   (let ((stab (syntax-table)))
     (set-syntax-table emacs-lisp-mode-syntax-table)
     (unwind-protect
 	(or (condition-case ()
+		(save-excursion
+		  (or (not (zerop (skip-syntax-backward "_w")))
+		      (eq (char-syntax (following-char)) ?w)
+		      (eq (char-syntax (following-char)) ?_)
+		      (forward-sexp -1))
+		  (skip-chars-forward "'")
+		  (let ((obj (read (current-buffer))))
+		    (and (symbolp obj) (fboundp obj) obj)))
+	      (error nil))
+	    (condition-case ()
 		(save-excursion
 		  (save-restriction
 		    (narrow-to-region (max (point-min) (- (point) 1000)) (point-max))
@@ -524,20 +543,30 @@ C-w Display information on absence of warranty for GNU Emacs."
 		    (let (obj)
 		      (setq obj (read (current-buffer)))
 		      (and (symbolp obj) (fboundp obj) obj))))
-	      (error nil))
-	    (condition-case ()
-		(save-excursion
-		  (or (not (zerop (skip-syntax-backward "_w")))
-		      (eq (char-syntax (following-char)) ?w)
-		      (eq (char-syntax (following-char)) ?_)
-		      (forward-sexp -1))
-		  (skip-chars-forward "'")
-		  (let ((obj (read (current-buffer))))
-		    (and (symbolp obj) (fboundp obj) obj)))
 	      (error nil)))
       (set-syntax-table stab))))
 
-(defun describe-function-find-file (function)
+(defvar symbol-file-load-history-loaded nil
+  "Non-nil means we have loaded the file `fns-VERSION.el' in `exec-directory'.
+That file records the part of `load-history' for preloaded files,
+which is cleared out before dumping to make Emacs smaller.")
+
+(defun symbol-file (function)
+  "Return the input source from which FUNCTION was loaded.
+The value is normally a string that was passed to `load':
+either an absolute file name, or a library name
+\(with no directory name and no `.el' or `.elc' at the end).
+It can also be nil, if the definition is not associated with any file."
+  (unless symbol-file-load-history-loaded
+    (load (expand-file-name
+	   ;; fns-XX.YY.ZZ.el does not work on DOS filesystem.
+	   (if (eq system-type 'ms-dos)
+	       "fns.el"
+	     (format "fns-%s.el" emacs-version))
+	   exec-directory)
+	  ;; The file name fns-%s.el already has a .el extension.
+	  nil nil t)
+    (setq symbol-file-load-history-loaded t))
   (let ((files load-history)
 	file functions)
     (while files
@@ -564,7 +593,7 @@ C-w Display information on absence of warranty for GNU Emacs."
 	;; Use " is " instead of a colon so that
 	;; it is easier to get out the function name using forward-sexp.
 	(princ " is ")
-	(describe-function-1 function nil)
+	(describe-function-1 function nil (interactive-p))
 	(print-help-return-message)
 	(save-excursion
 	  (set-buffer standard-output)
@@ -572,8 +601,10 @@ C-w Display information on absence of warranty for GNU Emacs."
 	  (buffer-string)))
     (message "You didn't specify a function")))
 
-(defun describe-function-1 (function parens)
-  (let* ((def (symbol-function function))
+(defun describe-function-1 (function parens interactive-p)
+  (let* ((def (if (symbolp function)
+		  (symbol-function function)
+		function))
 	 file-name string need-close
 	 (beg (if (commandp def) "an interactive " "a ")))
     (setq string
@@ -587,7 +618,7 @@ C-w Display information on absence of warranty for GNU Emacs."
 		((symbolp def)
 		 (while (symbolp (symbol-function def))
 		   (setq def (symbol-function def)))
-		 (format "alias for `%s'" def))
+		 (format "an alias for `%s'" def))
 		((eq (car-safe def) 'lambda)
 		 (concat beg "Lisp function"))
 		((eq (car-safe def) 'macro)
@@ -596,17 +627,23 @@ C-w Display information on absence of warranty for GNU Emacs."
 		 "a mocklisp function")
 		((eq (car-safe def) 'autoload)
 		 (setq file-name (nth 1 def))
-		 (format "%s autoloaded Lisp %s"
+		 (format "%s autoloaded %s"
 			 (if (commandp def) "an interactive" "an")
-			 (if (nth 4 def) "macro" "function")
+			 (if (eq (nth 4 def) 'keymap) "keymap"
+			   (if (nth 4 def) "Lisp macro" "Lisp function"))
 			 ))
 		(t "")))
     (when (and parens (not (equal string "")))
       (setq need-close t)
       (princ "("))
     (princ string)
+    (with-current-buffer "*Help*"
+      (save-excursion
+	(save-match-data
+	  (if (re-search-backward "alias for `\\([^`']+\\)'" nil t)
+	      (help-xref-button 1 #'describe-function def)))))
     (or file-name
-	(setq file-name (describe-function-find-file function)))
+	(setq file-name (symbol-file function)))
     (if file-name
 	(progn
 	  (princ " in `")
@@ -639,7 +676,7 @@ C-w Display information on absence of warranty for GNU Emacs."
 			 (t t))))
       (if (listp arglist)
 	  (progn
-	    (princ (cons function
+	    (princ (cons (if (symbolp function) function "anonymous")
 			 (mapcar (lambda (arg)
 				   (if (memq arg '(&optional &rest))
 				       arg
@@ -650,11 +687,12 @@ C-w Display information on absence of warranty for GNU Emacs."
       (if doc
 	  (progn (terpri)
 		 (princ doc)
-		 (help-setup-xref (list #'describe-function function) (interactive-p)))
+		 (help-setup-xref (list #'describe-function function) interactive-p))
 	(princ "not documented")))))
 
-;; We return 0 if we can't find a variable to return.
 (defun variable-at-point ()
+  "Return the bound variable symbol found around point.
+Return 0 if there is no such symbol."
   (condition-case ()
       (let ((stab (syntax-table)))
 	(unwind-protect
@@ -727,10 +765,12 @@ Returns the documentation as a string, also."
           (help-setup-xref (list #'describe-variable variable) (interactive-p))
 
 	  ;; Make a link to customize if this variable can be customized.
-	  ;; Note, it is not reliable to test for a custom-type property
+	  ;; Note, it is not reliable to test only for a custom-type property
 	  ;; because those are only present after the var's definition
 	  ;; has been loaded.
-	  (if (user-variable-p variable)
+	  (if (or (user-variable-p variable)
+		  (get variable 'custom-loads)
+		  (get variable 'custom-type))
 	      (let ((customize-label "customize"))
 		(terpri)
 		(terpri)
@@ -742,6 +782,23 @@ Returns the documentation as a string, also."
 		    (help-xref-button 1 #'(lambda (v)
 					    (customize-variable v)) variable)
 		    ))))
+	  ;; Make a hyperlink to the library if appropriate.  (Don't
+	  ;; change the format of the buffer's initial line in case
+	  ;; anything expects the current format.)
+	  (let ((file-name (symbol-file variable)))
+	    (when file-name
+	      (princ "\n\nDefined in `")
+	      (princ file-name)
+	      (princ "'.")
+	      (with-current-buffer "*Help*"
+		(save-excursion
+		  (re-search-backward "`\\([^`']+\\)'" nil t)
+		  (help-xref-button 1 (lambda (arg)
+					(let ((location
+					       (find-variable-noselect arg)))
+					  (pop-to-buffer (car location))
+					  (goto-char (cdr location))))
+				    variable)))))
 
 	  (print-help-return-message)
 	  (save-excursion
@@ -767,7 +824,7 @@ to display (default, the current buffer)."
 		     (interactive-p))))
 
 (defun where-is (definition &optional insert)
-  "Print message listing key sequences that invoke specified command.
+  "Print message listing key sequences that invoke the command DEFINITION.
 Argument is a command definition, usually a symbol with a function definition.
 If INSERT (the prefix arg) is non-nil, insert the message in the buffer."
   (interactive
@@ -801,7 +858,11 @@ Optional second arg NOSUFFIX non-nil means don't add suffixes `.elc' or `.el'
 to the specified name LIBRARY.
 
 If the optional third arg PATH is specified, that list of directories
-is used instead of `load-path'."
+is used instead of `load-path'.
+
+When called from a program, the file name is normaly returned as a
+string.  When run interactively, the argument INTERACTIVE-CALL is t,
+and the file name is displayed in the echo area."
   (interactive (list (read-string "Locate library: ")
 		     nil nil
 		     t))
@@ -881,7 +942,7 @@ The words preceding the quoted symbol can be used in doc strings to
 distinguish references to variables, functions and symbols.")
 
 (defvar help-xref-info-regexp
-  "\\<info\\s-+node\\s-`\\([^']+\\)'"
+  "\\<[Ii]nfo[ \t\n]+node[ \t\n]+`\\([^']+\\)'"
   "Regexp matching doc string references to an Info node.")
 
 (defun help-setup-xref (item interactive-p)
@@ -923,6 +984,14 @@ that."
         ;; The following should probably be abstracted out.
         (unwind-protect
             (progn
+              ;; Info references
+              (save-excursion
+                (while (re-search-forward help-xref-info-regexp nil t)
+                  (let ((data (match-string 1)))
+		    (save-match-data
+		      (unless (string-match "^([^)]+)" data)
+			(setq data (concat "(emacs)" data))))
+		    (help-xref-button 1 #'info data))))
               ;; Quoted symbols
               (save-excursion
                 (while (re-search-forward help-xref-symbol-regexp nil t)
@@ -946,14 +1015,12 @@ that."
                           (help-xref-button 6 #'describe-variable sym))
                          ((fboundp sym)
                           (help-xref-button 6 #'describe-function sym)))))))
-              ;; Info references
-              (save-excursion
-                (while (re-search-forward help-xref-info-regexp nil t)
-                  (help-xref-button 1 #'Info-goto-node (list (match-data 1)))))
               ;; An obvious case of a key substitution:
               (save-excursion              
-                (while (re-search-forward 
-                        "\\<M-x\\s-+\\(\\sw\\(\\sw\\|\\s_\\)+\\)" nil t)
+                (while (re-search-forward
+			;; Assume command name is only word characters
+			;; and dashes to get things like `use M-x foo.'.
+                        "\\<M-x\\s-+\\(\\sw\\(\\sw\\|-\\)+\\)" nil t)
                   (let ((sym (intern-soft (match-string 1))))
                     (if (fboundp sym)
                         (help-xref-button 1 #'describe-function sym)))))
@@ -969,18 +1036,18 @@ that."
                     (while
                         ;; Ignore single blank lines in table, but not
                         ;; double ones, which should terminate it.
-                        (and (looking-at "^\n?[^\n]")
+                        (and (not (looking-at "\n\n"))
                              (progn
-                               (if (and (> (move-to-column col) 0)
-                                        (looking-at "\\(\\sw\\|\\s_\\)+$"))
-                                   ;; 
+			       (and (eolp) (forward-line))
+			       (end-of-line)
+			       (skip-chars-backward "^\t\n")
+                               (if (and (>= (current-column) col)
+					(looking-at "\\(\\sw\\|-\\)+$"))
                                    (let ((sym (intern-soft (match-string 0))))
                                      (if (fboundp sym)
                                          (help-xref-button 
                                           0 #'describe-function sym))))
-                               t)
-                             (zerop (forward-line))
-                             (move-to-column 0)))))))
+			       (zerop (forward-line)))))))))
           (set-syntax-table stab))
         ;; Make a back-reference in this buffer if appropriate.
         (when help-xref-stack
@@ -1006,17 +1073,19 @@ MATCH-NUMBER is the subexpression of interest in the last matched
 regexp.  FUNCTION is a function to invoke when the button is
 activated, applied to DATA.  DATA may be a single value or a list.
 See `help-make-xrefs'."
-  (add-text-properties (match-beginning match-number)
-                     (match-end match-number)
-                       (list 'mouse-face 'highlight  
-                     'help-xref (cons function
-                                      (if (listp data)
-                                          data
-                                        (list data)))))
-  (if help-highlight-p
-      (put-text-property (match-beginning match-number)
-                         (match-end match-number)
-                         'face help-highlight-face)))
+  ;; Don't mung properties we've added specially in some instances.
+  (unless (get-text-property (match-beginning match-number) 'help-xref)
+    (add-text-properties (match-beginning match-number)
+			 (match-end match-number)
+			 (list 'mouse-face 'highlight  
+			       'help-xref (cons function
+						(if (listp data)
+						    data
+						  (list data)))))
+    (if help-highlight-p
+	(put-text-property (match-beginning match-number)
+			   (match-end match-number)
+			   'face help-highlight-face))))
 
 
 ;; Additional functions for (re-)creating types of help buffers.
@@ -1028,11 +1097,12 @@ help buffer."
   (let ((fdoc (describe-function symbol)))
     (describe-variable symbol)
     ;; We now have a help buffer on the variable.  Insert the function
-    ;; text after it.
-    (goto-char (point-max))
-    (insert "\n\n" fdoc))
-  (goto-char (point-min))
-  (help-setup-xref (list #'help-xref-interned symbol) nil))
+    ;; text before it.
+    (with-current-buffer "*Help*"
+      (goto-char (point-min))
+      (let ((inhibit-read-only t))
+	(insert fdoc "\n\n" (symbol-name symbol) " is also a variable.\n\n"))
+      (help-setup-xref (list #'help-xref-interned symbol) nil))))
 
 (defun help-xref-mode (buffer)
   "Do a `describe-mode' for the specified BUFFER."
@@ -1052,8 +1122,7 @@ help buffer."
       (help-follow pos))))
 
 (defun help-xref-go-back (buffer)
-  "Go back to the previous help buffer text using info on `help-xref-stack'."
-  (interactive)
+  "From BUFFER, go back to previous help buffer text using `help-xref-stack'."
   (let (item position method args)
     (with-current-buffer buffer
       (when help-xref-stack
@@ -1067,6 +1136,7 @@ help buffer."
     (goto-char position)))
 
 (defun help-go-back ()
+  "Invoke the [back] button (if any) in the Help mode buffer."
   (interactive)
   (help-follow (1- (point-max))))
 
@@ -1120,5 +1190,74 @@ For the cross-reference format, see `help-make-xrefs'."
 	     (setq pos t))
 	    (t				; be circular
 	     (goto-char (point-max)))))))
+
+
+;;; Automatic resizing of temporary buffers.
+
+(defcustom temp-buffer-resize-mode nil
+  "Non-nil means resize windows displaying temporary buffers.
+This makes the window the right height for its contents, but never
+more than `temp-buffer-max-height' nor less than `window-min-height'.
+This applies to `help', `apropos' and `completion' buffers, and some others.
+
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `temp-buffer-resize-mode'."
+  :get (lambda (symbol)
+         (and (memq 'resize-temp-buffer-window temp-buffer-show-hook) t))
+  :set (lambda (symbol value)
+         (temp-buffer-resize-mode (if value 1 -1)))
+  :initialize 'custom-initialize-default
+  :type 'boolean
+  :group 'help
+  :version "20.4")
+
+(defcustom temp-buffer-max-height (lambda (buffer) (/ (- (frame-height) 2) 2))
+  "*Maximum height of a window displaying a temporary buffer.
+This is the maximum height (in text lines) which `resize-temp-buffer-window'
+will give to a window displaying a temporary buffer.
+It can also be a function which will be called with the object corresponding
+to the buffer to be displayed as argument and should return an integer
+positive number."
+  :type '(choice integer function)
+  :group 'help
+  :version "20.4")
+
+(defun temp-buffer-resize-mode (arg)
+  "Toggle the mode which that makes windows smaller for temporary buffers.
+With prefix argument ARG, turn the resizing of windows displaying temporary
+buffers on if ARG is positive or off otherwise.
+See the documentation of the variable `temp-buffer-resize-mode' for
+more information."
+  (interactive "P")
+  (let ((turn-it-on
+         (if (null arg)
+             (not (memq 'resize-temp-buffer-window temp-buffer-show-hook))
+           (> (prefix-numeric-value arg) 0))))
+    (if turn-it-on
+        (progn
+          ;; `help-mode-maybe' may add a `back' button and thus increase the
+          ;; text size, so `resize-temp-buffer-window' must be run *after* it.
+          (add-hook 'temp-buffer-show-hook 'resize-temp-buffer-window 'append)
+          (setq temp-buffer-resize-mode t))
+      (remove-hook 'temp-buffer-show-hook 'resize-temp-buffer-window)
+      (setq temp-buffer-resize-mode nil))))
+
+(defun resize-temp-buffer-window ()
+  "Resize the current window to fit its contents.
+Will not make it higher than `temp-buffer-max-height' nor smaller than
+`window-min-height'.  Do nothing if it is the only window on its frame, if it
+is not as wide as the frame or if some of the window's contents are scrolled
+out of view."
+  (unless (or (one-window-p 'nomini)
+              (not (pos-visible-in-window-p (point-min)))
+              (/=  (frame-width) (window-width)))
+    (let* ((max-height (if (functionp temp-buffer-max-height)
+                           (funcall temp-buffer-max-height (current-buffer))
+                         temp-buffer-max-height))
+           (win-height (1- (window-height)))
+           (min-height (1- window-min-height))
+           (text-height (window-buffer-height(selected-window)))
+           (new-height (max (min text-height max-height) min-height)))
+      (enlarge-window (- new-height win-height)))))
 
 ;;; help.el ends here

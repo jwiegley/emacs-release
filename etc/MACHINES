@@ -235,18 +235,15 @@ Data General Aviion (m88k-dg-dgux)
   19.23 works; however, the GCC provided with DGUX 5.4R3.00 fails to
   compile src/emacs.c.  GCC 2.5.8 does work.
   The 19.26 pretest was reported to work; no word on which compiler.
-
   System versions other than DGUX 5.4R3.00 have not been tested.
 
   DGUX 5.4R3.10 works with 19.29 and 19.30.
   
-  DGUX R4.11 for m88k didn't work with 19.30 or 19.31 under some
-  circumstances because some of the stdio internals have changed.  The
-  s/dgux4.h file shipped with 19.32 works around the problems and allows
-  emacs to work interactively.  Emacs doesn't work in batch mode under
-  this version of the OS yet, I'm still working on this problem.
-  Contact me (Roderick Schertler <roderick@ibcinc.com>) if you're able
-  to work out what's going wrong.
+  DGUX R4.11 contains changes to the stdio internals and it doesn't work
+  with versions before 20.2 without patches.  20.2 works in interactive
+  mode but usually fails in batch mode.  The problem is that using
+  stderr in the dumped emacs usually leads to a segmentation fault.
+  Only m88k has been tested.
 
 DECstation (mips-dec-ultrix or mips-dec-osf)
 
@@ -627,9 +624,9 @@ Intel 386 (i386-*-isc, 		i386-*-esix,	 i386-*-bsdi2,
   19.29 is reported to crash when using Motif on Solaris 2.5.
   The reasons are not yet known.
 
-  Use i386-*-bsd386 for BSDI BSD/386; Emacs runs as of version 19.23.
-  Make on that system is broken; use GNU make instead.
-  Shell bugs in version 1.0 of BSD/386 cause configure
+  Use i386-*-bsdiN for BSDI BSD/OS version N; Emacs runs as of version 19.23.
+  In some system versions, `make' is broken; use GNU make instead.
+  Shell bugs in version 1.0 of BSD/OS cause configure
   to do the wrong thing with --with-x-toolkit; the workaround is to edit
   configure to run another shell such as bash.
 
@@ -809,6 +806,11 @@ NCR Intel system (i386-ncr-sysv4.2)
   you may need to set LD_RUN_PATH at link time to specify where
   to find the X libraries.
 
+NEC EWS4800 (mips-nec-sysv4)
+
+  This system works in 20.4, but you should use the compiler
+  /usr/abiccs/bin/cc (MIPS ABI MODE).
+
 NeXT (m68k-next-nextstep)
 
   Emacs 19 has not been tested extensively yet, but it seems to work
@@ -962,6 +964,9 @@ Stride (m68k-stride-sysv)
 Sun 3, Sun 4 (sparc), Sun 386 (m68k-sun-sunos, sparc-sun-sunos, i386-sun-sunos,
 			       sparc-sun-sunos4.1.3noshr, sparc-sun-solaris2.*,
 			       i386-sun-solaris2.*)
+
+  Emacs 20.3 fails to build on Solaris 2.5 if you use GCC 2.7.2.3.
+  Installing GCC 2.8 fixes the problem.
 
   19.32 works on Solaris 2.4 and 2.5.  On Solaris 2.5
   you may need one of these patches to prevent Emacs from crashing

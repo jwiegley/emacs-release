@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1997 Free Software Foundation, Inc.
 
-;; Author: Dan Nicolaescu <done@ece.arizona.edu>
+;; Author: Dan Nicolaescu <dann@ics.uci.edu>
 
 ;; This file is part of GNU Emacs.
 

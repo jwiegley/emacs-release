@@ -68,6 +68,13 @@
        (member (downcase (file-name-nondirectory shell-name)) 
 	       w32-system-shells)))
 
+(defun w32-shell-dos-semantics ()
+  "Return t if the interactive shell being used expects msdos shell semantics."
+  (or (w32-system-shell-p (w32-shell-name))
+      (and (member (downcase (file-name-nondirectory (w32-shell-name)))
+		   '("cmdproxy" "cmdproxy.exe"))
+	   (w32-system-shell-p (getenv "COMSPEC")))))
+
 (defvar w32-allow-system-shell nil
   "*Disable startup warning when using \"system\" shells.")
 
@@ -130,6 +137,26 @@ You should set this to t when using a non-system shell.\n\n"))))
 
 (add-hook 'after-init-hook 'w32-check-shell-configuration)
 
+;;; Override setting chosen at startup.
+(defun set-default-process-coding-system ()
+  ;; Most programs on Windows will accept Unix line endings on input
+  ;; (and some programs ported from Unix require it) but most will
+  ;; produce DOS line endings on output.
+  (setq default-process-coding-system
+	(if default-enable-multibyte-characters
+	    '(undecided-dos . undecided-unix)
+	  '(raw-text-dos . raw-text-unix)))
+  (or (w32-using-nt)
+      ;; On Windows 9x, make cmdproxy default to using DOS line endings
+      ;; for input, because command.com requires this.
+      (setq process-coding-system-alist
+	    `(("[cC][mM][dD][pP][rR][oO][xX][yY]"
+	       . ,(if default-enable-multibyte-characters
+		      '(undecided-dos . undecided-dos)
+		    '(raw-text-dos . raw-text-dos)))))))
+
+(add-hook 'before-init-hook 'set-default-process-coding-system)
+
 
 ;;; Basic support functions for managing Emacs' locale setting
 
@@ -186,6 +213,21 @@ You should set this to t when using a non-system shell.\n\n"))))
 
 (add-hook 'before-init-hook 'w32-init-info)
 
+;;; The variable source-directory is used to initialize Info-directory-list.
+;;; However, the common case is that Emacs is being used from a binary
+;;; distribution, and the value of source-directory is meaningless in that
+;;; case.  Even worse, source-directory can refer to a directory on a drive
+;;; on the build machine that happens to be a removable drive on the user's
+;;; machine.  When this happens, Emacs tries to access the removable drive
+;;; and produces the abort/retry/ignore dialog.  Since we do not use
+;;; source-directory, set it to something that is a reasonable approximation
+;;; on the user's machine.
+
+(add-hook 'before-init-hook 
+	  '(lambda ()
+	     (setq source-directory (file-name-as-directory 
+				     (expand-file-name ".." exec-directory)))))
+
 ;; Avoid creating auto-save file names containing invalid characters.
 (fset 'original-make-auto-save-file-name
       (symbol-function 'make-auto-save-file-name))
@@ -211,7 +253,13 @@ with a definition that really does change some file names."
     (while (string-match "[?*:<>|\"\000-\037]" name start)
       (aset name (match-beginning 0) ?!)
       (setq start (match-end 0)))
-    name))
+    ;; convert directory separators to Windows format
+    ;; (but only if the shell in use requires it)
+    (if (w32-shell-dos-semantics)
+	(while (string-match "/" name start)
+	  (aset name (match-beginning 0) ?\\)
+	  (setq start (match-end 0))))
+      name))
 
 ;;; Fix interface to (X-specific) mouse.el
 (defun x-set-selection (type data)
@@ -221,6 +269,22 @@ with a definition that really does change some file names."
 (defun x-get-selection (&optional type data-type)
   (or type (setq type 'PRIMARY))
   (get 'x-selections type))
+
+(defun set-w32-system-coding-system (coding-system)
+  "Set the coding system used by the Windows System to CODING-SYSTEM.
+This is used for things like passing font names with non-ASCII
+characters in them to the system. For a list of possible values of
+CODING-SYSTEM, use \\[list-coding-systems]."
+  (interactive
+   (list (let ((default w32-system-coding-system))
+           (read-coding-system
+            (format "Coding system for system calls (default, %s): "
+                    default)
+            default))))
+  (check-coding-system coding-system)
+  (setq w32-system-coding-system coding-system))
+;; Set system coding system initially to iso-latin-1
+(set-w32-system-coding-system 'iso-latin-1)
 
 ;;; Set to a system sound if you want a fancy bell.
 (set-message-beep nil)

@@ -231,15 +231,15 @@ not be enclosed in { } or ( )."
   :group 'makefile)
 
 ;; Note that the first big subexpression is used by font lock.  Note
-;; that if you change this regexp you must fix the imenu index
-;; function defined at the end of the file.
+;; that if you change this regexp you might have to fix the imenu
+;; index in makefile-imenu-generic-expression.
 (defconst makefile-dependency-regex
   "^ *\\([^ \n\t#:=]+\\([ \t]+\\([^ \t\n#:=]+\\|\\$[({][^ \t\n#})]+[})]\\)\\)*\\)[ \t]*:\\([ \t]*$\\|\\([^=\n].*$\\)\\)"
   "Regex used to find dependency lines in a makefile.")
 
-;; Note that the first subexpression is used by font lock.  Note that
-;; if you change this regexp you must fix the imenu index function
-;; defined at the end of the file.
+;; Note that the first subexpression is used by font lock.  Note 
+;; that if you change this regexp you might have to fix the imenu
+;; index in makefile-imenu-generic-expression.
 (defconst makefile-macroassign-regex
   "^ *\\([^ \n\t][^:#= \t\n]*\\)[ \t]*[*:+]?:?="
   "Regex used to find macro assignment lines in a makefile.")
@@ -279,6 +279,12 @@ not be enclosed in { } or ( )."
    ;; Highlight spaces that precede tabs.
    ;; They can make a tab fail to be effective.
    '("^\\( +\\)\t" 1 makefile-space-face)))
+
+(defvar makefile-imenu-generic-expression
+  (list
+   (list "Dependencies" makefile-dependency-regex  1)
+   (list "Macro Assignment" makefile-macroassign-regex 1))
+  "Imenu generic expression for makefile-mode.  See `imenu-generic-expression'.")
 
 ;;; ------------------------------------------------------------
 ;;; The following configurable variables are used in the
@@ -556,8 +562,8 @@ makefile-special-targets-list:
   (setq add-log-current-defun-function 'makefile-add-log-defun)
 
   ;; Imenu.
-  (make-local-variable 'imenu-create-index-function)
-  (setq imenu-create-index-function 'makefile-menu-index-function)
+  (make-local-variable 'imenu-generic-expression)
+  (setq imenu-generic-expression makefile-imenu-generic-expression)
 
   ;; Dabbrev.
   (make-local-variable 'dabbrev-abbrev-skip-leading-regexp)
@@ -1477,7 +1483,7 @@ Uses `makefile-use-curly-braces-for-macros-p'."
 
 
 
-;;; Support for other packages, like add-log and imenu.
+;;; Support for other packages, like add-log.
 
 (defun makefile-add-log-defun ()
   "Return name of target or variable assignment that point is in.
@@ -1504,26 +1510,5 @@ If it isn't in one, return nil."
 	(or found
 	    (forward-line -1)))
       (if (stringp found) found))))
-
-;; FIXME it might be nice to have them separated by macro vs target.
-(defun makefile-menu-index-function ()
-  ;; "Generate alist of indices for imenu."
-  (let (alist
-	stupid
-	(re (concat makefile-dependency-regex
-		    "\\|"
-		    makefile-macroassign-regex)))
-    (imenu-progress-message stupid 0)
-    (goto-char (point-min))
-    (while (re-search-forward re nil t)
-      (imenu-progress-message stupid)
-      (let ((n (if (match-beginning 1) 1 5)))
-	(setq alist (cons
-		     (cons (buffer-substring (match-beginning n)
-					     (match-end n))
-			   (match-beginning n))
-		     alist))))
-    (imenu-progress-message stupid 100)
-    (nreverse alist)))
 
 ;;; make-mode.el ends here

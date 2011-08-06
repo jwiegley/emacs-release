@@ -1,3 +1,133 @@
+1999-07-12  Richard Stallman  <rms@gnu.org>
+
+	* Version 20.4 released.
+
+1999-06-16  Andrew Innes  <andrewi@gnu.org>
+
+	* emacs.rc: Use an icon with a transparent background, to be in
+	keeping with other applications.
+
+1999-06-03  Andrew Innes  <andrewi@gnu.org>
+
+	* preprep.c: Fix typo.
+
+1999-05-02  Andrew Innes  <andrewi@gnu.org>
+
+	* config.h: Remove obsolete file.
+
+	* preprep.c (copy_executable_and_move_sections): Ifdef out a
+	couple of unused switch cases that aren't defined on all
+	platforms.
+
+	* ftime.bat: Add another variation of the profile command, which
+	only profiles extended commands.
+
+1999-03-31  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* cmdproxy.c (main): Fix parens.
+
+1999-03-25  Andrew Innes  <andrewi@gnu.org>
+
+	* cmdproxy.c (main): Call GetShortPathName to normalize program
+	names for comparison.
+
+1999-03-05  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.def: Compile multiple .c files when possible.
+	Use BLD instead of assuming i386.
+	* makefile.nt: Remove common multiple file compilation commands.
+
+1999-03-04  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* cmdproxy.c (main): Add missing parens.
+
+1999-02-20  Andrew Innes  <andrewi@gnu.org>
+
+	* preprep.c: New program to allow dumped image to be profiled.
+
+	* makefile.nt (preprep): New target.
+	(ALL): Build it.
+
+	* makefile.def (ARCH_CFLAGS): Set struct packing to 8.
+
+	* ftime.bat: Invoke preprep to prepare dumped image for profiling.
+	Change prep options to profile libc functions and skip the startup
+	code.
+
+1999-02-15  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt: Create installation directory as first step.
+
+1999-01-31  Andrew Innes  <andrewi@gnu.org>
+
+	* addsection.c: (ROUND_UP_DST_AND_ZERO): Renamed from
+	ROUND_UP_DST.  Zeroes the alignment slop.
+	(copy_executable_and_add_section): Update the
+	SizeOfHeaders field properly.
+
+1999-01-27  Andrew Innes  <andrewi@gnu.org>
+
+	* makefile.nt: Do make version comparison as strings.
+
+1999-01-26  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* runemacs.c (WinMain): Pass explicit environment block to
+	CreateProcess, to work around a bug in Windows 95/98.
+
+1999-01-22  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* icons: New directory with Davenport's icons.
+	icons/sink.ico: Renamed from emacs.ico.
+
+	* makefile.nt (install, fast_install): Install Windows icons
+	into etc/icons.
+
+	* emacs.rc (ICON): Use icons/gnu2a32.ico as the default icon.
+
+1999-01-17  Andrew Innes  <andrewi@gnu.org>
+
+	* makefile.nt: (ALL): List top-level targets.
+	(addsection): New top-level target.
+	(install): Copy fns-*.el to bin directory.
+
+	* addsection.c: New program to add static heap section to
+	temacs.exe after linking, in support of new unexec method.
+
+1998-12-28  Andrew Innes  <andrewi@delysid.gnu.org>
+
+	* cmdproxy.c (spawn): Pass directory for child as parameter.
+	(main): Save startup directory to give to spawn, then change
+	directory to location of .exe in order not to prevent startup
+	directory from being deleted.
+
+1998-12-08  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt: Do string comparision of _NMAKE_VER.
+
+1998-12-02  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* config.nt (LOCALTIME_CACHE): Define.
+
+1998-11-13  Andrew Innes  <andrewi@delysid.gnu.org>
+
+	* install.bat: Convert to DOS format.
+
+1998-11-10  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* cmdproxy.c (main): Set environment size only when running
+	command.com.
+
+1998-11-03  Theodore Jump <tjump@tertius.com>
+
+	* makefile.def (SYS_LDFLAGS): Use swapfile when running from cd or net.
+	(DEL_TREE): Use rd instead of rmdir.
+	(ARCH_CFLAGS): Optimize for P6.  Align structures on 8-byte boundaries.
+	* makefile.nt: Compile multiple source files when possible.
+	
+1998-10-05  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* cmdproxy.c (main): Treat command line options as case-insensitive.
+
 1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
 	* Version 20.3 released.

@@ -185,7 +185,7 @@ end in @samp{~}.
 @kindex . @r{(Dired)}
 @vindex dired-kept-versions
 @findex dired-clean-directory
-  @kbd{.} (period, @code{dired-clean-directory})) flags just some of the
+  @kbd{.} (period, @code{dired-clean-directory}) flags just some of the
 backup files for deletion: all but the oldest few and newest few backups
 of any one file.  Normally @code{dired-kept-versions} (@strong{not}
 @code{kept-new-versions}; that applies only when saving) specifies the
@@ -371,13 +371,15 @@ command, to distinguish various classes of files.  If @var{old} is a
 space (@samp{ }), then the command operates on all unmarked files; if
 @var{new} is a space, then the command unmarks the files it acts on.
 
-To illustrate the power of this command, here is how to put @samp{*}
-marks on all the files that are unmarked, while unmarking all those that
-have @samp{*} marks:
+To illustrate the power of this command, here is how to put @samp{D}
+flags on all the files that have no marks, while unflagging all those
+that already have @samp{D} flags:
 
 @example
-* c * t  * c SPC *  * c t SPC
+* c D t  * c SPC D  * c t SPC
 @end example
+
+This assumes that no files are marked with @samp{t}.
 
 @item % m @var{regexp} @key{RET}
 @itemx * % @var{regexp} @key{RET}
@@ -882,9 +884,9 @@ contents of the corresponding subdirectory.
 @kindex k @r{(Dired)}
 @findex dired-do-kill-lines
   To delete the specified @emph{file lines}---not the files, just the
-lines---type @kbd{k} (@code{dired-do-kill-lines}).  This command applies
-to the next @var{n} files, or to the marked files if any, or to the
-current file.
+lines---type @kbd{k} (@code{dired-do-kill-lines}).  With a numeric
+argument @var{n}, this command applies to the next @var{n} files;
+otherwise, it applies to the marked files.
 
   If you kill the line for a file that is a directory, the directory's
 contents are also deleted from the buffer.  Typing @kbd{C-u k} on the

@@ -1,4 +1,4 @@
-;;; chinese.el --- Support for Chinese
+;;; chinese.el --- Support for Chinese -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1995 Electrotechnical Laboratory, JAPAN.
 ;; Licensed to the Free Software Foundation.
@@ -100,10 +100,8 @@
       (set-buffer-modified-p buffer-modified-p))))
 
 (defun pre-write-encode-hz (from to)
-  (let ((buf (current-buffer))
-	(work (get-buffer-create " *pre-write-encoding-work*")))
-    (set-buffer work)
-    (erase-buffer)
+  (let ((buf (current-buffer)))
+    (set-buffer (generate-new-buffer " *temp*"))
     (if (stringp from)
 	(insert from)
       (insert-buffer-substring buf from to))
@@ -129,7 +127,9 @@
  'chinese-big5 3 ?B "BIG5 8-bit encoding for Chinese (MIME:CN-BIG5)"
  nil
  '((safe-charsets ascii chinese-big5-1 chinese-big5-2)
-   (mime-charset . cn-big5)))
+   (mime-charset . cn-big5)
+   (charset-origin-alist (chinese-big5-1  "BIG5" encode-big5-char)
+			 (chinese-big5-2  "BIG5" encode-big5-char))))
 
 (define-coding-system-alias 'big5 'chinese-big5)
 (define-coding-system-alias 'cn-big5 'chinese-big5)

@@ -28,6 +28,8 @@ Boston, MA 02111-1307, USA.  */
 #include <errno.h>
 
 #include "lisp.h"
+#include "charset.h"
+#include "fontset.h"
 #include "w32term.h"
 #include "frame.h"
 #include "window.h"
@@ -35,9 +37,10 @@ Boston, MA 02111-1307, USA.  */
 #include "dispextern.h"
 #include "keyboard.h"
 #include "blockinput.h"
-#include "paths.h"
+#include "epaths.h"
 #include "w32heap.h"
 #include "termhooks.h"
+#include "coding.h"
 
 #include <commdlg.h>
 #include <shellapi.h>
@@ -45,7 +48,10 @@ Boston, MA 02111-1307, USA.  */
 extern void abort ();
 extern void free_frame_menubar ();
 extern struct scroll_bar *x_window_to_scroll_bar ();
+extern int w32_console_toggle_lock_key (int vk_code, Lisp_Object new_state);
 extern int quit_char;
+
+extern char *lispy_function_keys[];
 
 /* The colormap for converting color names to RGB values */
 Lisp_Object Vw32_color_map;
@@ -57,9 +63,41 @@ Lisp_Object Vw32_pass_alt_to_system;
    to alt_modifier.  */
 Lisp_Object Vw32_alt_is_meta;
 
-/* Non nil if left window, right window, and application key events
-   are passed on to Windows.  */
-Lisp_Object Vw32_pass_optional_keys_to_system;
+/* If non-zero, the windows virtual key code for an alternative quit key. */
+Lisp_Object Vw32_quit_key;
+
+/* Non nil if left window key events are passed on to Windows (this only
+   affects whether "tapping" the key opens the Start menu).  */
+Lisp_Object Vw32_pass_lwindow_to_system;
+
+/* Non nil if right window key events are passed on to Windows (this
+   only affects whether "tapping" the key opens the Start menu).  */
+Lisp_Object Vw32_pass_rwindow_to_system;
+
+/* Virtual key code used to generate "phantom" key presses in order
+   to stop system from acting on Windows key events.  */
+Lisp_Object Vw32_phantom_key_code;
+
+/* Modifier associated with the left "Windows" key, or nil to act as a
+   normal key.  */
+Lisp_Object Vw32_lwindow_modifier;
+
+/* Modifier associated with the right "Windows" key, or nil to act as a
+   normal key.  */
+Lisp_Object Vw32_rwindow_modifier;
+
+/* Modifier associated with the "Apps" key, or nil to act as a normal
+   key.  */
+Lisp_Object Vw32_apps_modifier;
+
+/* Value is nil if Num Lock acts as a function key.  */
+Lisp_Object Vw32_enable_num_lock;
+
+/* Value is nil if Caps Lock acts as a function key.  */
+Lisp_Object Vw32_enable_caps_lock;
+
+/* Modifier associated with Scroll Lock, or nil to act as a normal key.  */
+Lisp_Object Vw32_scroll_lock_modifier;
 
 /* Switch to control whether we inhibit requests for italicised fonts (which
    are synthesized, look ugly, and are trashed by cursor movement under NT). */
@@ -96,6 +134,21 @@ static int w32_in_use;
 
 /* Search path for bitmap files.  */
 Lisp_Object Vx_bitmap_file_path;
+
+/* Regexp matching a font name whose width is the same as `PIXEL_SIZE'.  */
+Lisp_Object Vx_pixel_size_width_font_regexp;
+
+/* Alist of bdf fonts and the files that define them.  */
+Lisp_Object Vw32_bdf_filename_alist;
+
+Lisp_Object Vw32_system_coding_system;
+
+/* A flag to control whether fonts are matched strictly or not.  */
+int w32_strict_fontnames;
+
+/* A flag to control whether we should only repaint if GetUpdateRect
+   indicates there is an update region.  */
+int w32_strict_painting;
 
 /* Evaluate this expression to rebuild the section of syms_of_w32fns
    that initializes and staticpros the symbols declared below.  Note
@@ -166,6 +219,14 @@ Lisp_Object Quser_position;
 Lisp_Object Quser_size;
 Lisp_Object Qdisplay;
 
+Lisp_Object Qhyper;
+Lisp_Object Qsuper;
+Lisp_Object Qmeta;
+Lisp_Object Qalt;
+Lisp_Object Qctrl;
+Lisp_Object Qcontrol;
+Lisp_Object Qshift;
+
 /* State variables for emulating a three button mouse. */
 #define LMOUSE 1
 #define MMOUSE 2
@@ -196,6 +257,7 @@ extern int last_mouse_scroll_bar_pos;
 
 /* From w32term.c. */
 extern Lisp_Object Vw32_num_mouse_buttons;
+extern Lisp_Object Vw32_recognize_altgr;
 
 
 /* Error if we are not connected to MS-Windows.  */
@@ -442,6 +504,9 @@ x_create_bitmap_from_file (f, file)
   fd = openp (Vx_bitmap_file_path, file, "", &found, 0);
   if (fd < 0)
     return -1;
+  /* LoadLibraryEx won't handle special files handled by Emacs handler.  */
+  if (fd == 0)
+    return -1;
   close (fd);
 
   filename = (char *) XSTRING (found)->data;
@@ -472,7 +537,7 @@ x_create_bitmap_from_file (f, file)
 
 /* Remove reference to bitmap with id number ID.  */
 
-int
+void
 x_destroy_bitmap (f, id)
      FRAME_PTR f;
      int id;
@@ -632,6 +697,8 @@ x_set_frame_parameters (f, alist)
   int left_no_change = 0, top_no_change = 0;
   int icon_left_no_change = 0, icon_top_no_change = 0;
 
+  struct gcpro gcpro1, gcpro2;
+
   i = 0;
   for (tail = alist; CONSP (tail); tail = Fcdr (tail))
     i++;
@@ -652,6 +719,15 @@ x_set_frame_parameters (f, alist)
       i++;
     }
 
+  /* TAIL and ALIST are not used again below here.  */
+  alist = tail = Qnil;
+
+  GCPRO2 (*parms, *values);
+  gcpro1.nvars = i;
+  gcpro2.nvars = i;
+
+  /* There is no need to gcpro LEFT, TOP, ICON_LEFT, or ICON_TOP,
+     because their values appear in VALUES and strings are not valid.  */
   top = left = Qunbound;
   icon_left = icon_top = Qunbound;
 
@@ -815,6 +891,8 @@ x_set_frame_parameters (f, alist)
 	&& ! (icon_left_no_change && icon_top_no_change))
       x_wm_set_icon_position (f, XINT (icon_left), XINT (icon_top));
   }
+
+  UNGCPRO;
 }
 
 /* Store the screen positions of frame F into XPTR and YPTR.
@@ -1266,6 +1344,38 @@ w32_to_x_color (rgb)
     return Qnil;
 }
 
+COLORREF
+w32_color_map_lookup (colorname)
+     char *colorname;
+{
+  Lisp_Object tail, ret = Qnil;
+
+  BLOCK_INPUT;
+
+  for (tail = Vw32_color_map; !NILP (tail); tail = Fcdr (tail))
+    {
+      register Lisp_Object elt, tem;
+
+      elt = Fcar (tail);
+      if (!CONSP (elt)) continue;
+
+      tem = Fcar (elt);
+
+      if (lstrcmpi (XSTRING (tem)->data, colorname) == 0)
+	{
+	  ret = XUINT (Fcdr (elt));
+	  break;
+	}
+
+      QUIT;
+    }
+
+
+  UNBLOCK_INPUT;
+
+  return ret;
+}
+
 COLORREF 
 x_to_w32_color (colorname)
      char * colorname;
@@ -1430,27 +1540,30 @@ x_to_w32_color (colorname)
   /* I am not going to attempt to handle any of the CIE color schemes
      or TekHVC, since I don't know the algorithms for conversion to
      RGB.  */
-  
-  for (tail = Vw32_color_map; !NILP (tail); tail = Fcdr (tail))
+
+  /* If we fail to lookup the color name in w32_color_map, then check the
+     colorname to see if it can be crudely approximated: If the X color 
+     ends in a number (e.g., "darkseagreen2"), strip the number and
+     return the result of looking up the base color name.  */
+  ret = w32_color_map_lookup (colorname);
+  if (NILP (ret)) 
     {
-      register Lisp_Object elt, tem;
+      int len = strlen (colorname);
 
-      elt = Fcar (tail);
-      if (!CONSP (elt)) continue;
-
-      tem = Fcar (elt);
-
-      if (lstrcmpi (XSTRING (tem)->data, colorname) == 0)
+      if (isdigit (colorname[len - 1])) 
 	{
-	  ret = XUINT(Fcdr (elt));
-	  break;
-	}
+	  char *ptr, *approx = alloca (len);
 
-      QUIT;
+	  strcpy (approx, colorname);
+	  ptr = &approx[len - 1];
+	  while (ptr > approx && isdigit (*ptr)) 
+	      *ptr-- = '\0';
+
+	  ret = w32_color_map_lookup (approx);
+	}
     }
   
   UNBLOCK_INPUT;
-  
   return ret;
 }
 
@@ -1860,6 +1973,23 @@ x_set_cursor_color (f, arg, oldval)
     }
 }
 
+/* Set the border-color of frame F to pixel value PIX.
+   Note that this does not fully take effect if done before
+   F has an window.  */
+void
+x_set_border_pixel (f, pix)
+     struct frame *f;
+     int pix;
+{
+  f->output_data.w32->border_pixel = pix;
+
+  if (FRAME_W32_WINDOW (f) != 0 && f->output_data.w32->border_width > 0)
+    {
+      if (FRAME_VISIBLE_P (f))
+        redraw_frame (f);
+    }
+}
+
 /* Set the border-color of frame F to value described by ARG.
    ARG can be a string naming a color.
    The border-color is used for the border that is drawn by the server.
@@ -1880,23 +2010,6 @@ x_set_border_color (f, arg, oldval)
   pix = x_decode_color (f, arg, BLACK_PIX_DEFAULT (f));
 
   x_set_border_pixel (f, pix);
-}
-
-/* Set the border-color of frame F to pixel value PIX.
-   Note that this does not fully take effect if done before
-   F has an window.  */
-
-x_set_border_pixel (f, pix)
-     struct frame *f;
-     int pix;
-{
-  f->output_data.w32->border_pixel = pix;
-
-  if (FRAME_W32_WINDOW (f) != 0 && f->output_data.w32->border_width > 0)
-    {
-      if (FRAME_VISIBLE_P (f))
-        redraw_frame (f);
-    }
 }
 
 void
@@ -2041,6 +2154,7 @@ x_set_icon_name (f, arg, oldval)
 }
 
 extern Lisp_Object x_new_font ();
+extern Lisp_Object x_new_fontset();
 
 void
 x_set_font (f, arg, oldval)
@@ -2048,12 +2162,17 @@ x_set_font (f, arg, oldval)
      Lisp_Object arg, oldval;
 {
   Lisp_Object result;
+  Lisp_Object fontset_name;
   Lisp_Object frame;
 
   CHECK_STRING (arg, 1);
 
+  fontset_name = Fquery_fontset (arg, Qnil);
+
   BLOCK_INPUT;
-  result = x_new_font (f, XSTRING (arg)->data);
+  result = (STRINGP (fontset_name)
+            ? x_new_fontset (f, XSTRING (fontset_name)->data)
+            : x_new_font (f, XSTRING (arg)->data));
   UNBLOCK_INPUT;
   
   if (EQ (result, Qnil))
@@ -2834,7 +2953,7 @@ w32_init_class (hinst)
   wc.hInstance = hinst;
   wc.hIcon = LoadIcon (hinst, EMACS_CLASS);
   wc.hCursor = LoadCursor (NULL, IDC_ARROW);
-  wc.hbrBackground = NULL; // GetStockObject (WHITE_BRUSH);
+  wc.hbrBackground = NULL; /* GetStockObject (WHITE_BRUSH);  */
   wc.lpszMenuName = NULL;
   wc.lpszClassName = EMACS_CLASS;
 
@@ -2904,17 +3023,6 @@ w32_createwindow (f)
       /* Do this to discard the default setting specified by our parent. */
       ShowWindow (hwnd, SW_HIDE);
     }
-}
-
-/* Convert between the modifier bits W32 uses and the modifier bits
-   Emacs uses.  */
-unsigned int
-w32_get_modifiers ()
-{
-  return (((GetKeyState (VK_SHIFT)&0x8000)   ? shift_modifier  : 0) |
-	  ((GetKeyState (VK_CONTROL)&0x8000) ? ctrl_modifier   : 0) |
-          ((GetKeyState (VK_MENU)&0x8000)    ? 
-	   ((NILP (Vw32_alt_is_meta)) ? alt_modifier : meta_modifier) : 0));
 }
 
 void 
@@ -3021,15 +3129,12 @@ reset_modifiers ()
 {
   SHORT ctrl, alt;
 
-  if (!modifiers_recorded)
+  if (GetFocus () == NULL)
+    /* Emacs doesn't have keyboard focus.  Do nothing.  */
     return;
 
   ctrl = GetAsyncKeyState (VK_CONTROL);
   alt = GetAsyncKeyState (VK_MENU);
-
-  if (ctrl == 0 || alt == 0)
-    /* Emacs doesn't have keyboard focus.  Do nothing.  */
-    return;
 
   if (!(ctrl & 0x08000))
     /* Clear any recorded control modifier state.  */
@@ -3039,8 +3144,27 @@ reset_modifiers ()
     /* Clear any recorded alt modifier state.  */
     modifiers[EMACS_RMENU] = modifiers[EMACS_LMENU] = 0;
 
-  /* Otherwise, leave the modifier state as it was when Emacs lost
-     keyboard focus.  */
+  /* Update the state of all modifier keys, because modifiers used in
+     hot-key combinations can get stuck on if Emacs loses focus as a
+     result of a hot-key being pressed.  */
+  {
+    BYTE keystate[256];
+
+#define CURRENT_STATE(key) ((GetAsyncKeyState (key) & 0x8000) >> 8)
+
+    GetKeyboardState (keystate);
+    keystate[VK_SHIFT] = CURRENT_STATE (VK_SHIFT);
+    keystate[VK_CONTROL] = CURRENT_STATE (VK_CONTROL);
+    keystate[VK_LCONTROL] = CURRENT_STATE (VK_LCONTROL);
+    keystate[VK_RCONTROL] = CURRENT_STATE (VK_RCONTROL);
+    keystate[VK_MENU] = CURRENT_STATE (VK_MENU);
+    keystate[VK_LMENU] = CURRENT_STATE (VK_LMENU);
+    keystate[VK_RMENU] = CURRENT_STATE (VK_RMENU);
+    keystate[VK_LWIN] = CURRENT_STATE (VK_LWIN);
+    keystate[VK_RWIN] = CURRENT_STATE (VK_RWIN);
+    keystate[VK_APPS] = CURRENT_STATE (VK_APPS);
+    SetKeyboardState (keystate);
+  }
 }
 
 /* Synchronize modifier state with what is reported with the current
@@ -3063,7 +3187,7 @@ sync_modifiers ()
 static int
 modifier_set (int vkey)
 {
-  if (vkey == VK_CAPITAL)
+  if (vkey == VK_CAPITAL || vkey == VK_SCROLL)
     return (GetKeyState (vkey) & 0x1);
   if (!modifiers_recorded)
     return (GetKeyState (vkey) & 0x8000);
@@ -3078,10 +3202,72 @@ modifier_set (int vkey)
       return modifiers[EMACS_LMENU];
     case VK_RMENU:
       return modifiers[EMACS_RMENU];
-    default:
-      break;
     }
   return (GetKeyState (vkey) & 0x8000);
+}
+
+/* Convert between the modifier bits W32 uses and the modifier bits
+   Emacs uses.  */
+
+unsigned int
+w32_key_to_modifier (int key)
+{
+  Lisp_Object key_mapping;
+
+  switch (key)
+    {
+    case VK_LWIN:
+      key_mapping = Vw32_lwindow_modifier;
+      break;
+    case VK_RWIN:
+      key_mapping = Vw32_rwindow_modifier;
+      break;
+    case VK_APPS:
+      key_mapping = Vw32_apps_modifier;
+      break;
+    case VK_SCROLL:
+      key_mapping = Vw32_scroll_lock_modifier;
+      break;
+    default:
+      key_mapping = Qnil;
+    }
+
+  /* NB. This code runs in the input thread, asychronously to the lisp
+     thread, so we must be careful to ensure access to lisp data is
+     thread-safe.  The following code is safe because the modifier
+     variable values are updated atomically from lisp and symbols are
+     not relocated by GC.  Also, we don't have to worry about seeing GC
+     markbits here.  */
+  if (EQ (key_mapping, Qhyper))
+    return hyper_modifier;
+  if (EQ (key_mapping, Qsuper))
+    return super_modifier;
+  if (EQ (key_mapping, Qmeta))
+    return meta_modifier;
+  if (EQ (key_mapping, Qalt))
+    return alt_modifier;
+  if (EQ (key_mapping, Qctrl))
+    return ctrl_modifier;
+  if (EQ (key_mapping, Qcontrol)) /* synonym for ctrl */
+    return ctrl_modifier;
+  if (EQ (key_mapping, Qshift))
+    return shift_modifier;
+
+  /* Don't generate any modifier if not explicitly requested.  */
+  return 0;
+}
+
+unsigned int
+w32_get_modifiers ()
+{
+  return ((modifier_set (VK_SHIFT)   ? shift_modifier : 0) |
+	  (modifier_set (VK_CONTROL) ? ctrl_modifier  : 0) |
+	  (modifier_set (VK_LWIN)    ? w32_key_to_modifier (VK_LWIN) : 0) |
+	  (modifier_set (VK_RWIN)    ? w32_key_to_modifier (VK_RWIN) : 0) |
+	  (modifier_set (VK_APPS)    ? w32_key_to_modifier (VK_APPS) : 0) |
+	  (modifier_set (VK_SCROLL)  ? w32_key_to_modifier (VK_SCROLL) : 0) |
+          (modifier_set (VK_MENU)    ?
+	   ((NILP (Vw32_alt_is_meta)) ? alt_modifier : meta_modifier) : 0));
 }
 
 /* We map the VK_* modifiers into console modifier constants
@@ -3089,45 +3275,109 @@ modifier_set (int vkey)
    and window input.  */
 
 static int
-construct_modifiers (unsigned int wparam, unsigned int lparam)
+construct_console_modifiers ()
 {
   int mods;
-
-  if (wparam != VK_CONTROL && wparam != VK_MENU)
-    mods = GetLastError ();
 
   mods = 0;
   mods |= (modifier_set (VK_SHIFT)) ? SHIFT_PRESSED : 0;
   mods |= (modifier_set (VK_CAPITAL)) ? CAPSLOCK_ON : 0;
+  mods |= (modifier_set (VK_SCROLL)) ? SCROLLLOCK_ON : 0;
+  mods |= (modifier_set (VK_NUMLOCK)) ? NUMLOCK_ON : 0;
   mods |= (modifier_set (VK_LCONTROL)) ? LEFT_CTRL_PRESSED : 0;
   mods |= (modifier_set (VK_RCONTROL)) ? RIGHT_CTRL_PRESSED : 0;
   mods |= (modifier_set (VK_LMENU)) ? LEFT_ALT_PRESSED : 0;
   mods |= (modifier_set (VK_RMENU)) ? RIGHT_ALT_PRESSED : 0;
+  mods |= (modifier_set (VK_LWIN)) ? LEFT_WIN_PRESSED : 0;
+  mods |= (modifier_set (VK_RWIN)) ? RIGHT_WIN_PRESSED : 0;
+  mods |= (modifier_set (VK_APPS)) ? APPS_PRESSED : 0;
 
   return mods;
 }
 
-static unsigned int
-map_keypad_keys (unsigned int wparam, unsigned int lparam)
+static int
+w32_get_key_modifiers (unsigned int wparam, unsigned int lparam)
 {
-  unsigned int extended = (lparam & 0x1000000L);
+  int mods;
 
-  if (wparam < VK_CLEAR || wparam > VK_DELETE)
-    return wparam;
+  /* Convert to emacs modifiers.  */
+  mods = w32_kbd_mods_to_emacs (construct_console_modifiers (), wparam);
 
-  if (wparam == VK_RETURN)
+  return mods;
+}
+
+unsigned int
+map_keypad_keys (unsigned int virt_key, unsigned int extended)
+{
+  if (virt_key < VK_CLEAR || virt_key > VK_DELETE)
+    return virt_key;
+
+  if (virt_key == VK_RETURN)
     return (extended ? VK_NUMPAD_ENTER : VK_RETURN);
 
-  if (wparam >= VK_PRIOR && wparam <= VK_DOWN)
-    return (!extended ? (VK_NUMPAD_PRIOR + (wparam - VK_PRIOR)) : wparam);
+  if (virt_key >= VK_PRIOR && virt_key <= VK_DOWN)
+    return (!extended ? (VK_NUMPAD_PRIOR + (virt_key - VK_PRIOR)) : virt_key);
 
-  if (wparam == VK_INSERT || wparam == VK_DELETE)
-    return (!extended ? (VK_NUMPAD_INSERT + (wparam - VK_INSERT)) : wparam);
+  if (virt_key == VK_INSERT || virt_key == VK_DELETE)
+    return (!extended ? (VK_NUMPAD_INSERT + (virt_key - VK_INSERT)) : virt_key);
 
-  if (wparam == VK_CLEAR)
-    return (!extended ? VK_NUMPAD_CLEAR : wparam);
+  if (virt_key == VK_CLEAR)
+    return (!extended ? VK_NUMPAD_CLEAR : virt_key);
 
-  return wparam;
+  return virt_key;
+}
+
+/* List of special key combinations which w32 would normally capture,
+   but emacs should grab instead.  Not directly visible to lisp, to
+   simplify synchronization.  Each item is an integer encoding a virtual
+   key code and modifier combination to capture.  */
+Lisp_Object w32_grabbed_keys;
+
+#define HOTKEY(vk,mods)       make_number (((vk) & 255) | ((mods) << 8))
+#define HOTKEY_ID(k)          (XFASTINT (k) & 0xbfff)
+#define HOTKEY_VK_CODE(k)     (XFASTINT (k) & 255)
+#define HOTKEY_MODIFIERS(k)   (XFASTINT (k) >> 8)
+
+/* Register hot-keys for reserved key combinations when Emacs has
+   keyboard focus, since this is the only way Emacs can receive key
+   combinations like Alt-Tab which are used by the system.  */
+
+static void
+register_hot_keys (hwnd)
+     HWND hwnd;
+{
+  Lisp_Object keylist;
+
+  /* Use GC_CONSP, since we are called asynchronously.  */
+  for (keylist = w32_grabbed_keys; GC_CONSP (keylist); keylist = XCDR (keylist))
+    {
+      Lisp_Object key = XCAR (keylist);
+
+      /* Deleted entries get set to nil.  */
+      if (!INTEGERP (key))
+	continue;
+
+      RegisterHotKey (hwnd, HOTKEY_ID (key),
+		      HOTKEY_MODIFIERS (key), HOTKEY_VK_CODE (key));
+    }
+}
+
+static void
+unregister_hot_keys (hwnd)
+     HWND hwnd;
+{
+  Lisp_Object keylist;
+
+  /* Use GC_CONSP, since we are called asynchronously.  */
+  for (keylist = w32_grabbed_keys; GC_CONSP (keylist); keylist = XCDR (keylist))
+    {
+      Lisp_Object key = XCAR (keylist);
+
+      if (!INTEGERP (key))
+	continue;
+
+      UnregisterHotKey (hwnd, HOTKEY_ID (key));
+    }
 }
 
 /* Main message dispatch loop. */
@@ -3136,6 +3386,8 @@ static void
 w32_msg_pump (deferred_msg * msg_buf)
 {
   MSG msg;
+  int result;
+  HWND focus_window;
 
   msh_mousewheel = RegisterWindowMessage (MSH_MOUSEWHEEL);
   
@@ -3145,6 +3397,9 @@ w32_msg_pump (deferred_msg * msg_buf)
 	{
 	  switch (msg.message)
 	    {
+	    case WM_NULL:
+	      /* Produced by complete_deferred_msg; just ignore.  */
+	      break;
 	    case WM_EMACS_CREATEWINDOW:
 	      w32_createwindow ((struct frame *) msg.wParam);
 	      if (!PostThreadMessage (dwMainThreadId, WM_EMACS_DONE, 0, 0))
@@ -3154,9 +3409,67 @@ w32_msg_pump (deferred_msg * msg_buf)
 	      SetThreadLocale (msg.wParam);
 	      /* Reply is not expected.  */
 	      break;
+	    case WM_EMACS_SETKEYBOARDLAYOUT:
+	      result = (int) ActivateKeyboardLayout ((HKL) msg.wParam, 0);
+	      if (!PostThreadMessage (dwMainThreadId, WM_EMACS_DONE,
+				      result, 0))
+		abort ();
+	      break;
+	    case WM_EMACS_REGISTER_HOT_KEY:
+	      focus_window = GetFocus ();
+	      if (focus_window != NULL)
+		RegisterHotKey (focus_window,
+				HOTKEY_ID (msg.wParam),
+				HOTKEY_MODIFIERS (msg.wParam),
+				HOTKEY_VK_CODE (msg.wParam));
+	      /* Reply is not expected.  */
+	      break;
+	    case WM_EMACS_UNREGISTER_HOT_KEY:
+	      focus_window = GetFocus ();
+	      if (focus_window != NULL)
+		UnregisterHotKey (focus_window, HOTKEY_ID (msg.wParam));
+	      /* Mark item as erased.  NB: this code must be
+                 thread-safe.  The next line is okay because the cons
+                 cell is never made into garbage and is not relocated by
+                 GC.  */
+	      XCAR ((Lisp_Object) msg.lParam) = Qnil;
+	      if (!PostThreadMessage (dwMainThreadId, WM_EMACS_DONE, 0, 0))
+		abort ();
+	      break;
+	    case WM_EMACS_TOGGLE_LOCK_KEY:
+	      {
+		int vk_code = (int) msg.wParam;
+		int cur_state = (GetKeyState (vk_code) & 1);
+		Lisp_Object new_state = (Lisp_Object) msg.lParam;
+
+		/* NB: This code must be thread-safe.  It is safe to
+                   call NILP because symbols are not relocated by GC,
+                   and pointer here is not touched by GC (so the markbit
+                   can't be set).  Numbers are safe because they are
+                   immediate values.  */
+		if (NILP (new_state)
+		    || (NUMBERP (new_state)
+			&& (XUINT (new_state)) & 1 != cur_state))
+		  {
+		    one_w32_display_info.faked_key = vk_code;
+
+		    keybd_event ((BYTE) vk_code,
+				 (BYTE) MapVirtualKey (vk_code, 0),
+				 KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+		    keybd_event ((BYTE) vk_code,
+				 (BYTE) MapVirtualKey (vk_code, 0),
+				 KEYEVENTF_EXTENDEDKEY | 0, 0);
+		    keybd_event ((BYTE) vk_code,
+				 (BYTE) MapVirtualKey (vk_code, 0),
+				 KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+		    cur_state = !cur_state;
+		  }
+		if (!PostThreadMessage (dwMainThreadId, WM_EMACS_DONE,
+					cur_state, 0))
+		  abort ();
+	      }
+	      break;
 	    default:
-	      /* No need to be so draconian!  */
-	      /* abort (); */
 	      DebPrint (("msg %x not expected by w32_msg_pump\n", msg.message));
 	    }
 	}
@@ -3236,7 +3549,8 @@ complete_deferred_msg (HWND hwnd, UINT msg, LRESULT result)
   deferred_msg * msg_buf = find_deferred_msg (hwnd, msg);
 
   if (msg_buf == NULL)
-    abort ();
+    /* Message may have been cancelled, so don't abort().  */
+    return;
 
   msg_buf->result = result;
   msg_buf->completed = 1;
@@ -3245,6 +3559,26 @@ complete_deferred_msg (HWND hwnd, UINT msg, LRESULT result)
   PostThreadMessage (dwWindowsThreadId, WM_NULL, 0, 0);
 }
 
+void
+cancel_all_deferred_msgs ()
+{
+  deferred_msg * item;
+
+  /* Don't actually need synchronization for read access, since
+     modification of single pointer is always atomic.  */
+  /* enter_crit (); */
+
+  for (item = deferred_msg_head; item != NULL; item = item->next)
+    {
+      item->result = 0;
+      item->completed = 1;
+    }
+
+  /* leave_crit (); */
+
+  /* Ensure input thread is woken so it notices the completion.  */
+  PostThreadMessage (dwWindowsThreadId, WM_NULL, 0, 0);
+}
 
 DWORD 
 w32_msg_worker (dw)
@@ -3271,9 +3605,69 @@ w32_msg_worker (dw)
   return 0;
 }
 
-/* Main window procedure */
+static void
+post_character_message (hwnd, msg, wParam, lParam, modifiers)
+     HWND hwnd;
+     UINT msg;
+     WPARAM wParam;
+     LPARAM lParam;
+     DWORD  modifiers;
 
-extern char *lispy_function_keys[];
+{
+  W32Msg wmsg;
+
+  wmsg.dwModifiers = modifiers;
+
+  /* Detect quit_char and set quit-flag directly.  Note that we
+     still need to post a message to ensure the main thread will be
+     woken up if blocked in sys_select(), but we do NOT want to post
+     the quit_char message itself (because it will usually be as if
+     the user had typed quit_char twice).  Instead, we post a dummy
+     message that has no particular effect. */
+  {
+    int c = wParam;
+    if (isalpha (c) && wmsg.dwModifiers == ctrl_modifier)
+      c = make_ctrl_char (c) & 0377;
+    if (c == quit_char
+	|| (wmsg.dwModifiers == 0 &&
+	    XFASTINT (Vw32_quit_key) && wParam == XFASTINT (Vw32_quit_key)))
+      {
+	Vquit_flag = Qt;
+
+	/* The choice of message is somewhat arbitrary, as long as
+	   the main thread handler just ignores it. */
+	msg = WM_NULL;
+
+	/* Interrupt any blocking system calls.  */
+	signal_quit ();
+
+	/* As a safety precaution, forcibly complete any deferred
+           messages.  This is a kludge, but I don't see any particularly
+           clean way to handle the situation where a deferred message is
+           "dropped" in the lisp thread, and will thus never be
+           completed, eg. by the user trying to activate the menubar
+           when the lisp thread is busy, and then typing C-g when the
+           menubar doesn't open promptly (with the result that the
+           menubar never responds at all because the deferred
+           WM_INITMENU message is never completed).  Another problem
+           situation is when the lisp thread calls SendMessage (to send
+           a window manager command) when a message has been deferred;
+           the lisp thread gets blocked indefinitely waiting for the
+           deferred message to be completed, which itself is waiting for
+           the lisp thread to respond.
+
+	   Note that we don't want to block the input thread waiting for
+	   a reponse from the lisp thread (although that would at least
+	   solve the deadlock problem above), because we want to be able
+	   to receive C-g to interrupt the lisp thread.  */
+	cancel_all_deferred_msgs ();
+      }
+  }
+
+  my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+}
+
+/* Main window procedure */
 
 LRESULT CALLBACK 
 w32_wnd_proc (hwnd, msg, wParam, lParam)
@@ -3286,6 +3680,7 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
   struct w32_display_info *dpyinfo = &one_w32_display_info;
   W32Msg wmsg;
   int windows_translate;
+  int key;
 
   /* Note that it is okay to call x_window_to_frame, even though we are
      not running in the main lisp thread, because frame deletion
@@ -3311,6 +3706,12 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 	{
 	  GetUpdateRect (hwnd, &wmsg.rect, FALSE);
 	  w32_clear_rect (f, NULL, &wmsg.rect);
+
+#if defined (W32_DEBUG_DISPLAY)
+          DebPrint (("WM_ERASEBKGND: erasing %d,%d-%d,%d\n",
+                     wmsg.rect.left, wmsg.rect.top, wmsg.rect.right,
+                     wmsg.rect.bottom));
+#endif /* W32_DEBUG_DISPLAY */
 	}
       return 1;
     case WM_PALETTECHANGED:
@@ -3326,18 +3727,83 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       return 0;
     case WM_PAINT:
       {
-	PAINTSTRUCT paintStruct;
+  	PAINTSTRUCT paintStruct;
+        RECT update_rect;
 
-	enter_crit ();
-	BeginPaint (hwnd, &paintStruct);
-	wmsg.rect = paintStruct.rcPaint;
-	EndPaint (hwnd, &paintStruct);
-	leave_crit ();
+        /* MSDN Docs say not to call BeginPaint if GetUpdateRect
+           fails.  Apparently this can happen under some
+           circumstances.  */
+        if (!w32_strict_painting || GetUpdateRect (hwnd, &update_rect, FALSE))
+          {
+            enter_crit ();
+            BeginPaint (hwnd, &paintStruct);
 
+	    if (w32_strict_painting)
+	      /* The rectangles returned by GetUpdateRect and BeginPaint
+		 do not always match.  GetUpdateRect seems to be the
+		 more reliable of the two.  */
+	      wmsg.rect = update_rect;
+	    else
+	      wmsg.rect = paintStruct.rcPaint;
+
+#if defined (W32_DEBUG_DISPLAY)
+            DebPrint (("WM_PAINT: painting %d,%d-%d,%d\n", wmsg.rect.left,
+                       wmsg.rect.top, wmsg.rect.right, wmsg.rect.bottom));
+            DebPrint (("WM_PAINT: update region is %d,%d-%d,%d\n",
+                       update_rect.left, update_rect.top,
+                       update_rect.right, update_rect.bottom));
+#endif
+            EndPaint (hwnd, &paintStruct);
+            leave_crit ();
+
+            my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+          
+            return 0;
+          }
+
+	/* If GetUpdateRect returns 0 (meaning there is no update
+           region), assume the whole window needs to be repainted.  */
+	GetClientRect(hwnd, &wmsg.rect);
 	my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
-      
-	return (0);
+        return 0;
       }
+
+    case WM_INPUTLANGCHANGE:
+      /* Inform lisp thread of keyboard layout changes.  */
+      my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+
+      /* Clear dead keys in the keyboard state; for simplicity only
+         preserve modifier key states.  */
+      {
+	int i;
+	BYTE keystate[256];
+
+	GetKeyboardState (keystate);
+	for (i = 0; i < 256; i++)
+	  if (1
+	      && i != VK_SHIFT
+	      && i != VK_LSHIFT
+	      && i != VK_RSHIFT
+	      && i != VK_CAPITAL
+	      && i != VK_NUMLOCK
+	      && i != VK_SCROLL
+	      && i != VK_CONTROL
+	      && i != VK_LCONTROL
+	      && i != VK_RCONTROL
+	      && i != VK_MENU
+	      && i != VK_LMENU
+	      && i != VK_RMENU
+	      && i != VK_LWIN
+	      && i != VK_RWIN)
+	    keystate[i] = 0;
+	SetKeyboardState (keystate);
+      }
+      goto dflt;
+
+    case WM_HOTKEY:
+      /* Synchronize hot keys with normal input.  */
+      PostMessage (hwnd, WM_KEYDOWN, HIWORD (lParam), 0);
+      return (0);
 
     case WM_KEYUP:
     case WM_SYSKEYUP:
@@ -3346,41 +3812,203 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
+      /* Ignore keystrokes we fake ourself; see below.  */
+      if (dpyinfo->faked_key == wParam)
+	{
+	  dpyinfo->faked_key = 0;
+	  /* Make sure TranslateMessage sees them though (as long as
+	     they don't produce WM_CHAR messages).  This ensures that
+	     indicator lights are toggled promptly on Windows 9x, for
+	     example.  */
+	  if (lispy_function_keys[wParam] != 0)
+	    {
+	      windows_translate = 1;
+	      goto translate;
+	    }
+	  return 0;
+	}
+
       /* Synchronize modifiers with current keystroke.  */
       sync_modifiers ();
-
       record_keydown (wParam, lParam);
-
-      wParam = map_keypad_keys (wParam, lParam);
+      wParam = map_keypad_keys (wParam, (lParam & 0x1000000L) != 0);
 
       windows_translate = 0;
-      switch (wParam) {
-      case VK_LWIN:
-      case VK_RWIN:
-      case VK_APPS:
-	/* More support for these keys will likely be necessary.  */
-	if (!NILP (Vw32_pass_optional_keys_to_system))
-	  windows_translate = 1;
-	break;
-      case VK_MENU:
-	if (NILP (Vw32_pass_alt_to_system)) 
-	  return 0;
-	windows_translate = 1;
-	break;
-      case VK_CONTROL: 
-      case VK_CAPITAL: 
-      case VK_SHIFT:
-      case VK_NUMLOCK:
-      case VK_SCROLL: 
-	windows_translate = 1;
-	break;
-      default:
-	/* If not defined as a function key, change it to a WM_CHAR message. */
-	if (lispy_function_keys[wParam] == 0)
-	  msg = WM_CHAR;
-	break;
-      }
 
+      switch (wParam)
+	{
+	case VK_LWIN:
+	  if (NILP (Vw32_pass_lwindow_to_system))
+	    {
+	      /* Prevent system from acting on keyup (which opens the
+		 Start menu if no other key was pressed) by simulating a
+		 press of Space which we will ignore.  */
+	      if (GetAsyncKeyState (wParam) & 1)
+		{
+		  if (NUMBERP (Vw32_phantom_key_code))
+		    key = XUINT (Vw32_phantom_key_code) & 255;
+		  else
+		    key = VK_SPACE;
+		  dpyinfo->faked_key = key;
+		  keybd_event (key, (BYTE) MapVirtualKey (key, 0), 0, 0);
+		}
+	    }
+	  if (!NILP (Vw32_lwindow_modifier))
+	    return 0;
+	  break;
+	case VK_RWIN:
+	  if (NILP (Vw32_pass_rwindow_to_system))
+	    {
+	      if (GetAsyncKeyState (wParam) & 1)
+		{
+		  if (NUMBERP (Vw32_phantom_key_code))
+		    key = XUINT (Vw32_phantom_key_code) & 255;
+		  else
+		    key = VK_SPACE;
+		  dpyinfo->faked_key = key;
+		  keybd_event (key, (BYTE) MapVirtualKey (key, 0), 0, 0);
+		}
+	    }
+	  if (!NILP (Vw32_rwindow_modifier))
+	    return 0;
+	  break;
+  	case VK_APPS:
+	  if (!NILP (Vw32_apps_modifier))
+	    return 0;
+	  break;
+	case VK_MENU:
+	  if (NILP (Vw32_pass_alt_to_system)) 
+	    /* Prevent DefWindowProc from activating the menu bar if an
+               Alt key is pressed and released by itself.  */
+	    return 0;
+	  windows_translate = 1;
+	  break;
+	case VK_CAPITAL: 
+	  /* Decide whether to treat as modifier or function key.  */
+	  if (NILP (Vw32_enable_caps_lock))
+	    goto disable_lock_key;
+	  windows_translate = 1;
+	  break;
+	case VK_NUMLOCK:
+	  /* Decide whether to treat as modifier or function key.  */
+	  if (NILP (Vw32_enable_num_lock))
+	    goto disable_lock_key;
+	  windows_translate = 1;
+	  break;
+	case VK_SCROLL:
+	  /* Decide whether to treat as modifier or function key.  */
+	  if (NILP (Vw32_scroll_lock_modifier))
+	    goto disable_lock_key;
+	  windows_translate = 1;
+	  break;
+	disable_lock_key:
+	  /* Ensure the appropriate lock key state (and indicator light)
+             remains in the same state. We do this by faking another
+             press of the relevant key.  Apparently, this really is the
+             only way to toggle the state of the indicator lights.  */
+	  dpyinfo->faked_key = wParam;
+	  keybd_event ((BYTE) wParam, (BYTE) MapVirtualKey (wParam, 0),
+		       KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+	  keybd_event ((BYTE) wParam, (BYTE) MapVirtualKey (wParam, 0),
+		       KEYEVENTF_EXTENDEDKEY | 0, 0);
+	  keybd_event ((BYTE) wParam, (BYTE) MapVirtualKey (wParam, 0),
+		       KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+	  /* Ensure indicator lights are updated promptly on Windows 9x
+             (TranslateMessage apparently does this), after forwarding
+             input event.  */
+	  post_character_message (hwnd, msg, wParam, lParam,
+				  w32_get_key_modifiers (wParam, lParam));
+	  windows_translate = 1;
+	  break;
+	case VK_CONTROL: 
+	case VK_SHIFT:
+	case VK_PROCESSKEY:  /* Generated by IME.  */
+	  windows_translate = 1;
+	  break;
+	case VK_CANCEL:
+	  /* Windows maps Ctrl-Pause (aka Ctrl-Break) into VK_CANCEL,
+             which is confusing for purposes of key binding; convert
+	     VK_CANCEL events into VK_PAUSE events.  */
+	  wParam = VK_PAUSE;
+	  break;
+	case VK_PAUSE:
+	  /* Windows maps Ctrl-NumLock into VK_PAUSE, which is confusing
+             for purposes of key binding; convert these back into
+             VK_NUMLOCK events, at least when we want to see NumLock key
+             presses.  (Note that there is never any possibility that
+             VK_PAUSE with Ctrl really is C-Pause as per above.)  */
+	  if (NILP (Vw32_enable_num_lock) && modifier_set (VK_CONTROL))
+	    wParam = VK_NUMLOCK;
+	  break;
+	default:
+	  /* If not defined as a function key, change it to a WM_CHAR message. */
+	  if (lispy_function_keys[wParam] == 0)
+	    {
+	      DWORD modifiers = construct_console_modifiers ();
+
+	      if (!NILP (Vw32_recognize_altgr)
+		  && modifier_set (VK_LCONTROL) && modifier_set (VK_RMENU))
+		{
+		  /* Always let TranslateMessage handle AltGr key chords;
+		     for some reason, ToAscii doesn't always process AltGr
+		     chords correctly.  */
+		  windows_translate = 1;
+		}
+	      else if ((modifiers & (~SHIFT_PRESSED & ~CAPSLOCK_ON)) != 0)
+		{
+		  /* Handle key chords including any modifiers other
+		     than shift directly, in order to preserve as much
+		     modifier information as possible.  */
+		  if ('A' <= wParam && wParam <= 'Z')
+		    {
+		      /* Don't translate modified alphabetic keystrokes,
+			 so the user doesn't need to constantly switch
+			 layout to type control or meta keystrokes when
+			 the normal layout translates alphabetic
+			 characters to non-ascii characters.  */
+		      if (!modifier_set (VK_SHIFT))
+			wParam += ('a' - 'A');
+		      msg = WM_CHAR;
+		    }
+		  else
+		    {
+		      /* Try to handle other keystrokes by determining the
+			 base character (ie. translating the base key plus
+			 shift modifier).  */
+		      int add;
+		      int isdead = 0;
+		      KEY_EVENT_RECORD key;
+		  
+		      key.bKeyDown = TRUE;
+		      key.wRepeatCount = 1;
+		      key.wVirtualKeyCode = wParam;
+		      key.wVirtualScanCode = (lParam & 0xFF0000) >> 16;
+		      key.uChar.AsciiChar = 0;
+		      key.dwControlKeyState = modifiers;
+
+		      add = w32_kbd_patch_key (&key);
+		      /* 0 means an unrecognised keycode, negative means
+			 dead key.  Ignore both.  */
+		      while (--add >= 0)
+			{
+			  /* Forward asciified character sequence.  */
+			  post_character_message
+			    (hwnd, WM_CHAR, key.uChar.AsciiChar, lParam,
+			     w32_get_key_modifiers (wParam, lParam));
+			  w32_kbd_patch_key (&key);
+			}
+		      return 0;
+		    }
+		}
+	      else
+		{
+		  /* Let TranslateMessage handle everything else.  */
+		  windows_translate = 1;
+		}
+	    }
+	}
+
+    translate:
       if (windows_translate)
 	{
 	  MSG windows_msg = { hwnd, msg, wParam, lParam, 0, {0,0} };
@@ -3394,36 +4022,8 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       
     case WM_SYSCHAR:
     case WM_CHAR:
-      wmsg.dwModifiers = construct_modifiers (wParam, lParam);
-
-#if 1
-      /* Detect quit_char and set quit-flag directly.  Note that we
-	 still need to post a message to ensure the main thread will be
-	 woken up if blocked in sys_select(), but we do NOT want to post
-	 the quit_char message itself (because it will usually be as if
-	 the user had typed quit_char twice).  Instead, we post a dummy
-	 message that has no particular effect. */
-      {
-	int c = wParam;
-	if (isalpha (c) && (wmsg.dwModifiers == LEFT_CTRL_PRESSED 
-			    || wmsg.dwModifiers == RIGHT_CTRL_PRESSED))
-	  c = make_ctrl_char (c) & 0377;
-	if (c == quit_char)
-	  {
-	    Vquit_flag = Qt;
-
-	    /* The choice of message is somewhat arbitrary, as long as
-	       the main thread handler just ignores it. */
-	    msg = WM_NULL;
-
-	    /* Interrupt any blocking system calls.  */
-	    signal_quit ();
-	  }
-      }
-#endif
-
-      my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
-
+      post_character_message (hwnd, msg, wParam, lParam,
+			      w32_get_key_modifiers (wParam, lParam));
       break;
 
       /* Simulate middle mouse button events when left and right buttons
@@ -3479,7 +4079,8 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 	  {
 	    /* Hold onto message for now. */
 	    mouse_button_timer =
-	      SetTimer (hwnd, MOUSE_BUTTON_ID, XINT (Vw32_mouse_button_tolerance), NULL);
+	      SetTimer (hwnd, MOUSE_BUTTON_ID,
+			XINT (Vw32_mouse_button_tolerance), NULL);
 	    saved_mouse_button_msg.msg.hwnd = hwnd;
 	    saved_mouse_button_msg.msg.message = msg;
 	    saved_mouse_button_msg.msg.wParam = wParam;
@@ -3579,7 +4180,8 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 
       if (saved_mouse_move_msg.msg.hwnd == 0)
 	mouse_move_timer =
-	  SetTimer (hwnd, MOUSE_MOVE_ID, XINT (Vw32_mouse_move_interval), NULL);
+	  SetTimer (hwnd, MOUSE_MOVE_ID,
+		    XINT (Vw32_mouse_move_interval), NULL);
 
       /* Hold onto message for now. */
       saved_mouse_move_msg.msg.hwnd = hwnd;
@@ -3635,6 +4237,8 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       goto dflt;
 
     case WM_INITMENU:
+      button_state = 0;
+      ReleaseCapture ();
       /* We must ensure menu bar is fully constructed and up to date
 	 before allowing user interaction with it.  To achieve this
 	 we send this message to the lisp thread and wait for a
@@ -3764,8 +4368,8 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       goto dflt;
 #endif
 
-    case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
+    case WM_ACTIVATE:
     case WM_WINDOWPOSCHANGED:
     case WM_SHOWWINDOW:
       /* Inform lisp thread that a frame might have just been obscured
@@ -3774,11 +4378,18 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       goto dflt;
 
     case WM_SETFOCUS:
+      dpyinfo->faked_key = 0;
       reset_modifiers ();
+      register_hot_keys (hwnd);
+      goto command;
     case WM_KILLFOCUS:
+      unregister_hot_keys (hwnd);
+      button_state = 0;
+      ReleaseCapture ();
     case WM_MOVE:
     case WM_SIZE:
     case WM_COMMAND:
+    command:
       wmsg.dwModifiers = w32_get_modifiers ();
       my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
       goto dflt;
@@ -3862,6 +4473,12 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       
       goto dflt;
 
+    case WM_GETMINMAXINFO:
+      /* Hack to correct bug that allows Emacs frames to be resized
+	 below the Minimum Tracking Size.  */
+      ((LPMINMAXINFO) lParam)->ptMinTrackSize.y++;
+      return 0;
+
     case WM_EMACS_CREATESCROLLBAR:
       return (LRESULT) w32_createscrollbar ((struct frame *) wParam,
 					    (struct scroll_bar *) lParam);
@@ -3870,7 +4487,30 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       return ShowWindow ((HWND) wParam, (WPARAM) lParam);
 
     case WM_EMACS_SETFOREGROUND:
-      return SetForegroundWindow ((HWND) wParam);
+      {
+        HWND foreground_window;
+        DWORD foreground_thread, retval;
+
+        /* On NT 5.0, and apparently Windows 98, it is necessary to
+           attach to the thread that currently has focus in order to
+           pull the focus away from it.  */
+        foreground_window = GetForegroundWindow ();
+	foreground_thread = GetWindowThreadProcessId (foreground_window, NULL);
+        if (!foreground_window
+            || foreground_thread == GetCurrentThreadId ()
+            || !AttachThreadInput (GetCurrentThreadId (),
+                                   foreground_thread, TRUE))
+          foreground_thread = 0;
+
+        retval = SetForegroundWindow ((HWND) wParam);
+
+        /* Detach from the previous foreground thread.  */
+        if (foreground_thread)
+          AttachThreadInput (GetCurrentThreadId (),
+                             foreground_thread, FALSE);
+
+        return retval;
+      }
 
     case WM_EMACS_SETWINDOWPOS:
       {
@@ -3898,6 +4538,7 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 	/* Remember we did a SetCapture on the initial mouse down event,
 	   so for safety, we make sure the capture is cancelled now.  */
 	ReleaseCapture ();
+	button_state = 0;
 
 	/* Use menubar_active to indicate that WM_INITMENU is from
            TrackPopupMenu below, and should be ignored.  */
@@ -3921,7 +4562,6 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 	      {
 		retval = 0;
 	      }
-	    button_state = 0;
 	  }
 	else
 	  {
@@ -4079,6 +4719,8 @@ This function is an internal primitive--use `make-frame' instead.")
   Lisp_Object parent;
   struct kboard *kb;
 
+  check_w32 ();
+
   /* Use this general default value to start with
      until we know if this frame has a specified name.  */
   Vx_resource_name = Vinvocation_name;
@@ -4138,6 +4780,8 @@ This function is an internal primitive--use `make-frame' instead.")
   f->output_data.w32 = (struct w32_output *) xmalloc (sizeof (struct w32_output));
   bzero (f->output_data.w32, sizeof (struct w32_output));
 
+  FRAME_FONTSET (f) = -1;
+
   f->icon_name
     = x_get_arg (parms, Qicon_name, "iconName", "Title", string);
   if (! STRINGP (f->icon_name))
@@ -4179,6 +4823,10 @@ This function is an internal primitive--use `make-frame' instead.")
       specbind (Qx_resource_name, name);
     }
 
+  /* Create fontsets from `global_fontset_alist' before handling fonts.  */
+  for (tem = Vglobal_fontset_alist; CONSP (tem); tem = XCONS (tem)->cdr)
+    fs_register_fontset (f, XCONS (tem)->car);
+
   /* Extract the window parameters from the supplied values
      that are needed to determine window geometry.  */
   {
@@ -4188,15 +4836,21 @@ This function is an internal primitive--use `make-frame' instead.")
     BLOCK_INPUT;
     /* First, try whatever font the caller has specified.  */
     if (STRINGP (font))
-      font = x_new_font (f, XSTRING (font)->data);
+      {
+        tem = Fquery_fontset (font, Qnil);
+        if (STRINGP (tem))
+          font = x_new_fontset (f, XSTRING (tem)->data);
+        else
+          font = x_new_font (f, XSTRING (font)->data);
+      }
     /* Try out a font which we hope has bold and italic variations.  */
     if (!STRINGP (font))
-      font = x_new_font (f, "-*-Courier New-normal-r-*-*-13-97-*-*-c-*-*-ansi-");
+      font = x_new_font (f, "-*-Courier New-normal-r-*-*-13-*-*-*-c-*-iso8859-1");
     if (! STRINGP (font))
-      font = x_new_font (f, "-*-Courier-normal-r-*-*-13-97-*-*-c-*-*-ansi-");
+      font = x_new_font (f, "-*-Courier-normal-r-*-*-*-97-*-*-c-*-iso8859-1");
     /* If those didn't work, look for something which will at least work.  */
     if (! STRINGP (font))
-      font = x_new_font (f, "-*-Fixedsys-normal-r-*-*-13-97-*-*-c-*-*-ansi-");
+      font = x_new_font (f, "-*-Fixedsys-normal-r-*-*-*-*-90-*-c-*-iso8859-1");
     UNBLOCK_INPUT;
     if (! STRINGP (font))
       font = build_string ("Fixedsys");
@@ -4363,52 +5017,229 @@ DEFUN ("w32-focus-frame", Fw32_focus_frame, Sw32_focus_frame, 1, 1, 0,
 }
 
 
-XFontStruct *
-w32_load_font (dpyinfo,name)
-struct w32_display_info *dpyinfo;
-char * name;
+struct font_info *w32_load_bdf_font (struct frame *f, char *fontname,
+                                     int size, char* filename);
+
+struct font_info *
+w32_load_system_font (f,fontname,size)
+     struct frame *f;
+     char * fontname;
+     int size;
 {
-  XFontStruct * font = NULL;
-  BOOL ok;
+  struct w32_display_info *dpyinfo = FRAME_W32_DISPLAY_INFO (f);
+  Lisp_Object font_names;
 
+  /* Get a list of all the fonts that match this name.  Once we
+     have a list of matching fonts, we compare them against the fonts
+     we already have loaded by comparing names.  */
+  font_names = w32_list_fonts (f, build_string (fontname), size, 100);
+
+  if (!NILP (font_names))
   {
-    LOGFONT lf;
+      Lisp_Object tail;
+      int i;
+#if 0 /* This code has nasty side effects that cause Emacs to crash.  */
 
-    if (!name || !x_to_w32_font (name, &lf))
+      /* First check if any are already loaded, as that is cheaper
+         than loading another one. */
+      for (i = 0; i < dpyinfo->n_fonts; i++)
+	for (tail = font_names; CONSP (tail); tail = XCONS (tail)->cdr)
+	  if (!strcmp (dpyinfo->font_table[i].name,
+		       XSTRING (XCONS (tail)->car)->data)
+	      || !strcmp (dpyinfo->font_table[i].full_name,
+			  XSTRING (XCONS (tail)->car)->data))
+	    return (dpyinfo->font_table + i);
+#endif
+      fontname = (char *) XSTRING (XCONS (font_names)->car)->data;
+    }
+  else if (w32_strict_fontnames)
+    {
+      /* If EnumFontFamiliesEx was available, we got a full list of
+         fonts back so stop now to avoid the possibility of loading a
+         random font.  If we had to fall back to EnumFontFamilies, the
+         list is incomplete, so continue whether the font we want was
+         listed or not. */
+      HMODULE gdi32 = GetModuleHandle ("gdi32.dll");
+      FARPROC enum_font_families_ex
+        = GetProcAddress (gdi32, "EnumFontFamiliesExA");
+      if (enum_font_families_ex)
+        return NULL;
+    }
+
+  /* Load the font and add it to the table. */
+  {
+    char *full_name, *encoding;
+    XFontStruct *font;
+    struct font_info *fontp;
+    LOGFONT lf;
+    BOOL ok;
+
+    if (!fontname || !x_to_w32_font (fontname, &lf))
       return (NULL);
+
+    if (!*lf.lfFaceName)
+        /* If no name was specified for the font, we get a random font
+           from CreateFontIndirect - this is not particularly
+           desirable, especially since CreateFontIndirect does not
+           fill out the missing name in lf, so we never know what we
+           ended up with. */
+      return NULL;
 
     font = (XFontStruct *) xmalloc (sizeof (XFontStruct));
 
-    if (!font) return (NULL);
+    /* Set bdf to NULL to indicate that this is a Windows font.  */
+    font->bdf = NULL;
 
     BLOCK_INPUT;
 
     font->hfont = CreateFontIndirect (&lf);
+
+    if (font->hfont == NULL) 
+      {
+	ok = FALSE;
+      } 
+    else 
+      {
+	HDC hdc;
+	HANDLE oldobj;
+
+	hdc = GetDC (dpyinfo->root_window);
+	oldobj = SelectObject (hdc, font->hfont);
+	ok = GetTextMetrics (hdc, &font->tm);
+	SelectObject (hdc, oldobj);
+	ReleaseDC (dpyinfo->root_window, hdc);
+
+	/* [andrewi, 25-Apr-99] A number of fixed pitch fonts,
+           eg. Courier New and perhaps others, report a max width which
+           is larger than the average character width, at least on some
+           NT systems (I don't understand why - my best guess is that it
+           results from installing the CJK language packs for NT4).
+           Unfortunately, this forces the redisplay code in dumpglyphs
+           to draw text character by character.
+
+	   I don't like this hack, but it seems better to force the max
+	   width to match the average width if the font is marked as
+	   fixed pitch, for the sake of redisplay performance.  */
+
+	if ((font->tm.tmPitchAndFamily & TMPF_FIXED_PITCH) == 0)
+	  font->tm.tmMaxCharWidth = font->tm.tmAveCharWidth;
+      }
+
+    UNBLOCK_INPUT;
+
+    if (!ok)
+      {
+	w32_unload_font (dpyinfo, font);
+	return (NULL);
+      }
+
+    /* Do we need to create the table?  */
+    if (dpyinfo->font_table_size == 0)
+      {
+	dpyinfo->font_table_size = 16;
+	dpyinfo->font_table
+	  = (struct font_info *) xmalloc (dpyinfo->font_table_size
+					  * sizeof (struct font_info));
+      }
+    /* Do we need to grow the table?  */
+    else if (dpyinfo->n_fonts
+	     >= dpyinfo->font_table_size)
+      {
+	dpyinfo->font_table_size *= 2;
+	dpyinfo->font_table
+	  = (struct font_info *) xrealloc (dpyinfo->font_table,
+					   (dpyinfo->font_table_size
+					    * sizeof (struct font_info)));
+      }
+
+    fontp = dpyinfo->font_table + dpyinfo->n_fonts;
+
+    /* Now fill in the slots of *FONTP.  */
+    BLOCK_INPUT;
+    fontp->font = font;
+    fontp->font_idx = dpyinfo->n_fonts;
+    fontp->name = (char *) xmalloc (strlen (fontname) + 1);
+    bcopy (fontname, fontp->name, strlen (fontname) + 1);
+
+    /* Work out the font's full name.  */
+    full_name = (char *)xmalloc (100);
+    if (full_name && w32_to_x_font (&lf, full_name, 100))
+        fontp->full_name = full_name;
+    else
+      {
+        /* If all else fails - just use the name we used to load it.  */
+        xfree (full_name);
+        fontp->full_name = fontp->name;
+      }
+
+    fontp->size = FONT_WIDTH (font);
+    fontp->height = FONT_HEIGHT (font);
+
+    /* The slot `encoding' specifies how to map a character
+       code-points (0x20..0x7F or 0x2020..0x7F7F) of each charset to
+       the font code-points (0:0x20..0x7F, 1:0xA0..0xFF, 0:0x2020..0x7F7F,
+       the font code-points (0:0x20..0x7F, 1:0xA0..0xFF,
+       0:0x2020..0x7F7F, 1:0xA0A0..0xFFFF, 3:0x20A0..0x7FFF, or
+       2:0xA020..0xFF7F).  For the moment, we don't know which charset
+       uses this font.  So, we set informatoin in fontp->encoding[1]
+       which is never used by any charset.  If mapping can't be
+       decided, set FONT_ENCODING_NOT_DECIDED.  */
+
+    /* SJIS fonts need to be set to type 4, all others seem to work as
+       type FONT_ENCODING_NOT_DECIDED.  */
+    encoding = strrchr (fontp->name, '-');
+    if (encoding && stricmp (encoding+1, "sjis") == 0)
+      fontp->encoding[1] = 4;
+    else
+      fontp->encoding[1] = FONT_ENCODING_NOT_DECIDED;
+
+    /* The following three values are set to 0 under W32, which is
+       what they get set to if XGetFontProperty fails under X.  */
+    fontp->baseline_offset = 0;
+    fontp->relative_compose = 0;
+    fontp->default_ascent = 0;
+
+    UNBLOCK_INPUT;
+    dpyinfo->n_fonts++;
+
+    return fontp;
   }
+}
 
-  if (font->hfont == NULL) 
-    {
-      ok = FALSE;
-    } 
-  else 
-    {
-      HDC hdc;
-      HANDLE oldobj;
+/* Load font named FONTNAME of size SIZE for frame F, and return a
+   pointer to the structure font_info while allocating it dynamically.
+   If loading fails, return NULL. */
+struct font_info *
+w32_load_font (f,fontname,size)
+struct frame *f;
+char * fontname;
+int size;
+{
+  Lisp_Object bdf_fonts;
+  struct font_info *retval = NULL;
 
-      hdc = GetDC (dpyinfo->root_window);
-      oldobj = SelectObject (hdc, font->hfont);
-      ok = GetTextMetrics (hdc, &font->tm);
-      SelectObject (hdc, oldobj);
-      ReleaseDC (dpyinfo->root_window, hdc);
+  bdf_fonts = w32_list_bdf_fonts (build_string (fontname));
+
+  while (!retval && CONSP (bdf_fonts))
+    {
+      char *bdf_name, *bdf_file;
+      Lisp_Object bdf_pair;
+
+      bdf_name = XSTRING (XCONS (bdf_fonts)->car)->data;
+      bdf_pair = Fassoc (XCONS (bdf_fonts)->car, Vw32_bdf_filename_alist);
+      bdf_file = XSTRING (XCONS (bdf_pair)->cdr)->data;
+
+      retval = w32_load_bdf_font (f, bdf_name, size, bdf_file);
+
+      bdf_fonts = XCONS (bdf_fonts)->cdr;
     }
 
-  UNBLOCK_INPUT;
+  if (retval)
+    return retval;
 
-  if (ok) return (font);
-
-  w32_unload_font (dpyinfo, font);
-  return (NULL);
+  return w32_load_system_font(f, fontname, size);
 }
+
 
 void 
 w32_unload_font (dpyinfo, font)
@@ -4417,6 +5248,8 @@ w32_unload_font (dpyinfo, font)
 {
   if (font) 
     {
+      if (font->bdf) w32_free_bdf_font (font->bdf);
+
       if (font->hfont) DeleteObject(font->hfont);
       xfree (font);
     }
@@ -4524,7 +5357,7 @@ w32_to_x_weight (fnweight)
   if (fnweight >= FW_HEAVY)      return "heavy";
   if (fnweight >= FW_EXTRABOLD)  return "extrabold";
   if (fnweight >= FW_BOLD)       return "bold";
-  if (fnweight >= FW_SEMIBOLD)   return "semibold";
+  if (fnweight >= FW_SEMIBOLD)   return "demibold";
   if (fnweight >= FW_MEDIUM)     return "medium";
   if (fnweight >= FW_NORMAL)     return "normal";
   if (fnweight >= FW_LIGHT)      return "light";
@@ -4540,15 +5373,49 @@ x_to_w32_charset (lpcs)
 {
   if (!lpcs) return (0);
 
-  if (stricmp (lpcs,"ansi") == 0)               return ANSI_CHARSET;
-  else if (stricmp (lpcs,"iso8859-1") == 0)     return ANSI_CHARSET;
-  else if (stricmp (lpcs,"iso8859") == 0)       return ANSI_CHARSET;
-  else if (stricmp (lpcs,"oem") == 0)	        return OEM_CHARSET;
-#ifdef UNICODE_CHARSET
-  else if (stricmp (lpcs,"unicode") == 0)       return UNICODE_CHARSET;
-  else if (stricmp (lpcs,"iso10646") == 0)      return UNICODE_CHARSET;
+  if (stricmp (lpcs,"ansi") == 0)                return ANSI_CHARSET;
+  else if (stricmp (lpcs,"iso8859-1") == 0)      return ANSI_CHARSET;
+  else if (stricmp (lpcs, "ms-symbol") == 0)     return SYMBOL_CHARSET;
+  /* Map all Japanese charsets to the Windows Shift-JIS charset.  */
+  else if (strnicmp (lpcs, "jis", 3) == 0)       return SHIFTJIS_CHARSET;
+  /* Map all GB charsets to the Windows GB2312 charset.  */
+  else if (strnicmp (lpcs, "gb2312", 6) == 0)    return GB2312_CHARSET;
+  /* Map all Big5 charsets to the Windows Big5 charset.  */
+  else if (strnicmp (lpcs, "big5", 4) == 0)      return CHINESEBIG5_CHARSET;
+  else if (stricmp (lpcs, "ksc5601.1987") == 0)  return HANGEUL_CHARSET;
+  else if (stricmp (lpcs, "ms-oem") == 0)	 return OEM_CHARSET;
+
+#ifdef EASTEUROPE_CHARSET
+  else if (stricmp (lpcs, "iso8859-2") == 0)     return EASTEUROPE_CHARSET;
+  else if (stricmp (lpcs, "iso8859-3") == 0)     return TURKISH_CHARSET;
+  else if (stricmp (lpcs, "iso8859-4") == 0)     return BALTIC_CHARSET;
+  else if (stricmp (lpcs, "iso8859-5") == 0)     return RUSSIAN_CHARSET;
+  else if (stricmp (lpcs, "koi8") == 0)          return RUSSIAN_CHARSET;
+  else if (stricmp (lpcs, "iso8859-6") == 0)     return ARABIC_CHARSET;
+  else if (stricmp (lpcs, "iso8859-7") == 0)     return GREEK_CHARSET;
+  else if (stricmp (lpcs, "iso8859-8") == 0)     return HEBREW_CHARSET;
+  else if (stricmp (lpcs, "iso8859-9") == 0)     return TURKISH_CHARSET;
+#ifndef VIETNAMESE_CHARSET
+#define VIETNAMESE_CHARSET 163
 #endif
-  else if (lpcs[0] == '#')			return atoi (lpcs + 1);
+  /* Map all Viscii charsets to the Windows Vietnamese charset.  */
+  else if (strnicmp (lpcs, "viscii", 6) == 0)    return VIETNAMESE_CHARSET;
+  else if (strnicmp (lpcs, "vscii", 5) == 0)     return VIETNAMESE_CHARSET;
+  /* Map all TIS charsets to the Windows Thai charset.  */
+  else if (strnicmp (lpcs, "tis620", 6) == 0)    return THAI_CHARSET;
+  else if (stricmp (lpcs, "mac") == 0)           return MAC_CHARSET;
+  else if (stricmp (lpcs, "ksc5601.1992") == 0)  return JOHAB_CHARSET;
+  /* For backwards compatibility with previous 20.4 pretests, map
+     non-specific KSC charsets to the Windows Hangeul charset.  */
+  else if (strnicmp (lpcs, "ksc5601", 7) == 0)   return HANGEUL_CHARSET;
+  else if (stricmp (lpcs, "johab") == 0)         return JOHAB_CHARSET;
+#endif
+
+#ifdef UNICODE_CHARSET
+  else if (stricmp (lpcs,"iso10646") == 0)       return UNICODE_CHARSET;
+  else if (stricmp (lpcs, "unicode") == 0)       return UNICODE_CHARSET;
+#endif
+  else if (lpcs[0] == '#')			 return atoi (lpcs + 1);
   else
     return DEFAULT_CHARSET;
 }
@@ -4561,15 +5428,46 @@ w32_to_x_charset (fncharset)
 
   switch (fncharset)
     {
-    case ANSI_CHARSET:     return "ansi";
-    case OEM_CHARSET:      return "oem";
-    case SYMBOL_CHARSET:   return "symbol";
+      /* ansi is considered iso8859-1, as most modern ansi fonts are.  */
+    case ANSI_CHARSET:        return "iso8859-1";
+    case DEFAULT_CHARSET:     return "ascii-*";
+    case SYMBOL_CHARSET:      return "ms-symbol";
+    case SHIFTJIS_CHARSET:    return "jisx0208-sjis";
+    case HANGEUL_CHARSET:     return "ksc5601.1987-*";
+    case GB2312_CHARSET:      return "gb2312-*";
+    case CHINESEBIG5_CHARSET: return "big5-*";
+    case OEM_CHARSET:         return "ms-oem";
+
+      /* More recent versions of Windows (95 and NT4.0) define more
+         character sets.  */
+#ifdef EASTEUROPE_CHARSET
+    case EASTEUROPE_CHARSET: return "iso8859-2";
+    case TURKISH_CHARSET:    return "iso8859-9";
+    case BALTIC_CHARSET:     return "iso8859-4";
+
+      /* W95 with international support but not IE4 often has the
+         KOI8-R codepage but not ISO8859-5.  */
+    case RUSSIAN_CHARSET:
+      if (!IsValidCodePage(28595) && IsValidCodePage(20886))
+        return "koi8-r";
+      else
+        return "iso8859-5";
+    case ARABIC_CHARSET:     return "iso8859-6";
+    case GREEK_CHARSET:      return "iso8859-7";
+    case HEBREW_CHARSET:     return "iso8859-8";
+    case VIETNAMESE_CHARSET: return "viscii1.1-*";
+    case THAI_CHARSET:       return "tis620-*";
+    case MAC_CHARSET:        return "mac-*";
+    case JOHAB_CHARSET:      return "ksc5601.1992-*";
+
+#endif
+
 #ifdef UNICODE_CHARSET
-    case UNICODE_CHARSET:  return "unicode";
+    case UNICODE_CHARSET:  return "iso10646-unicode";
 #endif
     }
   /* Encode numerical value of unknown charset.  */
-  sprintf (buf, "#%u", fncharset);
+  sprintf (buf, "*-#%u", fncharset);
   return buf;
 }
 
@@ -4579,20 +5477,42 @@ w32_to_x_font (lplogfont, lpxstr, len)
      char * lpxstr;
      int len;
 {
+  char *fontname;
   char height_pixels[8];
   char height_dpi[8];
   char width_pixels[8];
+  char *fontname_dash;
+  int display_resy = one_w32_display_info.height_in;
+  int display_resx = one_w32_display_info.width_in;
+  int bufsz;
+  struct coding_system coding;
 
   if (!lpxstr) abort ();
 
   if (!lplogfont)
     return FALSE;
 
+  setup_coding_system (Fcheck_coding_system (Vw32_system_coding_system),
+                       &coding);
+  coding.mode |= CODING_MODE_LAST_BLOCK;
+  bufsz = decoding_buffer_size (&coding, LF_FACESIZE);
+
+  fontname = alloca(sizeof(*fontname) * bufsz);
+  decode_coding (&coding, lplogfont->lfFaceName, fontname,
+                 strlen(lplogfont->lfFaceName), bufsz - 1);
+  *(fontname + coding.produced) = '\0';
+
+  /* Replace dashes with underscores so the dashes are not
+     misinterpreted.  */
+  fontname_dash = fontname;
+  while (fontname_dash = strchr (fontname_dash, '-'))
+      *fontname_dash = '_';
+
   if (lplogfont->lfHeight)
     {
       sprintf (height_pixels, "%u", abs (lplogfont->lfHeight));
       sprintf (height_dpi, "%u",
-	       (abs (lplogfont->lfHeight) * 720) / one_w32_display_info.height_in);
+	       abs (lplogfont->lfHeight) * 720 / display_resy);
     }
   else
     {
@@ -4605,15 +5525,22 @@ w32_to_x_font (lplogfont, lpxstr, len)
     strcpy (width_pixels, "*");
 
   _snprintf (lpxstr, len - 1,
-	     "-*-%s-%s-%c-*-*-%s-%s-*-*-%c-%s-*-%s-",
-	     lplogfont->lfFaceName,
-	     w32_to_x_weight (lplogfont->lfWeight),
-	     lplogfont->lfItalic?'i':'r',
-	     height_pixels,
-	     height_dpi,
-	     ((lplogfont->lfPitchAndFamily & 0x3) == VARIABLE_PITCH) ? 'p' : 'c',
-	     width_pixels,
-	     w32_to_x_charset (lplogfont->lfCharSet)
+	     "-*-%s-%s-%c-*-*-%s-%s-%d-%d-%c-%s-%s",
+                                                     /* foundry */
+	     fontname,                               /* family */
+	     w32_to_x_weight (lplogfont->lfWeight),  /* weight */
+	     lplogfont->lfItalic?'i':'r',            /* slant */
+                                                     /* setwidth name */
+                                                     /* add style name */
+	     height_pixels,                          /* pixel size */
+	     height_dpi,                             /* point size */
+             display_resx,                           /* resx */
+             display_resy,                           /* resy */
+	     ((lplogfont->lfPitchAndFamily & 0x3) == VARIABLE_PITCH)
+             ? 'p' : 'c',                            /* spacing */
+	     width_pixels,                           /* avg width */
+	     w32_to_x_charset (lplogfont->lfCharSet) /* charset registry
+                                                        and encoding*/
 	     );
 
   lpxstr[len - 1] = 0;		/* just to be sure */
@@ -4625,10 +5552,13 @@ x_to_w32_font (lpxstr, lplogfont)
      char * lpxstr;
      LOGFONT * lplogfont;
 {
+  struct coding_system coding;
+
   if (!lplogfont) return (FALSE);
-  
+
   memset (lplogfont, 0, sizeof (*lplogfont));
 
+  /* Set default value for each field.  */
 #if 1
   lplogfont->lfOutPrecision = OUT_DEFAULT_PRECIS;
   lplogfont->lfClipPrecision = CLIP_DEFAULT_PRECIS;
@@ -4639,6 +5569,10 @@ x_to_w32_font (lpxstr, lplogfont)
   lplogfont->lfClipPrecision = CLIP_STROKE_PRECIS;
   lplogfont->lfQuality = PROOF_QUALITY;
 #endif
+
+  lplogfont->lfCharSet = DEFAULT_CHARSET;
+  lplogfont->lfWeight = FW_DONTCARE;
+  lplogfont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
   if (!lpxstr)
     return FALSE;
@@ -4651,20 +5585,32 @@ x_to_w32_font (lpxstr, lplogfont)
   
   if (*lpxstr == '-')
     {
-      int fields;
-      char name[50], weight[20], slant, pitch, pixels[10], height[10], width[10], remainder[20];
+      int fields, tem;
+      char name[50], weight[20], slant, pitch, pixels[10], height[10],
+        width[10], resy[10], remainder[20];
       char * encoding;
+      int dpi = one_w32_display_info.height_in;
 
       fields = sscanf (lpxstr,
-		       "-%*[^-]-%49[^-]-%19[^-]-%c-%*[^-]-%*[^-]-%9[^-]-%9[^-]-%*[^-]-%*[^-]-%c-%9[^-]-%19s",
-		       name, weight, &slant, pixels, height, &pitch, width, remainder);
-
+		       "-%*[^-]-%49[^-]-%19[^-]-%c-%*[^-]-%*[^-]-%9[^-]-%9[^-]-%*[^-]-%9[^-]-%c-%9[^-]-%19s",
+		       name, weight, &slant, pixels, height, resy, &pitch, width, remainder);
       if (fields == EOF) return (FALSE);
 
       if (fields > 0 && name[0] != '*')
         {
-	  strncpy (lplogfont->lfFaceName,name, LF_FACESIZE);
-	  lplogfont->lfFaceName[LF_FACESIZE-1] = 0;
+	  int bufsize;
+	  unsigned char *buf;
+
+          setup_coding_system
+            (Fcheck_coding_system (Vw32_system_coding_system), &coding);
+	  bufsize = encoding_buffer_size (&coding, strlen (name));
+	  buf = (unsigned char *) alloca (bufsize);
+          coding.mode |= CODING_MODE_LAST_BLOCK;
+          encode_coding (&coding, name, buf, strlen (name), bufsize);
+	  if (coding.produced >= LF_FACESIZE)
+	    coding.produced = LF_FACESIZE - 1;
+	  buf[coding.produced] = 0;
+	  strcpy (lplogfont->lfFaceName, buf);
 	}
       else
         {
@@ -4686,13 +5632,17 @@ x_to_w32_font (lpxstr, lplogfont)
 	lplogfont->lfHeight = atoi (pixels);
 
       fields--;
-
-      if (fields > 0 && lplogfont->lfHeight == 0 && height[0] != '*')
-	lplogfont->lfHeight = (atoi (height)
-			       * one_w32_display_info.height_in) / 720;
-
       fields--;
+      if (fields > 0 && resy[0] != '*')
+        {
+          tem = atoi (pixels);
+          if (tem > 0) dpi = tem;
+        }
 
+      if (fields > -1 && lplogfont->lfHeight == 0 && height[0] != '*')
+	lplogfont->lfHeight = atoi (height) * dpi / 720;
+
+      if (fields > 0)
       lplogfont->lfPitchAndFamily =
 	(fields > 0 && pitch == 'p') ? VARIABLE_PITCH : FIXED_PITCH;
 
@@ -4703,9 +5653,8 @@ x_to_w32_font (lpxstr, lplogfont)
 
       fields--;
 
-      /* Not all font specs include the registry field, so we allow for an
-	 optional registry field before the encoding when parsing
-	 remainder.  Also we strip the trailing '-' if present. */
+      /* Strip the trailing '-' if present. (it shouldn't be, as it
+         fails the test against xlfn-tight-regexp in fontset.el).  */
       {
 	int len = strlen (remainder);
 	if (len > 0 && remainder[len-1] == '-')
@@ -4763,8 +5712,8 @@ w32_font_match (lpszfont1, lpszfont2)
     char * lpszfont1;
     char * lpszfont2;
 {
-  char * s1 = lpszfont1, *e1;
-  char * s2 = lpszfont2, *e2;
+  char * s1 = lpszfont1, *e1, *w1;
+  char * s2 = lpszfont2, *e2, *w2;
   
   if (s1 == NULL || s2 == NULL) return (FALSE);
   
@@ -4773,24 +5722,52 @@ w32_font_match (lpszfont1, lpszfont2)
   
   while (1) 
     {
-      int len1, len2;
+      int len1, len2, len3=0;
 
       e1 = strchr (s1, '-');
       e2 = strchr (s2, '-');
+      w1 = strchr (s1, '*');
+      w2 = strchr (s2, '*');
 
-      if (e1 == NULL || e2 == NULL) return (TRUE);
-
+      if (e1 == NULL)
+        len1 = strlen (s1);
+      else
       len1 = e1 - s1;
+      if (e2 == NULL)
+        len2 = strlen (s1);
+      else
       len2 = e2 - s2;
 
-      if (*s1 != '*' && *s2 != '*'
-	  && (len1 != len2 || strnicmp (s1, s2, len1) != 0))
+      if (w1 && w1 < e1)
+        len3 = w1 - s1;
+      if (w2 && w2 < e2 && ( len3 == 0 || (w2 - s2) < len3))
+        len3 = w2 - s2;
+
+      /* Whole field is not a wildcard, and ...*/
+      if (*s1 != '*' && *s2 != '*' && *s1 != '-' && *s2 != '-'
+          /* Lengths are different and there are no wildcards, or ... */
+	  && ((len1 != len2 && len3 == 0) ||
+              /* strings don't match up until first wildcard or end.  */
+              strnicmp (s1, s2, len3 > 0 ? len3 : len1) != 0))
 	return (FALSE);
+
+      if (e1 == NULL || e2 == NULL)
+        return (TRUE);
 
       s1 = e1 + 1;
       s2 = e2 + 1;
     }
 }
+
+/* Callback functions, and a structure holding info they need, for
+   listing system fonts on W32. We need one set of functions to do the
+   job properly, but these don't work on NT 3.51 and earlier, so we
+   have a second set which don't handle character sets properly to
+   fall back on.
+
+   In both cases, there are two passes made. The first pass gets one
+   font from each family, the second pass lists all the fonts from
+   each family.  */
 
 typedef struct enumfont_t 
 {
@@ -4799,7 +5776,6 @@ typedef struct enumfont_t
   LOGFONT logfont;
   XFontStruct *size_ref;
   Lisp_Object *pattern;
-  Lisp_Object *head;
   Lisp_Object *tail;
 } enumfont_t;
 
@@ -4813,22 +5789,40 @@ enum_font_cb2 (lplf, lptm, FontType, lpef)
   if (lplf->elfLogFont.lfStrikeOut || lplf->elfLogFont.lfUnderline)
     return (1);
   
+  /* Check that the character set matches if it was specified */
+  if (lpef->logfont.lfCharSet != DEFAULT_CHARSET &&
+      lplf->elfLogFont.lfCharSet != lpef->logfont.lfCharSet)
+    return (1);
+
+  /* We want all fonts cached, so don't compare sizes just yet */
   /*    if (!lpef->size_ref || lptm->tmMaxCharWidth == FONT_WIDTH (lpef->size_ref)) */
   {
     char buf[100];
+    Lisp_Object width = Qnil;
 
     if (!NILP (*(lpef->pattern)) && FontType != RASTER_FONTTYPE)
       {
+        /* Scalable fonts are as big as you want them to be.  */
 	lplf->elfLogFont.lfHeight = lpef->logfont.lfHeight;
 	lplf->elfLogFont.lfWidth = lpef->logfont.lfWidth;
       }
+    /* Make sure the height used here is the same as everywhere
+       else (ie character height, not cell height).  */
+    else if (lplf->elfLogFont.lfHeight > 0)
+      lplf->elfLogFont.lfHeight = lptm->tmInternalLeading - lptm->tmHeight;
 
-    if (!w32_to_x_font (lplf, buf, 100)) return (0);
+    /* The MaxCharWidth is not valid at this stage for scalable fonts. */
+    if (FontType == RASTER_FONTTYPE)
+        width = make_number (lptm->tmMaxCharWidth);
 
-    if (NILP (*(lpef->pattern)) || w32_font_match (buf, XSTRING (*(lpef->pattern))->data))
+    if (!w32_to_x_font (&(lplf->elfLogFont), buf, 100))
+      return (0);
+
+    if (NILP (*(lpef->pattern))
+        || w32_font_match (buf, XSTRING (*(lpef->pattern))->data))
       {
-	*lpef->tail = Fcons (build_string (buf), Qnil);
-	lpef->tail = &XCONS (*lpef->tail)->cdr;
+	*lpef->tail = Fcons (Fcons (build_string (buf), width), Qnil);
+	lpef->tail = &(XCONS (*lpef->tail)->cdr);
 	lpef->numFonts++;
       }
   }
@@ -4850,6 +5844,398 @@ enum_font_cb1 (lplf, lptm, FontType, lpef)
 }
 
 
+int CALLBACK
+enum_fontex_cb2 (lplf, lptm, font_type, lpef)
+     ENUMLOGFONTEX * lplf;
+     NEWTEXTMETRICEX * lptm;
+     int font_type;
+     enumfont_t * lpef;
+{
+  /* We are not interested in the extra info we get back from the 'Ex
+     version - only the fact that we get character set variations
+     enumerated seperately.  */
+  return enum_font_cb2 ((ENUMLOGFONT *) lplf, (NEWTEXTMETRIC *) lptm,
+                        font_type, lpef);
+}
+
+int CALLBACK
+enum_fontex_cb1 (lplf, lptm, font_type, lpef)
+     ENUMLOGFONTEX * lplf;
+     NEWTEXTMETRICEX * lptm;
+     int font_type;
+     enumfont_t * lpef;
+{
+  HMODULE gdi32 = GetModuleHandle ("gdi32.dll");
+  FARPROC enum_font_families_ex
+    = GetProcAddress ( gdi32, "EnumFontFamiliesExA");
+  /* We don't really expect EnumFontFamiliesEx to disappear once we
+     get here, so don't bother handling it gracefully.  */
+  if (enum_font_families_ex == NULL)
+    error ("gdi32.dll has disappeared!");
+  return enum_font_families_ex (lpef->hdc,
+                                &lplf->elfLogFont,
+                                (FONTENUMPROC) enum_fontex_cb2,
+                                (LPARAM) lpef, 0);
+}
+
+/* Interface to fontset handler. (adapted from mw32font.c in Meadow
+   and xterm.c in Emacs 20.3) */
+
+Lisp_Object w32_list_bdf_fonts (Lisp_Object pattern, int max_names)
+{
+  char *fontname, *ptnstr;
+  Lisp_Object list, tem, newlist = Qnil;
+  int n_fonts = 0;
+
+  list = Vw32_bdf_filename_alist;
+  ptnstr = XSTRING (pattern)->data;
+
+  for ( ; CONSP (list); list = XCONS (list)->cdr)
+    {
+      tem = XCONS (list)->car;
+      if (CONSP (tem))
+        fontname = XSTRING (XCONS (tem)->car)->data;
+      else if (STRINGP (tem))
+        fontname = XSTRING (tem)->data;
+      else
+        continue;
+
+      if (w32_font_match (fontname, ptnstr))
+        {
+          newlist = Fcons (XCONS (tem)->car, newlist);
+          n_fonts++;
+          if (n_fonts >= max_names)
+            break;
+        }
+    }
+
+  return newlist;
+}
+
+Lisp_Object w32_list_synthesized_fonts (FRAME_PTR f, Lisp_Object pattern,
+                                        int size, int max_names);
+
+/* Return a list of names of available fonts matching PATTERN on frame
+   F.  If SIZE is not 0, it is the size (maximum bound width) of fonts
+   to be listed.  Frame F NULL means we have not yet created any
+   frame, which means we can't get proper size info, as we don't have
+   a device context to use for GetTextMetrics.
+   MAXNAMES sets a limit on how many fonts to match.  */
+
+Lisp_Object
+w32_list_fonts (FRAME_PTR f, Lisp_Object pattern, int size, int maxnames )
+{
+  Lisp_Object patterns, key, tem, tpat;
+  Lisp_Object list = Qnil, newlist = Qnil, second_best = Qnil;
+  struct w32_display_info *dpyinfo = &one_w32_display_info;
+  int n_fonts = 0;
+
+  patterns = Fassoc (pattern, Valternate_fontname_alist);
+  if (NILP (patterns))
+    patterns = Fcons (pattern, Qnil);
+
+  for (; CONSP (patterns); patterns = XCONS (patterns)->cdr)
+    {
+      enumfont_t ef;
+
+      tpat = XCONS (patterns)->car;
+
+      /* See if we cached the result for this particular query.
+         The cache is an alist of the form:
+           ((PATTERN (FONTNAME . WIDTH) ...) ...)
+      */
+      if (tem = XCONS (dpyinfo->name_list_element)->cdr,
+          !NILP (list = Fassoc (tpat, tem)))
+        {
+          list = Fcdr_safe (list);
+          /* We have a cached list. Don't have to get the list again.  */
+          goto label_cached;
+        }
+
+      BLOCK_INPUT;
+      /* At first, put PATTERN in the cache.  */
+      list = Qnil;
+      ef.pattern = &tpat;
+      ef.tail = &list;
+      ef.numFonts = 0;
+
+      /* Use EnumFontFamiliesEx where it is available, as it knows
+         about character sets.  Fall back to EnumFontFamilies for
+         older versions of NT that don't support the 'Ex function.  */
+      x_to_w32_font (STRINGP (tpat) ? XSTRING (tpat)->data :
+                     NULL, &ef.logfont);
+      {
+        LOGFONT font_match_pattern;
+        HMODULE gdi32 = GetModuleHandle ("gdi32.dll");
+        FARPROC enum_font_families_ex
+          = GetProcAddress ( gdi32, "EnumFontFamiliesExA");
+
+        /* We do our own pattern matching so we can handle wildcards.  */
+        font_match_pattern.lfFaceName[0] = 0;
+        font_match_pattern.lfPitchAndFamily = 0;
+        /* We can use the charset, because if it is a wildcard it will
+           be DEFAULT_CHARSET anyway.  */
+        font_match_pattern.lfCharSet = ef.logfont.lfCharSet;
+
+        ef.hdc = GetDC (dpyinfo->root_window);
+
+        if (enum_font_families_ex)
+          enum_font_families_ex (ef.hdc,
+                                 &font_match_pattern,
+                                 (FONTENUMPROC) enum_fontex_cb1,
+                                 (LPARAM) &ef, 0);
+        else
+          EnumFontFamilies (ef.hdc, NULL, (FONTENUMPROC) enum_font_cb1,
+                            (LPARAM)&ef);
+
+        ReleaseDC (dpyinfo->root_window, ef.hdc);
+      }
+
+      UNBLOCK_INPUT;
+
+      /* Make a list of the fonts we got back.
+         Store that in the font cache for the display. */
+      XCONS (dpyinfo->name_list_element)->cdr
+        = Fcons (Fcons (tpat, list),
+                 XCONS (dpyinfo->name_list_element)->cdr);
+
+    label_cached:
+      if (NILP (list)) continue; /* Try the remaining alternatives.  */
+
+      newlist = second_best = Qnil;
+
+      /* Make a list of the fonts that have the right width.  */          
+      for (; CONSP (list); list = XCONS (list)->cdr)
+        {
+          int found_size;
+          tem = XCONS (list)->car;
+
+          if (!CONSP (tem))
+            continue;
+          if (NILP (XCONS (tem)->car))
+            continue;
+          if (!size)
+            {
+              newlist = Fcons (XCONS (tem)->car, newlist);
+              n_fonts++;
+              if (n_fonts >= maxnames)
+                break;
+              else
+                continue;
+            }
+          if (!INTEGERP (XCONS (tem)->cdr))
+            {
+              /* Since we don't yet know the size of the font, we must
+                 load it and try GetTextMetrics.  */
+              W32FontStruct thisinfo;
+              LOGFONT lf;
+              HDC hdc;
+              HANDLE oldobj;
+
+              if (!x_to_w32_font (XSTRING (XCONS (tem)->car)->data, &lf))
+                continue;
+
+              BLOCK_INPUT;
+              thisinfo.bdf = NULL;
+              thisinfo.hfont = CreateFontIndirect (&lf);
+              if (thisinfo.hfont == NULL)
+                continue;
+
+              hdc = GetDC (dpyinfo->root_window);
+              oldobj = SelectObject (hdc, thisinfo.hfont);
+              if (GetTextMetrics (hdc, &thisinfo.tm))
+                XCONS (tem)->cdr = make_number (FONT_WIDTH (&thisinfo));
+              else
+                XCONS (tem)->cdr = make_number (0);
+              SelectObject (hdc, oldobj);
+              ReleaseDC (dpyinfo->root_window, hdc);
+              DeleteObject(thisinfo.hfont);
+              UNBLOCK_INPUT;
+            }
+          found_size = XINT (XCONS (tem)->cdr);
+          if (found_size == size)
+            {
+              newlist = Fcons (XCONS (tem)->car, newlist);
+              n_fonts++;
+              if (n_fonts >= maxnames)
+                break;
+            }
+          /* keep track of the closest matching size in case
+             no exact match is found.  */
+          else if (found_size > 0)
+            {
+              if (NILP (second_best))
+                second_best = tem;
+                  
+              else if (found_size < size)
+                {
+                  if (XINT (XCONS (second_best)->cdr) > size
+                      || XINT (XCONS (second_best)->cdr) < found_size)
+                    second_best = tem;
+                }
+              else
+                {
+                  if (XINT (XCONS (second_best)->cdr) > size
+                      && XINT (XCONS (second_best)->cdr) >
+                      found_size)
+                    second_best = tem;
+                }
+            }
+        }
+
+      if (!NILP (newlist))
+        break;
+      else if (!NILP (second_best))
+        {
+          newlist = Fcons (XCONS (second_best)->car, Qnil);
+          break;
+        }
+    }
+
+  /* Include any bdf fonts.  */
+  if (n_fonts < maxnames)
+  {
+    Lisp_Object combined[2];
+    combined[0] = w32_list_bdf_fonts (pattern, maxnames - n_fonts);
+    combined[1] = newlist;
+    newlist = Fnconc(2, combined);
+  }
+
+  /* If we can't find a font that matches, check if Windows would be
+     able to synthesize it from a different style.  */
+  if (NILP (newlist) && !NILP (Vw32_enable_italics))
+    newlist = w32_list_synthesized_fonts (f, pattern, size, maxnames);
+
+  return newlist;
+}
+
+Lisp_Object
+w32_list_synthesized_fonts (f, pattern, size, max_names)
+     FRAME_PTR f;
+     Lisp_Object pattern;
+     int size;
+     int max_names;
+{
+  int fields;
+  char *full_pattn, *new_pattn, foundary[50], family[50], *pattn_part2;
+  char style[20], slant;
+  Lisp_Object matches, match, tem, synthed_matches = Qnil;
+
+  full_pattn = XSTRING (pattern)->data;
+
+  pattn_part2 = alloca (XSTRING (pattern)->size);
+  /* Allow some space for wildcard expansion.  */
+  new_pattn = alloca (XSTRING (pattern)->size + 100);
+
+  fields = sscanf (full_pattn, "-%49[^-]-%49[^-]-%19[^-]-%c-%s",
+                   foundary, family, style, &slant, pattn_part2);
+  if (fields == EOF || fields < 5)
+    return Qnil;
+
+  /* If the style and slant are wildcards already there is no point
+     checking again (and we don't want to keep recursing).  */
+  if (*style == '*' && slant == '*')
+    return Qnil;
+
+  sprintf (new_pattn, "-%s-%s-*-*-%s", foundary, family, pattn_part2);
+
+  matches = w32_list_fonts (f, build_string (new_pattn), size, max_names);
+
+  for ( ; CONSP (matches); matches = XCONS (matches)->cdr)
+    {
+      tem = XCONS (matches)->car;
+      if (!STRINGP (tem))
+        continue;
+
+      full_pattn = XSTRING (tem)->data;
+      fields = sscanf (full_pattn, "-%49[^-]-%49[^-]-%*[^-]-%*c-%s",
+                       foundary, family, pattn_part2);
+      if (fields == EOF || fields < 3)
+        continue;
+
+      sprintf (new_pattn, "-%s-%s-%s-%c-%s", foundary, family, style,
+               slant, pattn_part2);
+
+      synthed_matches = Fcons (build_string (new_pattn),
+                               synthed_matches);
+    }
+
+  return synthed_matches;
+}
+
+
+/* Return a pointer to struct font_info of font FONT_IDX of frame F.  */
+struct font_info *
+w32_get_font_info (f, font_idx)
+     FRAME_PTR f;
+     int font_idx;
+{
+  return (FRAME_W32_FONT_TABLE (f) + font_idx);
+}
+
+
+struct font_info*
+w32_query_font (struct frame *f, char *fontname)
+{
+  int i;
+  struct font_info *pfi;
+
+  pfi = FRAME_W32_FONT_TABLE (f);
+
+  for (i = 0; i < one_w32_display_info.n_fonts ;i++, pfi++)
+    {
+      if (strcmp(pfi->name, fontname) == 0) return pfi;
+    }
+
+  return NULL;
+}
+
+/* Find a CCL program for a font specified by FONTP, and set the member
+ `encoder' of the structure.  */
+
+void
+w32_find_ccl_program (fontp)
+     struct font_info *fontp;
+{
+  extern Lisp_Object Vfont_ccl_encoder_alist, Vccl_program_table;
+  extern Lisp_Object Qccl_program_idx;
+  extern Lisp_Object resolve_symbol_ccl_program ();
+  Lisp_Object list, elt, ccl_prog, ccl_id;
+
+  for (list = Vfont_ccl_encoder_alist; CONSP (list); list = XCONS (list)->cdr)
+    {
+      elt = XCONS (list)->car;
+      if (CONSP (elt)
+	  && STRINGP (XCONS (elt)->car)
+	  && (fast_c_string_match_ignore_case (XCONS (elt)->car, fontp->name)
+	      >= 0))
+	{
+	  if (SYMBOLP (XCONS (elt)->cdr) &&
+	      (!NILP (ccl_id = Fget (XCONS (elt)->cdr, Qccl_program_idx))))
+	    {
+	      ccl_prog = XVECTOR (Vccl_program_table)->contents[XUINT (ccl_id)];
+	      if (!CONSP (ccl_prog)) continue;
+	      ccl_prog = XCONS (ccl_prog)->cdr;
+	    }
+	  else
+	    {
+	      ccl_prog = XCONS (elt)->cdr;
+	      if (!VECTORP (ccl_prog)) continue;
+	    }
+	    
+	  fontp->font_encoder
+	    = (struct ccl_program *) xmalloc (sizeof (struct ccl_program));
+	  setup_ccl_program (fontp->font_encoder,
+			     resolve_symbol_ccl_program (ccl_prog));
+	  break;
+	}
+    }
+}
+
+
+#if 1
+#include "x-list-font.c"
+#else
 DEFUN ("x-list-fonts", Fx_list_fonts, Sx_list_fonts, 1, 4, 0,
   "Return a list of the names of available fonts matching PATTERN.\n\
 If optional arguments FACE and FRAME are specified, return only fonts\n\
@@ -4933,10 +6319,12 @@ fonts to match.  The first MAXIMUM fonts are reported.")
       newlist = Qnil;
       for (tem = list; CONSP (tem); tem = XCONS (tem)->cdr)
 	{
-	  XFontStruct *thisinfo;
+	  struct font_info *fontinf;
+          XFontStruct *thisinfo = NULL;
 
-          thisinfo = w32_load_font (FRAME_W32_DISPLAY_INFO (f), XSTRING (XCONS (tem)->car)->data);
-
+          fontinf = w32_load_font (f, XSTRING (XCONS (tem)->car)->data, 0);
+          if (fontinf)
+            thisinfo = (XFontStruct *)fontinf->font;
           if (thisinfo && same_size_fonts (thisinfo, size_ref))
 	    newlist = Fcons (XCONS (tem)->car, newlist);
 
@@ -4952,7 +6340,7 @@ fonts to match.  The first MAXIMUM fonts are reported.")
 
   namelist = Qnil;
   ef.pattern = &pattern;
-  ef.tail = ef.head = &namelist;
+  ef.tail &namelist;
   ef.numFonts = 0;
   x_to_w32_font (STRINGP (pattern) ? XSTRING (pattern)->data : NULL, &ef.logfont);
 
@@ -4988,10 +6376,13 @@ fonts to match.  The first MAXIMUM fonts are reported.")
 	    keeper = 1;
 	  else
 	    {
-	      XFontStruct *thisinfo;
+	      struct font_info *fontinf;
+              XFontStruct *thisinfo = NULL;
 
 	      BLOCK_INPUT;
-	      thisinfo = w32_load_font (FRAME_W32_DISPLAY_INFO (f), XSTRING (Fcar (cur))->data);
+	      fontinf = w32_load_font (f, XSTRING (Fcar (cur))->data, 0);
+              if (fontinf)
+                thisinfo = (XFontStruct *)fontinf->font;
 
 	      keeper = thisinfo && same_size_fonts (thisinfo, size_ref);
 
@@ -5009,6 +6400,57 @@ fonts to match.  The first MAXIMUM fonts are reported.")
 
   return list;
 }
+#endif
+
+DEFUN ("w32-find-bdf-fonts", Fw32_find_bdf_fonts, Sw32_find_bdf_fonts,
+       1, 1, 0,
+       "Return a list of BDF fonts in DIR, suitable for appending to\n\
+w32-bdf-filename-alist.  Fonts which do not contain an xfld description\n\
+will not be included in the list. DIR may be a list of directories.")
+     (directory)
+     Lisp_Object directory;
+{
+  Lisp_Object list = Qnil;
+  struct gcpro gcpro1, gcpro2;
+
+  if (!CONSP (directory))
+    return w32_find_bdf_fonts_in_dir (directory);
+
+  for ( ; CONSP (directory); directory = XCONS (directory)->cdr)
+    {
+      Lisp_Object pair[2];
+      pair[0] = list;
+      pair[1] = Qnil;
+      GCPRO2 (directory, list);
+      pair[1] = w32_find_bdf_fonts_in_dir( XCONS (directory)->car );
+      list = Fnconc( 2, pair );
+      UNGCPRO;
+    }
+  return list;
+}
+
+/* Find BDF files in a specified directory.  (use GCPRO when calling,
+   as this calls lisp to get a directory listing).  */
+Lisp_Object w32_find_bdf_fonts_in_dir( Lisp_Object directory )
+{
+  Lisp_Object filelist, list = Qnil;
+  char fontname[100];
+
+  if (!STRINGP(directory))
+    return Qnil;
+
+  filelist = Fdirectory_files (directory, Qt,
+                              build_string (".*\\.[bB][dD][fF]"), Qt);
+
+  for ( ; CONSP(filelist); filelist = XCONS (filelist)->cdr)
+    {
+      Lisp_Object filename = XCONS (filelist)->car;
+      if (w32_BDF_to_x_font (XSTRING (filename)->data, fontname, 100))
+          store_in_alist (&list, build_string (fontname), filename);
+    }
+  return list;
+}
+
 
 DEFUN ("x-color-defined-p", Fx_color_defined_p, Sx_color_defined_p, 1, 2, 0,
        "Return non-nil if color COLOR is supported on frame FRAME.\n\
@@ -5542,14 +6984,37 @@ DEFUN ("w32-select-font", Fw32_select_font, Sw32_select_font, 0, 1, 0,
   FRAME_PTR f = check_x_frame (frame);
   CHOOSEFONT cf;
   LOGFONT lf;
+  TEXTMETRIC tm;
+  HDC hdc;
+  HANDLE oldobj;
   char buf[100];
 
   bzero (&cf, sizeof (cf));
+  bzero (&lf, sizeof (lf));
 
   cf.lStructSize = sizeof (cf);
   cf.hwndOwner = FRAME_W32_WINDOW (f);
   cf.Flags = CF_FIXEDPITCHONLY | CF_FORCEFONTEXIST | CF_SCREENFONTS;
   cf.lpLogFont = &lf;
+
+  /* Initialize as much of the font details as we can from the current
+     default font.  */
+  hdc = GetDC (FRAME_W32_WINDOW (f));
+  oldobj = SelectObject (hdc, FRAME_FONT (f)->hfont);
+  GetTextFace (hdc, LF_FACESIZE, lf.lfFaceName);
+  if (GetTextMetrics (hdc, &tm))
+    {
+      lf.lfHeight = tm.tmInternalLeading - tm.tmHeight;
+      lf.lfWeight = tm.tmWeight;
+      lf.lfItalic = tm.tmItalic;
+      lf.lfUnderline = tm.tmUnderlined;
+      lf.lfStrikeOut = tm.tmStruckOut;
+      lf.lfPitchAndFamily = tm.tmPitchAndFamily;
+      lf.lfCharSet = tm.tmCharSet;
+      cf.Flags |= CF_INITTOLOGFONTSTRUCT;
+    }
+  SelectObject (hdc, oldobj);
+  ReleaseDC (FRAME_W32_WINDOW(f), hdc);
 
   if (!ChooseFont (&cf) || !w32_to_x_font (&lf, buf, 100))
       return Qnil;
@@ -5578,6 +7043,263 @@ If optional parameter FRAME is not specified, use selected frame.")
   return Qnil;
 }
 
+DEFUN ("w32-shell-execute", Fw32_shell_execute, Sw32_shell_execute, 2, 4, 0,
+  "Get Windows to perform OPERATION on DOCUMENT.\n\
+This is a wrapper around the ShellExecute system function, which\n\
+invokes the application registered to handle OPERATION for DOCUMENT.\n\
+OPERATION is typically \"open\", \"print\" or \"explore\", and DOCUMENT\n\
+is typically the name of a document file or URL, but can also be a\n\
+program executable to run or a directory to open in the Windows Explorer.\n\
+\n\
+If DOCUMENT is a program executable, PARAMETERS can be a list of command\n\
+line parameters, but otherwise should be nil.\n\
+\n\
+SHOW-FLAG can be used to control whether the invoked application is hidden\n\
+or minimized.  If SHOw-FLAG is nil, the application is displayed normally,\n\
+otherwise it is an integer representing a ShowWindow flag:\n\
+\n\
+  0 - start hidden\n\
+  1 - start normally\n\
+  3 - start maximized\n\
+  6 - start minimized")
+  (operation, document, parameters, show_flag)
+     Lisp_Object operation, document, parameters, show_flag;
+{
+  Lisp_Object current_dir;
+
+  CHECK_STRING (operation, 0);
+  CHECK_STRING (document, 0);
+
+  /* Encode filename and current directory.  */
+  current_dir = ENCODE_FILE (current_buffer->directory);
+  document = ENCODE_FILE (document);
+  if ((int) ShellExecute (NULL,
+			  XSTRING (operation)->data,
+			  XSTRING (document)->data,
+			  (STRINGP (parameters) ?
+			   XSTRING (parameters)->data : NULL),
+			  XSTRING (current_dir)->data,
+			  (INTEGERP (show_flag) ?
+			   XINT (show_flag) : SW_SHOWDEFAULT))
+      > 32)
+    return Qt;
+  error ("ShellExecute failed");
+}
+
+/* Lookup virtual keycode from string representing the name of a
+   non-ascii keystroke into the corresponding virtual key, using
+   lispy_function_keys.  */
+static int
+lookup_vk_code (char *key)
+{
+  int i;
+
+  for (i = 0; i < 256; i++)
+    if (lispy_function_keys[i] != 0
+	&& strcmp (lispy_function_keys[i], key) == 0)
+      return i;
+
+  return -1;
+}
+
+/* Convert a one-element vector style key sequence to a hot key
+   definition.  */
+static int
+w32_parse_hot_key (key)
+     Lisp_Object key;
+{
+  /* Copied from Fdefine_key and store_in_keymap.  */
+  register Lisp_Object c;
+  int vk_code;
+  int lisp_modifiers;
+  int w32_modifiers;
+  struct gcpro gcpro1;
+
+  CHECK_VECTOR (key, 0);
+
+  if (XFASTINT (Flength (key)) != 1)
+    return Qnil;
+
+  GCPRO1 (key);
+
+  c = Faref (key, make_number (0));
+
+  if (CONSP (c) && lucid_event_type_list_p (c))
+    c = Fevent_convert_list (c);
+
+  UNGCPRO;
+
+  if (! INTEGERP (c) && ! SYMBOLP (c))
+    error ("Key definition is invalid");
+
+  /* Work out the base key and the modifiers.  */
+  if (SYMBOLP (c))
+    {
+      c = parse_modifiers (c);
+      lisp_modifiers = Fcar (Fcdr (c));
+      c = Fcar (c);
+      if (!SYMBOLP (c))
+	abort ();
+      vk_code = lookup_vk_code (XSYMBOL (c)->name->data);
+    }
+  else if (INTEGERP (c))
+    {
+      lisp_modifiers = XINT (c) & ~CHARACTERBITS;
+      /* Many ascii characters are their own virtual key code.  */
+      vk_code = XINT (c) & CHARACTERBITS;
+    }
+
+  if (vk_code < 0 || vk_code > 255)
+    return Qnil;
+
+  if ((lisp_modifiers & meta_modifier) != 0
+      && !NILP (Vw32_alt_is_meta))
+    lisp_modifiers |= alt_modifier;
+
+  /* Convert lisp modifiers to Windows hot-key form.  */
+  w32_modifiers  = (lisp_modifiers & hyper_modifier)    ? MOD_WIN : 0;
+  w32_modifiers |= (lisp_modifiers & alt_modifier)      ? MOD_ALT : 0;
+  w32_modifiers |= (lisp_modifiers & ctrl_modifier)     ? MOD_CONTROL : 0;
+  w32_modifiers |= (lisp_modifiers & shift_modifier)    ? MOD_SHIFT : 0;
+
+  return HOTKEY (vk_code, w32_modifiers);
+}
+
+DEFUN ("w32-register-hot-key", Fw32_register_hot_key, Sw32_register_hot_key, 1, 1, 0,
+   "Register KEY as a hot-key combination.\n\
+Certain key combinations like Alt-Tab are reserved for system use on\n\
+Windows, and therefore are normally intercepted by the system.  However,\n\
+most of these key combinations can be received by registering them as\n\
+hot-keys, overriding their special meaning.\n\
+\n\
+KEY must be a one element key definition in vector form that would be\n\
+acceptable to `define-key' (e.g. [A-tab] for Alt-Tab).  The meta\n\
+modifier is interpreted as Alt if `w32-alt-is-meta' is t, and hyper\n\
+is always interpreted as the Windows modifier keys.\n\
+\n\
+The return value is the hotkey-id if registered, otherwise nil.")
+  (key)
+     Lisp_Object key;
+{
+  key = w32_parse_hot_key (key);
+
+  if (NILP (Fmemq (key, w32_grabbed_keys)))
+    {
+      /* Reuse an empty slot if possible.  */
+      Lisp_Object item = Fmemq (Qnil, w32_grabbed_keys);
+
+      /* Safe to add new key to list, even if we have focus.  */
+      if (NILP (item))
+	w32_grabbed_keys = Fcons (key, w32_grabbed_keys);
+      else
+	XCAR (item) = key;
+
+      /* Notify input thread about new hot-key definition, so that it
+	 takes effect without needing to switch focus.  */
+      PostThreadMessage (dwWindowsThreadId, WM_EMACS_REGISTER_HOT_KEY,
+			 (WPARAM) key, 0);
+    }
+
+  return key;
+}
+
+DEFUN ("w32-unregister-hot-key", Fw32_unregister_hot_key, Sw32_unregister_hot_key, 1, 1, 0,
+   "Unregister HOTKEY as a hot-key combination.")
+  (key)
+     Lisp_Object key;
+{
+  Lisp_Object item;
+
+  if (!INTEGERP (key))
+    key = w32_parse_hot_key (key);
+
+  item = Fmemq (key, w32_grabbed_keys);
+
+  if (!NILP (item))
+    {
+      /* Notify input thread about hot-key definition being removed, so
+	 that it takes effect without needing focus switch.  */
+      if (PostThreadMessage (dwWindowsThreadId, WM_EMACS_UNREGISTER_HOT_KEY,
+			     (WPARAM) XINT (XCAR (item)), (LPARAM) item))
+	{
+	  MSG msg;
+	  GetMessage (&msg, NULL, WM_EMACS_DONE, WM_EMACS_DONE);
+	}
+      return Qt;
+    }
+  return Qnil;
+}
+
+DEFUN ("w32-registered-hot-keys", Fw32_registered_hot_keys, Sw32_registered_hot_keys, 0, 0, 0,
+   "Return list of registered hot-key IDs.")
+  ()
+{
+  return Fcopy_sequence (w32_grabbed_keys);
+}
+
+DEFUN ("w32-reconstruct-hot-key", Fw32_reconstruct_hot_key, Sw32_reconstruct_hot_key, 1, 1, 0,
+   "Convert hot-key ID to a lisp key combination.")
+  (hotkeyid)
+     Lisp_Object hotkeyid;
+{
+  int vk_code, w32_modifiers;
+  Lisp_Object key;
+
+  CHECK_NUMBER (hotkeyid, 0);
+
+  vk_code = HOTKEY_VK_CODE (hotkeyid);
+  w32_modifiers = HOTKEY_MODIFIERS (hotkeyid);
+
+  if (lispy_function_keys[vk_code])
+    key = intern (lispy_function_keys[vk_code]);
+  else
+    key = make_number (vk_code);
+
+  key = Fcons (key, Qnil);
+  if (w32_modifiers & MOD_SHIFT)
+    key = Fcons (Qshift, key);
+  if (w32_modifiers & MOD_CONTROL)
+    key = Fcons (Qctrl, key);
+  if (w32_modifiers & MOD_ALT)
+    key = Fcons (NILP (Vw32_alt_is_meta) ? Qalt : Qmeta, key);
+  if (w32_modifiers & MOD_WIN)
+    key = Fcons (Qhyper, key);
+
+  return key;
+}
+
+DEFUN ("w32-toggle-lock-key", Fw32_toggle_lock_key, Sw32_toggle_lock_key, 1, 2, 0,
+   "Toggle the state of the lock key KEY.\n\
+KEY can be `capslock', `kp-numlock', or `scroll'.\n\
+If the optional parameter NEW-STATE is a number, then the state of KEY\n\
+is set to off if the low bit of NEW-STATE is zero, otherwise on.")
+  (key, new_state)
+     Lisp_Object key, new_state;
+{
+  int vk_code;
+  int cur_state;
+
+  if (EQ (key, intern ("capslock")))
+    vk_code = VK_CAPITAL;
+  else if (EQ (key, intern ("kp-numlock")))
+    vk_code = VK_NUMLOCK;
+  else if (EQ (key, intern ("scroll")))
+    vk_code = VK_SCROLL;
+  else
+    return Qnil;
+
+  if (!dwWindowsThreadId)
+    return make_number (w32_console_toggle_lock_key (vk_code, new_state));
+
+  if (PostThreadMessage (dwWindowsThreadId, WM_EMACS_TOGGLE_LOCK_KEY,
+			 (WPARAM) vk_code, (LPARAM) new_state))
+    {
+      MSG msg;
+      GetMessage (&msg, NULL, WM_EMACS_DONE, WM_EMACS_DONE);
+      return make_number (msg.wParam);
+    }
+  return Qnil;
+}
 
 syms_of_w32fns ()
 {
@@ -5655,6 +7377,21 @@ syms_of_w32fns ()
   staticpro (&Qdisplay);
   /* This is the end of symbol initialization.  */
 
+  Qhyper = intern ("hyper");
+  staticpro (&Qhyper);
+  Qsuper = intern ("super");
+  staticpro (&Qsuper);
+  Qmeta = intern ("meta");
+  staticpro (&Qmeta);
+  Qalt = intern ("alt");
+  staticpro (&Qalt);
+  Qctrl = intern ("ctrl");
+  staticpro (&Qctrl);
+  Qcontrol = intern ("control");
+  staticpro (&Qcontrol);
+  Qshift = intern ("shift");
+  staticpro (&Qshift);
+
   Qface_set_after_frame_default = intern ("face-set-after-frame-default");
   staticpro (&Qface_set_after_frame_default);
 
@@ -5663,8 +7400,11 @@ syms_of_w32fns ()
   Fput (Qundefined_color, Qerror_message,
 	build_string ("Undefined color"));
 
+  staticpro (&w32_grabbed_keys);
+  w32_grabbed_keys = Qnil;
+
   DEFVAR_LISP ("w32-color-map", &Vw32_color_map,
-	       "A array of color name mappings for windows.");
+	       "An array of color name mappings for windows.");
   Vw32_color_map = Qnil;
 
   DEFVAR_LISP ("w32-pass-alt-to-system", &Vw32_pass_alt_to_system,
@@ -5678,11 +7418,77 @@ open the System menu.  When nil, Emacs silently swallows alt key events.");
 When nil, Emacs will translate the alt key to the Alt modifier, and not Meta.");
   Vw32_alt_is_meta = Qt;
 
-  DEFVAR_LISP ("w32-pass-optional-keys-to-system", 
-	       &Vw32_pass_optional_keys_to_system,
-	       "Non-nil if the 'optional' keys (left window, right window,\n\
-and application keys) are passed on to Windows.");
-  Vw32_pass_optional_keys_to_system = Qnil;
+  DEFVAR_INT ("w32-quit-key", &Vw32_quit_key,
+	       "If non-zero, the virtual key code for an alternative quit key.");
+  XSETINT (Vw32_quit_key, 0);
+
+  DEFVAR_LISP ("w32-pass-lwindow-to-system", 
+	       &Vw32_pass_lwindow_to_system,
+	       "Non-nil if the left \"Windows\" key is passed on to Windows.\n\
+When non-nil, the Start menu is opened by tapping the key.");
+  Vw32_pass_lwindow_to_system = Qt;
+
+  DEFVAR_LISP ("w32-pass-rwindow-to-system", 
+	       &Vw32_pass_rwindow_to_system,
+	       "Non-nil if the right \"Windows\" key is passed on to Windows.\n\
+When non-nil, the Start menu is opened by tapping the key.");
+  Vw32_pass_rwindow_to_system = Qt;
+
+  DEFVAR_INT ("w32-phantom-key-code",
+	       &Vw32_phantom_key_code,
+	       "Virtual key code used to generate \"phantom\" key presses.\n\
+Value is a number between 0 and 255.\n\
+\n\
+Phantom key presses are generated in order to stop the system from\n\
+acting on \"Windows\" key events when `w32-pass-lwindow-to-system' or\n\
+`w32-pass-rwindow-to-system' is nil.");
+  /* Although 255 is technically not a valid key code, it works and
+     means that this hack won't interfere with any real key code.  */
+  Vw32_phantom_key_code = 255;
+
+  DEFVAR_LISP ("w32-enable-num-lock", 
+	       &Vw32_enable_num_lock,
+	       "Non-nil if Num Lock should act normally.\n\
+Set to nil to see Num Lock as the key `kp-numlock'.");
+  Vw32_enable_num_lock = Qt;
+
+  DEFVAR_LISP ("w32-enable-caps-lock", 
+	       &Vw32_enable_caps_lock,
+	       "Non-nil if Caps Lock should act normally.\n\
+Set to nil to see Caps Lock as the key `capslock'.");
+  Vw32_enable_caps_lock = Qt;
+
+  DEFVAR_LISP ("w32-scroll-lock-modifier",
+	       &Vw32_scroll_lock_modifier,
+	       "Modifier to use for the Scroll Lock on state.\n\
+The value can be hyper, super, meta, alt, control or shift for the\n\
+respective modifier, or nil to see Scroll Lock as the key `scroll'.\n\
+Any other value will cause the key to be ignored.");
+  Vw32_scroll_lock_modifier = Qt;
+
+  DEFVAR_LISP ("w32-lwindow-modifier",
+	       &Vw32_lwindow_modifier,
+	       "Modifier to use for the left \"Windows\" key.\n\
+The value can be hyper, super, meta, alt, control or shift for the\n\
+respective modifier, or nil to appear as the key `lwindow'.\n\
+Any other value will cause the key to be ignored.");
+  Vw32_lwindow_modifier = Qnil;
+
+  DEFVAR_LISP ("w32-rwindow-modifier",
+	       &Vw32_rwindow_modifier,
+	       "Modifier to use for the right \"Windows\" key.\n\
+The value can be hyper, super, meta, alt, control or shift for the\n\
+respective modifier, or nil to appear as the key `rwindow'.\n\
+Any other value will cause the key to be ignored.");
+  Vw32_rwindow_modifier = Qnil;
+
+  DEFVAR_LISP ("w32-apps-modifier",
+	       &Vw32_apps_modifier,
+	       "Modifier to use for the \"Apps\" key.\n\
+The value can be hyper, super, meta, alt, control or shift for the\n\
+respective modifier, or nil to appear as the key `apps'.\n\
+Any other value will cause the key to be ignored.");
+  Vw32_apps_modifier = Qnil;
 
   DEFVAR_LISP ("w32-enable-italics", &Vw32_enable_italics,
 	       "Non-nil enables selection of artificially italicized fonts.");
@@ -5707,7 +7513,7 @@ button down event is generated instead.");
 The value is the minimum time in milliseconds that must elapse between\n\
 successive mouse move (or scroll bar drag) events before they are\n\
 reported as lisp events.");
-  XSETINT (Vw32_mouse_move_interval, 50);
+  XSETINT (Vw32_mouse_move_interval, 0);
 
   init_x_parm_symbols ();
 
@@ -5753,6 +7559,43 @@ unless you set it to something else.");
      and maybe the user would like to set it to t.  */
   Vx_no_window_manager = Qnil;
 
+  DEFVAR_LISP ("x-pixel-size-width-font-regexp",
+	       &Vx_pixel_size_width_font_regexp,
+     "Regexp matching a font name whose width is the same as `PIXEL_SIZE'.\n\
+\n\
+Since Emacs gets width of a font matching with this regexp from\n\
+PIXEL_SIZE field of the name, font finding mechanism gets faster for\n\
+such a font.  This is especially effective for such large fonts as\n\
+Chinese, Japanese, and Korean.");
+  Vx_pixel_size_width_font_regexp = Qnil;
+
+  DEFVAR_LISP ("w32-bdf-filename-alist",
+               &Vw32_bdf_filename_alist,
+               "List of bdf fonts and their corresponding filenames.");
+  Vw32_bdf_filename_alist = Qnil;
+
+  DEFVAR_BOOL ("w32-strict-fontnames",
+               &w32_strict_fontnames,
+  "Non-nil means only use fonts that are exact matches for those requested.\n\
+Default is nil, which allows old fontnames that are not XLFD compliant,\n\
+and allows third-party CJK display to work by specifying false charset\n\
+fields to trick Emacs into translating to Big5, SJIS etc.\n\
+Setting this to t will prevent wrong fonts being selected when\n\
+fontsets are automatically created.");
+  w32_strict_fontnames = 0;
+
+  DEFVAR_BOOL ("w32-strict-painting",
+               &w32_strict_painting,
+  "Non-nil means use strict rules for repainting frames.\n\
+Set this to nil to get the old behaviour for repainting; this should\n\
+only be necessary if the default setting causes problems.");
+  w32_strict_painting = 1;
+
+  DEFVAR_LISP ("w32-system-coding-system",
+               &Vw32_system_coding_system,
+  "Coding system used by Windows system functions, such as for font names.");
+  Vw32_system_coding_system = Qnil;
+
   defsubr (&Sx_get_resource);
   defsubr (&Sx_list_fonts);
   defsubr (&Sx_display_color_p);
@@ -5787,6 +7630,22 @@ unless you set it to something else.");
   defsubr (&Sw32_default_color_map);
   defsubr (&Sw32_load_color_file);
   defsubr (&Sw32_send_sys_command);
+  defsubr (&Sw32_shell_execute);
+  defsubr (&Sw32_register_hot_key);
+  defsubr (&Sw32_unregister_hot_key);
+  defsubr (&Sw32_registered_hot_keys);
+  defsubr (&Sw32_reconstruct_hot_key);
+  defsubr (&Sw32_toggle_lock_key);
+  defsubr (&Sw32_find_bdf_fonts);
+
+  /* Setting callback functions for fontset handler.  */
+  get_font_info_func = w32_get_font_info;
+  list_fonts_func = w32_list_fonts;
+  load_font_func = w32_load_font;
+  find_ccl_program_func = w32_find_ccl_program;
+  query_font_func = w32_query_font;
+  set_frame_fontset_func = x_set_font;
+  check_window_system_func = check_w32;
 }
 
 #undef abort
@@ -5815,3 +7674,9 @@ w32_abort()
     }
 }
 
+/* For convenience when debugging.  */
+int
+w32_last_error()
+{
+  return GetLastError ();
+}

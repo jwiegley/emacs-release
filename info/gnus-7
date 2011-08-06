@@ -1,9 +1,8 @@
 This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
 the input file gnus.texi.
 
-INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
-* Gnus: (gnus).		The news reader Gnus.
+* Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
 
    This file documents Gnus, the GNU Emacs newsreader.
@@ -22,6 +21,851 @@ of a permission notice identical to this one.
    Permission is granted to copy and distribute translations of this
 manual into another language, under the above conditions for modified
 versions.
+
+
+File: gnus,  Node: Washing Mail,  Next: Duplicates,  Prev: Expiring Mail,  Up: Getting Mail
+
+Washing Mail
+------------
+
+   Mailers and list servers are notorious for doing all sorts of really,
+really stupid things with mail.  "Hey, RFC822 doesn't explicitly
+prohibit us from adding the string `wE aRe ElItE!!!!!1!!' to the end of
+all lines passing through our server, so let's do that!!!!1!"  Yes, but
+RFC822 wasn't designed to be read by morons.  Things that were
+considered to be self-evident were not discussed.  So.  Here we are.
+
+   Case in point:  The German version of Microsoft Exchange adds `AW: '
+to the subjects of replies instead of `Re: '.  I could pretend to be
+shocked and dismayed by this, but I haven't got the energy.  It is to
+laugh.
+
+   Gnus provides a plethora of functions for washing articles while
+displaying them, but it might be nicer to do the filtering before
+storing the mail to disc.  For that purpose, we have three hooks and
+various functions that can be put in these hooks.
+
+`nnmail-prepare-incoming-hook'
+     This hook is called before doing anything with the mail and is
+     meant for grand, sweeping gestures.  Functions to be used include:
+
+    `nnheader-ms-strip-cr'
+          Remove trailing carriage returns from each line.  This is
+          default on Emacs running on MS machines.
+
+`nnmail-prepare-incoming-header-hook'
+     This hook is called narrowed to each header.  It can be used when
+     cleaning up the headers.  Functions that can be used include:
+
+    `nnmail-remove-leading-whitespace'
+          Clear leading white space that "helpful" listservs have added
+          to the headers to make them look nice.  Aaah.
+
+    `nnmail-remove-list-identifiers'
+          Some list servers add an identifier--for example, `(idm)'--to
+          the beginning of all `Subject' headers.  I'm sure that's nice
+          for people who use stone age mail readers.  This function
+          will remove strings that match the `nnmail-list-identifiers'
+          regexp, which can also be a list of regexp.
+
+          For instance, if you want to remove the `(idm)' and the
+          `nagnagnag' identifiers:
+
+               (setq nnmail-list-identifiers
+                     '("(idm)" "nagnagnag"))
+
+    `nnmail-remove-tabs'
+          Translate all `TAB' characters into `SPACE' characters.
+
+`nnmail-prepare-incoming-message-hook'
+     This hook is called narrowed to each message.  Functions to be used
+     include:
+
+    `article-de-quoted-unreadable'
+          Decode Quoted Readable encoding.
+
+
+File: gnus,  Node: Duplicates,  Next: Not Reading Mail,  Prev: Washing Mail,  Up: Getting Mail
+
+Duplicates
+----------
+
+   If you are a member of a couple of mailing lists, you will sometimes
+receive two copies of the same mail.  This can be quite annoying, so
+`nnmail' checks for and treats any duplicates it might find.  To do
+this, it keeps a cache of old `Message-ID's--
+`nnmail-message-id-cache-file', which is `~/.nnmail-cache' by default.
+The approximate maximum number of `Message-ID's stored there is
+controlled by the `nnmail-message-id-cache-length' variable, which is
+1000 by default. (So 1000 `Message-ID's will be stored.) If all this
+sounds scary to you, you can set `nnmail-treat-duplicates' to `warn'
+(which is what it is by default), and `nnmail' won't delete duplicate
+mails.  Instead it will insert a warning into the head of the mail
+saying that it thinks that this is a duplicate of a different message.
+
+   This variable can also be a function.  If that's the case, the
+function will be called from a buffer narrowed to the message in
+question with the `Message-ID' as a parameter.  The function must
+return either `nil', `warn', or `delete'.
+
+   You can turn this feature off completely by setting the variable to
+`nil'.
+
+   If you want all the duplicate mails to be put into a special
+"duplicates" group, you could do that using the normal mail split
+methods:
+
+     (setq nnmail-split-fancy
+           '(| ;; Messages duplicates go to a separate group.
+               ("gnus-warning" "duplication of message" "duplicate")
+               ;; Message from daemons, postmaster, and the like to another.
+               (any mail "mail.misc")
+               ;; Other rules.
+               [ ... ] ))
+
+   Or something like:
+     (setq nnmail-split-methods
+           '(("duplicates" "^Gnus-Warning:")
+             ;; Other rules.
+             [...]))
+
+   Here's a neat feature: If you know that the recipient reads her mail
+with Gnus, and that she has `nnmail-treat-duplicates' set to `delete',
+you can send her as many insults as you like, just by using a
+`Message-ID' of a mail that you know that she's already received.
+Think of all the fun!  She'll never see any of it!  Whee!
+
+
+File: gnus,  Node: Not Reading Mail,  Next: Choosing a Mail Backend,  Prev: Duplicates,  Up: Getting Mail
+
+Not Reading Mail
+----------------
+
+   If you start using any of the mail backends, they have the annoying
+habit of assuming that you want to read mail with them.  This might not
+be unreasonable, but it might not be what you want.
+
+   If you set `nnmail-spool-file' to `nil', none of the backends will
+ever attempt to read incoming mail, which should help.
+
+   This might be too much, if, for instance, you are reading mail quite
+happily with `nnml' and just want to peek at some old RMAIL file you
+have stashed away with `nnbabyl'.  All backends have variables called
+backend-`get-new-mail'.  If you want to disable the `nnbabyl' mail
+reading, you edit the virtual server for the group to have a setting
+where `nnbabyl-get-new-mail' to `nil'.
+
+   All the mail backends will call `nn'*`-prepare-save-mail-hook'
+narrowed to the article to be saved before saving it when reading
+incoming mail.
+
+
+File: gnus,  Node: Choosing a Mail Backend,  Prev: Not Reading Mail,  Up: Getting Mail
+
+Choosing a Mail Backend
+-----------------------
+
+   Gnus will read the mail spool when you activate a mail group.  The
+mail file is first copied to your home directory.  What happens after
+that depends on what format you want to store your mail in.
+
+* Menu:
+
+* Unix Mail Box::               Using the (quite) standard Un*x mbox.
+* Rmail Babyl::                 Emacs programs use the rmail babyl format.
+* Mail Spool::                  Store your mail in a private spool?
+* MH Spool::                    An mhspool-like backend.
+* Mail Folders::                Having one file for each group.
+
+
+File: gnus,  Node: Unix Mail Box,  Next: Rmail Babyl,  Up: Choosing a Mail Backend
+
+Unix Mail Box
+.............
+
+   The "nnmbox" backend will use the standard Un*x mbox file to store
+mail.  `nnmbox' will add extra headers to each mail article to say
+which group it belongs in.
+
+   Virtual server settings:
+
+`nnmbox-mbox-file'
+     The name of the mail box in the user's home directory.
+
+`nnmbox-active-file'
+     The name of the active file for the mail box.
+
+`nnmbox-get-new-mail'
+     If non-`nil', `nnmbox' will read incoming mail and split it into
+     groups.
+
+
+File: gnus,  Node: Rmail Babyl,  Next: Mail Spool,  Prev: Unix Mail Box,  Up: Choosing a Mail Backend
+
+Rmail Babyl
+...........
+
+   The "nnbabyl" backend will use a babyl mail box (aka. "rmail mbox")
+to store mail. `nnbabyl' will add extra headers to each mail article to
+say which group it belongs in.
+
+   Virtual server settings:
+
+`nnbabyl-mbox-file'
+     The name of the rmail mbox file.
+
+`nnbabyl-active-file'
+     The name of the active file for the rmail box.
+
+`nnbabyl-get-new-mail'
+     If non-`nil', `nnbabyl' will read incoming mail.
+
+
+File: gnus,  Node: Mail Spool,  Next: MH Spool,  Prev: Rmail Babyl,  Up: Choosing a Mail Backend
+
+Mail Spool
+..........
+
+   The "nnml" spool mail format isn't compatible with any other known
+format.  It should be used with some caution.
+
+   If you use this backend, Gnus will split all incoming mail into
+files, one file for each mail, and put the articles into the
+corresponding directories under the directory specified by the
+`nnml-directory' variable.  The default value is `~/Mail/'.
+
+   You do not have to create any directories beforehand; Gnus will take
+care of all that.
+
+   If you have a strict limit as to how many files you are allowed to
+store in your account, you should not use this backend.  As each mail
+gets its own file, you might very well occupy thousands of inodes
+within a few weeks.  If this is no problem for you, and it isn't a
+problem for you having your friendly systems administrator walking
+around, madly, shouting "Who is eating all my inodes?! Who? Who!?!",
+then you should know that this is probably the fastest format to use.
+You do not have to trudge through a big mbox file just to read your new
+mail.
+
+   `nnml' is probably the slowest backend when it comes to article
+splitting.  It has to create lots of files, and it also generates NOV
+databases for the incoming mails.  This makes it the fastest backend
+when it comes to reading mail.
+
+   Virtual server settings:
+
+`nnml-directory'
+     All `nnml' directories will be placed under this directory.
+
+`nnml-active-file'
+     The active file for the `nnml' server.
+
+`nnml-newsgroups-file'
+     The `nnml' group descriptions file.  *Note Newsgroups File
+     Format::.
+
+`nnml-get-new-mail'
+     If non-`nil', `nnml' will read incoming mail.
+
+`nnml-nov-is-evil'
+     If non-`nil', this backend will ignore any NOV files.
+
+`nnml-nov-file-name'
+     The name of the NOV files.  The default is `.overview'.
+
+`nnml-prepare-save-mail-hook'
+     Hook run narrowed to an article before saving.
+
+   If your `nnml' groups and NOV files get totally out of whack, you
+can do a complete update by typing `M-x nnml-generate-nov-databases'.
+This command will trawl through the entire `nnml' hierarchy, looking at
+each and every article, so it might take a while to complete.  A better
+interface to this functionality can be found in the server buffer
+(*note Server Commands::.).
+
+
+File: gnus,  Node: MH Spool,  Next: Mail Folders,  Prev: Mail Spool,  Up: Choosing a Mail Backend
+
+MH Spool
+........
+
+   `nnmh' is just like `nnml', except that is doesn't generate NOV
+databases and it doesn't keep an active file.  This makes `nnmh' a
+*much* slower backend than `nnml', but it also makes it easier to write
+procmail scripts for.
+
+   Virtual server settings:
+
+`nnmh-directory'
+     All `nnmh' directories will be located under this directory.
+
+`nnmh-get-new-mail'
+     If non-`nil', `nnmh' will read incoming mail.
+
+`nnmh-be-safe'
+     If non-`nil', `nnmh' will go to ridiculous lengths to make sure
+     that the articles in the folder are actually what Gnus thinks they
+     are.  It will check date stamps and stat everything in sight, so
+     setting this to `t' will mean a serious slow-down.  If you never
+     use anything but Gnus to read the `nnmh' articles, you do not have
+     to set this variable to `t'.
+
+
+File: gnus,  Node: Mail Folders,  Prev: MH Spool,  Up: Choosing a Mail Backend
+
+Mail Folders
+............
+
+   `nnfolder' is a backend for storing each mail group in a separate
+file.  Each file is in the standard Un*x mbox format.  `nnfolder' will
+add extra headers to keep track of article numbers and arrival dates.
+
+   Virtual server settings:
+
+`nnfolder-directory'
+     All the `nnfolder' mail boxes will be stored under this directory.
+
+`nnfolder-active-file'
+     The name of the active file.
+
+`nnfolder-newsgroups-file'
+     The name of the group descriptions file.  *Note Newsgroups File
+     Format::.
+
+`nnfolder-get-new-mail'
+     If non-`nil', `nnfolder' will read incoming mail.
+
+`nnfolder-save-buffer-hook'
+     Hook run before saving the folders.  Note that Emacs does the
+     normal backup renaming of files even with the `nnfolder' buffers.
+     If you wish to switch this off, you could say something like the
+     following in your `.emacs' file:
+
+          (defun turn-off-backup ()
+            (set (make-local-variable 'backup-inhibited) t))
+          
+          (add-hook 'nnfolder-save-buffer-hook 'turn-off-backup)
+
+   If you have lots of `nnfolder'-like files you'd like to read with
+`nnfolder', you can use the `M-x nnfolder-generate-active-file' command
+to make `nnfolder' aware of all likely files in `nnfolder-directory'.
+
+
+File: gnus,  Node: Other Sources,  Next: Combined Groups,  Prev: Getting Mail,  Up: Select Methods
+
+Other Sources
+=============
+
+   Gnus can do more than just read news or mail.  The methods described
+below allow Gnus to view directories and files as if they were
+newsgroups.
+
+* Menu:
+
+* Directory Groups::      You can read a directory as if it was a newsgroup.
+* Anything Groups::       Dired?  Who needs dired?
+* Document Groups::       Single files can be the basis of a group.
+* SOUP::                  Reading SOUP packets "offline".
+* Web Searches::          Creating groups from articles that match a string.
+* Mail-To-News Gateways:: Posting articles via mail-to-news gateways.
+
+
+File: gnus,  Node: Directory Groups,  Next: Anything Groups,  Up: Other Sources
+
+Directory Groups
+----------------
+
+   If you have a directory that has lots of articles in separate files
+in it, you might treat it as a newsgroup.  The files have to have
+numerical names, of course.
+
+   This might be an opportune moment to mention `ange-ftp' (and its
+successor `efs'), that most wonderful of all wonderful Emacs packages.
+When I wrote `nndir', I didn't think much about it--a backend to read
+directories.  Big deal.
+
+   `ange-ftp' changes that picture dramatically.  For instance, if you
+enter the `ange-ftp' file name `/ftp.hpc.uh.edu:/pub/emacs/ding-list/'
+as the directory name, `ange-ftp' or `efs' will actually allow you to
+read this directory over at `sina' as a newsgroup.  Distributed news
+ahoy!
+
+   `nndir' will use NOV files if they are present.
+
+   `nndir' is a "read-only" backend--you can't delete or expire
+articles with this method.  You can use `nnmh' or `nnml' for whatever
+you use `nndir' for, so you could switch to any of those methods if you
+feel the need to have a non-read-only `nndir'.
+
+
+File: gnus,  Node: Anything Groups,  Next: Document Groups,  Prev: Directory Groups,  Up: Other Sources
+
+Anything Groups
+---------------
+
+   From the `nndir' backend (which reads a single spool-like
+directory), it's just a hop and a skip to `nneething', which pretends
+that any arbitrary directory is a newsgroup.  Strange, but true.
+
+   When `nneething' is presented with a directory, it will scan this
+directory and assign article numbers to each file.  When you enter such
+a group, `nneething' must create "headers" that Gnus can use.  After
+all, Gnus is a newsreader, in case you're forgetting. `nneething' does
+this in a two-step process.  First, it snoops each file in question.
+If the file looks like an article (i.e., the first few lines look like
+headers), it will use this as the head.  If this is just some arbitrary
+file without a head (e.g. a C source file), `nneething' will cobble up
+a header out of thin air.  It will use file ownership, name and date
+and do whatever it can with these elements.
+
+   All this should happen automatically for you, and you will be
+presented with something that looks very much like a newsgroup.
+Totally like a newsgroup, to be precise.  If you select an article, it
+will be displayed in the article buffer, just as usual.
+
+   If you select a line that represents a directory, Gnus will pop you
+into a new summary buffer for this `nneething' group.  And so on.  You
+can traverse the entire disk this way, if you feel like, but remember
+that Gnus is not dired, really, and does not intend to be, either.
+
+   There are two overall modes to this action--ephemeral or solid.  When
+doing the ephemeral thing (i.e., `G D' from the group buffer), Gnus
+will not store information on what files you have read, and what files
+are new, and so on.  If you create a solid `nneething' group the normal
+way with `G m', Gnus will store a mapping table between article numbers
+and file names, and you can treat this group like any other groups.
+When you activate a solid `nneething' group, you will be told how many
+unread articles it contains, etc., etc.
+
+   Some variables:
+
+`nneething-map-file-directory'
+     All the mapping files for solid `nneething' groups will be stored
+     in this directory, which defaults to `~/.nneething/'.
+
+`nneething-exclude-files'
+     All files that match this regexp will be ignored.  Nice to use to
+     exclude auto-save files and the like, which is what it does by
+     default.
+
+`nneething-map-file'
+     Name of the map files.
+
+
+File: gnus,  Node: Document Groups,  Next: SOUP,  Prev: Anything Groups,  Up: Other Sources
+
+Document Groups
+---------------
+
+   `nndoc' is a cute little thing that will let you read a single file
+as a newsgroup.  Several files types are supported:
+
+`babyl'
+     The babyl (rmail) mail box.
+
+`mbox'
+     The standard Unix mbox file.
+
+`mmdf'
+     The MMDF mail box format.
+
+`news'
+     Several news articles appended into a file.
+
+`rnews'
+     The rnews batch transport format.
+
+`forward'
+     Forwarded articles.
+
+`mime-parts'
+     MIME multipart messages, besides digests.
+
+`mime-digest'
+     MIME (RFC 1341) digest format.
+
+`standard-digest'
+     The standard (RFC 1153) digest format.
+
+`slack-digest'
+     Non-standard digest format--matches most things, but does it badly.
+
+   You can also use the special "file type" `guess', which means that
+`nndoc' will try to guess what file type it is looking at.  `digest'
+means that `nndoc' should guess what digest type the file is.
+
+   `nndoc' will not try to change the file or insert any extra headers
+into it--it will simply, like, let you use the file as the basis for a
+group.  And that's it.
+
+   If you have some old archived articles that you want to insert into
+your new & spiffy Gnus mail backend, `nndoc' can probably help you with
+that.  Say you have an old `RMAIL' file with mail that you now want to
+split into your new `nnml' groups.  You look at that file using `nndoc'
+(using the `G f' command in the group buffer (*note Foreign
+Groups::.)), set the process mark on all the articles in the buffer (`M
+P b', for instance), and then re-spool (`B r') using `nnml'.  If all
+goes well, all the mail in the `RMAIL' file is now also stored in lots
+of `nnml' directories, and you can delete that pesky `RMAIL' file.  If
+you have the guts!
+
+   Virtual server variables:
+
+`nndoc-article-type'
+     This should be one of `mbox', `babyl', `digest', `news', `rnews',
+     `mmdf', `forward', `rfc934', `rfc822-forward', `mime-parts',
+     `mime-digest', `standard-digest', `slack-digest', `clari-briefs' or
+     `guess'.
+
+`nndoc-post-type'
+     This variable says whether Gnus is to consider the group a news
+     group or a mail group.  There are two valid values:  `mail' (the
+     default) and `news'.
+
+* Menu:
+
+* Document Server Internals::   How to add your own document types.
+
+
+File: gnus,  Node: Document Server Internals,  Up: Document Groups
+
+Document Server Internals
+.........................
+
+   Adding new document types to be recognized by `nndoc' isn't
+difficult.  You just have to whip up a definition of what the document
+looks like, write a predicate function to recognize that document type,
+and then hook into `nndoc'.
+
+   First, here's an example document type definition:
+
+     (mmdf
+      (article-begin .  "^\^A\^A\^A\^A\n")
+      (body-end .  "^\^A\^A\^A\^A\n"))
+
+   The definition is simply a unique "name" followed by a series of
+regexp pseudo-variable settings.  Below are the possible
+variables--don't be daunted by the number of variables; most document
+types can be defined with very few settings:
+
+`first-article'
+     If present, `nndoc' will skip past all text until it finds
+     something that match this regexp.  All text before this will be
+     totally ignored.
+
+`article-begin'
+     This setting has to be present in all document type definitions.
+     It says what the beginning of each article looks like.
+
+`head-begin-function'
+     If present, this should be a function that moves point to the head
+     of the article.
+
+`nndoc-head-begin'
+     If present, this should be a regexp that matches the head of the
+     article.
+
+`nndoc-head-end'
+     This should match the end of the head of the article.  It defaults
+     to `^$'--the empty line.
+
+`body-begin-function'
+     If present, this function should move point to the beginning of
+     the body of the article.
+
+`body-begin'
+     This should match the beginning of the body of the article.  It
+     defaults to `^\n'.
+
+`body-end-function'
+     If present, this function should move point to the end of the body
+     of the article.
+
+`body-end'
+     If present, this should match the end of the body of the article.
+
+`file-end'
+     If present, this should match the end of the file.  All text after
+     this regexp will be totally ignored.
+
+   So, using these variables `nndoc' is able to dissect a document file
+into a series of articles, each with a head and a body.  However, a few
+more variables are needed since not all document types are all that
+news-like--variables needed to transform the head or the body into
+something that's palatable for Gnus:
+
+`prepare-body-function'
+     If present, this function will be called when requesting an
+     article.  It will be called with point at the start of the body,
+     and is useful if the document has encoded some parts of its
+     contents.
+
+`article-transform-function'
+     If present, this function is called when requesting an article.
+     It's meant to be used for more wide-ranging transformation of both
+     head and body of the article.
+
+`generate-head-function'
+     If present, this function is called to generate a head that Gnus
+     can understand.  It is called with the article number as a
+     parameter, and is expected to generate a nice head for the article
+     in question.  It is called when requesting the headers of all
+     articles.
+
+   Let's look at the most complicated example I can come up
+with--standard digests:
+
+     (standard-digest
+      (first-article . ,(concat "^" (make-string 70 ?-) "\n\n+"))
+      (article-begin . ,(concat "\n\n" (make-string 30 ?-) "\n\n+"))
+      (prepare-body-function . nndoc-unquote-dashes)
+      (body-end-function . nndoc-digest-body-end)
+      (head-end . "^ ?$")
+      (body-begin . "^ ?\n")
+      (file-end . "^End of .*digest.*[0-9].*\n\\*\\*\\|^End of.*Digest *$")
+      (subtype digest guess))
+
+   We see that all text before a 70-width line of dashes is ignored; all
+text after a line that starts with that `^End of' is also ignored; each
+article begins with a 30-width line of dashes; the line separating the
+head from the body may contain a single space; and that the body is run
+through `nndoc-unquote-dashes' before being delivered.
+
+   To hook your own document definition into `nndoc', use the
+`nndoc-add-type' function.  It takes two parameters--the first is the
+definition itself and the second (optional) parameter says where in the
+document type definition alist to put this definition.  The alist is
+traversed sequentially, and `nndoc-TYPE-type-p' is called for a given
+type `TYPE'.  So `nndoc-mmdf-type-p' is called to see whether a document
+is of `mmdf' type, and so on.  These type predicates should return
+`nil' if the document is not of the correct type; `t' if it is of the
+correct type; and a number if the document might be of the correct
+type.  A high number means high probability; a low number means low
+probability with `0' being the lowest valid number.
+
+
+File: gnus,  Node: SOUP,  Next: Web Searches,  Prev: Document Groups,  Up: Other Sources
+
+SOUP
+----
+
+   In the PC world people often talk about "offline" newsreaders.  These
+are thingies that are combined reader/news transport monstrosities.
+With built-in modem programs.  Yecchh!
+
+   Of course, us Unix Weenie types of human beans use things like
+`uucp' and, like, `nntpd' and set up proper news and mail transport
+things like Ghod intended.  And then we just use normal newsreaders.
+
+   However, it can sometimes be convenient to do something a that's a
+bit easier on the brain if you have a very slow modem, and you're not
+really that interested in doing things properly.
+
+   A file format called SOUP has been developed for transporting news
+and mail from servers to home machines and back again.  It can be a bit
+fiddly.
+
+   First some terminology:
+
+"server"
+     This is the machine that is connected to the outside world and
+     where you get news and/or mail from.
+
+"home machine"
+     This is the machine that you want to do the actual reading and
+     responding on.  It is typically not connected to the rest of the
+     world in any way.
+
+"packet"
+     Something that contains messages and/or commands.  There are two
+     kinds of packets:
+
+    "message packets"
+          These are packets made at the server, and typically contain
+          lots of messages for you to read.  These are called
+          `SoupoutX.tgz' by default, where X is a number.
+
+    "response packets"
+          These are packets made at the home machine, and typically
+          contains replies that you've written.  These are called
+          `SoupinX.tgz' by default, where X is a number.
+
+  1. You log in on the server and create a SOUP packet.  You can either
+     use a dedicated SOUP thingie (like the `awk' program), or you can
+     use Gnus to create the packet with its SOUP commands (`O s' and/or
+     `G s b'; and then `G s p') (*note SOUP Commands::.).
+
+  2. You transfer the packet home.  Rail, boat, car or modem will do
+     fine.
+
+  3. You put the packet in your home directory.
+
+  4. You fire up Gnus on your home machine using the `nnsoup' backend as
+     the native or secondary server.
+
+  5. You read articles and mail and answer and followup to the things
+     you want (*note SOUP Replies::.).
+
+  6. You do the `G s r' command to pack these replies into a SOUP
+     packet.
+
+  7. You transfer this packet to the server.
+
+  8. You use Gnus to mail this packet out with the `G s s' command.
+
+  9. You then repeat until you die.
+
+
+   So you basically have a bipartite system--you use `nnsoup' for
+reading and Gnus for packing/sending these SOUP packets.
+
+* Menu:
+
+* SOUP Commands::     Commands for creating and sending SOUP packets
+* SOUP Groups::       A backend for reading SOUP packets.
+* SOUP Replies::      How to enable `nnsoup' to take over mail and news.
+
+
+File: gnus,  Node: SOUP Commands,  Next: SOUP Groups,  Up: SOUP
+
+SOUP Commands
+.............
+
+   These are commands for creating and manipulating SOUP packets.
+
+`G s b'
+     Pack all unread articles in the current group
+     (`gnus-group-brew-soup').  This command understands the
+     process/prefix convention.
+
+`G s w'
+     Save all SOUP data files (`gnus-soup-save-areas').
+
+`G s s'
+     Send all replies from the replies packet
+     (`gnus-soup-send-replies').
+
+`G s p'
+     Pack all files into a SOUP packet (`gnus-soup-pack-packet').
+
+`G s r'
+     Pack all replies into a replies packet (`nnsoup-pack-replies').
+
+`O s'
+     This summary-mode command adds the current article to a SOUP packet
+     (`gnus-soup-add-article').  It understands the process/prefix
+     convention (*note Process/Prefix::.).
+
+   There are a few variables to customize where Gnus will put all these
+thingies:
+
+`gnus-soup-directory'
+     Directory where Gnus will save intermediate files while composing
+     SOUP packets.  The default is `~/SoupBrew/'.
+
+`gnus-soup-replies-directory'
+     This is what Gnus will use as a temporary directory while sending
+     our reply packets.  `~/SoupBrew/SoupReplies/' is the default.
+
+`gnus-soup-prefix-file'
+     Name of the file where Gnus stores the last used prefix.  The
+     default is `gnus-prefix'.
+
+`gnus-soup-packer'
+     A format string command for packing a SOUP packet.  The default is
+     `tar cf - %s | gzip > $HOME/Soupout%d.tgz'.
+
+`gnus-soup-unpacker'
+     Format string command for unpacking a SOUP packet.  The default is
+     `gunzip -c %s | tar xvf -'.
+
+`gnus-soup-packet-directory'
+     Where Gnus will look for reply packets.  The default is `~/'.
+
+`gnus-soup-packet-regexp'
+     Regular expression matching SOUP reply packets in
+     `gnus-soup-packet-directory'.
+
+
+File: gnus,  Node: SOUP Groups,  Next: SOUP Replies,  Prev: SOUP Commands,  Up: SOUP
+
+SOUP Groups
+...........
+
+   `nnsoup' is the backend for reading SOUP packets.  It will read
+incoming packets, unpack them, and put them in a directory where you
+can read them at leisure.
+
+   These are the variables you can use to customize its behavior:
+
+`nnsoup-tmp-directory'
+     When `nnsoup' unpacks a SOUP packet, it does it in this directory.
+     (`/tmp/' by default.)
+
+`nnsoup-directory'
+     `nnsoup' then moves each message and index file to this directory.
+     The default is `~/SOUP/'.
+
+`nnsoup-replies-directory'
+     All replies will be stored in this directory before being packed
+     into a reply packet.  The default is `~/SOUP/replies/"'.
+
+`nnsoup-replies-format-type'
+     The SOUP format of the replies packets.  The default is `?n'
+     (rnews), and I don't think you should touch that variable.  I
+     probably shouldn't even have documented it.  Drats!  Too late!
+
+`nnsoup-replies-index-type'
+     The index type of the replies packet.  The default is `?n', which
+     means "none".  Don't fiddle with this one either!
+
+`nnsoup-active-file'
+     Where `nnsoup' stores lots of information.  This is not an "active
+     file" in the `nntp' sense; it's an Emacs Lisp file.  If you lose
+     this file or mess it up in any way, you're dead.  The default is
+     `~/SOUP/active'.
+
+`nnsoup-packer'
+     Format string command for packing a reply SOUP packet.  The default
+     is `tar cf - %s | gzip > $HOME/Soupin%d.tgz'.
+
+`nnsoup-unpacker'
+     Format string command for unpacking incoming SOUP packets.  The
+     default is `gunzip -c %s | tar xvf -'.
+
+`nnsoup-packet-directory'
+     Where `nnsoup' will look for incoming packets.  The default is
+     `~/'.
+
+`nnsoup-packet-regexp'
+     Regular expression matching incoming SOUP packets.  The default is
+     `Soupout'.
+
+`nnsoup-always-save'
+     If non-`nil', save the replies buffer after each posted message.
+
+
+File: gnus,  Node: SOUP Replies,  Prev: SOUP Groups,  Up: SOUP
+
+SOUP Replies
+............
+
+   Just using `nnsoup' won't mean that your postings and mailings end
+up in SOUP reply packets automagically.  You have to work a bit more
+for that to happen.
+
+   The `nnsoup-set-variables' command will set the appropriate
+variables to ensure that all your followups and replies end up in the
+SOUP system.
+
+   In specific, this is what it does:
+
+     (setq message-send-news-function 'nnsoup-request-post)
+     (setq message-send-mail-function 'nnsoup-request-mail)
+
+   And that's it, really.  If you only want news to go into the SOUP
+system you just use the first line.  If you only want mail to be SOUPed
+you use the second.
 
 
 File: gnus,  Node: Web Searches,  Next: Mail-To-News Gateways,  Prev: SOUP,  Up: Other Sources
@@ -45,12 +889,12 @@ this in an easy-to-use fashion.
 groups--they have a very fleeting idea of article numbers.  In fact,
 each time you enter an `nnweb' group (not even changing the search
 pattern), you are likely to get the articles ordered in a different
-manner.  Not even using duplicate suppression (`Duplicate Suppression')
-will help, since `nnweb' doesn't even know the `Message-ID' of the
-articles before reading them using some search engines (DejaNews, for
-instance).  The only possible way to keep track of which articles
-you've read is by scoring on the `Date' header--mark all articles that
-were posted before the last date you read the group as read.
+manner.  Not even using duplicate suppression (*note Duplicate
+Suppression::.) will help, since `nnweb' doesn't even know the
+`Message-ID' of the articles before reading them using some search
+engines (DejaNews, for instance).  The only possible way to keep track
+of which articles you've read is by scoring on the `Date' header--mark
+all articles posted before the last date you read the group as read.
 
    If the search engine changes its output substantially, `nnweb' won't
 be able to parse it and will fail.  One could hardly fault the Web
@@ -66,7 +910,7 @@ the providers might be somewhat miffed.  We'll see.
 
 `nnweb-type'
      What search engine type is being used.  The currently supported
-     types are `dejanews', `altavista' and `reference'.
+     types are `dejanews', `dejanewsold', `altavista' and `reference'.
 
 `nnweb-search'
      The search string to feed to the search engine.
@@ -117,16 +961,16 @@ used to post with.
      This is the address of the mail-to-news gateway.
 
 `nngateway-header-transformation'
-     News headers have often have to be transformed in some odd way or
-     other for the mail-to-news gateway to accept it.  This variable
-     says what transformation should be called, and defaults to
+     News headers often have to be transformed in some odd way or other
+     for the mail-to-news gateway to accept it.  This variable says what
+     transformation should be called, and defaults to
      `nngateway-simple-header-transformation'.  The function is called
      narrowed to the headers to be transformed and with one
      parameter--the gateway address.
 
      This default function just inserts a new `To' header based on the
-     `Newsgroups' header and the gateway address--an article with this
-     `Newsgroups' header:
+     `Newsgroups' header and the gateway address.  For instance, an
+     article with this `Newsgroups' header:
 
           Newsgroups: alt.religion.emacs
 
@@ -134,12 +978,28 @@ used to post with.
 
           To: alt-religion-emacs@GATEWAY
 
+     The following pre-defined functions exist:
+
+    `nngateway-simple-header-transformation'
+          Creates a `To' header that looks like
+          NEWSGROUP@`nngateway-address'.
+
+    `nngateway-mail2news-header-transformation'
+          Creates a `To' header that looks like `nngateway-address'.
+
+          Here's an example:
+
+               (setq gnus-post-method
+                     '(nngateway "mail2news@replay.com"
+                                 (nngateway-header-transformation
+                                  nngateway-mail2news-header-transformation)))
+
    So, to use this, simply say something like:
 
      (setq gnus-post-method '(nngateway "GATEWAY.ADDRESS"))
 
 
-File: gnus,  Node: Combined Groups,  Prev: Other Sources,  Up: Select Methods
+File: gnus,  Node: Combined Groups,  Next: Gnus Unplugged,  Prev: Other Sources,  Up: Select Methods
 
 Combined Groups
 ===============
@@ -161,7 +1021,7 @@ Virtual Groups
    An "nnvirtual group" is really nothing more than a collection of
 other groups.
 
-   For instance, if you are tired of reading many small group, you can
+   For instance, if you are tired of reading many small groups, you can
 put them all in one big group, and then grow tired of reading one big,
 unwieldy group.  The joys of computing!
 
@@ -188,17 +1048,21 @@ distribution.  If you would like to read `soc.motss' both from a server
 in Japan and a server in Norway, you could use the following as the
 group regexp:
 
-     "^nntp+some.server.jp:soc.motss$\\|^nntp+some.server.no:soc.motss$"
+     "^nntp\\+server\\.jp:soc\\.motss$\\|^nntp\\+server\\.no:soc\\.motss$"
+
+   (Remember, though, that if you're creating the group with `G m', you
+shouldn't double the backslashes, and you should leave off the quote
+characters at the beginning and the end of the string.)
 
    This should work kinda smoothly--all articles from both groups should
 end up in this one, and there should be no duplicates.  Threading (and
 the rest) will still work as usual, but there might be problems with the
 sequence of articles.  Sorting on date might be an option here (*note
-Selecting a Group::..
+Selecting a Group::.).
 
-   One limitation, however--all groups that are included in a virtual
-group has to be alive (i.e., subscribed or unsubscribed).  Killed or
-zombie groups can't be component groups for `nnvirtual' groups.
+   One limitation, however--all groups included in a virtual group have
+to be alive (i.e., subscribed or unsubscribed).  Killed or zombie
+groups can't be component groups for `nnvirtual' groups.
 
    If the `nnvirtual-always-rescan' is non-`nil', `nnvirtual' will
 always scan groups for unread articles when entering a virtual group.
@@ -206,10 +1070,21 @@ If this variable is `nil' (which is the default) and you read articles
 in a component group after the virtual group has been activated, the
 read articles from the component group will show up when you enter the
 virtual group.  You'll also see this effect if you have two virtual
-groups that contain the same component group.  If that's the case, you
+groups that have a component group in common.  If that's the case, you
 should set this variable to `t'.  Or you can just tap `M-g' on the
 virtual group every time before you enter it--it'll have much the same
 effect.
+
+   `nnvirtual' can have both mail and news groups as component groups.
+When responding to articles in `nnvirtual' groups, `nnvirtual' has to
+ask the backend of the component group the article comes from whether
+it is a news or mail backend.  However, when you do a `^', there is
+typically no sure way for the component backend to know this, and in
+that case `nnvirtual' tells Gnus that the article came from a not-news
+backend.  (Just to be on the safe side.)
+
+   `C-c C-t' in the message buffer will insert the `Newsgroups' line
+from the article you respond to in these cases.
 
 
 File: gnus,  Node: Kibozed Groups,  Prev: Virtual Groups,  Up: Combined Groups
@@ -226,16 +1101,16 @@ requests!  Oh happiness!
 
    The address field of the `nnkiboze' method is, as with `nnvirtual',
 a regexp to match groups to be "included" in the `nnkiboze' group.
-There most similarities between `nnkiboze' and `nnvirtual' ends.
+That's where most similarities between `nnkiboze' and `nnvirtual' end.
 
    In addition to this regexp detailing component groups, an `nnkiboze'
-group must have a score file to say what articles that are to be
-included in the group (*note Scoring::.).
+group must have a score file to say what articles are to be included in
+the group (*note Scoring::.).
 
    You must run `M-x nnkiboze-generate-groups' after creating the
 `nnkiboze' groups you want to have.  This command will take time.  Lots
 of time.  Oodles and oodles of time.  Gnus has to fetch the headers from
-all the articles in all the components groups and run them through the
+all the articles in all the component groups and run them through the
 scoring process to determine if there are any articles in the groups
 that are to be part of the `nnkiboze' groups.
 
@@ -250,1017 +1125,222 @@ dead, and they can be foreign.  No restrictions.
    The generation of an `nnkiboze' group means writing two files in
 `nnkiboze-directory', which is `~/News/' by default.  One contains the
 NOV header lines for all the articles in the group, and the other is an
-additional `.newsrc' file to store information on what groups that have
-been searched through to find component articles.
+additional `.newsrc' file to store information on what groups have been
+searched through to find component articles.
 
-   Articles that are marked as read in the `nnkiboze' group will have
-their NOV lines removed from the NOV file.
+   Articles marked as read in the `nnkiboze' group will have their NOV
+lines removed from the NOV file.
 
 
-File: gnus,  Node: Scoring,  Next: Various,  Prev: Select Methods,  Up: Top
+File: gnus,  Node: Gnus Unplugged,  Prev: Combined Groups,  Up: Select Methods
 
-Scoring
-*******
+Gnus Unplugged
+==============
 
-   Other people use "kill files", but we here at Gnus Towers like
-scoring better than killing, so we'd rather switch than fight.  They do
-something completely different as well, so sit up straight and pay
-attention!
+   In olden times (ca. February '88), people used to run their
+newsreaders on big machines with permanent connections to the net.
+News transport was dealt with by news servers, and all the newsreaders
+had to do was to read news.  Believe it or not.
 
-   All articles have a default score (`gnus-summary-default-score'),
-which is 0 by default.  This score may be raised or lowered either
-interactively or by score files.  Articles that have a score lower than
-`gnus-summary-mark-below' are marked as read.
+   Nowadays most people read news and mail at home, and use some sort of
+modem to connect to the net.  To avoid running up huge phone bills, it
+would be nice to have a way to slurp down all the news and mail, hang up
+the phone, read for several hours, and then upload any responses you
+have to make.  And then you repeat the procedure.
 
-   Gnus will read any "score files" that apply to the current group
-before generating the summary buffer.
+   Of course, you can use news servers for doing this as well.  I've
+used `inn' together with `slurp', `pop' and `sendmail' for some years,
+but doing that's a bore.  Moving the news server functionality up to
+the newsreader makes sense if you're the only person reading news on a
+machine.
 
-   There are several commands in the summary buffer that insert score
-entries based on the current article.  You can, for instance, ask Gnus
-to lower or increase the score of all articles with a certain subject.
+   Using Gnus as an "offline" newsreader is quite simple.
 
-   There are two sorts of scoring entries: Permanent and temporary.
-Temporary score entries are self-expiring entries.  Any entries that are
-temporary and have not been used for, say, a week, will be removed
-silently to help keep the sizes of the score files down.
+   * First, set up Gnus as you would do if you were running it on a
+     machine that has full connection to the net.  Go ahead.  I'll
+     still be waiting here.
+
+   * Then, put the following magical incantation at the end of your
+     `.gnus.el' file:
+
+          (gnus-agentize)
+
+   That's it.  Gnus is now an "offline" newsreader.
+
+   Of course, to use it as such, you have to learn a few new commands.
 
 * Menu:
 
-* Summary Score Commands::   Adding score entries for the current group.
-* Group Score Commands::     General score commands.
-* Score Variables::          Customize your scoring.  (My, what terminology).
-* Score File Format::        What a score file may contain.
-* Score File Editing::       You can edit score files by hand as well.
-* Adaptive Scoring::         Big Sister Gnus knows what you read.
-* Home Score File::          How to say where new score entries are to go.
-* Followups To Yourself::    Having Gnus notice when people answer you.
-* Scoring Tips::             How to score effectively.
-* Reverse Scoring::          That problem child of old is not problem.
-* Global Score Files::       Earth-spanning, ear-splitting score files.
-* Kill Files::               They are still here, but they can be ignored.
-* Converting Kill Files::    Translating kill files to score files.
-* GroupLens::                Getting predictions on what you like to read.
-* Advanced Scoring::         Using logical expressions to build score rules.
-* Score Decays::             It can be useful to let scores wither away.
+* Agent Basics::           How it all is supposed to work.
+* Agent Categories::       How to tell the Gnus Agent what to download.
+* Agent Commands::         New commands for all the buffers.
+* Agent Expiry::           How to make old articles go away.
+* Outgoing Messages::      What happens when you post/mail something?
+* Agent Variables::        Customizing is fun.
+* Example Setup::          An example `.gnus.el' file for offline people.
+* Batching Agents::        How to fetch news from a `cron' job.
 
 
-File: gnus,  Node: Summary Score Commands,  Next: Group Score Commands,  Up: Scoring
+File: gnus,  Node: Agent Basics,  Next: Agent Categories,  Up: Gnus Unplugged
 
-Summary Score Commands
-======================
+Agent Basics
+------------
 
-   The score commands that alter score entries do not actually modify
-real score files.  That would be too inefficient.  Gnus maintains a
-cache of previously loaded score files, one of which is considered the
-"current score file alist".  The score commands simply insert entries
-into this list, and upon group exit, this list is saved.
+   First, let's get some terminology out of the way.
 
-   The current score file is by default the group's local score file,
-even if no such score file actually exists.  To insert score commands
-into some other score file (e.g. `all.SCORE'), you must first make this
-score file the current one.
+   The Gnus Agent is said to be "unplugged" when you have severed the
+connection to the net (and notified the Agent that this is the case).
+When the connection to the net is up again (and Gnus knows this), the
+Agent is "plugged".
 
-   General score commands that don't actually change the score file:
+   The "local" machine is the one you're running on, and which isn't
+connected to the net continuously.
 
-`V s'
-     Set the score of the current article (`gnus-summary-set-score').
+   "Downloading" means fetching things from the net to your local
+machine.  "Uploading" is doing the opposite.
 
-`V S'
-     Display the score of the current article
-     (`gnus-summary-current-score').
+   Let's take a typical Gnus session using the Agent.
 
-`V t'
-     Display all score rules that have been used on the current article
-     (`gnus-score-find-trace').
+   * You start Gnus with `gnus-unplugged'.  This brings up the Gnus
+     Agent in a disconnected state.  You can read all the news that you
+     have already fetched while in this mode.
 
-`V R'
-     Run the current summary through the scoring process
-     (`gnus-summary-rescore').  This might be useful if you're playing
-     around with your score files behind Gnus' back and want to see the
-     effect you're having.
+   * You then decide to see whether any new news has arrived.  You
+     connect your machine to the net (using PPP or whatever), and then
+     hit `J j' to make Gnus become "plugged".
 
-`V a'
-     Add a new score entry, and allow specifying all elements
-     (`gnus-summary-score-entry').
+   * You can then read the new news immediately, or you can download
+     the news onto your local machine.  If you want to do the latter,
+     you press `J s' to fetch all the eligible articles in all the
+     groups.  (To let Gnus know which articles you want to download,
+     *note Agent Categories::..)
 
-`V c'
-     Make a different score file the current
-     (`gnus-score-change-score-file').
+   * After fetching the articles, you press `J j' to make Gnus become
+     unplugged again, and you shut down the PPP thing (or whatever).
+     And then you read the news offline.
 
-`V e'
-     Edit the current score file (`gnus-score-edit-current-scores').
-     You will be popped into a `gnus-score-mode' buffer (*note Score
-     File Editing::.).
+   * And then you go to step 2.
 
-`V f'
-     Edit a score file and make this score file the current one
-     (`gnus-score-edit-file').
+   Here are some things you should do the first time (or so) that you
+use the Agent.
 
-`V F'
-     Flush the score cache (`gnus-score-flush-cache').  This is useful
-     after editing score files.
+   * Decide which servers should be covered by the Agent.  If you have
+     a mail backend, it would probably be nonsensical to have it
+     covered by the Agent.  Go to the server buffer (`^' in the group
+     buffer) and press `J a' the server (or servers) that you wish to
+     have covered by the Agent (*note Server Agent Commands::.).  This
+     will typically be only the primary select method, which is listed
+     on the bottom in the buffer.
 
-`V C'
-     Customize a score file in a visually pleasing manner
-     (`gnus-score-customize').
+   * Decide on download policy.  *Note Agent Categories::.
 
-`I C-i'
-     Increase the score of the current article
-     (`gnus-summary-raise-score').
-
-`L C-l'
-     Lower the score of the current article
-     (`gnus-summary-lower-score').
-
-   The rest of these commands modify the local score file.
-
-`V m'
-     Prompt for a score, and mark all articles with a score below this
-     as read (`gnus-score-set-mark-below').
-
-`V x'
-     Prompt for a score, and add a score rule to the current score file
-     to expunge all articles below this score
-     (`gnus-score-set-expunge-below').
-
-   The keystrokes for actually making score entries follow a very
-regular pattern, so there's no need to list all the commands.
-(Hundreds of them.)
-
-  1. The first key is either `I' (upper-case `i') for increasing the
-     score or `L' for lowering the score.
-
-  2. The second key says what header you want to score on.  The
-     following keys are available:
-    `a'
-          Score on the author name.
-
-    `s'
-          Score on the subject line.
-
-    `x'
-          Score on the Xref line--i.e., the cross-posting line.
-
-    `t'
-          Score on thread--the References line.
-
-    `d'
-          Score on the date.
-
-    `l'
-          Score on the number of lines.
-
-    `i'
-          Score on the Message-ID.
-
-    `f'
-          Score on followups.
-
-    `b'
-          Score on the body.
-
-    `h'
-          Score on the head.
-
-  3. The third key is the match type.  Which match types are legal
-     depends on what headers you are scoring on.
-
-    `strings'
-
-         `e'
-               Exact matching.
-
-         `s'
-               Substring matching.
-
-         `f'
-               Fuzzy matching (*note Fuzzy Matching::.).
-
-         `r'
-               Regexp matching
-
-    `date'
-
-         `b'
-               Before date.
-
-         `a'
-               At date.
-
-         `n'
-               This date.
-
-    `number'
-
-         `<'
-               Less than number.
-
-         `='
-               Equal to number.
-
-         `>'
-               Greater than number.
-
-  4. The fourth and final key says whether this is a temporary (i.e.,
-     expiring) score entry, or a permanent (i.e., non-expiring) score
-     entry, or whether it is to be done immediately, without adding to
-     the score file.
-    `t'
-          Temporary score entry.
-
-    `p'
-          Permanent score entry.
-
-    `i'
-          Immediately scoring.
-
-
-   So, let's say you want to increase the score on the current author
-with exact matching permanently: `I a e p'.  If you want to lower the
-score based on the subject line, using substring matching, and make a
-temporary score entry: `L s s t'.  Pretty easy.
-
-   To make things a bit more complicated, there are shortcuts.  If you
-use a capital letter on either the second or third keys, Gnus will use
-defaults for the remaining one or two keystrokes.  The defaults are
-"substring" and "temporary".  So `I A' is the same as `I a s t', and `I
-a R' is the same as `I a r t'.
-
-   The `gnus-score-mimic-keymap' says whether these commands will
-pretend they are keymaps or not.
+   * Uhm... that's it.
 
 
-File: gnus,  Node: Group Score Commands,  Next: Score Variables,  Prev: Summary Score Commands,  Up: Scoring
+File: gnus,  Node: Agent Categories,  Next: Agent Commands,  Prev: Agent Basics,  Up: Gnus Unplugged
 
-Group Score Commands
-====================
+Agent Categories
+----------------
 
-   There aren't many of these as yet, I'm afraid.
+   One of the main reasons to integrate the news transport layer into
+the newsreader is to allow greater control over what articles to
+download.  There's not much point in downloading huge amounts of
+articles, just to find out that you're not interested in reading any of
+them.  It's better to be somewhat more conservative in choosing what to
+download, and then mark the articles for downloading manually if it
+should turn out that you're interested in the articles anyway.
 
-`W f'
-     Gnus maintains a cache of score alists to avoid having to reload
-     them all the time.  This command will flush the cache
-     (`gnus-score-flush-cache').
+   The main way to control what is to be downloaded is to create a
+"category" and then assign some (or all) groups to this category.  Gnus
+has its own buffer for creating and managing categories.
 
-
-File: gnus,  Node: Score Variables,  Next: Score File Format,  Prev: Group Score Commands,  Up: Scoring
+* Menu:
 
-Score Variables
-===============
-
-`gnus-use-scoring'
-     If `nil', Gnus will not check for score files, and will not, in
-     general, do any score-related work.  This is `t' by default.
-
-`gnus-kill-killed'
-     If this variable is `nil', Gnus will never apply score files to
-     articles that have already been through the kill process.  While
-     this may save you lots of time, it also means that if you apply a
-     kill file to a group, and then change the kill file and want to
-     run it over you group again to kill more articles, it won't work.
-     You have to set this variable to `t' to do that.  (It is `t' by
-     default.)
-
-`gnus-kill-files-directory'
-     All kill and score files will be stored in this directory, which is
-     initialized from the `SAVEDIR' environment variable by default.
-     This is `~/News/' by default.
-
-`gnus-score-file-suffix'
-     Suffix to add to the group name to arrive at the score file name
-     (`SCORE' by default.)
-
-`gnus-score-uncacheable-files'
-     All score files are normally cached to avoid excessive re-loading
-     of score files.  However, if this might make you Emacs grow big and
-     bloated, so this regexp can be used to weed out score files that
-     are unlikely to be needed again.  It would be a bad idea to deny
-     caching of `all.SCORE', while it might be a good idea to not cache
-     `comp.infosystems.www.authoring.misc.ADAPT'.  In fact, this
-     variable is `ADAPT$' by default, so no adaptive score files will
-     be cached.
-
-`gnus-save-score'
-     If you have really complicated score files, and do lots of batch
-     scoring, then you might set this variable to `t'.  This will make
-     Gnus save the scores into the `.newsrc.eld' file.
-
-`gnus-score-interactive-default-score'
-     Score used by all the interactive raise/lower commands to
-     raise/lower score with.  Default is 1000, which may seem
-     excessive, but this is to ensure that the adaptive scoring scheme
-     gets enough room to play with.  We don't want the small changes
-     from the adaptive scoring to overwrite manually entered data.
-
-`gnus-summary-default-score'
-     Default score of an article, which is 0 by default.
-
-`gnus-summary-expunge-below'
-     Don't display the summary lines of articles that have scores lower
-     than this variable.  This is `nil' by default, which means that no
-     articles will be hidden.
-
-`gnus-score-over-mark'
-     Mark (in the third column) used for articles with a score over the
-     default.  Default is `+'.
-
-`gnus-score-below-mark'
-     Mark (in the third column) used for articles with a score below the
-     default.  Default is `-'.
-
-`gnus-score-find-score-files-function'
-     Function used to find score files for the current group.  This
-     function is called with the name of the group as the argument.
-
-     Predefined functions available are:
-    `gnus-score-find-single'
-          Only apply the group's own score file.
-
-    `gnus-score-find-bnews'
-          Apply all score files that match, using bnews syntax.  This
-          is the default.  If the current group is `gnu.emacs.gnus',
-          for instance, `all.emacs.all.SCORE', `not.alt.all.SCORE' and
-          `gnu.all.SCORE' would all apply.  In short, the instances of
-          `all' in the score file names are translated into `.*', and
-          then a regexp match is done.
-
-          This means that if you have some score entries that you want
-          to apply to all groups, then you put those entries in the
-          `all.SCORE' file.
-
-          The score files are applied in a semi-random order, although
-          Gnus will try to apply the more general score files before
-          the more specific score files.  It does this by looking at
-          the number of elements in the score file names--discarding
-          the `all' elements.
-
-    `gnus-score-find-hierarchical'
-          Apply all score files from all the parent groups.  This means
-          that you can't have score files like `all.SCORE', but you can
-          have `SCORE', `comp.SCORE' and `comp.emacs.SCORE'.
-
-     This variable can also be a list of functions.  In that case, all
-     these functions will be called, and all the returned lists of
-     score files will be applied.  These functions can also return
-     lists of score alists directly.  In that case, the functions that
-     return these non-file score alists should probably be placed
-     before the "real" score file functions, to ensure that the last
-     score file returned is the local score file.  Phu.
-
-`gnus-score-expiry-days'
-     This variable says how many days should pass before an unused
-     score file entry is expired.  If this variable is `nil', no score
-     file entries are expired.  It's 7 by default.
-
-`gnus-update-score-entry-dates'
-     If this variable is non-`nil', matching score entries will have
-     their dates updated.  (This is how Gnus controls expiry--all
-     non-matching entries will become too old while matching entries
-     will stay fresh and young.)  However, if you set this variable to
-     `nil', even matching entries will grow old and will have to face
-     that oh-so grim reaper.
-
-`gnus-score-after-write-file-function'
-     Function called with the name of the score file just written.
+* Category Syntax::       What a category looks like.
+* The Category Buffer::   A buffer for maintaining categories.
+* Category Variables::    Customize'r'Us.
 
 
-File: gnus,  Node: Score File Format,  Next: Score File Editing,  Prev: Score Variables,  Up: Scoring
+File: gnus,  Node: Category Syntax,  Next: The Category Buffer,  Up: Agent Categories
 
-Score File Format
-=================
+Category Syntax
+...............
 
-   A score file is an `emacs-lisp' file that normally contains just a
-single form.  Casual users are not expected to edit these files;
-everything can be changed from the summary buffer.
+   A category consists of two things.
 
-   Anyway, if you'd like to dig into it yourself, here's an example:
+  1. A predicate which (generally) gives a rough outline of which
+     articles are eligible for downloading; and
 
-     (("from"
-       ("Lars Ingebrigtsen" -10000)
-       ("Per Abrahamsen")
-       ("larsi\\|lmi" -50000 nil R))
-      ("subject"
-       ("Ding is Badd" nil 728373))
-      ("xref"
-       ("alt.politics" -1000 728372 s))
-      ("lines"
-       (2 -100 nil <))
-      (mark 0)
-      (expunge -1000)
-      (mark-and-expunge -10)
-      (read-only nil)
-      (orphan -10)
-      (adapt t)
-      (files "/hom/larsi/News/gnu.SCORE")
-      (exclude-files "all.SCORE")
-      (local (gnus-newsgroup-auto-expire t)
-             (gnus-summary-make-false-root 'empty))
-      (eval (ding)))
+  2. a score rule which (generally) gives you a finer granularity when
+     deciding what articles to download.  (Note that this "download
+     score" is wholly unrelated to normal scores.)
 
-   This example demonstrates absolutely everything about a score file.
+   A predicate consists of predicates with logical operators sprinkled
+in between.
 
-   Even though this looks much like lisp code, nothing here is actually
-`eval'ed.  The lisp reader is used to read this form, though, so it has
-to be legal syntactically, if not semantically.
+   Perhaps some examples are in order.
 
-   Six keys are supported by this alist:
+   Here's a simple predicate.  (It's the default predicate, in fact,
+used for all groups that don't belong to any other category.)
 
-`STRING'
-     If the key is a string, it is the name of the header to perform the
-     match on.  Scoring can only be performed on these eight headers:
-     `From', `Subject', `References', `Message-ID', `Xref', `Lines',
-     `Chars' and `Date'.  In addition to these headers, there are three
-     strings to tell Gnus to fetch the entire article and do the match
-     on larger parts of the article: `Body' will perform the match on
-     the body of the article, `Head' will perform the match on the head
-     of the article, and `All' will perform the match on the entire
-     article.  Note that using any of these last three keys will slow
-     down group entry *considerably*.  The final "header" you can score
-     on is `Followup'.  These score entries will result in new score
-     entries being added for all follow-ups to articles that matches
-     these score entries.
+     short
 
-     Following this key is a arbitrary number of score entries, where
-     each score entry has one to four elements.
-       1. The first element is the "match element".  On most headers
-          this will be a string, but on the Lines and Chars headers,
-          this must be an integer.
+   Quite simple, eh?  This predicate is true if and only if the article
+is short (for some value of "short").
 
-       2. If the second element is present, it should be a number--the
-          "score element".  This number should be an integer in the
-          neginf to posinf interval.  This number is added to the score
-          of the article if the match is successful.  If this element
-          is not present, the `gnus-score-interactive-default-score'
-          number will be used instead.  This is 1000 by default.
+   Here's a more complex predicate:
 
-       3. If the third element is present, it should be a number--the
-          "date element".  This date says when the last time this score
-          entry matched, which provides a mechanism for expiring the
-          score entries.  It this element is not present, the score
-          entry is permanent.  The date is represented by the number of
-          days since December 31, 1 BCE.
+     (or high
+         (and
+          (not low)
+          (not long)))
 
-       4. If the fourth element is present, it should be a symbol--the
-          "type element".  This element specifies what function should
-          be used to see whether this score entry matches the article.
-          What match types that can be used depends on what header you
-          wish to perform the match on.
-         "From, Subject, References, Xref, Message-ID"
-               For most header types, there are the `r' and `R'
-               (regexp), as well as `s' and `S' (substring) types, and
-               `e' and `E' (exact match), and `w' (word match) types.
-               If this element is not present, Gnus will assume that
-               substring matching should be used.  `R', `S', and `E'
-               differ from the others in that the matches will be done
-               in a case-sensitive manner.  All these one-letter types
-               are really just abbreviations for the `regexp',
-               `string', `exact', and `word' types, which you can use
-               instead, if you feel like.
+   This means that an article should be downloaded if it has a high
+score, or if the score is not low and the article is not long.  You get
+the drift.
 
-         "Lines, Chars"
-               These two headers use different match types: `<', `>',
-               `=', `>=' and `<='.  When matching on `Lines', be
-               careful because some backends (like `nndir') do not
-               generate `Lines' header, so every article ends up being
-               marked as having 0 lines.  This can lead to strange
-               results if you happen to lower score of the articles
-               with few lines.
+   The available logical operators are `or', `and' and `not'.  (If you
+prefer, you can use the more "C"-ish operators `|', `&' and `!'
+instead.)
 
-         "Date"
-               For the Date header we have three kinda silly match
-               types: `before', `at' and `after'.  I can't really
-               imagine this ever being useful, but, like, it would feel
-               kinda silly not to provide this function.  Just in case.
-               You never know.  Better safe than sorry.  Once burnt,
-               twice shy.  Don't judge a book by its cover.  Never not
-               have sex on a first date.  (I have been told that at
-               least one person, and I quote, "found this function
-               indispensable", however.)
+   The following predicates are pre-defined, but if none of these fit
+what you want to do, you can write your own.
 
-               A more useful match type is `regexp'.  With it, you can
-               match the date string using a regular expression.  The
-               date is normalized to ISO8601 compact format
-               first--`YYYYMMDDTHHMMSS'.  If you want to match all
-               articles that have been posted on April 1st in every
-               year, you could use `....0401.........' as a match
-               string, for instance.  (Note that the date is kept in
-               its original time zone, so this will match articles that
-               were posted when it was April 1st where the article was
-               posted from.  Time zones are such wholesome fun for the
-               whole family, eh?)
+`short'
+     True iff the article is shorter than `gnus-agent-short-article'
+     lines; default 100.
 
-         "Head, Body, All"
-               These three match keys use the same match types as the
-               `From' (etc) header uses.
+`long'
+     True iff the article is longer than `gnus-agent-long-article'
+     lines; default 200.
 
-         "Followup"
-               This match key is somewhat special, in that it will
-               match the `From' header, and affect the score of not
-               only the matching articles, but also all followups to
-               the matching articles.  This allows you e.g. increase
-               the score of followups to your own articles, or decrease
-               the score of followups to the articles of some known
-               trouble-maker.  Uses the same match types as the `From'
-               header uses.
+`low'
+     True iff the article has a download score less than
+     `gnus-agent-low-score'; default 0.
 
-         "Thread"
-               This match key works along the same lines as the
-               `Followup' match key.  If you say that you want to score
-               on a (sub-)thread that is started by an article with a
-               `Message-ID' X, then you add a `thread' match.  This
-               will add a new `thread' match for each article that has
-               X in its `References' header.  (These new `thread'
-               matches will use the `Message-ID's of these matching
-               articles.)  This will ensure that you can raise/lower
-               the score of an entire thread, even though some articles
-               in the thread may not have complete `References'
-               headers.  Note that using this may lead to
-               undeterministic scores of the articles in the thread.
+`high'
+     True iff the article has a download score greater than
+     `gnus-agent-high-score'; default 0.
 
-`mark'
-     The value of this entry should be a number.  Any articles with a
-     score lower than this number will be marked as read.
+`spam'
+     True iff the Gnus Agent guesses that the article is spam.  The
+     heuristics may change over time, but at present it just computes a
+     checksum and sees whether articles match.
 
-`expunge'
-     The value of this entry should be a number.  Any articles with a
-     score lower than this number will be removed from the summary
-     buffer.
+`true'
+     Always true.
 
-`mark-and-expunge'
-     The value of this entry should be a number.  Any articles with a
-     score lower than this number will be marked as read and removed
-     from the summary buffer.
+`false'
+     Always false.
 
-`thread-mark-and-expunge'
-     The value of this entry should be a number.  All articles that
-     belong to a thread that has a total score below this number will
-     be marked as read and removed from the summary buffer.
-     `gnus-thread-score-function' says how to compute the total score
-     for a thread.
+   If you want to create your own predicate function, here's what you
+have to know:  The functions are called with no parameters, but the
+`gnus-headers' and `gnus-score' dynamic variables are bound to useful
+values.
 
-`files'
-     The value of this entry should be any number of file names.  These
-     files are assumed to be score files as well, and will be loaded
-     the same way this one was.
-
-`exclude-files'
-     The clue of this entry should be any number of files.  These files
-     will not be loaded, even though they would normally be so, for
-     some reason or other.
-
-`eval'
-     The value of this entry will be `eval'el.  This element will be
-     ignored when handling global score files.
-
-`read-only'
-     Read-only score files will not be updated or saved.  Global score
-     files should feature this atom (*note Global Score Files::.).
-
-`orphan'
-     The value of this entry should be a number.  Articles that do not
-     have parents will get this number added to their scores.  Imagine
-     you follow some high-volume newsgroup, like `comp.lang.c'.  Most
-     likely you will only follow a few of the threads, also want to see
-     any new threads.
-
-     You can do this with the following two score file entries:
-
-                  (orphan -500)
-                  (mark-and-expunge -100)
-
-     When you enter the group the first time, you will only see the new
-     threads.  You then raise the score of the threads that you find
-     interesting (with `I T' or `I S'), and ignore (`C y') the rest.
-     Next time you enter the group, you will see new articles in the
-     interesting threads, plus any new threads.
-
-     I.e.--the orphan score atom is for high-volume groups where there
-     exist a few interesting threads which can't be found automatically
-     by ordinary scoring rules.
-
-`adapt'
-     This entry controls the adaptive scoring.  If it is `t', the
-     default adaptive scoring rules will be used.  If it is `ignore', no
-     adaptive scoring will be performed on this group.  If it is a
-     list, this list will be used as the adaptive scoring rules.  If it
-     isn't present, or is something other than `t' or `ignore', the
-     default adaptive scoring rules will be used.  If you want to use
-     adaptive scoring on most groups, you'd set
-     `gnus-use-adaptive-scoring' to `t', and insert an `(adapt ignore)'
-     in the groups where you do not want adaptive scoring.  If you only
-     want adaptive scoring in a few groups, you'd set
-     `gnus-use-adaptive-scoring' to `nil', and insert `(adapt t)' in
-     the score files of the groups where you want it.
-
-`adapt-file'
-     All adaptive score entries will go to the file named by this
-     entry.  It will also be applied when entering the group.  This
-     atom might be handy if you want to adapt on several groups at
-     once, using the same adaptive file for a number of groups.
-
-`local'
-     The value of this entry should be a list of `(VAR VALUE)' pairs.
-     Each VAR will be made buffer-local to the current summary buffer,
-     and set to the value specified.  This is a convenient, if somewhat
-     strange, way of setting variables in some groups if you don't like
-     hooks much.
-
-
-File: gnus,  Node: Score File Editing,  Next: Adaptive Scoring,  Prev: Score File Format,  Up: Scoring
-
-Score File Editing
-==================
-
-   You normally enter all scoring commands from the summary buffer, but
-you might feel the urge to edit them by hand as well, so we've supplied
-you with a mode for that.
-
-   It's simply a slightly customized `emacs-lisp' mode, with these
-additional commands:
-
-`C-c C-c'
-     Save the changes you have made and return to the summary buffer
-     (`gnus-score-edit-done').
-
-`C-c C-d'
-     Insert the current date in numerical format
-     (`gnus-score-edit-insert-date').  This is really the day number, if
-     you were wondering.
-
-`C-c C-p'
-     The adaptive score files are saved in an unformatted fashion.  If
-     you intend to read one of these files, you want to "pretty print"
-     it first.  This command (`gnus-score-pretty-print') does that for
-     you.
-
-   Type `M-x gnus-score-mode' to use this mode.
-
-   `gnus-score-menu-hook' is run in score mode buffers.
-
-   In the summary buffer you can use commands like `V f' and `V e' to
-begin editing score files.
-
-
-File: gnus,  Node: Adaptive Scoring,  Next: Home Score File,  Prev: Score File Editing,  Up: Scoring
-
-Adaptive Scoring
-================
-
-   If all this scoring is getting you down, Gnus has a way of making it
-all happen automatically--as if by magic.  Or rather, as if by
-artificial stupidity, to be precise.
-
-   When you read an article, or mark an article as read, or kill an
-article, you leave marks behind.  On exit from the group, Gnus can sniff
-these marks and add score elements depending on what marks it finds.
-You turn on this ability by setting `gnus-use-adaptive-scoring' to `t'
-or `(line)'.  If you want score adaptively on separate words appearing
-in the subjects, you should set this variable to `(word)'.  If you want
-to use both adaptive methods, set this variable to `(word line)'.
-
-   To give you complete control over the scoring process, you can
-customize the `gnus-default-adaptive-score-alist' variable.  For
-instance, it might look something like this:
-
-     (defvar gnus-default-adaptive-score-alist
-       '((gnus-unread-mark)
-         (gnus-ticked-mark (from 4))
-         (gnus-dormant-mark (from 5))
-         (gnus-del-mark (from -4) (subject -1))
-         (gnus-read-mark (from 4) (subject 2))
-         (gnus-expirable-mark (from -1) (subject -1))
-         (gnus-killed-mark (from -1) (subject -3))
-         (gnus-kill-file-mark)
-         (gnus-ancient-mark)
-         (gnus-low-score-mark)
-         (gnus-catchup-mark (from -1) (subject -1))))
-
-   As you see, each element in this alist has a mark as a key (either a
-variable name or a "real" mark--a character).  Following this key is a
-arbitrary number of header/score pairs.  If there are no header/score
-pairs following the key, no adaptive scoring will be done on articles
-that have that key as the article mark.  For instance, articles with
-`gnus-unread-mark' in the example above will not get adaptive score
-entries.
-
-   Each article can have only one mark, so just a single of these rules
-will be applied to each article.
-
-   To take `gnus-del-mark' as an example--this alist says that all
-articles that have that mark (i.e., are marked with `D') will have a
-score entry added to lower based on the `From' header by -4, and
-lowered by `Subject' by -1.  Change this to fit your prejudices.
-
-   If you have marked 10 articles with the same subject with
-`gnus-del-mark', the rule for that mark will be applied ten times.
-That means that that subject will get a score of ten times -1, which
-should be, unless I'm much mistaken, -10.
-
-   If you have auto-expirable (mail) groups (*note Expiring Mail::.),
-all the read articles will be marked with the `E' mark.  This'll
-probably make adaptive scoring slightly impossible, so auto-expiring and
-adaptive scoring doesn't really mix very well.
-
-   The headers you can score on are `from', `subject', `message-id',
-`references', `xref', `lines', `chars' and `date'.  In addition, you
-can score on `followup', which will create an adaptive score entry that
-matches on the `References' header using the `Message-ID' of the
-current article, thereby matching the following thread.
-
-   You can also score on `thread', which will try to score all articles
-that appear in a thread.  `thread' matches uses a `Message-ID' to match
-on the `References' header of the article.  If the match is made, the
-`Message-ID' of the article is added to the `thread' rule.  (Think
-about it.  I'd recommend two aspirins afterwards.)
-
-   If you use this scheme, you should set the score file atom `mark' to
-something small--like -300, perhaps, to avoid having small random
-changes result in articles getting marked as read.
-
-   After using adaptive scoring for a week or so, Gnus should start to
-become properly trained and enhance the authors you like best, and kill
-the authors you like least, without you having to say so explicitly.
-
-   You can control what groups the adaptive scoring is to be performed
-on by using the score files (*note Score File Format::.).  This will
-also let you use different rules in different groups.
-
-   The adaptive score entries will be put into a file where the name is
-the group name with `gnus-adaptive-file-suffix' appended.  The default
-is `ADAPT'.
-
-   When doing adaptive scoring, substring or fuzzy matching would
-probably give you the best results in most cases.  However, if the
-header one matches is short, the possibility for false positives is
-great, so if the length of the match is less than
-`gnus-score-exact-adapt-limit', exact matching will be used.  If this
-variable is `nil', exact matching will always be used to avoid this
-problem.
-
-   As mentioned above, you can adapt either on individual words or
-entire headers.  If you adapt on words, the
-`gnus-default-adaptive-word-score-alist' variable says what score each
-instance of a word should add given a mark.
-
-     (setq gnus-default-adaptive-word-score-alist
-           `((,gnus-read-mark . 30)
-             (,gnus-catchup-mark . -10)
-             (,gnus-killed-mark . -20)
-             (,gnus-del-mark . -15)))
-
-   This is the default value.  If you have adaption on words enabled,
-every word that appears in subjects of articles that are marked with
-`gnus-read-mark' will result in a score rule that increase the score
-with 30 points.
-
-   Words that appear in the `gnus-default-ignored-adaptive-words' list
-will be ignored.  If you wish to add more words to be ignored, use the
-`gnus-ignored-adaptive-words' list instead.
-
-   When the scoring is done, `gnus-adaptive-word-syntax-table' is the
-syntax table in effect.  It is similar to the standard syntax table, but
-it considers numbers to be non-word-constituent characters.
-
-   After using this scheme for a while, it might be nice to write a
-`gnus-psychoanalyze-user' command to go through the rules and see what
-words you like and what words you don't like.  Or perhaps not.
-
-   Note that the adaptive word scoring thing is highly experimental and
-is likely to change in the future.  Initial impressions seem to indicate
-that it's totally useless as it stands.  Some more work (involving more
-rigorous statistical methods) will have to be done to make this useful.
-
-
-File: gnus,  Node: Home Score File,  Next: Followups To Yourself,  Prev: Adaptive Scoring,  Up: Scoring
-
-Home Score File
-===============
-
-   The score file where new score file entries will go is called the
-"home score file".  This is normally (and by default) the score file
-for the group itself.  For instance, the home score file for
-`gnu.emacs.gnus' is `gnu.emacs.gnus.SCORE'.
-
-   However, this may not be what you want.  It is often convenient to
-share a common home score file among many groups--all `emacs' groups
-could perhaps use the same home score file.
-
-   The variable that controls this is `gnus-home-score-file'.  It can
-be:
-
-  1. A string.  Then this file will be used as the home score file for
-     all groups.
-
-  2. A function. The result of this function will be used as the home
-     score file.  The function will be called with the name of the
-     group as the parameter.
-
-  3. A list.  The elements in this list can be:
-
-       1. (REGEXP FILE-NAME).  If the REGEXP matches the group name,
-          the FILE-NAME will will be used as the home score file.
-
-       2. A function. If the function returns non-nil, the result will
-          be used as the home score file.
-
-       3. A string.  Use the string as the home score file.
-
-     The list will be traversed from the beginning towards the end
-     looking for matches.
-
-
-   So, if you want to use just a single score file, you could say:
-
-     (setq gnus-home-score-file
-           "my-total-score-file.SCORE")
-
-   If you want to use `gnu.SCORE' for all `gnu' groups and `rec.SCORE'
-for all `rec' groups (and so on), you can say:
-
-     (setq gnus-home-score-file
-           'gnus-hierarchial-home-score-file)
-
-   This is a ready-made function provided for your convenience.
-
-   If you want to have one score file for the `emacs' groups and
-another for the `comp' groups, while letting all other groups use their
-own home score files:
-
-     (setq gnus-home-score-file
-           ;; All groups that match the regexp "\\.emacs"
-           '("\\.emacs" "emacs.SCORE")
-           ;; All the comp groups in one score file
-            ("^comp" "comp.SCORE"))
-
-   `gnus-home-adapt-file' works exactly the same way as
-`gnus-home-score-file', but says what the home adaptive score file is
-instead.  All new adaptive file entries will go into the file specified
-by this variable, and the same syntax is allowed.
-
-   In addition to using `gnus-home-score-file' and
-`gnus-home-adapt-file', you can also use group parameters (*note Group
-Parameters::.) and topic parameters (*note Topic Parameters::.) to
-achieve much the same.  Group and topic parameters take precedence over
-this variable.
-
-
-File: gnus,  Node: Followups To Yourself,  Next: Scoring Tips,  Prev: Home Score File,  Up: Scoring
-
-Followups To Yourself
-=====================
-
-   Gnus offers two commands for picking out the `Message-ID' header in
-the current buffer.  Gnus will then add a score rule that scores using
-this `Message-ID' on the `References' header of other articles.  This
-will, in effect, increase the score of all articles that respond to the
-article in the current buffer.  Quite useful if you want to easily note
-when people answer what you've said.
-
-`gnus-score-followup-article'
-     This will add a score to articles that directly follow up your own
-     article.
-
-`gnus-score-followup-thread'
-     This will add a score to all articles that appear in a thread
-     "below" your own article.
-
-   These two functions are both primarily meant to be used in hooks like
-`message-sent-hook'.
-
-   If you look closely at your own `Message-ID', you'll notice that the
-first two or three characters are always the same.  Here's two of mine:
-
-     <x6u3u47icf.fsf@eyesore.no>
-     <x6sp9o7ibw.fsf@eyesore.no>
-
-   So "my" ident on this machine is `x6'.  This can be exploited--the
-following rule will raise the score on all followups to myself:
-
-     ("references"
-      ("<x6[0-9a-z]+\\.fsf@.*eyesore.no>" 1000 nil r))
-
-   Whether it's the first two or first three characters that are "yours"
-is system-dependent.
-
-
-File: gnus,  Node: Scoring Tips,  Next: Reverse Scoring,  Prev: Followups To Yourself,  Up: Scoring
-
-Scoring Tips
-============
-
-"Crossposts"
-     If you want to lower the score of crossposts, the line to match on
-     is the `Xref' header.
-          ("xref" (" talk.politics.misc:" -1000))
-
-"Multiple crossposts"
-     If you want to lower the score of articles that have been
-     crossposted to more than, say, 3 groups:
-          ("xref" ("[^:\n]+:[0-9]+ +[^:\n]+:[0-9]+ +[^:\n]+:[0-9]+" -1000 nil r))
-
-"Matching on the body"
-     This is generally not a very good idea--it takes a very long time.
-     Gnus actually has to fetch each individual article from the
-     server.  But you might want to anyway, I guess.  Even though there
-     are three match keys (`Head', `Body' and `All'), you should choose
-     one and stick with it in each score file.  If you use any two,
-     each article will be fetched *twice*.  If you want to match a bit
-     on the `Head' and a bit on the `Body', just use `All' for all the
-     matches.
-
-"Marking as read"
-     You will probably want to mark articles that has a score below a
-     certain number as read.  This is most easily achieved by putting
-     the following in your `all.SCORE' file:
-          ((mark -100))
-     You may also consider doing something similar with `expunge'.
-
-"Negated character classes"
-     If you say stuff like `[^abcd]*', you may get unexpected results.
-     That will match newlines, which might lead to, well, The Unknown.
-     Say `[^abcd\n]*' instead.
-
-
-File: gnus,  Node: Reverse Scoring,  Next: Global Score Files,  Prev: Scoring Tips,  Up: Scoring
-
-Reverse Scoring
-===============
-
-   If you want to keep just articles that have `Sex with Emacs' in the
-subject header, and expunge all other articles, you could put something
-like this in your score file:
-
-     (("subject"
-       ("Sex with Emacs" 2))
-      (mark 1)
-      (expunge 1))
-
-   So, you raise all articles that match `Sex with Emacs' and mark the
-rest as read, and expunge them to boot.
-
-
-File: gnus,  Node: Global Score Files,  Next: Kill Files,  Prev: Reverse Scoring,  Up: Scoring
-
-Global Score Files
-==================
-
-   Sure, other newsreaders have "global kill files".  These are usually
-nothing more than a single kill file that applies to all groups, stored
-in the user's home directory.  Bah!  Puny, weak newsreaders!
-
-   What I'm talking about here are Global Score Files.  Score files from
-all over the world, from users everywhere, uniting all nations in one
-big, happy score file union!  Ange-score!  New and untested!
-
-   All you have to do to use other people's score files is to set the
-`gnus-global-score-files' variable.  One entry for each score file, or
-each score file directory.  Gnus will decide by itself what score files
-are applicable to which group.
-
-   Say you want to use the score file
-`/ftp@ftp.gnus.org:/pub/larsi/ding/score/soc.motss.SCORE' and all score
-files in the `/ftp@ftp.some-where:/pub/score' directory:
-
-     (setq gnus-global-score-files
-           '("/ftp@ftp.gnus.org:/pub/larsi/ding/score/soc.motss.SCORE"
-             "/ftp@ftp.some-where:/pub/score/"))
-
-   Simple, eh?  Directory names must end with a `/'.  These directories
-are typically scanned only once during each Gnus session.  If you feel
-the need to manually re-scan the remote directories, you can use the
-`gnus-score-search-global-directories' command.
-
-   Note that, at present, using this option will slow down group entry
-somewhat.  (That is--a lot.)
-
-   If you want to start maintaining score files for other people to use,
-just put your score file up for anonymous ftp and announce it to the
-world.  Become a retro-moderator!  Participate in the retro-moderator
-wars sure to ensue, where retro-moderators battle it out for the
-sympathy of the people, luring them to use their score files on false
-premises!  Yay!  The net is saved!
-
-   Here are some tips for the would-be retro-moderator, off the top of
-my head:
-
-   * Articles that are heavily crossposted are probably junk.
-
-   * To lower a single inappropriate article, lower by `Message-ID'.
-
-   * Particularly brilliant authors can be raised on a permanent basis.
-
-   * Authors that repeatedly post off-charter for the group can safely
-     be lowered out of existence.
-
-   * Set the `mark' and `expunge' atoms to obliterate the nastiest
-     articles completely.
-
-   * Use expiring score entries to keep the size of the file down.  You
-     should probably have a long expiry period, though, as some sites
-     keep old articles for a long time.
-
-   ... I wonder whether other newsreaders will support global score
-files in the future.  *Snicker*.  Yup, any day now, newsreaders like
-Blue Wave, xrn and 1stReader are bound to implement scoring.  Should we
-start holding our breath yet?
+   Now, the syntax of the download score is the same as the syntax of
+normal score files, except that all elements that require actually
+seeing the article itself are verboten.  This means that only the
+following headers can be scored on: `From', `Subject', `Date', `Xref',
+`Lines', `Chars', `Message-ID', and `References'.
 

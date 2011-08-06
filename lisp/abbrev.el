@@ -48,11 +48,12 @@ and be replaced by its expansion."
 
 (defcustom abbrev-mode nil
   "Toggle abbrev mode.
-In abbrev mode, inserting an abbreviation causes it to expand
-and be replaced by its expansion.
-You must modify via \\[customize] for this variable to have an effect."
-  :set (lambda (symbol value)
-	 (abbrev-mode (if value 1 0)))
+Non-nil means automatically expand abbrevs as they are inserted.
+
+This variable automatically becomes buffer-local when set in any fashion.
+Changing it with \\[customize] sets the default value.
+Use the command `abbrev-mode' to enable or disable Abbrev mode in the current
+buffer."
   :type 'boolean
   :group 'abbrev-mode)
 
@@ -269,7 +270,7 @@ Expands the abbreviation after defining it."
 					       (setq nameloc (point))))))
     (set-text-properties 0 (length name) nil name)
     (setq exp (read-string (format "%s expansion for \"%s\": "
-				   type name)))
+				   type name) nil nil nil t))
     (if (or (not (abbrev-expansion name table))
 	    (y-or-n-p (format "%s expands to \"%s\"; redefine? "
 			      name (abbrev-expansion name table))))

@@ -55,7 +55,8 @@
 ;;;###autoload
 (defcustom winner-mode nil
   "Toggle winner-mode.
-You must modify via \\[customize] for this variable to have an effect."
+Setting this variable directly does not take effect;
+use either \\[customize] or the function `winner-mode'."
   :set #'(lambda (symbol value)
 	   (winner-mode (or value 0)))
   :initialize 'custom-initialize-default
@@ -244,6 +245,12 @@ With arg, turn Winner mode on if and only if arg is positive."
     (force-mode-line-update)))
 
 ;; Inspired by undo (simple.el)
+
+(defvar winner-pending-undo-ring nil
+  "The ring currently used by winner undo.")
+(defvar winner-undo-counter nil)
+(defvar winner-undone-data  nil) ; There confs have been passed.
+
 (defun winner-undo (arg)
   "Switch back to an earlier window configuration saved by Winner mode.
 In other words, \"undo\" changes in window configuration.
@@ -263,11 +270,6 @@ With prefix arg, undo that many levels."
       (unless (window-minibuffer-p (selected-window))
 	(message "Winner undo (%d)" winner-undo-counter))
       (setq this-command 'winner-undo))))
-
-(defvar winner-pending-undo-ring nil) ; The ring currently used by
-				      ; undo.
-(defvar winner-undo-counter nil)
-(defvar winner-undone-data  nil) ; There confs have been passed.
 
 (defun winner-undo-this () ; The heart of winner undo.
   (if (>= winner-undo-counter (ring-length winner-pending-undo-ring))

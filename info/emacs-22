@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,211 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Specific Customization,  Prev: Face Customization,  Up: Easy Customization
+
+Customizing Specific Items
+..........................
+
+   Instead of finding the options you want to change by moving down
+through the structure of groups, you can specify the particular option,
+face or group that you want to customize.
+
+`M-x customize-option <RET> OPTION <RET>'
+     Set up a customization buffer with just one option, OPTION.
+
+`M-x customize-face <RET> FACE <RET>'
+     Set up a customization buffer with just one face, FACE.
+
+`M-x customize-group <RET> GROUP <RET>'
+     Set up a customization buffer with just one group, GROUP.
+
+`M-x customize-apropos <RET> REGEXP <RET>'
+     Set up a customization buffer with all the options, faces and
+     groups that match REGEXP.
+
+`M-x customize-changed-options <RET> VERSION <RET>'
+     Set up a customization buffer with all the options, faces and
+     groups whose meaning has changed since Emacs version VERSION.
+
+`M-x customize-saved'
+     Set up a customization buffer containing all options and faces
+     that you have saved with customization buffers.
+
+`M-x customize-customized'
+     Set up a customization buffer containing all options and faces
+     that you have customized but not saved.
+
+   If you want to alter a particular user option variable with the
+customization buffer, and you know its name, you can use the command
+`M-x customize-option' and specify the option name.  This sets up the
+customization buffer with just one option--the one that you asked for.
+Editing, setting and saving the value work as described above, but only
+for the specified option.
+
+   Likewise, you can modify a specific face, chosen by name, using `M-x
+customize-face'.
+
+   You can also set up the customization buffer with a specific group,
+using `M-x customize-group'.  The immediate contents of the chosen
+group, including option variables, faces, and other groups, all appear
+as well.  However, these subgroups' own contents start out hidden.  You
+can show their contents in the usual way, by invoking `[Show]'.
+
+   To control more precisely what to customize, you can use `M-x
+customize-apropos'.  You specify a regular expression as argument; then
+all options, faces and groups whose names match this regular expression
+are set up in the customization buffer.  If you specify an empty regular
+expression, this includes *all* groups, options and faces in the
+customization buffer (but that takes a long time).
+
+   When you upgrade to a new Emacs version, you might want to customize
+new options and options whose meanings or default values have changed.
+To do this, use `M-x customize-changed-options' and specify a previous
+Emacs version number using the minibuffer.  It creates a customization
+buffer which shows all the options (and groups) whose definitions have
+been changed since the specified version.
+
+   If you change option values and then decide the change was a mistake,
+you can use two special commands to revisit your previous changes.  Use
+`customize-saved' to look at the options and faces that you have saved.
+Use `M-x customize-customized' to look at the options and faces that
+you have set but not saved.
+
+
+File: emacs,  Node: Hooks,  Next: Locals,  Prev: Easy Customization,  Up: Variables
+
+Hooks
+-----
+
+   A "hook" is a variable where you can store a function or functions
+to be called on a particular occasion by an existing program.  Emacs
+provides a number of hooks for the sake of customization.
+
+   Most of the hooks in Emacs are "normal hooks".  These variables
+contain lists of functions to be called with no arguments.  The reason
+most hooks are normal hooks is so that you can use them in a uniform
+way.  Every variable in Emacs whose name ends in `-hook' is a normal
+hook.
+
+   Most major modes run hooks as the last step of initialization.  This
+makes it easy for a user to customize the behavior of the mode, by
+overriding the local variable assignments already made by the mode.  But
+hooks may also be used in other contexts.  For example, the hook
+`suspend-hook' runs just before Emacs suspends itself (*note
+Exiting::.).
+
+   The recommended way to add a hook function to a normal hook is by
+calling `add-hook'.  You can use any valid Lisp function as the hook
+function.  For example, here's how to set up a hook to turn on Auto
+Fill mode when entering Text mode and other modes based on Text mode:
+
+     (add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+   The next example shows how to use a hook to customize the indentation
+of C code.  (People often have strong personal preferences for one
+format compared to another.)  Here the hook function is an anonymous
+lambda expression.
+
+     (setq my-c-style
+       '((c-comment-only-line-offset . 4)
+         (c-cleanup-list . (scope-operator
+     		       empty-defun-braces
+     		       defun-close-semi))
+         (c-offsets-alist . ((arglist-close . c-lineup-arglist)
+     			(substatement-open . 0)))))
+     
+     (add-hook 'c-mode-common-hook
+       (function (lambda ()
+         (c-add-style "my-style" my-c-style t))))
+
+   It is best to design your hook functions so that the order in which
+they are executed does not matter.  Any dependence on the order is
+"asking for trouble."  However, the order is predictable: the most
+recently added hook functions are executed first.
+
+
+File: emacs,  Node: Locals,  Next: File Variables,  Prev: Hooks,  Up: Variables
+
+Local Variables
+---------------
+
+`M-x make-local-variable <RET> VAR <RET>'
+     Make variable VAR have a local value in the current buffer.
+
+`M-x kill-local-variable <RET> VAR <RET>'
+     Make variable VAR use its global value in the current buffer.
+
+`M-x make-variable-buffer-local <RET> VAR <RET>'
+     Mark variable VAR so that setting it will make it local to the
+     buffer that is current at that time.
+
+   Almost any variable can be made "local" to a specific Emacs buffer.
+This means that its value in that buffer is independent of its value in
+other buffers.  A few variables are always local in every buffer.
+Every other Emacs variable has a "global" value which is in effect in
+all buffers that have not made the variable local.
+
+   `M-x make-local-variable' reads the name of a variable and makes it
+local to the current buffer.  Further changes in this buffer will not
+affect others, and further changes in the global value will not affect
+this buffer.
+
+   `M-x make-variable-buffer-local' reads the name of a variable and
+changes the future behavior of the variable so that it will become local
+automatically when it is set.  More precisely, once a variable has been
+marked in this way, the usual ways of setting the variable automatically
+do `make-local-variable' first.  We call such variables "per-buffer"
+variables.
+
+   Major modes (*note Major Modes::.) always make variables local to the
+buffer before setting the variables.  This is why changing major modes
+in one buffer has no effect on other buffers.  Minor modes also work by
+setting variables--normally, each minor mode has one controlling
+variable which is non-`nil' when the mode is enabled (*note Minor
+Modes::.).  For most minor modes, the controlling variable is per
+buffer.
+
+   Emacs contains a number of variables that are always per-buffer.
+These include `abbrev-mode', `auto-fill-function', `case-fold-search',
+`comment-column', `ctl-arrow', `fill-column', `fill-prefix',
+`indent-tabs-mode', `left-margin', `mode-line-format', `overwrite-mode',
+`selective-display-ellipses', `selective-display', `tab-width', and
+`truncate-lines'.  Some other variables are always local in every
+buffer, but they are used for internal purposes.
+
+   A few variables cannot be local to a buffer because they are always
+local to each display instead (*note Multiple Displays::.).  If you try
+to make one of these variables buffer-local, you'll get an error
+message.
+
+   `M-x kill-local-variable' reads the name of a variable and makes it
+cease to be local to the current buffer.  The global value of the
+variable henceforth is in effect in this buffer.  Setting the major mode
+kills all the local variables of the buffer except for a few variables
+specially marked as "permanent locals".
+
+   To set the global value of a variable, regardless of whether the
+variable has a local value in the current buffer, you can use the Lisp
+construct `setq-default'.  This construct is used just like `setq', but
+it sets variables' global values instead of their local values (if
+any).  When the current buffer does have a local value, the new global
+value may not be visible until you switch to another buffer.  Here is
+an example:
+
+     (setq-default fill-column 75)
+
+`setq-default' is the only way to set the global value of a variable
+that has been marked with `make-variable-buffer-local'.
+
+   Lisp programs can use `default-value' to look at a variable's
+default value.  This function takes a symbol as argument and returns its
+default value.  The argument is evaluated; usually you must quote it
+explicitly.  For example, here's how to obtain the default value of
+`fill-column':
+
+     (default-value 'fill-column)
 
 
 File: emacs,  Node: File Variables,  Prev: Locals,  Up: Variables
@@ -116,10 +321,6 @@ particular files.  If you want to use Auto Fill, set up major mode hooks
 with your `.emacs' file to turn it on (when appropriate) for you alone
 (*note Init File::.).  Don't use a local variable list to impose your
 taste on everyone.
-
-   It does not work to specify the "variable" `coding' in a local
-variables list; `coding' is implemented in a special way and it works
-only in the `-*-' construct.
 
    The start of the local variables list must be no more than 3000
 characters from the end of the file, and must be in the last page if the
@@ -382,6 +583,7 @@ name which usually consists of lower-case letters and hyphens.
 * Init Rebinding::      Rebinding keys with your init file, `.emacs'.
 * Function Keys::       Rebinding terminal function keys.
 * Named ASCII Chars::   Distinguishing <TAB> from `C-i', and so on.
+* Non-ASCII Rebinding:: Rebinding non-ASCII characters such as Latin-1.
 * Mouse Buttons::       Rebinding mouse buttons in Emacs.
 * Disabling::           Disabling a command means confirmation is required
                           before it can be executed.  This is done to protect
@@ -460,9 +662,10 @@ are inconvenient to type in.
    As a user, you can redefine any key; but it might be best to stick to
 key sequences that consist of `C-c' followed by a letter.  These keys
 are "reserved for users," so they won't conflict with any properly
-designed Emacs extension.  If you redefine some other key, your
-definition may be overridden by certain extensions or major modes which
-redefine the same key.
+designed Emacs extension.  The function keys <F5> through <F9> are also
+reserved for users.  If you redefine some other key, your definition
+may be overridden by certain extensions or major modes which redefine
+the same key.
 
 
 File: emacs,  Node: Prefix Keymaps,  Next: Local Keymaps,  Prev: Keymaps,  Up: Key Bindings
@@ -709,7 +912,7 @@ character as it would appear in a string.
 
    Here are examples of using vectors to rebind `C-=' (a control
 character outside of ASCII), `H-a' (a Hyper character; ASCII doesn't
-have Hyper at all); <f7> (a function key), and `C-Mouse-1' (a
+have Hyper at all), <F7> (a function key), and `C-Mouse-1' (a
 keyboard-modified mouse button):
 
      (global-set-key [?\C-=] 'make-symbolic-link)
@@ -805,7 +1008,7 @@ forward a word:
      (global-set-key [H-M-right] 'forward-word)
 
 
-File: emacs,  Node: Named ASCII Chars,  Next: Mouse Buttons,  Prev: Function Keys,  Up: Key Bindings
+File: emacs,  Node: Named ASCII Chars,  Next: Non-ASCII Rebinding,  Prev: Function Keys,  Up: Key Bindings
 
 Named ASCII Control Characters
 ------------------------------
@@ -834,315 +1037,33 @@ between <TAB> and `C-i' (and likewise for other such pairs), because
 the terminal sends the same character in both cases.
 
 
-File: emacs,  Node: Mouse Buttons,  Next: Disabling,  Prev: Named ASCII Chars,  Up: Key Bindings
-
-Rebinding Mouse Buttons
------------------------
-
-   Emacs uses Lisp symbols to designate mouse buttons, too.  The
-ordinary mouse events in Emacs are "click" events; these happen when you
-press a button and release it without moving the mouse.  You can also
-get "drag" events, when you move the mouse while holding the button
-down.  Drag events happen when you finally let go of the button.
-
-   The symbols for basic click events are `mouse-1' for the leftmost
-button, `mouse-2' for the next, and so on.  Here is how you can
-redefine the second mouse button to split the current window:
-
-     (global-set-key [mouse-2] 'split-window-vertically)
-
-   The symbols for drag events are similar, but have the prefix `drag-'
-before the word `mouse'.  For example, dragging the first button
-generates a `drag-mouse-1' event.
-
-   You can also define bindings for events that occur when a mouse
-button is pressed down.  These events start with `down-' instead of
-`drag-'.  Such events are generated only if they have key bindings.
-When you get a button-down event, a corresponding click or drag event
-will always follow.
-
-   If you wish, you can distinguish single, double, and triple clicks.
-A double click means clicking a mouse button twice in approximately the
-same place.  The first click generates an ordinary click event.  The
-second click, if it comes soon enough, generates a double-click event
-instead.  The event type for a double-click event starts with
-`double-': for example, `double-mouse-3'.
-
-   This means that you can give a special meaning to the second click at
-the same place, but it must act on the assumption that the ordinary
-single click definition has run when the first click was received.
-
-   This constrains what you can do with double clicks, but user
-interface designers say that this constraint ought to be followed in
-any case.  A double click should do something similar to the single
-click, only "more so."  The command for the double-click event should
-perform the extra work for the double click.
-
-   If a double-click event has no binding, it changes to the
-corresponding single-click event.  Thus, if you don't define a
-particular double click specially, it executes the single-click command
-twice.
-
-   Emacs also supports triple-click events whose names start with
-`triple-'.  Emacs does not distinguish quadruple clicks as event types;
-clicks beyond the third generate additional triple-click events.
-However, the full number of clicks is recorded in the event list, so you
-can distinguish if you really want to.  We don't recommend distinct
-meanings for more than three clicks, but sometimes it is useful for
-subsequent clicks to cycle through the same set of three meanings, so
-that four clicks are equivalent to one click, five are equivalent to
-two, and six are equivalent to three.
-
-   Emacs also records multiple presses in drag and button-down events.
-For example, when you press a button twice, then move the mouse while
-holding the button, Emacs gets a `double-drag-' event.  And at the
-moment when you press it down for the second time, Emacs gets a
-`double-down-' event (which is ignored, like all button-down events, if
-it has no binding).
-
-   The variable `double-click-time' specifies how long may elapse
-between clicks that are recognized as a pair.  Its value is measured in
-milliseconds.  If the value is `nil', double clicks are not detected at
-all.  If the value is `t', then there is no time limit.
-
-   The symbols for mouse events also indicate the status of the modifier
-keys, with the usual prefixes `C-', `M-', `H-', `s-', `A-' and `S-'.
-These always precede `double-' or `triple-', which always precede
-`drag-' or `down-'.
-
-   A frame includes areas that don't show text from the buffer, such as
-the mode line and the scroll bar.  You can tell whether a mouse button
-comes from a special area of the screen by means of dummy "prefix
-keys."  For example, if you click the mouse in the mode line, you get
-the prefix key `mode-line' before the ordinary mouse-button symbol.
-Thus, here is how to define the command for clicking the first button in
-a mode line to run `scroll-up':
-
-     (global-set-key [mode-line mouse-1] 'scroll-up)
-
-   Here is the complete list of these dummy prefix keys and their
-meanings:
-
-`mode-line'
-     The mouse was in the mode line of a window.
-
-`vertical-line'
-     The mouse was in the vertical line separating side-by-side
-     windows.  (If you use scroll bars, they appear in place of these
-     vertical lines.)
-
-`vertical-scroll-bar'
-     The mouse was in a vertical scroll bar.  (This is the only kind of
-     scroll bar Emacs currently supports.)
-
-   You can put more than one mouse button in a key sequence, but it
-isn't usual to do so.
-
-
-File: emacs,  Node: Disabling,  Prev: Mouse Buttons,  Up: Key Bindings
-
-Disabling Commands
-------------------
-
-   Disabling a command marks the command as requiring confirmation
-before it can be executed.  The purpose of disabling a command is to
-prevent beginning users from executing it by accident and being
-confused.
-
-   An attempt to invoke a disabled command interactively in Emacs
-displays a window containing the command's name, its documentation, and
-some instructions on what to do immediately; then Emacs asks for input
-saying whether to execute the command as requested, enable it and
-execute it, or cancel.  If you decide to enable the command, you are
-asked whether to do this permanently or just for the current session.
-Enabling permanently works by automatically editing your `.emacs' file.
-
-   The direct mechanism for disabling a command is to put a non-`nil'
-`disabled' property on the Lisp symbol for the command.  Here is the
-Lisp program to do this:
-
-     (put 'delete-region 'disabled t)
-
-   If the value of the `disabled' property is a string, that string is
-included in the message printed when the command is used:
-
-     (put 'delete-region 'disabled
-          "It's better to use `kill-region' instead.\n")
-
-   You can make a command disabled either by editing the `.emacs' file
-directly or with the command `M-x disable-command', which edits the
-`.emacs' file for you.  Likewise, `M-x enable-command' edits `.emacs'
-to enable a command permanently.  *Note Init File::.
-
-   Whether a command is disabled is independent of what key is used to
-invoke it; disabling also applies if the command is invoked using
-`M-x'.  Disabling a command has no effect on calling it as a function
-from Lisp programs.
-
-
-File: emacs,  Node: Keyboard Translations,  Next: Syntax,  Prev: Key Bindings,  Up: Customization
-
-Keyboard Translations
-=====================
-
-   Some keyboards do not make it convenient to send all the special
-characters that Emacs uses.  The most common problem case is the <DEL>
-character.  Some keyboards provide no convenient way to type this very
-important character--usually because they were designed to expect the
-character `C-h' to be used for deletion.  On these keyboards, if you
-press the key normally used for deletion, Emacs handles the `C-h' as a
-prefix character and offers you a list of help options, which is not
-what you want.
-
-   You can work around this problem within Emacs by setting up keyboard
-translations to turn `C-h' into <DEL> and <DEL> into `C-h', as follows:
-
-     ;; Translate `C-h' to <DEL>.
-     (keyboard-translate ?\C-h ?\C-?)
-     
-     ;; Translate <DEL> to `C-h'.
-     (keyboard-translate ?\C-? ?\C-h)
-
-   Keyboard translations are not the same as key bindings in keymaps
-(*note Keymaps::.).  Emacs contains numerous keymaps that apply in
-different situations, but there is only one set of keyboard
-translations, and it applies to every character that Emacs reads from
-the terminal.  Keyboard translations take place at the lowest level of
-input processing; the keys that are looked up in keymaps contain the
-characters that result from keyboard translation.
-
-   Under X, the keyboard key named <DELETE> is a function key and is
-distinct from the ASCII character named <DEL>.  *Note Named ASCII
-Chars::.  Keyboard translations affect only ASCII character input, not
-function keys; thus, the above example used under X does not affect the
-<DELETE> key.  However, the translation above isn't necessary under X,
-because Emacs can also distinguish between the <BACKSPACE> key and
-`C-h'; and it normally treats <BACKSPACE> as <DEL>.
-
-   For full information about how to use keyboard translations, see
-*Note Translating Input: (elisp)Translating Input.
-
-
-File: emacs,  Node: Syntax,  Next: Init File,  Prev: Keyboard Translations,  Up: Customization
-
-The Syntax Table
-================
-
-   All the Emacs commands which parse words or balance parentheses are
-controlled by the "syntax table".  The syntax table says which
-characters are opening delimiters, which are parts of words, which are
-string quotes, and so on.  Each major mode has its own syntax table
-(though sometimes related major modes use the same one) which it
-installs in each buffer that uses that major mode.  The syntax table
-installed in the current buffer is the one that all commands use, so we
-call it "the" syntax table.  A syntax table is a Lisp object, a
-char-table, whose elements are numbers.
-
-   To display a description of the contents of the current syntax table,
-type `C-h s' (`describe-syntax').  The description of each character
-includes both the string you would have to give to
-`modify-syntax-entry' to set up that character's current syntax, and
-some English to explain that string if necessary.
-
-   For full information on the syntax table, see *Note Syntax Tables:
-(elisp)Syntax Tables.
-
-
-File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
-
-The Init File, `~/.emacs'
-=========================
-
-   When Emacs is started, it normally loads a Lisp program from the file
-`.emacs' in your home directory.  We call this file your "init file"
-because it specifies how to initialize Emacs for you.  You can use the
-command line switch `-q' to prevent loading your init file, and `-u'
-(or `--user') to specify a different user's init file (*note Entering
-Emacs::.).
-
-   There can also be a "default init file", which is the library named
-`default.el', found via the standard search path for libraries.  The
-Emacs distribution contains no such library; your site may create one
-for local customizations.  If this library exists, it is loaded
-whenever you start Emacs (except when you specify `-q').  But your init
-file, if any, is loaded first; if it sets `inhibit-default-init'
-non-`nil', then `default' is not loaded.
-
-   Your site may also have a "site startup file"; this is named
-`site-start.el', if it exists.  Emacs loads this library before it
-loads your init file.  To inhibit loading of this library, use the
-option `-no-site-file'.
-
-   If you have a large amount of code in your `.emacs' file, you should
-move it into another file such as `~/SOMETHING.el', byte-compile it,
-and make your `.emacs' file load it with `(load "~/SOMETHING")'.  *Note
-Byte Compilation: (elisp)Byte Compilation, for more information about
-compiling Emacs Lisp programs.
-
-   If you are going to write actual Emacs Lisp programs that go beyond
-minor customization, you should read the `Emacs Lisp Reference Manual'.
-*Note Emacs Lisp: (elisp)Top.
-
-* Menu:
-
-* Init Syntax::	        Syntax of constants in Emacs Lisp.
-* Init Examples::       How to do some things with an init file.
-* Terminal Init::       Each terminal type can have an init file.
-* Find Init::	        How Emacs finds the init file.
-
-
-File: emacs,  Node: Init Syntax,  Next: Init Examples,  Up: Init File
-
-Init File Syntax
-----------------
-
-   The `.emacs' file contains one or more Lisp function call
-expressions.  Each of these consists of a function name followed by
-arguments, all surrounded by parentheses.  For example, `(setq
-fill-column 60)' calls the function `setq' to set the variable
-`fill-column' (*note Filling::.) to 60.
-
-   The second argument to `setq' is an expression for the new value of
-the variable.  This can be a constant, a variable, or a function call
-expression.  In `.emacs', constants are used most of the time.  They
-can be:
-
-Numbers:
-     Numbers are written in decimal, with an optional initial minus
-     sign.
-
-Strings:
-     Lisp string syntax is the same as C string syntax with a few extra
-     features.  Use a double-quote character to begin and end a string
-     constant.
-
-     In a string, you can include newlines and special characters
-     literally.  But often it is cleaner to use backslash sequences for
-     them: `\n' for newline, `\b' for backspace, `\r' for carriage
-     return, `\t' for tab, `\f' for formfeed (control-L), `\e' for
-     escape, `\\' for a backslash, `\"' for a double-quote, or `\OOO'
-     for the character whose octal code is OOO.  Backslash and
-     double-quote are the only characters for which backslash sequences
-     are mandatory.
-
-     `\C-' can be used as a prefix for a control character, as in
-     `\C-s' for ASCII control-S, and `\M-' can be used as a prefix for
-     a Meta character, as in `\M-a' for `Meta-A' or `\M-\C-a' for
-     `Control-Meta-A'.
-
-Characters:
-     Lisp character constant syntax consists of a `?' followed by
-     either a character or an escape sequence starting with `\'.
-     Examples: `?x', `?\n', `?\"', `?\)'.  Note that strings and
-     characters are not interchangeable in Lisp; some contexts require
-     one and some contexts require the other.
-
-True:
-     `t' stands for `true'.
-
-False:
-     `nil' stands for `false'.
-
-Other Lisp objects:
-     Write a single-quote (') followed by the Lisp object you want.
+File: emacs,  Node: Non-ASCII Rebinding,  Next: Mouse Buttons,  Prev: Named ASCII Chars,  Up: Key Bindings
+
+Non-ASCII Characters on the Keyboard
+------------------------------------
+
+   If your keyboard has keys that send non-ASCII characters, such as
+accented letters, rebinding these keys is a bit tricky.  There are two
+solutions you can use.  One is to specify a keyboard coding system,
+using `set-keyboard-coding-system' (*note Specify Coding::.).  Then you
+can bind these keys in the usual way, but writing
+
+     (global-set-key [?CHAR] 'some-function)
+
+and typing the key you want to bind to insert CHAR.
+
+   If you don't specify the keyboard coding system, that approach won't
+work.  Instead, you need to find out the actual code that the terminal
+sends.  The easiest way to do this in Emacs is to create an empty buffer
+with `C-x b temp <RET>', make it unibyte with `M-x
+toggle-enable-multibyte-characters <RET>', then type the key to insert
+the character into this buffer.
+
+   Move point before the character, then type `C-b C-x ='.  This
+displays a message in the minibuffer, showing the character code in
+three ways, octal, decimal and hexadecimal, all within a set of
+parentheses.  Use the second of the three numbers, the decimal one,
+inside the vector to bind:
+
+     (global-set-key [DECIMAL-CODE] 'some-function)
 

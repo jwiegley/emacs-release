@@ -1,6 +1,6 @@
 ;;; startup.el --- process Emacs shell arguments
 
-;; Copyright (C) 1985, 86, 92, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 92, 94, 95, 96, 97, 1998, 1999 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -293,15 +293,17 @@ override them.  Users can prevent loading `default.el' with the `-q'
 option or by setting `inhibit-default-init' in their own init files,
 but inhibiting `site-start.el' requires `--no-site-file', which
 is less convenient."
-  :type 'string
+  :type '(choice (const :tag "none" nil) string)
   :group 'initialization)
 
-(defconst iso-8859-n-locale-regexp "8859[-_]?\\([1-49]\\)"
+(defconst iso-8859-n-locale-regexp "8859[-_]?\\([1-49]\\)\\>"
   "Regexp that specifies when to enable an ISO 8859-N character set.
-We do that if this regexp matches the locale name
-specified by the LC_ALL, LC_CTYPE and LANG environment variables.
+We do that if this regexp matches the locale name specified by
+one of the environment variables LC_ALL, LC_CTYPE, or LANG.
 The paren group in the regexp should match the specific character
-set number, N.")
+set number, N.  Currently only Latin-[12345] are supported.
+\(Note that Latin-5 is ISO 8859-9, because 8859-[678] are non-Latin
+alphabets; hence, supported values of N are [12349].\)")
 
 (defcustom mail-host-address nil
   "*Name of this machine, for purposes of naming users."
@@ -329,12 +331,25 @@ from being initialized."
 		 string)
   :group 'auto-save)
 
-(defvar locale-translation-file-name "/usr/share/locale/locale.alias"
-  "*File name for the system's file of locale-name aliases.")
+(defvar locale-translation-file-name
+  (let ((files '("/usr/lib/X11/locale/locale.alias" ; e.g. X11R6.4
+		 "/usr/X11R6/lib/X11/locale/locale.alias" ; e.g. RedHat 4.2
+		 "/usr/openwin/lib/locale/locale.alias" ; e.g. Solaris 2.6
+		 ;;
+		 ;; The following name appears after the X-related names above,
+		 ;; since the X-related names are what X actually uses.
+		 "/usr/share/locale/locale.alias" ; GNU/Linux sans X
+		 )))
+    (while (and files (not (file-exists-p (car files))))
+      (setq files (cdr files)))
+    (car files))
+  "*File name for the system's file of locale-name aliases, or nil if none.")
 
 (defvar init-file-debug nil)
 
 (defvar init-file-had-error nil)
+
+(defvar normal-top-level-add-subdirs-inode-list nil)
 
 (defun normal-top-level-add-subdirs-to-load-path ()
   "Add all subdirectories of current directory to `load-path'.
@@ -342,23 +357,32 @@ More precisely, this uses only the subdirectories whose names
 start with letters or digits; it excludes any subdirectory named `RCS'
 or `CVS', and any subdirectory that contains a file named `.nosearch'."
   (let (dirs 
+	attrs
 	(pending (list default-directory)))
     ;; This loop does a breadth-first tree walk on DIR's subtree,
     ;; putting each subdir into DIRS as its contents are examined.
     (while pending
       (setq dirs (cons (car pending) dirs))
       (setq pending (cdr pending))
+      (setq attrs (nthcdr 10 (file-attributes (car dirs))))
       (let ((contents (directory-files (car dirs)))
 	    (default-directory (car dirs)))
-	(while contents
-	  (unless (member (car contents) '("." ".." "RCS" "CVS"))
-	    (when (and (string-match "\\`[a-zA-Z0-9]" (car contents))
-		       (file-directory-p (car contents)))
-	      (let ((expanded (expand-file-name (car contents))))
-		(unless (file-exists-p (expand-file-name ".nosearch"
-							 expanded))
-		  (setq pending (nconc pending (list expanded)))))))
-	  (setq contents (cdr contents)))))
+	(unless (member attrs normal-top-level-add-subdirs-inode-list)
+	  (setq normal-top-level-add-subdirs-inode-list
+		(cons attrs normal-top-level-add-subdirs-inode-list))
+	  (while contents
+	    (unless (member (car contents) '("." ".." "RCS" "CVS"))
+	      (when (and (string-match "\\`[a-zA-Z0-9]" (car contents))
+			 ;; Avoid doing a `stat' when it isn't necessary
+			 ;; because that can cause trouble when an NFS server
+			 ;; is down.
+			 (not (string-match "\\.elc?\\'" (car contents)))
+			 (file-directory-p (car contents)))
+		(let ((expanded (expand-file-name (car contents))))
+		  (unless (file-exists-p (expand-file-name ".nosearch"
+							   expanded))
+		    (setq pending (nconc pending (list expanded)))))))
+	    (setq contents (cdr contents))))))
     (normal-top-level-add-to-load-path (cdr (nreverse dirs)))))
 
 ;; This function is called from a subdirs.el file.
@@ -505,11 +529,12 @@ or `CVS', and any subdirectory that contains a file named `.nosearch'."
     ;; Translate "swedish" into "sv_SE.ISO-8859-1", and so on,
     ;; using the translation file that GNU/Linux systems have.
     (and ctype
+	 locale-translation-file-name
 	 (not (string-match iso-8859-n-locale-regexp ctype))
-	 (file-exists-p locale-translation-file-name)
 	 (with-temp-buffer
 	   (insert-file-contents locale-translation-file-name)
-	   (if (re-search-forward (concat "^" ctype "[ \t]+") nil t)
+	   (if (re-search-forward
+		(concat "^" (regexp-quote ctype) ":?[ \t]+") nil t)
 	       (setq ctype (buffer-substring (point)
 					     (progn (end-of-line) (point)))))))
     ;; Now see if the locale specifies an ISO 8859 character set.
@@ -538,6 +563,18 @@ or `CVS', and any subdirectory that contains a file named `.nosearch'."
   ;;! to it, then it would be better to eliminate the option.
   ;;! ;; Choose a good default value for split-window-keep-point.
   ;;! (setq split-window-keep-point (> baud-rate 2400))
+
+  ;; Set the default strings to display in mode line for
+  ;; end-of-line formats that aren't native to this platform.
+  (cond
+   ((memq system-type '(ms-dos windows-nt emx))
+    (setq eol-mnemonic-unix "(Unix)")
+    (setq eol-mnemonic-mac  "(Mac)"))
+   ;; Mac-specific settings should come here, once there's a
+   ;; system-type symbol specific to MacOS.
+   (t	; this is for Unix/GNU/Linux systems
+    (setq eol-mnemonic-dos  "(DOS)")
+    (setq eol-mnemonic-mac  "(Mac)")))
 
   ;; Read window system's init file if using a window system.
   (condition-case error
@@ -663,27 +700,30 @@ or `CVS', and any subdirectory that contains a file named `.nosearch'."
   (let (debug-on-error-from-init-file
 	debug-on-error-should-be-set
 	(debug-on-error-initial
-	 (if (eq init-file-debug t) 'startup init-file-debug)))
+	 (if (eq init-file-debug t) 'startup init-file-debug))
+	(orig-enable-multibyte default-enable-multibyte-characters))
     (let ((debug-on-error debug-on-error-initial)
 	  ;; This function actually reads the init files.
 	  (inner
 	   (function
 	    (lambda ()
 	      (if init-file-user
-		  (progn
-		    (setq user-init-file 
+		  (let ((user-init-file-1
 			  (cond 
 			   ((eq system-type 'ms-dos)
 			    (concat "~" init-file-user "/_emacs"))
 			   ((eq system-type 'windows-nt)
-			    (if (file-exists-p "~/.emacs") 
+			    (if (directory-files "~" nil "^\\.emacs\\(\\.elc?\\)?$")
 				"~/.emacs"
 			      "~/_emacs"))
 			   ((eq system-type 'vax-vms) 
 			    "sys$login:.emacs")
 			   (t 
-			    (concat "~" init-file-user "/.emacs"))))
-		    (load user-init-file t t)
+			    (concat "~" init-file-user "/.emacs")))))
+		    ;; This tells `load' to store the file name found
+		    ;; into user-init-file.
+		    (setq user-init-file t)
+		    (load user-init-file-1 t t)
 		    (or inhibit-default-init
 			(let ((inhibit-startup-message nil))
 			  ;; Users are supposed to be told their rights.
@@ -709,7 +749,22 @@ or `CVS', and any subdirectory that contains a file named `.nosearch'."
 	  (setq debug-on-error-should-be-set t
 		debug-on-error-from-init-file debug-on-error)))
     (if debug-on-error-should-be-set
-	(setq debug-on-error debug-on-error-from-init-file)))
+	(setq debug-on-error debug-on-error-from-init-file))
+    (unless (or default-enable-multibyte-characters
+		(eq orig-enable-multibyte default-enable-multibyte-characters))
+      ;; Init file changed to unibyte.  Reset existing multibyte
+      ;; buffers (probably *scratch*, *Messages*, *Minibuff-0*).
+      ;; Arguably this should only be done if they're free of
+      ;; multibyte characters.
+      (mapcar (lambda (buffer)
+		(with-current-buffer buffer
+		  (if enable-multibyte-characters
+		      (set-buffer-multibyte nil))))
+	      (buffer-list))
+      ;; Also re-set the language environment in case it was
+      ;; originally done before unibyte was set and is sensitive to
+      ;; unibyte (display table, terminal coding system &c).
+      (set-language-environment current-language-environment)))
 
   ;; Do this here in case the init file sets mail-host-address.
   (or user-mail-address
@@ -843,7 +898,7 @@ Getting New Versions	How to obtain the latest version of Emacs.
 ")
 			     (insert "\n\n" (emacs-version)
 				     "
-Copyright (C) 1998 Free Software Foundation, Inc."))
+Copyright (C) 1999 Free Software Foundation, Inc."))
 			 ;; If keys have their default meanings,
 			 ;; use precomputed string to save lots of time.
 			 (if (and (eq (key-binding "\C-h") 'help-command)
@@ -900,19 +955,21 @@ If you have no Meta key, you may instead type ESC followed by the character.)")
 
 			 (insert "\n\n" (emacs-version)
 				 "
-Copyright (C) 1998 Free Software Foundation, Inc.")
+Copyright (C) 1999 Free Software Foundation, Inc.")
 			 (if (and (eq (key-binding "\C-h\C-c") 'describe-copying)
 				  (eq (key-binding "\C-h\C-d") 'describe-distribution)
 				  (eq (key-binding "\C-h\C-w") 'describe-no-warranty))
 			     (insert 
 			      "\n
 GNU Emacs comes with ABSOLUTELY NO WARRANTY; type C-h C-w for full details.
-You may give out copies of Emacs; type C-h C-c to see the conditions.
+Emacs is Free Software--Free as in Freedom--so you can redistribute copies
+of Emacs and modify it; type C-h C-c to see the conditions.
 Type C-h C-d for information on getting the latest version.")
 			   (insert (substitute-command-keys
 				    "\n
 GNU Emacs comes with ABSOLUTELY NO WARRANTY; type \\[describe-no-warranty] for full details.
-You may give out copies of Emacs; type \\[describe-copying] to see the conditions.
+Emacs is Free Software--Free as in Freedom--so you can redistribute copies
+of Emacs and modify it; type \\[describe-copying] to see the conditions.
 Type \\[describe-distribution] for information on getting the latest version."))))
 		       (goto-char (point-min))
 

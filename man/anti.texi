@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1997 Free Software Foundation, Inc.
+@c Copyright (C) 1997, 1999 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 
 @node Antinews, MS-DOS, Command Arguments, Top
@@ -11,10 +11,11 @@ simplicity that results from the absence of certain Emacs 20 features.
 
 @itemize @bullet
 @item
-The multibyte character support has been eliminated entirely.  (Some
-users consider this a tremendous improvement.)  Each character takes up
-one position in a buffer or string, and character codes are limited to
-the range 0 through 255.
+The multibyte character and end-of-line conversion support have been
+eliminated entirely.  (Some users consider this a tremendous
+improvement.)  Character codes are limited to the range 0 through 255
+and files imported onto Unix-like systems may have a ^M at the end of
+each line to remind you to control MS-DOG type files.
 
 @item
 Fontsets, coding systems and input methods have been eliminated as well.

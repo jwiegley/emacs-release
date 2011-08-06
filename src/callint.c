@@ -85,7 +85,7 @@ Just `(interactive)' means pass no args when calling interactively.\n\
 a -- Function name: symbol with a function definition.\n\
 b -- Name of existing buffer.\n\
 B -- Name of buffer, possibly nonexistent.\n\
-c -- Character.\n\
+c -- Character (no input method is used).\n\
 C -- Command name: symbol with interactive function definition.\n\
 d -- Value of point as number.  Does not do I/O.\n\
 D -- Directory name.\n\
@@ -560,7 +560,8 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 		Lisp_Object tem2;
 
 		teml = Fget (teml, intern ("event-symbol-elements"));
-		tem2 = Fmemq (intern ("down"), teml);
+		/* Ignore first element, which is the base key.  */
+		tem2 = Fmemq (intern ("down"), Fcdr (teml));
 		if (! NILP (tem2))
 		  Fread_event (Qnil, Qnil);
 	      }
@@ -587,7 +588,8 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 		Lisp_Object tem2;
 
 		teml = Fget (teml, intern ("event-symbol-elements"));
-		tem2 = Fmemq (intern ("down"), teml);
+		/* Ignore first element, which is the base key.  */
+		tem2 = Fmemq (intern ("down"), Fcdr (teml));
 		if (! NILP (tem2))
 		  Fread_event (Qnil, Qnil);
 	      }

@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -34,7 +34,327 @@ translation approved by the Free Software Foundation instead of in the
 original English.
 
 
-File: emacs,  Node: Electric C,  Next: Hungry Delete,  Prev: Motion in C,  Up: C/Java Modes
+File: emacs,  Node: State of Difference,  Next: Merge Commands,  Prev: Submodes of Emerge,  Up: Emerge
+
+State of a Difference
+---------------------
+
+   In the merge buffer, a difference is marked with lines of `v' and
+`^' characters.  Each difference has one of these seven states:
+
+A
+     The difference is showing the A version.  The `a' command always
+     produces this state; the mode line indicates it with `A'.
+
+B
+     The difference is showing the B version.  The `b' command always
+     produces this state; the mode line indicates it with `B'.
+
+default-A
+default-B
+     The difference is showing the A or the B state by default, because
+     you haven't made a choice.  All differences start in the default-A
+     state (and thus the merge buffer is a copy of the A buffer),
+     except those for which one alternative is "preferred" (see below).
+
+     When you select a difference, its state changes from default-A or
+     default-B to plain A or B.  Thus, the selected difference never has
+     state default-A or default-B, and these states are never displayed
+     in the mode line.
+
+     The command `d a' chooses default-A as the default state, and `d
+     b' chooses default-B.  This chosen default applies to all
+     differences which you haven't ever selected and for which no
+     alternative is preferred.  If you are moving through the merge
+     sequentially, the differences you haven't selected are those
+     following the selected one.  Thus, while moving sequentially, you
+     can effectively make the A version the default for some sections
+     of the merge buffer and the B version the default for others by
+     using `d a' and `d b' between sections.
+
+prefer-A
+prefer-B
+     The difference is showing the A or B state because it is
+     "preferred".  This means that you haven't made an explicit choice,
+     but one alternative seems likely to be right because the other
+     alternative agrees with the common ancestor.  Thus, where the A
+     buffer agrees with the common ancestor, the B version is
+     preferred, because chances are it is the one that was actually
+     changed.
+
+     These two states are displayed in the mode line as `A*' and `B*'.
+
+combined
+     The difference is showing a combination of the A and B states, as a
+     result of the `x c' or `x C' commands.
+
+     Once a difference is in this state, the `a' and `b' commands don't
+     do anything to it unless you give them a numeric argument.
+
+     The mode line displays this state as `comb'.
+
+
+File: emacs,  Node: Merge Commands,  Next: Exiting Emerge,  Prev: State of Difference,  Up: Emerge
+
+Merge Commands
+--------------
+
+   Here are the Merge commands for Fast mode; in Edit mode, precede them
+with `C-c C-c':
+
+`p'
+     Select the previous difference.
+
+`n'
+     Select the next difference.
+
+`a'
+     Choose the A version of this difference.
+
+`b'
+     Choose the B version of this difference.
+
+`C-u N j'
+     Select difference number N.
+
+`.'
+     Select the difference containing point.  You can use this command
+     in the merge buffer or in the A or B buffer.
+
+`q'
+     Quit--finish the merge.
+
+`C-]'
+     Abort--exit merging and do not save the output.
+
+`f'
+     Go into Fast mode.  (In Edit mode, this is actually `C-c C-c f'.)
+
+`e'
+     Go into Edit mode.
+
+`l'
+     Recenter (like `C-l') all three windows.
+
+`-'
+     Specify part of a prefix numeric argument.
+
+`DIGIT'
+     Also specify part of a prefix numeric argument.
+
+`d a'
+     Choose the A version as the default from here down in the merge
+     buffer.
+
+`d b'
+     Choose the B version as the default from here down in the merge
+     buffer.
+
+`c a'
+     Copy the A version of this difference into the kill ring.
+
+`c b'
+     Copy the B version of this difference into the kill ring.
+
+`i a'
+     Insert the A version of this difference at point.
+
+`i b'
+     Insert the B version of this difference at point.
+
+`m'
+     Put point and mark around the difference.
+
+`^'
+     Scroll all three windows down (like `M-v').
+
+`v'
+     Scroll all three windows up (like `C-v').
+
+`<'
+     Scroll all three windows left (like `C-x <').
+
+`>'
+     Scroll all three windows right (like `C-x >').
+
+`|'
+     Reset horizontal scroll on all three windows.
+
+`x 1'
+     Shrink the merge window to one line.  (Use `C-u l' to restore it
+     to full size.)
+
+`x c'
+     Combine the two versions of this difference (*note Combining in
+     Emerge::.).
+
+`x f'
+     Show the names of the files/buffers Emerge is operating on, in a
+     Help window.  (Use `C-u l' to restore windows.)
+
+`x j'
+     Join this difference with the following one.  (`C-u x j' joins
+     this difference with the previous one.)
+
+`x s'
+     Split this difference into two differences.  Before you use this
+     command, position point in each of the three buffers at the place
+     where you want to split the difference.
+
+`x t'
+     Trim identical lines off the top and bottom of the difference.
+     Such lines occur when the A and B versions are identical but
+     differ from the ancestor version.
+
+
+File: emacs,  Node: Exiting Emerge,  Next: Combining in Emerge,  Prev: Merge Commands,  Up: Emerge
+
+Exiting Emerge
+--------------
+
+   The `q' command (`emerge-quit') finishes the merge, storing the
+results into the output file if you specified one.  It restores the A
+and B buffers to their proper contents, or kills them if they were
+created by Emerge and you haven't changed them.  It also disables the
+Emerge commands in the merge buffer, since executing them later could
+damage the contents of the various buffers.
+
+   `C-]' aborts the merge.  This means exiting without writing the
+output file.  If you didn't specify an output file, then there is no
+real difference between aborting and finishing the merge.
+
+   If the Emerge command was called from another Lisp program, then its
+return value is `t' for successful completion, or `nil' if you abort.
+
+
+File: emacs,  Node: Combining in Emerge,  Next: Fine Points of Emerge,  Prev: Exiting Emerge,  Up: Emerge
+
+Combining the Two Versions
+--------------------------
+
+   Sometimes you want to keep *both* alternatives for a particular
+difference.  To do this, use `x c', which edits the merge buffer like
+this:
+
+     #ifdef NEW
+     VERSION FROM A BUFFER
+     #else /* not NEW */
+     VERSION FROM B BUFFER
+     #endif /* not NEW */
+
+While this example shows C preprocessor conditionals delimiting the two
+alternative versions, you can specify the strings to use by setting the
+variable `emerge-combine-versions-template' to a string of your choice.
+In the string, `%a' says where to put version A, and `%b' says where
+to put version B.  The default setting, which produces the results
+shown above, looks like this:
+
+     "#ifdef NEW\n%a#else /* not NEW */\n%b#endif /* not NEW */\n"
+
+
+File: emacs,  Node: Fine Points of Emerge,  Prev: Combining in Emerge,  Up: Emerge
+
+Fine Points of Emerge
+---------------------
+
+   During the merge, you mustn't try to edit the A and B buffers
+yourself.  Emerge modifies them temporarily, but ultimately puts them
+back the way they were.
+
+   You can have any number of merges going at once--just don't use any
+one buffer as input to more than one merge at once, since the temporary
+changes made in these buffers would get in each other's way.
+
+   Starting Emerge can take a long time because it needs to compare the
+files fully.  Emacs can't do anything else until `diff' finishes.
+Perhaps in the future someone will change Emerge to do the comparison in
+the background when the input files are large--then you could keep on
+doing other things with Emacs until Emerge is ready to accept commands.
+
+   After setting up the merge, Emerge runs the hook
+`emerge-startup-hook' (*note Hooks::.).
+
+
+File: emacs,  Node: C Modes,  Next: Fortran,  Prev: Emerge,  Up: Programs
+
+C and Related Modes
+===================
+
+   This section describes special features available in C, C++,
+Objective-C, Java, CORBA IDL, and Pike modes.  When we say "C mode and
+related modes," those are the modes we mean.
+
+* Menu:
+
+* Motion in C::
+* Electric C::
+* Hungry Delete::
+* Other C Commands::
+* Comments in C::
+
+
+File: emacs,  Node: Motion in C,  Next: Electric C,  Up: C Modes
+
+C Mode Motion Commands
+----------------------
+
+   This section describes commands for moving point, in C mode and
+related modes.
+
+`C-c C-u'
+     Move point back to the containing preprocessor conditional,
+     leaving the mark behind.  A prefix argument acts as a repeat
+     count.  With a negative argument, move point forward to the end of
+     the containing preprocessor conditional.  When going backwards,
+     `#elif' is treated like `#else' followed by `#if'.  When going
+     forwards, `#elif' is ignored.
+
+`C-c C-p'
+     Move point back over a preprocessor conditional, leaving the mark
+     behind.  A prefix argument acts as a repeat count.  With a negative
+     argument, move forward.
+
+`C-c C-n'
+     Move point forward across a preprocessor conditional, leaving the
+     mark behind.  A prefix argument acts as a repeat count.  With a
+     negative argument, move backward.
+
+`M-a'
+     Move point to the beginning of the innermost C statement
+     (`c-beginning-of-statement').  If point is already at the beginning
+     of a statement, move to the beginning of the preceding statement.
+     With prefix argument N, move back N - 1 statements.
+
+     If point is within a string or comment, or next to a comment (only
+     whitespace between them), this command moves by sentences instead
+     of statements.
+
+     When called from a program, this function takes three optional
+     arguments: the numeric prefix argument, a buffer position limit
+     (don't move back before that place), and a flag that controls
+     whether to do sentence motion when inside of a comment.
+
+`M-e'
+     Move point to the end of the innermost C statement; like `M-a'
+     except that it moves in the other direction (`c-end-of-statement').
+
+`M-x c-backward-into-nomenclature'
+     Move point backward to beginning of a C++ nomenclature section or
+     word.  With prefix argument N, move N times.  If N is negative,
+     move forward.  C++ nomenclature means a symbol name in the style
+     of NamingSymbolsWithMixedCaseAndNoUnderlines; each capital letter
+     begins a section or word.
+
+     In the GNU project, we recommend using underscores to separate
+     words within an identifier in C or C++, rather than using case
+     distinctions.
+
+`M-x c-forward-into-nomenclature'
+     Move point forward to end of a C++ nomenclature section or word.
+     With prefix argument N, move N times.
+
+
+File: emacs,  Node: Electric C,  Next: Hungry Delete,  Prev: Motion in C,  Up: C Modes
 
 Electric C Characters
 ---------------------
@@ -43,7 +363,7 @@ Electric C Characters
 "electric"--in addition to inserting themselves, they also reindent the
 current line and may insert newlines.  This feature is controlled by
 the variable `c-auto-newline'.  The "electric" characters are `{', `}',
-`:', `#', `;', `,', `<', `>', `/' and `*'.
+`:', `#', `;', `,', `<', `>', `/', `*', `(', and `)'.
 
    Electric characters insert newlines only when the "auto-newline"
 feature is enabled (indicated by `/a' in the mode line after the mode
@@ -103,6 +423,12 @@ variable's value is a list of symbols, each describing one case for
 possible deletion of a newline.  Here are the meaningful symbols, and
 their meanings:
 
+`brace-catch-brace'
+     Clean up `} catch (CONDITION) {' constructs by placing the entire
+     construct on a single line.  The clean-up occurs when you type the
+     `{', if there is nothing between the braces aside from `catch' and
+     CONDITION.
+
 `brace-else-brace'
      Clean up `} else {' constructs by placing the entire construct on
      a single line.  The clean-up occurs when you type the `{' after
@@ -135,7 +461,7 @@ their meanings:
      nothing but whitespace.
 
 
-File: emacs,  Node: Hungry Delete,  Next: Other C Commands,  Prev: Electric C,  Up: C/Java Modes
+File: emacs,  Node: Hungry Delete,  Next: Other C Commands,  Prev: Electric C,  Up: C Modes
 
 Hungry Delete Feature in C
 --------------------------
@@ -158,7 +484,7 @@ feature on or off, use `C-c C-d':
 hungry-delete feature is enabled.
 
 
-File: emacs,  Node: Other C Commands,  Next: Comments in C,  Prev: Hungry Delete,  Up: C/Java Modes
+File: emacs,  Node: Other C Commands,  Next: Comments in C,  Prev: Hungry Delete,  Up: C Modes
 
 Other Commands for C Mode
 -------------------------
@@ -210,7 +536,7 @@ Other Commands for C Mode
      directs how the line is indented.
 
 
-File: emacs,  Node: Comments in C,  Prev: Other C Commands,  Up: C/Java Modes
+File: emacs,  Node: Comments in C,  Prev: Other C Commands,  Up: C Modes
 
 Comments in C Modes
 -------------------
@@ -244,7 +570,7 @@ comment format.
      beginning of the first line of the comment text.
 
 
-File: emacs,  Node: Fortran,  Next: Asm Mode,  Prev: C/Java Modes,  Up: Programs
+File: emacs,  Node: Fortran,  Next: Asm Mode,  Prev: C Modes,  Up: Programs
 
 Fortran Mode
 ============
@@ -569,7 +895,7 @@ can choose from three styles of alignment by setting the variable
      `fortran-comment-line-extra-indent' columns of indentation.
 
 `nil'
-     Don't move text in full-line columns automatically at all.
+     Don't move text in full-line comments automatically at all.
 
    In addition, you can specify the character to be used to indent
 within full-line comments by setting the variable
@@ -605,9 +931,9 @@ Fortran Auto Fill Mode
    Fortran Auto Fill mode is a minor mode which automatically splits
 Fortran statements as you insert them when they become too wide.
 Splitting a statement involves making continuation lines using
-`fortran-continuation-string' (*Note ForIndent Cont::).  This splitting
-happens when you type <SPC>, <RET>, or <TAB>, and also in the Fortran
-indentation commands.
+`fortran-continuation-string' (*note ForIndent Cont::.).  This
+splitting happens when you type <SPC>, <RET>, or <TAB>, and also in the
+Fortran indentation commands.
 
    `M-x fortran-auto-fill-mode' turns Fortran Auto Fill mode on if it
 was off, or off if it was on.  This command works the same as `M-x
@@ -947,294 +1273,4 @@ subprocesses; to work around this lack, `M-x compile' runs the
 compilation command synchronously on MS-DOS.  As a consequence, you must
 wait until the command finishes before you can do anything else in
 Emacs.  *Note MS-DOS::.
-
-
-File: emacs,  Node: Debuggers,  Next: Executing Lisp,  Prev: Compilation Shell,  Up: Building
-
-Running Debuggers Under Emacs
-=============================
-
-   The GUD (Grand Unified Debugger) library provides an interface to
-various symbolic debuggers from within Emacs.  We recommend the debugger
-GDB, which is free software, but you can also run DBX, SDB or XDB if you
-have them.  GUD can also serve as an interface to the Perl's debugging
-mode, the Python debugger PDB, and to JDB, the Java Debugger.
-
-* Menu:
-
-* Starting GUD::	How to start a debugger subprocess.
-* Debugger Operation::	Connection between the debugger and source buffers.
-* Commands of GUD::	Key bindings for common commands.
-* GUD Customization::	Defining your own commands for GUD.
-
-
-File: emacs,  Node: Starting GUD,  Next: Debugger Operation,  Up: Debuggers
-
-Starting GUD
-------------
-
-   There are several commands for starting a debugger, each
-corresponding to a particular debugger program.
-
-`M-x gdb <RET> FILE <RET>'
-     Run GDB as a subprocess of Emacs.  This command creates a buffer
-     for input and output to GDB, and switches to it.  If a GDB buffer
-     already exists, it just switches to that buffer.
-
-`M-x dbx <RET> FILE <RET>'
-     Similar, but run DBX instead of GDB.
-
-`M-x xdb <RET> FILE <RET>'
-     Similar, but run XDB instead of GDB.  Use the variable
-     `gud-xdb-directories' to specify directories to search for source
-     files.
-
-`M-x sdb <RET> FILE <RET>'
-     Similar, but run SDB instead of GDB.
-
-     Some versions of SDB do not mention source file names in their
-     messages.  When you use them, you need to have a valid tags table
-     (*note Tags::.) in order for GUD to find functions in the source
-     code.  If you have not visited a tags table or the tags table
-     doesn't list one of the functions, you get a message saying `The
-     sdb support requires a valid tags table to work'.  If this
-     happens, generate a valid tags table in the working directory and
-     try again.
-
-`M-x perldb <RET> FILE <RET>'
-     Run the Perl interpreter in debug mode to debug FILE, a Perl
-     program.
-
-`M-x jdb <RET> FILE <RET>'
-     Run the Java debugger to debug FILE.
-
-`M-x pdb <RET> FILE <RET>'
-     Run the Python debugger to debug FILE.
-
-   Each of these commands takes one argument: a command line to invoke
-the debugger.  In the simplest case, specify just the name of the
-executable file you want to debug.  You may also use options that the
-debugger supports.  However, shell wildcards and variables are not
-allowed.  GUD assumes that the first argument not starting with a `-'
-is the executable file name.
-
-   Emacs can only run one debugger process at a time.
-
-
-File: emacs,  Node: Debugger Operation,  Next: Commands of GUD,  Prev: Starting GUD,  Up: Debuggers
-
-Debugger Operation
-------------------
-
-   When you run a debugger with GUD, the debugger uses an Emacs buffer
-for its ordinary input and output.  This is called the GUD buffer.  The
-debugger displays the source files of the program by visiting them in
-Emacs buffers.  An arrow (`=>') in one of these buffers indicates the
-current execution line.  Moving point in this buffer does not move the
-arrow.
-
-   You can start editing these source files at any time in the buffers
-that were made to display them.  The arrow is not part of the file's
-text; it appears only on the screen.  If you do modify a source file,
-keep in mind that inserting or deleting lines will throw off the arrow's
-positioning; GUD has no way of figuring out which line corresponded
-before your changes to the line number in a debugger message.  Also,
-you'll typically have to recompile and restart the program for your
-changes to be reflected in the debugger's tables.
-
-   If you wish, you can control your debugger process entirely through
-the debugger buffer, which uses a variant of Shell mode.  All the usual
-commands for your debugger are available, and you can use the Shell mode
-history commands to repeat them.  *Note Shell Mode::.
-
-
-File: emacs,  Node: Commands of GUD,  Next: GUD Customization,  Prev: Debugger Operation,  Up: Debuggers
-
-Commands of GUD
----------------
-
-   The GUD interaction buffer uses a variant of Shell mode, so the
-commands of Shell mode are available (*note Shell Mode::.).  GUD mode
-also provides commands for setting and clearing breakpoints, for
-selecting stack frames, and for stepping through the program.  These
-commands are available both in the GUD buffer and globally, but with
-different key bindings.
-
-   The breakpoint commands are usually used in source file buffers,
-because that is the way to specify where to set or clear the breakpoint.
-Here's the global command to set a breakpoint:
-
-`C-x <SPC>'
-     Set a breakpoint on the source line that point is on.
-
-   Here are the other special commands provided by GUD.  The keys
-starting with `C-c' are available only in the GUD interaction buffer.
-The key bindings that start with `C-x C-a' are available in the GUD
-interaction buffer and also in source files.
-
-`C-c C-l'
-`C-x C-a C-l'
-     Display in another window the last line referred to in the GUD
-     buffer (that is, the line indicated in the last location message).
-     This runs the command `gud-refresh'.
-
-`C-c C-s'
-`C-x C-a C-s'
-     Execute a single line of code (`gud-step').  If the line contains
-     a function call, execution stops after entering the called
-     function.
-
-`C-c C-n'
-`C-x C-a C-n'
-     Execute a single line of code, stepping across entire function
-     calls at full speed (`gud-next').
-
-`C-c C-i'
-`C-x C-a C-i'
-     Execute a single machine instruction (`gud-stepi').
-
-`C-c C-r'
-`C-x C-a C-r'
-     Continue execution without specifying any stopping point.  The
-     program will run until it hits a breakpoint, terminates, or gets a
-     signal that the debugger is checking for (`gud-cont').
-
-`C-c C-d'
-`C-x C-a C-d'
-     Delete the breakpoint(s) on the current source line, if any
-     (`gud-remove').  If you use this command in the GUD interaction
-     buffer, it applies to the line where the program last stopped.
-
-`C-c C-t'
-`C-x C-a C-t'
-     Set a temporary breakpoint on the current source line, if any.  If
-     you use this command in the GUD interaction buffer, it applies to
-     the line where the program last stopped.
-
-   The above commands are common to all supported debuggers.  If you are
-using GDB or (some versions of) DBX, these additional commands are
-available:
-
-`C-c <'
-`C-x C-a <'
-     Select the next enclosing stack frame (`gud-up').  This is
-     equivalent to the `up' command.
-
-`C-c >'
-`C-x C-a >'
-     Select the next inner stack frame (`gud-down').  This is
-     equivalent to the `down' command.
-
-   If you are using GDB, these additional key bindings are available:
-
-`<TAB>'
-     With GDB, complete a symbol name (`gud-gdb-complete-command').
-     This key is available only in the GUD interaction buffer, and
-     requires GDB versions 4.13 and later.
-
-`C-c C-f'
-`C-x C-a C-f'
-     Run the program until the selected stack frame returns (or until it
-     stops for some other reason).
-
-   These commands interpret a numeric argument as a repeat count, when
-that makes sense.
-
-   Because <TAB> serves as a completion command, you can't use it to
-enter a tab as input to the program you are debugging with GDB.
-Instead, type `C-q <TAB>' to enter a tab.
-
-
-File: emacs,  Node: GUD Customization,  Prev: Commands of GUD,  Up: Debuggers
-
-GUD Customization
------------------
-
-   On startup, GUD runs one of the following hooks: `gdb-mode-hook', if
-you are using GDB; `dbx-mode-hook', if you are using DBX;
-`sdb-mode-hook', if you are using SDB; `xdb-mode-hook', if you are
-using XDB; `perldb-mode-hook', for Perl debugging mode;
-`jdb-mode-hook', for PDB; `jdb-mode-hook', for JDB.  You can use these
-hooks to define custom key bindings for the debugger interaction
-buffer.  *Note Hooks::.
-
-   Here is a convenient way to define a command that sends a particular
-command string to the debugger, and set up a key binding for it in the
-debugger interaction buffer:
-
-     (gud-def FUNCTION CMDSTRING BINDING DOCSTRING)
-
-   This defines a command named FUNCTION which sends CMDSTRING to the
-debugger process, and gives it the documentation string DOCSTRING.  You
-can use the command thus defined in any buffer.  If BINDING is
-non-`nil', `gud-def' also binds the command to `C-c BINDING' in the GUD
-buffer's mode and to `C-x C-a BINDING' generally.
-
-   The command string CMDSTRING may contain certain `%'-sequences that
-stand for data to be filled in at the time FUNCTION is called:
-
-`%f'
-     The name of the current source file.  If the current buffer is the
-     GUD buffer, then the "current source file" is the file that the
-     program stopped in.
-
-`%l'
-     The number of the current source line.  If the current buffer is
-     the GUD buffer, then the "current source line" is the line that
-     the program stopped in.
-
-`%e'
-     The text of the C lvalue or function-call expression at or
-     adjacent to point.
-
-`%a'
-     The text of the hexadecimal address at or adjacent to point.
-
-`%p'
-     The numeric argument of the called function, as a decimal number.
-     If the command is used without a numeric argument, `%p' stands for
-     the empty string.
-
-     If you don't use `%p' in the command string, the command you define
-     ignores any numeric argument.
-
-
-File: emacs,  Node: Executing Lisp,  Next: Lisp Libraries,  Prev: Debuggers,  Up: Building
-
-Executing Lisp Expressions
-==========================
-
-   Emacs has several different major modes for Lisp and Scheme.  They
-are the same in terms of editing commands, but differ in the commands
-for executing Lisp expressions.  Each mode has its own purpose.
-
-Emacs-Lisp mode
-     The mode for editing source files of programs to run in Emacs Lisp.
-     This mode defines `C-M-x' to evaluate the current defun.  *Note
-     Lisp Libraries::.
-
-Lisp Interaction mode
-     The mode for an interactive session with Emacs Lisp.  It defines
-     `C-j' to evaluate the sexp before point and insert its value in the
-     buffer.  *Note Lisp Interaction::.
-
-Lisp mode
-     The mode for editing source files of programs that run in Lisps
-     other than Emacs Lisp.  This mode defines `C-M-x' to send the
-     current defun to an inferior Lisp process.  *Note External Lisp::.
-
-Inferior Lisp mode
-     The mode for an interactive session with an inferior Lisp process.
-     This mode combines the special features of Lisp mode and Shell mode
-     (*note Shell Mode::.).
-
-Scheme mode
-     Like Lisp mode but for Scheme programs.
-
-Inferior Scheme mode
-     The mode for an interactive session with an inferior Scheme
-     process.
-
-   Most editing commands for working with Lisp programs are in fact
-available globally.  *Note Programs::.
 

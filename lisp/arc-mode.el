@@ -526,6 +526,10 @@ archive.
 	(make-local-variable 'local-enable-local-variables)
 	(setq local-enable-local-variables nil)
 
+	;; Prevent loss of data when saving the file.
+	(make-local-variable 'file-precious-flag)
+	(setq file-precious-flag t)
+
 	(make-local-variable 'archive-read-only)
 	;; Archives which are inside other archives and whose
 	;; names are invalid for this OS, can't be written.
@@ -840,8 +844,9 @@ using `make-temp-name', and the generated name is returned."
     (let ((coding
 	   (or coding-system-for-read
 	       (and set-auto-coding-function
-		    (funcall set-auto-coding-function
-			     filename (- (point-max) (point-min))))
+		    (save-excursion
+		      (funcall set-auto-coding-function
+			       filename (- (point-max) (point-min)))))
 	       ;; dos-w32.el defines find-operation-coding-system for
 	       ;; DOS/Windows systems which preserves the coding-system
 	       ;; of existing files.  We want it to act here as if the
@@ -1289,7 +1294,7 @@ as a relative change like \"g+rw\" as for chmod(2)"
       (error "Renaming is not supported for this archive type"))))
 
 ;; Revert the buffer and recompute the dired-like listing.
-(defun archive-mode-revert (&optional no-autosave no-confirm)
+(defun archive-mode-revert (&optional no-auto-save no-confirm)
   (let ((no (archive-get-lineno)))
     (setq archive-files nil)
     (let ((revert-buffer-function nil)
@@ -1722,6 +1727,10 @@ This doesn't recover lost files, it just undoes changes in the buffer itself."
 (defun archive-zoo-extract (archive name)
   (archive-extract-by-stdout archive name archive-zoo-extract))
 ;; -------------------------------------------------------------------------
+;; This line was a mistake; it is kept now for compatibility.
+;; rms  15 Oct 98
 (provide 'archive-mode)
+
+(provide 'arc-mode)
 
 ;; arc-mode.el ends here.

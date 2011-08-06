@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,6 +32,199 @@ versions, except that the sections entitled "The GNU Manifesto",
 "Distribution" and "GNU General Public License" may be included in a
 translation approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: emacs,  Node: Speedbar,  Next: Creating Frames,  Prev: Mode Line Mouse,  Up: Frames
+
+Making and Using a Speedbar Frame
+=================================
+
+   An Emacs frame can have a "speedbar", which is a vertical window
+that serves as a scrollable menu of files you could visit and tags
+within those files.  To create a speedbar, type `M-x speedbar'; this
+creates a speedbar window for the selected frame.  From then on, you can
+click on a file name in the speedbar to visit that file in the
+corresponding Emacs frame, or click on a tag name to jump to that tag in
+the Emacs frame.
+
+   Initially the speedbar lists the immediate contents of the current
+directory, one file per line.  Each line also has a box, `[+]' or
+`<+>', that you can click on with `Mouse-2' to "open up" the contents
+of that item.  If the line names a directory, opening it adds the
+contents of that directory to the speedbar display, underneath the
+directory's own line.  If the line lists an ordinary file, opening it up
+adds a list of the tags in that file to the speedbar display.  When a
+file is opened up, the `[+]' changes to `[-]'; you can click on that
+box to "close up" that file (hide its contents).
+
+   Some major modes, including Rmail mode, Info, and GUD, have
+specialized ways of putting useful items into the speedbar for you to
+select.  For example, in Rmail mode, the speedbar shows a list of Rmail
+files, and lets you move the current message to another Rmail file by
+clicking on its `<M>' box.
+
+   A speedbar belongs to one Emacs frame, and always operates on that
+frame.  If you use multiple frames, you can make a speedbar for some or
+all of the frames; type `M-x speedbar' in any given frame to make a
+speedbar for it.
+
+
+File: emacs,  Node: Multiple Displays,  Next: Special Buffer Frames,  Prev: Creating Frames,  Up: Frames
+
+Multiple Displays
+=================
+
+   A single Emacs can talk to more than one X Windows display.
+Initially, Emacs uses just one display--the one specified with the
+`DISPLAY' environment variable or with the `--display' option (*note
+Initial Options::.).  To connect to another display, use the command
+`make-frame-on-display':
+
+`M-x make-frame-on-display <RET> DISPLAY <RET>'
+     Create a new frame on display DISPLAY.
+
+   A single X server can handle more than one screen.  When you open
+frames on two screens belonging to one server, Emacs knows they share a
+single keyboard, and it treats all the commands arriving from these
+screens as a single stream of input.
+
+   When you open frames on different X servers, Emacs makes a separate
+input stream for each server.  This way, two users can type
+simultaneously on the two displays, and Emacs will not garble their
+input.  Each server also has its own selected frame.  The commands you
+enter with a particular X server apply to that server's selected frame.
+
+   Despite these features, people using the same Emacs job from
+different displays can still interfere with each other if they are not
+careful.  For example, if any one types `C-x C-c', that exits the Emacs
+job for all of them!
+
+
+File: emacs,  Node: Special Buffer Frames,  Next: Frame Parameters,  Prev: Multiple Displays,  Up: Frames
+
+Special Buffer Frames
+=====================
+
+   You can make certain chosen buffers, for which Emacs normally creates
+a second window when you have just one window, appear in special frames
+of their own.  To do this, set the variable
+`special-display-buffer-names' to a list of buffer names; any buffer
+whose name is in that list automatically gets a special frame, when an
+Emacs command wants to display it "in another window."
+
+   For example, if you set the variable this way,
+
+     (setq special-display-buffer-names
+           '("*Completions*" "*grep*" "*tex-shell*"))
+
+then completion lists, `grep' output and the TeX mode shell buffer get
+individual frames of their own.  These frames, and the windows in them,
+are never automatically split or reused for any other buffers.  They
+continue to show the buffers they were created for, unless you alter
+them by hand.  Killing the special buffer deletes its frame
+automatically.
+
+   More generally, you can set `special-display-regexps' to a list of
+regular expressions; then a buffer gets its own frame if its name
+matches any of those regular expressions.  (Once again, this applies
+only to buffers that normally get displayed for you in a separate
+window.)
+
+   The variable `special-display-frame-alist' specifies the frame
+parameters for these frames.  It has a default value, so you don't need
+to set it.
+
+   For those who know Lisp, an element of
+`special-display-buffer-names' or `special-display-regexps' can also be
+a list.  Then the first element is the buffer name or regular
+expression; the rest of the list specifies how to create the frame.  It
+can be an association list specifying frame parameter values; these
+values take precedence over parameter values specified in
+`special-display-frame-alist'.  Alternatively, it can have this form:
+
+     (FUNCTION ARGS...)
+
+where FUNCTION is a symbol.  Then the frame is constructed by calling
+FUNCTION; its first argument is the buffer, and its remaining arguments
+are ARGS.
+
+   An analogous feature lets you specify buffers which should be
+displayed in the selected window.  *Note Force Same Window::.  The
+same-window feature takes precedence over the special-frame feature;
+therefore, if you add a buffer name to `special-display-buffer-names'
+and it has no effect, check to see whether that feature is also in use
+for the same buffer name.
+
+
+File: emacs,  Node: Frame Parameters,  Next: Scroll Bars,  Prev: Special Buffer Frames,  Up: Frames
+
+Setting Frame Parameters
+========================
+
+   This section describes commands for altering the display style and
+window management behavior of the selected frame.
+
+`M-x set-foreground-color <RET> COLOR <RET>'
+     Specify color COLOR for the foreground of the selected frame.
+
+`M-x set-background-color <RET> COLOR <RET>'
+     Specify color COLOR for the background of the selected frame.
+     This changes the foreground color of the `modeline' face also, so
+     that it remains in inverse video compared with the default.
+
+`M-x set-cursor-color <RET> COLOR <RET>'
+     Specify color COLOR for the cursor of the selected frame.
+
+`M-x set-mouse-color <RET> COLOR <RET>'
+     Specify color COLOR for the mouse cursor when it is over the
+     selected frame.
+
+`M-x set-border-color <RET> COLOR <RET>'
+     Specify color COLOR for the border of the selected frame.
+
+`M-x list-colors-display'
+     Display the defined color names and show what the colors look like.
+     This command is somewhat slow.
+
+`M-x auto-raise-mode'
+     Toggle whether or not the selected frame should auto-raise.
+     Auto-raise means that every time you move the mouse onto the
+     frame, it raises the frame.
+
+     Note that this auto-raise feature is implemented by Emacs itself.
+     Some window managers also implement auto-raise.  If you enable
+     auto-raise for Emacs frames in your X window manager, it should
+     work, but it is beyond Emacs's control and therefore
+     `auto-raise-mode' has no effect on it.
+
+`M-x auto-lower-mode'
+     Toggle whether or not the selected frame should auto-lower.
+     Auto-lower means that every time you move the mouse off the frame,
+     the frame moves to the bottom of the stack of X windows.
+
+     The command `auto-lower-mode' has no effect on auto-lower
+     implemented by the X window manager.  To control that, you must use
+     the appropriate window manager features.
+
+`M-x set-frame-font <RET> FONT <RET>'
+     Specify font FONT as the principal font for the selected frame.
+     The principal font is used for all text displayed in the frame,
+     except when a face (*note Faces::.) specifies a different font to
+     use for certain text.  *Note Font X::, for ways to list the
+     available fonts on your system.
+
+     You can also set a frame's principal font through a pop-up menu.
+     Press `S-Mouse-1' to activate this menu.
+
+   In Emacs versions that use an X toolkit, the color-setting and
+font-setting functions don't affect menus and the menu bar, since they
+are displayed by their own widget classes.  To change the appearance of
+the menus and menu bar, you must use X resources (*note Resources X::.).
+*Note Colors X::, regarding colors.  *Note Font X::, regarding choice of
+font.
+
+   For information on frame parameters and customization, see *Note
+Frame Parameters: (elisp)Frame Parameters.
 
 
 File: emacs,  Node: Scroll Bars,  Next: Menu Bars,  Prev: Frame Parameters,  Up: Frames
@@ -87,7 +280,7 @@ Bar mode.  *Note Resources X::.  Expert users often turn off the menu
 bar, especially on text-only terminals, where this makes one additional
 line available for text.
 
-   *Note Menu Bar:: for information on how to invoke commands with the
+   *Note Menu Bar::, for information on how to invoke commands with the
 menu bar.
 
 
@@ -106,7 +299,8 @@ MS-DOS::.).
    The way you control display style is by defining named "faces".
 Each face can specify a type font, a foreground color, a background
 color, and an underline flag; but it does not have to specify all of
-them.
+them.  Then by specifying the face or faces to use for a given part of
+the text in the buffer, you control how that text appears.
 
    The style of display used for a given character in the text is
 determined by combining several faces.  Any aspect of the display style
@@ -205,7 +399,7 @@ Font Lock mode whenever you edit a C file, you can do this:
    To turn on Font Lock mode automatically in all modes which support
 it, use the function `global-font-lock-mode', like this:
 
-     (global-font-lock-mode t)
+     (global-font-lock-mode 1)
 
    In Font Lock mode, when you edit the text, the highlighting updates
 automatically in the line that you changed.  Most changes don't affect
@@ -496,6 +690,7 @@ have been merged from the modified version of Emacs known as MULE (for
 * Language Environments::   Setting things up for the language you use.
 * Input Methods::           Entering text characters not on your keyboard.
 * Select Input Method::     Specifying your choice of input methods.
+* Multibyte Conversion::    How single-byte characters convert to multibyte.
 * Coding Systems::          Character set conversion when you read and
                               write files, and so on.
 * Recognize Coding::        How Emacs figures out which conversion to use.
@@ -521,7 +716,7 @@ represents each non-ASCII character as a sequence of bytes in the range
 0200 through 0377.  Emacs translates between the multibyte character
 encoding and various other coding systems when reading and writing
 files, when exchanging data with subprocesses, and (in some cases) in
-the `C-q' command (see below).
+the `C-q' command (*note Multibyte Conversion::.).
 
    The command `C-h h' (`view-hello-file') displays the file
 `etc/HELLO', which shows how to say "hello" in many languages.  This
@@ -546,43 +741,45 @@ Emacs as a whole, or for a single buffer.  When multibyte characters are
 disabled in a buffer, then each byte in that buffer represents a
 character, even codes 0200 through 0377.  The old features for
 supporting the European character sets, ISO Latin-1 and ISO Latin-2,
-work as they did in Emacs 19.
+work as they did in Emacs 19 and also work for the other ISO 8859
+character sets.
 
    However, there is no need to turn off multibyte character support to
-use ISO Latin-1 or ISO Latin-2; the Emacs multibyte character set
-includes all the characters in these character sets, and Emacs can
-translate automatically to and from either of these ISO codes.
+use ISO Latin; the Emacs multibyte character set includes all the
+characters in these character sets, and Emacs can translate
+automatically to and from the ISO codes.
 
    To edit a particular file in unibyte representation, visit it using
 `find-file-literally'.  *Note Visiting::.  To convert a buffer in
 multibyte representation into a single-byte representation of the same
 characters, the easiest way is to save the contents in a file, kill the
-buffer, and find the file again with `find-file-literally'.
+buffer, and find the file again with `find-file-literally'.  You can
+also use `C-x <RET> c' (`universal-coding-system-argument') and specify
+`raw-text' as the coding system with which to find or save a file.
+*Note Specify Coding::.  Finding a file as `raw-text' doesn't disable
+format conversion, uncompression and auto mode selection as
+`find-file-literally' does.
 
    To turn off multibyte character support by default, start Emacs with
 the `--unibyte' option (*note Initial Options::.), or set the
-environment variable `EMACS_UNIBYTE'.
+environment variable `EMACS_UNIBYTE'.  You can also customize
+`enable-multibyte-characters' or, equivalently, directly set the
+variable `default-enable-multibyte-characters' in your init file to
+have basically the same effect as `--unibyte'.
+
+   Multibyte strings are not created during initialization from the
+values of environment variables, `/etc/passwd' entries etc. that
+contain non-ASCII 8-bit characters.  However, the initialization file is
+normally read as multibyte--like Lisp files in general--even with
+`--unibyte'.  To avoid multibyte strings being generated by non-ASCII
+characters in it, put `-*-unibyte: t;-*-' in a comment on the first
+line.  Do the same for initialization files for packages like Gnus.
 
    The mode line indicates whether multibyte character support is
 enabled in the current buffer.  If it is, there are two or more
 characters (most often two dashes) before the colon near the beginning
 of the mode line.  When multibyte characters are not enabled, just one
 dash precedes the colon.
-
-   When multibyte characters are enabled, character codes 0240 (octal)
-through 0377 (octal) are not really legitimate in the buffer.  The valid
-non-ASCII printing characters have codes that start from 0400.
-
-   If you type a self-inserting character in the invalid range 0240
-through 0377, Emacs assumes you intended to use one of the ISO Latin-N
-character sets, and converts it to the Emacs code representing that
-Latin-N character.  You select *which* ISO Latin character set to use
-though your choice of language environment (*note Language
-Environments::.).  If you do not specify a choice, the default is
-Latin-1.
-
-   The same thing happens when you use `C-q' to enter an octal code in
-this range.
 
 
 File: emacs,  Node: Language Environments,  Next: Input Methods,  Prev: Enabling Multibyte,  Up: International
@@ -595,7 +792,7 @@ multibyte characters are enabled; there is no need to select a
 particular language in order to display its characters in an Emacs
 buffer.  However, it is important to select a "language environment" in
 order to set various defaults.  The language environment really
-represents a choice of preferred script (more or less) rather that a
+represents a choice of preferred script (more or less) rather than a
 choice of language.
 
    The language environment controls which coding systems to recognize
@@ -662,10 +859,10 @@ another alphabet.  This is how the Greek and Russian input methods work.
    A more powerful technique is composition: converting sequences of
 characters into one letter.  Many European input methods use composition
 to produce a single non-ASCII letter from a sequence that consists of a
-letter followed by accent characters.  For example, some methods convert
-the sequence `'a' into a single accented letter.  These input methods
-have no special commands of their own; all they do is compose sequences
-of printing characters.
+letter followed by accent characters (or vice versa).  For example, some
+methods convert the sequence `a'' into a single accented letter.  These
+input methods have no special commands of their own; all they do is
+compose sequences of printing characters.
 
    The input methods for syllabic scripts typically use mapping followed
 by composition.  The input methods for Thai and Korean work this way.
@@ -721,7 +918,7 @@ is non-`nil', the list of possible characters to type next is displayed
 in the echo area (but not when you are in the minibuffer).
 
 
-File: emacs,  Node: Select Input Method,  Next: Coding Systems,  Prev: Input Methods,  Up: International
+File: emacs,  Node: Select Input Method,  Next: Multibyte Conversion,  Prev: Input Methods,  Up: International
 
 Selecting an Input Method
 =========================
@@ -774,7 +971,28 @@ list-input-methods'.  The list gives information about each input
 method, including the string that stands for it in the mode line.
 
 
-File: emacs,  Node: Coding Systems,  Next: Recognize Coding,  Prev: Select Input Method,  Up: International
+File: emacs,  Node: Multibyte Conversion,  Next: Coding Systems,  Prev: Select Input Method,  Up: International
+
+Unibyte and Multibyte Non-ASCII characters
+==========================================
+
+   When multibyte characters are enabled, character codes 0240 (octal)
+through 0377 (octal) are not really legitimate in the buffer.  The valid
+non-ASCII printing characters have codes that start from 0400.
+
+   If you type a self-inserting character in the invalid range 0240
+through 0377, Emacs assumes you intended to use one of the ISO Latin-N
+character sets, and converts it to the Emacs code representing that
+Latin-N character.  You select *which* ISO Latin character set to use
+through your choice of language environment (*note Language
+Environments::.).  If you do not specify a choice, the default is
+Latin-1.
+
+   The same thing happens when you use `C-q' to enter an octal code in
+this range.
+
+
+File: emacs,  Node: Coding Systems,  Next: Recognize Coding,  Prev: Multibyte Conversion,  Up: International
 
 Coding Systems
 ==============
@@ -824,8 +1042,8 @@ Mode Line::.).
 `no-conversion', which means no conversion of any kind--specifies how
 and whether to convert printing characters, but leaves the choice of
 end-of-line conversion to be decided based on the contents of each file.
-For example, if the file appears to use carriage-return linefeed between
-lines, that end-of-line conversion will be used.
+For example, if the file appears to use the sequence carriage-return
+linefeed to separate lines, DOS end-of-line conversion will be used.
 
    Each of the listed coding systems has three variants which specify
 exactly what to do for end-of-line conversion:
@@ -838,7 +1056,7 @@ exactly what to do for end-of-line conversion:
 `...-dos'
      Assume the file uses carriage-return linefeed to separate lines,
      and do the appropriate conversion.  (This is the convention
-     normally used on Microsoft systems.)
+     normally used on Microsoft systems.(1))
 
 `...-mac'
      Assume the file uses carriage-return to separate lines, and do the
@@ -875,235 +1093,10 @@ non-ASCII characters stored with the internal Emacs encoding.  It
 handles end-of-line conversion based on the data encountered, and has
 the usual three variants to specify the kind of end-of-line conversion.
 
-
-File: emacs,  Node: Recognize Coding,  Next: Specify Coding,  Prev: Coding Systems,  Up: International
+   ---------- Footnotes ----------
 
-Recognizing Coding Systems
-==========================
-
-   Most of the time, Emacs can recognize which coding system to use for
-any given file-once you have specified your preferences.
-
-   Some coding systems can be recognized or distinguished by which byte
-sequences appear in the data.  However, there are coding systems that
-cannot be distinguished, not even potentially.  For example, there is no
-way to distinguish between Latin-1 and Latin-2; they use the same byte
-values with different meanings.
-
-   Emacs handles this situation by means of a priority list of coding
-systems.  Whenever Emacs reads a file, if you do not specify the coding
-system to use, Emacs checks the data against each coding system,
-starting with the first in priority and working down the list, until it
-finds a coding system that fits the data.  Then it converts the file
-contents assuming that they are represented in this coding system.
-
-   The priority list of coding systems depends on the selected language
-environment (*note Language Environments::.).  For example, if you use
-French, you probably want Emacs to prefer Latin-1 to Latin-2; if you use
-Czech, you probably want Latin-2 to be preferred.  This is one of the
-reasons to specify a language environment.
-
-   However, you can alter the priority list in detail with the command
-`M-x prefer-coding-system'.  This command reads the name of a coding
-system from the minibuffer, and adds it to the front of the priority
-list, so that it is preferred to all others.  If you use this command
-several times, each use adds one element to the front of the priority
-list.
-
-   Sometimes a file name indicates which coding system to use for the
-file.  The variable `file-coding-system-alist' specifies this
-correspondence.  There is a special function
-`modify-coding-system-alist' for adding elements to this list.  For
-example, to read and write all `.txt' files using the coding system
-`china-iso-8bit', you can execute this Lisp expression:
-
-     (modify-coding-system-alist 'file "\\.txt\\'" 'china-iso-8bit)
-
-The first argument should be `file', the second argument should be a
-regular expression that determines which files this applies to, and the
-third argument says which coding system to use for these files.
-
-   You can specify the coding system for a particular file using the
-`-*-...-*-' construct at the beginning of a file, or a local variables
-list at the end (*note File Variables::.).  You do this by defining a
-value for the "variable" named `coding'.  Emacs does not really have a
-variable `coding'; instead of setting a variable, it uses the specified
-coding system for the file.  For example, `-*-mode: C; coding:
-latin-1;-*-' specifies use of the Latin-1 coding system, as well as C
-mode.  If you specify the coding explicitly in the file, that overrides
-`file-coding-system-alist'.
-
-   The variable `auto-coding-alist' is the strongest way to specify the
-coding system for certain patterns of file names; this variable even
-overrides `-*-coding:-*-' tags in the file itself.  Emacs uses this
-feature for tar and archive files, to prevent Emacs from being confused
-by a `-*-coding:-*-' tag in a member of the archive and thinking it
-applies to the archive file as a whole.
-
-   Once Emacs has chosen a coding system for a buffer, it stores that
-coding system in `buffer-file-coding-system' and uses that coding
-system, by default, for operations that write from this buffer into a
-file.  This includes the commands `save-buffer' and `write-region'.  If
-you want to write files from this buffer using a different coding
-system, you can specify a different coding system for the buffer using
-`set-buffer-file-coding-system' (*note Specify Coding::.).
-
-   When you send a message with Mail mode (*note Sending Mail::.),
-Emacs has four different ways to determine the coding system to use for
-encoding the message text.  It tries the buffer's own value of
-`buffer-file-coding-system', if that is non-`nil'.  Otherwise, it uses
-the value of `sendmail-coding-system', if that is non-`nil'.  The third
-way is to use the default coding system for new files, which is
-controlled by your choice of language environment, if that is
-non-`nil'.  If all of these three values are `nil', Emacs encodes
-outgoing mail using the Latin-1 coding system.
-
-   When you get new mail in Rmail, each message is translated
-automatically from the coding system it is written in--as if it were a
-separate file.  This uses the priority list of coding systems that you
-have specified.
-
-   For reading and saving Rmail files themselves, Emacs uses the coding
-system specified by the variable `rmail-file-coding-system'.  The
-default value is `nil', which means that Rmail files are not translated
-(they are read and written in the Emacs internal character code).
-
-
-File: emacs,  Node: Specify Coding,  Next: Fontsets,  Prev: Recognize Coding,  Up: International
-
-Specifying a Coding System
-==========================
-
-   In cases where Emacs does not automatically choose the right coding
-system, you can use these commands to specify one:
-
-`C-x <RET> f CODING <RET>'
-     Use coding system CODING for the visited file in the current
-     buffer.
-
-`C-x <RET> c CODING <RET>'
-     Specify coding system CODING for the immediately following command.
-
-`C-x <RET> k CODING <RET>'
-     Use coding system CODING for keyboard input.
-
-`C-x <RET> t CODING <RET>'
-     Use coding system CODING for terminal output.
-
-`C-x <RET> p CODING <RET>'
-     Use coding system CODING for subprocess input and output in the
-     current buffer.
-
-`C-x <RET> x CODING <RET>'
-     Use coding system CODING for transferring selections to and from
-     other programs through the window system.
-
-`C-x <RET> X CODING <RET>'
-     Use coding system CODING for transferring *one* selection--the
-     next one--to or from the window system.
-
-   The command `C-x <RET> f' (`set-buffer-file-coding-system')
-specifies the file coding system for the current buffer--in other
-words, which coding system to use when saving or rereading the visited
-file.  You specify which coding system using the minibuffer.  Since this
-command applies to a file you have already visited, it affects only the
-way the file is saved.
-
-   Another way to specify the coding system for a file is when you visit
-the file.  First use the command `C-x <RET> c'
-(`universal-coding-system-argument'); this command uses the minibuffer
-to read a coding system name.  After you exit the minibuffer, the
-specified coding system is used for *the immediately following command*.
-
-   So if the immediately following command is `C-x C-f', for example,
-it reads the file using that coding system (and records the coding
-system for when the file is saved).  Or if the immediately following
-command is `C-x C-w', it writes the file using that coding system.
-Other file commands affected by a specified coding system include `C-x
-C-i' and `C-x C-v', as well as the other-window variants of `C-x C-f'.
-
-   `C-x <RET> c' also affects commands that start subprocesses,
-including `M-x shell' (*note Shell::.).
-
-   However, if the immediately following command does not use the coding
-system, then `C-x <RET> c' ultimately has no effect.
-
-   An easy way to visit a file with no conversion is with the `M-x
-find-file-literally' command.  *Note Visiting::.
-
-   The variable `default-buffer-file-coding-system' specifies the
-choice of coding system to use when you create a new file.  It applies
-when you find a new file, and when you create a buffer and then save it
-in a file.  Selecting a language environment typically sets this
-variable to a good choice of default coding system for that language
-environment.
-
-   The command `C-x <RET> t' (`set-terminal-coding-system') specifies
-the coding system for terminal output.  If you specify a character code
-for terminal output, all characters output to the terminal are
-translated into that coding system.
-
-   This feature is useful for certain character-only terminals built to
-support specific languages or character sets--for example, European
-terminals that support one of the ISO Latin character sets.  You need to
-specify the terminal coding system when using multibyte text, so that
-Emacs knows which characters the terminal can actually handle.
-
-   By default, output to the terminal is not translated at all, unless
-Emacs can deduce the proper coding system from your terminal type.
-
-   The command `C-x <RET> k' (`set-keyboard-coding-system') specifies
-the coding system for keyboard input.  Character-code translation of
-keyboard input is useful for terminals with keys that send non-ASCII
-graphic characters--for example, some terminals designed for ISO
-Latin-1 or subsets of it.
-
-   By default, keyboard input is not translated at all.
-
-   There is a similarity between using a coding system translation for
-keyboard input, and using an input method: both define sequences of
-keyboard input that translate into single characters.  However, input
-methods are designed to be convenient for interactive use by humans, and
-the sequences that are translated are typically sequences of ASCII
-printing characters.  Coding systems typically translate sequences of
-non-graphic characters.
-
-   The command `C-x <RET> x' (`set-selection-coding-system') specifies
-the coding system for sending selected text to the window system, and
-for receiving the text of selections made in other applications.  This
-command applies to all subsequent selections, until you override it by
-using the command again.  The command `C-x <RET> X'
-(`set-next-selection-coding-system') specifies the coding system for
-the next selection made in Emacs or read by Emacs.
-
-   The command `C-x <RET> p' (`set-buffer-process-coding-system')
-specifies the coding system for input and output to a subprocess.  This
-command applies to the current buffer; normally, each subprocess has its
-own buffer, and thus you can use this command to specify translation to
-and from a particular subprocess by giving the command in the
-corresponding buffer.
-
-   By default, process input and output are not translated at all.
-
-   The variable `file-name-coding-system' specifies a coding system to
-use for encoding file names.  If you set the variable to a coding
-system name (as a Lisp symbol or a string), Emacs encodes file names
-using that coding system for all file operations.  This makes it
-possible to use non-ASCII characters in file names--or, at least, those
-non-ASCII characters which the specified coding system can encode.
-
-   If `file-name-coding-system' is `nil', Emacs uses a default coding
-system determined by the selected language environment.  In the default
-language environment, any non-ASCII characters in file names are not
-encoded specially; they appear in the file system using the internal
-Emacs representation.
-
-   *Warning:* if you change `file-name-coding-system' (or the language
-environment) in the middle of an Emacs session, problems can result if
-you have already visited files whose names were encoding using the
-earlier coding system and cannot be encoded (or are encoded
-differently) under the new coding system.  If you try to save one of
-these buffers under the visited file name, saving may use the wrong file
-name, or it may get an error.  If such a problem happens, use `C-x C-w'
-to specify a new file name for that buffer.
+   (1) It is also specified for MIME `text/*' bodies and in other
+network transport contexts.  It is different from the SGML reference
+syntax record-start/record-end format which Emacs doesn't support
+directly.
 

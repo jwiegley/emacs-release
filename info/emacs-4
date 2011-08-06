@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -34,6 +34,39 @@ translation approved by the Free Software Foundation instead of in the
 original English.
 
 
+File: emacs,  Node: Completion Options,  Prev: Strict Completion,  Up: Completion
+
+Completion Options
+------------------
+
+   When completion is done on file names, certain file names are usually
+ignored.  The variable `completion-ignored-extensions' contains a list
+of strings; a file whose name ends in any of those strings is ignored
+as a possible completion.  The standard value of this variable has
+several elements including `".o"', `".elc"', `".dvi"' and `"~"'.  The
+effect is that, for example, `foo' can complete to `foo.c' even though
+`foo.o' exists as well.  However, if *all* the possible completions end
+in "ignored" strings, then they are not ignored.  Ignored extensions do
+not apply to lists of completions--those always mention all possible
+completions.
+
+   Normally, a completion command that finds the next character is
+undetermined automatically displays a list of all possible completions.
+If the variable `completion-auto-help' is set to `nil', this does not
+happen, and you must type `?' to display the possible completions.
+
+   The `complete' library implements a more powerful kind of completion
+that can complete multiple words at a time.  For example, it can
+complete the command name abbreviation `p-b' into `print-buffer',
+because no other command starts with two words whose initials are `p'
+and `b'.  To use this library, put `(load "complete")' in your
+`~/.emacs' file (*note Init File::.).
+
+   Icomplete mode presents a constantly-updated display that tells you
+what completions are available for the text you've entered so far.  The
+command to enable or disable this minor mode is `M-x icomplete-mode'.
+
+
 File: emacs,  Node: Minibuffer History,  Next: Repetition,  Prev: Completion,  Up: Minibuffer
 
 Minibuffer History
@@ -45,12 +78,12 @@ argument.  Special commands load the text of an earlier argument in the
 minibuffer.  They discard the old minibuffer contents, so you can think
 of them as moving through the history of previous arguments.
 
-`<up>'
+`<UP>'
 `M-p'
      Move to the next earlier argument string saved in the minibuffer
      history (`previous-history-element').
 
-`<down>'
+`<DOWN>'
 `M-n'
      Move to the next later argument string saved in the minibuffer
      history (`next-history-element').
@@ -341,7 +374,7 @@ Help Summary
 `C-h L LANGUAGE-ENV <RET>'
      Describe information on the character sets, coding systems and
      input methods used for language environment LANGUAGE-ENV
-     (`describe-language-support').
+     (`describe-language-environment').
 
 `C-h C-c'
      Display the copying conditions for GNU Emacs.
@@ -518,7 +551,7 @@ use:
      data --- support for editing files of data.
      docs --- support for Emacs documentation.
      emulations --- emulations of other editors.
-     extensions --- emacs Lisp language extensions.
+     extensions --- Emacs Lisp language extensions.
      faces --- support for using faces (fonts and colors; *note Faces::.).
      frames --- support for Emacs frames and window systems.
      games --- games, jokes and amusements.
@@ -667,14 +700,15 @@ marks a defun.)
 `C-h C-w' displays the full details on the complete absence of
 warranty for GNU Emacs.  `C-h n' (`view-emacs-news') displays the file
 `emacs/etc/NEWS', which contains documentation on Emacs changes
-arranged chronologically.  `C-h t' (`help-with-tutorial') displays the
-learn-by-doing Emacs tutorial.  `C-h C-c' (`describe-copying') displays
-the file `emacs/etc/COPYING', which tells you the conditions you must
-obey in distributing copies of Emacs.  `C-h C-d'
-(`describe-distribution') displays the file `emacs/etc/DISTRIB', which
-tells you how you can order a copy of the latest version of Emacs.
-`C-h C-p' (`describe-project') displays general information about the
-GNU Project.
+arranged chronologically.  `C-h F' (`view-emacs-FAQ') displays the
+Emacs frequently-answered-questions list.  `C-h t'
+(`help-with-tutorial') displays the learn-by-doing Emacs tutorial.
+`C-h C-c' (`describe-copying') displays the file `emacs/etc/COPYING',
+which tells you the conditions you must obey in distributing copies of
+Emacs.  `C-h C-d' (`describe-distribution') displays the file
+`emacs/etc/DISTRIB', which tells you how you can order a copy of the
+latest version of Emacs.  `C-h C-p' (`describe-project') displays
+general information about the GNU Project.
 
 
 File: emacs,  Node: Mark,  Next: Killing,  Prev: Help,  Up: Top
@@ -754,7 +788,7 @@ move point away, leaving the mark behind.
 mouse button one across a range of text; that puts point where you
 release the mouse button, and sets the mark at the other end of that
 range.  Or you can click mouse button three, which sets the mark at
-point (like `C-<SPC>') and them moves point (like `Mouse-1').  Both of
+point (like `C-<SPC>') and then moves point (like `Mouse-1').  Both of
 these methods copy the region into the kill ring in addition to setting
 the mark; that gives behavior consistent with other window-driven
 applications, but if you don't want to modify the kill ring, you must
@@ -1168,61 +1202,4 @@ the text you tried to kill into the kill ring, so you can yank it into
 other buffers.  Most of the kill commands move point across the text
 they copy in this way, so that successive kill commands build up a
 single kill ring entry as usual.
-
-
-File: emacs,  Node: Yanking,  Next: Accumulating Text,  Prev: Killing,  Up: Top
-
-Yanking
-=======
-
-   "Yanking" means reinserting text previously killed.  This is what
-some systems call "pasting."  The usual way to move or copy text is to
-kill it and then yank it elsewhere one or more times.
-
-`C-y'
-     Yank last killed text (`yank').
-
-`M-y'
-     Replace text just yanked with an earlier batch of killed text
-     (`yank-pop').
-
-`M-w'
-     Save region as last killed text without actually killing it
-     (`kill-ring-save').
-
-`C-M-w'
-     Append next kill to last batch of killed text (`append-next-kill').
-
-* Menu:
-
-* Kill Ring::		Where killed text is stored.  Basic yanking.
-* Appending Kills::	Several kills in a row all yank together.
-* Earlier Kills::	Yanking something killed some time ago.
-
-
-File: emacs,  Node: Kill Ring,  Next: Appending Kills,  Up: Yanking
-
-The Kill Ring
--------------
-
-   All killed text is recorded in the "kill ring", a list of blocks of
-text that have been killed.  There is only one kill ring, shared by all
-buffers, so you can kill text in one buffer and yank it in another
-buffer.  This is the usual way to move text from one file to another.
-(*Note Accumulating Text::, for some other ways.)
-
-   The command `C-y' (`yank') reinserts the text of the most recent
-kill.  It leaves the cursor at the end of the text.  It sets the mark at
-the beginning of the text.  *Note Mark::.
-
-   `C-u C-y' leaves the cursor in front of the text, and sets the mark
-after it.  This happens only if the argument is specified with just a
-`C-u', precisely.  Any other sort of argument, including `C-u' and
-digits, specifies an earlier kill to yank (*note Earlier Kills::.).
-
-   To copy a block of text, you can use `M-w' (`kill-ring-save'), which
-copies the region into the kill ring without removing it from the
-buffer.  This is approximately equivalent to `C-w' followed by `C-x u',
-except that `M-w' does not alter the undo history and does not
-temporarily change the screen.
 

@@ -139,6 +139,8 @@
       (load "dos-w32")
       (load "dos-fns")
       (load "dos-vars")
+      (load "international/ccl") ; for cpNNN coding systems in codepage.el
+      (load "international/codepage")	; internal.el uses cpNNN coding systems
       (load "disp-table"))) ; needed to setup ibm-pc char set, see internal.el
 (if (fboundp 'atan)	; preload some constants and 
     (progn		; floating pt. functions if we have float support.
@@ -209,6 +211,38 @@
 ;;;See also "site-load" above.
 (load "site-init" t)
 (setq current-load-list nil)
+
+;; Write the value of load-history into fns-VERSION.el,
+;; then clear out load-history.
+(if (or (equal (nth 3 command-line-args) "dump")
+	(equal (nth 4 command-line-args) "dump"))
+    (let ((buffer-undo-list t))
+      (princ "(setq load-history\n" (current-buffer))
+      (princ "      (nconc load-history\n" (current-buffer))
+      (princ "             '(" (current-buffer))
+      (let ((tem load-history))
+	(while tem
+	  (prin1 (car tem) (current-buffer))
+	  (terpri (current-buffer))
+	  (if (cdr tem)
+	      (princ "               " (current-buffer)))
+	  (setq tem (cdr tem))))
+      (princ ")))\n" (current-buffer))
+      (write-region (point-min) (point-max)
+		    (expand-file-name
+		     (cond 
+		      ((eq system-type 'ms-dos)
+		       "../lib-src/fns.el")
+		      ((eq system-type 'windows-nt)
+		       (format "../../../lib-src/fns-%s.el" emacs-version))
+		      (t
+		       (format "../lib-src/fns-%s.el" emacs-version)))
+		     invocation-directory))
+      (erase-buffer)
+      (setq load-history nil))
+  (setq symbol-file-load-history-loaded t))
+(set-buffer-modified-p nil)
+
 (garbage-collect)
 
 ;;; At this point, we're ready to resume undo recording for scratch.

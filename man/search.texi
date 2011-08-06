@@ -747,9 +747,16 @@ performs the inverse transformation.
 @node Replacement and Case, Query Replace, Regexp Replace, Replace
 @subsection Replace Commands and Case
 
+  If the first argument of a replace command is all lower case, the
+commands ignores case while searching for occurrences to
+replace---provided @code{case-fold-search} is non-@code{nil}.  If
+@code{case-fold-search} is set to @code{nil}, case is always significant
+in all searches.
+
 @vindex case-replace
-  If the arguments to a replace command are in lower case, it preserves
-case when it makes a replacement.  Thus, the command
+  In addition, when the @var{newstring} argument is all or partly lower
+case, replacement commands try to preserve the case pattern of each
+occurrence.  Thus, the command
 
 @example
 M-x replace-string @key{RET} foo @key{RET} bar @key{RET}
@@ -762,14 +769,12 @@ all-caps @samp{FOO} with @samp{BAR}, and a capitalized @samp{Foo} with
 capitalized, are the only ones that @code{replace-string} can
 distinguish.)
 
-  If upper-case letters are used in the second argument, they remain
-upper case every time that argument is inserted.  If upper-case letters
-are used in the first argument, the second argument is always
-substituted exactly as given, with no case conversion.  Likewise, if the
-variable @code{case-replace} is set to @code{nil}, replacement is done
-without case conversion.  If @code{case-fold-search} is set to
-@code{nil}, case is significant in matching occurrences of @samp{foo} to
-replace; this also inhibits case conversion of the replacement string.
+  If upper-case letters are used in the replacement string, they remain
+upper case every time that text is inserted.  If upper-case letters are
+used in the first argument, the second argument is always substituted
+exactly as given, with no case conversion.  Likewise, if either
+@code{case-replace} or @code{case-fold-search} is set to @code{nil},
+replacement is done without case conversion.
 
 @node Query Replace,, Replacement and Case, Replace
 @subsection Query Replace
@@ -895,8 +900,10 @@ copy, or link files by replacing regexp matches in file names.
 @node Other Repeating Search,, Replace, Search
 @section Other Search-and-Loop Commands
 
-  Here are some other commands that find matches for a regular expression.
-They all operate from point to the end of the buffer.
+  Here are some other commands that find matches for a regular
+expression.  They all operate from point to the end of the buffer, and
+all ignore case in matching, if the pattern contains no upper-case
+letters and @code{case-fold-search} is non-@code{nil}.
 
 @findex list-matching-lines
 @findex occur
@@ -905,7 +912,7 @@ They all operate from point to the end of the buffer.
 @findex delete-matching-lines
 @findex flush-lines
 @findex keep-lines
-@c grosscommands
+
 @table @kbd
 @item M-x occur @key{RET} @var{regexp} @key{RET}
 Display a list showing each line in the buffer that contains a match for
@@ -913,10 +920,6 @@ Display a list showing each line in the buffer that contains a match for
 to print before and after each matching line; the default is none.
 To limit the search to part of the buffer, narrow to that part
 (@pxref{Narrowing}).
-
-If @var{regexp} contains upper-case letters, then the matching is done
-in a case-sensitive way.  Otherwise, @code{case-fold-search} controls
-whether case is ignored.
 
 @kindex RET @r{(Occur mode)}
 The buffer @samp{*Occur*} containing the output serves as a menu for

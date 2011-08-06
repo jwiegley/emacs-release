@@ -2,7 +2,7 @@ This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.3
+for Emacs version 20.4
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -12,8 +12,8 @@ END-INFO-DIR-ENTRY
    Published by the Free Software Foundation 59 Temple Place, Suite 330
 Boston, MA  02111-1307 USA
 
-   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
-Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+1999    Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -41,9 +41,8 @@ The Emacs Editor
 
    Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
-some of how to customize it; it corresponds to GNU Emacs version 20.3.
-For information on extending Emacs, see *Note Emacs Lisp: (elisp)Emacs
-Lisp.
+some of how to customize it; it corresponds to GNU Emacs version 20.4.
+For information on extending Emacs, see *Note Emacs Lisp: (elisp).
 
 * Menu:
 
@@ -99,7 +98,7 @@ Major Structures of Emacs
 * Buffers::	        Multiple buffers; editing several files at once.
 * Windows::	        Viewing two pieces of text at once.
 * Frames::	        Running the same Emacs session in multiple X windows.
-* International::       Using non-ASCII character sets.
+* International::       Using non-ASCII character sets (the MULE features).
 
 Advanced Features
 * Major Modes::	        Text mode vs. Lisp mode vs. C mode ...
@@ -405,7 +404,7 @@ Editing Programs
 * Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
 * Emerge::	        A convenient way of merging two versions of a program.
-* C/Java Modes::        Special commands of C, C++, Objective-C and Java modes.
+* C Modes::             Special commands of C, C++, Objective-C and Java modes.
 * Fortran::	        Fortran mode and its special features.
 * Asm Mode::	        Asm mode and its special features.
 
@@ -682,7 +681,7 @@ Environment Variables
 * General Variables::	Environment variables that all versions of Emacs use.
 * Misc Variables::	Certain system specific variables.
 
-MS-DOS and Windows NT/95
+MS-DOS and Windows 95/98/NT
 
 * MS-DOS Input::        Keyboard and mouse usage on MS-DOS.
 * MS-DOS Display::      Fonts, frames and display size on MS-DOS.
