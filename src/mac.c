@@ -1,12 +1,12 @@
 /* Unix emulation routines for GNU Emacs on the Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -5009,6 +5009,13 @@ extern int noninteractive;
 #if SELECT_USE_CFSOCKET
 #define SELECT_TIMEOUT_THRESHOLD_RUNLOOP 0.2
 
+/* Dictionary of file descriptors vs CFSocketRef's allocated in
+   sys_select.  */
+static CFMutableDictionaryRef cfsockets_for_select;
+
+/* Process ID of Emacs.  */
+static pid_t mac_emacs_pid;
+
 static void
 socket_callback (s, type, address, data, info)
      CFSocketRef s;
@@ -5076,6 +5083,43 @@ select_and_poll_event (nfds, rfds, wfds, efds, timeout)
     }
   else
     return 0;
+}
+
+/* Clean up the CFSocket associated with the file descriptor FD in
+   case the same descriptor is used in other threads later.  If no
+   CFSocket is associated with FD, then return 0 without closing FD.
+   Otherwise, return 1 with closing FD.  */
+
+int
+mac_try_close_socket (fd)
+     int fd;
+{
+#if SELECT_USE_CFSOCKET
+  if (getpid () == mac_emacs_pid && cfsockets_for_select)
+    {
+      void *key = (void *) fd;
+      CFSocketRef socket =
+	(CFSocketRef) CFDictionaryGetValue (cfsockets_for_select, key);
+
+      if (socket)
+	{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1020
+	  CFOptionFlags flags = CFSocketGetSocketFlags (socket);
+
+	  if (!(flags & kCFSocketCloseOnInvalidate))
+	    CFSocketSetSocketFlags (socket, flags | kCFSocketCloseOnInvalidate);
+#endif
+	  BLOCK_INPUT;
+	  CFSocketInvalidate (socket);
+	  CFDictionaryRemoveValue (cfsockets_for_select, key);
+	  UNBLOCK_INPUT;
+
+	  return 1;
+	}
+    }
+#endif
+
+  return 0;
 }
 
 int
@@ -5156,6 +5200,11 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 	      CFDictionaryCreateMutable (NULL, 0, NULL,
 					 &kCFTypeDictionaryValueCallBacks);
 
+	  if (cfsockets_for_select == NULL)
+	    cfsockets_for_select =
+	      CFDictionaryCreateMutable (NULL, 0, NULL,
+					 &kCFTypeDictionaryValueCallBacks);
+
 	  for (minfd = 1; ; minfd++) /* nfds-1 works as a sentinel.  */
 	    if (FD_ISSET (minfd, rfds) || (wfds && FD_ISSET (minfd, wfds)))
 	      break;
@@ -5167,7 +5216,7 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 		CFRunLoopSourceRef source =
 		  (CFRunLoopSourceRef) CFDictionaryGetValue (sources, key);
 
-		if (source == NULL)
+		if (source == NULL || !CFRunLoopSourceIsValid (source))
 		  {
 		    CFSocketRef socket =
 		      CFSocketCreateWithNative (NULL, fd,
@@ -5177,11 +5226,12 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 
 		    if (socket == NULL)
 		      continue;
+		    CFDictionarySetValue (cfsockets_for_select, key, socket);
 		    source = CFSocketCreateRunLoopSource (NULL, socket, 0);
 		    CFRelease (socket);
 		    if (source == NULL)
 		      continue;
-		    CFDictionaryAddValue (sources, key, source);
+		    CFDictionarySetValue (sources, key, source);
 		    CFRelease (source);
 		  }
 		CFRunLoopAddSource (runloop, source, kCFRunLoopDefaultMode);
@@ -5282,6 +5332,8 @@ init_mac_osx_environment ()
   char *p, *q;
   struct stat st;
 
+  mac_emacs_pid = getpid ();
+
   /* Initialize locale related variables.  */
   mac_system_script_code =
     (ScriptCode) GetScriptManagerVariable (smSysScript);
@@ -5322,8 +5374,8 @@ init_mac_osx_environment ()
   /* P should have sufficient room for the pathname of the bundle plus
      the subpath in it leading to the respective directories.  Q
      should have three times that much room because EMACSLOADPATH can
-     have the value "<path to lisp dir>:<path to leim dir>:<path to
-     site-lisp dir>".  */
+     have the value "<path to site-lisp dir>:<path to lisp dir>:<path
+     to leim dir>".  */
   p = (char *) alloca (app_bundle_pathname_len + 50);
   q = (char *) alloca (3 * app_bundle_pathname_len + 150);
   if (!getenv ("EMACSLOADPATH"))
@@ -5331,12 +5383,12 @@ init_mac_osx_environment ()
       q[0] = '\0';
 
       strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/lisp");
+      strcat (p, "/Contents/Resources/site-lisp");
       if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
 	strcat (q, p);
 
       strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/leim");
+      strcat (p, "/Contents/Resources/lisp");
       if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
 	{
 	  if (q[0] != '\0')
@@ -5345,7 +5397,7 @@ init_mac_osx_environment ()
 	}
 
       strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/site-lisp");
+      strcat (p, "/Contents/Resources/leim");
       if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
 	{
 	  if (q[0] != '\0')

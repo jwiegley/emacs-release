@@ -1,6 +1,6 @@
 ;;; wdired.el --- Rename files editing their names in dired buffers
 
-;; Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Filename: wdired.el
 ;; Author: Juan León Lahoz García <juanleon1@gmail.com>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2, or (at
+;; published by the Free Software Foundation; either version 3, or (at
 ;; your option) any later version.
 
 ;; This program is distributed in the hope that it will be useful, but
@@ -323,7 +323,11 @@ non-nil means return old filename."
       (unless (eq beg end)
 	(if old
 	    (setq file (get-text-property beg 'old-name))
-	  (setq end (next-single-property-change (1+ beg) 'end-name))
+	  ;; In the following form changed `(1+ beg)' to `beg' so that
+	  ;; the filename end is found even when the filename is empty.
+	  ;; Fixes error and spurious newlines when marking files for
+	  ;; deletion.
+	  (setq end (next-single-property-change beg 'end-name))
 	  (setq file (buffer-substring-no-properties (1+ beg) end)))
 	(and file (setq file (wdired-normalize-filename file))))
       (if (or no-dir old)

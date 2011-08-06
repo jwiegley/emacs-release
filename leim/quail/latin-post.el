@@ -1,9 +1,9 @@
 ;;; latin-post.el --- Quail packages for inputting various European characters  -*-coding: iso-2022-7bit;-*-
 
-;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007
+;;   2006, 2007, 2008
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1253,7 +1253,7 @@ Doubling the postfix separates the letter and postfix: e.g. aee -> ae
 (quail-define-package
  "scandinavian-postfix" "Latin-1" "SC<" t
  "Scandinavian input method with postfix modifiers
-Supported languages are Swidish, Norwegian, Danish, and Finnish.
+Supported languages are Swedish, Norwegian, Danish, and Finnish.
 
 ae -> ,Af(B
 oe -> ,Ax(B

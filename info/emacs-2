@@ -1,11 +1,11 @@
 This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
 
    This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.1.
+updated for Emacs version 22.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,9 +16,9 @@ Foundation, Inc.
      Texts as in (a) below.  A copy of the license is included in the
      section entitled "GNU Free Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -631,14 +631,14 @@ File: emacs,  Node: Query Replace,  Prev: Replacement and Case,  Up: Replace
      Replace some matches for REGEXP with NEWSTRING.
 
    If you want to change only some of the occurrences of `foo' to
-`bar', not all of them, then you cannot use an ordinary
-`replace-string'.  Instead, use `M-%' (`query-replace').  This command
+`bar', not all of them, use `M-%' (`query-replace').  This command
 finds occurrences of `foo' one by one, displays each occurrence and
 asks you whether to replace it.  Aside from querying, `query-replace'
-works just like `replace-string'.  It preserves case, like
-`replace-string', provided `case-replace' is non-`nil', as it normally
-is (*note Replacement and Case::).  A numeric argument means consider
-only occurrences that are bounded by word-delimiter characters.
+works just like `replace-string' (*note Unconditional Replace::).  In
+particular, it preserves case provided `case-replace' is non-`nil', as
+it normally is (*note Replacement and Case::).  A numeric argument
+means consider only occurrences that are bounded by word-delimiter
+characters.
 
    `C-M-%' performs regexp search and replace (`query-replace-regexp').
 It works like `replace-regexp' except that it queries like
@@ -2857,8 +2857,9 @@ File: emacs,  Node: Auto Save,  Next: File Aliases,  Prev: Autorevert,  Up: File
 ==============================================
 
 Emacs saves all the visited files from time to time (based on counting
-your keystrokes) without being asked.  This is called "auto-saving".
-It prevents you from losing more than a limited amount of work if the
+your keystrokes) without being asked, in separate files so as not to
+alter the files you actually use.  This is called "auto-saving".  It
+prevents you from losing more than a limited amount of work if the
 system crashes.
 
    When Emacs determines that it is time for auto-saving, it considers
@@ -4511,11 +4512,11 @@ File: emacs,  Node: Customizing VC,  Prev: Miscellaneous VC,  Up: Version Contro
 ----------------------
 
 The variable `vc-handled-backends' determines which version control
-systems VC should handle.  The default value is `(RCS CVS SVN SCCS Arch
-MCVS)', so it contains all six version systems that are currently
-supported.  If you want VC to ignore one or more of these systems,
-exclude its name from the list.  To disable VC entirely, set this
-variable to `nil'.
+systems VC should handle.  The default value is `(RCS CVS SVN SCCS GIT
+HG Arch MCVS)', so it contains all six version systems that are
+currently supported.  If you want VC to ignore one or more of these
+systems, exclude its name from the list.  To disable VC entirely, set
+this variable to `nil'.
 
    The order of systems in the list is significant: when you visit a
 file registered in more than one system (*note Local Version
@@ -5197,7 +5198,9 @@ which can be used with `ffap'.  *Note Completion Options::.
 mode allows you to toggle between displaying the file as an image in
 the Emacs buffer, and displaying its underlying text representation,
 using the command `C-c C-c' (`image-toggle-display').  This works only
-when Emacs can display the specific image type.
+when Emacs can display the specific image type.  If the displayed image
+is wider or taller than the frame, the usual point motion keys (`C-f',
+`C-p', and so forth) cause different parts of the image to be displayed.
 
    See also the Image-Dired package (*note Image-Dired::) for viewing
 images as thumbnails.

@@ -1,12 +1,12 @@
 /* Declarations useful when processing input.
    Copyright (C) 1985, 1986, 1987, 1993, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -82,6 +82,9 @@ struct kboard
     /* Normally same as last-command, but never modified by
        other commands.  */
     Lisp_Object Vreal_last_command;
+
+    /* Last command that may be repeated by `repeat'.  */
+    Lisp_Object Vlast_repeatable_command;
 
     /* The prefix argument for the next command, in raw form.  */
     Lisp_Object Vprefix_arg;
@@ -240,7 +243,7 @@ extern Lisp_Object item_properties;
 
 /* Macros for dealing with lispy events.  */
 
-/* True iff EVENT has data fields describing it (i.e. a mouse click).  */
+/* True if EVENT has data fields describing it (i.e. a mouse click).  */
 #define EVENT_HAS_PARAMETERS(event) (CONSP (event))
 
 /* Extract the head from an event.

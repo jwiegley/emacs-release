@@ -2,7 +2,7 @@ This is ../info/dired-x, produced by makeinfo version 4.8 from
 dired-x.texi.
 
    Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007  Free Software Foundation, Inc.
+2007, 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1599,32 +1599,32 @@ Variable Index
 
 
 Tag Table:
-Node: Top1360
-Node: Introduction1996
-Node: Features2797
-Node: Technical Details3778
-Node: Installation4227
-Node: Optional Installation Dired Jump5349
-Node: Optional Installation File At Point6931
-Node: Omitting Files in Dired7983
-Node: Omitting Variables9471
-Node: Omitting Examples12680
-Node: Omitting Technical13910
-Node: Local Variables14307
-Node: Shell Command Guessing16185
-Node: Virtual Dired19258
-Node: Advanced Mark Commands20783
-Node: Advanced Cleaning Functions22182
-Node: Advanced Cleaning Variables22988
-Node: Special Marking Function24111
-Node: Multiple Dired Directories25674
-Node: Find File At Point26891
-Node: Miscellaneous Commands29651
-Node: Bugs33137
-Node: GNU Free Documentation License33731
-Node: Concept Index55962
-Node: Command Index60259
-Node: Key Index63906
-Node: Variable Index66056
+Node: Top1366
+Node: Introduction2002
+Node: Features2803
+Node: Technical Details3784
+Node: Installation4233
+Node: Optional Installation Dired Jump5355
+Node: Optional Installation File At Point6937
+Node: Omitting Files in Dired7989
+Node: Omitting Variables9477
+Node: Omitting Examples12686
+Node: Omitting Technical13916
+Node: Local Variables14313
+Node: Shell Command Guessing16191
+Node: Virtual Dired19264
+Node: Advanced Mark Commands20789
+Node: Advanced Cleaning Functions22188
+Node: Advanced Cleaning Variables22994
+Node: Special Marking Function24117
+Node: Multiple Dired Directories25680
+Node: Find File At Point26897
+Node: Miscellaneous Commands29657
+Node: Bugs33143
+Node: GNU Free Documentation License33737
+Node: Concept Index55968
+Node: Command Index60265
+Node: Key Index63912
+Node: Variable Index66062
 
 End Tag Table

@@ -1,7 +1,7 @@
 ;;; mm-util.el --- Utility functions for Mule and low level things
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -36,11 +36,7 @@
        (if (fboundp (car elem))
 	   (defalias nfunc (car elem))
 	 (defalias nfunc (cdr elem)))))
-   '((decode-coding-string . (lambda (s a) s))
-     (encode-coding-string . (lambda (s a) s))
-     (encode-coding-region . ignore)
-     (coding-system-list . ignore)
-     (decode-coding-region . ignore)
+   '((coding-system-list . ignore)
      (char-int . identity)
      (coding-system-equal . equal)
      (annotationp . ignore)
@@ -95,6 +91,34 @@
      (multibyte-string-p . ignore)
      (insert-byte . insert-char)
      (multibyte-char-to-unibyte . identity))))
+
+(eval-and-compile
+  (if (featurep 'xemacs)
+      (if (featurep 'file-coding)
+	  ;; Don't modify string if CODING-SYSTEM is nil.
+	  (progn
+	    (defun mm-decode-coding-string (str coding-system)
+	      (if coding-system
+		  (decode-coding-string str coding-system)
+		str))
+	    (defun mm-encode-coding-string (str coding-system)
+	      (if coding-system
+		  (encode-coding-string str coding-system)
+		str))
+	    (defun mm-decode-coding-region (start end coding-system)
+	      (if coding-system
+		  (decode-coding-region start end coding-system)))
+	    (defun mm-encode-coding-region (start end coding-system)
+	      (if coding-system
+		  (encode-coding-region start end coding-system))))
+	(defun mm-decode-coding-string (str coding-system) str)
+	(defun mm-encode-coding-string (str coding-system) str)
+	(defalias 'mm-decode-coding-region 'ignore)
+	(defalias 'mm-encode-coding-region 'ignore))
+    (defalias 'mm-decode-coding-string 'decode-coding-string)
+    (defalias 'mm-encode-coding-string 'encode-coding-string)
+    (defalias 'mm-decode-coding-region 'decode-coding-region)
+    (defalias 'mm-encode-coding-region 'encode-coding-region)))
 
 (eval-and-compile
   (cond
@@ -232,6 +256,12 @@ the alias.  Else windows-NUMBER is used."
     ,@(when (and (not (mm-coding-system-p 'windows-31j))
 		 (mm-coding-system-p 'cp932))
 	'((windows-31j . cp932)))
+    ;; Charset name: GBK, Charset aliases: CP936, MS936, windows-936
+    ;; http://www.iana.org/assignments/charset-reg/GBK
+    ;; Emacs 22.1 has cp936, but not gbk, so we alias it:
+    ,@(when (and (not (mm-coding-system-p 'gbk))
+		 (mm-coding-system-p 'cp936))
+	'((gbk . cp936)))
     )
   "A mapping from unknown or invalid charset names to the real charset names.
 
@@ -390,6 +420,7 @@ could use `autoload-coding-system' here."
 		       (cons (symbol :tag "charset")
 			     (symbol :tag "form"))))
   :group 'mime)
+(put 'mm-charset-eval-alist 'risky-local-variable t)
 
 (defvar mm-binary-coding-system
   (cond

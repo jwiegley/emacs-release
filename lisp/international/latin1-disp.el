@@ -1,6 +1,6 @@
 ;;; latin1-disp.el --- display tables for other ISO 8859 on Latin-1 terminals -*-coding: iso-2022-7bit;-*-
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -777,9 +777,9 @@ use either \\[customize] or the function `latin1-display'."
   "Set up Latin-1/ASCII display for Unicode characters.
 This uses the transliterations of the Lynx browser.
 
-With argument ARG, turn such display on iff ARG is positive, otherwise
+With argument ARG, turn such display on if ARG is positive, otherwise
 turn it off and display Unicode characters literally.  The display
-is't changed if the display can render Unicode characters."
+isn't changed if the display can render Unicode characters."
   (interactive "p")
   (if (> arg 0)
       (unless (char-displayable-p

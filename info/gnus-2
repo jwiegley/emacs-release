@@ -1,7 +1,7 @@
 This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -22,7 +22,7 @@ This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
      the license.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -492,7 +492,8 @@ then you should shout and whine at your news admin until she includes
 the `Xref' header in the overview files.
 
    If you want Gnus to get the `Xref's right all the time, you have to
-set `gnus-nov-is-evil' to `t', which slows things down considerably.
+set `nntp-nov-is-evil' to `t', which slows things down considerably.
+Also *note Slow/Expensive Connection::.
 
    C'est la vie.
 
@@ -876,9 +877,9 @@ a MIME button:
 
 `i (Article)'
      Insert the contents of the MIME object into the buffer
-     (`gnus-mime-inline-part') as text/plain.  If given a prefix, insert
-     the raw contents without decoding.  If given a numerical prefix,
-     you can do semi-manual charset stuff (see
+     (`gnus-mime-inline-part') as `text/plain'.  If given a prefix,
+     insert the raw contents without decoding.  If given a numerical
+     prefix, you can do semi-manual charset stuff (see
      `gnus-summary-show-article-charset-alist' in *Note Paging the
      Article::).
 
@@ -1103,8 +1104,8 @@ buffer, which means that you don't actually have to have a summary
 buffer displayed while reading.  You can do it all from the article
 buffer.
 
-   The key `v' is reserved for users.  You can bind it key to some
-function or better use it as a prefix key.
+   The key `v' is reserved for users.  You can bind it to some command
+or better use it as a prefix key.
 
    A few additional keystrokes are available:
 
@@ -1959,8 +1960,8 @@ File: gnus,  Node: Server Commands,  Next: Example Methods,  Prev: Server Buffer
 ---------------------
 
 `v'
-     The key `v' is reserved for users.  You can bind it key to some
-     function or better use it as a prefix key.
+     The key `v' is reserved for users.  You can bind it to some
+     command or better use it as a prefix key.
 
 `a'
      Add a new server (`gnus-server-add-server').
@@ -2355,6 +2356,32 @@ server:
      network is fast, setting this variable to a really small number
      means that fetching will probably be slower.  If this variable is
      `nil', `nntp' will never split requests.  The default is 5.
+
+`nntp-xref-number-is-evil'
+     When Gnus refers to an article having the `Message-ID' that a user
+     specifies or having the `Message-ID' of the parent article of the
+     current one (*note Finding the Parent::), Gnus sends a `HEAD'
+     command to the NNTP server to know where it is, and the server
+     returns the data containing the pairs of a group and an article
+     number in the `Xref' header.  Gnus normally uses the article
+     number to refer to the article if the data shows that that article
+     is in the current group, while it uses the `Message-ID' otherwise.
+     However, some news servers, e.g., ones running Diablo, run
+     multiple engines having the same articles but article numbers are
+     not kept synchronized between them.  In that case, the article
+     number that appears in the `Xref' header varies by which engine is
+     chosen, so you cannot refer to the parent article that is in the
+     current group, for instance.  If you connect to such a server, set
+     this variable to a non-`nil' value, and Gnus never uses article
+     numbers.  For example:
+
+          (setq gnus-select-method
+                '(nntp "newszilla"
+                       (nntp-address "newszilla.example.com")
+                       (nntp-xref-number-is-evil t)
+                       ...))
+
+     The default value of this server variable is `nil'.
 
 `nntp-prepare-server-hook'
      A hook run before attempting to connect to an NNTP server.
@@ -2844,12 +2871,16 @@ Commands::).
    Header lines longer than the value of
 `nnmail-split-header-length-limit' are excluded from the split function.
 
-   By default, splitting MIME-decodes headers so you can match on
-non-ASCII strings.  The `nnmail-mail-splitting-charset' variable
-specifies the default charset for decoding.  The behavior can be turned
-off completely by binding `nnmail-mail-splitting-decodes' to `nil',
-which is useful if you want to match articles based on the raw header
-data.
+   By default, splitting does not decode headers, so you can not match
+on non-ASCII strings.  But it is useful if you want to match articles
+based on the raw header data.  To enable it, set the
+`nnmail-mail-splitting-decodes' variable to a non-`nil' value.  In
+addition, the value of the `nnmail-mail-splitting-charset' variable is
+used for decoding non-MIME encoded string when
+`nnmail-mail-splitting-decodes' is non-`nil'.  The default value is
+`nil' which means not to decode non-MIME encoded string.  A suitable
+value for you will be `undecided' or be the charset used normally in
+mails you are interested in.
 
    By default, splitting is performed on all incoming messages.  If you
 specify a `directory' entry for the variable `mail-sources' (*note Mail
@@ -3301,13 +3332,15 @@ variables.
 `mail-source-delete-incoming'
      If non-`nil', delete incoming files after handling them.  If `t',
      delete the files immediately, if `nil', never delete any files.
-     If a positive number, delete files older than number of days (This
-     will only happen, when receiving new mail).  You may also set
-     `mail-source-delete-incoming' to `nil' and call
+     If a positive number, delete files older than number of days (the
+     deletion will only happen when receiving new mail).  You may also
+     set `mail-source-delete-incoming' to `nil' and call
      `mail-source-delete-old-incoming' from a hook or interactively.
+     `mail-source-delete-incoming' defaults to `2' in alpha Gnusae and
+     `10' in released Gnusae.  *Note Gnus Development::.
 
 `mail-source-delete-old-incoming-confirm'
-     If non-`nil', ask for for confirmation before deleting old incoming
+     If non-`nil', ask for confirmation before deleting old incoming
      files.  This variable only applies when
      `mail-source-delete-incoming' is a positive number.
 
@@ -3344,8 +3377,8 @@ The way to actually tell Gnus where to get new mail from is to set
 `mail-sources' to a list of mail source specifiers (*note Mail Source
 Specifiers::).
 
-   If this variable (and the obsolescent `nnmail-spool-file') is `nil',
-the mail back ends will never attempt to fetch mail by themselves.
+   If this variable is `nil', the mail back ends will never attempt to
+fetch mail by themselves.
 
    If you want to fetch mail both from your local spool as well as a
 POP mail server, you'd say something like:
@@ -3524,11 +3557,11 @@ are the possible split syntaxes:
                 (when (re-search-forward "Some.*string" nil t)
                   "string.group"))))
 
-     The buffer is narrowed to the message in question when FUNCTION is
-     run.  That's why `(widen)' needs to be called after
-     `save-excursion' and `save-restriction' in the example above.
-     Also note that with the nnimap backend, message bodies will not be
-     downloaded by default.  You need to set
+     The buffer is narrowed to the header of the message in question
+     when FUNCTION is run.  That's why `(widen)' needs to be called
+     after `save-excursion' and `save-restriction' in the example
+     above.  Also note that with the nnimap backend, message bodies will
+     not be downloaded by default.  You need to set
      `nnimap-split-download-body' to `t' to do that (*note Splitting in
      IMAP::).
 
@@ -5245,7 +5278,7 @@ the summary buffer.
            (kbd "<RET>") 'browse-nnrss-url))
      (add-to-list 'nnmail-extra-headers nnrss-url-field)
 
-   Even if you have added `"text/html"' to the
+   Even if you have added `text/html' to the
 `mm-discouraged-alternatives' variable (*note Display Customization:
 (emacs-mime)Display Customization.) since you don't want to see HTML
 parts, it might be more useful especially in `nnrss' groups to display
@@ -6878,7 +6911,7 @@ variables are probably the only ones you will want to change:
 
  -- Variable: nndiary-reminders
      This is the list of times when you want to be reminded of your
-     appointements (e.g. 3 weeks before, then 2 days before, then 1 hour
+     appointments (e.g. 3 weeks before, then 2 days before, then 1 hour
      before and that's it).  Remember that "being reminded" means that
      the diary message will pop up as brand new and unread again when
      you get new mail.
@@ -7021,12 +7054,12 @@ File: gnus,  Node: Sending or Not Sending,  Prev: The Gnus Diary Library,  Up: E
 6.8.3 Sending or Not Sending
 ----------------------------
 
-Well, assuming you've read of of the above, here are two final notes on
+Well, assuming you've read all of the above, here are two final notes on
 mail sending with `nndiary':
 
    * `nndiary' is a _real_ mail back end.  You really send real diary
      messsages for real.  This means for instance that you can give
-     appointements to anybody (provided they use Gnus and `nndiary') by
+     appointments to anybody (provided they use Gnus and `nndiary') by
      sending the diary message to them as well.
 
    * However, since `nndiary' also has a `request-post' method, you can
@@ -7214,276 +7247,4 @@ your settings.
 * Category Syntax::             What a category looks like.
 * Category Buffer::             A buffer for maintaining categories.
 * Category Variables::          Customize'r'Us.
-
-
-File: gnus,  Node: Category Syntax,  Next: Category Buffer,  Up: Agent Categories
-
-6.9.2.1 Category Syntax
-.......................
-
-A category consists of a name, the list of groups belonging to the
-category, and a number of optional parameters that override the
-customizable variables.  The complete list of agent parameters are
-listed below.
-
-`gnus-agent-cat-name'
-     The name of the category.
-
-`gnus-agent-cat-groups'
-     The list of groups that are in this category.
-
-`gnus-agent-cat-predicate'
-     A predicate which (generally) gives a rough outline of which
-     articles are eligible for downloading; and
-
-`gnus-agent-cat-score-file'
-     a score rule which (generally) gives you a finer granularity when
-     deciding what articles to download.  (Note that this "download
-     score" is not necessarily related to normal scores.)
-
-`gnus-agent-cat-enable-expiration'
-     a boolean indicating whether the agent should expire old articles
-     in this group.  Most groups should be expired to conserve disk
-     space.  In fact, its probably safe to say that the gnus.*
-     hierarchy contains the only groups that should not be expired.
-
-`gnus-agent-cat-days-until-old'
-     an integer indicating the number of days that the agent should wait
-     before deciding that a read article is safe to expire.
-
-`gnus-agent-cat-low-score'
-     an integer that overrides the value of `gnus-agent-low-score'.
-
-`gnus-agent-cat-high-score'
-     an integer that overrides the value of `gnus-agent-high-score'.
-
-`gnus-agent-cat-length-when-short'
-     an integer that overrides the value of `gnus-agent-short-article'.
-
-`gnus-agent-cat-length-when-long'
-     an integer that overrides the value of `gnus-agent-long-article'.
-
-`gnus-agent-cat-enable-undownloaded-faces'
-     a symbol indicating whether the summary buffer should display
-     undownloaded articles using the gnus-summary-*-undownloaded-face
-     faces.  The symbol nil will disable the use of undownloaded faces
-     while all other symbols enable them.
-
-   The name of a category can not be changed once the category has been
-created.
-
-   Each category maintains a list of groups that are exclusive members
-of that category.  The exclusivity rule is automatically enforced, add a
-group to a new category and it is automatically removed from its old
-category.
-
-   A predicate in its simplest form can be a single predicate such as
-`true' or `false'.  These two will download every available article or
-nothing respectively.  In the case of these two special predicates an
-additional score rule is superfluous.
-
-   Predicates of `high' or `low' download articles in respect of their
-scores in relationship to `gnus-agent-high-score' and
-`gnus-agent-low-score' as described below.
-
-   To gain even finer control of what is to be regarded eligible for
-download a predicate can consist of a number of predicates with logical
-operators sprinkled in between.
-
-   Perhaps some examples are in order.
-
-   Here's a simple predicate.  (It's the default predicate, in fact,
-used for all groups that don't belong to any other category.)
-
-     short
-
-   Quite simple, eh?  This predicate is true if and only if the article
-is short (for some value of "short").
-
-   Here's a more complex predicate:
-
-     (or high
-         (and
-          (not low)
-          (not long)))
-
-   This means that an article should be downloaded if it has a high
-score, or if the score is not low and the article is not long.  You get
-the drift.
-
-   The available logical operators are `or', `and' and `not'.  (If you
-prefer, you can use the more "C"-ish operators `|', `&' and `!'
-instead.)
-
-   The following predicates are pre-defined, but if none of these fit
-what you want to do, you can write your own.
-
-   When evaluating each of these predicates, the named constant will be
-bound to the value determined by calling `gnus-agent-find-parameter' on
-the appropriate parameter.  For example, gnus-agent-short-article will
-be bound to `(gnus-agent-find-parameter group 'agent-short-article)'.
-This means that you can specify a predicate in your category then tune
-that predicate to individual groups.
-
-`short'
-     True iff the article is shorter than `gnus-agent-short-article'
-     lines; default 100.
-
-`long'
-     True iff the article is longer than `gnus-agent-long-article'
-     lines; default 200.
-
-`low'
-     True iff the article has a download score less than
-     `gnus-agent-low-score'; default 0.
-
-`high'
-     True iff the article has a download score greater than
-     `gnus-agent-high-score'; default 0.
-
-`spam'
-     True iff the Gnus Agent guesses that the article is spam.  The
-     heuristics may change over time, but at present it just computes a
-     checksum and sees whether articles match.
-
-`true'
-     Always true.
-
-`false'
-     Always false.
-
-   If you want to create your own predicate function, here's what you
-have to know:  The functions are called with no parameters, but the
-`gnus-headers' and `gnus-score' dynamic variables are bound to useful
-values.
-
-   For example, you could decide that you don't want to download
-articles that were posted more than a certain number of days ago (e.g.
-posted more than `gnus-agent-expire-days' ago) you might write a
-function something along the lines of the following:
-
-     (defun my-article-old-p ()
-       "Say whether an article is old."
-       (< (time-to-days (date-to-time (mail-header-date gnus-headers)))
-          (- (time-to-days (current-time)) gnus-agent-expire-days)))
-
-   with the predicate then defined as:
-
-     (not my-article-old-p)
-
-   or you could append your predicate to the predefined
-`gnus-category-predicate-alist' in your `~/.gnus.el' or wherever.
-
-     (require 'gnus-agent)
-     (setq  gnus-category-predicate-alist
-       (append gnus-category-predicate-alist
-              '((old . my-article-old-p))))
-
-   and simply specify your predicate as:
-
-     (not old)
-
-   If/when using something like the above, be aware that there are many
-misconfigured systems/mailers out there and so an article's date is not
-always a reliable indication of when it was posted.  Hell, some people
-just don't give a damn.
-
-   The above predicates apply to _all_ the groups which belong to the
-category.  However, if you wish to have a specific predicate for an
-individual group within a category, or you're just too lazy to set up a
-new category, you can enter a group's individual predicate in its group
-parameters like so:
-
-     (agent-predicate . short)
-
-   This is the group/topic parameter equivalent of the agent category
-default.  Note that when specifying a single word predicate like this,
-the `agent-predicate' specification must be in dotted pair notation.
-
-   The equivalent of the longer example from above would be:
-
-     (agent-predicate or high (and (not low) (not long)))
-
-   The outer parenthesis required in the category specification are not
-entered here as, not being in dotted pair notation, the value of the
-predicate is assumed to be a list.
-
-   Now, the syntax of the download score is the same as the syntax of
-normal score files, except that all elements that require actually
-seeing the article itself are verboten.  This means that only the
-following headers can be scored on: `Subject', `From', `Date',
-`Message-ID', `References', `Chars', `Lines', and `Xref'.
-
-   As with predicates, the specification of the `download score rule'
-to use in respect of a group can be in either the category definition if
-it's to be applicable to all groups in therein, or a group's parameters
-if it's to be specific to that group.
-
-   In both of these places the `download score rule' can take one of
-three forms:
-
-  1. Score rule
-
-     This has the same syntax as a normal Gnus score file except only a
-     subset of scoring keywords are available as mentioned above.
-
-     example:
-
-        * Category specification
-
-               (("from"
-                      ("Lars Ingebrigtsen" 1000000 nil s))
-               ("lines"
-                      (500 -100 nil <)))
-
-        * Group/Topic Parameter specification
-
-               (agent-score ("from"
-                                  ("Lars Ingebrigtsen" 1000000 nil s))
-                            ("lines"
-                                  (500 -100 nil <)))
-
-          Again, note the omission of the outermost parenthesis here.
-
-  2. Agent score file
-
-     These score files must _only_ contain the permitted scoring
-     keywords stated above.
-
-     example:
-
-        * Category specification
-
-               ("~/News/agent.SCORE")
-
-          or perhaps
-
-               ("~/News/agent.SCORE" "~/News/agent.group.SCORE")
-
-        * Group Parameter specification
-
-               (agent-score "~/News/agent.SCORE")
-
-          Additional score files can be specified as above.  Need I say
-          anything about parenthesis?
-
-  3. Use `normal' score files
-
-     If you don't want to maintain two sets of scoring rules for a
-     group, and your desired `downloading' criteria for a group are the
-     same as your `reading' criteria then you can tell the agent to
-     refer to your `normal' score files when deciding what to download.
-
-     These directives in either the category definition or a group's
-     parameters will cause the agent to read in all the applicable score
-     files for a group, _filtering out_ those sections that do not
-     relate to one of the permitted subset of scoring keywords.
-
-        * Category Specification
-
-               file
-
-        * Group Parameter specification
-
-               (agent-score . file)
 

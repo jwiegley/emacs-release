@@ -1,13 +1,13 @@
 /* machine description file for AT&T UNIX PC model 7300
    Copyright (C) 1986, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007  Free Software Foundation, Inc.
+                 2006, 2007, 2008  Free Software Foundation, Inc.
    Modified for this machine by mtxinu!rtech!gonzo!daveb
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -30,7 +30,7 @@ Boston, MA 02110-1301, USA.  */
 /* # define SHORTNAMES */
 
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #define WORDS_BIG_ENDIAN

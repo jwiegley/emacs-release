@@ -4,14 +4,14 @@
 ;; Keywords: internal
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 ;; Based partially on earlier release by Lucid.
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -178,7 +178,7 @@ Cut buffers are considered obsolete; you should use selections instead."
 If it is valid, set the register `r0' to 1, else set it to 0.")
 
 (defun string-utf-8-p (string)
-  "Return non-nil iff STRING is a unibyte string of valid UTF-8 sequence."
+  "Return non-nil if STRING is a unibyte string of valid UTF-8 sequence."
   (if (or (not (stringp string))
 	  (multibyte-string-p string))
       (error "Not a unibyte string: %s" string))

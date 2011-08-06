@@ -1,7 +1,7 @@
 This is ../info/tramp, produced by makeinfo version 4.8 from tramp.texi.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
-Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,   2006,
+2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -11,9 +11,9 @@ Free Software Foundation, Inc.
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License" in the Emacs manual.
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy
+     and modify this GNU manual.  Buying copies from the FSF supports
+     it in developing GNU and promoting software freedom."
 
      This document is part of a collection distributed under the GNU
      Free Documentation License.  If you want to distribute this
@@ -30,10 +30,10 @@ END-INFO-DIR-ENTRY
 
 File: tramp,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 
-TRAMP version 2.0.55 User Manual
+TRAMP version 2.0.57 User Manual
 ********************************
 
-This file documents TRAMP version 2.0.55, a remote file editing package
+This file documents TRAMP version 2.0.57, a remote file editing package
 for GNU Emacs.
 
    TRAMP stands for `Transparent Remote (file) Access, Multiple
@@ -51,8 +51,8 @@ the local and the remote host, whereas TRAMP uses a combination of
 <tramp-devel@gnu.org>, and archived at the TRAMP Mail Archive
 (http://lists.gnu.org/archive/html/tramp-devel/).
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
-Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,   2006,
+2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -62,9 +62,9 @@ Free Software Foundation, Inc.
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License" in the Emacs manual.
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy
+     and modify this GNU manual.  Buying copies from the FSF supports
+     it in developing GNU and promoting software freedom."
 
      This document is part of a collection distributed under the GNU
      Free Documentation License.  If you want to distribute this
@@ -1574,8 +1574,9 @@ File: tramp,  Node: Frequently Asked Questions,  Next: Concept Index,  Prev: Bug
           A special problem is the zsh, which uses left-hand side and
           right-hand side prompts in parallel.  Therefore, it is
           necessary to disable the zsh line editor on the remote host.
-          You shall add to `~/.zshrc' the following command: `[ $TERM =
-          "dumb" ] && unsetopt zle'.
+          You shall add to `~/.zshrc' the following command:
+
+               [ $TERM = "dumb" ] && unsetopt zle && PS1='$ '
 
         - TRAMP doesn't transfer strings with more than 500 characters
           correctly
@@ -2538,18 +2539,18 @@ Node: Dired63591
 Node: Compilation64055
 Node: Bug Reports64856
 Node: Frequently Asked Questions66456
-Node: Version Control72133
-Node: Version Controlled Files73275
-Node: Remote Commands73689
-Node: Changed workfiles74591
-Node: Checking out files75462
-Node: Miscellaneous Version Control75920
-Node: Remote File Ownership76341
-Node: Back-end Versions77654
-Node: Files directories and localnames79124
-Node: Localname deconstruction79454
-Node: Issues80157
-Node: GNU Free Documentation License82228
-Node: Concept Index104437
+Node: Version Control72148
+Node: Version Controlled Files73290
+Node: Remote Commands73704
+Node: Changed workfiles74606
+Node: Checking out files75477
+Node: Miscellaneous Version Control75935
+Node: Remote File Ownership76356
+Node: Back-end Versions77669
+Node: Files directories and localnames79139
+Node: Localname deconstruction79469
+Node: Issues80172
+Node: GNU Free Documentation License82243
+Node: Concept Index104452
 
 End Tag Table

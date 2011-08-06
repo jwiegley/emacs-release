@@ -1,3 +1,43 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-01-14  Aidan Kehoe  <kehoea@parhasard.net>  (tiny change)
+
+        * quail/latin-ltx.el ("TeX"): Correct the mappings for \v{k} and
+	\vk.
+
+2007-12-15  Richard Stallman  <rms@gnu.org>
+
+	* quail/latin-post.el ("scandinavian-postfix"): Doc fix.
+
+	* quail/latin-alt.el: Many doc fixes.
+	("danish-alt-postfix")
+	("esperanto-alt-postfix", "finnish-alt-postfix")
+	("german-alt-postfix", "icelandic-alt-postfix")
+	("norwegian-alt-postfix", "scandinavian-alt-postfix")
+	("spanish-alt-postfix", "swedish-alt-postfix"):
+	Deleted; they were identical to the non-alt versions.
+
+2007-10-31  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (install): Change ownership of installed files.
+
+2007-10-24  Juanma Barranquero  <lekktu@gmail.com>
+
+	* quail/indian.el (quail-indian-update-preceding-char):
+	Don't mark the variable as frame-local; it wasn't used as such.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+	* COPYING: Switch to GPLv3.
+
+2007-07-20  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (extraclean): Don't delete *~.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
@@ -5,11 +45,11 @@
 2007-01-30  Kenichi Handa  <handa@m17n.org>
 
 	* CXTERM-DIC/CCDOSPY.tit, CXTERM-DIC/PY-b5.tit, CXTERM-DIC/SW.tit,
-	CXTERM-DIC/TONEPY.tit: Add copyright and license notices.
+	* CXTERM-DIC/TONEPY.tit: Add copyright and license notices.
 
 	* MISC-DIC/pinyin.map, MISC-DIC/ziranma.cin: Add copyright and
 	license notices.
-	
+
 2007-01-24  Kenichi Handa  <handa@m17n.org>
 
 	* MISC-DIC/README: New file.
@@ -17,8 +57,8 @@
 	* CXTERM-DIC/README: New file.
 
 	* CXTERM-DIC/4Corner.tit, CXTERM-DIC/CCDOSPY.tit,
-	CXTERM-DIC/PY-b5.tit, CXTERM-DIC/QJ-b5.tit, CXTERM-DIC/QJ.tit,
-	CXTERM-DIC/SW.tit, CXTERM-DIC/TONEPY.tit: Updated from
+	* CXTERM-DIC/PY-b5.tit, CXTERM-DIC/QJ-b5.tit, CXTERM-DIC/QJ.tit,
+	* CXTERM-DIC/SW.tit, CXTERM-DIC/TONEPY.tit: Updated from
 	X11R6/contrib/programs/cxterm.
 
 	* ja-dic/ja-dic.el: Regenerated.
@@ -1691,13 +1731,13 @@
 ;; End:
 
     Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-	2007  Free Software Foundation, Inc.
+	2007, 2008  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

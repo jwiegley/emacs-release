@@ -1,13 +1,13 @@
 /* machine description file for Whitechapel Computer Works MG1 (ns16000 based).
    Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007  Free Software Foundation, Inc.
+                 2006, 2007, 2008  Free Software Foundation, Inc.
    MG-1 version by L.M.McLoughlin
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -34,7 +34,7 @@ own configuration files, please let the Free Software Foundation in on
 your work; we'd like to distribute this information.
 NOTE-END  */
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #undef WORDS_BIG_ENDIAN

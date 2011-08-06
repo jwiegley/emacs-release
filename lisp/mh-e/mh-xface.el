@@ -1,6 +1,6 @@
 ;;; mh-xface.el --- MH-E X-Face and Face header field display
 
-;; Copyright (C) 2002, 2003, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -360,8 +360,8 @@ This is only done if `mh-x-image-cache-directory' is nil."
   "Canonicalize URL.
 Replace the ?/ character with a ?! character and append .png.
 Also replaces special characters with `mh-url-hexify-string'
-since not all characters, such as :, are legal within Windows
-filenames. In addition, replaces * with %2a. See URL
+since not all characters, such as :, are valid within Windows
+filenames.  In addition, replaces * with %2a. See URL
 `http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/reference/ifaces/iitemnamelimits/GetValidCharacters.asp'."
   (format "%s/%s.png" mh-x-image-cache-directory
           (mh-replace-regexp-in-string

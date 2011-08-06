@@ -1,7 +1,7 @@
 ;;; help-mode.el --- `help-mode' used by *Help* buffers
 
 ;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -436,9 +436,11 @@ that."
               ;; An obvious case of a key substitution:
               (save-excursion
                 (while (re-search-forward
-			;; Assume command name is only word characters
-			;; and dashes to get things like `use M-x foo.'.
-                        "\\<M-x\\s-+\\(\\sw\\(\\sw\\|-\\)+\\)" nil t)
+                        ;; Assume command name is only word and symbol
+                        ;; characters to get things like `use M-x foo->bar'.
+                        ;; Command required to end with word constituent
+                        ;; to avoid `.' at end of a sentence.
+                        "\\<M-x\\s-+\\(\\sw\\(\\sw\\|\\s_\\)*\\sw\\)" nil t)
                   (let ((sym (intern-soft (match-string 1))))
                     (if (fboundp sym)
                         (help-xref-button 1 'help-function sym)))))
@@ -462,9 +464,9 @@ that."
 		      ;; Skip a single blank line.
 		      (and (eolp) (forward-line))
 		      (end-of-line)
-		      (skip-chars-backward "^\t\n")
+		      (skip-chars-backward "^ \t\n")
 		      (if (and (>= (current-column) col)
-			       (looking-at "\\(\\sw\\|-\\)+$"))
+			       (looking-at "\\(\\sw\\|\\s_\\)+$"))
 			  (let ((sym (intern-soft (match-string 0))))
 			    (if (fboundp sym)
 				(help-xref-button 0 'help-function sym))))

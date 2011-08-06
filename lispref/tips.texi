@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1995, 1998, 1999, 2001, 2002,
-@c   2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/tips
 @node Tips, GNU Emacs Internals, GPL, Top
@@ -274,7 +274,7 @@ file if you distribute copies.  Use a notice like this one:
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2 of
+;; published by the Free Software Foundation; either version 3 of
 ;; the License, or (at your option) any later version.
 
 ;; This program is distributed in the hope that it will be
@@ -843,6 +843,12 @@ returned.''
 Avoid using the word ``cause'' (or its equivalents) unnecessarily.
 Instead of, ``Cause Emacs to display text in boldface,'' write just
 ``Display text in boldface.''
+
+@item
+Avoid using ``iff'' (a mathematics term meaning ``if and only if''),
+since many people are unfamiliar with it and mistake it for a typo.  In
+most cases, the meaning is clear with just ``if''.  Otherwise, try to
+find an alternate phrasing that conveys the meaning.
 
 @item
 When a command is meaningful only in a certain mode or situation,

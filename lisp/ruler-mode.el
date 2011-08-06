@@ -1,7 +1,7 @@
 ;;; ruler-mode.el --- display a ruler in the header line
 
 ;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007 Free Software Foundation, Inc.
+;;   2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
@@ -13,7 +13,7 @@
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2, or (at
+;; published by the Free Software Foundation; either version 3, or (at
 ;; your option) any later version.
 
 ;; This program is distributed in the hope that it will be useful, but
@@ -29,7 +29,7 @@
 ;;; Commentary:
 
 ;; This library provides a minor mode to display a ruler in the header
-;; line.  It works only on Emacs 21.
+;; line.  It works from Emacs 21 onwards.
 ;;
 ;; You can use the mouse to change the `fill-column' `comment-column',
 ;; `goal-column', `window-margins' and `tab-stop-list' settings:
@@ -562,7 +562,8 @@ Call `ruler-mode-ruler-function' to compute the ruler value.")
       (progn
         ;; When `ruler-mode' is on save previous header line format
         ;; and install the ruler header line format.
-        (when (local-variable-p 'header-line-format)
+        (when (and (local-variable-p 'header-line-format)
+		   (not (local-variable-p 'ruler-mode-header-line-format-old)))
           (set (make-local-variable 'ruler-mode-header-line-format-old)
                header-line-format))
         (setq header-line-format ruler-mode-header-line-format)

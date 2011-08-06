@@ -1,7 +1,7 @@
 ;;; byte-run.el --- byte-compiler support for inlining
 
 ;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -102,6 +102,12 @@ The return value of this function is not used."
        (defun ,name ,arglist ,@body)
      (eval-and-compile
        (put ',name 'byte-optimizer 'byte-compile-inline-expand))))
+
+(defmacro declare-function (&rest args)
+  "In Emacs 22, does nothing.  In 23, it will suppress byte-compiler warnings.
+This definition is so that packages may take advantage of the
+Emacs 23 feature and still remain compatible with Emacs 22."
+  nil)
 
 (defun make-obsolete (obsolete-name current-name &optional when)
   "Make the byte-compiler warn that OBSOLETE-NAME is obsolete.
@@ -221,7 +227,7 @@ In interpreted code, this is entirely equivalent to `progn'."
 ;;   verbose	  t, nil		byte-compile-verbose
 ;;   optimize	  t, nil, source, byte	byte-compile-optimize
 ;;   warnings	  list of warnings	byte-compile-warnings
-;; 		      Legal elements: (callargs redefine free-vars unresolved)
+;; 		      Valid elements: (callargs redefine free-vars unresolved)
 ;;   file-format	  emacs18, emacs19	byte-compile-compatibility
 ;;
 ;; For example, this might appear at the top of a source file:

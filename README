@@ -1,9 +1,9 @@
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 
-This directory tree holds version 22.1 of GNU Emacs, the extensible,
+This directory tree holds version 22.2 of GNU Emacs, the extensible,
 customizable, self-documenting real-time display editor.
 
 The file INSTALL in this directory says how to build and install GNU
@@ -76,7 +76,7 @@ There are several subdirectories:
 `man'       holds the source code for the Emacs Manual.  If you modify the
             manual sources, you will need the `makeinfo' program to produce
             an updated manual.  `makeinfo' is part of the GNU Texinfo
-            package; you need version 4.2 or later of Texinfo.
+            package; you need version 4.6 or later of Texinfo.
 `lispref'   holds the source code for the Emacs Lisp reference manual.
 `lispintro' holds the source code for the Introduction to Programming
             in Emacs Lisp manual.
@@ -98,7 +98,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

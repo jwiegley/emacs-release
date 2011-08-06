@@ -1,6 +1,6 @@
 ;;; time-date.el --- Date and time handling functions
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -53,7 +53,7 @@ the symbols HIGH-SYMBOL, LOW-SYMBOL and MICRO-SYMBOL.
 
 The optional TYPE-SYMBOL is bound to the type of the time value.
 Type 0 is the cons cell (HIGH . LOW), type 1 is the list (HIGH
-LOW), and type 3 is the list (HIGH LOW MICRO)."
+LOW), and type 2 is the list (HIGH LOW MICRO)."
   (declare (indent 1)
 	   (debug ((&rest (symbolp symbolp symbolp &or [symbolp form] form))
 		   body)))
@@ -86,7 +86,7 @@ LOW), and type 3 is the list (HIGH LOW MICRO)."
 (defun encode-time-value (high low micro type)
   "Encode HIGH, LOW, and MICRO into a time value of type TYPE.
 Type 0 is the cons cell (HIGH . LOW), type 1 is the list (HIGH LOW),
-and type 3 is the list (HIGH LOW MICRO)."
+and type 2 is the list (HIGH LOW MICRO)."
   (cond
    ((eq type 0) (cons high low))
    ((eq type 1) (list high low))

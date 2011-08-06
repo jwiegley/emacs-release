@@ -1,11 +1,11 @@
 This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
 
    This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.1.
+updated for Emacs version 22.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,9 +16,9 @@ Foundation, Inc.
      Texts as in (a) below.  A copy of the license is included in the
      section entitled "GNU Free Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -34,7 +34,7 @@ The Emacs Editor
 Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
 some of how to customize it; it corresponds to GNU Emacs version
-22.1.
+22.2.
 
    To learn more about the Info documentation system, type `h', and
 Emacs will take you to a programmed instruction sequence for the Info
@@ -50,7 +50,7 @@ commands.
 			  it also explains that there is no warranty.
 * GNU Free Documentation License:: The license for this documentation.
 * Intro::	        An introduction to Emacs concepts.
-* Glossary::	        The glossary.
+* Glossary::	        Terms used in this manual.
 * Antinews::	        Information about Emacs version 21.
 * Mac OS::              Using Emacs in the Mac.
 * Microsoft Windows::   Using Emacs on Microsoft Windows and MS-DOS.
@@ -1707,7 +1707,7 @@ you use.)  On these systems, you can only get back to the shell from
 which Emacs was run (to log out, for example) when you kill Emacs.
 
    Suspending can fail if you run Emacs under a shell that doesn't
-support suspendion of its subjobs, even if the system itself does
+support suspension of its subjobs, even if the system itself does
 support it.  In such a case, you can set the variable `cannot-suspend'
 to a non-`nil' value to force `C-z' to start an inferior shell.
 
@@ -2031,11 +2031,11 @@ File: emacs,  Node: Basic Undo,  Next: Basic Files,  Prev: Erasing,  Up: Basic
 8.4 Undoing Changes
 ===================
 
-Emacs records a list of changes made in the buffer text, so you can you
-can undo recent changes, as far as the records go.  Usually each
-editing command makes a separate entry in the undo records, but
-sometimes an entry covers just part of a command, and very simple
-commands may be grouped.
+Emacs records a list of changes made in the buffer text, so you can
+undo recent changes, as far as the records go.  Usually each editing
+command makes a separate entry in the undo records, but sometimes an
+entry covers just part of a command, and very simple commands may be
+grouped.
 
 `C-x u'
      Undo one entry of the undo records--usually, one command worth
@@ -2302,8 +2302,9 @@ character.
      text-only terminal, the code(s) sent to the terminal.
 
    * The character's text properties (*note Text Properties:
-     (elisp)Text Properties.), and any overlays containing it (*note
-     Overlays: (elisp)Overlays.).
+     (elisp)Text Properties.), including any faces usewd to display the
+     character, and any overlays containing it (*note Overlays:
+     (elisp)Overlays.).
 
    Here's an example showing the Latin-1 character A with grave accent,
 in a buffer whose coding system is `iso-latin-1', whose terminal coding
@@ -3566,10 +3567,10 @@ character.
 
 `C-h C-p'
      Display general information about the GNU Project
-     (`describe-project').
+     (`describe-gnu-project').
 
 `C-h C-t'
-     Display the Emacs to-do list (`view-todo').
+     Display the Emacs to-do list (`view-emacs-todo').
 
 `C-h C-w'
      Display the full details on the complete absence of warranty for
@@ -5193,8 +5194,8 @@ large window.
 
 File: emacs,  Node: Faces,  Next: Standard Faces,  Prev: Follow Mode,  Up: Display
 
-19.5 Using Multiple Typefaces
-=============================
+19.5 Faces: Controlling Text Display Style
+==========================================
 
 You can specify various styles for displaying text using "faces".  Each
 face can specify various "face attributes", such as the font family,
@@ -5209,11 +5210,11 @@ terminals support inverse video, bold, and underline attributes; some
 support colors.  Text-only terminals generally do not support changing
 the height and width or the font family.
 
-   Emacs uses faces automatically for highlighting, through the work of
-Font Lock mode.  *Note Font Lock::, for more information about Font
-Lock mode and syntactic highlighting.  You can print out the buffer
-with the highlighting that appears on your screen using the command
-`ps-print-buffer-with-faces'.  *Note PostScript::.
+   Most major modes assign faces to the text automatically through the
+work of Font Lock mode.  *Note Font Lock::, for more information about
+Font Lock mode and syntactic highlighting.  You can print the current
+buffer with the highlighting that appears on your screen using the
+command `ps-print-buffer-with-faces'.  *Note PostScript::.
 
    You control the appearance of a part of the text in the buffer by
 specifying the face or faces to use for it.  The style of display used
@@ -5791,8 +5792,14 @@ accessible part of the buffer is shown.
 Number mode is enabled.  Use the command `M-x line-number-mode' to turn
 this mode on and off; normally it is on.  The line number appears after
 the buffer percentage POS, with the letter `L' to indicate what it is.
-*Note Minor Modes::, for more information about minor modes and about
-how to use this command.
+
+   Similarly, you can display the current column number by turning on
+Column number mode with `M-x column-number-mode'.  The column number is
+indicated by the letter `C'.  However, when both of these modes are
+enabled, the line and column numbers are displayed in parentheses, the
+line number first, rather than with `L' and `C'.  For example:
+`(561,2)'.  *Note Minor Modes::, for more information about minor modes
+and about how to use these commands.
 
    If you have narrowed the buffer (*note Narrowing::), the displayed
 line number is relative to the accessible portion of the buffer.  Thus,
@@ -5809,10 +5816,6 @@ are too long.  For this reason, Emacs normally doesn't display line
 numbers if the average width, in characters, of lines near point is
 larger than the value of the variable
 `line-number-display-limit-width'.  The default value is 200 characters.
-
-   You can also display the current column number by turning on Column
-Number mode.  It displays the current column number preceded by the
-letter `C'.  Type `M-x column-number-mode' to toggle this mode.
 
    Emacs can optionally display the time and system load in all mode
 lines.  To enable this feature, type `M-x display-time' or customize
@@ -5942,8 +5945,8 @@ to it when you start or resume Emacs.  If the variable `visible-cursor'
 is `nil' when Emacs starts or resumes, it doesn't switch, so it uses
 the normal cursor.
 
-   Normally, the cursor appears in non-selected windows in the "off"
-state, with the same appearance as when the blinking cursor blinks
+   Normally, the cursor appears in non-selected windows without
+blinking, with the same appearance as when the blinking cursor blinks
 "off."  For a box cursor, this is a hollow box; for a bar cursor, this
 is a thinner bar.  To turn off cursors in non-selected windows,
 customize the variable `cursor-in-non-selected-windows' and assign it a

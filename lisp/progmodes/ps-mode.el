@@ -1,6 +1,6 @@
 ;;; ps-mode.el --- PostScript mode for GNU Emacs
 
-;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation, Inc.
 
 ;; Author:     Peter Kleiweg <p.c.j.kleiweg@rug.nl>
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -408,7 +408,6 @@ If nil, the following are tried in turn, until success:
 
 (unless ps-mode-map
   (setq ps-mode-map (make-sparse-keymap))
-  (define-key ps-mode-map "\C-cv"    'ps-mode-show-version)
   (define-key ps-mode-map "\C-c\C-v" 'ps-run-boundingbox)
   (define-key ps-mode-map "\C-c\C-u" 'ps-mode-uncomment-region)
   (define-key ps-mode-map "\C-c\C-t" 'ps-mode-epsf-rich)

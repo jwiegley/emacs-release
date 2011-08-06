@@ -1,7 +1,7 @@
 ;;; easy-mmode.el --- easy definition for major and minor modes
 
 ;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Georges Brun-Cottan <Georges.Brun-Cottan@inria.fr>
 ;; Maintainer: Stefan Monnier <monnier@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -103,7 +103,7 @@ used (see below).
 
 BODY contains code to execute each time the mode is activated or deactivated.
   It is executed after toggling the mode,
-  and before running the hook variable `mode-HOOK'.
+  and before running the hook variable `MODE-hook'.
   Before the actual body code, you can write keyword arguments (alternating
   keywords and values).  These following keyword arguments are supported (other
   keywords will be passed to `defcustom' if the minor mode is global):
@@ -139,8 +139,8 @@ For example, you could write
     (setq body (list* lighter keymap body) lighter nil keymap nil))
    ((keywordp keymap) (push keymap body) (setq keymap nil)))
 
-  (let* ((last-message (current-message))
-	 (mode-name (symbol-name mode))
+  (let* ((last-message (make-symbol "last-message"))
+         (mode-name (symbol-name mode))
 	 (pretty-name (easy-mmode-pretty-mode-name mode lighter))
 	 (globalp nil)
 	 (set nil)
@@ -222,28 +222,30 @@ With zero or negative ARG turn mode off.
 	 ;; Use `toggle' rather than (if ,mode 0 1) so that using
 	 ;; repeat-command still does the toggling correctly.
 	 (interactive (list (or current-prefix-arg 'toggle)))
-	 (setq ,mode
-	       (cond
-		((eq arg 'toggle) (not ,mode))
-		(arg (> (prefix-numeric-value arg) 0))
-		(t
-		 (if (null ,mode) t
-		   (message
-		    "Toggling %s off; better pass an explicit argument."
-		    ',mode)
-		   nil))))
-	 ,@body
-	 ;; The on/off hooks are here for backward compatibility only.
-	 (run-hooks ',hook (if ,mode ',hook-on ',hook-off))
-	 (if (called-interactively-p)
-	     (progn
-	       ,(if globalp `(customize-mark-as-set ',mode))
-	       ;; Avoid overwriting a message shown by the body,
-               ;; but do overwrite previous messages.
-	       (unless  ,(and (current-message)
-                              (not (equal last-message (current-message))))
-		 (message ,(format "%s %%sabled" pretty-name)
-			  (if ,mode "en" "dis")))))
+	 (let ((,last-message (current-message)))
+           (setq ,mode
+                 (cond
+                  ((eq arg 'toggle) (not ,mode))
+                  (arg (> (prefix-numeric-value arg) 0))
+                  (t
+                   (if (null ,mode) t
+                     (message
+                      "Toggling %s off; better pass an explicit argument."
+                      ',mode)
+                     nil))))
+           ,@body
+           ;; The on/off hooks are here for backward compatibility only.
+           (run-hooks ',hook (if ,mode ',hook-on ',hook-off))
+           (if (called-interactively-p)
+               (progn
+                 ,(if globalp `(customize-mark-as-set ',mode))
+                 ;; Avoid overwriting a message shown by the body,
+                 ;; but do overwrite previous messages.
+                 (unless (and (current-message)
+                              (not (equal ,last-message
+                                          (current-message))))
+                   (message ,(format "%s %%sabled" pretty-name)
+                            (if ,mode "en" "dis"))))))
 	 (force-mode-line-update)
 	 ;; Return the new setting.
 	 ,mode)
@@ -486,7 +488,7 @@ BASE-next also tries to make sure that the whole entry is visible by
   the next entry) and recentering if necessary.
 ENDFUN should return the end position (with or without moving point).
 NARROWFUN non-nil means to check for narrowing before moving, and if
-found, do widen first and then call NARROWFUN with no args after moving."
+found, do `widen' first and then call NARROWFUN with no args after moving."
   (let* ((base-name (symbol-name base))
 	 (prev-sym (intern (concat base-name "-prev")))
 	 (next-sym (intern (concat base-name "-next")))
@@ -539,5 +541,5 @@ found, do widen first and then call NARROWFUN with no args after moving."
 
 (provide 'easy-mmode)
 
-;;; arch-tag: d48a5250-6961-4528-9cb0-3c9ea042a66a
+;; arch-tag: d48a5250-6961-4528-9cb0-3c9ea042a66a
 ;;; easy-mmode.el ends here

@@ -1,3 +1,101 @@
+2008-02-28  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* url-util.el (url-get-normalized-date): Simplify
+	to use `format-time-string'.  Always generate date in UTC, but
+	call it GMT for full compatibility with the RFCs.
+
+2008-02-25  John Wiegley  <johnw@newartisans.com>
+
+	* url-auth.el (url-digest-auth): If the 'opaque' argument is not
+	being used, don't add it to the response text.
+
+2008-01-21  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-handlers.el (unhandled-file-name-directory): Add handler.
+	(url-handler-unhandled-file-name-directory): New fun.
+
+2008-01-07  Michael Albinus  <michael.albinus@gmx.de>
+
+	* url-handlers.el (url-file-handler): Autoload.
+
+2007-12-11  Glenn Morris  <rgm@gnu.org>
+
+	* url-util.el (url-make-private-file): New function.
+	* url-cookie.el (url-cookie-write-file):
+	* url-history.el (url-history-save-history):
+	Use url-make-private-file and with-temp-buffer.
+
+2007-12-02  Glenn Morris  <rgm@gnu.org>
+
+	* url-news.el (nntp-open-tls-stream, nntp-open-ssl-stream):
+	No need to define for compiler.
+	(url-snews): Use nntp-open-tls-stream unless ssl is requested.
+	Correct quoting of nntp-open-connection-function value.
+
+2007-11-28  Diane Murray  <disumu@x3y2z1.net>
+
+	* url-dired.el: Don't require w3-fetch and w3-open-local.
+	(url-dired-find-file): Use `find-file'.	 Doc fix.
+	(url-dired-find-file-mouse, url-dired-minor-mode): Doc fix.
+
+2007-11-15  Richard Stallman  <rms@gnu.org>
+
+	* url.el (url-retrieve-synchronously): Call delete-process.
+
+2007-10-13  Richard Stallman  <rms@gnu.org>
+
+	* url-util.el (url-basepath): Function deleted.
+	(url-file-directory, url-file-nondirectory): New functions
+	replacing url-basepath.  Callers changed.
+
+	* url-expand.el (url-default-expander): Use `url-file-directory'.
+
+	* url-auth.el (url-digest-auth, url-basic-auth):
+	Rename `path' to `file'.  Use `url-file-directory'.
+
+2007-10-12  Diane Murray  <disumu@x3y2z1.net>
+
+	* url-auth.el (url-basic-auth): Set path to "/" when URL has an
+	empty string filename.
+
+2007-10-09  Richard Stallman  <rms@gnu.org>
+
+	* url-parse.el (url-type, url-user, url-password, url-host)
+	(url-port, url-filename, url-target, url-attributes)
+	(url-fullness, url-set-type, url-set-user, url-set-password)
+	(url-set-host, url-set-port, url-set-filename, url-set-target)
+	(url-set-attributes, url-set-full): Change macros to defuns.
+
+2007-09-22  Diane Murray  <disumu@x3y2z1.net>
+
+	* url-misc.el (url-generic-emulator-loader): Send the port as a
+	string to `url-do-terminal-emulator'.
+
+2007-09-21  Diane Murray  <disumu@x3y2z1.net>
+
+	* url-news.el (url-news-fetch-newsgroup): Fix formatting of Gnus
+	method.
+
+	* url-util.el (url-get-normalized-date): Pass full timezone
+	information to timezone-make-date-arpa-standard, since zone name
+	may be unknown.
+
+2007-09-03  Diane Murray  <disumu@x3y2z1.net>
+
+	* url-http.el (url-http-parse-headers): Bind the current buffer
+	rather than calling `url-mark-buffer-as-dead' with
+	`current-buffer', so that the correct buffer is killed if
+	`url-retrieve-synchronously' gets redirected to a new URL.
+
+2007-08-08  Glenn Morris  <rgm@gnu.org>
+
+	* url-auth.el, url-cache.el, url-dav.el, url-file.el, vc-dav.el:
+	Replace `iff' in doc-strings and comments.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
 2007-05-29  Chong Yidong  <cyd@stupidchicken.com>
 
 	* url-mailto.el (url-mailto): Insert body after
@@ -838,7 +936,7 @@
 	* texi/url.txi: Start making it vaguely useful.
 
 	* texi/Makefile.in (install): Cope with Debian install-info.
-	From Kai.Grossjohann@CS.Uni-Dortmund.DE (Kai Großjohann).
+	From Kai.Grossjohann@CS.Uni-Dortmund.DE (Kai Grossjohann).
 
 2002-04-22  Dave Love  <fx@gnu.org>
 
@@ -1812,13 +1910,13 @@
 ;; End:
 
     Copyright (C) 1999, 2001, 2002, 2004, 2005,
-	2006, 2007  Free Software Foundation, Inc.
+	2006, 2007, 2008  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

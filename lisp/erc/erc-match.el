@@ -1,7 +1,7 @@
 ;;; erc-match.el --- Highlight messages matching certain regexps
 
 ;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007 Free Software Foundation, Inc.
+;;   2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Andreas Fuchs <asf@void.at>
 ;; Keywords: comm, faces
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -256,7 +256,7 @@ current-nick, keyword, pal, dangerous-host, fool"
     (modify-syntax-entry ?\\ "w" table)
     table)
   "Syntax table used when highlighting messages.
-This syntax table should make all the legal nick characters word
+This syntax table should make all the valid nick characters word
 constituents.")
 
 ;; Faces:
@@ -530,11 +530,11 @@ Use this defun with `erc-insert-modify-hook'."
 
 (defun erc-log-matches (match-type nickuserhost message)
   "Log matches in a separate buffer, determined by MATCH-TYPE.
-The behaviour of this function is controlled by the variables
-`erc-log-matches-types-alist' and `erc-log-matches-flag'. Specify the
-match types which should be logged in the former, and
-deactivate/activate match logging in the latter. See
-`erc-log-match-format'."
+The behavior of this function is controlled by the variables
+`erc-log-matches-types-alist' and `erc-log-matches-flag'.
+Specify the match types which should be logged in the former,
+and deactivate/activate match logging in the latter.
+See `erc-log-match-format'."
   (let  ((match-buffer-name (cdr (assq match-type
 				       erc-log-matches-types-alist)))
 	 (nick (nth 0 (erc-parse-user nickuserhost))))

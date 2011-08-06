@@ -1,12 +1,13 @@
 /* Evaluator for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -97,6 +98,7 @@ Lisp_Object Qinhibit_quit, Vinhibit_quit, Vquit_flag;
 Lisp_Object Qand_rest, Qand_optional;
 Lisp_Object Qdebug_on_error;
 Lisp_Object Qdeclare;
+Lisp_Object Qdebug;
 
 /* This holds either the symbol `run-hooks' or nil.
    It is nil at an early stage of startup, and when Emacs
@@ -220,7 +222,7 @@ init_eval_once ()
   specpdl_ptr = specpdl;
   /* Don't forget to update docs (lispref node "Local Variables").  */
   max_specpdl_size = 1000;
-  max_lisp_eval_depth = 300;
+  max_lisp_eval_depth = 400;
 
   Vrun_hooks = Qnil;
 }
@@ -329,7 +331,7 @@ DEFUN ("or", For, Sor, 0, UNEVALLED, 0,
        doc: /* Eval args until one of them yields non-nil, then return that value.
 The remaining args are not evalled at all.
 If all args return nil, return nil.
-usage: (or CONDITIONS ...)  */)
+usage: (or CONDITIONS...)  */)
      (args)
      Lisp_Object args;
 {
@@ -354,7 +356,7 @@ DEFUN ("and", Fand, Sand, 0, UNEVALLED, 0,
        doc: /* Eval args until one of them yields nil, then return nil.
 The remaining args are not evalled at all.
 If no arg yields nil, return the last arg's value.
-usage: (and CONDITIONS ...)  */)
+usage: (and CONDITIONS...)  */)
      (args)
      Lisp_Object args;
 {
@@ -433,7 +435,7 @@ usage: (cond CLAUSES...)  */)
 
 DEFUN ("progn", Fprogn, Sprogn, 0, UNEVALLED, 0,
        doc: /* Eval BODY forms sequentially and return value of last one.
-usage: (progn BODY ...)  */)
+usage: (progn BODY...)  */)
      (args)
      Lisp_Object args;
 {
@@ -465,7 +467,7 @@ usage: (prog1 FIRST BODY...)  */)
   struct gcpro gcpro1, gcpro2;
   register int argnum = 0;
 
-  if (NILP(args))
+  if (NILP (args))
     return Qnil;
 
   args_left = args;
@@ -530,7 +532,7 @@ Thus, (setq x (1+ y)) sets `x' to the value of `(1+ y)'.
 The second VAL is not computed until after the first SYM is set, and so on;
 each VAL can use the new value of variables set earlier in the `setq'.
 The return value of the `setq' form is the value of the last VAL.
-usage: (setq SYM VAL SYM VAL ...)  */)
+usage: (setq [SYM VAL]...)  */)
      (args)
      Lisp_Object args;
 {
@@ -1344,14 +1346,15 @@ if CONDITION-NAME is one of the error's condition names.
 If an error happens, the first applicable handler is run.
 
 The car of a handler may be a list of condition names
-instead of a single condition name.
+instead of a single condition name.  Then it handles all of them.
 
-When a handler handles an error,
-control returns to the condition-case and the handler BODY... is executed
-with VAR bound to (SIGNALED-CONDITIONS . SIGNAL-DATA).
-VAR may be nil; then you do not get access to the signal information.
+When a handler handles an error, control returns to the `condition-case'
+and it executes the handler's BODY...
+with VAR bound to (SIGNALED-CONDITIONS . SIGNAL-DATA) from the error.
+(If VAR is nil, the handler can't access that information.)
+Then the value of the last BODY form is returned from the `condition-case'
+expression.
 
-The value of the last BODY form is returned from the condition-case.
 See also the function `signal' for more info.
 usage: (condition-case VAR BODYFORM &rest HANDLERS)  */)
      (args)
@@ -1784,7 +1787,7 @@ signal_error (s, arg)
 }
 
 
-/* Return nonzero iff LIST is a non-nil atom or
+/* Return nonzero if LIST is a non-nil atom or
    a list containing one of CONDITIONS.  */
 
 static int
@@ -2144,7 +2147,7 @@ do_autoload (fundef, funname)
      Lisp_Object fundef, funname;
 {
   int count = SPECPDL_INDEX ();
-  Lisp_Object fun, queue, first, second;
+  Lisp_Object fun;
   struct gcpro gcpro1, gcpro2, gcpro3;
 
   /* This is to make sure that loadup.el gives a clear picture
@@ -2160,24 +2163,17 @@ do_autoload (fundef, funname)
   /* Preserve the match data.  */
   record_unwind_save_match_data ();
 
-  /* Value saved here is to be restored into Vautoload_queue.  */
+  /* If autoloading gets an error (which includes the error of failing
+     to define the function being called), we use Vautoload_queue
+     to undo function definitions and `provide' calls made by
+     the function.  We do this in the specific case of autoloading
+     because autoloading is not an explicit request "load this file",
+     but rather a request to "call this function".
+     
+     The value saved here is to be restored into Vautoload_queue.  */
   record_unwind_protect (un_autoload, Vautoload_queue);
   Vautoload_queue = Qt;
   Fload (Fcar (Fcdr (fundef)), Qnil, noninteractive ? Qt : Qnil, Qnil, Qt);
-
-  /* Save the old autoloads, in case we ever do an unload.  */
-  queue = Vautoload_queue;
-  while (CONSP (queue))
-    {
-      first = XCAR (queue);
-      second = Fcdr (first);
-      first = Fcar (first);
-
-      if (SYMBOLP (first) && CONSP (second) && EQ (XCAR (second), Qautoload))
-	Fput (first, Qautoload, (XCDR (second)));
-
-      queue = XCDR (queue);
-    }
 
   /* Once loading finishes, don't undo it.  */
   Vautoload_queue = Qt;
@@ -3599,6 +3595,9 @@ before making `inhibit-quit' nil.  */);
 
   Qand_optional = intern ("&optional");
   staticpro (&Qand_optional);
+
+  Qdebug = intern ("debug");
+  staticpro (&Qdebug);
 
   DEFVAR_LISP ("stack-trace-on-error", &Vstack_trace_on_error,
 	       doc: /* *Non-nil means errors display a backtrace buffer.

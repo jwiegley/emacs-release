@@ -1,6 +1,6 @@
 ;; idlwave.el --- IDL editing mode for GNU Emacs
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
@@ -14,7 +14,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -4342,7 +4342,7 @@ catalog \('lib).")
 (defvar idlwave-true-path-alist nil
   "Like `idlwave-path-alist', but with true filenames.")
 (defvar idlwave-routines nil
-  "Holds the combinded procedure/function/method routine-info.")
+  "Holds the combined procedure/function/method routine-info.")
 (defvar idlwave-class-alist nil
   "Holds the class names known to IDLWAVE.")
 (defvar idlwave-class-history nil
@@ -4846,7 +4846,7 @@ Gets set in cached XML rinfo, or `idlw-rinfo.el'.")
   ;; Create a sysvar list entry from the xml parsed list.
   (let* ((nameblock (nth 1 xml-entry))
 	 (name (cdr (assq 'name nameblock)))
-	 (sysvar (substring name (progn (string-match "^ *!" name) 
+	 (sysvar (substring name (progn (string-match "^ *!" name)
 					(match-end 0))))
 	 (link (cdr (assq 'link nameblock)))
 	 (params (cddr xml-entry))
@@ -7095,7 +7095,7 @@ sort the list before displaying"
   "Make the user select an element from the alist in the variable SYM.
 The keys of the alist are expected to be strings.  The function returns the
 car of the selected association.
-To do this, PROMPT is displayed and and the user must hit a letter key to
+To do this, PROMPT is displayed and the user must hit a letter key to
 select an entry.  If the user does not reply within DELAY seconds, a help
 window with the options is displayed automatically.
 The key which is associated with each option is generated automatically.

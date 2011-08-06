@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1994, 1995, 1996,
 ;;   1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -59,8 +59,9 @@ FROM with TO when it appears in a directory name.  This replacement is
 done when setting up the default directory of a newly visited file.
 *Every* FROM string should start with `^'.
 
-Do not use `~' in the TO strings.
-They should be ordinary absolute directory names.
+FROM and TO should be equivalent names, which refer to the
+same directory.  Do not use `~' in the TO strings;
+they should be ordinary absolute directory names.
 
 Use this feature when you have directories which you normally refer to
 via absolute symbolic links.  Make TO the name of the link, and FROM
@@ -162,7 +163,7 @@ The truename of a file is found by chasing all links
 both at the file level and at the levels of the containing directories."
   :type 'boolean
   :group 'find-file)
-(put 'find-file-visit-truename 'safe-local-variable 'boolean)
+(put 'find-file-visit-truename 'safe-local-variable 'booleanp)
 
 (defcustom revert-without-query nil
   "Specify which files should be reverted without query.
@@ -216,12 +217,12 @@ have fast storage with limited space, such as a RAM disk."
   (cond ((and (eq system-type 'ms-dos) (not (msdos-long-file-names)))
 	 (concat "^\\([^A-Z[-`a-z]\\|..+\\)?:\\|" ; colon except after drive
 		 "[+, ;=|<>\"?*]\\|\\[\\|\\]\\|"  ; invalid characters
-		 "[\000-\031]\\|"		  ; control characters
+		 "[\000-\037]\\|"		  ; control characters
 		 "\\(/\\.\\.?[^/]\\)\\|"	  ; leading dots
 		 "\\(/[^/.]+\\.[^/.]*\\.\\)"))	  ; more than a single dot
 	((memq system-type '(ms-dos windows-nt cygwin))
 	 (concat "^\\([^A-Z[-`a-z]\\|..+\\)?:\\|" ; colon except after drive
-		 "[|<>\"?*\000-\031]"))		  ; invalid characters
+		 "[|<>\"?*\000-\037]"))		  ; invalid characters
 	(t "[\000]"))
   "Regexp recognizing file names which aren't allowed by the filesystem.")
 
@@ -449,7 +450,7 @@ use `before-save-hook'.")
 
 (defcustom enable-local-variables t
   "Control use of local variables in files you visit.
-The value can be t, nil, :safe, or something else.
+The value can be t, nil, :safe, :all or something else.
 
 A value of t means file local variables specifications are obeyed
 if all the specified variable values are safe; if any values are
@@ -515,7 +516,10 @@ using \\[toggle-read-only]."
   :group 'view)
 
 (defvar file-name-history nil
-  "History list of file names entered in the minibuffer.")
+  "History list of file names entered in the minibuffer.
+
+Maximum length of the history list is determined by the value
+of `history-length', which see.")
 
 (put 'ange-ftp-completion-hook-function 'safe-magic t)
 (defun ange-ftp-completion-hook-function (op &rest args)
@@ -554,7 +558,7 @@ See Info node `(elisp)Standard File Names' for more details."
 	    (start 0))
 	;; Replace invalid filename characters with !
 	(while (string-match "[?*:<>|\"\000-\037]" name start)
-	  (aset name (match-beginning 0) ?!)
+	       (aset name (match-beginning 0) ?!)
 	  (setq start (match-end 0)))
 	name)
     filename))
@@ -1006,14 +1010,16 @@ documentation for additional customization information."
   "Switch to buffer BUFFER in another frame.
 Optional second arg NORECORD non-nil means
 do not put this buffer at the front of the list of recently selected ones.
+This function returns the buffer it switched to.
 
 This uses the function `display-buffer' as a subroutine; see its
 documentation for additional customization information."
   (interactive "BSwitch to buffer in other frame: ")
   (let ((pop-up-frames t)
 	same-window-buffer-names same-window-regexps)
-    (pop-to-buffer buffer t norecord)
-    (raise-frame (window-frame (selected-window)))))
+    (prog1
+	(pop-to-buffer buffer t norecord)
+      (raise-frame (window-frame (selected-window))))))
 
 (defun display-buffer-other-frame (buffer)
   "Switch to buffer BUFFER in another frame.
@@ -1068,6 +1074,13 @@ Interactively, the default if you just type RET is the current directory,
 but the visited file name is available through the minibuffer history:
 type M-n to pull it into the minibuffer.
 
+You can visit files on remote machines by specifying something
+like /ssh:SOME_REMOTE_MACHINE:FILE for the file name.  You can
+also visit local files as a different user by specifying
+/sudo::FILE for the file name.
+See the Info node `(tramp)Filename Syntax' in the Tramp Info
+manual, for more about this.
+
 Interactively, or if WILDCARDS is non-nil in a call from Lisp,
 expand wildcards (if any) and visit multiple files.  You can
 suppress wildcard expansion by setting `find-file-wildcards' to nil.
@@ -1082,8 +1095,9 @@ automatically choosing a major mode, use \\[find-file-literally]."
 
 (defun find-file-other-window (filename &optional wildcards)
   "Edit file FILENAME, in another window.
-May create a new window, or reuse an existing one.
-See the function `display-buffer'.
+
+Like \\[find-file] (which see), but creates a new window or reuses
+an existing one.  See the function `display-buffer'.
 
 Interactively, the default if you just type RET is the current directory,
 but the visited file name is available through the minibuffer history:
@@ -1102,8 +1116,9 @@ expand wildcards (if any) and visit multiple files."
 
 (defun find-file-other-frame (filename &optional wildcards)
   "Edit file FILENAME, in another frame.
-May create a new frame, or reuse an existing one.
-See the function `display-buffer'.
+
+Like \\[find-file] (which see), but creates a new frame or reuses
+an existing one.  See the function `display-buffer'.
 
 Interactively, the default if you just type RET is the current directory,
 but the visited file name is available through the minibuffer history:
@@ -1122,7 +1137,7 @@ expand wildcards (if any) and visit multiple files."
 
 (defun find-file-existing (filename)
    "Edit the existing file FILENAME.
-Like \\[find-file] but only allow a file that exists, and do not allow
+Like \\[find-file], but only allow a file that exists, and do not allow
 file names with wildcards."
    (interactive (nbutlast (find-file-read-args "Find existing file: " t)))
    (if (and (not (interactive-p)) (not (file-exists-p filename)))
@@ -1132,7 +1147,7 @@ file names with wildcards."
 
 (defun find-file-read-only (filename &optional wildcards)
   "Edit file FILENAME but don't allow changes.
-Like \\[find-file] but marks buffer as read-only.
+Like \\[find-file], but marks buffer as read-only.
 Use \\[toggle-read-only] to permit editing."
   (interactive (find-file-read-args "Find file read-only: " nil))
   (unless (or (and wildcards find-file-wildcards
@@ -1147,7 +1162,7 @@ Use \\[toggle-read-only] to permit editing."
 
 (defun find-file-read-only-other-window (filename &optional wildcards)
   "Edit file FILENAME in another window but don't allow changes.
-Like \\[find-file-other-window] but marks buffer as read-only.
+Like \\[find-file-other-window], but marks buffer as read-only.
 Use \\[toggle-read-only] to permit editing."
   (interactive (find-file-read-args "Find file read-only other window: " nil))
   (unless (or (and wildcards find-file-wildcards
@@ -1162,7 +1177,7 @@ Use \\[toggle-read-only] to permit editing."
 
 (defun find-file-read-only-other-frame (filename &optional wildcards)
   "Edit file FILENAME in another frame but don't allow changes.
-Like \\[find-file-other-frame] but marks buffer as read-only.
+Like \\[find-file-other-frame], but marks buffer as read-only.
 Use \\[toggle-read-only] to permit editing."
   (interactive (find-file-read-args "Find file read-only other frame: " nil))
   (unless (or (and wildcards find-file-wildcards
@@ -1178,6 +1193,8 @@ Use \\[toggle-read-only] to permit editing."
 (defun find-alternate-file-other-window (filename &optional wildcards)
   "Find file FILENAME as a replacement for the file in the next window.
 This command does not select that window.
+
+See \\[find-file] for the possible forms of the FILENAME argument.
 
 Interactively, or if WILDCARDS is non-nil in a call from Lisp,
 expand wildcards (if any) and replace the file with multiple files."
@@ -1203,6 +1220,8 @@ expand wildcards (if any) and replace the file with multiple files."
   "Find file FILENAME, select its buffer, kill previous buffer.
 If the current buffer now contains an empty file that you just visited
 \(presumably by mistake), use this command to visit the file you really want.
+
+See \\[find-file] for the possible forms of the FILENAME argument.
 
 Interactively, or if WILDCARDS is non-nil in a call from Lisp,
 expand wildcards (if any) and replace the file with multiple files.
@@ -1886,7 +1905,7 @@ since only a single case-insensitive search through the alist is made."
   ;; c++-mode, java-mode and more) are added through autoload
   ;; directives in that file.  That way is discouraged since it
   ;; spreads out the definition of the initial value.
-  (mapc
+  (mapcar
    (lambda (elt)
      (cons (purecopy (car elt)) (cdr elt)))
    `(;; do this first, so that .html.pl is Polish html, not Perl
@@ -1976,6 +1995,7 @@ since only a single case-insensitive search through the alist is made."
      ("\\.ds\\(ss\\)?l\\'" . dsssl-mode)
      ("\\.js\\'" . java-mode)		; javascript-mode would be better
      ("\\.x[bp]m\\'" . c-mode)
+     ("\\.d?v\\'" . verilog-mode)
      ;; .emacs or .gnus or .viper following a directory delimiter in
      ;; Unix, MSDOG or VMS syntax.
      ("[]>:/\\]\\..*\\(emacs\\|gnus\\|viper\\)\\'" . emacs-lisp-mode)
@@ -1985,6 +2005,8 @@ since only a single case-insensitive search through the alist is made."
      ("[:/]_emacs\\'" . emacs-lisp-mode)
      ("/crontab\\.X*[0-9]+\\'" . shell-script-mode)
      ("\\.ml\\'" . lisp-mode)
+     ;; Common Lisp ASDF package system.
+     ("\\.asd\\'" . lisp-mode)
      ("\\.\\(asn\\|mib\\|smi\\)\\'" . snmp-mode)
      ("\\.\\(as\\|mi\\|sm\\)2\\'" . snmpv2-mode)
      ("\\.\\(diffs?\\|patch\\|rej\\)\\'" . diff-mode)
@@ -2007,9 +2029,12 @@ since only a single case-insensitive search through the alist is made."
      ("java.+\\.conf\\'" . conf-javaprop-mode)
      ("\\.properties\\(?:\\.[a-zA-Z0-9._-]+\\)?\\'" . conf-javaprop-mode)
      ;; *.cf, *.cfg, *.conf, *.config[.local|.de_DE.UTF8|...], */config
-     ("[/.]c\\(?:on\\)?f\\(?:i?g\\)?\\(?:\\.[a-zA-Z0-9._-]+\\)?\\'" . conf-mode)
+     ("[/.]c\\(?:on\\)?f\\(?:i?g\\)?\\(?:\\.[a-zA-Z0-9._-]+\\)?\\'" . conf-mode-maybe)
      ("\\`/etc/\\(?:DIR_COLORS\\|ethers\\|.?fstab\\|.*hosts\\|lesskey\\|login\\.?de\\(?:fs\\|vperm\\)\\|magic\\|mtab\\|pam\\.d/.*\\|permissions\\(?:\\.d/.+\\)?\\|protocols\\|rpc\\|services\\)\\'" . conf-space-mode)
      ("\\`/etc/\\(?:acpid?/.+\\|aliases\\(?:\\.d/.+\\)?\\|default/.+\\|group-?\\|hosts\\..+\\|inittab\\|ksysguarddrc\\|opera6rc\\|passwd-?\\|shadow-?\\|sysconfig/.+\\)\\'" . conf-mode)
+     ;; ChangeLog.old etc.  Other change-log-mode entries are above;
+     ;; this has lower priority to avoid matching changelog.sgml etc.
+     ("[cC]hange[lL]og[-.][-0-9a-z]+\\'" . change-log-mode)
      ;; either user's dot-files or under /etc or some such
      ("/\\.?\\(?:gnokiirc\\|kde.*rc\\|mime\\.types\\|wgetrc\\)\\'" . conf-mode)
      ;; alas not all ~/.*rc files are like this
@@ -2050,6 +2075,16 @@ appear in `auto-coding-alist' with `no-conversion' coding system.
 See also `interpreter-mode-alist', which detects executable script modes
 based on the interpreters they specify to run,
 and `magic-mode-alist', which determines modes based on file contents.")
+
+(defun conf-mode-maybe ()
+  "Select Conf mode or XML mode according to start of file."
+  (if (save-excursion
+	(save-restriction
+	  (widen)
+	  (goto-char (point-min))
+	  (looking-at "<\\?xml \\|<!-- \\|<!DOCTYPE ")))
+      (xml-mode)
+    (conf-mode)))
 
 (defvar interpreter-mode-alist
   ;; Note: The entries for the modes defined in cc-mode.el (awk-mode
@@ -2119,8 +2154,7 @@ is assumed to be interpreted by the interpreter matched by the second group
 of the regular expression.  The mode is then determined as the mode
 associated with that interpreter in `interpreter-mode-alist'.")
 
-(defvar magic-mode-alist
-  `((image-type-auto-detected-p . image-mode))
+(defvar magic-mode-alist nil
   "Alist of buffer beginnings vs. corresponding major mode functions.
 Each element looks like (REGEXP . FUNCTION) or (MATCH-FUNCTION . FUNCTION).
 After visiting a file, if REGEXP matches the text at the beginning of the
@@ -2133,7 +2167,8 @@ If FUNCTION is nil, then it is not called.  (That is a way of saying
 (put 'magic-mode-alist 'risky-local-variable t)
 
 (defvar magic-fallback-mode-alist
-  `(;; The < comes before the groups (but the first) to reduce backtracking.
+  `((image-type-auto-detected-p . image-mode)
+    ;; The < comes before the groups (but the first) to reduce backtracking.
     ;; TODO: UTF-16 <?xml may be preceded by a BOM 0xff 0xfe or 0xfe 0xff.
     ;; We use [ \t\r\n] instead of `\\s ' to make regex overflow less likely.
     (,(let* ((incomment-re "\\(?:[^-]\\|-[^-]\\)")
@@ -2254,7 +2289,12 @@ we don't actually set it to the same mode the buffer already has."
     ;; Next compare the filename against the entries in auto-mode-alist.
     (unless done
       (if buffer-file-name
-	  (let ((name buffer-file-name))
+	  (let ((name buffer-file-name)
+		(remote-id (file-remote-p buffer-file-name)))
+	    ;; Remove remote file name identification.
+	    (when (and (stringp remote-id)
+		       (string-match (regexp-quote remote-id) name))
+	      (setq name (substring name (match-end 0))))
 	    ;; Remove backup-suffixes from file name.
 	    (setq name (file-name-sans-versions name))
 	    (while name
@@ -2378,13 +2418,13 @@ symbol and VAL is a value that is considered safe."
   :group 'find-file
   :type  'alist)
 
-(defcustom safe-local-eval-forms nil
+(defcustom safe-local-eval-forms '((add-hook 'write-file-hooks 'time-stamp))
   "Expressions that are considered safe in an `eval:' local variable.
 Add expressions to this list if you want Emacs to evaluate them, when
 they appear in an `eval' local variable specification, without first
 asking you for confirmation."
   :group 'find-file
-  :version "22.1"
+  :version "22.2"
   :type '(repeat sexp))
 
 ;; Risky local variables:
@@ -2476,7 +2516,11 @@ asking you for confirmation."
 
 (put 'c-set-style 'safe-local-eval-function t)
 
-(defun hack-local-variables-confirm (vars unsafe-vars risky-vars)
+(defun hack-local-variables-confirm (all-vars unsafe-vars risky-vars)
+  "Get confirmation before setting up local variable values.
+ALL-VARS is the list of all variables to be set up.
+UNSAFE-VARS is the list of those that aren't marked as safe or risky.
+RISKY-VARS is the list of those that are marked as risky."
   (if noninteractive
       nil
     (let ((name (if buffer-file-name
@@ -2507,7 +2551,7 @@ n  -- to ignore the local variables list.")
 !  -- to apply the local variables list, and permanently mark these
       values (*) as safe (in the future, they will be set automatically.)\n\n")
 	    (insert "\n\n"))
-	  (dolist (elt vars)
+	  (dolist (elt all-vars)
 	    (cond ((member elt unsafe-vars)
 		   (insert "  * "))
 		  ((member elt risky-vars)
@@ -2723,7 +2767,8 @@ is specified, returning t if it is specified."
 	    (dolist (elt result)
 	      (let ((var (car elt))
 		    (val (cdr elt)))
-		(or (eq var 'mode)
+		;; Don't query about the fake variables.
+		(or (memq var '(mode unibyte coding))
 		    (and (eq var 'eval)
 			 (or (eq enable-local-eval t)
 			     (hack-one-local-variable-eval-safep
@@ -2736,8 +2781,8 @@ is specified, returning t if it is specified."
 		;; If caller wants only the safe variables,
 		;; install only them.
 		(dolist (elt result)
-		  (unless (or (memq (car elt) unsafe-vars)
-			      (memq (car elt) risky-vars))
+		  (unless (or (member elt unsafe-vars)
+			      (member elt risky-vars))
 		    (hack-one-local-variable (car elt) (cdr elt))))
 	      ;; Query, except in the case where all are known safe
 	      ;; if the user wants no quuery in that case.
@@ -3117,17 +3162,22 @@ BACKUPNAME is the backup file name, which is the old file renamed."
 	  ;; loosen them later, whereas it's impossible to close the
 	  ;; time-window of loose permissions otherwise.
 	  (set-default-file-modes ?\700)
-	  (while (condition-case ()
-		     (progn
-		       (condition-case nil
-			   (delete-file to-name)
-			 (file-error nil))
-		       (copy-file from-name to-name nil t)
-		       nil)
-		   (file-already-exists t))
-	    ;; The file was somehow created by someone else between
-	    ;; `delete-file' and `copy-file', so let's try again.
-	    nil))
+	  (when (condition-case nil
+		    ;; Try to overwrite old backup first.
+		    (copy-file from-name to-name t t)
+		  (error t))
+	    (while (condition-case nil
+		       (progn
+			 (when (file-exists-p to-name)
+			   (delete-file to-name))
+			 (copy-file from-name to-name nil t)
+			 nil)
+		     (file-already-exists t))
+	      ;; The file was somehow created by someone else between
+	      ;; `delete-file' and `copy-file', so let's try again.
+	      ;; rms says "I think there is also a possible race
+	      ;; condition for making backup files" (emacs-devel 20070821).
+	      nil)))
       ;; Reset the umask.
       (set-default-file-modes umask)))
   (and modes
@@ -3156,7 +3206,7 @@ we do not remove backup version numbers, only true file version numbers."
 			 (length name))
 		   (if keep-backup-version
 		       (length name)
-		     (or (string-match "\\.~[0-9.]+~\\'" name)
+		     (or (string-match "\\.~[-[:alnum:]:#@^._]+~\\'" name)
 			 (string-match "~\\'" name)
 			 (length name))))))))
 
@@ -3931,8 +3981,9 @@ prints a message in the minibuffer.  Instead, use `set-buffer-modified-p'."
 
 (defun toggle-read-only (&optional arg)
   "Change whether this buffer is visiting its file read-only.
-With arg, set read-only iff arg is positive.
-If visiting file read-only and `view-read-only' is non-nil, enter view mode."
+With prefix argument ARG, make the buffer read-only if ARG is
+positive, otherwise make it writable.  If visiting file read-only
+and `view-read-only' is non-nil, enter view mode."
   (interactive "P")
   (if (and arg
            (if (> (prefix-numeric-value arg) 0) buffer-read-only
@@ -4510,15 +4561,18 @@ See also `auto-save-file-name-p'."
     (let ((buffer-name (buffer-name))
 	  (limit 0)
 	  file-name)
-      ;; Eliminate all slashes and backslashes by
-      ;; replacing them with sequences that start with %.
-      ;; Quote % also, to keep distinct names distinct.
-      (while (string-match "[/\\%]" buffer-name limit)
+      ;; Restrict the characters used in the file name to those which
+      ;; are known to be safe on all filesystems, url-encoding the
+      ;; rest.
+      ;; We do this on all platforms, because even if we are not
+      ;; running on DOS/Windows, the current directory may be on a
+      ;; mounted VFAT filesystem, such as a USB memory stick.
+      (while (string-match "[^A-Za-z0-9-_.~#+]" buffer-name limit)
 	(let* ((character (aref buffer-name (match-beginning 0)))
 	       (replacement
-		(cond ((eq character ?%) "%%")
-		      ((eq character ?/) "%+")
-		      ((eq character ?\\) "%-"))))
+                ;; For multibyte characters, this will produce more than
+                ;; 2 hex digits, so is not true URL encoding.
+                (format "%%%02X" character)))
 	  (setq buffer-name (replace-match replacement t t buffer-name))
 	  (setq limit (1+ (match-end 0)))))
       ;; Generate the file name.
@@ -4558,7 +4612,7 @@ FILENAME should lack slashes.  You can redefine this for customization."
 
 (defun wildcard-to-regexp (wildcard)
   "Given a shell file name pattern WILDCARD, return an equivalent regexp.
-The generated regexp will match a filename iff the filename
+The generated regexp will match a filename only if the filename
 matches that wildcard according to shell rules.  Only wildcards known
 by `sh' are supported."
   (let* ((i (string-match "[[.*+\\^$?]" wildcard))
@@ -4723,7 +4777,7 @@ and `list-directory-verbose-switches'."
 
 PATTERN is assumed to represent a file-name wildcard suitable for the
 underlying filesystem.  For Unix and GNU/Linux, the characters from the
-set [ \\t\\n;<>&|()#$] are quoted with a backslash; for DOS/Windows, all
+set [ \\t\\n;<>&|()'\"#$] are quoted with a backslash; for DOS/Windows, all
 the parts of the pattern which don't include wildcard characters are
 quoted with double quotes.
 Existing quote characters in PATTERN are left alone, so you can pass
@@ -4755,7 +4809,7 @@ PATTERN that already quotes some of the special characters."
 	  (concat result (substring pattern beg) "\""))))
      (t
       (let ((beg 0))
-	(while (string-match "[ \t\n;<>&|()#$]" pattern beg)
+	(while (string-match "[ \t\n;<>&|()'\"#$]" pattern beg)
 	  (setq pattern
 		(concat (substring pattern 0 (match-beginning 0))
 			"\\"

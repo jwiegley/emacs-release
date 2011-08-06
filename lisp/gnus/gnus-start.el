@@ -1,7 +1,7 @@
 ;;; gnus-start.el --- startup functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -178,8 +178,13 @@ properly with all servers."
 
 (defconst gnus-level-unsubscribed 7
   "Groups with levels less than or equal to this variable are unsubscribed.
-Groups with levels less than `gnus-level-subscribed', which should be
-less than this variable, are subscribed.")
+
+Groups with levels less than `gnus-level-subscribed', which
+should be less than this variable, are subscribed.  Groups with
+levels from `gnus-level-subscribed' (exclusive) upto this
+variable (inclusive) are unsubscribed.  See also
+`gnus-level-zombie', `gnus-level-killed' and the Info node `Group
+Levels' for details.")
 
 (defconst gnus-level-zombie 8
   "Groups with this level are zombie groups.")
@@ -758,8 +763,7 @@ prompt the user for the name of an NNTP server to use."
       (cond
        ((featurep 'xemacs)
 	(gnus-xmas-splash))
-       ((and window-system
-	     (= (frame-height) (1+ (window-height))))
+       (window-system
 	(gnus-x-splash))))
 
     (let ((level (and (numberp arg) (> arg 0) arg))

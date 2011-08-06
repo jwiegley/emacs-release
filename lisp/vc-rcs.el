@@ -1,7 +1,7 @@
 ;;; vc-rcs.el --- support for RCS version-control
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:     FSF (see vc.el for full credits)
 ;; Maintainer: Andre Spiegel <spiegel@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -225,6 +225,14 @@ When VERSION is given, perform check for that version."
     ;; The workfile is unchanged if rcsdiff found no differences.
     (zerop status)))
 
+(defun vc-rcs-find-file-not-found-hook ()
+  (if (yes-or-no-p
+       (format "File %s was lost; check out from version control? "
+	       (file-name-nondirectory buffer-file-name)))
+      (save-excursion
+	(require 'vc)
+	(let ((default-directory (file-name-directory buffer-file-name)))
+          (not (vc-error-occurred (vc-checkout buffer-file-name)))))))
 
 ;;;
 ;;; State-changing functions

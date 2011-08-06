@@ -1,12 +1,13 @@
 /* Primitive operations on Lisp data types for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1988, 1993, 1994, 1995, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -662,12 +663,20 @@ DEFUN ("fset", Ffset, Sfset, 2, 2, 0,
      (symbol, definition)
      register Lisp_Object symbol, definition;
 {
+  register Lisp_Object function;
+
   CHECK_SYMBOL (symbol);
   if (NILP (symbol) || EQ (symbol, Qt))
     xsignal1 (Qsetting_constant, symbol);
-  if (!NILP (Vautoload_queue) && !EQ (XSYMBOL (symbol)->function, Qunbound))
-    Vautoload_queue = Fcons (Fcons (symbol, XSYMBOL (symbol)->function),
-			     Vautoload_queue);
+
+  function = XSYMBOL (symbol)->function;
+
+  if (!NILP (Vautoload_queue) && !EQ (function, Qunbound))
+    Vautoload_queue = Fcons (Fcons (symbol, function), Vautoload_queue);
+
+  if (CONSP (function) && EQ (XCAR (function), Qautoload))
+    Fput (symbol, Qautoload, XCDR (function));
+
   XSYMBOL (symbol)->function = definition;
   /* Handle automatic advice activation */
   if (CONSP (XSYMBOL (symbol)->plist) && !NILP (Fget (symbol, Qad_advice_info)))
@@ -1440,7 +1449,7 @@ More generally, you can use multiple variables and values, as in
 This sets each VAR's default value to the corresponding VALUE.
 The VALUE for the Nth VAR can refer to the new default values
 of previous VARs.
-usage: (setq-default [VAR VALUE...])  */)
+usage: (setq-default [VAR VALUE]...)  */)
      (args)
      Lisp_Object args;
 {
@@ -1575,7 +1584,7 @@ Instead, use `add-hook' and specify t for the LOCAL argument.  */)
       XBUFFER_LOCAL_VALUE (newval)->found_for_frame = 0;
       XBUFFER_LOCAL_VALUE (newval)->check_frame = 0;
       XBUFFER_LOCAL_VALUE (newval)->cdr = tem;
-      SET_SYMBOL_VALUE (variable, newval);;
+      SET_SYMBOL_VALUE (variable, newval);
     }
   /* Make sure this buffer has its own value of symbol.  */
   tem = Fassq (variable, current_buffer->local_var_alist);
@@ -2349,7 +2358,9 @@ DEFUN ("zerop", Fzerop, Szerop, 1, 1, 0,
   return Qnil;
 }
 
-/* Convert between long values and pairs of Lisp integers.  */
+/* Convert between long values and pairs of Lisp integers.
+   Note that long_to_cons returns a single Lisp integer
+   when the value fits in one.  */
 
 Lisp_Object
 long_to_cons (i)

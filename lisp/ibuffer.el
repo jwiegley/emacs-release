@@ -1,7 +1,7 @@
 ;;; ibuffer.el --- operate on buffers like dired
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: John Paul Wallington <jpw@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2, or (at
+;; published by the Free Software Foundation; either version 3, or (at
 ;; your option) any later version.
 
 ;; This program is distributed in the hope that it will be useful, but
@@ -1835,7 +1835,7 @@ If point is on a group name, this function operates on that group."
 
 (defun ibuffer-map-lines (function &optional nomodify group)
   "Call FUNCTION for each buffer.
-Don't set the ibuffer modification flag iff NOMODIFY is non-nil.
+Set the ibuffer modification flag unless NOMODIFY is non-nil.
 
 If optional argument GROUP is non-nil, then only call FUNCTION on
 buffers in filtering group GROUP.
@@ -2267,7 +2267,7 @@ If optional arg SILENT is non-nil, do not display progress messages."
 
 (defun ibuffer-quit ()
   "Quit this `ibuffer' session.
-Try to restore the previous window configuration iff
+Try to restore the previous window configuration if
 `ibuffer-restore-window-config-on-quit' is non-nil."
   (interactive)
   (if ibuffer-restore-window-config-on-quit

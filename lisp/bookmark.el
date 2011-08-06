@@ -1,7 +1,7 @@
 ;;; bookmark.el --- set bookmarks, maybe annotate them, jump to them later
 
 ;; Copyright (C) 1993, 1994, 1995, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Karl Fogel <kfogel@red-bean.com>
 ;; Maintainer: Karl Fogel <kfogel@red-bean.com>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1044,10 +1044,10 @@ For example, if this is a Info buffer, return the Info file's name."
   ;;Return the bookmark-alist for display.  If the bookmark-sort-flag
   ;;is non-nil, then return a sorted copy of the alist.
   (if bookmark-sort-flag
-      (setq bookmark-alist
-            (sort (copy-alist bookmark-alist)
-                  (function
-                   (lambda (x y) (string-lessp (car x) (car y))))))))
+      (sort (copy-alist bookmark-alist)
+            (function
+             (lambda (x y) (string-lessp (car x) (car y)))))
+    bookmark-alist))
 
 
 (defvar bookmark-after-jump-hook nil
@@ -1568,7 +1568,6 @@ deletion, or > if it is flagged for displaying."
     (insert "% Bookmark\n- --------\n")
     (add-text-properties (point-min) (point)
 			 '(font-lock-face bookmark-menu-heading))
-    (bookmark-maybe-sort-alist)
     (mapcar
      (lambda (full-record)
        ;; if a bookmark has an annotation, prepend a "*"
@@ -1591,7 +1590,7 @@ deletion, or > if it is flagged for displaying."
 		  help-echo "mouse-2: go to this bookmark in other window")))
 	   (insert "\n")
 	   )))
-     bookmark-alist))
+     (bookmark-maybe-sort-alist)))
   (goto-char (point-min))
   (forward-line 2)
   (bookmark-bmenu-mode)
@@ -1794,7 +1793,8 @@ if an annotation exists."
          (if (and ann (not (string-equal ann "")))
              ;; insert the annotation, indented by 4 spaces.
              (progn
-               (save-excursion (insert ann))
+               (save-excursion (insert ann) (unless (bolp)
+                                              (insert "\n")))
                (while (< (point) (point-max))
                  (beginning-of-line) ; paranoia
                  (insert "    ")

@@ -1,6 +1,6 @@
 ;;; cpp.el --- highlight or hide text according to cpp conditionals
 
-;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -623,7 +623,8 @@ You can also use the keyboard accelerators indicated like this: [K]ey."
 
 (defun cpp-edit-toggle-known (arg)
   "Toggle writable status for known conditionals.
-With optional argument ARG, make them writable iff ARG is positive."
+With optional argument ARG, make them writable if ARG is positive,
+otherwise make them unwritable."
   (interactive "@P")
   (if (or (and (null arg) cpp-known-writable)
 	  (<= (prefix-numeric-value arg) 0))
@@ -633,7 +634,8 @@ With optional argument ARG, make them writable iff ARG is positive."
 
 (defun cpp-edit-toggle-unknown (arg)
   "Toggle writable status for unknown conditionals.
-With optional argument ARG, make them writable iff ARG is positive."
+With optional argument ARG, make them writable if ARG is positive,
+otherwise make them unwritable."
   (interactive "@P")
   (if (or (and (null arg) cpp-unknown-writable)
 	  (<= (prefix-numeric-value arg) 0))

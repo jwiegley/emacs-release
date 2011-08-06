@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/modes
 @node Modes, Documentation, Keymaps, Top
@@ -1078,7 +1078,7 @@ each calls the following function to set various variables:
 
   In Lisp and most programming languages, we want the paragraph
 commands to treat only blank lines as paragraph separators.  And the
-modes should undestand the Lisp conventions for comments.  The rest of
+modes should understand the Lisp conventions for comments.  The rest of
 @code{lisp-mode-variables} sets this up:
 
 @smallexample

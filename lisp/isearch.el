@@ -1,7 +1,7 @@
 ;;; isearch.el --- incremental search minor mode
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@cs.uiuc.edu>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -819,7 +819,7 @@ NOPUSH is t and EDIT is t."
     (run-hooks 'isearch-mode-end-hook))
 
   ;; If there was movement, mark the starting position.
-  ;; Maybe should test difference between and set mark iff > threshold.
+  ;; Maybe should test difference between and set mark only if > threshold.
   (if (/= (point) isearch-opoint)
       (or (and transient-mark-mode mark-active)
 	  (progn
@@ -992,7 +992,7 @@ If first char entered is \\[isearch-yank-word-or-char], then do word search inst
 	       isearch-original-minibuffer-message-timeout)
 	      (isearch-original-minibuffer-message-timeout
 	       isearch-original-minibuffer-message-timeout)
-	      )
+	      old-point old-other-end)
 
 	  ;; Actually terminate isearching until editing is done.
 	  ;; This is so that the user can do anything without failure,
@@ -1000,6 +1000,10 @@ If first char entered is \\[isearch-yank-word-or-char], then do word search inst
 	  (condition-case err
 	      (isearch-done t t)
 	    (exit nil))			; was recursive editing
+
+	  ;; Save old point and isearch-other-end before reading from minibuffer
+	  ;; that can change their values.
+	  (setq old-point (point) old-other-end isearch-other-end)
 
 	  (isearch-message) ;; for read-char
 	  (unwind-protect
@@ -1036,6 +1040,14 @@ If first char entered is \\[isearch-yank-word-or-char], then do word search inst
 		      isearch-new-message
 		      (mapconcat 'isearch-text-char-description
 				 isearch-new-string "")))
+
+	    ;; Set point at the start (end) of old match if forward (backward),
+	    ;; so after exiting minibuffer isearch resumes at the start (end)
+	    ;; of this match and can find it again.
+	    (if (and old-other-end (eq old-point (point))
+		     (eq isearch-forward isearch-new-forward))
+		(goto-char old-other-end))
+
 	    ;; Always resume isearching by restarting it.
 	    (isearch-mode isearch-forward
 			  isearch-regexp
@@ -1069,6 +1081,7 @@ If first char entered is \\[isearch-yank-word-or-char], then do word search inst
 
 	;; Reinvoke the pending search.
 	(isearch-search)
+	(isearch-push-state)
 	(isearch-update)
 	(if isearch-nonincremental
 	    (progn
@@ -1259,10 +1272,13 @@ If search string is empty, just beep."
       (ding)
     (setq isearch-string (substring isearch-string 0 (- (or arg 1)))
           isearch-message (mapconcat 'isearch-text-char-description
-                                     isearch-string "")
-          ;; Don't move cursor in reverse search.
-          isearch-yank-flag t))
-  (isearch-search-and-update))
+                                     isearch-string "")))
+  ;; Use the isearch-other-end as new starting point to be able
+  ;; to find the remaining part of the search string again.
+  (if isearch-other-end (goto-char isearch-other-end))
+  (isearch-search)
+  (isearch-push-state)
+  (isearch-update))
 
 (defun isearch-yank-string (string)
   "Pull STRING into search string."
@@ -1445,7 +1461,7 @@ to the barrier."
 	;; removes all bracket-sets and groups that might be in the way, as
 	;; well as partial \{\} constructs that the code below leaves behind.
 	;; Also skip over postfix operators -- though horrid,
-	;; 'ab?\{5,6\}+\{1,2\}*' is perfectly legal.
+	;; 'ab?\{5,6\}+\{1,2\}*' is perfectly valid.
 	(while (and previous
 		    (or (isearch-error-state frame)
 			(let* ((string (isearch-string-state frame))
@@ -2305,7 +2321,7 @@ since they have special meaning in a regexp."
 ;;  - the direction of the current search is expected to be given by
 ;;    `isearch-forward';
 ;;  - the variable `isearch-error' is expected to be true
-;;    iff `isearch-string' is an invalid regexp.
+;;    only if `isearch-string' is an invalid regexp.
 
 (defvar isearch-lazy-highlight-overlays nil)
 (defvar isearch-lazy-highlight-wrapped nil)

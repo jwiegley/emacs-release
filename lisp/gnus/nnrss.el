@@ -1,7 +1,7 @@
 ;;; nnrss.el --- interfacing with RSS
 
 ;; Copyright (C) 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: RSS
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful, but
@@ -85,7 +85,12 @@ ARTICLE is the article number of the current headline.")
 (defvar nnrss-file-coding-system mm-universal-coding-system
   "Coding system used when reading and writing files.")
 
-(defvar nnrss-compatible-encoding-alist '((iso-8859-1 . windows-1252))
+(defvar nnrss-compatible-encoding-alist
+  (delq nil (mapcar (lambda (elem)
+		      (if (and (mm-coding-system-p (car elem))
+			       (mm-coding-system-p (cdr elem)))
+			  elem))
+		    mm-charset-override-alist))
   "Alist of encodings and those supersets.
 The cdr of each element is used to decode data if it is available when
 the car is what the data specify as the encoding.  Or, the car is used

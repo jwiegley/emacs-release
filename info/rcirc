@@ -1,6 +1,6 @@
 This is ../info/rcirc, produced by makeinfo version 4.8 from rcirc.texi.
 
-   Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+   Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -221,7 +221,7 @@ IRC.
      /nick "alex schroeder"
 
    This will try to change your nick to `"alex'.  Usually this will
-fail because the double quote character is not a legal character for
+fail because the double quote character is not a valid character for
 nicks.
 
    These commands are case insensitive.
@@ -1220,24 +1220,24 @@ Index
 
 
 Tag Table:
-Node: Top1233
-Node: Basics2141
-Node: Internet Relay Chat2402
-Node: Getting started with rcirc3917
-Node: Reference6366
-Node: rcirc commands6694
-Node: Useful IRC commands10081
-Node: Configuration10808
-Node: Hacking and Tweaking15533
-Node: Skipping /away messages using handlers15978
-Node: Using fly spell mode16725
-Node: Scrolling conservatively17146
-Node: Changing the time stamp format17818
-Node: Defining a new command18194
-Node: Reconnecting after you have lost the connection19014
-Node: GNU Free Documentation License20879
-Node: Key Index43120
-Node: Variable Index44282
-Node: Index45703
+Node: Top1239
+Node: Basics2147
+Node: Internet Relay Chat2408
+Node: Getting started with rcirc3923
+Node: Reference6372
+Node: rcirc commands6700
+Node: Useful IRC commands10087
+Node: Configuration10814
+Node: Hacking and Tweaking15539
+Node: Skipping /away messages using handlers15984
+Node: Using fly spell mode16731
+Node: Scrolling conservatively17152
+Node: Changing the time stamp format17824
+Node: Defining a new command18200
+Node: Reconnecting after you have lost the connection19020
+Node: GNU Free Documentation License20885
+Node: Key Index43126
+Node: Variable Index44288
+Node: Index45709
 
 End Tag Table

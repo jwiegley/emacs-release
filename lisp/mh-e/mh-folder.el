@@ -1,6 +1,6 @@
 ;;; mh-folder.el --- MH-Folder mode
 
-;; Copyright (C) 2002, 2003, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1495,7 +1495,7 @@ function doesn't recenter the folder buffer."
 
 (defun mh-update-unseen ()
   "Synchronize the unseen sequence with MH.
-Return non-nil iff the MH folder was set.
+Return non-nil if the MH folder was set.
 The hook `mh-unseen-updated-hook' is called after the unseen sequence
 is updated."
   (if mh-seen-list

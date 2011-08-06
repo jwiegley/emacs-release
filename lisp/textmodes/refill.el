@@ -1,7 +1,7 @@
 ;;; refill.el --- `auto-fill' by refilling paragraphs on changes
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Maintainer: Miles Bader <miles@gnu.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -217,7 +217,7 @@ complex processing.")
 ;;;###autoload
 (define-minor-mode refill-mode
   "Toggle Refill minor mode.
-With prefix arg, turn Refill mode on iff arg is positive.
+With prefix arg, turn Refill mode on if arg is positive, otherwise turn it off.
 
 When Refill mode is on, the current paragraph will be formatted when
 changes are made within it.  Self-inserting characters only cause

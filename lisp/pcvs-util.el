@@ -1,7 +1,7 @@
 ;;; pcvs-util.el --- utility functions for PCL-CVS  -*- byte-compile-dynamic: t -*-
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -186,35 +186,6 @@ arguments.  If ARGS is not a list, no argument will be passed."
   "Tell whether STR1 is a prefix of STR2."
   (eq t (compare-strings str2 nil (length str1) str1 nil nil)))
 
-;; (string->strings (strings->string X)) == X
-(defun cvs-strings->string (strings &optional separator)
-  "Concatenate the STRINGS, adding the SEPARATOR (default \" \").
-This tries to quote the strings to avoid ambiguity such that
-  (cvs-string->strings (cvs-strings->string strs)) == strs
-Only some SEPARATORs will work properly."
-  (let ((sep (or separator " ")))
-    (mapconcat
-     (lambda (str)
-       (if (string-match "[\\\"]" str)
-	   (concat "\"" (replace-regexp-in-string "[\\\"]" "\\\\\\&" str) "\"")
-	 str))
-     strings sep)))
-
-;; (string->strings (strings->string X)) == X
-(defun cvs-string->strings (string &optional separator)
-  "Split the STRING into a list of strings.
-It understands elisp style quoting within STRING such that
-  (cvs-string->strings (cvs-strings->string strs)) == strs
-The SEPARATOR regexp defaults to \"\\s-+\"."
-  (let ((sep (or separator "\\s-+"))
-	(i (string-match "[\"]" string)))
-    (if (null i) (split-string string sep t)	; no quoting:  easy
-      (append (unless (eq i 0) (split-string (substring string 0 i) sep t))
-	      (let ((rfs (read-from-string string i)))
-		(cons (car rfs)
-		      (cvs-string->strings (substring string (cdr rfs))
-					   sep)))))))
-
 ;;;;
 ;;;; file names
 ;;;;
@@ -240,7 +211,8 @@ The SEPARATOR regexp defaults to \"\\s-+\"."
 (defconst cvs-qtypedesc-string1 (cvs-qtypedesc-create 'identity 'identity t))
 (defconst cvs-qtypedesc-string (cvs-qtypedesc-create 'identity 'identity))
 (defconst cvs-qtypedesc-strings
-  (cvs-qtypedesc-create 'cvs-string->strings 'cvs-strings->string nil))
+  (cvs-qtypedesc-create 'split-string-and-unquote
+			'combine-and-quote-strings nil))
 
 (defun cvs-query-read (default prompt qtypedesc &optional hist-sym)
   (let* ((qtypedesc (or qtypedesc cvs-qtypedesc-strings))

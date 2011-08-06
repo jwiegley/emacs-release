@@ -1,12 +1,12 @@
 /* machine description file for Sun 68000's
    Copyright (C) 1985, 1986, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -40,7 +40,7 @@ Sun 1, 2 and 3 (-machine=sun1, -machine=sun2, -machine=sun3;
   problems caused by bugs in the "export" version of SunOS 4.
 NOTE-END  */
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #define WORDS_BIG_ENDIAN

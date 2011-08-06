@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/processes
 @node Processes, Display, Abbrevs, Top
@@ -2027,7 +2027,8 @@ That particular network option is supported by
 @section Misc Network Facilities
 
   These additional functions are useful for creating and operating
-on network connections.
+on network connections.  Note that they are supported only on some
+systems.
 
 @defun network-interface-list
 This function returns a list describing the network interfaces

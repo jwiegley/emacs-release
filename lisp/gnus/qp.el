@@ -1,7 +1,7 @@
 ;;; qp.el --- Quoted-Printable functions
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: mail, extensions
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -82,7 +82,7 @@ them into characters should be done separately."
 
 (defun quoted-printable-decode-string (string &optional coding-system)
   "Decode the quoted-printable encoded STRING and return the result.
-If CODING-SYSTEM is non-nil, decode the region with coding-system.
+If CODING-SYSTEM is non-nil, decode the string with coding-system.
 Use of CODING-SYSTEM is deprecated; this function should deal with
 raw bytes, and coding conversion should be done separately."
   (mm-with-unibyte-buffer

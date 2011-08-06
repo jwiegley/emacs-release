@@ -1,12 +1,12 @@
 /* Definitions and global variables for intervals.
    Copyright (C) 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -75,24 +75,7 @@ struct interval
 /* Size of a pointer to an interval structure */
 #define INTERVAL_PTR_SIZE (sizeof (struct interval *))
 
-/* True if an interval pointer is null, or is a Lisp_Buffer or
-   Lisp_String pointer (meaning it points to the owner of this
-   interval tree). */
-#ifdef NO_UNION_TYPE
-#define INT_LISPLIKE(i) (BUFFERP ((Lisp_Object)(i)) \
-			 || STRINGP ((Lisp_Object)(i)))
-#else
-#define INT_LISPLIKE(i) (BUFFERP ((Lisp_Object){(EMACS_INT)(i)}) \
-			 || STRINGP ((Lisp_Object){(EMACS_INT)(i)}))
-#endif
-
-#ifdef ENABLE_CHECKING
-#define NULL_INTERVAL_P(i) \
-   (CHECK (!INT_LISPLIKE (i), "non-interval"), (i) == NULL_INTERVAL)
-/* old #define NULL_INTERVAL_P(i) ((i) == NULL_INTERVAL || INT_LISPLIKE (i)) */
-#else
 #define NULL_INTERVAL_P(i) ((i) == NULL_INTERVAL)
-#endif
 
 /* True if this interval has no right child. */
 #define NULL_RIGHT_CHILD(i) ((i)->right == NULL_INTERVAL)
@@ -162,7 +145,7 @@ struct interval
    casts to get around this, it will break some development work in
    progress.  */
 #define SET_INTERVAL_PARENT(i,p) \
-   (eassert (!INT_LISPLIKE (p)), (i)->up_obj = 0, (i)->up.interval = (p))
+   ((i)->up_obj = 0, (i)->up.interval = (p))
 #define SET_INTERVAL_OBJECT(i,o) \
    (eassert (BUFFERP (o) || STRINGP (o)), (i)->up_obj = 1, (i)->up.obj = (o))
 #define INTERVAL_PARENT(i) \

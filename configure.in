@@ -3,14 +3,14 @@ dnl To rebuild the `configure' script from this, execute the command
 dnl 	autoconf
 dnl in the directory containing this script.
 dnl
-dnl  Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
-dnl  Free Software Foundation, Inc.
+dnl  Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003,
+dnl    2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 dnl
 dnl  This file is part of GNU Emacs.
 dnl
 dnl  GNU Emacs is free software; you can redistribute it and/or modify
 dnl  it under the terms of the GNU General Public License as published by
-dnl  the Free Software Foundation; either version 2, or (at your option)
+dnl  the Free Software Foundation; either version 3, or (at your option)
 dnl  any later version.
 dnl
 dnl  GNU Emacs is distributed in the hope that it will be useful,
@@ -241,11 +241,25 @@ case "${canonical}" in
     opsys=freebsd
     case "${canonical}" in
       alpha*-*-freebsd*)	machine=alpha ;;
+      arm*-*-freebsd*)          machine=arm ;;
       ia64-*-freebsd*)		machine=ia64 ;;
       sparc64-*-freebsd*)	machine=sparc ;;
       powerpc-*-freebsd*)	machine=macppc ;;
       i[3456]86-*-freebsd*)	machine=intel386 ;;
       amd64-*-freebsd*|x86_64-*-freebsd*) machine=amdx86-64 ;;
+    esac
+  ;;
+
+  ## FreeBSD kernel + glibc based userland
+  *-*-kfreebsd*gnu* )
+    opsys=gnu-kfreebsd
+    case "${canonical}" in
+      alpha*-*-kfreebsd*)	machine=alpha ;;
+      ia64-*-kfreebsd*)		machine=ia64 ;;
+      sparc64-*-kfreebsd*)	machine=sparc ;;
+      powerpc-*-kfreebsd*)	machine=macppc ;;
+      i[3456]86-*-kfreebsd*)	machine=intel386 ;;
+      amd64-*-kfreebsd*|x86_64-*-kfreebsd*) machine=amdx86-64 ;;
     esac
   ;;
 
@@ -1196,7 +1210,7 @@ dnl see the `changequote' comment above.
   ;;
 
   ## Tensilica Xtensa Linux-based GNU system    
-  xtensa-*-linux-gnu* )
+  xtensa*-*-linux-* )
     machine=xtensa opsys=gnu-linux
     ;;
 
@@ -1242,6 +1256,30 @@ if test x"${opsys}" = x; then
     ;;
   esac
 fi
+
+### Tests for sytems that we beleive are obsolete and should be desupported.
+
+case "${machine}" in
+     pmax | hp9000s300 | ibm370aix | ncr386 | ews4800 | mips-siemens | powerpcle | tandem-s2 )
+     	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
+	  echo "and it is planned to be desupported in the next version of Emacs"
+	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
+	  echo "The code is still functional, but you need to edit the 'configure' script and remove the"
+	  echo "exit 33 line.  After that you can run configure again and 'complete' the build."
+	  exit 33
+	  ;;
+esac
+
+case "${opsys}" in
+     bsd386 | bsdos2-1 |  bsdos2 | bsdos3 | bsdos4 | bsd4-1 | bsd4-2 | bsd4-3 | usg5-0 | usg5-2-2 | usg5-2 | usg5-3 | ultrix4-3 | 386bsd | hpux | hpux8 | hpux9 | hpux9shr | hpux10 | hpux10-20 | aix3-1 | aix3-2-5 | aix3-2 | aix4-1 | nextstep | ux4800 | uxpds | uxpv )
+     	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
+	  echo "and it is planned to be desupported in the next version of Emacs"
+	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
+	  echo "The code is still functional, but you need to edit the 'configure' script and remove the"
+	  echo "'exit 44' line.  After that you can run 'configure' again and complete the build."
+	  exit 44
+	  ;;
+esac
 
 ]
 dnl quotation ends
@@ -1519,7 +1557,7 @@ AC_SYS_LARGEFILE
 ### The standard library on x86-64 GNU/Linux distributions can 
 ### be located in either /usr/lib64 or /usr/lib.
 case "${canonical}" in
-  x86_64-*-linux-gnu* )
+  x86_64-*-linux-gnu* | s390x-*-linux-gnu* )
     if test -d /usr/lib64; then
       AC_DEFINE(HAVE_X86_64_LIB64_DIR, 1,
         [Define to 1 if the file /usr/lib64 exists.])
@@ -2100,8 +2138,8 @@ if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
   if test "$USE_X_TOOLKIT" != "none" && test "$USE_X_TOOLKIT" != "maybe"; then
     AC_MSG_ERROR([Conflicting options, --with-gtk is incompatible with --with-x-toolkit=${with_x_toolkit}]);
   fi
-  GLIB_REQUIRED=2.4
-  GTK_REQUIRED=2.4
+  GLIB_REQUIRED=2.6
+  GTK_REQUIRED=2.6
   GTK_MODULES="gtk+-2.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED"
 
   dnl Check if --with-pkg-config-prog has been given.
@@ -2165,7 +2203,10 @@ if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
       AC_CHECK_LIB(pthread, pthread_self, HAVE_GTK_AND_PTHREAD=yes)
     fi
     if test "$HAVE_GTK_AND_PTHREAD" = yes; then
-      GTK_LIBS="$GTK_LIBS -lpthread"
+      case "${canonical}" in
+        *-hpux*) ;;
+        *) GTK_LIBS="$GTK_LIBS -lpthread" ;;
+      esac
       AC_DEFINE(HAVE_GTK_AND_PTHREAD, 1,
                [Define to 1 if you have GTK and pthread (-lpthread).])
     fi
@@ -2938,14 +2979,14 @@ if test "${REL_ALLOC}" = "yes" ; then
 fi
 
 AH_TOP([/* GNU Emacs site configuration template file.
-   Copyright (C) 1988, 1993, 1994, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007
-             Free Software Foundation, Inc.
+   Copyright (C) 1988, 1993, 1994, 1999, 2000, 2001, 2002, 2004, 2005,
+     2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

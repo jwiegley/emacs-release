@@ -1,7 +1,7 @@
 ;;; ido.el --- interactively do things with buffers and files.
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Based on: iswitchb by Stephen Eglen <stephen@cns.ed.ac.uk>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -449,7 +449,7 @@ in merged file and directory lists."
 ;(setq ido-ignore-files '("^ " "\\.c$" "\\.h$"))
 
 (defcustom ido-default-file-method  'raise-frame
-    "*How to visit a new file when using `ido-find-file'.
+  "*How to visit a new file when using `ido-find-file'.
 Possible values:
 `selected-window' Show new file in selected window
 `other-window'	  Show new file in another window (same frame)
@@ -469,7 +469,7 @@ Possible values:
     :group 'ido)
 
 (defcustom ido-default-buffer-method  'raise-frame
-    "*How to switch to new buffer when using `ido-switch-buffer'.
+  "*How to switch to new buffer when using `ido-switch-buffer'.
 See `ido-default-file-method' for details."
     :type '(choice (const :tag "Show in selected window" selected-window)
 		   (const :tag "Show in other window" other-window)
@@ -898,7 +898,7 @@ See documentation of `walk-windows' for useful values.")
 (defcustom ido-minibuffer-setup-hook nil
   "*Ido-specific customization of minibuffer setup.
 
-This hook is run during minibuffer setup iff `ido' will be active.
+This hook is run during minibuffer setup if `ido' is active.
 It is intended for use in customizing ido for interoperation
 with other packages.  For instance:
 
@@ -1309,6 +1309,8 @@ Value is an integer which is number of chars to right of prompt.")
       (unwind-protect
 	  (with-current-buffer buf
 	    (erase-buffer)
+	    (insert ";;; -*- coding: emacs-mule -*-\n")
+	    (setq buffer-file-coding-system 'emacs-mule)
 	    (ido-pp 'ido-last-directory-list)
 	    (ido-pp 'ido-work-directory-list)
 	    (ido-pp 'ido-work-file-list)
@@ -3994,8 +3996,7 @@ For details of keybindings, see `ido-switch-buffer'."
 (defun ido-find-file-in-dir (dir)
   "Switch to another file starting from DIR."
   (interactive "DDir: ")
-  (if (not (equal (substring dir -1) "/"))
-      (setq dir (concat dir "/")))
+  (setq dir (file-name-as-directory dir))
   (ido-file-internal ido-default-file-method nil dir nil nil nil 'ignore))
 
 ;;;###autoload

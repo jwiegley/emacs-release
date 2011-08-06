@@ -1,13 +1,13 @@
 /* Asynchronous subprocess control for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995,
                  1996, 1998, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -626,6 +626,7 @@ make_process (name)
   XSETFASTINT (p->tick, 0);
   XSETFASTINT (p->update_tick, 0);
   p->pid = 0;
+  p->pty_flag = Qnil;
   p->raw_status_new = 0;
   p->status = Qrun;
   p->mark = Fmake_marker ();
@@ -1002,7 +1003,7 @@ DEFUN ("process-mark", Fprocess_mark, Sprocess_mark,
 DEFUN ("set-process-filter", Fset_process_filter, Sset_process_filter,
        2, 2, 0,
        doc: /* Give PROCESS the filter function FILTER; nil means no filter.
-t means stop accepting output from the process.
+A value of t means stop accepting output from the process.
 
 When a process has a filter, its buffer is not used for output.
 Instead, each time it does output, the entire string of output is
@@ -1370,8 +1371,10 @@ list_processes_1 (query_only)
   if (w_tty)
     {
       XSETFASTINT (i_tty, XFASTINT (i_buffer) + w_buffer + 1);
-      XSETFASTINT (i_command, XFASTINT (i_buffer) + w_tty + 1);
-    } else {
+      XSETFASTINT (i_command, XFASTINT (i_tty) + w_tty + 1);
+    }
+  else
+    {
       i_tty = Qnil;
       XSETFASTINT (i_command, XFASTINT (i_buffer) + w_buffer + 1);
     }
@@ -2722,7 +2725,9 @@ host, and only clients connecting to that address will be accepted.
 
 :service SERVICE -- SERVICE is name of the service desired, or an
 integer specifying a port number to connect to.  If SERVICE is t,
-a random port number is selected for the server.
+a random port number is selected for the server.  (If Emacs was
+compiled with getaddrinfo, a port number can also be specified as a
+string, e.g. "80", as well as an integer.  This is not portable.)
 
 :type TYPE -- TYPE is the type of connection.  The default (nil) is a
 stream type connection, `datagram' creates a datagram type connection.
@@ -2781,7 +2786,7 @@ The stopped state is cleared by `continue-process' and set by
 
 :filter-multibyte BOOL -- If BOOL is non-nil, strings given to the
 process filter are multibyte, otherwise they are unibyte.
-If this keyword is not specified, the strings are multibyte iff
+If this keyword is not specified, the strings are multibyte if
 `default-enable-multibyte-characters' is non-nil.
 
 :sentinel SENTINEL -- Install SENTINEL as the process sentinel.
@@ -3920,7 +3925,7 @@ it specifies a fractional number of seconds to wait.
 If optional fourth arg JUST-THIS-ONE is non-nil, only accept output
 from PROCESS, suspending reading output from other processes.
 If JUST-THIS-ONE is an integer, don't run any timers either.
-Return non-nil iff we received any output before the timeout expired.  */)
+Return non-nil if we received any output before the timeout expired.  */)
      (process, seconds, millisec, just_this_one)
      register Lisp_Object process, seconds, millisec, just_this_one;
 {
@@ -4253,16 +4258,16 @@ select_wrapper (n, rfd, wfd, xfd, tmo)
      (and gobble terminal input into the buffer if any arrives).
 
    If WAIT_PROC is specified, wait until something arrives from that
-     process.  The return value is true iff we read some input from
+     process.  The return value is true if we read some input from
      that process.
 
    If JUST_WAIT_PROC is non-nil, handle only output from WAIT_PROC
      (suspending output from other processes).  A negative value
      means don't run any timers either.
 
-   If WAIT_PROC is specified, then the function returns true iff we
+   If WAIT_PROC is specified, then the function returns true if we
      received input from that process before the timeout elapsed.
-   Otherwise, return true iff we received input from any process.  */
+   Otherwise, return true if we received input from any process.  */
 
 int
 wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
@@ -4371,13 +4376,15 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 	    {
 	      int old_timers_run = timers_run;
 	      struct buffer *old_buffer = current_buffer;
+	      Lisp_Object old_window = selected_window;
 
 	      timer_delay = timer_check (1);
 
 	      /* If a timer has run, this might have changed buffers
 		 an alike.  Make read_key_sequence aware of that.  */
 	      if (timers_run != old_timers_run
-		  && old_buffer != current_buffer
+		  && (old_buffer != current_buffer
+		      || !EQ (old_window, selected_window))
 		  && waiting_for_user_input_p == -1)
 		record_asynch_buffer_change ();
 
@@ -4692,6 +4699,7 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 	{
 	  int old_timers_run = timers_run;
 	  struct buffer *old_buffer = current_buffer;
+	  Lisp_Object old_window = selected_window;
 	  int leave = 0;
 
 	  if (detect_input_pending_run_timers (do_display))
@@ -4705,7 +4713,8 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 	     an alike.  Make read_key_sequence aware of that.  */
 	  if (timers_run != old_timers_run
 	      && waiting_for_user_input_p == -1
-	      && old_buffer != current_buffer)
+	      && (old_buffer != current_buffer
+	      || !EQ (old_window, selected_window)))
 	    record_asynch_buffer_change ();
 
 	  if (leave)
@@ -7324,7 +7333,7 @@ Lisp_Object QCtype;
    do_display != 0 means redisplay should be done to show subprocess
    output that arrives.
 
-   Return true iff we received input from any process.  */
+   Return true if we received input from any process.  */
 
 int
 wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,

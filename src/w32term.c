@@ -1,13 +1,13 @@
 /* Implementation of GUI terminal on the Microsoft W32 API.
    Copyright (C) 1989, 1993, 1994, 1995, 1996, 1997, 1998,
                  1999, 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007 Free Software Foundation, Inc.
+                 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -1519,6 +1519,7 @@ x_draw_glyph_string_background (s, force_p)
 	       || s->font_not_found_p
 	       || s->extends_to_end_of_line_p
                || s->font->bdf
+               || cleartype_active
 	       || force_p)
 	{
 	  x_clear_glyph_string_rect (s, s->x, s->y + box_line_width,
@@ -1547,7 +1548,8 @@ x_draw_glyph_string_foreground (s)
   else
     x = s->x;
 
-  if (s->for_overlaps || (s->background_filled_p && s->hl != DRAW_CURSOR))
+  if (s->for_overlaps || (s->background_filled_p && s->hl != DRAW_CURSOR)
+      || cleartype_active)
     SetBkMode (s->hdc, TRANSPARENT);
   else
     SetBkMode (s->hdc, OPAQUE);
@@ -2364,7 +2366,6 @@ x_draw_stretch_glyph_string (s)
      struct glyph_string *s;
 {
   xassert (s->first_glyph->type == STRETCH_GLYPH);
-  s->stippled_p = s->face->stipple != 0;
 
   if (s->hl == DRAW_CURSOR
       && !x_stretch_cursor_p)
@@ -2547,10 +2548,10 @@ x_draw_glyph_string (s)
           unsigned long dy = 0, h = 1;
 
           if (s->face->overline_color_defaulted_p)
-        {
-          w32_fill_area (s->f, s->hdc, s->gc->foreground, s->x,
-                         s->y + dy, s->background_width, h);
-        }
+	    {
+	      w32_fill_area (s->f, s->hdc, s->gc->foreground, s->x,
+			     s->y + dy, s->background_width, h);
+	    }
           else
             {
               w32_fill_area (s->f, s->hdc, s->face->overline_color, s->x,
@@ -2572,7 +2573,7 @@ x_draw_glyph_string (s)
             }
           else
             {
-              w32_fill_area (s->f, s->hdc, s->face->underline_color, s->x,
+              w32_fill_area (s->f, s->hdc, s->face->strike_through_color, s->x,
                              s->y + dy, s->width, h);
             }
         }
@@ -4129,6 +4130,8 @@ x_scroll_bar_clear (f)
 static int temp_index;
 static short temp_buffer[100];
 
+/* Temporarily store lead byte of DBCS input sequences.  */
+static char dbcs_lead = 0;
 
 /* Read events coming from the W32 shell.
    This routine is called by the SIGIO handler.
@@ -4288,11 +4291,122 @@ w32_read_socket (sd, expected, hold_quit)
 	      if (temp_index == sizeof temp_buffer / sizeof (short))
 		temp_index = 0;
 	      temp_buffer[temp_index++] = msg.msg.wParam;
-	      inev.kind = ASCII_KEYSTROKE_EVENT;
-	      inev.code = msg.msg.wParam;
-	      inev.modifiers = msg.dwModifiers;
-	      XSETFRAME (inev.frame_or_window, f);
-	      inev.timestamp = msg.msg.time;
+
+              inev.modifiers = msg.dwModifiers;
+              XSETFRAME (inev.frame_or_window, f);
+              inev.timestamp = msg.msg.time;
+
+              if (msg.msg.wParam < 128 && !dbcs_lead)
+                {
+                  inev.kind = ASCII_KEYSTROKE_EVENT;
+                  inev.code = msg.msg.wParam;
+                }
+              else if (msg.msg.wParam < 256)
+                {
+                  wchar_t code;
+                  char dbcs[2];
+                  inev.kind = MULTIBYTE_CHAR_KEYSTROKE_EVENT;
+                  dbcs[0] = 0;
+                  dbcs[1] = (char) msg.msg.wParam;
+
+                  if (dbcs_lead)
+                    {
+                      dbcs[0] = dbcs_lead;
+                      dbcs_lead = 0;
+                      if (!MultiByteToWideChar(CP_ACP, 0, dbcs, 2, &code, 1))
+                        {
+                          /* Garbage */
+                          DebPrint (("Invalid DBCS sequence: %d %d\n",
+                                     dbcs[0], dbcs[1]));
+                          inev.kind = NO_EVENT;
+                          break;
+                        }
+                    }
+                  else if (IsDBCSLeadByteEx(CP_ACP, (BYTE) msg.msg.wParam))
+                    {
+                      dbcs_lead = (char) msg.msg.wParam;
+                      inev.kind = NO_EVENT;
+                      break;
+                    }
+                  else
+                    {
+                      if (!MultiByteToWideChar(CP_ACP, 0, &dbcs[1], 1,
+                                               &code, 1))
+                        {
+                          /* What to do with garbage? */
+                          DebPrint (("Invalid character: %d\n", dbcs[1]));
+                          inev.kind = NO_EVENT;
+                          break;
+                        }
+                    }
+
+                  /* Process unicode input for ASCII and ISO Control only. */
+                  if (code < 0x80)
+                    {
+                      inev.kind = ASCII_KEYSTROKE_EVENT;
+                      inev.code = code;
+                    }
+                  else if (code < 0xA0)
+                    inev.code = MAKE_CHAR (CHARSET_8_BIT_CONTROL, code, 0);
+                  else
+                    {
+                      /* Many locales do not have full mapping from
+                         unicode on save, so use the locale coding to
+                         decode them. Windows only allows non-Unicode
+                         Windows to receive characters in the system
+                         locale anyway, so this doesn't really limit
+                         us.  */
+                      int nbytes, nchars, require, i, len;
+                      unsigned char *dest;
+                      struct coding_system coding;
+
+                      if (dbcs[0] == 0)
+                        {
+                          nbytes = 1;
+                          dbcs[0] = dbcs[1];
+                        }
+                      else
+                        nbytes = 2;
+
+                      setup_coding_system (Vlocale_coding_system, &coding);
+                      coding.src_multibyte = 0;
+                      coding.dst_multibyte = 1;
+                      coding.composing = COMPOSITION_DISABLED;
+                      require = decoding_buffer_size (&coding, nbytes);
+                      dest = (unsigned char *) alloca (require);
+                      coding.mode |= CODING_MODE_LAST_BLOCK;
+
+                      decode_coding (&coding, dbcs, dest, nbytes, require);
+                      nbytes = coding.produced;
+                      nchars = coding.produced_char;
+
+                      for (i = 0; i < nbytes; i += len)
+                        {
+                          if (nchars == nbytes)
+                            {
+                              inev.code = dest[i];
+                              len = 1;
+                            }
+                          else
+                            inev.code = STRING_CHAR_AND_LENGTH (dest + i,
+                                                                nbytes - 1,
+                                                                len);
+                          inev.kind = (SINGLE_BYTE_CHAR_P (inev.code)
+                                       ? ASCII_KEYSTROKE_EVENT
+                                       : MULTIBYTE_CHAR_KEYSTROKE_EVENT);
+                          kbd_buffer_store_event_hold (&inev, hold_quit);
+                          count++;
+                        }
+                      inev.kind = NO_EVENT; /* Already handled */
+                    }
+                }
+              else
+                {
+                  /* Windows shouldn't generate WM_CHAR events above 0xFF
+                     in non-Unicode message handlers.  */
+                  DebPrint (("Non-byte WM_CHAR: %d\n", msg.msg.wParam));
+                  inev.kind = NO_EVENT;
+                }
 	    }
 	  break;
 
@@ -4336,10 +4450,16 @@ w32_read_socket (sd, expected, hold_quit)
 		  /* Window will be selected only when it is not
 		     selected now and last mouse movement event was
 		     not in it.  Minibuffer window will be selected
-		     iff it is active.  */
+		     only when it is active.  */
 		  if (WINDOWP(window)
 		      && !EQ (window, last_window)
-		      && !EQ (window, selected_window))
+		      && !EQ (window, selected_window)
+		      /* For click-to-focus window managers
+			 create event iff we don't leave the
+			 selected frame.  */
+		      && (focus_follows_mouse
+			  || (EQ (XWINDOW (window)->frame,
+				  XWINDOW (selected_window)->frame))))
 		    {
 		      inev.kind = SELECT_WINDOW_EVENT;
 		      inev.frame_or_window = window;
@@ -5515,7 +5635,22 @@ x_set_window_size (f, change_gravity, cols, rows)
 		       SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
   }
 
-  /* Now, strictly speaking, we can't be sure that this is accurate,
+#if 0
+  /* The following mirrors what is done in xterm.c. It appears to be
+     for informing lisp of the new size immediately, while the actual
+     resize will happen asynchronously. But on Windows, the menu bar
+     automatically wraps when the frame is too narrow to contain it,
+     and that causes any calculations made here to come out wrong. The
+     end is some nasty buggy behaviour, including the potential loss
+     of the minibuffer.
+
+     Disabling this code is either not sufficient to fix the problems
+     completely, or it causes fresh problems, but at least it removes
+     the most problematic symptom of the minibuffer becoming unusable.
+
+     -----------------------------------------------------------------
+
+     Now, strictly speaking, we can't be sure that this is accurate,
      but the window manager will get around to dealing with the size
      change request eventually, and we'll hear how it went when the
      ConfigureNotify event gets here.
@@ -5546,6 +5681,7 @@ x_set_window_size (f, change_gravity, cols, rows)
      Actually checking whether it is outside is a pain in the neck,
      so don't try--just let the highlighting be done afresh with new size.  */
   cancel_mouse_face (f);
+#endif
 
   UNBLOCK_INPUT;
 }

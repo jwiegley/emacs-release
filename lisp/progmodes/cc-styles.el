@@ -1,7 +1,7 @@
 ;;; cc-styles.el --- support for styles in CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2004- Alan Mackenzie
@@ -18,7 +18,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -58,7 +58,8 @@
   '(("gnu"
      (c-basic-offset . 2)
      (c-comment-only-line-offset . (0 . 0))
-     (c-hanging-braces-alist     . ((substatement-open before after)))
+     (c-hanging-braces-alist     . ((substatement-open before after)
+				    (arglist-cont-nonempty)))
      (c-offsets-alist . ((statement-block-intro . +)
 			 (knr-argdecl-intro . 5)
 			 (substatement-open . +)
@@ -170,7 +171,8 @@
                          (case-label           . +)
                          (access-label         . -)
                          (inclass              . ++)
-			 (inline-open          . 0))))
+			 (inline-open          . 0)
+			 (arglist-cont-nonempty))))
 
     ("linux"
      (c-basic-offset  . 8)
@@ -178,7 +180,8 @@
      (c-hanging-braces-alist . ((brace-list-open)
 				(brace-entry-open)
 				(substatement-open after)
-				(block-close . c-snug-do-while)))
+				(block-close . c-snug-do-while)
+				(arglist-cont-nonempty)))
      (c-cleanup-list . (brace-else-brace))
      (c-offsets-alist . ((statement-block-intro . +)
 			 (knr-argdecl-intro     . 0)
@@ -200,7 +203,8 @@
 				(brace-list-close)
 				(brace-entry-open)
 				(substatement-open after)
-				(block-close . c-snug-do-while)))
+				(block-close . c-snug-do-while)
+				(arglist-cont-nonempty)))
      (c-block-comment-prefix . ""))
 
     ("java"
@@ -230,7 +234,8 @@
      (c-hanging-braces-alist . ((defun-open after)
 				(defun-close . c-snug-1line-defun-close)
 				(substatement-open after)
-				(block-close . c-snug-do-while)))
+				(block-close . c-snug-do-while)
+				(arglist-cont-nonempty)))
      (c-hanging-semi&comma-criteria . nil)
      (c-cleanup-list . nil)		; You might want one-liner-defun here.
      (c-offsets-alist . ((statement-block-intro . +)
@@ -418,7 +423,7 @@ STYLE using `c-set-style' if the optional SET-P flag is non-nil."
 
 (defun c-read-offset (langelem)
   ;; read new offset value for LANGELEM from minibuffer. return a
-  ;; legal value only
+  ;; valid value only
   (let* ((oldoff  (cdr-safe (or (assq langelem c-offsets-alist)
 				(assq langelem (get 'c-offsets-alist
 						    'c-stylevar-fallback)))))
@@ -550,7 +555,7 @@ variables."
 	"[ \t\f]*\\\\?$")
   (setq c-sentence-end-with-esc-eol
 	(concat "\\(\\(" (c-default-value-sentence-end) "\\)"
-		;; N.B.:  "$" would be illegal when not enclosed like "\\($\\)".
+		;; N.B.:  "$" would be invalid when not enclosed like "\\($\\)".
 		"\\|" "[.?!][]\"')}]* ?\\\\\\($\\)[ \t\n]*"
 		"\\)")))
 

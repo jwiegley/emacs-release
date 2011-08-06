@@ -1,7 +1,7 @@
 ;;; tex-mode.el --- TeX, LaTeX, and SliTeX mode commands -*- coding: utf-8 -*-
 
 ;; Copyright (C) 1985, 1986, 1989, 1992, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: tex
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1163,24 +1163,27 @@ on the line for the invalidity you want to see."
 	(setq occur-revert-arguments (list nil 0 (list buffer))))
       (save-excursion
 	(goto-char (point-max))
-	(while (and (not (bobp)))
-	  (let ((end (point))
-		prev-end)
-	    ;; Scan the previous paragraph for invalidities.
-	    (if (search-backward "\n\n" nil t)
-		(progn
-		  (setq prev-end (point))
-		  (forward-char 2))
-	      (goto-char (setq prev-end (point-min))))
-	    (or (tex-validate-region (point) end)
-		(let* ((end (line-beginning-position 2))
-		       start tem)
+	;; Do a little shimmy to place point at the end of the last
+	;; "real" paragraph. Need to avoid validating across an \end,
+	;; because that blows up latex-forward-sexp.
+	(backward-paragraph)
+	(forward-paragraph)
+	(while (not (bobp))
+	  ;; Scan the previous paragraph for invalidities.
+	  (backward-paragraph)
+	  (save-excursion
+	    (or (tex-validate-region (point) (save-excursion
+					       (forward-paragraph)
+					       (point)))
+		(let ((end (line-beginning-position 2))
+		      start tem)
 		  (beginning-of-line)
 		  (setq start (point))
 		  ;; Keep track of line number as we scan,
 		  ;; in a cumulative fashion.
 		  (if linenum
-		      (setq linenum (- linenum (count-lines prevpos (point))))
+		      (setq linenum (- linenum
+				       (count-lines prevpos (point))))
 		    (setq linenum (1+ (count-lines 1 start))))
 		  (setq prevpos (point))
 		  ;; Mention this mismatch in *Occur*.
@@ -1201,10 +1204,10 @@ on the line for the invalidity you want to see."
 		      (add-text-properties
 		       text-beg (- text-end 1)
 		       '(mouse-face highlight
-			 help-echo "mouse-2: go to this invalidity"))
+				    help-echo
+				    "mouse-2: go to this invalidity"))
 		      (put-text-property text-beg (- text-end 1)
-					 'occur-target tem)))))
-	    (goto-char prev-end))))
+					 'occur-target tem))))))))
       (with-current-buffer standard-output
 	(let ((no-matches (zerop num-matches)))
 	  (if no-matches
@@ -1227,7 +1230,9 @@ area if a mismatch is found."
 	    (narrow-to-region start end)
 	    ;; First check that the open and close parens balance in numbers.
 	    (goto-char start)
-	    (while (<= 0 (setq max-possible-sexps (1- max-possible-sexps)))
+	    (while (and (not (eobp))
+			(<= 0 (setq max-possible-sexps
+				    (1- max-possible-sexps))))
 	      (forward-sexp 1))
 	    ;; Now check that like matches like.
 	    (goto-char start)
@@ -1252,9 +1257,13 @@ A prefix arg inhibits the checking."
   (interactive "*P")
   (or inhibit-validation
       (save-excursion
+	;; For the purposes of this, a "paragraph" is a block of text
+	;; wherein all the brackets etc are expected to be balanced.  It
+	;; may start after a blank line (ie a "proper" paragraph), or
+	;; a begin{} or end{} block, etc.
 	(tex-validate-region
 	 (save-excursion
-	   (search-backward "\n\n" nil 'move)
+	   (backward-paragraph)
 	   (point))
 	 (point)))
       (message "Paragraph being closed appears to contain a mismatch"))
@@ -1362,7 +1371,7 @@ Return the value returned by the last execution of BODY."
     (search-failed (error "Couldn't find unended \\begin"))))
 
 (defun tex-next-unmatched-end ()
-  "Leave point at the end of the next `\\end' that is unended."
+  "Leave point at the end of the next `\\end' that is unmatched."
   (while (and (tex-search-noncomment
 	       (re-search-forward "\\\\\\(begin\\|end\\)\\s *{[^}]+}"))
 	      (save-excursion (goto-char (match-beginning 0))
@@ -1820,7 +1829,8 @@ FILE is typically the output DVI or PDF file."
 		  (not (file-symlink-p f)))
 	     (unless (string-match ignored-dirs-re f)
 	       (setq files (nconc
-			    (directory-files f t tex-input-files-re)
+                            (ignore-errors ;Not readable or something.
+                              (directory-files f t tex-input-files-re))
 			    files)))
 	   (when (file-newer-than-file-p f file)
 	     (setq uptodate nil)))))
@@ -2011,29 +2021,37 @@ for the error messages."
 	  (file-name-directory (buffer-file-name tex-last-buffer-texed)))
 	found-desired (num-errors-found 0)
 	last-filename last-linenum last-position
-	begin-of-error end-of-error)
+	begin-of-error end-of-error errfilename)
     ;; Don't reparse messages already seen at last parse.
     (goto-char compilation-parsing-end)
     ;; Parse messages.
     (while (and (not (or found-desired (eobp)))
-		(prog1 (re-search-forward "^! " nil 'move)
+		;; First alternative handles the newer --file-line-error style:
+		;; ./test2.tex:14: Too many }'s.
+		;; Second handles the old-style:
+		;; ! Too many }'s.
+		(prog1 (re-search-forward
+			"^\\(?:\\([^:\n]+\\):[[:digit:]]+:\\|!\\) " nil 'move)
 		  (setq begin-of-error (match-beginning 0)
-			end-of-error (match-end 0)))
+			end-of-error (match-end 0)
+			errfilename (match-string 1)))
 		(re-search-forward
 		 "^l\\.\\([0-9]+\\) \\(\\.\\.\\.\\)?\\(.*\\)$" nil 'move))
       (let* ((this-error (copy-marker begin-of-error))
 	     (linenum (string-to-number (match-string 1)))
 	     (error-text (regexp-quote (match-string 3)))
 	     (filename
-	      (save-excursion
-		(with-syntax-table tex-error-parse-syntax-table
-		  (backward-up-list 1)
-		  (skip-syntax-forward "(_")
-		  (while (not (file-readable-p (thing-at-point 'filename)))
-		    (skip-syntax-backward "(_")
-		    (backward-up-list 1)
-		    (skip-syntax-forward "(_"))
-		  (thing-at-point 'filename))))
+	      ;; Prefer --file-liner-error filename if we have it.
+	      (or errfilename
+		  (save-excursion
+		    (with-syntax-table tex-error-parse-syntax-table
+		      (backward-up-list 1)
+		      (skip-syntax-forward "(_")
+		      (while (not (file-readable-p (thing-at-point 'filename)))
+			(skip-syntax-backward "(_")
+			(backward-up-list 1)
+			(skip-syntax-forward "(_"))
+		      (thing-at-point 'filename)))))
 	     (new-file
 	      (or (null last-filename)
 		  (not (string-equal last-filename filename))))
@@ -2103,57 +2121,31 @@ The value of `tex-command' specifies the command to use to run TeX."
   (let* ((zap-directory
           (file-name-as-directory (expand-file-name tex-directory)))
          (tex-out-file (expand-file-name (concat tex-zap-file ".tex")
-					 zap-directory)))
+					 zap-directory))
+	 (main-file (expand-file-name (tex-main-file)))
+	 (ismain (string-equal main-file (buffer-file-name)))
+	 already-output)
     ;; Don't delete temp files if we do the same buffer twice in a row.
     (or (eq (current-buffer) tex-last-buffer-texed)
 	(tex-delete-last-temp-files t))
-    ;; Write the new temp file.
-    (save-excursion
-      (save-restriction
-	(widen)
-	(goto-char (point-min))
-	(forward-line 100)
-	(let ((search-end (point))
-	      (default-directory zap-directory)
-	      (already-output 0))
-	  (goto-char (point-min))
-
-          ;; Maybe copy first line, such as `\input texinfo', to temp file.
-	  (and tex-first-line-header-regexp
-	       (looking-at tex-first-line-header-regexp)
-	       (write-region (point)
-			     (progn (forward-line 1)
-				    (setq already-output (point)))
-			     tex-out-file nil nil))
-
-	  ;; Write out the header, if there is one,
-	  ;; and any of the specified region which extends before it.
-	  ;; But don't repeat anything already written.
-	  (if (re-search-forward tex-start-of-header search-end t)
-	      (let (hbeg)
-		(beginning-of-line)
-		(setq hbeg (point))	;mark beginning of header
-		(if (re-search-forward tex-end-of-header nil t)
-		    (let (hend)
-		      (forward-line 1)
-		      (setq hend (point)) ;mark end of header
-		      (write-region (max (min hbeg beg) already-output)
-				    hend
-				    tex-out-file
-				    (not (zerop already-output)) nil)
-		      (setq already-output hend)))))
-
-	  ;; Write out the specified region
-	  ;; (but don't repeat anything already written).
-	  (write-region (max beg already-output) end
-			tex-out-file
-			(not (zerop already-output)) nil))
-	;; Write the trailer, if any.
-	;; Precede it with a newline to make sure it
-	;; is not hidden in a comment.
-	(if tex-trailer
-	    (write-region (concat "\n" tex-trailer) nil
-			  tex-out-file t nil))))
+    (let ((default-directory zap-directory)) ; why?
+      ;; We assume the header is fully contained in tex-main-file.
+      ;; We use f-f-ns so we get prompted about any changes on disk.
+      (with-current-buffer (find-file-noselect main-file)
+	(setq already-output (tex-region-header tex-out-file
+						(and ismain beg))))
+      ;; Write out the specified region (but don't repeat anything
+      ;; already written in the header).
+      (write-region (if ismain
+			(max beg already-output)
+		      beg)
+		    end tex-out-file (not (zerop already-output)))
+      ;; Write the trailer, if any.
+      ;; Precede it with a newline to make sure it
+      ;; is not hidden in a comment.
+      (if tex-trailer
+	  (write-region (concat "\n" tex-trailer) nil
+			tex-out-file t)))
     ;; Record the file name to be deleted afterward.
     (setq tex-last-temp-file tex-out-file)
     ;; Use a relative file name here because (1) the proper dir
@@ -2161,6 +2153,52 @@ The value of `tex-command' specifies the command to use to run TeX."
     ;; too long and can make tex crash.
     (tex-start-tex tex-command (concat tex-zap-file ".tex") zap-directory)
     (setq tex-print-file tex-out-file)))
+
+(defun tex-region-header (file &optional beg)
+  "If there is a TeX header in the current buffer, write it to FILE.
+Return point at the end of the region so written, or zero.  If
+the optional buffer position BEG is specified, then the region
+written out starts at BEG, if this lies before the start of the header.
+
+If the first line matches `tex-first-line-header-regexp', it is
+also written out.  The variables `tex-start-of-header' and
+`tex-end-of-header' are used to locate the header.  Note that the
+start of the header is required to be within the first 100 lines."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let ((search-end (save-excursion
+      (forward-line 100)
+			  (point)))
+	    (already-output 0)
+	    hbeg hend)
+	;; Maybe copy first line, such as `\input texinfo', to temp file.
+	(and tex-first-line-header-regexp
+	     (looking-at tex-first-line-header-regexp)
+	     (write-region (point)
+			   (progn (forward-line 1)
+				  (setq already-output (point)))
+			   file))
+	;; Write out the header, if there is one, and any of the
+	;; specified region which extends before it.  But don't repeat
+	;; anything already written.
+	(and tex-start-of-header
+	     (re-search-forward tex-start-of-header search-end t)
+	     (progn
+	      (beginning-of-line)
+	      (setq hbeg (point))	;mark beginning of header
+	       (when (re-search-forward tex-end-of-header nil t)
+		    (forward-line 1)
+		    (setq hend (point))	;mark end of header
+		 (write-region
+		  (max (if beg
+			   (min hbeg beg)
+			 hbeg)
+		       already-output)
+		  hend file (not (zerop already-output)))
+		 (setq already-output hend))))
+	already-output))))
 
 (defun tex-buffer ()
   "Run TeX on current buffer.  See \\[tex-region] for more information.

@@ -1,12 +1,12 @@
 # Maintenance productions for the Lisp directory
 # Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
-#   2006, 2007 Free Software Foundation, Inc.
+#   2006, 2007, 2008 Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 
 # GNU Emacs is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
+# the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 
 # GNU Emacs is distributed in the hope that it will be useful,
@@ -87,15 +87,19 @@ doit:
 
 $(lisp)/cus-load.el:
 	touch $@
-custom-deps: $(lisp)/subdirs.el $(lisp)/loaddefs.el $(lisp)/cus-load.el doit
+# Note that custom-deps and finder-data depend on autoloads rather
+# than on loaddefs.el, so that autoloads does not run in parallel with
+# them under "make -j", because that could delete loaddefs.el from
+# under their feet.
+custom-deps: $(lisp)/subdirs.el autoloads $(lisp)/cus-load.el doit
 	wd=$(lisp); $(setwins_almost); \
 	echo Directories: $$wins; \
-	$(EMACS) $(EMACSOPT) -l cus-dep --eval '(setq generated-custom-dependencies-file "$(lisp)/cus-load.el")' -f custom-make-dependencies $$wins
+	$(emacs) -l cus-dep --eval '(setq generated-custom-dependencies-file "$(lisp)/cus-load.el")' -f custom-make-dependencies $$wins
 
-finder-data: $(lisp)/subdirs.el $(lisp)/loaddefs.el doit
+finder-data: $(lisp)/subdirs.el autoloads doit
 	wd=$(lisp); $(setwins_almost); \
 	echo Directories: $$wins; \
-	$(EMACS) $(EMACSOPT) -l finder --eval '(setq generated-finder-keywords-file "$(lisp)/finder-inf.el")' -f finder-compile-keywords-make-dist $$wins
+	$(emacs) -l finder --eval '(setq generated-finder-keywords-file "$(lisp)/finder-inf.el")' -f finder-compile-keywords-make-dist $$wins
 
 $(lisp)/loaddefs.el:
 	echo ";;; loaddefs.el --- automatically extracted autoloads" >> $@
@@ -110,7 +114,7 @@ $(lisp)/loaddefs.el:
 autoloads: $(lisp)/subdirs.el $(lisp)/loaddefs.el doit
 	wd=$(lisp); $(setwins_almost); \
 	echo Directories: $$wins; \
-	$(EMACS) $(EMACSOPT) -l autoload --eval '(setq generated-autoload-file "$(lisp)/loaddefs.el")' -f batch-update-autoloads $$wins
+	$(emacs) -l autoload --eval '(setq generated-autoload-file "$(lisp)/loaddefs.el")' -f batch-update-autoloads $$wins
 
 $(lisp)/subdirs.el:
 	$(MAKE) $(MFLAGS) update-subdirs
@@ -210,7 +214,7 @@ compile-after-backup: backup-compiled-files compile-always
 # new ones.
 
 recompile: doit mh-autoloads $(lisp)/progmodes/cc-mode.elc
-	$(EMACS) $(EMACSOPT) --eval "(batch-byte-recompile-directory 0)" $(lisp)
+	$(emacs) --eval "(batch-byte-recompile-directory 0)" $(lisp)
 
 # CC Mode uses a compile time macro system which causes a compile time
 # dependency in cc-mode.elc on the macros in cc-langs.el and the
@@ -219,7 +223,7 @@ $(lisp)/progmodes/cc-mode.elc: \
 	$(lisp)/progmodes/cc-mode.el \
 	$(lisp)/progmodes/cc-langs.el \
 	$(lisp)/progmodes/cc-defs.el
-	$(EMACS) $(EMACSOPT) -f batch-byte-compile $(lisp)/progmodes/cc-mode.el
+	$(emacs) -f batch-byte-compile $(lisp)/progmodes/cc-mode.el
 
 # Update MH-E internal autoloads. These are not to be confused with
 # the autoloads for the MH-E entry points, which are already in
@@ -239,10 +243,10 @@ MH_E_SRC = $(lisp)/mh-e/mh-acros.el $(lisp)/mh-e/mh-alias.el	\
 	$(lisp)/mh-e/mh-xface.el
 
 mh-autoloads: $(lisp)/mh-e/mh-loaddefs.el
-$(lisp)/mh-e/mh-loaddefs.el: $(MH_E_SRC)
+$(lisp)/mh-e/mh-loaddefs.el: $(lisp)/subdirs.el $(MH_E_SRC)
 	echo ";;; mh-loaddefs.el --- automatically extracted autoloads" > $@
 	echo "" >> $@
-	echo ";; Copyright (C) 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc." >> $@
+	echo ";; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc." >> $@
 	echo ";; Author: Bill Wohler <wohler@newt.com>" >> $@
 	echo ";; Keywords: mail" >> $@
 	echo ";;; Commentary:" >> $@
@@ -256,7 +260,7 @@ $(lisp)/mh-e/mh-loaddefs.el: $(MH_E_SRC)
 	echo ";; no-update-autoloads: t" >> $@
 	echo ";; End:" >> $@
 	echo ";;; mh-loaddefs.el ends here" >> $@
-	$(EMACS) $(EMACSOPT) \
+	$(emacs) \
 	   -l autoload \
 	   --eval "(setq generate-autoload-cookie \";;;###mh-autoload\")" \
 	   --eval "(setq generated-autoload-file \"$(lisp)/mh-e/mh-loaddefs.el\")" \

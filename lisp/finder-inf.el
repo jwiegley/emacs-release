@@ -732,14 +732,26 @@
     ("vc-arch.el"
         "VC backend for the Arch version-control system"
         nil)
+    ("vc-bzr.el"
+        "VC backend for the bzr revision control system"
+        (tools))
     ("vc-cvs.el"
         "non-resident support for CVS version-control"
         nil)
+    ("vc-git.el"
+        "VC backend for the git version control system"
+        (tools))
+    ("vc-hg.el"
+        "VC backend for the mercurial version control system"
+        (tools))
     ("vc-hooks.el"
         "resident support for version-control"
         nil)
     ("vc-mcvs.el"
         "VC backend for the Meta-CVS version-control system"
+        nil)
+    ("vc-mtn.el"
+        "VC backend for Monotone"
         nil)
     ("vc-rcs.el"
         "support for RCS version-control"
@@ -999,9 +1011,6 @@
     ("erc-networks.el"
         "IRC networks"
         (comm))
-    ("erc-nicklist.el"
-        "Display channel nicknames in a side buffer."
-        (irc chat client internet))
     ("erc-notify.el"
         "Online status change notification"
         (comm))
@@ -1044,444 +1053,6 @@
     ("erc.el"
         "An Emacs Internet Relay Chat client"
         (irc  chat  client  internet))
-    ("appt.el"
-        "appointment notification functions"
-        (calendar))
-    ("cal-bahai.el"
-        "calendar functions for the Baha'i calendar."
-        (calendar))
-    ("cal-china.el"
-        "calendar functions for the Chinese calendar"
-        (calendar))
-    ("cal-coptic.el"
-        "calendar functions for the Coptic/Ethiopic calendars"
-        (calendar))
-    ("cal-dst.el"
-        "calendar functions for daylight saving rules"
-        (calendar))
-    ("cal-french.el"
-        "calendar functions for the French Revolutionary calendar"
-        (calendar))
-    ("cal-hebrew.el"
-        "calendar functions for the Hebrew calendar"
-        (calendar))
-    ("cal-html.el"
-        "functions for printing HTML calendars"
-        (calendar))
-    ("cal-islam.el"
-        "calendar functions for the Islamic calendar"
-        (calendar))
-    ("cal-iso.el"
-        "calendar functions for the ISO calendar"
-        (calendar))
-    ("cal-julian.el"
-        "calendar functions for the Julian calendar"
-        (calendar))
-    ("cal-mayan.el"
-        "calendar functions for the Mayan calendars"
-        (calendar))
-    ("cal-menu.el"
-        "calendar functions for menu bar and popup menu support"
-        (calendar))
-    ("cal-move.el"
-        "calendar functions for movement in the calendar"
-        (calendar))
-    ("cal-persia.el"
-        "calendar functions for the Persian calendar"
-        (calendar))
-    ("cal-tex.el"
-        "calendar functions for printing calendars with LaTeX"
-        (calendar))
-    ("cal-x.el"
-        "calendar windows in dedicated frames in X"
-        (calendar))
-    ("calendar.el"
-        "calendar functions"
-        (calendar))
-    ("diary-lib.el"
-        "diary functions"
-        (calendar))
-    ("holidays.el"
-        "holiday functions for the calendar package"
-        (holidays  calendar))
-    ("icalendar.el"
-        "iCalendar implementation"
-        (calendar))
-    ("lunar.el"
-        "calendar functions for phases of the moon"
-        (calendar))
-    ("parse-time.el"
-        "parsing time strings"
-        (util))
-    ("solar.el"
-        "calendar functions for solar events"
-        (calendar))
-    ("time-date.el"
-        "Date and time handling functions"
-        (mail news util))
-    ("timeclock.el"
-        "mode for keeping track of how much you work"
-        (calendar data))
-    ("todo-mode.el"
-        "major mode for editing TODO list files"
-        (calendar  todo))
-    ("advice.el"
-        "an overloading mechanism for Emacs Lisp functions"
-        (extensions  lisp  tools))
-    ("assoc.el"
-        "insert/delete/sort functions on association lists"
-        (extensions))
-    ("authors.el"
-        "utility for maintaining Emacs' AUTHORS file"
-        (maint))
-    ("autoload.el"
-        "maintain autoloads in loaddefs.el"
-        (maint))
-    ("backquote.el"
-        "implement the ` Lisp construct"
-        (extensions  internal))
-    ("benchmark.el"
-        "support for benchmarking code"
-        (lisp  extensions))
-    ("bindat.el"
-        "binary data structure packing and unpacking."
-        (comm data processes))
-    ("byte-opt.el"
-        "the optimization passes of the emacs-lisp byte compiler"
-        (internal))
-    ("byte-run.el"
-        "byte-compiler support for inlining"
-        (internal))
-    ("bytecomp.el"
-        "compilation of Lisp code into byte code"
-        (lisp))
-    ("checkdoc.el"
-        "check documentation strings for style requirements"
-        (docs  maint  lisp))
-    ("cl-compat.el"
-        "Common Lisp extensions for GNU Emacs Lisp (compatibility)"
-        (extensions))
-    ("cl-extra.el"
-        "Common Lisp features, part 2"
-        (extensions))
-    ("cl-indent.el"
-        "enhanced lisp-indent mode"
-        (lisp  tools))
-    ("cl-macs.el"
-        "Common Lisp macros"
-        (extensions))
-    ("cl-seq.el"
-        "Common Lisp features, part 3"
-        (extensions))
-    ("cl-specs.el"
-        "Edebug specs for cl.el"
-        (lisp  tools  maint))
-    ("cl.el"
-        "Common Lisp extensions for Emacs"
-        (extensions))
-    ("copyright.el"
-        "update the copyright notice in current buffer"
-        (maint  tools))
-    ("crm.el"
-        "read multiple strings with completion"
-        (completion  minibuffer  multiple elements))
-    ("cust-print.el"
-        "handles print-level and print-circle"
-        (extensions))
-    ("debug.el"
-        "debuggers and related commands for Emacs"
-        (lisp  tools  maint))
-    ("derived.el"
-        "allow inheritance of major modes"
-        (extensions))
-    ("disass.el"
-        "disassembler for compiled Emacs Lisp code"
-        (internal))
-    ("easy-mmode.el"
-        "easy definition for major and minor modes"
-        (extensions lisp))
-    ("easymenu.el"
-        "support the easymenu interface for defining a menu"
-        (emulations))
-    ("edebug.el"
-        "a source-level debugger for Emacs Lisp"
-        (lisp  tools  maint))
-    ("eldoc.el"
-        "show function arglist or variable docstring in echo area"
-        (extensions))
-    ("elint.el"
-        "Lint Emacs Lisp"
-        (lisp))
-    ("elp.el"
-        "Emacs Lisp Profiler"
-        (debugging lisp tools))
-    ("ewoc.el"
-        "utility to maintain a view of a list of objects in a buffer"
-        (extensions  lisp))
-    ("find-func.el"
-        "find the definition of the Emacs Lisp function near point"
-        (emacs-lisp  functions  variables))
-    ("find-gc.el"
-        "detect functions that call the garbage collector"
-        nil)
-    ("float-sup.el"
-        "define some constants useful for floating point numbers."
-        (internal))
-    ("generic.el"
-        "defining simple major modes with comment and font-lock"
-        (generic  comment  font-lock))
-    ("gulp.el"
-        "ask for updates for Lisp packages"
-        (maintenance))
-    ("helper.el"
-        "utility help package supporting help in electric modes"
-        (help))
-    ("levents.el"
-        "emulate the Lucid event data type and associated functions"
-        (emulations))
-    ("lisp-mnt.el"
-        "utility functions for Emacs Lisp maintainers"
-        (docs))
-    ("lisp-mode.el"
-        "Lisp mode, and its idiosyncratic commands"
-        (lisp  languages))
-    ("lisp.el"
-        "Lisp editing commands for Emacs"
-        (lisp  languages))
-    ("lmenu.el"
-        "emulate Lucid's menubar support"
-        (emulations obsolete))
-    ("lselect.el"
-        "Lucid interface to X Selections"
-        (emulations))
-    ("lucid.el"
-        "emulate some Lucid Emacs functions"
-        (emulations))
-    ("macroexp.el"
-        "Additional macro-expansion support"
-        (lisp  compiler  macros))
-    ("map-ynp.el"
-        "general-purpose boolean question-asker"
-        (lisp  extensions))
-    ("pp.el"
-        "pretty printer for Emacs Lisp"
-        (lisp))
-    ("re-builder.el"
-        "building Regexps with visual feedback"
-        (matching  lisp  tools))
-    ("regexp-opt.el"
-        "generate efficient regexps to match strings"
-        (strings  regexps  extensions))
-    ("regi.el"
-        "REGular expression Interpreting engine"
-        (extensions  matching))
-    ("ring.el"
-        "handle rings of items"
-        (extensions))
-    ("rx.el"
-        "sexp notation for regular expressions"
-        (strings  regexps  extensions))
-    ("shadow.el"
-        "locate Emacs Lisp file shadowings"
-        (lisp))
-    ("sregex.el"
-        "symbolic regular expressions"
-        (extensions))
-    ("syntax.el"
-        "helper functions to find syntactic context"
-        (internal))
-    ("tcover-ses.el"
-        "Example use of `testcover' to test \"SES\""
-        (spreadsheet lisp utility))
-    ("tcover-unsafep.el"
-        "Use testcover to test unsafep's code coverage"
-        (safety lisp utility))
-    ("testcover.el"
-        "Visual code-coverage tool"
-        (lisp utility))
-    ("timer.el"
-        "run a function with args at some time in future"
-        nil)
-    ("tq.el"
-        "utility to maintain a transaction queue"
-        (extensions))
-    ("trace.el"
-        "tracing facility for Emacs Lisp functions"
-        (tools  lisp))
-    ("unsafep.el"
-        "Determine whether a Lisp form is safe to evaluate"
-        (safety lisp utility))
-    ("warnings.el"
-        "log and display warnings"
-        (internal))
-    ("crisp.el"
-        "CRiSP/Brief Emacs emulator"
-        (emulations brief crisp))
-    ("cua-base.el"
-        "emulate CUA key bindings"
-        (keyboard emulation convenience cua))
-    ("cua-gmrk.el"
-        "CUA unified global mark support"
-        (keyboard emulations convenience cua mark))
-    ("cua-rect.el"
-        "CUA unified rectangle support"
-        (keyboard emulations convenience cua))
-    ("edt-lk201.el"
-        "enhanced EDT keypad mode emulation for LK-201 keyboards"
-        (emulations))
-    ("edt-mapper.el"
-        "create an EDT LK-201 map file for X-Windows Emacs"
-        (emulations))
-    ("edt-pc.el"
-        "enhanced EDT keypad mode emulation for PC 101 keyboards"
-        (emulations))
-    ("edt-vt100.el"
-        "enhanced EDT keypad mode emulation for VT series terminals"
-        (emulations))
-    ("edt.el"
-        "enhanced EDT keypad mode emulation for GNU Emacs 19"
-        (emulations))
-    ("keypad.el"
-        "simplified keypad bindings"
-        (keyboard convenience))
-    ("pc-mode.el"
-        "emulate certain key bindings used on PCs"
-        (emulations))
-    ("pc-select.el"
-        "emulate mark, cut, copy and paste from Motif"
-        (convenience emulation))
-    ("tpu-edt.el"
-        "Emacs emulating TPU emulating EDT"
-        (emulations))
-    ("tpu-extras.el"
-        "scroll margins and free cursor mode for TPU-edt"
-        (emulations))
-    ("tpu-mapper.el"
-        "create a TPU-edt X-windows keymap file"
-        (emulations))
-    ("vi.el"
-        "major mode for emulating \"vi\" editor under GNU Emacs"
-        (emulations))
-    ("vip.el"
-        "a VI Package for GNU Emacs"
-        (emulations))
-    ("viper-cmd.el"
-        "Vi command support for Viper"
-        nil)
-    ("viper-ex.el"
-        "functions implementing the Ex commands for Viper"
-        nil)
-    ("viper-init.el"
-        "some common definitions for Viper"
-        nil)
-    ("viper-keym.el"
-        "Viper keymaps"
-        nil)
-    ("viper-macs.el"
-        "functions implementing keyboard macros for Viper"
-        nil)
-    ("viper-mous.el"
-        "mouse support for Viper"
-        nil)
-    ("viper-util.el"
-        "Utilities used by viper.el"
-        nil)
-    ("viper.el"
-        "A full-featured Vi emulator for GNU Emacs and XEmacs,"
-        (emulations))
-    ("ws-mode.el"
-        "WordStar emulation mode for GNU Emacs"
-        (emulations))
-    ("em-alias.el"
-        "creation and management of command aliases"
-        nil)
-    ("em-banner.el"
-        "sample module that displays a login banner"
-        nil)
-    ("em-basic.el"
-        "basic shell builtin commands"
-        nil)
-    ("em-cmpl.el"
-        "completion using the TAB key"
-        nil)
-    ("em-dirs.el"
-        "directory navigation commands"
-        nil)
-    ("em-glob.el"
-        "extended file name globbing"
-        nil)
-    ("em-hist.el"
-        "history list management"
-        nil)
-    ("em-ls.el"
-        "implementation of ls in Lisp"
-        nil)
-    ("em-pred.el"
-        "argument predicates and modifiers (ala zsh)"
-        nil)
-    ("em-prompt.el"
-        "command prompts"
-        nil)
-    ("em-rebind.el"
-        "rebind keys when point is at current input"
-        nil)
-    ("em-script.el"
-        "Eshell script files"
-        nil)
-    ("em-smart.el"
-        "smart display of output"
-        nil)
-    ("em-term.el"
-        "running visual commands"
-        nil)
-    ("em-unix.el"
-        "UNIX command aliases"
-        nil)
-    ("em-xtra.el"
-        "extra alias functions"
-        nil)
-    ("esh-arg.el"
-        "argument processing"
-        nil)
-    ("esh-cmd.el"
-        "command invocation"
-        nil)
-    ("esh-ext.el"
-        "commands external to Eshell"
-        nil)
-    ("esh-groups.el"
-        nil
-        nil)
-    ("esh-io.el"
-        "I/O management"
-        nil)
-    ("esh-maint.el"
-        "init code for building eshell"
-        nil)
-    ("esh-mode.el"
-        "user interface"
-        nil)
-    ("esh-module.el"
-        "Eshell modules"
-        (processes))
-    ("esh-opt.el"
-        "command options processing"
-        nil)
-    ("esh-proc.el"
-        "process management"
-        nil)
-    ("esh-test.el"
-        "Eshell test suite"
-        nil)
-    ("esh-util.el"
-        "general utilities"
-        nil)
-    ("esh-var.el"
-        "handling of variables"
-        nil)
-    ("eshell.el"
-        "the Emacs command shell"
-        (processes))
     ("binhex.el"
         "elisp native binhex decode"
         (binhex news))
@@ -1887,6 +1458,543 @@
     ("yenc.el"
         "elisp native yenc decoder"
         (yenc news))
+    ("blessmail.el"
+        "decide whether movemail needs special privileges"
+        (internal))
+    ("emacsbug.el"
+        "command to report Emacs bugs to appropriate mailing list"
+        (maint mail))
+    ("feedmail.el"
+        "assist other email packages to massage outgoing messages"
+        (email  queue  mail  sendmail  message  spray  smtp  draft))
+    ("footnote.el"
+        "footnote support for message mode"
+        (mail  news))
+    ("mail-extr.el"
+        "extract full name and address from RFC 822 mail header"
+        (mail))
+    ("mail-hist.el"
+        "headers and message body history for outgoing mail"
+        (mail  history))
+    ("mail-utils.el"
+        "utility functions used both by rmail and rnews"
+        (mail  news))
+    ("mailabbrev.el"
+        "abbrev-expansion of mail aliases"
+        (mail))
+    ("mailalias.el"
+        "expand and complete mailing address aliases"
+        (mail))
+    ("mailclient.el"
+        "mail sending via system's mail client."
+        (mail))
+    ("mailheader.el"
+        "mail header parsing, merging, formatting"
+        (tools  mail  news))
+    ("mailpost.el"
+        "RMAIL coupler to /usr/uci/post mailer"
+        (mail))
+    ("metamail.el"
+        "Metamail interface for GNU Emacs"
+        (mail  news  mime  multimedia))
+    ("mspools.el"
+        "show mail spools waiting to be read"
+        (mail))
+    ("reporter.el"
+        "customizable bug reporting of lisp programs"
+        (maint mail tools))
+    ("rfc2368.el"
+        "support for rfc2368"
+        (mail))
+    ("rfc822.el"
+        "hairy rfc822 parser for mail and news and suchlike"
+        (mail))
+    ("rmail-spam-filter.el"
+        "spam filter for rmail, the emacs mail reader."
+        (email  spam  filter  rmail))
+    ("rmail.el"
+        "main code of \"RMAIL\" mail reader for Emacs"
+        (mail))
+    ("rmailedit.el"
+        "\"RMAIL edit mode\"  Edit the current message"
+        (mail))
+    ("rmailkwd.el"
+        "part of the \"RMAIL\" mail reader for Emacs"
+        (mail))
+    ("rmailmsc.el"
+        "miscellaneous support functions for the RMAIL mail reader"
+        (mail))
+    ("rmailout.el"
+        "\"RMAIL\" mail reader for Emacs: output message to a file"
+        (mail))
+    ("rmailsort.el"
+        "Rmail: sort messages"
+        (mail))
+    ("rmailsum.el"
+        "make summary buffers for the mail reader"
+        (mail))
+    ("sendmail.el"
+        "mail sending commands for Emacs."
+        (mail))
+    ("smtpmail.el"
+        "simple SMTP protocol (RFC 821) for sending mail"
+        (mail))
+    ("supercite.el"
+        "minor mode for citing mail and news replies"
+        (mail  news))
+    ("uce.el"
+        "facilitate reply to unsolicited commercial email"
+        (uce  unsolicited commercial email))
+    ("undigest.el"
+        "digest-cracking support for the RMAIL mail reader"
+        (mail))
+    ("unrmail.el"
+        "convert Rmail files to mailbox files"
+        (mail))
+    ("vms-pmail.el"
+        "use Emacs as the editor within VMS mail"
+        (vms))
+    ("appt.el"
+        "appointment notification functions"
+        (calendar))
+    ("cal-bahai.el"
+        "calendar functions for the Baha'i calendar."
+        (calendar))
+    ("cal-china.el"
+        "calendar functions for the Chinese calendar"
+        (calendar))
+    ("cal-coptic.el"
+        "calendar functions for the Coptic/Ethiopic calendars"
+        (calendar))
+    ("cal-dst.el"
+        "calendar functions for daylight saving rules"
+        (calendar))
+    ("cal-french.el"
+        "calendar functions for the French Revolutionary calendar"
+        (calendar))
+    ("cal-hebrew.el"
+        "calendar functions for the Hebrew calendar"
+        (calendar))
+    ("cal-html.el"
+        "functions for printing HTML calendars"
+        (calendar))
+    ("cal-islam.el"
+        "calendar functions for the Islamic calendar"
+        (calendar))
+    ("cal-iso.el"
+        "calendar functions for the ISO calendar"
+        (calendar))
+    ("cal-julian.el"
+        "calendar functions for the Julian calendar"
+        (calendar))
+    ("cal-mayan.el"
+        "calendar functions for the Mayan calendars"
+        (calendar))
+    ("cal-menu.el"
+        "calendar functions for menu bar and popup menu support"
+        (calendar))
+    ("cal-move.el"
+        "calendar functions for movement in the calendar"
+        (calendar))
+    ("cal-persia.el"
+        "calendar functions for the Persian calendar"
+        (calendar))
+    ("cal-tex.el"
+        "calendar functions for printing calendars with LaTeX"
+        (calendar))
+    ("cal-x.el"
+        "calendar windows in dedicated frames in X"
+        (calendar))
+    ("calendar.el"
+        "calendar functions"
+        (calendar))
+    ("diary-lib.el"
+        "diary functions"
+        (calendar))
+    ("holidays.el"
+        "holiday functions for the calendar package"
+        (holidays  calendar))
+    ("icalendar.el"
+        "iCalendar implementation"
+        (calendar))
+    ("lunar.el"
+        "calendar functions for phases of the moon"
+        (calendar))
+    ("parse-time.el"
+        "parsing time strings"
+        (util))
+    ("solar.el"
+        "calendar functions for solar events"
+        (calendar))
+    ("time-date.el"
+        "Date and time handling functions"
+        (mail news util))
+    ("timeclock.el"
+        "mode for keeping track of how much you work"
+        (calendar data))
+    ("todo-mode.el"
+        "major mode for editing TODO list files"
+        (calendar  todo))
+    ("advice.el"
+        "an overloading mechanism for Emacs Lisp functions"
+        (extensions  lisp  tools))
+    ("assoc.el"
+        "insert/delete/sort functions on association lists"
+        (extensions))
+    ("authors.el"
+        "utility for maintaining Emacs' AUTHORS file"
+        (maint))
+    ("autoload.el"
+        "maintain autoloads in loaddefs.el"
+        (maint))
+    ("backquote.el"
+        "implement the ` Lisp construct"
+        (extensions  internal))
+    ("benchmark.el"
+        "support for benchmarking code"
+        (lisp  extensions))
+    ("bindat.el"
+        "binary data structure packing and unpacking."
+        (comm data processes))
+    ("byte-opt.el"
+        "the optimization passes of the emacs-lisp byte compiler"
+        (internal))
+    ("byte-run.el"
+        "byte-compiler support for inlining"
+        (internal))
+    ("bytecomp.el"
+        "compilation of Lisp code into byte code"
+        (lisp))
+    ("checkdoc.el"
+        "check documentation strings for style requirements"
+        (docs  maint  lisp))
+    ("cl-compat.el"
+        "Common Lisp extensions for GNU Emacs Lisp (compatibility)"
+        (extensions))
+    ("cl-extra.el"
+        "Common Lisp features, part 2"
+        (extensions))
+    ("cl-indent.el"
+        "enhanced lisp-indent mode"
+        (lisp  tools))
+    ("cl-loaddefs.el"
+        "automatically extracted autoloads"
+        nil)
+    ("cl-macs.el"
+        "Common Lisp macros"
+        (extensions))
+    ("cl-seq.el"
+        "Common Lisp features, part 3"
+        (extensions))
+    ("cl-specs.el"
+        "Edebug specs for cl.el"
+        (lisp  tools  maint))
+    ("cl.el"
+        "Common Lisp extensions for Emacs"
+        (extensions))
+    ("copyright.el"
+        "update the copyright notice in current buffer"
+        (maint  tools))
+    ("crm.el"
+        "read multiple strings with completion"
+        (completion  minibuffer  multiple elements))
+    ("cust-print.el"
+        "handles print-level and print-circle"
+        (extensions))
+    ("debug.el"
+        "debuggers and related commands for Emacs"
+        (lisp  tools  maint))
+    ("derived.el"
+        "allow inheritance of major modes"
+        (extensions))
+    ("disass.el"
+        "disassembler for compiled Emacs Lisp code"
+        (internal))
+    ("easy-mmode.el"
+        "easy definition for major and minor modes"
+        (extensions lisp))
+    ("easymenu.el"
+        "support the easymenu interface for defining a menu"
+        (emulations))
+    ("edebug.el"
+        "a source-level debugger for Emacs Lisp"
+        (lisp  tools  maint))
+    ("eldoc.el"
+        "show function arglist or variable docstring in echo area"
+        (extensions))
+    ("elint.el"
+        "Lint Emacs Lisp"
+        (lisp))
+    ("elp.el"
+        "Emacs Lisp Profiler"
+        (debugging lisp tools))
+    ("ewoc.el"
+        "utility to maintain a view of a list of objects in a buffer"
+        (extensions  lisp))
+    ("find-func.el"
+        "find the definition of the Emacs Lisp function near point"
+        (emacs-lisp  functions  variables))
+    ("find-gc.el"
+        "detect functions that call the garbage collector"
+        nil)
+    ("float-sup.el"
+        "define some constants useful for floating point numbers."
+        (internal))
+    ("generic.el"
+        "defining simple major modes with comment and font-lock"
+        (generic  comment  font-lock))
+    ("gulp.el"
+        "ask for updates for Lisp packages"
+        (maintenance))
+    ("helper.el"
+        "utility help package supporting help in electric modes"
+        (help))
+    ("levents.el"
+        "emulate the Lucid event data type and associated functions"
+        (emulations))
+    ("lisp-mnt.el"
+        "utility functions for Emacs Lisp maintainers"
+        (docs))
+    ("lisp-mode.el"
+        "Lisp mode, and its idiosyncratic commands"
+        (lisp  languages))
+    ("lisp.el"
+        "Lisp editing commands for Emacs"
+        (lisp  languages))
+    ("lmenu.el"
+        "emulate Lucid's menubar support"
+        (emulations obsolete))
+    ("lselect.el"
+        "Lucid interface to X Selections"
+        (emulations))
+    ("lucid.el"
+        "emulate some Lucid Emacs functions"
+        (emulations))
+    ("macroexp.el"
+        "Additional macro-expansion support"
+        (lisp  compiler  macros))
+    ("map-ynp.el"
+        "general-purpose boolean question-asker"
+        (lisp  extensions))
+    ("pp.el"
+        "pretty printer for Emacs Lisp"
+        (lisp))
+    ("re-builder.el"
+        "building Regexps with visual feedback"
+        (matching  lisp  tools))
+    ("regexp-opt.el"
+        "generate efficient regexps to match strings"
+        (strings  regexps  extensions))
+    ("regi.el"
+        "REGular expression Interpreting engine"
+        (extensions  matching))
+    ("ring.el"
+        "handle rings of items"
+        (extensions))
+    ("rx.el"
+        "sexp notation for regular expressions"
+        (strings  regexps  extensions))
+    ("shadow.el"
+        "locate Emacs Lisp file shadowings"
+        (lisp))
+    ("sregex.el"
+        "symbolic regular expressions"
+        (extensions))
+    ("syntax.el"
+        "helper functions to find syntactic context"
+        (internal))
+    ("tcover-ses.el"
+        "Example use of `testcover' to test \"SES\""
+        (spreadsheet lisp utility))
+    ("tcover-unsafep.el"
+        "Use testcover to test unsafep's code coverage"
+        (safety lisp utility))
+    ("testcover.el"
+        "Visual code-coverage tool"
+        (lisp utility))
+    ("timer.el"
+        "run a function with args at some time in future"
+        nil)
+    ("tq.el"
+        "utility to maintain a transaction queue"
+        (extensions))
+    ("trace.el"
+        "tracing facility for Emacs Lisp functions"
+        (tools  lisp))
+    ("unsafep.el"
+        "Determine whether a Lisp form is safe to evaluate"
+        (safety lisp utility))
+    ("warnings.el"
+        "log and display warnings"
+        (internal))
+    ("crisp.el"
+        "CRiSP/Brief Emacs emulator"
+        (emulations brief crisp))
+    ("cua-base.el"
+        "emulate CUA key bindings"
+        (keyboard emulation convenience cua))
+    ("cua-gmrk.el"
+        "CUA unified global mark support"
+        (keyboard emulations convenience cua mark))
+    ("cua-rect.el"
+        "CUA unified rectangle support"
+        (keyboard emulations convenience cua))
+    ("edt-lk201.el"
+        "enhanced EDT keypad mode emulation for LK-201 keyboards"
+        (emulations))
+    ("edt-mapper.el"
+        "create an EDT LK-201 map file for X-Windows Emacs"
+        (emulations))
+    ("edt-pc.el"
+        "enhanced EDT keypad mode emulation for PC 101 keyboards"
+        (emulations))
+    ("edt-vt100.el"
+        "enhanced EDT keypad mode emulation for VT series terminals"
+        (emulations))
+    ("edt.el"
+        "enhanced EDT keypad mode emulation for GNU Emacs 19"
+        (emulations))
+    ("keypad.el"
+        "simplified keypad bindings"
+        (keyboard convenience))
+    ("pc-mode.el"
+        "emulate certain key bindings used on PCs"
+        (emulations))
+    ("pc-select.el"
+        "emulate mark, cut, copy and paste from Motif"
+        (convenience emulation))
+    ("tpu-edt.el"
+        "Emacs emulating TPU emulating EDT"
+        (emulations))
+    ("tpu-extras.el"
+        "scroll margins and free cursor mode for TPU-edt"
+        (emulations))
+    ("tpu-mapper.el"
+        "create a TPU-edt X-windows keymap file"
+        (emulations))
+    ("vi.el"
+        "major mode for emulating \"vi\" editor under GNU Emacs"
+        (emulations))
+    ("vip.el"
+        "a VI Package for GNU Emacs"
+        (emulations))
+    ("viper-cmd.el"
+        "Vi command support for Viper"
+        nil)
+    ("viper-ex.el"
+        "functions implementing the Ex commands for Viper"
+        nil)
+    ("viper-init.el"
+        "some common definitions for Viper"
+        nil)
+    ("viper-keym.el"
+        "Viper keymaps"
+        nil)
+    ("viper-macs.el"
+        "functions implementing keyboard macros for Viper"
+        nil)
+    ("viper-mous.el"
+        "mouse support for Viper"
+        nil)
+    ("viper-util.el"
+        "Utilities used by viper.el"
+        nil)
+    ("viper.el"
+        "A full-featured Vi emulator for GNU Emacs and XEmacs,"
+        (emulations))
+    ("ws-mode.el"
+        "WordStar emulation mode for GNU Emacs"
+        (emulations))
+    ("em-alias.el"
+        "creation and management of command aliases"
+        nil)
+    ("em-banner.el"
+        "sample module that displays a login banner"
+        nil)
+    ("em-basic.el"
+        "basic shell builtin commands"
+        nil)
+    ("em-cmpl.el"
+        "completion using the TAB key"
+        nil)
+    ("em-dirs.el"
+        "directory navigation commands"
+        nil)
+    ("em-glob.el"
+        "extended file name globbing"
+        nil)
+    ("em-hist.el"
+        "history list management"
+        nil)
+    ("em-ls.el"
+        "implementation of ls in Lisp"
+        nil)
+    ("em-pred.el"
+        "argument predicates and modifiers (ala zsh)"
+        nil)
+    ("em-prompt.el"
+        "command prompts"
+        nil)
+    ("em-rebind.el"
+        "rebind keys when point is at current input"
+        nil)
+    ("em-script.el"
+        "Eshell script files"
+        nil)
+    ("em-smart.el"
+        "smart display of output"
+        nil)
+    ("em-term.el"
+        "running visual commands"
+        nil)
+    ("em-unix.el"
+        "UNIX command aliases"
+        nil)
+    ("em-xtra.el"
+        "extra alias functions"
+        nil)
+    ("esh-arg.el"
+        "argument processing"
+        nil)
+    ("esh-cmd.el"
+        "command invocation"
+        nil)
+    ("esh-ext.el"
+        "commands external to Eshell"
+        nil)
+    ("esh-groups.el"
+        nil
+        nil)
+    ("esh-io.el"
+        "I/O management"
+        nil)
+    ("esh-maint.el"
+        "init code for building eshell"
+        nil)
+    ("esh-mode.el"
+        "user interface"
+        nil)
+    ("esh-module.el"
+        "Eshell modules"
+        (processes))
+    ("esh-opt.el"
+        "command options processing"
+        nil)
+    ("esh-proc.el"
+        "process management"
+        nil)
+    ("esh-test.el"
+        "Eshell test suite"
+        nil)
+    ("esh-util.el"
+        "general utilities"
+        nil)
+    ("esh-var.el"
+        "handling of variables"
+        nil)
+    ("eshell.el"
+        "the Emacs command shell"
+        (processes))
     ("ccl.el"
         "CCL (Code Conversion Language) compiler"
         (ccl  mule  multilingual  character set  coding-system))
@@ -1957,7 +2065,7 @@
         "display tables for other ISO 8859 on Latin-1 terminals"
         (i18n))
     ("mule-cmds.el"
-        "commands for mulitilingual environment"
+        "commands for multilingual environment"
         (mule  multilingual))
     ("mule-conf.el"
         "configure multilingual environment"
@@ -2121,102 +2229,6 @@
     ("vietnamese.el"
         "support for Vietnamese"
         (multilingual  vietnamese))
-    ("blessmail.el"
-        "decide whether movemail needs special privileges"
-        (internal))
-    ("emacsbug.el"
-        "command to report Emacs bugs to appropriate mailing list"
-        (maint mail))
-    ("feedmail.el"
-        "assist other email packages to massage outgoing messages"
-        (email  queue  mail  sendmail  message  spray  smtp  draft))
-    ("footnote.el"
-        "footnote support for message mode"
-        (mail  news))
-    ("mail-extr.el"
-        "extract full name and address from RFC 822 mail header"
-        (mail))
-    ("mail-hist.el"
-        "headers and message body history for outgoing mail"
-        (mail  history))
-    ("mail-utils.el"
-        "utility functions used both by rmail and rnews"
-        (mail  news))
-    ("mailabbrev.el"
-        "abbrev-expansion of mail aliases"
-        (mail))
-    ("mailalias.el"
-        "expand and complete mailing address aliases"
-        (mail))
-    ("mailclient.el"
-        "mail sending via system's mail client."
-        (mail))
-    ("mailheader.el"
-        "mail header parsing, merging, formatting"
-        (tools  mail  news))
-    ("mailpost.el"
-        "RMAIL coupler to /usr/uci/post mailer"
-        (mail))
-    ("metamail.el"
-        "Metamail interface for GNU Emacs"
-        (mail  news  mime  multimedia))
-    ("mspools.el"
-        "show mail spools waiting to be read"
-        (mail))
-    ("reporter.el"
-        "customizable bug reporting of lisp programs"
-        (maint mail tools))
-    ("rfc2368.el"
-        "support for rfc2368"
-        (mail))
-    ("rfc822.el"
-        "hairy rfc822 parser for mail and news and suchlike"
-        (mail))
-    ("rmail-spam-filter.el"
-        "spam filter for rmail, the emacs mail reader."
-        (email  spam  filter  rmail))
-    ("rmail.el"
-        "main code of \"RMAIL\" mail reader for Emacs"
-        (mail))
-    ("rmailedit.el"
-        "\"RMAIL edit mode\"  Edit the current message"
-        (mail))
-    ("rmailkwd.el"
-        "part of the \"RMAIL\" mail reader for Emacs"
-        (mail))
-    ("rmailmsc.el"
-        "miscellaneous support functions for the RMAIL mail reader"
-        (mail))
-    ("rmailout.el"
-        "\"RMAIL\" mail reader for Emacs: output message to a file"
-        (mail))
-    ("rmailsort.el"
-        "Rmail: sort messages"
-        (mail))
-    ("rmailsum.el"
-        "make summary buffers for the mail reader"
-        (mail))
-    ("sendmail.el"
-        "mail sending commands for Emacs."
-        (mail))
-    ("smtpmail.el"
-        "simple SMTP protocol (RFC 821) for sending mail"
-        (mail))
-    ("supercite.el"
-        "minor mode for citing mail and news replies"
-        (mail  news))
-    ("uce.el"
-        "facilitate reply to unsolicited commercial email"
-        (uce  unsolicited commercial email))
-    ("undigest.el"
-        "digest-cracking support for the RMAIL mail reader"
-        (mail))
-    ("unrmail.el"
-        "convert Rmail files to mailbox files"
-        (mail))
-    ("vms-pmail.el"
-        "use Emacs as the editor within VMS mail"
-        (vms))
     ("mh-acros.el"
         "macros used in MH-E"
         (mail))
@@ -2358,6 +2370,9 @@
     ("snmp-mode.el"
         "SNMP & SNMPv2 MIB major mode"
         (data))
+    ("socks.el"
+        "A Socks v5 Client for Emacs"
+        (comm  firewalls))
     ("telnet.el"
         "run a telnet session from within an Emacs buffer"
         (unix  comm))
@@ -2700,6 +2715,12 @@
     ("tcl.el"
         "Tcl code editing commands for Emacs"
         (languages tcl modes))
+    ("vera-mode.el"
+        "major mode for editing Vera files."
+        (languages vera))
+    ("verilog-mode.el"
+        "major mode for editing verilog source in Emacs"
+        (languages))
     ("vhdl-mode.el"
         "major mode for editing VHDL code"
         (languages vhdl))
@@ -2715,12 +2736,18 @@
     ("bib-mode.el"
         "major mode for editing bib files"
         (bib))
+    ("bibtex-style.el"
+        "Major mode for BibTeX Style files"
+        nil)
     ("bibtex.el"
         "BibTeX mode for GNU Emacs"
         (bibtex  latex  tex))
     ("conf-mode.el"
         "Simple major mode for editing conf/ini/properties files"
         (conf ini windows java))
+    ("css-mode.el"
+        "Major mode to edit CSS files"
+        (hypermedia))
     ("dns-mode.el"
         "a mode for viewing/editing Domain Name System master files"
         (dns master zone file soa))

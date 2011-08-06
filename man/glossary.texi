@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2001, 2002,
-@c   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Glossary, Key Index, Intro, Top
 @unnumbered Glossary
@@ -603,7 +603,8 @@ Hyper}.
 
 @item Iff
 ``Iff'' means ``if and only if.''  This terminology comes from
-mathematics.
+mathematics.  Try to avoid using this term in documentation, since
+many are unfamiliar with it and mistake it for a typo.
 
 @item Inbox
 An inbox is a file in which mail is delivered by the operating system.
@@ -657,7 +658,7 @@ Justification means adding extra spaces within lines of text to make
 them extend exactly to a specified width.
 @xref{Format Justification}.
 
-@item Keybinding
+@item Key Binding
 See `binding.'
 
 @item Keyboard Macro

@@ -1,7 +1,7 @@
 ;;; cua-base.el --- emulate CUA key bindings
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard emulation convenience cua
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -286,7 +286,7 @@ enabled."
   "*If non-nil, only highlight region if marked with S-<move>.
 When this is non-nil, CUA toggles `transient-mark-mode' on when the region
 is marked using shifted movement keys, and off when the mark is cleared.
-But when the mark was set using \\[cua-set-mark], transient-mark-mode
+But when the mark was set using \\[cua-set-mark], Transient Mark mode
 is not turned on."
   :type 'boolean
   :group 'cua)
@@ -951,8 +951,8 @@ If global mark is active, copy from register or one character."
 
 (defun cua-paste-pop (arg)
   "Replace a just-pasted text or rectangle with a different text.
-See `yank-pop' for details about the default behaviour.  For an alternative
-behaviour, see `cua-paste-pop-rotate-temporarily'."
+See `yank-pop' for details about the default behavior.  For an alternative
+behavior, see `cua-paste-pop-rotate-temporarily'."
   (interactive "P")
   (cond
    ((eq last-command 'cua--paste-rectangle)
@@ -1595,23 +1595,6 @@ shifted movement key, set `cua-highlight-region-shift-only'."
   "Toggle CUA debugging."
   (interactive)
   (setq cua--debug (not cua--debug)))
-
-;; Install run-time check for older versions of CUA-mode which does not
-;; work with GNU Emacs version 22.1 and newer.
-;;
-;; Except for version 1.2, all of the 1.x and 2.x version of cua-mode
-;; provided the `CUA-mode' feature.  Since this is no longer true,
-;; we can warn the user if the `CUA-mode' feature is ever provided.
-
-;;;###autoload (eval-after-load 'CUA-mode
-;;;###autoload  '(error (concat "\n\n"
-;;;###autoload  "CUA-mode is now part of the standard GNU Emacs distribution, so you may\n"
-;;;###autoload  "now enable CUA via the Options menu or by customizing option `cua-mode'.\n\n"
-;;;###autoload  "You have loaded an older version of CUA-mode which does\n"
-;;;###autoload  "not work correctly with this version of GNU Emacs.\n\n"
-;;;###autoload  (if user-init-file (concat
-;;;###autoload  "To correct this, remove the loading and customization of the\n"
-;;;###autoload  "old version from the " user-init-file " file.\n\n")))))
 
 (provide 'cua)
 

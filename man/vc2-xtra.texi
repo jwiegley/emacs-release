@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @c
 @c This file is included either in vc-xtra.texi (when producing the
@@ -588,9 +588,9 @@ headers.
 @subsection Customizing VC
 
 @vindex vc-handled-backends
-The variable @code{vc-handled-backends} determines which version
-control systems VC should handle.  The default value is @code{(RCS CVS
-SVN SCCS Arch MCVS)}, so it contains all six version systems that are
+The variable @code{vc-handled-backends} determines which version control
+systems VC should handle.  The default value is @code{(RCS CVS SVN SCCS
+GIT HG Arch MCVS)}, so it contains all six version systems that are
 currently supported.  If you want VC to ignore one or more of these
 systems, exclude its name from the list.  To disable VC entirely, set
 this variable to @code{nil}.

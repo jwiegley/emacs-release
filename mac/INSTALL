@@ -1,7 +1,7 @@
 * BUILDING EMACS ON MAC OS Classic AND MAC OS X     -*- outline -*-
 
 Copyright (C) 2001, 2002, 2003, 2004, 2005,
-   2006, 2007 Free Software Foundation, Inc.
+   2006, 2007, 2008 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 
@@ -192,7 +192,7 @@ is created.
 * NOTES
 
 Emacs should build and run on a PowerMac running Mac OS 8.6 - 9.2 (but
-only tested on 9.2.2), and Mac OS X 10.1 - 10.4.
+only tested on 9.2.2), and Mac OS X 10.1 - 10.5.
 
 You will need around 100 MB of disk space for the source files and
 intermediate files.
@@ -220,7 +220,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

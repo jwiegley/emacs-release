@@ -29,15 +29,15 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 Copyright (C) 1984, 1987, 1988, 1989, 1993, 1994, 1995, 1998, 1999,
-  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
   Free Software Foundation, Inc.
 
 This file is not considered part of GNU Emacs.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+the Free Software Foundation; either version 3, or (at your option)
+any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -45,8 +45,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software Foundation,
-Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with this program; see the file COPYING.  If not, write to the
+Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA. */
 
 
 /* NB To comply with the above BSD license, copyright information is
@@ -60,10 +61,10 @@ University of California, as described above. */
 
 /*
  * Authors:
- *	Ctags originally by Ken Arnold.
- *	Fortran added by Jim Kleckner.
- *	Ed Pelegri-Llopart added C typedefs.
- *	Gnu Emacs TAGS format and modifications by RMS?
+ * 1983	Ctags originally by Ken Arnold.
+ * 1984	Fortran added by Jim Kleckner.
+ * 1984	Ed Pelegri-Llopart added C typedefs.
+ * 1985	Emacs TAGS format by Richard Stallman.
  * 1989	Sam Kendall added C++.
  * 1992 Joseph B. Wells improved C and C++ parsing.
  * 1993	Francesco Potortì reorganised C and C++.
@@ -500,7 +501,7 @@ static bool update;		/* -u: update tags */
 static bool vgrind_style;	/* -v: create vgrind style index output */
 static bool no_warnings;	/* -w: suppress warnings (undocumented) */
 static bool cxref_style;	/* -x: create cxref style output */
-static bool cplusplus;		/* .[hc] means C++, not C */
+static bool cplusplus;		/* .[hc] means C++, not C (undocumented) */
 static bool ignoreindent;	/* -I: ignore indentation in C */
 static bool packages_only;	/* --packages-only: in Ada, only tag packages*/
 
@@ -607,20 +608,29 @@ followed by a colon, are tags.";
 
 
 /* Note that .c and .h can be considered C++, if the --c++ flag was
-   given, or if the `class' or `template' keyowrds are met inside the file.
+   given, or if the `class' or `template' keywords are met inside the file.
    That is why default_C_entries is called for these. */
 static char *default_C_suffixes [] =
   { "c", "h", NULL };
+#if CTAGS				/* C help for Ctags */
+static char default_C_help [] =
+"In C code, any C function is a tag.  Use -t to tag typedefs.\n\
+Use -T to tag definitions of `struct', `union' and `enum'.\n\
+Use -d to tag `#define' macro definitions and `enum' constants.\n\
+Use --globals to tag global variables.\n\
+You can tag function declarations and external variables by\n\
+using `--declarations', and struct members by using `--members'.";
+#else					/* C help for Etags */
 static char default_C_help [] =
 "In C code, any C function or typedef is a tag, and so are\n\
 definitions of `struct', `union' and `enum'.  `#define' macro\n\
 definitions and `enum' constants are tags unless you specify\n\
 `--no-defines'.  Global variables are tags unless you specify\n\
-`--no-globals' and so are struct members unless you specify\n\
-`--no-members'.  Use of `--no-globals', `--no-defines' and\n\
-`--no-members' can make the tags table file much smaller.\n\
+`--no-globals'.  Use of `--no-globals' and `--no-defines'\n\
+can make the tags table file much smaller.\n\
 You can tag function declarations and external variables by\n\
-using `--declarations'.";
+using `--declarations', and struct members by using `--members'.";
+#endif	/* C help for Ctags and Etags */
 
 static char *Cplusplus_suffixes [] =
   { "C", "c++", "cc", "cpp", "cxx", "H", "h++", "hh", "hpp", "hxx",
@@ -631,7 +641,7 @@ static char Cplusplus_help [] =
 "In C++ code, all the tag constructs of C code are tagged.  (Use\n\
 --help --lang=c --lang=c++ for full help.)\n\
 In addition to C tags, member functions are also recognized.  Member\n\
-variables are recognized unless you use the `--no-members' option.\n\
+variables are also recognized if you use the `--members' option.\n\
 Tags for variables and functions in classes are named `CLASS::VARIABLE'\n\
 and `CLASS::FUNCTION'.  `operator' definitions have tag names like\n\
 `operator+'.";
@@ -726,8 +736,8 @@ defined in the default package is `main::SUB'.";
 static char *PHP_suffixes [] =
   { "php", "php3", "php4", NULL };
 static char PHP_help [] =
-"In PHP code, tags are functions, classes and defines.  Unless you use\n\
-the `--no-members' option, vars are tags too.";
+"In PHP code, tags are functions, classes and defines.  When using\n\
+the `--members' option, vars are tags too.";
 
 static char *plain_C_suffixes [] =
   { "pc",			/* Pro*C file */
@@ -875,13 +885,13 @@ etags --help --lang=ada.");
 # define EMACS_NAME "standalone"
 #endif
 #ifndef VERSION
-# define VERSION "version"
+# define VERSION "17.26"
 #endif
 static void
 print_version ()
 {
   printf ("%s (%s %s)\n", (CTAGS) ? "ctags" : "etags", EMACS_NAME, VERSION);
-  puts ("Copyright (C) 2007 Free Software Foundation, Inc.");
+  puts ("Copyright (C) 2008 Free Software Foundation, Inc.");
   puts ("This program is distributed under the terms in ETAGS.README");
 
   exit (EXIT_SUCCESS);
@@ -969,9 +979,8 @@ Relative ones are stored relative to the output file's directory.\n");
     puts ("--no-globals\n\
 	Do not create tag entries for global variables in some\n\
 	languages.  This makes the tags file smaller.");
-  puts ("--no-members\n\
-	Do not create tag entries for members of structures\n\
-	in some languages.");
+  puts ("--members\n\
+	Create tag entries for members of structures in some languages.");
 
   puts ("-r REGEXP, --regex=REGEXP or --regex=@regexfile\n\
         Make a tag for each line matching a regular expression pattern\n\
@@ -1209,8 +1218,8 @@ main (argc, argv)
 
   /*
    * If etags, always find typedefs and structure tags.  Why not?
-   * Also default to find macro constants, enum constants, struct
-   * members and global variables.
+   * Also default to find macro constants, enum constants and
+   * global variables.
    */
   if (!CTAGS)
     {
@@ -1467,6 +1476,7 @@ main (argc, argv)
       exit (EXIT_SUCCESS);
     }
 
+  /* From here on, we are in (CTAGS && !cxref_style) */
   if (update)
     {
       char cmd[BUFSIZ];
@@ -2852,7 +2862,7 @@ static void make_C_tag __P((bool));
  *	function or variable, or corresponds to a typedef, or
  * 	is a struct/union/enum tag, or #define, or an enum constant.
  *
- *	*IS_FUNC gets TRUE iff the token is a function or #define macro
+ *	*IS_FUNC gets TRUE if the token is a function or #define macro
  *	with args.  C_EXTP points to which language we are looking at.
  *
  * Globals
@@ -2975,11 +2985,6 @@ consider_token (str, len, c, c_extp, bracelev, parlev, is_func_or_var)
        return TRUE;
      }
 
-   /*
-    * This structdef business is NOT invoked when we are ctags and the
-    * file is plain C.  This is because a struct tag may have the same
-    * name as another tag, and this loses with ctags.
-    */
    switch (toktype)
      {
      case st_C_javastruct:
@@ -3397,17 +3402,15 @@ C_entries (c_ext, inf)
 	case '/':
 	  if (*lp == '*')
 	    {
-	      lp++;
 	      incomm = TRUE;
-	      continue;
+	      lp++;
+	      c = ' ';
 	    }
 	  else if (/* cplpl && */ *lp == '/')
 	    {
 	      c = '\0';
-	      break;
 	    }
-	  else
-	    break;
+	  break;
 	case '%':
 	  if ((c_ext & YACC) && *lp == '%')
 	    {
@@ -3949,7 +3952,7 @@ C_entries (c_ext, inf)
 	      make_C_tag (FALSE);  /* a struct or enum */
 	      break;
 	    }
-	  bracelev++;
+	  bracelev += 1;
 	  break;
 	case '*':
 	  if (definedef != dnone)
@@ -3963,17 +3966,21 @@ C_entries (c_ext, inf)
 	case '}':
 	  if (definedef != dnone)
 	    break;
+	  bracelev -= 1;
 	  if (!ignoreindent && lp == newlb.buffer + 1)
 	    {
 	      if (bracelev != 0)
-		token.valid = FALSE;
+		token.valid = FALSE; /* unexpected value, token unreliable */
 	      bracelev = 0;	/* reset brace level if first column */
 	      parlev = 0;	/* also reset paren level, just in case... */
 	    }
-	  else if (bracelev > 0)
-	    bracelev--;
-	  else
+	  else if (bracelev < 0)
+	    {
 	    token.valid = FALSE; /* something gone amiss, token unreliable */
+	      bracelev = 0;
+	    }
+	  if (bracelev == 0 && fvdef == vignore)
+	    fvdef = fvnone;		/* end of function */
 	  popclass_above (bracelev);
 	  structdef = snone;
 	  /* Only if typdef == tinbody is typdefbracelev significant. */
@@ -4509,7 +4516,7 @@ Perl_functions (inf)
 
   LOOP_ON_INPUT_LINES (inf, lb, cp)
     {
-      skip_spaces(cp);
+      cp = skip_spaces (cp);
 
       if (LOOKING_AT (cp, "package"))
 	{
@@ -4768,7 +4775,7 @@ Pascal_functions (inf)
   int save_lineno, namelen, taglen;
   char c, *name;
 
-  bool				/* each of these flags is TRUE iff: */
+  bool				/* each of these flags is TRUE if: */
     incomment,			/* point is inside a comment */
     inquote,			/* point is inside '..' string */
     get_tagname,		/* point is after PROCEDURE/FUNCTION

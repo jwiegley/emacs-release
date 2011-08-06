@@ -1,7 +1,7 @@
 ;;; icomplete.el --- minibuffer completion incremental feedback
 
 ;; Copyright (C) 1992, 1993, 1994, 1997, 1999, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ken Manheimer <klm@i.am>
 ;; Maintainer: Ken Manheimer <klm@i.am>
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -99,7 +99,7 @@ completions - see `icomplete-delay-completions-threshold'."
 (defcustom icomplete-minibuffer-setup-hook nil
   "*Icomplete-specific customization of minibuffer setup.
 
-This hook is run during minibuffer setup iff icomplete will be active.
+This hook is run during minibuffer setup if icomplete is active.
 It is intended for use in customizing icomplete for interoperation
 with other features and packages.  For instance:
 
@@ -147,8 +147,7 @@ is minibuffer."
     (save-excursion
       (let* ((sym (intern func-name))
 	     (buf (other-buffer nil t))
-	     (map (save-excursion (set-buffer buf) (current-local-map)))
-	     (keys (where-is-internal sym map)))
+	     (keys (with-current-buffer buf (where-is-internal sym))))
 	(if keys
 	    (concat "<"
 		    (mapconcat 'key-description
@@ -168,7 +167,8 @@ except those on this list.")
 ;;;###autoload
 (define-minor-mode icomplete-mode
   "Toggle incremental minibuffer completion for this Emacs session.
-With a numeric argument, turn Icomplete mode on iff ARG is positive."
+With a numeric argument, turn Icomplete mode on if ARG is positive,
+otherwise turn it off."
   :global t :group 'icomplete
   (if icomplete-mode
       ;; The following is not really necessary after first time -

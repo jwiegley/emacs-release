@@ -3,8 +3,8 @@ This is ../info/sieve, produced by makeinfo version 4.8 from sieve.texi.
    This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -244,13 +244,13 @@ in the `sieve' group (`M-x customize-group RET sieve RET'):
      Authenticate to the server.
 
 `sieve-manage-capability'
-     Return a list of capabilities the server support.
+     Return a list of capabilities the server supports.
 
 `sieve-manage-listscripts'
      List scripts on the server.
 
 `sieve-manage-havespace'
-     Returns non-`nil' iff server have roam for a script of given size.
+     Return non-`nil' if the server has room for a script of given size.
 
 `sieve-manage-getscript'
      Download script from server.
@@ -742,14 +742,14 @@ Index
 
 
 Tag Table:
-Node: Top1351
-Node: Installation2415
-Node: Sieve Mode2888
-Node: Managing Sieve3856
-Node: Examples5356
-Node: Manage Sieve API6669
-Node: Standards8127
-Node: GNU Free Documentation License8614
-Node: Index30840
+Node: Top1357
+Node: Installation2421
+Node: Sieve Mode2894
+Node: Managing Sieve3862
+Node: Examples5362
+Node: Manage Sieve API6675
+Node: Standards8135
+Node: GNU Free Documentation License8622
+Node: Index30848
 
 End Tag Table

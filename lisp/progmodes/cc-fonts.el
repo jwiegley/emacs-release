@@ -1,6 +1,6 @@
 ;;; cc-fonts.el --- font lock support for CC Mode
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
 ;;             2002- Martin Stjernholm
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -394,14 +394,14 @@ stuff.  Used on level 1 and higher."
 	    `(;; The stuff after #error and #warning is a message, so
 	      ;; fontify it as a string.
 	      ,@(when (c-lang-const c-cpp-message-directives)
-		  (let* ((re (c-make-keywords-re nil
+		  (let* ((re (c-make-keywords-re 'appendable ; nil
 			       (c-lang-const c-cpp-message-directives)))
 			 (re-depth (regexp-opt-depth re)))
 		    `((,(concat noncontinued-line-end
 				(c-lang-const c-opt-cpp-prefix)
 				re
 				"\\s +\\(.*\\)$")
-		       ,(+ ncle-depth re-depth 1) font-lock-string-face))))
+		       ,(+ ncle-depth re-depth 1) font-lock-string-face t))))
 
 	      ;; Fontify filenames in #include <...> as strings.
 	      ,@(when (c-lang-const c-cpp-include-directives)

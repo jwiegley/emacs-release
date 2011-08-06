@@ -2,7 +2,7 @@ This is ../info/autotype, produced by makeinfo version 4.8 from
 autotype.texi.
 
    Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007  Free Software Foundation, Inc.
+2007, 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1107,22 +1107,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1431
-Node: Using Skeletons3942
-Node: Wrapping Skeletons5413
-Node: Skeletons as Abbrevs8017
-Node: Skeleton Language8904
-Node: Inserting Pairs12482
-Node: Autoinserting14864
-Node: Copyrights18650
-Node: Executables20518
-Node: Timestamps22215
-Node: QuickURL23590
-Node: Tempo24456
-Node: Hippie Expand25639
-Node: GNU Free Documentation License26671
-Node: Concept Index48912
-Node: Command Index50023
-Node: Variable Index51483
+Node: Top1437
+Node: Using Skeletons3948
+Node: Wrapping Skeletons5419
+Node: Skeletons as Abbrevs8023
+Node: Skeleton Language8910
+Node: Inserting Pairs12488
+Node: Autoinserting14870
+Node: Copyrights18656
+Node: Executables20524
+Node: Timestamps22221
+Node: QuickURL23596
+Node: Tempo24462
+Node: Hippie Expand25645
+Node: GNU Free Documentation License26677
+Node: Concept Index48918
+Node: Command Index50029
+Node: Variable Index51489
 
 End Tag Table

@@ -580,14 +580,6 @@ crasht.
    goed is verschijnt "Wrote ...TUTORIAL.nl" op de onderste
    schermregel.
 
-OPMERKING: Op sommige systemen gebeurt er helemaal niets als je C-x
-C-s tikt, en daarna ook niets meer.  Dit komt door een eigenschap van
-de machine waarop je werkt die te maken heeft met "flow control".  Met
-C-s stopt de "flow" en komt niets meer van wat je tikt bij Emacs
-terecht.  Om deze situatie te herstellen, tik C-q.  Lees daarna het
-hoofdstuk "Spontaneous Entry to Incremental Search" in het
-Emacs-handboek over hoe je moet omgaan met deze situatie.
-
 Je kan een bestaand bestand bezoeken om het te bekijken of het te
 wijzigen.  Je kan ook een bestand bezoeken dat nog niet bestaat.  Dit
 is de manier om met Emacs een nieuw bestand te maken: bezoek het
@@ -1205,7 +1197,7 @@ Deze versie van de inleiding valt onder copyright, net als GNU Emacs.
 Je mag deze inleiding verspreiden onder bepaalde voorwaarden:
 
 Copyright (C) 1985, 1996, 1997, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    Iedereen mag letterlijke kopieën van dit document, zowel ontvangen
    als verspreiden, op elk medium, vooropgesteld dat de
@@ -1230,7 +1222,7 @@ This version of the tutorial, like GNU Emacs, is copyrighted, and
 comes with permission to distribute copies on certain conditions:
 
 Copyright (C) 1985, 1996, 1997, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim
    copies of this document as received, in any medium, provided that

@@ -1,7 +1,7 @@
 ;;; kmacro.el --- enhanced keyboard macros
 
 ;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007 Free Software Foundation, Inc.
+;;   2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard convenience
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -795,8 +795,9 @@ may be shaded by a local key binding."
 	  ok cmd)
       (when (= (length key-seq) 1)
 	(let ((ch (aref key-seq 0)))
-	  (if (or (and (>= ch ?0) (<= ch ?9))
-		  (and (>= ch ?A) (<= ch ?Z)))
+	  (if (and (integerp ch)
+		   (or (and (>= ch ?0) (<= ch ?9))
+		       (and (>= ch ?A) (<= ch ?Z))))
 	      (setq key-seq (concat "\C-x\C-k" key-seq)
 		    ok t))))
       (when (and (not (equal key-seq ""))

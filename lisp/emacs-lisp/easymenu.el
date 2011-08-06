@@ -1,7 +1,7 @@
 ;;; easymenu.el --- support the easymenu interface for defining a menu
 
 ;; Copyright (C) 1994, 1996, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: emulations
 ;; Author: Richard Stallman <rms@gnu.org>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -539,7 +539,7 @@ earlier by `easy-menu-define' or `easy-menu-create-menu'."
     (easy-menu-do-add-item map item before)))
 
 (defun easy-menu-item-present-p (map path name)
-  "In submenu of MAP with path PATH, return non-nil iff item NAME is present.
+  "In submenu of MAP with path PATH, return non-nil if item NAME is present.
 MAP and PATH are defined as in `easy-menu-add-item'.
 NAME should be a string, the name of the element to be looked for."
   (easy-menu-return-item (easy-menu-get-map map path) name))

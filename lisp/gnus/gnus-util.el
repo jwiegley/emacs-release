@@ -1,7 +1,7 @@
 ;;; gnus-util.el --- utility functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -289,6 +289,15 @@ is slower."
 (defun gnus-string> (s1 s2)
   (not (or (string< s1 s2)
 	   (string= s1 s2))))
+
+(defun gnus-string< (s1 s2)
+  "Return t if first arg string is less than second in lexicographic order.
+Case is significant if and only if `case-fold-search' is nil.
+Symbols are also allowed; their print names are used instead."
+  (if case-fold-search
+      (string-lessp (downcase (if (symbolp s1) (symbol-name s1) s1))
+		    (downcase (if (symbolp s2) (symbol-name s2) s2)))
+    (string-lessp s1 s2)))
 
 ;;; Time functions.
 
@@ -1108,7 +1117,7 @@ Return the modified alist."
     `(setq ,alist (delq (,fun ,key ,alist) ,alist))))
 
 (defun gnus-globalify-regexp (re)
-  "Return a regexp that matches a whole line, iff RE matches a part of it."
+  "Return a regexp that matches a whole line, if RE matches a part of it."
   (concat (unless (string-match "^\\^" re) "^.*")
 	  re
 	  (unless (string-match "\\$$" re) ".*$")))

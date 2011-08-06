@@ -1,6 +1,6 @@
 ;;; vc-svn.el --- non-resident support for Subversion version-control
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
 ;; Maintainer:  Stefan Monnier <monnier@gnu.org>
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -493,6 +493,35 @@ and that it passes `vc-svn-global-switches' to it before FLAGS."
       ;; behavior for different modules on the same server.
       (match-string 1))))
 
+(defun vc-svn-resolve-when-done ()
+  "Call \"svn resolved\" if the conflict markers have been removed."
+  (save-excursion
+    (goto-char (point-min))
+    (unless (re-search-forward "^<<<<<<< " nil t)
+      (vc-svn-command nil 0 buffer-file-name "resolved")
+      ;; Remove the hook so that it is not called multiple times.
+      (remove-hook 'after-save-hook 'vc-svn-resolve-when-done t))))
+
+;; Inspired by vc-arch-find-file-hook.
+(defun vc-svn-find-file-hook ()
+  (when (eq ?C (vc-file-getprop buffer-file-name 'vc-svn-status))
+    ;; If the file is marked as "conflicted", then we should try and call
+    ;; "svn resolved" when applicable.
+    (if (save-excursion
+          (goto-char (point-min))
+          (re-search-forward "^<<<<<<< " nil t))
+        ;; There are conflict markers.
+        (progn
+          (smerge-mode 1)
+          (add-hook 'after-save-hook 'vc-svn-resolve-when-done nil t))
+      ;; There are no conflict markers.  This is problematic: maybe it means
+      ;; the conflict has been resolved and we should immediately call "svn
+      ;; resolved", or it means that the file's type does not allow Svn to
+      ;; use conflict markers in which case we don't really know what to do.
+      ;; So let's just punt for now.
+      nil)
+    (message "There are unresolved conflicts in this file")))
+
 (defun vc-svn-parse-status (&optional filename)
   "Parse output of \"svn status\" command in the current buffer.
 Set file properties accordingly.  Unless FILENAME is non-nil, parse only
@@ -515,6 +544,8 @@ information about FILENAME and return its status."
 	;; Use the last-modified revision, so that searching in vc-print-log
 	;; output works.
 	(vc-file-setprop file 'vc-workfile-version (match-string 3))
+        ;; Remember Svn's own status.
+        (vc-file-setprop file 'vc-svn-status status)
 	(vc-file-setprop
 	 file 'vc-state
 	 (cond

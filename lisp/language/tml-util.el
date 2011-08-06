@@ -1,6 +1,7 @@
 ;;; tml-util.el --- support for composing tamil characters  -*-coding: iso-2022-7bit;-*-
 
-;; Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: KAWABATA, Taichi <kawabata@m17n.org>
 ;; Keywords: multilingual, Indian, Tamil
@@ -9,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,

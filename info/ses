@@ -2,7 +2,7 @@ This is ../info/ses, produced by makeinfo version 4.8 from ses.texi.
 
    This file documents SES: the Simple Emacs Spreadsheet.
 
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -1374,32 +1374,32 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top1299
-Node: Sales Pitch2113
-Node: The Basics2927
-Node: Formulas4077
-Node: Resizing5481
-Node: Printer functions6618
-Node: Clearing cells8369
-Node: Copy/cut/paste8697
-Node: Customizing SES10911
-Node: Advanced Features12274
-Node: The print area13148
-Node: Ranges in formulas13828
-Node: Sorting by column15342
-Node: Standard formula functions16264
-Node: More on cell printing16937
-Node: Import and export18677
-Node: Virus protection19284
-Node: Spreadsheets with details and summary20682
-Node: For Gurus21868
-Node: Deferred updates22125
-Node: Nonrelocatable references23644
-Node: The data area24544
-Node: Buffer-local variables in spreadsheets25763
-Node: Uses of defadvice in SES27203
-Node: Index28021
-Node: Acknowledgements36357
-Node: GNU Free Documentation License37478
+Node: Top1305
+Node: Sales Pitch2119
+Node: The Basics2933
+Node: Formulas4083
+Node: Resizing5487
+Node: Printer functions6624
+Node: Clearing cells8375
+Node: Copy/cut/paste8703
+Node: Customizing SES10917
+Node: Advanced Features12280
+Node: The print area13154
+Node: Ranges in formulas13834
+Node: Sorting by column15348
+Node: Standard formula functions16270
+Node: More on cell printing16943
+Node: Import and export18683
+Node: Virus protection19290
+Node: Spreadsheets with details and summary20688
+Node: For Gurus21874
+Node: Deferred updates22131
+Node: Nonrelocatable references23650
+Node: The data area24550
+Node: Buffer-local variables in spreadsheets25769
+Node: Uses of defadvice in SES27209
+Node: Index28027
+Node: Acknowledgements36363
+Node: GNU Free Documentation License37484
 
 End Tag Table

@@ -4,7 +4,7 @@ This is ../info/ediff, produced by makeinfo version 4.8 from ediff.texi.
 diff and patch utilities.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -3069,31 +3069,31 @@ Index
 
 
 Tag Table:
-Node: Top1418
-Node: Introduction2088
-Node: Major Entry Points4478
-Node: Session Commands14387
-Node: Quick Help Commands15905
-Node: Other Session Commands34355
-Node: Registry of Ediff Sessions37155
-Node: Session Groups38711
-Node: Remote and Compressed Files44876
-Node: Customization46108
-Node: Hooks48061
-Node: Quick Help Customization53360
-Node: Window and Frame Configuration54371
-Node: Selective Browsing60336
-Node: Highlighting Difference Regions65432
-Node: Narrowing70174
-Node: Refinement of Difference Regions71452
-Node: Patch and Diff Programs74387
-Node: Merging and diff378954
-Node: Support for Version Control88757
-Node: Customizing the Mode Line90382
-Node: Miscellaneous91236
-Node: Notes on Heavy-duty Customization96484
-Node: Credits99069
-Node: GNU Free Documentation License104080
-Node: Index126304
+Node: Top1424
+Node: Introduction2094
+Node: Major Entry Points4484
+Node: Session Commands14393
+Node: Quick Help Commands15911
+Node: Other Session Commands34361
+Node: Registry of Ediff Sessions37161
+Node: Session Groups38717
+Node: Remote and Compressed Files44882
+Node: Customization46114
+Node: Hooks48067
+Node: Quick Help Customization53366
+Node: Window and Frame Configuration54377
+Node: Selective Browsing60342
+Node: Highlighting Difference Regions65438
+Node: Narrowing70180
+Node: Refinement of Difference Regions71458
+Node: Patch and Diff Programs74393
+Node: Merging and diff378960
+Node: Support for Version Control88763
+Node: Customizing the Mode Line90388
+Node: Miscellaneous91242
+Node: Notes on Heavy-duty Customization96490
+Node: Credits99075
+Node: GNU Free Documentation License104086
+Node: Index126310
 
 End Tag Table

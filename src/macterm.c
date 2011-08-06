@@ -1,12 +1,12 @@
 /* Implementation of GUI terminal on the Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -734,7 +734,7 @@ mac_create_bitmap_from_bitmap_data (bitmap, bits, w, h)
 	  /* Bitswap XBM bytes to match how Mac does things.  */
 	  unsigned char c = *bits++;
 	  *p++ = (unsigned char)((swap_nibble[c & 0xf] << 4)
-				 | (swap_nibble[(c>>4) & 0xf]));;
+				 | (swap_nibble[(c>>4) & 0xf]));
 	}
     }
 
@@ -2275,6 +2275,9 @@ mac_define_fringe_bitmap (which, bits, h, wd)
 
   for (i = 0; i < h; i++)
     bits[i] = ~bits[i];
+
+  BLOCK_INPUT;
+
   provider = CGDataProviderCreateWithData (NULL, bits,
 					   sizeof (unsigned short) * h, NULL);
   if (provider)
@@ -2284,6 +2287,8 @@ mac_define_fringe_bitmap (which, bits, h, wd)
 					     provider, NULL, 0);
       CGDataProviderRelease (provider);
     }
+
+  UNBLOCK_INPUT;
 }
 
 static void
@@ -2294,7 +2299,11 @@ mac_destroy_fringe_bitmap (which)
     return;
 
   if (fringe_bmp[which])
-    CGImageRelease (fringe_bmp[which]);
+    {
+      BLOCK_INPUT;
+      CGImageRelease (fringe_bmp[which]);
+      UNBLOCK_INPUT;
+    }
   fringe_bmp[which] = 0;
 }
 #endif
@@ -2973,10 +2982,17 @@ x_draw_composite_glyph_string_foreground (s)
   else
     {
       for (i = 0; i < s->nchars; i++, ++s->gidx)
-	mac_draw_image_string_16 (s->f, s->gc,
-				  x + s->cmp->offsets[s->gidx * 2],
-				  s->ybase - s->cmp->offsets[s->gidx * 2 + 1],
-				  s->char2b + i, 1, 0, s->face->overstrike);
+	if (mac_per_char_metric (GC_FONT (s->gc), s->char2b + i, 0) == NULL)
+	  /* This is a nonexistent or zero-width glyph such as a
+	     combining diacritic.  Draw a rectangle.  */
+	  mac_draw_rectangle (s->f, s->gc,
+			      x + s->cmp->offsets[s->gidx * 2], s->y,
+			      FONT_WIDTH (GC_FONT (s->gc)) - 1, s->height - 1);
+	else
+	  mac_draw_image_string_16 (s->f, s->gc,
+				    x + s->cmp->offsets[s->gidx * 2],
+				    s->ybase - s->cmp->offsets[s->gidx * 2 + 1],
+				    s->char2b + i, 1, 0, s->face->overstrike);
     }
 }
 
@@ -3688,7 +3704,6 @@ x_draw_stretch_glyph_string (s)
      struct glyph_string *s;
 {
   xassert (s->first_glyph->type == STRETCH_GLYPH);
-  s->stippled_p = s->face->stipple != 0;
 
   if (s->hl == DRAW_CURSOR
       && !x_stretch_cursor_p)
@@ -4983,6 +4998,7 @@ x_scroll_bar_create (w, top, left, width, height, disp_top, disp_height)
   XSETINT (bar->start, 0);
   XSETINT (bar->end, 0);
   bar->dragging = Qnil;
+  bar->redraw_needed_p = Qnil;
 #ifdef USE_TOOLKIT_SCROLL_BARS
   bar->track_top = Qnil;
   bar->track_height = Qnil;
@@ -5178,10 +5194,20 @@ XTset_vertical_scroll_bar (w, portion, whole, position)
       BLOCK_INPUT;
 
       /* If already correctly positioned, do nothing.  */
-      if (!(XINT (bar->left) == sb_left
-	    && XINT (bar->top) == top
-	    && XINT (bar->width) == sb_width
-	    && XINT (bar->height) == height))
+      if (XINT (bar->left) == sb_left
+	  && XINT (bar->top) == top
+	  && XINT (bar->width) == sb_width
+	  && XINT (bar->height) == height)
+	{
+	  if (!NILP (bar->redraw_needed_p))
+	    {
+#if USE_CG_DRAWING
+	      mac_prepare_for_quickdraw (f);
+#endif
+	      Draw1Control (SCROLL_BAR_CONTROL_HANDLE (bar));
+	    }
+	}
+      else
 	{
 	  /* Since toolkit scroll bars are smaller than the space reserved
 	     for them on the frame, we have to clear "under" them.  */
@@ -5213,6 +5239,8 @@ XTset_vertical_scroll_bar (w, portion, whole, position)
 
       UNBLOCK_INPUT;
     }
+
+  bar->redraw_needed_p = Qnil;
 
 #ifdef USE_TOOLKIT_SCROLL_BARS
   if (NILP (bar->track_top))
@@ -5566,8 +5594,15 @@ void
 x_scroll_bar_clear (f)
      FRAME_PTR f;
 {
-  XTcondemn_scroll_bars (f);
-  XTjudge_scroll_bars (f);
+  Lisp_Object bar;
+
+  /* We can have scroll bars even if this is 0,
+     if we just turned off scroll bar mode.
+     But in that case we should not clear them.  */
+  if (FRAME_HAS_VERTICAL_SCROLL_BARS (f))
+    for (bar = FRAME_SCROLL_BARS (f); VECTORP (bar);
+	 bar = XSCROLL_BAR (bar)->next)
+      XSCROLL_BAR (bar)->redraw_needed_p = Qt;
 }
 
 
@@ -7558,7 +7593,7 @@ init_font_name_table ()
 	make_hash_table (Qequal, make_number (DEFAULT_HASH_SIZE),
 			 make_float (DEFAULT_REHASH_SIZE),
 			 make_float (DEFAULT_REHASH_THRESHOLD),
-			 Qnil, Qnil, Qnil);;
+			 Qnil, Qnil, Qnil);
       h = XHASH_TABLE (atsu_font_id_hash);
 
       err = ATSUFontCount (&nfonts);
@@ -8136,7 +8171,7 @@ mac_load_query_font (f, fontname)
 
       font_id = atsu_find_font_from_family_name (family);
       if (font_id == kATSUInvalidFontID)
-	return;
+	return NULL;
       size_fixed = Long2Fix (size);
       bold_p = (fontface & bold) != 0;
       italic_p = (fontface & italic) != 0;
@@ -8974,8 +9009,8 @@ static const unsigned char keycode_to_xkeysym_table[] = {
 /* Table for translating Mac keycode with the laptop `fn' key to that
    without it.  Destination symbols in comments are keys on US
    keyboard, and they may not be the same on other types of keyboards.
-   If the destination is identical to the source (f1 ... f12), it
-   doesn't map `fn' key to a modifier.  */
+   If the destination is identical to the source, it doesn't map `fn'
+   key to a modifier.  */
 static const unsigned char fn_keycode_to_keycode_table[] = {
   /*0x00*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   /*0x10*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -8998,25 +9033,25 @@ static const unsigned char fn_keycode_to_keycode_table[] = {
 
   /*0x60*/ 0x60 /*f5 = f5*/, 0x61 /*f6 = f6*/, 0x62 /*f7 = f7*/, 0x63 /*f3 = f3*/,
   /*0x64*/ 0x64 /*f8 = f8*/, 0x65 /*f9 = f9*/, 0, 0x67 /*f11 = f11*/,
-  /*0x68*/ 0, 0, 0, 0,
+  /*0x68*/ 0, 0x69 /*f13 = f13*/, 0x6a /*f16 = f16*/, 0x6b /*f14 = f14*/,
   /*0x6C*/ 0, 0x6d /*f10 = f10*/, 0, 0x6f /*f12 = f12*/,
 
-  /*0x70*/ 0, 0, 0, 0x7b /*home -> left*/,
+  /*0x70*/ 0, 0x71 /*f15 = f15*/, 0x72 /*help = help*/, 0x7b /*home -> left*/,
   /*0x74*/ 0x7e /*pgup -> up*/, 0x33 /*delete -> backspace*/, 0x76 /*f4 = f4*/, 0x7c /*end -> right*/,
-  /*0x78*/ 0x78 /*f2 = f2*/, 0x7d /*pgdown -> down*/, 0x7a /*f1 = f1*/, 0,
-  /*0x7C*/ 0, 0, 0, 0
+  /*0x78*/ 0x78 /*f2 = f2*/, 0x7d /*pgdown -> down*/, 0x7a /*f1 = f1*/, 0x7b /*left = left*/,
+  /*0x7C*/ 0x7c /*right = right*/, 0x7d /*down = down*/, 0x7e /*up = up*/, 0
 };
 #endif	/* MAC_OSX */
 
 static int
 #if USE_CARBON_EVENTS
-mac_to_emacs_modifiers (UInt32 mods)
+mac_to_emacs_modifiers (UInt32 mods, UInt32 unmapped_mods)
 #else
-mac_to_emacs_modifiers (EventModifiers mods)
+mac_to_emacs_modifiers (EventModifiers mods, EventModifiers unmapped_mods)
 #endif
 {
   unsigned int result = 0;
-  if (mods & shiftKey)
+  if ((mods | unmapped_mods) & shiftKey)
     result |= shift_modifier;
 
   /* Deactivated to simplify configuration:
@@ -9056,8 +9091,8 @@ mac_to_emacs_modifiers (EventModifiers mods)
 }
 
 static UInt32
-mac_mapped_modifiers (modifiers)
-     UInt32 modifiers;
+mac_mapped_modifiers (modifiers, key_code)
+     UInt32 modifiers, key_code;
 {
   UInt32 mapped_modifiers_all =
     (NILP (Vmac_control_modifier) ? 0 : controlKey)
@@ -9067,6 +9102,17 @@ mac_mapped_modifiers (modifiers)
 #ifdef MAC_OSX
   mapped_modifiers_all |=
     (NILP (Vmac_function_modifier) ? 0 : kEventKeyModifierFnMask);
+
+  /* The meaning of kEventKeyModifierFnMask has changed in Mac OS X
+     10.5, and it now behaves much like Cocoa's NSFunctionKeyMask.  It
+     no longer means laptop's `fn' key is down for the following keys:
+     F1, F2, and so on, Help, Forward Delete, Home, End, Page Up, Page
+     Down, the arrow keys, and Clear.  We ignore the corresponding bit
+     if that key can be entered without the `fn' key on laptops.  */
+  if (modifiers & kEventKeyModifierFnMask
+      && key_code <= 0x7f
+      && fn_keycode_to_keycode_table[key_code] == key_code)
+    modifiers &= ~kEventKeyModifierFnMask;
 #endif
 
   return mapped_modifiers_all & modifiers;
@@ -9095,18 +9141,19 @@ int
 mac_quit_char_key_p (modifiers, key_code)
      UInt32 modifiers, key_code;
 {
-  UInt32 char_code;
+  UInt32 char_code, mapped_modifiers;
   unsigned long some_state = 0;
   Ptr kchr_ptr = (Ptr) GetScriptManagerVariable (smKCHRCache);
   int c, emacs_modifiers;
 
   /* Mask off modifier keys that are mapped to some Emacs modifiers.  */
-  key_code |= (modifiers & ~(mac_mapped_modifiers (modifiers)));
+  mapped_modifiers = mac_mapped_modifiers (modifiers, key_code);
+  key_code |= (modifiers & ~mapped_modifiers);
   char_code = KeyTranslate (kchr_ptr, key_code, &some_state);
   if (char_code & ~0xff)
     return 0;
 
-  emacs_modifiers = mac_to_emacs_modifiers (modifiers);
+  emacs_modifiers = mac_to_emacs_modifiers (mapped_modifiers, modifiers);
   if (emacs_modifiers & ctrl_modifier)
     c = make_ctrl_char (char_code);
 
@@ -9132,7 +9179,7 @@ mac_event_to_emacs_modifiers (EventRef eventRef)
     {
       mods &= ~(optionKey | cmdKey);
     }
-  return mac_to_emacs_modifiers (mods);
+  return mac_to_emacs_modifiers (mods, 0);
 }
 
 /* Given an event ref, return the code to use for the mouse button
@@ -9722,7 +9769,7 @@ mac_store_drag_event (window, mouse_pos, modifiers, desc)
   EVENT_INIT (buf);
 
   buf.kind = DRAG_N_DROP_EVENT;
-  buf.modifiers = mac_to_emacs_modifiers (modifiers);
+  buf.modifiers = mac_to_emacs_modifiers (modifiers, 0);
   buf.timestamp = TickCount () * (1000 / 60);
   XSETINT (buf.x, mouse_pos.h);
   XSETINT (buf.y, mouse_pos.v);
@@ -10168,7 +10215,7 @@ mac_handle_text_input_event (next_handler, event, data)
     case kEventTextInputUnicodeForKeyEvent:
       {
 	EventRef kbd_event;
-	UInt32 actual_size, modifiers;
+	UInt32 actual_size, modifiers, key_code;
 
 	err = GetEventParameter (event, kEventParamTextInputSendKeyboardEvent,
 				 typeEventRef, NULL, sizeof (EventRef), NULL,
@@ -10177,7 +10224,11 @@ mac_handle_text_input_event (next_handler, event, data)
 	  err = GetEventParameter (kbd_event, kEventParamKeyModifiers,
 				   typeUInt32, NULL,
 				   sizeof (UInt32), NULL, &modifiers);
-	if (err == noErr && mac_mapped_modifiers (modifiers))
+	if (err == noErr)
+	  err = GetEventParameter (kbd_event, kEventParamKeyCode,
+				   typeUInt32, NULL, sizeof (UInt32),
+				   NULL, &key_code);
+	if (err == noErr && mac_mapped_modifiers (modifiers, key_code))
 	  /* There're mapped modifier keys.  Process it in
 	     XTread_socket.  */
 	  return eventNotHandledErr;
@@ -10195,29 +10246,21 @@ mac_handle_text_input_event (next_handler, event, data)
 	    if (err == noErr && code < 0x80)
 	      {
 		/* ASCII character.  Process it in XTread_socket.  */
-		if (read_socket_inev && code >= 0x20 && code <= 0x7e)
+		if (read_socket_inev && code >= 0x20 && code <= 0x7e
+		    && !(key_code <= 0x7f
+			 && keycode_to_xkeysym_table [key_code]))
 		  {
-		    UInt32 key_code;
+		    struct frame *f = mac_focus_frame (&one_mac_display_info);
 
-		    err = GetEventParameter (kbd_event, kEventParamKeyCode,
-					     typeUInt32, NULL, sizeof (UInt32),
-					     NULL, &key_code);
-		    if (!(err == noErr && key_code <= 0x7f
-			  && keycode_to_xkeysym_table [key_code]))
-		      {
-			struct frame *f =
-			  mac_focus_frame (&one_mac_display_info);
-
-			read_socket_inev->kind = ASCII_KEYSTROKE_EVENT;
-			read_socket_inev->code = code;
-			read_socket_inev->modifiers =
-			  mac_to_emacs_modifiers (modifiers);
-			read_socket_inev->modifiers |=
-			  (extra_keyboard_modifiers
-			   & (meta_modifier | alt_modifier
-			      | hyper_modifier | super_modifier));
-			XSETFRAME (read_socket_inev->frame_or_window, f);
-		      }
+		    read_socket_inev->kind = ASCII_KEYSTROKE_EVENT;
+		    read_socket_inev->code = code;
+		    read_socket_inev->modifiers =
+		      mac_to_emacs_modifiers (modifiers, 0);
+		    read_socket_inev->modifiers |=
+		      (extra_keyboard_modifiers
+		       & (meta_modifier | alt_modifier
+			  | hyper_modifier | super_modifier));
+		    XSETFRAME (read_socket_inev->frame_or_window, f);
 		  }
 		return eventNotHandledErr;
 	      }
@@ -10244,6 +10287,9 @@ mac_handle_text_input_event (next_handler, event, data)
 	   previous events may change some states about display.  */
 	if (NILP (Foverlay_get (Vmac_ts_active_input_overlay, Qbefore_string)))
 	  {
+	    if (!WINDOWP (echo_area_window))
+	      return eventNotHandledErr;
+
 	    /* Active input area is displayed in the echo area.  */
 	    w = XWINDOW (echo_area_window);
 	    f = WINDOW_XFRAME (w);
@@ -10855,7 +10901,7 @@ XTread_socket (sd, expected, hold_quit)
 		    inev.modifiers = mac_event_to_emacs_modifiers (eventRef);
 #else
 		    inev.code = mac_get_emulated_btn (er.modifiers);
-		    inev.modifiers = mac_to_emacs_modifiers (er.modifiers);
+		    inev.modifiers = mac_to_emacs_modifiers (er.modifiers, 0);
 #endif
 		    XSETINT (inev.x, mouse_loc.h);
 		    XSETINT (inev.y, mouse_loc.v);
@@ -11106,10 +11152,16 @@ XTread_socket (sd, expected, hold_quit)
 			  /* Window will be selected only when it is
 			     not selected now and last mouse movement
 			     event was not in it.  Minibuffer window
-			     will be selected iff it is active.  */
+			     will be selected only when it is active.  */
 			  if (WINDOWP (window)
 			      && !EQ (window, last_window)
-			      && !EQ (window, selected_window))
+			      && !EQ (window, selected_window)
+			      /* For click-to-focus window managers
+			         create event iff we don't leave the
+			         selected frame.  */
+			      && (focus_follows_mouse
+				  || (EQ (XWINDOW (window)->frame,
+					  XWINDOW (selected_window)->frame))))
 			    {
 			      inev.kind = SELECT_WINDOW_EVENT;
 			      inev.frame_or_window = window;
@@ -11220,7 +11272,7 @@ XTread_socket (sd, expected, hold_quit)
 			       typeUInt32, NULL,
 			       sizeof (UInt32), NULL, &modifiers);
 #endif
-	    mapped_modifiers = mac_mapped_modifiers (modifiers);
+	    mapped_modifiers = mac_mapped_modifiers (modifiers, keycode);
 
 #if USE_CARBON_EVENTS && (defined (MAC_OSX) || USE_MAC_TSM)
 	    /* When using Carbon Events, we need to pass raw keyboard
@@ -11285,12 +11337,6 @@ XTread_socket (sd, expected, hold_quit)
 	      {
 		inev.kind = NON_ASCII_KEYSTROKE_EVENT;
 		inev.code = 0xff00 | keycode_to_xkeysym_table [keycode];
-#ifdef MAC_OSX
-		if (modifiers & kEventKeyModifierFnMask
-		    && keycode <= 0x7f
-		    && fn_keycode_to_keycode_table[keycode] == keycode)
-		  modifiers &= ~kEventKeyModifierFnMask;
-#endif
 	      }
 	    else if (mapped_modifiers)
 	      {
@@ -11384,7 +11430,8 @@ XTread_socket (sd, expected, hold_quit)
 		inev.code = er.message & charCodeMask;
 	      }
 
-	    inev.modifiers = mac_to_emacs_modifiers (modifiers);
+	    inev.modifiers = mac_to_emacs_modifiers (mapped_modifiers,
+						     modifiers);
 	    inev.modifiers |= (extra_keyboard_modifiers
 			       & (meta_modifier | alt_modifier
 				  | hyper_modifier | super_modifier));

@@ -6,10 +6,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -21,9 +21,9 @@ Foundation, Inc.
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 
 File: elisp,  Node: Synchronous Processes,  Next: Asynchronous Processes,  Prev: Shell Arguments,  Up: Processes
@@ -1687,7 +1687,7 @@ File: elisp,  Node: Misc Network,  Next: Byte Packing,  Prev: Low-Level Network,
 =============================
 
 These additional functions are useful for creating and operating on
-network connections.
+network connections.  Note that they are supported only on some systems.
 
  -- Function: network-interface-list
      This function returns a list describing the network interfaces of
@@ -2197,20 +2197,10 @@ corrupted.
  -- Command: redraw-display
      This function clears and redisplays all visible frames.
 
-   This function calls for redisplay of certain windows, the next time
-redisplay is done, but does not clear them first.
-
- -- Function: force-window-update &optional object
-     This function forces some or all windows to be updated on next
-     redisplay.  If OBJECT is a window, it forces redisplay of that
-     window.  If OBJECT is a buffer or buffer name, it forces redisplay
-     of all windows displaying that buffer.  If OBJECT is `nil' (or
-     omitted), it forces redisplay of all windows.
-
-   Processing user input takes absolute priority over redisplay.  If you
-call these functions when input is available, they do nothing
-immediately, but a full redisplay does happen eventually--after all the
-input has been processed.
+   In Emacs, processing user input takes priority over redisplay.  If
+you call these functions when input is available, they don't redisplay
+immediately, but the requested redisplay does happen eventually--after
+all the input has been processed.
 
    Normally, suspending and resuming Emacs also refreshes the screen.
 Some terminal emulators record separate contents for display-oriented
@@ -2230,10 +2220,51 @@ File: elisp,  Node: Forcing Redisplay,  Next: Truncation,  Prev: Refresh Screen,
 38.2 Forcing Redisplay
 ======================
 
-Emacs redisplay normally stops if input arrives, and does not happen at
-all if input is available before it starts.  Most of the time, this is
-exactly what you want.  However, you can prevent preemption by binding
-`redisplay-dont-pause' to a non-`nil' value.
+Emacs normally tries to redisplay the screen whenever it waits for
+input.  With this function you can request an immediate attempt to
+redisplay, in the middle of Lisp code, without actually waiting for
+input.
+
+ -- Function: redisplay &optional force
+     This function tries immediately to redisplay, provided there are no
+     pending input events.  It is equivalent to `(sit-for 0)'.
+
+     If the optional argument FORCE is non-`nil', it does all pending
+     redisplay work even if input is available, with no pre-emption.
+
+     The function returns `t' if it actually tried to redisplay, and
+     `nil' otherwise.  A value of `t' does not mean that redisplay
+     proceeded to completion; it could have been pre-empted by newly
+     arriving terminal input.
+
+   `redisplay' with no argument tries immediately to redisplay, but has
+no effect on the usual rules for what parts of the screen to redisplay.
+By contrast, the following function adds certain windows to the
+pending redisplay work (as if their contents had completely changed),
+but doesn't immediately try to do any redisplay work.
+
+ -- Function: force-window-update &optional object
+     This function forces some or all windows to be updated on next
+     redisplay.  If OBJECT is a window, it requires eventual redisplay
+     of that window.  If OBJECT is a buffer or buffer name, it requires
+     eventual redisplay of all windows displaying that buffer.  If
+     OBJECT is `nil' (or omitted), it requires eventual redisplay of
+     all windows.
+
+   `force-window-update' does not do a redisplay immediately.  (Emacs
+will do that when it waits for input.)  Rather, its effect is to put
+more work on the queue to be done by redisplay whenever there is a
+chance.
+
+   Emacs redisplay normally stops if input arrives, and does not happen
+at all if input is available before it starts.  Most of the time, this
+is exactly what you want.  However, you can prevent preemption by
+binding `redisplay-dont-pause' to a non-`nil' value.
+
+ -- Variable: redisplay-dont-pause
+     If this variable is non-`nil', pending input does not prevent or
+     halt redisplay; redisplay occurs, and finishes, regardless of
+     whether input is available.
 
  -- Variable: redisplay-preemption-period
      This variable specifies how many seconds Emacs waits between checks
@@ -2246,20 +2277,6 @@ exactly what you want.  However, you can prevent preemption by binding
 
      This variable is only obeyed on graphical terminals.  For text
      terminals, see *Note Terminal Output::.
-
- -- Variable: redisplay-dont-pause
-     If this variable is non-`nil', pending input does not prevent or
-     halt redisplay; redisplay occurs, and finishes, regardless of
-     whether input is available.
-
- -- Function: redisplay &optional force
-     This function performs an immediate redisplay provided there are no
-     pending input events.  This is equivalent to `(sit-for 0)'.
-
-     If the optional argument FORCE is non-`nil', it forces an
-     immediate and complete redisplay even if input is available.
-
-     Returns `t' if redisplay was performed, or `nil' otherwise.
 
 
 File: elisp,  Node: Truncation,  Next: The Echo Area,  Prev: Forcing Redisplay,  Up: Display
@@ -3753,8 +3770,7 @@ faces in Lisp programs by the symbols that name them.
 
  -- Function: facep object
      This function returns `t' if OBJECT is a face name string or
-     symbol (or if it is a vector of the kind used internally to record
-     face data).  It returns `nil' otherwise.
+     symbol.  It returns `nil' otherwise.
 
    Each face name is meaningful for all frames, and by default it has
 the same meaning in all frames.  But you can arrange to give a
@@ -3796,6 +3812,11 @@ Customization.).
      When `defface' executes, it defines the face according to SPEC,
      then uses any customizations that were read from the init file
      (*note Init File::) to override that specification.
+
+     When you evaluate a `defface' form with `C-M-x' in Emacs Lisp mode
+     (`eval-defun'), a special feature of `eval-defun' overrides any
+     customizations of the face.  This way, the face reflects exactly
+     what the `defface' says.
 
      The purpose of SPEC is to specify how the face should appear on
      different kinds of terminals.  It should be an alist whose elements
@@ -4478,7 +4499,8 @@ File: elisp,  Node: Auto Faces,  Next: Font Lookup,  Prev: Face Functions,  Up: 
 ---------------------------------
 
 This hook is used for automatically assigning faces to text in the
-buffer.  It is part of the implementation of Font-Lock mode.
+buffer.  It is part of the implementation of Jit-Lock mode, used by
+Font-Lock.
 
  -- Variable: fontification-functions
      This variable holds a list of functions that are called by Emacs
@@ -5146,15 +5168,51 @@ File: elisp,  Node: Display Property,  Next: Images,  Prev: Scroll Bars,  Up: Di
 The `display' text property (or overlay property) is used to insert
 images into text, and also control other aspects of how text displays.
 The value of the `display' property should be a display specification,
-or a list or vector containing several display specifications.
+or a list or vector containing several display specifications.  Display
+specifications in the same `display' property value generally apply in
+parallel to the text they cover.
 
-   Some kinds of `display' properties specify something to display
-instead of the text that has the property.  In this case, "the text"
-means all the consecutive characters that have the same Lisp object as
-their `display' property; these characters are replaced as a single
-unit.  By contrast, characters that have similar but distinct Lisp
-objects as their `display' properties are handled separately.  Here's a
-function that illustrates this point:
+   If several sources (overlays and/or a text property) specify values
+for the `display' property, only one of the values takes effect,
+following the rules of `get-char-property'.  *Note Examining
+Properties::.
+
+   The rest of this section describes several kinds of display
+specifications and what they mean.
+
+* Menu:
+
+* Replacing Specs::      Display specs that replace the text.
+* Specified Space::      Displaying one space with a specified width.
+* Pixel Specification::  Specifying space width or height in pixels.
+* Other Display Specs::  Displaying an image; magnifying text; moving it
+                          up or down on the page; adjusting the width
+                          of spaces within text.
+* Display Margins::     Displaying text or images to the side of the main text.
+
+
+File: elisp,  Node: Replacing Specs,  Next: Specified Space,  Up: Display Property
+
+38.15.1 Display Specs That Replace The Text
+-------------------------------------------
+
+Some kinds of `display' specifications specify something to display
+instead of the text that has the property.  These are called
+"replacing" display specifications.  Emacs does not allow the user to
+interactively move point into the middle of buffer text that is
+replaced in this way.
+
+   If a list of display specifications includes more than one replacing
+display specification, the first overrides the rest.  Replacing display
+specifications make most other display specifications irrelevant, since
+those don't apply to the replacement.
+
+   For replacing display specifications, "the text that has the
+property" means all the consecutive characters that have the same Lisp
+object as their `display' property; these characters are replaced as a
+single unit.  By contrast, characters that have similar but distinct
+Lisp objects as their `display' properties are handled separately.
+Here's a function that illustrates this point:
 
      (defun foo ()
        (goto-char (point-min))
@@ -5177,7 +5235,7 @@ function would have the same results:
        (goto-char (point-min))
        (dotimes (i 5)
          (let ((string (concat "A")))
-           (put-text-property (point) (2+ (point)) 'display string)
+           (put-text-property (point) (+ 2 (point)) 'display string)
            (put-text-property (point) (1+ (point)) 'display string)
            (forward-char 2))))
 
@@ -5187,22 +5245,10 @@ character.  If two consecutive characters have the same object as the
 property from a single call to `put-text-property' or from two
 different calls.
 
-   The rest of this section describes several kinds of display
-specifications and what they mean.
-
-* Menu:
-
-* Specified Space::      Displaying one space with a specified width.
-* Pixel Specification::  Specifying space width or height in pixels.
-* Other Display Specs::  Displaying an image; magnifying text; moving it
-                          up or down on the page; adjusting the width
-                          of spaces within text.
-* Display Margins::     Displaying text or images to the side of the main text.
-
 
-File: elisp,  Node: Specified Space,  Next: Pixel Specification,  Up: Display Property
+File: elisp,  Node: Specified Space,  Next: Pixel Specification,  Prev: Replacing Specs,  Up: Display Property
 
-38.15.1 Specified Spaces
+38.15.2 Specified Spaces
 ------------------------
 
 To display a space of specified width and/or height, use a display
@@ -5261,7 +5307,7 @@ terminals, but the other space properties in this section are not.
 
 File: elisp,  Node: Pixel Specification,  Next: Other Display Specs,  Prev: Specified Space,  Up: Display Property
 
-38.15.2 Pixel Specification for Spaces
+38.15.3 Pixel Specification for Spaces
 --------------------------------------
 
 The value of the `:width', `:align-to', `:height', and `:ascent'
@@ -5323,7 +5369,7 @@ form `(- EXPR ...)' negates or subtracts the value of the expressions.
 
 File: elisp,  Node: Other Display Specs,  Next: Display Margins,  Prev: Pixel Specification,  Up: Display Property
 
-38.15.3 Other Display Specifications
+38.15.4 Other Display Specifications
 ------------------------------------
 
 Here are the other sorts of display specifications that you can use in
@@ -5420,25 +5466,29 @@ Both positions can be different when `object' is a string.
 
 File: elisp,  Node: Display Margins,  Prev: Other Display Specs,  Up: Display Property
 
-38.15.4 Displaying in the Margins
+38.15.5 Displaying in the Margins
 ---------------------------------
 
 A buffer can have blank areas called "display margins" on the left and
 on the right.  Ordinary text never appears in these areas, but you can
 put things into the display margins using the `display' property.
+There is currently no way to make text or images in the margin
+mouse-sensitive.
 
-   To put text in the left or right display margin of the window, use a
-display specification of the form `(margin right-margin)' or `(margin
-left-margin)' on it.  To put an image in a display margin, use that
-display specification along with the display specification for the
-image.  Unfortunately, there is currently no way to make text or images
-in the margin mouse-sensitive.
+   The way to display something in the margins is to specify it in a
+margin display specification in the `display' property of some text.
+This is a replacing display specification, meaning that the text you
+put it on does not get displayed; the margin display appears, but that
+text does not.
 
-   If you put such a display specification directly on text in the
-buffer, the specified margin display appears _instead of_ that buffer
-text itself.  To put something in the margin _in association with_
-certain buffer text without preventing or altering the display of that
-text, put a `before-string' property on the text and put the display
+   A margin display specification looks like `((margin right-margin)
+SPEC' or `((margin left-margin) SPEC)'.  Here, SPEC is another display
+specification that says what to display in the margin.  Typically it is
+a string of text to display, or an image descriptor.
+
+   To display something in the margin _in association with_ certain
+buffer text, without altering or preventing the display of that text,
+put a `before-string' property on the text and put the margin display
 specification on the contents of the before-string.
 
    Before the display margins can display anything, you must give them
@@ -6074,14 +6124,41 @@ File: elisp,  Node: Image Cache,  Prev: Showing Images,  Up: Images
 38.16.9 Image Cache
 -------------------
 
-Emacs stores images in an image cache when it displays them, so it can
-display them again more efficiently.  It removes an image from the cache
-when it hasn't been displayed for a specified period of time.
+Emacs stores images in an image cache so that it can display them again
+more efficiently.  When Emacs displays an image, it searches the image
+cache for an existing image specification `equal' to the desired
+specification.  If a match is found, the image is displayed from the
+cache; otherwise, Emacs loads the image normally.
 
-   When an image is looked up in the cache, its specification is
-compared with cached image specifications using `equal'.  This means
-that all images with equal specifications share the same image in the
-cache.
+   Occasionally, you may need to tell Emacs to refresh the images
+associated with a given image specification.  For example, suppose you
+display an image using a specification that contains a `:file'
+property.  The image is loaded from the given file and stored in the
+image cache.  If you later display the image again, using the same
+image specification, the image is displayed from the image cache.
+Normally, this is not a problem.  However, if the image file has
+changed in the meantime, Emacs would be displaying the old version of
+the image.  In such a situation, it is necessary to "refresh" the image
+using `image-refresh'.
+
+ -- Function: image-refresh spec &optional frame
+     This function refreshes any images having image specifications
+     `equal' to SPEC on frame FRAME.  If FRAME is `nil', the selected
+     frame is used.  If FRAME is `t', the refresh is applied to all
+     existing frames.
+
+     This works by removing all image with image specifications matching
+     SPEC from the image cache.  Thus, the next time the image is
+     displayed, Emacs will load the image again.
+
+ -- Function: clear-image-cache &optional frame
+     This function clears the entire image cache.  If FRAME is
+     non-`nil', only the cache for that frame is cleared.  Otherwise,
+     all frames' caches are cleared.
+
+   If an image in the image cache has not been displayed for a specified
+period of time, Emacs removes it from the cache and frees the
+associated memory.
 
  -- Variable: image-cache-eviction-delay
      This variable specifies the number of seconds an image can remain
@@ -6092,11 +6169,6 @@ cache.
      If the value is `nil', Emacs does not remove images from the cache
      except when you explicitly clear it.  This mode can be useful for
      debugging.
-
- -- Function: clear-image-cache &optional frame
-     This function clears the image cache.  If FRAME is non-`nil', only
-     the cache for that frame is cleared.  Otherwise all frames' caches
-     are cleared.
 
 
 File: elisp,  Node: Buttons,  Next: Abstract Display,  Prev: Images,  Up: Display
@@ -6921,105 +6993,4 @@ effect of setting `ctl-arrow' to a non-`nil' value:
  -- Command: describe-current-display-table
      This command displays a description of the current display table
      in a help buffer.
-
-
-File: elisp,  Node: Active Display Table,  Next: Glyphs,  Prev: Display Table Format,  Up: Display Tables
-
-38.21.2 Active Display Table
-----------------------------
-
-Each window can specify a display table, and so can each buffer.  When
-a buffer B is displayed in window W, display uses the display table for
-window W if it has one; otherwise, the display table for buffer B if it
-has one; otherwise, the standard display table if any.  The display
-table chosen is called the "active" display table.
-
- -- Function: window-display-table &optional window
-     This function returns WINDOW's display table, or `nil' if WINDOW
-     does not have an assigned display table.  The default for WINDOW
-     is the selected window.
-
- -- Function: set-window-display-table window table
-     This function sets the display table of WINDOW to TABLE.  The
-     argument TABLE should be either a display table or `nil'.
-
- -- Variable: buffer-display-table
-     This variable is automatically buffer-local in all buffers; its
-     value in a particular buffer specifies the display table for that
-     buffer.  If it is `nil', that means the buffer does not have an
-     assigned display table.
-
- -- Variable: standard-display-table
-     This variable's value is the default display table, used whenever a
-     window has no display table and neither does the buffer displayed
-     in that window.  This variable is `nil' by default.
-
-   If there is no display table to use for a particular window--that is,
-if the window specifies none, its buffer specifies none, and
-`standard-display-table' is `nil'--then Emacs uses the usual display
-conventions for all character codes in that window.  *Note Usual
-Display::.
-
-   A number of functions for changing the standard display table are
-defined in the library `disp-table'.
-
-
-File: elisp,  Node: Glyphs,  Prev: Active Display Table,  Up: Display Tables
-
-38.21.3 Glyphs
---------------
-
-A "glyph" is a generalization of a character; it stands for an image
-that takes up a single character position on the screen.  Normally
-glyphs come from vectors in the display table (*note Display Tables::).
-
-   A glyph is represented in Lisp as a "glyph code".  A glyph code can
-be "simple" or it can be defined by the "glyph table".  A simple glyph
-code is just a way of specifying a character and a face to output it
-in.  *Note Faces::.
-
-   The following functions are used to manipulate simple glyph codes:
-
- -- Function: make-glyph-code char &optional face
-     This function returns a simple glyph code representing char CHAR
-     with face FACE.
-
- -- Function: glyph-char glyph
-     This function returns the character of simple glyph code GLYPH.
-
- -- Function: glyph-face glyph
-     This function returns face of simple glyph code GLYPH, or `nil' if
-     GLYPH has the default face (face-id 0).
-
-   On character terminals, you can set up a "glyph table" to define the
-meaning of glyph codes (represented as small integers).
-
- -- Variable: glyph-table
-     The value of this variable is the current glyph table.  It should
-     be `nil' or a vector whose Gth element defines glyph code G.
-
-     If a glyph code is greater than or equal to the length of the glyph
-     table, that code is automatically simple.  If `glyph-table' is
-     `nil' then all glyph codes are simple.
-
-     The glyph table is used only on character terminals.  On graphical
-     displays, all glyph codes are simple.
-
-   Here are the meaningful types of elements in the glyph table:
-
-STRING
-     Send the characters in STRING to the terminal to output this glyph
-     code.
-
-CODE
-     Define this glyph code as an alias for glyph code CODE created by
-     `make-glyph-code'.  You can use such an alias to define a
-     small-numbered glyph code which specifies a character with a face.
-
-`nil'
-     This glyph code is simple.
-
- -- Function: create-glyph string
-     This function returns a newly-allocated glyph code which is set up
-     to display by sending STRING to the terminal.
 

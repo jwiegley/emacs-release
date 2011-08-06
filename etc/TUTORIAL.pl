@@ -563,14 +563,6 @@ za du¿o w wypadku za³amania systemu.
 >> Naci¶nij C-x C-s, by zachowaæ dla siebie kopiê samouczka. Emacs
    powinien wypisaæ "Wrote ...TUTORIAL" na dole ekranu.
 
-UWAGA: W niektórych systemach naci¶niêcie C-x C-s zamra¿a ekran i w
-rezultacie Emacs nie mo¿e pokazywaæ tekstu. Oznacza to, ¿e sk³adowa
-systemu operacyjnego, zwana kontrol± przep³ywu (ang. flow control),
-przechwyci³a znak C-s i nie pozwoli³a mu dotrzeæ do Emacsa. By odzyskaæ
-kontrolê nad ekranem, naci¶nij C-q. Dodatkowej pomocy poszukaj w
-rozdziale "Spontaneous Entry to Incremental Search" w podrêczniku
-Emacsa.
-
 Odwiedziæ w celu edycji lub odczytu mo¿esz plik istniej±cy ju¿ w
 systemie. Mo¿esz te¿ odwiedziæ plik, którego jeszcze nie ma w systemie i
 w³a¶nie w taki sposób tworzy siê w Emacsie nowe pliki. Gdy poleceniem
@@ -1218,7 +1210,7 @@ Ta wersja samouczka, podobnie jak GNU Emacs, jest chroniona prawem
 autorskim, ale wolno j± kopiowaæ pod nastêpuj±cymi warunkami:
 
 Copyright (C) 1985, 1994, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 Zezwala siê na wykonywanie lub rozpowszechnianie
 wiernych kopii tego dokumentu w otrzymanej formie, na dowolnym

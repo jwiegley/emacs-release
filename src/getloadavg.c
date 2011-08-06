@@ -1,6 +1,6 @@
 /* Get the system load averages.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1991, 1992, 1993, 1994, 1995,
-                 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+                 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
                  Free Software Foundation, Inc.
 
    NOTE: The canonical source of this file is maintained with gnulib.
@@ -484,7 +484,7 @@ static struct dg_sys_info_load_info load_info;	/* what-a-mouthful! */
 #if !defined(HAVE_LIBKSTAT) && defined(LOAD_AVE_TYPE)
 /* File descriptor open to /dev/kmem or VMS load ave driver.  */
 static int channel;
-/* Nonzero iff channel is valid.  */
+/* Nonzero if channel is valid.  */
 static int getloadavg_initialized;
 /* Offset in kmem to seek to read load average, or 0 means invalid.  */
 static long offset;

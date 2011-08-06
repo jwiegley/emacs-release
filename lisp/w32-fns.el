@@ -1,7 +1,7 @@
 ;;; w32-fns.el --- Lisp routines for Windows NT
 
 ;; Copyright (C) 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Geoff Voelker <voelker@cs.washington.edu>
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -149,14 +149,19 @@ You should set this to t when using a non-system shell.\n\n"))))
 	(if default-enable-multibyte-characters
 	    '(undecided-dos . undecided-unix)
 	  '(raw-text-dos . raw-text-unix)))
-  (or (w32-using-nt)
-      ;; On Windows 9x, make cmdproxy default to using DOS line endings
-      ;; for input, because command.com requires this.
-      (setq process-coding-system-alist
-	    `(("[cC][mM][dD][pP][rR][oO][xX][yY]"
-	       . ,(if default-enable-multibyte-characters
-		      '(undecided-dos . undecided-dos)
-		    '(raw-text-dos . raw-text-dos)))))))
+  ;; Make cmdproxy default to using DOS line endings for input,
+  ;; because some Windows programs (including command.com) require it.
+  (add-to-list 'process-coding-system-alist
+	       `("[cC][mM][dD][pP][rR][oO][xX][yY]"
+		 . ,(if default-enable-multibyte-characters
+			'(undecided-dos . undecided-dos)
+		      '(raw-text-dos . raw-text-dos))))
+  ;; plink needs DOS input when entering the password.
+  (add-to-list 'process-coding-system-alist
+	       `("[pP][lL][iI][nN][kK]"
+		 . ,(if default-enable-multibyte-characters
+			'(undecided-dos . undecided-dos)
+		      '(raw-text-dos . raw-text-dos)))))
 
 (add-hook 'before-init-hook 'set-default-process-coding-system)
 
@@ -374,9 +379,9 @@ bit output with no translation."
 (w32-add-charset-info "jisx0201-latin" 'w32-charset-shiftjis 932)
 (w32-add-charset-info "jisx0201-katakana" 'w32-charset-shiftjis 932)
 (w32-add-charset-info "jisx0208-sjis" 'w32-charset-shiftjis 932)
-(w32-add-charset-info "ksc5601.1987" 'w32-charset-hangeul 949)
+(w32-add-charset-info "ksc5601.1989" 'w32-charset-hangeul 949)
 (w32-add-charset-info "big5" 'w32-charset-chinesebig5 950)
-(w32-add-charset-info "gb2312" 'w32-charset-gb2312 936)
+(w32-add-charset-info "gb2312.1980" 'w32-charset-gb2312 936)
 (w32-add-charset-info "ms-symbol" 'w32-charset-symbol nil)
 (w32-add-charset-info "ms-oem" 'w32-charset-oem 437)
 (w32-add-charset-info "ms-oemlatin" 'w32-charset-oem 850)
@@ -394,10 +399,9 @@ bit output with no translation."
       (w32-add-charset-info "iso8859-5" 'w32-charset-russian 28595)
       (w32-add-charset-info "tis620" 'w32-charset-thai 874)
       (w32-add-charset-info "ksc5601.1992" 'w32-charset-johab 1361)
-      (w32-add-charset-info "mac" 'w32-charset-mac nil)))
+      (w32-add-charset-info "mac-latin" 'w32-charset-mac nil)))
 (if (boundp 'w32-unicode-charset-defined)
     (progn
-      (w32-add-charset-info "unicode" 'w32-charset-unicode t)
       (w32-add-charset-info "iso10646-1" 'w32-charset-unicode t))
   ;; If unicode windows charset is not defined, use ansi fonts.
   (w32-add-charset-info "iso10646-1" 'w32-charset-ansi t))

@@ -1,7 +1,7 @@
 ;;; mail-source.el --- functions for fetching mail
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news, mail
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -269,25 +269,28 @@ If non-nil, this maildrop will be checked periodically for new mail."
   :group 'mail-source
   :type 'integer)
 
-(defcustom mail-source-delete-incoming t
-  "*If non-nil, delete incoming files after handling.
+(defcustom mail-source-delete-incoming
+  ;; 10 ;; development versions
+  2 ;; released versions
+  "If non-nil, delete incoming files after handling.
 If t, delete immediately, if nil, never delete.  If a positive number, delete
-files older than number of days."
-  ;; Note: The removing happens in `mail-source-callback', i.e. no old
-  ;; incoming files will be deleted, unless you receive new mail.
-  ;;
-  ;; You may also set this to `nil' and call `mail-source-delete-old-incoming'
-  ;; from a hook or interactively.
+files older than number of days.
+
+Removing of old files happens in `mail-source-callback', i.e. no
+old incoming files will be deleted unless you receive new mail.
+You may also set this variable to nil and call
+`mail-source-delete-old-incoming' interactively."
   :group 'mail-source
+  :version "22.2" ;; No Gnus / Gnus 5.10.10 (default changed)
   :type '(choice (const :tag "immediately" t)
 		 (const :tag "never" nil)
 		 (integer :tag "days")))
 
-(defcustom mail-source-delete-old-incoming-confirm t
-  "*If non-nil, ask for for confirmation before deleting old incoming files.
+(defcustom mail-source-delete-old-incoming-confirm nil
+  "If non-nil, ask for confirmation before deleting old incoming files.
 This variable only applies when `mail-source-delete-incoming' is a positive
 number."
-  :version "22.1"
+  :version "22.2" ;; No Gnus / Gnus 5.10.10 (default changed)
   :group 'mail-source
   :type 'boolean)
 
@@ -533,7 +536,8 @@ If CONFIRM is non-nil, ask for confirmation before removing a file."
 	 currday files)
     (setq files (directory-files
 		 mail-source-directory t
-		 (concat mail-source-incoming-file-prefix "*"))
+		 (concat "\\`"
+			 (regexp-quote mail-source-incoming-file-prefix)))
 	  currday (* (car (current-time)) high2days)
 	  currday (+ currday (* low2days (nth 1 (current-time)))))
     (while files
@@ -545,10 +549,13 @@ If CONFIRM is non-nil, ask for confirmation before removing a file."
 	     (fileday (+ fileday (* low2days (nth 1 filetime)))))
 	(setq files (cdr files))
 	(when (and (> (- currday fileday) diff)
-		   (gnus-message 8 "File `%s' is older than %s day(s)"
-				 bfile diff)
-		   (or (not confirm)
-		       (y-or-n-p (concat "Remove file `" bfile "'? "))))
+		   (if confirm
+		       (y-or-n-p
+			(format "\
+Delete old (> %s day(s)) incoming mail file `%s'? " diff bfile))
+		     (gnus-message 8 "\
+Deleting old (> %s day(s)) incoming mail file `%s'." diff bfile)
+		     t))
 	  (delete-file ffile))))))
 
 (defun mail-source-callback (callback info)

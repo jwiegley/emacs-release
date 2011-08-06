@@ -1,9 +1,9 @@
 ;;; mule.el --- basic commands for mulitilingual environment
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007
+;;   2005, 2006, 2007, 2008
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -2302,25 +2302,26 @@ This function is intended to be added to `auto-coding-functions'."
 (defun sgml-html-meta-auto-coding-function (size)
   "If the buffer has an HTML meta tag, use it to determine encoding.
 This function is intended to be added to `auto-coding-functions'."
-  (setq size (min (+ (point) size)
-		  (save-excursion
-		    ;; Limit the search by the end of the HTML header.
-		    (or (search-forward "</head>" size t)
-			;; In case of no header, search only 10 lines.
-			(forward-line 10))
-		    (point))))
-  ;; Make sure that the buffer really contains an HTML document, by
-  ;; checking that it starts with a doctype or a <HTML> start tag
-  ;; (allowing for whitespace at bob).  Note: 'DOCTYPE NETSCAPE' is
-  ;; useful for Mozilla bookmark files.
-  (when (and (re-search-forward "\\`[[:space:]\n]*\\(<!doctype[[:space:]\n]+\\(html\\|netscape\\)\\|<html\\)" size t)
-	     (re-search-forward "<meta\\s-+http-equiv=[\"']?content-type[\"']?\\s-+content=[\"']text/\\sw+;\\s-*charset=\\(.+?\\)[\"']" size t))
-    (let* ((match (match-string 1))
-	   (sym (intern (downcase match))))
-      (if (coding-system-p sym)
-	  sym
-	(message "Warning: unknown coding system \"%s\"" match)
-	nil))))
+  (let ((case-fold-search t))
+    (setq size (min (+ (point) size)
+		    (save-excursion
+		      ;; Limit the search by the end of the HTML header.
+		      (or (search-forward "</head>" size t)
+			  ;; In case of no header, search only 10 lines.
+			  (forward-line 10))
+		      (point))))
+    ;; Make sure that the buffer really contains an HTML document, by
+    ;; checking that it starts with a doctype or a <HTML> start tag
+    ;; (allowing for whitespace at bob).  Note: 'DOCTYPE NETSCAPE' is
+    ;; useful for Mozilla bookmark files.
+    (when (and (re-search-forward "\\`[[:space:]\n]*\\(<!doctype[[:space:]\n]+\\(html\\|netscape\\)\\|<html\\)" size t)
+	       (re-search-forward "<meta\\s-+http-equiv=[\"']?content-type[\"']?\\s-+content=[\"']text/\\sw+;\\s-*charset=\\(.+?\\)[\"']" size t))
+      (let* ((match (match-string 1))
+	     (sym (intern (downcase match))))
+	(if (coding-system-p sym)
+	    sym
+	  (message "Warning: unknown coding system \"%s\"" match)
+	  nil)))))
 
 ;;;
 (provide 'mule)

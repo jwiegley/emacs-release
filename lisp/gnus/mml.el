@@ -1,14 +1,14 @@
 ;;; mml.el --- A package for parsing and validating MML documents
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -404,7 +404,7 @@ If MML is non-nil, return the buffer up till the correspondent mml tag."
 	(mml-multipart-number mml-multipart-number))
     (if (not cont)
 	nil
-      (with-temp-buffer
+      (mm-with-multibyte-buffer
 	(if (and (consp (car cont))
 		 (= (length cont) 1))
 	    (mml-generate-mime-1 (car cont))
@@ -516,14 +516,13 @@ If MML is non-nil, return the buffer up till the correspondent mml tag."
 		      (progn
 			(mm-enable-multibyte)
 			(insert contents)
-			(setq charset (mm-encode-body)))
+			(unless raw
+			  (setq charset (mm-encode-body))))
 		    (insert contents)))))
 	      (setq encoding (mm-encode-buffer type)
 		    coded (mm-string-as-multibyte (buffer-string))))
 	    (mml-insert-mime-headers cont type charset encoding nil)
-	    (insert "\n")
-	    (mm-with-unibyte-current-buffer
-	      (insert coded)))))
+	    (insert "\n" coded))))
        ((eq (car cont) 'external)
 	(insert "Content-Type: message/external-body")
 	(let ((parameters (mml-parameter-string

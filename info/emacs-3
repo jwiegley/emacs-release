@@ -1,11 +1,11 @@
 This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
 
    This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.1.
+updated for Emacs version 22.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,9 +16,9 @@ Foundation, Inc.
      Texts as in (a) below.  A copy of the license is included in the
      section entitled "GNU Free Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -1501,6 +1501,13 @@ underlying system's text representation, which is normally specified by
 one of the environment variables `LC_ALL', `LC_CTYPE', and `LANG'.
 (The first one, in the order specified above, whose value is nonempty
 is the one that determines the text representation.)
+
+   The variable `x-select-request-type' specifies a selection data type
+of selection to request from the X server.  The default value is `nil',
+which means Emacs tries `COMPOUND_TEXT' and `UTF8_STRING', and uses
+whichever result seems more appropriate.  You can explicitly specify
+the data type by setting the variable to one of the symbols
+`COMPOUND_TEXT', `UTF8_STRING', `STRING' and `TEXT'.
 
 
 File: emacs,  Node: File Name Coding,  Next: Terminal Coding,  Prev: Communication Coding,  Up: International
@@ -3931,7 +3938,7 @@ contains a list of ideas for future enhancements.
 * Justification: Format Justification.
                                 Centering, setting text flush with the
                                   left or right margin, etc.
-* Other: Format Properties.     The "special" text properties submenu.
+* Special: Format Properties.   The "special" text properties submenu.
 * Forcing Enriched Mode::       How to force use of Enriched mode.
 
 
@@ -4018,9 +4025,7 @@ menu in the menu bar (use `<F10> e t' if you have no mouse), or with
 `C-Mouse-2' (hold the <CTRL> key and press the middle mouse button).
 There are also keyboard commands described in the following section.
 
-   Most of the items in the Text Properties menu lead to other submenus.
-These are described in the sections that follow.  Some items run
-commands directly:
+   These items in the Text Properties menu run commands directly:
 
 `Remove Face Properties'
      Delete from the region all face and color text properties
@@ -4040,17 +4045,32 @@ commands directly:
 `Display Colors'
      Display a list of all the defined colors (`list-colors-display').
 
+   Other items in the Text Properties menu lead to submenus:
+
+* Menu:
+
+* Faces: Format Faces.          Bold, italic, underline, etc.
+* Color: Format Colors.         Changing the color of text.
+* Indent: Format Indentation.   Changing the left and right margins.
+* Justification: Format Justification.
+                                Centering, setting text flush with the
+                                  left or right margin, etc.
+* Special: Format Properties.   The "special" text properties submenu.
+
 
 File: emacs,  Node: Format Faces,  Next: Format Colors,  Prev: Editing Format Info,  Up: Formatted Text
 
 30.12.4 Faces in Formatted Text
 -------------------------------
 
-The Faces submenu lists various Emacs faces including `bold', `italic',
-and `underline' (*note Faces::).  These menu items operate on the
-region if it is active and nonempty.  Otherwise, they specify to use
-that face for an immediately following self-inserting character.
-Instead of the menu, you can use these keyboard commands:
+The Faces submenu under Text Properties lists various Emacs faces
+including `bold', `italic', and `underline' (*note Faces::).  These
+menu items operate on the region if it is active and nonempty.
+Otherwise, they specify to use that face for an immediately following
+self-inserting character.  There is also an item `Other' with which you
+can enter a face name through the minibuffer (*note Standard Faces::).
+
+   Instead of the Faces submenu, you can use these keyboard commands:
 
 `M-o d'
      Remove all `face' properties from the region (which includes
@@ -4124,20 +4144,21 @@ File: emacs,  Node: Format Colors,  Next: Format Indentation,  Prev: Format Face
 --------------------------------
 
 You can specify foreground and background colors for portions of the
-text.  There is a menu for specifying the foreground color and a menu
-for specifying the background color.  Each color menu lists all the
-colors that you have used in Enriched mode in the current Emacs session.
+text.  Under Text Properties there is a submenu for specifying the
+foreground color, and a submenu for specifying the background color.
+Each one lists all the colors that you have used in Enriched mode in
+the current Emacs session.
 
    If you specify a color with a prefix argument--or, in Transient Mark
 mode, if the region is not active--then it applies to any immediately
 following self-inserting input.  Otherwise, the command applies to the
 region.
 
-   Each color menu contains one additional item: `Other'.  You can use
-this item to specify a color that is not listed in the menu; it reads
-the color name with the minibuffer.  To display a list of available
-colors and their names, use the `Display Colors' menu item in the Text
-Properties menu (*note Editing Format Info::).
+   Each of the two color submenus contains one additional item:
+`Other'.  You can use this item to specify a color that is not listed
+in the menu; it reads the color name with the minibuffer.  To display a
+list of available colors and their names, use the `Display Colors' menu
+item in the Text Properties menu (*note Editing Format Info::).
 
    Any color that you specify in this way, or that is mentioned in a
 formatted text file that you read in, is added to the corresponding
@@ -4159,8 +4180,9 @@ indentation for the right or left margin of an entire paragraph or a
 part of a paragraph.  The margins you specify automatically affect the
 Emacs fill commands (*note Filling::) and line-breaking commands.
 
-   The Indentation submenu provides a convenient interface for
-specifying these properties.  The submenu contains four items:
+   The Indentation submenu of Text Properties provides a convenient
+interface for specifying these properties.  The submenu contains four
+items:
 
 `Indent More'
      Indent the region by 4 columns (`increase-left-margin').  In
@@ -4226,8 +4248,8 @@ When editing formatted text, you can specify various styles of
 justification for a paragraph.  The style you specify automatically
 affects the Emacs fill commands.
 
-   The Justification submenu provides a convenient interface for
-specifying the style.  The submenu contains five items:
+   The Justification submenu of Text Properties provides a convenient
+interface for specifying the style.  The submenu contains five items:
 
 `Left'
      This is the most common style of justification (at least for
@@ -4295,11 +4317,11 @@ File: emacs,  Node: Format Properties,  Next: Forcing Enriched Mode,  Prev: Form
 30.12.8 Setting Other Text Properties
 -------------------------------------
 
-The Special Properties menu lets you add or remove three other useful
-text properties: `read-only', `invisible' and `intangible'.  The
-`intangible' property disallows moving point within the text, the
-`invisible' text property hides text from display, and the `read-only'
-property disallows alteration of the text.
+The Special Properties submenu of Text Properties can add or remove
+three other useful text properties: `read-only', `invisible' and
+`intangible'.  The `intangible' property disallows moving point within
+the text, the `invisible' text property hides text from display, and
+the `read-only' property disallows alteration of the text.
 
    Each of these special properties has a menu item to add it to the
 region.  The last menu item, `Remove Special', removes all of these
@@ -6617,93 +6639,4 @@ Several additional variables control how Fortran indentation works:
 
    The variables controlling the indentation of comments are described
 in the following section.
-
-
-File: emacs,  Node: Fortran Comments,  Next: Fortran Autofill,  Prev: Fortran Indent,  Up: Fortran
-
-31.13.3 Fortran Comments
-------------------------
-
-The usual Emacs comment commands assume that a comment can follow a
-line of code.  In Fortran77, the standard comment syntax requires an
-entire line to be just a comment.  Therefore, Fortran mode replaces the
-standard Emacs comment commands and defines some new variables.
-
-   Fortran mode can also handle the Fortran90 comment syntax where
-comments start with `!' and can follow other text.  Because only some
-Fortran77 compilers accept this syntax, Fortran mode will not insert
-such comments unless you have said in advance to do so.  To do this,
-set the variable `fortran-comment-line-start' to `"!"'.
-
-`M-;'
-     Align comment or insert new comment (`fortran-indent-comment').
-
-`C-x ;'
-     Applies to nonstandard `!' comments only.
-
-`C-c ;'
-     Turn all lines of the region into comments, or (with argument)
-     turn them back into real code (`fortran-comment-region').
-
-   `M-;' in Fortran mode is redefined as the command
-`fortran-indent-comment'.  Like the usual `M-;' command, this
-recognizes any kind of existing comment and aligns its text
-appropriately; if there is no existing comment, a comment is inserted
-and aligned.  But inserting and aligning comments are not the same in
-Fortran mode as in other modes.
-
-   When a new comment must be inserted, if the current line is blank, a
-full-line comment is inserted.  On a non-blank line, a nonstandard `!'
-comment is inserted if you have said you want to use them.  Otherwise a
-full-line comment is inserted on a new line before the current line.
-
-   Nonstandard `!' comments are aligned like comments in other
-languages, but full-line comments are different.  In a standard
-full-line comment, the comment delimiter itself must always appear in
-column zero.  What can be aligned is the text within the comment.  You
-can choose from three styles of alignment by setting the variable
-`fortran-comment-indent-style' to one of these values:
-
-`fixed'
-     Align the text at a fixed column, which is the sum of
-     `fortran-comment-line-extra-indent' and the minimum statement
-     indentation.  This is the default.
-
-     The minimum statement indentation is
-     `fortran-minimum-statement-indent-fixed' for fixed format
-     continuation line style and `fortran-minimum-statement-indent-tab'
-     for tab format style.
-
-`relative'
-     Align the text as if it were a line of code, but with an additional
-     `fortran-comment-line-extra-indent' columns of indentation.
-
-`nil'
-     Don't move text in full-line comments automatically.
-
-   In addition, you can specify the character to be used to indent
-within full-line comments by setting the variable
-`fortran-comment-indent-char' to the single-character string you want
-to use.
-
-   Compiler directive lines, or preprocessor lines, have much the same
-appearance as comment lines.  It is important, though, that such lines
-never be indented at all, no matter what the value of
-`fortran-comment-indent-style'.  The variable `fortran-directive-re' is
-a regular expression that specifies which lines are directives.
-Matching lines are never indented, and receive distinctive font-locking.
-
-   The normal Emacs comment command `C-x ;' has not been redefined.  If
-you use `!' comments, this command can be used with them.  Otherwise it
-is useless in Fortran mode.
-
-   The command `C-c ;' (`fortran-comment-region') turns all the lines
-of the region into comments by inserting the string `C$$$' at the front
-of each one.  With a numeric argument, it turns the region back into
-live code by deleting `C$$$' from the front of each line in it.  The
-string used for these comments can be controlled by setting the
-variable `fortran-comment-region'.  Note that here we have an example
-of a command and a variable with the same name; these two uses of the
-name never conflict because in Lisp and in Emacs it is always clear
-from the context which one is meant.
 

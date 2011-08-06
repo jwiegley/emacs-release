@@ -1,7 +1,7 @@
 ;;; nroff-mode.el --- GNU Emacs major mode for editing nroff source
 
 ;; Copyright (C) 1985, 1986, 1994, 1995, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -130,6 +130,7 @@ closing requests for requests that are used in matched pairs."
   (set (make-local-variable 'comment-start-skip) "\\\\\"[ \t]*")
   (set (make-local-variable 'comment-column) 24)
   (set (make-local-variable 'comment-indent-function) 'nroff-comment-indent)
+  (set (make-local-variable 'indent-line-function) 'nroff-indent-line-function)
   (set (make-local-variable 'imenu-generic-expression) nroff-imenu-expression))
 
 (defun nroff-outline-level ()
@@ -161,6 +162,19 @@ Puts a full-stop before comments on a line by themselves."
 			      9) 8)))))) ; add 9 to ensure at least two blanks
       (goto-char pt))))
 
+;; All this does is insert a "." at the start of comment-lines,
+;; for the sake of comment-dwim adding a new comment on an empty line.
+;; Hack! The right fix probably involves ;; comment-insert-comment-function,
+;; but comment-dwim does not call that for the empty line case.
+;; http://lists.gnu.org/archive/html/emacs-devel/2007-10/msg01869.html
+(defun nroff-indent-line-function ()
+  "Function for `indent-line-function' in `nroff-mode'."
+  (save-excursion
+    (forward-line 0)
+    (when (looking-at "[ \t]*\\\\\"[ \t]*") ; \# does not need this
+      (delete-horizontal-space)
+      (insert ?.))))
+
 (defun nroff-count-text-lines (start end &optional print)
   "Count lines in region, except for nroff request lines.
 All lines not starting with a period are counted up.
@@ -173,7 +187,7 @@ Noninteractively, return number of non-request lines from START to END."
       (save-restriction
 	(narrow-to-region start end)
 	(goto-char (point-min))
-	(- (buffer-size) (forward-text-line (buffer-size)))))))
+	(- (buffer-size) (nroff-forward-text-line (buffer-size)))))))
 
 (defun nroff-forward-text-line (&optional cnt)
   "Go forward one nroff text line, skipping lines of nroff requests.
@@ -261,7 +275,7 @@ automatically inserts the matching closing request after point."
 `nroff-electric-newline' forces Emacs to check for an nroff request at the
 beginning of the line, and insert the matching closing request if necessary.
 This command toggles that mode (off->on, on->off), with an argument,
-turns it on iff arg is positive, otherwise off."
+turns it on if arg is positive, otherwise off."
   :lighter " Electric"
   (or (derived-mode-p 'nroff-mode) (error "Must be in nroff mode")))
 

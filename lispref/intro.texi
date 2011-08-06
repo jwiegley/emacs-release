@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 2001, 2002, 2003, 2004,
-@c   2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/intro
 
@@ -213,7 +213,7 @@ values results in a @code{setting-constant} error.  @xref{Constant
 Variables}.
 
 @defun booleanp object
-Return non-nil iff @var{object} is one of the two canonical boolean
+Return non-nil if @var{object} is one of the two canonical boolean
 values: @code{t} or @code{nil}.
 @end defun
 

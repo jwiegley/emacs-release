@@ -1,7 +1,7 @@
 ;;; url-cookie.el --- Netscape Cookie support
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -9,7 +9,7 @@
 ;;
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -148,34 +148,31 @@ telling Microsoft that."
     (set var new)))
 
 (defun url-cookie-write-file (&optional fname)
-  (setq fname (or fname url-cookie-file))
-  (unless (file-directory-p (file-name-directory fname))
-    (ignore-errors (make-directory (file-name-directory fname))))
-  (cond
-   ((not url-cookies-changed-since-last-save) nil)
-   ((not (file-writable-p fname))
-    (message "Cookies file %s (see variable `url-cookie-file') is unwritable." fname))
-   (t
-    (url-cookie-clean-up)
-    (url-cookie-clean-up t)
-    (with-current-buffer (get-buffer-create " *cookies*")
-      (erase-buffer)
-      (fundamental-mode)
-      (insert ";; Emacs-W3 HTTP cookies file\n"
-	      ";; Automatically generated file!!! DO NOT EDIT!!!\n\n"
-	      "(setq url-cookie-storage\n '")
-      (pp url-cookie-storage (current-buffer))
-      (insert ")\n(setq url-cookie-secure-storage\n '")
-      (pp url-cookie-secure-storage (current-buffer))
-      (insert ")\n")
-      (insert "\n;; Local Variables:\n"
-              ";; version-control: never\n"
-              ";; no-byte-compile: t\n"
-              ";; End:\n")
-      (set (make-local-variable 'version-control) 'never)
-      (write-file fname)
-      (setq url-cookies-changed-since-last-save nil)
-      (kill-buffer (current-buffer))))))
+  (when url-cookies-changed-since-last-save
+    (or fname (setq fname (expand-file-name url-cookie-file)))
+    (if (condition-case nil
+            (progn
+              (url-make-private-file fname)
+              nil)
+          (error t))
+        (message "Error accessing cookie file `%s'" fname)
+      (url-cookie-clean-up)
+      (url-cookie-clean-up t)
+      (with-temp-buffer
+        (insert ";; Emacs-W3 HTTP cookies file\n"
+                ";; Automatically generated file!!! DO NOT EDIT!!!\n\n"
+                "(setq url-cookie-storage\n '")
+        (pp url-cookie-storage (current-buffer))
+        (insert ")\n(setq url-cookie-secure-storage\n '")
+        (pp url-cookie-secure-storage (current-buffer))
+        (insert ")\n")
+        (insert "\n;; Local Variables:\n"
+                ";; version-control: never\n"
+                ";; no-byte-compile: t\n"
+                ";; End:\n")
+        (set (make-local-variable 'version-control) 'never)
+        (write-file fname))
+      (setq url-cookies-changed-since-last-save nil))))
 
 (defun url-cookie-store (name value &optional expires domain localpart secure)
   "Store a netscape-style cookie."

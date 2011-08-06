@@ -1,7 +1,7 @@
 ;;; cc-cmds.el --- user level commands for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
@@ -18,7 +18,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -524,7 +524,11 @@ inside a literal or a macro, nothing special happens."
 	;; This is the list of brace syntactic symbols that can hang.
 	;; If any new ones are added to c-offsets-alist, they should be
 	;; added here as well.
-	'(class-open class-close defun-open defun-close
+	;; 
+	;; The order of this list is important; if SYNTAX has several
+	;; elements, the element that "wins" is the earliest in SYMS.
+	'(arglist-cont-nonempty		; e.g. an array literal.
+		     class-open class-close defun-open defun-close
 		     inline-open inline-close
 		     brace-list-open brace-list-close
 		     brace-list-intro brace-entry-open

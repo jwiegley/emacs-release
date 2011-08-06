@@ -1,13 +1,13 @@
 /* pop.c: client routines for talking to a POP3-protocol post-office server
    Copyright (C) 1991, 1993, 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
    Written by Jonathan Kamens, jik@security.ov.com.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -352,6 +352,7 @@ pop_stat (server, count, size)
      int *size;
 {
   char *fromserver;
+  char *end_ptr;
 
   if (server->in_multi)
     {
@@ -377,18 +378,26 @@ pop_stat (server, count, size)
       return (-1);
     }
 
-  *count = atoi (&fromserver[4]);
-
-  fromserver = index (&fromserver[4], ' ');
-  if (! fromserver)
+  errno = 0;
+  *count = strtol (&fromserver[4], &end_ptr, 10);
+  /* Check validity of string-to-integer conversion. */
+  if (fromserver + 4 == end_ptr || *end_ptr != ' ' || errno)
     {
-      strcpy (pop_error,
-	      "Badly formatted response from server in pop_stat");
+      strcpy (pop_error, "Unexpected response from POP server in pop_stat");
       pop_trash (server);
       return (-1);
     }
 
-  *size = atoi (fromserver + 1);
+  fromserver = end_ptr;
+
+  errno = 0;
+  *size = strtol (fromserver + 1, &end_ptr, 10);
+  if (fromserver + 1 == end_ptr || errno)
+    {
+      strcpy (pop_error, "Unexpected response from POP server in pop_stat");
+      pop_trash (server);
+      return (-1);
+    }
 
   return (0);
 }
@@ -913,7 +922,17 @@ pop_last (server)
     }
   else
     {
-      return (atoi (&fromserver[4]));
+      char *end_ptr;
+      int count;
+      errno = 0;
+      count = strtol (&fromserver[4], &end_ptr, 10);
+      if (fromserver + 4 == end_ptr || errno)
+	{
+	  strcpy (pop_error, "Unexpected response from server in pop_last");
+	  pop_trash (server);
+	  return (-1);
+	}
+      return count;
     }
 }
 
@@ -1557,7 +1576,7 @@ pop_close (server)
  * Function: pop_trash
  *
  * Purpose: Like pop_close or pop_quit, but doesn't deallocate the
- * 	memory associated with the server.  It is legal to call
+ * 	memory associated with the server.  It is valid to call
  * 	pop_close or pop_quit after this function has been called.
  */
 static void

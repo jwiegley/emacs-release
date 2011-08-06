@@ -1,12 +1,12 @@
 /* systime.h - System-dependent definitions for time manipulations.
    Copyright (C) 1993, 1994, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -67,7 +67,7 @@ extern time_t timezone;
    EMACS_SECS (TIME) is an rvalue for the seconds component of TIME.
    EMACS_SET_SECS (TIME, SECONDS) sets that to SECONDS.
 
-   EMACS_HAS_USECS is defined iff EMACS_TIME has a usecs component.
+   EMACS_HAS_USECS is defined if EMACS_TIME has a usecs component.
    EMACS_USECS (TIME) is an rvalue for the microseconds component of TIME.
    	This returns zero if EMACS_TIME doesn't have a microseconds component.
    EMACS_SET_USECS (TIME, MICROSECONDS) sets that to MICROSECONDS.
@@ -83,7 +83,7 @@ extern time_t timezone;
 
    EMACS_SUB_TIME (DEST, SRC1, SRC2) subtracts SRC2 from SRC1 and
 	stores the result in DEST.  SRC should not be negative.
-   EMACS_TIME_NEG_P (TIME) is true iff TIME is negative.
+   EMACS_TIME_NEG_P (TIME) is true if TIME is negative.
 
 */
 

@@ -1,7 +1,7 @@
 ;;; lisp.el --- Lisp editing commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, languages
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -41,7 +41,8 @@ See function `beginning-of-defun'."
 (make-variable-buffer-local 'defun-prompt-regexp)
 
 (defcustom parens-require-spaces t
-  "If non-nil, `insert-parentheses' inserts whitespace as needed."
+  "If non-nil, add whitespace as needed when inserting parentheses.
+This affects `insert-parentheses' and `insert-pair'."
   :type 'boolean
   :group 'lisp)
 

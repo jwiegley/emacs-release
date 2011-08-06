@@ -519,13 +519,6 @@ v pøípadì pádu systému.
 >> Stisknìte C-x C-s pro ulo¾ení va¹í kopie tutoriálu.
    Mìlo by to zobrazit "Wrote ...TUTORIAL.cs" ve spodním øádku obrazovky.
 
-POZNÁMKA: Na nìkterých systémech zpùsobí stisk C-x C-s ztuhnutí
-obrazovky a nevidíte ¾ádný dal¹í výstup z Emacsu.  To znamená, ¾e
-"vlastnost" operaèního systému zvaná "flow control" zachycuje C-s a
-nepropustí jej k Emacsu.  Pro odtuhnutí obrazovky stisknìte C-q.  Pak
-v sekci "Spontaneous Entry to Incremental Search" v manuálu Emacsu
-vyhledejte radu, jak se vypoøádat s touto "vlastností".
-
 Existující soubor mù¾ete vyhledat, abyste jej mohli prohlí¾et nebo
 editovat.  Mù¾ete také vyhledat soubor, který je¹tì neexistuje.  To je
 zpùsob, jakým lze vytvoøit soubor v Emacsu: vyhledejte soubor, který
@@ -1023,7 +1016,7 @@ Tato verze tutoriálu je, podobnì jako GNU Emacs, chránìna copyrightem a
 je ¹íøena se svolením distribuovat kopie za jistých podmínek:
 
 Copyright (C) 1985, 1996, 1998, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    Ka¾dému je zaruèeno právo vytváøet a distribuovat pøesné kopie tohoto
    dokumentu tak, jak jej obdr¾el, na jakémkoliv médiu, s tím, ¾e bude

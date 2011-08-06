@@ -6,10 +6,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -21,9 +21,9 @@ Foundation, Inc.
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 
 File: elisp,  Node: Columns,  Next: Indentation,  Prev: Sorting,  Up: Text
@@ -531,11 +531,11 @@ from 1.
 
      The argument OBJECT may be a string, a buffer, or a window.  If it
      is a window, then the buffer displayed in that window is used for
-     text properties and overlays, but only the overlays active for
-     that window are considered.  If OBJECT is a buffer, then all
-     overlays in that buffer are considered, as well as text
-     properties.  If OBJECT is a string, only text properties are
-     considered, since strings never have overlays.
+     text properties and overlays, but only the overlays active for that
+     window are considered.  If OBJECT is a buffer, then overlays in
+     that buffer are considered first, in order of decreasing priority,
+     followed by the text properties.  If OBJECT is a string, only text
+     properties are considered, since strings never have overlays.
 
  -- Function: get-char-property-and-overlay position prop &optional
           object
@@ -873,29 +873,27 @@ each Emacs command.  *Note Adjusting Point::.
           you want to specify a particular attribute for certain text.
           *Note Face Attributes::.
 
-        * A cons cell with the form `(foreground-color . COLOR-NAME)' or
-          `(background-color . COLOR-NAME)'.  These elements specify
-          just the foreground color or just the background color.
-          *Note Color Names::, for the supported forms of COLOR-NAME.
+        * A cons cell with the form `(foreground-color . COLOR-NAME)'
+          or `(background-color . COLOR-NAME)'.  These are older,
+          deprecated equivalents for `(:foreground COLOR-NAME)' and
+          `(:background COLOR-NAME)'.  Please convert code that uses
+          them.
 
-          A cons cell of `(foreground-color . COLOR-NAME)' is
-          equivalent to specifying `(:foreground COLOR-NAME)'; likewise
-          for the background.
+     It works to use the latter two forms directly as the value of the
+     `face' property.
 
-     You can use Font Lock Mode (*note Font Lock Mode::), to dynamically
-     update `face' properties based on the contents of the text.
+     Font Lock mode (*note Font Lock Mode::) works in most buffers by
+     dynamically updating the `face' property of characters based on
+     the context.
 
 `font-lock-face'
-     The `font-lock-face' property is the same in all respects as the
-     `face' property, but its state of activation is controlled by
-     `font-lock-mode'.  This can be advantageous for special buffers
-     which are not intended to be user-editable, or for static areas of
-     text which are always fontified in the same way.  *Note
-     Precalculated Fontification::.
+     The `font-lock-face' property is equivalent to the `face' property
+     when Font Lock mode is enabled.  When Font Lock mode is disabled,
+     `font-lock-face' has no effect.
 
-     Strictly speaking, `font-lock-face' is not a built-in text
-     property; rather, it is implemented in Font Lock mode using
-     `char-property-alias-alist'.  *Note Examining Properties::.
+     The `font-lock-mode' property is useful for special modes that
+     implement their own highlighting.  *Note Precalculated
+     Fontification::.
 
      This property is new in Emacs 22.1.
 
@@ -1533,7 +1531,7 @@ determine how to follow the link.
  -- Function: mouse-on-link-p pos
      This function returns non-`nil' if position POS in the current
      buffer is on a link.  POS can also be a mouse event location, as
-     returned by `event-start' (*note Accessing Events::).
+     returned by `event-start' (*note Accessing Mouse::).
 
 
 File: elisp,  Node: Fields,  Next: Not Intervals,  Prev: Links and Mouse-1,  Up: Text Properties
@@ -2099,31 +2097,6 @@ functions.
      because it may lead to inefficient behavior for some change hook
      functions.
 
-   The two variables above are temporarily bound to `nil' during the
-time that any of these functions is running.  This means that if one of
-these functions changes the buffer, that change won't run these
-functions.  If you do want a hook function to make changes that run
-these functions, make it bind these variables back to their usual
-values.
-
-   One inconvenient result of this protective feature is that you cannot
-have a function in `after-change-functions' or
-`before-change-functions' which changes the value of that variable.
-But that's not a real limitation.  If you want those functions to change
-the list of functions to run, simply add one fixed function to the hook,
-and code that function to look in another variable for other functions
-to call.  Here is an example:
-
-     (setq my-own-after-change-functions nil)
-     (defun indirect-after-change-function (beg end len)
-       (let ((list my-own-after-change-functions))
-         (while list
-           (funcall (car list) beg end len)
-           (setq list (cdr list)))))
-
-     (add-hooks 'after-change-functions
-                'indirect-after-change-function)
-
  -- Variable: first-change-hook
      This variable is a normal hook that is run whenever a buffer is
      changed that was previously in the unmodified state.
@@ -2134,6 +2107,13 @@ to call.  Here is an example:
      described above in this section, as well as the hooks attached to
      certain special text properties (*note Special Properties::) and
      overlay properties (*note Overlay Properties::).
+
+     Also, this variable is bound to non-`nil' while running those same
+     hook variables, so that by default modifying the buffer from a
+     modification hook does not cause other modification hooks to be
+     run.  If you do want modification hooks to be run in a particular
+     piece of code that is itself run from a modification hook, then
+     rebind locally `inhibit-modification-hooks' to `nil'.
 
 
 File: elisp,  Node: Non-ASCII Characters,  Next: Searching and Matching,  Prev: Text,  Up: Top

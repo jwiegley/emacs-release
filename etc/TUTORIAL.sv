@@ -548,13 +548,6 @@ systemet kraschar.
    Detta skall leda till att "Wrote ...TUTORIAL.sv" skrivs ut nederst
    på skärmbilden.
 
-Observera: På vissa system leder C-x C-s till att skärmen låser
-sig. Detta tyder på att systemet har "flödeskontroll" och att denna
-har fångat C-s och inte skickat den vidare till Emacs. För att
-fortsätta måste du trycka C-q. Se i så fall i avsnittet "Spontaneous
-Entry to Incremental Search" i Emacs-manualen för att få tips på hur
-detta kan undvikas.
-
 Du kan finna en existerande fil, antingen för att förändra den eller
 för att titta på den. Du kan också finna en fil som inte existerar.
 Det är så man skapar nya filer med Emacs: finn filen, som är tom till
@@ -1127,7 +1120,7 @@ This version of the tutorial, like GNU Emacs, is copyrighted, and
 comes with permission to distribute copies on certain conditions:
 
 Copyright (C) 1985, 1996, 1998, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the

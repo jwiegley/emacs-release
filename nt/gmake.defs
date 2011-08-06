@@ -1,10 +1,10 @@
 #  -*- Makefile -*- definition file for building GNU Emacs on Windows NT.
 #  Copyright (C) 2000, 2001, 2002, 2003, 2004,
-#    2005, 2006, 2007 Free Software Foundation, Inc.
+#    2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 #
 #  GNU Emacs is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
+#  the Free Software Foundation; either version 3, or (at your option)
 #  any later version.
 #
 #  GNU Emacs is distributed in the hope that it will be useful,
@@ -99,6 +99,16 @@ sh_output := $(shell echo foo")
 ifeq "$(sh_output)" ""
 NEW_CYGWIN = 1
 endif
+
+# By default, newer versions of Cygwin mess with NTFS ACLs in an
+# attempt to emulate traditional posix file permissions. This can
+# cause bad effects, such as .exe files that are missing the
+# FILE_EXECUTE/FILE_GENERIC_EXECUTE permissions when they are created
+# with Cygwin commands that don't expect to be creating executable
+# files. Then when we later use a non-Cygwin program to create the
+# real .exe, the previous Cygwin defined ACL sticks.
+CYGWIN=nontsec
+export CYGWIN
 endif
 
 ALL_DEPS	= $^
@@ -170,14 +180,16 @@ A		= a
 BASE_LIBS	= $(libc) $(baselibs)
 
 ADVAPI32	= -ladvapi32
+COMCTL32	= -lcomctl32
 COMDLG32	= -lcomdlg32
 GDI32		= -lgdi32
 MPR		= -lmpr
 SHELL32		= -lshell32
 USER32		= -luser32
 WSOCK32		= -lwsock32
-WINMM     = -lwinmm
+WINMM		= -lwinmm
 WINSPOOL	= -lwinspool
+OLE32		= -lole32
 
 ifdef NOOPT
 DEBUG_CFLAGS	= -DEMACSDEBUG

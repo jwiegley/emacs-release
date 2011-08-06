@@ -1,12 +1,13 @@
 /* X Communication module for terminals which understand the X protocol.
    Copyright (C) 1989, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -155,6 +156,7 @@ extern void _XEditResCheckMessages ();
 #endif
 #endif
 
+#undef abs
 #define abs(x)	((x) < 0 ? -(x) : (x))
 
 /* Default to using XIM if available.  */
@@ -2476,9 +2478,11 @@ x_draw_image_glyph_string (s)
 	    {
 	      /* Fill background with a stipple pattern.  */
 	      XSetFillStyle (s->display, s->gc, FillOpaqueStippled);
+	      XSetTSOrigin (s->display, s->gc, - s->x, - s->y);
 	      XFillRectangle (s->display, pixmap, s->gc,
 			      0, 0, s->background_width, s->height);
 	      XSetFillStyle (s->display, s->gc, FillSolid);
+	      XSetTSOrigin (s->display, s->gc, 0, 0);
 	    }
 	  else
 	    {
@@ -2536,7 +2540,6 @@ x_draw_stretch_glyph_string (s)
      struct glyph_string *s;
 {
   xassert (s->first_glyph->type == STRETCH_GLYPH);
-  s->stippled_p = s->face->stipple != 0;
 
   if (s->hl == DRAW_CURSOR
       && !x_stretch_cursor_p)
@@ -6485,9 +6488,7 @@ handle_one_xevent (dpyinfo, eventp, finish, hold_quit)
 		kbd_buffer_store_event_hold (&inev.ie, hold_quit);
 	      }
 
-	    /* Previous code updated count by nchars rather than nbytes,
-	       but that seems bogus to me.  ++kfs  */
-	    count += nbytes;
+	    count += nchars;
 
 	    inev.ie.kind = NO_EVENT;  /* Already stored above.  */
 
@@ -6622,10 +6623,16 @@ handle_one_xevent (dpyinfo, eventp, finish, hold_quit)
 
                 /* Window will be selected only when it is not selected now and
                    last mouse movement event was not in it.  Minibuffer window
-                   will be selected iff it is active.  */
+                   will be selected only when it is active.  */
                 if (WINDOWP (window)
                     && !EQ (window, last_window)
-                    && !EQ (window, selected_window))
+		    && !EQ (window, selected_window)
+		    /* For click-to-focus window managers
+		       create event iff we don't leave the
+		       selected frame.  */
+		    && (focus_follows_mouse
+			|| (EQ (XWINDOW (window)->frame,
+				XWINDOW (selected_window)->frame))))
                   {
                     inev.ie.kind = SELECT_WINDOW_EVENT;
                     inev.ie.frame_or_window = window;
@@ -6775,27 +6782,23 @@ handle_one_xevent (dpyinfo, eventp, finish, hold_quit)
               }
 
             if (!tool_bar_p)
-              if (!dpyinfo->x_focus_frame
-                  || f == dpyinfo->x_focus_frame)
-                {
 #if defined (USE_X_TOOLKIT) || defined (USE_GTK)
-                  if (! popup_activated ())
+              if (! popup_activated ())
 #endif
-		    {
-		      if (ignore_next_mouse_click_timeout)
-			{
-			  if (event.type == ButtonPress
-			      && (int)(event.xbutton.time - ignore_next_mouse_click_timeout) > 0)
-			    {
-			      ignore_next_mouse_click_timeout = 0;
-			      construct_mouse_click (&inev.ie, &event.xbutton, f);
-			    }
-			  if (event.type == ButtonRelease)
-			    ignore_next_mouse_click_timeout = 0;
-			}
-		      else
-			construct_mouse_click (&inev.ie, &event.xbutton, f);
-		    }
+                {
+                  if (ignore_next_mouse_click_timeout)
+                    {
+                      if (event.type == ButtonPress
+                          && (int)(event.xbutton.time - ignore_next_mouse_click_timeout) > 0)
+                        {
+                          ignore_next_mouse_click_timeout = 0;
+                          construct_mouse_click (&inev.ie, &event.xbutton, f);
+                        }
+                      if (event.type == ButtonRelease)
+                        ignore_next_mouse_click_timeout = 0;
+                    }
+                  else
+                    construct_mouse_click (&inev.ie, &event.xbutton, f);
                 }
           }
         else
@@ -6984,7 +6987,9 @@ x_dispatch_event (event, display)
    We return as soon as there are no more events to be read.
 
    We return the number of characters stored into the buffer,
-   thus pretending to be `read'.
+   thus pretending to be `read' (except the characters we store
+   in the keyboard buffer can be multibyte, so are not necessarily
+   C chars).
 
    EXPECTED is nonzero if the caller knows input is available.  */
 
@@ -8266,7 +8271,7 @@ x_set_offset (f, xoff, yoff, change_gravity)
 {
   int modified_top, modified_left;
 
-  if (change_gravity != 0)
+  if (change_gravity > 0)
     {
       FRAME_X_OUTPUT (f)->left_before_move = f->left_pos;
       FRAME_X_OUTPUT (f)->top_before_move = f->top_pos;

@@ -1,7 +1,7 @@
 GNUS NEWS -- history of user-visible changes.
 
 Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-   2006, 2007 Free Software Foundation, Inc.
+   2006, 2007, 2008 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 Please send Gnus bug reports to bugs@gnus.org.
@@ -30,7 +30,7 @@ or remove them using `make remove-installed-shadows'.
 
 Use `make.bat' if you want to install Gnus under MS Windows, the first
 argument to the batch-program should be the directory where `xemacs.exe'
-respectively `emacs.exe' is located, iff you want to install Gnus after
+respectively `emacs.exe' is located, if you want to install Gnus after
 compiling it, give `make.bat' `/copy' as the second parameter.
 
 `make.bat' has been rewritten from scratch, it now features automatic
@@ -139,6 +139,9 @@ instead of real group names in 5.8.  Users who customize these variables
 should change those regexps accordingly.  For example:
 ("^han\\>" euc-kr) -> ("\\(^\\|:\\)han\\>" euc-kr)
 
+** Old intermediate incoming mail files (`Incoming*') are deleted after a
+couple of days, not immediately.  *Note Mail Source Customization::.
+(New in Gnus 5.10.10 / Emacs 22.2)
 
 
 * Changes in summary and article mode
@@ -308,7 +311,7 @@ as external parts.
 
 ** Gnus no longer generate the Sender: header automatically.
 
-Earlier it was generated iff the user configurable email address was
+Earlier it was generated when the user configurable email address was
 different from the Gnus guessed default user address.  As the guessing
 algorithm is rarely correct these days, and (more controversially) the
 only use of the Sender: header was to check if you are entitled to
@@ -524,7 +527,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

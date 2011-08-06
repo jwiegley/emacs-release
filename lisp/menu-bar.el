@@ -1,7 +1,7 @@
 ;;; menu-bar.el --- define a default menu bar
 
 ;; Copyright (C) 1993, 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: RMS
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -56,9 +56,10 @@ A large number or nil slows down menu responsiveness."
 (defvar menu-bar-tools-menu (make-sparse-keymap "Tools"))
 (define-key global-map [menu-bar tools] (cons "Tools" menu-bar-tools-menu))
 ;; This definition is just to show what this looks like.
-;; It gets overridden below when menu-bar-update-buffers is called.
+;; It gets modified in place when menu-bar-update-buffers is called.
+(defvar global-buffers-menu-map (make-sparse-keymap "Buffers"))
 (define-key global-map [menu-bar buffer]
-  (cons "Buffers" (make-sparse-keymap "Buffers")))
+  (cons "Buffers" global-buffers-menu-map))
 (defvar menu-bar-options-menu (make-sparse-keymap "Options"))
 (define-key global-map [menu-bar options]
   (cons "Options" menu-bar-options-menu))
@@ -744,7 +745,11 @@ mail status in mode line"))
   '(menu-item "Other (Customize)"
 	      menu-bar-showhide-fringe-ind-customize
 	      :help "Additional choices available through Custom buffer"
-	      :visible (display-graphic-p)))
+	      :visible (display-graphic-p)
+	      :button (:radio . (not (member indicate-buffer-boundaries
+					     '(nil left right
+					       ((top . left) (bottom . right))
+					       ((t . right) (top . left))))))))
 
 (defun menu-bar-showhide-fringe-ind-mixed ()
   "Display top and bottom indicators in opposite fringes, arrows in right."
@@ -757,8 +762,8 @@ mail status in mode line"))
 	      :help
 	      "Show top/bottom indicators in opposite fringes, arrows in right"
 	      :visible (display-graphic-p)
-	      :button (:radio . (eq indicate-buffer-boundaries
-				    '((t . right) (top . left))))))
+	      :button (:radio . (equal indicate-buffer-boundaries
+				       '((t . right) (top . left))))))
 
 (defun menu-bar-showhide-fringe-ind-box ()
   "Display top and bottom indicators in opposite fringes."
@@ -770,8 +775,8 @@ mail status in mode line"))
   '(menu-item "Opposite, No Arrows" menu-bar-showhide-fringe-ind-box
 	      :help "Show top/bottom indicators in opposite fringes, no arrows"
 	      :visible (display-graphic-p)
-	      :button (:radio . (eq indicate-buffer-boundaries
-				    '((top . left) (bottom . right))))))
+	      :button (:radio . (equal indicate-buffer-boundaries
+				       '((top . left) (bottom . right))))))
 
 (defun menu-bar-showhide-fringe-ind-right ()
   "Display buffer boundaries and arrows in the right fringe."
@@ -1160,11 +1165,9 @@ mail status in mode line"))
 (define-key menu-bar-tools-menu [separator-vc]
   '("--"))
 
-(defvar vc-menu-map (make-sparse-keymap "Version Control"))
 (define-key menu-bar-tools-menu [pcl-cvs]
   '(menu-item "PCL-CVS" cvs-global-menu))
-(define-key menu-bar-tools-menu [vc]
-  (list 'menu-item "Version Control" vc-menu-map))
+(define-key menu-bar-tools-menu [vc] nil) ;Create the place for the VC menu.
 
 (define-key menu-bar-tools-menu [separator-compare]
   '("--"))
@@ -1214,7 +1217,7 @@ mail status in mode line"))
 	      :visible default-enable-multibyte-characters
 	      :help "Display multilingual environment settings"))
 (define-key menu-bar-describe-menu [describe-coding-system-briefly]
-  '(menu-item "Describe Coding System (Briefly)..."
+  '(menu-item "Describe Coding System (Briefly)"
               describe-current-coding-system-briefly
               :visible default-enable-multibyte-characters))
 (define-key menu-bar-describe-menu [describe-coding-system]
@@ -1255,7 +1258,8 @@ key, a click, or a menu-item"))
   '(menu-item "Describe Buffer Modes" describe-mode
 	      :help "Describe this buffer's major and minor mode"))
 
-(defvar menu-bar-apropos-menu (make-sparse-keymap "Apropos"))
+(defvar menu-bar-search-documentation-menu
+  (make-sparse-keymap "Search Documentation"))
 (defun menu-bar-read-lispref ()
   "Display the Emacs Lisp Reference manual in Info mode."
   (interactive)
@@ -1283,37 +1287,37 @@ key, a click, or a menu-item"))
   (info "elisp")
   (Info-index topic))
 
-(define-key menu-bar-apropos-menu [apropos-documentation]
+(define-key menu-bar-search-documentation-menu [search-documentation-strings]
   '(menu-item "Search Documentation Strings..." apropos-documentation
               :help
 	      "Find functions and variables whose doc strings match a regexp"))
-(define-key menu-bar-apropos-menu [apropos]
+(define-key menu-bar-search-documentation-menu [find-any-object-by-name]
   '(menu-item "Find Any Object by Name..."  apropos
               :help "Find symbols of any kind whose names match a regexp"))
-(define-key menu-bar-apropos-menu [apropos-value]
+(define-key menu-bar-search-documentation-menu [find-option-by-value]
   '(menu-item "Find Options by Value..." apropos-value
               :help "Find variables whose values match a regexp"))
-(define-key menu-bar-apropos-menu [apropos-variables]
+(define-key menu-bar-search-documentation-menu [find-options-by-name]
   '(menu-item "Find Options by Name..." apropos-variable
 	      :help "Find variables whose names match a regexp"))
-(define-key menu-bar-apropos-menu [apropos-commands]
+(define-key menu-bar-search-documentation-menu [find-commands-by-name]
   '(menu-item "Find Commands by Name..." apropos-command
 	      :help "Find commands whose names match a regexp"))
-(define-key menu-bar-apropos-menu [sep1]
+(define-key menu-bar-search-documentation-menu [sep1]
   '("--"))
-(define-key menu-bar-apropos-menu [emacs-command-node]
+(define-key menu-bar-search-documentation-menu [lookup-command-in-manual]
   '(menu-item "Look Up Command in User Manual..." Info-goto-emacs-command-node
 	      :help "Display manual section that describes a command"))
-(define-key menu-bar-apropos-menu [emacs-key-command-node]
+(define-key menu-bar-search-documentation-menu [lookup-key-in-manual]
   '(menu-item "Look Up Key in User Manual..." Info-goto-emacs-key-command-node
 	      :help "Display manual section that describes a key"))
-(define-key menu-bar-apropos-menu [elisp-index-search]
+(define-key menu-bar-search-documentation-menu [lookup-subject-in-elisp-manual]
   '(menu-item "Look Up Subject in ELisp Manual..." elisp-index-search
 	      :help "Find description of a subject in Emacs Lisp manual"))
-(define-key menu-bar-apropos-menu [emacs-index-search]
+(define-key menu-bar-search-documentation-menu [lookup-subject-in-emacs-manual]
   '(menu-item "Look Up Subject in User Manual..." emacs-index-search
 	      :help "Find description of a subject in Emacs User manual"))
-(define-key menu-bar-apropos-menu [emacs-glossary]
+(define-key menu-bar-search-documentation-menu [emacs-terminology]
   '(menu-item "Emacs Terminology" search-emacs-glossary
 	      :help "Display the Glossary section of the Emacs manual"))
 
@@ -1327,22 +1331,25 @@ key, a click, or a menu-item"))
 (define-key menu-bar-manuals-menu [order-emacs-manuals]
   '(menu-item "Ordering Manuals" view-order-manuals
 	      :help "How to order manuals from the Free Software Foundation"))
-(define-key menu-bar-manuals-menu [info-apropos]
+(define-key menu-bar-manuals-menu [lookup-subject-in-all-manuals]
   '(menu-item "Lookup Subject in all manuals..." info-apropos
 	      :help "Find description of a subject in all installed manuals"))
-(define-key menu-bar-manuals-menu [info]
+(define-key menu-bar-manuals-menu [other-manuals]
   '(menu-item "All Other Manuals (Info)" Info-directory
 	      :help "Read any of the installed manuals"))
-(define-key menu-bar-manuals-menu [info-elisp]
+(define-key menu-bar-manuals-menu [emacs-lisp-reference]
   '(menu-item "Emacs Lisp Reference" menu-bar-read-lispref
 	      :help "Read the Emacs Lisp Reference manual"))
-(define-key menu-bar-manuals-menu [info-elintro]
+(define-key menu-bar-manuals-menu [emac-lisp-intro]
   '(menu-item "Introduction to Emacs Lisp" menu-bar-read-lispintro
 	      :help "Read the Introduction to Emacs Lisp Programming"))
 
-(define-key menu-bar-help-menu [eliza]
-  '(menu-item "Emacs Psychotherapist" doctor
-	      :help "Our doctor will help you feel better"))
+(define-key menu-bar-help-menu [about-gnu-project]
+  '(menu-item "About GNU" describe-gnu-project
+	      :help "About the GNU System, GNU Project, and GNU/Linux"))
+(define-key menu-bar-help-menu [about-emacs]
+  '(menu-item "About Emacs" about-emacs
+	      :help "Display version number, copyright info, and basic help"))
 (define-key menu-bar-help-menu [sep4]
   '("--"))
 (define-key menu-bar-help-menu [describe-no-warranty]
@@ -1351,12 +1358,9 @@ key, a click, or a menu-item"))
 (define-key menu-bar-help-menu [describe-copying]
   '(menu-item "Copying Conditions" describe-copying
 	      :help "Show the Emacs license (GPL)"))
-(define-key menu-bar-help-menu [describe-distribution]
+(define-key menu-bar-help-menu [getting-new-versions]
   '(menu-item "Getting New Versions" describe-distribution
 	      :help "How to get latest versions of Emacs"))
-(define-key menu-bar-help-menu [more]
-  '(menu-item "External Packages" menu-bar-help-extra-packages
-	      :help "Lisp packages distributed separately for use in Emacs"))
 (defun menu-bar-help-extra-packages ()
   "Display help about some additional packages available for Emacs."
   (interactive)
@@ -1364,29 +1368,32 @@ key, a click, or a menu-item"))
     (view-file (expand-file-name "MORE.STUFF"
 				 data-directory))
     (goto-address)))
-(define-key menu-bar-help-menu [about]
-  '(menu-item "About Emacs" display-splash-screen
-	      :help "Display version number, copyright info, and basic help"))
 (define-key menu-bar-help-menu [sep2]
   '("--"))
-(define-key menu-bar-help-menu [finder-by-keyword]
+(define-key menu-bar-help-menu [external-packages]
+  '(menu-item "External Packages" menu-bar-help-extra-packages
+	      :help "Lisp packages distributed separately for use in Emacs"))
+(define-key menu-bar-help-menu [find-emacs-packages]
   '(menu-item "Find Emacs Packages" finder-by-keyword
 	      :help "Find packages and features by keyword"))
-(define-key menu-bar-help-menu [manuals]
+(define-key menu-bar-help-menu [more-manuals]
   (list 'menu-item "More Manuals" menu-bar-manuals-menu))
 (define-key menu-bar-help-menu [emacs-manual]
   '(menu-item "Read the Emacs Manual" info-emacs-manual
 	      :help "Full documentation of Emacs features"))
 (define-key menu-bar-help-menu [describe]
   (list 'menu-item "Describe" menu-bar-describe-menu))
-(define-key menu-bar-help-menu [apropos]
-  (list 'menu-item "Search Documentation" menu-bar-apropos-menu))
+(define-key menu-bar-help-menu [search-documentation]
+  (list 'menu-item "Search Documentation" menu-bar-search-documentation-menu))
 (define-key menu-bar-help-menu [sep1]
   '("--"))
-(define-key menu-bar-help-menu [report-emacs-bug]
+(define-key menu-bar-help-menu [emacs-psychotherapist]
+  '(menu-item "Emacs Psychotherapist" doctor
+	      :help "Our doctor will help you feel better"))
+(define-key menu-bar-help-menu [send-emacs-bug-report]
   '(menu-item "Send Bug Report..." report-emacs-bug
 	      :help "Send e-mail to Emacs maintainers"))
-(define-key menu-bar-help-menu [emacs-problems]
+(define-key menu-bar-help-menu [emacs-known-problems]
   '(menu-item "Emacs Known Problems" view-emacs-problems
 	      :help "Read about known problems with Emacs"))
 (define-key menu-bar-help-menu [emacs-news]
@@ -1574,7 +1581,7 @@ Buffers menu is regenerated."
        (or force (frame-or-buffer-changed-p))
        (let ((buffers (buffer-list))
 	     (frames (frame-list))
-	     buffers-menu frames-menu)
+	     buffers-menu)
 	 ;; If requested, list only the N most recently selected buffers.
 	 (if (and (integerp buffers-menu-max-size)
 		  (> buffers-menu-max-size 1))
@@ -1675,10 +1682,10 @@ Buffers menu is regenerated."
 	 (setq buffers-menu
 	       (nconc buffers-menu menu-bar-buffers-menu-command-entries))
 
-	 (setq buffers-menu (cons 'keymap (cons "Select Buffer" buffers-menu)))
-	 (define-key (current-global-map) [menu-bar buffer]
-	   ;; Call copy-sequence so the string is not pure.
-	   (cons (copy-sequence "Buffers") buffers-menu)))))
+         ;; We used to "(define-key (current-global-map) [menu-bar buffer]"
+         ;; but that did not do the right thing when the [menu-bar buffer]
+         ;; entry above had been moved (e.g. to a parent keymap).
+	 (setcdr global-buffers-menu-map (cons "Select Buffer" buffers-menu)))))
 
 (add-hook 'menu-bar-update-hook 'menu-bar-update-buffers)
 
@@ -1771,5 +1778,5 @@ turn on menu bars; otherwise, turn off menu bars."
 
 (provide 'menu-bar)
 
-;;; arch-tag: 6e6a3c22-4ec4-4d3d-8190-583f8ef94ced
+;; arch-tag: 6e6a3c22-4ec4-4d3d-8190-583f8ef94ced
 ;;; menu-bar.el ends here

@@ -1,7 +1,7 @@
 ;;; autoinsert.el --- automatic mode-dependent insertion of text into new files
 
 ;; Copyright (C) 1985, 1986, 1987, 1994, 1995, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Charlie Martin <crm@cs.duke.edu>
 ;; Adapted-By: Daniel Pfeiffer <occitan@esperanto.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -179,7 +179,7 @@ If this contains a %s, that will be replaced by the matching rule."
  ;;'(setq v1 (apply 'vector (mapcar 'car finder-known-keywords)))
  '(setq v1 (mapcar (lambda (x) (list (symbol-name (car x))))
 		   finder-known-keywords)
-	v2 (mapconcat (lambda (x) (format "%10.0s:  %s" (car x) (cdr x)))
+	v2 (mapconcat (lambda (x) (format "%12s:  %s" (car x) (cdr x)))
 	   finder-known-keywords
 	   "\n"))
  ((let ((minibuffer-help-form v2))
@@ -188,7 +188,7 @@ If this contains a %s, that will be replaced by the matching rule."
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; This file is distributed in the hope that it will be useful,

@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @iftex
 @chapter Miscellaneous Commands
@@ -488,12 +488,13 @@ also change the coding system for a running subshell by typing
 Coding}.
 
 @cindex @env{INSIDE_EMACS} environment variable
-  Emacs sets the envitonment variable @env{INSIDE_EMACS} to @code{t}
-in the subshell.  Programs can check this variable to determine
-whether they are running inside an Emacs subshell.
+  Emacs sets the environment variable @env{INSIDE_EMACS} in the
+subshell to a comma-separated list including the Emacs version.
+Programs can check this variable to determine whether they are running
+inside an Emacs subshell.
 
 @cindex @env{EMACS} environment variable
-  Emacs also sets the @env{EMACS} environment variable to @code{t} if
+  Emacs also sets the @env{EMACS} environment variable (to @code{t}) if
 it is not already defined.  @strong{Warning:} This environment
 variable is deprecated.  Programs that check this variable should be
 changed to check @env{INSIDE_EMACS} instead.

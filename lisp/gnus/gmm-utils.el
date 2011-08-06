@@ -1,6 +1,6 @@
 ;;; gmm-utils.el --- Utility functions for Gnus, Message and MML
 
-;; Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Reiner Steib <reiner.steib@gmx.de>
 ;; Keywords: news
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -79,7 +79,7 @@ ARGS are passed to `message'."
 
 ;;;###autoload
 (defun gmm-widget-p (symbol)
-  "Non-nil iff SYMBOL is a widget."
+  "Non-nil if SYMBOL is a widget."
   (get symbol 'widget-type))
 
 ;; Copy of the `nnmail-lazy' code from `nnmail.el':

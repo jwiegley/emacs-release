@@ -1,7 +1,7 @@
 ;;; url-cache.el --- Uniform Resource Locator retrieval tool
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -186,7 +186,7 @@ Very fast if you have an `md5' primitive function, suitably fast otherwise."
 
 ;;;###autoload
 (defun url-cache-expired (url mod)
-  "Return t iff a cached file has expired."
+  "Return t if a cached file has expired."
   (let* ((urlobj (if (vectorp url) url (url-generic-parse-url url)))
 	 (type (url-type urlobj)))
     (cond

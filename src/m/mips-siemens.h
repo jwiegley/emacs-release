@@ -1,6 +1,6 @@
 /* m- file for Mips machines.
    Copyright (C) 1987, 1992, 1993, 1995, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    This file contains some changes for our SVR4 based SINIX-Mips 5.4.
    I hope this is helpful to port the emacs to our RM?00 series and
@@ -11,7 +11,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -36,7 +36,7 @@ This is the m- file for SNI RM*00 machines. Use s- sinix5-4.h file!
 With this the file mips-siemens.h is obsolete.
 NOTE-END  */
 
-/* Define BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #define BIG_ENDIAN

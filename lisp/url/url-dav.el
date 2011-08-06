@@ -1,6 +1,6 @@
 ;;; url-dav.el --- WebDAV support
 
-;; Copyright (C) 2001, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Maintainer: Bill Perry <wmperry@gnu.org>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -562,7 +562,7 @@ FAILURE-RESULTS is a list of (URL STATUS)."
 
 (defun url-dav-unlock-resource (url lock-token)
   "Release the lock on URL represented by LOCK-TOKEN.
-Returns t iff the lock was successfully released."
+Returns t if the lock was successfully released."
   (declare (special url-http-response-status))
   (let* ((url-request-extra-headers (list (cons "Lock-Token"
 						(concat "<" lock-token ">"))))
@@ -654,13 +654,13 @@ Returns t iff the lock was successfully released."
          (or (plist-get properties 'DAV:getcontentlength) 0)
 
          ;; file modes as a string like `ls -l'
-         ;; 
+         ;;
          ;; Should be able to build this up from the
          ;; DAV:supportedlock attribute pretty easily.  Getting
          ;; the group info could be impossible though.
          (url-dav-file-attributes-mode-string properties)
 
-         ;; t iff file's gid would change if it were deleted &
+         ;; t if file's gid would change if it were deleted &
          ;; recreated.  No way for us to know that thru DAV.
          nil
 

@@ -1,11 +1,11 @@
 ;;; allout.el --- extensive outline mode for use alone and with other modes
 
 ;; Copyright (C) 1992, 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ken Manheimer <ken dot manheimer at gmail dot com>
 ;; Maintainer: Ken Manheimer <ken dot manheimer at gmail dot com>
-;; Created: Dec 1991 - first release to usenet
+;; Created: Dec 1991 -- first release to usenet
 ;; Version: 2.2.1
 ;; Keywords: outlines wp languages
 ;; Website: http://myriadicity.net/Sundry/EmacsAllout
@@ -14,7 +14,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -36,11 +36,11 @@
 ;;  - Topic-oriented editing including coherent topic and subtopic
 ;;    creation, promotion, demotion, cut/paste across depths, etc.
 ;;  - Incremental search with dynamic exposure and reconcealment of text
-;;  - Customizable bullet format - enables programming-language specific
+;;  - Customizable bullet format -- enables programming-language specific
 ;;    outlining, for code-folding editing.  (Allout code itself is to try it;
-;;    formatted as an outline - do ESC-x eval-buffer in allout.el; but
+;;    formatted as an outline -- do ESC-x eval-buffer in allout.el; but
 ;;    emacs local file variables need to be enabled when the
-;;    file was visited - see `enable-local-variables'.)
+;;    file was visited -- see `enable-local-variables'.)
 ;;  - Configurable per-file initial exposure settings
 ;;  - Symmetric-key and key-pair topic encryption, plus symmetric passphrase
 ;;    mnemonic support, with verification against an established passphrase
@@ -53,7 +53,7 @@
 ;;    exposure control (see the allout-mode docstring)
 ;;  - Easy rendering of exposed portions into numbered, latex, indented, etc
 ;;    outline styles
-;;  - Careful attention to whitespace - enabling blank lines between items
+;;  - Careful attention to whitespace -- enabling blank lines between items
 ;;    and maintenance of hanging indentation (in paragraph auto-fill and
 ;;    across topic promotion and demotion) of topic bodies consistent with
 ;;    indentation of their topic header.
@@ -76,7 +76,7 @@
 ;; `allout-mode' as a minor mode.  (It has changed since allout
 ;; 3.x, for those of you that depend on the old method.)
 ;;
-;; Note - the lines beginning with `;;;_' are outline topic headers.
+;; Note -- the lines beginning with `;;;_' are outline topic headers.
 ;;        Just `ESC-x eval-buffer' to give it a whirl.
 
 ;; ken manheimer (ken dot manheimer at gmail dot com)
@@ -111,7 +111,7 @@
 
 ;;;_  = allout-auto-activation
 (defcustom allout-auto-activation nil
-  "*Regulates auto-activation modality of allout outlines - see `allout-init'.
+  "*Regulates auto-activation modality of allout outlines -- see `allout-init'.
 
 Setq-default by `allout-init' to regulate whether or not allout
 outline mode is automatically activated when the buffer-specific
@@ -153,35 +153,35 @@ value will automatically trigger `allout-mode', provided
 
 The types of elements in the layout specification are:
 
- integer - dictate the relative depth to open the corresponding topic(s),
-           where:
-         - negative numbers force the topic to be closed before opening
-           to the absolute value of the number, so all siblings are open
-           only to that level.
-         - positive numbers open to the relative depth indicated by the
-           number, but do not force already opened subtopics to be closed.
-         - 0 means to close topic - hide all subitems.
- :   - repeat spec - apply the preceeding element to all siblings at
-       current level, *up to* those siblings that would be covered by specs
-       following the `:' on the list.  Ie, apply to all topics at level but
-       trailing ones accounted for by trailing specs.  (Only the first of
-       multiple colons at the same level is honored - later ones are ignored.)
- *   - completely exposes the topic, including bodies
- +   - exposes all subtopics, but not the bodies
- -   - exposes the body of the corresponding topic, but not subtopics
- list - a nested layout spec, to be applied intricately to its
+ INTEGER -- dictate the relative depth to open the corresponding topic(s),
+            where:
+         -- negative numbers force the topic to be closed before opening
+            to the absolute value of the number, so all siblings are open
+            only to that level.
+         -- positive numbers open to the relative depth indicated by the
+            number, but do not force already opened subtopics to be closed.
+         -- 0 means to close topic -- hide all subitems.
+ :   -- repeat spec -- apply the preceeding element to all siblings at
+        current level, *up to* those siblings that would be covered by specs
+        following the `:' on the list.  Ie, apply to all topics at level but
+        trailing ones accounted for by trailing specs.  (Only the first of
+        multiple colons at the same level is honored -- later ones are ignored.)
+ *   -- completely exposes the topic, including bodies
+ +   -- exposes all subtopics, but not the bodies
+ -   -- exposes the body of the corresponding topic, but not subtopics
+ LIST -- a nested layout spec, to be applied intricately to its
         corresponding item(s)
 
 Examples:
- '(-2 : 0)
+ (-2 : 0)
 	Collapse the top-level topics to show their children and
         grandchildren, but completely collapse the final top-level topic.
- '(-1 () : 1 0)
+ (-1 () : 1 0)
 	Close the first topic so only the immediate subtopics are shown,
         leave the subsequent topics exposed as they are until the second
 	second to last topic, which is exposed at least one level, and
         completely close the last topic.
- '(-2 : -1 *)
+ (-2 : -1 *)
         Expose children and grandchildren of all topics at current
 	level except the last two; expose children of the second to
 	last and completely expose the last one, including its subtopics.
@@ -253,7 +253,7 @@ repeated calls."
 Cycling only happens on when the command is repeated, not when it
 follows a different command.
 
-Smart-placement means that repeated calls to this function will
+Smart placement means that repeated calls to this function will
 advance as follows:
 
  - if the cursor is not on the end-of-line,
@@ -335,25 +335,25 @@ persistent until deliberately changed.  Their significance is
 purely by convention, however.  Some conventions suggest
 themselves:
 
- `(' - open paren - an aside or incidental point
- `?' - question mark - uncertain or outright question
- `!' - exclamation point/bang - emphatic
- `[' - open square bracket - meta-note, about item instead of item's subject
- `\"' - double quote - a quotation or other citation
- `=' - equal sign - an assignement, equating a name with some connotation
- `^' - carat - relates to something above
+ `(' - open paren -- an aside or incidental point
+ `?' - question mark -- uncertain or outright question
+ `!' - exclamation point/bang -- emphatic
+ `[' - open square bracket -- meta-note, about item instead of item's subject
+ `\"' - double quote -- a quotation or other citation
+ `=' - equal sign -- an assignement, equating a name with some connotation
+ `^' - carat -- relates to something above
 
 Some are more elusive, but their rationale may be recognizable:
 
- `+' - plus - pending consideration, completion
- `_' - underscore - done, completed
- `&' - ampersand - addendum, furthermore
+ `+' - plus -- pending consideration, completion
+ `_' - underscore -- done, completed
+ `&' - ampersand -- addendum, furthermore
 
 \(Some other non-plain bullets have special meaning to the
 software.  By default:
 
- `~' marks encryptable topics - see `allout-topic-encryption-bullet'
- `#' marks auto-numbered bullets - see `allout-numbered-bullet'.)
+ `~' marks encryptable topics -- see `allout-topic-encryption-bullet'
+ `#' marks auto-numbered bullets -- see `allout-numbered-bullet'.)
 
 See `allout-plain-bullets-string' for the standard, alternating
 bullets.
@@ -395,7 +395,7 @@ comment-start strings that do not end in spaces are tripled in
 the header-prefix, and an `_' underscore is tacked on the end, to
 distinguish them from regular comment strings.  comment-start
 strings that do end in spaces are not tripled, but an underscore
-is substituted for the space. [This presumes that the space is
+is substituted for the space.  [This presumes that the space is
 for appearance, not comment syntax.  You can use
 `allout-mode-leaders' to override this behavior, when
 undesired.]"
@@ -436,7 +436,7 @@ are always respected by the topic maneuvering functions."
 ;;;###autoload
 (put 'allout-old-style-prefixes 'safe-local-variable
      (if (fboundp 'booleanp) 'booleanp '(lambda (x) (member x '(t nil)))))
-;;;_  = allout-stylish-prefixes - alternating bullets
+;;;_  = allout-stylish-prefixes -- alternating bullets
 (defcustom allout-stylish-prefixes t
   "*Do fancy stuff with topic prefix bullets according to level, etc.
 
@@ -584,7 +584,7 @@ formatted copy."
 (defcustom allout-topic-encryption-bullet "~"
   "*Bullet signifying encryption of the entry's body."
   :type '(choice (const nil) string)
-  :version "22.0"
+  :version "22.1"
   :group 'allout-encryption)
 ;;;_  = allout-passphrase-verifier-handling
 (defcustom allout-passphrase-verifier-handling t
@@ -593,23 +593,23 @@ formatted copy."
 See the docstring for the `allout-enable-file-variable-adjustment'
 variable for details about allout ajustment of file variables."
   :type 'boolean
-  :version "22.0"
+  :version "22.1"
   :group 'allout-encryption)
 (make-variable-buffer-local 'allout-passphrase-verifier-handling)
 ;;;_  = allout-passphrase-hint-handling
 (defcustom allout-passphrase-hint-handling 'always
   "*Dictate outline encryption passphrase reminder handling:
 
- always - always show reminder when prompting
- needed - show reminder on passphrase entry failure
- disabled - never present or adjust reminder
+ always -- always show reminder when prompting
+ needed -- show reminder on passphrase entry failure
+ disabled -- never present or adjust reminder
 
 See the docstring for the `allout-enable-file-variable-adjustment'
 variable for details about allout ajustment of file variables."
   :type '(choice (const always)
                  (const needed)
                  (const disabled))
-  :version "22.0"
+  :version "22.1"
   :group 'allout-encryption)
 (make-variable-buffer-local 'allout-passphrase-hint-handling)
 ;;;_  = allout-encrypt-unencrypted-on-saves
@@ -625,7 +625,7 @@ mostly covers both deliberate file writes and auto-saves.
         can continue editing but the copy on the file system will be
         encrypted.)
         Auto-saves will use the \"All except current topic\" mode if this
-        one is selected, to avoid practical difficulties - see below.
+        one is selected, to avoid practical difficulties -- see below.
  - All except current topic: skip the topic currently being edited, even if
        it's pending encryption.  This may expose the current topic on the
        file sytem, but avoids the nuisance of prompts for the encryption
@@ -642,7 +642,7 @@ disable auto-saves for that file."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "All except current topic" except-current)
                  (const :tag "No" nil))
-  :version "22.0"
+  :version "22.1"
   :group 'allout-encryption)
 (make-variable-buffer-local 'allout-encrypt-unencrypted-on-saves)
 
@@ -677,7 +677,7 @@ willing to let allout use a bunch of \C-c keybindings."
   :group 'allout)
 
 ;;;_  = allout-keybindings-list
-;;; You have to reactivate allout-mode - `(allout-mode t)' - to
+;;; You have to reactivate allout-mode -- `(allout-mode t)' -- to
 ;;; institute changes to this var.
 (defvar allout-keybindings-list ()
   "*List of `allout-mode' key / function bindings, for `allout-mode-map'.
@@ -747,7 +747,7 @@ else allout's special hanging-indent maintaining auto-fill function,
 (defcustom allout-use-hanging-indents t
   "*If non-nil, topic body text auto-indent defaults to indent of the header.
 Ie, it is indented to be just past the header prefix.  This is
-relevant mostly for use with indented-text-mode, or other situations
+relevant mostly for use with `indented-text-mode', or other situations
 where auto-fill occurs."
   :type 'boolean
   :group 'allout)
@@ -792,7 +792,7 @@ For details, see `allout-toggle-current-subtree-encryption's docstring."
   :group 'allout)
 (make-variable-buffer-local 'allout-enable-file-variable-adjustment)
 
-;;;_* CODE - no user customizations below.
+;;;_* CODE -- no user customizations below.
 
 ;;;_ #1 Internal Outline Formatting and Configuration
 ;;;_  : Version
@@ -812,7 +812,7 @@ For details, see `allout-toggle-current-subtree-encryption's docstring."
 (defvar allout-mode nil "Allout outline mode minor-mode flag.")
 (make-variable-buffer-local 'allout-mode)
 ;;;_   = allout-layout nil
-(defvar allout-layout nil            ; LEAVE GLOBAL VALUE NIL - see docstring.
+(defvar allout-layout nil            ; LEAVE GLOBAL VALUE NIL -- see docstring.
   "Buffer-specific setting for allout layout.
 
 In buffers where this is non-nil (and if `allout-init' has been run, to
@@ -856,7 +856,7 @@ by `set-allout-regexp'.")
 (defvar allout-bullets-string ""
   "A string dictating the valid set of outline topic bullets.
 
-This var should *not* be set by the user - it is set by `set-allout-regexp',
+This var should *not* be set by the user -- it is set by `set-allout-regexp',
 and is produced from the elements of `allout-plain-bullets-string'
 and `allout-distinctive-bullets-string'.")
 (make-variable-buffer-local 'allout-bullets-string)
@@ -954,7 +954,7 @@ invoking it directly."
 					  comment-start
 					  t)))
 			      allout-use-mode-specific-leader
-			    ;; Oops - garbled value, equate with effect of 't:
+			    ;; Oops -- garbled value, equate with effect of t:
 			    t)))
 	 (leader
 	  (cond
@@ -982,8 +982,8 @@ invoking it directly."
 	nil
       (setq allout-header-prefix leader)
       (if (not allout-old-style-prefixes)
-          ;; setting allout-primary-bullet makes the top level topics use -
-          ;; actually, be - the special prefix:
+          ;; setting allout-primary-bullet makes the top level topics use --
+          ;; actually, be -- the special prefix:
           (setq allout-primary-bullet leader))
       allout-header-prefix)))
 (defalias 'allout-infer-header-lead
@@ -1124,10 +1124,10 @@ Also refresh various data structures that hinge on the regexp."
 (defvar allout-mode-map nil "Keybindings for (allout) outline minor mode.")
 ;;;_   > produce-allout-mode-map (keymap-alist &optional base-map)
 (defun produce-allout-mode-map (keymap-list &optional base-map)
-  "Produce keymap for use as allout-mode-map, from KEYMAP-LIST.
+  "Produce keymap for use as `allout-mode-map', from KEYMAP-LIST.
 
 Built on top of optional BASE-MAP, or empty sparse map if none specified.
-See doc string for allout-keybindings-list for format of binding list."
+See doc string for `allout-keybindings-list' for format of binding list."
   (let ((map (or base-map (make-sparse-keymap)))
 	(pref (list allout-command-prefix)))
     (mapcar (function
@@ -1239,7 +1239,7 @@ extended from the existing one by `append'ing a list containing the second
 element of the pair onto the end of the existing value.
 
 Extension, and resumptions in general, should not be used for hook
-functions - use the 'local mode of `add-hook' for that, instead.
+functions -- use the 'local mode of `add-hook' for that, instead.
 
 The settings are stored on `allout-mode-prior-settings'."
   (while pairs
@@ -1258,7 +1258,7 @@ The settings are stored on `allout-mode-prior-settings'."
       (when (not (assoc name allout-mode-prior-settings))
         ;; Not already added as a resumption, create the prior setting entry.
         (if (local-variable-p name)
-            ;; is already local variable - preserve the prior value:
+            ;; is already local variable -- preserve the prior value:
             (push (list name prior-value) allout-mode-prior-settings)
           ;; wasn't local variable, indicate so for resumption by killing
           ;; local value, and make it local:
@@ -1324,9 +1324,9 @@ It is run at the conclusion of `allout-flag-region'.
 
 Functions on the hook must take three arguments:
 
- - from - integer indicating the point at the start of the change.
- - to - integer indicating the point of the end of the change.
- - flag - change mode: nil for exposure, otherwise concealment.
+ - FROM -- integer indicating the point at the start of the change.
+ - TO -- integer indicating the point of the end of the change.
+ - FLAG -- change mode: nil for exposure, otherwise concealment.
 
 This hook might be invoked multiple times by a single command.
 
@@ -1338,10 +1338,10 @@ and eventually will not be invoked.")
 
 Functions on the hook should take two arguments:
 
- - new-start - integer indicating the point at the start of the first new item.
- - new-end - integer indicating the point of the end of the last new item.
+ - NEW-START -- integer indicating position of start of the first new item.
+ - NEW-END -- integer indicating position of end of the last new item.
 
-Some edits that introduce new items may missed by this hook -
+Some edits that introduce new items may missed by this hook:
 specifically edits that native allout routines do not control.
 
 This hook might be invoked multiple times by a single command.")
@@ -1351,10 +1351,10 @@ This hook might be invoked multiple times by a single command.")
 
 Functions on the hook must take two arguments:
 
- - depth - integer indicating the depth of the subtree that was deleted.
- - removed-from - integer indicating the point where the subtree was removed.
+ - DEPTH -- integer indicating the depth of the subtree that was deleted.
+ - REMOVED-FROM -- integer indicating the point where the subtree was removed.
 
-Some edits that remove or invalidate items may missed by this hook -
+Some edits that remove or invalidate items may missed by this hook:
 specifically edits that native allout routines do not control.
 
 This hook might be invoked multiple times by a single command.")
@@ -1364,10 +1364,10 @@ This hook might be invoked multiple times by a single command.")
 
 Functions on the hook should take two arguments:
 
- - depth-change - integer indicating depth increase, negative for decrease
- - start - integer indicating the start point of the shifted parent item.
+ - DEPTH-CHANGE -- integer indicating depth increase, negative for decrease
+ - START -- integer indicating the start point of the shifted parent item.
 
-Some edits that shift items can be missed by this hook - specifically edits
+Some edits that shift items can be missed by this hook: specifically edits
 that native allout routines do not control.
 
 This hook might be invoked multiple times by a single command.")
@@ -1444,7 +1444,7 @@ substition is used against the regexp matches, a la `replace-match'.")
   "Variable for regexps matching plaintext to remove before encryption.
 
 This is for the sake of redoing encryption in cases where the ciphertext
-incidentally contains strings that would disrupt mode operation -
+incidentally contains strings that would disrupt mode operation --
 for example, a line that happens to look like an allout-mode topic prefix.
 
 Entries must be symbols that are bound to the desired regexp values.
@@ -1462,7 +1462,7 @@ See `allout-encryption-ciphertext-rejection-regexps' for rejection reasons.")
 (make-variable-buffer-local 'allout-encryption-ciphertext-rejection-ceiling)
 ;;;_   > allout-mode-p ()
 ;; Must define this macro above any uses, or byte compilation will lack
-;; proper def, if file isn't loaded - eg, during emacs build!
+;; proper def, if file isn't loaded -- eg, during emacs build!
 (defmacro allout-mode-p ()
   "Return t if `allout-mode' is active in current buffer."
   'allout-mode)
@@ -1637,11 +1637,11 @@ the following two lines in your Emacs init file:
   (put 'allout-exposure-category 'invisible 'allout)
   (put 'allout-exposure-category 'evaporate t)
   ;; XXX We use isearch-open-invisible *and* isearch-mode-end-hook.  The
-  ;; latter would be sufficient, but it seems that a separate behavior -
-  ;; the _transient_ opening of invisible text during isearch - is keyed to
-  ;; presence of the isearch-open-invisible property - even though this
+  ;; latter would be sufficient, but it seems that a separate behavior --
+  ;; the _transient_ opening of invisible text during isearch -- is keyed to
+  ;; presence of the isearch-open-invisible property -- even though this
   ;; property controls the isearch _arrival_ behavior.  This is the case at
-  ;; least in emacs 21, 22.0, and xemacs 21.4.
+  ;; least in emacs 21, 22.1, and xemacs 21.4.
   (put 'allout-exposure-category 'isearch-open-invisible
        'allout-isearch-end-handler)
   (if (featurep 'xemacs)
@@ -1658,8 +1658,9 @@ the following two lines in your Emacs init file:
   "Toggle minor mode for controlling exposure and editing of text outlines.
 \\<allout-mode-map>
 
-Optional arg forces mode to re-initialize iff arg is positive num or
-symbol.  Allout outline mode always runs as a minor mode.
+Optional prefix argument TOGGLE forces the mode to re-initialize
+if it is positive, otherwise it turns the mode off.  Allout
+outline mode always runs as a minor mode.
 
 Allout outline mode provides extensive outline oriented formatting and
 manipulation.  It enables structural editing of outlines, as well as
@@ -1692,7 +1693,7 @@ variable.  We recommend customizing `allout-command-prefix' to use just
 `\\C-c' as the command prefix, if the allout bindings don't conflict with
 any personal bindings you have on \\C-c.  In any case, outline structure
 navigation and authoring is simplified by positioning the cursor on an
-item's bullet character, the \"hot-spot\" - then you can invoke allout
+item's bullet character, the \"hot-spot\" -- then you can invoke allout
 commands with just the un-prefixed, un-control-shifted command letters.
 This is described further in the HOT-SPOT Operation section.
 
@@ -1713,7 +1714,7 @@ This is described further in the HOT-SPOT Operation section.
 \\[allout-backward-current-level] `allout-backward-current-level'
 \\[allout-end-of-entry] `allout-end-of-entry'
 \\[allout-beginning-of-current-entry] `allout-beginning-of-current-entry' (alternately, goes to hot-spot)
-\\[allout-beginning-of-line]  `allout-beginning-of-line' - like regular beginning-of-line, but
+\\[allout-beginning-of-line]  `allout-beginning-of-line' -- like regular beginning-of-line, but
      if immediately repeated cycles to the beginning of the current item
      and then to the hot-spot (if `allout-beginning-of-line-cycles' is set).
 
@@ -1731,9 +1732,9 @@ This is described further in the HOT-SPOT Operation section.
 \\[allout-rebullet-current-heading] `allout-rebullet-current-heading' Prompt for alternate bullet for
             current topic
 \\[allout-rebullet-topic] `allout-rebullet-topic'   Reconcile bullets of topic and
-            its' offspring - distinctive bullets are not changed, others
+            its' offspring -- distinctive bullets are not changed, others
             are alternated according to nesting depth.
-\\[allout-number-siblings] `allout-number-siblings'  Number bullets of topic and siblings -
+\\[allout-number-siblings] `allout-number-siblings'  Number bullets of topic and siblings --
            the offspring are not affected.
            With repeat count, revoke numbering.
 
@@ -1762,7 +1763,7 @@ M-x outlineify-sticky       Activate outline mode for current buffer,
 \\[allout-copy-exposed-to-buffer] `allout-copy-exposed-to-buffer'
                             Duplicate outline, sans concealed text, to
                             buffer with name derived from derived from that
-                            of current buffer - \"*BUFFERNAME exposed*\".
+                            of current buffer -- \"*BUFFERNAME exposed*\".
 \\[allout-flatten-exposed-to-buffer] `allout-flatten-exposed-to-buffer'
                             Like above 'copy-exposed', but convert topic
                             prefixes to section.subsection... numeric
@@ -1831,7 +1832,7 @@ without changes to the allout core.  Here are key ones:
 
                             Terminology
 
-Topic hierarchy constituents - TOPICS and SUBTOPICS:
+Topic hierarchy constituents -- TOPICS and SUBTOPICS:
 
 ITEM:   A unitary outline element, including the HEADER and ENTRY text.
 TOPIC:  An ITEM and any ITEMs contained within it, ie having greater DEPTH
@@ -1939,7 +1940,7 @@ OPEN:	A TOPIC that is not CLOSED, though its OFFSPRING or BODY may be."
 
     (cond
 
-     ;; Provision for v19.18, 19.19 bug -
+     ;; Provision for v19.18, 19.19 bug --
      ;; Emacs v 19.18, 19.19 file-var code invokes prop-line-designated
      ;; modes twice when file is visited.  We have to avoid toggling mode
      ;; off on second invocation, so we detect it as best we can, and
@@ -2084,7 +2085,7 @@ OPEN:	A TOPIC that is not CLOSED, though its OFFSPRING or BODY may be."
                 (progn
                   (apply 'allout-expose-topic (list use-layout))
                   (message "Adjusting '%s' exposure... done." (buffer-name)))
-              ;; Problem applying exposure - notify user, but don't
+              ;; Problem applying exposure -- notify user, but don't
               ;; interrupt, eg, file visit:
               (error (message "%s" (car (cdr err)))
                      (sit-for 1))))))
@@ -2119,6 +2120,16 @@ OPEN:	A TOPIC that is not CLOSED, though its OFFSPRING or BODY may be."
 ;;;_  > allout-minor-mode
 (defalias 'allout-minor-mode 'allout-mode)
 
+;;;_  > allout-unload-function
+(defun allout-unload-function ()
+  "Unload the allout outline library."
+  (save-current-buffer
+    (dolist (buffer (buffer-list))
+      (set-buffer buffer)
+      (when allout-mode (allout-mode -1))))
+  ;; continue standard unloading
+  nil)
+
 ;;;_  - Position Assessment
 ;;;_   > allout-hidden-p (&optional pos)
 (defsubst allout-hidden-p (&optional pos)
@@ -2139,10 +2150,10 @@ OPEN:	A TOPIC that is not CLOSED, though its OFFSPRING or BODY may be."
   "Get confirmation before making arbitrary changes to invisible text.
 
 We expose the invisible text and ask for confirmation.  Refusal or
-keyboard-quit abandons the changes, with keyboard-quit additionally
+`keyboard-quit' abandons the changes, with keyboard-quit additionally
 reclosing the opened text.
 
-No confirmation is necessary when inhibit-read-only is set - eg, allout
+No confirmation is necessary when `inhibit-read-only' is set -- eg, allout
 internal functions use this feature cohesively bunch changes."
 
   (when (and (not inhibit-read-only) (not after))
@@ -2180,7 +2191,7 @@ internal functions use this feature cohesively bunch changes."
 (defun allout-before-change-handler (beg end)
   "Protect against changes to invisible text.
 
-See allout-overlay-interior-modification-handler for details."
+See `allout-overlay-interior-modification-handler' for details."
 
   (if (and (allout-mode-p) undo-in-progress (allout-hidden-p))
       (allout-show-to-offshoot))
@@ -2190,7 +2201,7 @@ See allout-overlay-interior-modification-handler for details."
   (when (and (featurep 'xemacs) (allout-mode-p))
     ;; process all of the pending overlays:
     (save-excursion
-      (got-char beg)
+      (goto-char beg)
       (let ((overlay (allout-get-invisibility-overlay)))
 	(allout-overlay-interior-modification-handler
 	 overlay nil beg end nil)))))
@@ -2205,7 +2216,7 @@ function can also be used as an `isearch-mode-end-hook'."
   (if (and (allout-mode-p) (allout-hidden-p))
       (allout-show-to-offshoot)))
 
-;;;_ #3 Internal Position State-Tracking - "allout-recent-*" funcs
+;;;_ #3 Internal Position State-Tracking -- "allout-recent-*" funcs
 ;;; All the basic outline functions that directly do string matches to
 ;;; evaluate heading prefix location set the variables
 ;;; `allout-recent-prefix-beginning'  and `allout-recent-prefix-end'
@@ -2233,7 +2244,8 @@ function can also be used as an `isearch-mode-end-hook'."
 (defsubst allout-prefix-data ()
   "Register allout-prefix state data.
 
-For reference by `allout-recent' funcs.  Returns BEGINNING."
+For reference by `allout-recent' funcs.  Return
+the new value of `allout-recent-prefix-beginning'."
   (setq allout-recent-prefix-end (or (match-end 1) (match-end 2))
         allout-recent-prefix-beginning (or (match-beginning 1)
                                            (match-beginning 2))
@@ -2287,7 +2299,7 @@ to return the current depth of the most recently matched topic."
 (defsubst allout-do-doublecheck ()
   "True if current item conditions qualify for checking on topic aberrance."
   (and
-   ;; presume integrity of outline and yanked content during yank - necessary,
+   ;; presume integrity of outline and yanked content during yank -- necessary
    ;; to allow for level disparity of yank location and yanked text:
    (not allout-inhibit-aberrance-doublecheck)
    ;; allout-doublecheck-at-and-shallower is ceiling for doublecheck:
@@ -2324,12 +2336,12 @@ exceeds the topic by more than one."
         (allout-prefix-data)
         (goto-char allout-recent-prefix-beginning)
         (cond
-         ;; sibling - continue:
+         ;; sibling -- continue:
          ((eq allout-recent-depth depth))
-         ;; first offspring is excessive - aberrant:
+         ;; first offspring is excessive -- aberrant:
          ((> allout-recent-depth (1+ depth))
           (setq done t aberrant t))
-         ;; next non-sibling is lower-depth - not aberrant:
+         ;; next non-sibling is lower-depth -- not aberrant:
          (t (setq done t)))))
     (if aberrant
         aberrant
@@ -2468,7 +2480,7 @@ Outermost is first."
 ;;;_   > allout-end-of-current-line ()
 (defun allout-end-of-current-line ()
   "Move to the end of line, past concealed text if any."
-  ;; XXX This is for symmetry with `allout-beginning-of-current-line' -
+  ;; XXX This is for symmetry with `allout-beginning-of-current-line' --
   ;; `move-end-of-line' doesn't suffer the same problem as
   ;; `move-beginning-of-line'.
   (let ((inhibit-field-text-motion t))
@@ -2534,7 +2546,7 @@ Outermost is first."
 
 Returns the location of the heading, or nil if none found.
 
-We skip anomolous low-level topics, a la `allout-aberrant-container-p'."
+We skip anomalous low-level topics, a la `allout-aberrant-container-p'."
   (if (looking-at allout-regexp)
       (forward-char 1))
 
@@ -2557,7 +2569,7 @@ We skip anomolous low-level topics, a la `allout-aberrant-container-p'."
 
 Return the location of the beginning of the heading, or nil if not found.
 
-We skip anomolous low-level topics, a la `allout-aberrant-container-p'."
+We skip anomalous low-level topics, a la `allout-aberrant-container-p'."
 
   (if (bobp)
       nil
@@ -2654,9 +2666,9 @@ starting point, and PREV-DEPTH is depth of prior topic."
 		       ;; Register this one and move on:
 		       (setq chart (cons allout-recent-prefix-beginning chart))
 		       (if (and levels (<= levels 1))
-			   ;; At depth limit - skip sublevels:
+			   ;; At depth limit -- skip sublevels:
 			   (or (allout-next-sibling curr-depth)
-			       ;; or no more siblings - proceed to
+			       ;; or no more siblings -- proceed to
 			       ;; next heading at lesser depth:
 			       (while (and (<= curr-depth
 					       allout-recent-depth)
@@ -2729,7 +2741,7 @@ start point."
 	  (let ((further (allout-chart-to-reveal here (if (null depth)
                                                           depth
                                                         (1- depth)))))
-	    ;; We're on the start of a subtree - recurse with it, if there's
+	    ;; We're on the start of a subtree -- recurse with it, if there's
 	    ;; more depth to go:
 	    (if further (setq result (append further result)))
 	    (setq chart (cdr chart)))
@@ -3114,7 +3126,7 @@ situation."
           (progn (goto-char start-point)
                  nil)
         ;; rationale: if any intervening items were at a lower depth, we
-        ;; would now be on the first offspring at the target depth - ie,
+        ;; would now be on the first offspring at the target depth -- ie,
         ;; the preceeding item (per the search direction) must be at a
         ;; lesser depth.  that's all we need to check.
         (if backward (allout-next-heading) (allout-previous-heading))
@@ -3191,7 +3203,7 @@ Move to buffer limit in indicated direction if headings are exhausted."
                          (allout-aberrant-container-p))
                     ;; skip this aberrant prospective header line:
                     t
-                  ;; this prospective headerline qualifies - register:
+                  ;; this prospective headerline qualifies -- register:
                   (setq got allout-recent-prefix-beginning)
                   ;; and break the loop:
                   nil))))
@@ -3359,7 +3371,7 @@ Returns the qualifying command, if any, else nil."
                                                     (>= 122 key-num)) ; "z"
                                                (- key-num 96) key-num)))
                                   t))))
-          ;; Qualified as an allout command - do hot-spot operation.
+          ;; Qualified as an allout command -- do hot-spot operation.
           (setq allout-post-goto-bullet t)
         ;; accept-defaults nil, or else we'll get allout-item-icon-key-handler.
         (setq mapped-binding (key-binding (char-to-string key-num))))
@@ -3461,7 +3473,7 @@ Second arg NEW indicates that a new topic is being opened after the
 topic at point, if non-nil.  Default bullet for new topics, eg, may
 be set (contingent to other args) to numbered bullets if previous
 sibling is one.  The implication otherwise is that the current topic
-is being adjusted - shifted or rebulleted - and we don't consider
+is being adjusted -- shifted or rebulleted -- and we don't consider
 bullet or previous sibling.
 
 Third arg DEPTH forces the topic prefix to that depth, regardless of
@@ -3507,11 +3519,11 @@ index for each successive sibling)."
           ;; Getting value for bullet char is practically the whole job:
 
           (cond
-                                        ; Simplest situation - level 1:
+                                        ; Simplest situation -- level 1:
            ((<= depth 1) (setq header-lead "") allout-primary-bullet)
                                         ; Simple, too: all asterisks:
            (allout-old-style-prefixes
-            ;; Cheat - make body the whole thing, null out header-lead and
+            ;; Cheat -- make body the whole thing, null out header-lead and
             ;; bullet-char:
             (setq body (make-string depth
                                     (string-to-char allout-primary-bullet)))
@@ -3589,8 +3601,8 @@ index for each successive sibling)."
   "Open a new topic at depth DEPTH.
 
 New topic is situated after current one, unless optional flag BEFORE
-is non-nil, or unless current line is completely empty - lacking even
-whitespace - in which case open is done on the current line.
+is non-nil, or unless current line is completely empty -- lacking even
+whitespace -- in which case open is done on the current line.
 
 When adding an offspring, it will be added immediately after the parent if
 the other offspring are exposed, or after the last child if the offspring
@@ -3654,7 +3666,7 @@ Nuances:
 
     (if (not opening-on-blank)
                                         ; Positioning and vertical
-                                        ; padding - only if not
+                                        ; padding -- only if not
                                         ; opening-on-blank:
         (progn
           (goto-char ref-topic)
@@ -3705,7 +3717,7 @@ Nuances:
                                (open-line 1)))
 		  (allout-end-of-current-subtree)
                   (if (looking-at "\n\n") (forward-char 1))))
-            ;; Going inwards - double-space if first offspring is
+            ;; Going inwards -- double-space if first offspring is
             ;; double-spaced, otherwise snug up.
             (allout-end-of-entry)
             (if (eobp)
@@ -3715,7 +3727,7 @@ Nuances:
             (backward-char 1)
             (if (bolp)
                 ;; Blank lines between current header body and next
-                ;; header - get to last substantive (non-white-space)
+                ;; header -- get to last substantive (non-white-space)
                 ;; line in body:
                 (progn (setq dbl-space t)
                        (re-search-backward "[^ \t\n]" nil t)))
@@ -3860,9 +3872,9 @@ Note that refill of indented paragraphs is not done."
 		  (not (looking-at allout-regexp)))
 	   (if (> 0 (setq excess (- (- old-indent-end old-indent-begin)
                                     old-margin)))
-	       ;; Text starts left of old margin - don't adjust:
+	       ;; Text starts left of old margin -- don't adjust:
 	       nil
-	     ;; Text was hanging at or right of old left margin -
+	     ;; Text was hanging at or right of old left margin --
 	     ;; reindent it, preserving its existing indentation
 	     ;; beyond the old margin:
 	     (delete-region old-indent-begin old-indent-end)
@@ -3923,9 +3935,9 @@ Third arg NUMBER-CONTROL can force the prefix to or away from
 numbered form.  It has effect only if `allout-numbered-bullet' is
 non-nil and soliciting was not explicitly invoked (via first arg).
 Its effect, numbering or denumbering, then depends on the setting
-of the forth arg, INDEX.
+of the fourth arg, INDEX.
 
-If NUMBER-CONTROL is non-nil and forth arg INDEX is nil, then the
+If NUMBER-CONTROL is non-nil and fourth arg INDEX is nil, then the
 prefix of the topic is forced to be non-numbered.  Null index and
 non-nil NUMBER-CONTROL forces denumbering.  Non-nil INDEX (and
 non-nil NUMBER-CONTROL) forces a numbered-prefix form.  If non-nil
@@ -4009,7 +4021,7 @@ this function."
 
 Descends into invisible as well as visible topics, however.
 
-When optional sans-offspring is non-nil, subtopics are not
+When optional SANS-OFFSPRING is non-nil, subtopics are not
 shifted.  (Shifting a topic outwards without shifting its
 offspring is disallowed, since this would create a \"containment
 discontinuity\", where the depth difference between a topic and
@@ -4054,7 +4066,7 @@ Finally, if optional SANS-OFFSPRING is non-nil then the offspring
 are not shifted.  (Shifting a topic outwards without shifting
 its offspring is disallowed, since this would create a
 \"containment discontinuity\", where the depth difference between
-a topic and its immediate offspring is greater than one..)"
+a topic and its immediate offspring is greater than one.)"
 
   ;; XXX the recursion here is peculiar, and in general the routine may
   ;; need simplification with refactoring.
@@ -4119,7 +4131,7 @@ a topic and its immediate offspring is greater than one..)"
                                         nil)))) ;;; do-successors
 
           ((< starting-depth new-depth)
-           ;; Rare case - subtopic more than one level deeper than parent.
+           ;; Rare case -- subtopic more than one level deeper than parent.
            ;; Treat this one at an even deeper level:
            (allout-rebullet-topic-grunt relative-depth
                                          new-depth
@@ -4181,7 +4193,7 @@ Returns final depth."
 (defun allout-number-siblings (&optional denumber)
   "Assign numbered topic prefix to this topic and its siblings.
 
-With universal argument, denumber - assign default bullet to this
+With universal argument, denumber -- assign default bullet to this
 topic and its siblings.
 
 With repeated universal argument (`^U^U'), solicit bullet for each
@@ -4340,7 +4352,7 @@ Trailing whitespace is killed with a topic if that whitespace:
    previous one.
 
 Topic exposure is marked with text-properties, to be used by
-allout-yank-processing for exposure recovery."
+`allout-yank-processing' for exposure recovery."
 
   (interactive)
   (let* ((inhibit-field-text-motion t)
@@ -4371,7 +4383,7 @@ allout-yank-processing for exposure recovery."
     (run-hook-with-args 'allout-structure-deleted-hook depth (point))))
 ;;;_    > allout-copy-topic-as-kill ()
 (defun allout-copy-topic-as-kill ()
-  "Like allout-kill-topic, but save to kill ring instead of deleting."
+  "Like `allout-kill-topic', but save to kill ring instead of deleting."
   (interactive)
   (let ((buffer-read-only t))
     (condition-case nil
@@ -4396,7 +4408,7 @@ allout-yank-processing for exposure recovery."
                                                            'invisible
                                                            nil end))))
           (if (or (not next) (eq prev next))
-              ;; still not at start of hidden area - must not be any left.
+              ;; still not at start of hidden area -- must not be any left.
               (setq done t)
             (goto-char next)
             (setq prev next)
@@ -4437,7 +4449,7 @@ allout-yank-processing for exposure recovery."
                                                          'allout-was-hidden
                                                          nil end)))
         (if (or (not next) (eq prev next))
-            ;; no more or not advancing - must not be any left.
+            ;; no more or not advancing -- must not be any left.
             (setq done t)
           (goto-char next)
           (setq prev next)
@@ -4493,7 +4505,7 @@ however, are left exactly like normal, non-allout-specific yanks."
          (rectify-numbering (or resituate
                                 (and into-bol (looking-at allout-regexp)))))
     (if resituate
-        ;; Yanking a topic into the start of a topic - reconcile to fit:
+        ;; Yanking a topic into the start of a topic -- reconcile to fit:
         (let* ((inhibit-field-text-motion t)
                (prefix-len (if (not (match-end 1))
                                1
@@ -4632,7 +4644,7 @@ works with normal `yank' in non-outline buffers."
 
 Adapts level of popped topics to level of fresh prefix.
 
-Note - prefix changes to distinctive bullets will stick, if followed
+Note -- prefix changes to distinctive bullets will stick, if followed
 by pops to non-distinctive yanks.  Bug..."
 
   (interactive "*p")
@@ -4651,7 +4663,7 @@ by pops to non-distinctive yanks.  Bug..."
   (interactive)
   (if (not allout-file-xref-bullet)
       (error
-       "Outline cross references disabled - no `allout-file-xref-bullet'")
+       "Outline cross references disabled -- no `allout-file-xref-bullet'")
     (if (not (string= (allout-current-bullet) allout-file-xref-bullet))
         (error "Current heading lacks cross-reference bullet `%s'"
                allout-file-xref-bullet)
@@ -4873,16 +4885,16 @@ Useful for coherently exposing to a random point in a hidden region."
       )))
 ;;;_   > allout-show-current-subtree (&optional arg)
 (defun allout-show-current-subtree (&optional arg)
-  "Show everything within the current topic.  With a repeat-count,
-expose this topic and its siblings."
+  "Show everything within the current topic.
+With a repeat-count, expose this topic and its siblings."
   (interactive "P")
   (save-excursion
     (if (<= (allout-current-depth) 0)
-	;; Outside any topics - try to get to the first:
+	;; Outside any topics -- try to get to the first:
 	(if (not (allout-next-heading))
 	    (error "No topics")
-	  ;; got to first, outermost topic - set to expose it and siblings:
-	  (message "Above outermost topic - exposing all.")
+	  ;; got to first, outermost topic -- set to expose it and siblings:
+	  (message "Above outermost topic -- exposing all.")
 	  (allout-flag-region (point-min)(point-max) nil))
       (allout-beginning-of-current-line)
       (if (not arg)
@@ -4919,7 +4931,7 @@ siblings, even if the target topic is already closed."
 
   (interactive)
   (let* ((from (point))
-         (sibs-msg "Top-level topic already closed - closing siblings...")
+         (sibs-msg "Top-level topic already closed -- closing siblings...")
          (current-exposed (not (allout-current-topic-collapsed-p t))))
     (cond (current-exposed (allout-flag-current-subtree t))
           (just-close nil)
@@ -5007,13 +5019,13 @@ Simple (numeric and null-list) specs are interpreted as follows:
        that level.
      - positive numbers open to the relative depth indicated by the
        number, but do not force already opened subtopics to be closed.
-     - 0 means to close topic - hide all offspring.
+     - 0 means to close topic -- hide all offspring.
   :  - `repeat'
        apply prior element to all siblings at current level, *up to*
        those siblings that would be covered by specs following the `:'
        on the list.  Ie, apply to all topics at level but the last
        ones.  (Only first of multiple colons at same level is
-       respected - subsequent ones are discarded.)
+       respected -- subsequent ones are discarded.)
   *  - completely opens the topic, including bodies.
   +  - shows all the sub headers, but not the bodies
   -  - exposes the body of the corresponding topic.
@@ -5061,11 +5073,11 @@ Examples:
 		 ;; Expand the `repeat' spec to an explicit version,
 		 ;; w.r.t. remaining siblings:
 		 (let ((residue	   ; = # of sibs not covered by remaining spec
-			;; Dang - could be nice to make use of the chart, sigh:
+			;; Dang, could be nice to make use of the chart, sigh:
 			(- (length (allout-chart-siblings))
 			   (length spec))))
 		   (if (< 0 residue)
-		       ;; Some residue - cover it with prev-elem:
+		       ;; Some residue -- cover it with prev-elem:
 		       (setq spec (append (make-list residue prev-elem)
 					  spec)))))))
 	 ((numberp curr-elem)
@@ -5199,7 +5211,7 @@ Examples:
 	     (error "allout-new-exposure: Can't find any outline topics"))
 	(list 'allout-expose-topic (list 'quote spec))))
 
-;;;_ #7 Systematic outline presentation - copying, printing, flattening
+;;;_ #7 Systematic outline presentation -- copying, printing, flattening
 
 ;;;_  - Mapping and processing of topics
 ;;;_   ( See also Subtree Charting, in Navigation code.)
@@ -5287,12 +5299,12 @@ the subject region.
 
 Optional START and END indicate bounds of region.
 
-optional arg, FORMAT, designates an alternate presentation form for
+Optional arg, FORMAT, designates an alternate presentation form for
 the prefix:
 
- list - Present prefix as numeric section.subsection..., starting with
+ list -- Present prefix as numeric section.subsection..., starting with
 	section indicated by the list, innermost nesting first.
- `indent' (symbol) -  Convert header prefixes to all white space,
+ `indent' (symbol) --  Convert header prefixes to all white space,
 		       except for distinctive bullets.
 
 The elements of the list produced are lists that represents a topic
@@ -5317,7 +5329,7 @@ header and body.  The elements of that list are:
       (beginning-of-line)
       ;; Goto initial topic, and register preceeding stuff, if any:
       (if (> (allout-goto-prefix-doublechecked) start)
-	  ;; First topic follows beginning point - register preliminary stuff:
+	  ;; First topic follows beginning point -- register preliminary stuff:
 	  (setq result (list (list 0 "" nil
 				   (buffer-substring start (1- (point)))))))
       (while (and (not done)
@@ -5385,7 +5397,7 @@ header and body.  The elements of that list are:
 	    (cond ((= new-depth depth)
 		   (setq format (cons (1+ (car format))
 					  (cdr format))))
-		  ((> new-depth depth)	; descending - assume by 1:
+		  ((> new-depth depth)	; descending -- assume by 1:
 		   (setq format (cons 1 format)))
 		  (t
 					; Pop the residue:
@@ -5416,12 +5428,12 @@ Apply FUNCTION to exposed portions FROM position TO position in buffer
 FROMBUF to buffer TOBUF.  Sixth optional arg, FORMAT, designates an
 alternate presentation form:
 
- `flat' - Present prefix as numeric section.subsection..., starting with
-	 section indicated by the start-num, innermost nesting first.
- X`flat-indented' - Prefix is like `flat' for first topic at each
+ `flat' -- Present prefix as numeric section.subsection..., starting with
+	 section indicated by the START-NUM, innermost nesting first.
+ X`flat-indented' -- Prefix is like `flat' for first topic at each
  X		   level, but subsequent topics have only leaf topic
  X		   number, padded with blanks to line up with first.
- `indent' (symbol) -  Convert header prefixes to all white space,
+ `indent' (symbol) --  Convert header prefixes to all white space,
 		       except for distinctive bullets.
 
 Defaults:
@@ -5441,19 +5453,19 @@ Defaults:
 	(setq from (point-min) to (point-max))))
   (if frombuf
       (if (not (bufferp frombuf))
-	  ;; Specified but not a buffer - get it:
+	  ;; Specified but not a buffer -- get it:
 	  (let ((got (get-buffer frombuf)))
 	    (if (not got)
 		(error (concat "allout-process-exposed: source buffer "
 			       frombuf
 			       " not found."))
 	      (setq frombuf got))))
-    ;; not specified - default it:
+    ;; not specified -- default it:
     (setq frombuf (current-buffer)))
   (if tobuf
       (if (not (bufferp tobuf))
 	  (setq tobuf (get-buffer-create tobuf)))
-    ;; not specified - default it:
+    ;; not specified -- default it:
     (setq tobuf (concat "*" (buffer-name frombuf) " exposed*")))
   (if (listp format)
       (nreverse format))
@@ -5540,7 +5552,7 @@ alternate presentation format for the outline:
 (defun allout-flatten-exposed-to-buffer (&optional arg tobuf)
   "Present numeric outline of outline's exposed portions in another buffer.
 
-The resulting outline is not compatible with outline mode - use
+The resulting outline is not compatible with outline mode -- use
 `allout-copy-exposed-to-buffer' if you want that.
 
 Use `allout-indented-exposed-to-buffer' for indented presentation.
@@ -5556,7 +5568,7 @@ used verbatim."
 (defun allout-indented-exposed-to-buffer (&optional arg tobuf)
   "Present indented outline of outline's exposed portions in another buffer.
 
-The resulting outline is not compatible with outline mode - use
+The resulting outline is not compatible with outline mode -- use
 `allout-copy-exposed-to-buffer' if you want that.
 
 Use `allout-flatten-exposed-to-buffer' for numeric sectional presentation.
@@ -5784,7 +5796,7 @@ encryption are encrypted.  See allout-encrypt-unencrypted-on-saves for
 auto-encryption specifics.
 
 \*NOTE WELL* that automatic encryption that happens during saves will
-default to symmetric encryption - you must deliberately (re)encrypt key-pair
+default to symmetric encryption -- you must deliberately (re)encrypt key-pair
 encrypted topics if you want them to continue to use the key-pair cipher.
 
 Level-one topics, with prefix consisting solely of an `*' asterisk, cannot be
@@ -5871,7 +5883,7 @@ See `allout-toggle-current-subtree-encryption' for more details."
                                                          subtree-end))
            (subtree-end-char (char-after (1- subtree-end)))
            (subtree-trailing-char (char-after subtree-end))
-           ;; kluge - result-text needs to be nil, but we also want to
+           ;; kluge -- result-text needs to be nil, but we also want to
            ;;         check for the error condition
            (result-text (if (or (string= "" subject-text)
                                 (string= "\n" subject-text))
@@ -5958,18 +5970,19 @@ If DECRYPT is true (default false), then decrypt instead of encrypt.
 
 FETCH-PASS (default false) forces fresh prompting for the passphrase.
 
-KEY-TYPE indicates whether to use a 'symmetric or 'keypair cipher.
+KEY-TYPE, either `symmetric' or `keypair', specifies which type
+of cypher to use.
 
 FOR-KEY is human readable identification of the first of the user's
 eligible secret keys a keypair decryption targets, or else nil.
 
-Optional RETRIED is for internal use - conveys the number of failed keys
+Optional RETRIED is for internal use -- conveys the number of failed keys
 that have been solicited in sequence leading to this current call.
 
 Optional PASSPHRASE enables explicit delivery of the decryption passphrase,
 for verification purposes.
 
-Optional REJECTED is for internal use - conveys the number of
+Optional REJECTED is for internal use -- conveys the number of
 rejections due to matches against
 `allout-encryption-ciphertext-rejection-regexps', as limited by
 `allout-encryption-ciphertext-rejection-ceiling'.
@@ -6066,15 +6079,15 @@ Returns the resulting string, or nil if the transformation fails."
 
             (if status
                 (pgg-situate-output (point-min) (point-max))
-              ;; failed - handle passphrase caching
+              ;; failed -- handle passphrase caching
               (if verifying
                   (throw 'encryption-failed nil)
                 (pgg-remove-passphrase-from-cache target-cache-id t)
-                (error "Symmetric-cipher %scryption failed - %s"
+                (error "Symmetric-cipher %scryption failed -- %s"
                        (if decrypt "de" "en")
-                       "try again with different passphrase."))))
+                       "try again with different passphrase"))))
 
-           ;; encrypt 'keypair:
+           ;; encrypt `keypair':
            ((not decrypt)
 
             (setq status
@@ -6087,7 +6100,7 @@ Returns the resulting string, or nil if the transformation fails."
               (error (pgg-remove-passphrase-from-cache target-cache-id t)
                      (error "encryption failed"))))
 
-           ;; decrypt 'keypair:
+           ;; decrypt `keypair':
            (t
 
             (setq status
@@ -6103,7 +6116,7 @@ Returns the resulting string, or nil if the transformation fails."
                  1 (- (point-max) (if decrypt 0 1))))
           )
 
-        ;; validate result - non-empty
+        ;; validate result -- non-empty
         (cond ((not result-text)
                (if verifying
                    nil
@@ -6139,7 +6152,7 @@ Returns the resulting string, or nil if the transformation fails."
                     (string-match "[\C-a\C-k\C-o-\C-z\C-@]"
                                   result-text))
                (error (concat "Encryption produced non-armored text, which"
-                              "conflicts with allout mode - reconfigure!")))
+                              "conflicts with allout mode -- reconfigure!")))
 
               ;; valid result and just verifying or non-symmetric:
               ((or verifying (not (equal key-type 'symmetric)))
@@ -6148,7 +6161,7 @@ Returns the resulting string, or nil if the transformation fails."
                                                 passphrase t))
                result-text)
 
-              ;; valid result and regular symmetric - "register"
+              ;; valid result and regular symmetric -- "register"
               ;; passphrase with mnemonic aids/cache.
               (t
                (set-buffer allout-buffer)
@@ -6179,7 +6192,7 @@ CACHE-ID is the cache id of the key for the passphrase.
 
 PROMPT-ID is the id for use when prompting the user.
 
-KEY-TYPE is either 'symmetric or 'keypair.
+KEY-TYPE is either `symmetric' or `keypair'.
 
 ALLOUT-BUFFER is the buffer containing the entry being en/decrypted.
 
@@ -6242,7 +6255,7 @@ of the availability of a cached copy."
                  (if (and (not confirmation)
                           (if (yes-or-no-p
                                (concat "Passphrase differs from established"
-                                       " - use new one instead? "))
+                                       " -- use new one instead? "))
                               ;; deactivate password for subsequent
                               ;; confirmation:
                               (progn
@@ -6252,11 +6265,11 @@ of the availability of a cached copy."
                             t))
                      (progn (pgg-remove-passphrase-from-cache cache-id t)
                             (error "Wrong passphrase."))))
-                ;; No verifier string - force confirmation by repetition of
+                ;; No verifier string -- force confirmation by repetition of
                 ;; (new) passphrase:
                 ((or fetch-pass (not cached))
                  (pgg-remove-passphrase-from-cache cache-id t))))
-        ;; confirmation vs new input - doing pgg-read-passphrase will do the
+        ;; confirmation vs new input -- doing pgg-read-passphrase will do the
         ;; right thing, in either case:
         (if (not confirmation)
             (setq confirmation
@@ -6267,7 +6280,7 @@ of the availability of a cached copy."
             (if (equal got-pass confirmation)
                 confirmation
               (if (yes-or-no-p (concat "spelling of original and"
-                                       " confirmation differ - retry? "))
+                                       " confirmation differ -- retry? "))
                   (progn (setq retried (if retried (1+ retried) 1))
                          (pgg-remove-passphrase-from-cache cache-id t)
                          ;; recurse to this routine:
@@ -6289,10 +6302,10 @@ of the availability of a cached copy."
 (defun allout-encrypted-key-info (text)
   "Return a pair of the key type and identity of a recipient's secret key.
 
-The key type is one of 'symmetric or 'keypair.
+The key type is one of `symmetric' or `keypair'.
 
-if 'keypair, and some of the user's secret keys are among those for which
-the message was encoded, return the identity of the first.  otherwise,
+If `keypair', and some of the user's secret keys are among those for which
+the message was encoded, return the identity of the first.  Otherwise,
 return nil for the second item of the pair.
 
 An error is raised if the text is not encrypted."
@@ -6337,7 +6350,7 @@ An error is raised if the text is not encrypted."
 See `allout-passphrase-verifier-string' and `allout-passphrase-hint-string'
 settings.
 
-PASSPHRASE is the passphrase being mnemonicized
+PASSPHRASE is the passphrase being mnemonicized.
 
 OUTLINE-BUFFER is the buffer of the outline being adjusted.
 
@@ -6415,7 +6428,7 @@ EXCEPT-MARK identifies a point whose containing topics should be excluded
 from encryption.  This supports 'except-current mode of
 `allout-encrypt-unencrypted-on-saves'.
 
-Such a topic has the allout-topic-encryption-bullet without an
+Such a topic has the `allout-topic-encryption-bullet' without an
 immediately following '*' that would mark the topic as being encrypted.  It
 must also have content."
   (let (done got content-beg)
@@ -6467,7 +6480,7 @@ must also have content."
   "Encrypt topics pending encryption except those containing exemption point.
 
 EXCEPT-MARK identifies a point whose containing topics should be excluded
-from encryption.  This supports 'except-current mode of
+from encryption.  This supports the `except-current' mode of
 `allout-encrypt-unencrypted-on-saves'.
 
 If a topic that is currently being edited was encrypted, we return a list
@@ -6533,7 +6546,7 @@ setup for auto-startup."
     (if (allout-goto-prefix)
 	t
       (allout-open-topic 2)
-      (insert (concat "Dummy outline topic header - see"
+      (insert (concat "Dummy outline topic header -- see"
                       "`allout-mode' docstring: `^Hm'."))
       (allout-adjust-file-variable
        "allout-layout" (or allout-layout '(-1 : 0))))))
@@ -6541,7 +6554,7 @@ setup for auto-startup."
 (defun allout-file-vars-section-data ()
   "Return data identifying the file-vars section, or nil if none.
 
-Returns list `(beginning-point prefix-string suffix-string)'."
+Returns a list of the form (BEGINNING-POINT PREFIX-STRING SUFFIX-STRING)."
   ;; minimally gleaned from emacs 21.4 files.el hack-local-variables function.
   (let (beg prefix suffix)
     (save-excursion
@@ -6643,7 +6656,7 @@ not its value."
         got)
     (dolist (sym configvar-value)
       (if (not (boundp sym))
-          (if (yes-or-no-p (format "%s entry `%s' is unbound - remove it? "
+          (if (yes-or-no-p (format "%s entry `%s' is unbound -- remove it? "
                                    configvar-name sym))
               (delq sym (symbol-value configvar-name)))
         (push (symbol-value sym) got)))
@@ -6690,7 +6703,7 @@ Optional arg DO-DEFAULTING indicates to accept empty input (CR)."
 					    string
 					    ""))
 		   nil))))
-      ;; got something out of loop - return it:
+      ;; got something out of loop -- return it:
       got)
   )
 ;;;_  : Strings:
@@ -6698,7 +6711,7 @@ Optional arg DO-DEFAULTING indicates to accept empty input (CR)."
 (defun regexp-sans-escapes (regexp &optional successive-backslashes)
   "Return a copy of REGEXP with all character escapes stripped out.
 
-Representations of actual backslashes - '\\\\\\\\' - are left as a
+Representations of actual backslashes -- '\\\\\\\\' -- are left as a
 single backslash.
 
 Optional arg SUCCESSIVE-BACKSLASHES is used internally for recursion."
@@ -6745,7 +6758,7 @@ If BEG is bigger than END we return 0."
   (cond ((null list) nil)
         ((atom (car list)) (cons (car list) (allout-flatten (cdr list))))
         (t (append (allout-flatten (car list)) (allout-flatten (cdr list))))))
-;;;_  : Compatability:
+;;;_  : Compatibility:
 ;;;_   > allout-mark-marker to accommodate divergent emacsen:
 (defun allout-mark-marker (&optional force buffer)
   "Accommodate the different signature for `mark-marker' across Emacsen.
@@ -6797,7 +6810,7 @@ BEG and END default respectively to the beginning and end of buffer."
                   (move-overlay o end (overlay-end o))
                 (delete-overlay o)))))))
   )
-;;;_   > copy-overlay if necessary - xemacs ~ 21.4
+;;;_   > copy-overlay if necessary -- xemacs ~ 21.4
 (if (not (fboundp 'copy-overlay))
     (defun copy-overlay (o)
       "Return a copy of overlay O."
@@ -6809,7 +6822,7 @@ BEG and END default respectively to the beginning and end of buffer."
         (while props
           (overlay-put o1 (pop props) (pop props)))
         o1)))
-;;;_   > add-to-invisibility-spec if necessary - xemacs ~ 21.4
+;;;_   > add-to-invisibility-spec if necessary -- xemacs ~ 21.4
 (if (not (fboundp 'add-to-invisibility-spec))
     (defun add-to-invisibility-spec (element)
       "Add ELEMENT to `buffer-invisibility-spec'.
@@ -6819,14 +6832,14 @@ that can be added."
           (setq buffer-invisibility-spec (list t)))
       (setq buffer-invisibility-spec
             (cons element buffer-invisibility-spec))))
-;;;_   > remove-from-invisibility-spec if necessary - xemacs ~ 21.4
+;;;_   > remove-from-invisibility-spec if necessary -- xemacs ~ 21.4
 (if (not (fboundp 'remove-from-invisibility-spec))
     (defun remove-from-invisibility-spec (element)
       "Remove ELEMENT from `buffer-invisibility-spec'."
       (if (consp buffer-invisibility-spec)
           (setq buffer-invisibility-spec (delete element
                                                  buffer-invisibility-spec)))))
-;;;_   > move-beginning-of-line if necessary - older emacs, xemacs
+;;;_   > move-beginning-of-line if necessary -- older emacs, xemacs
 (if (not (fboundp 'move-beginning-of-line))
     (defun move-beginning-of-line (arg)
       "Move point to beginning of current line as displayed.
@@ -6850,7 +6863,7 @@ To ignore intangibility, bind `inhibit-point-motion-hooks' to t."
         (skip-chars-backward "^\n"))
       (vertical-motion 0))
 )
-;;;_   > move-end-of-line if necessary - older emacs, xemacs
+;;;_   > move-end-of-line if necessary -- older emacs, xemacs
 (if (not (fboundp 'move-end-of-line))
     (defun move-end-of-line (arg)
       "Move point to end of current line as displayed.
@@ -6919,7 +6932,7 @@ To ignore intangibility, bind `inhibit-point-motion-hooks' to t."
     (isearch-repeat 'forward)
     (isearch-mode t)))
 
-;;;_ #11 Unit tests - this should be last item before "Provide"
+;;;_ #11 Unit tests -- this should be last item before "Provide"
 ;;;_  > allout-run-unit-tests ()
 (defun allout-run-unit-tests ()
   "Run the various allout unit tests."
@@ -6935,11 +6948,11 @@ To ignore intangibility, bind `inhibit-point-motion-hooks' to t."
   (while (boundp name) (makunbound name)))
 ;;;_   > allout-test-resumptions ()
 (defvar allout-tests-globally-unbound nil
-  "Fodder for allout resumptions tests - defvar just for byte compiler.")
+  "Fodder for allout resumptions tests -- defvar just for byte compiler.")
 (defvar allout-tests-globally-true nil
-  "Fodder for allout resumptions tests - defvar just just for byte compiler.")
+  "Fodder for allout resumptions tests -- defvar just for byte compiler.")
 (defvar allout-tests-locally-true nil
-  "Fodder for allout resumptions tests - defvar just for byte compiler.")
+  "Fodder for allout resumptions tests -- defvar just for byte compiler.")
 (defun allout-test-resumptions ()
   "Exercise allout resumptions."
   ;; for each resumption case, we also test that the right local/global
@@ -6975,10 +6988,10 @@ To ignore intangibility, bind `inhibit-point-motion-hooks' to t."
     (allout-tests-obliterate-variable 'allout-tests-locally-true)
     (set (make-local-variable 'allout-tests-locally-true) t)
     (assert (not (default-boundp 'allout-tests-locally-true))
-            nil (concat "Test setup mistake - variable supposed to"
+            nil (concat "Test setup mistake -- variable supposed to"
                         " not have global binding, but it does."))
     (assert (local-variable-p 'allout-tests-locally-true)
-            nil (concat "Test setup mistake - variable supposed to have"
+            nil (concat "Test setup mistake -- variable supposed to have"
                         " local binding, but it lacks one."))
     (allout-add-resumptions '(allout-tests-locally-true nil))
     (assert (not (default-boundp 'allout-tests-locally-true)))

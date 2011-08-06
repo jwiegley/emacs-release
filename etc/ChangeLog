@@ -1,3 +1,137 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-03-22  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* GNUS-NEWS (incoming mail files): Add version.
+
+2008-03-12  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* TUTORIAL.de: Remove even more discussion of flow control.  Refer
+	to node name `Init Rebinding' instead of title.
+
+2008-03-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* TUTORIAL, TUTORIAL.fr, TUTORIAL.ro, TUTORIAL.bg, TUTORIAL.it:
+	* TUTORIAL.ru, TUTORIAL.cn, TUTORIAL.ja, TUTORIAL.sk:
+	* TUTORIAL.cs, TUTORIAL.ko, TUTORIAL.sl, TUTORIAL.de:
+	* TUTORIAL.nl, TUTORIAL.sv, TUTORIAL.eo, TUTORIAL.pl, TUTORIAL.th:
+	* TUTORIAL.es, TUTORIAL.pt_BR: Remove discussion of flow control.
+
+2008-02-25  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+
+	* NEWS: Mention stock icons for Gtk+.
+
+2008-02-09  Eli Zaretskii  <eliz@gnu.org>
+
+	* TUTORIAL.ru: Remove redundant empty lines, insert a magic line
+	instead.
+
+2008-02-02  Eli Zaretskii  <eliz@gnu.org>
+
+	* TUTORIAL.ru: Restore copyright years.  Update tutorial.  Fix
+	wording.
+
+2008-01-31  Alex Ott  <alexott@gmail.com>
+
+	* TUTORIAL.ru: Update tutorial.
+
+2008-01-08  Kevin Ryde  <user42@zip.com.au>
+
+	* compilation.txt (perl): Add a "during global destruction" sample.
+
+2008-01-08  Glenn Morris  <rgm@gnu.org>
+
+	* calccard.tex, cs-dired-ref.tex, cs-refcard.tex, cs-survival.tex:
+	* de-refcard.tex, dired-ref.tex, fr-drdref.tex, fr-refcard.tex:
+	* fr-survival.tex, gnus-refcard.tex, orgcard.tex, pl-refcard.tex:
+	* pt-br-refcard.tex, refcard.tex, ru-refcard.tex, sk-dired-ref.tex:
+	* sk-refcard.tex, sk-survival.tex, survival.tex, vipcard.tex:
+	* viperCard.tex: Update printed copyright year to 2008.
+
+2007-11-24  Glenn Morris  <rgm@gnu.org>
+
+	* images/gnus/mail-send.xpm: Copy here from trunk.
+
+2007-11-22  Francesco Potort,Al(B  <pot@gnu.org>
+
+	* etags.1: Revert this change, not installed in Emacs 22:
+	"Now --members is the default for etags, not for ctags yet".
+	* etags.1: Note that you can use "-" for stdout with -o.
+	* NEWS: remove this entry for etags, because it was in fact not
+	installed in Emacs 22: "the --members option is now the default".
+
+2007-10-24  Juanma Barranquero  <lekktu@gmail.com>
+
+	* NEWS: Mention desktop locking.
+
+2007-09-28  Glenn Morris  <rgm@gnu.org>
+
+	* PROBLEMS: Mention Tex superscript font issue.
+
+2007-09-12  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* emacs.py (complete.class_members): Make sure we return the _emacs_out
+	message even in the face of exceptions.
+
+2007-09-05  Jason Rumney  <jasonr@gnu.org>
+
+	* NEWS: Mention focus-follows-mouse change.
+
+2007-08-27  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* PROBLEMS (Mac OS X): Add alternative workaround for QuickTime
+	updater breakage.
+
+2007-08-22  Karl Berry  <karl@gnu.org>
+
+	* refcard.tex: Updates for printing.
+	(\versionyear): Update to 2007.
+	(\copyrightnotice): Modified or unmodified ok.
+	(Simple Customization): Don't use goto-line, since now it's bound.
+	Also, use now-preferred (kbd ...) syntax.
+
+2007-08-14  Glenn Morris  <rgm@gnu.org>
+
+	* NEWS: Mention `bad-packages-alist'.
+
+2007-08-08  Glenn Morris  <rgm@gnu.org>
+
+	* TODO: `iff' item is dealt with.
+	* GNUS-NEWS, NEWS, NEWS.1-17, NEWS.19, NEWS.21: Replace `iff'.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+	* COPYING: Switch to GPLv3.
+
+2007-07-15  Werner Lemberg  <wl@gnu.org>
+
+	* emacs.1: Completely revised.
+	Fix many typographical glitches.
+	Updated to handle current state of options and resources.
+
+2007-07-14  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+
+	* PROBLEMS: Mention gtk-engines-qt problem.
+
+2007-06-07  Glenn Morris  <rgm@gnu.org>
+
+	* images/cancel.pbm: Convert from PGM to PBM.
+
+	* images/copy.pbm, images/next-node.pbm, images/prev-node.pbm:
+	* images/save.pbm, images/up-node.pbm: Convert from PPM to PBM.
+
+2007-06-07  Mark H. Weaver  <mhw@netris.org>  (tiny change)
+
+	* NEWS (set-mark-command-repeat-pop): Fix duplicate entry.
+
+2007-06-07  Michael Olson  <mwolson@gnu.org>
+
+	* MORE.STUFF: Update eshell URL.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
@@ -3589,13 +3723,14 @@
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001
-	2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+	2002, 2003, 2004, 2005, 2006, 2007, 2008
+	Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

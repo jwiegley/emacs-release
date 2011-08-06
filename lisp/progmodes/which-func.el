@@ -1,6 +1,6 @@
 ;;; which-func.el --- print current function in mode line
 
-;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;           Free Software Foundation, Inc.
 
 ;; Author:   Alex Rezinsky <alexr@msil.sps.mot.com>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -232,7 +232,7 @@ It creates the Imenu index for the buffer, if necessary."
 When Which Function mode is enabled, the current function name is
 continuously displayed in the mode line, in certain major modes.
 
-With prefix ARG, turn Which Function mode on iff arg is positive,
+With prefix ARG, turn Which Function mode on if arg is positive,
 and off otherwise."
   :global t :group 'which-func
   (if which-function-mode

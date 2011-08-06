@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2001, 2002,
-@c   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Rmail, Dired, Sending Mail, Top
 @chapter Reading Mail with Rmail
@@ -955,27 +955,36 @@ Rmail by saving the Rmail file and switching to another buffer.
 
 @node Rmail Sorting
 @section Sorting the Rmail File
+@cindex sorting Rmail file
+@cindex Rmail file sorting
 
 @table @kbd
+@findex rmail-sort-by-date
 @item M-x rmail-sort-by-date
 Sort messages of current Rmail file by date.
 
+@findex rmail-sort-by-subject
 @item M-x rmail-sort-by-subject
 Sort messages of current Rmail file by subject.
 
+@findex rmail-sort-by-author
 @item M-x rmail-sort-by-author
 Sort messages of current Rmail file by author's name.
 
+@findex rmail-sort-by-recipient
 @item M-x rmail-sort-by-recipient
 Sort messages of current Rmail file by recipient's names.
 
+@findex rmail-sort-by-correspondent
 @item M-x rmail-sort-by-correspondent
 Sort messages of current Rmail file by the name of the other
 correspondent.
 
+@findex rmail-sort-by-lines
 @item M-x rmail-sort-by-lines
 Sort messages of current Rmail file by size (number of lines).
 
+@findex rmail-sort-by-keywords
 @item M-x rmail-sort-by-keywords @key{RET} @var{labels} @key{RET}
 Sort messages of current Rmail file by labels.  The argument
 @var{labels} should be a comma-separated list of labels.  The order of

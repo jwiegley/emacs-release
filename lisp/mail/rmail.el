@@ -1,7 +1,8 @@
 ;;; rmail.el --- main code of "RMAIL" mail reader for Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -10,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -214,7 +215,15 @@ Otherwise, look for `movemail' in the directories in
       (dolist (dir (append rmail-movemail-search-path exec-path
 			   (list exec-directory)))
 	(when (and dir (file-accessible-directory-p dir))
-	  (let ((progname (expand-file-name "movemail" dir)))
+	  ;; Previously, this didn't have to work on Windows, because
+	  ;; rmail-insert-inbox-text before r1.439 fell back to using
+	  ;; (expand-file-name "movemail" exec-directory) and just
+	  ;; assuming it would work.
+	  ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-02/msg00087.html
+	  (let ((progname (expand-file-name
+			   (concat "movemail"
+				   (if (memq system-type '(ms-dos windows-nt))
+				       ".exe")) dir)))
 	    (when (and (not (file-directory-p progname))
 		       (file-executable-p progname))
 	      (let ((x (rmail-probe progname)))
@@ -228,7 +237,7 @@ Otherwise, look for `movemail' in the directories in
   `emacs'     Means any implementation, compatible with the native Emacs one.
               This is the default;
   `mailutils' Means GNU mailutils implementation, capable of handling full
-mail URLs as the source mailbox;")
+mail URLs as the source mailbox.")
 
 ;;;###autoload
 (defun rmail-movemail-variant-p (&rest variants)
@@ -238,6 +247,12 @@ Currently known variants are 'emacs and 'mailutils."
     ;; Autodetect
     (setq rmail-movemail-variant-in-use (rmail-autodetect)))
   (not (null (member rmail-movemail-variant-in-use variants))))
+
+;; Call for effect, to set rmail-movemail-program (if not set by the
+;; user), and rmail-movemail-variant-in-use. Used by various functions.
+;; I'm not sure if M-x rmail is the only entry point to this package.
+;; If so, this can be moved there.
+(rmail-movemail-variant-p)
 
 ;;;###autoload
 (defcustom rmail-dont-reply-to-names nil "\
@@ -321,7 +336,7 @@ See also `rmail-highlight-face'."
   :group 'rmail-headers)
 
 (defface rmail-highlight
-  '((t :default highlight))
+  '((t (:inherit highlight)))
   "Face to use for highlighting the most important header fields."
   :group 'rmail-headers
   :version "22.1")
@@ -1818,10 +1833,7 @@ is non-nil if the user has supplied the password interactively.
 		 (buffer-disable-undo errors)
 		 (let ((args
 			(append
-			 (list (or rmail-movemail-program
-				   (expand-file-name "movemail"
-						     exec-directory))
-			       nil errors nil)
+			 (list rmail-movemail-program nil errors nil)
 			 (if rmail-preserve-inbox
 			     (list "-p")
 			   nil)
@@ -3278,7 +3290,9 @@ and more whitespace.  The returned regular expressions contains
     (setq subject (regexp-quote subject))
     (setq subject
 	  (replace-regexp-in-string "[ \t\n]+" "[ \t\n]+" subject t t))
-    (concat "^Subject: "
+    ;; Some mailers insert extra spaces after "Subject:", so allow any
+    ;; amount of them.
+    (concat "^Subject:[ \t]+"
 	    (if (string= "\\`" (substring rmail-reply-regexp 0 2))
 		(substring rmail-reply-regexp 2)
 	      rmail-reply-regexp)
@@ -3992,13 +4006,13 @@ specifying headers which should not be copied into the new message."
 	    (mail-position-on-field (if resending "Resent-To" "To") t))))))
 
 (defun rmail-summary-exists ()
-  "Non-nil iff in an RMAIL buffer and an associated summary buffer exists.
+  "Non-nil if in an RMAIL buffer and an associated summary buffer exists.
 In fact, the non-nil value returned is the summary buffer itself."
   (and rmail-summary-buffer (buffer-name rmail-summary-buffer)
        rmail-summary-buffer))
 
 (defun rmail-summary-displayed ()
-  "t iff in RMAIL buffer and an associated summary buffer is displayed."
+  "t if in RMAIL buffer and an associated summary buffer is displayed."
   (and rmail-summary-buffer (get-buffer-window rmail-summary-buffer)))
 
 (defcustom rmail-redisplay-summary nil

@@ -9,7 +9,7 @@ END-INFO-DIR-ENTRY
    This file documents the URL loading package.
 
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2002, 2004,
-2005, 2006, 2007 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -1598,47 +1598,47 @@ Concept Index
 
 
 Tag Table:
-Node: Top757
-Node: Getting Started1460
-Node: Configuration2850
-Node: Parsed URLs3108
-Node: Retrieving URLs4460
-Node: Supported URL Types5373
-Node: http/https6233
-Node: Cookies7417
-Node: HTTP language/coding8403
-Node: HTTP URL Options10027
-Node: Dealing with HTTP documents10958
-Node: file/ftp11935
-Node: info12835
-Node: mailto13102
-Node: news/nntp/snews14210
-Node: rlogin/telnet/tn327015444
-Node: irc16011
-Node: data16918
-Node: nfs17383
-Node: cid18133
-Node: about18239
-Node: ldap18340
-Node: imap18481
-Node: man18589
-Node: Defining New URLs18787
-Node: Naming conventions19071
-Node: Required functions19209
-Node: Optional functions19374
-Node: Asynchronous fetching19542
-Node: Supporting file-name-handlers19727
-Node: General Facilities19901
-Node: Disk Caching20117
-Node: Proxies22098
-Node: Gateways in general24153
-Ref: Gateways in general-Footnote-128199
-Node: Suppressing network connections28274
-Node: History28925
-Node: Customization30764
-Node: GNU Free Documentation License32650
-Node: Function Index54887
-Node: Variable Index57989
-Node: Concept Index62567
+Node: Top763
+Node: Getting Started1466
+Node: Configuration2856
+Node: Parsed URLs3114
+Node: Retrieving URLs4466
+Node: Supported URL Types5379
+Node: http/https6239
+Node: Cookies7423
+Node: HTTP language/coding8409
+Node: HTTP URL Options10033
+Node: Dealing with HTTP documents10964
+Node: file/ftp11941
+Node: info12841
+Node: mailto13108
+Node: news/nntp/snews14216
+Node: rlogin/telnet/tn327015450
+Node: irc16017
+Node: data16924
+Node: nfs17389
+Node: cid18139
+Node: about18245
+Node: ldap18346
+Node: imap18487
+Node: man18595
+Node: Defining New URLs18793
+Node: Naming conventions19077
+Node: Required functions19215
+Node: Optional functions19380
+Node: Asynchronous fetching19548
+Node: Supporting file-name-handlers19733
+Node: General Facilities19907
+Node: Disk Caching20123
+Node: Proxies22104
+Node: Gateways in general24159
+Ref: Gateways in general-Footnote-128205
+Node: Suppressing network connections28280
+Node: History28931
+Node: Customization30770
+Node: GNU Free Documentation License32656
+Node: Function Index54893
+Node: Variable Index57995
+Node: Concept Index62573
 
 End Tag Table

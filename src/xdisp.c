@@ -1,13 +1,13 @@
 /* Display generation from window structure and buffer text.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -967,8 +967,8 @@ static void compute_string_pos P_ ((struct text_pos *, struct text_pos,
 static int face_before_or_after_it_pos P_ ((struct it *, int));
 static int next_overlay_change P_ ((int));
 static int handle_single_display_spec P_ ((struct it *, Lisp_Object,
-					   Lisp_Object, struct text_pos *,
-					   int));
+					   Lisp_Object, Lisp_Object,
+					   struct text_pos *, int));
 static int underlying_face_id P_ ((struct it *));
 static int in_ellipses_for_invisible_text_p P_ ((struct display_pos *,
 						 struct window *));
@@ -3073,16 +3073,18 @@ handle_stop (it)
 	  if (it->method == GET_FROM_DISPLAY_VECTOR)
 	    handle_overlay_change_p = 0;
 
-	  /* Handle overlay changes.  */
+	  /* Handle overlay changes.
+	     This sets HANDLED to HANDLED_RECOMPUTE_PROPS
+	     if it finds overlays.  */
 	  if (handle_overlay_change_p)
 	    handled = handle_overlay_change (it);
-
-	  /* Determine where to stop next.  */
-	  if (handled == HANDLED_NORMALLY)
-	    compute_stop_pos (it);
 	}
     }
   while (handled == HANDLED_RECOMPUTE_PROPS);
+
+  /* Determine where to stop next.  */
+  if (handled == HANDLED_NORMALLY)
+    compute_stop_pos (it);
 }
 
 
@@ -3363,18 +3365,58 @@ handle_face_prop (it)
   else
     {
       int base_face_id, bufpos;
+      int i;
+      Lisp_Object from_overlay
+	= (it->current.overlay_string_index >= 0
+	   ? it->string_overlays[it->current.overlay_string_index]
+	   : Qnil);
 
-      if (it->current.overlay_string_index >= 0)
-	bufpos = IT_CHARPOS (*it);
+      /* See if we got to this string directly or indirectly from
+	 an overlay property.  That includes the before-string or
+	 after-string of an overlay, strings in display properties
+	 provided by an overlay, their text properties, etc.
+
+	 FROM_OVERLAY is the overlay that brought us here, or nil if none.  */
+      if (! NILP (from_overlay))
+	for (i = it->sp - 1; i >= 0; i--)
+	  {
+	    if (it->stack[i].current.overlay_string_index >= 0)
+	      from_overlay
+		= it->string_overlays[it->stack[i].current.overlay_string_index];
+	    else if (! NILP (it->stack[i].from_overlay))
+	      from_overlay = it->stack[i].from_overlay;
+
+	    if (!NILP (from_overlay))
+	      break;
+	  }
+
+      if (! NILP (from_overlay))
+	{
+	  bufpos = IT_CHARPOS (*it);
+	  /* For a string from an overlay, the base face depends
+	     only on text properties and ignores overlays.  */
+	  base_face_id
+	    = face_for_overlay_string (it->w,
+				       IT_CHARPOS (*it),
+				       it->region_beg_charpos,
+				       it->region_end_charpos,
+				       &next_stop,
+				       (IT_CHARPOS (*it)
+					+ TEXT_PROP_DISTANCE_LIMIT),
+				       0,
+				       from_overlay);
+	}
       else
-	bufpos = 0;
+	{
+	  bufpos = 0;
 
-      /* For strings from a buffer, i.e. overlay strings or strings
-	 from a `display' property, use the face at IT's current
-	 buffer position as the base face to merge with, so that
-	 overlay strings appear in the same face as surrounding
-	 text, unless they specify their own faces.  */
-      base_face_id = underlying_face_id (it);
+	  /* For strings from a `display' property, use the face at
+	     IT's current buffer position as the base face to merge
+	     with, so that overlay strings appear in the same face as
+	     surrounding text, unless they specify their own
+	     faces.  */
+	  base_face_id = underlying_face_id (it);
+	}
 
       new_face_id = face_at_string_position (it->w,
 					     it->string,
@@ -3719,6 +3761,10 @@ handle_invisible_prop (it)
 		  it->position.bytepos = CHAR_TO_BYTE (it->position.charpos);
 		}
               setup_for_ellipsis (it, 0);
+	      /* Let the ellipsis display before
+		 considering any properties of the following char.
+		 Fixes jasonr@gnu.org 01 Oct 07 bug.  */
+	      handled = HANDLED_RETURN;
             }
 	}
     }
@@ -3780,7 +3826,7 @@ static enum prop_handled
 handle_display_prop (it)
      struct it *it;
 {
-  Lisp_Object prop, object;
+  Lisp_Object prop, object, overlay;
   struct text_pos *position;
   /* Nonzero if some property replaces the display of the text itself.  */
   int display_replaced_p = 0;
@@ -3808,10 +3854,12 @@ handle_display_prop (it)
   if (!it->string_from_display_prop_p)
     it->area = TEXT_AREA;
 
-  prop = Fget_char_property (make_number (position->charpos),
-			     Qdisplay, object);
+  prop = get_char_property_and_overlay (make_number (position->charpos),
+					Qdisplay, object, &overlay);
   if (NILP (prop))
     return HANDLED_NORMALLY;
+  /* Now OVERLAY is the overlay that gave us this property, or nil
+     if it was a text property.  */
 
   if (!STRINGP (it->string))
     object = it->w->buffer;
@@ -3833,22 +3881,35 @@ handle_display_prop (it)
     {
       for (; CONSP (prop); prop = XCDR (prop))
 	{
-	  if (handle_single_display_spec (it, XCAR (prop), object,
+	  if (handle_single_display_spec (it, XCAR (prop), object, overlay,
 					  position, display_replaced_p))
-	    display_replaced_p = 1;
+	    {
+	      display_replaced_p = 1;
+	      /* If some text in a string is replaced, `position' no
+		 longer points to the position of `object'.  */
+	      if (STRINGP (object))
+		break;
+	    }
 	}
     }
   else if (VECTORP (prop))
     {
       int i;
       for (i = 0; i < ASIZE (prop); ++i)
-	if (handle_single_display_spec (it, AREF (prop, i), object,
+	if (handle_single_display_spec (it, AREF (prop, i), object, overlay,
 					position, display_replaced_p))
-	  display_replaced_p = 1;
+	  {
+	    display_replaced_p = 1;
+	    /* If some text in a string is replaced, `position' no
+	       longer points to the position of `object'.  */
+	    if (STRINGP (object))
+	      break;
+	  }
     }
   else
     {
-      int ret = handle_single_display_spec (it, prop, object, position, 0);
+      int ret = handle_single_display_spec (it, prop, object, overlay,
+					    position, 0);
       if (ret < 0)  /* Replaced by "", i.e. nothing. */
 	return HANDLED_RECOMPUTE_PROPS;
       if (ret)
@@ -3890,6 +3951,9 @@ display_prop_end (it, object, start_pos)
    replaced text display with something else, for example an image;
    we ignore such properties after the first one has been processed.
 
+   OVERLAY is the overlay this `display' property came from,
+   or nil if it was a text property.
+
    If PROP is a `space' or `image' specification, and in some other
    cases too, set *POSITION to the position where the `display'
    property ends.
@@ -3899,11 +3963,12 @@ display_prop_end (it, object, start_pos)
    "something" is "nothing". */
 
 static int
-handle_single_display_spec (it, spec, object, position,
+handle_single_display_spec (it, spec, object, overlay, position,
 			    display_replaced_before_p)
      struct it *it;
      Lisp_Object spec;
      Lisp_Object object;
+     Lisp_Object overlay;
      struct text_pos *position;
      int display_replaced_before_p;
 {
@@ -4013,7 +4078,7 @@ handle_single_display_spec (it, spec, object, position,
       return 0;
     }
 
-  /* Handle `(space_width WIDTH)'.  */
+  /* Handle `(space-width WIDTH)'.  */
   if (CONSP (spec)
       && EQ (XCAR (spec), Qspace_width)
       && CONSP (XCDR (spec)))
@@ -4137,6 +4202,7 @@ handle_single_display_spec (it, spec, object, position,
       it->position = start_pos;
       it->object = NILP (object) ? it->w->buffer : object;
       it->method = GET_FROM_IMAGE;
+      it->from_overlay = Qnil;
       it->face_id = face_id;
 
       /* Say that we haven't consumed the characters with
@@ -4207,6 +4273,7 @@ handle_single_display_spec (it, spec, object, position,
       it->position = *position;
       push_it (it);
       it->position = save_pos;
+      it->from_overlay = overlay;
 
       if (NILP (location))
 	it->area = TEXT_AREA;
@@ -4233,7 +4300,8 @@ handle_single_display_spec (it, spec, object, position,
 	  /* Say that we haven't consumed the characters with
 	     `display' property yet.  The call to pop_it in
 	     set_iterator_to_next will clean this up.  */
-	  *position = start_pos;
+	  if (BUFFERP (object))
+	    *position = start_pos;
 	}
       else if (CONSP (value) && EQ (XCAR (value), Qspace))
 	{
@@ -4846,7 +4914,10 @@ load_overlay_strings (it, charpos)
   i = 0;
   j = it->current.overlay_string_index;
   while (i < OVERLAY_STRING_CHUNK_SIZE && j < n)
-    it->overlay_strings[i++] = entries[j++].string;
+    {
+      it->overlay_strings[i] = entries[j].string;
+      it->string_overlays[i++] = entries[j++].overlay;
+    }
 
   CHECK_IT (it);
 }
@@ -4860,6 +4931,7 @@ static int
 get_overlay_strings_1 (it, charpos, compute_stop_p)
      struct it *it;
      int charpos;
+     int compute_stop_p;
 {
   /* Get the first OVERLAY_STRING_CHUNK_SIZE overlay strings to
      process.  This fills IT->overlay_strings with strings, and sets
@@ -4892,6 +4964,7 @@ get_overlay_strings_1 (it, charpos, compute_stop_p)
 	 string.  */
       IT_STRING_CHARPOS (*it) = IT_STRING_BYTEPOS (*it) = 0;
       it->string = it->overlay_strings[0];
+      it->from_overlay = Qnil;
       it->stop_charpos = 0;
       xassert (STRINGP (it->string));
       it->end_charpos = SCHARS (it->string);
@@ -4945,6 +5018,7 @@ push_it (it)
   p->face_id = it->face_id;
   p->string = it->string;
   p->method = it->method;
+  p->from_overlay = it->from_overlay;
   switch (p->method)
     {
     case GET_FROM_IMAGE:
@@ -4998,6 +5072,7 @@ pop_it (it)
   it->current = p->current;
   it->position = p->position;
   it->string = p->string;
+  it->from_overlay = p->from_overlay;
   if (NILP (it->string))
     SET_TEXT_POS (it->current.string_pos, -1, -1);
   it->method = p->method;
@@ -6269,7 +6344,7 @@ next_element_from_buffer (it)
 	it->c = *p, it->len = 1;
 
       /* Record what we have and where it came from.  */
-      it->what = IT_CHARACTER;;
+      it->what = IT_CHARACTER;
       it->object = it->w->buffer;
       it->position = it->current.pos;
 
@@ -7087,18 +7162,22 @@ move_it_by_lines (it, dvpos, need_y_p)
 {
   struct position pos;
 
-  if (!FRAME_WINDOW_P (it->f))
+  /* The commented-out optimization uses vmotion on terminals.  This
+     gives bad results, because elements like it->what, on which
+     callers such as pos_visible_p rely, aren't updated. */
+  /*  if (!FRAME_WINDOW_P (it->f))
     {
       struct text_pos textpos;
 
-      /* We can use vmotion on frames without proportional fonts.  */
       pos = *vmotion (IT_CHARPOS (*it), dvpos, it->w);
       SET_TEXT_POS (textpos, pos.bufpos, pos.bytepos);
       reseat (it, textpos, 1);
       it->vpos += pos.vpos;
       it->current_y += pos.vpos;
     }
-  else if (dvpos == 0)
+    else */
+
+  if (dvpos == 0)
     {
       /* DVPOS == 0 means move to the start of the screen line.  */
       move_it_vertically_backward (it, 0);
@@ -8212,7 +8291,7 @@ resize_mini_window_1 (a1, exactly, a3, a4)
 }
 
 
-/* Resize mini-window W to fit the size of its contents.  EXACT:P
+/* Resize mini-window W to fit the size of its contents.  EXACT_P
    means size the window exactly to the size needed.  Otherwise, it's
    only enlarged until W's buffer is empty.
 
@@ -13520,7 +13599,10 @@ redisplay_window (window, just_this_one_p)
   /* Restore current_buffer and value of point in it.  */
   TEMP_SET_PT_BOTH (CHARPOS (opoint), BYTEPOS (opoint));
   set_buffer_internal_1 (old);
-  TEMP_SET_PT_BOTH (CHARPOS (lpoint), BYTEPOS (lpoint));
+  /* Avoid an abort in TEMP_SET_PT_BOTH if the buffer has become
+     shorter.  This can be caused by log truncation in *Messages*. */
+  if (CHARPOS (lpoint) <= ZV)
+    TEMP_SET_PT_BOTH (CHARPOS (lpoint), BYTEPOS (lpoint));
 
   unbind_to (count, Qnil);
 }
@@ -17341,7 +17423,9 @@ are the selected window and the window's buffer).  */)
     buffer = w->buffer;
   CHECK_BUFFER (buffer);
 
-  if (NILP (format))
+  /* Make formatting the modeline a non-op when noninteractive, otherwise
+     there will be problems later caused by a partially initialized frame.  */
+  if (NILP (format) || noninteractive)
     return build_string ("");
 
   if (no_props)
@@ -21292,7 +21376,7 @@ get_window_cursor_type (w, glyph, width, active_cursor)
       non_selected = 1;
     }
 
-  /* Nonselected window or nonselected frame.  */
+  /* Detect a nonselected window or nonselected frame.  */
   else if (w != XWINDOW (f->selected_window)
 #ifdef HAVE_WINDOW_SYSTEM
 	   || f != FRAME_X_DISPLAY_INFO (f)->x_highlight_frame
@@ -21311,13 +21395,6 @@ get_window_cursor_type (w, glyph, width, active_cursor)
   if (NILP (b->cursor_type))
     return NO_CURSOR;
 
-  /* Use cursor-in-non-selected-windows for non-selected window or frame.  */
-  if (non_selected)
-    {
-      alt_cursor = b->cursor_in_non_selected_windows;
-      return get_specified_cursor_type (alt_cursor, width);
-    }
-
   /* Get the normal cursor type for this window.  */
   if (EQ (b->cursor_type, Qt))
     {
@@ -21326,6 +21403,21 @@ get_window_cursor_type (w, glyph, width, active_cursor)
     }
   else
     cursor_type = get_specified_cursor_type (b->cursor_type, width);
+
+  /* Use cursor-in-non-selected-windows instead
+     for non-selected window or frame.  */
+  if (non_selected)
+    {
+      alt_cursor = b->cursor_in_non_selected_windows;
+      if (!EQ (Qt, alt_cursor))
+	return get_specified_cursor_type (alt_cursor, width);
+      /* t means modify the normal cursor type.  */
+      if (cursor_type == FILLED_BOX_CURSOR)
+	cursor_type = HOLLOW_BOX_CURSOR;
+      else if (cursor_type == BAR_CURSOR && *width > 1)
+	--*width;
+      return cursor_type;
+    }
 
   /* Use normal cursor if not blinked off.  */
   if (!w->cursor_off_p)
@@ -23387,6 +23479,24 @@ phys_cursor_in_rect_p (w, r)
 {
   XRectangle cr, result;
   struct glyph *cursor_glyph;
+  struct glyph_row *row;
+
+  if (w->phys_cursor.vpos >= 0
+      && w->phys_cursor.vpos < w->current_matrix->nrows
+      && (row = MATRIX_ROW (w->current_matrix, w->phys_cursor.vpos),
+	  row->enabled_p)
+      && row->cursor_in_fringe_p)
+    {
+      /* Cursor is in the fringe.  */
+      cr.x = window_box_right_offset (w,
+				      (WINDOW_HAS_FRINGES_OUTSIDE_MARGINS (w)
+				       ? RIGHT_MARGIN_AREA
+				       : TEXT_AREA));
+      cr.y = row->y;
+      cr.width = WINDOW_RIGHT_FRINGE_WIDTH (w);
+      cr.height = row->height;
+      return x_intersect_rectangles (&cr, r, &result);
+    }
 
   cursor_glyph = get_phys_cursor_glyph (w);
   if (cursor_glyph)
@@ -24010,8 +24120,12 @@ If you want scrolling to always be a line at a time, you should set
 
   DEFVAR_INT ("scroll-conservatively", &scroll_conservatively,
     doc: /* *Scroll up to this many lines, to bring point back on screen.
-A value of zero means to scroll the text to center point vertically
-in the window.  */);
+If point moves off-screen, redisplay will scroll by up to
+`scroll-conservatively' lines in order to bring point just barely
+onto the screen again.   If that cannot be done, then redisplay
+recenters point as usual.
+
+A value of zero means always recenter point if it moves off screen.  */);
   scroll_conservatively = 0;
 
   DEFVAR_INT ("scroll-margin", &scroll_margin,
@@ -24129,7 +24243,10 @@ Any other value means to autoselect window instantaneously when the
 mouse pointer enters it.
 
 Autoselection selects the minibuffer only if it is active, and never
-unselects the minibuffer if it is active.  */);
+unselects the minibuffer if it is active.
+
+When customizing this variable make sure that the actual value of
+`focus-follows-mouse' matches the behavior of your window manager.  */);
   Vmouse_autoselect_window = Qnil;
 
   DEFVAR_LISP ("auto-resize-tool-bars", &Vauto_resize_tool_bars,
@@ -24137,7 +24254,7 @@ unselects the minibuffer if it is active.  */);
 This dynamically changes the tool-bar's height to the minimum height
 that is needed to make all tool-bar items visible.
 If value is `grow-only', the tool-bar's height is only increased
-automatically; to decreace the tool-bar height, use \\[recenter].  */);
+automatically; to decrease the tool-bar height, use \\[recenter].  */);
   Vauto_resize_tool_bars = Qt;
 
   DEFVAR_BOOL ("auto-raise-tool-bar-buttons", &auto_raise_tool_bar_buttons_p,

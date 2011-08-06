@@ -1,12 +1,13 @@
 /* String search routines for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1997, 1998, 1999, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -1614,7 +1615,7 @@ simple_search (n, pat, len, len_byte, trt, pos, pos_byte, lim, lim_byte)
    have nontrivial translation are the same aside from the last byte.
    This makes it possible to translate just the last byte of a
    character, and do so after just a simple test of the context.
-   CHARSET_BASE is nonzero iff there is such a non-ASCII character.
+   CHARSET_BASE is nonzero if there is such a non-ASCII character.
 
    If that criterion is not satisfied, do not call this function.  */
 
@@ -2892,11 +2893,15 @@ Return value is undefined if the last search failed.  */)
   return reuse;
 }
 
-/* Internal usage only:
-   If RESEAT is `evaporate', put the markers back on the free list
-   immediately.  No other references to the markers must exist in this case,
-   so it is used only internally on the unwind stack and save-match-data from
-   Lisp.  */
+/* We used to have an internal use variant of `reseat' described as:
+
+      If RESEAT is `evaporate', put the markers back on the free list
+      immediately.  No other references to the markers must exist in this
+      case, so it is used only internally on the unwind stack and
+      save-match-data from Lisp.
+
+   But it was ill-conceived: those supposedly-internal markers get exposed via
+   the undo-list, so freeing them here is unsafe.  */
 
 DEFUN ("set-match-data", Fset_match_data, Sset_match_data, 1, 2, 0,
        doc: /* Set internal data on last search match from elements of LIST.
@@ -2981,10 +2986,7 @@ If optional arg RESEAT is non-nil, make markers on LIST point nowhere.  */)
 
 	    if (!NILP (reseat) && MARKERP (m))
 	      {
-		if (EQ (reseat, Qevaporate))
-		  free_marker (m);
-		else
-		  unchain_marker (XMARKER (m));
+		unchain_marker (XMARKER (m));
 		XSETCAR (list, Qnil);
 	      }
 
@@ -3002,10 +3004,7 @@ If optional arg RESEAT is non-nil, make markers on LIST point nowhere.  */)
 
 	    if (!NILP (reseat) && MARKERP (m))
 	      {
-		if (EQ (reseat, Qevaporate))
-		  free_marker (m);
-		else
-		  unchain_marker (XMARKER (m));
+		unchain_marker (XMARKER (m));
 		XSETCAR (list, Qnil);
 	      }
 	  }
@@ -3069,8 +3068,8 @@ static Lisp_Object
 unwind_set_match_data (list)
      Lisp_Object list;
 {
-  /* It is safe to free (evaporate) the markers immediately.  */
-  return Fset_match_data (list, Qevaporate);
+  /* It is NOT ALWAYS safe to free (evaporate) the markers immediately.  */
+  return Fset_match_data (list, Qt);
 }
 
 /* Called to unwind protect the match data.  */

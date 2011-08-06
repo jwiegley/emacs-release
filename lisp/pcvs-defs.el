@@ -1,7 +1,7 @@
 ;;; pcvs-defs.el --- variable definitions for PCL-CVS
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -347,6 +347,8 @@ This variable is buffer local and only used in the *cvs* buffer.")
     (" " .	cvs-mode-next-line)
     ("n" .	cvs-mode-next-line)
     ("p" .	cvs-mode-previous-line)
+    ("\t" .	cvs-mode-next-line)
+    ([backtab] . cvs-mode-previous-line)
     ;; M- keys are usually those that operate on modules
     ;;("\M-C".	cvs-mode-rcs2log) ; i.e. "Create a ChangeLog"
     ;;("\M-t".	cvs-rtag)

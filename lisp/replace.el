@@ -1,7 +1,7 @@
 ;;; replace.el --- replace commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -366,11 +366,9 @@ using `search-forward-regexp' and `replace-match' is preferred." "22.1")
 
 (defun map-query-replace-regexp (regexp to-strings &optional n start end)
   "Replace some matches for REGEXP with various strings, in rotation.
-The second argument TO-STRINGS contains the replacement strings,
-separated by spaces.  Third arg DELIMITED (prefix arg if interactive),
-if non-nil, means replace only matches surrounded by word boundaries.
-This command works like `query-replace-regexp' except that each
-successive replacement uses the next successive replacement string,
+The second argument TO-STRINGS contains the replacement strings, separated
+by spaces.  This command works like `query-replace-regexp' except that
+each successive replacement uses the next successive replacement string,
 wrapping around from the last such string to the first.
 
 In Transient Mark mode, if the mark is active, operate on the contents
@@ -515,7 +513,10 @@ which will run faster and will not set the mark or print anything."
 
 
 (defvar regexp-history nil
-  "History list for some commands that read regular expressions.")
+  "History list for some commands that read regular expressions.
+
+Maximum length of the history list is determined by the value
+of `history-length', which see.")
 
 
 (defalias 'delete-non-matching-lines 'keep-lines)
@@ -860,7 +861,7 @@ Compatibility function for \\[next-error] invocations."
 
 (defface match
   '((((class color) (min-colors 88) (background light))
-     :background "yellow")
+     :background "yellow1")
     (((class color) (min-colors 88) (background dark))
      :background "RoyalBlue3")
     (((class color) (min-colors 8) (background light))

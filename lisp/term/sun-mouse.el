@@ -1,7 +1,7 @@
 ;;; sun-mouse.el --- mouse handling for Sun windows
 
 ;; Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jeff Peck
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -230,7 +230,7 @@ Handles wrapped and horizontally scrolled lines correctly."
 
 
 (defun minibuffer-window-p (window)
-  "True iff this WINDOW is minibuffer."
+  "True if this WINDOW is minibuffer."
   (= (frame-height)
      (nth 3 (window-edges window))	; The bottom edge.
      ))

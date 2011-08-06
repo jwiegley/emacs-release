@@ -1,7 +1,7 @@
 ;;; comint.el --- general command interpreter in a window stuff
 
 ;; Copyright (C) 1988, 1990, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu>
 ;;	Simon Marshall <simon@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -333,12 +333,15 @@ This variable is buffer-local."
 ;; kinit prints a prompt like `Password for devnull@GNU.ORG: '.
 ;; ksu prints a prompt like `Kerberos password for devnull/root@GNU.ORG: '.
 ;; ssh-add prints a prompt like `Enter passphrase: '.
+;; plink prints a prompt like `Passphrase for key "root@GNU.ORG": '.
+;; Ubuntu's sudo prompts like `[sudo] password for user:'
 ;; Some implementations of passwd use "Password (again)" as the 2nd prompt.
+;; Something called "perforce" uses "Enter password:".
 (defcustom comint-password-prompt-regexp
-  "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|login \\|\
-Kerberos \\|CVS \\|UNIX \\| SMB \\|^\\)\
+  "\\(\\(Enter \\|[Oo]ld \\|[Nn]ew \\|'s \\|login \\|\
+Kerberos \\|CVS \\|UNIX \\| SMB \\|LDAP \\|\\[sudo] \\|^\\)\
 \[Pp]assword\\( (again)\\)?\\|\
-pass phrase\\|\\(Enter\\|Repeat\\|Bad\\) passphrase\\)\
+pass phrase\\|\\(Enter \\|Repeat \\|Bad \\)?[Pp]assphrase\\)\
 \\(?:, try again\\)?\\(?: for [^:]+\\)?:\\s *\\'"
   "*Regexp matching prompts for passwords in the inferior process.
 This is used by `comint-watch-for-password-prompt'."
@@ -450,6 +453,10 @@ executed once when the buffer is created."
     (define-key map "\e\C-l" 	  'comint-show-output)
     (define-key map "\C-m" 	  'comint-send-input)
     (define-key map "\C-d" 	  'comint-delchar-or-maybe-eof)
+    ;; The following two are standardly aliased to C-d,
+    ;; but they should never do EOF, just delete.
+    (define-key map [delete] 	  'delete-char)
+    (define-key map [kp-delete]	  'delete-char)
     (define-key map "\C-c " 	  'comint-accumulate)
     (define-key map "\C-c\C-x" 	  'comint-get-next-from-history)
     (define-key map "\C-c\C-a" 	  'comint-bol-or-process-mark)
@@ -642,9 +649,15 @@ Entry to this mode runs the hooks on `comint-mode-hook'."
   (make-local-variable 'comint-move-point-for-output)
   (make-local-variable 'comint-scroll-show-maximum-output)
   (make-local-variable 'comint-stored-incomplete-input)
+  ;; Following disabled because it seems to break the case when
+  ;; comint-scroll-show-maximum-output is nil, and no-one can remember
+  ;; what the original problem was.  If there are problems with point
+  ;; not going to the end, consider re-enabling this.
+  ;; http://lists.gnu.org/archive/html/emacs-devel/2007-08/msg00827.html
+  ;;
   ;; This makes it really work to keep point at the bottom.
-  (make-local-variable 'scroll-conservatively)
-  (setq scroll-conservatively 10000)
+;;;  (make-local-variable 'scroll-conservatively)
+;;;  (setq scroll-conservatively 10000)
   (add-hook 'pre-command-hook 'comint-preinput-scroll-to-bottom t t)
   (make-local-variable 'comint-ptyp)
   (make-local-variable 'comint-process-echoes)
@@ -807,6 +820,7 @@ buffer.  The hook `comint-exec-hook' is run after each exec."
 If there is no previous input at point, run the command specified
 by the global keymap (usually `mouse-yank-at-point')."
   (interactive "e")
+  (mouse-set-point event)
   (let ((pos (posn-point (event-end event)))
 	field input)
     (with-selected-window (posn-window (event-end event))
@@ -1007,9 +1021,11 @@ See also `comint-read-input-ring'."
 	 (last-command last-command)
 	 (regexp (read-from-minibuffer prompt nil nil nil
 				       'minibuffer-history-search-history)))
+    ;; If the user didn't enter anything, nothing is added to m-h-s-h.
+    ;; Use the previous search regexp, if there is one.
     (list (if (string-equal regexp "")
-	      (setcar minibuffer-history-search-history
-		      (nth 1 minibuffer-history-search-history))
+              (or (car minibuffer-history-search-history)
+                  regexp)
 	    regexp)
 	  (prefix-numeric-value current-prefix-arg))))
 
@@ -1953,11 +1969,16 @@ If this takes us past the end of the current line, don't skip at all."
   "Default function for sending to PROC input STRING.
 This just sends STRING plus a newline.  To override this,
 set the hook `comint-input-sender'."
-  (comint-send-string proc string)
-  (if comint-input-sender-no-newline
-      (if (not (string-equal string ""))
-	  (process-send-eof))
-    (comint-send-string proc "\n")))
+  (let ((send-string
+         (if comint-input-sender-no-newline
+             string
+           ;; Sending as two separate strings does not work
+           ;; on Windows, so concat the \n before sending.
+           (concat string "\n"))))
+    (comint-send-string proc send-string))
+  (if (and comint-input-sender-no-newline
+	   (not (string-equal string "")))
+      (process-send-eof)))
 
 (defun comint-line-beginning-position ()
   "Return the buffer position of the beginning of the line, after any prompt.

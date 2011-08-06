@@ -1,7 +1,7 @@
 ;;; server.el --- Lisp code for GNU Emacs running as server process
 
 ;; Copyright (C) 1986, 1987, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: William Sommerfeld <wesommer@athena.mit.edu>
 ;; Maintainer: FSF
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -164,6 +164,7 @@ Only programs can do so."
 			:match (lambda (widget value)
 				 (not (functionp value)))
 			nil)
+		 (function-item :tag "Display in new frame" switch-to-buffer-other-frame)
 		 (function-item :tag "Use pop-to-buffer" pop-to-buffer)
 		 (function :tag "Other function")))
 
@@ -177,10 +178,10 @@ invoke the Emacs server."
 (defcustom server-kill-new-buffers t
   "Whether to kill buffers when done with them.
 If non-nil, kill a buffer unless it already existed before editing
-it with Emacs server.  If nil, kill only buffers as specified by
+it with the Emacs server.  If nil, kill only buffers as specified by
 `server-temp-file-regexp'.
-Please note that only buffers are killed that still have a client,
-i.e. buffers visited which \"emacsclient --no-wait\" are never killed in
+Please note that only buffers that still have a client are killed,
+i.e. buffers visited with \"emacsclient --no-wait\" are never killed in
 this way."
   :group 'server
   :type 'boolean
@@ -763,14 +764,18 @@ Arg NEXT-BUFFER is a suggestion; if it is a live buffer, use it."
 
 (define-key ctl-x-map "#" 'server-edit)
 
-(defun server-unload-hook ()
+(defun server-unload-function ()
+  "Unload the server library."
   (server-mode -1)
-  (remove-hook 'kill-buffer-query-functions 'server-kill-buffer-query-function)
-  (remove-hook 'kill-emacs-query-functions 'server-kill-emacs-query-function)
-  (remove-hook 'kill-buffer-hook 'server-kill-buffer))
+  (substitute-key-definition 'server-edit nil ctl-x-map)
+  (save-current-buffer
+   (dolist (buffer (buffer-list))
+     (set-buffer buffer)
+     (remove-hook 'kill-buffer-hook 'server-kill-buffer t)))
+  ;; continue standard unloading
+  nil)
 
 (add-hook 'kill-emacs-hook (lambda () (server-mode -1))) ;Cleanup upon exit.
-(add-hook 'server-unload-hook 'server-unload-hook)
 
 (provide 'server)
 

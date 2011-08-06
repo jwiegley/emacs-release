@@ -1,11 +1,12 @@
 /* machine description file for IBM S390 in 64-bit mode
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
+     Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -22,7 +23,7 @@ Boston, MA 02110-1301, USA.  */
    into ibms390.h.  */
 
 
-/* The following line tells the configuration script what sort of 
+/* The following line tells the configuration script what sort of
    operating system this machine is likely to run.
    USUAL-OPSYS="<name of system .h file here, without the s- or .h>"
 
@@ -36,7 +37,7 @@ NOTE-END */
 #define BITS_PER_LONG 64
 #define BITS_PER_EMACS_INT 64
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #define WORDS_BIG_ENDIAN
@@ -160,10 +161,18 @@ NOTE-END */
 #define XPNTR(a) XUINT (a)
 
 #undef START_FILES
+#ifdef HAVE_X86_64_LIB64_DIR
 #define START_FILES pre-crt0.o /usr/lib64/crt1.o /usr/lib64/crti.o
+#else
+#define START_FILES pre-crt0.o /usr/lib/crt1.o /usr/lib/crti.o
+#endif
 
 #undef LIB_STANDARD
+#ifdef HAVE_X86_64_LIB64_DIR
 #define LIB_STANDARD -lgcc -lc -lgcc /usr/lib64/crtn.o
+#else
+#define LIB_STANDARD -lgcc -lc -lgcc /usr/lib/crtn.o
+#endif
 
 /* arch-tag: 4b87653c-6add-4663-8691-7d9dc17b5519
    (do not change this comment) */

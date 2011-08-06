@@ -1,3 +1,90 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-02-27  Yuri Shtil  <yuris@juniper.net>  (tiny change)
+
+	* etags.c (Perl_functions): Fix call to skip_spaces.
+
+2008-01-22  Chong Yidong  <cyd@stupidchicken.com>
+
+	* pop.c (pop_stat, pop_last): Fix last fix.
+
+2008-01-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* pop.c (pop_stat, pop_last): Check validity of string-to-integer
+	conversion.  Mistakes spotted by Nico Golde.
+
+2008-01-04  Glenn Morris  <rgm@gnu.org>
+
+	* ebrowse.c (version): Just use current year for short copyright;
+	update to 2008.
+
+	* etags.c (print_version):
+	* rcs2log (Copyright): Update copyright to 2008.
+
+2007-11-22  Francesco Potort,Al(B  <pot@gnu.org>
+
+	* etags.c (default_C_help) [CTAGS]: differentiate the help string,
+	as the defaults in ctags are different from etags.
+	(default_C_help, Cplusplus_help, PHP_help, print_help):
+	Remove text saying --members is the default: not true in Emacs 22.
+
+2007-11-15  Francesco Potort,Al(B  <pot@gnu.org>
+
+	* etags.c: (C_entries): In case '}' decrement bracelev before
+	testing it.
+
+2007-11-15  Masatake YAMATO  <jet@gyve.org>
+
+	* etags.c (C_entries): In case '}', set fvdef to fvnone
+	unconditioned to (!ignoreindent && lp == newlb.buffer + 1).
+
+2007-11-15  Francesco Potort,Al(B  <pot@gnu.org>
+
+	* etags.c: (C_entries): Reset the fvdef machine when out of function.
+	(C_entries): Parse start of C comment as a space == end of token.
+	This is not necessary for C++ comment, already parsed as newline.
+
+2007-10-26  Juanma Barranquero  <lekktu@gmail.com>
+
+	* emacsclient.c: Add a wrapper for getenv so it also checks the
+	registry on Windows.  Suggestion and algorithm by Eli Zaretskii.
+	Code partially based on w32_get_resource and init_environment (w32.c).
+	(xmalloc): New function by K,Aa(Broly L$,1 q(Brentey (backported from the trunk).
+	(quote_file_name): Use it.
+	(egetenv): New wrapper for getenv.
+	(get_current_dir_name, decode_options, get_server_config)
+	(set_local_socket, set_socket, main): Use egetenv, not getenv.
+	(w32_get_resource, w32_getenv) [WINDOWSNT]: New functions.
+
+2007-10-25  Jason Rumney  <jasonr@gnu.org>
+
+	* emacsclient.c (sock_err_message): New function.
+	(set_tcp_socket): Use it.
+
+2007-09-27  Jason Rumney  <jasonr@gnu.org>
+
+	* makefile.w32-in (emacsclient, emacsclientw): Link to COMCTL32.
+
+	* emacsclient.c (w32_window_app): Init common controls when windowed.
+
+2007-08-25  Eli Zaretskii  <eliz@gnu.org>
+
+	* Makefile.in (rcs2log, rcs-checkin, grep-changelog, vcdiff):
+	Prepend "-" to the command, in case srcdir=. and file is copied
+	into itself.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+	* COPYING: Switch to GPLv3.
+
+2007-07-20  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (clean): Don't delete *~.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
@@ -6223,13 +6310,13 @@
 
     Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995,
 	1996, 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005,
-	2006, 2007 Free Software Foundation, Inc.
+	2006, 2007, 2008 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

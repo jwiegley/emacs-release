@@ -3,8 +3,8 @@ This is ../info/woman, produced by makeinfo version 4.8 from woman.texi.
 This file documents WoMan: A program to browse Unix manual pages `W.O.
 (without) man'.
 
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1791,35 +1791,35 @@ Concept Index
 
 
 Tag Table:
-Node: Top1361
-Node: Introduction2473
-Node: Background4991
-Node: Finding12248
-Node: Topic13804
-Node: Cache18189
-Node: Word at point19897
-Node: Filename20829
-Node: Automatic23079
-Node: Browsing24637
-Node: Fonts25863
-Node: Navigation26519
-Node: References27397
-Node: Changing28787
-Node: Convenience30795
-Node: Imenu31534
-Node: Customization32327
-Node: Interface Options34311
-Node: Formatting Options43009
-Node: Faces44559
-Node: Special symbols45838
-Node: Log47065
-Node: Technical48180
-Node: Bugs48891
-Node: Acknowledgements49638
-Node: GNU Free Documentation License51560
-Node: Command Index73792
-Node: Variable Index75777
-Node: Keystroke Index78406
-Node: Concept Index80161
+Node: Top1367
+Node: Introduction2479
+Node: Background4997
+Node: Finding12254
+Node: Topic13810
+Node: Cache18195
+Node: Word at point19903
+Node: Filename20835
+Node: Automatic23085
+Node: Browsing24643
+Node: Fonts25869
+Node: Navigation26525
+Node: References27403
+Node: Changing28793
+Node: Convenience30801
+Node: Imenu31540
+Node: Customization32333
+Node: Interface Options34317
+Node: Formatting Options43015
+Node: Faces44565
+Node: Special symbols45844
+Node: Log47071
+Node: Technical48186
+Node: Bugs48897
+Node: Acknowledgements49644
+Node: GNU Free Documentation License51566
+Node: Command Index73798
+Node: Variable Index75783
+Node: Keystroke Index78412
+Node: Concept Index80167
 
 End Tag Table

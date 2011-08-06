@@ -1,7 +1,7 @@
 ;;; mh-show.el --- MH-Show mode
 
 ;; Copyright (C) 1993, 1995, 1997,
-;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -161,7 +161,7 @@ displayed."
 (defun mh-showing-mode (&optional arg)
   "Change whether messages should be displayed.
 
-With ARG, display messages iff ARG is positive."
+With ARG, display messages if ARG is positive, otherwise don't display them."
   (setq mh-showing-mode
         (if (null arg)
             (not mh-showing-mode)

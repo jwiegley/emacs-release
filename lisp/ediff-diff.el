@@ -1,7 +1,7 @@
 ;;; ediff-diff.el --- diff-related utilities
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -867,7 +867,7 @@ one optional arguments, diff-number to refine.")
 	     (ediff-make-fine-diffs n 'noforce)
 	   (ediff-make-fine-diffs n 'skip)))
 
-	;; highlight iff fine diffs already exist
+	;; highlight if fine diffs already exist
 	((eq ediff-auto-refine 'off)
 	 (ediff-make-fine-diffs n 'skip))))
 
@@ -1459,7 +1459,7 @@ arguments to `skip-chars-forward'."
 
 
 (defun ediff-same-contents (d1 d2 &optional filter-re)
-  "Returns t iff D1 and D2 have the same content.
+  "Return t if D1 and D2 have the same content.
 D1 and D2 can either be both directories or both regular files.
 Symlinks and the likes are not handled.
 If FILTER-RE is non-nil, recursive checking in directories

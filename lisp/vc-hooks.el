@@ -1,7 +1,7 @@
 ;;; vc-hooks.el --- resident support for version-control
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:     FSF (see vc.el for full credits)
 ;; Maintainer: Andre Spiegel <spiegel@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -62,16 +62,18 @@ interpreted as hostnames."
   :type 'regexp
   :group 'vc)
 
-(defcustom vc-handled-backends '(RCS CVS SVN SCCS Arch MCVS)
-  ;; Arch and MCVS come last because they are per-tree rather than per-dir.
-  "*List of version control backends for which VC will be used.
+(defcustom vc-handled-backends '(RCS CVS SVN SCCS Bzr Git Hg Mtn Arch MCVS)
+  ;; RCS, CVS, SVN and SCCS come first because they are per-dir
+  ;; rather than per-tree.  RCS comes first because of the multibackend
+  ;; support intended to use RCS for local commits (with a remote CVS server).
+  "List of version control backends for which VC will be used.
 Entries in this list will be tried in order to determine whether a
 file is under that sort of version control.
 Removing an entry from the list prevents VC from being activated
 when visiting a file managed by that backend.
 An empty list disables VC altogether."
   :type '(repeat symbol)
-  :version "21.1"
+  :version "22.2"
   :group 'vc)
 
 (defcustom vc-path
@@ -316,20 +318,26 @@ If WITNESS if not found, return nil, otherwise return the root."
   ;; witnesses in /home or in /.
   (setq file (abbreviate-file-name file))
   (let ((root nil)
-        (user (nth 2 (file-attributes file))))
+        ;; `user' is not initialized outside the loop because
+        ;; `file' may not exist, so we may have to walk up part of the
+        ;; hierarchy before we find the "initial UID".
+        (user nil))
     (while (not (or root
-                   (equal file (setq file (file-name-directory file)))
-                   (null file)
-                   ;; As a heuristic, we stop looking up the hierarchy of
-                   ;; directories as soon as we find a directory belonging
-                   ;; to another user.  This should save us from looking in
-                   ;; things like /net and /afs.  This assumes that all the
-                   ;; files inside a project belong to the same user.
-                   (not (equal user (nth 2 (file-attributes file))))
-                   (string-match vc-ignore-dir-regexp file)))
+                    (null file)
+                    ;; As a heuristic, we stop looking up the hierarchy of
+                    ;; directories as soon as we find a directory belonging
+                    ;; to another user.  This should save us from looking in
+                    ;; things like /net and /afs.  This assumes that all the
+                    ;; files inside a project belong to the same user.
+                    (let ((prev-user user))
+                      (setq user (nth 2 (file-attributes file)))
+                      (and prev-user (not (equal user prev-user))))
+                    (string-match vc-ignore-dir-regexp file)))
       (if (file-exists-p (expand-file-name witness file))
-         (setq root file)
-       (setq file (directory-file-name file))))
+          (setq root file)
+        (if (equal file
+                   (setq file (file-name-directory (directory-file-name file))))
+            (setq file nil))))
     root))
 
 ;; Access functions to file properties
@@ -702,6 +710,21 @@ Before doing that, check if there are any old backups and get rid of them."
 	     ;; any VC Dired buffer to synchronize.
 	     (vc-dired-resynch-file file)))))
 
+(defvar vc-menu-entry
+  '(menu-item "Version Control" vc-menu-map
+    :filter vc-menu-map-filter))
+
+(when (boundp 'menu-bar-tools-menu)
+  ;; We do not need to worry here about the placement of this entry
+  ;; because menu-bar.el has already created the proper spot for us
+  ;; and this will simply use it.
+  (define-key menu-bar-tools-menu [vc] vc-menu-entry))
+
+(defconst vc-mode-line-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line down-mouse-1] vc-menu-entry)
+    map))
+
 (defun vc-mode-line (file)
   "Set `vc-mode' to display type of version control for FILE.
 The value is set in the current buffer, which should be the buffer
@@ -783,7 +806,7 @@ current, and kill the buffer that visits the link."
   (when buffer-file-name
     (vc-file-clearprops buffer-file-name)
     (cond
-     ((vc-backend buffer-file-name)
+     ((ignore-errors (vc-backend buffer-file-name))
       ;; Compute the state and put it in the modeline.
       (vc-mode-line buffer-file-name)
       (unless vc-make-backup-files
@@ -834,13 +857,9 @@ Used in `find-file-not-found-functions'."
     (if backend (vc-call-backend backend 'find-file-not-found-hook))))
 
 (defun vc-default-find-file-not-found-hook (backend)
-  (if (yes-or-no-p
-       (format "File %s was lost; check out from version control? "
-	       (file-name-nondirectory buffer-file-name)))
-      (save-excursion
-	(require 'vc)
-	(setq default-directory (file-name-directory buffer-file-name))
-	(not (vc-error-occurred (vc-checkout buffer-file-name))))))
+  ;; This used to do what vc-rcs-find-file-not-found-hook does, but it only
+  ;; really makes sense for RCS.  For other backends, better not do anything.
+  nil)
 
 (add-hook 'find-file-not-found-functions 'vc-file-not-found-hook)
 
@@ -879,36 +898,54 @@ Used in `find-file-not-found-functions'."
 (fset 'vc-prefix-map vc-prefix-map)
 (define-key global-map "\C-xv" 'vc-prefix-map)
 
-(if (not (boundp 'vc-menu-map))
-    ;; Don't do the menu bindings if menu-bar.el wasn't loaded to defvar
-    ;; vc-menu-map.
-    ()
-  ;;(define-key vc-menu-map [show-files]
-  ;;  '("Show Files under VC" . (vc-directory t)))
-  (define-key vc-menu-map [vc-retrieve-snapshot]
-    '("Retrieve Snapshot" . vc-retrieve-snapshot))
-  (define-key vc-menu-map [vc-create-snapshot]
-    '("Create Snapshot" . vc-create-snapshot))
-  (define-key vc-menu-map [vc-directory] '("VC Directory Listing" . vc-directory))
-  (define-key vc-menu-map [separator1] '("----"))
-  (define-key vc-menu-map [vc-annotate] '("Annotate" . vc-annotate))
-  (define-key vc-menu-map [vc-rename-file] '("Rename File" . vc-rename-file))
-  (define-key vc-menu-map [vc-version-other-window]
-    '("Show Other Version" . vc-version-other-window))
-  (define-key vc-menu-map [vc-diff] '("Compare with Base Version" . vc-diff))
-  (define-key vc-menu-map [vc-update-change-log]
-    '("Update ChangeLog" . vc-update-change-log))
-  (define-key vc-menu-map [vc-print-log] '("Show History" . vc-print-log))
-  (define-key vc-menu-map [separator2] '("----"))
-  (define-key vc-menu-map [vc-insert-header]
-    '("Insert Header" . vc-insert-headers))
-  (define-key vc-menu-map [undo] '("Undo Last Check-In" . vc-cancel-version))
-  (define-key vc-menu-map [vc-revert-buffer]
-    '("Revert to Base Version" . vc-revert-buffer))
-  (define-key vc-menu-map [vc-update]
-    '("Update to Latest Version" . vc-update))
-  (define-key vc-menu-map [vc-next-action] '("Check In/Out" . vc-next-action))
-  (define-key vc-menu-map [vc-register] '("Register" . vc-register)))
+(defvar vc-menu-map
+  (let ((map (make-sparse-keymap "Version Control")))
+    ;;(define-key map [show-files]
+    ;;  '("Show Files under VC" . (vc-directory t)))
+    (define-key map [vc-retrieve-snapshot]
+      '("Retrieve Snapshot" . vc-retrieve-snapshot))
+    (define-key map [vc-create-snapshot]
+      '("Create Snapshot" . vc-create-snapshot))
+    (define-key map [vc-directory] '("VC Directory Listing" . vc-directory))
+    (define-key map [separator1] '("----"))
+    (define-key map [vc-annotate] '("Annotate" . vc-annotate))
+    (define-key map [vc-rename-file] '("Rename File" . vc-rename-file))
+    (define-key map [vc-version-other-window]
+      '("Show Other Version" . vc-version-other-window))
+    (define-key map [vc-diff] '("Compare with Base Version" . vc-diff))
+    (define-key map [vc-update-change-log]
+      '("Update ChangeLog" . vc-update-change-log))
+    (define-key map [vc-print-log] '("Show History" . vc-print-log))
+    (define-key map [separator2] '("----"))
+    (define-key map [vc-insert-header]
+      '("Insert Header" . vc-insert-headers))
+    (define-key map [undo] '("Undo Last Check-In" . vc-cancel-version))
+    (define-key map [vc-revert-buffer]
+      '("Revert to Base Version" . vc-revert-buffer))
+    (define-key map [vc-update]
+      '("Update to Latest Version" . vc-update))
+    (define-key map [vc-next-action] '("Check In/Out" . vc-next-action))
+    (define-key map [vc-register] '("Register" . vc-register))
+    map))
+
+(defalias 'vc-menu-map vc-menu-map)
+
+(defun vc-menu-map-filter (orig-binding)
+  (if (and (symbolp orig-binding) (fboundp orig-binding))
+      (setq orig-binding (indirect-function orig-binding)))
+  (let ((ext-binding
+         (if vc-mode (vc-call-backend (vc-backend buffer-file-name)
+                                      'extra-menu))))
+    ;; Give the VC backend a chance to add menu entries
+    ;; specific for that backend.
+    (if (null ext-binding)
+        orig-binding
+      (append orig-binding
+	      '((ext-menu-separator "---"))
+              ext-binding))))
+
+(defun vc-default-extra-menu (backend)
+  nil)
 
 ;; These are not correct and it's not currently clear how doing it
 ;; better (with more complicated expressions) might slow things down

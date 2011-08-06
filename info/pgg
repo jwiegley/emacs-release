@@ -3,7 +3,7 @@ This is ../info/pgg, produced by makeinfo version 4.8 from pgg.texi.
    This file describes PGG, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007  Free Software
+   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -944,22 +944,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top773
-Node: Overview1383
-Node: Prerequisites1868
-Node: How to use2860
-Node: User Commands4063
-Node: Selecting an implementation7274
-Node: Caching passphrase8280
-Ref: Caching passphrase-Footnote-111566
-Node: Default user identity11731
-Node: Architecture12771
-Node: Initializing13419
-Node: Backend methods14144
-Node: Getting output16581
-Node: Parsing OpenPGP packets17213
-Node: GNU Free Documentation License17928
-Node: Function Index40175
-Node: Variable Index41709
+Node: Top778
+Node: Overview1388
+Node: Prerequisites1873
+Node: How to use2865
+Node: User Commands4068
+Node: Selecting an implementation7279
+Node: Caching passphrase8285
+Ref: Caching passphrase-Footnote-111571
+Node: Default user identity11736
+Node: Architecture12776
+Node: Initializing13424
+Node: Backend methods14149
+Node: Getting output16586
+Node: Parsing OpenPGP packets17218
+Node: GNU Free Documentation License17933
+Node: Function Index40180
+Node: Variable Index41714
 
 End Tag Table

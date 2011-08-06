@@ -1,7 +1,7 @@
 ;;; mm-uu.el --- Return uu stuff as mm handles
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: postscript uudecode binhex shar forward gnatsweb pgp
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -162,7 +162,10 @@ This can be either \"inline\" or \"attachment\".")
 Each element consist of the following entries: label,
 start-regexp, end-regexp, extract-function, test-function.
 
-After modifying this list you must run \\[mm-uu-configure].")
+After modifying this list you must run \\[mm-uu-configure].
+
+You can disable elements from this list by customizing
+`mm-uu-configure-list'.")
 
 (defcustom mm-uu-configure-list '((shar . disabled))
   "A list of mm-uu configuration.

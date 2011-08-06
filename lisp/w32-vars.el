@@ -1,6 +1,6 @@
 ;;; w32-vars.el --- MS-Windows specific user options
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jason Rumney <jasonr@gnu.org>
 ;; Keywords: internal
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -53,7 +53,7 @@ X does.  See `w32-fixed-font-alist' for the font menu definition."
 
 (defcustom w32-system-shells '("cmd" "cmd.exe" "command" "command.com"
 			       "4nt" "4nt.exe" "4dos" "4dos.exe"
-			       "ndos" "ndos.exe")
+			       "tcc" "tcc.exe" "ndos" "ndos.exe")
   "*List of strings recognized as Windows NT/9X system shells."
   :type '(repeat string)
   :group 'w32)

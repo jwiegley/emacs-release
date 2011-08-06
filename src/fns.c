@@ -1,13 +1,13 @@
 /* Random utility Lisp functions.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -2060,7 +2060,7 @@ The PLIST is modified by side effects.  */)
       prev = tail;
       QUIT;
     }
-  newcell = Fcons (prop, Fcons (val, Qnil));
+  newcell = Fcons (prop, Fcons (val, NILP (prev) ? plist : XCDR (XCDR (prev))));
   if (NILP (prev))
     return newcell;
   else
@@ -5212,7 +5212,7 @@ DEFUN ("sxhash", Fsxhash, Ssxhash, 1, 1, 0,
      (obj)
      Lisp_Object obj;
 {
-  unsigned hash = sxhash (obj, 0);;
+  unsigned hash = sxhash (obj, 0);
   return make_number (hash);
 }
 
@@ -5406,12 +5406,13 @@ DEFUN ("hash-table-p", Fhash_table_p, Shash_table_p, 1, 1, 0,
 
 
 DEFUN ("clrhash", Fclrhash, Sclrhash, 1, 1, 0,
-       doc: /* Clear hash table TABLE.  */)
+       doc: /* Clear hash table TABLE and return it.  */)
      (table)
      Lisp_Object table;
 {
   hash_clear (check_hash_table (table));
-  return Qnil;
+  /* Be compatible with XEmacs.  */
+  return table;
 }
 
 
@@ -5828,9 +5829,10 @@ invoked by mouse clicks and mouse menu items.  */);
 
   DEFVAR_BOOL ("use-file-dialog", &use_file_dialog,
     doc: /* *Non-nil means mouse commands use a file dialog to ask for files.
-This applies to commands from menus and tool bar buttons.  The value of
-`use-dialog-box' takes precedence over this variable, so a file dialog is only
-used if both `use-dialog-box' and this variable are non-nil.  */);
+This applies to commands from menus and tool bar buttons even when
+they are initiated from the keyboard.  The value of `use-dialog-box'
+takes precedence over this variable, so a file dialog is only used if
+both `use-dialog-box' and this variable are non-nil.  */);
   use_file_dialog = 1;
 
   defsubr (&Sidentity);

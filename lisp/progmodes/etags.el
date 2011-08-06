@@ -1,7 +1,7 @@
 ;;; etags.el --- etags facility for Emacs
 
 ;; Copyright (C) 1985, 1986, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998,
-;;               2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;;               2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;	Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -256,10 +256,10 @@ One argument, the tag info returned by `snarf-tag-function'.")
 (defvar tags-included-tables-function nil
   "Function to do the work of `tags-included-tables' (which see).")
 (defvar verify-tags-table-function nil
-  "Function to return t iff current buffer contains valid tags file.")
+  "Function to return t if current buffer contains valid tags file.")
 
 ;; Initialize the tags table in the current buffer.
-;; Returns non-nil iff it is a valid tags table.  On
+;; Returns non-nil if it is a valid tags table.  On
 ;; non-nil return, the tags table state variable are
 ;; made buffer-local and initialized to nil.
 (defun initialize-new-tags-table ()
@@ -277,8 +277,9 @@ One argument, the tag info returned by `snarf-tag-function'.")
 (defun tags-table-mode ()
   "Major mode for tags table file buffers."
   (interactive)
-  (setq major-mode 'tags-table-mode)
-  (setq mode-name "Tags Table")
+  (setq major-mode 'tags-table-mode
+        mode-name "Tags Table"
+        buffer-undo-list t)
   (initialize-new-tags-table))
 
 ;;;###autoload
@@ -417,7 +418,7 @@ file the tag was in."
 (defun tags-verify-table (file)
   "Read FILE into a buffer and verify that it is a valid tags table.
 Sets the current buffer to one visiting FILE (if it exists).
-Returns non-nil iff it is a valid table."
+Returns non-nil if it is a valid table."
   (if (get-file-buffer file)
       ;; The file is already in a buffer.  Check for the visited file
       ;; having changed since we last used it.
@@ -1219,8 +1220,8 @@ where they were found."
 	       (verify-tags-table-function . etags-verify-tags-table)
 	       ))))
 
-;; Return non-nil iff the current buffer is a valid etags TAGS file.
 (defun etags-verify-tags-table ()
+  "Return non-nil if the current buffer is a valid etags TAGS file."
   ;; Use eq instead of = in case char-after returns nil.
   (eq (char-after (point-min)) ?\f))
 
@@ -1695,8 +1696,14 @@ if the file was newly read in, the value is the filename."
     ;; if the files have changed on disk.
     (and buffer tags-loop-revert-buffers
 	 (not (verify-visited-file-modtime buffer))
+	 (y-or-n-p
+	  (format
+	   (if (buffer-modified-p buffer)
+	       "File %s changed on disk.  Discard your edits? "
+	     "File %s changed on disk.  Reread from disk? ")
+	   next))
 	 (with-current-buffer buffer
-	   (revert-buffer t)))
+	   (revert-buffer t t)))
     (if (not (and new novisit))
 	(set-buffer (find-file-noselect next novisit))
       ;; Like find-file, but avoids random warning messages.
@@ -1814,13 +1821,19 @@ See documentation of variable `tags-file-name'."
     (tags-loop-continue (or file-list-form t))))
 
 ;;;###autoload
-(defun tags-query-replace (from to &optional delimited file-list-form start end)
+(defun tags-query-replace (from to &optional delimited file-list-form)
   "Do `query-replace-regexp' of FROM with TO on all files listed in tags table.
 Third arg DELIMITED (prefix arg) means replace only word-delimited matches.
 If you exit (\\[keyboard-quit], RET or q), you can resume the query replace
 with the command \\[tags-loop-continue].
+Fourth arg FILE-LIST-FORM non-nil means initialize the replacement loop.
+Fifth and sixth arguments START and END are accepted, for compatibility
+with `query-replace-regexp', and ignored.
 
-See documentation of variable `tags-file-name'."
+If FILE-LIST-FORM is non-nil, it is a form to evaluate to
+produce the list of files to search.
+
+See also the documentation of the variable `tags-file-name'."
   (interactive (query-replace-read-args "Tags query replace (regexp)" t t))
   (setq tags-loop-scan `(let ,(unless (equal from (downcase from))
 				'((case-fold-search nil)))
@@ -1904,7 +1917,8 @@ The list of tags tables to select from is stored in `tags-table-set-list';
 see the doc of that variable if you want to add names to the list."
   (interactive)
   (pop-to-buffer "*Tags Table List*")
-  (setq buffer-read-only nil)
+  (setq buffer-read-only nil
+	buffer-undo-list t)
   (erase-buffer)
   (let ((set-list tags-table-set-list)
 	(desired-point nil)

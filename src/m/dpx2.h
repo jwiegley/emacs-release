@@ -1,12 +1,12 @@
 /* machine description for Bull DPX/2 range
    Copyright (C) 1985, 1986, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -32,7 +32,7 @@ Boston, MA 02110-1301, USA.  */
 /* #define ncl_el	/* DPX/2 210,220 etc */
 /* #define ncl_mr 1	/* DPX/2 320,340 (and 360,380 ?) */
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #define WORDS_BIG_ENDIAN

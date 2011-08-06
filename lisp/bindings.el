@@ -1,7 +1,7 @@
 ;;; bindings.el --- define standard key bindings and some variables
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1994, 1995, 1996, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -476,7 +476,7 @@ Menu of mode operations in the mode line.")
 (defvar minor-mode-alist nil "\
 Alist saying how to show minor modes in the mode line.
 Each element looks like (VARIABLE STRING);
-STRING is included in the mode line iff VARIABLE's value is non-nil.
+STRING is included in the mode line if VARIABLE's value is non-nil.
 
 Actually, STRING need not be a string; any possible mode-line element
 is okay.  See `mode-line-format'.")
@@ -680,7 +680,8 @@ language you are using."
   ;; Override the global binding (which calls indent-relative via
   ;; indent-for-tab-command).  The alignment that indent-relative tries to
   ;; do doesn't make much sense here since the prompt messes it up.
-  (define-key map "\t"    'self-insert-command))
+  (define-key map "\t"    'self-insert-command)
+  (define-key minibuffer-local-map [C-tab] 'file-cache-minibuffer-complete))
 
 (define-key global-map "\C-u" 'universal-argument)
 (let ((i ?0))
@@ -1050,6 +1051,9 @@ language you are using."
 
 (define-key ctl-x-map "z" 'repeat)
 
+(define-key esc-map "\C-l" 'reposition-window)
+
+(define-key ctl-x-4-map "a" 'add-change-log-entry-other-window)
 (define-key ctl-x-4-map "c" 'clone-indirect-buffer-other-window)
 
 ;; Signal handlers

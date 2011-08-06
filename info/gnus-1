@@ -1,7 +1,7 @@
 This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -22,7 +22,7 @@ This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
      the license.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -615,8 +615,8 @@ File: gnus,  Node: Starting Up,  Next: Group Buffer,  Prev: Top,  Up: Top
 1 Starting Gnus
 ***************
 
-If you are haven't used Emacs much before using Gnus, read *Note Emacs
-for Heathens:: first.
+If you haven't used Emacs much before using Gnus, read *Note Emacs for
+Heathens:: first.
 
    If your system administrator has set things up properly, starting
 Gnus and reading news is extremely easy--you just type `M-x gnus' in
@@ -1646,6 +1646,23 @@ arrived most recently will be fetched.
    `gnus-large-ephemeral-newsgroup' is the same as
 `gnus-large-newsgroup', but is only used for ephemeral newsgroups.
 
+   In groups in some news servers, there might be a big gap between a
+few very old articles that will never be expired and the recent ones.
+In such a case, the server will return the data like `(1 . 30000000)'
+for the `LIST ACTIVE group' command, for example.  Even if there are
+actually only the articles 1-10 and 29999900-30000000, Gnus doesn't
+know it at first and prepares for getting 30000000 articles.  However,
+it will consume hundreds megabytes of memories and might make Emacs get
+stuck as the case may be.  If you use such news servers, set the
+variable `gnus-newsgroup-maximum-articles' to a positive number.  The
+value means that Gnus ignores articles other than this number of the
+latest ones in every group.  For instance, the value 10000 makes Gnus
+get only the articles 29990001-30000000 (if the latest article number is
+30000000 in a group).  Note that setting this variable to a number might
+prevent you from reading very old articles.  The default value of the
+variable `gnus-newsgroup-maximum-articles' is `nil', which means Gnus
+never ignores old articles.
+
    If `gnus-auto-select-first' is non-`nil', select an article
 automatically when entering a group with the `SPACE' command.  Which
 article this is is controlled by the `gnus-auto-select-subject'
@@ -2048,7 +2065,15 @@ File: gnus,  Node: Group Parameters,  Next: Listing Groups,  Prev: Foreign Group
 =====================
 
 The group parameters store information local to a particular group.
-Here's an example group parameter list:
+
+   Use the `G p' or the `G c' command to edit group parameters of a
+group.  (`G p' presents you with a Lisp-based interface, `G c' presents
+you with a Customize-like interface.  The latter helps avoid silly Lisp
+errors.)  You might also be interested in reading about topic
+parameters (*note Topic Parameters::).  Additionally, you can set group
+parameters via the `gnus-parameters' variable, see below.
+
+   Here's an example group parameter list:
 
      ((to-address . "ding@gnus.org")
       (auto-expire . t))
@@ -2357,12 +2382,6 @@ which is an alist of regexps and values.
      when the group is entered, the 'd' key will not mark the article as
      expired.
 
-
-   Use the `G p' or the `G c' command to edit group parameters of a
-group.  (`G p' presents you with a Lisp-based interface, `G c' presents
-you with a Customize-like interface.  The latter helps avoid silly Lisp
-errors.)  You might also be interested in reading about topic
-parameters (*note Topic Parameters::).
 
    Group parameters can be set via the `gnus-parameters' variable too.
 But some variables, such as `visible', have no effect (For this case
@@ -3129,8 +3148,8 @@ File: gnus,  Node: Misc Group Stuff,  Prev: Group Topics,  Up: Group Buffer
 * Sieve Commands::              Managing Sieve scripts.
 
 `v'
-     The key `v' is reserved for users.  You can bind it key to some
-     function or better use it as a prefix key.  For example:
+     The key `v' is reserved for users.  You can bind it to some
+     command or better use it as a prefix key.  For example:
 
           (define-key gnus-group-mode-map (kbd "v j d")
             (lambda ()
@@ -3424,8 +3443,8 @@ group buffer (*note Selecting a Group::).
 customize-apropos RET gnus-summary-tool-bar'.  This feature is only
 available in Emacs.
 
-   The key `v' is reserved for users.  You can bind it key to some
-function or better use it as a prefix key.  For example:
+   The key `v' is reserved for users.  You can bind it to some command
+or better use it as a prefix key.  For example:
      (define-key gnus-summary-mode-map (kbd "v -") "LrS") ;; lower subthread
 
 * Menu:
@@ -5590,7 +5609,7 @@ pre-fetch--read articles, for instance.  The
 `gnus-async-prefetch-article-p' variable controls whether an article is
 to be pre-fetched.  This function should return non-`nil' when the
 article in question is to be pre-fetched.  The default is
-`gnus-async-read-p', which returns `nil' on read articles.  The
+`gnus-async-unread-p', which returns `nil' on read articles.  The
 function is called with an article data structure as the only parameter.
 
    If, for instance, you wish to pre-fetch only unread articles shorter
@@ -6956,7 +6975,7 @@ one that handles article bodies and one that handles article heads:
      message ID or a mail address.  If it is one of the symbols `mid' or
      `mail', Gnus will always assume that the string is a message ID or
      a mail address, respectively.  If this variable is set to the
-     symbol `ask', always query the user what do do.  If it is a
+     symbol `ask', always query the user what to do.  If it is a
      function, this function will be called with the string as its only
      argument.  The function must return `mid', `mail', `invalid' or
      `ask'.  The default value is the function
@@ -7380,7 +7399,7 @@ the same manner:
 `gnus-mime-display-multipart-related-as-mixed'
      Display "multipart/related" parts as "multipart/mixed".
 
-     If displaying "text/html" is discouraged, see
+     If displaying `text/html' is discouraged, see
      `mm-discouraged-alternatives', images or other material inside a
      "multipart/related" part might be overlooked when this variable is
      `nil'.  *Note Display Customization: (emacs-mime)Display

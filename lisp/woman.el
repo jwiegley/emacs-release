@@ -1,7 +1,7 @@
 ;;; woman.el --- browse UN*X manual pages `wo (without) man'
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Francis J. Wright <F.J.Wright@qmul.ac.uk>
 ;; Maintainer: FSF
@@ -14,7 +14,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -3558,8 +3558,10 @@ The expression may be an argument in quotes."
 	     (setq value (funcall op value (woman-parse-numeric-value))))
 	    ((looking-at "[<=>]=?")	; relational operators
 	     (goto-char (match-end 0))
-	     (setq op (or (intern-soft (match-string 0))
-			 (intern-soft "=")))
+	     (setq op (intern-soft
+                       (if (string-equal (match-string 0) "==")
+                           "="
+                         (match-string 0))))
 	     (setq value (if (funcall op value (woman-parse-numeric-value))
 			     1 0)))
 	    ((memq (setq op (following-char)) '(?& ?:)) ; Boolean and / or

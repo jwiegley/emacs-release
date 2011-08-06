@@ -1,7 +1,7 @@
 ;;; eldoc.el --- show function arglist or variable docstring in echo area
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman <friedman@splode.com>
 ;; Maintainer: friedman@splode.com
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -104,7 +104,7 @@ truncated to make more of the arglist or documentation string visible."
 ;;; No user options below here.
 
 (defvar eldoc-message-commands-table-size 31
-  "This is used by eldoc-add-command to initialize eldoc-message-commands
+  "This is used by `eldoc-add-command' to initialize `eldoc-message-commands'
 as an obarray.
 It should probably never be necessary to do so, but if you
 choose to increase the number of buckets, you must do so before loading
@@ -116,7 +116,7 @@ Remember to keep it a prime number to improve hash performance.")
   "Commands after which it is appropriate to print in the echo area.
 Eldoc does not try to print function arglists, etc. after just any command,
 because some commands print their own messages in the echo area and these
-functions would instantly overwrite them.  But self-insert-command as well
+functions would instantly overwrite them.  But `self-insert-command' as well
 as most motion commands are good candidates.
 This variable contains an obarray of symbols; do not manipulate it
 directly.  Instead, use `eldoc-add-command' and `eldoc-remove-command'.")
@@ -132,7 +132,7 @@ directly.  Instead, use `eldoc-add-command' and `eldoc-remove-command'.")
 (defvar eldoc-timer nil "eldoc's timer object.")
 
 (defvar eldoc-current-idle-delay eldoc-idle-delay
-  "idle time delay currently in use by timer.
+  "Idle time delay currently in use by timer.
 This is used to determine if `eldoc-idle-delay' is changed by the user.")
 
 

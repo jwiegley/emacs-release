@@ -1,12 +1,12 @@
 /* Lisp functions for making directory listings.
    Copyright (C) 1985, 1986, 1993, 1994, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -115,10 +115,10 @@ extern void filemodestring P_ ((struct stat *, char *));
 #endif
 
 extern int completion_ignore_case;
+extern Lisp_Object Qcompletion_ignore_case;
 extern Lisp_Object Vcompletion_regexp_list;
 
 Lisp_Object Vcompletion_ignored_extensions;
-Lisp_Object Qcompletion_ignore_case;
 Lisp_Object Qdirectory_files;
 Lisp_Object Qdirectory_files_and_attributes;
 Lisp_Object Qfile_name_completion;
@@ -916,7 +916,7 @@ Elements of the attribute list are:
  7. Size in bytes.
   This is a floating point number if the size is too large for an integer.
  8. File modes, as a string of ten letters or dashes as in ls -l.
- 9. t iff file's gid would change if file were deleted and recreated.
+ 9. t if file's gid would change if file were deleted and recreated.
 10. inode number.  If inode number is larger than the Emacs integer,
   this is a cons cell containing two integers: first the high part,
   then the low 16 bits.
@@ -1076,11 +1076,6 @@ syms_of_dired ()
   defsubr (&Sfile_name_all_completions);
   defsubr (&Sfile_attributes);
   defsubr (&Sfile_attributes_lessp);
-
-#ifdef VMS
-  Qcompletion_ignore_case = intern ("completion-ignore-case");
-  staticpro (&Qcompletion_ignore_case);
-#endif /* VMS */
 
   DEFVAR_LISP ("completion-ignored-extensions", &Vcompletion_ignored_extensions,
 	       doc: /* Completion ignores file names ending in any string in this list.

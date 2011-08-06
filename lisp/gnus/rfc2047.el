@@ -1,7 +1,7 @@
 ;;; rfc2047.el --- functions for encoding and decoding rfc2047 messages
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -55,7 +55,7 @@ Value is what BODY returns."
 (require 'ietf-drums)
 ;; Fixme: Avoid this (used for mail-parse-charset) mm dependence on gnus.
 (require 'mail-prsvr)
-(require 'base64)
+(require 'rfc2045) ;; rfc2045-encode-string
 (autoload 'mm-body-7-or-8 "mm-bodies")
 
 (eval-and-compile
@@ -832,12 +832,9 @@ it, put the following line in your ~/.gnus.el file:
 
 \(defalias 'mail-header-encode-parameter 'rfc2047-encode-parameter)
 "
-  (let* ((rfc2047-encoding-type 'mime)
-	 (rfc2047-encode-max-chars nil)
-	 (string (rfc2047-encode-string value)))
-    (if (string-match (concat "[" ietf-drums-tspecials "]") string)
-	(format "%s=%S" param string)
-      (concat param "=" string))))
+  (let ((rfc2047-encoding-type 'mime)
+	(rfc2047-encode-max-chars nil))
+    (rfc2045-encode-string param (rfc2047-encode-string value))))
 
 ;;;
 ;;; Functions for decoding RFC2047 messages

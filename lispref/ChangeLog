@@ -1,11 +1,212 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-02-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* strings.texi (Formatting Strings): Treat - and 0 as flag
+	characters.
+
+2008-02-11  Lawrence Mitchell <wence@gmx.li>  (tiny change)
+
+	* objects.texi (Equality Predicates): Add defun for
+	equal-including-properties.
+
+2008-02-11  Glenn Morris  <rgm@gnu.org>
+
+	* objects.texi (Equality Predicates): Mention
+	equal-including-properties.  No longer talk about "two" functions.
+
+2008-02-07  Richard Stallman  <rms@gnu.org>
+
+	* windows.texi (Window Start): Mention the feature of moving
+	window-start to start of line.
+
+2008-01-19  Martin Rudalics  <rudalics@gmx.at>
+
+	* buffers.texi (Buffer Modification): Fix typo.
+
+2008-01-04  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Faces): Don't talk about internal face vector as arg
+	to facep.
+
+	* customize.texi (Type Keywords): Fix previous change.
+
+	* text.texi (Links and Mouse-1): Fix xref for commands.texi change.
+	* elisp.texi (Top): Fix menu for commands.texi change.
+
+2007-12-30  Richard Stallman  <rms@gnu.org>
+
+	* commands.texi (Accessing Mouse): Renamed from Accessing Events.
+	(Accessing Scroll): New node broken out of Accessing Mouse.
+
+2007-12-28  Richard Stallman  <rms@gnu.org>
+
+	* frames.texi (Size Parameters): Fix typo.
+	(Basic Parameters): For `title', refer to title bar.
+	(Size and Position): Explain meaning of frame pixel width and height.
+
+2007-12-23  Richard Stallman  <rms@gnu.org>
+
+	* customize.texi (Type Keywords): Uncomment :validate and clarify it.
+	Improve some of the commented-out keywords' text too.
+
+2007-12-04  Richard Stallman  <rms@gnu.org>
+
+	* objects.texi (Symbol Type): Fix typo.
+
+2007-12-03  Richard Stallman  <rms@gnu.org>
+
+	* hooks.texi (Standard Hooks): Add link to Hooks for Loading.
+
+2007-11-29  Richard Stallman  <rms@gnu.org>
+
+	* customize.texi (Composite Types): Document `group' type.
+
+2007-11-24  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Refresh Screen, Forcing Redisplay):
+	Clarify the text and move items around.
+
+2007-11-15  Martin Rudalics  <rudalics@gmx.at>
+
+	* vol1.texi (Top): Remove Frame-Local Variables from Node Listing.
+	* vol2.texi (Top): Remove Frame-Local Variables from Node Listing.
+
+2007-10-24  Richard Stallman  <rms@gnu.org>
+
+	* elisp.texi (Top): Delete Frame-Local Variables from subnode menu.
+
+	* variables.texi (Frame-Local Variables): Node deleted.
+	(Variables): Delete Frame-Local Variables from menu.
+	(Local Variables, Buffer-Local Variables, Intro to Buffer-Local)
+	(Default Value): Don't mention frame-local vars.
+
+	* os.texi (Idle Timers): current-idle-time returns nil if not idle.
+
+	* loading.texi (Unloading): Document FEATURE-unload-function
+	instead of FEATURE-unload-hook.
+
+	* functions.texi (Related Topics): Add called-interactively-p.
+	Fix xref.
+
+	* frames.texi (Multiple Displays): Don't mention frame-local vars.
+
+2007-10-12  Richard Stallman  <rms@gnu.org>
+
+	* elisp.texi (Top): Add Distinguish Interactive to subnode menu.
+
+	* commands.texi (Distinguish Interactive): New node,
+	broken out from Interactive Call and rewritten.
+	(Command Loop): Put Distinguish Interactive in menu.
+
+2007-10-09  Richard Stallman  <rms@gnu.org>
+
+	* text.texi (Examining Properties): Mention overlay priority.
+
+	* display.texi (Display Margins): Correct the description
+	of margin display specifications.
+	(Replacing Specs): New subnode broken out of Display Property.
+
+2007-10-05  Juanma Barranquero  <lekktu@gmail.com>
+
+	* display.texi (Auto Faces): Fix typo.
+
+2007-10-02  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Display Property): Explain some display specs
+	don't let you move point in.
+
+	* frames.texi (Cursor Parameters): Describe
+	cursor-in-non-selected-windows here.  Explain more values.
+
+	* windows.texi (Basic Windows): Don't describe
+	cursor-in-non-selected-windows here.
+
+2007-10-01  Eli Zaretskii  <eliz@gnu.org>
+
+	* processes.texi (Misc Network): Note that these functions are
+	supported only on some systems.
+
+2007-09-19  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Display Property): Explain multiple display specs.
+	Clarify when they work in parallel and when one overrides.
+	Fix error in example.
+
+2007-08-30  Martin Rudalics  <rudalics@gmx.at>
+
+	* commands.texi (Command Loop Info): Advise against changing
+	most variables described here.  Explain new variable
+	last-repeatable-command.
+
+2007-08-27  Richard Stallman  <rms@gnu.org>
+
+	* windows.texi (Window Configurations): Clarify what
+	a window configuration saves.
+
+2007-08-25  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Images): Delete redundant @findex.
+
+2007-08-08  Martin Rudalics  <rudalics@gmx.at>
+
+	* modes.texi (Example Major Modes): Fix typo.
+
+2007-08-08  Glenn Morris  <rgm@gnu.org>
+
+	* intro.texi (nil and t): Do not use `iff' in documentation.
+
+	* tips.texi (Documentation Tips): Recommend against `iff'.
+
+2007-08-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* display.texi (Image Cache): Document image-refresh.
+
+2007-08-06  Martin Rudalics  <rudalics@gmx.at>
+
+	* windows.texi (Size of Window): Document window-full-width-p.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* gpl.texi (GPL): Replace license with GPLv3.
+
+	* Relicense all FSF files to GPLv3 or later.
+
+2007-07-16  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Defining Faces): Fix previous change.
+
+2007-07-10  Richard Stallman  <rms@gnu.org>
+
+	* display.texi (Defining Faces): Explain C-M-x feature for defface.
+
+2007-06-24  Karl Berry  <karl@tug.org>
+
+	* elisp.texi, vol1.texi, vol2.texi: New Back-Cover Text.
+
+2007-06-14  Karl Berry  <karl@tug.org>
+
+	* anti.texi (Antinews): Typo.
+
+2007-06-12  Karl Berry  <karl@gnu.org>
+
+	* vol1.texi, vol2.texi, two-volume-cross-refs.txt: Update.
+	* two-volume.make: New file.
+	* .cvsignore: Ignore two-volume files.
+
+2007-06-02  Richard Stallman  <rms@gnu.org>
+
+	* frames.texi (Color Parameters): Add xref to (emacs)Standard Faces.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
 
 2007-06-01  Stefan Monnier  <monnier@iro.umontreal.ca>
 
-	* text.texi (Special Properties): Correct meaning of fontified
-	face.
+	* text.texi (Special Properties): Correct meaning of fontified face.
 
 2007-05-30  Richard Stallman  <rms@gnu.org>
 
@@ -111,15 +312,15 @@
 2007-04-11  Karl Berry  <karl@gnu.org>
 
 	* anti.texi (Antinews),
-	* display.texi (Overlay Properties) and (Defining Images),
-	* processes.texi (Synchronous Processes) and (Sentinels),
+	* display.texi (Overlay Properties, Defining Images),
+	* processes.texi (Synchronous Processes, Sentinels),
 	* syntax.texi (Syntax Table Internals),
 	* searching.texi (Regexp Special),
 	* nonascii.texi (Default Coding Systems),
 	* text.texi (Special Properties),
 	* minibuf.texi (Basic Completion): Wording to improve breaks in
 	8.5x11 format.
-	* elisp.texi (smallbook): new @set to more easily switch between
+	* elisp.texi (smallbook): New @set to more easily switch between
 	smallbook and 8.5x11.
 
 2007-04-11  Richard Stallman  <rms@gnu.org>
@@ -410,7 +611,7 @@
 
 	* loading.texi (How Programs Do Loading): Fix anchor position at
 	load-read-function definition doc. (tiny change)
-	
+
 2007-02-21  Kim F. Storm  <storm@cua.dk>
 
 	* strings.texi (Text Comparison): Mention that assoc-string
@@ -6084,13 +6285,13 @@ Tue Apr 11 12:23:28 1989  Robert J. Chassell  (bob@rice-chex.ai.mit.edu)
 ;; End:
 
     Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-      2005, 2006, 2007 Free Software Foundation, Inc.
+      2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

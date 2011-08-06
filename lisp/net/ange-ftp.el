@@ -1,7 +1,7 @@
 ;;; ange-ftp.el --- transparent FTP support for GNU Emacs
 
 ;; Copyright (C) 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Andy Norman (ange@hplb.hpl.hp.com)
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -297,7 +297,7 @@
 ;; you would type:
 ;;  C-x C-f /anonymous@ymir.claremont.edu:CSV/POLICY/RULES.MEM
 ;;
-;; A legal VMS filename is of the form: FILE.TYPE;##
+;; A valid VMS filename is of the form: FILE.TYPE;##
 ;; where FILE can be up to 39 characters
 ;;       TYPE can be up to 39 characters
 ;;       ## is a version number (an integer between 1 and 32,767)
@@ -3766,7 +3766,7 @@ Value is (0 0) if the modification time cannot be determined."
 	    (ange-ftp-send-cmd
 	     t-host
 	     t-user
-	     (list 'put (or temp2 filename) t-name)
+	     (list 'put (or temp2 (ange-ftp-quote-string filename)) t-name)
 	     (or msg
 		 (if (and temp2 f-parsed)
 		     (format "Putting %s" newname)
@@ -4274,7 +4274,12 @@ NEWNAME should be the name to give the new compressed or uncompressed file.")
 ;;;###autoload
 (defun ange-ftp-hook-function (operation &rest args)
   (let ((fn (get operation 'ange-ftp)))
-    (if fn (save-match-data (apply fn args))
+    (if fn
+	;; Catch also errors in process-filter.
+	(condition-case err
+	    (let ((debug-on-error t))
+	      (save-match-data (apply fn args)))
+	  (error (signal (car err) (cdr err))))
       (ange-ftp-run-real-handler operation args))))
 
 ;; The following code is commented out because Tramp now deals with

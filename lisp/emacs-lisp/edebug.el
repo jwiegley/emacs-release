@@ -1,7 +1,7 @@
 ;;; edebug.el --- a source-level debugger for Emacs Lisp
 
 ;; Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1997, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@holonexus.org>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1496,7 +1496,7 @@ expressions; a `progn' form will be returned enclosing these forms."
     (cond
      ((symbolp head)
       (cond
-       ((null head) nil) ; () is legal.
+       ((null head) nil) ; () is valid.
        ((eq head 'interactive-p)
 	;; Special case: replace (interactive-p) with variable
 	(setq edebug-def-interactive 'check-it)
@@ -1507,7 +1507,7 @@ expressions; a `progn' form will be returned enclosing these forms."
 		    head (edebug-move-cursor cursor))))))
 
      ((consp head)
-      (if (eq (car head) ',)
+      (if (eq (car head) '\,)
 	  ;; The head of a form should normally be a symbol or a lambda
 	  ;; expression but it can also be an unquote form to be filled
 	  ;; before evaluation.  We evaluate the arguments anyway, on the
@@ -1664,7 +1664,7 @@ expressions; a `progn' form will be returned enclosing these forms."
      ((fboundp symbol)			; is it a predicate?
       (let ((sexp (edebug-top-element-required cursor "Expected" symbol)))
 	;; Special case for edebug-`.
-	(if (and (listp sexp) (eq (car sexp) ',))
+	(if (and (listp sexp) (eq (car sexp) '\,))
 	    (edebug-match cursor '(("," def-form)))
 	  (if (not (funcall symbol sexp))
 	      (edebug-no-match cursor symbol "failed"))
@@ -2076,7 +2076,7 @@ expressions; a `progn' form will be returned enclosing these forms."
    ;; doesn't handle (a . ,b).  The straightforward fix:
    ;;   (backquote-form . [&or nil backquote-form])
    ;; uses up too much stack space.
-   ;; Note that `(foo . ,@bar) is not legal, so we don't need to handle it.
+   ;; Note that `(foo . ,@bar) is not valid, so we don't need to handle it.
    (backquote-form [&rest [&not ","] backquote-form]
 		   . [&or nil backquote-form])
    ;; If you use dotted forms in backquotes, replace the previous line
@@ -2102,8 +2102,8 @@ expressions; a `progn' form will be returned enclosing these forms."
 (def-edebug-spec edebug-\` (def-form))
 
 ;; Assume immediate quote in unquotes mean backquote at next higher level.
-(def-edebug-spec , (&or ("quote" edebug-\`) def-form))
-(def-edebug-spec ,@ (&define  ;; so (,@ form) is never wrapped.
+(def-edebug-spec \, (&or ("quote" edebug-\`) def-form))
+(def-edebug-spec \,@ (&define  ;; so (,@ form) is never wrapped.
 		     &or ("quote" edebug-\`) def-form))
 
 ;; New byte compiler.
@@ -3675,44 +3675,6 @@ Return the result of the last expression."
 
 ;;; Printing
 
-;; Replace printing functions.
-
-;; obsolete names
-(define-obsolete-function-alias 'edebug-install-custom-print-funcs
-    'edebug-install-custom-print "22.1")
-(define-obsolete-function-alias 'edebug-reset-print-funcs
-    'edebug-uninstall-custom-print "22.1")
-(define-obsolete-function-alias 'edebug-uninstall-custom-print-funcs
-    'edebug-uninstall-custom-print "22.1")
-
-(defun edebug-install-custom-print ()
-  "Replace print functions used by Edebug with custom versions."
-  ;; Modifying the custom print functions, or changing print-length,
-  ;; print-level, print-circle, custom-print-list or custom-print-vector
-  ;; have immediate effect.
-  (interactive)
-  (require 'cust-print)
-  (defalias 'edebug-prin1 'custom-prin1)
-  (defalias 'edebug-print 'custom-print)
-  (defalias 'edebug-prin1-to-string 'custom-prin1-to-string)
-  (defalias 'edebug-format 'custom-format)
-  (defalias 'edebug-message 'custom-message)
-  "Installed")
-
-(eval-and-compile
-  (defun edebug-uninstall-custom-print ()
-    "Replace edebug custom print functions with internal versions."
-    (interactive)
-    (defalias 'edebug-prin1 'prin1)
-    (defalias 'edebug-print 'print)
-    (defalias 'edebug-prin1-to-string 'prin1-to-string)
-    (defalias 'edebug-format 'format)
-    (defalias 'edebug-message 'message)
-    "Uninstalled")
-
-  ;; Default print functions are the same as Emacs'.
-  (edebug-uninstall-custom-print))
-
 
 (defun edebug-report-error (edebug-value)
   ;; Print an error message like command level does.
@@ -3758,6 +3720,12 @@ Return the result of the last expression."
   (message "%s" edebug-previous-result))
 
 ;;; Read, Eval and Print
+
+(defalias 'edebug-prin1 'prin1)
+(defalias 'edebug-print 'print)
+(defalias 'edebug-prin1-to-string 'prin1-to-string)
+(defalias 'edebug-format 'format)
+(defalias 'edebug-message 'message)
 
 (defun edebug-eval-expression (edebug-expr)
   "Evaluate an expression in the outside environment.

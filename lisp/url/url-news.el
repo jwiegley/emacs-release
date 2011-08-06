@@ -1,7 +1,7 @@
 ;;; url-news.el --- News Uniform Resource Locator retrieval code
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -31,8 +31,6 @@
 (autoload 'url-warn "url")
 (autoload 'gnus-group-read-ephemeral-group "gnus-group")
 (eval-when-compile (require 'cl))
-(defvar nntp-open-tls-stream)
-(defvar nntp-open-ssl-stream)
 
 (defgroup url-news nil
   "News related options."
@@ -102,8 +100,8 @@
   (goto-char (point-min))
   (gnus-group-read-ephemeral-group newsgroup
 				   (list 'nntp host
-					 'nntp-open-connection-function
-					 nntp-open-connection-function)
+					 (list 'nntp-open-connection-function
+					       nntp-open-connection-function))
 				   nil
 				   (cons (current-buffer) 'browse)))
 
@@ -127,9 +125,9 @@
 
 ;;;###autoload
 (defun url-snews (url)
-  (let ((nntp-open-connection-function (if (eq 'tls url-gateway-method)
-					   nntp-open-tls-stream
-					 nntp-open-ssl-stream)))
+  (let ((nntp-open-connection-function (if (eq 'ssl url-gateway-method)
+					   'nntp-open-ssl-stream
+					 'nntp-open-tls-stream)))
     (url-news url)))
 
 (provide 'url-news)

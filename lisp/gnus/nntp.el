@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1987, 1988, 1989, 1990, 1992, 1993,
 ;;   1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful, but
@@ -182,6 +182,14 @@ by one.")
   "*Maximum allowed gap between two articles.
 If the gap between two consecutive articles is bigger than this
 variable, split the XOVER request into two requests.")
+
+(defvoo nntp-xref-number-is-evil nil
+  "*If non-nil, Gnus never trusts article numbers in the Xref header.
+Some news servers, e.g., ones running Diablo, run multiple engines
+having the same articles but article numbers are not kept synchronized
+between them.  If you connect to such a server, set this to a non-nil
+value, and Gnus never uses article numbers (that appear in the Xref
+header and vary by which engine is chosen) to refer to articles.")
 
 (defvoo nntp-prepare-server-hook nil
   "*Hook run before a server is opened.
@@ -1580,7 +1588,8 @@ password contained in '~/.nntp-authinfo'."
 		 ;; article number.  How... helpful.
 		 (progn
 		   (forward-line 1)
-		   (looking-at "[0-9]+\t...")) ; More text after number.
+		   ;; More text after number, or a dot.
+		   (looking-at "[0-9]+\t...\\|\\.\r?\n"))
 		 (setq nntp-server-xover (car commands))))
 	  (setq commands (cdr commands)))
 	;; If none of the commands worked, we disable XOVER.
@@ -1631,7 +1640,8 @@ password contained in '~/.nntp-authinfo'."
 		    (match-string 1 xref))
 		   (t "")))
 	  (cond
-	   ((and (setq xref (mail-fetch-field "xref"))
+	   ((and (not nntp-xref-number-is-evil)
+		 (setq xref (mail-fetch-field "xref"))
 		 (string-match
 		  (if group
 		      (concat "\\(" (regexp-quote group) "\\):\\([0-9]+\\)")
@@ -1779,7 +1789,10 @@ Please refer to the following variables to customize the connection:
 - `nntp-end-of-line'."
   (let ((command `(,nntp-telnet-command
 		   ,@nntp-telnet-switches
-		   ,nntp-address ,nntp-port-number))
+		   ,nntp-address
+		   ,(if (integerp nntp-port-number)
+			(number-to-string nntp-port-number)
+		      nntp-port-number)))
 	proc)
     (and nntp-pre-command
 	 (push nntp-pre-command command))
@@ -1822,8 +1835,11 @@ Please refer to the following variables to customize the connection:
     (save-excursion
       (set-buffer buffer)
       (nntp-wait-for-string "^r?telnet")
-      (process-send-string proc (concat "open " nntp-address
-					" " nntp-port-number "\n"))
+      (process-send-string proc (concat "open " nntp-address " "
+					(if (integerp nntp-port-number)
+					    (number-to-string nntp-port-number)
+					  nntp-port-number)
+					"\n"))
       (nntp-wait-for-string "^\r*20[01]")
       (beginning-of-line)
       (delete-region (point-min) (point))
@@ -1894,7 +1910,9 @@ Please refer to the following variables to customize the connection:
 				     ,nntp-telnet-command
 				     ,@nntp-telnet-switches
 				     ,nntp-address
-				     ,nntp-port-number)))
+				     ,(if (integerp nntp-port-number)
+					  (number-to-string nntp-port-number)
+					nntp-port-number))))
 	  (process-send-string proc
 			       (concat (mapconcat 'identity
 						  real-telnet-command " ")

@@ -1,7 +1,7 @@
 ;;; dired-aux.el --- less commonly used parts of dired  -*-byte-compile-dynamic: t;-*-
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>.
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -37,7 +37,7 @@
 ;;; Code:
 
 ;; We need macros in dired.el to compile properly.
-(eval-when-compile (require 'dired))
+(require 'dired)
 
 (defvar dired-create-files-failures nil
   "Variable where `dired-create-files' records failing file names.
@@ -1162,7 +1162,8 @@ Special value `always' suppresses confirmation."
 	     (or (eq recursive 'always)
 		 (yes-or-no-p (format "Recursive copies of %s? " from))))
 	;; This is a directory.
-	(let ((files
+	(let ((mode (file-modes from))
+	      (files
 	       (condition-case err
 		   (directory-files from nil dired-re-no-dot)
 		 (file-error
@@ -1176,7 +1177,9 @@ Special value `always' suppresses confirmation."
 	    (if (file-exists-p to)
 		(or top (dired-handle-overwrite to))
 	      (condition-case err
-		  (make-directory to)
+		  (progn
+		    (make-directory to)
+		    (set-file-modes to #o700))
 		(file-error
 		 (push (dired-make-relative from)
 		       dired-create-files-failures)
@@ -1195,7 +1198,9 @@ Special value `always' suppresses confirmation."
 		(file-error
 		 (push (dired-make-relative thisfrom)
 		       dired-create-files-failures)
-		 (dired-log "Copying error for %s:\n%s\n" thisfrom err))))))
+		 (dired-log "Copying error for %s:\n%s\n" thisfrom err)))))
+	  (when (file-directory-p to)
+	    (set-file-modes to mode)))
       ;; Not a directory.
       (or top (dired-handle-overwrite to))
       (condition-case err
@@ -1203,7 +1208,7 @@ Special value `always' suppresses confirmation."
 	      ;; It is a symlink
 	      (make-symbolic-link (car attrs) to ok-flag)
 	    (copy-file from to ok-flag dired-copy-preserve-time))
-	(file-date-error 
+	(file-date-error
 	 (push (dired-make-relative from)
 	       dired-create-files-failures)
 	 (dired-log "Can't set date on %s:\n%s\n" from err))))))
@@ -2006,8 +2011,8 @@ of marked files.  If KILL-ROOT is non-nil, kill DIRNAME as well."
 
 (defun dired-tree-lessp (dir1 dir2)
   ;; Lexicographic order on file name components, like `ls -lR':
-  ;; DIR1 < DIR2 iff DIR1 comes *before* DIR2 in an `ls -lR' listing,
-  ;;   i.e., iff DIR1 is a (grand)parent dir of DIR2,
+  ;; DIR1 < DIR2 if DIR1 comes *before* DIR2 in an `ls -lR' listing,
+  ;;   i.e., if DIR1 is a (grand)parent dir of DIR2,
   ;;   or DIR1 and DIR2 are in the same parentdir and their last
   ;;   components are string-lessp.
   ;; Thus ("/usr/" "/usr/bin") and ("/usr/a/" "/usr/b/") are tree-lessp.

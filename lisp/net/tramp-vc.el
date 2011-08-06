@@ -1,7 +1,7 @@
 ;;; tramp-vc.el --- Version control integration for TRAMP.el
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pittman <daniel@danann.net>
 ;; Keywords: comm, processes
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -31,8 +31,6 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
 (require 'vc)
 ;; Old VC defines vc-rcs-release in vc.el, new VC requires extra module.
 (unless (boundp 'vc-rcs-release)
@@ -100,9 +98,8 @@ See `vc-do-command' for more information."
 
 	(erase-buffer)
 
-	(mapcar
-	 (function
-	  (lambda (s) (and s (setq squeezed (append squeezed (list s))))))
+	(mapc
+	 (lambda (s) (and s (setq squeezed (append squeezed (list s)))))
 	 flags)
 	(if (and (eq last 'MASTER) file
 		 (setq vc-file (vc-name file)))
@@ -439,7 +436,10 @@ filename we are thinking about..."
 ;; The following defadvice is no longer necessary after changes in VC
 ;; on 2006-01-25, Andre.
 
-(unless (fboundp 'process-file)
+;; That means either GNU Emacs >= 22 or the "new vc" package from XEmacs
+;; packages collection; as of 2007-09-06, test for availability of
+;; `vc-find-version' works for both of those cases.
+(unless (fboundp 'vc-find-version)
   (defadvice vc-user-login-name
     (around tramp-vc-user-login-name activate)
     "Support for files on remote machines accessed by TRAMP."
@@ -455,7 +455,7 @@ filename we are thinking about..."
 	       (tramp-tramp-file-p file)	; tramp file
 	       (setq ad-return-value
 		     (save-match-data
-		       (tramp-handle-vc-user-login-name uid)))) ; get the owner name
+		       (tramp-handle-vc-user-login-name (ad-get-arg 0))))) ; get the owner name
 	  ad-do-it)))                     ; else call the original
 
   (add-hook 'tramp-unload-hook

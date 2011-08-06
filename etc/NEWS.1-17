@@ -1,6 +1,6 @@
 GNU Emacs NEWS -- history of user-visible changes.  26-Mar-1986
 
-Copyright (C) 1985, 1986, 2006, 2007  Free Software Foundation, Inc.
+Copyright (C) 1985, 1986, 2006, 2007, 2008  Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 
@@ -1208,7 +1208,7 @@ whether and where a line has a comment.
 
 * New function `auto-save-file-name-p'
 
-Should return non-`nil' iff given a string which is the name of an
+Should return non-`nil' if given a string which is the name of an
 auto-save file (sans directory name).  If you redefine
 `make-auto-save-file-name', you should redefine this accordingly.  By
 default, this function returns `t' for filenames beginning with
@@ -2515,7 +2515,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

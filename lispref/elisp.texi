@@ -7,7 +7,7 @@
 @c Version of the manual and of Emacs.
 @c Please remember to update the edition number in README as well.
 @set VERSION  2.9
-@set EMACSVER 22.1
+@set EMACSVER 22.2
 
 @dircategory Emacs
 @direntry
@@ -15,7 +15,7 @@
 @end direntry
 
 @c in general, keep the following line commented out, unless doing a
-@c copy of this manual that will be published.  the manual should go
+@c copy of this manual that will be published.  The manual should go
 @c onto the distribution in the full, 8.5 x 11" size.
 @c set smallbook
 
@@ -49,7 +49,7 @@ This is edition @value{VERSION} of the GNU Emacs Lisp Reference Manual,@*
 corresponding to Emacs version @value{EMACSVER}.
 
 Copyright @copyright{} 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
 @quotation
@@ -61,9 +61,9 @@ Front-Cover texts being ``A GNU Manual,'' and with the Back-Cover
 Texts as in (a) below.  A copy of the license is included in the
 section entitled ``GNU Free Documentation License.''
 
-(a) The FSF's Back-Cover Text is: ``You have freedom to copy and modify
-this GNU Manual, like GNU software.  Copies published by the Free
-Software Foundation raise funds for GNU development.''
+(a) The FSF's Back-Cover Text is: ``You are free to copy and modify
+this GNU Manual. Buying copies from GNU Press supports the FSF in
+developing GNU and promoting software freedom.''
 @end quotation
 @end copying
 
@@ -421,7 +421,6 @@ Variables
 * Setting Variables::       Storing new values in variables.
 * Variable Scoping::        How Lisp chooses among local and global values.
 * Buffer-Local Variables::  Variable values in effect only in one buffer.
-* Frame-Local Variables::   Variable values in effect only in one frame.
 * Future Local Variables::  New kinds of local values we might add some day.
 * File Local Variables::    Handling local variable lists in files.
 * Variable Aliases::        Variables that are aliases for other variables.
@@ -639,6 +638,7 @@ Command Loop
 * Command Overview::    How the command loop reads commands.
 * Defining Commands::   Specifying how a function should read arguments.
 * Interactive Call::    Calling a command, so that it will read arguments.
+* Distinguish Interactive::     Making a command distinguish interactive calls.
 * Command Loop Info::   Variables set by the command loop for you to examine.
 * Adjusting Point::     Adjustment of point after a command.
 * Input Events::	What input looks like when you read it.
@@ -674,7 +674,8 @@ Input Events
 * Misc Events::             Other events the system can generate.
 * Event Examples::          Examples of the lists for mouse events.
 * Classifying Events::      Finding the modifier keys in an event symbol.
-* Accessing Events::        Functions to extract info from events.
+* Accessing Mouse::	    Functions to extract info from mouse events.
+* Accessing Scroll::        Functions to get info from scroll bar events.
 * Strings of Events::       Special considerations for putting
                               keyboard character events in a string.
 

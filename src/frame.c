@@ -1,12 +1,12 @@
 /* Generic frame functions.
    Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -100,6 +100,7 @@ Lisp_Object Qouter_window_id;
 #endif
 Lisp_Object Qparent_id;
 Lisp_Object Qtitle, Qname;
+Lisp_Object Qexplicit_name;
 Lisp_Object Qunsplittable;
 Lisp_Object Qmenu_bar_lines, Qtool_bar_lines;
 Lisp_Object Qleft_fringe, Qright_fringe;
@@ -118,6 +119,8 @@ Lisp_Object Vdefault_frame_scroll_bars;
 Lisp_Object Vmouse_position_function;
 Lisp_Object Vmouse_highlight;
 Lisp_Object Vdelete_frame_functions;
+
+int focus_follows_mouse;
 
 static void
 set_menu_bar_lines_1 (window, n)
@@ -579,7 +582,7 @@ Note that changing the size of one terminal frame automatically affects all.  */
     abort ();
 #else /* not MSDOS */
 
-#ifdef MAC_OS
+#ifdef MAC_OS8
   if (sf->output_method != output_mac)
     error ("Not running on a Macintosh screen; cannot make a new Macintosh frame");
 #else
@@ -3004,6 +3007,7 @@ x_report_frame_params (f, alistptr)
     tem = Qnil;
   else
     XSETFASTINT (tem, FRAME_X_OUTPUT (f)->parent_desc);
+  store_in_alist (alistptr, Qexplicit_name, (f->explicit_name ? Qt : Qnil));
   store_in_alist (alistptr, Qparent_id, tem);
 }
 
@@ -3918,7 +3922,7 @@ x_figure_window_size (f, parms, toolbar_p)
       int width, height;
 
       /* It takes both for some WM:s to place it where we want */
-      window_prompting = USPosition | PPosition;
+      window_prompting |= USPosition | PPosition;
       x_fullscreen_adjust (f, &width, &height, &top, &left);
       FRAME_COLS (f) = width;
       FRAME_LINES (f) = height;
@@ -3965,6 +3969,8 @@ syms_of_frame ()
   staticpro (&Qframep);
   Qframe_live_p = intern ("frame-live-p");
   staticpro (&Qframe_live_p);
+  Qexplicit_name = intern ("explicit-name");
+  staticpro (&Qexplicit_name);
   Qheight = intern ("height");
   staticpro (&Qheight);
   Qicon = intern ("icon");
@@ -4151,6 +4157,21 @@ displayed.
 
 This variable is local to the current terminal and cannot be buffer-local.  */);
 
+  DEFVAR_BOOL ("focus-follows-mouse", &focus_follows_mouse,
+	       doc: /* Non-nil if window system changes focus when you move the mouse.
+You should set this variable to tell Emacs how your window manager
+handles focus, since there is no way in general for Emacs to find out
+automatically.  */);
+#ifdef HAVE_WINDOW_SYSTEM
+#if defined(HAVE_NTGUI) || defined(MAC_OS)
+  focus_follows_mouse = 0;
+#else
+  focus_follows_mouse = 1;
+#endif
+#else
+  focus_follows_mouse = 0;
+#endif
+	 
   staticpro (&Vframe_list);
 
   defsubr (&Sactive_minibuffer_window);

@@ -1,6 +1,6 @@
 ;;; url-expand.el --- expand-file-name for URLs
 
-;; Copyright (C) 1999, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
@@ -8,7 +8,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -135,7 +135,8 @@ path components followed by `..' are removed, along with the `..' itself."
 		  sepchar (substring (url-filename urlobj) (match-beginning 0) (match-end 0)))
 	  (setq file (url-filename urlobj)))
 	(setq file (url-expander-remove-relative-links
-		    (concat (url-basepath (url-filename defobj)) file)))
+		    (expand-file-name file
+				      (url-file-directory (url-filename defobj)))))
 	(url-set-filename urlobj (if query (concat file sepchar query) file))))))
 
 (provide 'url-expand)

@@ -2,13 +2,13 @@
 rem   ----------------------------------------------------------------------
 rem   Configuration script for MS Windows 95/98/Me and NT/2000/XP
 rem   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-rem      2006, 2007 Free Software Foundation, Inc.
+rem      2006, 2007, 2008 Free Software Foundation, Inc.
 
 rem   This file is part of GNU Emacs.
 
 rem   GNU Emacs is free software; you can redistribute it and/or modify
 rem   it under the terms of the GNU General Public License as published by
-rem   the Free Software Foundation; either version 2, or (at your option)
+rem   the Free Software Foundation; either version 3, or (at your option)
 rem   any later version.
 
 rem   GNU Emacs is distributed in the hope that it will be useful,
@@ -84,7 +84,9 @@ set noopt=N
 set nocygwin=N
 set COMPILER=
 set usercflags=
+set docflags=
 set userldflags=
+set doldflags=
 set sep1=
 set sep2=
 
@@ -118,11 +120,11 @@ echo.   --no-opt                disable optimization
 echo.   --no-cygwin             use -mno-cygwin option with GCC
 echo.   --cflags FLAG           pass FLAG to compiler
 echo.   --ldflags FLAG          pass FLAG to compiler when linking
-echo.   --without-png           do not use libpng even if it is installed
-echo.   --without-jpeg          do not use jpeg-6b even if it is installed
-echo.   --without-gif           do not use libungif even if it is installed
-echo.   --without-tiff          do not use libtiff even if it is installed
-echo.   --without-xpm           do not use libXpm even if it is installed
+echo.   --without-png           do not use PNG library even if it is installed
+echo.   --without-jpeg          do not use JPEG library even if it is installed
+echo.   --without-gif           do not use GIF library even if it is installed
+echo.   --without-tiff          do not use TIFF library even if it is installed
+echo.   --without-xpm           do not use XPM library even if it is installed
 goto end
 rem ----------------------------------------------------------------------
 :setprefix
@@ -473,16 +475,20 @@ if (%nodebug%) == (Y) echo NODEBUG=1 >>config.settings
 if (%noopt%) == (Y) echo NOOPT=1 >>config.settings
 if (%nocygwin%) == (Y) echo NOCYGWIN=1 >>config.settings
 if not "(%prefix%)" == "()" echo INSTALL_DIR=%prefix%>>config.settings
-if not "(%usercflags%)" == "()" echo USER_CFLAGS=%usercflags%>>config.settings
-if not "(%userldflags%)" == "()" echo USER_LDFLAGS=%userldflags%>>config.settings
+rem We go thru docflags because usercflags could be "-DFOO=bar" -something
+rem and the if command cannot cope with this
+for %%v in (%usercflags%) do if not (%%v)==() set docflags=Y
+if (%docflags%)==(Y) echo USER_CFLAGS=%usercflags%>>config.settings
+for %%v in (%userldflags%) do if not (%%v)==() set doldflags=Y
+if (%doldflags%)==(Y) echo USER_LDFLAGS=%userldflags%>>config.settings
 echo # End of settings from configure.bat>>config.settings
 echo. >>config.settings
 
 copy config.nt config.tmp
 echo. >>config.tmp
 echo /* Start of settings from configure.bat.  */ >>config.tmp
-if not "(%usercflags%)" == "()" echo #define USER_CFLAGS " %usercflags%">>config.tmp
-if not "(%userldflags%)" == "()" echo #define USER_LDFLAGS " %userldflags%">>config.tmp
+if (%docflags%) == (Y) echo #define USER_CFLAGS " %usercflags%">>config.tmp
+if (%doldflags%) == (Y) echo #define USER_LDFLAGS " %userldflags%">>config.tmp
 if not "(%HAVE_PNG%)" == "()" echo #define HAVE_PNG 1 >>config.tmp
 if not "(%HAVE_JPEG%)" == "()" echo #define HAVE_JPEG 1 >>config.tmp
 if not "(%HAVE_GIF%)" == "()" echo #define HAVE_GIF 1 >>config.tmp

@@ -1,13 +1,13 @@
 /* Lisp functions pertaining to editing.
    Copyright (C) 1985, 1986, 1987, 1989, 1993, 1994, 1995, 1996,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -3383,7 +3383,10 @@ DEFUN ("format", Fformat, Sformat, 1, MANY, 0,
        doc: /* Format a string out of a format-string and arguments.
 The first argument is a format control string.
 The other arguments are substituted into it to make the result, a string.
-It may contain %-sequences meaning to substitute the next argument.
+
+The format control string may contain %-sequences meaning to substitute
+the next available argument:
+
 %s means print a string argument.  Actually, prints any object, with `princ'.
 %d means print as number in decimal (%o octal, %x hex).
 %X is like %x, but uses upper case.
@@ -3393,12 +3396,34 @@ It may contain %-sequences meaning to substitute the next argument.
   or decimal-point notation, whichever uses fewer characters.
 %c means print a number as a single character.
 %S means print any object as an s-expression (using `prin1').
-  The argument used for %d, %o, %x, %e, %f, %g or %c must be a number.
+
+The argument used for %d, %o, %x, %e, %f, %g or %c must be a number.
 Use %% to put a single % into the output.
 
-The basic structure of a %-sequence is
-  % <flags> <width> <precision> character
-where flags is [-+ #0]+, width is [0-9]+, and precision is .[0-9]+
+A %-sequence may contain optional flag, width, and precision
+specifiers, as follows:
+
+  %<flags><width><precision>character
+
+where flags is [+ #-0]+, width is [0-9]+, and precision is .[0-9]+
+
+The + flag character inserts a + before any positive number, while a
+space inserts a space before any positive number; these flags only
+affect %d, %e, %f, and %g sequences, and the + flag takes precedence.
+The # flag means to use an alternate display form for %o, %x, %X, %e,
+%f, and %g sequences.  The - and 0 flags affect the width specifier,
+as described below.
+
+The width specifier supplies a lower limit for the length of the
+printed representation.  The padding, if any, normally goes on the
+left, but it goes on the right if the - flag is present.  The padding
+character is normally a space, but it is 0 if the 0 flag is present.
+The - flag takes precedence over the 0 flag.
+
+For %e, %f, and %g sequences, the number after the "." in the
+precision specifier says how many decimal places to show; if zero, the
+decimal point itself is omitted.  For %s and %S, the precision
+specifier truncates the string to the given width.
 
 usage: (format STRING &rest OBJECTS)  */)
      (nargs, args)
@@ -3516,7 +3541,7 @@ usage: (format STRING &rest OBJECTS)  */)
 	   precision	::= '.' [0-9]*
 
 	   If a field-width is specified, it specifies to which width
-	   the output should be padded with blanks, iff the output
+	   the output should be padded with blanks, if the output
 	   string is shorter than field-width.
 
 	   If precision is specified, it specifies the number of
@@ -3543,8 +3568,10 @@ usage: (format STRING &rest OBJECTS)  */)
 	      precision[n+1] = 10 * precision[n+1] + *format - '0';
 	  }
 
-	if (format - this_format_start + 1 > longest_format)
-	  longest_format = format - this_format_start + 1;
+	/* Extra +1 for 'l' that we may need to insert into the
+	   format.  */
+	if (format - this_format_start + 2 > longest_format)
+	  longest_format = format - this_format_start + 2;
 
 	if (format == end)
 	  error ("Format string ends in middle of format specifier");
@@ -3605,7 +3632,7 @@ usage: (format STRING &rest OBJECTS)  */)
 		  && *format != 'i' && *format != 'X' && *format != 'c')
 		error ("Invalid format operation %%%c", *format);
 
-	    thissize = 30;
+	    thissize = 30 + (precision[n] > 0 ? precision[n] : 0);
 	    if (*format == 'c')
 	      {
 		if (! SINGLE_BYTE_CHAR_P (XINT (args[n]))
@@ -3803,23 +3830,40 @@ usage: (format STRING &rest OBJECTS)  */)
 		     format - this_format_start);
 	      this_format[format - this_format_start] = 0;
 
-	      if (INTEGERP (args[n]))
-		{
-		  if (format[-1] == 'd')
-		    sprintf (p, this_format, XINT (args[n]));
-		  /* Don't sign-extend for octal or hex printing.  */
-		  else
-		    sprintf (p, this_format, XUINT (args[n]));
-		}
-	      else if (format[-1] == 'e' || format[-1] == 'f' || format[-1] == 'g')
+	      if (format[-1] == 'e' || format[-1] == 'f' || format[-1] == 'g')
 		sprintf (p, this_format, XFLOAT_DATA (args[n]));
-	      else if (format[-1] == 'd')
-		/* Maybe we should use "%1.0f" instead so it also works
-		   for values larger than MAXINT.  */
-		sprintf (p, this_format, (EMACS_INT) XFLOAT_DATA (args[n]));
 	      else
-		/* Don't sign-extend for octal or hex printing.  */
-		sprintf (p, this_format, (EMACS_UINT) XFLOAT_DATA (args[n]));
+		{
+		  if (sizeof (EMACS_INT) > sizeof (int)
+		      && format[-1] != 'c')
+		    {
+		      /* Insert 'l' before format spec.  */
+		      this_format[format - this_format_start]
+			= this_format[format - this_format_start - 1];
+		      this_format[format - this_format_start - 1] = 'l';
+		      this_format[format - this_format_start + 1] = 0;
+		    }
+
+		  if (INTEGERP (args[n]))
+		    {
+		      if (format[-1] == 'c')
+			sprintf (p, this_format, (int) XINT (args[n]));
+		      else if (format[-1] == 'd')
+			sprintf (p, this_format, XINT (args[n]));
+		      /* Don't sign-extend for octal or hex printing.  */
+		      else
+			sprintf (p, this_format, XUINT (args[n]));
+		    }
+		  else if (format[-1] == 'c')
+		    sprintf (p, this_format, (int) XFLOAT_DATA (args[n]));
+		  else if (format[-1] == 'd')
+		    /* Maybe we should use "%1.0f" instead so it also works
+		       for values larger than MAXINT.  */
+		    sprintf (p, this_format, (EMACS_INT) XFLOAT_DATA (args[n]));
+		  else
+		    /* Don't sign-extend for octal or hex printing.  */
+		    sprintf (p, this_format, (EMACS_UINT) XFLOAT_DATA (args[n]));
+		}
 
 	      if (p > buf
 		  && multibyte

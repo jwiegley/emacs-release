@@ -1,13 +1,13 @@
 """Definitions used by commands sent to inferior Python in python.el."""
 
-# Copyright (C) 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+# Copyright (C) 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 # Author: Dave Love <fx@gnu.org>
 
 # This file is part of GNU Emacs.
 
 # GNU Emacs is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
+# the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 
 # GNU Emacs is distributed in the hope that it will be useful,
@@ -176,7 +176,9 @@ def complete (name, imports):
 		    names.add('__class__')
 		    names.union_update (class_members (object))
 	    except: names = all_names (dict)
-    except: return []
+    except:
+        print '_emacs_out ()'
+        return []
     l = len(name)
     print '_emacs_out (',
     for n in names:

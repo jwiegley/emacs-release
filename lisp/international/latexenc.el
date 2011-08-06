@@ -1,6 +1,6 @@
 ;;; latexenc.el --- guess correct coding system in LaTeX files -*-coding: iso-2022-7bit -*-
 
-;; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Arne J,Ax(Brgensen <arne@arnested.dk>
 ;; Keywords: mule, coding system, latex
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -181,7 +181,8 @@ coding system names is determined from `latex-inputenc-coding-alist'."
                         (find-file-noselect latexenc-main-file t)))
                   (coding-system-base   ;Disregard the EOL part of the CS.
                    (with-current-buffer latexenc-main-buffer
-                     (or coding-system-for-write buffer-file-coding-system))))
+                     (or coding-system-for-write buffer-file-coding-system
+			 'undecided))))
               'undecided))))
     'undecided))
 

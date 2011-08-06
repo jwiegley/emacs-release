@@ -1,8 +1,8 @@
 This is ../info/ada-mode, produced by makeinfo version 4.8 from
 ada-mode.texi.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
-Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1816,33 +1816,33 @@ Index
 
 
 Tag Table:
-Node: Top1380
-Node: Overview2412
-Node: Installation3715
-Node: Customization4838
-Node: Non-standard file names5740
-Node: Other compiler7232
-Node: Other customization7730
-Node: Compiling Executing8378
-Node: Compile commands9044
-Node: Compiler errors11846
-Node: Project files12720
-Node: Project File Overview13221
-Node: GUI Editor15236
-Node: Project file variables15706
-Node: Compiling Examples20591
-Node: No project files21348
-Node: Set compiler options26027
-Node: Set source search path27987
-Node: Use GNAT project file30259
-Node: Moving Through Ada Code32440
-Node: Identifier completion34391
-Node: Automatic Smart Indentation35952
-Node: Formatting Parameter Lists38764
-Node: Automatic Casing39165
-Node: Statement Templates42413
-Node: Comment Handling43876
-Node: GNU Free Documentation License44402
-Node: Index66638
+Node: Top1387
+Node: Overview2419
+Node: Installation3722
+Node: Customization4845
+Node: Non-standard file names5747
+Node: Other compiler7239
+Node: Other customization7737
+Node: Compiling Executing8385
+Node: Compile commands9051
+Node: Compiler errors11853
+Node: Project files12727
+Node: Project File Overview13228
+Node: GUI Editor15243
+Node: Project file variables15713
+Node: Compiling Examples20598
+Node: No project files21355
+Node: Set compiler options26034
+Node: Set source search path27994
+Node: Use GNAT project file30266
+Node: Moving Through Ada Code32447
+Node: Identifier completion34398
+Node: Automatic Smart Indentation35959
+Node: Formatting Parameter Lists38771
+Node: Automatic Casing39172
+Node: Statement Templates42420
+Node: Comment Handling43883
+Node: GNU Free Documentation License44409
+Node: Index66645
 
 End Tag Table

@@ -1,6 +1,6 @@
 ;;; xscheme.el --- run MIT Scheme under Emacs
 
-;; Copyright (C) 1986, 1987, 1989, 1990, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1986, 1987, 1989, 1990, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -868,7 +868,7 @@ Control returns to the top level rep loop."
     (sleep-for 1)))
 
 (defun xscheme-process-running-p ()
-  "True iff there is a Scheme process whose status is `run'."
+  "True if there is a Scheme process whose status is `run'."
   (let ((process (get-process xscheme-process-name)))
     (and process
 	 (eq (process-status process) 'run))))
@@ -882,7 +882,7 @@ Control returns to the top level rep loop."
     (and buffer (get-buffer-window buffer))))
 
 (defun xscheme-process-buffer-current-p ()
-  "True iff the current buffer is the Scheme process buffer."
+  "True if the current buffer is the Scheme process buffer."
   (eq (xscheme-process-buffer) (current-buffer)))
 
 ;;;; Process Filter Operations

@@ -1,7 +1,7 @@
 ;; erc-button.el --- A way of buttonizing certain things in ERC buffers
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@delysid.org>
 ;; Keywords: irc, button, url, regexp
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -240,7 +240,7 @@ PAR is a number of a regexp grouping whose text will be passed to
     (modify-syntax-entry ?\\ "w" table)
     table)
   "Syntax table used when buttonizing messages.
-This syntax table should make all the legal nick characters word
+This syntax table should make all the valid nick characters word
 constituents.")
 
 (defvar erc-button-keys-added nil

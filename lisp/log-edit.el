@@ -1,7 +1,7 @@
 ;;; log-edit.el --- Major mode for editing CVS commit messages
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs cvs commit log
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -568,7 +568,7 @@ for more details."
 (defvar user-mail-address)
 (defun log-edit-changelog-ours-p ()
   "See if ChangeLog entry at point is for the current user, today.
-Return non-nil iff it is."
+Return non-nil if it is."
   ;; Code adapted from add-change-log-entry.
   (let ((name (or (and (boundp 'add-log-full-name) add-log-full-name)
 		  (and (fboundp 'user-full-name) (user-full-name))

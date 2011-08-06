@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/windows
 @node Windows, Frames, Buffers, Top
@@ -55,15 +55,11 @@ multiple nonoverlapping Emacs windows.
   In each frame, at any time, one and only one window is designated as
 @dfn{selected within the frame}.  The frame's cursor appears in that
 window, but the other windows have ``non-selected'' cursors, normally
-less visible.  At any time, one frame is the selected frame; and the
-window selected within that frame is @dfn{the selected window}.  The
-selected window's buffer is usually the current buffer (except when
-@code{set-buffer} has been used).  @xref{Current Buffer}.
-
-@defvar cursor-in-non-selected-windows
-If this variable is @code{nil}, Emacs displays only one cursor,
-in the selected window.  Other windows have no cursor at all.
-@end defvar
+less visible.  (@pxref{Cursor Parameters}, for customization of this.)
+At any time, one frame is the selected frame; and the window selected
+within that frame is @dfn{the selected window}.  The selected window's
+buffer is usually the current buffer (except when @code{set-buffer}
+has been used).  @xref{Current Buffer}.
 
   For practical purposes, a window exists only while it is displayed in
 a frame.  Once removed from the frame, the window is effectively deleted
@@ -1233,6 +1229,15 @@ is called the @dfn{display-start} position of the window (or just the
 at the upper left corner of the window.  It is usually, but not
 inevitably, at the beginning of a text line.
 
+  After switching windows or buffers, and in some other cases, if the
+window start is in the middle of a line, Emacs adjusts the window
+start to the start of a line.  This prevents certain operations from
+leaving the window start at a meaningless point within a line.  This
+feature may interfere with testing some Lisp code by executing it
+using the commands of Lisp mode, because they trigger this
+readjustment.  To test such code, put it into a command and bind the
+command to a key.
+
 @defun window-start &optional window
 @cindex window top line
 This function returns the display-start position of window
@@ -1300,10 +1305,10 @@ However, if you specify the start position with this function using
 screen.  If this does place point off screen, the display routines move
 point to the left margin on the middle line in the window.
 
-For example, if point @w{is 1} and you set the start of the window @w{to
-2}, then point would be ``above'' the top of the window.  The display
-routines will automatically move point if it is still 1 when redisplay
-occurs.  Here is an example:
+For example, if point @w{is 1} and you set the start of the window
+@w{to 37}, the start of the next line, point will be ``above'' the top
+of the window.  The display routines will automatically move point if
+it is still 1 when redisplay occurs.  Here is an example:
 
 @example
 @group
@@ -1325,15 +1330,17 @@ occurs.  Here is an example:
 @group
 (set-window-start
  (selected-window)
- (1+ (window-start)))
-@result{} 2
+ (save-excursion
+   (goto-char 1)
+   (forward-line 1)
+   (point)))
+@result{} 37
 @end group
 
 @group
 ;; @r{Here is what @samp{foo} looks like after executing}
 ;;   @r{the @code{set-window-start} expression.}
 ---------- Buffer: foo ----------
-his is the contents of buffer foo.
 2
 3
 @point{}4
@@ -1887,6 +1894,12 @@ If @var{window} is @code{nil}, the function uses the selected window.
 @end example
 @end defun
 
+@defun window-full-width-p &optional window
+This function returns non-@code{nil} if @var{window} is as wide as
+the frame that contains it; otherwise @code{nil}.
+If @var{window} is @code{nil}, the function uses the selected window.
+@end defun
+
 @defun window-edges &optional window
 This function returns a list of the edge coordinates of @var{window}.
 If @var{window} is @code{nil}, the selected window is used.
@@ -2240,13 +2253,13 @@ similar to the value returned by @code{window-edges}.
 @cindex saving window information
 
   A @dfn{window configuration} records the entire layout of one
-frame---all windows, their sizes, which buffers they contain, what
-part of each buffer is displayed, and the values of point and the
-mark; also their fringes, margins, and scroll bar settings.  It also
+frame---all windows, their sizes, which buffers they contain, how
+those buffers are scrolled, and their values of point and the mark;
+also their fringes, margins, and scroll bar settings.  It also
 includes the values of @code{window-min-height},
-@code{window-min-width} and @code{minibuffer-scroll-window}.  An
-exception is made for point in the selected window for the current
-buffer; its value is not saved in the window configuration.
+@code{window-min-width} and @code{minibuffer-scroll-window}.  As a
+special exception, the window configuration does not record the value
+of point in the selected window for the current buffer.
 
   You can bring back an entire previous layout by restoring a window
 configuration previously saved.  If you want to record all frames

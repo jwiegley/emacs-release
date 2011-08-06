@@ -1,7 +1,7 @@
 ;;; loadhist.el --- lisp functions for working with feature groups
 
 ;; Copyright (C) 1995, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -126,43 +126,58 @@ from a file."
 
 (defvaralias 'loadhist-hook-functions 'unload-feature-special-hooks)
 (defvar unload-feature-special-hooks
-  '(after-change-functions
-    after-insert-file-functions auto-fill-function
-    before-change-functions blink-paren-function
-    buffer-access-fontify-functions command-line-functions
-    comment-indent-function kill-buffer-query-functions
-    kill-emacs-query-functions lisp-indent-function
-    mouse-position-function
+  '(after-change-functions after-insert-file-functions
+    after-make-frame-functions auto-fill-function before-change-functions
+    blink-paren-function buffer-access-fontify-functions command-line-functions
+    comment-indent-function compilation-finish-functions delete-frame-functions
+    disabled-command-function find-file-not-found-functions
+    font-lock-beginning-of-syntax-function font-lock-fontify-buffer-function
+    font-lock-fontify-region-function font-lock-mark-block-function
+    font-lock-syntactic-face-function font-lock-unfontify-buffer-function
+    font-lock-unfontify-region-function kill-buffer-query-functions
+    kill-emacs-query-functions lisp-indent-function mouse-position-function
     redisplay-end-trigger-functions temp-buffer-show-function
     window-scroll-functions window-size-change-functions
+    write-contents-functions write-file-functions
     write-region-annotate-functions)
   "A list of special hooks from Info node `(elisp)Standard Hooks'.
 
-These are symbols with hook-type values whose names don't end in
-`-hook' or `-hooks', from which `unload-feature' tries to remove
+These are symbols with hooklike values whose names don't end in
+`-hook' or `-hooks', from which `unload-feature' should try to remove
 pertinent symbols.")
 
-(defvar unload-hook-features-list nil
-  "List of features of the package being unloaded.
+(defvar unload-function-defs-list nil
+  "List of defintions in the Lisp library being unloaded.
 
-This is meant to be used by FEATURE-unload-hook hooks, see the
+This is meant to be used by `FEATURE-unload-function'; see the
 documentation of `unload-feature' for details.")
+(define-obsolete-variable-alias 'unload-hook-features-list
+    'unload-function-defs-list "22.2")
 
 ;;;###autoload
 (defun unload-feature (feature &optional force)
-  "Unload the library that provided FEATURE, restoring all its autoloads.
+  "Unload the library that provided FEATURE.
 If the feature is required by any other loaded code, and prefix arg FORCE
 is nil, raise an error.
 
-This function tries to undo modifications made by the package to
-hooks.  Packages may define a hook FEATURE-unload-hook that is called
-instead of the normal heuristics for doing this.  Such a hook should
-undo all the relevant global state changes that may have been made by
-loading the package or executing functions in it.  It has access to
-the package's feature list (before anything is unbound) in the
-variable `unload-hook-features-list' and could remove features from it
-in the event that the package has done something normally-ill-advised,
-such as redefining an Emacs function."
+Standard unloading activities include restoring old autoloads for
+functions defined by the library, undoing any additions that the
+library has made to hook variables or to `auto-mode-alist', undoing
+ELP profiling of functions in that library, unproviding any features
+provided by the library, and canceling timers held in variables
+defined by the library.
+
+If a function `FEATURE-unload-function' is defined, this function
+calls it with no arguments, before doing anything else.  That function
+can do whatever is appropriate to undo the loading of the library.  If
+`FEATURE-unload-function' returns non-nil, that suppresses the
+standard unloading of the library.  Otherwise the standard unloading
+proceeds.
+
+`FEATURE-unload-function' has access to the package's list of
+definitions in the variable `unload-function-defs-list' and could
+remove symbols from it in the event that the package has done
+something strange, such as redefining an Emacs function."
   (interactive
    (list
     (read-feature "Unload feature: " t)
@@ -175,82 +190,88 @@ such as redefining an Emacs function."
       (when dependents
 	(error "Loaded libraries %s depend on %s"
 	       (prin1-to-string dependents) file))))
-  (let* ((unload-hook-features-list (feature-symbols feature))
-         (file (pop unload-hook-features-list))
+  (let* ((unload-function-defs-list (feature-symbols feature))
+         (file (pop unload-function-defs-list))
 	 ;; If non-nil, this is a symbol for which we should
 	 ;; restore a previous autoload if possible.
 	 restore-autoload
-         (unload-hook (intern-soft (concat (symbol-name feature)
-                                           "-unload-hook"))))
-    ;; Try to avoid losing badly when hooks installed in critical
-    ;; places go away.  (Some packages install things on
-    ;; `kill-buffer-hook', `activate-menubar-hook' and the like.)
-    ;; First off, provide a clean way for package FOO to arrange
-    ;; this by adding hooks on the variable `FOO-unload-hook'.
-    (if unload-hook
-        (run-hooks unload-hook)
-      ;; Otherwise, do our best.  Look through the obarray for symbols
-      ;; which seem to be hook variables or special hook functions and
-      ;; remove anything from them which matches the feature-symbols
-      ;; about to get zapped.  Obviously this won't get anonymous
-      ;; functions which the package might just have installed, and
-      ;; there might be other important state, but this tactic
-      ;; normally works.
-      (mapatoms
-       (lambda (x)
-         (when (and (boundp x)
-		    (or (and (consp (symbol-value x)) ; Random hooks.
-			     (string-match "-hooks?\\'" (symbol-name x)))
-			(memq x unload-feature-special-hooks)))	; Known abnormal hooks etc.
-	   (dolist (y unload-hook-features-list)
-	     (when (and (eq (car-safe y) 'defun)
-			(not (get (cdr y) 'autoload)))
-	       (remove-hook x (cdr y)))))))
-      ;; Remove any feature-symbols from auto-mode-alist as well.
-      (dolist (y unload-hook-features-list)
-	(when (and (eq (car-safe y) 'defun)
-		   (not (get (cdr y) 'autoload)))
-	  (setq auto-mode-alist
-		(rassq-delete-all (cdr y) auto-mode-alist)))))
-    (when (fboundp 'elp-restore-function) ; remove ELP stuff first
-      (dolist (elt unload-hook-features-list)
-	(when (symbolp elt)
-	  (elp-restore-function elt))))
+	 (name (symbol-name feature))
+         (unload-hook (intern-soft (concat name "-unload-hook")))
+	 (unload-func (intern-soft (concat name "-unload-function"))))
+    ;; If FEATURE-unload-function is defined and returns non-nil,
+    ;; don't try to do anything more; otherwise proceed normally.
+    (unless (and (fboundp unload-func)
+		 (funcall unload-func))
+      ;; Try to avoid losing badly when hooks installed in critical
+      ;; places go away.  (Some packages install things on
+      ;; `kill-buffer-hook', `activate-menubar-hook' and the like.)
+      (if unload-hook
+	  ;; First off, provide a clean way for package FOO to arrange
+	  ;; this by adding hooks on the variable `FOO-unload-hook'.
+	  ;; This is obsolete; FEATURE-unload-function should be used now.
+	  (run-hooks unload-hook)
+	;; Otherwise, do our best.  Look through the obarray for symbols
+	;; which seem to be hook variables or special hook functions and
+	;; remove anything from them which matches the feature-symbols
+	;; about to get zapped.  Obviously this won't get anonymous
+	;; functions which the package might just have installed, and
+	;; there might be other important state, but this tactic
+	;; normally works.
+	(mapatoms
+	 (lambda (x)
+	   (when (and (boundp x)
+		      (or (and (consp (symbol-value x)) ; Random hooks.
+			       (string-match "-hooks?\\'" (symbol-name x)))
+			  (memq x unload-feature-special-hooks)))	; Known abnormal hooks etc.
+	     (dolist (y unload-function-defs-list)
+	       (when (and (eq (car-safe y) 'defun)
+			  (not (get (cdr y) 'autoload)))
+		 (remove-hook x (cdr y)))))))
+	;; Remove any feature-symbols from auto-mode-alist as well.
+	(dolist (y unload-function-defs-list)
+	  (when (and (eq (car-safe y) 'defun)
+		     (not (get (cdr y) 'autoload)))
+	    (setq auto-mode-alist
+		  (rassq-delete-all (cdr y) auto-mode-alist)))))
+      (when (fboundp 'elp-restore-function) ; remove ELP stuff first
+	(dolist (elt unload-function-defs-list)
+	  (when (symbolp elt)
+	    (elp-restore-function elt))))
 
-    (dolist (x unload-hook-features-list)
-      (if (consp x)
-	  (case (car x)
-	   ;; Remove any feature names that this file provided.
-	   (provide
-	    (setq features (delq (cdr x) features)))
-	   ((defun autoload)
-	    (let ((fun (cdr x)))
-	      (when (fboundp fun)
-		(when (fboundp 'ad-unadvise)
-		  (ad-unadvise fun))
-		(let ((aload (get fun 'autoload)))
-		  (if (and aload (eq fun restore-autoload))
-                      (fset fun (cons 'autoload aload))
-                    (fmakunbound fun))))))
-	   ;; (t . SYMBOL) comes before (defun . SYMBOL)
-	   ;; and says we should restore SYMBOL's autoload
-	   ;; when we undefine it.
-	   ((t) (setq restore-autoload (cdr x)))
-           ((require defface) nil)
-	   (t (message "Unexpected element %s in load-history" x)))
-	;; Kill local values as much as possible.
-	(dolist (buf (buffer-list))
-	  (with-current-buffer buf
-            (if (and (boundp x) (timerp (symbol-value x)))
-                (cancel-timer (symbol-value x)))
-	    (kill-local-variable x)))
-        (if (and (boundp x) (timerp (symbol-value x)))
-            (cancel-timer (symbol-value x)))
-	;; Get rid of the default binding if we can.
-	(unless (local-variable-if-set-p x)
-	  (makunbound x))))
-    ;; Delete the load-history element for this file.
-    (setq load-history (delq (assoc file load-history) load-history)))
+      (dolist (x unload-function-defs-list)
+	(if (consp x)
+	    (case (car x)
+	      ;; Remove any feature names that this file provided.
+	      (provide
+	       (setq features (delq (cdr x) features)))
+	      ((defun autoload)
+	       (let ((fun (cdr x)))
+		 (when (fboundp fun)
+		   (when (fboundp 'ad-unadvise)
+		     (ad-unadvise fun))
+		   (let ((aload (get fun 'autoload)))
+		     (if (and aload (eq fun restore-autoload))
+			 (fset fun (cons 'autoload aload))
+		       (fmakunbound fun))))))
+	      ;; (t . SYMBOL) comes before (defun . SYMBOL)
+	      ;; and says we should restore SYMBOL's autoload
+	      ;; when we undefine it.
+	      ((t) (setq restore-autoload (cdr x)))
+	      ((require defface) nil)
+	      (t (message "Unexpected element %s in load-history" x)))
+	  ;; Kill local values as much as possible.
+	  (dolist (buf (buffer-list))
+	    (with-current-buffer buf
+	      (if (and (boundp x) (timerp (symbol-value x)))
+		  (cancel-timer (symbol-value x)))
+	      (kill-local-variable x)))
+	  (if (and (boundp x) (timerp (symbol-value x)))
+	      (cancel-timer (symbol-value x)))
+	  ;; Get rid of the default binding if we can.
+	  (unless (local-variable-if-set-p x)
+	    (makunbound x))))
+      ;; Delete the load-history element for this file.
+      (setq load-history (delq (assoc file load-history) load-history))))
   ;; Don't return load-history, it is not useful.
   nil)
 

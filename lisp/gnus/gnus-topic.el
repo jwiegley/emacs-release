@@ -1,7 +1,7 @@
 ;;; gnus-topic.el --- a folding minor mode for Gnus group buffers
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ilja Weis <kult@uni-paderborn.de>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1181,7 +1181,10 @@ articles in the topic and its subtopics."
 No article is selected automatically.
 If the group is opened, just switch the summary buffer.
 If ALL is non-nil, already read articles become readable.
-If ALL is a number, fetch this number of articles.
+
+If ALL is a positive number, fetch this number of the latest
+articles in the group.  If ALL is a negative number, fetch this
+number of the earliest articles in the group.
 
 If performed over a topic line, toggle folding the topic."
   (interactive "P")
@@ -1233,10 +1236,15 @@ Also see `gnus-group-catchup'."
 (defun gnus-topic-read-group (&optional all no-article group)
   "Read news in this newsgroup.
 If the prefix argument ALL is non-nil, already read articles become
-readable.  IF ALL is a number, fetch this number of articles.  If the
-optional argument NO-ARTICLE is non-nil, no article will be
-auto-selected upon group entry.  If GROUP is non-nil, fetch that
-group.
+readable.
+
+If ALL is a positive number, fetch this number of the latest
+articles in the group.  If ALL is a negative number, fetch this
+number of the earliest articles in the group.
+
+If the optional argument NO-ARTICLE is non-nil, no article will
+be auto-selected upon group entry.  If GROUP is non-nil, fetch
+that group.
 
 If performed over a topic line, toggle folding the topic."
   (interactive "P")

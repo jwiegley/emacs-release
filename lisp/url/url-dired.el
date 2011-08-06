@@ -1,7 +1,7 @@
 ;;; url-dired.el --- URL Dired minor mode
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: comm, files
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -24,8 +24,6 @@
 
 ;;; Code:
 
-(autoload 'w3-fetch "w3")
-(autoload 'w3-open-local "w3")
 (autoload 'dired-get-filename "dired")
 
 (defvar url-dired-minor-mode-map
@@ -41,22 +39,19 @@
 (make-variable-buffer-local 'url-dired-minor-mode)
 
 (defun url-dired-find-file ()
-  "In dired, visit the file or directory named on this line, using Emacs-W3."
+  "In dired, visit the file or directory named on this line."
   (interactive)
   (let ((filename (dired-get-filename)))
-    (cond ((string-match "/\\(.*@.*\\):\\(/.*\\)" filename)
-	   (w3-fetch (concat "file://" (match-string 1 filename) (match-string 2 filename))))
-	  (t
-	   (w3-open-local filename)))))
+    (find-file filename)))
 
 (defun url-dired-find-file-mouse (event)
-  "In dired, visit the file or directory name you click on, using Emacs-W3."
+  "In dired, visit the file or directory name you click on."
   (interactive "@e")
   (mouse-set-point event)
   (url-dired-find-file))
 
 (defun url-dired-minor-mode (&optional arg)
-  "Minor mode for directory browsing with Emacs-W3."
+  "Minor mode for directory browsing."
   (interactive "P")
   (cond
    ((null arg)

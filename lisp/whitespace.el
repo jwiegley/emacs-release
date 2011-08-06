@@ -1,7 +1,7 @@
 ;;; whitespace.el --- warn about and clean bogus whitespaces in the file
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Rajesh Vaidheeswarran <rv@gnu.org>
 ;; Keywords: convenience
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -110,22 +110,27 @@ visited by the buffers.")
 (defvar whitespace-check-buffer-leading nil
   "Test leading whitespace for file in current buffer if t.")
 (make-variable-buffer-local 'whitespace-check-buffer-leading)
+;;;###autoload(put 'whitespace-check-buffer-leading 'safe-local-variable 'booleanp)
 
 (defvar whitespace-check-buffer-trailing nil
   "Test trailing whitespace for file in current buffer if t.")
 (make-variable-buffer-local 'whitespace-check-buffer-trailing)
+;;;###autoload(put 'whitespace-check-buffer-trailing 'safe-local-variable 'booleanp)
 
 (defvar whitespace-check-buffer-indent nil
   "Test indentation whitespace for file in current buffer if t.")
 (make-variable-buffer-local 'whitespace-check-buffer-indent)
+;;;###autoload(put 'whitespace-check-buffer-indent 'safe-local-variable 'booleanp)
 
 (defvar whitespace-check-buffer-spacetab nil
   "Test Space-followed-by-TABS whitespace for file in current buffer if t.")
 (make-variable-buffer-local 'whitespace-check-buffer-spacetab)
+;;;###autoload(put 'whitespace-check-buffer-spacetab 'safe-local-variable 'booleanp)
 
 (defvar whitespace-check-buffer-ateol nil
   "Test end-of-line whitespace for file in current buffer if t.")
 (make-variable-buffer-local 'whitespace-check-buffer-ateol)
+;;;###autoload(put 'whitespace-check-buffer-ateol 'safe-local-variable 'booleanp)
 
 (defvar whitespace-highlighted-space nil
   "The variable to store the extent to highlight.")
@@ -166,21 +171,21 @@ don't define it."
 
 (defcustom whitespace-check-leading-whitespace t
   "Flag to check leading whitespace.  This is the global for the system.
-It can be overriden by setting a buffer local variable
+It can be overridden by setting a buffer local variable
 `whitespace-check-buffer-leading'."
   :type 'boolean
   :group 'whitespace)
 
 (defcustom whitespace-check-trailing-whitespace t
   "Flag to check trailing whitespace.  This is the global for the system.
-It can be overriden by setting a buffer local variable
+It can be overridden by setting a buffer local variable
 `whitespace-check-buffer-trailing'."
   :type 'boolean
   :group 'whitespace)
 
 (defcustom whitespace-check-spacetab-whitespace t
   "Flag to check space followed by a TAB.  This is the global for the system.
-It can be overriden by setting a buffer local variable
+It can be overridden by setting a buffer local variable
 `whitespace-check-buffer-spacetab'."
   :type 'boolean
   :group 'whitespace)
@@ -192,7 +197,7 @@ It can be overriden by setting a buffer local variable
 
 (defcustom whitespace-check-indent-whitespace indent-tabs-mode
   "Flag to check indentation whitespace.  This is the global for the system.
-It can be overriden by setting a buffer local variable
+It can be overridden by setting a buffer local variable
 `whitespace-check-buffer-indent'."
   :type 'boolean
   :group 'whitespace)
@@ -205,7 +210,7 @@ The default value ignores leading TABs."
 
 (defcustom whitespace-check-ateol-whitespace t
   "Flag to check end-of-line whitespace.  This is the global for the system.
-It can be overriden by setting a buffer local variable
+It can be overridden by setting a buffer local variable
 `whitespace-check-buffer-ateol'."
   :type 'boolean
   :group 'whitespace)
@@ -763,7 +768,7 @@ If timer is not set, then set it to scan the files in
 ;;;###autoload
 (define-minor-mode whitespace-global-mode
   "Toggle using Whitespace mode in new buffers.
-With ARG, turn the mode on iff ARG is positive.
+With ARG, turn the mode on if ARG is positive, otherwise turn it off.
 
 When this mode is active, `whitespace-buffer' is added to
 `find-file-hook' and `kill-buffer-hook'."
@@ -782,7 +787,6 @@ When this mode is active, `whitespace-buffer' is added to
 (defun whitespace-write-file-hook ()
   "Hook function to be called on the buffer when whitespace check is enabled.
 This is meant to be added buffer-locally to `write-file-functions'."
-  (interactive)
   (let ((werr nil))
     (if whitespace-auto-cleanup
 	(whitespace-cleanup-internal)
@@ -791,6 +795,21 @@ This is meant to be added buffer-locally to `write-file-functions'."
 	(error (concat "Abort write due to whitespaces in "
 		       buffer-file-name))))
   nil)
+
+(defun whitespace-unload-function ()
+  "Unload the whitespace library."
+  (if (unintern "whitespace-unload-hook")
+      ;; if whitespace-unload-hook is defined, let's get rid of it
+      ;; and recursively call `unload-feature'
+      (progn (unload-feature 'whitespace) t)
+    ;; this only happens in the recursive call
+    (whitespace-global-mode -1)
+    (save-current-buffer
+      (dolist (buf (buffer-list))
+	(set-buffer buf)
+	(remove-hook 'write-file-functions 'whitespace-write-file-hook t)))
+    ;; continue standard unloading
+    nil))
 
 (defun whitespace-unload-hook ()
   (remove-hook 'find-file-hook 'whitespace-buffer)

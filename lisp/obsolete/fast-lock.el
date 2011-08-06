@@ -1,7 +1,7 @@
 ;;; fast-lock.el --- automagic text properties caching for fast Font Lock mode
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Simon Marshall <simon@gnu.org>
 ;; Maintainer: FSF
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -523,7 +523,7 @@ See `fast-lock-cache-directories'."
 		;; Just a directory.
 		directory)
 	       (t
-		;; A directory iff the file name matches the regexp.
+		;; A directory if the file name matches the regexp.
 		(let ((bufile (expand-file-name buffer-file-truename))
 		      (case-fold-search nil))
 		  (when (save-match-data (string-match (car directory) bufile))

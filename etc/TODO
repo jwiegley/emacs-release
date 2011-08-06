@@ -1,6 +1,6 @@
 Emacs TODO List                                                   -*-outline-*-
 
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -21,8 +21,6 @@ look for include files in X11/Xaw should look in X11/Xaw3d if we are
 using Xaw3d.
 
 ** Compute the list of active keymaps *after* reading the first event.
-
-** Avoid using "iff" in doc strings.
 
 ** mouse-autoselect-window should wait to select the window until
 the mouse is put to rest or after a delay or both, so that moving over
@@ -176,6 +174,10 @@ specified filters, specified timers, and specified hooks.
   be only full columns/lines.
 
 * Other features we would like:
+
+** Make longlines-mode wrap lines based on screen position instead
+   of character position, so that variable-width fonts can be handled
+   properly.
 
 ** Remove the default toggling behavior of minor modes when called from elisp
 rather than interactively.  This a trivial one-liner in easy-mode.el.
@@ -605,7 +607,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

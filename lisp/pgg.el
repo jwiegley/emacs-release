@@ -1,7 +1,7 @@
 ;;; pgg.el --- glue for the various PGP implementations.
 
 ;; Copyright (C) 1999, 2000, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Symmetric encryption added by: Sascha Wilde <wilde@sha-bang.de>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -332,7 +332,7 @@ cache or user."
   (interactive "r")
   (let ((status
 	 (pgg-save-coding-system start end
-	   (pgg-invoke "encrypt-symmetric-region" 
+	   (pgg-invoke "encrypt-symmetric-region"
 		       (or pgg-scheme pgg-default-scheme)
 		       (point-min) (point-max) passphrase))))
     (when (interactive-p)
@@ -416,7 +416,7 @@ If the optional 3rd argument CLEARTEXT is non-nil, it does not create
 a detached signature.
 
 If this function is called interactively, CLEARTEXT is enabled
-and the the output is displayed.
+and the output is displayed.
 
 If optional PASSPHRASE is not specified, it will be obtained from the
 passphrase cache or user."
@@ -441,7 +441,7 @@ If optional arguments START and END are specified, only sign data
 within the region.
 
 If this function is called interactively, CLEARTEXT is enabled
-and the the output is displayed.
+and the output is displayed.
 
 If optional PASSPHRASE is not specified, it will be obtained from the
 passphrase cache or user."
@@ -485,7 +485,7 @@ signer's public key from `pgg-default-keyserver-address'."
 	       (or (cdr (assq 'preferred-key-server packet))
 		   pgg-default-keyserver-address))
 	 (pgg-fetch-key keyserver key))
-    (setq status 
+    (setq status
 	  (pgg-save-coding-system start end
 	    (pgg-invoke "verify-region" (or pgg-scheme pgg-default-scheme)
 			(point-min) (point-max) signature)))

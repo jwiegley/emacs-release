@@ -1,14 +1,14 @@
 ;;; gnus-agent.el --- unplugged support for Gnus
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1765,9 +1765,18 @@ article numbers will be returned."
                                (gnus-agent-find-parameter group
                                                           'agent-predicate)))))
          (articles (if fetch-all
-                       (gnus-uncompress-range (gnus-active group))
+		       (if gnus-newsgroup-maximum-articles
+			   (let ((active (gnus-active group)))
+			     (gnus-uncompress-range
+			      (cons (max (car active)
+					 (- (cdr active)
+					    gnus-newsgroup-maximum-articles
+					    -1))
+				    (cdr active))))
+			 (gnus-uncompress-range (gnus-active group)))
                      (gnus-list-of-unread-articles group)))
          (gnus-decode-encoded-word-function 'identity)
+	 (gnus-decode-encoded-address-function 'identity)
          (file (gnus-agent-article-name ".overview" group)))
 
     (unless fetch-all
@@ -3571,6 +3580,7 @@ has been fetched."
   (save-excursion
     (gnus-agent-create-buffer)
     (let ((gnus-decode-encoded-word-function 'identity)
+	  (gnus-decode-encoded-address-function 'identity)
 	  (file (gnus-agent-article-name ".overview" group))
 	  cached-articles uncached-articles)
       (gnus-make-directory (nnheader-translate-file-chars

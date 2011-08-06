@@ -1,7 +1,7 @@
 ;;; uniquify.el --- unique buffer names dependent on file name
 
 ;; Copyright (C) 1989, 1995, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Dick King <king@reasoning.com>
 ;; Maintainer: FSF
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -72,7 +72,7 @@
 ;; Add uniquify-list-buffers-directory-modes
 ;;   Stefan Monnier <monnier@cs.yale.edu> 17 Nov 2000
 ;; Algorithm and data structure changed to reduce consing with lots of buffers
-;;   Francesco Potortì <pot@gnu.org> (ideas by rms and monnier) 2001-07-18
+;;   Francesco PotortÃ¬ <pot@gnu.org> (ideas by rms and monnier) 2001-07-18
 
 ;; Valuable feedback was provided by
 ;; Paul Smith <psmith@baynetworks.com>,
@@ -189,6 +189,13 @@ It actually holds the list of `uniquify-item's corresponding to the conflict.")
 (make-variable-buffer-local 'uniquify-managed)
 (put 'uniquify-managed 'permanent-local t)
 
+;; Used in desktop.el to save the non-uniquified buffer name
+(defun uniquify-buffer-base-name ()
+  "Return the base name of the current buffer.
+Return nil if the buffer is not managed by uniquify."
+  (and uniquify-managed
+       (uniquify-item-base (car uniquify-managed))))
+
 ;;; Main entry point.
 
 (defun uniquify-rationalize-file-buffer-names (base dirname newbuf)
@@ -233,6 +240,14 @@ this rationalization."
 	      (with-current-buffer (uniquify-item-buffer (car items))
 		(setq uniquify-managed nil))
 	      (setq items nil)))
+          ;; In case we missed some calls to kill-buffer, there may be dead
+          ;; buffers in uniquify-managed, so filter them out.
+          (setq items
+                (delq nil (mapcar
+                           (lambda (item)
+                             (if (buffer-live-p (uniquify-item-buffer item))
+                                 item))
+                           items)))
 	  (setq fix-list (append fix-list items))))
       ;; selects buffers whose names may need changing, and others that
       ;; may conflict, then bring conflicting names together
@@ -411,6 +426,23 @@ in `uniquify-list-buffers-directory-modes', otherwise returns nil."
 
 ;;; Hooks from the rest of Emacs
 
+;; Buffer deletion
+;; Rerationalize after a buffer is killed, to reduce coinciding buffer names.
+;; This mechanism uses `kill-buffer-hook', which runs *before* deletion, so
+;; it calls `uniquify-rerationalize-w/o-cb' to rerationalize the buffer list
+;; ignoring the current buffer (which is going to be deleted anyway).
+(defun uniquify-maybe-rerationalize-w/o-cb ()
+  "Re-rationalize buffer names, ignoring current buffer.
+For use on `kill-buffer-hook'."
+  (if (and (cdr uniquify-managed)
+	   uniquify-buffer-name-style
+	   uniquify-after-kill-buffer-p)
+      (uniquify-rerationalize-w/o-cb uniquify-managed)))
+
+;; Ideally we'd like to add it buffer-locally, but that doesn't work
+;; because kill-buffer-hook is not permanent-local :-(
+(add-hook 'kill-buffer-hook 'uniquify-maybe-rerationalize-w/o-cb)
+
 ;; The logical place to put all this code is in generate-new-buffer-name.
 ;; It's written in C, so we would add a generate-new-buffer-name-function
 ;; which, if non-nil, would be called instead of the C.  One problem with
@@ -448,28 +480,24 @@ in `uniquify-list-buffers-directory-modes', otherwise returns nil."
 	 (file-name-nondirectory filename)
 	 (file-name-directory filename) ad-return-value))))
 
-;; Buffer deletion
-;; Rerationalize after a buffer is killed, to reduce coinciding buffer names.
-;; This mechanism uses `kill-buffer-hook', which runs *before* deletion.
-;; That means that the kill-buffer-hook function cannot just delete the
-;; buffer -- it has to set something to do the rationalization *later*.
-;; It actually puts another function on `post-command-hook'.  This other
-;; function runs the rationalization and then removes itself from the hook.
-;; Is there a better way to accomplish this?
-;; (This ought to set some global variables so the work is done only for
-;; buffers with names similar to the deleted buffer.  -MDE)
+;;; The End
 
-(defun uniquify-maybe-rerationalize-w/o-cb ()
-  "Re-rationalize buffer names, ignoring current buffer.
-For use on `kill-buffer-hook'."
-  (if (and (cdr uniquify-managed)
-	   uniquify-buffer-name-style
-	   uniquify-after-kill-buffer-p)
-      (uniquify-rerationalize-w/o-cb uniquify-managed)))
-
-;; Ideally we'd like to add it buffer-locally, but that doesn't work
-;; because kill-buffer-hook is not permanent-local :-(
-(add-hook 'kill-buffer-hook 'uniquify-maybe-rerationalize-w/o-cb)
+(defun uniquify-unload-function ()
+  "Unload the uniquify library."
+  (save-current-buffer
+    (let ((buffers nil))
+      (dolist (buf (buffer-list))
+	(set-buffer buf)
+	(when uniquify-managed
+	  (push (cons buf (uniquify-item-base (car uniquify-managed))) buffers)))
+      (dolist (fun '(rename-buffer create-file-buffer))
+	(ad-remove-advice fun 'after (intern (concat (symbol-name fun) "-uniquify")))
+	(ad-update fun))
+      (dolist (buf buffers)
+	(set-buffer (car buf))
+	(rename-buffer (cdr buf) t))))
+  ;; continue standard unloading
+  nil)
 
 (provide 'uniquify)
 

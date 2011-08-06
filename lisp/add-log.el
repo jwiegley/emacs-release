@@ -1,7 +1,7 @@
 ;;; add-log.el --- change log maintenance commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1988, 1993, 1994, 1997, 1998, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: tools
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -509,19 +509,19 @@ non-nil, otherwise in local time."
 	 (file-name (expand-file-name (find-change-log file-name buffer-file)))
 	 ;; Set ITEM to the file name to use in the new item.
 	 (item (add-log-file-name buffer-file file-name))
-	 bound
-	 (full-name (or add-log-full-name (user-full-name)))
-	 (mailing-address (or add-log-mailing-address user-mail-address)))
+	 bound full-name mailing-address)
 
     (if whoami
 	(progn
-	  (setq full-name (read-string "Full name: " full-name))
+	  (setq full-name (read-string "Full name: "
+				       (or add-log-full-name (user-full-name))))
 	  ;; Note that some sites have room and phone number fields in
 	  ;; full name which look silly when inserted.  Rather than do
 	  ;; anything about that here, let user give prefix argument so that
 	  ;; s/he can edit the full name field in prompter if s/he wants.
 	  (setq mailing-address
-		(read-string "Mailing address: " mailing-address))))
+		(read-string "Mailing address: "
+			     (or add-log-mailing-address user-mail-address)))))
 
     (unless (equal file-name buffer-file-name)
       (if (or other-window (window-dedicated-p (selected-window)))
@@ -531,6 +531,11 @@ non-nil, otherwise in local time."
 	(change-log-mode))
     (undo-boundary)
     (goto-char (point-min))
+
+    (or full-name
+	(setq full-name (or add-log-full-name (user-full-name))))
+    (or mailing-address
+	 (setq mailing-address (or add-log-mailing-address user-mail-address)))
 
     ;; If file starts with a copyright and permission notice, skip them.
     ;; Assume they end at first blank line.
@@ -660,7 +665,6 @@ the change log file in another window."
 		   (list current-prefix-arg
 			 (prompt-for-change-log-name))))
   (add-change-log-entry whoami file-name t))
-;;;###autoload (define-key ctl-x-4-map "a" 'add-change-log-entry-other-window)
 
 (defvar change-log-indent-text 0)
 
@@ -1098,29 +1102,6 @@ old-style time formats for entries are supported."
 	    (with-current-buffer other-buf
 	      (goto-char (point-max)))
 	    (insert-buffer-substring other-buf start)))))))
-
-;;;###autoload
-(defun change-log-redate ()
-  "Fix any old-style date entries in the current log file to default format."
-  (interactive)
-  (require 'timezone)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "^\\sw.........[0-9:+ ]*" nil t)
-      (unless (= 12 (- (match-end 0) (match-beginning 0)))
-	(let* ((date (save-match-data
-		       (timezone-fix-time (match-string 0) nil nil)))
-	       (zone (if (consp (aref date 6))
-			 (nth 1 (aref date 6)))))
-	  (replace-match (format-time-string
-			  "%Y-%m-%d  "
-			  (encode-time (aref date 5)
-				       (aref date 4)
-				       (aref date 3)
-				       (aref date 2)
-				       (aref date 1)
-				       (aref date 0)
-				       zone))))))))
 
 (provide 'add-log)
 

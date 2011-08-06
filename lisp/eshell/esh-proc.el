@@ -1,7 +1,7 @@
 ;;; esh-proc.el --- process management
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -335,39 +335,39 @@ Used only on systems which do not support async subprocesses.")
 PROC is the process for which we're inserting output.  STRING is the
 output."
   (when (buffer-live-p (process-buffer proc))
-    (set-buffer (process-buffer proc))
-    (let ((entry (assq proc eshell-process-list)))
-      (when entry
-	(setcar (nthcdr 3 entry)
-		(concat (nth 3 entry) string))
-	(unless (nth 4 entry)           ; already being handled?
-	  (while (nth 3 entry)
-	    (let ((data (nth 3 entry)))
-	      (setcar (nthcdr 3 entry) nil)
-	      (setcar (nthcdr 4 entry) t)
-	      (eshell-output-object data nil (cadr entry))
-	      (setcar (nthcdr 4 entry) nil))))))))
+    (with-current-buffer (process-buffer proc)
+      (let ((entry (assq proc eshell-process-list)))
+	(when entry
+	  (setcar (nthcdr 3 entry)
+		  (concat (nth 3 entry) string))
+	  (unless (nth 4 entry)		; already being handled?
+	    (while (nth 3 entry)
+	      (let ((data (nth 3 entry)))
+		(setcar (nthcdr 3 entry) nil)
+		(setcar (nthcdr 4 entry) t)
+		(eshell-output-object data nil (cadr entry))
+		(setcar (nthcdr 4 entry) nil)))))))))
 
 (defun eshell-sentinel (proc string)
   "Generic sentinel for command processes.  Reports only signals.
 PROC is the process that's exiting.  STRING is the exit message."
   (when (buffer-live-p (process-buffer proc))
-    (set-buffer (process-buffer proc))
-    (unwind-protect
-	(let* ((entry (assq proc eshell-process-list)))
-;	  (if (not entry)
-;	      (error "Sentinel called for unowned process `%s'"
-;		     (process-name proc))
-	  (when entry
-	    (unwind-protect
-		(progn
-		  (unless (string= string "run")
-		    (unless (string-match "^\\(finished\\|exited\\)" string)
-		      (eshell-insertion-filter proc string))
-		    (eshell-close-handles (process-exit-status proc) 'nil
-					  (cadr entry))))
-	      (eshell-remove-process-entry entry))))
-      (run-hook-with-args 'eshell-kill-hook proc string))))
+    (with-current-buffer (process-buffer proc)
+      (unwind-protect
+	  (let* ((entry (assq proc eshell-process-list)))
+;	    (if (not entry)
+;		(error "Sentinel called for unowned process `%s'"
+;		       (process-name proc))
+	    (when entry
+	      (unwind-protect
+		  (progn
+		    (unless (string= string "run")
+		      (unless (string-match "^\\(finished\\|exited\\)" string)
+			(eshell-insertion-filter proc string))
+		      (eshell-close-handles (process-exit-status proc) 'nil
+					    (cadr entry))))
+		(eshell-remove-process-entry entry))))
+	(run-hook-with-args 'eshell-kill-hook proc string)))))
 
 (defun eshell-process-interact (func &optional all query)
   "Interact with a process, using PROMPT if more than one, via FUNC.

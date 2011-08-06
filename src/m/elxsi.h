@@ -1,13 +1,13 @@
 /* machine description file for Elxsi machine (running enix).
    Copyright (C) 1986, 1992, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
    Adapted by John Salmon
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -27,7 +27,7 @@ Boston, MA 02110-1301, USA.  */
 /* This file was modified by Matt Crawford <matt@tank.uchicago.edu>
    to work under Elxsi's 12.0 release of BSD unix. */
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #undef WORDS_BIG_ENDIAN

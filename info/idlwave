@@ -12,7 +12,7 @@ Emacs, and interacting with an IDL shell run as a subprocess.
    This is edition 6.1 of the IDLWAVE User Manual for IDLWAVE 6.1
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-2006, 2007 Free Software Foundation, Inc.
+2006, 2007, 2008 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -4607,77 +4607,77 @@ Index
 
 
 Tag Table:
-Node: Top1415
-Node: Introduction5053
-Ref: Introduction-Footnote-18714
-Node: IDLWAVE in a Nutshell8837
-Node: Getting Started11670
-Node: Lesson I -- Development Cycle11947
-Node: Lesson II -- Customization19859
-Node: Lesson III -- User Catalog24847
-Node: The IDLWAVE Major Mode27615
-Node: Code Formatting28704
-Node: Code Indentation30014
-Node: Continued Statement Indentation31541
-Node: Comment Indentation34764
-Node: Continuation Lines35751
-Node: Syntax Highlighting38201
-Node: Octals and Highlighting39230
-Node: Routine Info40310
-Ref: Routine Info-Footnote-146948
-Node: Online Help47114
-Node: Help with HTML Documentation51162
-Node: Help with Source54721
-Node: Completion57638
-Node: Case of Completed Words61751
-Node: Object Method Completion and Class Ambiguity63565
-Node: Object Method Completion in the Shell66245
-Node: Class and Keyword Inheritance67095
-Node: Structure Tag Completion69411
-Node: Routine Source71161
-Node: Resolving Routines72267
-Node: Code Templates73247
-Node: Abbreviations73745
-Node: Actions77616
-Node: Block Boundary Check79453
-Node: Padding Operators80502
-Node: Case Changes82629
-Node: Doc Header84118
-Node: Motion Commands85377
-Node: Misc Options86456
-Node: The IDLWAVE Shell87054
-Node: Starting the Shell88061
-Node: Using the Shell91616
-Ref: Using the Shell-Footnote-195442
-Node: Commands Sent to the Shell95630
-Node: Debugging IDL Programs97748
-Node: A Tale of Two Modes99145
-Node: Debug Key Bindings100270
-Node: Breakpoints and Stepping102150
-Node: Compiling Programs107985
-Node: Walking the Calling Stack109442
-Node: Electric Debug Mode110535
-Ref: Electric Debug Mode-Footnote-1116498
-Node: Examining Variables116625
-Ref: Examining Variables-Footnote-1121490
-Node: Custom Expression Examination121576
-Ref: Custom Expression Examination-Footnote-1125065
-Node: Acknowledgements125269
-Node: Sources of Routine Info127292
-Node: Routine Definitions128002
-Node: Routine Information Sources129383
-Node: Catalogs132887
-Node: Library Catalogs135501
-Node: User Catalog138375
-Ref: User Catalog-Footnote-1141436
-Ref: User Catalog-Footnote-2141519
-Node: Load-Path Shadows141555
-Node: Documentation Scan144144
-Node: HTML Help Browser Tips145616
-Node: Configuration Examples148763
-Node: Windows and MacOS155852
-Node: Troubleshooting158048
-Node: GNU Free Documentation License167777
-Node: Index190011
+Node: Top1421
+Node: Introduction5059
+Ref: Introduction-Footnote-18720
+Node: IDLWAVE in a Nutshell8843
+Node: Getting Started11676
+Node: Lesson I -- Development Cycle11953
+Node: Lesson II -- Customization19865
+Node: Lesson III -- User Catalog24853
+Node: The IDLWAVE Major Mode27621
+Node: Code Formatting28710
+Node: Code Indentation30020
+Node: Continued Statement Indentation31547
+Node: Comment Indentation34770
+Node: Continuation Lines35757
+Node: Syntax Highlighting38207
+Node: Octals and Highlighting39236
+Node: Routine Info40316
+Ref: Routine Info-Footnote-146954
+Node: Online Help47120
+Node: Help with HTML Documentation51168
+Node: Help with Source54727
+Node: Completion57644
+Node: Case of Completed Words61757
+Node: Object Method Completion and Class Ambiguity63571
+Node: Object Method Completion in the Shell66251
+Node: Class and Keyword Inheritance67101
+Node: Structure Tag Completion69417
+Node: Routine Source71167
+Node: Resolving Routines72273
+Node: Code Templates73253
+Node: Abbreviations73751
+Node: Actions77622
+Node: Block Boundary Check79459
+Node: Padding Operators80508
+Node: Case Changes82635
+Node: Doc Header84124
+Node: Motion Commands85383
+Node: Misc Options86462
+Node: The IDLWAVE Shell87060
+Node: Starting the Shell88067
+Node: Using the Shell91622
+Ref: Using the Shell-Footnote-195448
+Node: Commands Sent to the Shell95636
+Node: Debugging IDL Programs97754
+Node: A Tale of Two Modes99151
+Node: Debug Key Bindings100276
+Node: Breakpoints and Stepping102156
+Node: Compiling Programs107991
+Node: Walking the Calling Stack109448
+Node: Electric Debug Mode110541
+Ref: Electric Debug Mode-Footnote-1116504
+Node: Examining Variables116631
+Ref: Examining Variables-Footnote-1121496
+Node: Custom Expression Examination121582
+Ref: Custom Expression Examination-Footnote-1125071
+Node: Acknowledgements125275
+Node: Sources of Routine Info127298
+Node: Routine Definitions128008
+Node: Routine Information Sources129389
+Node: Catalogs132893
+Node: Library Catalogs135507
+Node: User Catalog138381
+Ref: User Catalog-Footnote-1141442
+Ref: User Catalog-Footnote-2141525
+Node: Load-Path Shadows141561
+Node: Documentation Scan144150
+Node: HTML Help Browser Tips145622
+Node: Configuration Examples148769
+Node: Windows and MacOS155858
+Node: Troubleshooting158054
+Node: GNU Free Documentation License167783
+Node: Index190017
 
 End Tag Table

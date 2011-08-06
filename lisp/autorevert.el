@@ -1,7 +1,7 @@
 ;;; autorevert.el --- revert buffers when files on disk change
 
 ;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
 ;; Keywords: convenience
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -315,7 +315,7 @@ This function is designed to be added to hooks, for example:
 ;;;###autoload
 (define-minor-mode auto-revert-tail-mode
   "Toggle reverting tail of buffer when file on disk grows.
-With arg, turn Tail mode on iff arg is positive.
+With arg, turn Tail mode on if arg is positive, otherwise turn it off.
 
 When Tail mode is enabled, the tail of the file is constantly
 followed, as with the shell command `tail -f'.  This means that
@@ -337,6 +337,22 @@ Use `auto-revert-mode' for changes other than appends!"
 	     (not auto-revert-tail-pos) ; library was loaded only after finding file
 	     (not (y-or-n-p "Buffer is modified, so tail offset may be wrong.  Proceed? ")))
 	(auto-revert-tail-mode 0)
+      ;; a-r-tail-pos stores the size of the file at the time of the
+      ;; last revert. After this package loads, it adds a
+      ;; find-file-hook to set this variable every time a file is
+      ;; loaded.  If the package is loaded only _after_ visiting the
+      ;; file to be reverted, then we have no idea what the value of
+      ;; a-r-tail-pos should have been when the file was visited.  If
+      ;; the file has changed on disk in the meantime, all we can do
+      ;; is offer to revert the whole thing. If you choose not to
+      ;; revert, then you might miss some output then happened
+      ;; between visiting the file and activating a-r-t-mode.
+      (and (zerop auto-revert-tail-pos)
+	   (not (verify-visited-file-modtime (current-buffer)))
+	   (y-or-n-p "File changed on disk, content may be missing.  \
+Perform a full revert? ")
+	   ;; Use this (not just revert-buffer) for point-preservation.
+	   (auto-revert-handler))
       ;; else we might reappend our own end when we save
       (add-hook 'before-save-hook (lambda () (auto-revert-tail-mode 0)) nil t)
       (or (local-variable-p 'auto-revert-tail-pos) ; don't lose prior position

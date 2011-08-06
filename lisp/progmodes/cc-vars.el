@@ -1,7 +1,7 @@
 ;;; cc-vars.el --- user customization variables for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
@@ -18,7 +18,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -73,8 +73,28 @@ Useful as last item in a `choice' widget."
       :format "%t%n"
       :value 'other))
 
+;; The next defun will supersede c-const-symbol.
+(eval-and-compile
+  (defun c-constant-symbol (sym len)
+    "Create an uneditable symbol for customization buffers.
+SYM is the name of the symbol, LEN the length of the field (in
+characters) the symbol will be displayed in.  LEN must be big
+enough.
+
+This returns a (const ....) structure, suitable for embedding
+within a customization type."
+    (or (symbolp sym) (error "c-constant-symbol: %s is not a symbol" sym))
+    (let* ((name (symbol-name sym))
+	   (l (length name))
+	   (disp (concat name ":" (make-string (- len l 1) ?\ ))))
+      `(const
+	:size ,len
+	:format ,disp
+	:value ,sym))))
+
 (define-widget 'c-const-symbol 'item
-  "An uneditable lisp symbol."
+  "An uneditable lisp symbol.  This is obsolete -
+use c-constant-symbol instead."
   :value nil
   :tag "Symbol"
   :format "%t: %v\n%d"
@@ -186,7 +206,7 @@ the value set here overrides the style system (there is a variable
 		    (bq-process type)))))))))
 
 (defun c-valid-offset (offset)
-  "Return non-nil iff OFFSET is a valid offset for a syntactic symbol.
+  "Return non-nil if OFFSET is a valid offset for a syntactic symbol.
 See `c-offsets-alist'."
   (or (eq offset '+)
       (eq offset '-)
@@ -295,6 +315,7 @@ e.g. `c-special-indent-hook'."
   :type 'boolean
   :group 'c)
 (make-variable-buffer-local 'c-syntactic-indentation)
+(put 'c-syntactic-indentation 'safe-local-variable 'booleanp)
 
 (defcustom c-syntactic-indentation-in-macros t
   "*Enable syntactic analysis inside macros.
@@ -313,6 +334,7 @@ countered easily by surrounding the statements by a block \(or even
 better with the \"do { ... } while \(0)\" trick)."
   :type 'boolean
   :group 'c)
+(put 'c-syntactic-indentation-in-macros 'safe-local-variable 'booleanp)
 
 (defcustom-c-stylevar c-comment-only-line-offset 0
   "*Extra offset for line which contains only the start of a comment.
@@ -395,9 +417,7 @@ in that case, i.e. as if \\[c-indent-command] was used instead."
     `(set ,@(mapcar
 	     (lambda (elt)
 	       `(cons :format "%v"
-		      (c-const-symbol :format "%v: "
-				      :size 20
-				      :value ,elt)
+		      ,(c-constant-symbol elt 20)
 		      (choice
 		       :format "%[Choice%] %v"
 		       :value (column . nil)
@@ -698,7 +718,8 @@ involve auto-newline inserted newlines:
 					       (module-open after)
 					       (composition-open after)
 					       (inexpr-class-open after)
-					       (inexpr-class-close before))
+					       (inexpr-class-close before)
+					       (arglist-cont-nonempty))
   "*Controls the insertion of newlines before and after braces
 when the auto-newline feature is active.  This variable contains an
 association list with elements of the following form:
@@ -732,18 +753,15 @@ syntactic context for the brace line."
   `(set ,@(mapcar
 	   (lambda (elt)
 	     `(cons :format "%v"
-		    (c-const-symbol :format "%v: "
-				    :size 20
-				    :value ,elt)
+		    ,(c-constant-symbol elt 24)
 		    (choice :format "%[Choice%] %v"
 			    :value (before after)
 			    (set :menu-tag "Before/after"
-				 :format "Newline %v brace\n"
-				 (const :format "%v, " before)
-				 (const :format "%v" after))
+				 :format "Newline  %v brace\n"
+				 (const :format "%v,  " before)
+				 (const :format "%v " after))
 			    (function :menu-tag "Function"
-				      :format "Run function: %v"
-				      :value c-))))
+				      :format "Run function: %v"))))
 	   '(defun-open defun-close
 	      class-open class-close
 	      inline-open inline-close
@@ -755,7 +773,8 @@ syntactic context for the brace line."
 	      namespace-open namespace-close
 	      module-open module-close
 	      composition-open composition-close
-	      inexpr-class-open inexpr-class-close)))
+	      inexpr-class-open inexpr-class-close
+	      arglist-cont-nonempty)))
     :group 'c)
 
 (defcustom c-max-one-liner-length 80
@@ -779,11 +798,9 @@ currently not supported for this variable."
   `(set ,@(mapcar
 	   (lambda (elt)
 	     `(cons :format "%v"
-		    (c-const-symbol :format "%v: "
-				    :size 20
-				    :value ,elt)
-		    (set :format "Newline %v brace\n"
-			 (const :format "%v, " before)
+		    ,(c-constant-symbol elt 20)
+		    (set :format "Newline  %v  colon\n"
+			 (const :format "%v,  " before)
 			 (const :format "%v" after))))
 	   '(case-label label access-label member-init-intro inher-intro)))
   :group 'c)
@@ -1296,8 +1313,7 @@ Here is the current list of valid syntactic element symbols:
 	   (lambda (elt)
 	     `(cons :format "%v"
 		    :value ,elt
-		    (c-const-symbol :format "%v: "
-				    :size 25)
+		    ,(c-constant-symbol (car elt) 25)
 		    (sexp :format "%v"
 			  :validate
 			  (lambda (widget)

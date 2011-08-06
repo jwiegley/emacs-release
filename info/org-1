@@ -7,7 +7,7 @@ END-INFO-DIR-ENTRY
 
    This manual is for Org-mode (version 4.67).
 
-   Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation
+   Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -29,7 +29,7 @@ Org Mode Manual
 
 This manual is for Org-mode (version 4.67).
 
-   Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation
+   Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -344,7 +344,7 @@ tables in arbitray file types, for example in LaTeX.
    There is a website for Org-mode which provides links to the newest
 version of Org-mode, as well as additional information, frequently asked
 questions (FAQ), links to tutorials etc.  This page is located at
-`http://www.astro.uva.nl/~dominik/Tools/org/'.
+`http://orgmode.org/'.
 
 
 File: org,  Node: Installation,  Next: Activation,  Prev: Summary,  Up: Introduction
@@ -1783,7 +1783,7 @@ start with a short identifying string followed by a colon.  There can be
 no space after the colon.  The following list shows examples for each
 link type.
 
-     http://www.astro.uva.nl/~dominik          on the web
+     http://orgmode.org/                       on the web
      file:/home/dominik/images/jupiter.jpg     file, absolute path
      file:papers/last.pdf                      file, relative path
      news:comp.emacs                           Usenet link
@@ -3081,7 +3081,7 @@ to activate any changes.
 
    If at least one tag has a selection key, pressing `C-c C-c' will
 automatically present you with a special interface, listing inherited
-tags, the tags of the current headline, and a list of all legal tags
+tags, the tags of the current headline, and a list of all valid tags
 with corresponding keys(2).  In this interface, you can use the
 following keys:
 
@@ -5107,7 +5107,7 @@ file is visited again in a new Emacs session.
      and `org-todo-interpretation'.
 
 `#+TAGS:  TAG1(c1) TAG2(c2)'
-     These lines (several such lines are allowed) specify the legal
+     These lines (several such lines are allowed) specify the valid
      tags in this file, and (potentially) the corresponding _fast tag
      selection_ keys.  The corresponding variable is `org-tag-alist'.
 

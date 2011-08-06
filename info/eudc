@@ -6,8 +6,8 @@ This is ../info/eudc, produced by makeinfo version 4.8 from eudc.texi.
 directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
-   Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
-Free Software Foundation, Inc.
+   Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1409,31 +1409,31 @@ Variables Index
 
 
 Tag Table:
-Node: Top1494
-Node: Overview2131
-Node: LDAP3200
-Node: CCSO PH/QI4176
-Node: BBDB5228
-Node: Installation6245
-Node: LDAP Requirements7129
-Node: Usage7588
-Node: Querying Servers8440
-Node: Selecting a Server8959
-Node: Return Attributes10779
-Node: Duplicate Attributes11857
-Node: Query Form14429
-Node: Display of Query Results16911
-Node: Inline Query Expansion19881
-Node: The Server Hotlist24330
-Node: The Hotlist Edit Buffer25934
-Node: Multi-server Queries26994
-Node: Creating BBDB Records28277
-Ref: Creating BBDB Records-Footnote-133179
-Node: Server/Protocol Locals33308
-Node: Manipulating local bindings33815
-Node: Credits36482
-Node: GNU Free Documentation License36805
-Node: Command and Function Index59049
-Node: Variables Index63261
+Node: Top1500
+Node: Overview2137
+Node: LDAP3206
+Node: CCSO PH/QI4182
+Node: BBDB5234
+Node: Installation6251
+Node: LDAP Requirements7135
+Node: Usage7594
+Node: Querying Servers8446
+Node: Selecting a Server8965
+Node: Return Attributes10785
+Node: Duplicate Attributes11863
+Node: Query Form14435
+Node: Display of Query Results16917
+Node: Inline Query Expansion19887
+Node: The Server Hotlist24336
+Node: The Hotlist Edit Buffer25940
+Node: Multi-server Queries27000
+Node: Creating BBDB Records28283
+Ref: Creating BBDB Records-Footnote-133185
+Node: Server/Protocol Locals33314
+Node: Manipulating local bindings33821
+Node: Credits36488
+Node: GNU Free Documentation License36811
+Node: Command and Function Index59055
+Node: Variables Index63267
 
 End Tag Table

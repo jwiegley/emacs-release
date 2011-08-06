@@ -1,12 +1,12 @@
 /* Menu support for GNU Emacs on Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -3174,7 +3174,22 @@ fill_menubar (wv, deep_p)
 
 	  GetMenuTitle (menu, old_title);
 	  if (!EqualString (title, old_title, false, false))
-	    SetMenuTitle (menu, title);
+	    {
+#ifdef MAC_OSX
+	      if (id + 1 == min_menu_id[MAC_MENU_MENU_BAR + 1]
+		  || GetMenuRef (id + 1) == NULL)
+		{
+		  /* This is a workaround for Mac OS X 10.5 where just
+		     calling SetMenuTitle fails to change the title of
+		     the last (Help) menu in the menu bar.  */
+		  DeleteMenu (id);
+		  DisposeMenu (menu);
+		  menu = NULL;
+		}
+	      else
+#endif	/* MAC_OSX */
+		SetMenuTitle (menu, title);
+	    }
 #else  /* !TARGET_API_MAC_CARBON */
 	  if (!EqualString (title, (*menu)->menuData, false, false))
 	    {
@@ -3186,7 +3201,8 @@ fill_menubar (wv, deep_p)
 	    }
 #endif  /* !TARGET_API_MAC_CARBON */
 	}
-      else
+
+      if (!menu)
 	{
 	  menu = NewMenu (id, title);
 	  InsertMenu (menu, 0);

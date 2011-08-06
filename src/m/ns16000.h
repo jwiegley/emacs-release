@@ -1,12 +1,12 @@
 /* machine description file for ns16000.
    Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007  Free Software Foundation, Inc.
+                 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -30,7 +30,7 @@ For a Tektronix 16000 box (a 6130, perhaps?), use `-opsystem=bsd4-2'.
 Use `-machine=ns16000' for both.
 NOTE-END  */
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #undef WORDS_BIG_ENDIAN

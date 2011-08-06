@@ -4,7 +4,8 @@ flymake.texi.
    This manual is for GNU Flymake (version 0.3, April 2004), which is a
 universal on-the-fly syntax checker for GNU Emacs.
 
-   Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -284,7 +285,7 @@ This section summarizes variables used for Flymake configuration.
 
 `flymake-err-line-patterns'
      Patterns for error/warning messages in the form `(regexp file-idx
-     line-idx err-text-idx)'. *Note Parsing the output::.
+     line-idx col-idx err-text-idx)'. *Note Parsing the output::.
 
 `flymake-compilation-prevents-syntax-check'
      A flag indicating whether compilation and syntax check of the same
@@ -303,11 +304,11 @@ This section summarizes variables used for Flymake configuration.
      A boolean flag indicating whether to start syntax check after a
      newline character is added to the buffer.
 
-`flymake-errline-face'
+`flymake-errline'
      A custom face for highlighting lines for which at least one error
      has been reported.
 
-`flymake-warnline-face'
+`flymake-warnline'
      A custom face for highlighting lines for which at least one warning
      and no errors have been reported.
 
@@ -377,15 +378,12 @@ In this example, we will add support for `perl' as a syntax check tool.
 
    First, we write the `init-function':
 
-     (defun flymake-perl-init (buffer)
+     (defun flymake-perl-init ()
        (let* ((temp-file (flymake-init-create-temp-buffer-copy
-                          buffer 'flymake-create-temp-inplace))
-              (local-file  (concat (flymake-build-relative-filename
-                                    (file-name-directory
-                                     (buffer-file-name
-                                      (current-buffer)))
-                                    (file-name-directory temp-file))
-                                   (file-name-nondirectory temp-file))))
+                          'flymake-create-temp-inplace))
+     	 (local-file (file-relative-name
+                           temp-file
+                           (file-name-directory buffer-file-name))))
          (list "perl" (list "-wc " local-file))))
 
    `flymake-perl-init' creates a temporary copy of the buffer contents
@@ -676,9 +674,9 @@ File: flymake,  Node: Highlighting erroneous lines,  Next: Interaction with othe
 
 Highlighting is implemented with overlays and happens in the process
 sentinel, after calling the cleanup function. Two customizable faces
-are used: `flymake-errline-face' and `flymake-warnline-face'.  Errors
-belonging outside the current buffer are considered to belong to line 1
-of the current buffer.
+are used: `flymake-errline' and `flymake-warnline'.  Errors belonging
+outside the current buffer are considered to belong to line 1 of the
+current buffer.
 
 
 File: flymake,  Node: Interaction with other modes,  Prev: Highlighting erroneous lines,  Up: Flymake Implementation
@@ -1192,32 +1190,32 @@ Index
 
 
 Tag Table:
-Node: Top1376
-Node: Overview of Flymake1641
-Node: Installing Flymake3452
-Node: Using Flymake4139
-Node: Flymake mode4435
-Node: Running the syntax check4966
-Node: Navigating to error lines5486
-Node: Viewing error messages6241
-Node: Syntax check statuses6829
-Node: Troubleshooting8591
-Node: Configuring Flymake9107
-Node: Customizable variables9485
-Node: Adding support for a new syntax check tool11738
-Node: Example -- Configuring a tool called directly13972
-Node: Example -- Configuring a tool called via make15829
-Node: Flymake Implementation17277
-Node: Determining whether syntax check is possible18371
-Node: Making a temporary copy19746
-Node: Locating a master file21051
-Node: Getting the include directories22427
-Node: Locating the buildfile23479
-Node: Starting the syntax check process24951
-Node: Parsing the output25483
-Node: Highlighting erroneous lines26923
-Node: Interaction with other modes27441
-Node: GNU Free Documentation License28510
-Node: Index50751
+Node: Top1382
+Node: Overview of Flymake1647
+Node: Installing Flymake3458
+Node: Using Flymake4145
+Node: Flymake mode4441
+Node: Running the syntax check4972
+Node: Navigating to error lines5492
+Node: Viewing error messages6247
+Node: Syntax check statuses6835
+Node: Troubleshooting8597
+Node: Configuring Flymake9113
+Node: Customizable variables9491
+Node: Adding support for a new syntax check tool11742
+Node: Example -- Configuring a tool called directly13976
+Node: Example -- Configuring a tool called via make15586
+Node: Flymake Implementation17034
+Node: Determining whether syntax check is possible18128
+Node: Making a temporary copy19503
+Node: Locating a master file20808
+Node: Getting the include directories22184
+Node: Locating the buildfile23236
+Node: Starting the syntax check process24708
+Node: Parsing the output25240
+Node: Highlighting erroneous lines26680
+Node: Interaction with other modes27188
+Node: GNU Free Documentation License28257
+Node: Index50498
 
 End Tag Table

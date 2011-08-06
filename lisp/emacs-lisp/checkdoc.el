@@ -1,7 +1,7 @@
 ;;; checkdoc.el --- check documentation strings for style requirements
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Version: 0.6.2
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -263,7 +263,7 @@ system.  Possible values are:
 		 (const t)))
 
 (defvar checkdoc-ispell-lisp-words
-  '("alist" "emacs" "etags" "iff" "keymap" "paren" "regexp" "sexp" "xemacs")
+  '("alist" "emacs" "etags" "keymap" "paren" "regexp" "sexp" "xemacs")
   "List of words that are correct when spell-checking Lisp documentation.")
 
 (defcustom checkdoc-max-keyref-before-warn 10
@@ -1243,7 +1243,8 @@ generating a buffered list of errors."
 ;;;###autoload
 (define-minor-mode checkdoc-minor-mode
   "Toggle Checkdoc minor mode, a mode for checking Lisp doc strings.
-With prefix ARG, turn Checkdoc minor mode on iff ARG is positive.
+With prefix ARG, turn Checkdoc minor mode on if ARG is positive, otherwise
+turn it off.
 
 In Checkdoc minor mode, the usual bindings for `eval-defun' which is
 bound to \\<checkdoc-minor-mode-map>\\[checkdoc-eval-defun] and `checkdoc-eval-current-buffer' are overridden to include

@@ -1,6 +1,6 @@
 ;;; tutorial.el --- tutorial for Emacs
 
-;; Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -431,10 +431,16 @@ where
 	       (def-fun (nth 0 kdf))
 	       (def-fun-txt (format "%s" def-fun))
 	       (rem-fun (command-remapping def-fun))
+	       ;; Handle prefix definitions specially
+	       ;; so that a mode that rebinds some subcommands
+	       ;; won't make it appear that the whole prefix is gone.
 	       (key-fun (if (eq def-fun 'ESC-prefix)
 			    (lookup-key global-map [27])
-			  (key-binding key)))
+			  (if (eq def-fun 'Control-X-prefix)
+			      (lookup-key global-map [24])
+			    (key-binding key))))
 	       (where (where-is-internal (if rem-fun rem-fun def-fun))))
+
 	  (if where
 	      (progn
 		(setq where (key-description (car where)))
@@ -650,7 +656,8 @@ position where the display of changed bindings was inserted."
   ;; This runs in a hook so protect it:
   (condition-case err
       (if (y-or-n-p "Save your position in the tutorial? ")
-	  (tutorial--save-tutorial-to (tutorial--saved-file)))
+	  (tutorial--save-tutorial-to (tutorial--saved-file))
+	(message "Tutorial position not saved"))
     (error (message "Error saving tutorial state: %s"
 		    (error-message-string err)))))
 

@@ -1,6 +1,6 @@
 ;;; scroll-lock.el --- Scroll lock scrolling.
 
-;; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ralf Angeli <angeli@iwi.uni-sb.de>
 ;; Maintainer: FSF
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -50,7 +50,7 @@
 
 ;;;###autoload
 (define-minor-mode scroll-lock-mode
-  "Minor mode for pager-like scrolling.
+  "Buffer-local minor mode for pager-like scrolling.
 Keys which normally move point by line or paragraph will scroll
 the buffer by the respective amount of lines instead and point
 will be kept vertically fixed relative to window boundaries

@@ -3,7 +3,8 @@ newsticker.texi.
 
    This manual is for Newsticker (version 1.9, November 2005).
 
-Copyright (C) 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+Copyright (C) 2004, 2005, 2006, 2007, 2008  Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -661,14 +662,14 @@ Index
 
 
 Tag Table:
-Node: Top1311
-Node: Overview1854
-Node: Requirements3449
-Node: Installation4079
-Node: Usage4550
-Node: Configuration5458
-Node: Remarks7496
-Node: GNU Free Documentation License7901
-Node: Index30130
+Node: Top1317
+Node: Overview1860
+Node: Requirements3455
+Node: Installation4085
+Node: Usage4556
+Node: Configuration5464
+Node: Remarks7502
+Node: GNU Free Documentation License7907
+Node: Index30136
 
 End Tag Table

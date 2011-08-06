@@ -1,7 +1,7 @@
 ;;; iswitchb.el --- switch between buffers using substrings
 
 ;; Copyright (C) 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Stephen Eglen <stephen@gnu.org>
 ;; Maintainer: Stephen Eglen <stephen@gnu.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -289,7 +289,7 @@ is temporarily case sensitive."
   "*List of regexps or functions matching buffer names to ignore.
 For example, traditional behavior is not to list buffers whose names begin
 with a space, for which the regexp is `^ '.  See the source file for
-example functions that filter buffernames."
+example functions that filter buffer names."
   :type '(repeat (choice regexp function))
   :group 'iswitchb)
 (put 'iswitchb-buffer-ignore 'risky-local-variable t)
@@ -374,7 +374,7 @@ See also `iswitchb-newbuffer'."
   :group 'iswitchb)
 
 (defcustom iswitchb-use-faces t
-  "*Non-nil means use font-lock fonts for showing first match."
+  "*Non-nil means use font-lock faces for showing first match."
   :type 'boolean
   :group 'iswitchb)
 (define-obsolete-variable-alias 'iswitchb-use-fonts 'iswitchb-use-faces "22.1")
@@ -396,7 +396,7 @@ See documentation of `walk-windows' for useful values.")
 (defcustom iswitchb-minibuffer-setup-hook nil
   "Iswitchb-specific customization of minibuffer setup.
 
-This hook is run during minibuffer setup iff `iswitchb' will be active.
+This hook is run during minibuffer setup if `iswitchb' is active.
 For instance:
 \(add-hook 'iswitchb-minibuffer-setup-hook
 	  '\(lambda () (set (make-local-variable 'max-mini-window-height) 3)))
@@ -624,7 +624,7 @@ Return the name of a buffer selected.
 PROMPT is the prompt to give to the user.
 DEFAULT if given is the default buffer to be selected, which will
 go to the front of the list.
-If REQUIRE-MATCH is non-nil, an existing-buffer must be selected.
+If REQUIRE-MATCH is non-nil, an existing buffer must be selected.
 If START is a string, the selection process is started with that
 string.
 If MATCHES-SET is non-nil, the buflist is not updated before
@@ -1440,7 +1440,7 @@ This is an example function which can be hooked on to
     (iswitchb-to-end summaries)))
 
 (defun iswitchb-case ()
-  "Return non-nil iff we should ignore case when matching.
+  "Return non-nil if we should ignore case when matching.
 See the variable `iswitchb-case' for details."
   (if iswitchb-case
       (if (featurep 'xemacs)
@@ -1450,7 +1450,7 @@ See the variable `iswitchb-case' for details."
 ;;;###autoload
 (define-minor-mode iswitchb-mode
   "Toggle Iswitchb global minor mode.
-With arg, turn Iswitchb mode on if and only iff ARG is positive.
+With arg, turn Iswitchb mode on if ARG is positive, otherwise turn it off.
 This mode enables switching between buffers using substrings.  See
 `iswitchb' for details."
   nil nil iswitchb-global-map :global t :group 'iswitchb

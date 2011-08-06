@@ -1,7 +1,7 @@
 ;;; nndiary.el --- A diary back end for Gnus
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:        Didier Verna <didier@xemacs.org>
 ;; Maintainer:    Didier Verna <didier@xemacs.org>
@@ -12,8 +12,8 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2 of the License, or
-;; (at your option) any later version.
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,9 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, write to the Free Software
-;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-;; MA 02110-1301, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 
 ;;; Commentary:
@@ -131,7 +131,7 @@ non-nil."
 
 
 (defcustom nndiary-reminders '((0 . day))
-  "*Different times when you want to be reminded of your appointements.
+  "*Different times when you want to be reminded of your appointments.
 Diary articles will appear again, as if they'd been just received.
 
 Entries look like (3 . day) which means something like \"Please
@@ -145,7 +145,7 @@ not 'century, sorry).
 NOTE: the units of measure actually express dates, not durations: if you
 use 'week, messages will pop up on Sundays at 00:00 (or Mondays if
 `nndiary-week-starts-on-monday' is non-nil) and *not* 7 days before the
-appointement, if you use 'month, messages will pop up on the first day of
+appointment, if you use 'month, messages will pop up on the first day of
 each months, at 00:00 and so on.
 
 If you really want to specify a duration (like 24 hours exactly), you can
@@ -155,15 +155,15 @@ scheme might appear somewhat weird at a first glance, it is very powerful.
 In order to make this clear, here are some examples:
 
 - '(0 . day): this is the default value of `nndiary-reminders'.  It means
-  pop up the appointements of the day each morning at 00:00.
+  pop up the appointments of the day each morning at 00:00.
 
-- '(1 . day): this means pop up the appointements the day before, at 00:00.
+- '(1 . day): this means pop up the appointments the day before, at 00:00.
 
-- '(6 . hour): for an appointement at 18:30, this would pop up the
-  appointement message at 12:00.
+- '(6 . hour): for an appointment at 18:30, this would pop up the
+  appointment message at 12:00.
 
-- '(360 . minute): for an appointement at 18:30 and 15 seconds, this would
-  pop up the appointement message at 12:30."
+- '(360 . minute): for an appointment at 18:30 and 15 seconds, this would
+  pop up the appointment message at 12:30."
   :group 'nndiary
   :type '(repeat (cons :format "%v\n"
 		       (integer :format "%v")

@@ -1,7 +1,7 @@
 ;;; tar-mode.el --- simple editing of tar files from GNU emacs
 
 ;; Copyright (C) 1990, 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;; Maintainer: FSF
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -363,6 +363,7 @@ MODE should be an integer which is a file mode value."
 		  ((eq type 29) ?M)	; multivolume continuation
 		  ((eq type 35) ?S)	; sparse
 		  ((eq type 38) ?V)	; volume header
+		  ((eq type 55) ?H)	; extended pax header
 		  (t ?\s)
 		  )
 	    (tar-grind-file-mode mode)
@@ -421,7 +422,7 @@ is visible (and the real data of the buffer is hidden)."
                                   (buffer-substring pos (+ pos 512)))))))
         (setq pos (+ pos 512))
         (progress-reporter-update progress-reporter pos)
-        (if (eq (tar-header-link-type tokens) 20)
+        (if (memq (tar-header-link-type tokens) '(20 55))
             ;; Foo.  There's an extra empty block after these.
             (setq pos (+ pos 512)))
         (let ((size (tar-header-size tokens)))
@@ -657,15 +658,16 @@ appear on disk when you save the tar-file's buffer."
 	 (size (tar-header-size tokens))
 	 (link-p (tar-header-link-type tokens)))
     (if link-p
-	(error "This is a %s, not a real file"
-	       (cond ((eq link-p 5) "directory")
-		     ((eq link-p 20) "tar directory header")
-		     ((eq link-p 28) "next has longname")
-		     ((eq link-p 29) "multivolume-continuation")
-		     ((eq link-p 35) "sparse entry")
-		     ((eq link-p 38) "volume header")
-		     (t "link"))))
-    (if (zerop size) (error "This is a zero-length file"))
+	(error "This is %s, not a real file"
+	       (cond ((eq link-p 5) "a directory")
+		     ((eq link-p 20) "a tar directory header")
+		     ((eq link-p 28) "a next has longname")
+		     ((eq link-p 29) "a multivolume-continuation")
+		     ((eq link-p 35) "a sparse entry")
+		     ((eq link-p 38) "a volume header")
+		     ((eq link-p 55) "an extended pax header")
+		     (t "a link"))))
+    (if (zerop size) (message "This is a zero-length file"))
     descriptor))
 
 (defun tar-mouse-extract (event)

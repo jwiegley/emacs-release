@@ -4,13 +4,13 @@
 ;; Maintainer: Nick Roberts <nickrob@gnu.org>
 ;; Keywords: mouse gpm linux
 
-;; Copyright (C) 1994, 1995, 1998, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1995, 1998, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -271,7 +271,8 @@ The (secret) scrollbar interface is not implemented yet."
 ;;;###autoload
 (define-minor-mode t-mouse-mode
   "Toggle t-mouse mode to use the mouse in Linux consoles.
-With prefix arg, turn t-mouse mode on iff arg is positive.
+With prefix arg, turn t-mouse mode on if arg is positive, otherwise turn it
+off.
 
 This allows the use of the mouse when operating on a Linux console, in the
 same way as you can use the mouse under X11.

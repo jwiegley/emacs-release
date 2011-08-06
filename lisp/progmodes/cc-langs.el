@@ -1,7 +1,7 @@
 ;;; cc-langs.el --- language specific settings for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
@@ -18,7 +18,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -210,8 +210,8 @@ the evaluated constant value at compile time."
 
   (defun c-filter-ops (ops opgroup-filter op-filter &optional xlate)
     ;; Extract a subset of the operators in the list OPS in a DWIM:ey
-    ;; way.  The return value is a plain list of operators:  
-    ;; 
+    ;; way.  The return value is a plain list of operators:
+    ;;
     ;; OPS either has the structure of `c-operators', is a single
     ;; group in `c-operators', or is a plain list of operators.
     ;; 
@@ -413,6 +413,49 @@ the new syntax, as accepted by `modify-syntax-entry'."
   "Syntax table built on the mode syntax table but additionally
 classifies symbol constituents like '_' and '$' as word constituents,
 so that all identifiers are recognized as words.")
+
+(c-lang-defconst c-get-state-before-change-function
+  "If non-nil, a function called from c-before-change-hook.
+Typically it will record enough state to allow
+`c-before-font-lock-function' to extend the region to fontify,
+and may do such things as removing text-properties which must be
+recalculated.
+
+It takes 2 parameters, the BEG and END supplied to every
+before-change function; on entry, the buffer will have been
+widened and match-data will have been saved; point is undefined
+on both entry and exit; the return value is ignored.
+
+When the mode is initialized, this function is called with
+parameters \(point-min) and \(point-max)."
+  t nil
+  (c c++ objc) 'c-extend-region-for-CPP
+  awk 'c-awk-record-region-clear-NL)
+(c-lang-defvar c-get-state-before-change-function
+	       (c-lang-const c-get-state-before-change-function))
+  
+(c-lang-defconst c-before-font-lock-function
+  "If non-nil, a function called just before font locking.
+Typically it will extend the region about to be fontified \(see
+below) and will set `syntax-table' text properties on the region.
+
+It takes 3 parameters, the BEG, END, and OLD-LEN supplied to
+every after-change function; point is undefined on both entry and
+exit; on entry, the buffer will have been widened and match-data
+will have been saved; the return value is ignored.
+
+The function may extend the region to be fontified by setting the
+buffer local variables c-old-BEG and c-old-END.
+
+The function is called even when font locking is disabled.
+
+When the mode is initialized, this function is called with
+parameters \(point-min), \(point-max) and <buffer size>."
+  t nil
+  (c c++ objc) 'c-neutralize-syntax-in-CPP
+  awk 'c-awk-extend-and-syntax-tablify-region)
+(c-lang-defvar c-before-font-lock-function
+	       (c-lang-const c-before-font-lock-function))
 
 
 ;;; Lexer-level syntax (identifiers, tokens etc).
@@ -645,6 +688,13 @@ Assumed to not contain any submatches or \\| operators."
   (java awk) nil)
 (c-lang-defvar c-opt-cpp-prefix (c-lang-const c-opt-cpp-prefix))
 
+(c-lang-defconst c-anchored-cpp-prefix
+  "Regexp matching the prefix of a cpp directive anchored to BOL,
+in the languages that have a macro preprocessor."
+  t (if (c-lang-const c-opt-cpp-prefix)
+	(concat "^" (c-lang-const c-opt-cpp-prefix))))
+(c-lang-defvar c-anchored-cpp-prefix (c-lang-const c-anchored-cpp-prefix))
+
 (c-lang-defconst c-opt-cpp-start
   "Regexp matching the prefix of a cpp directive including the directive
 name, or nil in languages without preprocessor support.  The first
@@ -662,7 +712,7 @@ submatch surrounds the directive name."
 string message."
   t    (if (c-lang-const c-opt-cpp-prefix)
 	   '("error"))
-  pike '("error" "warning"))
+  (c c++ objc pike) '("error" "warning"))
 
 (c-lang-defconst c-cpp-include-directives
   "List of cpp directives (without the prefix) that are followed by a
@@ -700,7 +750,7 @@ definition, or nil if the language doesn't have any."
   (c-lang-const c-opt-cpp-macro-define-id))
 
 (c-lang-defconst c-cpp-expr-directives
-  "List if cpp directives (without the prefix) that are followed by an
+  "List of cpp directives (without the prefix) that are followed by an
 expression."
   t (if (c-lang-const c-opt-cpp-prefix)
 	'("if" "elif")))
@@ -1601,6 +1651,17 @@ will be handled."
   t (c-make-keywords-re t (c-lang-const c-other-block-decl-kwds)))
 (c-lang-defvar c-other-decl-block-key (c-lang-const c-other-decl-block-key))
 
+(c-lang-defvar c-other-decl-block-key-in-symbols-alist
+  (mapcar
+   (lambda (elt)
+     (cons elt
+	   (if (string= elt "extern")
+	       'inextern-lang
+	     (intern (concat "in" elt)))))
+   (c-lang-const c-other-block-decl-kwds))
+  "Alist associating keywords in c-other-decl-block-decl-kwds with
+their matching \"in\" syntactic symbols.")
+
 (c-lang-defconst c-typedef-decl-kwds
   "Keywords introducing declarations where the identifier(s) being
 declared are types.
@@ -1760,11 +1821,13 @@ one of `c-type-list-kwds', `c-ref-list-kwds',
 (c-lang-defvar c-prefix-spec-kwds-re (c-lang-const c-prefix-spec-kwds-re))
 
 (c-lang-defconst c-specifier-key
-  ;; Adorned regexp of the keywords in `c-prefix-spec-kwds' that
-  ;; aren't ambiguous with types or type prefixes.
+  ;; Adorned regexp of the keywords in `c-prefix-spec-kwds' that aren't
+  ;; ambiguous with types or type prefixes.  These are the keywords (like
+  ;; extern, namespace, but NOT template) that can modify a declaration.
   t (c-make-keywords-re t
       (set-difference (c-lang-const c-prefix-spec-kwds)
-		      (c-lang-const c-type-start-kwds)
+		      (append (c-lang-const c-type-start-kwds)
+			      (c-lang-const c-<>-arglist-kwds))
 		      :test 'string-equal)))
 (c-lang-defvar c-specifier-key (c-lang-const c-specifier-key))
 
@@ -1959,6 +2022,7 @@ identifiers that follows the type in a normal declaration."
   "Statement keywords followed directly by a substatement."
   t    '("do" "else")
   c++  '("do" "else" "try")
+  objc '("do" "else" "@finally" "@try")
   java '("do" "else" "finally" "try")
   idl  nil)
 
@@ -1972,6 +2036,7 @@ identifiers that follows the type in a normal declaration."
   "Statement keywords followed by a paren sexp and then by a substatement."
   t    '("for" "if" "switch" "while")
   c++  '("for" "if" "switch" "while" "catch")
+  objc '("for" "if" "switch" "while" "@catch" "@synchronized")
   java '("for" "if" "switch" "while" "catch" "synchronized")
   idl  nil
   pike '("for" "if" "switch" "while" "foreach")
@@ -2003,6 +2068,7 @@ identifiers that follows the type in a normal declaration."
 (c-lang-defconst c-simple-stmt-kwds
   "Statement keywords followed by an expression or nothing."
   t    '("break" "continue" "goto" "return")
+  objc '("break" "continue" "goto" "return" "@throw")
   ;; Note: `goto' is not valid in Java, but the keyword is still reserved.
   java '("break" "continue" "goto" "return" "throw")
   idl  nil
@@ -2064,6 +2130,7 @@ nevertheless contains a list separated with ';' and not ','."
 	    "false" "true")		; Defined in C99.
   objc    '("nil" "Nil")
   idl     '("TRUE" "FALSE")
+  java    '("true" "false" "null") ; technically "literals", not keywords
   pike    '("UNDEFINED")) ;; Not a keyword, but practically works as one.
 
 (c-lang-defconst c-primary-expr-kwds
@@ -2875,6 +2942,14 @@ way."
 (defconst c-lang-variable-inits (cc-eval-when-compile c-lang-variable-inits))
 (defconst c-emacs-variable-inits (cc-eval-when-compile c-emacs-variable-inits))
 
+;; Make the `c-lang-setvar' variables buffer local in the current buffer.
+;; These are typically standard emacs variables such as `comment-start'.
+(defmacro c-make-emacs-variables-local ()
+  `(progn
+     ,@(mapcar (lambda (init)
+		 `(make-local-variable ',(car init)))
+	       (cdr c-emacs-variable-inits))))
+
 (defun c-make-init-lang-vars-fun (mode)
   "Create a function that initializes all the language dependent variables
 for the given mode.
@@ -2898,6 +2973,7 @@ accomplish that conveniently."
 	 ;; that could be in the result from `cl-macroexpand-all'.
 	 (let ((c-buffer-is-cc-mode ',mode)
 	       current-var source-eval)
+	   (c-make-emacs-variables-local)
 	   (condition-case err
 
 	       (if (eq c-version-sym ',c-version-sym)
@@ -2956,6 +3032,7 @@ accomplish that conveniently."
 	     (init (append (cdr c-emacs-variable-inits)
 			   (cdr c-lang-variable-inits)))
 	     current-var)
+	 (c-make-emacs-variables-local)
 	 (condition-case err
 
 	     (while init

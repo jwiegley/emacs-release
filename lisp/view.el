@@ -1,7 +1,7 @@
 ;;; view.el --- peruse file or buffer without editing
 
 ;; Copyright (C) 1985, 1989, 1994, 1995, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: Inge Frick <inge@nada.kth.se>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -238,6 +238,16 @@ This is local in each buffer, once it is used.")
 
 ;;; Commands that enter or exit view mode.
 
+;; This is used when view mode is exited, to make sure we don't try to
+;; kill a buffer modified by the user.  A buffer in view mode can
+;; become modified if the user types C-x C-q, edits the buffer, then
+;; types C-x C-q again to return to view mode.
+(defun kill-buffer-if-not-modified (buf)
+  "Like `kill-buffer', but does nothing if the buffer is modified."
+  (let ((buf (get-buffer buf)))
+    (and buf (not (buffer-modified-p buf))
+	 (kill-buffer buf))))
+
 ;;;###autoload
 (defun view-file (file)
   "View FILE in View mode, returning to previous buffer when done.
@@ -258,12 +268,14 @@ This command runs the normal hook `view-mode-hook'."
 	(progn
 	  (switch-to-buffer buffer)
 	  (message "Not using View mode because the major mode is special"))
-      (view-buffer buffer (and (not had-a-buf) 'kill-buffer)))))
+      (view-buffer buffer (and (not had-a-buf) 'kill-buffer-if-not-modified)))))
 
 ;;;###autoload
 (defun view-file-other-window (file)
   "View FILE in View mode in another window.
-Return that window to its previous buffer when done.
+When done, return that window to its previous buffer, and kill the
+buffer visiting FILE if unmodified and if it wasn't visited before.
+
 Emacs commands editing the buffer contents are not available; instead,
 a special set of commands (mostly letters and punctuation)
 are defined for moving around in the buffer.
@@ -273,14 +285,19 @@ For list of all View commands, type H or h while viewing.
 This command runs the normal hook `view-mode-hook'."
   (interactive "fIn other window view file: ")
   (unless (file-exists-p file) (error "%s does not exist" file))
-  (let ((had-a-buf (get-file-buffer file)))
-    (view-buffer-other-window (find-file-noselect file) nil
-			      (and (not had-a-buf) 'kill-buffer))))
+  (let ((had-a-buf (get-file-buffer file))
+	(buf-to-view (find-file-noselect file)))
+    (view-buffer-other-window buf-to-view nil
+			      (and (not had-a-buf)
+				   'kill-buffer-if-not-modified))))
 
 ;;;###autoload
 (defun view-file-other-frame (file)
   "View FILE in View mode in another frame.
-Maybe delete other frame and/or return to previous buffer when done.
+When done, kill the buffer visiting FILE if unmodified and if it wasn't
+visited before; also, maybe delete other frame and/or return to previous
+buffer.
+
 Emacs commands editing the buffer contents are not available; instead,
 a special set of commands (mostly letters and punctuation)
 are defined for moving around in the buffer.
@@ -290,9 +307,11 @@ For list of all View commands, type H or h while viewing.
 This command runs the normal hook `view-mode-hook'."
   (interactive "fIn other frame view file: ")
   (unless (file-exists-p file) (error "%s does not exist" file))
-  (let ((had-a-buf (get-file-buffer file)))
-    (view-buffer-other-frame (find-file-noselect file) nil
-			     (and (not had-a-buf) 'kill-buffer))))
+  (let ((had-a-buf (get-file-buffer file))
+	(buf-to-view (find-file-noselect file)))
+    (view-buffer-other-frame buf-to-view nil
+			     (and (not had-a-buf)
+				  'kill-buffer-if-not-modified))))
 
 
 ;;;###autoload
@@ -375,7 +394,8 @@ Use this argument instead of explicitly setting `view-exit-action'."
   ;; bindings instead of using the \\[] construction.  The reason for this
   ;; is that most commands have more than one key binding.
   "Toggle View mode, a minor mode for viewing text but not editing it.
-With ARG, turn View mode on iff ARG is positive.
+With prefix argument ARG, turn View mode on if ARG is positive, otherwise
+turn it off.
 
 Emacs commands that do not change the buffer contents are available as usual.
 Kill commands insert text in kill buffers but do not delete.  Other commands
@@ -989,27 +1009,27 @@ for highlighting the match that is found."
 	       times (if no "no " "") regexp)
       (sit-for 4))))
 
+;; This is the dumb approach, looking at each line.  The original
+;; version of this function looked like it might have been trying to
+;; do something clever, but not succeeding:
+;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2007-09/msg00073.html
 (defun view-search-no-match-lines (times regexp)
-  ;; Search for the TIMESt occurrence of line with no match for REGEXP.
-  (let ((back (and (< times 0) (setq times (- times)) -1))
-	n)
-    (while (> times 0)
-      (save-excursion (beginning-of-line (if back (- times) (1+ times)))
-		      (setq n (point)))
-      (setq times
-	    (cond
-	     ((< (count-lines (point) n) times) -1) ; Not enough lines.
-	     ((or (null (re-search-forward regexp nil t back))
-		  (if back (and (< (match-end 0) n)
-				(> (count-lines (match-end 0) n) 1))
-		    (and (< n (match-beginning 0))
-			 (> (count-lines n (match-beginning 0)) 1))))
-	      0)			; No match within lines.
-	     (back (count-lines (max n (match-beginning 0)) (match-end 0)))
-	     (t (count-lines (match-beginning 0) (min n (match-end 0))))))
-      (goto-char n))
-    (and (zerop times) (looking-at "^.*$"))))
-
+  "Search for the TIMESth occurrence of a line with no match for REGEXP.
+If such a line is found, return non-nil and set the match-data to that line.
+If TIMES is negative, search backwards."
+  (let ((step (if (>= times 0) 1
+                (setq times (- times))
+                -1)))
+    ;; Note that we do not check the current line.
+    (while (and (> times 0)
+                (zerop (forward-line step)))
+      ;; (forward-line 1) returns 0 on moving within the last line.
+      (if (eobp)
+          (setq times -1)
+        (or (re-search-forward regexp (line-end-position) t)
+            (setq times (1- times))))))
+  (and (zerop times)
+       (looking-at ".*")))
 
 (provide 'view)
 

@@ -1,7 +1,7 @@
 ;;; f90.el --- Fortran-90 mode (free format)
 
 ;; Copyright (C) 1995, 1996, 1997, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007  Free Software Foundation, Inc.
+;;   2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: Torbj\"orn Einarsson <Torbjorn.Einarsson@era.ericsson.se>
 ;; Maintainer: Glenn Morris <rgm@gnu.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -177,46 +177,55 @@
   "*Extra indentation applied to DO blocks."
   :type  'integer
   :group 'f90-indent)
+(put 'f90-do-indent 'safe-local-variable 'integerp)
 
 (defcustom f90-if-indent 3
   "*Extra indentation applied to IF, SELECT CASE, WHERE and FORALL blocks."
   :type  'integer
   :group 'f90-indent)
+(put 'f90-if-indent 'safe-local-variable 'integerp)
 
 (defcustom f90-type-indent 3
   "*Extra indentation applied to TYPE, INTERFACE and BLOCK DATA blocks."
   :type  'integer
   :group 'f90-indent)
+(put 'f90-type-indent 'safe-local-variable 'integerp)
 
 (defcustom f90-program-indent 2
   "*Extra indentation applied to PROGRAM, MODULE, SUBROUTINE, FUNCTION blocks."
   :type  'integer
   :group 'f90-indent)
+(put 'f90-program-indent 'safe-local-variable 'integerp)
 
 (defcustom f90-continuation-indent 5
   "*Extra indentation applied to continuation lines."
   :type  'integer
   :group 'f90-indent)
+(put 'f90-continuation-indent 'safe-local-variable 'integerp)
 
 (defcustom f90-comment-region "!!$"
   "*String inserted by \\[f90-comment-region] at start of each line in region."
   :type  'string
   :group 'f90-indent)
+(put 'f90-comment-region 'safe-local-variable 'stringp)
 
 (defcustom f90-indented-comment-re "!"
   "*Regexp matching comments to indent as code."
   :type  'regexp
   :group 'f90-indent)
+(put 'f90-indented-comment-re 'safe-local-variable 'stringp)
 
 (defcustom f90-directive-comment-re "!hpf\\$"
   "*Regexp of comment-like directive like \"!HPF\\\\$\", not to be indented."
   :type  'regexp
   :group 'f90-indent)
+(put 'f90-directive-comment-re 'safe-local-variable 'stringp)
 
 (defcustom f90-beginning-ampersand t
   "*Non-nil gives automatic insertion of \& at start of continuation line."
   :type  'boolean
   :group 'f90)
+(put 'f90-beginning-ampersand 'safe-local-variable 'booleanp)
 
 (defcustom f90-smart-end 'blink
   "*Qualification of END statements according to the matching block start.
@@ -227,6 +236,8 @@ The other two settings have the same effect, but 'blink
 additionally blinks the cursor to the start of the block."
   :type  '(choice (const blink) (const no-blink) (const nil))
   :group 'f90)
+(put 'f90-smart-end 'safe-local-variable
+     (lambda (value) (memq value '(blink no-blink nil))))
 
 (defcustom f90-break-delimiters "[-+\\*/><=,% \t]"
   "*Regexp matching delimiter characters at which lines may be broken.
@@ -235,11 +246,13 @@ matching this regexp that should not be split, and these are
 specified by the constant `f90-no-break-re'."
   :type  'regexp
   :group 'f90)
+(put 'f90-break-delimiters 'safe-local-variable 'stringp)
 
 (defcustom f90-break-before-delimiters t
   "*Non-nil causes `f90-do-auto-fill' to break lines before delimiters."
   :type  'boolean
   :group 'f90)
+(put 'f90-break-before-delimiters 'safe-local-variable 'booleanp)
 
 (defcustom f90-auto-keyword-case nil
   "*Automatic case conversion of keywords.
@@ -247,17 +260,23 @@ The options are 'downcase-word, 'upcase-word, 'capitalize-word and nil."
   :type  '(choice (const downcase-word) (const upcase-word)
                   (const capitalize-word) (const nil))
   :group 'f90)
+(put 'f90-auto-keyword-case 'safe-local-variable
+     (lambda (value) (memq value '(downcase-word
+                                   capitalize-word upcase-word nil))))
 
 (defcustom f90-leave-line-no nil
   "*If non-nil, line numbers are not left justified."
   :type  'boolean
   :group 'f90)
+(put 'f90-leave-line-no 'safe-local-variable 'booleanp)
 
 (defcustom f90-mode-hook nil
   "Hook run when entering F90 mode."
   :type    'hook
   :options '(f90-add-imenu-menu)
   :group   'f90)
+(put 'f90-mode-hook 'safe-local-variable
+     (lambda (value) (member value '((f90-add-imenu-menu) nil))))
 
 ;; User options end here.
 
@@ -371,7 +390,7 @@ subroutine\\)\\|use\\|call\\)\\>[ \t]*\\(\\sw+\\)?"
    (list
     ;; Variable declarations (avoid the real function call).
     '("^[ \t0-9]*\\(real\\|integer\\|c\\(haracter\\|omplex\\)\\|\
-logical\\|double[ \t]*precision\\|*type[ \t]*(\\sw+)\\)\
+logical\\|double[ \t]*precision\\|type[ \t]*(\\sw+)\\)\
 \\(.*::\\|[ \t]*(.*)\\)?\\([^&!\n]*\\)"
       (1 font-lock-type-face t) (4 font-lock-variable-name-face t))
     ;; do, if, select, where, and forall constructs.
@@ -393,7 +412,7 @@ do\\([ \t]*while\\)?\\|select[ \t]*case\\|where\\|forall\\)\\)\\>"
     '("\\<\\(exit\\|cycle\\)[ \t]*\\(\\sw+\\)?\\>"
       (1 font-lock-keyword-face) (2 font-lock-constant-face nil t))
     '("\\<\\(case\\)[ \t]*\\(default\\|(\\)" . 1)
-    '("\\<\\(do\\|go *to\\)\\>[ \t]*\\([0-9]+\\)"
+    '("\\<\\(do\\|go[ \t]*to\\)\\>[ \t]*\\([0-9]+\\)"
       (1 font-lock-keyword-face) (2 font-lock-constant-face))
     ;; Line numbers (lines whose first character after number is letter).
     '("^[ \t]*\\([0-9]+\\)[ \t]*[a-z]+" (1 font-lock-constant-face t))))
@@ -963,7 +982,7 @@ NAME is non-nil only for type."
   (cond
    ((looking-at f90-type-def-re)
     (list (match-string 1) (match-string 2)))
-   ((looking-at "\\(interface\\|block[\t]*data\\)\\>")
+   ((looking-at "\\(interface\\|block[ \t]*data\\)\\>")
     (list (match-string 1) nil))))
 
 (defsubst f90-looking-at-program-block-start ()
@@ -1223,7 +1242,7 @@ Return (TYPE NAME), or nil if not found."
 Return (TYPE NAME), or nil if not found."
   (interactive)
   (let ((case-fold-search t)
-        (count 1) 
+        (count 1)
         matching-end)
     (end-of-line)
     (while (and (> count 0)

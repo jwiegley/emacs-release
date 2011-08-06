@@ -1,8 +1,8 @@
 This is ../info/widget, produced by makeinfo version 4.8 from
 widget.texi.
 
-   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free
-Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -137,17 +137,6 @@ implement forms are:
      be extended to use the GUI features.  This means that your code
      using the widget library will also use the new graphic features
      automatically.
-
-   In order to minimize the code that is loaded by users who do not
-create any widgets, the code has been split in two files:
-
-`widget.el'
-     This will declare the user variables, define the function
-     `define-widget', and autoload the function `widget-create'.
-
-`wid-edit.el'
-     Everything else is here, there is no reason to load it explicitly,
-     as it will be autoloaded when needed.
 
 
 File: widget,  Node: User Interface,  Next: Programming Example,  Prev: Introduction,  Up: Top
@@ -2171,7 +2160,6 @@ variables, and widgets described in this manual.
 * void keyword:                          menu-choice.         (line  14)
 * widget browser:                        Widget Browser.      (line   6)
 * widget buttons:                        User Interface.      (line  84)
-* widget library, files:                 Introduction.        (line  88)
 * widget library, why use it:            Introduction.        (line  62)
 * widget minor mode:                     Widget Minor Mode.   (line   6)
 * widget properties:                     Widget Properties.   (line   6)
@@ -2243,39 +2231,39 @@ variables, and widgets described in this manual.
 
 
 Tag Table:
-Node: Top1415
-Node: Introduction1835
-Node: User Interface5304
-Node: Programming Example11025
-Node: Setting Up the Buffer14371
-Node: Basic Types16090
-Node: link22711
-Node: url-link23219
-Node: info-link23523
-Node: push-button23805
-Node: editable-field24372
-Node: text25760
-Node: menu-choice26049
-Node: radio-button-choice26897
-Node: item28479
-Node: choice-item28859
-Node: toggle29349
-Node: checkbox30096
-Node: checklist30395
-Node: editable-list31830
-Node: group33004
-Node: Sexp Types33284
-Node: constants33628
-Node: generic34696
-Node: atoms35246
-Node: composite37167
-Node: Widget Properties40147
-Node: Defining New Widgets43200
-Node: Widget Browser49228
-Node: Widget Minor Mode50081
-Node: Utilities50630
-Node: Widget Wishlist51113
-Node: GNU Free Documentation License52370
-Node: Index74603
+Node: Top1420
+Node: Introduction1840
+Node: User Interface4911
+Node: Programming Example10632
+Node: Setting Up the Buffer13978
+Node: Basic Types15697
+Node: link22318
+Node: url-link22826
+Node: info-link23130
+Node: push-button23412
+Node: editable-field23979
+Node: text25367
+Node: menu-choice25656
+Node: radio-button-choice26504
+Node: item28086
+Node: choice-item28466
+Node: toggle28956
+Node: checkbox29703
+Node: checklist30002
+Node: editable-list31437
+Node: group32611
+Node: Sexp Types32891
+Node: constants33235
+Node: generic34303
+Node: atoms34853
+Node: composite36774
+Node: Widget Properties39754
+Node: Defining New Widgets42807
+Node: Widget Browser48835
+Node: Widget Minor Mode49688
+Node: Utilities50237
+Node: Widget Wishlist50720
+Node: GNU Free Documentation License51977
+Node: Index74210
 
 End Tag Table

@@ -1,6 +1,6 @@
 ;;; antlr-mode.el --- major mode for ANTLR grammar files
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation, Inc.
 ;;
 ;; Author: Christoph.Wedler@sap.com
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -568,7 +568,7 @@ The standard value contains the following functions as READ-FN:
 general value, or `antlr-read-boolean' with ARGs = \(PROMPT TABLE) which
 reads a boolean value or a member of TABLE.  PROMPT is the prompt when
 asking for a new value.  If non-nil, TABLE is a table for completion or
-a function evaluating to such a table.  The return value is quoted iff
+a function evaluating to such a table.  The return value is quoted if
 AS-STRING is non-nil and is either t or a symbol which is a member of
 `antlr-options-style'.")
 
@@ -2203,8 +2203,8 @@ part SUPER in the result of `antlr-file-dependencies'.  CLASSES is the
 part \(CLASS-SPEC ...) in the result of `antlr-directory-dependencies'.
 
 The result looks like \(OPTION WITH-UNKNOWN GLIB ...).  OPTION is the
-complete \"-glib\" option.  WITH-UNKNOWN has value t iff there is none
-or more than one grammar file for at least one super grammar.
+complete \"-glib\" option.  WITH-UNKNOWN is t if there is none or more
+than one grammar file for at least one super grammar.
 
 Each GLIB looks like \(GRAMMAR-FILE \. EVOCAB).  GRAMMAR-FILE is a file
 in which a super-grammar is defined.  EVOCAB is the value of the export

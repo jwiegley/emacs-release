@@ -412,10 +412,10 @@ else
 fi
 
 test \$exitcode = 0") || {
-  echo Please tell bug-autoconf@gnu.org about your system,
-  echo including any error possibly output before this message.
-  echo This can help us improve future autoconf versions.
-  echo Configuration will now proceed without shell functions.
+  echo No shell found that supports shell functions.
+  echo Please tell autoconf@gnu.org about your system,
+  echo including any error possibly output before this
+  echo message
 }
 
 
@@ -2204,11 +2204,25 @@ case "${canonical}" in
     opsys=freebsd
     case "${canonical}" in
       alpha*-*-freebsd*)	machine=alpha ;;
+      arm*-*-freebsd*)          machine=arm ;;
       ia64-*-freebsd*)		machine=ia64 ;;
       sparc64-*-freebsd*)	machine=sparc ;;
       powerpc-*-freebsd*)	machine=macppc ;;
       i[3456]86-*-freebsd*)	machine=intel386 ;;
       amd64-*-freebsd*|x86_64-*-freebsd*) machine=amdx86-64 ;;
+    esac
+  ;;
+
+  ## FreeBSD kernel + glibc based userland
+  *-*-kfreebsd*gnu* )
+    opsys=gnu-kfreebsd
+    case "${canonical}" in
+      alpha*-*-kfreebsd*)	machine=alpha ;;
+      ia64-*-kfreebsd*)		machine=ia64 ;;
+      sparc64-*-kfreebsd*)	machine=sparc ;;
+      powerpc-*-kfreebsd*)	machine=macppc ;;
+      i[3456]86-*-kfreebsd*)	machine=intel386 ;;
+      amd64-*-kfreebsd*|x86_64-*-kfreebsd*) machine=amdx86-64 ;;
     esac
   ;;
 
@@ -3161,7 +3175,7 @@ _ACEOF
   ;;
 
   ## Tensilica Xtensa Linux-based GNU system
-  xtensa-*-linux-gnu* )
+  xtensa*-*-linux-* )
     machine=xtensa opsys=gnu-linux
     ;;
 
@@ -3207,6 +3221,30 @@ if test x"${opsys}" = x; then
     ;;
   esac
 fi
+
+### Tests for sytems that we beleive are obsolete and should be desupported.
+
+case "${machine}" in
+     pmax | hp9000s300 | ibm370aix | ncr386 | ews4800 | mips-siemens | powerpcle | tandem-s2 )
+     	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
+	  echo "and it is planned to be desupported in the next version of Emacs"
+	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
+	  echo "The code is still functional, but you need to edit the 'configure' script and remove the"
+	  echo "exit 33 line.  After that you can run configure again and 'complete' the build."
+	  exit 33
+	  ;;
+esac
+
+case "${opsys}" in
+     bsd386 | bsdos2-1 |  bsdos2 | bsdos3 | bsdos4 | bsd4-1 | bsd4-2 | bsd4-3 | usg5-0 | usg5-2-2 | usg5-2 | usg5-3 | ultrix4-3 | 386bsd | hpux | hpux8 | hpux9 | hpux9shr | hpux10 | hpux10-20 | aix3-1 | aix3-2-5 | aix3-2 | aix4-1 | nextstep | ux4800 | uxpds | uxpv )
+     	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
+	  echo "and it is planned to be desupported in the next version of Emacs"
+	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
+	  echo "The code is still functional, but you need to edit the 'configure' script and remove the"
+	  echo "'exit 44' line.  After that you can run 'configure' again and complete the build."
+	  exit 44
+	  ;;
+esac
 
 
 
@@ -5815,7 +5853,7 @@ fi
 ### The standard library on x86-64 GNU/Linux distributions can
 ### be located in either /usr/lib64 or /usr/lib.
 case "${canonical}" in
-  x86_64-*-linux-gnu* )
+  x86_64-*-linux-gnu* | s390x-*-linux-gnu* )
     if test -d /usr/lib64; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -10943,8 +10981,8 @@ if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
 echo "$as_me: error: Conflicting options, --with-gtk is incompatible with --with-x-toolkit=${with_x_toolkit}" >&2;}
    { (exit 1); exit 1; }; };
   fi
-  GLIB_REQUIRED=2.4
-  GTK_REQUIRED=2.4
+  GLIB_REQUIRED=2.6
+  GTK_REQUIRED=2.6
   GTK_MODULES="gtk+-2.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED"
 
     if test "X${with_pkg_config_prog}" != X; then
@@ -11683,7 +11721,10 @@ fi
 
     fi
     if test "$HAVE_GTK_AND_PTHREAD" = yes; then
-      GTK_LIBS="$GTK_LIBS -lpthread"
+      case "${canonical}" in
+        *-hpux*) ;;
+        *) GTK_LIBS="$GTK_LIBS -lpthread" ;;
+      esac
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_GTK_AND_PTHREAD 1

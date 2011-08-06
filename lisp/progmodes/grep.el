@@ -1,7 +1,7 @@
 ;;; grep.el --- run Grep as inferior of Emacs, parse match messages
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@gnu.org>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -750,10 +750,10 @@ This command shares argument histories with \\[lgrep] and \\[grep-find]."
 		      grep-find-template
 		      regexp
 		      (concat (shell-quote-argument "(")
-			      " -name "
+			      " " find-name-arg " "
 			      (mapconcat #'shell-quote-argument
 					 (split-string files)
-					 " -o -name ")
+					 (concat " -o " find-name-arg " "))
 			      " "
 			      (shell-quote-argument ")"))
 		       dir

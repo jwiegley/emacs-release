@@ -5,7 +5,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2006, 2007 Free Software Foundation, Inc.
+Copyright @copyright{} 2006, 2007, 2008 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -283,7 +283,7 @@ IRC.
 @end example
 
 This will try to change your nick to @code{"alex}.  Usually this will
-fail because the double quote character is not a legal character for
+fail because the double quote character is not a valid character for
 nicks.
 
 @cindex case insensitive commands

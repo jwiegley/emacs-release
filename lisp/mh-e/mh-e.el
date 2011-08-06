@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1985, 1986, 1987, 1988,
 ;;  1990, 1992, 1993, 1994, 1995, 1997, 1999,
-;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1986,7 +1986,7 @@ you would use \"(mh-set-cmd-note 4)\"."
   :package-version '(MH-E . "7.0"))
 
 (defun mh-scan-format-file-check (symbol value)
-  "Check if desired setting is legal.
+  "Check if desired setting is valid.
 Throw an error if user tries to set `mh-scan-format-file' to
 anything but t when `mh-adaptive-cmd-note-flag' is on. Otherwise,
 set SYMBOL to VALUE."
@@ -2025,7 +2025,7 @@ Emacs start with 0)."
   :package-version '(MH-E . "6.0"))
 
 (defun mh-adaptive-cmd-note-flag-check (symbol value)
-  "Check if desired setting is legal.
+  "Check if desired setting is valid.
 Throw an error if user tries to turn on
 `mh-adaptive-cmd-note-flag' when `mh-scan-format-file' isn't t.
 Otherwise, set SYMBOL to VALUE."

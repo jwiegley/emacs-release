@@ -1,7 +1,7 @@
 ;;; custom.el --- tools for declaring and initializing options
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -642,7 +642,7 @@ this sets the local binding in that buffer instead."
     (funcall variable (if value 1 0))))
 
 (defun custom-quote (sexp)
-  "Quote SEXP iff it is not self quoting."
+  "Quote SEXP if it is not self quoting."
   (if (or (memq sexp '(t nil))
 	  (keywordp sexp)
 	  (and (listp sexp)
@@ -665,14 +665,14 @@ default value.  Otherwise, set it to nil.
 
 To actually save the value, call `custom-save-all'.
 
-Return non-nil iff the `saved-value' property actually changed."
+Return non-nil if the `saved-value' property actually changed."
   (custom-load-symbol symbol)
   (let* ((get (or (get symbol 'custom-get) 'default-value))
 	 (value (funcall get symbol))
 	 (saved (get symbol 'saved-value))
 	 (standard (get symbol 'standard-value))
 	 (comment (get symbol 'customized-variable-comment)))
-    ;; Save default value iff different from standard value.
+    ;; Save default value if different from standard value.
     (if (or (null standard)
 	    (not (equal value (condition-case nil
 				  (eval (car standard))
@@ -694,13 +694,13 @@ or else if it is different from the standard value, set the
 `customized-value' property to a list whose car evaluates to the
 default value.  Otherwise, set it to nil.
 
-Return non-nil iff the `customized-value' property actually changed."
+Return non-nil if the `customized-value' property actually changed."
   (custom-load-symbol symbol)
   (let* ((get (or (get symbol 'custom-get) 'default-value))
 	 (value (funcall get symbol))
 	 (customized (get symbol 'customized-value))
 	 (old (or (get symbol 'saved-value) (get symbol 'standard-value))))
-    ;; Mark default value as set iff different from old value.
+    ;; Mark default value as set if different from old value.
     (if (not (and old
                   (equal value (condition-case nil
                                    (eval (car old))
@@ -885,7 +885,7 @@ in SYMBOL's list property `theme-value' \(using `custom-push-theme')."
                   (memq (get symbol 'custom-autoload) '(nil noset)))
         ;; This symbol needs to be autoloaded, even just for a `set'.
         (custom-load-symbol symbol))))
- 
+
   ;; Move minor modes and variables with explicit requires to the end.
   (setq args
 	(sort args
@@ -898,6 +898,8 @@ in SYMBOL's list property `theme-value' \(using `custom-push-theme')."
 			 (error "Circular custom dependency between `%s' and `%s'"
 				sym1 sym2))
 			(2-then-1 nil)
+			;; 1 is a dependency of 2, so needs to be set first.
+			(1-then-2)
 			;; Put minor modes and symbols with :require last.
 			;; Putting minor modes last ensures that the mode
 			;; function will see other customized values rather
@@ -1092,6 +1094,7 @@ This does not include the `user' theme, which is set by Customize,
 and always takes precedence over other Custom Themes."
   :group 'customize
   :type  '(repeat symbol)
+  :set-after '(custom-theme-directory)  ; so we can find the themes
   :set (lambda (symbol themes)
 	 ;; Avoid an infinite loop when custom-enabled-themes is
 	 ;; defined in a theme (e.g. `user').  Enabling the theme sets

@@ -1,7 +1,8 @@
 ;;; simple.el --- basic editing commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -631,7 +632,9 @@ column specified by the function `current-left-margin'."
     (newline)
     (save-excursion
       (goto-char pos)
-      (indent-according-to-mode)
+      ;; Usually indent-according-to-mode should "preserve" point, but it is
+      ;; not guaranteed; e.g. indent-to-left-margin doesn't.
+      (save-excursion (indent-according-to-mode))
       (delete-horizontal-space t))
     (indent-according-to-mode)))
 
@@ -1155,7 +1158,10 @@ to get different commands to edit and resubmit."
 (defvar minibuffer-history nil
   "Default minibuffer history list.
 This is used for all minibuffer input
-except when an alternate history list is specified.")
+except when an alternate history list is specified.
+
+Maximum length of the history list is determined by the value
+of `history-length', which see.")
 (defvar minibuffer-history-sexp-flag nil
   "Control whether history list elements are expressions or strings.
 If the value of this variable equals current minibuffer depth,
@@ -1747,7 +1753,10 @@ You can disable the popping up of this buffer by adding the entry
     t))
 
 (defvar shell-command-history nil
-  "History list for some commands that read shell commands.")
+  "History list for some commands that read shell commands.
+
+Maximum length of the history list is determined by the value
+of `history-length', which see.")
 
 (defvar shell-command-switch "-c"
   "Switch used to have the shell execute its command line argument.")
@@ -3219,7 +3228,8 @@ With no prefix argument, set the mark at point, and push the
 old mark position on local mark ring.  Also push the old mark on
 global mark ring, if the previous mark was set in another buffer.
 
-Immediately repeating this command activates `transient-mark-mode' temporarily.
+When Transient Mark Mode is off, immediately repeating this
+command activates `transient-mark-mode' temporarily.
 
 With prefix argument \(e.g., \\[universal-argument] \\[set-mark-command]\), \
 jump to the mark, and set the mark from
@@ -3477,7 +3487,7 @@ Outline mode sets this."
   :type 'boolean
   :group 'editing-basics)
 
-(defun line-move-invisible-p (pos)
+(defun invisible-p (pos)
   "Return non-nil if the character after POS is currently invisible."
   (let ((prop
 	 (get-char-property pos 'invisible)))
@@ -3485,6 +3495,7 @@ Outline mode sets this."
 	prop
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
+(define-obsolete-function-alias 'line-move-invisible-p 'invisible-p)
 
 ;; Returns non-nil if partial move was done.
 (defun line-move-partial (arg noerror to-end)
@@ -3605,7 +3616,7 @@ Outline mode sets this."
 	      (while (and (> arg 0) (not done))
 		;; If the following character is currently invisible,
 		;; skip all characters with that same `invisible' property value.
-		(while (and (not (eobp)) (line-move-invisible-p (point)))
+		(while (and (not (eobp)) (invisible-p (point)))
 		  (goto-char (next-char-property-change (point))))
 		;; Move a line.
 		;; We don't use `end-of-line', since we want to escape
@@ -3623,7 +3634,7 @@ Outline mode sets this."
 		    (setq done t)))
 		 ((and (> arg 1)  ;; Use vertical-motion for last move
 		       (not (integerp selective-display))
-		       (not (line-move-invisible-p (point))))
+		       (not (invisible-p (point))))
 		  ;; We avoid vertical-motion when possible
 		  ;; because that has to fontify.
 		  (forward-line 1))
@@ -3652,7 +3663,7 @@ Outline mode sets this."
 		    (setq done t)))
 		 ((and (< arg -1) ;; Use vertical-motion for last move
 		       (not (integerp selective-display))
-		       (not (line-move-invisible-p (1- (point)))))
+		       (not (invisible-p (1- (point)))))
 		  (forward-line -1))
 		 ((zerop (vertical-motion -1))
 		  (if (not noerror)
@@ -3664,7 +3675,7 @@ Outline mode sets this."
 			  ;; if our target is the middle of this line.
 			  (or (zerop (or goal-column temporary-goal-column))
 			      (< arg 0))
-			  (not (bobp)) (line-move-invisible-p (1- (point))))
+			  (not (bobp)) (invisible-p (1- (point))))
 		    (goto-char (previous-char-property-change (point))))))))
 	  ;; This is the value the function returns.
 	  (= arg 0))
@@ -3696,7 +3707,7 @@ Outline mode sets this."
 	     (save-excursion
 	       ;; Like end-of-line but ignores fields.
 	       (skip-chars-forward "^\n")
-	       (while (and (not (eobp)) (line-move-invisible-p (point)))
+	       (while (and (not (eobp)) (invisible-p (point)))
 		 (goto-char (next-char-property-change (point)))
 		 (skip-chars-forward "^\n"))
 	       (point))))
@@ -3779,13 +3790,13 @@ and `current-column' to be able to ignore invisible text."
     (move-to-column col))
 
   (when (and line-move-ignore-invisible
-	     (not (bolp)) (line-move-invisible-p (1- (point))))
+	     (not (bolp)) (invisible-p (1- (point))))
     (let ((normal-location (point))
 	  (normal-column (current-column)))
       ;; If the following character is currently invisible,
       ;; skip all characters with that same `invisible' property value.
       (while (and (not (eobp))
-		  (line-move-invisible-p (point)))
+		  (invisible-p (point)))
 	(goto-char (next-char-property-change (point))))
       ;; Have we advanced to a larger column position?
       (if (> (current-column) normal-column)
@@ -3798,7 +3809,7 @@ and `current-column' to be able to ignore invisible text."
 	;; but with a more reasonable buffer position.
 	(goto-char normal-location)
 	(let ((line-beg (save-excursion (beginning-of-line) (point))))
-	  (while (and (not (bolp)) (line-move-invisible-p (1- (point))))
+	  (while (and (not (bolp)) (invisible-p (1- (point))))
 	    (goto-char (previous-char-property-change (point) line-beg))))))))
 
 (defun move-end-of-line (arg)
@@ -3819,7 +3830,7 @@ To ignore intangibility, bind `inhibit-point-motion-hooks' to t."
 		 (and (line-move arg t)
 		      (not (bobp))
 		      (progn
-			(while (and (not (bobp)) (line-move-invisible-p (1- (point))))
+			(while (and (not (bobp)) (invisible-p (1- (point))))
 			  (goto-char (previous-char-property-change (point))))
 			(backward-char 1)))
 		 (point)))))
@@ -3855,13 +3866,13 @@ To ignore intangibility, bind `inhibit-point-motion-hooks' to t."
 
     ;; Move to beginning-of-line, ignoring fields and invisibles.
     (skip-chars-backward "^\n")
-    (while (and (not (bobp)) (line-move-invisible-p (1- (point))))
+    (while (and (not (bobp)) (invisible-p (1- (point))))
       (goto-char (previous-char-property-change (point)))
       (skip-chars-backward "^\n"))
     (setq start (point))
 
     ;; Now find first visible char in the line
-    (while (and (not (eobp)) (line-move-invisible-p (point)))
+    (while (and (not (eobp)) (invisible-p (point)))
       (goto-char (next-char-property-change (point))))
     (setq first-vis (point))
 
@@ -4343,8 +4354,9 @@ The variable `selective-display' has a separate value for each buffer."
 
 (defun toggle-truncate-lines (&optional arg)
   "Toggle whether to fold or truncate long lines for the current buffer.
-With arg, truncate long lines iff arg is positive.
-Note that in side-by-side windows, truncation is always enabled."
+With prefix argument ARG, truncate long lines if ARG is positive,
+otherwise don't truncate them.  Note that in side-by-side
+windows, truncation is always enabled."
   (interactive "P")
   (setq truncate-lines
 	(if (null arg)
@@ -4367,11 +4379,11 @@ Note that in side-by-side windows, truncation is always enabled."
 
 (defun overwrite-mode (arg)
   "Toggle overwrite mode.
-With arg, turn overwrite mode on iff arg is positive.
-In overwrite mode, printing characters typed in replace existing text
-on a one-for-one basis, rather than pushing it to the right.  At the
-end of a line, such characters extend the line.  Before a tab,
-such characters insert until the tab is filled in.
+With prefix argument ARG, turn overwrite mode on if ARG is positive,
+otherwise turn it off.  In overwrite mode, printing characters typed
+in replace existing text on a one-for-one basis, rather than pushing
+it to the right.  At the end of a line, such characters extend the line.
+Before a tab, such characters insert until the tab is filled in.
 \\[quoted-insert] still inserts characters in overwrite mode; this
 is supposed to make it easier to insert characters when necessary."
   (interactive "P")
@@ -4383,14 +4395,13 @@ is supposed to make it easier to insert characters when necessary."
 
 (defun binary-overwrite-mode (arg)
   "Toggle binary overwrite mode.
-With arg, turn binary overwrite mode on iff arg is positive.
-In binary overwrite mode, printing characters typed in replace
-existing text.  Newlines are not treated specially, so typing at the
-end of a line joins the line to the next, with the typed character
-between them.  Typing before a tab character simply replaces the tab
-with the character typed.
-\\[quoted-insert] replaces the text at the cursor, just as ordinary
-typing characters do.
+With prefix argument ARG, turn binary overwrite mode on if ARG is
+positive, otherwise turn it off.  In binary overwrite mode, printing
+characters typed in replace existing text.  Newlines are not treated
+specially, so typing at the end of a line joins the line to the next,
+with the typed character between them.  Typing before a tab character
+simply replaces the tab with the character typed.  \\[quoted-insert]
+replaces the text at the cursor, just as ordinary typing characters do.
 
 Note that binary overwrite mode is not its own minor mode; it is a
 specialization of overwrite mode, entered by setting the
@@ -4405,9 +4416,9 @@ specialization of overwrite mode, entered by setting the
 
 (define-minor-mode line-number-mode
   "Toggle Line Number mode.
-With arg, turn Line Number mode on iff arg is positive.
-When Line Number mode is enabled, the line number appears
-in the mode line.
+With arg, turn Line Number mode on if arg is positive, otherwise
+turn it off.  When Line Number mode is enabled, the line number
+appears in the mode line.
 
 Line numbers do not appear for very large buffers and buffers
 with very long lines; see variables `line-number-display-limit'
@@ -4416,16 +4427,16 @@ and `line-number-display-limit-width'."
 
 (define-minor-mode column-number-mode
   "Toggle Column Number mode.
-With arg, turn Column Number mode on iff arg is positive.
-When Column Number mode is enabled, the column number appears
-in the mode line."
+With arg, turn Column Number mode on if arg is positive,
+otherwise turn it off.  When Column Number mode is enabled, the
+column number appears in the mode line."
   :global t :group 'mode-line)
 
 (define-minor-mode size-indication-mode
   "Toggle Size Indication mode.
-With arg, turn Size Indication mode on iff arg is positive.  When
-Size Indication mode is enabled, the size of the accessible part
-of the buffer appears in the mode line."
+With arg, turn Size Indication mode on if arg is positive,
+otherwise turn it off.  When Size Indication mode is enabled, the
+size of the accessible part of the buffer appears in the mode line."
   :global t :group 'mode-line)
 
 (defgroup paren-blinking nil
@@ -4480,15 +4491,21 @@ it skips the contents of comments that end before point."
 				 (point))))))
     (let* ((oldpos (point))
 	   blinkpos
-	   message-log-max  ; Don't log messages about paren matching.
+	   message-log-max    ; Don't log messages about paren matching.
 	   matching-paren
-	   open-paren-line-string)
+	   open-paren-line-string
+	   old-start
+	   new-start
+	   isdollar)
       (save-excursion
 	(save-restriction
-	  (if blink-matching-paren-distance
-	      (narrow-to-region (max (minibuffer-prompt-end)
-				     (- (point) blink-matching-paren-distance))
-				oldpos))
+	  ;; Don't search for matching paren within minibuffer prompt.
+	  (setq old-start (minibuffer-prompt-end))
+	  (setq new-start
+		(if blink-matching-paren-distance
+		    (max old-start (- (point) blink-matching-paren-distance))
+		  old-start))
+	  (narrow-to-region new-start oldpos)
 	  (condition-case ()
 	      (let ((parse-sexp-ignore-comments
 		     (and parse-sexp-ignore-comments
@@ -4497,22 +4514,32 @@ it skips the contents of comments that end before point."
 	    (error nil)))
 	(and blinkpos
 	     ;; Not syntax '$'.
-	     (not (eq (syntax-class (syntax-after blinkpos)) 8))
+	     (not (setq isdollar (eq (syntax-class (syntax-after blinkpos)) 8)))
 	     (setq matching-paren
 		   (let ((syntax (syntax-after blinkpos)))
 		     (and (consp syntax)
 			  (eq (syntax-class syntax) 4)
 			  (cdr syntax)))))
 	(cond
-	 ((not (or (eq matching-paren (char-before oldpos))
-                   ;; The cdr might hold a new paren-class info rather than
-                   ;; a matching-char info, in which case the two CDRs
-                   ;; should match.
-                   (eq matching-paren (cdr (syntax-after (1- oldpos))))))
-	  (message "Mismatched parentheses"))
 	 ((not blinkpos)
-	  (if (not blink-matching-paren-distance)
-	      (message "Unmatched parenthesis")))
+	  ;; Don't complain when `$' with no blinkpos, because it
+	  ;; could just be the first one in the buffer.
+	  (unless (or (eq (syntax-class (syntax-after (1- oldpos))) 8)
+		      (and blink-matching-paren-distance
+			   (> new-start old-start))
+	    ;; When `blink-matching-paren-distance' is non-nil and we
+	    ;; didn't find a matching paren within that many characters
+	    ;; don't display a message.
+		      (message "Unmatched parenthesis"))))
+	 ;; isdollar is for:
+	 ;; http://lists.gnu.org/archive/html/emacs-devel/2007-10/msg00871.html
+	  ((not (or isdollar
+		    (eq matching-paren (char-before oldpos))
+		   ;; The cdr might hold a new paren-class info rather than
+		   ;; a matching-char info, in which case the two CDRs
+		   ;; should match.
+		   (eq matching-paren (cdr (syntax-after (1- oldpos))))))
+	  (message "Mismatched parentheses"))
 	 ((pos-visible-in-window-p blinkpos)
 	  ;; Matching open within window, temporarily move to blinkpos but only
 	  ;; if `blink-matching-paren-on-screen' is non-nil.
@@ -4758,7 +4785,10 @@ Each action has the form (FUNCTION . ARGS)."
 		'switch-to-buffer-other-frame yank-action send-actions))
 
 (defvar set-variable-value-history nil
-  "History of values entered with `set-variable'.")
+  "History of values entered with `set-variable'.
+
+Maximum length of the history list is determined by the value
+of `history-length', which see.")
 
 (defun set-variable (variable value &optional make-local)
   "Set VARIABLE to VALUE.  VALUE is a Lisp object.
@@ -4960,7 +4990,7 @@ With prefix argument N, move N items (negative N means move backward)."
 These functions are called in order with four arguments:
 CHOICE - the string to insert in the buffer,
 BUFFER - the buffer in which the choice should be inserted,
-MINI-P - non-nil iff BUFFER is a minibuffer, and
+MINI-P - non-nil if BUFFER is a minibuffer, and
 BASE-SIZE - the number of characters in BUFFER before
 the string being completed.
 
@@ -5568,7 +5598,8 @@ See also `normal-erase-is-backspace'."
 
 (define-minor-mode visible-mode
   "Toggle Visible mode.
-With argument ARG turn Visible mode on iff ARG is positive.
+With argument ARG turn Visible mode on if ARG is positive, otherwise
+turn it off.
 
 Enabling Visible mode makes all invisible text temporarily visible.
 Disabling Visible mode turns off that effect.  Visible mode
@@ -5603,6 +5634,58 @@ works by saving the value of `buffer-invisibility-spec' and setting it to nil."
 ;  (list 'modification-hooks '(minibuffer-prompt-modification)
 ;	'insert-in-front-hooks '(minibuffer-prompt-insertion)))
 ;
+
+
+;;;; Problematic external packages.
+
+;; rms says this should be done by specifying symbols that define
+;; versions together with bad values.  This is therefore not as
+;; flexible as it could be.  See the thread:
+;; http://lists.gnu.org/archive/html/emacs-devel/2007-08/msg00300.html
+(defconst bad-packages-alist
+  ;; Not sure exactly which semantic versions have problems.
+  ;; Definitely 2.0pre3, probably all 2.0pre's before this.
+  '((semantic semantic-version "\\`2\\.0pre[1-3]\\'"
+              "The version of `semantic' loaded does not work in Emacs 22.
+It can cause constant high CPU load.
+Upgrade to at least Semantic 2.0pre4 (distributed with CEDET 1.0pre4).")
+    ;; CUA-mode does not work with GNU Emacs version 22.1 and newer.
+    ;; Except for version 1.2, all of the 1.x and 2.x version of cua-mode
+    ;; provided the `CUA-mode' feature.  Since this is no longer true,
+    ;; we can warn the user if the `CUA-mode' feature is ever provided.
+    (CUA-mode t nil
+"CUA-mode is now part of the standard GNU Emacs distribution,
+so you can now enable CUA via the Options menu or by customizing `cua-mode'.
+
+You have loaded an older version of CUA-mode which does not work
+correctly with this version of Emacs.  You should remove the old
+version and use the one distributed with Emacs."))
+  "Alist of packages known to cause problems in this version of Emacs.
+Each element has the form (PACKAGE SYMBOL REGEXP STRING).
+PACKAGE is either a regular expression to match file names, or a
+symbol (a feature name); see the documentation of
+`after-load-alist', to which this variable adds functions.
+SYMBOL is either the name of a string variable, or `t'.  Upon
+loading PACKAGE, if SYMBOL is t or matches REGEXP, display a
+warning using STRING as the message.")
+
+(defun bad-package-check (package)
+  "Run a check using the element from `bad-packages-alist' matching PACKAGE."
+  (condition-case nil
+      (let* ((list (assoc package bad-packages-alist))
+             (symbol (nth 1 list)))
+        (and list
+             (boundp symbol)
+             (or (eq symbol t)
+                 (and (stringp (setq symbol (eval symbol)))
+                      (string-match (nth 2 list) symbol)))
+             (display-warning :warning (nth 3 list))))
+    (error nil)))
+
+(mapc (lambda (elem)
+        (eval-after-load (car elem) `(bad-package-check ',(car elem))))
+      bad-packages-alist)
+
 
 (provide 'simple)
 

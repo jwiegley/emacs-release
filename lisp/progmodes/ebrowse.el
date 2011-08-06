@@ -1,7 +1,7 @@
 ;;; ebrowse.el --- Emacs C++ class browser & tags facility
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;; 2002, 2003, 2004, 2005, 2006, 2007
+;; 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation Inc.
 
 ;; Author: Gerd Moellmann <gerd@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1003,7 +1003,7 @@ type `ebrowse-hs' is set to the resulting obarray."
 
 
 (defun ebrowse-member-table (header)
-  "Return the member obarray.  Build it it hasn't been set up yet.
+  "Return the member obarray.  Build it if it hasn't been set up yet.
 HEADER is the tree header structure of the class tree."
   (when (null (ebrowse-hs-member-table header))
     (loop for buffer in (ebrowse-browser-buffer-list)
@@ -1613,21 +1613,6 @@ and (b) in the directories named in `ebrowse-search-path'."
     file-name))
 
 
-(defun ebrowse-view-file-other-window (file)
-  "View a file FILE in another window.
-This is a replacement for `view-file-other-window' which does not
-seem to work. It should be removed when `view.el' is fixed."
-  (interactive)
-  (let ((old-arrangement (current-window-configuration))
-	(had-a-buf (get-file-buffer file))
-	(buf-to-view (find-file-noselect file)))
-    (switch-to-buffer-other-window buf-to-view)
-    (view-mode-enter old-arrangement
-		     (and (not had-a-buf)
-			  (not (buffer-modified-p buf-to-view))
-			  'kill-buffer))))
-
-
 (defun ebrowse-view-exit-fn (buffer)
   "Function called when exiting View mode in BUFFER.
 Restore frame configuration active before viewing the file,
@@ -1648,10 +1633,9 @@ and possibly kill the viewed buffer."
 
 (defun ebrowse-view-file-other-frame (file)
   "View a file FILE in another frame.
-The new frame is deleted when it is no longer used."
+The new frame is deleted when you quit viewing the file in that frame."
   (interactive)
   (let ((old-frame-configuration (current-frame-configuration))
-	(old-arrangement (current-window-configuration))
 	(had-a-buf (get-file-buffer file))
 	(buf-to-view (find-file-noselect file)))
     (switch-to-buffer-other-frame buf-to-view)
@@ -1662,8 +1646,8 @@ The new frame is deleted when it is no longer used."
 	  (and (not had-a-buf)
 	       (not (buffer-modified-p buf-to-view))
 	       'kill-buffer))
-    (view-mode-enter old-arrangement 'ebrowse-view-exit-fn)))
-
+    (view-mode-enter (cons (selected-window) (cons (selected-window) t))
+		     'ebrowse-view-exit-fn)))
 
 (defun ebrowse-view/find-file-and-search-pattern
   (struc info file tags-file-name &optional view where)
@@ -1698,7 +1682,7 @@ specifies where to find/view the result."
 	   (setq view-mode-hook nil))
 	 (push 'ebrowse-find-pattern view-mode-hook)
 	 (case where
-	   (other-window (ebrowse-view-file-other-window file))
+	   (other-window (view-file-other-window file))
 	   (other-frame  (ebrowse-view-file-other-frame file))
 	   (t            (view-file file))))
 	(t
@@ -3598,7 +3582,7 @@ The file name is read from the minibuffer."
 
 
 (defun* ebrowse-draw-file-member-info (info &optional (kind ""))
-  "Display a line in an the members per file info buffer.
+  "Display a line in the members info buffer.
 INFO describes the member.  It has the form (TREE ACCESSOR MEMBER).
 TREE is the class of the member to display.
 ACCESSOR is the accessor symbol of its member list.

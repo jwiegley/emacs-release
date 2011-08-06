@@ -1,7 +1,7 @@
 ;;; faces.el --- Lisp faces
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -48,8 +48,8 @@
   "*A list specifying how face font selection chooses fonts.
 Each of the four symbols `:width', `:height', `:weight', and `:slant'
 must appear once in the list, and the list must not contain any other
-elements.  Font selection tries to find a best matching font for
-those face attributes first that appear first in the list.  For
+elements.  Font selection first tries to find a best matching font
+for those face attributes that appear before in the list.  For
 example, if `:slant' appears before `:height', font selection first
 tries to find a font with a suitable slant, even if this results in
 a font height that isn't optimal."
@@ -158,13 +158,18 @@ and for each existing frame.
 
 If the optional fourth argument NEW-FRAME is given,
 copy the information from face OLD-FACE on frame FRAME
-to NEW-FACE on frame NEW-FRAME."
+to NEW-FACE on frame NEW-FRAME.  In this case, FRAME may not be nil."
   (let ((inhibit-quit t))
     (if (null frame)
 	(progn
+	  (when new-frame
+	    (error "Copying face %s from all frames to one frame"
+		   old-face))
+	  (make-empty-face new-face)
 	  (dolist (frame (frame-list))
 	    (copy-face old-face new-face frame))
 	  (copy-face old-face new-face t))
+      (make-empty-face new-face)
       (internal-copy-lisp-face old-face new-face frame new-frame))
     new-face))
 
@@ -201,10 +206,8 @@ The optional argument FRAME is ignored."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun facep (face)
-  "Return non-nil if FACE is a face name or internal face object.
-Return nil otherwise.  A face name can be a string or a symbol.
-An internal face object is a vector of the kind used internally
-to record face data."
+  "Return non-nil if FACE is a face name; nil otherwise.
+A face name can be a string or a symbol."
   (internal-lisp-face-p face))
 
 

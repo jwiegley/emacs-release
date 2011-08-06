@@ -1,7 +1,7 @@
 ;;; compile.el --- run compiler as inferior of Emacs, parse error messages
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Authors: Roland McGrath <roland@gnu.org>,
 ;;	    Daniel Pfeiffer <occitan@esperanto.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -117,7 +117,7 @@ bound to the compilation buffer and window, respectively.")
   "Function to compute the name of a compilation buffer.
 The function receives one argument, the name of the major mode of the
 compilation buffer.  It should return a string.
-nil means compute the name with `(concat \"*\" (downcase major-mode) \"*\")'.")
+If nil, compute the name with `(concat \"*\" (downcase major-mode) \"*\")'.")
 
 ;;;###autoload
 (defvar compilation-finish-function nil
@@ -126,7 +126,7 @@ It is called with two arguments: the compilation buffer, and a string
 describing how the process finished.")
 
 (make-obsolete-variable 'compilation-finish-function
-  "Use `compilation-finish-functions', but it works a little differently."
+  "use `compilation-finish-functions', but it works a little differently."
   "22.1")
 
 ;;;###autoload
@@ -233,7 +233,7 @@ of[ \t]+\"?\\([a-zA-Z]?:?[^\":\n]+\\)\"?:" 3 2 nil (1))
 \\([0-9]+\\)\\(?:\\([.:]\\)\\([0-9]+\\)\\)?\
 \\(?:-\\([0-9]+\\)?\\(?:\\3\\([0-9]+\\)\\)?\\)?:\
 \\(?: *\\(\\(?:Future\\|Runtime\\)?[Ww]arning\\|W:\\)\\|\
- *\\([Ii]nfo\\(?:\\>\\|rmationa?l?\\)\\|I:\\|instantiated from\\)\\|\
+ *\\([Ii]nfo\\(?:\\>\\|rmationa?l?\\)\\|I:\\|instantiated from\\|[Nn]ote\\)\\|\
 \[0-9]?\\(?:[^0-9\n]\\|$\\)\\|[0-9][0-9][0-9]\\)"
      1 (2 . 5) (4 . 6) (7 . 8))
 
@@ -273,8 +273,12 @@ of[ \t]+\"?\\([a-zA-Z]?:?[^\":\n]+\\)\"?:" 3 2 nil (1))
 \\(?:,\\| in\\| of\\)? file \\(.*?\\):?$"
      3 1 2)
 
+    ;; "during global destruction": This comes out under "use
+    ;; warnings" in recent perl when breaking circular references
+    ;; during program or thread exit.
     (perl
-     " at \\([^ \n]+\\) line \\([0-9]+\\)\\(?:[,.]\\|$\\)" 1 2)
+     " at \\([^ \n]+\\) line \\([0-9]+\\)\\(?:[,.]\\|$\\| \
+during global destruction\\.$\\)" 1 2)
 
     (rxp
      "^\\(?:Error\\|Warnin\\(g\\)\\):.*\n.* line \\([0-9]+\\) char\
@@ -466,7 +470,7 @@ Otherwise, it saves all modified buffers without asking."
 (defcustom compilation-search-path '(nil)
   "*List of directories to search for source files named in error messages.
 Elements should be directory names, not file names of directories.
-nil as an element means to try the default directory."
+The value nil as an element means to try the default directory."
   :type '(repeat (choice (const :tag "Default" nil)
 			 (string :tag "Directory")))
   :group 'compilation)
@@ -888,11 +892,13 @@ non-nil; otherwise uses `compile-command'.  With prefix arg, always prompts.
 Additionally, with universal prefix arg, compilation buffer will be in
 comint mode, i.e. interactive.
 
-To run more than one compilation at once, start one and rename
+To run more than one compilation at once, start one then rename
 the \`*compilation*' buffer to some other name with
-\\[rename-buffer].  Then start the next one.  On most systems,
-termination of the main compilation process kills its
-subprocesses.
+\\[rename-buffer].  Then _switch buffers_ and start the new compilation.
+It will create a new \`*compilation*' buffer.
+
+On most systems, termination of the main compilation process
+kills its subprocesses.
 
 The name used for the buffer is actually whatever is returned by
 the function in `compilation-buffer-name-function', so you can set that
@@ -944,7 +950,7 @@ visible rather than the beginning."
 If NAME-FUNCTION is non-nil, call it with one argument MODE-NAME
 to determine the buffer name.
 Likewise if `compilation-buffer-name-function' is non-nil.
-If current buffer is the mode MODE-COMMAND,
+If current buffer has the major mode MODE-COMMAND,
 return the name of the current buffer, so that it gets reused.
 Otherwise, construct a buffer name from MODE-NAME."
   (cond (name-function
@@ -983,8 +989,11 @@ The rest of the arguments are optional; for them, nil means use the default.
 
 MODE is the major mode to set in the compilation buffer.  Mode
 may also be t meaning use `compilation-shell-minor-mode' under `comint-mode'.
+
 If NAME-FUNCTION is non-nil, call it with one argument (the mode name)
-to determine the buffer name.
+to determine the buffer name.  Otherwise, the default is to
+reuses the current buffer if it has the proper major mode,
+else use or create a buffer with name based on the major mode.
 
 If HIGHLIGHT-REGEXP is non-nil, `next-error' will temporarily highlight
 the matching section of the visited source line; the default is to use the
@@ -1050,10 +1059,6 @@ Returns the compilation buffer created."
 		command "\n")
 	(setq thisdir default-directory))
       (set-buffer-modified-p nil))
-    ;; If we're already in the compilation buffer, go to the end
-    ;; of the buffer, so point will track the compilation output.
-    (if (eq outbuf (current-buffer))
-	(goto-char (point-max)))
     ;; Pop up the compilation buffer.
     (setq outwin (display-buffer outbuf nil t))
     (with-current-buffer outbuf
@@ -1078,10 +1083,18 @@ Returns the compilation buffer created."
 	(set (make-local-variable 'revert-buffer-function)
 	     'compilation-revert-buffer)
 	(set-window-start outwin (point-min))
-	(or (eq outwin (selected-window))
-	    (set-window-point outwin (if compilation-scroll-output
-					 (point)
-				       (point-min))))
+
+	;; Position point as the user will see it.
+	(let ((desired-visible-point
+	       ;; Put it at the end if `compilation-scroll-output' is set.
+	       (if compilation-scroll-output
+		   (point-max)
+		 ;; Normally put it at the top.
+		 (point-min))))
+	  (if (eq outwin (selected-window))
+	      (goto-char desired-visible-point)
+	    (set-window-point outwin desired-visible-point)))
+
 	;; The setup function is called before compilation-set-window-height
 	;; so it can set the compilation-window-height buffer locally.
 	(if compilation-process-setup-function
@@ -1100,7 +1113,10 @@ Returns the compilation buffer created."
 	      (setq mode-line-process '(":%s"))
 	      (set-process-sentinel proc 'compilation-sentinel)
 	      (set-process-filter proc 'compilation-filter)
-	      (set-marker (process-mark proc) (point) outbuf)
+	      ;; Use (point-max) here so that output comes in
+	      ;; after the initial text,
+	      ;; regardless of where the user sees point.
+	      (set-marker (process-mark proc) (point-max) outbuf)
 	      (when compilation-disable-input
                 (condition-case nil
                     (process-send-eof proc)
@@ -1114,21 +1130,25 @@ Returns the compilation buffer created."
 	  (setq mode-line-process ":run")
 	  (force-mode-line-update)
 	  (sit-for 0)			; Force redisplay
-	  (let* ((buffer-read-only nil)	; call-process needs to modify outbuf
-		 (status (call-process shell-file-name nil outbuf nil "-c"
-				       command)))
-	    (cond ((numberp status)
-		   (compilation-handle-exit 'exit status
-					    (if (zerop status)
-						"finished\n"
-					      (format "\
+	  (save-excursion
+	    ;; Insert the output at the end, after the initial text,
+	    ;; regardless of where the user sees point.
+	    (goto-char (point-max))
+	    (let* ((buffer-read-only nil) ; call-process needs to modify outbuf
+		   (status (call-process shell-file-name nil outbuf nil "-c"
+					 command)))
+	      (cond ((numberp status)
+		     (compilation-handle-exit 'exit status
+					      (if (zerop status)
+						  "finished\n"
+						(format "\
 exited abnormally with code %d\n"
-						      status))))
-		  ((stringp status)
-		   (compilation-handle-exit 'signal status
-					    (concat status "\n")))
-		  (t
-		   (compilation-handle-exit 'bizarre status status))))
+							status))))
+		    ((stringp status)
+		     (compilation-handle-exit 'signal status
+					      (concat status "\n")))
+		    (t
+		     (compilation-handle-exit 'bizarre status status)))))
 	  ;; Without async subprocesses, the buffer is not yet
 	  ;; fontified, so fontify it now.
 	  (let ((font-lock-verbose nil)) ; shut up font-lock messages
@@ -1148,7 +1168,7 @@ exited abnormally with code %d\n"
   "Set the height of WINDOW according to `compilation-window-height'."
   (let ((height (buffer-local-value 'compilation-window-height (window-buffer window))))
     (and height
-	 (= (window-width window) (frame-width (window-frame window)))
+	 (window-full-width-p window)
 	 ;; If window is alone in its frame, aside from a minibuffer,
 	 ;; don't change its height.
 	 (not (eq window (frame-root-window (window-frame window))))
@@ -1419,7 +1439,7 @@ Turning the mode on runs the normal hook `compilation-minor-mode-hook'."
     (font-lock-fontify-buffer)))
 
 (defun compilation-handle-exit (process-status exit-status msg)
-  "Write MSG in the current buffer and hack its mode-line-process."
+  "Write MSG in the current buffer and hack its `mode-line-process'."
   (let ((inhibit-read-only t)
 	(status (if compilation-exit-message-function
 		    (funcall compilation-exit-message-function
@@ -1524,9 +1544,13 @@ Just inserts the text, but uses `insert-before-markers'."
 
 (defun compilation-next-error (n &optional different-file pt)
   "Move point to the next error in the compilation buffer.
+This function does NOT find the source line like \\[next-error].
 Prefix arg N says how many error messages to move forwards (or
 backwards, if negative).
-Does NOT find the source line like \\[next-error]."
+Optional arg DIFFERENT-FILE, if non-nil, means find next error for a
+file that is different from the current one.
+Optional arg PT, if non-nil, specifies the value of point to start
+looking for the next message."
   (interactive "p")
   (or (compilation-buffer-p (current-buffer))
       (error "Not in a compilation buffer"))
@@ -1604,12 +1628,14 @@ Use this command in a compilation log buffer.  Sets the mark at point there."
     (setq compilation-current-error (point))
     (next-error-internal)))
 
-;; Return a compilation buffer.
-;; If the current buffer is a compilation buffer, return it.
-;; Otherwise, look for a compilation buffer and signal an error
-;; if there are none.
 (defun compilation-find-buffer (&optional avoid-current)
-  (next-error-find-buffer avoid-current 'compilation-buffer-internal-p))
+  "Return a compilation buffer.
+If AVOID-CURRENT is nil, and the current buffer is a compilation buffer,
+return it.  If AVOID-CURRENT is non-nil, return the current buffer only
+as a last resort."
+  (if (and (compilation-buffer-internal-p) (not avoid-current))
+      (current-buffer)
+    (next-error-find-buffer avoid-current 'compilation-buffer-internal-p)))
 
 ;;;###autoload
 (defun compilation-next-error-function (n &optional reset)
@@ -1822,13 +1848,17 @@ and overlay is highlighted between MK and END-MK."
 
 (defun compilation-find-file (marker filename directory &rest formats)
   "Find a buffer for file FILENAME.
+If FILENAME is not found at all, ask the user where to find it.
+Pop up the buffer containing MARKER and scroll to MARKER if we ask
+the user where to find the file.
 Search the directories in `compilation-search-path'.
 A nil in `compilation-search-path' means to try the
 \"current\" directory, which is passed in DIRECTORY.
-If DIRECTORY. is relative, it is combined with `default-directory'.
-If DIRECTORY. is nil, that means use `default-directory'.
-If FILENAME is not found at all, ask the user where to find it.
-Pop up the buffer containing MARKER and scroll to MARKER if we ask the user."
+If DIRECTORY is relative, it is combined with `default-directory'.
+If DIRECTORY is nil, that means use `default-directory'.
+FORMATS, if given, is a list of formats to reformat FILENAME when
+looking for it: for each element FMT in FORMATS, this function
+attempts to find a file whose name is produced by (format FMT FILENAME)."
   (or formats (setq formats '("%s")))
   (let ((dirs compilation-search-path)
         (spec-dir (if directory
@@ -1888,8 +1918,7 @@ FILE should be (FILENAME) or (RELATIVE-FILENAME . DIRNAME).
 In the former case, FILENAME may be relative or absolute.
 
 The file-structure looks like this:
-  (list (list FILENAME [DIR-FROM-PREV-MSG]) FMT LINE-STRUCT...)
-"
+  (list (list FILENAME [DIR-FROM-PREV-MSG]) FMT LINE-STRUCT...)"
   (or (gethash file compilation-locs)
       ;; File was not previously encountered, at least not in the form passed.
       ;; Let's normalize it and look again.
@@ -1928,8 +1957,12 @@ The file-structure looks like this:
 	;; Store it for the possibly unnormalized name
 	(puthash file
 		 ;; Retrieve or create file-structure for normalized name
-		 (or (gethash (list filename) compilation-locs)
-		     (puthash (list filename)
+		 ;; The gethash used to not use spec-directory, but
+		 ;; this leads to errors when files in different
+		 ;; directories have the same name:
+		 ;; http://lists.gnu.org/archive/html/emacs-devel/2007-08/msg00463.html
+		 (or (gethash (cons filename spec-directory) compilation-locs)
+		     (puthash (cons filename spec-directory)
 			      (list (list filename spec-directory) fmt)
 			      compilation-locs))
 		 compilation-locs))))

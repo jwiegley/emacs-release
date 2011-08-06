@@ -1,7 +1,7 @@
 ;;; byte-opt.el --- the optimization passes of the emacs-lisp byte compiler
 
 ;; Copyright (C) 1991, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -276,6 +276,8 @@
 	      ;; Isn't it an error for `string' not to be unibyte??  --stef
 	      (if (fboundp 'string-as-unibyte)
 		  (setq string (string-as-unibyte string)))
+	      ;; `byte-compile-splice-in-already-compiled-code'
+	      ;; takes care of inlining the body.
 	      (cons `(lambda ,(aref fn 0)
 		       (byte-code ,string ,(aref fn 2) ,(aref fn 3)))
 		    (cdr form)))
@@ -564,7 +566,7 @@
 	       (cons fn args)))))))
 
 (defun byte-optimize-all-constp (list)
-  "Non-nil iff all elements of LIST satisfy `byte-compile-constp'."
+  "Non-nil if all elements of LIST satisfy `byte-compile-constp'."
   (let ((constant t))
     (while (and list constant)
       (unless (byte-compile-constp (car list))
@@ -1135,9 +1137,9 @@
 
 (put 'featurep 'byte-optimizer 'byte-optimize-featurep)
 (defun byte-optimize-featurep (form)
-  ;; Emacs-21's byte-code doesn't run under XEmacs anyway, so we can
-  ;; safely optimize away this test.
-  (if (equal '((quote xemacs)) (cdr-safe form))
+  ;; Emacs-21's byte-code doesn't run under XEmacs or SXEmacs anyway, so we
+  ;; can safely optimize away this test.
+  (if (member (cdr-safe form) '((quote xemacs) (quote sxemacs)))
       nil
     form))
 

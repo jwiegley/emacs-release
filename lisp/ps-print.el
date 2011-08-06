@@ -1,7 +1,7 @@
 ;;; ps-print.el --- print text from the buffer as PostScript
 
 ;; Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jim Thompson (was <thompson@wg2.waii.com>)
 ;;	Jacques Duthen (was <duthen@cegelec-red.fr>)
@@ -10,11 +10,11 @@
 ;; Maintainer: Kenichi Handa <handa@m17n.org> (multi-byte characters)
 ;;	Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Keywords: wp, print, PostScript
-;; Version: 6.7.4
+;; Version: 6.7.6
 ;; X-URL: http://www.emacswiki.org/cgi-bin/wiki/ViniciusJoseLatorre
 
-(defconst ps-print-version "6.7.4"
-  "ps-print.el, v 6.7.4 <2007/05/13 vinicius>
+(defconst ps-print-version "6.7.6"
+  "ps-print.el, v 6.7.6 <2007/10/10 vinicius>
 
 Vinicius's last change version -- this file may have been edited as part of
 Emacs without changes to the version number.  When reporting bugs, please also
@@ -27,7 +27,7 @@ Please send all bug fixes and enhancements to
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free
-;; Software Foundation; either version 2, or (at your option) any later
+;; Software Foundation; either version 3, or (at your option) any later
 ;; version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -2869,7 +2869,8 @@ uses the fonts resident in your printer."
   :group 'ps-print-font)
 
 (defcustom ps-font-size   '(7 . 8.5)
-  "*Font size, in points, for ordinary text, when generating PostScript."
+  "*Font size, in points, for ordinary text, when generating PostScript.
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE)."
   :type '(choice :menu-tag "Ordinary Text Font Size"
 		 :tag "Ordinary Text Font Size"
 		 (number :tag "Text Size")
@@ -2886,7 +2887,8 @@ uses the fonts resident in your printer."
   :group 'ps-print-font)
 
 (defcustom ps-header-font-size       '(10 . 12)
-  "*Font size, in points, for text in the header, when generating PostScript."
+  "*Font size, in points, for text in the header, when generating PostScript.
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE)."
   :type '(choice :menu-tag "Header Font Size"
 		 :tag "Header Font Size"
 		 (number :tag "Header Size")
@@ -2897,7 +2899,8 @@ uses the fonts resident in your printer."
   :group 'ps-print-font)
 
 (defcustom ps-header-title-font-size '(12 . 14)
-  "*Font size, in points, for the top line of text in header, in PostScript."
+  "*Font size, in points, for the top line of text in header, in PostScript.
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE)."
   :type '(choice :menu-tag "Header Title Font Size"
 		 :tag "Header Title Font Size"
 		 (number :tag "Header Title Size")
@@ -2914,7 +2917,8 @@ uses the fonts resident in your printer."
   :group 'ps-print-font)
 
 (defcustom ps-footer-font-size       '(10 . 12)
-  "*Font size, in points, for text in the footer, when generating PostScript."
+  "*Font size, in points, for text in the footer, when generating PostScript.
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE)."
   :type '(choice :menu-tag "Footer Font Size"
 		 :tag "Footer Font Size"
 		 (number :tag "Footer Size")
@@ -2946,7 +2950,8 @@ uses the fonts resident in your printer."
   :group 'ps-print-miscellany)
 
 (defcustom ps-line-number-font-size 6
-  "*Font size, in points, for line number, when generating PostScript."
+  "*Font size, in points, for line number, when generating PostScript.
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE)."
   :type '(choice :menu-tag "Line Number Font Size"
 		 :tag "Line Number Font Size"
 		 (number :tag "Font Size")
@@ -2987,7 +2992,7 @@ Any other value is treated as t."
   :version "20"
   :group 'ps-print-color)
 
-(defcustom ps-default-fg 'frame-parameter
+(defcustom ps-default-fg nil
   "*RGB values of the default foreground color.
 
 The `ps-default-fg' variable contains the default foreground color used by
@@ -3016,7 +3021,8 @@ Valid values are:
 
 Any other value is ignored and black color will be used.
 
-It's used only when `ps-print-color-p' is non-nil."
+This variable is used only when `ps-print-color-p' (which see) is neither nil
+nor black-white."
   :type '(choice :menu-tag "Default Foreground Gray/Color"
 		 :tag "Default Foreground Gray/Color"
 		 (const :tag "Session Foreground" t)
@@ -3030,7 +3036,7 @@ It's used only when `ps-print-color-p' is non-nil."
   :version "20"
   :group 'ps-print-color)
 
-(defcustom ps-default-bg 'frame-parameter
+(defcustom ps-default-bg nil
   "*RGB values of the default background color.
 
 The `ps-default-bg' variable contains the default background color used by
@@ -3059,7 +3065,8 @@ Valid values are:
 
 Any other value is ignored and white color will be used.
 
-It's used only when `ps-print-color-p' is non-nil.
+This variable is used only when `ps-print-color-p' (which see) is neither nil
+nor black-white.
 
 See also `ps-use-face-background'."
   :type '(choice :menu-tag "Default Background Gray/Color"
@@ -3355,6 +3362,8 @@ By default, this directory is the same as in the variable `data-directory'."
 (defcustom ps-line-spacing 0
   "*Specify line spacing, in points, for ordinary text.
 
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE).
+
 See also `ps-paragraph-spacing' and `ps-paragraph-regexp'.
 
 To get all lines with some spacing set both `ps-line-spacing' and
@@ -3370,6 +3379,8 @@ To get all lines with some spacing set both `ps-line-spacing' and
 
 (defcustom ps-paragraph-spacing 0
   "*Specify paragraph spacing, in points, for ordinary text.
+
+Either a float or a cons of floats (LANDSCAPE-SIZE . PORTRAIT-SIZE).
 
 See also `ps-line-spacing' and `ps-paragraph-regexp'.
 
@@ -3702,7 +3713,7 @@ The table depends on the current ps-print setup."
 ;;    ps-page-dimensions-database
 ;;    ps-font-info-database
 
-;;; ps-print - end of settings\n")
+\;;; ps-print - end of settings\n")
      "\n")))
 
 
@@ -3912,6 +3923,12 @@ It can be retrieved with `(ps-get ALIST-SYM KEY)'."
 	 (or (ps-xemacs-face-kind-p face 'ANGLE_NAME "i\\|o")
 	     (ps-xemacs-face-kind-p face 'SLANT "i\\|o")
 	     (memq face ps-italic-faces))) ; Kludge-compatible
+
+       (defalias 'ps-face-strikeout-p 'ignore)
+
+       (defalias 'ps-face-overline-p 'ignore)
+
+       (defalias 'ps-face-box-p 'ignore)
        )
 
       (t				; Emacs
@@ -3932,6 +3949,15 @@ It can be retrieved with `(ps-get ALIST-SYM KEY)'."
        (defun ps-face-italic-p (face)
 	 (or (ps-e-face-italic-p face)
 	     (memq face ps-italic-faces)))
+
+       (defun ps-face-strikeout-p (face)
+	 (eq (face-attribute face :strike-through) t))
+
+       (defun ps-face-overline-p (face)
+	 (eq (face-attribute face :overline) t))
+
+       (defun ps-face-box-p (face)
+	 (not (memq (face-attribute face :box) '(nil unspecified))))
        ))
 
 
@@ -5622,9 +5648,11 @@ XSTART YSTART are the relative position for the first page in a sheet.")
 		       ps-zebra-stripe-height)
 	       "/ZebraColor       "
 	       (ps-format-color ps-zebra-color 0.95)
-	       "def\n/BackgroundColor  "
+	       "def\n")
+    (ps-output "/BackgroundColor  "
 	       (ps-format-color ps-default-background 1.0)
-	       "def\n/UseSetpagedevice "
+	       "def\n")
+    (ps-output "/UseSetpagedevice "
 	       (if (eq ps-spool-config 'setpagedevice)
 		   "/setpagedevice where{pop languagelevel 2 eq}{false}ifelse"
 		 "false")
@@ -5909,9 +5937,18 @@ XSTART YSTART are the relative position for the first page in a sheet.")
 	      ((eq ps-print-control-characters 'control)
 	       "[\000-\037\177]")
 	      (t "[\t\n\f]"))
+	;; Set the color scale.  We do it here instead of in the defvar so
+	;; that ps-print can be dumped into emacs.  This expression can't be
+	;; evaluated at dump-time because X isn't initialized.
+	ps-color-p            (and ps-print-color-p (ps-color-device))
+	ps-print-color-scale  (if ps-color-p
+				  (float (car (ps-color-values "white")))
+				1.0)
 	ps-default-background (ps-rgb-color
 			       (cond
-				((eq genfunc 'ps-generate-postscript)
+				((or (member ps-print-color-p
+					     '(nil back-white))
+				     (eq genfunc 'ps-generate-postscript))
 				 nil)
 				((eq ps-default-bg 'frame-parameter)
 				 (ps-frame-parameter nil 'background-color))
@@ -5923,7 +5960,9 @@ XSTART YSTART are the relative position for the first page in a sheet.")
 			       1.0)
 	ps-default-foreground (ps-rgb-color
 			       (cond
-				((eq genfunc 'ps-generate-postscript)
+				((or (member ps-print-color-p
+					     '(nil back-white))
+				     (eq genfunc 'ps-generate-postscript))
 				 nil)
 				((eq ps-default-fg 'frame-parameter)
 				 (ps-frame-parameter nil 'foreground-color))
@@ -5933,15 +5972,10 @@ XSTART YSTART are the relative position for the first page in a sheet.")
 				 ps-default-fg))
 			       "unspecified-fg"
 			       0.0)
-	ps-default-color (and (eq ps-print-color-p t) ps-default-foreground)
-	ps-current-color ps-default-color
-	;; Set the color scale.  We do it here instead of in the defvar so
-	;; that ps-print can be dumped into emacs.  This expression can't be
-	;; evaluated at dump-time because X isn't initialized.
-	ps-color-p           (and ps-print-color-p (ps-color-device))
-	ps-print-color-scale (if ps-color-p
-				 (float (car (ps-color-values "white")))
-			       1.0))
+	ps-default-color      (and (not (member ps-print-color-p
+						'(nil back-white)))
+				   ps-default-foreground)
+	ps-current-color      ps-default-color)
   ;; initialize page dimensions
   (ps-get-page-dimensions)
   ;; final check
@@ -6322,6 +6356,18 @@ to the equivalent Latin-1 characters.")
     (ps-output " S\n")))
 
 
+(defsubst ps-face-foreground-color-p (attr)
+  (memq attr '(foreground-color :foreground)))
+
+
+(defsubst ps-face-background-color-p (attr)
+  (memq attr '(background-color :background)))
+
+
+(defsubst ps-face-color-p (attr)
+  (memq attr '(foreground-color :foreground background-color :background)))
+
+
 (defun ps-face-attributes (face)
   "Return face attribute vector.
 
@@ -6345,9 +6391,9 @@ If FACE is not a valid face name, use default face."
 		   (setq ps-print-face-alist
 			 (cons new-face ps-print-face-alist)))
 	       new-face))))
-   ((eq (car face) 'foreground-color)
+   ((ps-face-foreground-color-p (car face))
     (vector 0 (cdr face) nil))
-   ((eq (car face) 'background-color)
+   ((ps-face-background-color-p (car face))
     (vector 0 nil (cdr face)))
    (t
     (vector 0 nil nil))))
@@ -6360,12 +6406,11 @@ If FACE is not a valid face name, use default face."
 	     ((symbolp face)
 	      (memq face ps-use-face-background))
 	     ((listp face)
-	      (or (memq (car face) '(foreground-color background-color))
+	      (or (ps-face-color-p (car face))
 		  (let (ok)
 		    (while face
 		      (if (or (memq (car face) ps-use-face-background)
-			      (memq (car face)
-				    '(foreground-color background-color)))
+			      (ps-face-color-p (car face)))
 			  (setq face nil
 				ok   t)
 			(setq face (cdr face))))
@@ -6382,10 +6427,10 @@ If FACE is not a valid face name, use default face."
    ((not (listp face-or-list))
     (ps-face-attributes face-or-list))
    ;; only foreground color, not a `real' face
-   ((eq (car face-or-list) 'foreground-color)
+   ((ps-face-foreground-color-p (car face-or-list))
     (vector 0 (cdr face-or-list) nil))
    ;; only background color, not a `real' face
-   ((eq (car face-or-list) 'background-color)
+   ((ps-face-background-color-p (car face-or-list))
     (vector 0 nil (cdr face-or-list)))
    ;; list of faces
    (t
@@ -6478,9 +6523,12 @@ If FACE is not a valid face name, use default face."
 
 (defun ps-screen-to-bit-face (face)
   (cons face
-	(vector (logior (if (ps-face-bold-p face) 1 0) ; bold
-			(if (ps-face-italic-p face) 2 0) ; italic
-			(if (ps-face-underlined-p face) 4 0)) ; underline
+	(vector (logior (if (ps-face-bold-p face)       1 0)  ; bold
+			(if (ps-face-italic-p face)     2 0)  ; italic
+			(if (ps-face-underlined-p face) 4 0)  ; underline
+			(if (ps-face-strikeout-p face)  8 0)  ; strikeout
+			(if (ps-face-overline-p face)  16 0)  ; overline
+			(if (ps-face-box-p face)       64 0)) ; box
 		(ps-face-foreground-name face)
 		(ps-face-background-name face))))
 
@@ -7073,5 +7121,5 @@ It is assumed that the length of STRING is not zero.")
 
 (provide 'ps-print)
 
-;;; arch-tag: fb06a585-1112-4206-885d-a57d95d50579
+;; arch-tag: fb06a585-1112-4206-885d-a57d95d50579
 ;;; ps-print.el ends here

@@ -1,3 +1,55 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-02-25  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Print an error for systems that we think are
+	obsolete and are proposed to be removed.
+
+	* configure: Regenerate.
+
+2008-02-10  Matthew Luckie  <mjl@luckie.org.nz>  (tiny change)
+
+	* configure.in (arm*-*-freebsd*): Added.
+
+2008-01-23  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (xtensa): Match more configurations.
+
+	* configure: Regenerate.
+
+2008-01-21  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* config.guess, config.sub: Updated from master source.
+
+2008-01-17  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (HAVE_X86_64_LIB64_DIR): Also set on s390x systems.
+
+2007-11-28  Petr Salinger  <Petr.Salinger@seznam.cz>  (tiny change)
+
+	* configure.in: Add support for gnu-kfreebsd.
+
+2007-09-16  Peter O'Gorman  <bug-gnu-emacs@mlists.thewrittenword.com>  (tiny change)
+
+	* configure.in: Don't use -lpthread on HP-UX.
+
+2007-09-02  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+
+	* configure.in: Require Gtk/Glib 2.6.
+
+2007-07-28  Eli Zaretskii  <eliz@gnu.org>
+
+	* Makefile.in (install-arch-indep): Use "rm -f" for removing DOC,
+	to avoid an error message if there is no DOC there.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+	* COPYING, info/COPYING: Switch to GPLv3.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
@@ -12,8 +64,7 @@
 
 2007-04-19  Glenn Morris  <rgm@gnu.org>
 
-	* configure.in: Signal error if Xaw libs are missing in a Lucid
-	build.
+	* configure.in: Signal error if Xaw libs are missing in a Lucid build.
 
 2007-04-18  Glenn Morris  <rgm@gnu.org>
 
@@ -886,7 +937,7 @@
 
 2003-04-28  Francesco Potort,Al(B  <pot@gnu.org>
 
-	* configure.in:  Undo last (RMS') change, as it is useless, per
+	* configure.in: Undo last (RMS') change, as it is useless, per
 	Dave Love.
 
 2003-04-08  Richard M. Stallman  <rms@gnu.org>
@@ -1057,7 +1108,7 @@
 
 2002-10-30  Dave Love  <fx@gnu.org>
 
-	* configure.in:  Require autoconf 2.53.  Test for pty.h,
+	* configure.in: Require autoconf 2.53.  Test for pty.h,
 	sys/mman.h, sys/param.h, mremap, memmove.
 	(AH_BOTTOM): Maybe include strings.h.  Add local variables for mode.
 	(AC_PROG_YACC): Delete.
@@ -2847,7 +2898,7 @@
 
 1997-04-09  Marcus G. Daniels  <marcus@cathcart.sysc.pdx.edu>
 
-	* configure.in (doug_lea_malloc):  First check for SYSTEM_MALLOC,
+	* configure.in (doug_lea_malloc): First check for SYSTEM_MALLOC,
 	in case it is desirable to disable the GNU malloc features with glibc.
 
 1997-04-08  Marcus G. Daniels  <marcus@cathcart.sysc.pdx.edu>
@@ -6476,13 +6527,13 @@
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
-	2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+	2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

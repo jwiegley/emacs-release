@@ -1,7 +1,7 @@
 ;;; font-lock.el --- Electric font lock mode
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: jwz, then rms, then sm
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -355,7 +355,7 @@ Each element in a user-level keywords list should have one of these forms:
 
 where MATCHER can be either the regexp to search for, or the function name to
 call to make the search (called with one argument, the limit of the search;
-it should return non-nil, move point, and set `match-data' appropriately iff
+it should return non-nil, move point, and set `match-data' appropriately if
 it succeeds; like `re-search-forward' would).
 MATCHER regexps can be generated via the function `regexp-opt'.
 
@@ -698,6 +698,14 @@ see the variables `c-font-lock-extra-types', `c++-font-lock-extra-types',
 	 ;; contain the new keywords.
 	 (font-lock-update-removed-keyword-alist mode keywords how))
 	(t
+         (when (and font-lock-mode
+                    (not (or font-lock-keywords font-lock-defaults)))
+           ;; The major mode has not set any keywords, so when we enabled
+           ;; font-lock-mode it only enabled the font-core.el part, not the
+           ;; font-lock-mode-internal.  Try again.
+           (font-lock-mode -1)
+           (set (make-local-variable 'font-lock-defaults) '(nil t))
+           (font-lock-mode 1))
 	 ;; Otherwise set or add the keywords now.
 	 ;; This is a no-op if it has been done already in this buffer
 	 ;; for the correct major mode.
@@ -1060,7 +1068,7 @@ that tries to find such elements and move the boundaries such that they do
 not fall in the middle of one.
 Each function is called with no argument; it is expected to adjust the
 dynamically bound variables `font-lock-beg' and `font-lock-end'; and return
-non-nil iff it did make such an adjustment.
+non-nil if it did make such an adjustment.
 These functions are run in turn repeatedly until they all return nil.
 Put first the functions more likely to cause a change and cheaper to compute.")
 ;; Mark it as a special hook which doesn't use any global setting
@@ -1287,6 +1295,12 @@ Optional argument OBJECT is the string or buffer containing the text."
     (while (/= start end)
       (setq next (next-single-property-change start prop object end)
 	    prev (get-text-property start prop object))
+      ;; Canonicalize old forms of face property.
+      (and (memq prop '(face font-lock-face))
+	   (listp prev)
+	   (or (keywordp (car prev))
+	       (memq (car prev) '(foreground-color background-color)))
+	   (setq prev (list prev)))
       (put-text-property start next prop
 			 (append val (if (listp prev) prev (list prev)))
 			 object)
@@ -1301,6 +1315,12 @@ Optional argument OBJECT is the string or buffer containing the text."
     (while (/= start end)
       (setq next (next-single-property-change start prop object end)
 	    prev (get-text-property start prop object))
+      ;; Canonicalize old forms of face property.
+      (and (memq prop '(face font-lock-face))
+	   (listp prev)
+	   (or (keywordp (car prev))
+	       (memq (car prev) '(foreground-color background-color)))
+	   (setq prev (list prev)))
       (put-text-property start next prop
 			 (append (if (listp prev) prev (list prev)) val)
 			 object)
@@ -1738,7 +1758,7 @@ A LEVEL of nil is equal to a LEVEL of 0, a LEVEL of t is equal to
   "Set fontification defaults appropriately for this mode.
 Sets various variables using `font-lock-defaults' (or, if nil, using
 `font-lock-defaults-alist') and `font-lock-maximum-decoration'."
-  ;; Set fontification defaults iff not previously set for correct major mode.
+  ;; Set fontification defaults if not previously set for correct major mode.
   (unless (and font-lock-set-defaults
 	       (eq font-lock-mode-major-mode major-mode))
     (setq font-lock-mode-major-mode major-mode)
@@ -1757,13 +1777,16 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
 	    (cdr-safe (assq major-mode font-lock-removed-keywords-alist))))
       (set (make-local-variable 'font-lock-defaults) defaults)
       ;; Syntactic fontification?
-      (when (nth 1 defaults)
-	(set (make-local-variable 'font-lock-keywords-only) t))
+      (if (nth 1 defaults)
+          (set (make-local-variable 'font-lock-keywords-only) t)
+        (kill-local-variable 'font-lock-keywords-only))
       ;; Case fold during regexp fontification?
-      (when (nth 2 defaults)
-	(set (make-local-variable 'font-lock-keywords-case-fold-search) t))
+      (if (nth 2 defaults)
+          (set (make-local-variable 'font-lock-keywords-case-fold-search) t)
+        (kill-local-variable 'font-lock-keywords-case-fold-search))
       ;; Syntax table for regexp and syntactic fontification?
-      (when (nth 3 defaults)
+      (if (null (nth 3 defaults))
+          (kill-local-variable 'font-lock-syntax-table)
 	(set (make-local-variable 'font-lock-syntax-table)
 	     (copy-syntax-table (syntax-table)))
 	(dolist (selem (nth 3 defaults))
@@ -1774,9 +1797,10 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
 			    (mapcar 'identity (car selem))))
 	      (modify-syntax-entry char syntax font-lock-syntax-table)))))
       ;; Syntax function for syntactic fontification?
-      (when (nth 4 defaults)
+      (if (nth 4 defaults)
 	(set (make-local-variable 'font-lock-beginning-of-syntax-function)
-	     (nth 4 defaults)))
+               (nth 4 defaults))
+        (kill-local-variable 'font-lock-beginning-of-syntax-function))
       ;; Variable alist?
       (dolist (x (nthcdr 5 defaults))
 	(set (make-local-variable (car x)) (cdr x)))
@@ -1814,7 +1838,7 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
     (((class color) (min-colors 16) (background dark))
      (:foreground "red1"))
     (((class color) (min-colors 8) (background light))
-     )
+     (:foreground "red"))
     (((class color) (min-colors 8) (background dark))
      )
     (t (:weight bold :slant italic)))

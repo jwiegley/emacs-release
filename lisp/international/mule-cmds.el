@@ -1,9 +1,9 @@
-;;; mule-cmds.el --- commands for mulitilingual environment -*-coding: iso-2022-7bit -*-
+;;; mule-cmds.el --- commands for multilingual environment -*-coding: iso-2022-7bit -*-
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007  Free Software Foundation, Inc.
+;;   2006, 2007, 2008  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007
+;;   2005, 2006, 2007, 2008
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -203,7 +203,7 @@
 		    "`\\(\\sw\\(\\sw\\|\\s_\\)+\\)'")))
 
 (defun coding-system-change-eol-conversion (coding-system eol-type)
-  "Return a coding system which differs from CODING-SYSTEM in eol conversion.
+  "Return a coding system which differs from CODING-SYSTEM in EOL conversion.
 The returned coding system converts end-of-line by EOL-TYPE
 but text as the same way as CODING-SYSTEM.
 EOL-TYPE should be `unix', `dos', `mac', or nil.
@@ -253,8 +253,8 @@ the buffer; it only changes the way those bytes are interpreted.
 In general, therefore, this command *changes* the sequence of
 characters that the current buffer contains.
 
-We suggest you avoid using use this command unless you know what you
-are doing.  If you use it by mistake, and the buffer is now displayed
+We suggest you avoid using this command unless you know what you are
+doing.  If you use it by mistake, and the buffer is now displayed
 wrong, use this command again to toggle back to the right mode."
   (interactive "P")
   (let ((new-flag
@@ -327,10 +327,10 @@ This sets the following coding systems:
   o default coding system for subprocess I/O
 This also sets the following values:
   o default value used as `file-name-coding-system' for converting file names
-      if CODING-SYSTEM is ASCII-compatible.
+      if CODING-SYSTEM is ASCII-compatible
   o default value for the command `set-terminal-coding-system' (not on MSDOS)
   o default value for the command `set-keyboard-coding-system'
-      if CODING-SYSTEM is ASCII-compatible.."
+      if CODING-SYSTEM is ASCII-compatible"
   (check-coding-system coding-system)
   (setq-default buffer-file-coding-system coding-system)
   (if (fboundp 'ucs-set-table-for-input)
@@ -372,7 +372,7 @@ This also sets the following coding systems:
   o coding system of a newly created buffer
   o default coding system for subprocess I/O
 This also sets the following values:
-  o default value used as `file-name-coding-system' for converting file names.
+  o default value used as `file-name-coding-system' for converting file names
   o default value for the command `set-terminal-coding-system' (not on MSDOS)
   o default value for the command `set-keyboard-coding-system'
 
@@ -423,16 +423,16 @@ The function `sort-coding-systems' use it.")
 
 (defun sort-coding-systems (codings)
   "Sort coding system list CODINGS by a priority of each coding system.
-Returns the sorted list.  CODINGS is modified by side effects.
+Return the sorted list.  CODINGS is modified by side effects.
 
 If a coding system is most preferred, it has the highest priority.
-Otherwise, a coding system corresponds to some MIME charset has higher
-priorities.  Among them, a coding system included in `coding-system'
-key of the current language environment has higher priorities.  See
-also the documentation of `language-info-alist'.
+Otherwise, coding systems that correspond to MIME charsets have
+higher priorities.  Among them, a coding system included in the
+`coding-system' key of the current language environment has higher
+priority.  See also the documentation of `language-info-alist'.
 
 If the variable `sort-coding-systems-predicate' (which see) is
-non-nil, it is used to sort CODINGS in the different way than above."
+non-nil, it is used to sort CODINGS instead."
   (if sort-coding-systems-predicate
       (sort codings sort-coding-systems-predicate)
     (let* ((from-categories (mapcar #'(lambda (x) (symbol-value x))
@@ -445,11 +445,11 @@ non-nil, it is used to sort CODINGS in the different way than above."
 		    (let ((base (coding-system-base x)))
 		      ;; We calculate the priority number 0..255 by
 		      ;; using the 8 bits PMMLCEII as this:
-		      ;; P: 1 iff most preferred.
-		      ;; MM: greater than 0 iff mime-charset.
-		      ;; L: 1 iff one of the current lang. env.'s codings.
-		      ;; C: 1 iff one of codings listed in the category list.
-		      ;; E: 1 iff not XXX-with-esc
+		      ;; P: 1 if most preferred.
+		      ;; MM: greater than 0 if mime-charset.
+		      ;; L: 1 if one of the current lang. env.'s codings.
+		      ;; C: 1 if one of codings listed in the category list.
+		      ;; E: 1 if not XXX-with-esc
 		      ;; II: if iso-2022 based, 0..3, else 1.
 		      (logior
 		       (lsh (if (eq base most-preferred) 1 0) 7)
@@ -566,7 +566,7 @@ where
   COUNT is a number of characters,
   CHARs are the characters found from the character set.
 Optional 3rd arg MAXCOUNT limits how many CHARs are put in the above list.
-Optional 4th arg EXCLUDE is a list of character sets to be ignored.
+Optional 4th arg EXCLUDES is a list of character sets to be ignored.
 
 For invalid characters, CHARs are actually strings."
   (let ((chars nil)
@@ -616,8 +616,8 @@ It asks which coding system to check.
 If such a character is found, set point after that character.
 Otherwise, don't move point.
 
-When called from a program, the value is a position of the found character,
-or nil if all characters are encodable."
+When called from a program, the value is the position of the unencodable
+character found, or nil if all characters are encodable."
   (interactive
    (list (let ((default (or buffer-file-coding-system 'us-ascii)))
 	   (read-coding-system
@@ -966,6 +966,7 @@ It is highly recommended to fix it before writing to a file."
 
     (let ((codings (find-coding-systems-region from to))
 	  (coding-system nil)
+	  (tick (if (not (stringp from)) (buffer-modified-tick)))
 	  safe rejected unsafe)
       (if (eq (car codings) 'undecided)
 	  ;; Any coding system is ok.
@@ -1030,6 +1031,8 @@ It is highly recommended to fix it before writing to a file."
 %s specified by file contents.  Really save (else edit coding cookies \
 and try again)? " coding-system auto-cs))
 	      (error "Save aborted"))))
+      (when (and tick (/= tick (buffer-modified-tick)))
+	(error "Cancelled because the buffer was modified"))
       coding-system)))
 
 (setq select-safe-coding-system-function 'select-safe-coding-system)
@@ -1295,7 +1298,7 @@ Emacs loads this file at startup time.")
 
 (defvar leim-list-entry-regexp "^(register-input-method"
   "Regexp matching head of each entry in LEIM list file.
-See also the variable `leim-list-header'")
+See also the variable `leim-list-header'.")
 
 (defvar update-leim-list-functions
   '(quail-update-leim-list-file)
@@ -1336,7 +1339,10 @@ This is the input method activated automatically by the command
 (put 'input-method-function 'permanent-local t)
 
 (defvar input-method-history nil
-  "History list for some commands that read input methods.")
+  "History list of input methods read from the minibuffer.
+
+Maximum length of the history list is determined by the value
+of `history-length', which see.")
 (make-variable-buffer-local 'input-method-history)
 (put 'input-method-history 'permanent-local t)
 
@@ -1479,7 +1485,7 @@ When called interactively, the optional arg INTERACTIVE is non-nil,
 which marks the variable `default-input-method' as set for Custom buffers.
 
 To deactivate the input method interactively, use \\[toggle-input-method].
-To deactivate it programmatically, use \\[inactivate-input-method]."
+To deactivate it programmatically, use `inactivate-input-method'."
   (interactive
    (let* ((default (or (car input-method-history) default-input-method)))
      (list (read-input-method-name
@@ -1491,6 +1497,9 @@ To deactivate it programmatically, use \\[inactivate-input-method]."
   (when interactive
     (customize-mark-as-set 'default-input-method))
   default-input-method)
+
+(defvar toggle-input-method-active nil
+  "Non-nil inside `toggle-input-method'.")
 
 (defun toggle-input-method (&optional arg interactive)
   "Enable or disable multilingual text input method for the current buffer.
@@ -1511,9 +1520,12 @@ When called interactively, the optional arg INTERACTIVE is non-nil,
 which marks the variable `default-input-method' as set for Custom buffers."
 
   (interactive "P\np")
+  (if toggle-input-method-active
+      (error "Recursive use of `toggle-input-method'"))
   (if (and current-input-method (not arg))
       (inactivate-input-method)
-    (let ((default (or (car input-method-history) default-input-method)))
+    (let ((toggle-input-method-active t)
+	  (default (or (car input-method-history) default-input-method)))
       (if (and arg default (equal current-input-method default)
 	       (> (length input-method-history) 1))
 	  (setq default (nth 1 input-method-history)))
@@ -1648,7 +1660,7 @@ just inactivated.")
   "This flag controls when an input method returns.
 Usually, the input method does not return while there's a possibility
 that it may find a different translation if a user types another key.
-But, it this flag is non-nil, the input method returns as soon as
+But, if this flag is non-nil, the input method returns as soon as
 the current key sequence gets long enough to have some valid translation.")
 
 (defvar input-method-use-echo-area nil
@@ -1680,7 +1692,7 @@ When this hook is run, the variable `current-language-environment'
 is still bound to the language environment being exited.
 
 This hook is mainly used for canceling the effect of
-`set-language-environment-hook' (which-see).")
+`set-language-environment-hook' (which see).")
 
 (put 'setup-specified-language-environment 'apropos-inhibit t)
 
@@ -2015,7 +2027,7 @@ specifies the character set for the major languages of Western Europe."
   (set-display-table-and-terminal-coding-system language-name))
 
 (defsubst princ-list (&rest args)
-  "Print all arguments with `princ', then print \"\n\"."
+  "Print all arguments with `princ', then print \"\\n\"."
   (while args (princ (car args)) (setq args (cdr args)))
   (princ "\n"))
 
@@ -2345,10 +2357,10 @@ specifies the character set for the major languages of Western Europe."
     ("wen" . "Latin-2") ; MS Windows Upper Sorbian
     ))
   "Alist of locale regexps vs the corresponding languages and coding systems.
-Each element has these form:
+Each element has this form:
   \(LOCALE-REGEXP LANG-ENV CODING-SYSTEM)
 The first element whose LOCALE-REGEXP matches the start of a
-downcased locale specifies the LANG-ENV \(language environtment)
+downcased locale specifies the LANG-ENV \(language environment)
 and CODING-SYSTEM corresponding to that locale.  If there is no
 appropriate language environment, the element may have this form:
   \(LOCALE-REGEXP . LANG-ENV)
@@ -2372,7 +2384,7 @@ specific encoding such as \"Latin-1\" and \"UTF-8\".")
 The first element whose locale regexp matches the start of a downcased locale
 specifies the language name whose charset corresponds to that locale.
 This language name is used if the locale is not listed in
-`locale-language-names'")
+`locale-language-names'.")
 
 (defconst locale-preferred-coding-systems
   (purecopy
@@ -2609,14 +2621,24 @@ See also `locale-charset-language-names', `locale-language-names',
 	  (setq locale-coding-system coding-system))))
 
     ;; On Windows, override locale-coding-system,
-    ;; keyboard-coding-system with system codepage.  Note:
-    ;; selection-coding-system is already set in w32select.c.
+    ;; default-file-name-coding-system, keyboard-coding-system,
+    ;; terminal-coding-system with system codepage.
     (when (boundp 'w32-ansi-code-page)
       (let ((code-page-coding (intern (format "cp%d" w32-ansi-code-page))))
 	(when (coding-system-p code-page-coding)
 	  (setq locale-coding-system code-page-coding)
 	  (set-keyboard-coding-system code-page-coding)
-	  (set-terminal-coding-system code-page-coding))))
+	  (set-terminal-coding-system code-page-coding)
+	  ;; Set default-file-name-coding-system last, so that Emacs
+	  ;; doesn't try to use cpNNNN when it defines keyboard and
+	  ;; terminal encoding.  That's because the above two lines
+	  ;; will want to load code-pages.el, where cpNNNN are
+	  ;; defined; if default-file-name-coding-system were set to
+	  ;; cpNNNN while these two lines run, Emacs will want to use
+	  ;; it for encoding the file name it wants to load.  And that
+	  ;; will fail, since cpNNNN is not yet usable until
+	  ;; code-pages.el finishes loading.
+	  (setq default-file-name-coding-system code-page-coding))))
 
     (when (eq system-type 'darwin)
       ;; On Darwin, file names are always encoded in utf-8, no matter

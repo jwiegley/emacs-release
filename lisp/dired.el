@@ -1,7 +1,7 @@
 ;;; dired.el --- directory-browsing commands
 
 ;; Copyright (C) 1985, 1986, 1992, 1993, 1994, 1995, 1996, 1997, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -335,12 +335,25 @@ Subexpression 2 must end right before the \\n or \\r.")
   "Face name used for flagged files.")
 
 (defface dired-warning
-  '((t (:inherit font-lock-comment-face)))
+  ;; Inherit from font-lock-warning-face since with min-colors 8
+  ;; font-lock-comment-face is not colored any more.
+  '((t (:inherit font-lock-warning-face)))
   "Face used to highlight a part of a buffer that needs user attention."
   :group 'dired-faces
   :version "22.1")
 (defvar dired-warning-face 'dired-warning
   "Face name used for a part of a buffer that needs user attention.")
+
+(defface dired-perm-write
+  '((((type w32 pc)) :inherit default)  ;; These default to rw-rw-rw.
+    ;; Inherit from font-lock-comment-delimiter-face since with min-colors 8
+    ;; font-lock-comment-face is not colored any more.
+    (t (:inherit font-lock-comment-delimiter-face)))
+  "Face used to highlight permissions of group- and world-writable files."
+  :group 'dired-faces
+  :version "22.2")
+(defvar dired-perm-write-face 'dired-perm-write
+  "Face name used for permissions of group- and world-writable files.")
 
 (defface dired-directory
   '((t (:inherit font-lock-function-name-face)))
@@ -403,10 +416,10 @@ Subexpression 2 must end right before the \\n or \\r.")
    ;; fields with keymaps to frob the permissions, somewhat a la XEmacs.
    (list (concat dired-re-maybe-mark dired-re-inode-size
 		 "[-d]....\\(w\\)....")	; group writable
-	 '(1 dired-warning-face))
+	 '(1 dired-perm-write-face))
    (list (concat dired-re-maybe-mark dired-re-inode-size
 		 "[-d].......\\(w\\).")	; world writable
-	 '(1 dired-warning-face))
+	 '(1 dired-perm-write-face))
    ;;
    ;; Subdirectories.
    (list dired-re-dir
@@ -1451,10 +1464,6 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
 
     (define-key map [menu-bar operate]
       (cons "Operate" (make-sparse-keymap "Operate")))
-
-    (define-key map [menu-bar operate dashes-2]
-      '("--"))
-
     (define-key map
       [menu-bar operate image-dired-delete-tag]
       '(menu-item "Delete Image Tag..." image-dired-delete-tag
@@ -2362,7 +2371,7 @@ Optional argument means return a file name relative to `default-directory'."
 
 ;; Deleting files
 
-(defcustom dired-recursive-deletes nil ; Default only delete empty directories.
+(defcustom dired-recursive-deletes 'top
   "*Decide whether recursive deletes are allowed.
 A value of nil means no recursive deletes.
 `always' means delete recursively without asking.  This is DANGEROUS!
@@ -2526,8 +2535,10 @@ deletion of non-empty directories is allowed."
   (if (= 1 count) "" "s"))
 
 (defun dired-mark-prompt (arg files)
-  ;; Return a string for use in a prompt, either the current file
-  ;; name, or the marker and a count of marked files.
+  "Return a string for use in a prompt, either the current file
+name, or the marker and a count of marked files."
+  ;; distinguish-one-marked can cause the first element to be just t.
+  (if (eq (car files) t) (setq files (cdr files)))
   (let ((count (length files)))
     (if (= count 1)
 	(car files)
@@ -2551,12 +2562,12 @@ deletion of non-empty directories is allowed."
       (cond ;; if split-height-threshold is enabled, use the largest window
             ((and (> (window-height (setq w2 (get-largest-window)))
 		     split-height-threshold)
-		  (= (frame-width) (window-width w2)))
+		  (window-full-width-p w2))
 	     (setq window w2))
 	    ;; if the least-recently-used window is big enough, use it
 	    ((and (> (window-height (setq w2 (get-lru-window)))
 		     (* 2 window-min-height))
-		  (= (frame-width) (window-width w2)))
+		  (window-full-width-p w2))
 	     (setq window w2)))
       (save-excursion
 	(set-buffer buf)
@@ -3210,7 +3221,7 @@ To be called first in body of `dired-sort-other', etc."
 
 ;;;;  Drag and drop support
 
-(defcustom dired-recursive-copies nil
+(defcustom dired-recursive-copies 'top
   "*Decide whether recursive copies are allowed.
 A value of nil means no recursive copies.
 `always' means copy recursively without asking.

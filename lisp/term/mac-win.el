@@ -1,7 +1,7 @@
 ;;; mac-win.el --- parse switches controlling interface with Mac window system -*-coding: iso-2022-7bit;-*-
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Andrew Choi <akochoi@mac.com>
 ;; Keywords: terminals
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -76,7 +76,6 @@
 (require 'menu-bar)
 (require 'fontset)
 (require 'dnd)
-(eval-when-compile (require 'url))
 
 (defvar mac-charset-info-alist)
 (defvar mac-service-selection)
@@ -1778,19 +1777,19 @@ Currently the `mailto' scheme is supported."
 
 (define-key mac-apple-event-map [internet-event get-url] 'mac-ae-get-url)
 
-(define-key mac-apple-event-map [hi-command about] 'display-splash-screen)
+(define-key mac-apple-event-map [hi-command about] 'about-emacs)
 
 ;;; Converted Carbon Events
 (defun mac-handle-toolbar-switch-mode (event)
   "Toggle visibility of tool-bars in response to EVENT.
 With no keyboard modifiers, it toggles the visibility of the
 frame where the tool-bar toggle button was pressed.  With some
-modifiers, it changes global tool-bar visibility setting."
+modifiers, it changes the global tool-bar visibility setting."
   (interactive "e")
   (let ((ae (mac-event-ae event)))
     (if (mac-ae-keyboard-modifiers ae)
 	;; Globally toggle tool-bar-mode if some modifier key is pressed.
-	(tool-bar-mode)
+	(tool-bar-mode 'toggle)
       (let ((frame (mac-ae-frame ae)))
 	(set-frame-parameter frame 'tool-bar-lines
 			     (if (= (frame-parameter frame 'tool-bar-lines) 0)
@@ -2118,7 +2117,9 @@ either in the current buffer or in the echo area."
 (defun mac-service-open-file ()
   "Open the file specified by the selection value for Services."
   (interactive)
-  (find-file-existing (x-selection-value mac-service-selection)))
+  ;; The selection seems not to contain the file name as
+  ;; public.utf16-plain-text data on Mac OS X 10.4.
+  (dnd-open-file (x-get-selection mac-service-selection 'public.file-url) nil))
 
 (defun mac-service-open-selection ()
   "Create a new buffer containing the selection value for Services."

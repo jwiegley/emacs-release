@@ -1,7 +1,7 @@
 ;;; image.el --- image API
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: multimedia
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -313,22 +313,14 @@ use its file extension as image type.
 Optional DATA-P non-nil means FILE-OR-DATA is a string containing image data."
   (when (and (not data-p) (not (stringp file-or-data)))
     (error "Invalid image file name `%s'" file-or-data))
-  (cond ((null data-p)
-	 ;; FILE-OR-DATA is a file name.
-	 (unless (or type
-		     (setq type (image-type-from-file-header file-or-data)))
-	   (let ((extension (file-name-extension file-or-data)))
-	     (unless extension
-	       (error "Cannot determine image type"))
-	     (setq type (intern extension)))))
-	(t
-	 ;; FILE-OR-DATA contains image data.
-	 (unless type
-	   (setq type (image-type-from-data file-or-data)))))
   (unless type
-    (error "Cannot determine image type"))
-  (unless (symbolp type)
-    (error "Invalid image type `%s'" type))
+    (setq type (if data-p 
+                   (image-type-from-data file-or-data)
+                 (or (image-type-from-file-header file-or-data)
+                     (image-type-from-file-name file-or-data))))
+    (or type(error "Cannot determine image type")))
+  (or (memq type (and (boundp 'image-types) image-types))
+      (error "Invalid image type `%s'" type))
   type)
 
 
@@ -342,31 +334,16 @@ Image types are symbols like `xbm' or `jpeg'."
 
 ;;;###autoload
 (defun image-type-auto-detected-p ()
-  "Return t iff the current buffer contains an auto-detectable image.
-This function is intended to be used from `magic-mode-alist' (which see).
+  "Return t if the current buffer contains an auto-detectable image.
+This function is intended to be used from `magic-fallback-mode-alist'.
 
-First, compare the beginning of the buffer with `image-type-header-regexps'.
-If an appropriate image type is found, check if that image type can be
-autodetected using the variable `image-type-auto-detectable'.  Finally,
-if `buffer-file-name' is non-nil, check if it matches another major mode
-in `auto-mode-alist' apart from `image-mode'; if there is another match,
-the autodetection is considered to have failed.  Return t if all the above
-steps succeed."
+The buffer is considered to contain an auto-detectable image if
+its beginning matches an image type in `image-type-header-regexps',
+and that image type is present in `image-type-auto-detectable'."
   (let* ((type (image-type-from-buffer))
 	 (auto (and type (cdr (assq type image-type-auto-detectable)))))
     (and auto
-	 (or (eq auto t) (image-type-available-p type))
-	 (or (null buffer-file-name)
-	     (not (assoc-default
-		   buffer-file-name
-		   (delq nil (mapcar 
-			      (lambda (elt)
-				(unless (memq (or (car-safe (cdr elt))
-						  (cdr elt))
-					      '(image-mode image-mode-maybe))
-				  elt))
-			      auto-mode-alist))
-		   'string-match))))))
+	 (or (eq auto t) (image-type-available-p type)))))
 
 
 ;;;###autoload

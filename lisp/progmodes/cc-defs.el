@@ -1,7 +1,7 @@
 ;;; cc-defs.el --- compile time definitions for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
@@ -18,7 +18,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -96,7 +96,7 @@
 
 ;;; Variables also used at compile time.
 
-(defconst c-version "5.31.4"
+(defconst c-version "5.31.5"
   "CC Mode version number.")
 
 (defconst c-version-sym (intern c-version))
@@ -425,6 +425,8 @@ The return value is the value of the last form in BODY."
 	  (inhibit-read-only t) (inhibit-point-motion-hooks t)
 	  before-change-functions after-change-functions
 	  deactivate-mark
+	  buffer-file-name buffer-file-truename ; Prevent primitives checking
+						; for file modification
 	  ,@varlist)
      (unwind-protect
 	 (progn ,@body)
@@ -719,7 +721,7 @@ be after it."
 		  ((bobp) (setq pos (point-min)))
 		  ((not pos)
 		   (let ((distance (skip-chars-backward "^{")))
-		     ;; unbalanced parenthesis, while illegal C code,
+		     ;; unbalanced parenthesis, while invalid C code,
 		     ;; shouldn't cause an infloop!  See unbal.c
 		     (when (zerop distance)
 		       ;; Punt!
@@ -1026,6 +1028,39 @@ MODE is either a mode symbol or a list of mode symbols."
     ;; Emacs.
     `(remove-text-properties ,from ,to '(,property nil))))
 
+(defun c-clear-char-property-with-value-function (from to property value)
+  "Remove all text-properties PROPERTY from the region (FROM, TO)
+which have the value VALUE, as tested by `equal'.  These
+properties are assumed to be over individual characters, having
+been put there by c-put-char-property.  POINT remains unchanged."
+  (let ((place from) end-place)
+    (while			  ; loop round occurrances of (PROPERTY VALUE)
+	(progn
+	  (while	   ; loop round changes in PROPERTY till we find VALUE
+	      (and
+	       (< place to)
+	       (not (equal (get-text-property place property) value)))
+	    (setq place (next-single-property-change place property nil to)))
+	  (< place to))
+      (setq end-place (next-single-property-change place property nil to))
+      (put-text-property place end-place property nil)
+      ;; Do we have to do anything with stickiness here?
+      (setq place end-place))))
+
+(defmacro c-clear-char-property-with-value (from to property value)
+  "Remove all text-properties PROPERTY from the region [FROM, TO)
+which have the value VALUE, as tested by `equal'.  These
+properties are assumed to be over individual characters, having
+been put there by c-put-char-property.  POINT remains unchanged."
+  (if c-use-extents
+    ;; XEmacs
+      `(let ((-property- ,property))
+	 (map-extents (lambda (ext val)
+			(if (equal (extent-property ext -property-) val)
+			    (delete-extent ext)))
+		      nil ,from ,to ,value nil -property-))
+  ;; Gnu Emacs
+    `(c-clear-char-property-with-value-function ,from ,to ,property ,value)))
 
 ;; Macros to put overlays (Emacs) or extents (XEmacs) on buffer text.
 ;; For our purposes, these are characterized by being possible to

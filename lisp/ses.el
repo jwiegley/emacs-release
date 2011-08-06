@@ -1,6 +1,6 @@
 ;;; ses.el -- Simple Emacs Spreadsheet  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: Jonathan Yavner <jyavner@member.fsf.org>
 ;; Maintainer: Jonathan Yavner <jyavner@member.fsf.org>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -628,8 +628,9 @@ the old and FORCE is nil."
     (let ((oldval  (ses-cell-value   cell))
 	  (formula (ses-cell-formula cell))
 	  newval)
-      (if (eq (car-safe formula) 'ses-safe-formula)
-	  (ses-set-cell row col 'formula (ses-safe-formula (cadr formula))))
+      (when (eq (car-safe formula) 'ses-safe-formula)
+	(setq formula (ses-safe-formula (cadr formula)))
+	(ses-set-cell row col 'formula formula))
       (condition-case sig
 	  (setq newval (eval formula))
 	(error
@@ -878,9 +879,9 @@ preceding cell has spilled over."
 
 (defun ses-call-printer (printer &optional value)
   "Invokes PRINTER (a string or parenthesized string or function-symbol or
-lambda of one argument) on VALUE.  Result is the the printed cell as a
-string.  The variable `ses-call-printer-return' is set to t if the printer
-used parenthesis to request left-justification, or the error-signal if the
+lambda of one argument) on VALUE.  Result is the printed cell as a string.
+The variable `ses-call-printer-return' is set to t if the printer used
+parenthesis to request left-justification, or the error-signal if the
 printer signaled one (and \"%s\" is used as the default printer), else nil."
   (setq ses-call-printer-return nil)
   (unless value
@@ -1470,17 +1471,22 @@ Narrows the buffer to show only the print area.  Gives it `read-only' and
   (overlay-put ses--curcell-overlay 'face 'underline))
 
 (defun ses-cleanup ()
-  "Cleanup when changing a buffer from SES mode to something else.  Delete
-overlay, remove special text properties."
+  "Cleanup when changing a buffer from SES mode to something else.
+Delete overlays, remove special text properties."
   (widen)
   (let ((inhibit-read-only t)
+        ;; When reverting, hide the buffer name, otherwise Emacs will ask
+        ;; the user "the file is modified, do you really want to make
+        ;; modifications to this buffer", where the "modifications" refer to
+        ;; the irrelevant set-text-properties below.
+        (buffer-file-name nil)
 	(was-modified      (buffer-modified-p)))
     ;;Delete read-only, keymap, and intangible properties
     (set-text-properties (point-min) (point-max) nil)
     ;;Delete overlay
     (mapc 'delete-overlay (overlays-in (point-min) (point-max)))
     (unless was-modified
-      (set-buffer-modified-p nil))))
+      (restore-buffer-modified-p nil))))
 
 ;;;###autoload
 (defun ses-mode ()
@@ -2902,7 +2908,7 @@ TEST is evaluated."
 ;;----------------------------------------------------------------------------
 
 ;;These functions use the variables 'row' and 'col' that are
-;;dynamically bound by ses-print-cell.  We define these varables at
+;;dynamically bound by ses-print-cell.  We define these variables at
 ;;compile-time to make the compiler happy.
 (eval-when-compile
   (dolist (x '(row col))
@@ -2960,6 +2966,19 @@ current column and continues until the next nonblank column."
 ;;All standard printers are safe, including ses-unsafe!
 (dolist (x (cons 'ses-unsafe ses-standard-printer-functions))
   (put x 'side-effect-free t))
+
+(defun ses-unload-function ()
+  "Unload the Simple Emacs Spreadsheet."
+  (dolist (fun '(copy-region-as-kill yank))
+    (ad-remove-advice fun 'around (intern (concat "ses-" (symbol-name fun))))
+    (ad-update fun))
+  (save-current-buffer
+    (dolist (buf (buffer-list))
+      (set-buffer buf)
+      (when (eq major-mode 'ses-mode)
+	(funcall (or default-major-mode 'fundamental-mode)))))
+  ;; continue standard unloading
+  nil)
 
 (provide 'ses)
 

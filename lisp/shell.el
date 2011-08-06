@@ -1,7 +1,7 @@
 ;;; shell.el --- specialized comint.el for running the shell
 
 ;; Copyright (C) 1988, 1993, 1994, 1995, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu>
 ;;	Simon Marshall <simon@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -93,7 +93,7 @@
 ;; m-c-f   shell-forward-command	Forward a shell command
 ;; m-c-b   shell-backward-command	Backward a shell command
 ;; 	   dirs				Resync the buffer's dir stack
-;; 	   dirtrack-mode		Turn dir tracking on/off
+;; 	   shell-dirtrack-mode		Turn dir tracking on/off
 ;;         comint-strip-ctrl-m		Remove trailing ^Ms from output
 ;;
 ;; The shell mode hook is shell-mode-hook
@@ -263,7 +263,9 @@ This mirrors the optional behavior of tcsh."
 
 (defcustom shell-dirtrack-verbose t
   "If non-nil, show the directory stack following directory change.
-This is effective only if directory tracking is enabled."
+This is effective only if directory tracking is enabled.
+The `dirtrack' package provides an alternative implementation of this feature -
+see the function `dirtrack-mode'."
   :type 'boolean
   :group 'shell-directories)
 
@@ -398,7 +400,9 @@ While directory tracking is enabled, the shell's working directory is displayed
 by \\[list-buffers] or \\[mouse-buffer-menu] in the `File' field.
 \\[dirs] queries the shell and resyncs Emacs' idea of what the current
     directory stack is.
-\\[dirtrack-mode] turns directory tracking on and off.
+\\[shell-dirtrack-mode] turns directory tracking on and off.
+\(The `dirtrack' package provides an alternative implementation of this
+feature.)
 
 \\{shell-mode-map}
 Customization: Entry to this mode runs the hooks on `comint-mode-hook' and
@@ -615,8 +619,10 @@ This function is called on each input passed to the shell.
 It watches for cd, pushd and popd commands and sets the buffer's
 default directory to track these commands.
 
-You may toggle this tracking on and off with \\[dirtrack-mode].
+You may toggle this tracking on and off with \\[shell-dirtrack-mode].
 If Emacs gets confused, you can resync with the shell with \\[dirs].
+\(The `dirtrack' package provides an alternative implementation of this
+feature - see the function `dirtrack-mode'.)
 
 See variables `shell-cd-regexp', `shell-chdrive-regexp', `shell-pushd-regexp',
 and  `shell-popd-regexp', while `shell-pushd-tohome', `shell-pushd-dextract',
@@ -772,7 +778,9 @@ Environment variables are expanded, see function `substitute-in-file-name'."
 
 (defvaralias 'shell-dirtrack-mode 'shell-dirtrackp)
 (define-minor-mode shell-dirtrack-mode
-  "Turn directory tracking on and off in a shell buffer."
+  "Turn directory tracking on and off in a shell buffer.
+The `dirtrack' package provides an alternative implementation of this
+feature - see the function `dirtrack-mode'."
   nil nil nil
   (setq list-buffers-directory (if shell-dirtrack-mode default-directory))
   (if shell-dirtrack-mode
@@ -781,8 +789,6 @@ Environment variables are expanded, see function `substitute-in-file-name'."
 
 ;; For your typing convenience:
 (defalias 'shell-dirtrack-toggle 'shell-dirtrack-mode) ;??Convenience??
-(defalias 'dirtrack-toggle 'shell-dirtrack-mode)
-(defalias 'dirtrack-mode 'shell-dirtrack-mode)
 
 (defun shell-cd (dir)
   "Do normal `cd' to DIR, and set `list-buffers-directory'."
@@ -802,51 +808,54 @@ new directory stack -- you lose.  If this happens, just do the
 command again."
   (interactive)
   (let* ((proc (get-buffer-process (current-buffer)))
-	 (pmark (process-mark proc)))
-    (goto-char pmark)
-    ;; If the process echoes commands, don't insert a fake command in
-    ;; the buffer or it will appear twice.
-    (unless comint-process-echoes
-      (insert shell-dirstack-query) (insert "\n"))
-    (sit-for 0) ; force redisplay
-    (comint-send-string proc shell-dirstack-query)
-    (comint-send-string proc "\n")
-    (set-marker pmark (point))
-    (let ((pt (point))
-	  (regexp
-	   (concat
-	    (if comint-process-echoes
-		;; Skip command echo if the process echoes
-		(concat "\\(" (regexp-quote shell-dirstack-query) "\n\\)")
-	      "\\(\\)")
-	    "\\(.+\n\\)")))
-      ;; This extra newline prevents the user's pending input from spoofing us.
-      (insert "\n") (backward-char 1)
-      ;; Wait for one line.
-      (while (not (looking-at regexp))
-	(accept-process-output proc)
-	(goto-char pt)))
-    (goto-char pmark) (delete-char 1) ; remove the extra newline
-    ;; That's the dirlist. grab it & parse it.
-    (let* ((dl (buffer-substring (match-beginning 2) (1- (match-end 2))))
-	   (dl-len (length dl))
-	   (ds '())			; new dir stack
-	   (i 0))
-      (while (< i dl-len)
-	;; regexp = optional whitespace, (non-whitespace), optional whitespace
-	(string-match "\\s *\\(\\S +\\)\\s *" dl i) ; pick off next dir
-	(setq ds (cons (concat comint-file-name-prefix
-			       (substring dl (match-beginning 1)
-					  (match-end 1)))
-		       ds))
-	(setq i (match-end 0)))
-      (let ((ds (nreverse ds)))
-	(condition-case nil
-	    (progn (shell-cd (car ds))
-		   (setq shell-dirstack (cdr ds)
-			 shell-last-dir (car shell-dirstack))
-		   (shell-dirstack-message))
-	  (error (message "Couldn't cd")))))))
+	 (pmark (process-mark proc))
+	 (started-at-pmark (= (point) (marker-position pmark))))
+    (save-excursion
+      (goto-char pmark)
+      ;; If the process echoes commands, don't insert a fake command in
+      ;; the buffer or it will appear twice.
+      (unless comint-process-echoes
+	(insert shell-dirstack-query) (insert "\n"))
+      (sit-for 0)			; force redisplay
+      (comint-send-string proc shell-dirstack-query)
+      (comint-send-string proc "\n")
+      (set-marker pmark (point))
+      (let ((pt (point))
+	    (regexp
+	     (concat
+	      (if comint-process-echoes
+		  ;; Skip command echo if the process echoes
+		  (concat "\\(" (regexp-quote shell-dirstack-query) "\n\\)")
+		"\\(\\)")
+	      "\\(.+\n\\)")))
+	;; This extra newline prevents the user's pending input from spoofing us.
+	(insert "\n") (backward-char 1)
+	;; Wait for one line.
+	(while (not (looking-at regexp))
+	  (accept-process-output proc)
+	  (goto-char pt)))
+      (goto-char pmark) (delete-char 1) ; remove the extra newline
+      ;; That's the dirlist. grab it & parse it.
+      (let* ((dl (buffer-substring (match-beginning 2) (1- (match-end 2))))
+	     (dl-len (length dl))
+	     (ds '())			; new dir stack
+	     (i 0))
+	(while (< i dl-len)
+	  ;; regexp = optional whitespace, (non-whitespace), optional whitespace
+	  (string-match "\\s *\\(\\S +\\)\\s *" dl i) ; pick off next dir
+	  (setq ds (cons (concat comint-file-name-prefix
+				 (substring dl (match-beginning 1)
+					    (match-end 1)))
+			 ds))
+	  (setq i (match-end 0)))
+	(let ((ds (nreverse ds)))
+	  (condition-case nil
+	      (progn (shell-cd (car ds))
+		     (setq shell-dirstack (cdr ds)
+			   shell-last-dir (car shell-dirstack))
+		     (shell-dirstack-message))
+	    (error (message "Couldn't cd"))))))
+    (if started-at-pmark (goto-char (marker-position pmark)))))
 
 ;; For your typing convenience:
 (defalias 'dirs 'shell-resync-dirs)

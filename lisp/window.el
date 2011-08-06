@@ -1,7 +1,7 @@
 ;;; window.el --- GNU Emacs window commands aside from those written in C
 
 ;; Copyright (C) 1985, 1989, 1992, 1993, 1994, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -120,7 +120,7 @@ bars (top, bottom, or nil)."
 PROC is called with a window as argument.
 
 Optional second arg MINIBUF t means count the minibuffer window even
-if not active.  MINIBUF nil or omitted means count the minibuffer iff
+if not active.  MINIBUF nil or omitted means count the minibuffer only if
 it is active.  MINIBUF neither t nor nil means not to count the
 minibuffer even if it is active.
 
@@ -165,7 +165,7 @@ value is returned.  If no window satisfies PREDICATE, DEFAULT is
 returned.
 
 Optional second arg MINIBUF t means count the minibuffer window even
-if not active.  MINIBUF nil or omitted means count the minibuffer iff
+if not active.  MINIBUF nil or omitted means count the minibuffer only if
 it is active.  MINIBUF neither t nor nil means not to count the
 minibuffer even if it is active.
 
@@ -805,10 +805,13 @@ scrollbar interaction\) and `select' \(the next invocation of
   "Cancel delayed window autoselection.
 Optional argument FORCE means cancel unconditionally."
   (unless (and (not force)
-	       ;; Don't cancel while the user drags a scroll bar.
-	       (eq this-command 'scroll-bar-toolkit-scroll)
-	       (memq (nth 4 (event-end last-input-event))
-		     '(handle end-scroll)))
+	       ;; Don't cancel for select-window or select-frame events
+	       ;; or when the user drags a scroll bar.
+	       (or (memq this-command
+			 '(handle-select-window handle-switch-frame))
+		   (and (eq this-command 'scroll-bar-toolkit-scroll)
+			(memq (nth 4 (event-end last-input-event))
+			      '(handle end-scroll)))))
     (setq mouse-autoselect-window-state nil)
     (when (timerp mouse-autoselect-window-timer)
       (cancel-timer mouse-autoselect-window-timer))
@@ -833,7 +836,7 @@ means suspend autoselection."
 (defun mouse-autoselect-window-select ()
   "Select window with delayed window autoselection.
 If the mouse position has stabilized in a non-selected window, select
-that window.  The minibuffer window is selected iff the minibuffer is
+that window.  The minibuffer window is selected only if the minibuffer is
 active.  This function is run by `mouse-autoselect-window-timer'."
   (condition-case nil
       (let* ((mouse-position (mouse-position))
@@ -858,14 +861,14 @@ active.  This function is run by `mouse-autoselect-window-timer'."
 			;; If `mouse-autoselect-window' is positive, select
 			;; window if the window is the same as before.
 			(eq window mouse-autoselect-window-window))
-		   ;; Otherwise select window iff the mouse is at the same
+		   ;; Otherwise select window if the mouse is at the same
 		   ;; position as before.  Observe that the first test after
 		   ;; starting autoselection usually fails since the value of
 		   ;; `mouse-autoselect-window-position' recorded there is the
 		   ;; position where the mouse has entered the new window and
 		   ;; not necessarily where the mouse has stopped moving.
 		   (equal mouse-position mouse-autoselect-window-position))
-	       ;; The minibuffer is a candidate window iff it's active.
+	       ;; The minibuffer is a candidate window if it's active.
 	       (or (not (window-minibuffer-p window))
 		   (eq window (active-minibuffer-window))))
 	  ;; Mouse position has stabilized in non-selected window: Cancel
@@ -896,33 +899,35 @@ active.  This function is run by `mouse-autoselect-window-timer'."
   "Handle select-window events."
   (interactive "e")
   (let ((window (posn-window (event-start event))))
-    (when (and (window-live-p window)
-	       ;; Don't switch if we're currently in the minibuffer.
-	       ;; This tries to work around problems where the minibuffer gets
-	       ;; unselected unexpectedly, and where you then have to move
-	       ;; your mouse all the way down to the minibuffer to select it.
-	       (not (window-minibuffer-p (selected-window)))
-	       ;; Don't switch to a minibuffer window unless it's active.
-	       (or (not (window-minibuffer-p window))
-		   (minibuffer-window-active-p window)))
-      (unless (and (numberp mouse-autoselect-window)
-		   (not (zerop mouse-autoselect-window))
-		   (not (eq mouse-autoselect-window-state 'select))
-		   (progn
-		     ;; Cancel any delayed autoselection.
-		     (mouse-autoselect-window-cancel t)
-		     ;; Start delayed autoselection from current mouse position
-		     ;; and window.
-		     (mouse-autoselect-window-start (mouse-position) window)
-		     ;; Executing a command cancels delayed autoselection.
-		     (add-hook
-		      'pre-command-hook 'mouse-autoselect-window-cancel)))
+    (unless (or (not (window-live-p window))
+		;; Don't switch if we're currently in the minibuffer.
+		;; This tries to work around problems where the
+		;; minibuffer gets unselected unexpectedly, and where
+		;; you then have to move your mouse all the way down to
+		;; the minibuffer to select it.
+		(window-minibuffer-p (selected-window))
+		;; Don't switch to minibuffer window unless it's active.
+		(and (window-minibuffer-p window)
+		     (not (minibuffer-window-active-p window)))
+		;; Don't switch when autoselection shall be delayed.
+		(and (numberp mouse-autoselect-window)
+		     (not (zerop mouse-autoselect-window))
+		     (not (eq mouse-autoselect-window-state 'select))
+		     (progn
+		       ;; Cancel any delayed autoselection.
+		       (mouse-autoselect-window-cancel t)
+		       ;; Start delayed autoselection from current mouse position
+		       ;; and window.
+		       (mouse-autoselect-window-start (mouse-position) window)
+		       ;; Executing a command cancels delayed autoselection.
+		       (add-hook
+			'pre-command-hook 'mouse-autoselect-window-cancel))))
+      (when mouse-autoselect-window
 	;; Reset state of delayed autoselection.
 	(setq mouse-autoselect-window-state nil)
-	(when mouse-autoselect-window
-	  ;; Run `mouse-leave-buffer-hook' when autoselecting window.
-	  (run-hooks 'mouse-leave-buffer-hook))
-	(select-window window)))))
+	;; Run `mouse-leave-buffer-hook' when autoselecting window.
+	(run-hooks 'mouse-leave-buffer-hook))
+      (select-window window))))
 
 (define-key ctl-x-map "2" 'split-window-vertically)
 (define-key ctl-x-map "3" 'split-window-horizontally)

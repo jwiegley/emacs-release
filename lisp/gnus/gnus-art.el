@@ -1,7 +1,7 @@
 ;;; gnus-art.el --- article mode commands for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -651,7 +651,7 @@ value is a list of possible files to save in if the match is non-nil.
 If the match is a string, it is used as a regexp match on the
 article.  If the match is a symbol, that symbol will be funcalled
 from the buffer of the article to be saved with the newsgroup as the
-parameter.  If it is a list, it will be evaled in the same buffer.
+parameter.  If it is a list, it will be evalled in the same buffer.
 
 If this form or function returns a string, this string will be used as
 a possible file name; and if it returns a non-nil list, that list will
@@ -1743,7 +1743,7 @@ Initialized from `text-mode-syntax-table.")
   (interactive)
   ;; This function might be inhibited.
   (unless gnus-inhibit-hiding
-    (let ((inhibit-read-only nil)
+    (let ((inhibit-read-only t)
 	  (case-fold-search t)
 	  (max (1+ (length gnus-sorted-header-list)))
 	  (inhibit-point-motion-hooks t)
@@ -3925,7 +3925,8 @@ commands:
   (make-local-variable 'gnus-article-image-alist)
   (make-local-variable 'gnus-article-charset)
   (make-local-variable 'gnus-article-ignored-charsets)
-  ;; Prevent recent Emacsen from displaying non-break space as "\ ".
+  ;; Prevent Emacs 22 from displaying non-break space with `nobreak-space'
+  ;; face.
   (set (make-local-variable 'nobreak-char-display) nil)
   (setq cursor-in-non-selected-windows nil)
   (gnus-set-default-directory)
@@ -4407,11 +4408,11 @@ Deleting parts may malfunction or destroy the article; continue? ")
 	  (gnus-summary-edit-article-done
 	   ,(or (mail-header-references gnus-current-headers) "")
 	   ,(gnus-group-read-only-p)
-	   ,gnus-summary-buffer no-highlight)))))
-  ;; Not in `gnus-mime-save-part-and-strip':
-  (gnus-article-edit-done)
-  (gnus-summary-expand-window)
-  (gnus-summary-show-article))
+	   ,gnus-summary-buffer no-highlight))))
+    ;; Not in `gnus-mime-save-part-and-strip':
+    (gnus-article-edit-done)
+    (gnus-summary-expand-window)
+    (gnus-summary-show-article)))
 
 (defun gnus-mime-save-part ()
   "Save the MIME part under point."
@@ -4673,7 +4674,7 @@ specified charset."
          (mm-enable-external t))
     (if (not (stringp method))
 	(gnus-mime-view-part-as-type
-	 nil (lambda (type) (stringp (mailcap-mime-info type))))
+	 nil (lambda (types) (stringp (mailcap-mime-info (car types)))))
       (when handle
 	(if (mm-handle-undisplayer handle)
 	    (mm-remove-part handle)
@@ -4694,7 +4695,7 @@ If no internal viewer is available, use an external viewer."
 	 (inhibit-read-only t))
     (if (not (mm-inlinable-p handle))
         (gnus-mime-view-part-as-type
-         nil (lambda (type) (mm-inlinable-p handle type)))
+         nil (lambda (types) (mm-inlinable-p handle (car types))))
       (when handle
 	(if (mm-handle-undisplayer handle)
 	    (mm-remove-part handle)
@@ -5397,41 +5398,52 @@ the coding cookie."
 If given a numerical ARG, move forward ARG pages."
   (interactive "P")
   (setq arg (if arg (prefix-numeric-value arg) 0))
-  (save-excursion
-    (set-buffer gnus-article-buffer)
-    (goto-char (point-min))
+  (with-current-buffer gnus-article-buffer
     (widen)
     ;; Remove any old next/prev buttons.
     (when (gnus-visual-p 'page-marker)
       (let ((inhibit-read-only t))
 	(gnus-remove-text-with-property 'gnus-prev)
 	(gnus-remove-text-with-property 'gnus-next)))
-    (if
-	(cond ((< arg 0)
-	       (re-search-backward page-delimiter nil 'move (1+ (abs arg))))
-	      ((> arg 0)
-	       (re-search-forward page-delimiter nil 'move arg)))
-	(goto-char (match-end 0))
-      (save-excursion
-	(goto-char (point-min))
-	(setq gnus-page-broken
-	      (and (re-search-forward page-delimiter nil t) t))))
-    (when gnus-page-broken
-      (narrow-to-region
-       (point)
-       (if (re-search-forward page-delimiter nil 'move)
-	   (match-beginning 0)
-	 (point)))
-      (when (and (gnus-visual-p 'page-marker)
-		 (> (point-min) (save-restriction (widen) (point-min))))
-	(save-excursion
-	  (goto-char (point-min))
-	  (gnus-insert-prev-page-button)))
-      (when (and (gnus-visual-p 'page-marker)
-		 (< (point-max) (save-restriction (widen) (point-max))))
-	(save-excursion
-	  (goto-char (point-max))
-	  (gnus-insert-next-page-button))))))
+    (let (st nd pt)
+      (when (save-excursion
+	      (cond ((< arg 0)
+		     (if (re-search-backward page-delimiter nil 'move (abs arg))
+			 (prog1
+			     (setq nd (match-beginning 0)
+				   pt nd)
+			   (when (re-search-backward page-delimiter nil t)
+			     (setq st (match-end 0))))
+		       (when (re-search-forward page-delimiter nil t)
+			 (setq nd (match-beginning 0)
+			       pt (point-min)))))
+		    ((> arg 0)
+		     (if (re-search-forward page-delimiter nil 'move arg)
+			 (prog1
+			     (setq st (match-end 0)
+				   pt st)
+			   (when (re-search-forward page-delimiter nil t)
+			     (setq nd (match-beginning 0))))
+		       (when (re-search-backward page-delimiter nil t)
+			 (setq st (match-end 0)
+			       pt (point-max)))))
+		    (t
+		     (when (re-search-backward page-delimiter nil t)
+		       (goto-char (setq st (match-end 0))))
+		     (when (re-search-forward page-delimiter nil t)
+		       (setq nd (match-beginning 0)))
+		     (or st nd))))
+	(setq gnus-page-broken t)
+	(when pt (goto-char pt))
+	(narrow-to-region (or st (point-min)) (or nd (point-max)))
+	(when (gnus-visual-p 'page-marker)
+	  (save-excursion
+	    (when nd
+	      (goto-char nd)
+	      (gnus-insert-next-page-button))
+	    (when st
+	      (goto-char st)
+	      (gnus-insert-prev-page-button))))))))
 
 ;; Article mode commands
 
@@ -5446,7 +5458,7 @@ If given a numerical ARG, move forward ARG pages."
 (defun gnus-article-goto-prev-page ()
   "Show the previous page of the article."
   (interactive)
-  (if (bobp)
+  (if (save-restriction (widen) (bobp)) ;; Real beginning-of-buffer?
       (gnus-article-read-summary-keys nil (gnus-character-to-event ?p))
     (gnus-article-prev-page nil)))
 
@@ -5606,7 +5618,7 @@ not have a face in `gnus-article-boring-faces'."
   "Execute the last keystroke in the summary buffer."
   (interactive)
   (let (func)
-    (pop-to-buffer gnus-article-current-summary 'norecord)
+    (pop-to-buffer gnus-article-current-summary)
     (setq func (lookup-key (current-local-map) (this-command-keys)))
     (call-interactively func)))
 
@@ -5645,7 +5657,7 @@ not have a face in `gnus-article-boring-faces'."
 	    (member keys nosave-in-article))
 	(let (func)
 	  (save-window-excursion
-	    (pop-to-buffer gnus-article-current-summary 'norecord)
+	    (pop-to-buffer gnus-article-current-summary)
 	    ;; We disable the pick minor mode commands.
 	    (let (gnus-pick-mode)
 	      (setq func (lookup-key (current-local-map) keys))))
@@ -5657,14 +5669,14 @@ not have a face in `gnus-article-boring-faces'."
 	    (call-interactively func)
 	    (setq new-sum-point (point)))
 	  (when (member keys nosave-but-article)
-	    (pop-to-buffer gnus-article-buffer 'norecord)))
+	    (pop-to-buffer gnus-article-buffer)))
       ;; These commands should restore window configuration.
       (let ((obuf (current-buffer))
 	    (owin (current-window-configuration))
 	    (opoint (point))
 	    win func in-buffer selected new-sum-start new-sum-hscroll)
 	(cond (not-restore-window
-	       (pop-to-buffer gnus-article-current-summary 'norecord))
+	       (pop-to-buffer gnus-article-current-summary))
 	      ((setq win (get-buffer-window gnus-article-current-summary))
 	       (select-window win))
 	      (t
@@ -6707,6 +6719,7 @@ variable it the real callback function."
 		       (repeat :tag "Par"
 			       :inline t
 			       (integer :tag "Regexp group")))))
+(put 'gnus-button-alist 'risky-local-variable t)
 
 (defcustom gnus-header-button-alist
   '(("^\\(References\\|Message-I[Dd]\\|^In-Reply-To\\):" "<[^<>]+>"
@@ -6744,6 +6757,7 @@ HEADER is a regexp to match a header.  For a fuller explanation, see
 		       (repeat :tag "Par"
 			       :inline t
 			       (integer :tag "Regexp group")))))
+(put 'gnus-header-button-alist 'risky-local-variable t)
 
 ;;; Commands:
 

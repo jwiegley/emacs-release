@@ -1,6 +1,6 @@
 ;;; reftex.el --- minor mode for doing \label, \ref, \cite, \index in LaTeX
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1331,10 +1331,8 @@ Valid actions are: readable, restore, read, kill, write."
       (put docstruct-symbol 'modified nil)
       (save-excursion
         (if (file-writable-p file)
-            (progn
+            (with-temp-file file
               (message "Writing parse file %s" (abbreviate-file-name file))
-              (find-file file)
-              (erase-buffer)
               (insert (format ";; RefTeX parse info file\n"))
               (insert (format ";; File: %s\n" master))
               (insert (format ";; User: %s (%s)\n\n"
@@ -1357,9 +1355,7 @@ Valid actions are: readable, restore, read, kill, write."
                           )
                          (t (print x))))
                  list))
-              (insert "))\n\n")
-              (save-buffer 0)
-              (kill-buffer (current-buffer)))
+              (insert "))\n\n"))
           (error "Cannot write to file %s" file)))
       t))))
 

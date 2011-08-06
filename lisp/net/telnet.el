@@ -1,7 +1,7 @@
 ;;; telnet.el --- run a telnet session from within an Emacs buffer
 
 ;; Copyright (C) 1985, 1988, 1992, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: William F. Schelter
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -247,7 +247,8 @@ It has most of the same commands as comint-mode.
 There is a variable ``telnet-interrupt-string'' which is the character
 sent to try to stop execution of a job on the remote host.
 Data is sent to the remote host when RET is typed."
-  (set (make-local-variable 'comint-prompt-regexp) telnet-prompt-pattern))
+  (set (make-local-variable 'comint-prompt-regexp) telnet-prompt-pattern)
+  (set (make-local-variable 'comint-use-prompt-regexp) t))
 
 ;;;###autoload (add-hook 'same-window-regexps "\\*rsh-[^-]*\\*\\(\\|<[0-9]*>\\)")
 

@@ -1,7 +1,7 @@
 ;;; message.el --- composing mail and news messages
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: mail, news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -271,7 +271,7 @@ included.  Organization and User-Agent are optional."
   :link '(custom-manual "(message)Mail Headers")
   :type 'regexp)
 
-(defcustom message-ignored-supersedes-headers "^Path:\\|^Date\\|^NNTP-Posting-Host:\\|^Xref:\\|^Lines:\\|^Received:\\|^X-From-Line:\\|^X-Trace:\\|^X-Complaints-To:\\|Return-Path:\\|^Supersedes:\\|^NNTP-Posting-Date:\\|^X-Trace:\\|^X-Complaints-To:\\|^Cancel-Lock:\\|^Cancel-Key:\\|^X-Hashcash:\\|^X-Payment:"
+(defcustom message-ignored-supersedes-headers "^Path:\\|^Date\\|^NNTP-Posting-Host:\\|^Xref:\\|^Lines:\\|^Received:\\|^X-From-Line:\\|^X-Trace:\\|^X-ID:\\|^X-Complaints-To:\\|Return-Path:\\|^Supersedes:\\|^NNTP-Posting-Date:\\|^X-Trace:\\|^X-Complaints-To:\\|^Cancel-Lock:\\|^Cancel-Key:\\|^X-Hashcash:\\|^X-Payment:"
   "*Header lines matching this regexp will be deleted before posting.
 It's best to delete old Path and Date headers before posting to avoid
 any confusion."
@@ -3376,7 +3376,8 @@ prefix, and don't delete any headers."
     (nreverse buffers)))
 
 (defun message-cite-original-without-signature ()
-  "Cite function in the standard Message manner."
+  "Cite function in the standard Message manner.
+This function strips off the signature from the original message."
   (let* ((start (point))
 	 (end (mark t))
 	 (functions
@@ -5797,7 +5798,7 @@ are not included."
   "Disassociate the message buffer from the drafts directory."
   (when message-draft-article
     (nndraft-request-expire-articles
-     (list message-draft-article) "drafts" nil t)))
+     (list message-draft-article) "nndraft:drafts" nil t)))
 
 (defun message-insert-headers ()
   "Generate the headers for the article."
@@ -6697,7 +6698,7 @@ you."
 	(goto-char boundary)
 	(when (re-search-backward "^.?From .*\n" nil t)
 	  (delete-region (match-beginning 0) (match-end 0)))))
-    (mm-enable-multibyte)
+    (mime-to-mml)
     (save-restriction
       (message-narrow-to-head-1)
       (message-remove-header message-ignored-bounced-headers t)
@@ -6883,7 +6884,7 @@ See `gmm-tool-bar-from-list' for details on the format of the list."
 
 (defcustom message-tool-bar-retro
   '(;; Old Emacs 21 icon for consistency.
-    (message-send-and-exit "gnus/mail_send")
+    (message-send-and-exit "gnus/mail-send")
     (message-kill-buffer "close")
     (message-dont-send "cancel")
     (mml-attach-file "attach" mml-mode-map)
@@ -7164,7 +7165,7 @@ regexp VARSTR."
 address in `message-alternative-emails', looking at To, Cc and
 From headers in the original article."
   (require 'mail-utils)
-  (let* ((fields '("To" "Cc"))
+  (let* ((fields '("To" "Cc" "From"))
 	 (emails
 	  (split-string
 	   (mail-strip-quoted-names
@@ -7179,7 +7180,8 @@ From headers in the original article."
     (unless (or (not email) (equal email user-mail-address))
       (message-remove-header "From")
       (goto-char (point-max))
-      (insert "From: " email "\n"))))
+      (insert "From: " (let ((user-mail-address email)) (message-make-from))
+	      "\n"))))
 
 (defun message-options-get (symbol)
   (cdr (assq symbol message-options)))

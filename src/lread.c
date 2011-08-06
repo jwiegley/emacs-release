@@ -1,13 +1,13 @@
 /* Lisp parsing and input streams.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994, 1995,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -93,7 +93,7 @@ Lisp_Object Qfile_truename, Qdo_after_load_evaluation; /* ACM 2006/5/16 */
 extern Lisp_Object Qevent_symbol_element_mask;
 extern Lisp_Object Qfile_exists_p;
 
-/* non-zero iff inside `load' */
+/* non-zero if inside `load' */
 int load_in_progress;
 
 /* Directory in which the sources were found.  */
@@ -193,6 +193,7 @@ static file_offset prev_saved_doc_string_position;
    Fread initializes this to zero, so we need not specbind it
    or worry about what happens to it when there is an error.  */
 static int new_backquote_flag;
+static Lisp_Object Vold_style_backquotes, Qold_style_backquotes;
 
 /* A list of file names for files being loaded in Fload.  Used to
    check for recursive loads.  */
@@ -642,7 +643,7 @@ DEFUN ("get-file-char", Fget_file_char, Sget_file_char, 0, 0, 0,
 
 
 
-/* Value is non-zero if the file asswociated with file descriptor FD
+/* Value is non-zero if the file associated with file descriptor FD
    is a compiled Lisp file that's safe to load.  Only files compiled
    with Emacs are safe to load.  Files compiled with XEmacs can lead
    to a crash in Fbyte_code because of an incompatible change in the
@@ -698,6 +699,20 @@ load_error_handler (data)
   return Qnil;
 }
 
+static Lisp_Object
+load_warn_old_style_backquotes (file)
+     Lisp_Object file;
+{
+  if (!NILP (Vold_style_backquotes))
+    {
+      Lisp_Object args[2];
+      args[0] = build_string ("!! File %s uses old-style backquotes !!");
+      args[1] = file;
+      Fmessage (2, args);
+    }
+  return Qnil;
+}
+
 DEFUN ("get-load-suffixes", Fget_load_suffixes, Sget_load_suffixes, 0, 0, 0,
        doc: /* Return the suffixes that `load' should try if a suffix is \
 required.
@@ -724,7 +739,7 @@ DEFUN ("load", Fload, Sload, 1, 5, 0,
        doc: /* Execute a file of Lisp code named FILE.
 First try FILE with `.elc' appended, then try with `.el',
 then try FILE unmodified (the exact suffixes in the exact order are
-determined by  `load-suffixes').  Environment variable references in
+determined by `load-suffixes').  Environment variable references in
 FILE are replaced with their values by calling `substitute-in-file-name'.
 This function searches the directories in `load-path'.
 
@@ -762,7 +777,6 @@ Return t if the file exists and loads successfully.  */)
   register FILE *stream;
   register int fd = -1;
   int count = SPECPDL_INDEX ();
-  Lisp_Object temp;
   struct gcpro gcpro1, gcpro2, gcpro3;
   Lisp_Object found, efound, hist_file_name;
   /* 1 means we printed the ".el is newer" message.  */
@@ -895,6 +909,10 @@ Return t if the file exists and loads successfully.  */)
                                    tmp[1] = Ffile_name_nondirectory (found),
                                    tmp))
                     : found) ;
+
+  /* Check for the presence of old-style quotes and warn about them.  */
+  specbind (Qold_style_backquotes, Qnil);
+  record_unwind_protect (load_warn_old_style_backquotes, file);
 
   if (!bcmp (SDATA (found) + SBYTES (found) - 4,
 	     ".elc", 4))
@@ -1126,7 +1144,7 @@ in which case file-name-handlers are ignored.  */)
    On success, returns a file descriptor.  On failure, returns -1.
 
    SUFFIXES is a list of strings containing possible suffixes.
-   The empty suffix is automatically added iff the list is empty.
+   The empty suffix is automatically added if the list is empty.
 
    PREDICATE non-nil means don't open the files,
    just look for one that satisfies the predicate.  In this case,
@@ -1381,8 +1399,6 @@ readevalloop_1 (old)
 static void
 end_of_file_error ()
 {
-  Lisp_Object data;
-
   if (STRINGP (Vload_file_name))
     xsignal1 (Qend_of_file, Vload_file_name);
 
@@ -2442,7 +2458,10 @@ read1 (readcharfun, pch, first_in_list)
 
     case '`':
       if (first_in_list)
-	goto default_label;
+	{
+	  Vold_style_backquotes = Qt;
+	  goto default_label;
+	}
       else
 	{
 	  Lisp_Object value;
@@ -2477,7 +2496,10 @@ read1 (readcharfun, pch, first_in_list)
 	  return Fcons (comma_type, Fcons (value, Qnil));
 	}
       else
-	goto default_label;
+	{
+	  Vold_style_backquotes = Qt;
+	  goto default_label;
+	}
 
     case '?':
       {
@@ -3845,7 +3867,7 @@ init_lread ()
 		    Vload_path = Fcons (tem, Vload_path);
 		}
 
-	      /* Add site-list under the installation dir, if it exists.  */
+	      /* Add site-lisp under the installation dir, if it exists.  */
 	      tem = Fexpand_file_name (build_string ("site-lisp"),
 				       Vinstallation_directory);
 	      tem1 = Ffile_exists_p (tem);
@@ -3905,7 +3927,7 @@ init_lread ()
       /* NORMAL refers to the lisp dir in the source directory.  */
       /* We used to add ../lisp at the front here, but
 	 that caused trouble because it was copied from dump_path
-	 into Vload_path, aboe, when Vinstallation_directory was non-nil.
+	 into Vload_path, above, when Vinstallation_directory was non-nil.
 	 It should be unnecessary.  */
       Vload_path = decode_env_path (0, normal);
       dump_path = Vload_path;
@@ -3964,7 +3986,7 @@ init_lread ()
 }
 
 /* Print a warning, using format string FORMAT, that directory DIRNAME
-   does not exist.  Print it on stderr and put it in *Message*.  */
+   does not exist.  Print it on stderr and put it in *Messages*.  */
 
 void
 dir_warning (format, dirname)
@@ -4074,7 +4096,7 @@ customize `jka-compr-load-suffixes' rather than the present variable.  */);
   Vload_file_rep_suffixes = Fcons (build_string (""), Qnil);
 
   DEFVAR_BOOL ("load-in-progress", &load_in_progress,
-	       doc: /* Non-nil iff inside of `load'.  */);
+	       doc: /* Non-nil if inside of `load'.  */);
 
   DEFVAR_LISP ("after-load-alist", &Vafter_load_alist,
 	       doc: /* An alist of expressions to be evalled when particular files are loaded.
@@ -4187,6 +4209,12 @@ to load.  See also `load-dangerous-libraries'.  */);
   DEFVAR_LISP ("eval-buffer-list", &Veval_buffer_list,
 	       doc: /* List of buffers being read from by calls to `eval-buffer' and `eval-region'.  */);
   Veval_buffer_list = Qnil;
+
+  DEFVAR_LISP ("old-style-backquotes", &Vold_style_backquotes,
+	       doc: /* Set to non-nil when `read' encounters an old-style backquote.  */);
+  Vold_style_backquotes = Qnil;
+  Qold_style_backquotes = intern ("old-style-backquotes");
+  staticpro (&Qold_style_backquotes);
 
   /* Vsource_directory was initialized in init_lread.  */
 

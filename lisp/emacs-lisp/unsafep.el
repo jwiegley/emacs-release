@@ -1,6 +1,6 @@
 ;;;; unsafep.el -- Determine whether a Lisp form is safe to evaluate
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jonathan Yavner <jyavner@member.fsf.org>
 ;; Maintainer: Jonathan Yavner <jyavner@member.fsf.org>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -116,9 +116,9 @@ in the parse.")
 
 ;;;###autoload
 (defun unsafep (form &optional unsafep-vars)
-  "Return nil if evaluating FORM couldn't possibly do any harm;
-otherwise result is a reason why FORM is unsafe.  UNSAFEP-VARS is a list
-of symbols with local bindings."
+  "Return nil if evaluating FORM couldn't possibly do any harm.
+Otherwise result is a reason why FORM is unsafe.
+UNSAFEP-VARS is a list of symbols with local bindings."
   (catch 'unsafep
     (if (or (eq safe-functions t)	    ;User turned off safety-checking
 	    (atom form))		    ;Atoms are never unsafe
@@ -212,9 +212,9 @@ of symbols with local bindings."
 
 
 (defun unsafep-function (fun)
-  "Return nil iff FUN is a safe function.
-\(either a safe lambda or a symbol that names a safe function).  Otherwise
-result is a reason code."
+  "Return nil if FUN is a safe function.
+\(Either a safe lambda or a symbol that names a safe function).
+Otherwise result is a reason code."
   (cond
    ((eq (car-safe fun) 'lambda)
     (unsafep fun unsafep-vars))
@@ -226,8 +226,8 @@ result is a reason code."
     `(function ,fun))))
 
 (defun unsafep-progn (list)
-  "Return nil if all forms in LIST are safe, or the reason
-for the first unsafe form."
+  "Return nil if all forms in LIST are safe.
+Else, return the reason for the first unsafe form."
   (catch 'unsafep-progn
     (let (reason)
       (dolist (x list)
@@ -236,8 +236,9 @@ for the first unsafe form."
 
 (defun unsafep-let (clause)
   "Check the safety of a let binding.
-CLAUSE is a let-binding, either SYM or (SYM) or (SYM VAL).  Checks VAL
-and throws a reason to `unsafep' if unsafe.  Returns SYM."
+CLAUSE is a let-binding, either SYM or (SYM) or (SYM VAL).
+Check VAL and throw a reason to `unsafep' if unsafe.
+Return SYM."
   (let (reason sym)
     (if (atom clause)
 	(setq sym clause)

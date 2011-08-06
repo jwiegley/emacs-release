@@ -4,7 +4,7 @@ cc-mode.texi.
    This manual is for CC Mode in Emacs.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -259,8 +259,8 @@ just fine right out of the box.  Note however that you might not have
 the latest CC Mode release and might want to upgrade your copy (see
 below).
 
-   You should probably start by skimming through the entire chapter
-*Note Commands:: to get an overview of CC Mode's capabilities.
+   You should probably start by skimming through the entire Commands
+chapter (*note Commands::) to get an overview of CC Mode's capabilities.
 
    After trying out some commands, you may dislike some aspects of CC
 Mode's default configuration.  Here is an outline of how to change some
@@ -296,14 +296,14 @@ Electric Indentation
 
           (setq-default c-electric-flag nil)
 
-     Details of of this and other similar "Minor Modes" appear in the
+     Details of this and other similar "Minor Modes" appear in the
      section *Note Minor Modes::.
 
 Making the <RET> key indent the new line
      The standard Emacs binding for <RET> just adds a new line.  If you
      want it to reindent the new line as well, rebind the key.  Note
-     that the action of rebinding will fail if the pertinent keymap
-     doesn't yet exist--we thus need to delay the action until after CC
+     that the action of rebinding would fail if the pertinent keymap
+     didn't yet exist--we thus need to delay the action until after CC
      Mode has been loaded.  Put the following code into your `.emacs':
 
           (defun my-make-CR-do-indent ()
@@ -550,8 +550,8 @@ File: ccmode,  Node: Comment Commands,  Next: Movement Commands,  Prev: Indentat
           the list then the line is indented to the column specified by
           `comment-column'.
 
-          See the documentation string for for a full description of
-          this variable (use `C-h v c-indent-comment-alist').
+          See the documentation string for a full description of this
+          variable (use `C-h v c-indent-comment-alist').
 
       -- User Option: c-indent-comments-syntactically-p
           Normally, when this style variable is `nil', `M-;' will
@@ -577,8 +577,8 @@ File: ccmode,  Node: Movement Commands,  Next: Filling and Breaking,  Prev: Comm
 
 CC Mode contains some useful commands for moving around in C code.
 
-`C-M-a'
-`C-M-e'
+`C-M-a' (`c-beginning-of-defun')
+`C-M-e' (`c-end-of-defun')
      Move to the beginning or end of the current or next function.
      Other constructs (such as a structs or classes) which have a brace
      block also count as "functions" here.  To move over several
@@ -862,7 +862,7 @@ reindenting the line.  This reindentation saves you from having to
 reindent a line manually after typing, say, a `}'.  A few keywords,
 such as `else', also trigger electric action.
 
-   You can inhibit the electric behaviour described here by disabling
+   You can inhibit the electric behavior described here by disabling
 electric minor mode (*note Minor Modes::).
 
    Common to all these keys is that they only behave electrically when
@@ -898,7 +898,7 @@ default).
      Additionally, you can configure CC Mode so that typing a slash at
      the start of a line within a block comment will terminate the
      comment.  You don't need to have electric minor mode enabled to get
-     this behaviour.  *Note Clean-ups::.
+     this behavior.  *Note Clean-ups::.
 
      In AWK mode, `*' and `/' do not delimit comments and are not
      electric.
@@ -1772,8 +1772,8 @@ File: ccmode,  Node: Style Variables,  Next: Styles,  Prev: CC Hooks,  Up: Confi
 The variables that CC Mode's style system control are called "style
 variables".  Note that style variables are ordinary Lisp variables,
 which the style system initializes; you can change their values at any
-time (e.g. in a hook function).  The style system can also also set
-other variables, to some extent.  *Note Styles::.
+time (e.g. in a hook function).  The style system can also set other
+variables, to some extent.  *Note Styles::.
 
    "Style variables" are handled specially in several ways:
 
@@ -5127,7 +5127,7 @@ File: ccmode,  Node: Custom Macros,  Next: Odds and Ends,  Prev: Customizing Ind
 *********************
 
 Normally, the lines in a multi-line macro are indented relative to each
-other as though they were code.  You can suppress this behaviour by
+other as though they were code.  You can suppress this behavior by
 setting the following user option:
 
  -- User Option: c-syntactic-indentation-in-macros
@@ -5519,11 +5519,11 @@ _before_ your bug example, if you think it might affect our ability to
 reproduce it.
 
    Please try to produce the problem in an Emacs instance without any
-customizations loaded (i.e. start it with the `-q -no-site-file'
+customizations loaded (i.e. start it with the `-q --no-site-file'
 arguments).  If it works correctly there, the problem might be caused
 by faulty customizations in either your own or your site configuration.
-In that case, we'd appreciate if you isolate the Emacs Lisp code that
-triggers the bug and include it in your report.
+In that case, we'd appreciate it if you isolate the Emacs Lisp code
+that triggers the bug and include it in your report.
 
    Bug reports should be sent to <bug-cc-mode@gnu.org>.  You can also
 send other questions and suggestions (kudos? ;-) to that address.  It's

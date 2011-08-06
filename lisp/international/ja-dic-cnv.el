@@ -1,7 +1,7 @@
 ;;; ja-dic-cnv.el --- convert a Japanese dictionary (SKK-JISYO.L) to Emacs Lisp
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007
+;;   2005, 2006, 2007, 2008
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -215,8 +215,8 @@
 ;; Return t if substring of STR (between FROM and TO) can be broken up
 ;; to chunks all of which can be derived from another entry in SKK
 ;; dictionary.  SKKBUF is the buffer where the original SKK dictionary
-;; is visited, KANA is the current entry for STR.  FIRST is t iff this
-;; is called at top level.
+;; is visited, KANA is the current entry for STR.  FIRST is t only if
+;; this is called at top level.
 
 (defun skkdic-breakup-string (skkbuf kana str from to &optional first)
   (let ((len (- to from)))

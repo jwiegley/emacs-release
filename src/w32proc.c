@@ -1,12 +1,12 @@
 /* Process support for GNU Emacs on the Microsoft W32 API.
    Copyright (C) 1992, 1995, 1999, 2000, 2001, 2002, 2003, 2004,
-		 2005, 2006, 2007 Free Software Foundation, Inc.
+		 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -216,12 +216,18 @@ delete_child (child_process *cp)
 	  /* let the thread exit cleanly if possible */
 	  cp->status = STATUS_READ_ERROR;
 	  SetEvent (cp->char_consumed);
+#if 0
+          /* We used to forceably terminate the thread here, but it
+             is normally unnecessary, and in abnormal cases, the worst that
+             will happen is we have an extra idle thread hanging around
+             waiting for the zombie process.  */
 	  if (WaitForSingleObject (cp->thrd, 1000) != WAIT_OBJECT_0)
 	    {
 	      DebPrint (("delete_child.WaitForSingleObject (thread) failed "
 			 "with %lu for fd %ld\n", GetLastError (), cp->fd));
 	      TerminateThread (cp->thrd, 0);
 	    }
+#endif
 	}
       CloseHandle (cp->thrd);
       cp->thrd = NULL;
@@ -590,6 +596,13 @@ get_result:
   return pid;
 }
 
+/* Old versions of w32api headers don't have separate 32-bit and
+   64-bit defines, but the one they have matches the 32-bit variety.  */
+#ifndef IMAGE_NT_OPTIONAL_HDR32_MAGIC
+# define IMAGE_NT_OPTIONAL_HDR32_MAGIC IMAGE_NT_OPTIONAL_HDR_MAGIC
+# define IMAGE_OPTIONAL_HEADER32 IMAGE_OPTIONAL_HEADER
+#endif
+
 void
 w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app, int * is_gui_app)
 {
@@ -650,33 +663,54 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app, int
   	}
       else if (nt_header->Signature == IMAGE_NT_SIGNATURE)
   	{
-	  /* Look for cygwin.dll in DLL import list. */
-	  IMAGE_DATA_DIRECTORY import_dir =
-	    nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
-	  IMAGE_IMPORT_DESCRIPTOR * imports;
-	  IMAGE_SECTION_HEADER * section;
+          IMAGE_DATA_DIRECTORY *data_dir = NULL;
+          if (nt_header->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+            {
+              /* Ensure we are using the 32 bit structure.  */
+              IMAGE_OPTIONAL_HEADER32 *opt
+                = (IMAGE_OPTIONAL_HEADER32*) &(nt_header->OptionalHeader);
+              data_dir = opt->DataDirectory;
+              *is_gui_app = (opt->Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI);
+            }
+          /* MingW 3.12 has the required 64 bit structs, but in case older
+             versions don't, only check 64 bit exes if we know how.  */
+#ifdef IMAGE_NT_OPTIONAL_HDR64_MAGIC
+          else if (nt_header->OptionalHeader.Magic
+                   == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+            {
+              IMAGE_OPTIONAL_HEADER64 *opt
+                = (IMAGE_OPTIONAL_HEADER64*) &(nt_header->OptionalHeader);
+              data_dir = opt->DataDirectory;
+              *is_gui_app = (opt->Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI);
+            }
+#endif
+          if (data_dir)
+            {
+              /* Look for cygwin.dll in DLL import list. */
+              IMAGE_DATA_DIRECTORY import_dir =
+                data_dir[IMAGE_DIRECTORY_ENTRY_IMPORT];
+              IMAGE_IMPORT_DESCRIPTOR * imports;
+              IMAGE_SECTION_HEADER * section;
 
-	  section = rva_to_section (import_dir.VirtualAddress, nt_header);
-	  imports = RVA_TO_PTR (import_dir.VirtualAddress, section, executable);
+              section = rva_to_section (import_dir.VirtualAddress, nt_header);
+              imports = RVA_TO_PTR (import_dir.VirtualAddress, section,
+                                    executable);
 
-	  for ( ; imports->Name; imports++)
-  	    {
-	      char * dllname = RVA_TO_PTR (imports->Name, section, executable);
-
-	      /* The exact name of the cygwin dll has changed with
-	         various releases, but hopefully this will be reasonably
-	         future proof.  */
-	      if (strncmp (dllname, "cygwin", 6) == 0)
-		{
-		  *is_cygnus_app = TRUE;
-		  break;
-		}
-  	    }
-
-	  /* Check whether app is marked as a console or windowed (aka
-             GUI) app.  Accept Posix and OS2 subsytem apps as console
-             apps.  */
-	  *is_gui_app = (nt_header->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI);
+              for ( ; imports->Name; imports++)
+                {
+                  char * dllname = RVA_TO_PTR (imports->Name, section,
+                                               executable);
+                  
+                  /* The exact name of the cygwin dll has changed with
+                     various releases, but hopefully this will be reasonably
+                     future proof.  */
+                  if (strncmp (dllname, "cygwin", 6) == 0)
+                    {
+                      *is_cygnus_app = TRUE;
+                      break;
+                    }
+                }
+            }
   	}
     }
 
@@ -747,7 +781,14 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
      variable in their environment.  */
   char ppid_env_var_buffer[64];
   char *extra_env[] = {ppid_env_var_buffer, NULL};
-  char *sepchars = " \t";
+  /* These are the characters that cause an argument to need quoting.
+     Arguments with whitespace characters need quoting to prevent the
+     argument being split into two or more. Arguments with wildcards
+     are also quoted, for consistency with posix platforms, where wildcards
+     are not expanded if we run the program directly without a shell.
+     Some extra whitespace characters need quoting in Cygwin programs,
+     so this list is conditionally modified below.  */
+  char *sepchars = " \t*?";
 
   /* We don't care about the other modes */
   if (mode != _P_NOWAIT)

@@ -1,6 +1,6 @@
 ;;; icalendar.el --- iCalendar implementation -*-coding: utf-8 -*-
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author:         Ulf Jasper <ulf.jasper@web.de>
 ;; Created:        August 2002
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -678,7 +678,7 @@ takes care of european-style."
       nil)))
 
 (defun icalendar--diarytime-to-isotime (timestring ampmstring)
-  "Convert a a time like 9:30pm to an iso-conform string like T213000.
+  "Convert a time like 9:30pm to an iso-conform string like T213000.
 In this example the TIMESTRING would be \"9:30\" and the AMPMSTRING
 would be \"pm\"."
   (if timestring
@@ -710,7 +710,7 @@ would be \"pm\"."
   "Export diary file to iCalendar format.
 All diary entries in the file DIARY-FILENAME are converted to iCalendar
 format.  The result is appended to the file ICAL-FILENAME."
-  (interactive "FExport diary data from file:
+  (interactive "FExport diary data from file: 
 Finto iCalendar file: ")
   (save-current-buffer
     (set-buffer (find-file diary-filename))
@@ -1454,8 +1454,8 @@ Argument ICAL-FILENAME output iCalendar file.
 Argument DIARY-FILENAME input `diary-file'.
 Optional argument NON-MARKING determines whether events are created as
 non-marking or not."
-  (interactive "fImport iCalendar data from file:
-Finto diary file:
+  (interactive "fImport iCalendar data from file: 
+Finto diary file: 
 p")
   ;; clean up the diary file
   (save-current-buffer

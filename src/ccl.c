@@ -1,8 +1,8 @@
 /* CCL (Code Conversion Language) interpreter.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007 Free Software Foundation, Inc.
+                 2006, 2007, 2008 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007
+     2005, 2006, 2007, 2008
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -10,7 +10,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -659,13 +659,13 @@ while (0)
 
 #define CCL_LookupIntConstTbl 0x13 /* Lookup multibyte character by
 				      integer key.  Afterwards R7 set
-				      to 1 iff lookup succeeded.
+				      to 1 if lookup succeeded.
 				      1:ExtendedCOMMNDRrrRRRXXXXXXXX
 				      2:ARGUMENT(Hash table ID) */
 
 #define CCL_LookupCharConstTbl 0x14 /* Lookup integer by multibyte
 				       character key.  Afterwards R7 set
-				       to 1 iff lookup succeeded.
+				       to 1 if lookup succeeded.
 				       1:ExtendedCOMMNDRrrRRRrrrXXXXX
 				       2:ARGUMENT(Hash table ID) */
 
@@ -748,7 +748,7 @@ while(0)
     int bytes = SINGLE_BYTE_CHAR_P (ch) ? 1: CHAR_BYTES (ch);		\
     if (!dst)								\
       CCL_INVALID_CMD;							\
-    else if (dst + bytes + extra_bytes < (dst_bytes ? dst_end : src))	\
+    else if (dst + bytes + extra_bytes <= (dst_bytes ? dst_end : src))	\
       {									\
 	if (bytes == 1)							\
 	  {								\
@@ -775,7 +775,7 @@ while(0)
     int bytes = CHAR_BYTES (ch);					\
     if (!dst)								\
       CCL_INVALID_CMD;							\
-    else if (dst + bytes + extra_bytes < (dst_bytes ? dst_end : src))	\
+    else if (dst + bytes + extra_bytes <= (dst_bytes ? dst_end : src))	\
       {									\
 	if (CHAR_VALID_P ((ch), 0))					\
 	  dst += CHAR_STRING ((ch), dst);				\
@@ -1261,7 +1261,7 @@ ccl_driver (ccl, source, destination, src_bytes, dst_bytes, consumed)
 	    case CCL_MOD: reg[rrr] = i % j; break;
 	    case CCL_AND: reg[rrr] = i & j; break;
 	    case CCL_OR: reg[rrr] = i | j; break;
-	    case CCL_XOR: reg[rrr] = i ^ j;; break;
+	    case CCL_XOR: reg[rrr] = i ^ j; break;
 	    case CCL_LSH: reg[rrr] = i << j; break;
 	    case CCL_RSH: reg[rrr] = i >> j; break;
 	    case CCL_LSH8: reg[rrr] = (i << 8) | j; break;
@@ -1909,7 +1909,8 @@ ccl_driver (ccl, source, destination, src_bytes, dst_bytes, consumed)
 	  break;
 
 	case CCL_STAT_QUIT:
-	  sprintf(msg, "\nCCL: Quited.");
+	  if (! ccl->quit_silently)
+	    sprintf(msg, "\nCCL: Quited.");
 	  break;
 
 	default:
@@ -2112,6 +2113,7 @@ setup_ccl_program (ccl, ccl_prog)
   ccl->eol_type = CODING_EOL_LF;
   ccl->suppress_error = 0;
   ccl->eight_bit_control = 0;
+  ccl->quit_silently = 0;
   return 0;
 }
 

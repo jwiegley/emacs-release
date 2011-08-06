@@ -1,12 +1,13 @@
 /* Terminal control module for terminals described by TERMCAP
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1998, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -2169,15 +2170,22 @@ DEFUN ("tty-display-color-cells", Ftty_display_color_cells,
 
 #ifndef WINDOWSNT
 
+/* Declare here rather than in the function, as in the rest of Emacs,
+   to work around an HPUX compiler bug (?). See
+   http://lists.gnu.org/archive/html/emacs-devel/2007-08/msg00410.html  */
+static int default_max_colors;
+static int default_max_pairs;
+static int default_no_color_video;
+static char *default_orig_pair;
+static char *default_set_foreground;
+static char *default_set_background;
+
 /* Save or restore the default color-related capabilities of this
    terminal.  */
 static void
 tty_default_color_capabilities (save)
      int save;
 {
-  static char
-    *default_orig_pair, *default_set_foreground, *default_set_background;
-  static int default_max_colors, default_max_pairs, default_no_color_video;
 
   if (save)
     {

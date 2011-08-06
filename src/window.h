@@ -1,12 +1,13 @@
 /* Window definitions for GNU Emacs.
    Copyright (C) 1985, 1986, 1993, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -777,6 +778,7 @@ extern Lisp_Object window_from_coordinates P_ ((struct frame *, int, int,
 EXFUN (Fwindow_dedicated_p, 1);
 extern int window_height P_ ((Lisp_Object));
 extern int window_width P_ ((Lisp_Object));
+EXFUN (Fwindow_full_width_p, 1);
 extern void set_window_height P_ ((Lisp_Object, int, int));
 extern void set_window_width P_ ((Lisp_Object, int, int));
 extern void change_window_heights P_ ((Lisp_Object, int));
@@ -818,7 +820,7 @@ extern int command_loop_level;
 
 extern int minibuf_level;
 
-/* true iff we should redraw the mode lines on the next redisplay.  */
+/* true if we should redraw the mode lines on the next redisplay.  */
 
 extern int update_mode_lines;
 

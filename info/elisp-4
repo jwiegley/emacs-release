@@ -6,10 +6,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -21,9 +21,9 @@ Foundation, Inc.
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 
 File: elisp,  Node: Command Loop,  Next: Keymaps,  Prev: Minibuffers,  Up: Top
@@ -41,6 +41,7 @@ are done, and the subroutines that allow Lisp programs to do them.
 * Command Overview::    How the command loop reads commands.
 * Defining Commands::   Specifying how a function should read arguments.
 * Interactive Call::    Calling a command, so that it will read arguments.
+* Distinguish Interactive::     Making a command distinguish interactive calls.
 * Command Loop Info::   Variables set by the command loop for you to examine.
 * Adjusting Point::     Adjustment of point after a command.
 * Input Events::	What input looks like when you read it.
@@ -497,7 +498,7 @@ Here are some examples of `interactive':
           => nil
 
 
-File: elisp,  Node: Interactive Call,  Next: Command Loop Info,  Prev: Defining Commands,  Up: Command Loop
+File: elisp,  Node: Interactive Call,  Next: Distinguish Interactive,  Prev: Defining Commands,  Up: Command Loop
 
 21.3 Interactive Call
 =====================
@@ -595,35 +596,62 @@ these functions yourself.
           ---------- Buffer: Minibuffer ----------
                => t
 
- -- Function: interactive-p
-     This function returns `t' if the containing function (the one
-     whose code includes the call to `interactive-p') was called in
-     direct response to user input.  This means that it was called with
-     the function `call-interactively', and that a keyboard macro is
-     not running, and that Emacs is not running in batch mode.
+
+File: elisp,  Node: Distinguish Interactive,  Next: Command Loop Info,  Prev: Interactive Call,  Up: Command Loop
+
+21.4 Distinguish Interactive Calls
+==================================
+
+Sometimes a command should display additional visual feedback (such as
+an informative message in the echo area) for interactive calls only.
+There are three ways to do this.  The recommended way to test whether
+the function was called using `call-interactively' is to give it an
+optional argument `print-message' and use the `interactive' spec to
+make it non-`nil' in interactive calls.  Here's an example:
+
+     (defun foo (&optional print-message)
+       (interactive "p")
+       (when print-message
+         (message "foo")))
+
+We use `"p"' because the numeric prefix argument is never `nil'.
+Defined in this way, the function does display the message when called
+from a keyboard macro.
+
+   The above method with the additional argument is usually best,
+because it allows callers to say "treat this call as interactive."  But
+you can also do the job in a simpler way by testing
+`called-interactively-p'.
+
+ -- Function: called-interactively-p
+     This function returns `t' when the calling function was called
+     using `call-interactively'.
 
      If the containing function was called by Lisp evaluation (or with
      `apply' or `funcall'), then it was not called interactively.
 
-   The most common use of `interactive-p' is for deciding whether to
-give the user additional visual feedback (such as by printing an
-informative message).  For example:
+   Here's an example of using `called-interactively-p':
 
-     ;; Here's the usual way to use `interactive-p'.
      (defun foo ()
        (interactive)
-       (when (interactive-p)
-         (message "foo")))
+       (when (called-interactively-p)
+         (message "foo"))
+       'haha)
           => foo
-
-     ;; This function is just to illustrate the behavior.
-     (defun bar ()
-       (interactive)
-       (setq foobar (list (foo) (interactive-p))))
-          => bar
 
      ;; Type `M-x foo'.
           -| foo
+
+     (foo)
+          => haha
+
+   Here is another example that contrasts direct and indirect calls to
+`called-interactively-p'.
+
+     (defun bar ()
+       (interactive)
+       (setq foobar (list (foo) (called-interactively-p))))
+          => bar
 
      ;; Type `M-x bar'.
      ;; This does not display a message.
@@ -631,36 +659,27 @@ informative message).  For example:
      foobar
           => (nil t)
 
-   If you want to test _only_ whether the function was called using
-`call-interactively', add an optional argument `print-message' which
-should be non-`nil' in an interactive call, and use the `interactive'
-spec to make sure it is non-`nil'.  Here's an example:
+   If you want to treat commands run in keyboard macros just like calls
+from Lisp programs, test `interactive-p' instead of
+`called-interactively-p'.
 
-     (defun foo (&optional print-message)
-       (interactive "p")
-       (when print-message
-         (message "foo")))
-
-Defined in this way, the function does display the message when called
-from a keyboard macro.  We use `"p"' because the numeric prefix
-argument is never `nil'.
-
- -- Function: called-interactively-p
-     This function returns `t' when the calling function was called
-     using `call-interactively'.
-
-     When possible, instead of using this function, you should use the
-     method in the example above; that method makes it possible for a
-     caller to "pretend" that the function was called interactively.
+ -- Function: interactive-p
+     This function returns `t' if the containing function (the one
+     whose code includes the call to `interactive-p') was called in
+     direct response to user input.  This means that it was called with
+     the function `call-interactively', and that a keyboard macro is
+     not running, and that Emacs is not running in batch mode.
 
 
-File: elisp,  Node: Command Loop Info,  Next: Adjusting Point,  Prev: Interactive Call,  Up: Command Loop
+File: elisp,  Node: Command Loop Info,  Next: Adjusting Point,  Prev: Distinguish Interactive,  Up: Command Loop
 
-21.4 Information from the Command Loop
+21.5 Information from the Command Loop
 ======================================
 
 The editor command loop sets several Lisp variables to keep status
-records for itself and for commands that are run.
+records for itself and for commands that are run.  With the exception of
+`this-command' and `last-command' it's generally a bad idea to change
+any of these variables in a Lisp program.
 
  -- Variable: last-command
      This variable records the name of the previous command executed by
@@ -678,6 +697,11 @@ records for itself and for commands that are run.
  -- Variable: real-last-command
      This variable is set up by Emacs just like `last-command', but
      never altered by Lisp programs.
+
+ -- Variable: last-repeatable-command
+     This variable stores the most recently executed command that was
+     not part of an input event.  This is the command `repeat' will try
+     to repeat, *Note Repeating: (emacs)Repeating.
 
  -- Variable: this-command
      This variable records the name of the command now being executed by
@@ -784,7 +808,7 @@ precisely what we want to avoid.
 
 File: elisp,  Node: Adjusting Point,  Next: Input Events,  Prev: Command Loop Info,  Up: Command Loop
 
-21.5 Adjusting Point After Commands
+21.6 Adjusting Point After Commands
 ===================================
 
 It is not easy to display a value of point in the middle of a sequence
@@ -812,7 +836,7 @@ normally moves point to the edge of the sequence.
 
 File: elisp,  Node: Input Events,  Next: Reading Input,  Prev: Adjusting Point,  Up: Command Loop
 
-21.6 Input Events
+21.7 Input Events
 =================
 
 The Emacs command loop reads a sequence of "input events" that
@@ -846,14 +870,15 @@ describes the representation and meaning of input events in detail.
 * Event Examples::		Examples of the lists for mouse events.
 * Classifying Events::		Finding the modifier keys in an event symbol.
 				Event types.
-* Accessing Events::		Functions to extract info from events.
+* Accessing Mouse::		Functions to extract info from mouse events.
+* Accessing Scroll::		Functions to get info from scroll bar events.
 * Strings of Events::           Special considerations for putting
 				  keyboard character events in a string.
 
 
 File: elisp,  Node: Keyboard Events,  Next: Function Keys,  Up: Input Events
 
-21.6.1 Keyboard Events
+21.7.1 Keyboard Events
 ----------------------
 
 There are two kinds of input you can get from the keyboard: ordinary
@@ -921,7 +946,7 @@ Classifying Events::).
 
 File: elisp,  Node: Function Keys,  Next: Mouse Events,  Prev: Keyboard Events,  Up: Input Events
 
-21.6.2 Function Keys
+21.7.2 Function Keys
 --------------------
 
 Most keyboards also have "function keys"--keys that have names or
@@ -1007,7 +1032,7 @@ key-binding lookup and modification functions.
 
 File: elisp,  Node: Mouse Events,  Next: Click Events,  Prev: Function Keys,  Up: Input Events
 
-21.6.3 Mouse Events
+21.7.3 Mouse Events
 -------------------
 
 Emacs supports four kinds of mouse events: click events, drag events,
@@ -1032,7 +1057,7 @@ command binding of the key sequence.
 
 File: elisp,  Node: Click Events,  Next: Drag Events,  Prev: Mouse Events,  Up: Input Events
 
-21.6.4 Click Events
+21.7.4 Click Events
 -------------------
 
 When the user presses a mouse button and releases it at the same
@@ -1160,7 +1185,7 @@ input stream.  *Note Key Sequence Input::.
 
 File: elisp,  Node: Drag Events,  Next: Button-Down Events,  Prev: Click Events,  Up: Input Events
 
-21.6.5 Drag Events
+21.7.5 Drag Events
 ------------------
 
 With Emacs, you can have a drag event without even changing your
@@ -1195,7 +1220,7 @@ and drag events unless you want to.
 
 File: elisp,  Node: Button-Down Events,  Next: Repeat Events,  Prev: Drag Events,  Up: Input Events
 
-21.6.6 Button-Down Events
+21.7.6 Button-Down Events
 -------------------------
 
 Click and drag events happen when the user releases a mouse button.
@@ -1224,7 +1249,7 @@ Motion Events::.
 
 File: elisp,  Node: Repeat Events,  Next: Motion Events,  Prev: Button-Down Events,  Up: Input Events
 
-21.6.7 Repeat Events
+21.7.7 Repeat Events
 --------------------
 
 If you press the same mouse button more than once in quick succession
@@ -1314,7 +1339,7 @@ how many times the button was pressed.
 
 File: elisp,  Node: Motion Events,  Next: Focus Events,  Prev: Repeat Events,  Up: Input Events
 
-21.6.8 Motion Events
+21.7.8 Motion Events
 --------------------
 
 Emacs sometimes generates "mouse motion" events to describe motion of
@@ -1334,7 +1359,7 @@ appear.  *Note Mouse Tracking::.
 
 File: elisp,  Node: Focus Events,  Next: Misc Events,  Prev: Motion Events,  Up: Input Events
 
-21.6.9 Focus Events
+21.7.9 Focus Events
 -------------------
 
 Window systems provide general ways for the user to control which window
@@ -1369,7 +1394,7 @@ sequence, and not within it.
 
 File: elisp,  Node: Misc Events,  Next: Event Examples,  Prev: Focus Events,  Up: Input Events
 
-21.6.10 Miscellaneous System Events
+21.7.10 Miscellaneous System Events
 -----------------------------------
 
 A few other event types represent occurrences within the system.
@@ -1464,7 +1489,7 @@ within it.
 
 File: elisp,  Node: Event Examples,  Next: Classifying Events,  Prev: Misc Events,  Up: Input Events
 
-21.6.11 Event Examples
+21.7.11 Event Examples
 ----------------------
 
 If the user presses and releases the left mouse button over the same
@@ -1499,9 +1524,9 @@ it to the `signal usr1' event sequence:
      (global-set-key [signal usr1] 'usr1-handler)
 
 
-File: elisp,  Node: Classifying Events,  Next: Accessing Events,  Prev: Event Examples,  Up: Input Events
+File: elisp,  Node: Classifying Events,  Next: Accessing Mouse,  Prev: Event Examples,  Up: Input Events
 
-21.6.12 Classifying Events
+21.7.12 Classifying Events
 --------------------------
 
 Every event has an "event type", which classifies the event for key
@@ -1603,10 +1628,10 @@ to get such information conveniently.
                => C-s-f1
 
 
-File: elisp,  Node: Accessing Events,  Next: Strings of Events,  Prev: Classifying Events,  Up: Input Events
+File: elisp,  Node: Accessing Mouse,  Next: Accessing Scroll,  Prev: Classifying Events,  Up: Input Events
 
-21.6.13 Accessing Events
-------------------------
+21.7.13 Accessing Mouse Events
+------------------------------
 
 This section describes convenient functions for accessing the data in a
 mouse button or motion event.
@@ -1726,7 +1751,13 @@ list with the functions described above.
      area, otherwise they are relative to the entire window area
      including scroll bars, margins and fringes.
 
-   These functions are useful for decoding scroll bar events.
+
+File: elisp,  Node: Accessing Scroll,  Next: Strings of Events,  Prev: Accessing Mouse,  Up: Input Events
+
+21.7.14 Accessing Scroll Bar Events
+-----------------------------------
+
+These functions are useful for decoding scroll bar events.
 
  -- Function: scroll-bar-event-ratio event
      This function returns the fractional vertical position of a scroll
@@ -1752,9 +1783,9 @@ list with the functions described above.
      in place of a pair of x and y coordinates.
 
 
-File: elisp,  Node: Strings of Events,  Prev: Accessing Events,  Up: Input Events
+File: elisp,  Node: Strings of Events,  Prev: Accessing Scroll,  Up: Input Events
 
-21.6.14 Putting Keyboard Events in Strings
+21.7.15 Putting Keyboard Events in Strings
 ------------------------------------------
 
 In most of the places where strings are used, we conceptualize the
@@ -1835,7 +1866,7 @@ following the recommendations at the beginning of this section.
 
 File: elisp,  Node: Reading Input,  Next: Special Events,  Prev: Input Events,  Up: Command Loop
 
-21.7 Reading Input
+21.8 Reading Input
 ==================
 
 The editor command loop reads key sequences using the function
@@ -1860,7 +1891,7 @@ terminal input.
 
 File: elisp,  Node: Key Sequence Input,  Next: Reading One Event,  Up: Reading Input
 
-21.7.1 Key Sequence Input
+21.8.1 Key Sequence Input
 -------------------------
 
 The command loop reads input a key sequence at a time, by calling
@@ -1970,7 +2001,7 @@ mouse on the window's mode line, you get two events, like this:
 
 File: elisp,  Node: Reading One Event,  Next: Event Mod,  Prev: Key Sequence Input,  Up: Reading Input
 
-21.7.2 Reading One Event
+21.8.2 Reading One Event
 ------------------------
 
 The lowest level functions for command input are those that read a
@@ -2066,7 +2097,7 @@ single event.
 
 File: elisp,  Node: Event Mod,  Next: Invoking the Input Method,  Prev: Reading One Event,  Up: Reading Input
 
-21.7.3 Modifying and Translating Input Events
+21.8.3 Modifying and Translating Input Events
 ---------------------------------------------
 
 Emacs modifies every event it reads according to
@@ -2144,7 +2175,7 @@ sequences at the level of `read-key-sequence'.
 
 File: elisp,  Node: Invoking the Input Method,  Next: Quoted Character Input,  Prev: Event Mod,  Up: Reading Input
 
-21.7.4 Invoking the Input Method
+21.8.4 Invoking the Input Method
 --------------------------------
 
 The event-reading functions invoke the current input method, if any
@@ -2186,7 +2217,7 @@ return that list with no further processing.
 
 File: elisp,  Node: Quoted Character Input,  Next: Event Input Misc,  Prev: Invoking the Input Method,  Up: Reading Input
 
-21.7.5 Quoted Character Input
+21.8.5 Quoted Character Input
 -----------------------------
 
 You can use the function `read-quoted-char' to ask the user to specify
@@ -2224,7 +2255,7 @@ command `quoted-insert' uses this function.
 
 File: elisp,  Node: Event Input Misc,  Prev: Quoted Character Input,  Up: Reading Input
 
-21.7.6 Miscellaneous Event Input Features
+21.8.6 Miscellaneous Event Input Features
 -----------------------------------------
 
 This section describes how to "peek ahead" at events without using them
@@ -2336,7 +2367,7 @@ See also the function `read-passwd' (*note Reading a Password::).
 
 File: elisp,  Node: Special Events,  Next: Waiting,  Prev: Reading Input,  Up: Command Loop
 
-21.8 Special Events
+21.9 Special Events
 ===================
 
 Special events are handled at a very low level--as soon as they are
@@ -2364,8 +2395,8 @@ special events--and which events are special--is in the variable
 
 File: elisp,  Node: Waiting,  Next: Quitting,  Prev: Special Events,  Up: Command Loop
 
-21.9 Waiting for Elapsed Time or Input
-======================================
+21.10 Waiting for Elapsed Time or Input
+=======================================
 
 The wait functions are designed to wait for a certain amount of time to
 pass or until there is input.  For example, you may wish to pause in
@@ -2425,7 +2456,7 @@ input comes in, while `sleep-for' pauses without updating the screen.
 
 File: elisp,  Node: Quitting,  Next: Prefix Command Arguments,  Prev: Waiting,  Up: Command Loop
 
-21.10 Quitting
+21.11 Quitting
 ==============
 
 Typing `C-g' while a Lisp function is running causes Emacs to "quit"
@@ -2538,7 +2569,7 @@ See the function `set-input-mode' in *Note Terminal Input::.
 
 File: elisp,  Node: Prefix Command Arguments,  Next: Recursive Editing,  Prev: Quitting,  Up: Command Loop
 
-21.11 Prefix Command Arguments
+21.12 Prefix Command Arguments
 ==============================
 
 Most Emacs commands can use a "prefix argument", a number specified
@@ -2660,7 +2691,7 @@ following command.  Do not call them for any other reason.
 
 File: elisp,  Node: Recursive Editing,  Next: Disabling Commands,  Prev: Prefix Command Arguments,  Up: Command Loop
 
-21.12 Recursive Editing
+21.13 Recursive Editing
 =======================
 
 The Emacs command loop is entered automatically when Emacs starts up.
@@ -2767,7 +2798,7 @@ recursive edit but also provides the other features of the debugger.
 
 File: elisp,  Node: Disabling Commands,  Next: Command History,  Prev: Recursive Editing,  Up: Command Loop
 
-21.13 Disabling Commands
+21.14 Disabling Commands
 ========================
 
 "Disabling a command" marks the command as requiring user confirmation
@@ -2821,7 +2852,7 @@ has no effect on calling it as a function from Lisp programs.
 
 File: elisp,  Node: Command History,  Next: Keyboard Macros,  Prev: Disabling Commands,  Up: Command Loop
 
-21.14 Command History
+21.15 Command History
 =====================
 
 The command loop keeps a history of the complex commands that have been
@@ -2858,7 +2889,7 @@ minibuffer history commands are available.
 
 File: elisp,  Node: Keyboard Macros,  Prev: Command History,  Up: Command Loop
 
-21.15 Keyboard Macros
+21.16 Keyboard Macros
 =====================
 
 A "keyboard macro" is a canned sequence of input events that can be
@@ -6242,7 +6273,7 @@ each calls the following function to set various variables:
 
    In Lisp and most programming languages, we want the paragraph
 commands to treat only blank lines as paragraph separators.  And the
-modes should undestand the Lisp conventions for comments.  The rest of
+modes should understand the Lisp conventions for comments.  The rest of
 `lisp-mode-variables' sets this up:
 
        (make-local-variable 'paragraph-start)

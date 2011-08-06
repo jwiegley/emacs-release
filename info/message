@@ -4,7 +4,7 @@ message.texi.
    This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -667,8 +667,8 @@ add the `Content-Type' and `Content-Transfer-Encoding' headers.
 
    The most typical thing users want to use the multipart things in
 MIME for is to add "attachments" to mail they send out.  This can be
-done with the `C-c C-a' command (`M-x mml-attach'), which will prompt
-for a file name and a MIME type.
+done with the `C-c C-a' command (`M-x mml-attach-file'), which will
+prompt for a file name and a MIME type.
 
    If your Emacs supports drag and drop, you can also drop the file in
 the Message buffer.  The variable `mml-dnd-protocol-alist' specifies
@@ -1189,7 +1189,7 @@ look sufficiently similar.
 `message-subject-trailing-was-query'
      Controls what to do with trailing `(was: <old subject>)' in subject
      lines.  If `nil', leave the subject unchanged.  If it is the symbol
-     `ask', query the user what do do.  In this case, the subject is
+     `ask', query the user what to do.  In this case, the subject is
      matched against `message-subject-trailing-was-ask-regexp'.  If
      `message-subject-trailing-was-query' is `t', always strip the
      trailing old subject.  In this case,
@@ -2624,7 +2624,7 @@ File: message,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentation Lic
 * MIME:                                  MIME.                (line   6)
 * Mime-Version:                          News Headers.        (line  70)
 * MML:                                   MIME.                (line   6)
-* mml-attach:                            MIME.                (line  10)
+* mml-attach-file:                       MIME.                (line  10)
 * mml-dnd-attach-options:                MIME.                (line  15)
 * mml-dnd-protocol-alist:                MIME.                (line  15)
 * mml-secure-message-encrypt-pgp:        Signing and encryption.
@@ -2756,51 +2756,51 @@ File: message,  Node: Key Index,  Prev: Index,  Up: Top
 
 
 Tag Table:
-Node: Top1384
-Node: Interface2129
-Node: New Mail Message3321
-Node: New News Message3683
-Node: Reply4076
-Node: Wide Reply5446
-Node: Followup6321
-Node: Canceling News7096
-Node: Superseding8276
-Node: Forwarding8917
-Node: Resending10465
-Node: Bouncing10820
-Node: Mailing Lists11391
-Node: Commands16588
-Node: Buffer Entry17326
-Node: Header Commands17997
-Node: Movement22863
-Node: Insertion23427
-Node: MIME24556
-Node: IDNA25754
-Node: Security26949
-Node: Signing and encryption27501
-Node: Using S/MIME30314
-Node: Using PGP/MIME33533
-Node: PGP Compatibility35370
-Node: Various Commands37025
-Node: Sending38599
-Node: Mail Aliases39009
-Node: Spelling39879
-Node: Variables41185
-Node: Message Headers41904
-Node: Mail Headers47910
-Node: Mail Variables48595
-Node: News Headers50843
-Node: News Variables57839
-Node: Insertion Variables58244
-Node: Various Message Variables62120
-Node: Sending Variables67250
-Node: Message Buffers68452
-Node: Message Actions70607
-Node: Compatibility72079
-Node: Appendices72522
-Node: Responses72740
-Node: GNU Free Documentation License74092
-Node: Index96303
-Node: Key Index117634
+Node: Top1390
+Node: Interface2135
+Node: New Mail Message3327
+Node: New News Message3689
+Node: Reply4082
+Node: Wide Reply5452
+Node: Followup6327
+Node: Canceling News7102
+Node: Superseding8282
+Node: Forwarding8923
+Node: Resending10471
+Node: Bouncing10826
+Node: Mailing Lists11397
+Node: Commands16594
+Node: Buffer Entry17332
+Node: Header Commands18003
+Node: Movement22869
+Node: Insertion23433
+Node: MIME24562
+Node: IDNA25765
+Node: Security26960
+Node: Signing and encryption27512
+Node: Using S/MIME30325
+Node: Using PGP/MIME33544
+Node: PGP Compatibility35381
+Node: Various Commands37036
+Node: Sending38610
+Node: Mail Aliases39020
+Node: Spelling39890
+Node: Variables41196
+Node: Message Headers41915
+Node: Mail Headers47921
+Node: Mail Variables48606
+Node: News Headers50854
+Node: News Variables57850
+Node: Insertion Variables58255
+Node: Various Message Variables62131
+Node: Sending Variables67261
+Node: Message Buffers68463
+Node: Message Actions70618
+Node: Compatibility72090
+Node: Appendices72533
+Node: Responses72751
+Node: GNU Free Documentation License74103
+Node: Index96314
+Node: Key Index117645
 
 End Tag Table

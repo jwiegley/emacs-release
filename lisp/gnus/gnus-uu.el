@@ -1,7 +1,7 @@
 ;;; gnus-uu.el --- extract (uu)encoded files in Gnus
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Created: 2 Oct 1993
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -75,7 +75,7 @@
     ("\\.\\(tar\\|arj\\|zip\\|zoo\\|arc\\|gz\\|Z\\|lzh\\|ar\\|lha\\)$"
      "gnus-uu-archive"))
   "*Default actions to be taken when the user asks to view a file.
-To change the behaviour, you can either edit this variable or set
+To change the behavior, you can either edit this variable or set
 `gnus-uu-user-view-rules' to something useful.
 
 For example:
@@ -95,7 +95,7 @@ at that point in the command string.  If there's no \"%s\" in the
 command string, the file name will be appended to the command string
 before executing.
 
-There are several user variables to tailor the behaviour of gnus-uu to
+There are several user variables to tailor the behavior of gnus-uu to
 your needs.  First we have `gnus-uu-user-view-rules', which is the
 variable gnus-uu first consults when trying to decide how to view a
 file.  If this variable contains no matches, gnus-uu examines the
@@ -393,7 +393,7 @@ didn't work, and overwrite existing files.  Otherwise, ask each time."
    (list current-prefix-arg
 	 (read-file-name
 	  (if gnus-uu-save-separate-articles
-	      "Save articles is dir: "
+	      "Save articles in dir: "
 	    "Save articles in file: ")
 	  gnus-uu-default-dir
 	  gnus-uu-default-dir)))

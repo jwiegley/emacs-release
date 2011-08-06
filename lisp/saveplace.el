@@ -1,7 +1,7 @@
 ;;; saveplace.el --- automatically save place in files
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Karl Fogel <kfogel@red-bean.com>
 ;; Maintainer: FSF
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -205,13 +205,16 @@ may have changed\) back to `save-place-alist'."
       (setq save-place-alist (cdr save-place-alist)))))
 
 (defun save-place-alist-to-file ()
-  (let ((file (expand-file-name save-place-file)))
+  (let ((file (expand-file-name save-place-file))
+        (coding-system-for-write 'emacs-mule))
     (save-excursion
       (message "Saving places to %s..." file)
       (set-buffer (get-buffer-create " *Saved Places*"))
       (delete-region (point-min) (point-max))
       (when save-place-forget-unreadable-files
 	(save-place-forget-unreadable-files))
+      (insert (format ";;; -*- coding: %s -*-\n"
+                      (symbol-name coding-system-for-write)))
       (let ((print-length nil)
             (print-level nil))
         (print save-place-alist (current-buffer)))
@@ -224,7 +227,7 @@ may have changed\) back to `save-place-alist'."
                t))))
 	(condition-case nil
 	    ;; Don't use write-file; we don't want this buffer to visit it.
-	    (write-region (point-min) (point-max) file)
+            (write-region (point-min) (point-max) file)
 	  (file-error (message "Can't write %s" file)))
         (kill-buffer (current-buffer))
         (message "Saving places to %s...done" file)))))

@@ -1,7 +1,7 @@
 ;;; frame.el --- multi-frame management independent of window systems
 
 ;; Copyright (C) 1993, 1994, 1996, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -681,17 +681,6 @@ the user during startup."
 	(nreverse frame-initial-geometry-arguments))
   (cdr param-list))
 
-(defcustom focus-follows-mouse (not (eq window-system 'mac))
-  "*Non-nil if window system changes focus when you move the mouse.
-You should set this variable to tell Emacs how your window manager
-handles focus, since there is no way in general for Emacs to find out
-automatically.
-
-This variable does not have any effect on MS-Windows."
-  :type 'boolean
-  :group 'frames
-  :version "20.3")
-
 (defun select-frame-set-input-focus (frame)
   "Select FRAME, raise it, and set input focus, if possible."
     (select-frame frame)
@@ -818,8 +807,15 @@ is given and non-nil, the unwanted frames are iconified instead."
 			;; Since we can't set a frame's minibuffer status,
 			;; we might as well omit the parameter altogether.
 			(let* ((parms (nth 1 parameters))
-			       (mini (assq 'minibuffer parms)))
-			  (if mini (setq parms (delq mini parms)))
+			       (mini (assq 'minibuffer parms))
+			       (name (assq 'name parms))
+			       (explicit-name (cdr (assq 'explicit-name parms))))
+			  (when mini (setq parms (delq mini parms)))
+			  ;; Leave name in iff it was set explicitly.
+			  ;; This should fix the behavior reported in
+			  ;; http://lists.gnu.org/archive/html/emacs-devel/2007-08/msg01632.html
+			  (when (and name (not explicit-name))
+			    (setq parms (delq name parms)))
 			  parms))
 		       (set-window-configuration (nth 2 parameters)))
 		   (setq frames-to-delete (cons frame frames-to-delete))))))
@@ -1103,7 +1099,7 @@ displays not explicitely specified."
 
 (defun display-mm-height (&optional display)
   "Return the height of DISPLAY's screen in millimeters.
-System values can be overriden by `display-mm-dimensions-alist'.
+System values can be overridden by `display-mm-dimensions-alist'.
 If the information is unavailable, value is nil."
   (and (memq (framep-on-display display) '(x w32 mac))
        (or (cddr (assoc (or display (frame-parameter nil 'display))
@@ -1113,7 +1109,7 @@ If the information is unavailable, value is nil."
 
 (defun display-mm-width (&optional display)
   "Return the width of DISPLAY's screen in millimeters.
-System values can be overriden by `display-mm-dimensions-alist'.
+System values can be overridden by `display-mm-dimensions-alist'.
 If the information is unavailable, value is nil."
   (and (memq (framep-on-display display) '(x w32 mac))
        (or (cadr (assoc (or display (frame-parameter nil 'display))
@@ -1310,9 +1306,9 @@ itself as a pre-command hook."
 
 (define-minor-mode blink-cursor-mode
   "Toggle blinking cursor mode.
-With a numeric argument, turn blinking cursor mode on iff ARG is positive.
-When blinking cursor mode is enabled, the cursor of the selected
-window blinks.
+With a numeric argument, turn blinking cursor mode on if ARG is positive,
+otherwise turn it off.  When blinking cursor mode is enabled, the
+cursor of the selected window blinks.
 
 Note that this command is effective only when Emacs
 displays through a window system, because then Emacs does its own
@@ -1355,6 +1351,9 @@ cursor shapes."
 (defcustom cursor-in-non-selected-windows t
   "*Non-nil means show a hollow box cursor in non-selected windows.
 If nil, don't show a cursor except in the selected window.
+If t, display a cursor related to the usual cursor type
+ \(a solid box becomes hollow, a bar becomes a narrower bar).
+You can also specify the cursor type as in the `cursor-type' variable.
 Use Custom to set this variable to get the display updated."
   :tag "Cursor In Non-selected Windows"
   :type 'boolean

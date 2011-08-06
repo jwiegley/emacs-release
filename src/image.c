@@ -1,12 +1,13 @@
 /* Functions for image support on window system.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -1609,6 +1610,7 @@ x_alloc_image_color (f, img, color_name, dflt)
 			     Image Cache
  ***********************************************************************/
 
+static struct image *search_image_cache P_ ((struct frame *, Lisp_Object, unsigned));
 static void cache_image P_ ((struct frame *f, struct image *img));
 static void postprocess_image P_ ((struct frame *, struct image *));
 
@@ -1628,6 +1630,55 @@ make_image_cache ()
   c->buckets = (struct image **) xmalloc (size);
   bzero (c->buckets, size);
   return c;
+}
+
+
+/* Find an image matching SPEC in the cache, and return it.  If no
+   image is found, return NULL.  */
+static struct image *
+search_image_cache (f, spec, hash)
+     struct frame *f;
+     Lisp_Object spec;
+     unsigned hash;
+{
+  struct image *img;
+  struct image_cache *c = FRAME_X_IMAGE_CACHE (f);
+  int i = hash % IMAGE_CACHE_BUCKETS_SIZE;
+
+  if (!c) return NULL;
+
+  /* If the image spec does not specify a background color, the cached
+     image must have the same background color as the current frame.
+     The foreground color must also match, for the sake of monochrome
+     images.
+
+     In fact, we could ignore the foreground color matching condition
+     for color images, or if the image spec specifies :foreground;
+     similarly we could ignore the background color matching condition
+     for formats that don't use transparency (such as jpeg), or if the
+     image spec specifies :background.  However, the extra memory
+     usage is probably negligible in practice, so we don't bother.  */
+
+  for (img = c->buckets[i]; img; img = img->next)
+    if (img->hash == hash
+	&& !NILP (Fequal (img->spec, spec))
+	&& img->frame_foreground == FRAME_FOREGROUND_PIXEL (f)
+	&& img->frame_background == FRAME_BACKGROUND_PIXEL (f))
+      break;
+  return img;
+}
+
+
+/* Search frame F for an image with spec SPEC, and free it.  */
+
+static void
+uncache_image (f, spec)
+     struct frame *f;
+     Lisp_Object spec;
+{
+  struct image *img = search_image_cache (f, spec, sxhash (spec, 0));
+  if (img)
+    free_image (f, img);
 }
 
 
@@ -1659,9 +1710,9 @@ free_image_cache (f)
 /* Clear image cache of frame F.  FORCE_P non-zero means free all
    images.  FORCE_P zero means clear only images that haven't been
    displayed for some time.  Should be called from time to time to
-   reduce the number of loaded images.  If image-eviction-seconds is
-   non-nil, this frees images in the cache which weren't displayed for
-   at least that many seconds.  */
+   reduce the number of loaded images.  If image-cache-eviction-delay
+   is non-nil, this frees images in the cache which weren't displayed
+   for at least that many seconds.  */
 
 void
 clear_image_cache (f, force_p)
@@ -1736,6 +1787,36 @@ FRAME t means clear the image caches of all frames.  */)
     }
   else
     clear_image_cache (check_x_frame (frame), 1);
+
+  return Qnil;
+}
+
+
+DEFUN ("image-refresh", Fimage_refresh, Simage_refresh,
+       1, 2, 0,
+       doc: /* Refresh the image with specification SPEC on frame FRAME.
+If SPEC specifies an image file, the displayed image is updated with
+the current contents of that file.
+FRAME nil or omitted means use the selected frame.
+FRAME t means refresh the image on all frames.  */)
+     (spec, frame)
+     Lisp_Object spec, frame;
+{
+  if (!valid_image_p (spec))
+    error ("Invalid image specification");
+
+  if (EQ (frame, Qt))
+    {
+      Lisp_Object tail;
+      FOR_EACH_FRAME (tail, frame)
+	{
+	  struct frame *f = XFRAME (frame);
+	  if (FRAME_WINDOW_P (f))
+	    uncache_image (f, spec);
+	}
+    }
+  else
+    uncache_image (check_x_frame (frame), spec);
 
   return Qnil;
 }
@@ -1824,9 +1905,7 @@ lookup_image (f, spec)
      struct frame *f;
      Lisp_Object spec;
 {
-  struct image_cache *c = FRAME_X_IMAGE_CACHE (f);
   struct image *img;
-  int i;
   unsigned hash;
   struct gcpro gcpro1;
   EMACS_TIME now;
@@ -1840,12 +1919,7 @@ lookup_image (f, spec)
 
   /* Look up SPEC in the hash table of the image cache.  */
   hash = sxhash (spec, 0);
-  i = hash % IMAGE_CACHE_BUCKETS_SIZE;
-
-  for (img = c->buckets[i]; img; img = img->next)
-    if (img->hash == hash && !NILP (Fequal (img->spec, spec)))
-      break;
-
+  img = search_image_cache (f, spec, hash);
   if (img && img->load_failed_p)
     {
       free_image (f, img);
@@ -1861,6 +1935,8 @@ lookup_image (f, spec)
       img = make_image (spec, hash);
       cache_image (f, img);
       img->load_failed_p = img->type->load (f, img) == 0;
+      img->frame_foreground = FRAME_FOREGROUND_PIXEL (f);
+      img->frame_background = FRAME_BACKGROUND_PIXEL (f);
 
       /* If we can't load the image, and we don't have a width and
 	 height, use some arbitrary width and height so that we can
@@ -2803,7 +2879,7 @@ enum xbm_token
    3. a vector of strings or bool-vectors, one for each line of the
    bitmap.
 
-   4. A string containing an in-memory XBM file.  WIDTH and HEIGHT
+   4. a string containing an in-memory XBM file.  WIDTH and HEIGHT
    may not be specified in this case because they are defined in the
    XBM file.
 
@@ -3028,7 +3104,8 @@ w32_create_pixmap_from_bitmap_data (int width, int height, char *data)
   return bmp;
 }
 
-static void convert_mono_to_color_image (f, img, foreground, background)
+static void
+convert_mono_to_color_image (f, img, foreground, background)
      struct frame *f;
      struct image *img;
      COLORREF foreground, background;
@@ -3044,8 +3121,10 @@ static void convert_mono_to_color_image (f, img, foreground, background)
   release_frame_dc (f, hdc);
   old_prev = SelectObject (old_img_dc, img->pixmap);
   new_prev = SelectObject (new_img_dc, new_pixmap);
-  SetTextColor (new_img_dc, foreground);
-  SetBkColor (new_img_dc, background);
+  /* Windows convention for mono bitmaps is black = background,
+     white = foreground.  */
+  SetTextColor (new_img_dc, background);
+  SetBkColor (new_img_dc, foreground);
 
   BitBlt (new_img_dc, 0, 0, img->width, img->height, old_img_dc,
 	  0, 0, SRCCOPY);
@@ -3439,6 +3518,19 @@ xbm_load (f, img)
 	  else
 	    bits = XBOOL_VECTOR (data)->data;
 
+#ifdef WINDOWSNT
+          {
+            char *invertedBits;
+            int nbytes, i;
+            /* Windows mono bitmaps are reversed compared with X.  */
+            invertedBits = bits;
+            nbytes = (img->width + BITS_PER_CHAR - 1) / BITS_PER_CHAR 
+              * img->height;
+            bits = (char *) alloca(nbytes);
+            for (i = 0; i < nbytes; i++)
+              bits[i] = XBM_BIT_SHUFFLE (invertedBits[i]);
+          }
+#endif
 	  /* Create the pixmap.  */
 
 	  Create_Pixmap_From_Bitmap_Data (f, img, bits,
@@ -3910,9 +4002,6 @@ xpm_load (f, img)
   attrs.valuemask |= XpmCloseness;
 #endif /* not XpmAllocCloseColors */
 #endif /* ALLOC_XPM_COLORS */
-#ifdef ALLOC_XPM_COLORS
-  xpm_init_color_cache (f, &attrs);
-#endif
 
   /* If image specification contains symbolic color definitions, add
      these to `attrs'.  */
@@ -4202,7 +4291,7 @@ xpm_scan (s, end, beg, len)
   return XPM_TK_EOF;
 }
 
-/* Functions for color table lookup in XPM data.  A Key is a string
+/* Functions for color table lookup in XPM data.  A key is a string
    specifying the color of each pixel in XPM data.  A value is either
    an integer that specifies a pixel color, Qt that specifies
    transparency, or Qnil for the unspecified color.  If the length of
@@ -4980,7 +5069,8 @@ x_to_xcolors (f, img, rgb_p)
    created with CreateDIBSection, with the pointer to the bit values
    stored in ximg->data.  */
 
-static void XPutPixel (ximg, x, y, color)
+static void
+XPutPixel (ximg, x, y, color)
      XImagePtr  ximg;
      int x, y;
      COLORREF color;
@@ -5730,7 +5820,17 @@ pbm_load (f, img)
 	    if (raw_p)
 	      {
 		if ((x & 7) == 0)
-		  c = *p++;
+		  {
+		    if (p >= end)
+		      {
+			x_destroy_x_image (ximg);
+			x_clear_image (f, img);
+			image_error ("Invalid image size in image `%s'",
+				     img->spec, Qnil);
+			goto error;
+		      }
+		    c = *p++;
+		  }
 		g = c & 0x80;
 		c <<= 1;
 	      }
@@ -6276,11 +6376,14 @@ png_load (f, img)
 				     PNG_BACKGROUND_GAMMA_SCREEN, 0, 1.0);
 	    }
 	}
+      /* The commented-out code checked if the png specifies a default
+	 background color, and uses that.  Since we use the current
+	 frame background, it is OK for us to ignore this.
+
       else if (fn_png_get_bKGD (png_ptr, info_ptr, &image_bg))
-	/* Image contains a background color with which to
-	   combine the image.  */
 	fn_png_set_background (png_ptr, image_bg,
 			       PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
+	*/
       else
 	{
 	  /* Image does not contain a background color with which
@@ -6682,18 +6785,19 @@ our_common_term_source (cinfo)
    whenever more data is needed.  We read the whole image in one step,
    so this only adds a fake end of input marker at the end.  */
 
+static JOCTET our_memory_buffer[2];
+
 static boolean
 our_memory_fill_input_buffer (cinfo)
      j_decompress_ptr cinfo;
 {
   /* Insert a fake EOI marker.  */
   struct jpeg_source_mgr *src = cinfo->src;
-  static JOCTET buffer[2];
 
-  buffer[0] = (JOCTET) 0xFF;
-  buffer[1] = (JOCTET) JPEG_EOI;
+  our_memory_buffer[0] = (JOCTET) 0xFF;
+  our_memory_buffer[1] = (JOCTET) JPEG_EOI;
 
-  src->next_input_byte = buffer;
+  src->next_input_byte = our_memory_buffer;
   src->bytes_in_buffer = 2;
   return 1;
 }
@@ -7663,6 +7767,9 @@ gif_read_from_memory (file, buf, len)
 /* Load GIF image IMG for use on frame F.  Value is non-zero if
    successful.  */
 
+static int interlace_start[] = {0, 4, 2, 1};
+static int interlace_increment[] = {8, 8, 4, 2};
+
 static int
 gif_load (f, img)
      struct frame *f;
@@ -7791,13 +7898,14 @@ gif_load (f, img)
   init_color_table ();
   bzero (pixel_colors, sizeof pixel_colors);
 
-  for (i = 0; i < gif_color_map->ColorCount; ++i)
-    {
-      int r = gif_color_map->Colors[i].Red << 8;
-      int g = gif_color_map->Colors[i].Green << 8;
-      int b = gif_color_map->Colors[i].Blue << 8;
-      pixel_colors[i] = lookup_rgb_color (f, r, g, b);
-    }
+  if (gif_color_map)
+    for (i = 0; i < gif_color_map->ColorCount; ++i)
+      {
+        int r = gif_color_map->Colors[i].Red << 8;
+        int g = gif_color_map->Colors[i].Green << 8;
+        int b = gif_color_map->Colors[i].Blue << 8;
+        pixel_colors[i] = lookup_rgb_color (f, r, g, b);
+      }
 
 #ifdef COLOR_TABLE_SUPPORT
   img->colors = colors_in_color_table (&img->ncolors);
@@ -7832,8 +7940,6 @@ gif_load (f, img)
 
   if (gif->SavedImages[ino].ImageDesc.Interlace)
     {
-      static int interlace_start[] = {0, 4, 2, 1};
-      static int interlace_increment[] = {8, 8, 4, 2};
       int pass;
       int row = interlace_start[0];
 
@@ -8530,7 +8636,7 @@ syms_of_image ()
      defining the supported image types.  */
   DEFVAR_LISP ("image-types", &Vimage_types,
     doc: /* List of potentially supported image types.
-Each element of the list is a symbol for a image type, like 'jpeg or 'png.
+Each element of the list is a symbol for an image type, like 'jpeg or 'png.
 To check whether it is really supported, use `image-type-available-p'.  */);
   Vimage_types = Qnil;
 
@@ -8544,7 +8650,7 @@ alternate filenames for the corresponding external libraries.
 Emacs tries to load the libraries in the order they appear on the
 list; if none is loaded, the running session of Emacs won't
 support the image type.  Types 'pbm and 'xbm don't need to be
-listed; they're always supported.  */);
+listed; they are always supported.  */);
   Vimage_library_alist = Qnil;
   Fput (intern ("image-library-alist"), Qrisky_local_variable, Qt);
 
@@ -8650,6 +8756,7 @@ non-numeric, there is no explicit limit on the size of images.  */);
 
   defsubr (&Sinit_image_library);
   defsubr (&Sclear_image_cache);
+  defsubr (&Simage_refresh);
   defsubr (&Simage_size);
   defsubr (&Simage_mask_p);
   defsubr (&Simage_extension_data);
@@ -8661,7 +8768,7 @@ non-numeric, there is no explicit limit on the size of images.  */);
 
   DEFVAR_BOOL ("cross-disabled-images", &cross_disabled_images,
     doc: /* Non-nil means always draw a cross over disabled images.
-Disabled images are those having an `:conversion disabled' property.
+Disabled images are those having a `:conversion disabled' property.
 A cross is always drawn on black & white displays.  */);
   cross_disabled_images = 0;
 

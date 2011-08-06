@@ -1,7 +1,7 @@
 ;;; sort.el --- commands to sort text in an Emacs buffer
 
 ;; Copyright (C) 1986, 1987, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Howie Kaye
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -39,6 +39,7 @@
   "*Non-nil if the buffer sort functions should ignore case."
   :group 'sort
   :type 'boolean)
+;;;###autoload(put 'sort-fold-case 'safe-local-variable 'booleanp)
 
 ;;;###autoload
 (defun sort-subr (reverse nextrecfun endrecfun
@@ -258,6 +259,7 @@ the sort order."
   "*The default base used by `sort-numeric-fields'."
   :group 'sort
   :type 'integer)
+;;;###autoload(put 'sort-numeric-base 'safe-local-variable 'integerp)
 
 ;;;###autoload
 (defun sort-numeric-fields (field beg end)

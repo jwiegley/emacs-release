@@ -1,7 +1,7 @@
 ;;; undigest.el --- digest-cracking support for the RMAIL mail reader
 
 ;; Copyright (C) 1985, 1986, 1994, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -93,7 +93,15 @@ See rmail-digest-methods."
  (rmail-digest-rfc1153
   "^-\\{55,\\}\n\n"
   "^\n-\\{27,\\}\n\n"
-  "^\n-\\{27,\\}\n\nEnd of"))
+  ;; GNU Mailman knowingly (see comment at line 353 of ToDigest.py in
+  ;; Mailman source) produces non-conformant rfc 1153 digests, in that
+  ;; the trailer contains a "digest footer" like this:
+  ;; _______________________________________________
+  ;; <one or more lines of list blurb>
+  ;;
+  ;; End of Foo Digest...
+  ;; **************************************
+  "^\nEnd of"))
 
 (defun rmail-digest-rfc1153 (prolog-sep message-sep trailer-sep)
   (goto-char (point-min))
@@ -104,7 +112,7 @@ See rmail-digest-methods."
 	  separator result)
       (move-marker start (match-beginning 0))
       (move-marker end (match-end 0))
-      (setq result (cons (copy-marker start) (copy-marker end t)))
+      (setq result (list (cons (copy-marker start) (copy-marker end t))))
       (when (re-search-forward message-sep nil t)
 	;; Ok, at least one message separator found
 	(setq separator (match-string 0))

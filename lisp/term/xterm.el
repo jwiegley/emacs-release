@@ -1,7 +1,7 @@
 ;;; xterm.el --- define function key sequences and standard colors for xterm
 
 ;; Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: FSF
 ;; Keywords: terminals
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -169,6 +169,19 @@
       (define-key map "\e[23;3~" [A-f11])
       (define-key map "\e[24;3~" [A-f12])
 
+      (define-key map "\eO4P" [M-S-f1])
+      (define-key map "\eO4Q" [M-S-f2])
+      (define-key map "\eO4R" [M-S-f3])
+      (define-key map "\eO4S" [M-S-f4])
+      (define-key map "\e[15;4~" [M-S-f5])
+      (define-key map "\e[17;4~" [M-S-f6])
+      (define-key map "\e[18;4~" [M-S-f7])
+      (define-key map "\e[19;4~" [M-S-f8])
+      (define-key map "\e[20;4~" [M-S-f9])
+      (define-key map "\e[21;4~" [M-S-f10])
+      (define-key map "\e[23;4~" [M-S-f11])
+      (define-key map "\e[24;4~" [M-S-f12])
+
       (define-key map "\eOA" [up])
       (define-key map "\eOB" [down])
       (define-key map "\eOC" [right])
@@ -183,6 +196,13 @@
       (define-key map "\e[1;2F" [S-end])
       (define-key map "\e[1;2H" [S-home])
 
+      (define-key map "\e[1;4A" [M-S-up])
+      (define-key map "\e[1;4B" [M-S-down])
+      (define-key map "\e[1;4C" [M-S-right])
+      (define-key map "\e[1;4D" [M-S-left])
+      (define-key map "\e[1;4F" [M-S-end])
+      (define-key map "\e[1;4H" [M-S-home])
+
       (define-key map "\e[1;5A" [C-up])
       (define-key map "\e[1;5B" [C-down])
       (define-key map "\e[1;5C" [C-right])
@@ -196,6 +216,20 @@
       (define-key map "\e[1;6D" [C-S-left])
       (define-key map "\e[1;6F" [C-S-end])
       (define-key map "\e[1;6H" [C-S-home])
+
+      (define-key map "\e[1;7A" [C-M-up])
+      (define-key map "\e[1;7B" [C-M-down])
+      (define-key map "\e[1;7C" [C-M-right])
+      (define-key map "\e[1;7D" [C-M-left])
+      (define-key map "\e[1;7F" [C-M-end])
+      (define-key map "\e[1;7H" [C-M-home])
+
+      (define-key map "\e[1;8A" [C-M-S-up])
+      (define-key map "\e[1;8B" [C-M-S-down])
+      (define-key map "\e[1;8C" [C-M-S-right])
+      (define-key map "\e[1;8D" [C-M-S-left])
+      (define-key map "\e[1;8F" [C-M-S-end])
+      (define-key map "\e[1;8H" [C-M-S-home])
 
       (define-key map "\e[1;3A" [A-up])
       (define-key map "\e[1;3B" [A-down])
@@ -214,6 +248,11 @@
       (define-key map "\e[5;2~" [S-prior])
       (define-key map "\e[6;2~" [S-next])
 
+      (define-key map "\e[2;4~" [M-S-insert])
+      (define-key map "\e[3;4~" [M-S-delete])
+      (define-key map "\e[5;4~" [M-S-prior])
+      (define-key map "\e[6;4~" [M-S-next])
+
       (define-key map "\e[2;5~" [C-insert])
       (define-key map "\e[3;5~" [C-delete])
       (define-key map "\e[5;5~" [C-prior])
@@ -223,6 +262,16 @@
       (define-key map "\e[3;6~" [C-S-delete])
       (define-key map "\e[5;6~" [C-S-prior])
       (define-key map "\e[6;6~" [C-S-next])
+
+      (define-key map "\e[2;7~" [C-M-insert])
+      (define-key map "\e[3;7~" [C-M-delete])
+      (define-key map "\e[5;7~" [C-M-prior])
+      (define-key map "\e[6;7~" [C-M-next])
+
+      (define-key map "\e[2;8~" [C-M-S-insert])
+      (define-key map "\e[3;8~" [C-M-S-delete])
+      (define-key map "\e[5;8~" [C-M-S-prior])
+      (define-key map "\e[6;8~" [C-M-S-next])
 
       (define-key map "\e[2;3~" [A-insert])
       (define-key map "\e[3;3~" [A-delete])
@@ -272,8 +321,8 @@
       (define-key map "\e[27;6;36~"  [?\C-$])
       (define-key map "\e[27;6;37~"  [?\C-%])
       (define-key map "\e[27;6;38~"  [?\C-&])
-      (define-key map "\e[27;6;40~"  [?\C-(])
-      (define-key map "\e[27;6;41~"  [?\C-)])
+      (define-key map "\e[27;6;40~"  [?\C-\(])
+      (define-key map "\e[27;6;41~"  [?\C-\)])
       (define-key map "\e[27;6;42~"  [?\C-*])
       (define-key map "\e[27;6;43~"  [?\C-+])
       (define-key map "\e[27;6;58~"  [?\C-:])
@@ -312,8 +361,8 @@
       (define-key map "\e[27;14;36~"  [?\C-\M-$])
       (define-key map "\e[27;14;37~"  [?\C-\M-%])
       (define-key map "\e[27;14;38~"  [?\C-\M-&])
-      (define-key map "\e[27;14;40~"  [?\C-\M-(])
-      (define-key map "\e[27;14;41~"  [?\C-\M-)])
+      (define-key map "\e[27;14;40~"  [?\C-\M-\(])
+      (define-key map "\e[27;14;41~"  [?\C-\M-\)])
       (define-key map "\e[27;14;42~"  [?\C-\M-*])
       (define-key map "\e[27;14;43~"  [?\C-\M-+])
       (define-key map "\e[27;14;58~"  [?\C-\M-:])
@@ -350,8 +399,8 @@
       (define-key map "\e[27;8;36~"  [?\C-\M-$])
       (define-key map "\e[27;8;37~"  [?\C-\M-%])
       (define-key map "\e[27;8;38~"  [?\C-\M-&])
-      (define-key map "\e[27;8;40~"  [?\C-\M-(])
-      (define-key map "\e[27;8;41~"  [?\C-\M-)])
+      (define-key map "\e[27;8;40~"  [?\C-\M-\(])
+      (define-key map "\e[27;8;41~"  [?\C-\M-\)])
       (define-key map "\e[27;8;42~"  [?\C-\M-*])
       (define-key map "\e[27;8;43~"  [?\C-\M-+])
       (define-key map "\e[27;8;58~"  [?\C-\M-:])

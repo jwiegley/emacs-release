@@ -1,8 +1,8 @@
 /* GNU Emacs routines to deal with category tables.
-   Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+   Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
      Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007
+     2005, 2006, 2007, 2008
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -10,7 +10,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -559,7 +559,7 @@ syms_of_category ()
 	       doc: /* List of pair (cons) of categories to determine word boundary.
 
 Emacs treats a sequence of word constituent characters as a single
-word (i.e. finds no word boundary between them) iff they belongs to
+word (i.e. finds no word boundary between them) only if they belong to
 the same charset.  But, exceptions are allowed in the following cases.
 
 \(1) The case that characters are in different charsets is controlled

@@ -1,7 +1,7 @@
 ;;; ibuf-ext.el --- extensions for ibuffer
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: John Paul Wallington <jpw@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2, or (at
+;; published by the Free Software Foundation; either version 3, or (at
 ;; your option) any later version.
 
 ;; This program is distributed in the hope that it will be useful, but
@@ -180,8 +180,8 @@ QUALIFIERS is a list of the same form as
 
 See also the variables `ibuffer-filter-groups',
 `ibuffer-filtering-qualifiers', `ibuffer-filtering-alist', and the
-functions `ibuffer-switch-to-saved-filter-group',
-`ibuffer-save-filter-group'."
+functions `ibuffer-switch-to-saved-filter-groups',
+`ibuffer-save-filter-groups'."
   :type '(repeat sexp)
   :group 'ibuffer)
 
@@ -565,7 +565,7 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
                   (cons (format "%s" mode) `((mode . ,mode))))
                 (let ((modes
                        (ibuffer-remove-duplicates
-                        (mapcar (lambda (buf) 
+                        (mapcar (lambda (buf)
 				  (with-current-buffer buf major-mode))
                                 (buffer-list)))))
                   (if ibuffer-view-ibuffer
@@ -604,7 +604,7 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
 ;;;###autoload
 (defun ibuffer-decompose-filter-group (group)
   "Decompose the filter group GROUP into active filters."
-  (interactive 
+  (interactive
    (list (ibuffer-read-filter-group-name "Decompose filter group: " t)))
   (let ((data (cdr (assoc group ibuffer-filter-groups))))
     (setq ibuffer-filter-groups (ibuffer-delete-alist
@@ -639,7 +639,7 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
 ;;;###autoload
 (defun ibuffer-jump-to-filter-group (name)
   "Move point to the filter group whose name is NAME."
-  (interactive 
+  (interactive
    (list (ibuffer-read-filter-group-name "Jump to filter group: ")))
   (ibuffer-aif (assoc name (ibuffer-current-filter-groups-with-position))
       (goto-char (cdr it))
@@ -753,9 +753,7 @@ They are removed from `ibuffer-saved-filter-groups'."
 ;;;###autoload
 (defun ibuffer-switch-to-saved-filter-groups (name)
   "Set this buffer's filter groups to saved version with NAME.
-The value from `ibuffer-saved-filters' is used.
-If prefix argument ADD is non-nil, then add the saved filters instead
-of replacing the current filters."
+The value from `ibuffer-saved-filter-groups' is used."
   (interactive
    (list
     (if (null ibuffer-saved-filter-groups)
@@ -863,7 +861,7 @@ filter into parts."
 		  (not (eq 'or (caar ibuffer-filtering-qualifiers))))
 	  (error "Top filter is not an OR"))
 	(let ((lim (pop ibuffer-filtering-qualifiers)))
-	  (setq ibuffer-filtering-qualifiers 
+	  (setq ibuffer-filtering-qualifiers
 		(nconc (cdr lim) ibuffer-filtering-qualifiers))))
     (when (< (length ibuffer-filtering-qualifiers) 2)
       (error "Need two filters to OR"))
@@ -931,9 +929,7 @@ Interactively, prompt for NAME, and use the current filters."
 
 ;;;###autoload
 (defun ibuffer-switch-to-saved-filters (name)
-  "Set this buffer's filters to filters with NAME from `ibuffer-saved-filters'.
-If prefix argument ADD is non-nil, then add the saved filters instead
-of replacing the current filters."
+  "Set this buffer's filters to filters with NAME from `ibuffer-saved-filters'."
   (interactive
    (list
     (if (null ibuffer-saved-filters)
@@ -1331,7 +1327,7 @@ If a buffer has no filename, it is ignored.
 With no prefix arg, use the filename sans its directory of each marked file.
 With a zero prefix arg, use the complete filename of each marked file.
 With \\[universal-argument], use the filename of each marked file relative
-to `ibuffer-default-directory' iff non-nil, otherwise `default-directory'.
+to `ibuffer-default-directory' if non-nil, otherwise `default-directory'.
 
 You can then feed the file name(s) to other commands with \\[yank]."
   (interactive "p")
@@ -1482,7 +1478,7 @@ You can then feed the file name(s) to other commands with \\[yank]."
 
 ;;;###autoload
 (defun ibuffer-mark-old-buffers ()
-  "Mark buffers which have not been viewed in `ibuffer-old-time' days."
+  "Mark buffers which have not been viewed in `ibuffer-old-time' hours."
   (interactive)
   (ibuffer-mark-on-buffer
    #'(lambda (buf)

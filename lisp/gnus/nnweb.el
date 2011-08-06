@@ -1,7 +1,7 @@
 ;;; nnweb.el --- retrieving articles via web search engines
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -367,7 +367,7 @@ Valid types include `google', `dejanews', and `gmane'.")
       (goto-char (point-max))
       (when
 	  (re-search-backward
-	   "^\\(?:\\(\\w+\\) \\([0-9]+\\)\\|\\S-+\\)\\(?: \\([0-9]\\{4\\}\\)\\)? by \\(.*\\)"
+ 	   "^\\(?:\\(\\w+\\) \\([0-9]+\\)\\|\\S-+\\)\\(?: \\([0-9]\\{4\\}\\)\\)? by ?\\(.*\\)"
 	   nil t)
 	(setq Date (if (match-string 1)
 		       (format "%s %s 00:00:00 %s"

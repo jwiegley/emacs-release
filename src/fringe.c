@@ -1,13 +1,13 @@
 /* Fringe handling (split from xdisp.c).
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007  Free Software Foundation, Inc.
+                 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -1327,6 +1327,14 @@ If BITMAP overrides a standard fringe bitmap, the original bitmap is restored.  
    On W32 and MAC (little endian), there's no need to do this.
 */
 
+#if defined (HAVE_X_WINDOWS)
+static unsigned char swap_nibble[16]
+  = { 0x0, 0x8, 0x4, 0xc,    /* 0000 1000 0100 1100 */
+      0x2, 0xa, 0x6, 0xe,    /* 0010 1010 0110 1110 */
+      0x1, 0x9, 0x5, 0xd,    /* 0001 1001 0101 1101 */
+      0x3, 0xb, 0x7, 0xf };  /* 0011 1011 0111 1111 */
+#endif                          /* HAVE_X_WINDOWS */
+
 void
 init_fringe_bitmap (which, fb, once_p)
      int which;
@@ -1336,11 +1344,6 @@ init_fringe_bitmap (which, fb, once_p)
   if (once_p || fb->dynamic)
     {
 #if defined (HAVE_X_WINDOWS)
-      static unsigned char swap_nibble[16]
-	= { 0x0, 0x8, 0x4, 0xc,    /* 0000 1000 0100 1100 */
-	    0x2, 0xa, 0x6, 0xe,    /* 0010 1010 0110 1110 */
-	    0x1, 0x9, 0x5, 0xd,    /* 0001 1001 0101 1101 */
-	    0x3, 0xb, 0x7, 0xf };  /* 0011 1011 0111 1111 */
       unsigned short *bits = fb->bits;
       int j;
 

@@ -4,7 +4,7 @@ This is ../info/info, produced by makeinfo version 4.8 from info.texi.
 documentation system.
 
    Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -712,6 +712,10 @@ is the `Previous' node (from this node, the `Prev' link leads to
 revisit nodes in the history list in the forward direction, so that `r'
 will return you to the node you came from by typing `l'.
 
+   The `L' command (`Info-history' in Emacs) creates a virtual node
+that contains a list of all nodes you visited.  You can select a
+previously visited node from this menu to revisit it.
+
    The `d' command (`Info-directory' in Emacs) gets you instantly to
 the Directory node.  This node, which is the first one you saw when you
 entered Info, has a menu which leads (directly or indirectly, through
@@ -1305,7 +1309,7 @@ topics discussed in this document.
 * completion of Info node names:         Help-M.              (line  98)
 * cross reference format:                Cross-refs.          (line   6)
 * cross references in Info documents:    Help-Xref.           (line   6)
-* d (Info mode):                         Help-Int.            (line  45)
+* d (Info mode):                         Help-Int.            (line  49)
 * DEL (Info mode):                       Help-^L.             (line  15)
 * Directory node:                        Add.                 (line  31)
 * f (Info mode):                         Help-Xref.           (line  12)
@@ -1313,11 +1317,12 @@ topics discussed in this document.
 * g (Info mode):                         Go to node.          (line   6)
 * go to a node by name:                  Go to node.          (line   6)
 * go to another Info file:               Go to node.          (line  15)
-* go to Directory node:                  Help-Int.            (line  45)
-* go to Top node:                        Help-Int.            (line  55)
+* go to Directory node:                  Help-Int.            (line  49)
+* go to Top node:                        Help-Int.            (line  59)
 * going back in Info history:            Help-Int.            (line  26)
 * going forward in Info history:         Help-Int.            (line  41)
 * header of Info node:                   Help.                (line  17)
+* history list of visited nodes:         Help-Int.            (line  45)
 * i (Info mode):                         Search Index.        (line   6)
 * index-apropos:                         Search Index.        (line  37)
 * Info document as a reference:          Search Text.         (line   6)
@@ -1326,7 +1331,7 @@ topics discussed in this document.
 * Info-additional-directory-list:        Emacs Info Variables.
                                                               (line  24)
 * info-apropos:                          Search Index.        (line  37)
-* Info-directory:                        Help-Int.            (line  45)
+* Info-directory:                        Help-Int.            (line  49)
 * Info-directory-list:                   Emacs Info Variables.
                                                               (line  13)
 * Info-enable-active-nodes:              Emacs Info Variables.
@@ -1340,6 +1345,7 @@ topics discussed in this document.
 * Info-goto-node:                        Go to node.          (line   6)
 * Info-hide-note-references:             Emacs Info Variables.
                                                               (line  52)
+* Info-history:                          Help-Int.            (line  45)
 * Info-history-back:                     Help-Int.            (line  26)
 * Info-history-forward:                  Help-Int.            (line  41)
 * Info-index:                            Search Index.        (line   6)
@@ -1358,13 +1364,14 @@ topics discussed in this document.
 * Info-search:                           Search Text.         (line  16)
 * Info-summary:                          Help-^L.             (line  74)
 * Info-tagify:                           Tags.                (line  11)
-* Info-top-node:                         Help-Int.            (line  55)
+* Info-top-node:                         Help-Int.            (line  59)
 * Info-up:                               Help-FOO.            (line  13)
 * Info-use-header-line:                  Emacs Info Variables.
                                                               (line  47)
 * Info-validate:                         Checking.            (line  17)
 * invisible text in Emacs:               Help-Inv.            (line  10)
 * isearch:                               Search Text.         (line  32)
+* L (Info mode):                         Help-Int.            (line  45)
 * l (Info mode):                         Help-Int.            (line  26)
 * m (Info mode):                         Help-M.              (line  62)
 * M-n (Info mode):                       Create Info buffer.  (line   6)
@@ -1394,7 +1401,7 @@ topics discussed in this document.
 * small screen, moving around:           Help-Small-Screen.   (line   6)
 * SPC (Info mode):                       Help-^L.             (line  15)
 * stale tags tables:                     Tags.                (line  16)
-* t (Info mode):                         Help-Int.            (line  55)
+* t (Info mode):                         Help-Int.            (line  59)
 * tags tables in Info files:             Tags.                (line   6)
 * u (Info mode):                         Help-FOO.            (line  13)
 * unstructured documents:                Add.                 (line  45)
@@ -1404,35 +1411,35 @@ topics discussed in this document.
 
 
 Tag Table:
-Node: Top1430
-Node: Getting Started2509
-Node: Help-Small-Screen3362
-Node: Help5316
-Node: Help-P6964
-Node: Help-^L8167
-Ref: Help-^L-Footnote-112698
-Node: Help-Inv13071
-Node: Help-]14750
-Node: Help-M16310
-Node: Help-FOO24863
-Node: Help-Xref25823
-Node: Help-Int29395
-Node: Advanced32212
-Node: Search Text33420
-Node: Search Index35421
-Node: Go to node37637
-Node: Choose menu subtopic38659
-Node: Create Info buffer39841
-Node: Emacs Info Variables40923
-Node: Expert Info44710
-Node: Add46059
-Ref: Add-Footnote-149056
-Node: Menus49309
-Node: Cross-refs52196
-Node: Help-Cross52967
-Node: Help-Q53631
-Node: Tags54784
-Node: Checking56295
-Node: Index57217
+Node: Top1436
+Node: Getting Started2515
+Node: Help-Small-Screen3368
+Node: Help5322
+Node: Help-P6970
+Node: Help-^L8173
+Ref: Help-^L-Footnote-112704
+Node: Help-Inv13077
+Node: Help-]14756
+Node: Help-M16316
+Node: Help-FOO24869
+Node: Help-Xref25829
+Node: Help-Int29401
+Node: Advanced32406
+Node: Search Text33614
+Node: Search Index35615
+Node: Go to node37831
+Node: Choose menu subtopic38853
+Node: Create Info buffer40035
+Node: Emacs Info Variables41117
+Node: Expert Info44904
+Node: Add46253
+Ref: Add-Footnote-149250
+Node: Menus49503
+Node: Cross-refs52390
+Node: Help-Cross53161
+Node: Help-Q53825
+Node: Tags54978
+Node: Checking56489
+Node: Index57411
 
 End Tag Table

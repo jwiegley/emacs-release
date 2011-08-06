@@ -567,14 +567,6 @@ trabajo si el sistema falla.
    Esto debería mostrar "Wrote ...TUTORIAL.es" al final de la
    pantalla.
 
-NOTA: En algunos sistemas, teclear C-x C-s dejará inmóvil la pantalla
-y no podrá ver más respuesta de Emacs.  Esto indica que una
-"característica" del sistema operativo llamada "control de flujo" está
-interceptando el C-s y no permitiéndole llegar hasta Emacs.  Para
-descongelar la pantalla, teclee C-q.  Luego consulte la sección
-"Entrada Espontánea para Búsqueda Incremental" en el manual de Emacs
-para consejos de cómo tratar con esta "característica".
-
 Puede encontrar un archivo existente, para verlo o editarlo.  También
 puede hacerlo con un archivo que no exista.  Ésta es la forma de crear
 un archivo en Emacs: encuentre el archivo, que comenzará vacío, luego
@@ -1188,7 +1180,7 @@ siguiente nota de derechos de reproducción (que puede encontrar en el
 archivo TUTORIAL).
 
 Copyright (C) 1985, 1996, 1998, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    Se permite a cualquiera hacer o distribuir copias literales de este
    documento como se recibe, en cualquier medio, siempre que la nota

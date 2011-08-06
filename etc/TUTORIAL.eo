@@ -533,14 +533,6 @@ sistemo paneos.
    Emakso devas montri la mesaøon "Wrote ...TUTORIAL.eo" (Skribis
    ...TUTORIAL.eo) æe la fundo de la ekrano.
 
-NOTO: Sur iuj sistemoj, C-x C-s senmovigas la ekranon kaj vi vidos
-nenian pluan eligon de Emakso.  Tio indikas ke operaciuma "trajto"
-nomata "fluregulado" (angle "flow control") interkaptis la ordonon C-s
-kaj ne lasas øin trapasi al Emakso.  Por revivigi la ekranon, tajpu
-C-q.  Poste rigardu la sekcion nomatan "Spontaneous Entry to
-Incremental Search" en la Emaksa manlibro por konsilo kion fari pri æi
-tiu "trajto".
-
 Vi povas trovi ekzistantan dosieron, por vidigi aý redakti øin.  Vi
 ankaý povas trovi dosieron kiu ankoraý ne ekzistas.  Æi tio estas la
 maniero por krei dosieron per Emakso: trovu la dosieron, komence
@@ -1090,13 +1082,13 @@ kopirajton, kaj venas kun permeso por disdoni kopiojn se certaj
 kondiæoj estas observataj:
 
    Copyright (C) 1985, 1999, 2001, 2002, 2005,
-   2007 Free Software Foundation, Inc.
+   2007, 2008 Free Software Foundation, Inc.
 
    Æi tiu dosiero estas parto de "GNU Emacs".
  
    "GNU Emacs" estas libera programverko; vi povas øin pludistribui
    kaj/aý modifi je la kondiæoj de la GNUa Øenerala Publika Permesilo,
-   eldonita de "Free Software Foundation", laý la versio 2 de tiu
+   eldonita de "Free Software Foundation", laý la versio 3 de tiu
    Permesilo aý, se vi preferas, ajna posta versio.
  
    Ni distribuas æi tiun programon esperante ke øi estos utila, tamen

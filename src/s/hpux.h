@@ -1,13 +1,13 @@
 /* Definitions file for GNU Emacs running on HPUX release 7.0.
    Based on AT&T System V.2.
    Copyright (C) 1985, 1986, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -167,9 +167,15 @@ Boston, MA 02110-1301, USA.  */
 
 /* USG systems tend to put everything declared static
    into the initialized data area, which becomes pure after dumping Emacs.
-   Foil this.  Emacs carefully avoids static vars inside functions.  */
+   Foil this.  Emacs carefully avoids static vars inside functions.
+   http://lists.gnu.org/archive/html/emacs-devel/2007-09/msg00368.html
+   As of at least HPUX 11.11 (2000), it seems this workaround is no
+   longer needed.  Try uncommenting the following if you have problems
+   on older versions.  */
 
-#define static
+/* This is unnecessary in HPUX versions 10.20, 11.0, 11.11, 11.23.  */
+
+/* #define static  */
 
 /* Define extra libraries to load.
    This should have -lBSD, but that library is said to make

@@ -1,7 +1,7 @@
 ;;; mailabbrev.el --- abbrev-expansion of mail aliases
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>, now <jwz@jwz.org>
 ;; Maintainer: FSF
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -495,7 +495,7 @@ of a mail alias.  The value is set up, buffer-local, when first needed.")
 
 	     (or (and (integerp last-command-char)
 		      ;; Some commands such as M-> may want to expand first.
-		      (equal this-command 'self-insert)
+		      (equal this-command 'self-insert-command)
 		      (or (eq (char-syntax last-command-char) ?_)
 			  ;; Don't expand on @.
 			  (memq last-command-char '(?@ ?. ?% ?! ?_ ?-))))

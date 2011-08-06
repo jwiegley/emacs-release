@@ -1340,7 +1340,7 @@
 	(shell-directory-tracker): Make regexp used for skipping to next
 	command correspond to one used for command itself.
 
-2003-06-13  Katsumi Yamaoka  <yamaoka@jpl.org>  (tiny change)
+2003-06-13  Katsumi Yamaoka  <yamaoka@jpl.org>
 
 	* textmodes/texinfmt.el (texinfo-format-scan):
 	Silence `whitespace-cleanup'.
@@ -11805,7 +11805,7 @@
 
 	* vc-hooks.el (vc-kill-buffer-hook): Add it to kill-buffer-hook again.
 
-2002-08-22  Katsumi Yamaoka  <yamaoka@jpl.org>  (tiny change)
+2002-08-22  Katsumi Yamaoka  <yamaoka@jpl.org>
 
 	* frame.el (select-frame-by-name, select-frame-set-input-focus):
 	Always call x-focus-frame, if using x.
@@ -23535,13 +23535,13 @@ See ChangeLog.9 for earlier changes.
 ;; End:
 
     Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006,
-      2007  Free Software Foundation, Inc.
+      2007, 2008  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

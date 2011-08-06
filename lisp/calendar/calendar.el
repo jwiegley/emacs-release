@@ -1,7 +1,7 @@
 ;;; calendar.el --- calendar functions
 
 ;; Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1997,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: Edward M. Reingold <reingold@cs.uiuc.edu>
 ;; Maintainer: Glenn Morris <rgm@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1821,6 +1821,11 @@ Driven by the variable `calendar-date-display-form'.")
 (autoload 'calendar-islamic-date-string "cal-islam"
   "String of Islamic date of Gregorian date.")
 
+(autoload 'calendar-goto-bahai-date "cal-bahai"
+  "Move cursor to Baha'i date DATE.
+Echo Baha'i date unless NOECHO is t."
+  t)
+
 (autoload 'calendar-print-bahai-date "cal-bahai"
   "Show the Baha'i date equivalents of date."
   t)
@@ -2073,7 +2078,7 @@ Or, for optional MON, YR."
     ;; Don't do any window-related stuff if we weren't called from a
     ;; window displaying the calendar
     (when in-calendar-window
-      (if (or (one-window-p t) (/= (frame-width) (window-width)))
+      (if (or (one-window-p t) (not (window-full-width-p)))
           ;; Don't mess with the window size, but ensure that the first
           ;; line is fully visible
           (set-window-vscroll nil 0)

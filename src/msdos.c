@@ -1,12 +1,13 @@
 /* MS-DOS specific C utilities.          -*- coding: raw-text -*-
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -1584,7 +1585,7 @@ IT_note_mouse_highlight (struct frame *f, int x, int y)
       {
 	extern Lisp_Object Qmouse_face;
 	Lisp_Object mouse_face, overlay, position, *overlay_vec;
-	int noverlays, obegv, ozv;;
+	int noverlays, obegv, ozv;
 	struct buffer *obuf;
 
 	/* If we get an out-of-range value, return now; avoid an error.  */
@@ -3231,7 +3232,7 @@ dos_rawgetc ()
            `dos_get_modifiers', they might have already released the
            Alt key, and Emacs gets just `x', which is BAD.
            However, for keys with the `Map' property set, the ASCII
-           code returns zero iff Alt is pressed.  So, when we DON'T
+           code returns zero only if Alt is pressed.  So, when we DON'T
            have to support international_keyboard, we don't have to
            distinguish between the left and  right Alt keys, and we
            can set the META modifier for any keys with the `Map'
@@ -4071,7 +4072,7 @@ getdefdir (drive, dst)
      int drive;
      char *dst;
 {
-  char in_path[4], *p = in_path, e = errno;;
+  char in_path[4], *p = in_path, e = errno;
 
   /* Generate "X:." (when drive is X) or "." (when drive is 0).  */
   if (drive != 0)

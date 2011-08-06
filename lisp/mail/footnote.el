@@ -1,7 +1,7 @@
 ;;; footnote.el --- footnote support for message mode  -*- coding: iso-latin-1;-*-
 
 ;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Steven L Baur <steve@xemacs.org>
 ;; Keywords: mail, news
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful, but
@@ -139,7 +139,7 @@ See also `footnote-section-tag'."
 
 ;;; Default styles
 ;;; NUMERIC
-(defconst footnote-numeric-regexp "[0-9]"
+(defconst footnote-numeric-regexp "[0-9]+"
   "Regexp for digits.")
 
 (defun Footnote-numeric (n)
@@ -151,7 +151,7 @@ Use Arabic numerals for footnoting."
 (defconst footnote-english-upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   "Upper case English alphabet.")
 
-(defconst footnote-english-upper-regexp "[A-Z]"
+(defconst footnote-english-upper-regexp "[A-Z]+"
   "Regexp for upper case English alphabet.")
 
 (defun Footnote-english-upper (n)
@@ -170,7 +170,7 @@ Wrapping around the alphabet implies successive repetitions of letters."
 (defconst footnote-english-lower "abcdefghijklmnopqrstuvwxyz"
   "Lower case English alphabet.")
 
-(defconst footnote-english-lower-regexp "[a-z]"
+(defconst footnote-english-lower-regexp "[a-z]+"
   "Regexp of lower case English alphabet.")
 
 (defun Footnote-english-lower (n)
@@ -191,7 +191,7 @@ Wrapping around the alphabet implies successive repetitions of letters."
     (50 . "l") (100 . "c") (500 . "d") (1000 . "m"))
   "List of roman numerals with their values.")
 
-(defconst footnote-roman-lower-regexp "[ivxlcdm]"
+(defconst footnote-roman-lower-regexp "[ivxlcdm]+"
   "Regexp of roman numerals.")
 
 (defun Footnote-roman-lower (n)
@@ -204,7 +204,7 @@ Wrapping around the alphabet implies successive repetitions of letters."
     (50 . "L") (100 . "C") (500 . "D") (1000 . "M"))
   "List of roman numerals with their values.")
 
-(defconst footnote-roman-upper-regexp "[IVXLCDM]"
+(defconst footnote-roman-upper-regexp "[IVXLCDM]+"
   "Regexp of roman numerals.  Not complete")
 
 (defun Footnote-roman-upper (n)
@@ -270,6 +270,7 @@ Wrapping around the alphabet implies successive repetitions of letters."
 (defconst footnote-latin-string "¹²³ºª§¶"
   "String of Latin-1 footnoting characters.")
 
+;; Note not [...]+, because this style cycles.
 (defconst footnote-latin-regexp (concat "[" footnote-latin-string "]")
   "Regexp for Latin-1 footnoting characters.")
 
@@ -326,7 +327,8 @@ Conversion is done based upon the current selected style."
 (defun Footnote-current-regexp ()
   "Return the regexp of the index of the current style."
   (concat (nth 2 (or (assq footnote-style footnote-style-alist)
-		     (nth 0 footnote-style-alist))) "*"))
+		     (nth 0 footnote-style-alist)))
+	  "*"))
 
 (defun Footnote-refresh-footnotes (&optional index-regexp)
   "Redraw all footnotes.
@@ -344,7 +346,7 @@ styles."
 	  (search-backward footnote-start-tag nil t)
 	  (when (looking-at (concat
 			     (regexp-quote footnote-start-tag)
-			     "\\(" index-regexp "\\)"
+			     "\\(" index-regexp "+\\)"
 			     (regexp-quote footnote-end-tag)))
 	    (replace-match (concat
 			    footnote-start-tag
@@ -360,7 +362,7 @@ styles."
 	(goto-char (cdr alist))
 	(when (looking-at (concat
 			   (regexp-quote footnote-start-tag)
-			   "\\(" index-regexp "\\)"
+			   "\\(" index-regexp "+\\)"
 			   (regexp-quote footnote-end-tag)))
 	  (replace-match (concat
 			  footnote-start-tag

@@ -1,7 +1,7 @@
 ;;; gnus-sum.el --- summary mode commands for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -973,14 +973,14 @@ automatically when it is selected."
      . gnus-summary-normal-read))
   "*Controls the highlighting of summary buffer lines.
 
-A list of (FORM . FACE) pairs.  When deciding how a a particular
+A list of (FORM . FACE) pairs.  When deciding how a particular
 summary line should be displayed, each form is evaluated.  The content
 of the face field after the first true form is used.  You can change
 how those summary lines are displayed, by editing the face field.
 
 You can use the following variables in the FORM field.
 
-score:        The article's score
+score:        The article's score.
 default:      The default article score.
 default-high: The default score for high scored articles.
 default-low:  The default score for low scored articles.
@@ -990,6 +990,7 @@ uncached:     Non-nil if the article is uncached."
   :group 'gnus-summary-visual
   :type '(repeat (cons (sexp :tag "Form" nil)
 		       face)))
+(put 'gnus-summary-highlight 'risky-local-variable t)
 
 (defcustom gnus-alter-header-function nil
   "Function called to allow alteration of article header structures.
@@ -1028,6 +1029,17 @@ default charset will be used instead."
   :version "21.1"
   :type '(repeat symbol)
   :group 'gnus-charset)
+
+(defcustom gnus-newsgroup-maximum-articles nil
+  "The maximum number of articles a newsgroup.
+If this is a number, old articles in a newsgroup exceeding this number
+are silently ignored.  If it is nil, no article is ignored.  Note that
+setting this variable to a number might prevent you from reading very
+old articles."
+  :group 'gnus-group-select
+  :version "22.2"
+  :type '(choice (const :tag "No limit" nil)
+		 integer))
 
 (gnus-define-group-parameter
  ignored-charsets
@@ -4633,11 +4645,11 @@ using some other form will lead to serious barfage."
    (gnus-thread-header h1) (gnus-thread-header h2)))
 
 (defsubst gnus-article-sort-by-random (h1 h2)
-  "Sort articles by article number."
+  "Sort articles randomly."
   (zerop (random 2)))
 
 (defun gnus-thread-sort-by-random (h1 h2)
-  "Sort threads by root article number."
+  "Sort threads randomly."
   (gnus-article-sort-by-random
    (gnus-thread-header h1) (gnus-thread-header h2)))
 
@@ -4663,7 +4675,7 @@ using some other form will lead to serious barfage."
 
 (defsubst gnus-article-sort-by-author (h1 h2)
   "Sort articles by root author."
-  (string-lessp
+  (gnus-string<
    (let ((extract (funcall
 		   gnus-extract-address-components
 		   (mail-header-from h1))))
@@ -4680,7 +4692,7 @@ using some other form will lead to serious barfage."
 
 (defsubst gnus-article-sort-by-subject (h1 h2)
   "Sort articles by root subject."
-  (string-lessp
+  (gnus-string<
    (downcase (gnus-simplify-subject-re (mail-header-subject h1)))
    (downcase (gnus-simplify-subject-re (mail-header-subject h2)))))
 
@@ -5472,7 +5484,15 @@ If SELECT-ARTICLES, only select those articles from GROUP."
 	      ;; articles in the group, or (if that's nil), the
 	      ;; articles in the cache.
 	      (or
-	       (gnus-uncompress-range (gnus-active group))
+	       (if gnus-newsgroup-maximum-articles
+		   (let ((active (gnus-active group)))
+		     (gnus-uncompress-range
+		      (cons (max (car active)
+				 (- (cdr active)
+				    gnus-newsgroup-maximum-articles
+				    -1))
+			    (cdr active))))
+		 (gnus-uncompress-range (gnus-active group)))
 	       (gnus-cache-articles-in-group group))
 	    ;; Select only the "normal" subset of articles.
 	    (gnus-sorted-nunion
@@ -6534,23 +6554,27 @@ displayed, no centering will be performed."
   (let* ((read (gnus-info-read (gnus-get-info group)))
 	 (active (or (gnus-active group) (gnus-activate-group group)))
 	 (last (cdr active))
+	 (bottom (if gnus-newsgroup-maximum-articles
+		     (max (car active)
+			  (- last gnus-newsgroup-maximum-articles -1))
+		   (car active)))
 	 first nlast unread)
     ;; If none are read, then all are unread.
     (if (not read)
-	(setq first (car active))
+	(setq first bottom)
       ;; If the range of read articles is a single range, then the
       ;; first unread article is the article after the last read
       ;; article.  Sounds logical, doesn't it?
       (if (and (not (listp (cdr read)))
-	       (or (< (car read) (car active))
+	       (or (< (car read) bottom)
 		   (progn (setq read (list read))
 			  nil)))
-	  (setq first (max (car active) (1+ (cdr read))))
+	  (setq first (max bottom (1+ (cdr read))))
 	;; `read' is a list of ranges.
 	(when (/= (setq nlast (or (and (numberp (car read)) (car read))
 				  (caar read)))
 		  1)
-	  (setq first (car active)))
+	  (setq first bottom))
 	(while read
 	  (when first
 	    (while (< first nlast)
@@ -6575,7 +6599,14 @@ displayed, no centering will be performed."
 	 (gnus-list-range-difference
 	  (gnus-list-range-difference
 	   (gnus-sorted-complement
-	    (gnus-uncompress-range active)
+	    (gnus-uncompress-range
+	     (if gnus-newsgroup-maximum-articles
+		 (cons (max (car active)
+			    (- (cdr active)
+			       gnus-newsgroup-maximum-articles
+			       -1))
+		       (cdr active))
+	       active))
 	    (gnus-list-of-unread-articles group))
 	   (cdr (assq 'dormant marked)))
 	  (cdr (assq 'tick marked))))))
@@ -6587,23 +6618,27 @@ displayed, no centering will be performed."
   (let* ((read (gnus-info-read (gnus-get-info group)))
 	 (active (or (gnus-active group) (gnus-activate-group group)))
 	 (last (cdr active))
+	 (bottom (if gnus-newsgroup-maximum-articles
+		     (max (car active)
+			  (- last gnus-newsgroup-maximum-articles -1))
+		   (car active)))
 	 first nlast unread)
     ;; If none are read, then all are unread.
     (if (not read)
-	(setq first (car active))
+	(setq first bottom)
       ;; If the range of read articles is a single range, then the
       ;; first unread article is the article after the last read
       ;; article.  Sounds logical, doesn't it?
       (if (and (not (listp (cdr read)))
-	       (or (< (car read) (car active))
+	       (or (< (car read) bottom)
 		   (progn (setq read (list read))
 			  nil)))
-	  (setq first (max (car active) (1+ (cdr read))))
+	  (setq first (max bottom (1+ (cdr read))))
 	;; `read' is a list of ranges.
 	(when (/= (setq nlast (or (and (numberp (car read)) (car read))
 				  (caar read)))
 		  1)
-	  (setq first (car active)))
+	  (setq first bottom))
 	(while read
 	  (when first
             (push (cons first nlast) unread))
@@ -7457,7 +7492,7 @@ If BACKWARD, the previous article is selected instead of the next."
 	(gnus-summary-article-subject))))
 
 (defun gnus-summary-prev-article (&optional unread subject)
-  "Select the article after the current one.
+  "Select the article before the current one.
 If UNREAD is non-nil, only unread articles are selected."
   (interactive "P")
   (gnus-summary-next-article unread subject t))
@@ -8807,8 +8842,6 @@ article.  If BACKWARD (the prefix) is non-nil, search backward instead."
     (goto-char (point-max))
     (recenter -3)
     (when gnus-break-pages
-      (when (re-search-backward page-delimiter nil t)
-	(narrow-to-region (match-end 0) (point-max)))
       (gnus-narrow-to-page))))
 
 (defun gnus-summary-print-truncate-and-quote (string &optional len)
@@ -8874,7 +8907,7 @@ to save in."
 			  (mail-header-date gnus-current-headers) ")"))))
 	    (gnus-run-hooks 'gnus-ps-print-hook)
 	    (save-excursion
-	      (if window-system
+	      (if ps-print-color-p
 		  (ps-spool-buffer-with-faces)
 		(ps-spool-buffer)))))
       (kill-buffer buffer))))
@@ -10358,12 +10391,12 @@ The difference between N and the number of marks cleared is returned."
   (gnus-summary-mark-forward (- n) gnus-unread-mark))
 
 (defun gnus-summary-mark-unread-as-read ()
-  "Intended to be used by `gnus-summary-mark-article-hook'."
+  "Intended to be used by `gnus-mark-article-hook'."
   (when (memq gnus-current-article gnus-newsgroup-unreads)
     (gnus-summary-mark-article gnus-current-article gnus-read-mark)))
 
 (defun gnus-summary-mark-read-and-unread-as-read (&optional new-mark)
-  "Intended to be used by `gnus-summary-mark-article-hook'."
+  "Intended to be used by `gnus-mark-article-hook'."
   (let ((mark (gnus-summary-article-mark)))
     (when (or (gnus-unread-mark-p mark)
 	      (gnus-read-mark-p mark))
@@ -10371,7 +10404,7 @@ The difference between N and the number of marks cleared is returned."
 				 (or new-mark gnus-read-mark)))))
 
 (defun gnus-summary-mark-current-read-and-unread-as-read (&optional new-mark)
-  "Intended to be used by `gnus-summary-mark-article-hook'."
+  "Intended to be used by `gnus-mark-article-hook'."
   (let ((mark (gnus-summary-article-mark)))
     (when (or (gnus-unread-mark-p mark)
 	      (gnus-read-mark-p mark))
@@ -10379,7 +10412,7 @@ The difference between N and the number of marks cleared is returned."
 				 (or new-mark gnus-read-mark)))))
 
 (defun gnus-summary-mark-unread-as-ticked ()
-  "Intended to be used by `gnus-summary-mark-article-hook'."
+  "Intended to be used by `gnus-mark-article-hook'."
   (when (memq gnus-current-article gnus-newsgroup-unreads)
     (gnus-summary-mark-article gnus-current-article gnus-ticked-mark)))
 
@@ -10514,7 +10547,8 @@ The number of articles marked as read is returned."
 		      (gnus-sorted-nunion
                        (gnus-sorted-intersection gnus-newsgroup-unreads
 						 gnus-newsgroup-downloadable)
-                       gnus-newsgroup-unfetched)))
+		       (gnus-sorted-difference gnus-newsgroup-unfetched
+					       gnus-newsgroup-cached))))
 	    ;; We actually mark all articles as canceled, which we
 	    ;; have to do when using auto-expiry or adaptive scoring.
 	    (gnus-summary-show-all-threads)

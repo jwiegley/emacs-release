@@ -1,7 +1,7 @@
 ;;; url-auth.el --- Uniform Resource Locator authorization modules
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -61,43 +61,46 @@ If optional argument PROMPT is non-nil, ask for the username/password
 to use for the url and its descendants.  If optional third argument
 OVERWRITE is non-nil, overwrite the old username/password pair if it
 is found in the assoc list.  If REALM is specified, use that as the realm
-instead of the pathname inheritance method."
+instead of the filename inheritance method."
   (let* ((href (if (stringp url)
 		   (url-generic-parse-url url)
 		 url))
 	 (server (url-host href))
 	 (port (url-port href))
-	 (path (url-filename href))
-	 user pass byserv retval data)
+	 (file (url-filename href))
+	 (user (url-user href))
+	 (pass (url-password href))
+	 byserv retval data)
     (setq server (format "%s:%d" server port)
-	  path (cond
+	  file (cond
 		(realm realm)
-		((string-match "/$" path) path)
-		(t (url-basepath path)))
+		((string= "" file) "/")
+		((string-match "/$" file) file)
+		(t (url-file-directory file)))
 	  byserv (cdr-safe (assoc server
 				  (symbol-value url-basic-auth-storage))))
     (cond
      ((and prompt (not byserv))
       (setq user (read-string (url-auth-user-prompt url realm)
-			      (user-real-login-name))
-	    pass (read-passwd "Password: "))
+			      (or user (user-real-login-name)))
+	    pass (read-passwd "Password: " nil (or pass "")))
       (set url-basic-auth-storage
 	   (cons (list server
-		       (cons path
+		       (cons file
 			     (setq retval
 				   (base64-encode-string
 				    (format "%s:%s" user pass)))))
 		 (symbol-value url-basic-auth-storage))))
      (byserv
-      (setq retval (cdr-safe (assoc path byserv)))
+      (setq retval (cdr-safe (assoc file byserv)))
       (if (and (not retval)
-	       (string-match "/" path))
+	       (string-match "/" file))
  	  (while (and byserv (not retval))
 	    (setq data (car (car byserv)))
 	    (if (or (not (string-match "/" data)) ; It's a realm - take it!
 		    (and
-		     (>= (length path) (length data))
-		     (string= data (substring path 0 (length data)))))
+		     (>= (length file) (length data))
+		     (string= data (substring file 0 (length data)))))
 		(setq retval (cdr (car byserv))))
 	    (setq byserv (cdr byserv))))
       (if (or (and (not retval) prompt) overwrite)
@@ -108,7 +111,7 @@ instead of the pathname inheritance method."
 		  retval (base64-encode-string (format "%s:%s" user pass))
 		  byserv (assoc server (symbol-value url-basic-auth-storage)))
 	    (setcdr byserv
-		    (cons (cons path retval) (cdr byserv))))))
+		    (cons (cons file retval) (cdr byserv))))))
      (t (setq retval nil)))
     (if retval (setq retval (concat "Basic " retval)))
     retval))
@@ -150,12 +153,12 @@ instead of hostname:portnum."
 		     url))
 	     (server (url-host href))
 	     (port (url-port href))
-	     (path (url-filename href))
+	     (file (url-filename href))
 	     user pass byserv retval data)
-	(setq path (cond
+	(setq file (cond
 		    (realm realm)
-		    ((string-match "/$" path) path)
-		    (t (url-basepath path)))
+		    ((string-match "/$" file) file)
+		    (t (url-file-directory file)))
 	      server (format "%s:%d" server port)
 	      byserv (cdr-safe (assoc server url-digest-auth-storage)))
 	(cond
@@ -165,7 +168,7 @@ instead of hostname:portnum."
 		pass (read-passwd "Password: ")
 		url-digest-auth-storage
 		(cons (list server
-			    (cons path
+			    (cons file
 				  (setq retval
 					(cons user
 					      (url-digest-auth-create-key
@@ -174,15 +177,15 @@ instead of hostname:portnum."
 					       url)))))
 		      url-digest-auth-storage)))
 	 (byserv
-	  (setq retval (cdr-safe (assoc path byserv)))
+	  (setq retval (cdr-safe (assoc file byserv)))
 	  (if (and (not retval)		; no exact match, check directories
-		   (string-match "/" path)) ; not looking for a realm
+		   (string-match "/" file)) ; not looking for a realm
 	      (while (and byserv (not retval))
 		(setq data (car (car byserv)))
 		(if (or (not (string-match "/" data))
 			(and
-			 (>= (length path) (length data))
-			 (string= data (substring path 0 (length data)))))
+			 (>= (length file) (length data))
+			 (string= data (substring file 0 (length data)))))
 		    (setq retval (cdr (car byserv))))
 		(setq byserv (cdr byserv))))
 	  (if (or (and (not retval) prompt) overwrite)
@@ -198,18 +201,27 @@ instead of hostname:portnum."
 					  url)))
 		      byserv (assoc server url-digest-auth-storage))
 		(setcdr byserv
-			(cons (cons path retval) (cdr byserv))))))
+			(cons (cons file retval) (cdr byserv))))))
 	 (t (setq retval nil)))
 	(if retval
-	    (let ((nonce (or (cdr-safe (assoc "nonce" args)) "nonegiven"))
-		  (opaque (or (cdr-safe (assoc "opaque" args)) "nonegiven")))
-	      (format
-	       (concat "Digest username=\"%s\", realm=\"%s\","
-		       "nonce=\"%s\", uri=\"%s\","
-		       "response=\"%s\", opaque=\"%s\"")
-	       (nth 0 retval) realm nonce (url-filename href)
-	       (md5 (concat (nth 1 retval) ":" nonce ":"
-			    (nth 2 retval))) opaque))))))
+	    (if (cdr-safe (assoc "opaque" args))
+		(let ((nonce (or (cdr-safe (assoc "nonce" args)) "nonegiven"))
+		      (opaque (cdr-safe (assoc "opaque" args))))
+		  (format
+		   (concat "Digest username=\"%s\", realm=\"%s\","
+			   "nonce=\"%s\", uri=\"%s\","
+			   "response=\"%s\", opaque=\"%s\"")
+		   (nth 0 retval) realm nonce (url-filename href)
+		   (md5 (concat (nth 1 retval) ":" nonce ":"
+				(nth 2 retval))) opaque))
+	      (let ((nonce (or (cdr-safe (assoc "nonce" args)) "nonegiven")))
+		(format
+		 (concat "Digest username=\"%s\", realm=\"%s\","
+			 "nonce=\"%s\", uri=\"%s\","
+			 "response=\"%s\"")
+		 (nth 0 retval) realm nonce (url-filename href)
+		 (md5 (concat (nth 1 retval) ":" nonce ":"
+			      (nth 2 retval))))))))))
 
 (defvar url-registered-auth-schemes nil
   "A list of the registered authorization schemes and various and sundry
@@ -310,7 +322,7 @@ RATING   a rating between 1 and 10 of the strength of the authentication.
 		  url-registered-auth-schemes)))))
 
 (defun url-auth-registered (scheme)
-  ;; Return non-nil iff SCHEME is registered as an auth type
+  "Return non-nil if SCHEME is registered as an auth type."
   (assoc scheme url-registered-auth-schemes))
 
 (provide 'url-auth)

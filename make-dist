@@ -7,13 +7,13 @@
 #### you should make sure that this script will include it.
 
 # Copyright (C) 1995, 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005,
-#   2006, 2007  Free Software Foundation, Inc.
+#   2006, 2007, 2008  Free Software Foundation, Inc.
 #
 # This file is part of GNU Emacs.
 #
 # GNU Emacs is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
+# the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 #
 # GNU Emacs is distributed in the hope that it will be useful,
@@ -494,7 +494,7 @@ echo "Making links to \`m4'"
 
 echo "Making links to \`nt'"
 (cd nt
- ln emacs.rc config.nt [a-z]*.c ../${tempdir}/nt
+ ln emacs.manifest emacs.rc config.nt [a-z]*.c ../${tempdir}/nt
  ln nmake.defs gmake.defs subdirs.el ../${tempdir}/nt
  ln [a-z]*.bat [a-z]*.h ../${tempdir}/nt
  ln ChangeLog INSTALL README makefile.w32-in ../${tempdir}/nt)

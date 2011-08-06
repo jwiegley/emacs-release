@@ -1,13 +1,14 @@
 /* Buffer manipulation primitives for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994,
                  1995, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -3937,7 +3938,7 @@ OVERLAY.  */)
 
 
 DEFUN ("overlays-at", Foverlays_at, Soverlays_at, 1, 1, 0,
-       doc: /* Return a list of the overlays that contain position POS.  */)
+       doc: /* Return a list of the overlays that contain the character at POS.  */)
      (pos)
      Lisp_Object pos;
 {
@@ -5652,8 +5653,8 @@ Backing up is done before the first time the file is saved.  */);
   DEFVAR_PER_BUFFER ("selective-display", &current_buffer->selective_display,
 		     Qnil,
 		     doc: /* Non-nil enables selective display.
-An Integer N as value means display only lines
-that start with less than n columns of space.
+An integer N as value means display only lines
+that start with less than N columns of space.
 A value of t means that the character ^M makes itself and
 all the rest of the line invisible; also, when saving the buffer
 in a file, save the ^M as a newline.  */);

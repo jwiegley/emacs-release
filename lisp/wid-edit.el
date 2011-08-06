@@ -1,7 +1,7 @@
 ;;; wid-edit.el --- Functions for creating and using widgets -*-byte-compile-dynamic: t;-*-
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -405,7 +405,17 @@ new value.")
     (unless (widget-get widget :suppress-face)
       (overlay-put overlay 'face (widget-apply widget :button-face-get))
       (overlay-put overlay 'mouse-face
-		   (widget-apply widget :mouse-face-get)))
+		   ;; Make new list structure for the mouse-face value
+		   ;; so that different widgets will have
+		   ;; different `mouse-face' property values
+		   ;; and will highlight separately.
+		   (let ((mouse-face-value
+			  (widget-apply widget :mouse-face-get)))
+		     ;; If it's a list, copy it.
+		     (if (listp mouse-face-value)
+			 (copy-sequence mouse-face-value)
+		       ;; If it's a symbol, put it in a list.
+		       (list mouse-face-value)))))
     (overlay-put overlay 'pointer 'hand)
     (overlay-put overlay 'follow-link follow-link)
     (overlay-put overlay 'help-echo help-echo)))
@@ -478,12 +488,12 @@ new value.")
 ;;; Widget Properties.
 
 (defsubst widget-type (widget)
-  "Return the type of WIDGET, a symbol."
+  "Return the type of WIDGET.  The type is a symbol."
   (car widget))
 
 ;;;###autoload
 (defun widgetp (widget)
-  "Return non-nil iff WIDGET is a widget."
+  "Return non-nil if WIDGET is a widget."
   (if (symbolp widget)
       (get widget 'widget-type)
     (and (consp widget)
@@ -500,7 +510,7 @@ Otherwise, just return the value."
       value)))
 
 (defun widget-member (widget property)
-  "Non-nil iff there is a definition in WIDGET for PROPERTY."
+  "Non-nil if there is a definition in WIDGET for PROPERTY."
   (cond ((plist-member (cdr widget) property)
 	 t)
 	((car widget)
@@ -656,7 +666,9 @@ button is pressed or inactive, respectively.  These are currently ignored."
       (progn (widget-put widget :suppress-face t)
 	     (insert-image image
 			   (propertize
-			    tag 'mouse-face widget-button-pressed-face)))
+                            ;; Use a `list' so it's unique and won't get
+                            ;; accidentally merged with neighbouring images.
+			    tag 'mouse-face (list widget-button-pressed-face))))
     (insert tag)))
 
 (defun widget-move-and-invoke (event)
@@ -1641,7 +1653,7 @@ If that does not exists, call the value of `widget-complete-field'."
       (widget-princ-to-string (widget-get widget :value))))
 
 (defun widget-default-active (widget)
-  "Return t iff this widget active (user modifiable)."
+  "Return t if this widget is active (user modifiable)."
   (or (widget-get widget :always-active)
       (and (not (widget-get widget :inactive))
 	   (let ((parent (widget-get widget :parent)))

@@ -1,7 +1,7 @@
 ;;; subr.el --- basic lisp subroutines for Emacs
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -103,7 +103,7 @@ change the list."
 When COND yields non-nil, eval BODY forms sequentially and return
 value of last one, or nil if there are none.
 
-\(fn COND BODY ...)"
+\(fn COND BODY...)"
   (declare (indent 1) (debug t))
   (list 'if cond (cons 'progn body)))
 
@@ -112,7 +112,7 @@ value of last one, or nil if there are none.
 When COND yields nil, eval BODY forms sequentially and return
 value of last one, or nil if there are none.
 
-\(fn COND BODY ...)"
+\(fn COND BODY...)"
   (declare (indent 1) (debug t))
   (cons 'if (cons cond (cons nil body))))
 
@@ -944,7 +944,7 @@ is converted into a string by expressing it in decimal."
 (make-obsolete 'focus-frame "it does nothing." "22.1")
 (defalias 'unfocus-frame 'ignore "")
 (make-obsolete 'unfocus-frame "it does nothing." "22.1")
-
+(make-obsolete 'make-variable-frame-local "use a frame-parameter instead." "22.2")
 
 ;;;; Obsolescence declarations for variables, and aliases.
 
@@ -988,7 +988,6 @@ to reread, so it now uses nil to mean `no event', instead of -1."
 (defalias 'search-backward-regexp (symbol-function 're-search-backward))
 (defalias 'int-to-string 'number-to-string)
 (defalias 'store-match-data 'set-match-data)
-(defalias 'make-variable-frame-localizable 'make-variable-frame-local)
 ;; These are the XEmacs names:
 (defalias 'point-at-eol 'line-end-position)
 (defalias 'point-at-bol 'line-beginning-position)
@@ -1764,9 +1763,10 @@ in milliseconds; this was useful when Emacs was built without
 floating point support.
 
 \(fn SECONDS &optional NODISP)"
-  (when (or obsolete (numberp nodisp))
-    (setq seconds (+ seconds (* 1e-3 nodisp)))
-    (setq nodisp obsolete))
+  (if (numberp nodisp)
+      (setq seconds (+ seconds (* 1e-3 nodisp))
+            nodisp obsolete)
+    (if obsolete (setq nodisp obsolete)))
   (cond
    (noninteractive
     (sleep-for seconds)
@@ -1803,6 +1803,10 @@ user can undo the change normally."
   (let ((handle (make-symbol "--change-group-handle--"))
 	(success (make-symbol "--change-group-success--")))
     `(let ((,handle (prepare-change-group))
+	   ;; Don't truncate any undo data in the middle of this.
+	   (undo-outer-limit nil)
+	   (undo-limit most-positive-fixnum)
+	   (undo-strong-limit most-positive-fixnum)
 	   (,success nil))
        (unwind-protect
 	   (progn
@@ -1872,24 +1876,25 @@ This finishes the change group by reverting all of its changes."
     (with-current-buffer (car elt)
       (setq elt (cdr elt))
       (let ((old-car
-	     (if (consp elt) (car elt)))
-	    (old-cdr
-	     (if (consp elt) (cdr elt))))
-	;; Temporarily truncate the undo log at ELT.
-	(when (consp elt)
-	  (setcar elt nil) (setcdr elt nil))
-	(unless (eq last-command 'undo) (undo-start))
-	;; Make sure there's no confusion.
-	(when (and (consp elt) (not (eq elt (last pending-undo-list))))
-	  (error "Undoing to some unrelated state"))
-	;; Undo it all.
-	(while (listp pending-undo-list) (undo-more 1))
-	;; Reset the modified cons cell ELT to its original content.
-	(when (consp elt)
-	  (setcar elt old-car)
-	  (setcdr elt old-cdr))
-	;; Revert the undo info to what it was when we grabbed the state.
-	(setq buffer-undo-list elt)))))
+             (if (consp elt) (car elt)))
+            (old-cdr
+             (if (consp elt) (cdr elt))))
+        ;; Temporarily truncate the undo log at ELT.
+        (when (consp elt)
+          (setcar elt nil) (setcdr elt nil))
+        (unless (eq last-command 'undo) (undo-start))
+        ;; Make sure there's no confusion.
+        (when (and (consp elt) (not (eq elt (last pending-undo-list))))
+          (error "Undoing to some unrelated state"))
+        ;; Undo it all.
+        (save-excursion
+          (while (listp pending-undo-list) (undo-more 1)))
+        ;; Reset the modified cons cell ELT to its original content.
+        (when (consp elt)
+          (setcar elt old-car)
+          (setcdr elt old-cdr))
+        ;; Revert the undo info to what it was when we grabbed the state.
+        (setq buffer-undo-list elt)))))
 
 ;;;; Display-related functions.
 
@@ -2473,7 +2478,7 @@ If BODY finishes, `while-no-input' returns whatever value BODY produced."
        (catch ',catch-sym
 	 (let ((throw-on-input ',catch-sym))
 	   (or (input-pending-p)
-	       ,@body))))))
+	       (progn ,@body)))))))
 
 (defmacro combine-after-change-calls (&rest body)
   "Execute BODY, but don't call the after-change functions till the end.
@@ -2509,6 +2514,20 @@ The value returned is the value of the last form in BODY."
 
 ;;;; Constructing completion tables.
 
+(defun complete-with-action (action table string pred)
+  "Perform completion ACTION.
+STRING is the string to complete.
+TABLE is the completion table, which should not be a function.
+PRED is a completion predicate.
+ACTION can be one of nil, t or `lambda'."
+  ;; (assert (not (functionp table)))
+  (funcall
+   (cond
+    ((null action) 'try-completion)
+    ((eq action t) 'all-completions)
+    (t 'test-completion))
+   string table pred))
+
 (defmacro dynamic-completion-table (fun)
   "Use function FUN as a dynamic completion table.
 FUN is called with one argument, the string for which completion is required,
@@ -2530,10 +2549,7 @@ that can be used as the ALIST argument to `try-completion' and
        (with-current-buffer (let ((,win (minibuffer-selected-window)))
                               (if (window-live-p ,win) (window-buffer ,win)
                                 (current-buffer)))
-         (cond
-          ((eq ,mode t) (all-completions ,string (,fun ,string) ,predicate))
-          ((not ,mode) (try-completion ,string (,fun ,string) ,predicate))
-          (t (test-completion ,string (,fun ,string) ,predicate)))))))
+         (complete-with-action ,mode (,fun ,string) ,string ,predicate)))))
 
 (defmacro lazy-completion-table (var fun)
   ;; We used to have `&rest args' where `args' were evaluated late (at the
@@ -2759,6 +2775,35 @@ Modifies the match data; use `save-match-data' if necessary."
 	      (cons (substring string start)
 		    list)))
     (nreverse list)))
+
+(defun combine-and-quote-strings (strings &optional separator)
+  "Concatenate the STRINGS, adding the SEPARATOR (default \" \").
+This tries to quote the strings to avoid ambiguity such that
+  (split-string-and-unquote (combine-and-quote-strings strs)) == strs
+Only some SEPARATORs will work properly."
+  (let ((sep (or separator " ")))
+    (mapconcat
+     (lambda (str)
+       (if (string-match "[\\\"]" str)
+	   (concat "\"" (replace-regexp-in-string "[\\\"]" "\\\\\\&" str) "\"")
+	 str))
+     strings sep)))
+
+(defun split-string-and-unquote (string &optional separator)
+  "Split the STRING into a list of strings.
+It understands Emacs Lisp quoting within STRING, such that
+  (split-string-and-unquote (combine-and-quote-strings strs)) == strs
+The SEPARATOR regexp defaults to \"\\s-+\"."
+  (let ((sep (or separator "\\s-+"))
+	(i (string-match "[\"]" string)))
+    (if (null i)
+	(split-string string sep t)	; no quoting:  easy
+      (append (unless (eq i 0) (split-string (substring string 0 i) sep t))
+	      (let ((rfs (read-from-string string i)))
+		(cons (car rfs)
+		      (split-string-and-unquote (substring string (cdr rfs))
+						sep)))))))
+
 
 ;;;; Replacement in strings.
 

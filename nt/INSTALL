@@ -1,7 +1,7 @@
 		      Building and Installing Emacs
 		on Windows NT/2K/XP and Windows 95/98/ME
 
-  Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007
+  Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
     Free Software Foundation, Inc.
   See the end of the file for license conditions.
 
@@ -100,6 +100,11 @@
   Alternatively, use programs that convert end-of-line format, such as
   dos2unix and unix2dos available from GnuWin32 or dtou and utod from
   the DJGPP project.
+
+  Additionally, the file lisp/ldefs-boot.el needs Unix line ends due
+  to some embedded ^M characters that are not at the end of the line.
+  So in the lisp directory you should run "cvs update -kb ldefs-boot.el",
+  or use dos2unix on that file.
 
   In addition to this file, you should also read INSTALL.CVS in the
   parent directory, and make sure that you have a version of
@@ -272,14 +277,19 @@
   compatible (for example, that they were built with the same compiler).
 
   Binaries for the image libraries (among many others) can be found at
-  the GnuWin32 project.  These are built with MinGW, but they can be
-  used with both GCC/MinGW and MSVC builds of Emacs.  See the info on
+  the GnuWin32 project.  PNG, JPEG and TIFF libraries are also
+  included with GTK, which is installed along with other Free Software
+  that requires it.  These are built with MinGW, but they can be used
+  with both GCC/MinGW and MSVC builds of Emacs.  See the info on
   http://ourcomments.org/Emacs/w32-build-emacs.html, under "How to Get
   Images Support", for more details about installing image support
   libraries.  Note specifically that, due to some packaging snafus in
   the GnuWin32-supplied image libraries, you will need to download
   _source_ packages for some of the libraries in order to get the
   header files necessary for building Emacs with image support.
+
+  If GTK 2.0 is installed, addpm will arrange for its image libraries
+  to be on the DLL search path for Emacs.
 
 * Building
 
@@ -453,7 +463,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Customization, Quitting, Amusements, Top
 @chapter Customization
@@ -1226,10 +1226,13 @@ safe.
 @cindex risky variable
   Some variables, such as @code{load-path}, are considered
 particularly @dfn{risky}: there is seldom any reason to specify them
-as local variables, and changing them can be dangerous.  Even if you
-enter @kbd{!} at the confirmation prompt, Emacs will not record any
-values as safe for these variables.  If you really want to record safe
-values for these variables, do it directly by customizing
+as local variables, and changing them can be dangerous.  If a file
+contains only risky local variables, Emacs neither offers nor accepts
+@kbd{!} as input at the confirmation prompt.  If some of the local
+variables in a file are risky, and some are only potentially unsafe, you
+can enter @kbd{!} at the prompt.  It applies all the variables, but only
+marks the non-risky ones as safe for the future.  If you really want to
+record safe values for risky variables, do it directly by customizing
 @samp{safe-local-variable-values} (@pxref{Easy Customization}).
 
 @vindex enable-local-variables
@@ -1585,6 +1588,8 @@ command is less work to invoke when you really want to.
 
 @node Init Rebinding
 @subsection Rebinding Keys in Your Init File
+@c This node is referenced in the tutorial.  When renaming or deleting
+@c it, the tutorial needs to be adjusted.  (TUTORIAL.de)
 
   If you have a set of key bindings that you like to use all the time,
 you can specify them in your @file{.emacs} file by using their Lisp
@@ -1878,7 +1883,7 @@ twice.
 types; clicks beyond the third generate additional triple-click events.
 However, the full number of clicks is recorded in the event list, so
 if you know Emacs Lisp you can distinguish if you really want to
-(@pxref{Accessing Events,,, elisp, The Emacs Lisp Reference Manual}).
+(@pxref{Click Events,,, elisp, The Emacs Lisp Reference Manual}).
 We don't recommend distinct meanings for more than three clicks, but
 sometimes it is useful for subsequent clicks to cycle through the same
 set of three meanings, so that four clicks are equivalent to one
@@ -2501,7 +2506,7 @@ Type @kbd{C-q}, followed by the key you want to bind, to insert @var{char}.
 
   @strong{Warning:} if you change the keyboard encoding, or change
 between multibyte and unibyte mode, or anything that would alter which
-code @kbd{C-q} would insert for that character, this keybinding may
+code @kbd{C-q} would insert for that character, this key binding may
 stop working.  It is therefore advisable to use one and only one
 coding system, for your init file as well as the files you edit.  For
 example, don't mix the @samp{latin-1} and @samp{latin-9} coding

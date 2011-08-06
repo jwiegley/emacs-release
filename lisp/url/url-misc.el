@@ -1,7 +1,7 @@
 ;;; url-misc.el --- Misc Uniform Resource Locator retrieval code
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2002, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -75,7 +75,7 @@
   (let* ((type (intern (downcase (url-type url))))
 	 (server (url-host url))
 	 (name (url-user url))
-	 (port (url-port url)))
+	 (port (number-to-string (url-port url))))
     (url-do-terminal-emulator type server port name))
   nil)
 

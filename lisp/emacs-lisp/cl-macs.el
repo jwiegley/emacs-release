@@ -1,6 +1,6 @@
 ;;; cl-macs.el --- Common Lisp macros -*-byte-compile-dynamic: t;-*-
 
-;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -266,15 +266,19 @@ its argument list allows full Common Lisp conventions."
 	     (nconc (nreverse simple-args)
 		    (list '&rest (car (pop bind-lets))))
 	     (nconc (let ((hdr (nreverse header)))
-		      (require 'help-fns)
-		      (cons (help-add-fundoc-usage
-			     (if (stringp (car hdr)) (pop hdr))
-			     ;; orig-args can contain &cl-defs (an internal CL
-			     ;; thingy that I do not understand), so remove it.
-			     (let ((x (memq '&cl-defs orig-args)))
-			       (if (null x) orig-args
-				 (delq (car x) (remq (cadr x) orig-args)))))
-			    hdr))
+                      ;; Macro expansion can take place in the middle of
+                      ;; apparently harmless computation, so it should not
+                      ;; touch the match-data.
+                      (save-match-data
+                        (require 'help-fns)
+                        (cons (help-add-fundoc-usage
+                               (if (stringp (car hdr)) (pop hdr))
+                               ;; orig-args can contain &cl-defs (an internal
+                               ;; CL thingy I don't understand), so remove it.
+                               (let ((x (memq '&cl-defs orig-args)))
+                                 (if (null x) orig-args
+                                   (delq (car x) (remq (cadr x) orig-args)))))
+                              hdr)))
 		    (list (nconc (list 'let* bind-lets)
 				 (nreverse bind-forms) body)))))))
 

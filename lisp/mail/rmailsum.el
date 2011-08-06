@@ -1,7 +1,7 @@
 ;;; rmailsum.el --- make summary buffers for the mail reader
 
 ;; Copyright (C) 1985, 1993, 1994, 1995, 1996, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -288,12 +288,14 @@ nil for FUNCTION means all messages."
 		    (if (zerop (% rmail-new-summary-line-count 10))
 			(message "Computing summary lines...%d"
 				 rmail-new-summary-line-count))
-		    (rmail-make-summary-line-1 msg)))))
+		    (rmail-make-summary-line-1 msg))))
+	delpos)
     ;; Fix up the part of the summary that says "deleted" or "unseen".
-    (aset line 5
-	  (if (rmail-message-deleted-p msg) ?\D
+    (string-match "[0-9]+" line)
+    (aset line (match-end 0)
+	  (if (rmail-message-deleted-p msg) ?D
 	    (if (= ?0 (char-after (+ 3 (rmail-msgbeg msg))))
-		?\- ?\ )))
+		?- ?\s)))
     line))
 
 ;;;###autoload
@@ -854,6 +856,15 @@ Search, the `unseen' attribute is restored.")
 		      (set-buffer rmail-buffer)
 		      (rmail-show-message msg-num t))))))
 	(rmail-summary-update-highlight nil)))))
+
+(defun rmail-summary-save-buffer ()
+  "Save the buffer associated with this RMAIL summary."
+  (interactive)
+  (save-window-excursion
+    (save-excursion
+      (switch-to-buffer rmail-buffer)
+      (save-buffer))))
+
 
 (if rmail-summary-mode-map
     nil
@@ -923,6 +934,7 @@ Search, the `unseen' attribute is restored.")
     'rmail-summary-sort-by-lines)
   (define-key rmail-summary-mode-map "\C-c\C-s\C-k"
     'rmail-summary-sort-by-labels)
+  (define-key rmail-summary-mode-map "\C-x\C-s" 'rmail-summary-save-buffer)
   )
 
 ;;; Menu bar bindings.

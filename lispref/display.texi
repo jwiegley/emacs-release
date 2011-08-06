@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/display
 @node Display, System Interface, Processes, Top
@@ -55,21 +55,10 @@ This function clears and redisplays frame @var{frame}.
 This function clears and redisplays all visible frames.
 @end deffn
 
-  This function calls for redisplay of certain windows, the next time
-redisplay is done, but does not clear them first.
-
-@defun force-window-update &optional object
-This function forces some or all windows to be updated on next redisplay.
-If @var{object} is a window, it forces redisplay of that window.  If
-@var{object} is a buffer or buffer name, it forces redisplay of all
-windows displaying that buffer.  If @var{object} is @code{nil} (or
-omitted), it forces redisplay of all windows.
-@end defun
-
-  Processing user input takes absolute priority over redisplay.  If you
-call these functions when input is available, they do nothing
-immediately, but a full redisplay does happen eventually---after all the
-input has been processed.
+  In Emacs, processing user input takes priority over redisplay.  If
+you call these functions when input is available, they don't redisplay
+immediately, but the requested redisplay does happen
+eventually---after all the input has been processed.
 
   Normally, suspending and resuming Emacs also refreshes the screen.
 Some terminal emulators record separate contents for display-oriented
@@ -89,10 +78,55 @@ to redraw, @code{nil} means redrawing is needed.  The default is @code{nil}.
 @section Forcing Redisplay
 @cindex forcing redisplay
 
+  Emacs normally tries to redisplay the screen whenever it waits for
+input.  With this function you can request an immediate attempt to
+redisplay, in the middle of Lisp code, without actually waiting for
+input.
+
+@defun redisplay &optional force
+This function tries immediately to redisplay, provided there are no
+pending input events.  It is equivalent to @code{(sit-for 0)}.
+
+If the optional argument @var{force} is non-@code{nil}, it does all
+pending redisplay work even if input is available, with no
+pre-emption.
+
+The function returns @code{t} if it actually tried to redisplay, and
+@code{nil} otherwise.  A value of @code{t} does not mean that
+redisplay proceeded to completion; it could have been pre-empted by
+newly arriving terminal input.
+@end defun
+
+  @code{redisplay} with no argument tries immediately to redisplay,
+but has no effect on the usual rules for what parts of the screen to
+redisplay.  By contrast, the following function adds certain windows
+to the pending redisplay work (as if their contents had completely
+changed), but doesn't immediately try to do any redisplay work.
+
+@defun force-window-update &optional object
+This function forces some or all windows to be updated on next
+redisplay.  If @var{object} is a window, it requires eventual
+redisplay of that window.  If @var{object} is a buffer or buffer name,
+it requires eventual redisplay of all windows displaying that buffer.
+If @var{object} is @code{nil} (or omitted), it requires eventual
+redisplay of all windows.
+@end defun
+
+  @code{force-window-update} does not do a redisplay immediately.
+(Emacs will do that when it waits for input.)  Rather, its effect is
+to put more work on the queue to be done by redisplay whenever there
+is a chance.
+
   Emacs redisplay normally stops if input arrives, and does not happen
 at all if input is available before it starts.  Most of the time, this
 is exactly what you want.  However, you can prevent preemption by
 binding @code{redisplay-dont-pause} to a non-@code{nil} value.
+
+@defvar redisplay-dont-pause
+If this variable is non-@code{nil}, pending input does not
+prevent or halt redisplay; redisplay occurs, and finishes,
+regardless of whether input is available.
+@end defvar
 
 @defvar redisplay-preemption-period
 This variable specifies how many seconds Emacs waits between checks
@@ -106,22 +140,6 @@ redisplay, and redisplay cannot be preempted by input.
 This variable is only obeyed on graphical terminals.  For
 text terminals, see @ref{Terminal Output}.
 @end defvar
-
-@defvar redisplay-dont-pause
-If this variable is non-@code{nil}, pending input does not
-prevent or halt redisplay; redisplay occurs, and finishes,
-regardless of whether input is available.
-@end defvar
-
-@defun redisplay &optional force
-This function performs an immediate redisplay provided there are no
-pending input events.  This is equivalent to @code{(sit-for 0)}.
-
-If the optional argument @var{force} is non-@code{nil}, it forces an
-immediate and complete redisplay even if input is available.
-
-Returns @code{t} if redisplay was performed, or @code{nil} otherwise.
-@end defun
 
 @node Truncation
 @section Truncation
@@ -1718,8 +1736,7 @@ faces in Lisp programs by the symbols that name them.
 
 @defun facep object
 This function returns @code{t} if @var{object} is a face name string
-or symbol (or if it is a vector of the kind used internally to record
-face data).  It returns @code{nil} otherwise.
+or symbol.  It returns @code{nil} otherwise.
 @end defun
 
 Each face name is meaningful for all frames, and by default it has the
@@ -1759,6 +1776,11 @@ can use in @code{defface} are the same as in @code{defgroup} and
 When @code{defface} executes, it defines the face according to
 @var{spec}, then uses any customizations that were read from the
 init file (@pxref{Init File}) to override that specification.
+
+When you evaluate a @code{defface} form with @kbd{C-M-x} in Emacs
+Lisp mode (@code{eval-defun}), a special feature of @code{eval-defun}
+overrides any customizations of the face.  This way, the face reflects
+exactly what the @code{defface} says.
 
 The purpose of @var{spec} is to specify how the face should appear on
 different kinds of terminals.  It should be an alist whose elements
@@ -2506,7 +2528,8 @@ makes @code{modeline} an alias for the @code{mode-line} face.
 @cindex faces, automatic choice
 
   This hook is used for automatically assigning faces to text in the
-buffer.  It is part of the implementation of Font-Lock mode.
+buffer.  It is part of the implementation of Jit-Lock mode, used by
+Font-Lock.
 
 @defvar fontification-functions
 This variable holds a list of functions that are called by Emacs
@@ -3231,15 +3254,47 @@ to use the value specified by the frame.
 insert images into text, and also control other aspects of how text
 displays.  The value of the @code{display} property should be a
 display specification, or a list or vector containing several display
-specifications.
+specifications.  Display specifications in the same @code{display}
+property value generally apply in parallel to the text they cover.
 
-  Some kinds of @code{display} properties specify something to display
-instead of the text that has the property.  In this case, ``the text''
-means all the consecutive characters that have the same Lisp object as
-their @code{display} property; these characters are replaced as a
-single unit.  By contrast, characters that have similar but distinct
-Lisp objects as their @code{display} properties are handled
-separately.  Here's a function that illustrates this point:
+  If several sources (overlays and/or a text property) specify values
+for the @code{display} property, only one of the values takes effect,
+following the rules of @code{get-char-property}.  @xref{Examining
+Properties}.
+
+  The rest of this section describes several kinds of
+display specifications and what they mean.
+
+@menu
+* Replacing Specs::      Display specs that replace the text.
+* Specified Space::      Displaying one space with a specified width.
+* Pixel Specification::  Specifying space width or height in pixels.
+* Other Display Specs::  Displaying an image; magnifying text; moving it
+                          up or down on the page; adjusting the width
+                          of spaces within text.
+* Display Margins::     Displaying text or images to the side of the main text.
+@end menu
+
+@node Replacing Specs
+@subsection Display Specs That Replace The Text
+
+  Some kinds of @code{display} specifications specify something to
+display instead of the text that has the property.  These are called
+@dfn{replacing} display specifications.  Emacs does not allow the user
+to interactively move point into the middle of buffer text that is
+replaced in this way.
+
+  If a list of display specifications includes more than one replacing
+display specification, the first overrides the rest.  Replacing
+display specifications make most other display specifications
+irrelevant, since those don't apply to the replacement.
+
+  For replacing display specifications, ``the text that has the
+property'' means all the consecutive characters that have the same
+Lisp object as their @code{display} property; these characters are
+replaced as a single unit.  By contrast, characters that have similar
+but distinct Lisp objects as their @code{display} properties are
+handled separately.  Here's a function that illustrates this point:
 
 @smallexample
 (defun foo ()
@@ -3267,7 +3322,7 @@ results:
   (goto-char (point-min))
   (dotimes (i 5)
     (let ((string (concat "A")))
-      (put-text-property (point) (2+ (point)) 'display string)
+      (put-text-property (point) (+ 2 (point)) 'display string)
       (put-text-property (point) (1+ (point)) 'display string)
       (forward-char 2))))
 @end smallexample
@@ -3278,18 +3333,6 @@ each character.  If two consecutive characters have the same
 object as the @code{display} property value, it's irrelevant
 whether they got this property from a single call to
 @code{put-text-property} or from two different calls.
-
-  The rest of this section describes several kinds of
-display specifications and what they mean.
-
-@menu
-* Specified Space::      Displaying one space with a specified width.
-* Pixel Specification::  Specifying space width or height in pixels.
-* Other Display Specs::  Displaying an image; magnifying text; moving it
-                          up or down on the page; adjusting the width
-                          of spaces within text.
-* Display Margins::     Displaying text or images to the side of the main text.
-@end menu
 
 @node Specified Space
 @subsection Specified Spaces
@@ -3529,25 +3572,28 @@ string.
 @cindex display margins
 @cindex margins, display
 
-  A buffer can have blank areas called @dfn{display margins} on the left
-and on the right.  Ordinary text never appears in these areas, but you
-can put things into the display margins using the @code{display}
-property.
+  A buffer can have blank areas called @dfn{display margins} on the
+left and on the right.  Ordinary text never appears in these areas,
+but you can put things into the display margins using the
+@code{display} property.  There is currently no way to make text or
+images in the margin mouse-sensitive.
 
-  To put text in the left or right display margin of the window, use a
-display specification of the form @code{(margin right-margin)} or
-@code{(margin left-margin)} on it.  To put an image in a display margin,
-use that display specification along with the display specification for
-the image.  Unfortunately, there is currently no way to make
-text or images in the margin mouse-sensitive.
+  The way to display something in the margins is to specify it in a
+margin display specification in the @code{display} property of some
+text.  This is a replacing display specification, meaning that the
+text you put it on does not get displayed; the margin display appears,
+but that text does not.
 
-  If you put such a display specification directly on text in the
-buffer, the specified margin display appears @emph{instead of} that
-buffer text itself.  To put something in the margin @emph{in
-association with} certain buffer text without preventing or altering
-the display of that text, put a @code{before-string} property on the
-text and put the display specification on the contents of the
-before-string.
+  A margin display specification looks like @code{((margin
+right-margin) @var{spec}} or @code{((margin left-margin) @var{spec})}.
+Here, @var{spec} is another display specification that says what to
+display in the margin.  Typically it is a string of text to display,
+or an image descriptor.
+
+  To display something in the margin @emph{in association with}
+certain buffer text, without altering or preventing the display of
+that text, put a @code{before-string} property on the text and put the
+margin display specification on the contents of the before-string.
 
   Before the display margins can display anything, you must give
 them a nonzero width.  The usual way to do that is to set these
@@ -3643,9 +3689,7 @@ This variable is ignored if the image libraries are statically linked
 into Emacs.
 @end defvar
 
-@defun  image-type-available-p type
-@findex image-type-available-p
-
+@defun image-type-available-p type
 This function returns non-@code{nil} if image type @var{type} is
 available, i.e., if images of this type can be loaded and displayed in
 Emacs.  @var{type} should be one of the types contained in
@@ -4275,13 +4319,43 @@ cache, it can always be displayed, even if the value of
 @subsection Image Cache
 @cindex image cache
 
-  Emacs stores images in an image cache when it displays them, so it can
-display them again more efficiently.  It removes an image from the cache
-when it hasn't been displayed for a specified period of time.
+  Emacs stores images in an image cache so that it can display them
+again more efficiently.  When Emacs displays an image, it searches the
+image cache for an existing image specification @code{equal} to the
+desired specification.  If a match is found, the image is displayed
+from the cache; otherwise, Emacs loads the image normally.
 
-When an image is looked up in the cache, its specification is compared
-with cached image specifications using @code{equal}.  This means that
-all images with equal specifications share the same image in the cache.
+  Occasionally, you may need to tell Emacs to refresh the images
+associated with a given image specification.  For example, suppose you
+display an image using a specification that contains a @code{:file}
+property.  The image is loaded from the given file and stored in the
+image cache.  If you later display the image again, using the same
+image specification, the image is displayed from the image cache.
+Normally, this is not a problem.  However, if the image file has
+changed in the meantime, Emacs would be displaying the old version of
+the image.  In such a situation, it is necessary to ``refresh'' the
+image using @code{image-refresh}.
+
+@defun image-refresh spec &optional frame
+This function refreshes any images having image specifications
+@code{equal} to @var{spec} on frame @var{frame}.  If @var{frame} is
+@code{nil}, the selected frame is used.  If @var{frame} is @code{t},
+the refresh is applied to all existing frames.
+
+This works by removing all image with image specifications matching
+@var{spec} from the image cache.  Thus, the next time the image is
+displayed, Emacs will load the image again.
+@end defun
+
+@defun clear-image-cache &optional frame
+This function clears the entire image cache.  If @var{frame} is
+non-@code{nil}, only the cache for that frame is cleared.  Otherwise,
+all frames' caches are cleared.
+@end defun
+
+If an image in the image cache has not been displayed for a specified
+period of time, Emacs removes it from the cache and frees the
+associated memory.
 
 @defvar image-cache-eviction-delay
 This variable specifies the number of seconds an image can remain in the
@@ -4292,12 +4366,6 @@ If the value is @code{nil}, Emacs does not remove images from the cache
 except when you explicitly clear it.  This mode can be useful for
 debugging.
 @end defvar
-
-@defun clear-image-cache &optional frame
-This function clears the image cache.  If @var{frame} is non-@code{nil},
-only the cache for that frame is cleared.  Otherwise all frames' caches
-are cleared.
-@end defun
 
 @node Buttons
 @section Buttons

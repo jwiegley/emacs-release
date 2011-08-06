@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/functions
 @node Functions, Macros, Variables, Top
@@ -1326,6 +1326,9 @@ See @ref{Autoload}.
 @item call-interactively
 See @ref{Interactive Call}.
 
+@item called-interactively-p
+See @ref{Distinguish Interactive}.
+
 @item commandp
 See @ref{Interactive Call}.
 
@@ -1351,7 +1354,7 @@ See @ref{Function Indirection}.
 See @ref{Using Interactive}.
 
 @item interactive-p
-See @ref{Interactive Call}.
+See @ref{Distinguish Interactive}.
 
 @item mapatoms
 See @ref{Creating Symbols}.

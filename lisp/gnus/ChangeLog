@@ -1,9 +1,392 @@
+2008-03-24  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* message.el (message-cite-original-without-signature): Mention
+	stripping of the signatur in doc string.
+
+2008-03-19  Nils Ackermann  <nils@ackermath.info>  (tiny change)
+
+	* nnmh.el (nnmh-request-expire-articles): Prefer expiry-target group
+	parameter.
+
+	* message.el (message-disassociate-draft): Specify drafts group name
+	fully.
+
+2008-03-19  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* mail-source.el (mail-source-delete-old-incoming) Fix regexp to find
+	Incoming* files.
+
+2008-03-19  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* nntp.el (nntp-open-telnet-stream, nntp-open-via-rlogin-and-telnet)
+	(nntp-open-via-telnet-and-telnet): Make sure the nntp port to specify
+	is a string.
+
+2008-03-08  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* mail-source.el (mail-source-delete-old-incoming-confirm): Change
+	default to nil.
+	(mail-source-delete-old-incoming): Make confirmation prompt more clear.
+
+2008-03-07  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-art.el (gnus-narrow-to-page): Position point properly.
+	(gnus-article-goto-prev-page): Work for articles having ^L's.
+
+	* gnus-sum.el (gnus-summary-end-of-article): Remove needless narrowing.
+
+	* mm-view.el (mm-w3m-standalone-supports-m17n-p): Fix typo.
+
+2008-03-05  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-sum.el (gnus-print-buffer): Honor ps-print-color-p.
+	Suggested by <chris.anderton@zetnet.co.uk>.
+
+2008-02-29  Andreas Seltenreich  <andreas@gate450.dyndns.org>
+
+	* nnweb.el (nnweb-google-parse-1): Fix date parsing on articles with
+	empty author.
+
+2008-02-16  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* mail-source.el (mail-source-delete-incoming): Change default.
+	Supplement doc string.
+
+2008-02-14  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* nnmail.el (nnmail-message-id-cache-file): Derive from
+	`gnus-home-directory'.
+
+2008-02-11  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-topic.el (gnus-topic-select-group, gnus-topic-read-group):
+	Document negative prefix.
+
+	* gnus-group.el (gnus-group-read-group): Document negative prefix.
+
+2008-02-03  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus.el (gnus-group-startup-message): Add `find-image' call before
+	image-load-path is let-bound.  Reported by Harald Hanche-Olsen
+	<hanche@math.ntnu.no>.
+
+2008-01-12  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-sum.el (gnus-article-sort-by-random)
+	(gnus-thread-sort-by-random): Fix doc strings.  Reported by
+	jidanni@jidanni.org.
+
+2007-12-18  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-draft.el (gnus-draft-send-message): Mention process/prefix
+	convention in doc string.
+
+2007-12-14  Johan Bockg,Ae(Brd  <bojohan@gnu.org>
+
+	* gnus-sum.el (gnus-summary-mark-unread-as-read)
+	(gnus-summary-mark-read-and-unread-as-read)
+	(gnus-summary-mark-current-read-and-unread-as-read)
+	(gnus-summary-mark-unread-as-ticked): Doc fix.
+	`gnus-mark-article-hook', not `gnus-summary-mark-article-hook'.
+
+2007-12-14  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-sum.el (gnus-summary-prev-article): Fix doc string.  Reported by
+	Christoph Conrad <christoph.conrad@gmx.de>.
+
+2007-12-03  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* message.el (message-ignored-supersedes-headers): Add "X-ID".
+
+2007-11-24  Glenn Morris  <rgm@gnu.org>
+
+	* message.el (message-tool-bar-retro): Update for rename
+	mail_send.xpm->mail-send.xpm.
+
+2007-11-15  Juanma Barranquero  <lekktu@gmail.com>
+
+	* nnimap.el (nnimap-split-download-body):
+	* gnus-demon.el (gnus-demon): Fix typos in docstrings.
+
+	* gnus-uu.el (gnus-uu-default-view-rules): Fix typos in docstring.
+	(gnus-uu-decode-save): Fix typo in prompt.
+
+2007-11-03  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-sum.el (gnus-summary-highlight): Mark as risky local variable.
+
+2007-11-01  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* mm-util.el (mm-charset-eval-alist): Mark as risky local variable.
+
+	* gnus.el (gnus-group-charter-alist): Mark as risky local variable.
+
+	* gnus-art.el (gnus-button-alist, gnus-header-button-alist): Mark as
+	risky local variable.
+
+	* gnus-group.el (gnus-group-icon-list): Mark as risky local variable.
+
+2007-11-01  ARISAWA Akihiro  <ari@mbf.ocn.ne.jp>  (tiny change)
+
+	* message.el (message-use-alternative-email-as-from): Examine the
+	From header as well; use message-make-from in order to include a
+	user's full name.  [ Backported bug fix from No Gnus. ]
+
+2007-10-30  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* qp.el (quoted-printable-decode-string): Fix typo in doc string.
+
+2007-10-30  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-ems.el (gnus-x-splash): Work even if there's no scroll bar.
+
+2007-10-23  Richard Stallman  <rms@gnu.org>
+
+	* gnus-group.el (gnus-group-highlight): Mark as risky.
+
+2007-10-23  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.el (gnus-server-to-method): Return method found first in
+	gnus-newsrc-alist.
+
+2007-10-20  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* html2text.el (html2text-fix-paragraph): Use `forward-line' instead of
+	`next-line'.
+
+2007-10-18  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* nnmail.el (nnmail-fancy-expiry-target): Use rmail-dont-reply-to to
+	exclude address matching message-dont-reply-to-names.
+
+2007-10-15  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-util.el (gnus-string<): New function.
+
+	* gnus-sum.el (gnus-article-sort-by-author)
+	(gnus-article-sort-by-subject): Use it.
+
+2007-10-15  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-win.el (gnus-configure-windows): Focus on the frame for which
+	the frame-focus tag is set in gnus-buffer-configuration.
+
+2007-10-08  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* mm-util.el (mm-charset-synonym-alist): Alias gbk to cp936.
+
+2007-10-04  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* Relicense "GPLv2 or later" files to "GPLv3 or later".
+
+2007-09-13  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-sum.el (gnus-newsgroup-maximum-articles): Move from gnus.el.
+	Suggested by Leo <sdl.web@gmail.com>.
+
+	* gnus.el: Do.
+
+2007-09-13  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.el (gnus-newsgroup-maximum-articles): Rename from
+	gnus-maximum-newsgroup.  Suggested by Leo <sdl.web@gmail.com>.
+
+	* gnus-agent.el (gnus-agent-fetch-headers): Do.
+
+	* gnus-sum.el (gnus-articles-to-read, gnus-list-of-unread-articles)
+	(gnus-list-of-read-articles, gnus-sequence-of-unread-articles): Do.
+
+2007-09-13  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* nnmbox.el (nnmbox-request-article): Don't assume delim regexp matches
+	newline.
+	(nnmbox-request-accept-article): Don't change article in source buffer;
+	narrow to header to use message-fetch-field rather than
+	nnmail-fetch-field; use with-current-buffer instead of save-excursion.
+	(nnmbox-request-replace-article): Quote lines that'll be misidentified
+	as delimiters; make sure article ends with newline.
+	(nnmbox-delete-mail): Correct last position of article to be deleted;
+	ignore X-Gnus-Newsgroup header in article body.
+	(nnmbox-save-mail): Quote lines looking like delimiters at the right
+	positions; make sure article ends with newline.
+
+2007-09-05  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-cus.el (gnus-score-extra): New widget.
+	(gnus-score-extra-convert): New function.
+	(gnus-score-customize): Use it for Extra.
+
+2007-08-23  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* mml.el (mml-generate-mime): Make sure it uses multibyte temp buffer.
+	(mml-generate-mime-1): Don't encode body if it is specified to be in
+	raw form; don't make buffer be unibyte when inserting multibyte string.
+
+2007-08-23  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* sha1.el: Fix up comment style.
+	(sha1-F0, sha1-F1, sha1-F2, sha1-F3, sha1-S1, sha1-S5, sha1-S30)
+	(sha1-OP, sha1-add-to-H): Use new-style backquotes.
+
+	* hex-util.el: Fix up comment style.
+	(hex-char-to-num, num-to-hex-char): Use new-style backquotes.
+
+	* gnus-salt.el: Use with-current-buffer.
+	(gnus-pick-setup-message): Fix long-standing typo.
+
+2007-08-17  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-art.el (gnus-article-summary-command-nosave)
+	(gnus-article-read-summary-keys): Don't use 3rd arg of pop-to-buffer.
+
+2007-08-14  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.el (gnus-maximum-newsgroup): New variable.
+
+	* gnus-agent.el (gnus-agent-fetch-headers): Limit the range of articles
+	according to gnus-maximum-newsgroup.
+
+	* gnus-sum.el (gnus-articles-to-read, gnus-list-of-unread-articles)
+	(gnus-list-of-read-articles, gnus-sequence-of-unread-articles):
+	Limit the range of articles according to gnus-maximum-newsgroup.
+
+2007-08-10  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* nntp.el (nntp-xref-number-is-evil): New server variable.
+	(nntp-find-group-and-number): If it is non-nil, don't trust article
+	numbers in the Xref header.
+
+2007-08-06  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-ems.el (gnus-x-splash): Bind inhibit-read-only to t.
+
+2007-08-04  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-art.el (article-hide-headers): Bind inhibit-read-only to t.
+
+2007-08-08  Glenn Morris  <rgm@gnu.org>
+
+	* gmm-utils.el, gnus-async.el, gnus-msg.el, gnus-score.el
+	* gnus-util.el, imap.el, mailcap.el, nnimap.el: Replace `iff' in
+	doc-strings and comments.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+2007-07-24  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-msg.el (gnus-summary-supersede-article)
+	(gnus-summary-resend-message-edit): Add Gcc header.
+	(gnus-summary-resend-bounced-mail): Ditto; search whole body for parent
+	article's Message-ID; refer parent article in summary buffer.
+
+	* message.el (message-bounce): Call mime-to-mml.
+
+2007-07-21  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* mm-uu.el (mm-uu-type-alist): Refer to mm-uu-configure-list in doc
+	string.
+
+2007-07-16  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-srvr.el (gnus-server-font-lock-keywords): Quote faces.
+
+2007-07-14  David Kastrup  <dak@gnu.org>
+
+	* gnus-art.el (gnus-mime-delete-part): Don't go through article-edit
+	finishing actions if we did not edit the article.
+
+2007-07-13  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-srvr.el (gnus-server-agent-face, gnus-server-opened-face)
+	(gnus-server-closed-face, gnus-server-denied-face)
+	(gnus-server-offline-face): Remove variable.
+	(gnus-server-font-lock-keywords): Use faces that are not aliases.
+
+	* mm-util.el (mm-decode-coding-string, mm-encode-coding-string)
+	(mm-decode-coding-region, mm-encode-coding-region): Don't modify string
+	if the coding-system argument is nil for XEmacs.
+
+	* nnrss.el (nnrss-compatible-encoding-alist): Inherit the value of
+	mm-charset-override-alist.
+
+	* rfc2047.el: Don't require base64; require rfc2045 for the function
+	rfc2045-encode-string.
+	(rfc2047-encode-parameter): Use rfc2045-encode-string to quote or not
+	to quote the parameter value.
+
+2007-07-04  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-sum.el (gnus-summary-catchup): Don't recognize cached articles
+	as unfetched articles.
+
+2007-07-02  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-start.el (gnus-level-unsubscribed): Improve doc string.
+
+2007-06-26  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-art.el (gnus-article-summary-command-nosave)
+	(gnus-article-read-summary-keys): Don't set the 3rd arg of
+	pop-to-buffer for XEmacs.
+
+2007-06-14  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-agent.el (gnus-agent-fetch-headers)
+	(gnus-agent-retrieve-headers): Bind
+	gnus-decode-encoded-address-function to identity.
+
+	* nntp.el (nntp-send-xover-command): Recognize an xover command is
+	available also when the server returns simply a dot.
+
+	* gnus-ems.el (gnus-x-splash): Redisplay window before measuring it.
+
+2007-06-08  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-ems.el (gnus-x-splash): Make it work.
+
+	* gnus-start.el (gnus-1): Relax restrictions that prevent gnus-x-splash
+	from being used.
+
+	* gnus-art.el (gnus-article-summary-command-nosave): Correct the order
+	of the arguments passed to pop-to-buffer.
+	(gnus-article-read-summary-keys): Ditto.
+
+2007-06-07  Juanma Barranquero  <lekktu@gmail.com>
+
+	* gnus-art.el (gnus-split-methods): Fix typo in docstring.
+
+2007-06-06  Juanma Barranquero  <lekktu@gmail.com>
+
+	* gnus-diary.el (gnus-diary-time-format, gnus-summary-sort-by-schedule):
+	* gnus-sum.el (gnus-summary-highlight):
+	* mail-source.el (mail-source-delete-old-incoming-confirm):
+	* nndiary.el (nndiary-reminders): Fix typos in docstrings.
+
+2007-06-04  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus-art.el (gnus-mime-view-part-externally)
+	(gnus-mime-view-part-internally): Fix predicate function passed to
+	completing-read.
+
+	* mm-decode.el (mm-image-fit-p): Return t if argument is not an image;
+	return t if image size is just the same as window size.
+
 2007-05-28  Katsumi Yamaoka  <yamaoka@jpl.org>
 
 	* message.el (message-pop-to-buffer): Add switch-function argument.
 	(message-mail): Pass switch-function argument to it.
-	(message-narrow-to-headers-or-head): Ignore mail-header-separator in
-	the body.
+
+2007-05-24  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* message.el (message-narrow-to-headers-or-head): Ignore
+	mail-header-separator in the body.
+
+2007-05-10  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* gnus-art.el (gnus-article-mode): Fix comment about displaying
+	non-break space.
 
 2007-05-09  Didier Verna  <didier@xemacs.org>
 
@@ -98,7 +481,7 @@
 	* message.el (message-make-in-reply-to): Quote name containing
 	non-ASCII characters.  It will make the RFC2047 encoder cause an error
 	if there are special characters.  Reported by NAKAJI Hiroyuki
-	<nakaji@kankyo-u.ac.jp>.
+	<nakaji@jp.freebsd.org>.
 
 2007-02-27  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -347,7 +730,7 @@
 	(message-simplify-subject): New function to remove duplicate code.
 	(message-reply, message-followup): Use it.
 	(message-simplify-subject-functions): New variable.
-	(message-strip-subject-encoded-words): New function
+	(message-strip-subject-encoded-words): New function.
 
 2006-11-08  Wolfgang Jenkner  <wjenkner@inode.at>  (tiny change)
 
@@ -1187,8 +1570,7 @@
 	* mm-view.el (mm-fill-flowed): New variable.
 	(mm-inline-text): Use it.
 
-2006-02-21  Wolfram Fenske  <wolfram.fenske@student.uni-magdeburg.de>
-	(tiny change)
+2006-02-21  Wolfram Fenske  <wolfram.fenske@student.uni-magdeburg.de>  (tiny change)
 
 	* nnimap.el (nnimap-request-move-article): Change folder back to
 	source group before deleting.
@@ -1750,7 +2132,7 @@
 	(pgg-pgp5-sign-region, pgg-pgp5-sign): Add optional 'passphrase'
 	argument to all these routines, so the passphrase can be managed
 	externally and passed in to the system.
-	(pgg-pgp5-sign-region): Use new name of	pgg-add-passphrase-to-cache
+	(pgg-pgp5-sign-region): Use new name of pgg-add-passphrase-to-cache
 	function.
 
 2005-10-29  Ken Manheimer  <ken.manheimer@gmail.com>
@@ -3625,7 +4007,7 @@
 	* nnmail.el (nnmail-split-fancy-with-parent-ignore-groups)
 	(nnmail-cache-ignore-groups, nnmail-spool-hook)
 	(nnmail-split-fancy-match-partial-words)
-	(nnmail-split-lowercase-expanded):
+	(nnmail-split-lowercase-expanded): Add :version.
 
 	* nndiary.el (nndiary): Add :version.
 
@@ -3901,7 +4283,7 @@
 	* gnus-int.el (gnus-request-delete-group):
 	Use gnus-cache-delete-group and gnus-agent-delete-group to keep the
 	local disk in sync with the server.
-	 (gnus-request-rename-group):
+	(gnus-request-rename-group):
 	Use gnus-cache-rename-group and gnus-agent-rename-group to keep the
 	local disk in sync with the server.
 
@@ -4028,7 +4410,7 @@
 
 	* gnus-sum.el (gnus-select-newgroup): Replace inline code with
 	gnus-agent-possibly-alter-active.
-	(gnus-adjust-marked-articles): Faster handling of simple lists
+	(gnus-adjust-marked-articles): Faster handling of simple lists.
 
 2004-10-18  David Edmondson  <dme@dme.org>
 
@@ -4171,7 +4553,7 @@
 
 	* gnus-fun.el: Require gnus-ems and gnus-util.
 
-	* gnus-diary.el (gnus-diary-header-schedule): caddr -> car (cddr
+	* gnus-diary.el (gnus-diary-header-schedule): caddr -> car (cddr).
 
 	* gnus-art.el (gnus-article-edit-mode): Define before first reference.
 
@@ -4254,6 +4636,7 @@
 
 	* nnmail.el (nnmail-fancy-expiry-targets)
 	(nnmail-mail-splitting-charset, nnmail-mail-splitting-decodes):
+	Add :version.
 
 	* nnimap.el (nnimap-split-download-body, nnimap-dont-close)
 	(nnimap-retrieve-groups-asynchronous): Add :version.
@@ -4262,7 +4645,7 @@
 	* mml.el (mml-content-disposition-parameters)
 	(mml-insert-mime-headers-always): Add :version.
 
-	* mm-util.el (mm-coding-system-priorities):
+	* mm-util.el (mm-coding-system-priorities): Add :version.
 
 	* mm-decode.el (mm-inline-text-html-with-images)
 	(mm-keep-viewer-alive-types, mm-external-terminal-program)
@@ -4319,7 +4702,7 @@
 	* gnus-srvr.el (gnus-server-browse-in-group-buffer)
 	(gnus-server-offline-face): Add :version.
 
-	* gnus-score.el (gnus-adaptive-word-length-limit):
+	* gnus-score.el (gnus-adaptive-word-length-limit): Add :version.
 
 	* gnus-msg.el (gnus-gcc-externalize-attachments)
 	(gnus-debug-files, gnus-debug-exclude-variables)
@@ -4341,7 +4724,7 @@
 	* gnus-delay.el (gnus-delay-default-hour): Add :version.
 
 	* gnus-cite.el (gnus-cite-blank-line-after-header)
-	(gnus-article-boring-faces):
+	(gnus-article-boring-faces): Add :version.
 
 	* gnus-art.el (gnus-buttonized-mime-types)
 	(gnus-inhibit-mime-unbuttonizing)
@@ -4405,10 +4788,10 @@
 2004-09-10  Teodor Zlatanov  <tzz@lifelogs.com>
 
 	* nnimap.el (nnimap-open-connection): Allow 'imaps' as a synonym
-	for the 'imap' port in netrc files
+	for the 'imap' port in netrc files.
 
 	* gnus-registry.el (gnus-registry-trim): Watch out for negatives
-	in gnus-registry-trim
+	in gnus-registry-trim.
 
 2004-09-10  Simon Josefsson  <jas@extundo.com>
 
@@ -4797,13 +5180,13 @@
 
 See ChangeLog.2 for earlier changes.
 
-    Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

@@ -1,7 +1,7 @@
 ;;; bytecomp.el --- compilation of Lisp code into byte code
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -364,7 +364,8 @@ Elements of the list may be:
 		      (const callargs) (const redefine)
 		      (const obsolete) (const noruntime)
 		      (const cl-functions) (const interactive-only))))
-(put 'byte-compile-warnings 'safe-local-variable 'byte-compile-warnings-safe-p)
+;;;###autoload(put 'byte-compile-warnings 'safe-local-variable 'byte-compile-warnings-safe-p)
+
 ;;;###autoload
 (defun byte-compile-warnings-safe-p (x)
   (or (booleanp x)
@@ -476,7 +477,8 @@ and we don't know the definition.")
 
 (defvar byte-compile-unresolved-functions nil
   "Alist of undefined functions to which calls have been compiled.
-Used for warnings when the function is not known to be defined or is later
+This variable is only significant whilst compiling an entire buffer.
+Used for warnings when a function is not known to be defined or is later
 defined with incorrect args.")
 
 (defvar byte-compile-noruntime-functions nil
@@ -972,7 +974,7 @@ Each function's symbol gets added to `byte-compile-noruntime-functions'."
 	 (pos (if (and byte-compile-current-file
 		       (integerp byte-compile-read-position))
 		  (with-current-buffer byte-compile-current-buffer
-		    (format "%d:%d:" 
+		    (format "%d:%d:"
 			    (save-excursion
 			      (goto-char byte-compile-last-position)
 			      (1+ (count-lines (point-min) (point-at-bol))))
@@ -1007,8 +1009,7 @@ Each function's symbol gets added to `byte-compile-noruntime-functions'."
 (defun byte-compile-log-file ()
   (and (not (equal byte-compile-current-file byte-compile-last-logged-file))
        (not noninteractive)
-       (save-excursion
-	 (set-buffer (get-buffer-create "*Compile-Log*"))
+       (with-current-buffer (get-buffer-create "*Compile-Log*")
 	 (goto-char (point-max))
 	 (let* ((inhibit-read-only t)
 		(dir (and byte-compile-current-file
@@ -1544,13 +1545,12 @@ recompile every `.el' file that already has a `.elc' file."
       nil
     (save-some-buffers)
     (force-mode-line-update))
-  (save-current-buffer
-    (set-buffer (get-buffer-create "*Compile-Log*"))
+  (with-current-buffer (get-buffer-create "*Compile-Log*")
     (setq default-directory (expand-file-name directory))
     ;; compilation-mode copies value of default-directory.
     (unless (eq major-mode 'compilation-mode)
       (compilation-mode))
-    (let ((directories (list (expand-file-name directory)))
+    (let ((directories (list default-directory))
 	  (default-directory default-directory)
 	  (skip-count 0)
 	  (fail-count 0)
@@ -1647,7 +1647,7 @@ The value is non-nil if there were no errors, nil if errors."
       (let ((b (get-file-buffer (expand-file-name filename))))
 	(if (and b (buffer-modified-p b)
 		 (y-or-n-p (format "Save buffer %s first? " (buffer-name b))))
-	    (save-excursion (set-buffer b) (save-buffer)))))
+	    (with-current-buffer b (save-buffer)))))
 
   ;; Force logging of the file name for each file compiled.
   (setq byte-compile-last-logged-file nil)
@@ -1657,9 +1657,8 @@ The value is non-nil if there were no errors, nil if errors."
 	byte-compile-dest-file)
     (setq target-file (byte-compile-dest-file filename))
     (setq byte-compile-dest-file target-file)
-    (save-excursion
-      (setq input-buffer (get-buffer-create " *Compiler Input*"))
-      (set-buffer input-buffer)
+    (with-current-buffer
+        (setq input-buffer (get-buffer-create " *Compiler Input*"))
       (erase-buffer)
       (setq buffer-file-coding-system nil)
       ;; Always compile an Emacs Lisp file as multibyte
@@ -1829,9 +1828,8 @@ With argument, insert value in current buffer after the form."
 	;;				   byte-compile-warnings))
 	)
     (byte-compile-close-variables
-     (save-excursion
-       (setq outbuffer
-	     (set-buffer (get-buffer-create " *Compiler Output*")))
+     (with-current-buffer
+         (setq outbuffer (get-buffer-create " *Compiler Output*"))
        (set-buffer-multibyte t)
        (erase-buffer)
        ;;	 (emacs-lisp-mode)
@@ -1845,9 +1843,13 @@ With argument, insert value in current buffer after the form."
        (setq overwrite-mode 'overwrite-mode-binary))
      (displaying-byte-compile-warnings
       (and filename (byte-compile-insert-header filename inbuffer outbuffer))
-      (save-excursion
-	(set-buffer inbuffer)
+      (with-current-buffer inbuffer
 	(goto-char 1)
+	;; Should we always do this?  When calling multiple files, it
+	;; would be useful to delay this warning until all have been
+	;; compiled.  A: Yes!  b-c-u-f might contain dross from a
+	;; previous byte-compile.
+	(setq byte-compile-unresolved-functions nil)
 
 	;; Compile the forms from the input buffer.
 	(while (progn
@@ -1857,18 +1859,20 @@ With argument, insert value in current buffer after the form."
 		 (not (eobp)))
 	  (setq byte-compile-read-position (point)
 		byte-compile-last-position byte-compile-read-position)
-	  (let ((form (read inbuffer)))
+	  (let* ((old-style-backquotes nil)
+                 (form (read inbuffer)))
+            ;; Warn about the use of old-style backquotes.
+            (when old-style-backquotes
+              (byte-compile-warn "!! The file uses old-style backquotes !!
+This functionality has been obsolete for more than 10 years already
+and will be removed soon.  See (elisp)Backquote in the manual."))
 	    (byte-compile-file-form form)))
 	;; Compile pending forms at end of file.
 	(byte-compile-flush-pending)
 	;; Make warnings about unresolved functions
 	;; give the end of the file as their position.
 	(setq byte-compile-last-position (point-max))
-	(byte-compile-warn-about-unresolved-functions)
-	;; Should we always do this?  When calling multiple files, it
-	;; would be useful to delay this warning until all have
-	;; been compiled.
-	(setq byte-compile-unresolved-functions nil))
+	(byte-compile-warn-about-unresolved-functions))
       ;; Fix up the header at the front of the output
       ;; if the buffer contains multibyte characters.
       (and filename (byte-compile-fix-header filename inbuffer outbuffer))))
@@ -2034,6 +2038,7 @@ list that represents a doc string reference.
   ;; We need to examine byte-compile-dynamic-docstrings
   ;; in the input buffer (now current), not in the output buffer.
   (let ((dynamic-docstrings byte-compile-dynamic-docstrings))
+    ;; FIXME: What's up with those set-buffers&prog1 thingy?  --Stef
     (set-buffer
      (prog1 (current-buffer)
        (set-buffer outbuffer)
@@ -4180,7 +4185,7 @@ Must be used only with `-batch', and kills Emacs on completion.
 For example, invoke `emacs -batch -f batch-byte-recompile-directory .'.
 
 Optional argument ARG is passed as second argument ARG to
-`batch-recompile-directory'; see there for its possible values
+`byte-recompile-directory'; see there for its possible values
 and corresponding effects."
   ;; command-line-args-left is what is left of the command line (startup.el)
   (defvar command-line-args-left)	;Avoid 'free variable' warning

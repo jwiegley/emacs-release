@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Building, Maintaining, Programs, Top
 @chapter Compiling and Testing Programs
@@ -820,15 +820,14 @@ unlimited, so it sets the height and width accordingly.  For correct
 operation you must not change these values during the GDB session.
 
 @vindex gud-gdb-command-name
-@findex gdba
-  You can also run GDB in text command mode, like other debuggers.  To
-do this, replace the GDB @code{"--annotate=3"} option with
-@code{"--fullname"} either in the minibuffer for the current Emacs
-session, or the custom variable @code{gud-gdb-command-name} for all
-future sessions.  You need to use text command mode to debug multiple
-programs within one Emacs session.  If you have customized
-@code{gud-gdb-command-name} in this way, you can use @kbd{M-x gdba} to
-invoke GDB in graphical mode.
+  You can also run GDB in text command mode, like the other debuggers
+in Emacs.  To do this, replace the GDB @code{"--annotate=3"} option
+with @code{"--fullname"} either in the minibuffer for the current
+Emacs session, or the custom variable @code{gud-gdb-command-name} for
+all future sessions.  You need to use text command mode to debug
+multiple programs within one Emacs session.  You can also use
+@kbd{M-x gud-gdb} to invoke GDB in text command mode if you have
+problems before execution has started.
 
 @menu
 * GDB-UI Layout::               Control the number of displayed buffers.
@@ -908,7 +907,7 @@ places.
 
 @c @findex gdb-mouse-set-clear-breakpoint
 @c @findex gdb-mouse-toggle-breakpoint
-Many GDB commands can be entered using keybindings or the tool bar but
+Many GDB commands can be entered using key bindings or the tool bar but
 sometimes it is quicker to use the fringe.  These commands either
 manipulate breakpoints or control program execution.  When there is no
 fringe, you can use the margin but this is only present when the
@@ -1117,6 +1116,13 @@ non-@code{nil} (the default value), Emacs uses
 changed and @code{shadow} face to make variables which have gone out of
 scope less noticeable.  When a variable goes out of scope you can't
 edit its value.
+
+@vindex gdb-delete-out-of-scope
+  If the variable @code{gdb-delete-out-of-scope} is non-@code{nil}
+(the default value), Emacs automatically deletes watch expressions
+which go out of scope.  Sometimes, when re-entering the same function,
+it may be useful to set this value to nil so that you don't need to
+recreate the watch expression.
 
 @vindex gdb-use-colon-colon-notation
   If the variable @code{gdb-use-colon-colon-notation} is

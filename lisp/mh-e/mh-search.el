@@ -1,7 +1,7 @@
 ;;; mh-search  ---  MH-Search mode
 
 ;; Copyright (C) 1993, 1995,
-;;  2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Indexed search by Satyaki Das <satyaki@theforce.stanford.edu>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1357,7 +1357,7 @@ record is invalid return 'error."
 ;;;###mh-autoload
 (defun mh-index-group-by-folder ()
   "Partition the messages based on source folder.
-Returns an alist with the the folder names in the car and the cdr
+Returns an alist with the folder names in the car and the cdr
 being the list of messages originally from that folder."
   (save-excursion
     (goto-char (point-min))

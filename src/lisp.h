@@ -1,12 +1,13 @@
 /* Fundamental definitions for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -1441,7 +1442,7 @@ typedef unsigned char UCHAR;
 #define GLYPH_CHAR(f, g) (FAST_GLYPH_CHAR (g))
 #define GLYPH_FACE(f, g) (FAST_GLYPH_FACE (g))
 
-/* Return 1 iff GLYPH contains valid character code.  */
+/* Return 1 if GLYPH contains valid character code.  */
 #define GLYPH_CHAR_VALID_P(glyph) CHAR_VALID_P (FAST_GLYPH_CHAR (glyph), 1)
 
 /* The ID of the mode line highlighting face.  */
@@ -1588,7 +1589,7 @@ typedef unsigned char UCHAR;
    "dead", which is what we want; this is an argument-checking macro, and
    the user should never get access to interior windows.
 
-   A window of any sort, leaf or interior, is dead iff the buffer,
+   A window of any sort, leaf or interior, is dead if the buffer,
    vchild, and hchild members are all nil.  */
 
 #define CHECK_LIVE_WINDOW(x) \
@@ -3238,6 +3239,7 @@ EXFUN (Fx_file_dialog, 5);
 #endif
 
 /* Defined in xfaces.c */
+EXFUN (Fclear_face_cache, 1);
 extern void syms_of_xfaces P_ ((void));
 
 #ifndef HAVE_GETLOADAVG
@@ -3253,6 +3255,7 @@ extern void syms_of_xfns P_ ((void));
 extern void syms_of_xsmfns P_ ((void));
 
 /* Defined in xselect.c */
+EXFUN (Fx_send_client_event, 6);
 extern void syms_of_xselect P_ ((void));
 
 /* Defined in xterm.c */

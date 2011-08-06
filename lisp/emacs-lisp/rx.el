@@ -1,7 +1,7 @@
 ;;; rx.el --- sexp notation for regular expressions
 
 ;; Copyright (C) 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Gerd Moellmann <gerd@gnu.org>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -554,7 +554,7 @@ appended to R will apply to all of R.  For example, \"a\"
 
 This function may return false negatives, but it will not
 return false positives.  It is nevertheless useful in
-situations where an efficiency shortcut can be taken iff a
+situations where an efficiency shortcut can be taken only if a
 regexp is atomic.  The function can be improved to detect
 more cases of atomic regexps.  Presently, this function
 detects the following categories of atomic regexp;

@@ -1,7 +1,7 @@
 ;;; mh-seq.el --- MH-E sequences support
 
 ;; Copyright (C) 1993, 1995,
-;;  2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -53,13 +53,13 @@
 
 ;;; Macros
 
-(defmacro mh-make-seq (name msgs)
+(defsubst mh-make-seq (name msgs)
   "Create sequence NAME with the given MSGS."
-  (list 'cons name msgs))
+  (cons name msgs))
 
-(defmacro mh-seq-name (sequence)
+(defsubst mh-seq-name (sequence)
   "Extract sequence name from the given SEQUENCE."
-  (list 'car sequence))
+  (car sequence))
 
 
 

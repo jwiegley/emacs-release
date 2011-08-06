@@ -1,12 +1,12 @@
 /* systty.h - System-dependent definitions for terminals.
    Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -297,7 +297,7 @@ static struct sensemode {
    written before making the change.
    Return 0 if all went well, and -1 if anything failed.
 
-   EMACS_TTY_TABS_OK (struct emacs_tty *P) is false iff the kernel
+   EMACS_TTY_TABS_OK (struct emacs_tty *P) is false if the kernel
    expands tabs to spaces upon output; in that case, there is no
    advantage to using tabs over spaces.  */
 

@@ -1,7 +1,7 @@
 ;;; gnus-win.el --- window configuration functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -471,7 +471,8 @@ See the Gnus manual for an explanation of the syntax used.")
 	  (gnus-configure-frame split)
 	  (run-hooks 'gnus-configure-windows-hook)
 	  (when gnus-window-frame-focus
-	    (select-frame (window-frame gnus-window-frame-focus))))))))
+	    (gnus-select-frame-set-input-focus
+	     (window-frame gnus-window-frame-focus))))))))
 
 (defun gnus-delete-windows-in-gnusey-frames ()
   "Do a `delete-other-windows' in all frames that have Gnus windows."

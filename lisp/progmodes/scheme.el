@@ -1,7 +1,7 @@
 ;;; scheme.el --- Scheme (and DSSSL) editing mode
 
 ;; Copyright (C) 1986, 1987, 1988, 1997, 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007  Free Software Foundation, Inc.
+;;   2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: Bill Rozas <jinx@martigny.ai.mit.edu>
 ;; Adapted-by: Dave Love <d.love@dl.ac.uk>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -33,7 +33,7 @@
 ;; for instance, at <URL:http://www.sil.org/sgml/related.html#dsssl>.]
 ;; All these Lisp-ish modes vary basically in details of the language
 ;; syntax they highlight/indent/index, but dsssl-mode uses "^;;;" as
-;; the page-delimiter since ^L isn't normally a legal SGML character.
+;; the page-delimiter since ^L isn't normally a valid SGML character.
 ;;
 ;; For interacting with a Scheme interpreter See also `run-scheme' in
 ;; the `cmuscheme' package and also the implementation-specific
@@ -156,6 +156,7 @@
   ;; Look within the line for a ; following an even number of backslashes
   ;; after either a non-backslash or the line beginning.
   (setq comment-start-skip "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\);+[ \t]*")
+  (set (make-local-variable 'font-lock-comment-start-skip) ";+ *")
   (make-local-variable 'comment-column)
   (setq comment-column 40)
   (make-local-variable 'parse-sexp-ignore-comments)

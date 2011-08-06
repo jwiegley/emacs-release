@@ -1,7 +1,7 @@
 ;;; vc-cvs.el --- non-resident support for CVS version-control
 
 ;; Copyright (C) 1995, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
 ;; Maintainer:  Andre Spiegel <spiegel@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -29,8 +29,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'vc))
+(eval-when-compile (require 'cl) (require 'vc))
 
 ;;;
 ;;; Customization options
@@ -630,11 +629,14 @@ systime, or nil if there is none."
          bol (1+ bol) 'vc-cvs-annotate-time
          (setq cache (cons
                       ;; Position at end makes for nicer overlay result.
-                      (match-end 0)
+                      ;; Don't put actual buffer pos here, but only relative
+                      ;; distance, so we don't ever move backward in the
+                      ;; goto-char below, even if the text is moved.
+                      (- (match-end 0) (match-beginning 0))
                       (vc-annotate-convert-time
                        (encode-time 0 0 0 day month year))))))))
     (when cache
-      (goto-char (car cache))           ; fontify from here to eol
+      (goto-char (+ bol (car cache)))   ; Fontify from here to eol.
       (cdr cache))))                    ; days (float)
 
 (defun vc-cvs-annotate-extract-revision-at-line ()
@@ -959,6 +961,33 @@ is non-nil."
 	      (t
 	       (vc-file-setprop file 'vc-checkout-time 0)
 	       (if set-state (vc-file-setprop file 'vc-state 'edited)))))))))
+
+;; Completion of revision names.
+;; Just so I don't feel like I'm duplicating code from pcl-cvs, I'll use
+;; `cvs log' so I can list all the revision numbers rather than only
+;; tag names.
+
+(defun vc-cvs-revision-table (file)
+  (let ((default-directory (file-name-directory file))
+        (res nil))
+    (with-temp-buffer
+      (vc-cvs-command t nil file "log")
+      (goto-char (point-min))
+      (when (re-search-forward "^symbolic names:\n" nil t)
+        (while (looking-at "^	\\(.*\\): \\(.*\\)")
+          (push (cons (match-string 1) (match-string 2)) res)
+          (forward-line 1)))
+      (while (re-search-forward "^revision \\([0-9.]+\\)" nil t)
+        (push (match-string 1) res))
+      res)))
+
+(defun vc-cvs-revision-completion-table (file)
+  (lexical-let ((file file)
+                table)
+    (setq table (lazy-completion-table
+                 table (lambda () (vc-cvs-revision-table file))))
+    table))
+                                           
 
 (provide 'vc-cvs)
 

@@ -1,7 +1,7 @@
 This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -22,7 +22,7 @@ This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
      the license.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -46,6 +46,278 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
+
+
+File: gnus,  Node: Category Syntax,  Next: Category Buffer,  Up: Agent Categories
+
+6.9.2.1 Category Syntax
+.......................
+
+A category consists of a name, the list of groups belonging to the
+category, and a number of optional parameters that override the
+customizable variables.  The complete list of agent parameters are
+listed below.
+
+`gnus-agent-cat-name'
+     The name of the category.
+
+`gnus-agent-cat-groups'
+     The list of groups that are in this category.
+
+`gnus-agent-cat-predicate'
+     A predicate which (generally) gives a rough outline of which
+     articles are eligible for downloading; and
+
+`gnus-agent-cat-score-file'
+     a score rule which (generally) gives you a finer granularity when
+     deciding what articles to download.  (Note that this "download
+     score" is not necessarily related to normal scores.)
+
+`gnus-agent-cat-enable-expiration'
+     a boolean indicating whether the agent should expire old articles
+     in this group.  Most groups should be expired to conserve disk
+     space.  In fact, its probably safe to say that the gnus.*
+     hierarchy contains the only groups that should not be expired.
+
+`gnus-agent-cat-days-until-old'
+     an integer indicating the number of days that the agent should wait
+     before deciding that a read article is safe to expire.
+
+`gnus-agent-cat-low-score'
+     an integer that overrides the value of `gnus-agent-low-score'.
+
+`gnus-agent-cat-high-score'
+     an integer that overrides the value of `gnus-agent-high-score'.
+
+`gnus-agent-cat-length-when-short'
+     an integer that overrides the value of `gnus-agent-short-article'.
+
+`gnus-agent-cat-length-when-long'
+     an integer that overrides the value of `gnus-agent-long-article'.
+
+`gnus-agent-cat-enable-undownloaded-faces'
+     a symbol indicating whether the summary buffer should display
+     undownloaded articles using the gnus-summary-*-undownloaded-face
+     faces.  The symbol nil will disable the use of undownloaded faces
+     while all other symbols enable them.
+
+   The name of a category can not be changed once the category has been
+created.
+
+   Each category maintains a list of groups that are exclusive members
+of that category.  The exclusivity rule is automatically enforced, add a
+group to a new category and it is automatically removed from its old
+category.
+
+   A predicate in its simplest form can be a single predicate such as
+`true' or `false'.  These two will download every available article or
+nothing respectively.  In the case of these two special predicates an
+additional score rule is superfluous.
+
+   Predicates of `high' or `low' download articles in respect of their
+scores in relationship to `gnus-agent-high-score' and
+`gnus-agent-low-score' as described below.
+
+   To gain even finer control of what is to be regarded eligible for
+download a predicate can consist of a number of predicates with logical
+operators sprinkled in between.
+
+   Perhaps some examples are in order.
+
+   Here's a simple predicate.  (It's the default predicate, in fact,
+used for all groups that don't belong to any other category.)
+
+     short
+
+   Quite simple, eh?  This predicate is true if and only if the article
+is short (for some value of "short").
+
+   Here's a more complex predicate:
+
+     (or high
+         (and
+          (not low)
+          (not long)))
+
+   This means that an article should be downloaded if it has a high
+score, or if the score is not low and the article is not long.  You get
+the drift.
+
+   The available logical operators are `or', `and' and `not'.  (If you
+prefer, you can use the more "C"-ish operators `|', `&' and `!'
+instead.)
+
+   The following predicates are pre-defined, but if none of these fit
+what you want to do, you can write your own.
+
+   When evaluating each of these predicates, the named constant will be
+bound to the value determined by calling `gnus-agent-find-parameter' on
+the appropriate parameter.  For example, gnus-agent-short-article will
+be bound to `(gnus-agent-find-parameter group 'agent-short-article)'.
+This means that you can specify a predicate in your category then tune
+that predicate to individual groups.
+
+`short'
+     True if the article is shorter than `gnus-agent-short-article'
+     lines; default 100.
+
+`long'
+     True if the article is longer than `gnus-agent-long-article'
+     lines; default 200.
+
+`low'
+     True if the article has a download score less than
+     `gnus-agent-low-score'; default 0.
+
+`high'
+     True if the article has a download score greater than
+     `gnus-agent-high-score'; default 0.
+
+`spam'
+     True if the Gnus Agent guesses that the article is spam.  The
+     heuristics may change over time, but at present it just computes a
+     checksum and sees whether articles match.
+
+`true'
+     Always true.
+
+`false'
+     Always false.
+
+   If you want to create your own predicate function, here's what you
+have to know:  The functions are called with no parameters, but the
+`gnus-headers' and `gnus-score' dynamic variables are bound to useful
+values.
+
+   For example, you could decide that you don't want to download
+articles that were posted more than a certain number of days ago (e.g.
+posted more than `gnus-agent-expire-days' ago) you might write a
+function something along the lines of the following:
+
+     (defun my-article-old-p ()
+       "Say whether an article is old."
+       (< (time-to-days (date-to-time (mail-header-date gnus-headers)))
+          (- (time-to-days (current-time)) gnus-agent-expire-days)))
+
+   with the predicate then defined as:
+
+     (not my-article-old-p)
+
+   or you could append your predicate to the predefined
+`gnus-category-predicate-alist' in your `~/.gnus.el' or wherever.
+
+     (require 'gnus-agent)
+     (setq  gnus-category-predicate-alist
+       (append gnus-category-predicate-alist
+              '((old . my-article-old-p))))
+
+   and simply specify your predicate as:
+
+     (not old)
+
+   If/when using something like the above, be aware that there are many
+misconfigured systems/mailers out there and so an article's date is not
+always a reliable indication of when it was posted.  Hell, some people
+just don't give a damn.
+
+   The above predicates apply to _all_ the groups which belong to the
+category.  However, if you wish to have a specific predicate for an
+individual group within a category, or you're just too lazy to set up a
+new category, you can enter a group's individual predicate in its group
+parameters like so:
+
+     (agent-predicate . short)
+
+   This is the group/topic parameter equivalent of the agent category
+default.  Note that when specifying a single word predicate like this,
+the `agent-predicate' specification must be in dotted pair notation.
+
+   The equivalent of the longer example from above would be:
+
+     (agent-predicate or high (and (not low) (not long)))
+
+   The outer parenthesis required in the category specification are not
+entered here as, not being in dotted pair notation, the value of the
+predicate is assumed to be a list.
+
+   Now, the syntax of the download score is the same as the syntax of
+normal score files, except that all elements that require actually
+seeing the article itself are verboten.  This means that only the
+following headers can be scored on: `Subject', `From', `Date',
+`Message-ID', `References', `Chars', `Lines', and `Xref'.
+
+   As with predicates, the specification of the `download score rule'
+to use in respect of a group can be in either the category definition if
+it's to be applicable to all groups in therein, or a group's parameters
+if it's to be specific to that group.
+
+   In both of these places the `download score rule' can take one of
+three forms:
+
+  1. Score rule
+
+     This has the same syntax as a normal Gnus score file except only a
+     subset of scoring keywords are available as mentioned above.
+
+     example:
+
+        * Category specification
+
+               (("from"
+                      ("Lars Ingebrigtsen" 1000000 nil s))
+               ("lines"
+                      (500 -100 nil <)))
+
+        * Group/Topic Parameter specification
+
+               (agent-score ("from"
+                                  ("Lars Ingebrigtsen" 1000000 nil s))
+                            ("lines"
+                                  (500 -100 nil <)))
+
+          Again, note the omission of the outermost parenthesis here.
+
+  2. Agent score file
+
+     These score files must _only_ contain the permitted scoring
+     keywords stated above.
+
+     example:
+
+        * Category specification
+
+               ("~/News/agent.SCORE")
+
+          or perhaps
+
+               ("~/News/agent.SCORE" "~/News/agent.group.SCORE")
+
+        * Group Parameter specification
+
+               (agent-score "~/News/agent.SCORE")
+
+          Additional score files can be specified as above.  Need I say
+          anything about parenthesis?
+
+  3. Use `normal' score files
+
+     If you don't want to maintain two sets of scoring rules for a
+     group, and your desired `downloading' criteria for a group are the
+     same as your `reading' criteria then you can tell the agent to
+     refer to your `normal' score files when deciding what to download.
+
+     These directives in either the category definition or a group's
+     parameters will cause the agent to read in all the applicable score
+     files for a group, _filtering out_ those sections that do not
+     relate to one of the permitted subset of scoring keywords.
+
+        * Category Specification
+
+               file
+
+        * Group Parameter specification
+
+               (agent-score . file)
 
 
 File: gnus,  Node: Category Buffer,  Next: Category Variables,  Prev: Category Syntax,  Up: Agent Categories
@@ -944,8 +1216,8 @@ File: gnus,  Node: Score Variables,  Next: Score File Format,  Prev: Group Score
 
 `gnus-score-uncacheable-files'
      All score files are normally cached to avoid excessive re-loading
-     of score files.  However, if this might make your Emacs grow big
-     and bloated, so this regexp can be used to weed out score files
+     of score files.  However, this might make your Emacs grow big and
+     bloated, so this regexp can be used to weed out score files
      unlikely to be needed again.  It would be a bad idea to deny
      caching of `all.SCORE', while it might be a good idea to not cache
      `comp.infosystems.www.authoring.misc.ADAPT'.  In fact, this
@@ -1349,7 +1621,7 @@ additional commands:
 
 `C-c C-c'
      Save the changes you have made and return to the summary buffer
-     (`gnus-score-edit-done').
+     (`gnus-score-edit-exit').
 
 `C-c C-d'
      Insert the current date in numerical format
@@ -3486,7 +3758,7 @@ image that's supposed to represent the author of the message.  It seems
 to be supported by an ever-growing number of mail and news readers.
 
    Viewing an `X-Face' header either requires an Emacs that has
-`compface' support (which most XEmacs versions has), or that you have
+`compface' support (which most XEmacs versions have), or that you have
 suitable conversion or display programs installed.  If your Emacs has
 image support the default action is to display the face before the
 `From' header.  If there's no native `X-Face' support, Gnus will try to
@@ -5918,11 +6190,6 @@ that.  Not reliably, at least.  Older versions of Gnus may work on older
 Emacs versions.  Particularly, Gnus 5.10.8 should also work on Emacs
 20.7 and XEmacs 21.1.
 
-   There are some vague differences between Gnus on the various
-platforms--XEmacs features more graphics (a logo and a toolbar)--but
-other than that, things should look pretty much the same under all
-Emacsen.
-
 
 File: gnus,  Node: Gnus Development,  Next: Contributors,  Prev: Emacsen,  Up: History
 
@@ -5930,24 +6197,22 @@ File: gnus,  Node: Gnus Development,  Next: Contributors,  Prev: Emacsen,  Up: H
 -----------------------
 
 Gnus is developed in a two-phased cycle.  The first phase involves much
-discussion on the `ding@gnus.org' mailing list, where people propose
-changes and new features, post patches and new back ends.  This phase
-is called the "alpha" phase, since the Gnusae released in this phase
-are "alpha releases", or (perhaps more commonly in other circles)
+discussion on the development mailing list `ding@gnus.org', where people
+propose changes and new features, post patches and new back ends.  This
+phase is called the "alpha" phase, since the Gnusae released in this
+phase are "alpha releases", or (perhaps more commonly in other circles)
 "snapshots".  During this phase, Gnus is assumed to be unstable and
 should not be used by casual users.  Gnus alpha releases have names
-like "Red Gnus" and "Quassia Gnus".
+like "Oort Gnus" and "No Gnus".  *Note Gnus Versions::.
 
-   After futzing around for 50-100 alpha releases, Gnus is declared
+   After futzing around for 10-100 alpha releases, Gnus is declared
 "frozen", and only bug fixes are applied.  Gnus loses the prefix, and
-is called things like "Gnus 5.6.32" instead.  Normal people are
+is called things like "Gnus 5.10.1" instead.  Normal people are
 supposed to be able to use these, and these are mostly discussed on the
-`gnu.emacs.gnus' newsgroup.
-
-   Some variable defaults differ between alpha Gnusae and released
-Gnusae.  In particular, `mail-source-delete-incoming' defaults to `nil'
-in alpha Gnusae and `t' in released Gnusae.  This is to prevent lossage
-of mail if an alpha release hiccups while handling the mail.
+`gnu.emacs.gnus' newsgroup.  This newgroup is mirrored to the mailing
+list `info-gnus-english@gnu.org' which is carried on Gmane as
+`gmane.emacs.gnus.user'.  These releases are finally integrated in
+Emacs.
 
    The division of discussion between the ding mailing list and the Gnus
 newsgroup is not purely based on publicity concerns.  It's true that
@@ -5959,6 +6224,15 @@ introduced, fiddled with, and judged to be found wanting, and then
 either discarded or totally rewritten.  People reading the mailing list
 usually keep up with these rapid changes, while people on the newsgroup
 can't be assumed to do so.
+
+   So if you have problems with or questions about the alpha versions,
+direct those to the ding mailing list `ding@gnus.org'.  This list is
+also available on Gmane as `gmane.emacs.gnus.general'.
+
+   Some variable defaults differ between alpha Gnusae and released
+Gnusae, in particular, `mail-source-delete-incoming'.  This is to
+prevent lossage of mail if an alpha release hiccups while handling the
+mail.  *Note Mail Source Customization::.
 
 
 File: gnus,  Node: Contributors,  Next: New Features,  Prev: Gnus Development,  Up: History
@@ -6667,8 +6941,8 @@ New features in Gnus 5.10:
           Use `make.bat' if you want to install Gnus under MS Windows,
           the first argument to the batch-program should be the
           directory where `xemacs.exe' respectively `emacs.exe' is
-          located, iff you want to install Gnus after compiling it,
-          give `make.bat' `/copy' as the second parameter.
+          located, if you want to install Gnus after compiling it, give
+          `make.bat' `/copy' as the second parameter.
 
           `make.bat' has been rewritten from scratch, it now features
           automatic recognition of XEmacs and GNU Emacs, generates
@@ -6782,6 +7056,10 @@ New features in Gnus 5.10:
           customize these variables should change those regexps
           accordingly.  For example:
                ("^han\\>" euc-kr) -> ("\\(^\\|:\\)han\\>" euc-kr)
+
+        * Old intermediate incoming mail files (`Incoming*') are deleted
+          after a couple of days, not immediately.  *Note Mail Source
+          Customization::.  (New in Gnus 5.10.10 / Emacs 22.2)
 
 
    * Changes in summary and article mode
@@ -6966,7 +7244,7 @@ New features in Gnus 5.10:
 
         * Gnus no longer generate the Sender: header automatically.
 
-          Earlier it was generated iff the user configurable email
+          Earlier it was generated when the user configurable email
           address was different from the Gnus guessed default user
           address.  As the guessing algorithm is rarely correct these
           days, and (more controversially) the only use of the Sender:
@@ -7212,8 +7490,8 @@ that's already there.  This is not how this manual is written.  When
 implementing something, I write the manual entry for that something
 straight away.  I then see that it's difficult to explain the
 functionality, so I write how it's supposed to be, and then I change the
-implementation.  Writing the documentation and writing the code goes
-hand in hand.
+implementation.  Writing the documentation and writing the code go hand
+in hand.
 
    This, of course, means that this manual has no, or little, flow.  It
 documents absolutely everything in Gnus, but often not where you're
@@ -7221,270 +7499,5 @@ looking for it.  It is a reference manual, and not a guide to how to get
 started with Gnus.
 
    That would be a totally different book, that should be written using
-the reference manual as source material.  It would look quite
-differently.
-
-
-File: gnus,  Node: Terminology,  Next: Customization,  Prev: On Writing Manuals,  Up: Appendices
-
-10.4 Terminology
-================
-
-"news"
-     This is what you are supposed to use this thing for--reading news.
-     News is generally fetched from a nearby NNTP server, and is
-     generally publicly available to everybody.  If you post news, the
-     entire world is likely to read just what you have written, and
-     they'll all snigger mischievously.  Behind your back.
-
-"mail"
-     Everything that's delivered to you personally is mail.  Some
-     news/mail readers (like Gnus) blur the distinction between mail
-     and news, but there is a difference.  Mail is private.  News is
-     public.  Mailing is not posting, and replying is not following up.
-
-"reply"
-     Send a mail to the person who has written what you are reading.
-
-"follow up"
-     Post an article to the current newsgroup responding to the article
-     you are reading.
-
-"back end"
-     Gnus considers mail and news to be mostly the same, really.  The
-     only difference is how to access the actual articles.  News
-     articles are commonly fetched via the protocol NNTP, whereas mail
-     messages could be read from a file on the local disk.  The internal
-     architecture of Gnus thus comprises a "front end" and a number of
-     "back ends".  Internally, when you enter a group (by hitting
-     <RET>, say), you thereby invoke a function in the front end in
-     Gnus.  The front end then "talks" to a back end and says things
-     like "Give me the list of articles in the foo group" or "Show me
-     article number 4711".
-
-     So a back end mainly defines either a protocol (the `nntp' back
-     end accesses news via NNTP, the `nnimap' back end accesses mail
-     via IMAP) or a file format and directory layout (the `nnspool'
-     back end accesses news via the common "spool directory" format,
-     the `nnml' back end access mail via a file format and directory
-     layout that's quite similar).
-
-     Gnus does not handle the underlying media, so to speak--this is all
-     done by the back ends.  A back end is a collection of functions to
-     access the articles.
-
-     However, sometimes the term "back end" is also used where "server"
-     would have been more appropriate.  And then there is the term
-     "select method" which can mean either.  The Gnus terminology can
-     be quite confusing.
-
-"native"
-     Gnus will always use one method (and back end) as the "native", or
-     default, way of getting news.
-
-"foreign"
-     You can also have any number of foreign groups active at the same
-     time.  These are groups that use non-native non-secondary back
-     ends for getting news.
-
-"secondary"
-     Secondary back ends are somewhere half-way between being native
-     and being foreign, but they mostly act like they are native.
-
-"article"
-     A message that has been posted as news.
-
-"mail message"
-     A message that has been mailed.
-
-"message"
-     A mail message or news article
-
-"head"
-     The top part of a message, where administrative information (etc.)
-     is put.
-
-"body"
-     The rest of an article.  Everything not in the head is in the body.
-
-"header"
-     A line from the head of an article.
-
-"headers"
-     A collection of such lines, or a collection of heads.  Or even a
-     collection of NOV lines.
-
-"NOV"
-     When Gnus enters a group, it asks the back end for the headers of
-     all unread articles in the group.  Most servers support the News
-     OverView format, which is more compact and much faster to read and
-     parse than the normal HEAD format.
-
-"level"
-     Each group is subscribed at some "level" or other (1-9).  The ones
-     that have a lower level are "more" subscribed than the groups with
-     a higher level.  In fact, groups on levels 1-5 are considered
-     "subscribed"; 6-7 are "unsubscribed"; 8 are "zombies"; and 9 are
-     "killed".  Commands for listing groups and scanning for new
-     articles will all use the numeric prefix as "working level".
-
-"killed groups"
-     No information on killed groups is stored or updated, which makes
-     killed groups much easier to handle than subscribed groups.
-
-"zombie groups"
-     Just like killed groups, only slightly less dead.
-
-"active file"
-     The news server has to keep track of what articles it carries, and
-     what groups exist.  All this information in stored in the active
-     file, which is rather large, as you might surmise.
-
-"bogus groups"
-     A group that exists in the `.newsrc' file, but isn't known to the
-     server (i.e.,  it isn't in the active file), is a _bogus group_.
-     This means that the group probably doesn't exist (any more).
-
-"activating"
-     The act of asking the server for info on a group and computing the
-     number of unread articles is called "activating the group".
-     Un-activated groups are listed with `*' in the group buffer.
-
-"spool"
-     News servers store their articles locally in one fashion or other.
-     One old-fashioned storage method is to have just one file per
-     article.  That's called a "traditional spool".
-
-"server"
-     A machine one can connect to and get news (or mail) from.
-
-"select method"
-     A structure that specifies the back end, the server and the virtual
-     server settings.
-
-"virtual server"
-     A named select method.  Since a select method defines all there is
-     to know about connecting to a (physical) server, taking the thing
-     as a whole is a virtual server.
-
-"washing"
-     Taking a buffer and running it through a filter of some sort.  The
-     result will (more often than not) be cleaner and more pleasing
-     than the original.
-
-"ephemeral groups"
-     Most groups store data on what articles you have read.  "Ephemeral"
-     groups are groups that will have no data stored--when you exit the
-     group, it'll disappear into the aether.
-
-"solid groups"
-     This is the opposite of ephemeral groups.  All groups listed in the
-     group buffer are solid groups.
-
-"sparse articles"
-     These are article placeholders shown in the summary buffer when
-     `gnus-build-sparse-threads' has been switched on.
-
-"threading"
-     To put responses to articles directly after the articles they
-     respond to--in a hierarchical fashion.
-
-"root"
-     The first article in a thread is the root.  It is the ancestor of
-     all articles in the thread.
-
-"parent"
-     An article that has responses.
-
-"child"
-     An article that responds to a different article--its parent.
-
-"digest"
-     A collection of messages in one file.  The most common digest
-     format is specified by RFC 1153.
-
-"splitting"
-     The action of sorting your emails according to certain rules.
-     Sometimes incorrectly called mail filtering.
-
-
-
-File: gnus,  Node: Customization,  Next: Troubleshooting,  Prev: Terminology,  Up: Appendices
-
-10.5 Customization
-==================
-
-All variables are properly documented elsewhere in this manual.  This
-section is designed to give general pointers on how to customize Gnus
-for some quite common situations.
-
-* Menu:
-
-* Slow/Expensive Connection::   You run a local Emacs and get the news elsewhere.
-* Slow Terminal Connection::    You run a remote Emacs.
-* Little Disk Space::           You feel that having large setup files is icky.
-* Slow Machine::                You feel like buying a faster machine.
-
-
-File: gnus,  Node: Slow/Expensive Connection,  Next: Slow Terminal Connection,  Up: Customization
-
-10.5.1 Slow/Expensive NNTP Connection
--------------------------------------
-
-If you run Emacs on a machine locally, and get your news from a machine
-over some very thin strings, you want to cut down on the amount of data
-Gnus has to get from the NNTP server.
-
-`gnus-read-active-file'
-     Set this to `nil', which will inhibit Gnus from requesting the
-     entire active file from the server.  This file is often very
-     large.  You also have to set `gnus-check-new-newsgroups' and
-     `gnus-check-bogus-newsgroups' to `nil' to make sure that Gnus
-     doesn't suddenly decide to fetch the active file anyway.
-
-`gnus-nov-is-evil'
-     This one has to be `nil'.  If not, grabbing article headers from
-     the NNTP server will not be very fast.  Not all NNTP servers
-     support XOVER; Gnus will detect this by itself.
-
-
-File: gnus,  Node: Slow Terminal Connection,  Next: Little Disk Space,  Prev: Slow/Expensive Connection,  Up: Customization
-
-10.5.2 Slow Terminal Connection
--------------------------------
-
-Let's say you use your home computer for dialing up the system that runs
-Emacs and Gnus.  If your modem is slow, you want to reduce (as much as
-possible) the amount of data sent over the wires.
-
-`gnus-auto-center-summary'
-     Set this to `nil' to inhibit Gnus from re-centering the summary
-     buffer all the time.  If it is `vertical', do only vertical
-     re-centering.  If it is neither `nil' nor `vertical', do both
-     horizontal and vertical recentering.
-
-`gnus-visible-headers'
-     Cut down on the headers included in the articles to the minimum.
-     You can, in fact, make do without them altogether--most of the
-     useful data is in the summary buffer, anyway.  Set this variable to
-     `^NEVVVVER' or `From:', or whatever you feel you need.
-
-     Use the following to enable all the available hiding features:
-          (setq gnus-treat-hide-headers 'head
-                gnus-treat-hide-signature t
-                gnus-treat-hide-citation t)
-
-`gnus-use-full-window'
-     By setting this to `nil', you can make all the windows smaller.
-     While this doesn't really cut down much generally, it means that
-     you have to see smaller portions of articles before deciding that
-     you didn't want to read them anyway.
-
-`gnus-thread-hide-subtree'
-     If this is non-`nil', all threads in the summary buffer will be
-     hidden initially.
-
-`gnus-updated-mode-lines'
-     If this is `nil', Gnus will not put information in the buffer mode
-     lines, which might save some time.
+the reference manual as source material.  It would look quite different.
 

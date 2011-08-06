@@ -4,7 +4,7 @@ emacs-mime.texi.
    This file documents the Emacs MIME interface functionality.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007 Free Software Foundation, Inc.
+2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2194,42 +2194,47 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 
+Local Variables:
+coding: iso-8859-1
+End:
+
+
 Tag Table:
-Node: Top1362
-Node: Decoding and Viewing2709
-Node: Dissection3490
-Node: Non-MIME3864
-Node: Handles4978
-Node: Display5830
-Node: Display Customization6551
-Ref: Display Customization-Footnote-112863
-Ref: Display Customization-Footnote-212943
-Node: Files and Directories13070
-Node: New Viewers14791
-Node: Composing15915
-Node: Simple MML Example16876
-Node: MML Definition17519
-Node: Advanced MML Example21340
-Node: Encoding Customization24080
-Node: Charset Translation27247
-Node: Conversion29783
-Node: Flowed text30904
-Node: Interface Functions31989
-Node: Basic Functions37547
-Node: rfc204538591
-Node: rfc223139106
-Node: ietf-drums40395
-Node: rfc204741480
-Node: time-date44268
-Node: qp47635
-Node: base6448602
-Node: binhex49555
-Node: uudecode49951
-Node: yenc50307
-Node: rfc184350585
-Node: mailcap51194
-Node: Standards52118
-Node: GNU Free Documentation License53539
-Node: Index75752
+Node: Top1368
+Node: Decoding and Viewing2715
+Node: Dissection3496
+Node: Non-MIME3870
+Node: Handles4984
+Node: Display5836
+Node: Display Customization6557
+Ref: Display Customization-Footnote-112869
+Ref: Display Customization-Footnote-212949
+Node: Files and Directories13076
+Node: New Viewers14797
+Node: Composing15921
+Node: Simple MML Example16882
+Node: MML Definition17525
+Node: Advanced MML Example21346
+Node: Encoding Customization24086
+Node: Charset Translation27253
+Node: Conversion29789
+Node: Flowed text30910
+Node: Interface Functions31995
+Node: Basic Functions37553
+Node: rfc204538597
+Node: rfc223139112
+Node: ietf-drums40401
+Node: rfc204741486
+Node: time-date44274
+Node: qp47641
+Node: base6448608
+Node: binhex49561
+Node: uudecode49957
+Node: yenc50313
+Node: rfc184350591
+Node: mailcap51200
+Node: Standards52124
+Node: GNU Free Documentation License53545
+Node: Index75758
 
 End Tag Table

@@ -2,7 +2,7 @@
 ;; An older version of this was known as libc.el.
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ralph Schleicher <rs@nunatak.allgaeu.org>
 ;;         (did not show signs of life (Nov 2001)  -stef)
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -144,7 +144,7 @@ to `symbol', and the help mode defaults to the current major mode."
   (apply 'info-lookup-add-help* nil arg))
 
 (defun info-lookup-maybe-add-help (&rest arg)
-  "Add a help specification iff none is defined.
+  "Add a help specification if none is defined.
 See the documentation of the function `info-lookup-add-help'
 for more details."
   (apply 'info-lookup-add-help* t arg))

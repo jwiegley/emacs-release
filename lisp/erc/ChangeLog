@@ -1,3 +1,38 @@
+2008-02-05  Juanma Barranquero  <lekktu@gmail.com>
+
+	* erc.el (erc-valid-nick-regexp):
+	* erc-button.el (erc-button-syntax-table):
+	* erc-match.el (erc-match-syntax-table): Replace `legal' with `valid'.
+
+2007-11-15  Juanma Barranquero  <lekktu@gmail.com>
+
+	* erc.el (erc-open):
+	* erc-backend.el (define-erc-response-handler):
+	* erc-log.el (log):
+	* erc-match.el (erc-log-matches): Fix typos in docstrings.
+
+2007-08-08  Glenn Morris  <rgm@gnu.org>
+
+	* erc-log.el, erc.el: Replace `iff' in doc-strings and comments.
+
+2007-07-30  Michael Olson  <mwolson@gnu.org>
+
+	* erc-nicklist.el: Remove from the Emacs source tree.  This file
+	is not release quality, and relies heavily on a module which
+	cannot be distributed with ERC due to licensing reasons.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+2007-06-07  Juanma Barranquero  <lekktu@gmail.com>
+
+	* erc.el (erc-startup-file-list): Fix typo in docstring.
+
+2007-06-06  Juanma Barranquero  <lekktu@gmail.com>
+
+	* erc.el (erc-show-channel-key-p): Fix typo in docstring.
+
 2007-04-01  Michael Olson  <mwolson@gnu.org>
 
 	* erc.el (erc-version-string): Release ERC 5.2.
@@ -352,13 +387,13 @@
 
 See ChangeLog.06 for earlier changes.
 
-    Copyright (C) 2007 Free Software Foundation, Inc.
+    Copyright (C) 2007, 2008 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

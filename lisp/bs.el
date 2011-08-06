@@ -1,7 +1,7 @@
 ;;; bs.el --- menu for selecting and displaying buffers
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 ;; Author: Olaf Sylvester <Olaf.Sylvester@netsurf.de>
 ;; Maintainer: Olaf Sylvester <Olaf.Sylvester@netsurf.de>
 ;; Keywords: convenience
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -131,8 +131,6 @@
 
 ;;; Code:
 
-(defvar font-lock-verbose)
-
 ;; ----------------------------------------------------------------------
 ;; Globals for customization
 ;; ----------------------------------------------------------------------
@@ -244,7 +242,8 @@ The function gets one argument - the buffer to test.")
 
 (defvar bs-buffer-sort-function nil
   "Sort function to sort the buffers that appear in Buffer Selection Menu.
-The function gets two arguments - the buffers to compare.")
+The function gets two arguments - the buffers to compare.
+It must return non-nil if the first buffer should sort before the second.")
 
 (defcustom bs-maximal-buffer-name-column 45
   "*Maximum column width for buffer names.
@@ -337,7 +336,7 @@ Must be a string used in `bs-configurations' for naming a configuration."
   :type 'string)
 
 (defcustom bs-string-show-normally  " "
-  "*String added in column 1 indicating a unmarked buffer."
+  "*String added in column 1 indicating an unmarked buffer."
   :group 'bs-appearance
   :type 'string)
 
@@ -393,9 +392,9 @@ A value of `always' means to show buffer regardless of the configuration.")
     ("by nothing"  nil                  nil      nil))
   "*List of all possible sorting aspects for Buffer Selection Menu.
 You can add a new entry with a call to `bs-define-sort-function'.
-Each element is a list of four elements (NAME FUNCTION REGEXP-FOR-SORTING FACE)
+Each element is a list of four elements (NAME FUNCTION REGEXP-FOR-SORTING FACE).
 NAME specifies the sort order defined by function FUNCTION.
-FUNCTION nil means don't sort the buffer list.  Otherwise the functions
+FUNCTION nil means don't sort the buffer list.  Otherwise the function
 must have two parameters - the buffers to compare.
 REGEXP-FOR-SORTING is a regular expression which describes the
 column title to highlight.
@@ -446,7 +445,6 @@ defined by current configuration `bs-current-configuration'.")
 
 (defvar bs--window-config-coming-from nil
   "Window configuration before starting Buffer Selection Menu.")
-(make-variable-frame-local 'bs--window-config-coming-from)
 
 (defvar bs--intern-show-never "^ \\|\\*buffer-selection\\*"
   "Regular expression specifying which buffers never to show.
@@ -615,12 +613,29 @@ actually the line which begins with character in `bs-string-current' or
     (format "Show buffer by configuration %S"
 	    bs-current-configuration)))
 
-(defun bs-mode ()
+(defun bs--track-window-changes (frame)
+  "Track window changes to refresh the buffer list.
+Used from `window-size-change-functions'."
+  (let ((win (get-buffer-window "*buffer-selection*" frame)))
+    (when win
+      (with-selected-window win
+	(bs--set-window-height)))))
+
+(defun bs--remove-hooks ()
+  "Remove `bs--track-window-changes' and auxiliary hooks."
+  (remove-hook 'window-size-change-functions 'bs--track-window-changes)
+  ;; Remove itself
+  (remove-hook 'kill-buffer-hook 'bs--remove-hooks t)
+  (remove-hook 'change-major-mode-hook 'bs--remove-hooks t))
+
+(put 'bs-mode 'mode-class 'special)
+
+(define-derived-mode bs-mode () "Buffer-Selection-Menu"
   "Major mode for editing a subset of Emacs' buffers.
 \\<bs-mode-map>
 Aside from two header lines each line describes one buffer.
 Move to a line representing the buffer you want to edit and select
-buffer by \\[bs-select] or SPC. Abort buffer list with \\[bs-kill].
+buffer by \\[bs-select] or SPC.  Abort buffer list with \\[bs-kill].
 There are many key commands similar to `Buffer-menu-mode' for
 manipulating the buffer list and buffers.
 For faster navigation each digit key is a digit argument.
@@ -648,28 +663,31 @@ available Buffer Selection Menu configuration.
 to show always.
 \\[bs-visit-tags-table] -- call `visit-tags-table' on current line's buffer.
 \\[bs-help] -- display this help text."
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map bs-mode-map)
   (make-local-variable 'font-lock-defaults)
   (make-local-variable 'font-lock-verbose)
+  (make-local-variable 'font-lock-global-modes)
   (buffer-disable-undo)
-  (setq major-mode 'bs-mode
-	mode-name "Buffer-Selection-Menu"
-	buffer-read-only t
+  (setq buffer-read-only t
 	truncate-lines t
+	show-trailing-whitespace nil
+	font-lock-global-modes '(not bs-mode)
 	font-lock-defaults '(bs-mode-font-lock-keywords t)
 	font-lock-verbose nil)
-  (run-mode-hooks 'bs-mode-hook))
+  (add-hook 'window-size-change-functions 'bs--track-window-changes)
+  (add-hook 'kill-buffer-hook 'bs--remove-hooks nil t)
+  (add-hook 'change-major-mode-hook 'bs--remove-hooks nil t))
 
 (defun bs--restore-window-config ()
   "Restore window configuration on the current frame."
   (when bs--window-config-coming-from
-    (set-window-configuration bs--window-config-coming-from)
+    (let ((frame (selected-frame)))
+      (unwind-protect
+	   (set-window-configuration bs--window-config-coming-from)
+	(select-frame frame)))
     (setq bs--window-config-coming-from nil)))
 
 (defun bs-kill ()
-  "Let buffer disappear and reset window-configuration."
+  "Let buffer disappear and reset window configuration."
   (interactive)
   (bury-buffer (current-buffer))
   (bs--restore-window-config))
@@ -725,7 +743,7 @@ Leave Buffer Selection Menu."
 (defun bs-select ()
   "Select current line's buffer and other marked buffers.
 If there are no marked buffers the window configuration before starting
-Buffer Selectin Menu will be restored.
+Buffer Selection Menu will be restored.
 If there are marked buffers each marked buffer and the current line's buffer
 will be selected in a window.
 Leave Buffer Selection Menu."
@@ -750,7 +768,7 @@ Leave Buffer Selection Menu."
 
 (defun bs-select-other-window ()
   "Select current line's buffer by `switch-to-buffer-other-window'.
-The window configuration before starting Buffer Selectin Menu will be restored
+The window configuration before starting Buffer Selection Menu will be restored
 unless there is no other window.  In this case a new window will be created.
 Leave Buffer Selection Menu."
   (interactive)
@@ -778,7 +796,7 @@ Leave Buffer Selection Menu."
 (defun bs-mouse-select-other-frame (event)
   "Select selected line's buffer in new created frame.
 Leave Buffer Selection Menu.
-EVENT: a mouse click EVENT."
+EVENT: a mouse click event."
   (interactive "e")
   (mouse-set-point event)
   (bs-select-other-frame))
@@ -929,7 +947,7 @@ WHAT is a value of nil, `never', or `always'."
       (bs-up 1))))
 
 (defun bs-show-sorted ()
-  "Show buffer list sorted by buffer name."
+  "Show buffer list sorted by next sort aspect."
   (interactive)
   (setq bs--current-sort-function
 	(bs-next-config-aux (car bs--current-sort-function)
@@ -1020,13 +1038,13 @@ If at end of buffer list go to first line."
     (forward-line 1)))
 
 (defun bs-visits-non-file (buffer)
-  "Return t or nil whether BUFFER visits no file.
+  "Return whether BUFFER visits no file.
 A value of t means BUFFER belongs to no file.
 A value of nil means BUFFER belongs to a file."
   (not (buffer-file-name buffer)))
 
 (defun bs-sort-buffer-interns-are-last (b1 b2)
-  "Function for sorting internal buffers B1 and B2 at the end of all buffers."
+  "Function for sorting internal buffers at the end of all buffers."
   (string-match "^\\*" (buffer-name b2)))
 
 ;; ----------------------------------------------------------------------
@@ -1034,7 +1052,7 @@ A value of nil means BUFFER belongs to a file."
 ;; ----------------------------------------------------------------------
 
 (defun bs-config-clear ()
-  "*Reset all variables which specify a configuration.
+  "Reset all variables which specify a configuration.
 These variables are `bs-dont-show-regexp', `bs-must-show-regexp',
 `bs-dont-show-function', `bs-must-show-function' and
 `bs-buffer-sort-function'."
@@ -1221,10 +1239,13 @@ by buffer configuration `bs-cycle-configuration-name'."
 					bs--cycle-list)))
 	     (next (car tupel))
 	     (cycle-list (cdr tupel)))
+	(unless (window-dedicated-p (selected-window))
+	  ;; We don't want the frame iconified if the only window in the frame
+	  ;; happens to be dedicated; let's get the error from switch-to-buffer
+	  (bury-buffer))
+	(switch-to-buffer next)
 	(setq bs--cycle-list (append (cdr cycle-list)
 				     (list (car cycle-list))))
-	(bury-buffer)
-	(switch-to-buffer next)
 	(bs-message-without-log "Next buffers: %s"
 				(or (cdr bs--cycle-list)
 				    "this buffer"))))))
@@ -1251,9 +1272,9 @@ by buffer configuration `bs-cycle-configuration-name'."
 					    bs--cycle-list)))
 	     (prev-buffer (car tupel))
 	     (cycle-list (cdr tupel)))
+	(switch-to-buffer prev-buffer)
 	(setq bs--cycle-list (append (last cycle-list)
 				     (reverse (cdr (reverse cycle-list)))))
-	(switch-to-buffer prev-buffer)
 	(bs-message-without-log "Previous buffers: %s"
 				(or (reverse (cdr bs--cycle-list))
 				    "this buffer"))))))
@@ -1271,7 +1292,7 @@ or a string."
 (defun bs--get-marked-string (start-buffer all-buffers)
   "Return a string which describes whether current buffer is marked.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu.
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu.
 The result string is one of `bs-string-current', `bs-string-current-marked',
 `bs-string-marked', `bs-string-show-normally', `bs-string-show-never', or
 `bs-string-show-always'."
@@ -1296,19 +1317,19 @@ The result string is one of `bs-string-current', `bs-string-current-marked',
 (defun bs--get-modified-string (start-buffer all-buffers)
   "Return a string which describes whether current buffer is modified.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
   (if (buffer-modified-p) "*" " "))
 
 (defun bs--get-readonly-string (start-buffer all-buffers)
   "Return a string which describes whether current buffer is read only.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
   (if buffer-read-only "%" " "))
 
 (defun bs--get-size-string (start-buffer all-buffers)
   "Return a string which describes the size of current buffer.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
   (int-to-string (buffer-size)))
 
 (defun bs--get-name (start-buffer all-buffers)
@@ -1316,7 +1337,7 @@ ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
 The name of current buffer gets additional text properties
 for mouse highlighting.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
   (propertize (buffer-name)
               'help-echo "mouse-2: select this buffer, mouse-3: select in other frame"
               'mouse-face 'highlight))
@@ -1324,7 +1345,7 @@ ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
 (defun bs--get-mode-name (start-buffer all-buffers)
   "Return the name of mode of current buffer for Buffer Selection Menu.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
   mode-name)
 
 (defun bs--get-file-name (start-buffer all-buffers)
@@ -1333,7 +1354,7 @@ This is the variable `buffer-file-name' of current buffer.
 If current mode is `dired-mode' or `shell-mode' it returns the
 default directory.
 START-BUFFER is the buffer where we started buffer selection.
-ALL-BUFFERS is the list of buffer appearing in Buffer Selection Menu."
+ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
   (propertize (if (member major-mode '(shell-mode dired-mode))
                   default-directory
                 (or buffer-file-name ""))
@@ -1369,7 +1390,7 @@ normally *buffer-selection*."
     string))
 
 (defun bs--format-aux (string align len)
-  "Generate a string with STRING with alignment ALIGN and length LEN.
+  "Pad STRING to length LEN with alignment ALIGN.
 ALIGN is one of the symbols `left', `middle', or `right'."
   (let* ((width (length string))
          (len (max len width)))
@@ -1380,9 +1401,8 @@ ALIGN is one of the symbols `left', `middle', or `right'."
 
 (defun bs--show-header ()
   "Insert header for Buffer Selection Menu in current buffer."
-  (mapcar '(lambda (string)
-	     (insert string "\n"))
-	  (bs--create-header)))
+  (dolist (string (bs--create-header))
+    (insert string "\n")))
 
 (defun bs--get-name-length ()
   "Return value of `bs--name-entry-length'."
@@ -1425,12 +1445,12 @@ for buffer selection."
 	  (active-window (get-window-with-predicate
                           (lambda (w)
                             (string= (buffer-name (window-buffer w))
-                                     "*buffer-selection*")))))
+                                     "*buffer-selection*"))
+			  nil (selected-frame))))
       (if active-window
 	  (select-window active-window)
-        (modify-frame-parameters nil
-                                 (list (cons 'bs--window-config-coming-from
-                                             (current-window-configuration))))
+	(bs--restore-window-config)
+	(setq bs--window-config-coming-from (current-window-configuration))
 	(when (> (window-height (selected-window)) 7)
           (split-window-vertically)
           (other-window 1)))
@@ -1468,7 +1488,7 @@ Otherwise return `bs-alternative-configuration'."
   "Make a menu of buffers so you can manipulate buffers or the buffer list.
 \\<bs-mode-map>
 There are many key commands similar to `Buffer-menu-mode' for
-manipulating buffer list and buffers itself.
+manipulating the buffer list and the buffers themselves.
 User can move with [up] or [down], select a buffer
 by \\[bs-select] or [SPC]\n
 Type \\[bs-kill] to leave Buffer Selection Menu without a selection.

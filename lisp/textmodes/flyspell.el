@@ -1,7 +1,7 @@
 ;;; flyspell.el --- on-the-fly spell checker
 
 ;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Manuel Serrano <Manuel.Serrano@sophia.inria.fr>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -457,7 +457,8 @@ See also `flyspell-duplicate-distance'."
 This spawns a single Ispell process and checks each word.
 The default flyspell behavior is to highlight incorrect words.
 With no argument, this command toggles Flyspell mode.
-With a prefix argument ARG, turn Flyspell minor mode on iff ARG is positive.
+With a prefix argument ARG, turn Flyspell minor mode on if ARG is positive,
+otherwise turn it off.
 
 Bindings:
 \\[ispell-word]: correct words (using Ispell).
@@ -484,7 +485,10 @@ in your .emacs file.
   :keymap flyspell-mode-map
   :group 'flyspell
   (if flyspell-mode
-      (flyspell-mode-on)
+      (condition-case ()
+	  (flyspell-mode-on)
+	(error (message "Enabling Flyspell mode gave an error")
+	       (flyspell-mode -1)))
     (flyspell-mode-off)))
 
 ;;;###autoload
@@ -1621,7 +1625,7 @@ FLYSPELL-BUFFER."
 ;;*    flyspell-overlay-p ...                                           */
 ;;*---------------------------------------------------------------------*/
 (defun flyspell-overlay-p (o)
-  "A predicate that return true iff O is an overlay used by flyspell."
+  "Return true if O is an overlay used by flyspell."
   (and (overlayp o) (overlay-get o 'flyspell-overlay)))
 
 ;;*---------------------------------------------------------------------*/

@@ -1,6 +1,6 @@
 ;;; perl-mode.el --- Perl code editing commands for GNU Emacs
 
-;; Copyright (C) 1990, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1990, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation, Inc.
 
 ;; Author: William F. Mann
@@ -15,7 +15,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -266,9 +266,19 @@ The expansion is entirely correct because it uses the C preprocessor."
     ;; format statements
     ("^[ \t]*format.*=[ \t]*\\(\n\\)" (1 '(7)))
     ;; Funny things in sub arg specifications like `sub myfunc ($$)'
-    ("\\<sub\\s-+\\S-+\\s-*(\\([^)]+\\))" 1 '(1))
-    ;; regexp and funny quotes
-    ("[?:.,;=!~({[][ \t\n]*\\(/\\)" (1 '(7)))
+    ;; Be careful not to match "sub { (...) ... }".
+    ("\\<sub[[:space:]]+[^{}[:punct:][:space:]]+[[:space:]]*(\\([^)]+\\))"
+     1 '(1))
+    ;; Regexp and funny quotes.
+    ("\\(?:[?:.,;=!~({[]\\|\\(^\\)\\)[ \t\n]*\\(/\\)"
+     (2 (if (and (match-end 1)
+                 (save-excursion
+                   (goto-char (match-end 1))
+                   (skip-chars-backward " \t\n")
+                   (not (memq (char-before)
+                              '(?? ?: ?. ?, ?\; ?= ?! ?~ ?\( ?\[)))))
+            nil ;; A division sign instead of a regexp-match.
+          '(7))))
     ("\\(^\\|[?:.,;=!~({[ \t]\\)\\([msy]\\|q[qxrw]?\\|tr\\)\\>\\s-*\\([^])}> \n\t]\\)"
      ;; Nasty cases:
      ;; /foo/m  $a->m  $#m $m @m %m
@@ -391,7 +401,19 @@ The expansion is entirely correct because it uses the C preprocessor."
   "*Indentation of Perl statements with respect to containing block."
   :type 'integer
   :group 'perl)
-(put 'perl-indent-level 'safe-local-variable 'integerp)
+
+;; Is is not unusual to put both things like perl-indent-level and
+;; cperl-indent-level in the local variable section of a file. If only
+;; one of perl-mode and cperl-mode is in use, a warning will be issued
+;; about the variable. Autoload these here, so that no warning is
+;; issued when using either perl-mode or cperl-mode.
+;;;###autoload(put 'perl-indent-level 'safe-local-variable 'integerp)
+;;;###autoload(put 'perl-continued-statement-offset 'safe-local-variable 'integerp)
+;;;###autoload(put 'perl-continued-brace-offset 'safe-local-variable 'integerp)
+;;;###autoload(put 'perl-brace-offset 'safe-local-variable 'integerp)
+;;;###autoload(put 'perl-brace-imaginary-offset 'safe-local-variable 'integerp)
+;;;###autoload(put 'perl-label-offset 'safe-local-variable 'integerp)
+
 (defcustom perl-continued-statement-offset 4
   "*Extra indent for lines not starting new statements."
   :type 'integer

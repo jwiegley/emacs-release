@@ -1,7 +1,7 @@
 ;;; calc-help.el --- help display functions for Calc,
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -414,7 +414,7 @@ C-w  Describe how there is no warranty for Calc."
     (princ (format "GNU Emacs Calculator version %s.\n"
 		   calc-version))
     (princ "  By Dave Gillespie.\n")
-    (princ "  Copyright (C) 2007 Free Software Foundation, Inc.\n\n")
+    (princ (format "  %s\n\n" emacs-copyright))
     (princ "Type `h s' for a more detailed summary.\n")
     (princ "Or type `h i' to read the full Calc manual on-line.\n\n")
     (princ "Basic keys:\n")

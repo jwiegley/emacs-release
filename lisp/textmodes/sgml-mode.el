@@ -1,7 +1,7 @@
 ;;; sgml-mode.el --- SGML- and HTML-editing modes -*- coding: iso-2022-7bit -*-
 
 ;; Copyright (C) 1992, 1995, 1996, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: James Clark <jjc@jclark.com>
 ;; Maintainer: FSF
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -469,8 +469,12 @@ Do \\[describe-key] on the following bindings to discover what they do.
          sgml-transformation-function))
   ;; This will allow existing comments within declarations to be
   ;; recognized.
-  (set (make-local-variable 'comment-start-skip) "\\(?:<!\\)?--[ \t]*")
-  (set (make-local-variable 'comment-end-skip) "[ \t]*--\\([ \t\n]*>\\)?")
+  ;; I can't find a clear description of SGML/XML comments, but it seems that
+  ;; the only reliable ones are <!-- ... --> although it's not clear what
+  ;; "..." can contain.  It used to accept -- ... -- as well, but that was
+  ;; apparently a mistake.
+  (set (make-local-variable 'comment-start-skip) "<!--[ \t]*")
+  (set (make-local-variable 'comment-end-skip) "[ \t]*--[ \t\n]*>")
   ;; This definition has an HTML leaning but probably fits well for other modes.
   (setq imenu-generic-expression
 	`((nil
@@ -757,7 +761,7 @@ With prefix argument ARG, repeat this ARG times."
 (defun sgml-skip-tag-forward (arg)
   "Skip to end of tag or matching closing tag if present.
 With prefix argument ARG, repeat this ARG times.
-Return t iff after a closing tag."
+Return t if after a closing tag."
   (interactive "p")
   ;; FIXME: Use sgml-get-context or something similar.
   ;; It currently might jump to an unrelated </P> if the <P>

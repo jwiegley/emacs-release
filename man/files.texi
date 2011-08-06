@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1999, 2000,
-@c   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Files, Buffers, Keyboard Macros, Top
 @chapter File Handling
@@ -997,10 +997,11 @@ visit files under version control.
 @cindex mode, Auto Save
 @cindex crashes
 
-  Emacs saves all the visited files from time to time (based on counting
-your keystrokes) without being asked.  This is called @dfn{auto-saving}.
-It prevents you from losing more than a limited amount of work if the
-system crashes.
+  Emacs saves all the visited files from time to time (based on
+counting your keystrokes) without being asked, in separate files so as
+not to alter the files you actually use.  This is called
+@dfn{auto-saving}.  It prevents you from losing more than a limited
+amount of work if the system crashes.
 
   When Emacs determines that it is time for auto-saving, it considers
 each buffer, and each is auto-saved if auto-saving is enabled for it
@@ -2814,7 +2815,10 @@ point.  Partial Completion mode offers other features extending
 mode allows you to toggle between displaying the file as an image in
 the Emacs buffer, and displaying its underlying text representation,
 using the command @kbd{C-c C-c} (@code{image-toggle-display}).  This
-works only when Emacs can display the specific image type.
+works only when Emacs can display the specific image type.  If the
+displayed image is wider or taller than the frame, the usual point
+motion keys (@kbd{C-f}, @kbd{C-p}, and so forth) cause different parts
+of the image to be displayed.
 
 @findex thumbs-mode
 @findex mode, thumbs

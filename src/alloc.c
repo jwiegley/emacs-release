@@ -1,12 +1,13 @@
 /* Storage allocation and gc for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1988, 1993, 1994, 1995, 1997, 1998, 1999,
-      2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+      2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -266,7 +267,7 @@ Lisp_Object Vmemory_full;
    remapping on more recent systems because this is less important
    nowadays than in the days of small memories and timesharing.  */
 
-EMACS_INT pure[PURESIZE / sizeof (EMACS_INT)] = {1,};
+EMACS_INT pure[(PURESIZE + sizeof (EMACS_INT) - 1) / sizeof (EMACS_INT)] = {1,};
 #define PUREBEG (char *) pure
 
 #else /* HAVE_SHM */
@@ -1342,9 +1343,9 @@ emacs_blocked_realloc (ptr, size, ptr2)
 void
 reset_malloc_hooks ()
 {
-  __free_hook = 0;
-  __malloc_hook = 0;
-  __realloc_hook = 0;
+  __free_hook = old_free_hook;
+  __malloc_hook = old_malloc_hook;
+  __realloc_hook = old_realloc_hook;
 }
 #endif /* HAVE_GTK_AND_PTHREAD */
 

@@ -1,13 +1,13 @@
 /* Minibuffer input and completion.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
                  2001, 2002, 2003, 2004, 2005,
-                 2006, 2007 Free Software Foundation, Inc.
+                 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -117,6 +117,7 @@ Lisp_Object Vread_buffer_function;
 /* Nonzero means completion ignores case.  */
 
 int completion_ignore_case;
+Lisp_Object Qcompletion_ignore_case;
 
 /* List of regexps that should restrict possible completions.  */
 
@@ -2801,6 +2802,9 @@ syms_of_minibuf ()
 
   minibuf_save_list = Qnil;
   staticpro (&minibuf_save_list);
+
+  Qcompletion_ignore_case = intern ("completion-ignore-case");
+  staticpro (&Qcompletion_ignore_case);
 
   Qread_file_name_internal = intern ("read-file-name-internal");
   staticpro (&Qread_file_name_internal);

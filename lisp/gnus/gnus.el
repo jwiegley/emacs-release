@@ -1,7 +1,7 @@
 ;;; gnus.el --- a newsreader for GNU Emacs
 
 ;; Copyright (C) 1987, 1988, 1989, 1990, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1001,6 +1001,11 @@ be set in `.emacs' instead."
    ((and
      (fboundp 'find-image)
      (display-graphic-p)
+     ;; Make sure the library defining `image-load-path' is loaded
+     ;; (`find-image' is autoloaded) (and discard the result).  Else, we may
+     ;; get "defvar ignored because image-load-path is let-bound" when calling
+     ;; `find-image' below.
+     (or (find-image '(nil (:type xpm :file "gnus.xpm"))) t)
      (let* ((data-directory (nnheader-find-etc-directory "images/gnus"))
 	    (image-load-path (cond (data-directory
 				    (list data-directory))
@@ -1466,6 +1471,7 @@ When FORM is evaluated `name' is bound to the name of the group."
   :version "22.1"
   :group 'gnus-group-various
   :type '(repeat (cons (string :tag "Hierarchy") (sexp :tag "Form"))))
+(put 'gnus-group-charter-alist 'risky-local-variable t)
 
 (defcustom gnus-group-fetch-control-use-browse-url nil
   "*Non-nil means that control messages are displayed using `browse-url'.
@@ -3512,24 +3518,23 @@ that that variable is buffer-local to the summary buffers."
 						       (cadar servers)))))
 		  (pop servers))
 		(car servers))
-              ;; This could be some sort of foreign server that I
-              ;; simply haven't opened (yet).  Do a brute-force scan
-              ;; of the entire gnus-newsrc-alist for the server name
-              ;; of every method.  As a side-effect, loads the
-              ;; gnus-server-method-cache so this only happens once,
-              ;; if at all.
-              (let (match)
-                (mapcar
-                 (lambda (info)
-                   (let ((info-method (gnus-info-method info)))
-                     (unless (stringp info-method)
-                       (let ((info-server (gnus-method-to-server info-method)))
-                         (when (equal server info-server)
-                           (setq match info-method))))))
-                 (cdr gnus-newsrc-alist))
-                match))))
-        (when result
-          (push (cons server result) gnus-server-method-cache))
+	      ;; This could be some sort of foreign server that I
+	      ;; simply haven't opened (yet).  Do a brute-force scan
+	      ;; of the entire gnus-newsrc-alist for the server name
+	      ;; of every method.  As a side-effect, loads the
+	      ;; gnus-server-method-cache so this only happens once,
+	      ;; if at all.
+	      (let ((alist (cdr gnus-newsrc-alist))
+		    method match)
+		(while alist
+		  (setq method (gnus-info-method (pop alist)))
+		  (when (and (not (stringp method))
+			     (equal server (gnus-method-to-server method)))
+		    (setq match method
+			  alist nil)))
+		match))))
+	(when result
+	  (push (cons server result) gnus-server-method-cache))
 	result)))
 
 (defsubst gnus-server-get-method (group method)

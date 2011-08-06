@@ -1,7 +1,7 @@
 ;;; ucs-tables.el --- translation to, from and via Unicode  -*- coding: iso-2022-7bit -*-
 
-;; Copyright (C) 2001, 2002, 2003, 2005, 2006, 2007  Free Software Foundation, Inc.
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 2001, 2002, 2003, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -611,10 +611,13 @@ Translates from the iso8859 charsets and `mule-unicode-0100-24ff'.")
 	 (?\,F!(B . ?\x2018) ;; LEFT SINGLE QUOTATION MARK
 	 (?\,F"(B . ?\x2019) ;; RIGHT SINGLE QUOTATION MARK
 	 (?\,F#(B . ?\x00A3) ;; POUND SIGN
+	 (?\,F$(B . ?\x20AC) ;; EURO SIGN
+	 (?\,F%(B . ?\x20AF) ;; DRACHMA SIGN
 	 (?\,F&(B . ?\x00A6) ;; BROKEN BAR
 	 (?\,F'(B . ?\x00A7) ;; SECTION SIGN
 	 (?\,F((B . ?\x00A8) ;; DIAERESIS
 	 (?\,F)(B . ?\x00A9) ;; COPYRIGHT SIGN
+	 (?\,F*(B . ?\x037A) ;; GREEK YPOGEGRAMMENI
 	 (?\,F+(B . ?\x00AB) ;; LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
 	 (?\,F,(B . ?\x00AC) ;; NOT SIGN
 	 (?\,F-(B . ?\x00AD) ;; SOFT HYPHEN

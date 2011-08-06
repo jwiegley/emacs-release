@@ -1,7 +1,7 @@
 ;; erc.el --- An Emacs Internet Relay Chat client
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Alexander L. Belikoff (alexander@belikoff.net)
 ;; Contributors: Sergey Berezin (sergey.berezin@cs.cmu.edu),
@@ -17,7 +17,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -842,7 +842,7 @@ See `erc-server-flood-margin' for other flood-related parameters.")
 The first existent and readable one will get executed.
 
 If the filename ends with `.el' it is presumed to be an Emacs Lisp
-script and it gets (load)ed.  Otherwise is is treated as a bunch of
+script and it gets (load)ed.  Otherwise it is treated as a bunch of
 regular IRC commands."
   :group 'erc-scripts
   :type '(repeat file))
@@ -1910,7 +1910,7 @@ already connected and just create a separate buffer for the new
 target CHANNEL.
 
 Use PASSWD as user password on the server.  If TGT-LIST is
-non-nil, use it to initialise `erc-default-recipients'.
+non-nil, use it to initialize `erc-default-recipients'.
 
 Returns the buffer for the given server or channel."
   (let ((server-announced-name (when (and (boundp 'erc-session-server)
@@ -2342,7 +2342,7 @@ If STRING is nil, the function does nothing."
 	(setq list (cdr list))))))
 
 (defvar erc-valid-nick-regexp "[]a-zA-Z^[;\\`_{}|][]^[;\\`_{}|a-zA-Z0-9-]*"
-  "Regexp which matches all legal characters in a IRC nickname.")
+  "Regexp which matches all valid characters in a IRC nickname.")
 
 (defun erc-is-valid-nick-p (nick)
   "Check if NICK is a valid IRC nickname."
@@ -3958,7 +3958,7 @@ and always returns t."
 (defun erc-echo-notice-in-target-buffer (s parsed buffer sender)
   "Echos a private notice in BUFFER, if BUFFER is non-nil.  This
 function is designed to be added to either `erc-echo-notice-hook'
-or `erc-echo-notice-always-hook', and returns non-nil iff BUFFER
+or `erc-echo-notice-always-hook', and returns non-nil if BUFFER
 is non-nil."
   (if buffer
       (progn (erc-display-message parsed nil buffer s) t)
@@ -3982,7 +3982,7 @@ designed to be added to either `erc-echo-notice-hook' or
   "Echos a private notice in the active buffer if the active
 buffer is not the server buffer.  This function is designed to be
 added to either `erc-echo-notice-hook' or
-`erc-echo-notice-always-hook', and returns non-nil iff the active
+`erc-echo-notice-always-hook', and returns non-nil if the active
 buffer is not the server buffer."
   (if (not (eq (erc-server-buffer) (erc-active-buffer)))
       (progn (erc-display-message parsed nil 'active s) t)
@@ -3999,7 +3999,7 @@ designed to be added to either `erc-echo-notice-hook' or
   "Echos a private notice in all of the buffers for which SENDER
 is a member.  This function is designed to be added to either
 `erc-echo-notice-hook' or `erc-echo-notice-always-hook', and
-returns non-nil iff there is at least one buffer for which the
+returns non-nil if there is at least one buffer for which the
 sender is a member.
 
 See also: `erc-echo-notice-in-first-user-buffer',
@@ -4013,7 +4013,7 @@ See also: `erc-echo-notice-in-first-user-buffer',
   "Echos a private notice in BUFFER and in all of the buffers for
 which SENDER is a member.  This function is designed to be added
 to either `erc-echo-notice-hook' or
-`erc-echo-notice-always-hook', and returns non-nil iff there is
+`erc-echo-notice-always-hook', and returns non-nil if there is
 at least one buffer for which the sender is a member or the
 default target.
 
@@ -4029,7 +4029,7 @@ See also: `erc-echo-notice-in-user-buffers',
   "Echos a private notice in one of the buffers for which SENDER
 is a member.  This function is designed to be added to either
 `erc-echo-notice-hook' or `erc-echo-notice-always-hook', and
-returns non-nil iff there is at least one buffer for which the
+returns non-nil if there is at least one buffer for which the
 sender is a member.
 
 See also: `erc-echo-notice-in-user-buffers',
@@ -4938,7 +4938,7 @@ Specifically, return the position of `erc-insert-marker'."
 (defun erc-send-input (input)
   "Treat INPUT as typed in by the user. It is assumed that the input
 and the prompt is already deleted.
-This returns non-nil only iff we actually send anything."
+This returns non-nil only if we actually send anything."
   ;; Handle different kinds of inputs
   (cond
    ;; Ignore empty input
@@ -5756,7 +5756,7 @@ Otherwise, use the `erc-header-line' face."
 		 (function :tag "Call a function")))
 
 (defcustom erc-show-channel-key-p t
-  "Show the the channel key in the header line."
+  "Show the channel key in the header line."
   :group 'erc-paranoia
   :type 'boolean)
 

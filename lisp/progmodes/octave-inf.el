@@ -1,6 +1,6 @@
 ;;; octave-inf.el --- running Octave as an inferior Emacs process
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation, Inc.
 
 ;; Author: Kurt Hornik <Kurt.Hornik@wu-wien.ac.at>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -42,7 +42,7 @@
   :group 'octave-inferior)
 
 (defcustom inferior-octave-prompt
-  "\\(^octave\\(\\|.bin\\)\\(-[.0-9]+\\)?\\(:[0-9]+\\)?\\|^debug\\|^\\)>+ "
+  "\\(^octave\\(\\|.bin\\|.exe\\)\\(-[.0-9]+\\)?\\(:[0-9]+\\)?\\|^debug\\|^\\)>+ "
   "Regexp to match prompts for the inferior Octave process."
   :type 'regexp
   :group 'octave-inferior)
@@ -153,10 +153,11 @@ Entry to this mode successively runs the hooks `comint-mode-hook' and
 
   (setq comint-input-ring-file-name
 	(or (getenv "OCTAVE_HISTFILE") "~/.octave_hist")
-	comint-input-ring-size (or (getenv "OCTAVE_HISTSIZE") 1024)
-	comint-input-filter-functions '(inferior-octave-directory-tracker))
+	comint-input-ring-size (or (getenv "OCTAVE_HISTSIZE") 1024))
   (set (make-local-variable 'comint-dynamic-complete-functions)
        inferior-octave-dynamic-complete-functions)
+  (add-hook 'comint-input-filter-functions
+	'inferior-octave-directory-tracker nil t)
   (comint-read-input-ring t)
 
   (run-mode-hooks 'inferior-octave-mode-hook))

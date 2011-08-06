@@ -1,7 +1,7 @@
 ;;; imenu.el --- framework for mode-specific buffer indexes
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ake Stenhoff <etxaksf@aom.ericsson.se>
 ;;         Lars Lindberg <lli@sypro.cap.se>
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -727,7 +727,7 @@ definitions, etc.  It contains a substring which is the name to
 appear in the menu.  See the info section on Regexps for more
 information.  REGEXP may also be a function, called without
 arguments.  It is expected to search backwards.  It shall return
-true and set `match-data' iff it finds another element.
+true and set `match-data' if it finds another element.
 
 INDEX points to the substring in REGEXP that contains the
 name (of the function, variable or type) that is to appear in the

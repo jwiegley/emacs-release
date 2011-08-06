@@ -1,7 +1,7 @@
 ;;; ispell.el --- interface to International Ispell Versions 3.1 and 3.2
 
 ;; Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:           Ken Stevens <k.stevens@ieee.org>
 ;; Maintainer:       Ken Stevens <k.stevens@ieee.org>
@@ -16,7 +16,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -349,12 +349,17 @@ Always stores Fcc copy of message when nil."
   :group 'ispell)
 
 
-(defcustom ispell-grep-command "egrep"
+(defcustom ispell-grep-command
+  ;; MS-Windows/MS-DOS have `egrep' as a Unix shell script, so they
+  ;; cannot invoke it.  Use "grep -E" instead (see ispell-grep-options
+  ;; below).
+  (if (memq system-type '(windows-nt ms-dos)) "grep" "egrep")
   "Name of the grep command for search processes."
   :type 'string
   :group 'ispell)
 
-(defcustom ispell-grep-options "-i"
+(defcustom ispell-grep-options
+  (if (memq system-type '(windows-nt ms-dos)) "-Ei" "-i")
   "String of options to use when running the program in `ispell-grep-command'.
 Should probably be \"-i\" or \"-e\".
 Some machines (like the NeXT) don't support \"-i\""
@@ -1422,6 +1427,7 @@ set when defined in the file with either `ispell-pdict-keyword' or the
 local variable syntax.")
 
 (make-variable-buffer-local 'ispell-local-pdict)
+;;;###autoload(put 'ispell-local-pdict 'safe-local-variable 'stringp)
 
 (defvar ispell-buffer-local-name nil
   "Contains the buffer name if local word definitions were used.
@@ -3324,7 +3330,8 @@ available on the net."
 ;;;###autoload
 (defun ispell-minor-mode (&optional arg)
   "Toggle Ispell minor mode.
-With prefix arg, turn Ispell minor mode on iff arg is positive.
+With prefix argument ARG, turn Ispell minor mode on if ARG is positive,
+otherwise turn it off.
 
 In Ispell minor mode, pressing SPC or RET
 warns you if the previous word is incorrectly spelled.
@@ -3750,7 +3757,7 @@ Both should not be used to define a buffer-local dictionary."
 	;; any character other than a space.  Not rigorous enough.
 	(while (re-search-forward " *\\([^ ]+\\)" end t)
 	  (setq string (match-string-no-properties 1))
-	  ;; This can fail when string contains a word with illegal chars.
+	  ;; This can fail when string contains a word with invalid chars.
 	  ;; Error handling needs to be added between ispell and emacs.
 	  (if (and (< 1 (length string))
 		   (equal 0 (string-match ispell-casechars string)))

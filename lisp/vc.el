@@ -1,7 +1,7 @@
 ;;; vc.el --- drive a version-control system from within Emacs
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:     FSF (see below for full credits)
 ;; Maintainer: Andre Spiegel <spiegel@gnu.org>
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -46,8 +46,9 @@
 
 ;; This mode is fully documented in the Emacs user's manual.
 ;;
-;; Supported version-control systems presently include CVS, RCS, GNU Arch,
-;; Subversion, Meta-CVS, and SCCS (or its free replacement, CSSC).
+;; Supported version-control systems presently include CVS, RCS, GNU
+;; Arch, Subversion, Bzr, Git, Mercurial, Meta-CVS, Monotone and SCCS
+;; (or its free replacement, CSSC).
 ;;
 ;; Some features will not work with old RCS versions.  Where
 ;; appropriate, VC finds out which version you have, and allows or
@@ -105,7 +106,13 @@
 ;;
 ;; * registered (file)
 ;;
-;;   Return non-nil if FILE is registered in this backend.
+;;   Return non-nil if FILE is registered in this backend.  Both this
+;;   function as well as `state' should be careful to fail gracefully
+;;   in the event that the backend executable is absent.  It is
+;;   preferable that this function's body is autoloaded, that way only
+;;   calling vc-registered does not cause the backend to be loaded
+;;   (all the vc-FOO-registered functions are called to try to find
+;;   the controlling backend for FILE.
 ;;
 ;; * state (file)
 ;;
@@ -270,6 +277,12 @@
 ;;   Insert the revision log of FILE into BUFFER, or the *vc* buffer
 ;;   if BUFFER is nil.
 ;;
+;; - log-view-mode ()
+;;
+;;   Mode to use for the output of print-log.  This defaults to
+;;   `log-view-mode' and is expected to be changed (if at all) to a derived
+;;   mode of `log-view-mode'.
+;;
 ;; - show-log-entry (version)
 ;;
 ;;   If provided, search the log entry for VERSION in the current buffer,
@@ -314,6 +327,11 @@
 ;;   BACKEND 'diff) to the backend command.  It should return a status
 ;;   of either 0 (no differences found), or 1 (either non-empty diff
 ;;   or the diff is run asynchronously).
+;;
+;; - revision-completion-table (file)
+;;
+;;   Return a completion table for existing revisions of FILE.
+;;   The default is to not use any completion table.
 ;;
 ;; - diff-tree (dir &optional rev1 rev2)
 ;;
@@ -446,6 +464,15 @@
 ;;
 ;;   Operation called in current buffer when opening a non-existing file.
 ;;   By default, this asks the user if she wants to check out the file.
+;;
+;; - extra-menu ()
+;;
+;;   Return a menu keymap, the items in the keymap will appear at the
+;;   end of the Version Control menu.  The goal is to allow backends
+;;   to specify extra menu items that appear in the VC menu.  This way
+;;   you can provide menu entries for functionality that is specific
+;;   to your backend and which does not map to any of the VC generic
+;;   concepts.
 
 ;;; Code:
 
@@ -547,7 +574,8 @@ These are passed to the checkin program by \\[vc-register]."
   :group 'vc
   :version "20.3")
 
-(defcustom vc-directory-exclusion-list '("SCCS" "RCS" "CVS" "MCVS" ".svn" "{arch}")
+(defcustom vc-directory-exclusion-list '("SCCS" "RCS" "CVS" "MCVS" ".svn" 
+					 ".git" ".hg" "{arch}")
   "List of directory names to be ignored when walking directory trees."
   :type '(repeat string)
   :group 'vc)
@@ -1085,7 +1113,7 @@ Used by `vc-restore-buffer-context' to later restore the context."
 	;; ;; We may want to reparse the compilation buffer after revert
 	;; (reparse (and (boundp 'compilation-error-list) ;compile loaded
 	;; 	      ;; Construct a list; each elt is nil or a buffer
-	;; 	      ;; iff that buffer is a compilation output buffer
+	;; 	      ;; if that buffer is a compilation output buffer
 	;; 	      ;; that contains markers into the current buffer.
 	;; 	      (save-current-buffer
 	;; 		(mapcar (lambda (buffer)
@@ -1740,19 +1768,22 @@ saving the buffer."
 	  (message "No changes to %s since latest version" file)
 	(vc-version-diff file nil nil)))))
 
+(defun vc-default-revision-completion-table (backend file) nil)
+
 (defun vc-version-diff (file rev1 rev2)
   "List the differences between FILE's versions REV1 and REV2.
 If REV1 is empty or nil it means to use the current workfile version;
 REV2 empty or nil means the current file contents.  FILE may also be
-a directory, in that case, generate diffs between the correponding
+a directory, in that case, generate diffs between the corresponding
 versions of all registered files in or below it."
   (interactive
-   (let ((file (expand-file-name
-                (read-file-name (if buffer-file-name
-                                    "File or dir to diff (default visited file): "
-                                  "File or dir to diff: ")
-                                default-directory buffer-file-name t)))
-         (rev1-default nil) (rev2-default nil))
+   (let* ((file (expand-file-name
+                 (read-file-name (if buffer-file-name
+                                     "File or dir to diff (default visited file): "
+                                   "File or dir to diff: ")
+                                 default-directory buffer-file-name t)))
+          (rev1-default nil) (rev2-default nil)
+          (completion-table (vc-call revision-completion-table file)))
      ;; compute default versions based on the file state
      (cond
       ;; if it's a directory, don't supply any version default
@@ -1768,17 +1799,21 @@ versions of all registered files in or below it."
        (if (string= rev1-default "") (setq rev1-default nil))
        (setq rev2-default (vc-workfile-version file))))
      ;; construct argument list
-     (list file
-           (read-string (if rev1-default
-			    (concat "Older version (default "
-				    rev1-default "): ")
-			  "Older version: ")
-			nil nil rev1-default)
-           (read-string (if rev2-default
-			    (concat "Newer version (default "
-				    rev2-default "): ")
-			  "Newer version (default current source): ")
-			nil nil rev2-default))))
+     (let* ((rev1-prompt (if rev1-default
+			     (concat "Older version (default "
+				     rev1-default "): ")
+			   "Older version: "))
+	    (rev2-prompt (concat "Newer version (default "
+				 (or rev2-default "current source") "): "))
+	    (rev1 (if completion-table
+		      (completing-read rev1-prompt completion-table
+                                       nil nil nil nil rev1-default)
+		    (read-string rev1-prompt nil nil rev1-default)))
+	    (rev2 (if completion-table
+		      (completing-read rev2-prompt completion-table
+                                       nil nil nil nil rev2-default)
+		    (read-string rev2-prompt nil nil rev2-default))))
+       (list file rev1 rev2))))
   (if (file-directory-p file)
       ;; recursive directory diff
       (progn
@@ -1818,7 +1853,8 @@ versions of all registered files in or below it."
 		      (if (eq (buffer-size) 0)
 			  (insert "No differences found.\n"))
 		      (goto-char (point-min))
-		      (shrink-window-if-larger-than-buffer)))
+                      (let ((win (get-buffer-window (current-buffer) t)))
+                        (if win (shrink-window-if-larger-than-buffer win)))))
     t))
 
 (defun vc-diff-label (file file-rev rev)
@@ -1933,7 +1969,16 @@ The meaning of REV1 and REV2 is the same as for `vc-version-diff'."
   "Visit version REV of the current file in another window.
 If the current file is named `F', the version is named `F.~REV~'.
 If `F.~REV~' already exists, use it instead of checking it out again."
-  (interactive "sVersion to visit (default is workfile version): ")
+  (interactive
+   (save-current-buffer
+     (vc-ensure-vc-buffer)
+     (let ((completion-table
+            (vc-call revision-completion-table buffer-file-name))
+           (prompt "Version to visit (default is workfile version): "))
+       (list
+        (if completion-table
+            (completing-read prompt completion-table)
+          (read-string prompt))))))
   (vc-ensure-vc-buffer)
   (let* ((file buffer-file-name)
 	 (version (if (string-equal rev "")
@@ -2449,7 +2494,7 @@ If FOCUS-REV is non-nil, leave the point at that revision."
     (pop-to-buffer (current-buffer))
     (vc-exec-after
      `(let ((inhibit-read-only t))
-    	(log-view-mode)
+    	(vc-call-backend ',(vc-backend file) 'log-view-mode)
 	(goto-char (point-max)) (forward-line -1)
 	(while (looking-at "=*\n")
 	  (delete-char (- (match-end 0) (match-beginning 0)))
@@ -2464,6 +2509,7 @@ If FOCUS-REV is non-nil, leave the point at that revision."
 			 ',focus-rev)
         (set-buffer-modified-p nil)))))
 
+(defun vc-default-log-view-mode (backend) (log-view-mode))
 (defun vc-default-show-log-entry (backend rev)
   (with-no-warnings
    (log-view-goto-rev rev)))
@@ -2551,7 +2597,7 @@ the current branch are merged into the working file."
   (vc-buffer-sync nil)
   (let ((file buffer-file-name))
     (if (vc-up-to-date-p file)
-        (vc-checkout file nil "")
+        (vc-checkout file nil t)
       (if (eq (vc-checkout-model file) 'locking)
           (if (eq (vc-state file) 'edited)
               (error
@@ -3298,7 +3344,7 @@ revision."
                      vc-annotate-parent-display-mode
                      buf)
 	(goto-line (min oldline (progn (goto-char (point-max))
-				       (previous-line)
+				       (forward-line -1)
 				       (line-number-at-pos))) buf)))))
 
 (defun vc-annotate-compcar (threshold a-list)

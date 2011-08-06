@@ -1,12 +1,12 @@
 /* X Selection processing for Emacs.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -683,6 +683,10 @@ some_frame_on_display (dpyinfo)
    DATA and SIZE describe the data to send, already converted.
    FORMAT is the unit-size (in bits) of the data to be transmitted.  */
 
+#ifdef TRACE_SELECTION
+static int x_reply_selection_request_cnt;
+#endif  /* TRACE_SELECTION */
+
 static void
 x_reply_selection_request (event, format, data, size, type)
      struct input_event *event;
@@ -721,10 +725,9 @@ x_reply_selection_request (event, format, data, size, type)
 
 #ifdef TRACE_SELECTION
   {
-    static int cnt;
     char *sel = XGetAtomName (display, reply.selection);
     char *tgt = XGetAtomName (display, reply.target);
-    TRACE3 ("%s, target %s (%d)", sel, tgt, ++cnt);
+    TRACE3 ("%s, target %s (%d)", sel, tgt, ++x_reply_selection_request_cnt);
     if (sel) XFree (sel);
     if (tgt) XFree (tgt);
   }
@@ -1854,9 +1857,9 @@ selection_data_to_lisp_data (display, data, size, type, format)
 	}
     }
 
-  /* Convert a single 16 or small 32 bit number to a Lisp_Int.
-     If the number is > 16 bits, convert it to a cons of integers,
-     16 bits in each half.
+  /* Convert a single 16-bit number or a small 32-bit number to a Lisp_Int.
+     If the number is 32 bits and won't fit in a Lisp_Int,
+     convert it to a cons of integers, 16 bits in each half.
    */
   else if (format == 32 && size == sizeof (int))
     return long_to_cons (((unsigned int *) data) [0]);

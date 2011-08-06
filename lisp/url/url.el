@@ -1,7 +1,7 @@
 ;;; url.el --- Uniform Resource Locator retrieval tool
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004,
-;;   2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes, hypermedia
@@ -10,7 +10,7 @@
 ;;
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -240,7 +240,9 @@ no further processing).  URL is either a string or a parsed URL."
 		;; XXX: The callback must always be called.  Any
 		;; exception is a bug that should be fixed, not worked
 		;; around.
-                (setq retrieval-done t))
+		(progn ;; Call delete-process so we run any sentinel now.
+		  (delete-process proc)
+		  (setq retrieval-done t)))
             ;; We used to use `sit-for' here, but in some cases it wouldn't
             ;; work because apparently pending keyboard input would always
             ;; interrupt it before it got a chance to handle process input.

@@ -1,6 +1,6 @@
 ;;; vc-arch.el --- VC backend for the Arch version-control system
 
-;; Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
 ;; Maintainer:  Stefan Monnier <monnier@gnu.org>
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -341,9 +341,11 @@ Return non-nil if FILE is unchanged."
   (save-excursion
     (let ((rej (concat buffer-file-name ".rej")))
       (when (and buffer-file-name (vc-arch-diff3-rej-p rej))
-	(if (not (re-search-forward "^<<<<<<< " nil t))
-	    ;; The .rej file is obsolete.
-	    (condition-case nil (delete-file rej) (error nil)))))))
+	(unless (re-search-forward "^<<<<<<< " nil t)
+	  ;; The .rej file is obsolete.
+	  (condition-case nil (delete-file rej) (error nil))
+	  ;; Remove the hook so that it is not called multiple times.
+	  (remove-hook 'after-save-hook 'vc-arch-delete-rej-if-obsolete t))))))
 
 (defun vc-arch-find-file-hook ()
   (let ((rej (concat buffer-file-name ".rej")))
@@ -418,6 +420,40 @@ Return non-nil if FILE is unchanged."
   (apply 'vc-do-command buffer okstatus vc-arch-command file flags))
 
 (defun vc-arch-init-version () nil)
+
+;;; Completion of versions and revisions.
+
+(defun vc-arch--version-completion-table (root string)
+  (delq nil
+	(mapcar
+	 (lambda (d)
+	   (when (string-match "/\\([^/]+\\)/\\([^/]+\\)\\'" d)
+	     (concat (match-string 2 d) "/" (match-string 1 d))))
+	 (let ((default-directory root))
+	   (file-expand-wildcards
+	    (concat "*/*/"
+		    (if (string-match "/" string)
+			(concat (substring string (match-end 0))
+				"*/" (substring string 0 (match-beginning 0)))
+		      (concat "*/" string))
+		    "*"))))))
+
+(defun vc-arch-revision-completion-table (file)
+  (lexical-let ((file file))
+    (lambda (string pred action)
+      ;; FIXME: complete revision patches as well.
+      (let* ((root (expand-file-name "{arch}" (vc-arch-root file)))
+             (table (vc-arch--version-completion-table root string)))
+	(complete-with-action action table string pred)))))
+
+(defvar vc-arch-extra-menu-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [add-tagline]
+      '(menu-item "Add tagline" vc-arch-add-tagline))
+    map))
+
+(defun vc-arch-extra-menu () vc-arch-extra-menu-map)
+  
 
 ;;; Less obvious implementations.
 

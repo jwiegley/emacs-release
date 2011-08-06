@@ -455,12 +455,6 @@ Emacs 会提示你输入文件名。你输入的文件名会出现在屏幕最底端的一行，这一
 >> 输入 C-x C-s 把本快速指南存下来。
    你会在屏幕的下方看到一条消息：“Wrote ...TUTORIAL.cn”。
 
-注意：在某些终端下，输入 C-x C-s 会冻结屏幕【屏幕没有任何输出】，使你看
-不到 Emacs 的任何变化。其原因是操作系统的“流量控制”功能拦截了 C-s 并
-冻结了屏幕。用 C-q 可以解除屏幕冻结。要解决这个问题，请参考 Emacs 手册
-里的“Spontaneous Entry to Incremental Search”一节【Emacs 手册可能还没
-有中文翻译】，那里提供了一些有用的建议。
-
 你不但可以寻找一个已有的文件来查看或编辑，还可以寻找一个不存在的文件。
 实际上这正是 Emacs 创建新文件的方法：找到不存在的新文件。只有在存盘的时
 候，Emacs 才会真正创建这个文件。而在这之后的一切就跟编辑一个已有文件没
@@ -987,7 +981,7 @@ This version of the tutorial, like GNU Emacs, is copyrighted, and
 comes with permission to distribute copies on certain conditions:
 
 Copyright (C) 1985, 1996, 1998, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
@@ -1013,7 +1007,7 @@ GNU Emacs to your friends.  Help stamp out software obstructionism
 本篇文档与 GNU Emacs 一样拥有版权，并允许在下列条件的约束下发行其拷贝：
 
    Copyright (C) 1985, 1996, 1998, 2001, 2002, 2003, 2004, 2005, 2006,
-   2007  Free Software Foundation, Inc.
+   2007, 2008  Free Software Foundation, Inc.
 
    本文档允许在不变更文档内容的情况下由任何人发布在任何媒体上，同时必须
    完整保留版权和许可声明，且需给予受众与发行者完全相同的、如本声明所允

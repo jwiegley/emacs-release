@@ -1,12 +1,13 @@
 /* Fully extensible Emacs, running on Unix, intended for GNU.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1998, 1999,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -866,7 +867,7 @@ main (argc, argv
       else
 	{
 	  printf ("GNU Emacs %s\n", SDATA (tem));
-	  printf ("Copyright (C) 2007 Free Software Foundation, Inc.\n");
+	  printf ("Copyright (C) 2008 Free Software Foundation, Inc.\n");
 	  printf ("GNU Emacs comes with ABSOLUTELY NO WARRANTY.\n");
 	  printf ("You may redistribute copies of Emacs\n");
 	  printf ("under the terms of the GNU General Public License.\n");
@@ -1157,6 +1158,13 @@ main (argc, argv
 #if defined (USG5) && defined (INTERRUPT_INPUT)
       setpgrp ();
 #endif
+#endif
+#if defined (HAVE_GTK_AND_PTHREAD) && !defined (SYSTEM_MALLOC) && !defined (DOUG_LEA_MALLOC)
+      {
+	extern void malloc_enable_thread P_ ((void));
+
+	malloc_enable_thread ();
+      }
 #endif
     }
 
@@ -1806,7 +1814,6 @@ struct standard_args standard_args[] =
   { "-q", "--no-init-file", 50, 0 },
   { "-no-init-file", 0, 50, 0 },
   { "-no-site-file", "--no-site-file", 40, 0 },
-  { "-no-splash", "--no-splash", 40, 0 },
   { "-u", "--user", 30, 1 },
   { "-user", 0, 30, 1 },
   { "-debug-init", "--debug-init", 20, 0 },
@@ -1841,6 +1848,8 @@ struct standard_args standard_args[] =
   { "-hb", "--horizontal-scroll-bars", 5, 0 },
   { "-vb", "--vertical-scroll-bars", 5, 0 },
   { "-color", "--color", 5, 0},
+  { "-no-splash", "--no-splash", 3, 0 },
+  { "-no-desktop", "--no-desktop", 3, 0 },
   /* These have the same priority as ordinary file name args,
      so they are not reordered with respect to those.  */
   { "-L", "--directory", 0, 1 },
@@ -2459,7 +2468,7 @@ Emacs is running.  */);
 	       doc: /* Non-nil means Emacs is running without interactive terminal.  */);
 
   DEFVAR_LISP ("kill-emacs-hook", &Vkill_emacs_hook,
-	       doc: /* Hook to be run when kill-emacs is called.
+	       doc: /* Hook to be run when `kill-emacs' is called.
 Since `kill-emacs' may be invoked when the terminal is disconnected (or
 in other similar situations), functions placed on this hook should not
 expect to be able to interact with the user.  To ask for confirmation,
@@ -2499,8 +2508,8 @@ The value is nil if that directory's name is not known.  */);
   DEFVAR_LISP ("installation-directory", &Vinstallation_directory,
 	       doc: /* A directory within which to look for the `lib-src' and `etc' directories.
 This is non-nil when we can't find those directories in their standard
-installed locations, but we can find them
-near where the Emacs executable was found.  */);
+installed locations, but we can find them near where the Emacs executable
+was found.  */);
   Vinstallation_directory = Qnil;
 
   DEFVAR_LISP ("system-messages-locale", &Vsystem_messages_locale,

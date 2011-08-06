@@ -1,7 +1,7 @@
 ;;; term.el --- general command interpreter in a window stuff
 
 ;; Copyright (C) 1988, 1990, 1992, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Per Bothner <per@bothner.com>
 ;; Maintainer: Dan Nicolaescu <dann@ics.uci.edu>, Per Bothner <per@bothner.com>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -470,7 +470,7 @@
 (defvar term-scroll-with-delete nil) ;; term-scroll-with-delete is t if
 ;;		forward scrolling should be implemented by delete to
 ;;		top-most line(s); and nil if scrolling should be implemented
-;;		by moving term-home-marker.  It is set to t iff there is a
+;;		by moving term-home-marker.  It is set to t if there is a
 ;;		(non-default) scroll-region OR the alternate buffer is used.
 (defvar term-pending-delete-marker) ;; New user input in line mode needs to
 ;;		be deleted, because it gets echoed by the inferior.
@@ -695,12 +695,12 @@ Buffer local variable.")
 
 ;;; faces -mm
 
-(defcustom term-default-fg-color 'unspecified
+(defcustom term-default-fg-color (face-foreground term-current-face)
   "Default color for foreground in `term'."
   :group 'term
   :type 'string)
 
-(defcustom term-default-bg-color 'unspecified
+(defcustom term-default-bg-color (face-background term-current-face)
   "Default color for background in `term'."
   :group 'term
   :type 'string)
@@ -1098,6 +1098,8 @@ Entry to this mode runs the hooks on `term-mode-hook'."
   (make-local-variable 'term-pending-delete-marker)
   (setq term-pending-delete-marker (make-marker))
   (make-local-variable 'term-current-face)
+  (setq term-current-face (list :background term-default-bg-color
+				:foreground term-default-fg-color))
   (make-local-variable 'term-pending-frame)
   (setq term-pending-frame nil)
   ;; Cua-mode's keybindings interfere with the term keybindings, disable it.
@@ -3055,7 +3057,8 @@ See `term-prompt-regexp'."
   (setq term-scroll-start 0)
   (setq term-scroll-end term-height)
   (setq term-insert-mode nil)
-  (setq term-current-face nil)
+  (setq term-current-face (list :background term-default-bg-color
+				:foreground term-default-fg-color))
   (setq term-ansi-current-underline nil)
   (setq term-ansi-current-bold nil)
   (setq term-ansi-current-reverse nil)
@@ -3117,7 +3120,8 @@ See `term-prompt-regexp'."
 
 ;;; 0 (Reset) or unknown (reset anyway)
    (t
-    (setq term-current-face nil)
+    (setq term-current-face (list :background term-default-bg-color
+				  :foreground term-default-fg-color))
     (setq term-ansi-current-underline nil)
     (setq term-ansi-current-bold nil)
     (setq term-ansi-current-reverse nil)
@@ -3154,11 +3158,11 @@ See `term-prompt-regexp'."
 	    (setq term-current-face
 		  (list :background
 			(if (= term-ansi-current-color 0)
-			    (face-foreground 'default)
+			    term-default-fg-color
 			  (elt ansi-term-color-vector term-ansi-current-color))
 			:foreground
 			(if (= term-ansi-current-bg-color 0)
-			    (face-background 'default)
+			    term-default-bg-color
 			  (elt ansi-term-color-vector term-ansi-current-bg-color))))
 	    (when term-ansi-current-bold
 	      (setq term-current-face
@@ -3181,9 +3185,13 @@ See `term-prompt-regexp'."
 		  )
 	  (setq term-current-face
 		(list :foreground
-		      (elt ansi-term-color-vector term-ansi-current-color)
+		      (if (= term-ansi-current-color 0)
+			  term-default-fg-color
+			(elt ansi-term-color-vector term-ansi-current-color))
 		      :background
-		      (elt ansi-term-color-vector term-ansi-current-bg-color)))
+		      (if (= term-ansi-current-bg-color 0)
+			  term-default-bg-color
+			(elt ansi-term-color-vector term-ansi-current-bg-color))))
 	  (when term-ansi-current-bold
 	    (setq term-current-face
 		  (append '(:weight bold) term-current-face)))

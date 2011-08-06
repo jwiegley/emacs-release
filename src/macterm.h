@@ -1,12 +1,12 @@
 /* Display module for Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -150,7 +150,7 @@ struct mac_display_info
   char *mac_id_name;
 
   /* The number of fonts actually stored in the font table.
-     font_table[n] is used and valid iff 0 <= n < n_fonts.  0 <=
+     font_table[n] is used and valid if 0 <= n < n_fonts.  0 <=
      n_fonts <= font_table_size and font_table[i].name != 0.  */
   int n_fonts;
 
@@ -434,6 +434,9 @@ struct scroll_bar {
      is the number of pixels plus 1.  If the handle isn't currently
      being dragged, this is Qnil.  */
   Lisp_Object dragging;
+
+  /* t if redraw needed in the next XTset_vertical_scroll_bar call.  */
+  Lisp_Object redraw_needed_p;
 
 #ifdef USE_TOOLKIT_SCROLL_BARS
   /* The position and size of the scroll bar handle track area in

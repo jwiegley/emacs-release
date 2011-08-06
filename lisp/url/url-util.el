@@ -1,7 +1,7 @@
 ;;; url-util.el --- Miscellaneous helper routines for URL library
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes
@@ -10,7 +10,7 @@
 ;;
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -185,33 +185,10 @@ Will not do anything if `url-show-status' is nil."
 
 ;;;###autoload
 (defun url-get-normalized-date (&optional specified-time)
-  "Return a 'real' date string that most HTTP servers can understand."
-  (require 'timezone)
-  (let* ((raw (if specified-time (current-time-string specified-time)
-		(current-time-string)))
-	 (gmt (timezone-make-date-arpa-standard raw
-						(nth 1 (current-time-zone))
-						"GMT"))
-	 (parsed (timezone-parse-date gmt))
-	 (day (cdr-safe (assoc (substring raw 0 3) url-weekday-alist)))
-	 (year nil)
-	 (month (car
-		 (rassoc
-		  (string-to-number (aref parsed 1)) url-monthabbrev-alist)))
-	 )
-    (setq day (or (car-safe (rassoc day url-weekday-alist))
-		  (substring raw 0 3))
-	  year (aref parsed 0))
-    ;; This is needed for plexus servers, or the server will hang trying to
-    ;; parse the if-modified-since header.  Hopefully, I can take this out
-    ;; soon.
-    (if (and year (> (length year) 2))
-	(setq year (substring year -2 nil)))
-
-    (concat day ", " (aref parsed 2) "-" month "-" year " "
-	    (aref parsed 3) " " (or (aref parsed 4)
-				    (concat "[" (nth 1 (current-time-zone))
-					    "]")))))
+ "Return a 'real' date string that most HTTP servers can understand."
+ (let ((system-time-locale "C"))
+  (format-time-string "%a, %d %b %Y %T GMT"
+   (or specified-time (current-time)) t)))
 
 ;;;###autoload
 (defun url-eat-trailing-space (x)
@@ -259,16 +236,22 @@ Will not do anything if `url-show-status' is nil."
     (/ (* x 100) y)))
 
 ;;;###autoload
-(defun url-basepath (file &optional x)
-  "Return the base pathname of FILE, or the actual filename if X is true."
+(defun url-file-directory (file)
+  "Return the directory part of FILE, for a URL."
   (cond
    ((null file) "")
    ((string-match (eval-when-compile (regexp-quote "?")) file)
-    (if x
-	(file-name-nondirectory (substring file 0 (match-beginning 0)))
-      (file-name-directory (substring file 0 (match-beginning 0)))))
-   (x (file-name-nondirectory file))
+    (file-name-directory (substring file 0 (match-beginning 0))))
    (t (file-name-directory file))))
+
+;;;###autoload
+(defun url-file-nondirectory (file)
+  "Return the nondirectory part of FILE, for a URL."
+  (cond
+   ((null file) "")
+   ((string-match (eval-when-compile (regexp-quote "?")) file)
+    (file-name-nondirectory (substring file 0 (match-beginning 0))))
+   (t (file-name-nondirectory file))))
 
 ;;;###autoload
 (defun url-parse-query-string (query &optional downcase allow-newlines)
@@ -385,7 +368,7 @@ string: \"%\" followed by two lowercase hex digits."
 If optional variable X is t,
 then return the basename of the file with the extension stripped off."
   (if (and fname
-	   (setq fname (url-basepath fname t))
+	   (setq fname (url-file-nondirectory fname))
 	   (string-match "\\.[^./]+$" fname))
       (if x (substring fname 0 (match-beginning 0))
 	(substring fname (match-beginning 0) nil))
@@ -516,6 +499,28 @@ Has a preference for looking backward when not directly on a symbol."
     (unless url-current-mime-headers
       (set (make-local-variable 'url-current-mime-headers)
 	   (mail-header-extract)))))
+
+(defun url-make-private-file (file)
+  "Make FILE only readable and writable by the current user.
+Creates FILE and its parent directories if they do not exist."
+  (let ((dir (file-name-directory file)))
+    (when dir
+      ;; For historical reasons.
+      (make-directory dir t)))
+  ;; Based on doc-view-make-safe-dir.
+  (condition-case nil
+      (let ((umask (default-file-modes)))
+        (unwind-protect
+            (progn
+              (set-default-file-modes #o0600)
+              (with-temp-buffer
+                (write-region (point-min) (point-max)
+                              file nil 'silent nil 'excl)))
+          (set-default-file-modes umask)))
+    (file-already-exists
+     (if (file-symlink-p file)
+         (error "Danger: `%s' is a symbolic link" file))
+     (set-file-modes file #o0600))))
 
 (provide 'url-util)
 

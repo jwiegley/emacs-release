@@ -1,6 +1,6 @@
 ;;; dnd.el --- drag and drop support.
 
-;; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jan Dj,Ad(Brv <jan.h.d@swipnet.se>
 ;; Maintainer: FSF
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -149,7 +149,7 @@ Return nil if URI is not a local file."
 	       "%[A-Fa-f0-9][A-Fa-f0-9]"
 	       (lambda (arg)
 		 (format "%c" (string-to-number (substring arg 1) 16)))
-	       f nil t))
+	       f t t))
       (let* ((decoded-f (decode-coding-string
 			 f
 			 (or file-name-coding-system

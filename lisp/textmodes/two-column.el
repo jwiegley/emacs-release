@@ -1,7 +1,7 @@
 ;;; two-column.el --- minor mode for editing of two-column text
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Adapted-By: ESR, Daniel Pfeiffer
@@ -18,7 +18,7 @@
 ;; ^gin sub  la  kondi^coj  de  la  GNU	 under the terms of the GNU General
 ;; ^Generala  Publika Licenco kiel pub-	 Public License as published by the
 ;; likigita far la Liberprogramara Fon-	 Free Software Foundation; either
-;; da^jo; a^u eldono 2a,  a^u (la^u via	 version 2, or (at your option) any
+;; da^jo; a^u eldono 2a,  a^u (la^u via	 version 3, or (at your option) any
 ;; elekto) ajna posta eldono.		 later version.
 
 ;; GNU  Emacs  estas  disdonata  en  la	 GNU Emacs is distributed in the hope
@@ -347,8 +347,8 @@ When called again, restores the screen layout with the current buffer
 first and the associated buffer to its right."
   (interactive "P")
   ;; first go to full width, so that we can certainly split into two windows
-  (if (< (window-width) (frame-width))
-      (enlarge-window 99999 t))
+  (unless (window-full-width-p)
+    (enlarge-window 99999 t))
   (split-window-horizontally
    (max window-min-width (min 2C-window-width
 			      (- (frame-width) window-min-width))))
@@ -533,8 +533,8 @@ off trailing spaces with \\[delete-trailing-whitespace]."
 	  (insert 2C-separator string))
 	(next-line 1)			; add one if necessary
 	(set-buffer b2))))
-  (if (< (window-width) (frame-width))
-      (enlarge-window 99999 t)))
+  (unless (window-full-width-p)
+    (enlarge-window 99999 t)))
 
 ;;;;; utility functions ;;;;;
 
@@ -561,8 +561,10 @@ off trailing spaces with \\[delete-trailing-whitespace]."
   (newline arg))
 
 (defun 2C-toggle-autoscroll (arg)
-  "Toggle autoscrolling, or set it iff prefix ARG is non-nil and positive.
-When autoscrolling is turned on, this also realigns the two buffers."
+  "Toggle autoscrolling.
+With prefix argument ARG, turn on autoscrolling if ARG is
+positive, otherwise turn it off.  When autoscrolling is turned
+on, this also realigns the two buffers."
   (interactive "P")
   ;(sit-for 0)
   (setq 2C-autoscroll-start (window-start))

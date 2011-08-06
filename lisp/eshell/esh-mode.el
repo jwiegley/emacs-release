@@ -1,7 +1,7 @@
 ;;; esh-mode.el --- user interface
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -165,7 +165,8 @@ number, if the function `eshell-truncate-buffer' is on
   :group 'eshell-mode)
 
 (defcustom eshell-output-filter-functions
-  '(eshell-handle-control-codes
+  '(eshell-postoutput-scroll-to-bottom
+    eshell-handle-control-codes
     eshell-watch-for-password-prompt)
   "*Functions to call before output is displayed.
 These functions are only called for output that is displayed
@@ -774,38 +775,36 @@ This is done after all necessary filtering has been done."
 	(setq string (funcall (car functions) string))
 	(setq functions (cdr functions))))
     (if (and string oprocbuf (buffer-name oprocbuf))
-	(let ((obuf (current-buffer))
-	      opoint obeg oend)
-	  (set-buffer oprocbuf)
-	  (setq opoint (point))
-	  (setq obeg (point-min))
-	  (setq oend (point-max))
-	  (let ((buffer-read-only nil)
-		(nchars (length string))
-		(ostart nil))
-	    (widen)
-	    (goto-char eshell-last-output-end)
-	    (setq ostart (point))
-	    (if (<= (point) opoint)
-		(setq opoint (+ opoint nchars)))
-	    (if (< (point) obeg)
-		(setq obeg (+ obeg nchars)))
-	    (if (<= (point) oend)
-		(setq oend (+ oend nchars)))
-	    (insert-before-markers string)
-	    (if (= (window-start (selected-window)) (point))
-		(set-window-start (selected-window)
-				  (- (point) nchars)))
-	    (if (= (point) eshell-last-input-end)
-		(set-marker eshell-last-input-end
-			    (- eshell-last-input-end nchars)))
-	    (set-marker eshell-last-output-start ostart)
-	    (set-marker eshell-last-output-end (point))
-	    (force-mode-line-update))
-	  (narrow-to-region obeg oend)
-	  (goto-char opoint)
-	  (eshell-run-output-filters)
-	  (set-buffer obuf)))))
+	(let (opoint obeg oend)
+	  (with-current-buffer oprocbuf
+	    (setq opoint (point))
+	    (setq obeg (point-min))
+	    (setq oend (point-max))
+	    (let ((buffer-read-only nil)
+		  (nchars (length string))
+		  (ostart nil))
+	      (widen)
+	      (goto-char eshell-last-output-end)
+	      (setq ostart (point))
+	      (if (<= (point) opoint)
+		  (setq opoint (+ opoint nchars)))
+	      (if (< (point) obeg)
+		  (setq obeg (+ obeg nchars)))
+	      (if (<= (point) oend)
+		  (setq oend (+ oend nchars)))
+	      (insert-before-markers string)
+	      (if (= (window-start (selected-window)) (point))
+		  (set-window-start (selected-window)
+				    (- (point) nchars)))
+	      (if (= (point) eshell-last-input-end)
+		  (set-marker eshell-last-input-end
+			      (- eshell-last-input-end nchars)))
+	      (set-marker eshell-last-output-start ostart)
+	      (set-marker eshell-last-output-end (point))
+	      (force-mode-line-update))
+	    (narrow-to-region obeg oend)
+	    (goto-char opoint)
+	    (eshell-run-output-filters))))))
 
 (defun eshell-run-output-filters ()
   "Run the `eshell-output-filter-functions' on the current output."
@@ -879,9 +878,6 @@ This function should be in the list `eshell-output-filter-functions'."
 		  (select-window selected)))))
 	 nil t)
       (set-buffer current))))
-
-(custom-add-option 'eshell-output-filter-functions
-		   'eshell-postoutput-scroll-to-bottom)
 
 (defun eshell-beginning-of-input ()
   "Return the location of the start of the previous input."

@@ -1,7 +1,7 @@
 ;;; help.el --- help commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -46,14 +46,15 @@
     (define-key map "." 'display-local-help)
     (define-key map "?" 'help-for-help)
 
+    (define-key map "\C-a" 'about-emacs)
     (define-key map "\C-c" 'describe-copying)
     (define-key map "\C-d" 'describe-distribution)
     (define-key map "\C-e" 'view-emacs-problems)
     (define-key map "\C-f" 'view-emacs-FAQ)
     (define-key map "\C-m" 'view-order-manuals)
     (define-key map "\C-n" 'view-emacs-news)
-    (define-key map "\C-p" 'describe-project)
-    (define-key map "\C-t" 'view-todo)
+    (define-key map "\C-p" 'describe-gnu-project)
+    (define-key map "\C-t" 'view-emacs-todo)
     (define-key map "\C-w" 'describe-no-warranty)
 
     ;; This does not fit the pattern, but it is natural given the C-\ command.
@@ -225,6 +226,7 @@ w  where-is.  Type a command name; it displays which keystrokes
 .  display-local-help.  Display any available local help at point
         in the echo area.
 
+C-a Display information about Emacs.
 C-c Display Emacs copying permission (GNU General Public License).
 C-d Display Emacs ordering information.
 C-e Display info about Emacs problems.
@@ -290,11 +292,13 @@ If that doesn't give a function, return nil."
   (view-file (expand-file-name "COPYING" data-directory))
   (goto-char (point-min)))
 
-(defun describe-project ()
+(defun describe-gnu-project ()
   "Display info on the GNU project."
   (interactive)
   (view-file (expand-file-name "THE-GNU-PROJECT" data-directory))
   (goto-char (point-min)))
+
+(define-obsolete-function-alias 'describe-project 'describe-gnu-project "22.2")
 
 (defun describe-no-warranty ()
   "Display info on all the kinds of warranty Emacs does NOT have."
@@ -394,10 +398,13 @@ With argument, display info only for the selected version."
 	   (point)))))))
 
 
-(defun view-todo (&optional arg)
+(defun view-emacs-todo (&optional arg)
   "Display the Emacs TODO list."
   (interactive "P")
   (view-file (expand-file-name "TODO" data-directory)))
+
+(define-obsolete-function-alias 'view-todo 'view-emacs-todo "22.2")
+
 
 (defun view-echo-area-messages ()
   "View the log of recent echo-area messages: the `*Messages*' buffer.
@@ -958,14 +965,14 @@ This applies to `help', `apropos' and `completion' buffers, and some others."
     (remove-hook 'temp-buffer-show-hook 'resize-temp-buffer-window)))
 
 (defun resize-temp-buffer-window ()
-  "Resize the current window to fit its contents.
+  "Resize the selected window to fit its contents.
 Will not make it higher than `temp-buffer-max-height' nor smaller than
 `window-min-height'.  Do nothing if it is the only window on its frame, if it
 is not as wide as the frame or if some of the window's contents are scrolled
 out of view."
   (unless (or (one-window-p 'nomini)
               (not (pos-visible-in-window-p (point-min)))
-              (/=  (frame-width) (window-width)))
+              (not (window-full-width-p)))
     (fit-window-to-buffer
      (selected-window)
      (if (functionp temp-buffer-max-height)

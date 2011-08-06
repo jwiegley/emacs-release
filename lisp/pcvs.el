@@ -1,7 +1,7 @@
 ;;; pcvs.el --- a front-end to CVS
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: (The PCL-CVS Trust) pcl-cvs@cyclic.com
 ;;	(Per Cederqvist) ceder@lysator.liu.se
@@ -19,7 +19,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -182,7 +182,7 @@
 	  (when (re-search-forward
 		 (concat "^" cmd "\\(\\s-+\\(.*\\)\\)?$") nil t)
 	    (let* ((sym (intern (concat "cvs-" cmd "-flags")))
-		   (val (cvs-string->strings (or (match-string 2) ""))))
+		   (val (split-string-and-unquote (or (match-string 2) ""))))
 	      (cvs-flags-set sym 0 val))))
 	;; ensure that cvs doesn't have -q or -Q
 	(cvs-flags-set 'cvs-cvs-flags 0
@@ -392,7 +392,11 @@ from the current buffer."
     (with-current-buffer buf
       (setq buffer-read-only nil)
       (setq default-directory dir)
-      (unless nosetup (erase-buffer))
+      (unless nosetup
+        ;; Disable undo before calling erase-buffer since it may generate
+        ;; a very large and unwanted undo record.
+        (buffer-disable-undo)
+        (erase-buffer))
       (set (make-local-variable 'cvs-buffer) cvs-buf)
       ;;(cvs-minor-mode 1)
       (let ((lbd list-buffers-directory))
@@ -400,7 +404,8 @@ from the current buffer."
 	(when lbd (set (make-local-variable 'list-buffers-directory) lbd)))
       (cvs-minor-mode 1)
       ;;(set (make-local-variable 'cvs-buffer) cvs-buf)
-      (unless normal
+      (if normal
+          (buffer-enable-undo)
 	(setq buffer-read-only t)
 	(buffer-disable-undo))
       buf)))
@@ -607,7 +612,7 @@ If non-nil, NEW means to create a new buffer no matter what."
 			  (t arg)))
 		       args)))
     (concat cvs-program " "
-	    (cvs-strings->string
+	    (combine-and-quote-strings
 	     (append (cvs-flags-query 'cvs-cvs-flags nil 'noquery)
 		     (if cvs-cvsroot (list "-d" cvs-cvsroot))
 		     args
@@ -936,7 +941,8 @@ With a prefix argument, prompt for cvs FLAGS to use."
    (let ((root (cvs-get-cvsroot)))
      (if (or (null root) current-prefix-arg)
 	 (setq root (read-string "CVS Root: ")))
-     (list (cvs-string->strings (read-string "Module(s): " (cvs-get-module)))
+     (list (split-string-and-unquote
+	    (read-string "Module(s): " (cvs-get-module)))
 	   (read-directory-name "CVS Checkout Directory: "
 				nil default-directory nil)
 	   (cvs-add-branch-prefix
@@ -959,7 +965,7 @@ The files are stored to DIR."
 			 (if branch (format " (branch: %s)" branch)
 			   ""))))
      (list (read-directory-name prompt nil default-directory nil))))
-  (let ((modules (cvs-string->strings (cvs-get-module)))
+  (let ((modules (split-string-and-unquote (cvs-get-module)))
 	(flags (cvs-add-branch-prefix
 		(cvs-flags-query 'cvs-checkout-flags "cvs checkout flags")))
 	(cvs-cvsroot (cvs-get-cvsroot)))
@@ -975,13 +981,13 @@ The files are stored to DIR."
   (interactive)
   (cvs-examine default-directory t))
 
-(defun cvs-query-directory (msg)
-  ;; last-command-char = ?\r hints that the command was run via M-x
+(defun cvs-query-directory (prompt)
+  "Read directory name, prompting with PROMPT.
+If in a *cvs* buffer, don't prompt unless a prefix argument is given."
   (if (and (cvs-buffer-p)
-	   (not current-prefix-arg)
-	   (not (eq last-command-char ?\r)))
+	   (not current-prefix-arg))
       default-directory
-    (read-directory-name msg nil default-directory nil)))
+    (read-directory-name prompt nil default-directory nil)))
 
 ;;;###autoload
 (defun cvs-quickdir (dir &optional flags noshow)
@@ -1898,7 +1904,7 @@ With prefix argument, prompt for cvs flags."
   (interactive (list (cvs-flags-query 'cvs-status-flags "cvs status flags")))
   (cvs-mode-do "status" flags nil :dont-change-disc t :show t
 	       :postproc (when (eq cvs-auto-remove-handled 'status)
-			   '((with-current-buffer ,(current-buffer)
+			   `((with-current-buffer ,(current-buffer)
 			       (cvs-mode-remove-handled))))))
 
 (defun-cvs-mode (cvs-mode-tree . SIMPLE) (flags)
@@ -2204,9 +2210,21 @@ With prefix argument, prompt for cvs flags."
 (defun-cvs-mode cvs-mode-add-change-log-entry-other-window ()
   "Add a ChangeLog entry in the ChangeLog of the current directory."
   (interactive)
+  ;; Require `add-log' explicitly, because if it gets autoloaded when we call
+  ;; add-change-log-entry-other-window below, the
+  ;; add-log-buffer-file-name-function ends up unbound when we leave the `let'.
+  (require 'add-log)
   (dolist (fi (cvs-mode-marked nil nil))
     (let* ((default-directory (cvs-expand-dir-name (cvs-fileinfo->dir fi)))
-	   (buffer-file-name (expand-file-name (cvs-fileinfo->file fi))))
+	   (add-log-buffer-file-name-function
+            (lambda ()
+              (let ((file (expand-file-name (cvs-fileinfo->file fi))))
+                (if (file-directory-p file)
+                    ;; Be careful to use a directory name, otherwise add-log
+                    ;; starts looking for a ChangeLog file in the
+                    ;; parent dir.
+                    (file-name-as-directory file)
+                  file)))))
       (kill-local-variable 'change-log-default-name)
       (save-excursion (add-change-log-entry-other-window)))))
 
@@ -2244,7 +2262,7 @@ With prefix argument, prompt for cvs flags."
       (let* ((args (append constant-args arg-list)))
 
 	(insert (format "=== %s %s\n\n"
-			program (cvs-strings->string args)))
+			program (split-string-and-unquote args)))
 
 	;; FIXME: return the exit status?
 	(apply 'call-process program nil t t args)

@@ -1,12 +1,12 @@
 /* Client process that communicates with GNU Emacs acting as server.
    Copyright (C) 1986, 1987, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -35,6 +35,7 @@ Boston, MA 02110-1301, USA.  */
 # include <malloc.h>
 # include <stdlib.h>
 # include <windows.h>
+# include <commctrl.h>
 
 # define NO_SOCKETS_IN_FILE_SYSTEM
 
@@ -79,6 +80,13 @@ Boston, MA 02110-1301, USA.  */
 
 char *getenv (), *getwd ();
 char *(getcwd) ();
+
+#ifdef WINDOWSNT
+char *w32_getenv ();
+#define egetenv(VAR) w32_getenv(VAR)
+#else
+#define egetenv(VAR) getenv(VAR)
+#endif
 
 #ifndef VERSION
 #define VERSION "unspecified"
@@ -149,9 +157,111 @@ struct option longopts[] =
   { 0, 0, 0, 0 }
 };
 
+
+/* Like malloc but get fatal error if memory is exhausted.  */
+
+long *
+xmalloc (size)
+     unsigned int size;
+{
+  long *result = (long *) malloc (size);
+  if (result == NULL)
+    {
+      perror ("malloc");
+      exit (EXIT_FAILURE);
+    }
+  return result;
+}
+
 /* Message functions. */
 
 #ifdef WINDOWSNT
+
+#define REG_ROOT "SOFTWARE\\GNU\\Emacs"
+
+/* Retrieve an environment variable from the Emacs subkeys of the registry.
+   Return NULL if the variable was not found, or it was empty.
+   This code is based on w32_get_resource (w32.c).  */
+char *
+w32_get_resource (predefined, key, type)
+     HKEY predefined;
+     char *key;
+     LPDWORD type;
+{
+  HKEY hrootkey = NULL;
+  char *result = NULL;
+  DWORD cbData;
+
+  if (RegOpenKeyEx (predefined, REG_ROOT, 0, KEY_READ, &hrootkey) == ERROR_SUCCESS)
+    {
+      if (RegQueryValueEx (hrootkey, key, NULL, NULL, NULL, &cbData) == ERROR_SUCCESS)
+	{
+	  result = (char *) xmalloc (cbData);
+
+	  if ((RegQueryValueEx (hrootkey, key, NULL, type, result, &cbData) != ERROR_SUCCESS) ||
+	      (*result == 0))
+	    {
+	      free (result);
+	      result = NULL;
+	    }
+	}
+
+      RegCloseKey (hrootkey);
+    }
+
+  return result;
+}
+
+/*
+  getenv wrapper for Windows
+
+  This is needed to duplicate Emacs's behavior, which is to look for enviroment
+  variables in the registry if they don't appear in the environment.
+*/
+char *
+w32_getenv (envvar)
+     char *envvar;
+{
+  char *value;
+  DWORD dwType;
+
+  if (value = getenv (envvar))
+    /* Found in the environment.  */
+    return value;
+
+  if (! (value = w32_get_resource (HKEY_CURRENT_USER, envvar, &dwType)) &&
+      ! (value = w32_get_resource (HKEY_LOCAL_MACHINE, envvar, &dwType)))
+    /* Not found in the registry.  */
+    return NULL;
+
+  if (dwType == REG_SZ)
+    /* Registry; no need to expand.  */
+    return value;
+
+  if (dwType == REG_EXPAND_SZ)
+    {
+      DWORD size;
+
+      if (size = ExpandEnvironmentStrings (value, NULL, 0))
+	{
+	  char *buffer = (char *) xmalloc (size);
+	  if (ExpandEnvironmentStrings (value, buffer, size))
+	    {
+	      /* Found and expanded.  */
+	      free (value);
+	      return buffer;
+	    }
+
+	  /* Error expanding.  */
+	  free (buffer);
+	}
+    }
+
+  /* Not the right type, or not correctly expanded.  */
+  free (value);
+  return NULL;
+}
+
 int
 w32_window_app ()
 {
@@ -159,9 +269,13 @@ w32_window_app ()
   char szTitle[MAX_PATH];
 
   if (window_app < 0)
-    /* Checking for STDOUT does not work; it's a valid handle also in
-       nonconsole apps.  Testing for the console title seems to work. */
-    window_app = (GetConsoleTitleA (szTitle, MAX_PATH) == 0);
+    {
+      /* Checking for STDOUT does not work; it's a valid handle also in
+         nonconsole apps.  Testing for the console title seems to work. */
+      window_app = (GetConsoleTitleA (szTitle, MAX_PATH) == 0);
+      if (window_app)
+        InitCommonControls();
+    }
 
   return window_app;
 }
@@ -203,7 +317,7 @@ decode_options (argc, argv)
      int argc;
      char **argv;
 {
-  alternate_editor = getenv ("ALTERNATE_EDITOR");
+  alternate_editor = egetenv ("ALTERNATE_EDITOR");
 
   while (1)
     {
@@ -390,6 +504,29 @@ extern int errno;
 char send_buffer[SEND_BUFFER_SIZE + 1];
 int sblen = 0;	/* Fill pointer for the send buffer.  */
 
+/* On Windows, the socket library was historically separate from the standard
+   C library, so errors are handled differently.  */
+void
+sock_err_message (function_name)
+     char *function_name;
+{
+#ifdef WINDOWSNT
+  char* msg = NULL;
+
+  FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM
+                 | FORMAT_MESSAGE_ALLOCATE_BUFFER
+                 | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                 NULL, WSAGetLastError (), 0, (LPTSTR)&msg, 0, NULL);
+
+  message (TRUE, "%s: %s: %s\n", progname, function_name, msg);
+
+  LocalFree (msg);
+#else
+  message (TRUE, "%s: %s: %s\n", progname, function_name, strerror (errno));
+#endif
+}
+
+
 /* Let's send the data to Emacs when either
    - the data ends in "\n", or
    - the buffer is full (but this shouldn't happen)
@@ -437,7 +574,7 @@ quote_file_name (s, name)
      HSOCKET s;
      char *name;
 {
-  char *copy = (char *) malloc (strlen (name) * 2 + 1);
+  char *copy = (char *) xmalloc (strlen (name) * 2 + 1);
   char *p, *q;
 
   p = name;
@@ -570,7 +707,7 @@ get_server_config (server, authentication)
     config = fopen (server_file, "rb");
   else
     {
-      char *home = getenv ("HOME");
+      char *home = egetenv ("HOME");
 
       if (home)
         {
@@ -579,7 +716,7 @@ get_server_config (server, authentication)
           config = fopen (path, "rb");
         }
 #ifdef WINDOWSNT
-      if (!config && (home = getenv ("APPDATA")))
+      if (!config && (home = egetenv ("APPDATA")))
         {
           char *path = alloca (32 + strlen (home) + strlen (server_file));
           sprintf (path, "%s/.emacs.d/server/%s", home, server_file);
@@ -641,7 +778,7 @@ set_tcp_socket ()
    */
   if ((s = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
-      message (TRUE, "%s: socket: %s\n", progname, strerror (errno));
+      sock_err_message ("socket");
       return INVALID_SOCKET;
     }
 
@@ -650,7 +787,7 @@ set_tcp_socket ()
    */
   if (connect (s, (struct sockaddr *) &server, sizeof server) < 0)
     {
-      message (TRUE, "%s: connect: %s\n", progname, strerror (errno));
+      sock_err_message ("connect");
       return INVALID_SOCKET;
     }
 
@@ -747,10 +884,10 @@ set_local_socket ()
 	   associated with the name.  This is reminiscent of the logic
 	   that init_editfns uses to set the global Vuser_full_name.  */
 
-	char *user_name = (char *) getenv ("LOGNAME");
+	char *user_name = (char *) egetenv ("LOGNAME");
 
 	if (!user_name)
-	  user_name = (char *) getenv ("USER");
+	  user_name = (char *) egetenv ("USER");
 
 	if (user_name)
 	  {
@@ -840,7 +977,7 @@ set_socket ()
 
   /* Explicit --server-file arg or EMACS_SERVER_FILE variable.  */
   if (!server_file)
-    server_file = getenv ("EMACS_SERVER_FILE");
+    server_file = egetenv ("EMACS_SERVER_FILE");
 
   if (server_file)
     {

@@ -1,7 +1,7 @@
 ;;; version.el --- record version number of Emacs -*- no-byte-compile: t -*-
 
 ;; Copyright (C) 1985, 1992, 1994, 1995, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -27,7 +27,10 @@
 
 ;;; Code:
 
-(defconst emacs-version "22.1" "\
+(defconst emacs-copyright "Copyright (C) 2008 Free Software Foundation, Inc."
+  "Short copyright string for this version of Emacs.")
+
+(defconst emacs-version "22.2" "\
 Version numbers of this version of Emacs.")
 
 (defconst emacs-major-version

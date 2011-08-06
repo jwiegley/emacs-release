@@ -1,18 +1,17 @@
 ;;; winner.el --- Restore old window configurations
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation. Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation. Inc.
 
 ;; Author: Ivar Rummelhoff <ivarru@math.uio.no>
 ;; Created: 27 Feb 1997
-;; Time-stamp: <2006-02-06 15:13:57 ttn>
 ;; Keywords: convenience frames
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -286,7 +285,7 @@ You may want to include buffer names such as *Help*, *Apropos*,
 
 (defun winner-get-point (buf win)
   ;; Consult (and possibly extend) `winner-point-alist'.
-  ;; Returns nil iff buf no longer exists.
+  ;; Returns nil if buf no longer exists.
   (when (buffer-name buf)
     (let ((entry (assq buf winner-point-alist)))
       (cond
@@ -306,7 +305,7 @@ You may want to include buffer names such as *Help*, *Apropos*,
 
 ;; Make sure point does not end up in the minibuffer and delete
 ;; windows displaying dead or boring buffers
-;; (c.f. `winner-boring-buffers').  Return nil iff all the windows
+;; (c.f. `winner-boring-buffers').  Return nil if all the windows
 ;; should be deleted.  Preserve correct points and marks.
 (defun winner-set (conf)
   ;; For the format of `conf', see `winner-conf'.

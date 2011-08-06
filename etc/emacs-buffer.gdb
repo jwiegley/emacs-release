@@ -1,6 +1,6 @@
 # emacs-buffer.gdb --- gdb macros for recovering buffers from emacs coredumps
 
-# Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+# Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 # Maintainer: Noah Friedman <friedman@splode.com>
 # Status: Works with Emacs 22.0.51.1 (prerelease) as of 2006-01-12.
@@ -13,7 +13,7 @@
 #
 # GNU Emacs is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
+# the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 #
 # GNU Emacs is distributed in the hope that it will be useful,

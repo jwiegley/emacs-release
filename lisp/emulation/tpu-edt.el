@@ -1,7 +1,7 @@
 ;;; tpu-edt.el --- Emacs emulating TPU emulating EDT
 
 ;; Copyright (C) 1993, 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Rob Riepel <riepel@networking.stanford.edu>
 ;; Maintainer: Rob Riepel <riepel@networking.stanford.edu>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -273,6 +273,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
 ;; we use picture-mode functions
 (require 'picture)
 
@@ -826,10 +827,13 @@ Create the key map if necessary."
 	 (use-local-map tpu-buffer-local-map)))
   (local-set-key key func))
 
-(defun tpu-current-line nil
+(defun tpu-current-line ()
   "Return the vertical position of point in the selected window.
 Top line is 0.  Counts each text line only once, even if it wraps."
-  (+ (count-lines (window-start) (point)) (if (= (current-column) 0) 1 0) -1))
+  (or
+   (cdr (nth 6 (posn-at-point)))
+   (if (eq (window-start) (point)) 0
+     (1- (count-screen-lines (window-start) (point) 'count-final-newline)))))
 
 
 ;;;
@@ -1067,13 +1071,6 @@ This is useful for inserting control characters."
 ;; Real TPU error messages end in periods.
 ;; Define this to avoid openly flouting Emacs coding standards.
 (defalias 'tpu-error 'error)
-
-
-;; Around emacs version 18.57, function line-move was renamed to
-;; next-line-internal.  If we're running under an older emacs,
-;; make next-line-internal equivalent to line-move.
-
-(if (not (fboundp 'next-line-internal)) (fset 'next-line-internal 'line-move))
 
 
 ;;;
@@ -2026,14 +2023,14 @@ With argument, do this that many times."
   "Move to next line.
 Prefix argument serves as a repeat count."
   (interactive "p")
-  (next-line-internal num)
+  (line-move num)
   (setq this-command 'next-line))
 
 (defun tpu-previous-line (num)
   "Move to previous line.
 Prefix argument serves as a repeat count."
   (interactive "p")
-  (next-line-internal (- num))
+  (line-move (- num))
   (setq this-command 'previous-line))
 
 (defun tpu-next-beginning-of-line (num)
@@ -2156,7 +2153,7 @@ A repeat count means scroll that many sections."
   (let* ((beg (tpu-current-line))
 	 (height (1- (window-height)))
 	 (lines (* num (/ (* height tpu-percent-scroll) 100))))
-    (next-line-internal (- lines))
+    (line-move (- lines))
     (if (> lines beg) (recenter 0))))
 
 (defun tpu-scroll-window-up (num)
@@ -2166,7 +2163,7 @@ A repeat count means scroll that many sections."
   (let* ((beg (tpu-current-line))
 	 (height (1- (window-height)))
 	 (lines (* num (/ (* height tpu-percent-scroll) 100))))
-    (next-line-internal lines)
+    (line-move lines)
     (if (>= (+ lines beg) height) (recenter -1))))
 
 (defun tpu-pan-right (num)
@@ -2439,6 +2436,7 @@ If FILE is nil, try to load a default file.  The default file names are
 	   (tpu-error (message "Sorry, couldn't copy - %s." (cdr conditions)))))
     (kill-buffer "*TPU-Notice*")))
 
+(defvar tpu-edt-old-global-values nil)
 
 ;;;
 ;;;  Start and Stop TPU-edt
@@ -2447,6 +2445,8 @@ If FILE is nil, try to load a default file.  The default file names are
 (defun tpu-edt-on ()
   "Turn on TPU/edt emulation."
   (interactive)
+  ;; To clean things up (and avoid cycles in the global map).
+  (tpu-edt-off)
   ;; First, activate tpu-global-map, while protecting the original keymap.
   (set-keymap-parent tpu-global-map global-map)
   (setq global-map tpu-global-map)
@@ -2457,9 +2457,12 @@ If FILE is nil, try to load a default file.  The default file names are
   (tpu-set-mode-line t)
   (tpu-advance-direction)
   ;; set page delimiter, display line truncation, and scrolling like TPU
-  (setq-default page-delimiter "\f")
-  (setq-default truncate-lines t)
-  (setq scroll-step 1)
+  (dolist (varval '((page-delimiter . "\f")
+                    (truncate-lines . t)
+                    (scroll-step . 1)))
+    (push (cons (car varval) (default-value (car varval)))
+          tpu-edt-old-global-values)
+    (set-default (car varval) (cdr varval)))
   (tpu-set-control-keys)
   (and window-system (tpu-load-xkeys nil))
   (tpu-arrow-history)
@@ -2476,9 +2479,9 @@ If FILE is nil, try to load a default file.  The default file names are
   (tpu-reset-control-keys nil)
   (remove-hook 'post-command-hook 'tpu-search-highlight)
   (tpu-set-mode-line nil)
-  (setq-default page-delimiter "^\f")
-  (setq-default truncate-lines nil)
-  (setq scroll-step 0)
+  (while tpu-edt-old-global-values
+    (let ((varval (pop tpu-edt-old-global-values)))
+      (set-default (car varval) (cdr varval))))
   ;; Remove tpu-global-map from the global map.
   (let ((map global-map))
     (while map
@@ -2486,6 +2489,7 @@ If FILE is nil, try to load a default file.  The default file names are
         (if (eq tpu-global-map parent)
             (set-keymap-parent map (keymap-parent parent))
           (setq map parent)))))
+  (ignore-errors (ad-disable-regexp "\\`tpu-"))
   (setq tpu-edt-mode nil))
 
 (provide 'tpu-edt)

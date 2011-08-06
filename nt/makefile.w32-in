@@ -1,6 +1,6 @@
 #  -*- Makefile -*- for GNU Emacs on the Microsoft W32 API.
 #  Copyright (C) 2000, 2001, 2002, 2003, 2004,
-#    2005, 2006, 2007 Free Software Foundation, Inc.
+#    2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 #
 #  Top level makefile for building GNU Emacs on Windows NT
 #
@@ -8,7 +8,7 @@
 #
 #  GNU Emacs is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
+#  the Free Software Foundation; either version 3, or (at your option)
 #  any later version.
 #
 #  GNU Emacs is distributed in the hope that it will be useful,
@@ -138,10 +138,12 @@ maybe-bootstrap-SH: doit
 	  exit -1; \
 	fi
 
-bootstrap:	addsection bootstrap-$(MAKETYPE)
+# Bootstrap depends on cmdproxy because some Lisp functions
+# loaded during bootstrap may need to run shell commands.
+bootstrap:	addsection cmdproxy bootstrap-$(MAKETYPE)
 	$(MAKE) $(MFLAGS) $(XMFLAGS) all
 
-bootstrap-nmake: addsection
+bootstrap-nmake: addsection cmdproxy
 	cd ..\lisp
 	$(MAKE) $(MFLAGS) bootstrap-clean
 	cd ..\src
@@ -151,18 +153,21 @@ bootstrap-nmake: addsection
 	cd ..\src
 	$(MAKE) $(MFLAGS) bootstrap
 	$(MAKE) $(MFLAGS) bootstrap-clean
+	cd ..\nt
+	$(CP) $(BLD)/cmdproxy.exe ../bin
 	cd ..\lisp
 	$(MAKE) $(MFLAGS) SHELL=$(SHELLTYPE) bootstrap
 	cd ..\lib-src
 	$(MAKE) $(MFLAGS) DOC
 	cd ..\nt
 
-bootstrap-gmake: addsection
+bootstrap-gmake: addsection cmdproxy
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../lisp bootstrap-clean
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../src clean
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../lib-src clean
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../src bootstrap
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../src bootstrap-clean
+	$(CP) $(BLD)/cmdproxy.exe ../bin
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../lisp bootstrap
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../lib-src DOC
 
@@ -206,6 +211,8 @@ install: all $(INSTALL_DIR)/bin install-other-dirs-$(MAKETYPE)
 	$(IFNOTSAMEDIR) $(CP_DIR) ../etc $(INSTALL_DIR) $(ENDIF)
 	- $(CP_DIR) icons $(INSTALL_DIR)/etc
 	$(IFNOTSAMEDIR) $(CP_DIR) ../info $(INSTALL_DIR) $(ENDIF)
+	$(IFNOTSAMEDIR) $(CP) ../COPYING $(INSTALL_DIR) $(ENDIF)
+	- $(CP) ../COPYING $(INSTALL_DIR)/bin
 	- $(DEL) ../same-dir.tst
 	- $(DEL) $(INSTALL_DIR)/same-dir.tst
 
@@ -248,7 +255,7 @@ info-gmake:
 # Maintenance
 #
 clean:	clean-other-dirs-$(MAKETYPE)
-	- $(DEL) *~ $(COMPILER_TEMP_FILES)
+	- $(DEL) $(COMPILER_TEMP_FILES)
 	- $(DEL_TREE) $(OBJDIR)
 	- $(DEL) stamp_BLD
 	- $(DEL) ../etc/DOC ../etc/DOC-X
@@ -287,6 +294,8 @@ cleanall-other-dirs-gmake:
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../lib-src cleanall
 	$(MAKE) $(MFLAGS) $(XMFLAGS) -C ../src cleanall
 
+# We used to delete *~ here, but that might inadvertently remove
+# precious files if it happens to match their short 8+3 aliases.
 cleanall: clean cleanall-other-dirs-$(MAKETYPE)
 	 - $(DEL_TREE) obj
 	 - $(DEL_TREE) obj-spd

@@ -1,7 +1,7 @@
 ;;; gnus-group.el --- group mode commands for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -378,6 +378,7 @@ score: The score of the group.
 ticked: The number of ticked articles."
   :group 'gnus-group-visual
   :type '(repeat (cons (sexp :tag "Form") face)))
+(put 'gnus-group-highlight 'risky-local-variable t)
 
 (defcustom gnus-new-mail-mark ?%
   "Mark used for groups with new mail."
@@ -415,6 +416,7 @@ score: The score of the group.
 ticked: The number of ticked articles."
   :group 'gnus-group-icons
   :type '(repeat (cons (sexp :tag "Form") file)))
+(put 'gnus-group-icon-list 'risky-local-variable t)
 
 (defcustom gnus-group-name-charset-method-alist nil
   "Alist of method and the charset for group names.
@@ -2006,10 +2008,15 @@ and with point over the group in question."
 (defun gnus-group-read-group (&optional all no-article group select-articles)
   "Read news in this newsgroup.
 If the prefix argument ALL is non-nil, already read articles become
-readable.  IF ALL is a number, fetch this number of articles.  If the
-optional argument NO-ARTICLE is non-nil, no article will be
-auto-selected upon group entry.  If GROUP is non-nil, fetch that
-group."
+readable.
+
+If ALL is a positive number, fetch this number of the latest
+articles in the group.  If ALL is a negative number, fetch this
+number of the earliest articles in the group.
+
+If the optional argument NO-ARTICLE is non-nil, no article will
+be auto-selected upon group entry.  If GROUP is non-nil, fetch
+that group."
   (interactive "P")
   (let ((no-display (eq all 0))
 	(group (or group (gnus-group-group-name)))

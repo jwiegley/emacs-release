@@ -1,7 +1,7 @@
 ;;; nnmail.el --- mail support functions for the Gnus mail backends
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news, mail
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -532,8 +532,9 @@ performed."
   :type '(choice (const :tag "disable" nil)
 		 (integer :format "%v")))
 
-(defcustom nnmail-message-id-cache-file "~/.nnmail-cache"
-  "*The file name of the nnmail Message-ID cache."
+(defcustom nnmail-message-id-cache-file
+  (nnheader-concat gnus-home-directory ".nnmail-cache")
+  "The file name of the nnmail Message-ID cache."
   :group 'nnmail-duplicate
   :group 'nnmail-files
   :type 'file)
@@ -1900,8 +1901,10 @@ See the Info node `(gnus)Fancy Mail Splitting' for more details."
        ;; To or From header
        ((and (equal header 'to-from)
 	     (or (string-match (cadr regexp-target-pair) from)
-		 (and (string-match message-dont-reply-to-names from)
-		      (string-match (cadr regexp-target-pair) to))))
+		 (and (string-match (cadr regexp-target-pair) to)
+		      (let ((rmail-dont-reply-to-names
+			     message-dont-reply-to-names))
+			(equal (rmail-dont-reply-to from) "")))))
 	(setq target (format-time-string (caddr regexp-target-pair) date)))
        ((and (not (equal header 'to-from))
 	     (string-match (cadr regexp-target-pair)

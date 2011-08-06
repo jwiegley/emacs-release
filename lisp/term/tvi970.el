@@ -1,7 +1,7 @@
 ;;; tvi970.el --- terminal support for the Televideo 970
 
 ;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jim Blandy <jimb@occs.cs.oberlin.edu>, January 1992
 ;; Keywords: terminals
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -106,8 +106,8 @@
 
 ;;; Should keypad numbers send ordinary digits or distinct escape sequences?
 (defvar tvi970-keypad-numeric nil
-  "The terminal should be in numeric keypad mode iff this variable is non-nil.
-Do not set this variable!  Call the function ``tvi970-set-keypad-mode''.")
+  "Non-nil means the terminal should be in numeric keypad mode.
+Do not set this variable!  Call the function `tvi970-set-keypad-mode'.")
 
 (defun tvi970-set-keypad-mode (&optional arg)
   "Set the current mode of the TVI 970 numeric keypad.

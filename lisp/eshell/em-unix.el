@@ -1,7 +1,7 @@
 ;;; em-unix.el --- UNIX command aliases
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -930,7 +930,10 @@ Show wall-clock time elapsed during execution of COMMAND.")
      (add-hook 'eshell-post-command-hook 'eshell-show-elapsed-time nil t)
      ;; after setting
      (throw 'eshell-replace-command
-	    (eshell-parse-command (car time-args) (cdr time-args))))))
+	    (eshell-parse-command (car time-args)
+;;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2007-08/msg00205.html
+				  (eshell-stringify-list
+				   (eshell-flatten-list (cdr time-args))))))))
 
 (defalias 'eshell/whoami 'user-login-name)
 

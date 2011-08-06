@@ -1,7 +1,7 @@
 /* Header for composite sequence handler.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007 Free Software Foundation, Inc.
-   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+                 2006, 2007, 2008 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -9,7 +9,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -56,7 +56,7 @@ enum composition_method {
 /* Temporary variable used only in the following macros.  */
 extern Lisp_Object composition_temp;
 
-/* Return 1 iff the composition is already registered.  */
+/* Return 1 if the composition is already registered.  */
 #define COMPOSITION_REGISTERD_P(prop) INTEGERP (XCAR (prop))
 
 /* Return ID number of the already registered composition.  */
@@ -91,7 +91,7 @@ extern Lisp_Object composition_temp;
 	  ? COMPOSITION_WITH_ALTCHARS					\
 	  : COMPOSITION_WITH_RULE_ALTCHARS))))
 
-/* Return 1 iff the composition is valid.  It is valid if length of
+/* Return 1 if the composition is valid.  It is valid if length of
    the composition equals to (END - START).  */
 #define COMPOSITION_VALID_P(start, end, prop)			\
   (CONSP (prop)							\

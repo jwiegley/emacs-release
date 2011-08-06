@@ -1,7 +1,7 @@
 ;;; fill.el --- fill commands for Emacs		-*- coding: iso-2022-7bit -*-
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1996, 1997, 1999, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -117,8 +117,8 @@ if it would act as a paragraph-starter on the second line."
   :group 'fill)
 
 (defcustom adaptive-fill-function nil
-  "*Function to call to choose a fill prefix for a paragraph, or nil.
-nil means the function has not determined the fill prefix."
+  "Function to call to choose a fill prefix for a paragraph, or nil.
+A nil value means the function has not determined the fill prefix."
   :type '(choice (const nil) function)
   :group 'fill)
 
@@ -391,7 +391,7 @@ Don't move back past the buffer position LIMIT.
 This function is called when we are going to break the current line
 after or before a non-ASCII character.  If the charset of the
 character has the property `fill-find-break-point-function', this
-function calls the property value as a function with one arg LINEBEG.
+function calls the property value as a function with one arg LIMIT.
 If the charset has no such property, do nothing."
   (let* ((ch (following-char))
 	 (charset (char-charset ch))
@@ -837,7 +837,13 @@ can take care of filling.  JUSTIFY is used as in `fill-paragraph'."
 	(goto-char comstart) (skip-chars-backward " \t")
 	(setq has-code-and-comment (not (bolp)))))
 
-    (if (not comstart)
+    (if (not (and comstart
+                  ;; Make sure the comment-start mark we found is accepted by
+                  ;; comment-start-skip.  If not, all bets are off, and
+                  ;; we'd better not mess with it.
+                  (string-match comment-start-skip
+                                (buffer-substring comstart comin))))
+
 	;; Return nil, so the normal filling will take place.
 	nil
 
@@ -1350,8 +1356,8 @@ These lines are filled together.
 When calling from a program, pass the range to fill
 as the first two arguments.
 
-Optional third and fourth arguments JUSTIFY and MAIL-FLAG:
-JUSTIFY to justify paragraphs (prefix arg),
+Optional third and fourth arguments JUSTIFY and CITATION-REGEXP:
+JUSTIFY to justify paragraphs (prefix arg).
 When filling a mail message, pass a regexp for CITATION-REGEXP
 which will match the prefix of a line which is a citation marker
 plus whitespace, but no other kind of prefix.

@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Calendar/Diary, Gnus, Dired, Top
 @chapter The Calendar and the Diary
@@ -432,12 +432,16 @@ argument which specifies how many days, weeks, months or years to print
   If the variable @code{cal-tex-holidays} is non-@code{nil} (the default),
 then the printed calendars show the holidays in @code{calendar-holidays}.
 If the variable @code{cal-tex-diary} is non-@code{nil} (the default is
-@code{nil}), diary entries are included also (in weekly and monthly
-calendars only).  If the variable @code{cal-tex-rules} is non-@code{nil}
-(the default is @code{nil}), the calendar displays ruled pages
-in styles that have sufficient room.  You can use the variable
-@code{cal-tex-preamble-extra} to insert extra La@TeX{} commands in the
-preamble of the generated document if you need to.
+@code{nil}), diary entries are included also (in monthly, filofax, and
+iso-week calendars only).  If the variable @code{cal-tex-rules} is
+non-@code{nil} (the default is @code{nil}), the calendar displays ruled
+pages in styles that have sufficient room.  Consult the documentation of
+the individual cal-tex functions to see which calendars support which
+features.
+
+  You can use the variable @code{cal-tex-preamble-extra} to insert extra
+La@TeX{} commands in the preamble of the generated document if you need
+to.
 
 @node Holidays
 @section Holidays
@@ -985,9 +989,8 @@ events for today, for the immediate future, or for any specified
 date.
 
   The name of the diary file is specified by the variable
-@code{diary-file}; @file{~/diary} is the default.  A sample diary file
-is (note that the file format is essentially the same as that used by
-the external shell utility @samp{calendar}):
+@code{diary-file}; @file{~/diary} is the default.  Here's an example
+showing what that file looks like:
 
 @example
 12/22/1988  Twentieth wedding anniversary!!
@@ -1004,8 +1007,10 @@ April 15, 1989 Income tax due.
 @end example
 
 @noindent
-This example uses extra spaces to align the event descriptions of most
-of the entries.  Such formatting is purely a matter of taste.
+This format is essentially the same as the one used by the system's
+@command{calendar} utility.  This example uses extra spaces to align
+the event descriptions of most of the entries.  Such formatting is
+purely a matter of taste.
 
   Although you probably will start by creating a diary manually, Emacs
 provides a number of commands to let you view, add, and change diary
@@ -1392,19 +1397,19 @@ nonmarking (with @samp{&}) when possible.
 specifies a regularly occurring event by offsets specified in days,
 weeks, and months.  It is comparable to a crontab entry interpreted by
 the @code{cron} utility.  Here is a nonmarking, floating diary entry
-that applies to the last Thursday in November:
+that applies to the fourth Thursday in November:
 
 @findex diary-float
 @example
-&%%(diary-float 11 4 -1) American Thanksgiving
+&%%(diary-float 11 4 4) American Thanksgiving
 @end example
 
 @noindent
 The 11 specifies November (the eleventh month), the 4 specifies Thursday
 (the fourth day of the week, where Sunday is numbered zero), and the
-@minus{}1 specifies ``last'' (1 would mean ``first,'' 2 would mean
-``second,'' @minus{}2 would mean ``second-to-last,'' and so on).  The
-month can be a single month or a list of months.  Thus you could change
+second 4 specifies the fourth Thursday (1 would mean ``first,'' 2 would
+mean ``second,'' @minus{}2 would mean ``second-to-last,'' and so on).
+The month can be a single month or a list of months.  Thus you could change
 the 11 above to @samp{'(1 2 3)} and have the entry apply to the last
 Thursday of January, February, and March.  If the month is @code{t}, the
 entry applies to all months of the year.@refill

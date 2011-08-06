@@ -1,6 +1,6 @@
 ;;; erc-log.el --- Logging facilities for ERC.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lawrence Mitchell <wence@gmx.li>
 ;; Keywords: IRC, chat, client, Internet, logging
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -195,7 +195,7 @@ format is defined through a formatting function on
 
 Since automatic logging is not always a Good Thing (especially if
 people say things in different coding systems), you can turn logging
-behaviour on and off with the variable `erc-enable-logging', which can
+behavior on and off with the variable `erc-enable-logging', which can
 also be a predicate function. To only log when you are not set away, use:
 
 \(setq erc-enable-logging
@@ -261,7 +261,7 @@ The current buffer is given by BUFFER."
 
 (defun erc-log-all-but-server-buffers (buffer)
   "Returns t if logging should be enabled in BUFFER.
-Returns nil iff `erc-server-buffer-p' returns t."
+Returns nil if `erc-server-buffer-p' returns t."
   (save-excursion
     (save-window-excursion
       (set-buffer buffer)
@@ -385,7 +385,7 @@ You can save every individual message by putting this function on
 	(with-current-buffer buffer
 	  (save-restriction
 	    (widen)
-	    ;; early on in the initalisation, don't try and write the log out
+	    ;; early on in the initialization, don't try and write the log out
 	    (when (and (markerp erc-last-saved-position)
 		       (> erc-insert-marker (1+ erc-last-saved-position)))
 	      (write-region (1+ (marker-position erc-last-saved-position))

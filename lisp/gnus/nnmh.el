@@ -1,7 +1,7 @@
 ;;; nnmh.el --- mhspool access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -255,8 +255,11 @@ as unread by Gnus.")
 (deffoo nnmh-request-expire-articles (articles newsgroup
 					       &optional server force)
   (nnmh-possibly-change-directory newsgroup server)
-  (let* ((is-old t)
-	 article rest mod-time)
+  (let ((is-old t)
+	(nnmail-expiry-target
+	 (or (gnus-group-find-parameter newsgroup 'expiry-target t)
+	     nnmail-expiry-target))
+	article rest mod-time)
     (nnheader-init-server-buffer)
 
     (while (and articles is-old)

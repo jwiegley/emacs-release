@@ -6,10 +6,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -21,9 +21,9 @@ Foundation, Inc.
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 
 File: elisp,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
@@ -32,7 +32,7 @@ Emacs Lisp
 **********
 
 This Info file contains edition 2.9 of the GNU Emacs Lisp Reference
-Manual, corresponding to GNU Emacs version 22.1.
+Manual, corresponding to GNU Emacs version 22.2.
 
 * Menu:
 
@@ -345,7 +345,6 @@ Variables
 * Setting Variables::       Storing new values in variables.
 * Variable Scoping::        How Lisp chooses among local and global values.
 * Buffer-Local Variables::  Variable values in effect only in one buffer.
-* Frame-Local Variables::   Variable values in effect only in one frame.
 * Future Local Variables::  New kinds of local values we might add some day.
 * File Local Variables::    Handling local variable lists in files.
 * Variable Aliases::        Variables that are aliases for other variables.
@@ -563,6 +562,7 @@ Command Loop
 * Command Overview::    How the command loop reads commands.
 * Defining Commands::   Specifying how a function should read arguments.
 * Interactive Call::    Calling a command, so that it will read arguments.
+* Distinguish Interactive::     Making a command distinguish interactive calls.
 * Command Loop Info::   Variables set by the command loop for you to examine.
 * Adjusting Point::     Adjustment of point after a command.
 * Input Events::	What input looks like when you read it.
@@ -598,7 +598,8 @@ Input Events
 * Misc Events::             Other events the system can generate.
 * Event Examples::          Examples of the lists for mouse events.
 * Classifying Events::      Finding the modifier keys in an event symbol.
-* Accessing Events::        Functions to extract info from events.
+* Accessing Mouse::	    Functions to extract info from mouse events.
+* Accessing Scroll::        Functions to get info from scroll bar events.
 * Strings of Events::       Special considerations for putting
                               keyboard character events in a string.
 
@@ -1356,7 +1357,7 @@ chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
 * Menu:
 
@@ -1514,7 +1515,7 @@ values results in a `setting-constant' error.  *Note Constant
 Variables::.
 
  -- Function: booleanp object
-     Return non-nil iff OBJECT is one of the two canonical boolean
+     Return non-nil if OBJECT is one of the two canonical boolean
      values: `t' or `nil'.
 
 
@@ -2247,8 +2248,8 @@ File: elisp,  Node: Symbol Type,  Next: Sequence Type,  Prev: Character Type,  U
 
 A "symbol" in GNU Emacs Lisp is an object with a name.  The symbol name
 serves as the printed representation of the symbol.  In ordinary Lisp
-use, with one single obarray (*note Creating Symbols::, a symbol's name
-is unique--no two symbols have the same name.
+use, with one single obarray (*note Creating Symbols::), a symbol's
+name is unique--no two symbols have the same name.
 
    A symbol can serve as a variable, as a function name, or to hold a
 property list.  Or it may serve only to be distinct from all other Lisp
@@ -3489,7 +3490,7 @@ File: elisp,  Node: Equality Predicates,  Prev: Type Predicates,  Up: Lisp Data 
 2.7 Equality Predicates
 =======================
 
-Here we describe two functions that test for equality between any two
+Here we describe functions that test for equality between any two
 objects.  Other functions test equality between objects of specific
 types, e.g., strings.  For these predicates, see the appropriate chapter
 describing the data type.
@@ -3577,11 +3578,12 @@ describing the data type.
 
      Comparison of strings is case-sensitive, but does not take account
      of text properties--it compares only the characters in the
-     strings.  For technical reasons, a unibyte string and a multibyte
-     string are `equal' if and only if they contain the same sequence of
-     character codes and all these codes are either in the range 0
-     through 127 (ASCII) or 160 through 255 (`eight-bit-graphic').
-     (*note Text Representations::).
+     strings.  Use `equal-including-properties' to also compare text
+     properties.  For technical reasons, a unibyte string and a
+     multibyte string are `equal' if and only if they contain the same
+     sequence of character codes and all these codes are either in the
+     range 0 through 127 (ASCII) or 160 through 255
+     (`eight-bit-graphic').  (*note Text Representations::).
 
           (equal "asdf" "ASDF")
                => nil
@@ -3598,6 +3600,17 @@ the expressions below return `t':
 
    Because of this recursive method, circular lists may therefore cause
 infinite recursion (leading to an error).
+
+ -- Function: equal-including-properties object1 object2
+     This function behaves like `equal' in all cases but also requires
+     that for two strings to be equal, they have the same text
+     properties.
+
+          (equal "asdf" (propertize "asdf" '(asdf t)))
+               => t
+          (equal-including-properties "asdf"
+                                      (propertize "asdf" '(asdf t)))
+               => nil
 
 
 File: elisp,  Node: Numbers,  Next: Strings and Characters,  Prev: Lisp Data Types,  Up: Top
@@ -5212,43 +5225,61 @@ error.
           => "The octal value of 18 is 22,
               and the hex value is 12."
 
-   A specification can have a "width", which is a signed decimal number
+   A specification can have a "width", which is a decimal number
 between the `%' and the specification character.  If the printed
 representation of the object contains fewer characters than this width,
-`format' extends it with padding.  The padding goes on the left if the
-width is positive (or starts with zero) and on the right if the width
-is negative.  The padding character is normally a space, but it's `0'
-if the width starts with a zero.
+`format' extends it with padding.  The width specifier is ignored for
+the `%%' specification.  Any padding introduced by the width specifier
+normally consists of spaces inserted on the left:
 
-   Some of these conventions are ignored for specification characters
-for which they do not make sense.  That is, `%s', `%S' and `%c' accept
-a width starting with 0, but still pad with _spaces_ on the left.
-Also, `%%' accepts a width, but ignores it.  Here are some examples of
-padding:
+     (format "%5d is padded on the left with spaces" 123)
+          => "  123 is padded on the left with spaces"
+
+If the width is too small, `format' does not truncate the object's
+printed representation.  Thus, you can use a width to specify a minimum
+spacing between columns with no risk of losing information.  In the
+following three examples, `%7s' specifies a minimum width of 7.  In the
+first case, the string inserted in place of `%7s' has only 3 letters,
+and needs 4 blank spaces as padding.  In the second case, the string
+`"specification"' is 13 letters wide but is not truncated.
+
+     (format "The word `%7s' actually has %d letters in it."
+             "foo" (length "foo"))
+          => "The word `    foo' actually has 3 letters in it."
+     (format "The word `%7s' actually has %d letters in it."
+             "specification" (length "specification"))
+          => "The word `specification' actually has 13 letters in it."
+
+   Immediately after the `%' and before the optional width specifier,
+you can also put certain "flag characters".
+
+   The flag `+' inserts a plus sign before a positive number, so that
+it always has a sign.  A space character as flag inserts a space before
+a positive number.  (Otherwise, positive numbers start with the first
+digit.)  These flags are useful for ensuring that positive numbers and
+negative numbers use the same number of columns.  They are ignored
+except for `%d', `%e', `%f', `%g', and if both flags are used, `+'
+takes precedence.
+
+   The flag `#' specifies an "alternate form" which depends on the
+format in use.  For `%o', it ensures that the result begins with a `0'.
+For `%x' and `%X', it prefixes the result with `0x' or `0X'.  For
+`%e', `%f', and `%g', the `#' flag means include a decimal point even
+if the precision is zero.
+
+   The flag `-' causes the padding inserted by the width specifier, if
+any, to be inserted on the right rather than the left.  The flag `0'
+ensures that the padding consists of `0' characters instead of spaces,
+inserted on the left.  These flags are ignored for specification
+characters for which they do not make sense: `%s', `%S' and `%c' accept
+the `0' flag, but still pad with _spaces_ on the left.  If both `-' and
+`0' are present and valid, `-' takes precedence.
 
      (format "%06d is padded on the left with zeros" 123)
           => "000123 is padded on the left with zeros"
 
      (format "%-6d is padded on the right" 123)
           => "123    is padded on the right"
-
-If the width is too small, `format' does not truncate the object's
-printed representation.  Thus, you can use a width to specify a minimum
-spacing between columns with no risk of losing information.
-
-   In the following three examples, `%7s' specifies a minimum width of
-7.  In the first case, the string inserted in place of `%7s' has only 3
-letters, it needs 4 blank spaces as padding.  In the second case, the
-string `"specification"' is 13 letters wide but is not truncated.  In
-the third case, the padding is on the right.
-
-     (format "The word `%7s' actually has %d letters in it."
-             "foo" (length "foo"))
-          => "The word `    foo' actually has 3 letters in it."
-
-     (format "The word `%7s' actually has %d letters in it."
-             "specification" (length "specification"))
-          => "The word `specification' actually has 13 letters in it."
 
      (format "The word `%-7s' actually has %d letters in it."
              "foo" (length "foo"))
@@ -5263,23 +5294,6 @@ omitted.  For `%s' and `%S', the precision truncates the string to the
 given width, so `%.3s' shows only the first three characters of the
 representation for OBJECT.  Precision has no effect for other
 specification characters.
-
-   Immediately after the `%' and before the optional width and
-precision, you can put certain "flag" characters.
-
-   `+' as a flag inserts a plus sign before a positive number, so that
-it always has a sign.  A space character as flag inserts a space before
-a positive number.  (Otherwise, positive numbers start with the first
-digit.)  Either of these two flags ensures that positive numbers and
-negative numbers use the same number of columns.  These flags are
-ignored except for `%d', `%e', `%f', `%g', and if both flags are used,
-the `+' takes precedence.
-
-   The flag `#' specifies an "alternate form" which depends on the
-format in use.  For `%o' it ensures that the result begins with a `0'.
-For `%x' and `%X', it prefixes the result with `0x' or `0X'.  For `%e',
-`%f', and `%g', the `#' flag means include a decimal point even if the
-precision is zero.
 
 
 File: elisp,  Node: Case Conversion,  Next: Case Tables,  Prev: Formatting Strings,  Up: Strings and Characters
@@ -7169,81 +7183,4 @@ such applications, for four reasons:
 sequence), a vector may be necessary, because many keyboard input
 characters are outside the range that will fit in a string.  *Note Key
 Sequence Input::.
-
-
-File: elisp,  Node: Array Functions,  Next: Vectors,  Prev: Arrays,  Up: Sequences Arrays Vectors
-
-6.3 Functions that Operate on Arrays
-====================================
-
-In this section, we describe the functions that accept all types of
-arrays.
-
- -- Function: arrayp object
-     This function returns `t' if OBJECT is an array (i.e., a vector, a
-     string, a bool-vector or a char-table).
-
-          (arrayp [a])
-               => t
-          (arrayp "asdf")
-               => t
-          (arrayp (syntax-table))    ;; A char-table.
-               => t
-
- -- Function: aref array index
-     This function returns the INDEXth element of ARRAY.  The first
-     element is at index zero.
-
-          (setq primes [2 3 5 7 11 13])
-               => [2 3 5 7 11 13]
-          (aref primes 4)
-               => 11
-          (aref "abcdefg" 1)
-               => 98           ; `b' is ASCII code 98.
-
-     See also the function `elt', in *Note Sequence Functions::.
-
- -- Function: aset array index object
-     This function sets the INDEXth element of ARRAY to be OBJECT.  It
-     returns OBJECT.
-
-          (setq w [foo bar baz])
-               => [foo bar baz]
-          (aset w 0 'fu)
-               => fu
-          w
-               => [fu bar baz]
-
-          (setq x "asdfasfd")
-               => "asdfasfd"
-          (aset x 3 ?Z)
-               => 90
-          x
-               => "asdZasfd"
-
-     If ARRAY is a string and OBJECT is not a character, a
-     `wrong-type-argument' error results.  The function converts a
-     unibyte string to multibyte if necessary to insert a character.
-
- -- Function: fillarray array object
-     This function fills the array ARRAY with OBJECT, so that each
-     element of ARRAY is OBJECT.  It returns ARRAY.
-
-          (setq a [a b c d e f g])
-               => [a b c d e f g]
-          (fillarray a 0)
-               => [0 0 0 0 0 0 0]
-          a
-               => [0 0 0 0 0 0 0]
-          (setq s "When in the course")
-               => "When in the course"
-          (fillarray s ?-)
-               => "------------------"
-
-     If ARRAY is a string and OBJECT is not a character, a
-     `wrong-type-argument' error results.
-
-   The general sequence functions `copy-sequence' and `length' are
-often useful for objects known to be arrays.  *Note Sequence
-Functions::.
 

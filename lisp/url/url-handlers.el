@@ -1,7 +1,7 @@
 ;;; url-handlers.el --- file-name-handler stuff for URL loading
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -9,7 +9,7 @@
 ;;
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -125,6 +125,7 @@ particularly bad at this\).")
 	(inhibit-file-name-operation operation))
     (apply operation args)))
 
+;;;###autoload
 (defun url-file-handler (operation &rest args)
   "Function called from the `file-name-handler-alist' routines.
 OPERATION is what needs to be done (`file-exists-p', etc).  ARGS are
@@ -152,6 +153,7 @@ the arguments that would have been passed to OPERATION."
 (put 'file-name-absolute-p 'url-file-handlers (lambda (&rest ignored) t))
 (put 'expand-file-name 'url-file-handlers 'url-handler-expand-file-name)
 (put 'directory-file-name 'url-file-handlers 'url-handler-directory-file-name)
+(put 'unhandled-file-name-directory 'url-file-handlers 'url-handler-unhandled-file-name-directory)
 ;; (put 'file-name-as-directory 'url-file-handlers 'url-handler-file-name-as-directory)
 
 ;; These are operations that we do not support yet (DAV!!!)
@@ -182,6 +184,13 @@ the arguments that would have been passed to OPERATION."
   ;; When there's more than a single /, just don't touch the slashes at all.
   (if (string-match "//\\'" dir) dir
     (url-run-real-handler 'directory-file-name (list dir))))
+
+(defun url-handler-unhandled-file-name-directory (filename)
+  ;; Copied from tramp.el.  This is used as the cwd for subprocesses:
+  ;; without it running call-process or start-process in a URL directory
+  ;; signals an error.
+  ;; FIXME: we can do better if `filename' is a "file://" URL.
+  (expand-file-name "~/"))
 
 ;; The actual implementation
 ;;;###autoload

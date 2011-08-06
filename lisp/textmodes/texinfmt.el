@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1985, 1986, 1988, 1990, 1991, 1992, 1993,
 ;;   1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: Robert J. Chassell <bug-texinfo@gnu.org>
 ;; Keywords: maint, tex, docs
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -3270,7 +3270,7 @@ Default is to leave paragraph indentation as is."
 ;; Take arguments
 
 ;; @,{c}           ==>    c,        cedilla accent
-(put ', 'texinfo-format 'texinfo-format-cedilla-accent)
+(put '\, 'texinfo-format 'texinfo-format-cedilla-accent)
 (defun texinfo-format-cedilla-accent ()
    (insert (texinfo-parse-arg-discard) ",")
   (goto-char texinfo-command-start))

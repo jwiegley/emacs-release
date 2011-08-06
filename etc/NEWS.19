@@ -1,6 +1,7 @@
 GNU Emacs NEWS -- history of user-visible changes.  1992.
 
-Copyright (C) 1993, 1994, 1995, 2001, 2006, 2007 Free Software Foundation, Inc.
+Copyright (C) 1993, 1994, 1995, 2001, 2006, 2007, 2008
+  Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 
@@ -5133,8 +5134,8 @@ using X).
 ** It is now simpler to tell Emacs to display accented characters under
 X windows.  M-x standard-display-european toggles the display of
 buffer text according to the ISO Latin-1 standard.  With a prefix
-argument, this command enables European character display iff the
-argument is positive.
+argument, this command enables European character display if and only
+if the argument is positive.
 
 ** The `-i' command-line argument tells Emacs to use a picture of the
 GNU gnu as its icon, instead of letting the window manager choose an
@@ -6524,7 +6525,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,

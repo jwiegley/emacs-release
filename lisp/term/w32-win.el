@@ -1,7 +1,7 @@
 ;;; w32-win.el --- parse switches controlling interface with W32 window system
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Kevin Gallo
 ;; Keywords: terminals
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1041,8 +1041,18 @@ XConsortium: rgb.txt,v 10.41 94/02/20 18:39:36 rws Exp")
 
 ;;; make f10 activate the real menubar rather than the mini-buffer menu
 ;;; navigation feature.
-(global-set-key [f10] (lambda ()
-			(interactive) (w32-send-sys-command ?\xf100)))
+(defun menu-bar-open (&optional frame)
+  "Start key navigation of the menu bar in FRAME.
+
+This initially activates the first menu-bar item, and you can then navigate
+with the arrow keys, select a menu entry with the Return key or cancel with
+the Escape key.  If FRAME has no menu bar, this function does nothing.
+
+If FRAME is nil or not given, use the selected frame."
+  (interactive "i")
+  (w32-send-sys-command ?\xf100 frame))
+;
+(global-set-key [f10] 'menu-bar-open)
 
 (substitute-key-definition 'suspend-emacs 'iconify-or-deiconify-frame
 			   global-map)
@@ -1098,6 +1108,15 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
     (progn
       ;; Setup the default fontset.
       (setup-default-fontset)
+      ;; Enable Japanese fonts on Windows to be used by default.
+      (set-fontset-font nil (make-char 'katakana-jisx0201)
+                        '("*" . "JISX0208-SJIS"))
+      (set-fontset-font nil (make-char 'latin-jisx0201)
+                        '("*" . "JISX0208-SJIS"))
+      (set-fontset-font nil (make-char 'japanese-jisx0208)
+                        '("*" . "JISX0208-SJIS"))
+      (set-fontset-font nil (make-char 'japanese-jisx0208-1978)
+                        '("*" . "JISX0208-SJIS"))
       ;; Create the standard fontset.
       (create-fontset-from-fontset-spec w32-standard-fontset-spec t)
       ;; Create fontset specified in X resources "Fontset-N" (N is 0, 1,...).
@@ -1199,12 +1218,6 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 			      nil nil default))))
     (list face (if (equal value "") nil value))))
 
-;;; Enable Japanese fonts on Windows to be used by default.
-(set-fontset-font nil (make-char 'katakana-jisx0201) '("*" . "JISX0208-SJIS"))
-(set-fontset-font nil (make-char 'latin-jisx0201) '("*" . "JISX0208-SJIS"))
-(set-fontset-font nil (make-char 'japanese-jisx0208) '("*" . "JISX0208-SJIS"))
-(set-fontset-font nil (make-char 'japanese-jisx0208-1978) '("*" . "JISX0208-SJIS"))
-
 (defun mouse-set-font (&rest fonts)
   "Select an Emacs font from a list of known good fonts and fontsets.
 
@@ -1240,8 +1253,10 @@ pop-up menu are unaffected by `w32-list-proportional-fonts')."
 
 ;;; Set default known names for image libraries
 (setq image-library-alist
-      '((xpm "xpm4.dll" "libXpm-nox4.dll" "libxpm.dll")
-        (png "libpng13d.dll" "libpng13.dll" "libpng12d.dll" "libpng12.dll" "libpng.dll")
+      '((xpm "libxpm.dll" "xpm4.dll" "libXpm-nox4.dll")
+        (png "libpng12d.dll" "libpng12.dll" "libpng.dll"
+	 ;; these are libpng 1.2.8 from GTK+
+	 "libpng13d.dll" "libpng13.dll")
         (jpeg "jpeg62.dll" "libjpeg.dll" "jpeg-62.dll" "jpeg.dll")
         (tiff "libtiff3.dll" "libtiff.dll")
         (gif "giflib4.dll" "libungif4.dll" "libungif.dll")))

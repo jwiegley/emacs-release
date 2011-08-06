@@ -5,13 +5,13 @@
 ;; Keywords: unix, tools
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2000, 2001, 2002, 2003,
-;;  2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;  2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -58,7 +58,7 @@
 
 (defgroup gud nil
   "Grand Unified Debugger mode for gdb and other debuggers under Emacs.
-Supported debuggers include gdb, sdb, dbx, xdb, perldb, pdb (Python), jdb."
+Supported debuggers include gdb, sdb, dbx, xdb, perldb, pdb (Python) and jdb."
   :group 'unix
   :group 'tools)
 
@@ -88,7 +88,7 @@ Supported debuggers include gdb, sdb, dbx, xdb, perldb, pdb (Python), jdb."
 
 (defun gud-symbol (sym &optional soft minor-mode)
   "Return the symbol used for SYM in MINOR-MODE.
-MINOR-MODE defaults to `gud-minor-mode.
+MINOR-MODE defaults to `gud-minor-mode'.
 The symbol returned is `gud-<MINOR-MODE>-<SYM>'.
 If SOFT is non-nil, returns nil if the symbol doesn't already exist."
   (unless (or minor-mode gud-minor-mode) (error "Gud internal error"))
@@ -103,6 +103,8 @@ If SOFT is non-nil, returns nil if the symbol doesn't already exist."
 (defvar gud-running nil
   "Non-nil if debugged program is running.
 Used to grey out relevant toolbar icons.")
+
+(defvar gdb-ready nil)
 
 ;; Use existing Info buffer, if possible.
 (defun gud-goto-info ()
@@ -137,7 +139,7 @@ Used to grey out relevant toolbar icons.")
 
 (easy-mmode-defmap gud-menu-map
   '(([help]     "Info" . gud-goto-info)
-    ([tooltips] menu-item "Toggle GUD tooltips" gud-tooltip-mode
+    ([tooltips] menu-item "Show GUD tooltips" gud-tooltip-mode
                   :enable (and (not emacs-basic-display)
 			       (display-graphic-p)
 			       (fboundp 'x-show-tip))
@@ -237,7 +239,7 @@ Used to grey out relevant toolbar icons.")
        ([menu-bar run] menu-item
 	,(propertize "run" 'face 'font-lock-doc-face) gud-run
 	:visible (memq gud-minor-mode '(gdbmi gdb dbx jdb)))
-       ([menu-bar go] menu-item 
+       ([menu-bar go] menu-item
 	,(propertize " go " 'face 'font-lock-doc-face) gud-go
 	:visible (and (not gud-running)
 		      (eq gud-minor-mode 'gdba)))
@@ -331,14 +333,14 @@ Uses `gud-<MINOR-MODE>-directories' to find the source files."
 ;; Of course you may use `gud-def' with any other debugger command, including
 ;; user defined ones.
 
-;; A macro call like (gud-def FUNC NAME KEY DOC) expands to a form
-;; which defines FUNC to send the command NAME to the debugger, gives
+;; A macro call like (gud-def FUNC CMD KEY DOC) expands to a form
+;; which defines FUNC to send the command CMD to the debugger, gives
 ;; it the docstring DOC, and binds that function to KEY in the GUD
 ;; major mode.  The function is also bound in the global keymap with the
 ;; GUD prefix.
 
 (defmacro gud-def (func cmd key &optional doc)
-  "Define FUNC to be a command sending STR and bound to KEY, with
+  "Define FUNC to be a command sending CMD and bound to KEY, with
 optional doc string DOC.  Certain %-escapes in the string arguments
 are interpreted specially if present.  These are:
 
@@ -362,9 +364,10 @@ we're in the GUD buffer)."
      (defun ,func (arg)
        ,@(if doc (list doc))
        (interactive "p")
-       ,(if (stringp cmd)
-	    `(gud-call ,cmd arg)
-	  cmd))
+       (if (not gud-running)
+	 ,(if (stringp cmd)
+	      `(gud-call ,cmd arg)
+	    cmd)))
      ,(if key `(local-set-key ,(concat "\C-c" key) ',func))
      ,(if key `(global-set-key (vconcat gud-key-prefix ,key) ',func))))
 
@@ -409,7 +412,7 @@ we're in the GUD buffer)."
 
 (defvar gud-last-speedbar-stackframe nil
   "Description of the currently displayed GUD stack.
-t means that there is no stack, and we are in display-file mode.")
+The value t means that there is no stack, and we are in display-file mode.")
 
 (defvar gud-speedbar-key-map nil
   "Keymap used when in the buffers display mode.")
@@ -456,7 +459,13 @@ t means that there is no stack, and we are in display-file mode.")
     ["Auto raise frame" gdb-speedbar-auto-raise
      :style toggle :selected gdb-speedbar-auto-raise
      :visible (memq (buffer-local-value 'gud-minor-mode gud-comint-buffer)
-		    '(gdbmi gdba))])
+		    '(gdbmi gdba))]
+    ("Output Format"
+     :visible (memq (buffer-local-value 'gud-minor-mode gud-comint-buffer)
+		    '(gdbmi gdba))
+     ["Binary" (gdb-var-set-format "binary") t]
+     ["Natural" (gdb-var-set-format  "natural") t]
+     ["Hexadecimal" (gdb-var-set-format "hexadecimal") t]))
   "Additional menu items to add to the speedbar frame.")
 
 ;; Make sure our special speedbar mode is loaded
@@ -465,14 +474,14 @@ t means that there is no stack, and we are in display-file mode.")
   (add-hook 'speedbar-load-hook 'gud-install-speedbar-variables))
 
 (defun gud-expansion-speedbar-buttons (directory zero)
-  "Wrapper for call to speedbar-add-expansion-list.   DIRECTORY and
-ZERO are not used, but are required by the caller."
+  "Wrapper for call to `speedbar-add-expansion-list'.
+DIRECTORY and ZERO are not used, but are required by the caller."
   (gud-speedbar-buttons gud-comint-buffer))
 
 (defun gud-speedbar-buttons (buffer)
   "Create a speedbar display based on the current state of GUD.
 If the GUD BUFFER is not running a supported debugger, then turn
-off the specialized speedbar mode.  BUFFER is not used, but are
+off the specialized speedbar mode.  BUFFER is not used, but is
 required by the caller."
   (when (and gud-comint-buffer
 	     ;; gud-comint-buffer might be killed
@@ -587,8 +596,9 @@ required by the caller."
 ;; History of argument lists passed to gdb.
 (defvar gud-gdb-history nil)
 
-(defcustom gud-gdb-command-name "gdb --annotate=3"
-  "Default command to execute an executable under the GDB debugger."
+(defcustom gud-gud-gdb-command-name "gdb --fullname"
+  "Default command to run an executable under GDB in text command mode.
+The option \"--fullname\" must be included in this value."
    :type 'string
    :group 'gud)
 
@@ -633,14 +643,6 @@ required by the caller."
     (while (string-match "\n\032\032\\(.*\\)\n" gud-marker-acc)
       (let ((match (match-string 1 gud-marker-acc)))
 
-	;; Pick up stopped annotation if attaching to process.
-	(if (string-equal match "stopped") (setq gdb-active-process t))
-
-	;; Using annotations, switch to gud-gdba-marker-filter.
-	(when (string-equal match "prompt")
-	  (require 'gdb-ui)
-	  (gdb-prompt nil))
-
 	(setq
 	 ;; Append any text before the marker to the output we're going
 	 ;; to return - we don't include the marker in this text.
@@ -649,13 +651,7 @@ required by the caller."
 
 	 ;; Set the accumulator to the remaining text.
 
-	 gud-marker-acc (substring gud-marker-acc (match-end 0)))
-
-	;; Pick up any errors that occur before first prompt annotation.
-	(if (string-equal match "error-begin")
-	    (put-text-property 0 (length gud-marker-acc)
-			       'face font-lock-warning-face
-			       gud-marker-acc))))
+	 gud-marker-acc (substring gud-marker-acc (match-end 0)))))
 
     ;; Does the remaining text look like it might end with the
     ;; beginning of another marker?  If it does, then keep it in
@@ -707,21 +703,13 @@ required by the caller."
 (defvar gud-filter-pending-text nil
   "Non-nil means this is text that has been saved for later in `gud-filter'.")
 
+;; The old gdb command (text command mode).  The new one is in gdb-ui.el.
 ;;;###autoload
-(defun gdb (command-line)
+(defun gud-gdb (command-line)
   "Run gdb on program FILE in buffer *gud-FILE*.
 The directory containing FILE becomes the initial working
-directory and source-file directory for your debugger.  By
-default this command starts GDB using a graphical interface.  See
-`gdba' for more information.
-
-To run GDB in text command mode, replace the GDB \"--annotate=3\"
-option with \"--fullname\" either in the minibuffer for the
-current Emacs session, or the custom variable
-`gud-gdb-command-name' for all future sessions.  You need to use
-text command mode to debug multiple programs within one Emacs
-session."
-  (interactive (list (gud-query-cmdline 'gdb)))
+directory and source-file directory for your debugger."
+  (interactive (list (gud-query-cmdline 'gud-gdb)))
 
   (when (and gud-comint-buffer
 	   (buffer-name gud-comint-buffer)
@@ -764,8 +752,10 @@ session."
   (setq comint-prompt-regexp "^(.*gdb[+]?) *")
   (setq paragraph-start comint-prompt-regexp)
   (setq gdb-first-prompt t)
+  (setq gud-running nil)
+  (setq gdb-ready nil)
   (setq gud-filter-pending-text nil)
-  (run-hooks 'gdb-mode-hook))
+  (run-hooks 'gud-gdb-mode-hook))
 
 ;; One of the nice features of GDB is its impressive support for
 ;; context-sensitive command completion.  We preserve that feature
@@ -914,7 +904,7 @@ It is passed through FILTER before we look at it."
 (defun gud-gdb-run-command-fetch-lines (command buffer &optional skip)
   "Run COMMAND, and return the list of lines it outputs.
 BUFFER is the current buffer which may be the GUD buffer in which to run.
-SKIP is the number of chars to skip on each lines, it defaults to 0."
+SKIP is the number of chars to skip on each line, it defaults to 0."
   (with-current-buffer gud-comint-buffer
     (if (and (eq gud-comint-buffer buffer)
 	     (save-excursion
@@ -1167,8 +1157,8 @@ a better solution in 6.1 upwards.")
 (defvar gud-dbx-use-stopformat-p
   (string-match "irix[6-9]\\.[1-9]" system-configuration)
   "Non-nil to use the dbx feature present at least from Irix 6.1
-  whereby $stopformat=1 produces an output format compatiable with
-  `gud-dbx-marker-filter'.")
+whereby $stopformat=1 produces an output format compatible with
+`gud-dbx-marker-filter'.")
 ;; [Irix dbx seems to be a moving target.  The dbx output changed
 ;; subtly sometime between OS v4.0.5 and v5.2 so that, for instance,
 ;; the output from `up' is no longer spotted by gud (and it's probably
@@ -1638,7 +1628,7 @@ and source-file directory for your debugger."
   (gud-common-init command-line nil 'gud-pdb-marker-filter)
   (set (make-local-variable 'gud-minor-mode) 'pdb)
 
-  (gud-def gud-break  "break %l"     "\C-b" "Set breakpoint at current line.")
+  (gud-def gud-break  "break %f:%l"  "\C-b" "Set breakpoint at current line.")
   (gud-def gud-remove "clear %f:%l"  "\C-d" "Remove breakpoint at current line")
   (gud-def gud-step   "step"         "\C-s" "Step one source line with display.")
   (gud-def gud-next   "next"         "\C-n" "Step one line (skip functions).")
@@ -1767,7 +1757,7 @@ class information on jdb startup (original method)."
   :group 'gud)
 
 (defvar gud-jdb-classpath nil
- "Java/jdb classpath directories list.
+  "Java/jdb classpath directories list.
 If `gud-jdb-use-classpath' is non-nil, gud-jdb derives the `gud-jdb-classpath'
 list automatically using the following methods in sequence
 \(with subsequent successful steps overriding the results of previous
@@ -1776,7 +1766,7 @@ steps):
 1) Read the CLASSPATH environment variable,
 2) Read any \"-classpath\" argument used to run jdb,
    or detected in jdb output (e.g. if jdb is run by a script
-   that echoes the actual jdb command before starting jdb)
+   that echoes the actual jdb command before starting jdb),
 3) Send a \"classpath\" command to jdb and scan jdb output for
    classpath information if jdb is invoked with an \"-attach\" (to
    an already running VM) argument (This case typically does not
@@ -1784,7 +1774,7 @@ steps):
    to the VM when it is started).
 
 Note that method 3 cannot be used with oldjdb (or Java 1 jdb) since
-those debuggers do not support the classpath command. Use 1) or 2).")
+those debuggers do not support the classpath command.  Use 1) or 2).")
 
 (defvar gud-jdb-sourcepath nil
   "Directory list provided by an (optional) \"-sourcepath\" option to jdb.
@@ -1798,7 +1788,7 @@ the most recent debugger output history while searching for
 source file information.")
 
 (defvar gud-jdb-history nil
-"History of argument lists passed to jdb.")
+  "History of argument lists passed to jdb.")
 
 
 ;; List of Java source file directories.
@@ -1815,21 +1805,21 @@ file from which the class originated.  This allows gud mode to keep
 the source code display in sync with the debugging session.")
 
 (defvar gud-jdb-source-files nil
-"List of the java source files for this debugging session.")
+  "List of the java source files for this debugging session.")
 
 ;; Association list of fully qualified class names (package + class name)
 ;; and their source files.
 (defvar gud-jdb-class-source-alist nil
-"Association list of fully qualified class names and source files.")
+  "Association list of fully qualified class names and source files.")
 
 ;; This is used to hold a source file during analysis.
 (defvar gud-jdb-analysis-buffer nil)
 
 (defvar gud-jdb-classpath-string nil
-"Holds temporary classpath values.")
+  "Holds temporary classpath values.")
 
 (defun gud-jdb-build-source-files-list (path extn)
-"Return a list of java source files (absolute paths).
+  "Return a list of java source files (absolute paths).
 PATH gives the directories in which to search for files with
 extension EXTN.  Normally EXTN is given as the regular expression
  \"\\.java$\" ."
@@ -2099,8 +2089,8 @@ extension EXTN.  Normally EXTN is given as the regular expression
 (defvar gud-jdb-lowest-stack-level 999)
 
 (defun gud-jdb-find-source-using-classpath (p)
-"Find source file corresponding to fully qualified class p.
-Convert p from jdb's output, converted to a pathname
+  "Find source file corresponding to fully qualified class P.
+Convert P from jdb's output, converted to a pathname
 relative to a classpath directory."
   (save-match-data
     (let
@@ -2128,14 +2118,14 @@ relative to a classpath directory."
     (if found-file (concat (car cplist) "/" filename)))))
 
 (defun gud-jdb-find-source (string)
-"Alias for function used to locate source files.
+  "Alias for function used to locate source files.
 Set to `gud-jdb-find-source-using-classpath' or `gud-jdb-find-source-file'
 during jdb initialization depending on the value of
 `gud-jdb-use-classpath'."
-nil)
+  nil)
 
 (defun gud-jdb-parse-classpath-string (string)
-"Parse the classpath list and convert each item to an absolute pathname."
+  "Parse the classpath list and convert each item to an absolute pathname."
   (mapcar (lambda (s) (if (string-match "[/\\]$" s)
 			  (replace-match "" nil nil s) s))
 	  (mapcar 'file-truename
@@ -2262,7 +2252,7 @@ The buffer is named \"*gud*\" if no initial class is given or
 switch is given, omit all whitespace between it and its value.
 
 See `gud-jdb-use-classpath' and `gud-jdb-classpath' documentation for
-information on how jdb accesses source files. Alternatively (if
+information on how jdb accesses source files.  Alternatively (if
 `gud-jdb-use-classpath' is nil), see `gud-jdb-directories' for the
 original source file access method.
 
@@ -2462,7 +2452,7 @@ comint mode, which see."
 ;; for local variables in the debugger buffer.
 (defun gud-common-init (command-line massage-args marker-filter
 				     &optional find-file)
-  (let* ((words (split-string command-line))
+  (let* ((words (split-string-and-unquote command-line))
 	 (program (car words))
 	 (dir default-directory)
 	 ;; Extract the file name from WORDS
@@ -2519,7 +2509,6 @@ comint mode, which see."
 	 (and file-word (file-name-nondirectory file))))
   (set (make-local-variable 'gud-marker-filter) marker-filter)
   (if find-file (set (make-local-variable 'gud-find-file) find-file))
-  (setq gud-running nil)
   (setq gud-last-last-frame nil)
 
   (set-process-filter (get-buffer-process (current-buffer)) 'gud-filter)
@@ -2627,7 +2616,7 @@ It is saved for when this flag is not set.")
 	   ;;  process-buffer is current-buffer
 	   (unwind-protect
 	       (progn
-		 ;; Write something in *compilation* and hack its mode line,
+		 ;; Write something in the GUD buffer and hack its mode line,
 		 (set-buffer (process-buffer proc))
 		 ;; Fix the mode line.
 		 (setq mode-line-process
@@ -2683,11 +2672,14 @@ Obeying it means displaying in another window the specified file and line."
 	 (buffer
 	  (with-current-buffer gud-comint-buffer
 	    (gud-find-file true-file)))
-	 (window (and buffer (or (get-buffer-window buffer)
-				 (if (memq gud-minor-mode '(gdbmi gdba))
-				     (unless (gdb-display-source-buffer buffer)
-				       (gdb-display-buffer buffer nil)))
-				 (display-buffer buffer))))
+	 (window (and buffer
+		      (or (get-buffer-window buffer)
+			  (if (memq gud-minor-mode '(gdbmi gdba))
+			      (or (if (get-buffer-window buffer 0)
+				      (display-buffer buffer nil 0))
+				  (unless (gdb-display-source-buffer buffer)
+				    (gdb-display-buffer buffer nil))))
+			  (display-buffer buffer))))
 	 (pos))
     (if buffer
 	(progn
@@ -3004,7 +2996,7 @@ Link exprs of the form:
   "Find fully qualified class in file F at line LINE.
 This function uses the `gud-jdb-classpath' (and optional
 `gud-jdb-sourcepath') list(s) to derive a file
-pathname relative to its classpath directory. The values in
+pathname relative to its classpath directory.  The values in
 `gud-jdb-classpath' are assumed to have been converted to absolute
 pathname standards using file-truename.
 If F is visited by a buffer and its mode is CC-mode(Java),
@@ -3114,7 +3106,7 @@ class of the file (using s to separate nested class ids)."
                              'syntax-table (eval-when-compile
                                              (string-to-syntax "> b")))
           ;; Make sure that rehighlighting the previous line won't erase our
-          ;; syntax-table property.  
+          ;; syntax-table property.
           (put-text-property (1- (match-beginning 0)) (match-end 0)
                              'font-lock-multiline t)
           nil)))))
@@ -3193,12 +3185,16 @@ Treats actions as defuns."
     (goto-char (point-max)))
   t)
 
+;; Besides .gdbinit, gdb documents other names to be usable for init
+;; files, cross-debuggers can use something like
+;; .PROCESSORNAME-gdbinit so that the host and target gdbinit files
+;; don't interfere with each other.
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("/\\.gdbinit" . gdb-script-mode))
+(add-to-list 'auto-mode-alist '("/\\.[a-z0-9-]*gdbinit" . gdb-script-mode))
 
 ;;;###autoload
 (define-derived-mode gdb-script-mode nil "GDB-Script"
-  "Major mode for editing GDB scripts"
+  "Major mode for editing GDB scripts."
   (set (make-local-variable 'comment-start) "#")
   (set (make-local-variable 'comment-start-skip) "#+\\s-*")
   (set (make-local-variable 'outline-regexp) "[ \t]")
@@ -3345,11 +3341,11 @@ For C this would dereference a pointer expression.")
 
 (defvar gud-tooltip-event nil
   "The mouse movement event that led to a tooltip display.
-This event can be examined by forms in GUD-TOOLTIP-DISPLAY.")
+This event can be examined by forms in `gud-tooltip-display'.")
 
 (defun gud-tooltip-dereference (&optional arg)
   "Toggle whether tooltips should show `* expr' or `expr'.
-With arg, dereference expr iff arg is positive."
+With arg, dereference expr if ARG is positive, otherwise do not derereference."
  (interactive "P")
   (setq gud-tooltip-dereference
 	(if (null arg)
@@ -3384,8 +3380,8 @@ With arg, dereference expr iff arg is positive."
 (defun gud-tooltip-tips (event)
   "Show tip for identifier or selection under the mouse.
 The mouse must either point at an identifier or inside a selected
-region for the tip window to be shown.  If gud-tooltip-dereference is t,
-add a `*' in front of the printed expression. In the case of a C program
+region for the tip window to be shown.  If `gud-tooltip-dereference' is t,
+add a `*' in front of the printed expression.  In the case of a C program
 controlled by GDB, show the associated #define directives when program is
 not executing.
 

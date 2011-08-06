@@ -1,6 +1,6 @@
 /* Header for CCL (Code Conversion Language) interpreter.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007
+     2005, 2006, 2007, 2008
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -8,7 +8,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -76,6 +76,9 @@ struct ccl_program {
 				   CCL_WRITE_CHAR.  After execution,
 				   if no such byte is written, set
 				   this value to zero.  */
+  int quit_silently;		/* If nonzero, don't append "CCL:
+				   Quitted" to the generated text when
+				   CCL program is quitted. */
 };
 
 /* This data type is used for the spec field of the structure

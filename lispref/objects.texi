@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/objects
 @node Lisp Data Types, Numbers, Introduction, Top
@@ -525,7 +525,7 @@ bit values are 2**22 for alt, 2**23 for super and 2**24 for hyper.
 
   A @dfn{symbol} in GNU Emacs Lisp is an object with a name.  The
 symbol name serves as the printed representation of the symbol.  In
-ordinary Lisp use, with one single obarray (@pxref{Creating Symbols},
+ordinary Lisp use, with one single obarray (@pxref{Creating Symbols}),
 a symbol's name is unique---no two symbols have the same name.
 
   A symbol can serve as a variable, as a function name, or to hold a
@@ -1870,7 +1870,7 @@ This function returns a symbol naming the primitive type of
 @section Equality Predicates
 @cindex equality
 
-  Here we describe two functions that test for equality between any two
+  Here we describe functions that test for equality between any two
 objects.  Other functions test equality between objects of specific
 types, e.g., strings.  For these predicates, see the appropriate chapter
 describing the data type.
@@ -2000,7 +2000,8 @@ always true.
 @end example
 
 Comparison of strings is case-sensitive, but does not take account of
-text properties---it compares only the characters in the strings.  For
+text properties---it compares only the characters in the strings.  Use
+@code{equal-including-properties} to also compare text properties.  For
 technical reasons, a unibyte string and a multibyte string are
 @code{equal} if and only if they contain the same sequence of
 character codes and all these codes are either in the range 0 through
@@ -2030,6 +2031,23 @@ returns @code{t} if and only if both the expressions below return
 
 Because of this recursive method, circular lists may therefore cause
 infinite recursion (leading to an error).
+
+@defun equal-including-properties object1 object2
+This function behaves like @code{equal} in all cases but also requires
+that for two strings to be equal, they have the same text properties.
+
+@example
+@group
+(equal "asdf" (propertize "asdf" '(asdf t)))
+     @result{} t
+@end group
+@group
+(equal-including-properties "asdf"
+                            (propertize "asdf" '(asdf t)))
+     @result{} nil
+@end group
+@end example
+@end defun
 
 @ignore
    arch-tag: 9711a66e-4749-4265-9e8c-972d55b67096

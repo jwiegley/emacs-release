@@ -15,7 +15,7 @@ This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
 Copyright @copyright{} 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001,
-2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -867,6 +867,13 @@ which the header says is the @samp{Previous} node (from this node, the
   You can use the @kbd{r} command (@code{Info-history-forward} in Emacs)
 to revisit nodes in the history list in the forward direction, so that
 @kbd{r} will return you to the node you came from by typing @kbd{l}.
+
+@kindex L @r{(Info mode)}
+@findex Info-history
+@cindex history list of visited nodes
+  The @kbd{L} command (@code{Info-history} in Emacs) creates a virtual
+node that contains a list of all nodes you visited.  You can select
+a previously visited node from this menu to revisit it.
 
 @kindex d @r{(Info mode)}
 @findex Info-directory

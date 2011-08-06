@@ -1,7 +1,7 @@
 ;;; strokes.el --- control Emacs through mouse strokes
 
 ;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: David Bakhash <cadet@alum.mit.edu>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1370,7 +1370,7 @@ If STROKES-MAP is not given, `strokes-global-map' will be used instead."
     (goto-char (point-min))))
 
 (defun strokes-alphabetic-lessp (stroke1 stroke2)
-  "T iff command name for STROKE1 is less than STROKE2's in lexicographic order."
+  "Return t if STROKE1's command name precedes STROKE2's in lexicographic order."
   (let ((command-name-1 (symbol-name (cdr stroke1)))
 	(command-name-2 (symbol-name (cdr stroke2))))
     (string-lessp command-name-1 command-name-2)))
@@ -1520,7 +1520,7 @@ Encode/decode your strokes with \\[strokes-encode-buffer],
       (eq char ?*)))
 
 ;;(defsubst strokes-xor (a b)  ### Should I make this an inline function? ###
-;;  "T iff one and only one of A and B is non-nil; otherwise, returns nil.
+;;  "T if one and only one of A and B is non-nil; otherwise, returns nil.
 ;;NOTE: Don't use this as a numeric xor since it treats all non-nil
 ;;      values as t including `0' (zero)."
 ;;  (eq (null a) (not (null b))))

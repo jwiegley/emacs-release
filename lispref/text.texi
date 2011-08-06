@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/text
 @node Text, Non-ASCII Characters, Markers, Top
@@ -2615,13 +2615,13 @@ the @var{prop} property of that symbol.
 This function is like @code{get-text-property}, except that it checks
 overlays first and then text properties.  @xref{Overlays}.
 
-The argument @var{object} may be a string, a buffer, or a window.  If it
-is a window, then the buffer displayed in that window is used for text
-properties and overlays, but only the overlays active for that window
-are considered.  If @var{object} is a buffer, then all overlays in that
-buffer are considered, as well as text properties.  If @var{object} is a
-string, only text properties are considered, since strings never have
-overlays.
+The argument @var{object} may be a string, a buffer, or a window.  If
+it is a window, then the buffer displayed in that window is used for
+text properties and overlays, but only the overlays active for that
+window are considered.  If @var{object} is a buffer, then overlays in
+that buffer are considered first, in order of decreasing priority,
+followed by the text properties.  If @var{object} is a string, only
+text properties are considered, since strings never have overlays.
 @end defun
 
 @defun get-char-property-and-overlay position prop &optional object
@@ -2989,31 +2989,28 @@ time you want to specify a particular attribute for certain text.
 @xref{Face Attributes}.
 
 @item
-A cons cell with the form @code{(foreground-color . @var{color-name})} or
-@code{(background-color . @var{color-name})}.  These elements specify
-just the foreground color or just the background color.  @xref{Color
-Names}, for the supported forms of @var{color-name}.
-
-A cons cell of @code{(foreground-color . @var{color-name})} is equivalent to
-specifying @code{(:foreground @var{color-name})}; likewise for the
-background.
+A cons cell with the form @code{(foreground-color . @var{color-name})}
+or @code{(background-color . @var{color-name})}.  These are older,
+deprecated equivalents for @code{(:foreground @var{color-name})} and
+@code{(:background @var{color-name})}.  Please convert code that uses
+them.
 @end itemize
 
-You can use Font Lock Mode (@pxref{Font Lock Mode}), to dynamically
-update @code{face} properties based on the contents of the text.
+It works to use the latter two forms directly as the value
+of the @code{face} property.
+
+Font Lock mode (@pxref{Font Lock Mode}) works in most buffers by
+dynamically updating the @code{face} property of characters based on
+the context.
 
 @item font-lock-face
 @kindex font-lock-face @r{(text property)}
-The @code{font-lock-face} property is the same in all respects as the
-@code{face} property, but its state of activation is controlled by
-@code{font-lock-mode}.  This can be advantageous for special buffers
-which are not intended to be user-editable, or for static areas of
-text which are always fontified in the same way.
-@xref{Precalculated Fontification}.
+The @code{font-lock-face} property is equivalent to the @code{face}
+property when Font Lock mode is enabled.  When Font Lock mode is disabled,
+@code{font-lock-face} has no effect.
 
-Strictly speaking, @code{font-lock-face} is not a built-in text
-property; rather, it is implemented in Font Lock mode using
-@code{char-property-alias-alist}.  @xref{Examining Properties}.
+The @code{font-lock-mode} property is useful for special modes that
+implement their own highlighting.  @xref{Precalculated Fontification}.
 
 This property is new in Emacs 22.1.
 
@@ -3717,7 +3714,7 @@ a @key{Mouse-1} click shall be translated to @key{RET}:
 @defun mouse-on-link-p pos
 This function returns non-@code{nil} if position @var{pos} in the
 current buffer is on a link.  @var{pos} can also be a mouse event
-location, as returned by @code{event-start} (@pxref{Accessing Events}).
+location, as returned by @code{event-start} (@pxref{Accessing Mouse}).
 @end defun
 
 @node Fields
@@ -4364,35 +4361,6 @@ because it may lead to inefficient behavior for some change hook
 functions.
 @end defmac
 
-The two variables above are temporarily bound to @code{nil} during the
-time that any of these functions is running.  This means that if one of
-these functions changes the buffer, that change won't run these
-functions.  If you do want a hook function to make changes that run
-these functions, make it bind these variables back to their usual
-values.
-
-One inconvenient result of this protective feature is that you cannot
-have a function in @code{after-change-functions} or
-@code{before-change-functions} which changes the value of that variable.
-But that's not a real limitation.  If you want those functions to change
-the list of functions to run, simply add one fixed function to the hook,
-and code that function to look in another variable for other functions
-to call.  Here is an example:
-
-@example
-(setq my-own-after-change-functions nil)
-(defun indirect-after-change-function (beg end len)
-  (let ((list my-own-after-change-functions))
-    (while list
-      (funcall (car list) beg end len)
-      (setq list (cdr list)))))
-
-@group
-(add-hooks 'after-change-functions
-           'indirect-after-change-function)
-@end group
-@end example
-
 @defvar first-change-hook
 This variable is a normal hook that is run whenever a buffer is changed
 that was previously in the unmodified state.
@@ -4404,6 +4372,13 @@ disabled; none of them run.  This affects all the hook variables
 described above in this section, as well as the hooks attached to
 certain special text properties (@pxref{Special Properties}) and overlay
 properties (@pxref{Overlay Properties}).
+
+Also, this variable is bound to non-@code{nil} while running those
+same hook variables, so that by default modifying the buffer from
+a modification hook does not cause other modification hooks to be run.
+If you do want modification hooks to be run in a particular piece of
+code that is itself run from a modification hook, then rebind locally
+@code{inhibit-modification-hooks} to @code{nil}.
 @end defvar
 
 @ignore

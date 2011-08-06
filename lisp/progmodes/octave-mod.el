@@ -1,6 +1,6 @@
 ;;; octave-mod.el --- editing Octave source files under Emacs
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 ;; Free Software Foundation, Inc.
 
 ;; Author: Kurt Hornik <Kurt.Hornik@wu-wien.ac.at>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -567,24 +567,24 @@ including a reproducible test case and send the message."
   (describe-function major-mode))
 
 (defsubst octave-in-comment-p ()
-  "Returns t if point is inside an Octave comment, nil otherwise."
+  "Return t if point is inside an Octave comment."
   (interactive)
   (save-excursion
     (nth 4 (parse-partial-sexp (line-beginning-position) (point)))))
 
 (defsubst octave-in-string-p ()
-  "Returns t if point is inside an Octave string, nil otherwise."
+  "Return t if point is inside an Octave string."
   (interactive)
   (save-excursion
     (nth 3 (parse-partial-sexp (line-beginning-position) (point)))))
 
 (defsubst octave-not-in-string-or-comment-p ()
-  "Returns t iff point is not inside an Octave string or comment."
+  "Return t if point is not inside an Octave string or comment."
   (let ((pps (parse-partial-sexp (line-beginning-position) (point))))
     (not (or (nth 3 pps) (nth 4 pps)))))
 
 (defun octave-in-block-p ()
-  "Returns t if point is inside an Octave block, nil otherwise.
+  "Return t if point is inside an Octave block.
 The block is taken to start at the first letter of the begin keyword and
 to end after the end keyword."
   (let ((pos (point)))
@@ -598,13 +598,28 @@ to end after the end keyword."
 	(error nil))
       (< pos (point)))))
 
+(defun octave-looking-at-kw (regexp)
+  "Like `looking-at', but sets `case-fold-search' nil."
+  (let ((case-fold-search nil))
+    (looking-at regexp)))
+
+(defun octave-re-search-forward-kw (regexp count)
+  "Like `re-search-forward', but sets `case-fold-search' nil, and moves point."
+  (let ((case-fold-search nil))
+    (re-search-forward regexp nil 'move count)))
+
+(defun octave-re-search-backward-kw (regexp count)
+  "Like `re-search-backward', but sets `case-fold-search' nil, and moves point."
+  (let ((case-fold-search nil))
+    (re-search-backward regexp nil 'move count)))
+
 (defun octave-in-defun-p ()
-  "Returns t iff point is inside an Octave function declaration.
+  "Return t if point is inside an Octave function declaration.
 The function is taken to start at the `f' of `function' and to end after
 the end keyword."
   (let ((pos (point)))
     (save-excursion
-      (or (and (looking-at "\\<function\\>")
+      (or (and (octave-looking-at-kw "\\<function\\>")
 	       (octave-not-in-string-or-comment-p))
 	  (and (octave-beginning-of-defun)
 	       (condition-case nil
@@ -675,14 +690,14 @@ level."
 		(while (< (point) eol)
 		  (if (octave-not-in-string-or-comment-p)
 		      (cond
-		       ((looking-at "\\<switch\\>")
+		       ((octave-looking-at-kw "\\<switch\\>")
 			(setq icol (+ icol (* 2 octave-block-offset))))
-		       ((looking-at octave-block-begin-regexp)
+		       ((octave-looking-at-kw octave-block-begin-regexp)
 			(setq icol (+ icol octave-block-offset)))
-		       ((looking-at octave-block-else-regexp)
+		       ((octave-looking-at-kw octave-block-else-regexp)
 			(if (= bot (point))
 			    (setq icol (+ icol octave-block-offset))))
-		       ((looking-at octave-block-end-regexp)
+		       ((octave-looking-at-kw octave-block-end-regexp)
 			(if (not (= bot (point)))
 			    (setq icol (- icol
 					  (octave-block-end-offset)))))))
@@ -692,10 +707,10 @@ level."
     (save-excursion
       (back-to-indentation)
       (cond
-       ((and (looking-at octave-block-else-regexp)
+       ((and (octave-looking-at-kw octave-block-else-regexp)
 	     (octave-not-in-string-or-comment-p))
 	(setq icol (- icol octave-block-offset)))
-       ((and (looking-at octave-block-end-regexp)
+       ((and (octave-looking-at-kw octave-block-end-regexp)
 	     (octave-not-in-string-or-comment-p))
 	(setq icol (- icol (octave-block-end-offset))))
        ((or (looking-at "\\s<\\s<\\s<\\S<")
@@ -871,8 +886,8 @@ an error is signaled."
     (save-excursion
       (while (/= count 0)
 	(catch 'foo
-	  (while (or (re-search-forward
-		      octave-block-begin-or-end-regexp nil 'move inc)
+	  (while (or (octave-re-search-forward-kw
+		      octave-block-begin-or-end-regexp inc)
 		     (if (/= depth 0)
 			 (error "Unbalanced block")))
 	    (if (octave-not-in-string-or-comment-p)
@@ -991,7 +1006,7 @@ Signal an error if the keywords are incompatible."
 	     (looking-at "\\>")
 	     (save-excursion
 	       (skip-syntax-backward "w")
-	       (looking-at octave-block-else-or-end-regexp)))
+	       (octave-looking-at-kw octave-block-else-or-end-regexp)))
 	(save-excursion
 	  (cond
 	   ((match-end 1)
@@ -1038,11 +1053,11 @@ Returns t unless search stops at the beginning or end of the buffer."
 	 (inc (if (> arg 0) 1 -1))
 	 (found))
     (and (not (eobp))
-	 (not (and (> arg 0) (looking-at "\\<function\\>")))
+	 (not (and (> arg 0) (octave-looking-at-kw "\\<function\\>")))
 	 (skip-syntax-forward "w"))
     (while (and (/= arg 0)
 		(setq found
-		      (re-search-backward "\\<function\\>" nil 'move inc)))
+		      (octave-re-search-backward-kw "\\<function\\>" inc)))
       (if (octave-not-in-string-or-comment-p)
 	  (setq arg (- arg inc))))
     (if found
@@ -1095,7 +1110,7 @@ otherwise."
 	    (save-excursion
 	      (beginning-of-line)
 	      (and auto-fill-inhibit-regexp
-		   (looking-at auto-fill-inhibit-regexp))))
+		   (octave-looking-at-kw auto-fill-inhibit-regexp))))
 	nil				; Can't do anything
       (if (and (not (octave-in-comment-p))
 	       (> (current-column) fc))

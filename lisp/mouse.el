@@ -1,7 +1,7 @@
 ;;; mouse.el --- window system-independent mouse support
 
 ;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware, mouse
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -173,11 +173,22 @@ Default to the Edit menu if the major mode doesn't define a menu."
 	 ;; default to the edit menu.
 	 (newmap (if ancestor
 		     (make-sparse-keymap (concat mode-name " Mode"))
-		   menu-bar-edit-menu)))
+		   menu-bar-edit-menu))
+	 uniq)
     (if ancestor
 	;; Make our menu inherit from the desired keymap which we want
 	;; to display as the menu now.
-	(set-keymap-parent newmap ancestor))
+	;; Sometimes keymaps contain duplicate menu code, leading to
+	;; duplicates in the popped-up menu. Avoid this by simply
+	;; taking the first of any identically-named menus.
+	;; http://lists.gnu.org/archive/html/emacs-devel/2007-11/msg00469.html
+	(set-keymap-parent newmap
+			   (progn
+			     (dolist (e ancestor)
+			       (unless (and (listp e)
+					    (assoc (car e) uniq))
+				 (setq uniq (append uniq (list e)))))
+			     uniq)))
     (popup-menu newmap event prefix)))
 
 
@@ -433,9 +444,8 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
 	  ;;   - there is a scroll-bar-movement event
 	  ;;     (same as mouse movement for our purposes)
 	  ;; quit if
-	  ;;   - there is a keyboard event or some other unknown event
-	  ;;     unknown event.
-	  (cond ((integerp event)
+	  ;;   - there is a keyboard event or some other unknown event.
+	  (cond ((not (consp event))
 		 (setq done t))
 
 		((memq (car event) '(switch-frame select-window))
@@ -443,7 +453,11 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
 
 		((not (memq (car event) '(mouse-movement scroll-bar-movement)))
 		 (when (consp event)
-		   (push event unread-command-events))
+		   ;; Do not unread a drag-mouse-1 event since it will cause the
+		   ;; selection of the window above when dragging the modeline
+		   ;; above the selected window.
+		   (unless (eq (car event) 'drag-mouse-1)
+		     (push event unread-command-events)))
 		 (setq done t))
 
 		((not (eq (car mouse) start-event-frame))
@@ -498,7 +512,10 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
 			   (and (not should-enlarge-minibuffer)
 				(> growth 0)
 				mode-line-p
-				(/= top (nth 1 (window-edges)))))
+				(/= top
+				    (nth 1 (window-edges
+					    ;; Choose right window.
+					    start-event-window)))))
 		   (set-window-configuration wconfig)))))))))
 
 (defun mouse-drag-mode-line (start-event)
@@ -1007,6 +1024,11 @@ should only be used by mouse-drag-region."
 			      (overlay-start mouse-drag-overlay))
 			   region-termination))
 		       last-command this-command)
+		  (when (eq transient-mark-mode 'identity)
+		    ;; Reset `transient-mark-mode' to avoid expanding the region
+		    ;; while scrolling (compare thread on "Erroneous selection
+		    ;; extension ..." on bug-gnu-emacs from 2007-06-10).
+		    (setq transient-mark-mode nil))
 		  (push-mark region-commencement t t)
 		  (goto-char region-termination)
 		  (if (not do-mouse-drag-region-post-process)
@@ -1620,7 +1642,10 @@ regardless of where you click."
   ;; Give temporary modes such as isearch a chance to turn off.
   (run-hooks 'mouse-leave-buffer-hook)
   (or mouse-yank-at-point (mouse-set-point click))
-  (insert (x-get-selection 'SECONDARY)))
+  (let ((secondary (x-get-selection 'SECONDARY)))
+    (if secondary
+        (insert (x-get-selection 'SECONDARY))
+      (error "No secondary selection"))))
 
 (defun mouse-kill-secondary ()
   "Kill the text in the secondary selection.
@@ -1903,7 +1928,7 @@ and selects that window."
 		  (cons
 		   (cons
 		    (format
-		     (format "%%%ds  %%s%%s  %%s" maxlen)
+		     (format "%%-%ds  %%s%%s  %%s" maxlen)
 		     (buffer-name elt)
 		     (if (buffer-modified-p elt) "*" " ")
 		     (save-excursion

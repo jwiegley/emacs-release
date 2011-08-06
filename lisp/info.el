@@ -1,7 +1,7 @@
 ;;; info.el --- info package for Emacs
 
 ;; Copyright (C) 1985, 1986, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1829,8 +1829,8 @@ If DIRECTION is `backward', search in the reverse direction."
 			 (unless isearch-forward 'backward))
 	  (Info-search (if isearch-regexp string (regexp-quote string))
 		       bound noerror count
-		       (unless isearch-forward 'backward))
-	  (point)))
+		       (unless isearch-forward 'backward)))
+	(point))
     (let ((isearch-search-fun-function nil))
       (isearch-search-fun))))
 
@@ -3262,10 +3262,14 @@ If FORK is non-nil, it i spassed to `Info-goto-node'."
 (defvar info-tool-bar-map
   (if (display-graphic-p)
       (let ((map (make-sparse-keymap)))
-	(tool-bar-local-item-from-menu 'Info-history-back "left-arrow" map Info-mode-map)
-	(tool-bar-local-item-from-menu 'Info-history-forward "right-arrow" map Info-mode-map)
-	(tool-bar-local-item-from-menu 'Info-prev "prev-node" map Info-mode-map)
-	(tool-bar-local-item-from-menu 'Info-next "next-node" map Info-mode-map)
+	(tool-bar-local-item-from-menu 'Info-history-back "left-arrow" map Info-mode-map
+				       :rtl "right-arrow")
+	(tool-bar-local-item-from-menu 'Info-history-forward "right-arrow" map Info-mode-map
+				       :rtl "left-arrow")
+	(tool-bar-local-item-from-menu 'Info-prev "prev-node" map Info-mode-map
+				       :rtl "next-node")
+	(tool-bar-local-item-from-menu 'Info-next "next-node" map Info-mode-map
+				       :rtl "prev-node")
 	(tool-bar-local-item-from-menu 'Info-up "up-node" map Info-mode-map)
 	(tool-bar-local-item-from-menu 'Info-top-node "home" map Info-mode-map)
 	(tool-bar-local-item-from-menu 'Info-goto-node "jump-to" map Info-mode-map)
@@ -3463,7 +3467,7 @@ Advanced commands:
   (setq widen-automatically nil)
   (setq desktop-save-buffer 'Info-desktop-buffer-misc-data)
   (add-hook 'kill-buffer-hook 'Info-kill-buffer nil t)
-  (add-hook 'clone-buffer-hook 'Info-clone-buffer-hook nil t)
+  (add-hook 'clone-buffer-hook 'Info-clone-buffer nil t)
   (add-hook 'change-major-mode-hook 'font-lock-defontify nil t)
   (add-hook 'isearch-mode-hook 'Info-isearch-start nil t)
   (set (make-local-variable 'isearch-search-fun-function)
@@ -3484,7 +3488,8 @@ Advanced commands:
        Info-tag-table-buffer
        (kill-buffer Info-tag-table-buffer)))
 
-(defun Info-clone-buffer-hook ()
+;; Placed on `clone-buffer-hook'.
+(defun Info-clone-buffer ()
   (when (bufferp Info-tag-table-buffer)
     (setq Info-tag-table-buffer
 	  (with-current-buffer Info-tag-table-buffer (clone-buffer))))

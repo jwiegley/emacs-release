@@ -1,7 +1,7 @@
 ;;; cus-edit.el --- tools for customizing Emacs and Lisp packages
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -1151,7 +1151,7 @@ the official name of the package, such as MH-E or Gnus.")
 (defalias 'customize-changed 'customize-changed-options)
 
 ;;;###autoload
-(defun customize-changed-options (since-version)
+(defun customize-changed-options (&optional since-version)
   "Customize all settings whose meanings have changed in Emacs itself.
 This includes new user option variables and faces, and new
 customization groups, as well as older options and faces whose meanings
@@ -1384,7 +1384,7 @@ If ALL is `groups', include only groups.
 If ALL is t (interactively, with prefix arg), include variables
 that are not customizable options, as well as faces and groups
 \(but we recommend using `apropos-variable' instead)."
-  (interactive "sCustomize regexp: \nP")
+  (interactive "sCustomize (regexp): \nP")
   (let ((found nil))
     (mapatoms (lambda (symbol)
 		(when (string-match regexp (symbol-name symbol))
@@ -1412,20 +1412,20 @@ that are not customizable options, as well as faces and groups
 (defun customize-apropos-options (regexp &optional arg)
   "Customize all loaded customizable options matching REGEXP.
 With prefix arg, include variables that are not customizable options
-\(but we recommend using `apropos-variable' instead)."
-  (interactive "sCustomize regexp: \nP")
+\(but it is better to use `apropos-variable' if you want to find those)."
+  (interactive "sCustomize options (regexp): \nP")
   (customize-apropos regexp (or arg 'options)))
 
 ;;;###autoload
 (defun customize-apropos-faces (regexp)
   "Customize all loaded faces matching REGEXP."
-  (interactive "sCustomize regexp: \n")
+  (interactive "sCustomize faces (regexp): \n")
   (customize-apropos regexp 'faces))
 
 ;;;###autoload
 (defun customize-apropos-groups (regexp)
   "Customize all loaded groups matching REGEXP."
-  (interactive "sCustomize regexp: \n")
+  (interactive "sCustomize groups (regexp): \n")
   (customize-apropos regexp 'groups))
 
 ;;; Buffer.
@@ -2313,7 +2313,8 @@ Insert PREFIX first if non-nil."
 	       (insert ", "))))
       (widget-put widget :buttons buttons))))
 
-(defun custom-add-parent-links (widget &optional initial-string)
+(defun custom-add-parent-links (widget &optional initial-string
+				       doc-initial-string)
   "Add \"Parent groups: ...\" to WIDGET if the group has parents.
 The value is non-nil if any parents were found.
 If INITIAL-STRING is non-nil, use that rather than \"Parent groups:\"."
@@ -2322,7 +2323,7 @@ If INITIAL-STRING is non-nil, use that rather than \"Parent groups:\"."
 	(buttons (widget-get widget :buttons))
 	(start (point))
 	(parents nil))
-    (insert (or initial-string "Parent groups:"))
+    (insert (or initial-string "Groups:"))
     (mapatoms (lambda (symbol)
 		(when (member (list name type) (get symbol 'custom-group))
 		  (insert " ")
@@ -2341,23 +2342,27 @@ If INITIAL-STRING is non-nil, use that rather than \"Parent groups:\"."
 					 (get (car parents) 'custom-links))))
                 (many (> (length links) 2)))
            (when links
-             (insert "\nParent documentation: ")
-             (while links
-               (push (widget-create-child-and-convert
-		      widget (car links)
-		      :button-face 'custom-link
-		      :mouse-face 'highlight
-		      :pressed-face 'highlight)
-                     buttons)
-               (setq links (cdr links))
-               (cond ((null links)
-                      (insert ".\n"))
-                     ((null (cdr links))
-                      (if many
-                          (insert ", and ")
-                        (insert " and ")))
-                     (t
-                      (insert ", ")))))))
+             (let ((pt (point))
+                   (left-margin (+ left-margin 2)))
+	       (insert "\n" (or doc-initial-string "Group documentation:") " ")
+	       (while links
+		 (push (widget-create-child-and-convert
+			widget (car links)
+			:button-face 'custom-link
+			:mouse-face 'highlight
+			:pressed-face 'highlight)
+		       buttons)
+		 (setq links (cdr links))
+		 (cond ((null links)
+			(insert ".\n"))
+		       ((null (cdr links))
+			(if many
+			    (insert ", and ")
+			  (insert " and ")))
+		       (t
+                        (insert ", "))))
+               (fill-region-as-paragraph pt (point))
+               (delete-to-left-margin (1+ pt) (+ pt 2))))))
     (if parents
         (insert "\n")
       (delete-region start (point)))
@@ -2500,7 +2505,8 @@ However, setting it through Custom sets the default value.")
 (defun custom-variable-type (symbol)
   "Return a widget suitable for editing the value of SYMBOL.
 If SYMBOL has a `custom-type' property, use that.
-Otherwise, look up symbol in `custom-guess-type-alist'."
+Otherwise, try matching SYMBOL against `custom-guess-name-alist' and
+try matching its doc string against `custom-guess-doc-alist'."
   (let* ((type (or (get symbol 'custom-type)
 		   (and (not (get symbol 'standard-value))
 			(custom-guess-type symbol))
@@ -2743,7 +2749,12 @@ Otherwise, look up symbol in `custom-guess-type-alist'."
   `(("Set for Current Session" custom-variable-set
      (lambda (widget)
        (eq (widget-get widget :custom-state) 'modified)))
-    ,@(when (or custom-file user-init-file)
+    ;; Note that in all the backquoted code in this file, we test
+    ;; init-file-user rather than user-init-file.  This is in case
+    ;; cus-edit is loaded by something in site-start.el, because
+    ;; user-init-file is not set at that stage.
+    ;; http://lists.gnu.org/archive/html/emacs-devel/2007-10/msg00310.html
+    ,@(when (or custom-file init-file-user)
 	'(("Save for Future Sessions" custom-variable-save
 	   (lambda (widget)
 	     (memq (widget-get widget :custom-state)
@@ -2758,7 +2769,7 @@ Otherwise, look up symbol in `custom-guess-type-alist'."
 		(get (widget-value widget) 'saved-variable-comment))
 	    (memq (widget-get widget :custom-state)
 		  '(modified set changed rogue)))))
-    ,@(when (or custom-file user-init-file)
+    ,@(when (or custom-file init-file-user)
 	'(("Erase Customization" custom-variable-reset-standard
 	   (lambda (widget)
 	     (and (get (widget-value widget) 'standard-value)
@@ -3057,7 +3068,7 @@ Also change :reverse-video to :inverse-video."
 		    (cons value (cons from (- (point) from))))))))
 
 (defun custom-face-edit-activate (widget)
-  "Make face widget WIDGET inactive for user modifications."
+  "Make face widget WIDGET active for user modifications."
   (let ((inactive (widget-get widget :inactive))
 	(inhibit-read-only t)
 	(inhibit-modification-hooks t))
@@ -3415,7 +3426,7 @@ SPEC must be a full face spec."
 
 (defvar custom-face-menu
   `(("Set for Current Session" custom-face-set)
-    ,@(when (or custom-file user-init-file)
+    ,@(when (or custom-file init-file-user)
 	'(("Save for Future Sessions" custom-face-save)))
     ("Undo Edits" custom-redraw
      (lambda (widget)
@@ -3424,7 +3435,7 @@ SPEC must be a full face spec."
      (lambda (widget)
        (or (get (widget-value widget) 'saved-face)
 	   (get (widget-value widget) 'saved-face-comment))))
-    ,@(when (or custom-file user-init-file)
+    ,@(when (or custom-file init-file-user)
 	'(("Erase Customization" custom-face-reset-standard
 	   (lambda (widget)
 	     (get (widget-value widget) 'face-defface-spec)))))
@@ -3934,7 +3945,8 @@ If GROUPS-ONLY non-nil, return only those members that are groups."
 		    ;;; was made to display a group.
 	       (when (eq level 1)
 		 (if (custom-add-parent-links widget
-					      "Go to parent group:")
+					      "Parent groups:"
+					      "Parent group documentation:")
 		     (insert "\n"))))
 	   ;; Create level indicator.
 	   (insert-char ?\  (* custom-buffer-indent (1- level)))
@@ -4024,7 +4036,7 @@ Creating group members... %2d%%"
   `(("Set for Current Session" custom-group-set
      (lambda (widget)
        (eq (widget-get widget :custom-state) 'modified)))
-    ,@(when (or custom-file user-init-file)
+    ,@(when (or custom-file init-file-user)
 	'(("Save for Future Sessions" custom-group-save
 	   (lambda (widget)
 	     (memq (widget-get widget :custom-state) '(modified set))))))
@@ -4034,7 +4046,7 @@ Creating group members... %2d%%"
     ("Reset to Saved" custom-group-reset-saved
      (lambda (widget)
        (memq (widget-get widget :custom-state) '(modified set))))
-    ,@(when (or custom-file user-init-file)
+    ,@(when (or custom-file init-file-user)
 	'(("Erase Customization" custom-group-reset-standard
 	   (lambda (widget)
 	     (memq (widget-get widget :custom-state) '(modified set saved)))))))
@@ -4530,7 +4542,7 @@ If several parents are listed, go to the first of them."
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (if (search-forward "\nGo to parent group: " nil t)
+    (if (search-forward "\nParent groups: " nil t)
 	(let* ((button (get-char-property (point) 'button))
 	       (parent (downcase (widget-get  button :tag))))
 	  (customize-group parent)))))

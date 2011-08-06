@@ -1,7 +1,7 @@
 ;;; advice.el --- an overloading mechanism for Emacs Lisp functions
 
 ;; Copyright (C) 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -2013,7 +2013,10 @@ On each iteration VAR will be bound to the name of an advised function
 (if (not (get 'ad-do-advised-functions 'lisp-indent-hook))
     (put 'ad-do-advised-functions 'lisp-indent-hook 1))
 
-(defmacro ad-get-advice-info (function)
+(defun ad-get-advice-info (function)
+  (get function 'ad-advice-info))
+
+(defmacro ad-get-advice-info-macro (function)
   `(get ,function 'ad-advice-info))
 
 (defmacro ad-set-advice-info (function advice-info)
@@ -2025,7 +2028,7 @@ On each iteration VAR will be bound to the name of an advised function
 (defmacro ad-is-advised (function)
   "Return non-nil if FUNCTION has any advice info associated with it.
 This does not mean that the advice is also active."
-  (list 'ad-get-advice-info function))
+  (list 'ad-get-advice-info-macro function))
 
 (defun ad-initialize-advice-info (function)
   "Initialize the advice info for FUNCTION.
@@ -2035,16 +2038,16 @@ Assumes that FUNCTION has not yet been advised."
 
 (defmacro ad-get-advice-info-field (function field)
   "Retrieve the value of the advice info FIELD of FUNCTION."
-  `(cdr (assq ,field (ad-get-advice-info ,function))))
+  `(cdr (assq ,field (ad-get-advice-info-macro ,function))))
 
 (defun ad-set-advice-info-field (function field value)
   "Destructively modify VALUE of the advice info FIELD of FUNCTION."
   (and (ad-is-advised function)
-       (cond ((assq field (ad-get-advice-info function))
+       (cond ((assq field (ad-get-advice-info-macro function))
 	      ;; A field with that name is already present:
-              (rplacd (assq field (ad-get-advice-info function)) value))
+              (rplacd (assq field (ad-get-advice-info-macro function)) value))
 	     (t;; otherwise, create a new field with that name:
-	      (nconc (ad-get-advice-info function)
+	      (nconc (ad-get-advice-info-macro function)
 		     (list (cons field value)))))))
 
 ;; Don't make this a macro so we can use it as a predicate:
@@ -3771,7 +3774,7 @@ The syntax of `defadvice' is as follows:
 
   \(defadvice FUNCTION (CLASS NAME [POSITION] [ARGLIST] FLAG...)
     [DOCSTRING] [INTERACTIVE-FORM]
-    BODY... )
+    BODY...)
 
 FUNCTION ::= Name of the function to be advised.
 CLASS ::= `before' | `around' | `after' | `activation' | `deactivation'.
@@ -3814,7 +3817,10 @@ the advised function.  `freeze' implies `activate' and `preactivate'.  The
 documentation of the advised function can be dumped onto the `DOC' file
 during preloading.
 
-See Info node `(elisp)Advising Functions' for comprehensive documentation."
+See Info node `(elisp)Advising Functions' for comprehensive documentation.
+usage: (defadvice FUNCTION (CLASS NAME [POSITION] [ARGLIST] FLAG...)
+          [DOCSTRING] [INTERACTIVE-FORM]
+          BODY...)"
   (declare (doc-string 3))
   (if (not (ad-name-p function))
       (error "defadvice: Invalid function name: %s" function))

@@ -1,12 +1,12 @@
 /* Implementation of BDF font handling on the Microsoft W32 API.
    Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007  Free Software Foundation, Inc.
+                 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -261,7 +261,7 @@ w32_init_bdf_font(char *filename)
       error("Fail to open BDF file");
     }
   hfilemap = CreateFileMapping(hfile, NULL, PAGE_READONLY, 0, 0, NULL);
-  if (hfilemap == INVALID_HANDLE_VALUE)
+  if (!hfilemap)
     {
       CloseHandle(hfile);
       error("Can't map font");
@@ -302,7 +302,7 @@ w32_free_bdf_font(bdffont *fontp)
   font_char *pch;
   cache_bitmap *pcb;
 
-  UnmapViewOfFile(fontp->hfilemap);
+  UnmapViewOfFile(fontp->font);
   CloseHandle(fontp->hfilemap);
   CloseHandle(fontp->hfile);
 
@@ -828,7 +828,7 @@ int w32_BDF_to_x_font (char *file, char* xstr, int len)
   size = fileinfo.nFileSizeLow;
 
   hfilemap = CreateFileMapping (hfile, NULL, PAGE_READONLY, 0, 0, NULL);
-  if (hfilemap == INVALID_HANDLE_VALUE)
+  if (!hfilemap)
     {
       CloseHandle (hfile);
       return 0;
@@ -867,6 +867,7 @@ int w32_BDF_to_x_font (char *file, char* xstr, int len)
           retval = 1;
         }
     }
+  UnmapViewOfFile (font);
   CloseHandle (hfile);
   CloseHandle (hfilemap);
   return retval;

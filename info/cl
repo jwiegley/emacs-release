@@ -2,8 +2,8 @@ This is ../info/cl, produced by makeinfo version 4.8 from cl.texi.
 
    This file documents the GNU Emacs Common Lisp emulation package.
 
-   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free
-Software Foundation, Inc.
+   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -43,14 +43,14 @@ does assume a basic familiarity with Emacs Lisp.
 
 * Overview::             Installation, usage, etc.
 * Program Structure::    Arglists, `eval-when', `defalias'
-* Predicates::           `typep', `eql', and `equalp'
+* Predicates::           `typep' and `equalp'
 * Control Structure::    `setf', `do', `loop', etc.
 * Macros::               Destructuring, `define-compiler-macro'
 * Declarations::         `proclaim', `declare', etc.
 * Symbols::              Property lists, `gensym'
 * Numbers::              Predicates, functions, random numbers
 * Sequences::            Mapping, functions, searching, sorting
-* Lists::                `cadr', `sublis', `member*', `assoc*', etc.
+* Lists::                `caddr', `sublis', `member*', `assoc*', etc.
 * Structures::           `defstruct'
 * Assertions::           `check-type', `assert', `ignore-errors'.
 
@@ -249,7 +249,7 @@ which were not taken from Common Lisp:
    The following simple functions and macros are defined in `cl.el';
 they do not cause other components like `cl-extra' to be loaded.
 
-     eql           floatp-safe   endp
+     floatp-safe   endp
      evenp         oddp          plusp         minusp
      caaar .. cddddr
      list*         ldiff         rest          first .. tenth
@@ -608,7 +608,7 @@ true or false.
 * Menu:
 
 * Type Predicates::      `typep', `deftype', and `coerce'
-* Equality Predicates::  `eql' and `equalp'
+* Equality Predicates::  `equalp'
 
 
 File: cl,  Node: Type Predicates,  Next: Equality Predicates,  Prev: Predicates,  Up: Predicates
@@ -723,38 +723,7 @@ File: cl,  Node: Equality Predicates,  Prev: Type Predicates,  Up: Predicates
 4.2 Equality Predicates
 =======================
 
-This package defines two Common Lisp predicates, `eql' and `equalp'.
-
- -- Function: eql a b
-     This function is almost the same as `eq', except that if A and B
-     are numbers of the same type, it compares them for numeric
-     equality (as if by `equal' instead of `eq').  This makes a
-     difference only for versions of Emacs that are compiled with
-     floating-point support.  Emacs floats are allocated objects just
-     like cons cells, which means that `(eq 3.0 3.0)' will not
-     necessarily be true--if the two `3.0's were allocated separately,
-     the pointers will be different even though the numbers are the
-     same.  But `(eql 3.0 3.0)' will always be true.
-
-     The types of the arguments must match, so `(eql 3 3.0)' is still
-     false.
-
-     Note that Emacs integers are "direct" rather than allocated, which
-     basically means `(eq 3 3)' will always be true.  Thus `eq' and
-     `eql' behave differently only if floating-point numbers are
-     involved, and are indistinguishable on Emacs versions that don't
-     support floats.
-
-     There is a slight inconsistency with Common Lisp in the treatment
-     of positive and negative zeros.  Some machines, notably those with
-     IEEE standard arithmetic, represent `+0' and `-0' as distinct
-     values.  Normally this doesn't matter because the standard
-     specifies that `(= 0.0 -0.0)' should always be true, and this is
-     indeed what Emacs Lisp and Common Lisp do.  But the Common Lisp
-     standard states that `(eql 0.0 -0.0)' and `(equal 0.0 -0.0)' should
-     be false on IEEE-like machines; Emacs Lisp does not do this, and in
-     fact the only known way to distinguish between the two zeros in
-     Emacs Lisp is to `format' them and check for a minus sign.
+This package defines the Common Lisp predicate `equalp'.
 
  -- Function: equalp a b
      This function is a more flexible version of `equal'.  In
@@ -2162,10 +2131,10 @@ form you use is purely a matter of style.
 
 `for VAR being the key-codes of KEYMAP'
      This clause iterates over the entries in KEYMAP.  The iteration
-     does not enter nested keymaps or inherited (parent) keymaps.  You
-     can use `the key-bindings' to access the commands bound to the
-     keys rather than the key codes, and you can add a `using' clause
-     to access both the codes and the bindings together.
+     does not enter nested keymaps but does enter inherited (parent)
+     keymaps.  You can use `the key-bindings' to access the commands
+     bound to the keys rather than the key codes, and you can add a
+     `using' clause to access both the codes and the bindings together.
 
 `for VAR being the key-seqs of KEYMAP'
      This clause iterates over all key sequences defined by KEYMAP and
@@ -3218,7 +3187,7 @@ or, if they both come from the same sequence, in the same order as they
 appear in that sequence.)  The `:test' argument specifies a function
 which must return true (non-`nil') to indicate a match; instead, you
 may use `:test-not' to give a function which returns _false_ to
-indicate a match.  The default test function is `:test 'eql'.
+indicate a match.  The default test function is `eql'.
 
    Many functions which take ITEM and `:test' or `:test-not' arguments
 also come in `-if' and `-if-not' varieties, where a PREDICATE function
@@ -4373,7 +4342,7 @@ understand full-featured argument lists.  The `&whole' keyword does not
 work in `defmacro' argument lists (except inside recursive argument
 lists).
 
-   The `eql' and `equal' predicates do not distinguish between IEEE
+   The `equal' predicate does not distinguish between IEEE
 floating-point plus and minus zero.  The `equalp' predicate has several
 differences with Common Lisp; *note Predicates::.
 
@@ -4572,12 +4541,6 @@ Common Lisp code into Emacs.
      Some Lisp packages use reader macros to create special syntaxes
      for themselves, which the Emacs parser is incapable of reading.
 
-     The lack of reader macros, incidentally, is the reason behind
-     Emacs Lisp's unusual backquote syntax.  Since backquotes are
-     implemented as a Lisp package and not built-in to the Emacs
-     parser, they are forced to use a regular macro named ``' which is
-     used with the standard function/macro call notation.
-
    * Other syntactic features.  Common Lisp provides a number of
      notations beginning with `#' that the Emacs Lisp parser won't
      understand.  For example, `#| ... |#' is an alternate comment
@@ -4633,10 +4596,11 @@ Common Lisp code into Emacs.
      its own `#(' notation for something entirely different--strings
      with properties.
 
-   * Characters are distinct from integers in Common Lisp.  The
-     notation for character constants is also different:  `#\A' instead
-     of `?A'.  Also, `string=' and `string-equal' are synonyms in Emacs
-     Lisp whereas the latter is case-insensitive in Common Lisp.
+   * Characters are distinct from integers in Common Lisp.  The notation
+     for character constants is also different: `#\A' in Common Lisp
+     where Emacs Lisp uses `?A'.  Also, `string=' and `string-equal'
+     are synonyms in Emacs Lisp, whereas the latter is case-insensitive
+     in Common Lisp.
 
    * Data types.  Some Common Lisp data types do not exist in Emacs
      Lisp.  Rational numbers and complex numbers are not present, nor
@@ -5166,8 +5130,7 @@ Function Index
 * dotimes:                               Iteration.           (line  98)
 * ecase:                                 Conditionals.        (line  38)
 * endp:                                  List Functions.      (line  25)
-* eql:                                   Equality Predicates. (line   9)
-* equalp:                                Equality Predicates. (line  40)
+* equalp:                                Equality Predicates. (line   9)
 * etypecase:                             Conditionals.        (line  59)
 * eval-when:                             Time of Evaluation.  (line  16)
 * eval-when-compile:                     Time of Evaluation.  (line  86)
@@ -5350,69 +5313,69 @@ Variable Index
 
 
 Tag Table:
-Node: Top1331
-Node: Overview2745
-Node: Usage5568
-Node: Organization6221
-Node: Installation8047
-Node: Naming Conventions9187
-Node: Program Structure10896
-Node: Argument Lists11313
-Node: Time of Evaluation20380
-Node: Predicates26248
-Node: Type Predicates26567
-Node: Equality Predicates31532
-Node: Control Structure34481
-Node: Assignment35266
-Node: Generalized Variables36511
-Node: Basic Setf37821
-Node: Modify Macros45007
-Node: Customizing Setf52235
-Node: Variable Bindings59536
-Node: Dynamic Bindings60120
-Node: Lexical Bindings61018
-Node: Function Bindings65120
-Node: Macro Bindings68297
-Node: Conditionals71219
-Node: Blocks and Exits73809
-Node: Iteration76823
-Node: Loop Facility82389
-Node: Loop Basics83319
-Node: Loop Examples85927
-Node: For Clauses88193
-Node: Iteration Clauses99486
-Node: Accumulation Clauses101334
-Node: Other Clauses103685
-Node: Multiple Values109761
-Node: Macros111659
-Node: Declarations114879
-Node: Symbols123239
-Node: Property Lists123538
-Node: Creating Symbols126746
-Node: Numbers128804
-Node: Predicates on Numbers129251
-Node: Numerical Functions130288
-Node: Random Numbers133986
-Node: Implementation Parameters136702
-Node: Sequences139979
-Node: Sequence Basics140653
-Node: Mapping over Sequences144219
-Node: Sequence Functions150159
-Node: Searching Sequences155681
-Node: Sorting Sequences158728
-Node: Lists161384
-Node: List Functions161801
-Node: Substitution of Expressions165100
-Node: Lists as Sets166995
-Node: Association Lists170768
-Node: Structures172223
-Node: Assertions186927
-Node: Efficiency Concerns189873
-Node: Common Lisp Compatibility194893
-Node: Old CL Compatibility197750
-Node: Porting Common Lisp202126
-Node: GNU Free Documentation License211585
-Node: Function Index233827
-Node: Variable Index248490
+Node: Top1337
+Node: Overview2744
+Node: Usage5567
+Node: Organization6220
+Node: Installation8046
+Node: Naming Conventions9186
+Node: Program Structure10881
+Node: Argument Lists11298
+Node: Time of Evaluation20365
+Node: Predicates26233
+Node: Type Predicates26542
+Node: Equality Predicates31507
+Node: Control Structure32759
+Node: Assignment33544
+Node: Generalized Variables34789
+Node: Basic Setf36099
+Node: Modify Macros43285
+Node: Customizing Setf50513
+Node: Variable Bindings57814
+Node: Dynamic Bindings58398
+Node: Lexical Bindings59296
+Node: Function Bindings63398
+Node: Macro Bindings66575
+Node: Conditionals69497
+Node: Blocks and Exits72087
+Node: Iteration75101
+Node: Loop Facility80667
+Node: Loop Basics81597
+Node: Loop Examples84205
+Node: For Clauses86471
+Node: Iteration Clauses97776
+Node: Accumulation Clauses99624
+Node: Other Clauses101975
+Node: Multiple Values108051
+Node: Macros109949
+Node: Declarations113169
+Node: Symbols121529
+Node: Property Lists121828
+Node: Creating Symbols125036
+Node: Numbers127094
+Node: Predicates on Numbers127541
+Node: Numerical Functions128578
+Node: Random Numbers132276
+Node: Implementation Parameters134992
+Node: Sequences138269
+Node: Sequence Basics138943
+Node: Mapping over Sequences142502
+Node: Sequence Functions148442
+Node: Searching Sequences153964
+Node: Sorting Sequences157011
+Node: Lists159667
+Node: List Functions160084
+Node: Substitution of Expressions163383
+Node: Lists as Sets165278
+Node: Association Lists169051
+Node: Structures170506
+Node: Assertions185210
+Node: Efficiency Concerns188156
+Node: Common Lisp Compatibility193176
+Node: Old CL Compatibility196024
+Node: Porting Common Lisp200400
+Node: GNU Free Documentation License209562
+Node: Function Index231804
+Node: Variable Index246394
 
 End Tag Table

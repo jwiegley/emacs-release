@@ -1,13 +1,13 @@
 /* Lisp object printing and output streams.
    Copyright (C) 1985, 1986, 1988, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -93,8 +93,8 @@ Lisp_Object Vfloat_output_format, Qfloat_output_format;
 /* Avoid actual stack overflow in print.  */
 int print_depth;
 
-/* Nonzero if inside outputting backquote in old style.  */
-int old_backquote_output;
+/* Level of nesting inside outputting backquote in new style.  */
+int new_backquote_output;
 
 /* Detect most circularities to print finite output.  */
 #define PRINT_CIRCLE 200
@@ -674,23 +674,32 @@ DEFUN ("with-output-to-temp-buffer",
        Fwith_output_to_temp_buffer, Swith_output_to_temp_buffer,
        1, UNEVALLED, 0,
        doc: /* Bind `standard-output' to buffer BUFNAME, eval BODY, then show that buffer.
-The buffer is cleared out initially, and marked as unmodified when done.
-All output done by BODY is inserted in that buffer by default.
-The buffer is displayed in another window, but not selected.
-The value of the last form in BODY is returned.
-If BODY does not finish normally, the buffer BUFNAME is not displayed.
 
-The hook `temp-buffer-setup-hook' is run before BODY,
-with the buffer BUFNAME temporarily current.
-The hook `temp-buffer-show-hook' is run after the buffer is displayed,
-with the buffer temporarily current, and the window that was used
-to display it temporarily selected.
+This construct makes buffer BUFNAME empty before running BODY.
+It does not make the buffer current for BODY.
+Instead it binds `standard-output' to that buffer, so that output
+generated with `prin1' and similar functions in BODY goes into
+the buffer.
 
-If variable `temp-buffer-show-function' is non-nil, call it at the end
-to get the buffer displayed instead of just displaying the non-selected
-buffer and calling the hook.  It gets one argument, the buffer to display.
+At the end of BODY, this marks buffer BUFNAME unmodifed and displays
+it in a window, but does not select it.  The normal way to do this is
+by calling `display-buffer', then running `temp-buffer-show-hook'.
+However, if `temp-buffer-show-function' is non-nil, it calls that
+function instead (and does not run `temp-buffer-show-hook').  The
+function gets one argument, the buffer to display.
 
-usage: (with-output-to-temp-buffer BUFNAME BODY ...)  */)
+The return value of `with-output-to-temp-buffer' is the value of the
+last form in BODY.  If BODY does not finish normally, the buffer
+BUFNAME is not displayed.
+
+This runs the hook `temp-buffer-setup-hook' before BODY,
+with the buffer BUFNAME temporarily current.  It runs the hook
+`temp-buffer-show-hook' after displaying buffer BUFNAME, with that
+buffer temporarily current, and the window that was used to display it
+temporarily selected.  But it doesn't run `temp-buffer-show-hook'
+if it uses `temp-buffer-show-function'.
+
+usage: (with-output-to-temp-buffer BUFNAME BODY...)  */)
      (args)
      Lisp_Object args;
 {
@@ -1291,7 +1300,7 @@ print (obj, printcharfun, escapeflag)
      register Lisp_Object printcharfun;
      int escapeflag;
 {
-  old_backquote_output = 0;
+  new_backquote_output = 0;
 
   /* Reset print_number_index and Vprint_number_table only when
      the variable Vprint_continuous_numbering is nil.  Otherwise,
@@ -1756,14 +1765,24 @@ print_object (obj, printcharfun, escapeflag)
 	  print_object (XCAR (XCDR (obj)), printcharfun, escapeflag);
 	}
       else if (print_quoted && CONSP (XCDR (obj)) && NILP (XCDR (XCDR (obj)))
-	       && ! old_backquote_output
+	       && ((EQ (XCAR (obj), Qbackquote))))
+	{
+	  print_object (XCAR (obj), printcharfun, 0);
+	  new_backquote_output++;
+	  print_object (XCAR (XCDR (obj)), printcharfun, escapeflag);
+	  new_backquote_output--;
+	}
+      else if (print_quoted && CONSP (XCDR (obj)) && NILP (XCDR (XCDR (obj)))
+	       && new_backquote_output
 	       && ((EQ (XCAR (obj), Qbackquote)
 		    || EQ (XCAR (obj), Qcomma)
 		    || EQ (XCAR (obj), Qcomma_at)
 		    || EQ (XCAR (obj), Qcomma_dot))))
 	{
 	  print_object (XCAR (obj), printcharfun, 0);
+	  new_backquote_output--;
 	  print_object (XCAR (XCDR (obj)), printcharfun, escapeflag);
+	  new_backquote_output++;
 	}
       else
 	{
@@ -1783,9 +1802,7 @@ print_object (obj, printcharfun, escapeflag)
 	      print_object (Qbackquote, printcharfun, 0);
 	      PRINTCHAR (' ');
 
-	      ++old_backquote_output;
 	      print_object (XCAR (XCDR (tem)), printcharfun, 0);
-	      --old_backquote_output;
 	      PRINTCHAR (')');
 
 	      obj = XCDR (obj);

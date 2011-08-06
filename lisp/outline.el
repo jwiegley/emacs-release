@@ -1,7 +1,7 @@
 ;;; outline.el --- outline mode commands for Emacs
 
 ;; Copyright (C) 1986, 1993, 1994, 1995, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: outlines
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -712,7 +712,10 @@ If nil, `show-entry' is called to reveal the invisible text.")
 If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
   (remove-overlays from to 'invisible 'outline)
   (when flag
-    (let ((o (make-overlay from to)))
+    ;; We use `front-advance' here because the invisible text begins at the
+    ;; very end of the heading, before the newline, so text inserted at FROM
+    ;; belongs to the heading rather than to the entry.
+    (let ((o (make-overlay from to nil 'front-advance)))
       (overlay-put o 'invisible 'outline)
       (overlay-put o 'isearch-open-invisible
 		   (or outline-isearch-open-invisible-function

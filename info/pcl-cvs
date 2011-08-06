@@ -2,7 +2,7 @@ This is ../info/pcl-cvs, produced by makeinfo version 4.8 from
 pcl-cvs.texi.
 
    Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -1837,38 +1837,38 @@ this manual.
 
 
 Tag Table:
-Node: Top1402
-Node: About PCL-CVS3920
-Node: Contributors5008
-Node: Getting started7557
-Node: Buffer contents10253
-Node: Selected files14542
-Node: Commands16176
-Node: Entering PCL-CVS17578
-Node: Setting flags19794
-Node: Updating the buffer22264
-Node: Movement commands23324
-Node: Marking files23901
-Node: Committing changes25037
-Node: Editing files26949
-Node: Getting info about files27856
-Node: Adding and removing files28370
-Node: Undoing changes29638
-Node: Removing handled entries30109
-Node: Ignoring files30964
-Node: Viewing differences31519
-Node: Invoking Ediff33091
-Node: Updating files33948
-Node: Tagging files34209
-Node: Miscellaneous commands34982
-Node: Log Edit Mode35947
-Node: Log View Mode37285
-Node: Customization37856
-Node: Customizing Faces41483
-Node: Bugs42278
-Node: GNU Free Documentation License43817
-Node: Function and Variable Index66062
-Node: Concept Index73468
-Node: Key Index81887
+Node: Top1407
+Node: About PCL-CVS3925
+Node: Contributors5013
+Node: Getting started7562
+Node: Buffer contents10258
+Node: Selected files14547
+Node: Commands16181
+Node: Entering PCL-CVS17583
+Node: Setting flags19799
+Node: Updating the buffer22269
+Node: Movement commands23329
+Node: Marking files23906
+Node: Committing changes25042
+Node: Editing files26954
+Node: Getting info about files27861
+Node: Adding and removing files28375
+Node: Undoing changes29643
+Node: Removing handled entries30114
+Node: Ignoring files30969
+Node: Viewing differences31524
+Node: Invoking Ediff33096
+Node: Updating files33953
+Node: Tagging files34214
+Node: Miscellaneous commands34987
+Node: Log Edit Mode35952
+Node: Log View Mode37290
+Node: Customization37861
+Node: Customizing Faces41488
+Node: Bugs42283
+Node: GNU Free Documentation License43822
+Node: Function and Variable Index66067
+Node: Concept Index73473
+Node: Key Index81892
 
 End Tag Table

@@ -1,7 +1,7 @@
 ;;; cl-specs.el --- Edebug specs for cl.el -*- no-byte-compile: t -*-
 
 ;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007 Free Software Foundation, Inc.
+;;   2006, 2007, 2008 Free Software Foundation, Inc.
 ;; Author: Daniel LaLiberte <liberte@holonexus.org>
 ;; Keywords: lisp, tools, maint
 
@@ -13,7 +13,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -323,7 +323,7 @@
 ;; Below is a complete spec for loop, in several parts that correspond
 ;; to the syntax given in CLtL2.  The specs do more than specify where
 ;; the forms are; it also specifies, as much as Edebug allows, all the
-;; syntactically legal loop clauses.  The disadvantage of this
+;; syntactically valid loop clauses.  The disadvantage of this
 ;; completeness is rigidity, but the "for ... being" clause allows
 ;; arbitrary extensions of the form: [symbolp &rest &or symbolp form].
 

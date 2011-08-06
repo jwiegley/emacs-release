@@ -1,11 +1,11 @@
 This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
 
    This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.1.
+updated for Emacs version 22.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,14 +16,84 @@ Foundation, Inc.
      Texts as in (a) below.  A copy of the license is included in the
      section entitled "GNU Free Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: From Other Calendar,  Next: Mayan Calendar,  Prev: To Other Calendar,  Up: Other Calendars
+
+39.9.3 Converting From Other Calendars
+--------------------------------------
+
+You can use the other supported calendars to specify a date to move to.
+This section describes the commands for doing this using calendars
+other than Mayan; for the Mayan calendar, see the following section.
+
+`g c'
+     Move to a date specified in the ISO commercial calendar
+     (`calendar-goto-iso-date').
+
+`g w'
+     Move to a week specified in the ISO commercial calendar
+     (`calendar-goto-iso-week').
+
+`g j'
+     Move to a date specified in the Julian calendar
+     (`calendar-goto-julian-date').
+
+`g a'
+     Move to a date specified with an astronomical (Julian) day number
+     (`calendar-goto-astro-day-number').
+
+`g h'
+     Move to a date specified in the Hebrew calendar
+     (`calendar-goto-hebrew-date').
+
+`g i'
+     Move to a date specified in the Islamic calendar
+     (`calendar-goto-islamic-date').
+
+`g f'
+     Move to a date specified in the French Revolutionary calendar
+     (`calendar-goto-french-date').
+
+`g C'
+     Move to a date specified in the Chinese calendar
+     (`calendar-goto-chinese-date').
+
+`g p'
+     Move to a date specified in the Persian calendar
+     (`calendar-goto-persian-date').
+
+`g k'
+     Move to a date specified in the Coptic calendar
+     (`calendar-goto-coptic-date').
+
+`g e'
+     Move to a date specified in the Ethiopic calendar
+     (`calendar-goto-ethiopic-date').
+
+   These commands ask you for a date on the other calendar, move point
+to the Gregorian calendar date equivalent to that date, and display the
+other calendar's date in the echo area.  Emacs uses strict completion
+(*note Completion::) whenever it asks you to type a month name, so you
+don't have to worry about the spelling of Hebrew, Islamic, or French
+names.
+
+   One common question concerning the Hebrew calendar is the computation
+of the anniversary of a date of death, called a "yahrzeit."  The Emacs
+calendar includes a facility for such calculations.  If you are in the
+calendar, the command `M-x list-yahrzeit-dates' asks you for a range of
+years and then displays a list of the yahrzeit dates for those years
+for the date given by point.  If you are not in the calendar, this
+command first asks you for the date of death and the range of years,
+and then displays the list of yahrzeit dates.
 
 
 File: emacs,  Node: Mayan Calendar,  Prev: From Other Calendar,  Up: Other Calendars
@@ -114,9 +184,8 @@ dates.  Then Emacs can automatically pick out and display the events
 for today, for the immediate future, or for any specified date.
 
    The name of the diary file is specified by the variable
-`diary-file'; `~/diary' is the default.  A sample diary file is (note
-that the file format is essentially the same as that used by the
-external shell utility `calendar'):
+`diary-file'; `~/diary' is the default.  Here's an example showing what
+that file looks like:
 
      12/22/1988  Twentieth wedding anniversary!!
      &1/1.       Happy New Year!
@@ -130,8 +199,10 @@ external shell utility `calendar'):
      April 15, 1989 Income tax due.
      &* 15       time cards due.
 
-This example uses extra spaces to align the event descriptions of most
-of the entries.  Such formatting is purely a matter of taste.
+This format is essentially the same as the one used by the system's
+`calendar' utility.  This example uses extra spaces to align the event
+descriptions of most of the entries.  Such formatting is purely a
+matter of taste.
 
    Although you probably will start by creating a diary manually, Emacs
 provides a number of commands to let you view, add, and change diary
@@ -478,18 +549,18 @@ nonmarking (with `&') when possible.
 specifies a regularly occurring event by offsets specified in days,
 weeks, and months.  It is comparable to a crontab entry interpreted by
 the `cron' utility.  Here is a nonmarking, floating diary entry that
-applies to the last Thursday in November:
+applies to the fourth Thursday in November:
 
-     &%%(diary-float 11 4 -1) American Thanksgiving
+     &%%(diary-float 11 4 4) American Thanksgiving
 
 The 11 specifies November (the eleventh month), the 4 specifies Thursday
-(the fourth day of the week, where Sunday is numbered zero), and the -1
-specifies "last" (1 would mean "first," 2 would mean "second," -2 would
-mean "second-to-last," and so on).  The month can be a single month or
-a list of months.  Thus you could change the 11 above to `'(1 2 3)' and
-have the entry apply to the last Thursday of January, February, and
-March.  If the month is `t', the entry applies to all months of the
-year.
+(the fourth day of the week, where Sunday is numbered zero), and the
+second 4 specifies the fourth Thursday (1 would mean "first," 2 would
+mean "second," -2 would mean "second-to-last," and so on).  The month
+can be a single month or a list of months.  Thus you could change the
+11 above to `'(1 2 3)' and have the entry apply to the last Thursday of
+January, February, and March.  If the month is `t', the entry applies
+to all months of the year.
 
    Each of the standard sexp diary entries takes an optional parameter
 specifying the name of a face or a single-character string to use when
@@ -1719,14 +1790,15 @@ found, Emacs tries to fallback on `~/.emacs.d/init_SHELLNAME.sh'.
 coding system for a running subshell by typing `C-x <RET> p' in the
 shell buffer.  *Note Communication Coding::.
 
-   Emacs sets the envitonment variable `INSIDE_EMACS' to `t' in the
-subshell.  Programs can check this variable to determine whether they
-are running inside an Emacs subshell.
+   Emacs sets the environment variable `INSIDE_EMACS' in the subshell
+to a comma-separated list including the Emacs version.  Programs can
+check this variable to determine whether they are running inside an
+Emacs subshell.
 
-   Emacs also sets the `EMACS' environment variable to `t' if it is not
-already defined.  *Warning:* This environment variable is deprecated.
-Programs that check this variable should be changed to check
-`INSIDE_EMACS' instead.
+   Emacs also sets the `EMACS' environment variable (to `t') if it is
+not already defined.  *Warning:* This environment variable is
+deprecated.  Programs that check this variable should be changed to
+check `INSIDE_EMACS' instead.
 
 
 File: emacs,  Node: Shell Mode,  Next: Shell Prompts,  Prev: Interactive Shell,  Up: Shell
@@ -4527,11 +4599,14 @@ file or others, it will assume they are safe.
 
    Some variables, such as `load-path', are considered particularly
 "risky": there is seldom any reason to specify them as local variables,
-and changing them can be dangerous.  Even if you enter `!' at the
-confirmation prompt, Emacs will not record any values as safe for these
-variables.  If you really want to record safe values for these
-variables, do it directly by customizing `safe-local-variable-values'
-(*note Easy Customization::).
+and changing them can be dangerous.  If a file contains only risky
+local variables, Emacs neither offers nor accepts `!' as input at the
+confirmation prompt.  If some of the local variables in a file are
+risky, and some are only potentially unsafe, you can enter `!' at the
+prompt.  It applies all the variables, but only marks the non-risky
+ones as safe for the future.  If you really want to record safe values
+for risky variables, do it directly by customizing
+`safe-local-variable-values' (*note Easy Customization::).
 
    The variable `enable-local-variables' allows you to change the way
 Emacs processes local variables.  Its default value is `t', which
@@ -5113,11 +5188,11 @@ twice.
 clicks beyond the third generate additional triple-click events.
 However, the full number of clicks is recorded in the event list, so if
 you know Emacs Lisp you can distinguish if you really want to (*note
-Accessing Events: (elisp)Accessing Events.).  We don't recommend
-distinct meanings for more than three clicks, but sometimes it is
-useful for subsequent clicks to cycle through the same set of three
-meanings, so that four clicks are equivalent to one click, five are
-equivalent to two, and six are equivalent to three.
+Click Events: (elisp)Click Events.).  We don't recommend distinct
+meanings for more than three clicks, but sometimes it is useful for
+subsequent clicks to cycle through the same set of three meanings, so
+that four clicks are equivalent to one click, five are equivalent to
+two, and six are equivalent to three.
 
    Emacs also records multiple presses in drag and button-down events.
 For example, when you press a button twice, then move the mouse while
@@ -5649,7 +5724,7 @@ Type `C-q', followed by the key you want to bind, to insert CHAR.
 
    *Warning:* if you change the keyboard encoding, or change between
 multibyte and unibyte mode, or anything that would alter which code
-`C-q' would insert for that character, this keybinding may stop
+`C-q' would insert for that character, this key binding may stop
 working.  It is therefore advisable to use one and only one coding
 system, for your init file as well as the files you edit.  For example,
 don't mix the `latin-1' and `latin-9' coding systems.
@@ -5715,10 +5790,10 @@ waiting for the operating system to do something, quitting is
 impossible unless special pains are taken for the particular system
 call within Emacs where the waiting occurs.  We have done this for the
 system calls that users are likely to want to quit from, but it's
-possible you will a case not handled.  In one very common case--waiting
-for file input or output using NFS--Emacs itself knows how to quit, but
-many NFS implementations simply do not allow user programs to stop
-waiting for NFS when the NFS server is hung.
+possible you will encounter a case not handled.  In one very common
+case--waiting for file input or output using NFS--Emacs itself knows
+how to quit, but many NFS implementations simply do not allow user
+programs to stop waiting for NFS when the NFS server is hung.
 
    Aborting with `C-]' (`abort-recursive-edit') is used to get out of a
 recursive editing level and cancel the command which invoked it.

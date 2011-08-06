@@ -1,7 +1,7 @@
 ;;; nnimap.el --- imap backend for Gnus
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <jas@pdc.kth.se>
 ;;         Jim Radford <radford@robby.caltech.edu>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -208,7 +208,7 @@ This is generally not required, and will slow things down considerably.
 You may need it if you want to use an advanced splitting function that
 analyzes the body before splitting the article.
 If this variable is nil, bodies will not be downloaded; if this
-variable is the symbol `default' the default behaviour is
+variable is the symbol `default' the default behavior is
 used (which currently is nil, unless you use a statistical
 spam.el test); if this variable is another non-nil value bodies
 will be downloaded."
@@ -1645,7 +1645,7 @@ be used in a STORE FLAGS command."
       result)))
 
 (defun nnimap-mark-permanent-p (mark &optional group)
-  "Return t iff MARK can be permanently (between IMAP sessions) saved on articles, in GROUP."
+  "Return t if MARK can be permanently (between IMAP sessions) saved on articles, in GROUP."
   (imap-message-flag-permanent-p (nnimap-mark-to-flag mark)))
 
 (when nnimap-debug

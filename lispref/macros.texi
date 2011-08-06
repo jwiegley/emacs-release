@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-@c   2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+@c   2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../info/macros
 @node Macros, Customization, Functions, Top
@@ -365,7 +365,7 @@ whitespace between the @samp{`}, @samp{,} or @samp{,@@} and the
 following expression.
 
 This syntax is still accepted, for compatibility with old Emacs
-versions, but we recommend not using it in new programs.
+versions, but support for it will soon disappear.
 
 @node Problems with Macros
 @section Common Problems Using Macros

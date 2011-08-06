@@ -1,7 +1,7 @@
 ;;; pcvs-parse.el --- the CVS output parser
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -235,7 +235,7 @@ The remaining KEYS are passed directly to `cvs-create-fileinfo'."
 	      ;; servers, this should not be necessary, because they return
 	      ;; a complete merge output.
 	      (with-temp-buffer
-		(insert-file-contents path)
+		(ignore-errors (insert-file-contents path))
 		(goto-char (point-min))
 		(if (re-search-forward "^<<<<<<< " nil t)
 		    'CONFLICT 'NEED-MERGE))))
@@ -272,8 +272,9 @@ The remaining KEYS are passed directly to `cvs-create-fileinfo'."
 	;; branches, or because it's been removed).
 	(if (ignore-errors
 	      (with-temp-buffer
-		(insert-file-contents (expand-file-name
-				       ".cvsignore" (file-name-directory dir)))
+                (ignore-errors
+                  (insert-file-contents
+                   (expand-file-name ".cvsignore" (file-name-directory dir))))
 		(goto-char (point-min))
 		(re-search-forward
 		 (concat "^" (regexp-quote (file-name-nondirectory dir)) "/$")
@@ -284,6 +285,8 @@ The remaining KEYS are passed directly to `cvs-create-fileinfo'."
        ;; File removed, since it is removed (by third party) in repository.
        (and
 	(cvs-or
+         ;; some cvs versions output quotes around these files
+	 (cvs-match "warning: `\\(.*\\)' is not (any longer) pertinent$" (file 1))
 	 (cvs-match "warning: \\(.*\\) is not (any longer) pertinent$" (file 1))
 	 (cvs-match "`\\(.*\\)' is no longer in the repository$" (file 1))
          (cvs-match "\\(.*\\) is no longer in the repository$" (file 1)))

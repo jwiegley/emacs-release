@@ -6,10 +6,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -21,9 +21,9 @@ Foundation, Inc.
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 
 File: elisp,  Node: Defining New Types,  Prev: Type Keywords,  Up: Customization Types
@@ -869,19 +869,24 @@ reclaim memory for other Lisp objects.  To do this, use the function
      Before restoring the previous definitions, `unload-feature' runs
      `remove-hook' to remove functions in the library from certain
      hooks.  These hooks include variables whose names end in `hook' or
-     `-hooks', plus those listed in `unload-feature-special-hooks'.
-     This is to prevent Emacs from ceasing to function because
-     important hooks refer to functions that are no longer defined.
+     `-hooks', plus those listed in `unload-feature-special-hooks', as
+     well as `auto-mode-alist'.  This is to prevent Emacs from ceasing
+     to function because important hooks refer to functions that are no
+     longer defined.
+
+     Standard unloading activities also undoes ELP profiling of
+     functions in that library, unprovides any features provided by the
+     library, and cancels timers held in variables defined by the
+     library.
 
      If these measures are not sufficient to prevent malfunction, a
-     library can define an explicit unload hook.  If
-     `FEATURE-unload-hook' is defined, it is run as a normal hook
-     before restoring the previous definitions, _instead of_ the usual
-     hook-removing actions.  The unload hook ought to undo all the
-     global state changes made by the library that might cease to work
-     once the library is unloaded.  `unload-feature' can cause problems
-     with libraries that fail to do this, so it should be used with
-     caution.
+     library can define an explicit unloader named
+     `FEATURE-unload-function'.  If that symbol is defined as a
+     function, `unload-feature' calls it with no arguments before doing
+     anything else.  It can do whatever is appropriate to unload the
+     library.  If it returns `nil', `unload-feature' proceeds to take
+     the normal unload actions.  Otherwise it considers the job to be
+     done.
 
      Ordinarily, `unload-feature' refuses to unload a library on which
      other loaded libraries depend.  (A library A depends on library B

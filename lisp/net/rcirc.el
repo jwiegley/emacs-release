@@ -1,6 +1,6 @@
 ;;; rcirc.el --- default, simple IRC client.
 
-;; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Ryan Yeske
 ;; URL: http://www.nongnu.org/rcirc
@@ -10,7 +10,7 @@
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; This file is distributed in the hope that it will be useful,
@@ -1887,23 +1887,24 @@ keywords when no KEYWORD is given."
     string))
 
 (defvar rcirc-url-regexp
-  (rx-to-string
-   `(and word-boundary
-	 (or (and
-	      (or (and (or "http" "https" "ftp" "file" "gopher" "news"
-			   "telnet" "wais" "mailto")
-		       "://")
-		  "www.")
-	      (1+ (char "-a-zA-Z0-9_."))
-	      (1+ (char "-a-zA-Z0-9_"))
-	      (optional ":" (1+ (char "0-9"))))
-	     (and (1+ (char "-a-zA-Z0-9_."))
-		  (or ".com" ".net" ".org")
-		  word-boundary))
-	 (optional
-	  (and "/"
-	       (1+ (char "-a-zA-Z0-9_=!?#$\@~`%&*+|\\/:;.,{}[]()"))
-	       (char "-a-zA-Z0-9_=#$\@~`%&*+|\\/:;{}[]()")))))
+  (concat
+   "\\b\\(\\(www\\.\\|\\(s?https?\\|ftp\\|file\\|gopher\\|"
+   "nntp\\|news\\|telnet\\|wais\\|mailto\\|info\\):\\)"
+   "\\(//[-a-z0-9_.]+:[0-9]*\\)?"
+   (if (string-match "[[:digit:]]" "1") ;; Support POSIX?
+       (let ((chars "-a-z0-9_=#$@~%&*+\\/[:word:]")
+	     (punct "!?:;.,"))
+	 (concat
+	  "\\(?:"
+	  ;; Match paired parentheses, e.g. in Wikipedia URLs:
+	  "[" chars punct "]+" "(" "[" chars punct "]+" "[" chars "]*)" "[" chars "]"
+	  "\\|"
+	  "[" chars punct     "]+" "[" chars "]"
+	  "\\)"))
+     (concat ;; XEmacs 21.4 doesn't support POSIX.
+      "\\([-a-z0-9_=!?#$@~%&*+\\/:;.,]\\|\\w\\)+"
+      "\\([-a-z0-9_=#$@~%&*+\\/]\\|\\w\\)"))
+   "\\)")
   "Regexp matching URLs.  Set to nil to disable URL features in rcirc.")
 
 (defun rcirc-browse-url (&optional arg)

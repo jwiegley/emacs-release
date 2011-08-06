@@ -1,7 +1,7 @@
 ;;; mailcap.el --- MIME media types configuration
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: William M. Perry <wmperry@aventail.com>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -538,7 +538,7 @@ MAILCAPS if set; otherwise (on Unix) use the path from RFC 1524, plus
       results)))
 
 (defun mailcap-mailcap-entry-passes-test (info)
-  "Return non-nil iff mailcap entry INFO passes its test clause.
+  "Return non-nil if mailcap entry INFO passes its test clause.
 Also return non-nil if no test clause is present."
   (let ((test (assq 'test info))	; The test clause
 	status)
@@ -631,7 +631,7 @@ Also return non-nil if no test clause is present."
 (defvar mailcap-viewer-test-cache nil)
 
 (defun mailcap-viewer-passes-test (viewer-info type-info)
-  "Return non-nil iff viewer specified by VIEWER-INFO passes its test clause.
+  "Return non-nil if viewer specified by VIEWER-INFO passes its test clause.
 Also return non-nil if it has no test clause.  TYPE-INFO is an argument
 to supply to the test."
   (let* ((test-info (assq 'test viewer-info))
@@ -704,7 +704,7 @@ If TEST is not given, it defaults to t."
 ;;;
 
 (defun mailcap-viewer-lessp (x y)
-  "Return t iff viewer X is more desirable than viewer Y."
+  "Return t if viewer X is more desirable than viewer Y."
   (let ((x-wild (string-match "[*?]" (or (cdr-safe (assq 'type x)) "")))
 	(y-wild (string-match "[*?]" (or (cdr-safe (assq 'type y)) "")))
 	(x-lisp (not (stringp (or (cdr-safe (assq 'viewer x)) ""))))

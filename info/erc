@@ -7,7 +7,7 @@ END-INFO-DIR-ENTRY
 
    This manual is for ERC version 5.2.
 
-   Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+   Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -34,7 +34,7 @@ ERC
 
 This manual is for ERC version 5.2.
 
-   Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
+   Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1436,24 +1436,24 @@ Index
 
 
 Tag Table:
-Node: Top1152
-Node: Introduction3417
-Node: Obtaining ERC4086
-Node: Releases4745
-Node: Development5320
-Node: Installation6909
-Node: Getting Started8546
-Node: Sample Session9512
-Node: Special Features11915
-Node: Keystroke Summary14207
-Node: Modules16744
-Node: Advanced Usage18808
-Node: Connecting19155
-Node: Sample Configuration22504
-Node: Options25868
-Node: Getting Help and Reporting Bugs26120
-Node: History27257
-Node: GNU Free Documentation License29280
-Node: Concept Index51510
+Node: Top1158
+Node: Introduction3429
+Node: Obtaining ERC4098
+Node: Releases4757
+Node: Development5332
+Node: Installation6921
+Node: Getting Started8558
+Node: Sample Session9524
+Node: Special Features11927
+Node: Keystroke Summary14219
+Node: Modules16756
+Node: Advanced Usage18820
+Node: Connecting19167
+Node: Sample Configuration22516
+Node: Options25880
+Node: Getting Help and Reporting Bugs26132
+Node: History27269
+Node: GNU Free Documentation License29292
+Node: Concept Index51522
 
 End Tag Table

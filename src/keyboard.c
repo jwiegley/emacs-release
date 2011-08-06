@@ -1,13 +1,13 @@
 /* Keyboard and mouse input; editor command loop.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994, 1995,
                  1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -112,6 +112,7 @@ extern int input_fd;
 #define KBD_BUFFER_SIZE 4096
 #endif	/* No X-windows */
 
+#undef abs
 #define abs(x)		((x) >= 0 ? (x) : -(x))
 
 /* Following definition copied from eval.c */
@@ -500,7 +501,7 @@ static struct input_event * volatile kbd_store_ptr;
 /* The above pair of variables forms a "queue empty" flag.  When we
    enqueue a non-hook event, we increment kbd_store_ptr.  When we
    dequeue a non-hook event, we increment kbd_fetch_ptr.  We say that
-   there is input available iff the two pointers are not equal.
+   there is input available if the two pointers are not equal.
 
    Why not just have a flag set and cleared by the enqueuing and
    dequeuing functions?  Such a flag could be screwed up by interrupts
@@ -1422,7 +1423,7 @@ DEFUN ("track-mouse", Ftrack_mouse, Strack_mouse, 0, UNEVALLED, 0,
 Within a `track-mouse' form, mouse motion generates input events that
 you can read with `read-event'.
 Normally, mouse motion is ignored.
-usage: (track-mouse BODY ...)  */)
+usage: (track-mouse BODY...)  */)
      (args)
      Lisp_Object args;
 {
@@ -1536,6 +1537,8 @@ command_loop_1 ()
   /* Do this after running Vpost_command_hook, for consistency.  */
   current_kboard->Vlast_command = Vthis_command;
   current_kboard->Vreal_last_command = real_this_command;
+  if (!CONSP (last_command_char))
+    current_kboard->Vlast_repeatable_command = real_this_command;
 
   while (1)
     {
@@ -1561,17 +1564,15 @@ command_loop_1 ()
 
       if (minibuf_level
 	  && !NILP (echo_area_buffer[0])
-	  && EQ (minibuf_window, echo_area_window))
+	  && EQ (minibuf_window, echo_area_window)
+	  && NUMBERP (Vminibuffer_message_timeout))
 	{
 	  /* Bind inhibit-quit to t so that C-g gets read in
 	     rather than quitting back to the minibuffer.  */
 	  int count = SPECPDL_INDEX ();
 	  specbind (Qinhibit_quit, Qt);
 
-	  if (NUMBERP (Vminibuffer_message_timeout))
-	    sit_for (Vminibuffer_message_timeout, 0, 2);
-	  else
-	    sit_for (Qt, 0, 2);
+	  sit_for (Vminibuffer_message_timeout, 0, 2);
 
 	  /* Clear the echo area.  */
 	  message2 (0, 0, 0);
@@ -1916,6 +1917,8 @@ command_loop_1 ()
 	{
 	  current_kboard->Vlast_command = Vthis_command;
 	  current_kboard->Vreal_last_command = real_this_command;
+	  if (!CONSP (last_command_char))
+	    current_kboard->Vlast_repeatable_command = real_this_command;
 	  cancel_echoing ();
 	  this_command_key_count = 0;
 	  this_command_key_count_reset = 0;
@@ -2304,6 +2307,9 @@ make_ctrl_char (c)
 {
   /* Save the upper bits here.  */
   int upper = c & ~0177;
+
+  if (! ASCII_BYTE_P (c))
+    return c |= ctrl_modifier;
 
   c &= 0177;
 
@@ -3590,7 +3596,7 @@ restore_getcjmp (temp)
    kbd_buffer_store_event places events in kbd_buffer, and
    kbd_buffer_get_event retrieves them.  */
 
-/* Return true iff there are any events in the queue that read-char
+/* Return true if there are any events in the queue that read-char
    would return.  If this returns false, a read-char would block.  */
 static int
 readable_events (flags)
@@ -3990,6 +3996,12 @@ kbd_buffer_get_event (kbp, used_mouse_menu, end_time)
   /* Wait until there is input available.  */
   for (;;)
     {
+      /* Break loop if there's an unread command event.  Needed in
+	 moused window autoselection which uses a timer to insert such
+	 events.  */
+      if (CONSP (Vunread_command_events))
+	break;
+      
       if (kbd_fetch_ptr != kbd_store_ptr)
 	break;
 #ifdef HAVE_MOUSE
@@ -4601,11 +4613,13 @@ timer_check (do_it_now)
 }
 
 DEFUN ("current-idle-time", Fcurrent_idle_time, Scurrent_idle_time, 0, 0, 0,
-       doc: /* Return the current length of Emacs idleness.
-The value is returned as a list of three integers.  The first has the
+       doc: /* Return the current length of Emacs idleness, or nil.
+The value when Emacs is idle is a list of three integers.  The first has the
 most significant 16 bits of the seconds, while the second has the
 least significant 16 bits.  The third integer gives the microsecond
 count.
+
+The value when Emacs is not idle is nil.
 
 The microsecond count is zero on systems that do not provide
 resolution finer than a second.  */)
@@ -7824,10 +7838,11 @@ static Lisp_Object tool_bar_item_properties;
 
 static int ntool_bar_items;
 
-/* The symbols `tool-bar', and `:image'.  */
+/* The symbols `tool-bar', `:image' and `:rtl'.  */
 
 extern Lisp_Object Qtool_bar;
 Lisp_Object QCimage;
+Lisp_Object Qrtl;
 
 /* Function prototypes.  */
 
@@ -8113,6 +8128,9 @@ parse_tool_bar_item (key, item)
 	/* Value is either a single image specification or a vector
 	   of 4 such specifications for the different button states.  */
 	PROP (TOOL_BAR_ITEM_IMAGES) = value;
+      else if (EQ (key, Qrtl))
+        /* ':rtl STRING' */
+        PROP (TOOL_BAR_ITEM_RTL_IMAGE) = value;
     }
 
   /* If got a filter apply it on binding.  */
@@ -10970,6 +10988,7 @@ init_kboard (kb)
   kb->Voverriding_terminal_local_map = Qnil;
   kb->Vlast_command = Qnil;
   kb->Vreal_last_command = Qnil;
+  kb->Vlast_repeatable_command = Qnil;
   kb->Vprefix_arg = Qnil;
   kb->Vlast_prefix_arg = Qnil;
   kb->kbd_queue = Qnil;
@@ -11139,6 +11158,9 @@ syms_of_keyboard ()
 
   staticpro (&Qhelp_echo);
   Qhelp_echo = intern ("help-echo");
+
+  staticpro (&Qrtl);
+  Qrtl = intern (":rtl");
 
   staticpro (&item_properties);
   item_properties = Qnil;
@@ -11456,6 +11478,11 @@ was a kill command.  */);
 
   DEFVAR_KBOARD ("real-last-command", Vreal_last_command,
 		 doc: /* Same as `last-command', but never altered by Lisp code.  */);
+
+  DEFVAR_KBOARD ("last-repeatable-command", Vlast_repeatable_command,
+		 doc: /* Last command that may be repeated.
+The last command executed that was not bound to an input event.
+This is the command `repeat' will try to repeat.  */);
 
   DEFVAR_LISP ("this-command", &Vthis_command,
 	       doc: /* The command now being executed.
@@ -11855,6 +11882,7 @@ mark_kboards ()
       mark_object (kb->Voverriding_terminal_local_map);
       mark_object (kb->Vlast_command);
       mark_object (kb->Vreal_last_command);
+      mark_object (kb->Vlast_repeatable_command);
       mark_object (kb->Vprefix_arg);
       mark_object (kb->Vlast_prefix_arg);
       mark_object (kb->kbd_queue);

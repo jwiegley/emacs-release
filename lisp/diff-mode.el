@@ -1,7 +1,7 @@
 ;;; diff-mode.el --- a mode for viewing/editing context diffs
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: convenience patch diff
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -112,6 +112,8 @@ when editing big diffs)."
     ("N" . diff-file-next)
     ("p" . diff-hunk-prev)
     ("P" . diff-file-prev)
+    ("\t" . diff-hunk-next)
+    ([backtab] . diff-hunk-prev)
     ("k" . diff-hunk-kill)
     ("K" . diff-file-kill)
     ;; From compilation-minor-mode.
@@ -164,12 +166,23 @@ when editing big diffs)."
   '("Diff"
     ["Jump to Source"		diff-goto-source	t]
     ["Apply hunk"		diff-apply-hunk		t]
+    ["Test applying hunk"	diff-test-hunk		t]
     ["Apply diff with Ediff"	diff-ediff-patch	t]
-    ["-----" nil nil]
+    "-----"
     ["Reverse direction"	diff-reverse-direction	t]
     ["Context -> Unified"	diff-context->unified	t]
     ["Unified -> Context"	diff-unified->context	t]
     ;;["Fixup Headers"		diff-fixup-modifs	(not buffer-read-only)]
+    "-----"
+    ["Split hunk"		diff-split-hunk		t]
+    ["Refine hunk"	        diff-refine-hunk	t]
+    ["Kill current hunk"	diff-hunk-kill   	t]
+    ["Kill current file's hunks" diff-file-kill   	t]
+    "-----"
+    ["Previous Hunk"		diff-hunk-prev  	t]
+    ["Next Hunk"		diff-hunk-next  	t]
+    ["Previous File"		diff-file-prev  	t]
+    ["Next File"		diff-file-next  	t]
     ))
 
 (defcustom diff-minor-mode-prefix "\C-c="
@@ -328,10 +341,12 @@ when editing big diffs)."
 	  (while (re-search-backward re start t)
 	    (replace-match "" t t)))))))
 
+(defconst diff-hunk-header-re-unified
+  "^@@ -\\([0-9]+\\),\\([0-9]+\\) \\+\\([0-9]+\\),\\([0-9]+\\) @@")
 
 (defvar diff-font-lock-keywords
-  `(("^\\(@@ -[0-9,]+ \\+[0-9,]+ @@\\)\\(.*\\)$"          ;unified
-     (1 diff-hunk-header-face) (2 diff-function-face))
+  `((,(concat "\\(" diff-hunk-header-re-unified "\\)\\(.*\\)$")
+     (1 diff-hunk-header-face) (6 diff-function-face))
     ("^\\(\\*\\{15\\}\\)\\(.*\\)$"                        ;context
      (1 diff-hunk-header-face) (2 diff-function-face))
     ("^\\*\\*\\* .+ \\*\\*\\*\\*". diff-hunk-header-face) ;context
@@ -368,35 +383,79 @@ when editing big diffs)."
 ;;;; Movement
 ;;;;
 
-(defconst diff-hunk-header-re "^\\(@@ -[0-9,]+ \\+[0-9,]+ @@.*\\|\\*\\{15\\}.*\n\\*\\*\\* .+ \\*\\*\\*\\*\\|[0-9]+\\(,[0-9]+\\)?[acd][0-9]+\\(,[0-9]+\\)?\\)$")
+(defvar diff-valid-unified-empty-line t
+  "If non-nil, empty lines are valid in unified diffs.
+Some versions of diff replace all-blank context lines in unified format with
+empty lines.  This makes the format less robust, but is tolerated.
+See http://lists.gnu.org/archive/html/emacs-devel/2007-11/msg01990.html")
+
+(defconst diff-hunk-header-re
+  (concat "^\\(?:" diff-hunk-header-re-unified ".*\\|\\*\\{15\\}.*\n\\*\\*\\* .+ \\*\\*\\*\\*\\|[0-9]+\\(,[0-9]+\\)?[acd][0-9]+\\(,[0-9]+\\)?\\)$"))
 (defconst diff-file-header-re (concat "^\\(--- .+\n\\+\\+\\+ \\|\\*\\*\\* .+\n--- \\|[^-+!<>0-9@* ]\\).+\n" (substring diff-hunk-header-re 1)))
 (defvar diff-narrowed-to nil)
 
-(defun diff-end-of-hunk (&optional style)
-  (when (looking-at diff-hunk-header-re)
-    (unless style
-      ;; Especially important for unified (because headers are ambiguous).
-      (setq style (cdr (assq (char-after) '((?@ . unified) (?* . context))))))
-    (goto-char (match-end 0)))
-  (let ((end (and (re-search-forward (case style
-				       ;; A `unified' header is ambiguous.
-				       (unified (concat "^[^-+# \\]\\|"
-							diff-file-header-re))
-				       (context "^[^-+#! \\]")
-				       (normal "^[^<>#\\]")
-				       (t "^[^-+#!<> \\]"))
-				     nil t)
-		  (match-beginning 0))))
+(defun diff-end-of-hunk (&optional style donttrustheader)
+  (let (end)
+    (when (looking-at diff-hunk-header-re)
+      (unless style
+        ;; Especially important for unified (because headers are ambiguous).
+        (setq style (cdr (assq (char-after) '((?@ . unified) (?* . context))))))
+      (goto-char (match-end 0))
+      (when (and (not donttrustheader) (match-end 2))
+        (let* ((nold (string-to-number (match-string 2)))
+               (nnew (string-to-number (match-string 4)))
+               (endold
+        (save-excursion
+          (re-search-forward (if diff-valid-unified-empty-line
+                                 "^[- \n]" "^[- ]")
+                                     nil t nold)
+                  (line-beginning-position 2)))
+               (endnew
+                ;; The hunk may end with a bunch of "+" lines, so the `end' is
+                ;; then further than computed above.
+                (save-excursion
+                  (re-search-forward (if diff-valid-unified-empty-line
+                                         "^[+ \n]" "^[+ ]")
+                                     nil t nnew)
+                  (line-beginning-position 2))))
+          (setq end (max endold endnew)))))
+    ;; We may have a first evaluation of `end' thanks to the hunk header.
+    (unless end
+      (setq end (and (re-search-forward
+                      (case style
+                        (unified (concat (if diff-valid-unified-empty-line
+                                             "^[^-+# \\\n]\\|" "^[^-+# \\]\\|")
+                                         ;; A `unified' header is ambiguous.
+                                         diff-file-header-re))
+                        (context "^[^-+#! \\]")
+                        (normal "^[^<>#\\]")
+                        (t "^[^-+#!<> \\]"))
+                      nil t)
+                     (match-beginning 0)))
+      (when diff-valid-unified-empty-line
+        ;; While empty lines may be valid inside hunks, they are also likely
+        ;; to be unrelated to the hunk.
+        (goto-char (or end (point-max)))
+        (while (eq ?\n (char-before (1- (point))))
+          (forward-char -1)
+          (setq end (point)))))
     ;; The return value is used by easy-mmode-define-navigation.
     (goto-char (or end (point-max)))))
 
-(defun diff-beginning-of-hunk ()
+(defun diff-beginning-of-hunk (&optional try-harder)
+  "Move back to beginning of hunk.
+If TRY-HARDER is non-nil, try to cater to the case where we're not in a hunk
+but in the file header instead, in which case move forward to the first hunk."
   (beginning-of-line)
   (unless (looking-at diff-hunk-header-re)
     (forward-line 1)
     (condition-case ()
 	(re-search-backward diff-hunk-header-re)
-      (error (error "Can't find the beginning of the hunk")))))
+      (error
+       (if (not try-harder)
+           (error "Can't find the beginning of the hunk")
+         (diff-beginning-of-file-and-junk)
+         (diff-hunk-next))))))
 
 (defun diff-beginning-of-file ()
   (beginning-of-line)
@@ -425,7 +484,7 @@ when editing big diffs)."
 If the prefix ARG is given, restrict the view to the current file instead."
   (interactive "P")
   (save-excursion
-    (if arg (diff-beginning-of-file) (diff-beginning-of-hunk))
+    (if arg (diff-beginning-of-file) (diff-beginning-of-hunk 'try-harder))
     (narrow-to-region (point)
 		      (progn (if arg (diff-end-of-file) (diff-end-of-hunk))
 			     (point)))
@@ -453,20 +512,56 @@ If the prefix ARG is given, restrict the view to the current file instead."
       (diff-end-of-hunk)
       (kill-region start (point)))))
 
+(defconst diff-file-junk-re "diff \\|index ") ; "index " is output by git-diff.
+
+(defun diff-beginning-of-file-and-junk ()
+  "Go to the beginning of file-related diff-info.
+This is like `diff-beginning-of-file' except it tries to skip back over leading
+data such as \"Index: ...\" and such."
+  (let ((orig (point))
+        ;; Skip forward over what might be "leading junk" so as to get
+        ;; closer to the actual diff.
+        (_ (progn (beginning-of-line)
+                  (while (looking-at diff-file-junk-re)
+                    (forward-line 1))))
+        (start (point))
+        (file (condition-case err (progn (diff-beginning-of-file) (point))
+                (error err)))
+        ;; prevhunk is one of the limits.
+        (prevhunk (save-excursion (ignore-errors (diff-hunk-prev) (point))))
+        err)
+    (when (consp file)
+      ;; Presumably, we started before the file header, in the leading junk.
+      (setq err file)
+      (diff-file-next)
+      (setq file (point)))
+    (let ((index (save-excursion
+                   (forward-line 1)  ;In case we're looking at "Index:".
+                   (re-search-backward "^Index: " prevhunk t))))
+      (when index (setq file index))
+      (if (<= file start)
+          (progn
+            (goto-char file)
+            ;; Now skip backward over the leading junk we may have before the
+            ;; diff itself.
+            (while (save-excursion
+                     (and (zerop (forward-line -1))
+                          (looking-at diff-file-junk-re)))
+              (forward-line -1)))
+        ;; File starts *after* the starting point: we really weren't in
+        ;; a file diff but elsewhere.
+        (goto-char orig)
+        (signal (car err) (cdr err))))))
+          
 (defun diff-file-kill ()
   "Kill current file's hunks."
   (interactive)
-  (diff-beginning-of-file)
-  (let* ((start (point))
-	 (prevhunk (save-excursion
-		     (ignore-errors
-		       (diff-hunk-prev) (point))))
-	 (index (save-excursion
-		  (re-search-backward "^Index: " prevhunk t)))
+  (let ((orig (point))
+        (start (progn (diff-beginning-of-file-and-junk) (point)))
 	 (inhibit-read-only t))
-    (when index (setq start index))
     (diff-end-of-file)
     (if (looking-at "^\n") (forward-char 1)) ;`tla' generates such diffs.
+    (if (> orig (point)) (error "Not inside a file diff"))
     (kill-region start (point))))
 
 (defun diff-kill-junk ()
@@ -497,11 +592,11 @@ If the prefix ARG is given, restrict the view to the current file instead."
   (beginning-of-line)
   (let ((pos (point))
 	(start (progn (diff-beginning-of-hunk) (point))))
-    (unless (looking-at "@@ -\\([0-9]+\\),[0-9]+ \\+\\([0-9]+\\),[0-9]+ @@")
+    (unless (looking-at diff-hunk-header-re-unified)
       (error "diff-split-hunk only works on unified context diffs"))
     (forward-line 1)
     (let* ((start1 (string-to-number (match-string 1)))
-	   (start2 (string-to-number (match-string 2)))
+	   (start2 (string-to-number (match-string 3)))
 	   (newstart1 (+ start1 (diff-count-matches "^[- \t]" (point) pos)))
 	   (newstart2 (+ start2 (diff-count-matches "^[+ \t]" (point) pos)))
 	   (inhibit-read-only t))
@@ -609,7 +704,9 @@ PREFIX is only used internally: don't use it."
 	   ((or (null files)
 		(setq file (do* ((files files (cdr files))
 				 (file (car files) (car files)))
-			       ((or (null file) (file-exists-p file))
+			       ;; Use file-regular-p to avoid
+			       ;; /dev/null, directories, etc.
+			       ((or (null file) (file-regular-p file))
 				file))))
 	    file))
        ;; <foo>.rej patches implicitly apply to <foo>
@@ -648,7 +745,7 @@ PREFIX is only used internally: don't use it."
 (defun diff-unified->context (start end)
   "Convert unified diffs to context diffs.
 START and END are either taken from the region (if a prefix arg is given) or
-else cover the whole bufer."
+else cover the whole buffer."
   (interactive (if (or current-prefix-arg (and transient-mark-mode mark-active))
 		   (list (region-beginning) (region-end))
 		 (list (point-min) (point-max))))
@@ -657,7 +754,10 @@ else cover the whole bufer."
 	(inhibit-read-only t))
     (save-excursion
       (goto-char start)
-      (while (and (re-search-forward "^\\(\\(---\\) .+\n\\(\\+\\+\\+\\) .+\\|@@ -\\([0-9]+\\),\\([0-9]+\\) \\+\\([0-9]+\\),\\([0-9]+\\) @@.*\\)$" nil t)
+      (while (and (re-search-forward
+                   (concat "^\\(\\(---\\) .+\n\\(\\+\\+\\+\\) .+\\|"
+                           diff-hunk-header-re-unified ".*\\)$")
+                   nil t)
 		  (< (point) end))
 	(combine-after-change-calls
 	  (if (match-beginning 2)
@@ -676,9 +776,11 @@ else cover the whole bufer."
 		       (number-to-string (+ (string-to-number line1)
 					    (string-to-number lines1)
 					    -1)) " ****"))
-	      (forward-line 1)
 	      (save-restriction
-		(narrow-to-region (point)
+		(narrow-to-region (line-beginning-position 2)
+                                  ;; Call diff-end-of-hunk from just before
+                                  ;; the hunk header so it can use the hunk
+                                  ;; header info.
 				  (progn (diff-end-of-hunk 'unified) (point)))
 		(let ((hunk (buffer-string)))
 		  (goto-char (point-min))
@@ -700,6 +802,8 @@ else cover the whole bufer."
 			  (?\\ (when (save-excursion (forward-line -1)
 						     (= (char-after) ?+))
 				 (delete-region (point) last-pt) (setq modif t)))
+                          ;; diff-valid-unified-empty-line.
+                          (?\n (insert "  ") (setq modif nil) (backward-char 2))
 			  (t (setq modif nil))))))
 		  (goto-char (point-max))
 		  (save-excursion
@@ -725,6 +829,8 @@ else cover the whole bufer."
 			  (?\\ (when (save-excursion (forward-line 1)
 						     (not (eobp)))
 				 (setq delete t) (setq modif t)))
+                          ;; diff-valid-unified-empty-line.
+                          (?\n (insert "  ") (setq modif nil) (backward-char 2))
 			  (t (setq modif nil)))
 			(let ((last-pt (point)))
 			  (forward-line 1)
@@ -810,7 +916,7 @@ With a prefix argument, convert unified format to context format."
 (defun diff-reverse-direction (start end)
   "Reverse the direction of the diffs.
 START and END are either taken from the region (if a prefix arg is given) or
-else cover the whole bufer."
+else cover the whole buffer."
   (interactive (if (or current-prefix-arg (and transient-mark-mode mark-active))
 		   (list (region-beginning) (region-end))
 		 (list (point-min) (point-max))))
@@ -866,23 +972,24 @@ else cover the whole bufer."
 		       (t (when (and first last (< first last))
 			    (insert (delete-and-extract-region first last)))
 			  (setq first nil last nil)
-			  (equal ?\s c)))
+			  (memq c (if diff-valid-unified-empty-line
+                                      '(?\s ?\n) '(?\s)))))
 		(forward-line 1))))))))))
 
 (defun diff-fixup-modifs (start end)
   "Fixup the hunk headers (in case the buffer was modified).
 START and END are either taken from the region (if a prefix arg is given) or
-else cover the whole bufer."
+else cover the whole buffer."
   (interactive (if (or current-prefix-arg (and transient-mark-mode mark-active))
 		   (list (region-beginning) (region-end))
 		 (list (point-min) (point-max))))
   (let ((inhibit-read-only t))
     (save-excursion
-      (goto-char end) (diff-end-of-hunk)
+      (goto-char end) (diff-end-of-hunk nil 'donttrustheader)
       (let ((plus 0) (minus 0) (space 0) (bang 0))
 	(while (and (= (forward-line -1) 0) (<= start (point)))
 	  (if (not (looking-at
-		    (concat "@@ -[0-9,]+ \\+[0-9,]+ @@"
+		    (concat diff-hunk-header-re-unified
 			    "\\|[-*][-*][-*] [0-9,]+ [-*][-*][-*][-*]$"
 			    "\\|--- .+\n\\+\\+\\+ ")))
 	      (case (char-after)
@@ -893,13 +1000,13 @@ else cover the whole bufer."
 		((?\\ ?#) nil)
 		(t  (setq space 0 plus 0 minus 0 bang 0)))
 	    (cond
-	     ((looking-at "@@ -[0-9]+,\\([0-9]*\\) \\+[0-9]+,\\([0-9]*\\) @@.*$")
-	      (let* ((old1 (match-string 1))
-		     (old2 (match-string 2))
+	     ((looking-at diff-hunk-header-re-unified)
+	      (let* ((old1 (match-string 2))
+		     (old2 (match-string 4))
 		     (new1 (number-to-string (+ space minus)))
 		     (new2 (number-to-string (+ space plus))))
-		(unless (string= new2 old2) (replace-match new2 t t nil 2))
-		(unless (string= new1 old1) (replace-match new1 t t nil 1))))
+		(unless (string= new2 old2) (replace-match new2 t t nil 4))
+		(unless (string= new1 old1) (replace-match new1 t t nil 2))))
 	     ((looking-at "--- \\([0-9]+\\),\\([0-9]*\\) ----$")
 	      (when (> (+ space bang plus) 0)
 		(let* ((old1 (match-string 1))
@@ -967,7 +1074,7 @@ See `after-change-functions' for the meaning of BEG, END and LEN."
 	;; (diff-fixup-modifs (point) (cdr diff-unhandled-changes))
 	(diff-beginning-of-hunk)
 	(when (save-excursion
-		(diff-end-of-hunk)
+		(diff-end-of-hunk nil 'donttrustheader)
 		(>= (point) (cdr diff-unhandled-changes)))
 	  (diff-fixup-modifs (point) (cdr diff-unhandled-changes)))))
     (setq diff-unhandled-changes nil)))
@@ -1082,9 +1189,8 @@ a diff with \\[diff-reverse-direction].
 Only works for unified diffs."
   (interactive)
   (while
-      (and (re-search-forward "^@@ [-0-9]+,\\([0-9]+\\) [+0-9]+,\\([0-9]+\\) @@"
-			      nil t)
-	   (equal (match-string 1) (match-string 2)))))
+      (and (re-search-forward diff-hunk-header-re-unified nil t)
+	   (equal (match-string 2) (match-string 4)))))
 
 (defun diff-sanity-check-context-hunk-half (lines)
   (let ((count lines))
@@ -1133,25 +1239,38 @@ Only works for unified diffs."
 
        ;; A unified diff.
        ((eq (char-after) ?@)
-        (if (not (looking-at
-                  "@@ -[0-9]+,\\([0-9]+\\) \\+[0-9]+,\\([0-9]+\\) @@"))
+        (if (not (looking-at diff-hunk-header-re-unified))
             (error "Unrecognized unified diff hunk header format")
-          (let ((before (string-to-number (match-string 1)))
-                (after (string-to-number (match-string 2))))
+          (let ((before (string-to-number (match-string 2)))
+                (after (string-to-number (match-string 4))))
             (forward-line)
             (while
                 (case (char-after)
                   (?\s (decf before) (decf after) t)
-                  (?- (decf before) t)
+                  (?-
+                   (if (and (looking-at diff-file-header-re)
+                            (zerop before) (zerop after))
+                       ;; No need to query: this is a case where two patches
+                       ;; are concatenated and only counting the lines will
+                       ;; give the right result.  Let's just add an empty
+                       ;; line so that our code which doesn't count lines
+                       ;; will not get confused.
+                       (progn (save-excursion (insert "\n")) nil)
+                     (decf before) t))
                   (?+ (decf after) t)
                   (t
                    (cond
+                    ((and diff-valid-unified-empty-line
+                          ;; Not just (eolp) so we don't infloop at eob.
+                          (eq (char-after) ?\n)
+                          (> before 0) (> after 0))
+                     (decf before) (decf after) t)
                     ((and (zerop before) (zerop after)) nil)
                     ((or (< before 0) (< after 0))
                      (error (if (or (zerop before) (zerop after))
                                 "End of hunk ambiguously marked"
                               "Hunk seriously messed up")))
-                    ((not (y-or-n-p "Try to auto-fix whitespace loss and word-wrap damage? "))
+                    ((not (y-or-n-p (concat "Try to auto-fix " (if (eolp) "whitespace loss" "word-wrap damage") "? ")))
                      (error "Abort!"))
                     ((eolp) (insert " ") (forward-line -1) t)
                     (t (insert " ")
@@ -1289,7 +1408,8 @@ SRC and DST are the two variants of text as returned by `diff-hunk-text'.
 SWITCHED is non-nil if the patch is already applied."
   (save-excursion
     (let* ((other (diff-xor other-file diff-jump-to-old-file))
-	   (char-offset (- (point) (progn (diff-beginning-of-hunk) (point))))
+	   (char-offset (- (point) (progn (diff-beginning-of-hunk 'try-harder)
+                                          (point))))
            ;; Check that the hunk is well-formed.  Otherwise diff-mode and
            ;; the user may disagree on what constitutes the hunk
            ;; (e.g. because an empty line truncates the hunk mid-course),
@@ -1458,7 +1578,8 @@ For use in `add-log-current-defun-function'."
 (defun diff-refine-hunk ()
   "Refine the current hunk by ignoring space differences."
   (interactive)
-  (let* ((char-offset (- (point) (progn (diff-beginning-of-hunk) (point))))
+  (let* ((char-offset (- (point) (progn (diff-beginning-of-hunk 'try-harder)
+                                        (point))))
 	 (opts (case (char-after) (?@ "-bu") (?* "-bc") (t "-b")))
 	 (line-nb (and (or (looking-at "[^0-9]+\\([0-9]+\\)")
 			   (error "Can't find line number"))

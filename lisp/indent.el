@@ -1,7 +1,7 @@
 ;;; indent.el --- indentation commands for Emacs
 
 ;; Copyright (C) 1985, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
@@ -9,7 +9,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -184,7 +184,12 @@ interactively or with optional argument FORCE, it will be fixed."
 ;; used in Fundamental Mode, Text Mode, etc.
 (defun indent-to-left-margin ()
   "Indent current line to the column given by `current-left-margin'."
-  (indent-line-to (current-left-margin)))
+  (save-excursion (indent-line-to (current-left-margin)))
+  ;; If we are within the indentation, move past it.
+  (when (save-excursion
+	  (skip-chars-backward " \t")
+	  (bolp))
+    (skip-chars-forward " \t")))
 
 (defun delete-to-left-margin (&optional from to)
   "Remove left margin indentation from a region.

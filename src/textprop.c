@@ -1,12 +1,12 @@
 /* Interface code for dealing with text properties.
    Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -713,7 +713,7 @@ POSITION is at the end of OBJECT, both car and cdr are nil.  */)
   Lisp_Object overlay;
   Lisp_Object val
     = get_char_property_and_overlay (position, prop, object, &overlay);
-  return Fcons(val, overlay);
+  return Fcons (val, overlay);
 }
 
 
@@ -1633,8 +1633,8 @@ Return t if any property was actually removed, nil otherwise.  */)
      The flag `modified' records if changes have been made.
      When object is a buffer, we must call modify_region before changes are
      made and signal_after_change when we are done.
-     We call modify_region before calling remove_properties iff modified == 0,
-     and we call signal_after_change before returning iff modified != 0. */
+     We call modify_region before calling remove_properties if modified == 0,
+     and we call signal_after_change before returning if modified != 0. */
   for (;;)
     {
       if (i == 0)

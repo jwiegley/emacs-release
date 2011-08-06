@@ -6,10 +6,10 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.1.
+corresponding to Emacs version 22.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free Software
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -21,9 +21,9 @@ Foundation, Inc.
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 
 File: elisp,  Node: Displaying Buffers,  Next: Choosing Window,  Prev: Buffers and Windows,  Up: Windows
@@ -438,6 +438,14 @@ is called the "display-start" position of the window (or just the
 the upper left corner of the window.  It is usually, but not
 inevitably, at the beginning of a text line.
 
+   After switching windows or buffers, and in some other cases, if the
+window start is in the middle of a line, Emacs adjusts the window start
+to the start of a line.  This prevents certain operations from leaving
+the window start at a meaningless point within a line.  This feature
+may interfere with testing some Lisp code by executing it using the
+commands of Lisp mode, because they trigger this readjustment.  To test
+such code, put it into a command and bind the command to a key.
+
  -- Function: window-start &optional window
      This function returns the display-start position of window WINDOW.
      If WINDOW is `nil', the selected window is used.  For example,
@@ -498,9 +506,9 @@ inevitably, at the beginning of a text line.
      the middle line in the window.
 
      For example, if point is 1 and you set the start of the window
-     to 2, then point would be "above" the top of the window.  The
-     display routines will automatically move point if it is still 1
-     when redisplay occurs.  Here is an example:
+     to 37, the start of the next line, point will be "above" the top
+     of the window.  The display routines will automatically move point
+     if it is still 1 when redisplay occurs.  Here is an example:
 
           ;; Here is what `foo' looks like before executing
           ;;   the `set-window-start' expression.
@@ -516,13 +524,15 @@ inevitably, at the beginning of a text line.
 
           (set-window-start
            (selected-window)
-           (1+ (window-start)))
-          => 2
+           (save-excursion
+             (goto-char 1)
+             (forward-line 1)
+             (point)))
+          => 37
 
           ;; Here is what `foo' looks like after executing
           ;;   the `set-window-start' expression.
           ---------- Buffer: foo ----------
-          his is the contents of buffer foo.
           2
           3
           -!-4
@@ -1004,6 +1014,11 @@ that separates side-by-side windows.
           (window-width)
                => 80
 
+ -- Function: window-full-width-p &optional window
+     This function returns non-`nil' if WINDOW is as wide as the frame
+     that contains it; otherwise `nil'.  If WINDOW is `nil', the
+     function uses the selected window.
+
  -- Function: window-edges &optional window
      This function returns a list of the edge coordinates of WINDOW.
      If WINDOW is `nil', the selected window is used.
@@ -1317,13 +1332,12 @@ File: elisp,  Node: Window Configurations,  Next: Window Hooks,  Prev: Window Tr
 ===========================
 
 A "window configuration" records the entire layout of one frame--all
-windows, their sizes, which buffers they contain, what part of each
-buffer is displayed, and the values of point and the mark; also their
-fringes, margins, and scroll bar settings.  It also includes the values
-of `window-min-height', `window-min-width' and
-`minibuffer-scroll-window'.  An exception is made for point in the
-selected window for the current buffer; its value is not saved in the
-window configuration.
+windows, their sizes, which buffers they contain, how those buffers are
+scrolled, and their values of point and the mark; also their fringes,
+margins, and scroll bar settings.  It also includes the values of
+`window-min-height', `window-min-width' and `minibuffer-scroll-window'.
+As a special exception, the window configuration does not record the
+value of point in the selected window for the current buffer.
 
    You can bring back an entire previous layout by restoring a window
 configuration previously saved.  If you want to record all frames
@@ -1631,7 +1645,7 @@ is the one for the terminal that the currently selected frame belongs
 to.  These variables include `default-minibuffer-frame',
 `defining-kbd-macro', `last-kbd-macro', and `system-key-alist'.  They
 are always terminal-local, and can never be buffer-local (*note
-Buffer-Local Variables::) or frame-local.
+Buffer-Local Variables::).
 
    A single X server can handle more than one screen.  A display name
 `HOST:SERVER.SCREEN' has three parts; the last part specifies the
@@ -1848,12 +1862,12 @@ These frame parameters give the most basic information about the frame.
      used in this frame.  Its value is `color', `grayscale' or `mono'.
 
 `title'
-     If a frame has a non-`nil' title, it appears in the window system's
-     border for the frame, and also in the mode line of windows in that
-     frame if `mode-line-frame-identification' uses `%F' (*note
-     %-Constructs::).  This is normally the case when Emacs is not
-     using a window system, and can only display one frame at a time.
-     *Note Frame Titles::.
+     If a frame has a non-`nil' title, it appears in the window
+     system's title bar at the top of the frame, and also in the mode
+     line of windows in that frame if `mode-line-frame-identification'
+     uses `%F' (*note %-Constructs::).  This is normally the case when
+     Emacs is not using a window system, and can only display one frame
+     at a time.  *Note Frame Titles::.
 
 `name'
      The name of the frame.  The frame name serves as a default for the
@@ -1943,8 +1957,8 @@ text-only terminals they count characters or lines instead.
      Position::.)
 
 `width'
-     The width of the frame contents, in characters.  (To get the
-     height in pixels, call `frame-pixel-width'; see *Note Size and
+     The width of the frame contents, in characters.  (To get the width
+     in pixels, call `frame-pixel-width'; see *Note Size and
      Position::.)
 
 `user-size'
@@ -2138,8 +2152,16 @@ cursor specified for the frame.
 
      There are various defaults for how to blink each type of cursor, if
      the type is not mentioned as an ON-STATE here.  Changes in this
-     variable do not take effect immediately, because the variable is
-     examined only when you specify the `cursor-type' parameter.
+     variable do not take effect immediately, only when you specify the
+     `cursor-type' frame parameter.
+
+ -- Variable: cursor-in-non-selected-windows
+     This variable controls how the cursor looks in a window that is not
+     selected.  It supports the same values as the `cursor-type' frame
+     parameter; also, `nil' means don't display a cursor in nonselected
+     windows, and `t' (the default) means use a standard modificatoin
+     of the usual cursor type (solid box becomes hollow box, and bar
+     becomes a narrower bar).
 
 
 File: elisp,  Node: Color Parameters,  Prev: Cursor Parameters,  Up: Window Frame Parameters
@@ -2187,7 +2209,7 @@ These frame parameters control the use of colors.
 
    These frame parameters are semi-obsolete in that they are
 automatically equivalent to particular face attributes of particular
-faces.
+faces.  *Note Standard Faces: (emacs)Standard Faces.
 
 `font'
      The name of the font for displaying text in the frame.  This is a
@@ -2266,8 +2288,14 @@ see *Note Input Focus::.)
 
  -- Function: frame-pixel-height &optional frame
  -- Function: frame-pixel-width &optional frame
-     These functions return the height and width of FRAME, measured in
-     pixels.  If you don't supply FRAME, they use the selected frame.
+     These functions return the height and width of the main display
+     area of FRAME, measured in pixels.  If you don't supply FRAME,
+     they use the selected frame.
+
+     These values include the internal borders, and windows' scroll bars
+     and fringes (which belong to individual windows, not to the frame
+     itself), but do not include menu bars or tool bars (except when
+     using X without an X toolkit).
 
  -- Function: frame-char-height &optional frame
  -- Function: frame-char-width &optional frame

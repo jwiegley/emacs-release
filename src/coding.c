@@ -1,8 +1,8 @@
 /* Coding system handler (conversion, detection, and etc).
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007 Free Software Foundation, Inc.
+                 2006, 2007, 2008 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007
+     2005, 2006, 2007, 2008
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -10,7 +10,7 @@ This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -371,6 +371,8 @@ extern Lisp_Object Qinsert_file_contents, Qwrite_region;
 Lisp_Object Qcall_process, Qcall_process_region;
 Lisp_Object Qstart_process, Qopen_network_stream;
 Lisp_Object Qtarget_idx;
+
+extern Lisp_Object Qcompletion_ignore_case;
 
 /* If a symbol has this property, evaluate the value to define the
    symbol as a coding system.  */
@@ -1408,12 +1410,17 @@ enum iso_code_class_type iso_code_class[256];
 	CODING_CATEGORY_MASK_ISO_7_ELSE
 	CODING_CATEGORY_MASK_ISO_8_ELSE
    are set.  If a code which should never appear in ISO2022 is found,
-   returns 0.  */
+   returns 0.
+
+   If *latin_extra_code_state is zero and Latin extra codes are found,
+   set *latin_extra_code_state to 1 and return 0.  If it is nonzero,
+   accept Latin extra codes.  */
 
 static int
-detect_coding_iso2022 (src, src_end, multibytep)
+detect_coding_iso2022 (src, src_end, multibytep, latin_extra_code_state)
      unsigned char *src, *src_end;
      int multibytep;
+     int *latin_extra_code_state;
 {
   int mask = CODING_CATEGORY_MASK_ISO;
   int mask_found = 0;
@@ -1576,6 +1583,11 @@ detect_coding_iso2022 (src, src_end, multibytep)
 	    if (VECTORP (Vlatin_extra_code_table)
 		&& !NILP (XVECTOR (Vlatin_extra_code_table)->contents[c]))
 	      {
+		if (! *latin_extra_code_state)
+		  {
+		    *latin_extra_code_state = 1;
+		    return 0;
+		  }
 		if (coding_system_table[CODING_CATEGORY_IDX_ISO_8_1]->flags
 		    & CODING_FLAG_ISO_LATIN_EXTRA)
 		  newmask |= CODING_CATEGORY_MASK_ISO_8_1;
@@ -1602,6 +1614,11 @@ detect_coding_iso2022 (src, src_end, multibytep)
 		{
 		  int newmask = 0;
 
+		  if (! *latin_extra_code_state)
+		    {
+		      *latin_extra_code_state = 1;
+		      return 0;
+		    }
 		  if (coding_system_table[CODING_CATEGORY_IDX_ISO_8_1]->flags
 		      & CODING_FLAG_ISO_LATIN_EXTRA)
 		    newmask |= CODING_CATEGORY_MASK_ISO_8_1;
@@ -4129,6 +4146,8 @@ detect_coding_mask (source, src_bytes, priorities, skip, multibytep)
   unsigned char *src = source, *src_end = source + src_bytes;
   unsigned int mask, utf16_examined_p, iso2022_examined_p;
   int i;
+  int null_byte_found;
+  int latin_extra_code_state = 1;
 
   /* At first, skip all ASCII characters and control characters except
      for three ISO2022 specific control characters.  */
@@ -4137,21 +4156,36 @@ detect_coding_mask (source, src_bytes, priorities, skip, multibytep)
   ascii_skip_code[ISO_CODE_ESC] = 0;
 
  label_loop_detect_coding:
-  while (src < src_end && ascii_skip_code[*src]) src++;
+  null_byte_found = 0;
+  /* We stop this loop before the last byte because it may be a NULL
+     anchor byte.  */
+  while (src < src_end - 1 && ascii_skip_code[*src])
+    null_byte_found |= (! *src++);
+  if (ascii_skip_code[*src])
+    src++;
+  else if (! null_byte_found)
+    {
+      unsigned char *p = src + 1;
+      while (p < src_end - 1)
+	null_byte_found |= (! *p++);
+    }
   *skip = src - source;
 
   if (src >= src_end)
-    /* We found nothing other than ASCII.  There's nothing to do.  */
+    /* We found nothing other than ASCII (and NULL byte).  There's
+       nothing to do.  */
     return 0;
 
   c = *src;
   /* The text seems to be encoded in some multilingual coding system.
      Now, try to find in which coding system the text is encoded.  */
-  if (c < 0x80)
+  if (! null_byte_found && c < 0x80)
     {
       /* i.e. (c == ISO_CODE_ESC || c == ISO_CODE_SI || c == ISO_CODE_SO) */
       /* C is an ISO2022 specific control code of C0.  */
-      mask = detect_coding_iso2022 (src, src_end, multibytep);
+      latin_extra_code_state = 1;
+      mask = detect_coding_iso2022 (src, src_end, multibytep,
+				    &latin_extra_code_state);
       if (mask == 0)
 	{
 	  /* No valid ISO2022 code follows C.  Try again.  */
@@ -4179,21 +4213,27 @@ detect_coding_mask (source, src_bytes, priorities, skip, multibytep)
       if (multibytep && c == LEADING_CODE_8_BIT_CONTROL)
 	c = src[1] - 0x20;
 
-      if (c < 0xA0)
+      if (null_byte_found)
+	{
+	  try = (CODING_CATEGORY_MASK_UTF_16_BE
+		 | CODING_CATEGORY_MASK_UTF_16_LE);
+	}
+      else if (c < 0xA0)
 	{
 	  /* C is the first byte of SJIS character code,
 	     or a leading-code of Emacs' internal format (emacs-mule),
 	     or the first byte of UTF-16.  */
 	  try = (CODING_CATEGORY_MASK_SJIS
-		  | CODING_CATEGORY_MASK_EMACS_MULE
-		  | CODING_CATEGORY_MASK_UTF_16_BE
-		  | CODING_CATEGORY_MASK_UTF_16_LE);
+		 | CODING_CATEGORY_MASK_EMACS_MULE
+		 | CODING_CATEGORY_MASK_UTF_16_BE
+		 | CODING_CATEGORY_MASK_UTF_16_LE);
 
 	  /* Or, if C is a special latin extra code,
 	     or is an ISO2022 specific control code of C1 (SS2 or SS3),
 	     or is an ISO2022 control-sequence-introducer (CSI),
 	     we should also consider the possibility of ISO2022 codings.  */
-	  if ((VECTORP (Vlatin_extra_code_table)
+	  if ((latin_extra_code_state
+	       && VECTORP (Vlatin_extra_code_table)
 	       && !NILP (XVECTOR (Vlatin_extra_code_table)->contents[c]))
 	      || (c == ISO_CODE_SS2 || c == ISO_CODE_SS3)
 	      || (c == ISO_CODE_CSI
@@ -4203,7 +4243,7 @@ detect_coding_mask (source, src_bytes, priorities, skip, multibytep)
 			      && src + 1 < src_end
 			      && src[1] == ']')))))
 	    try |= (CODING_CATEGORY_MASK_ISO_8_ELSE
-		     | CODING_CATEGORY_MASK_ISO_8BIT);
+		    | CODING_CATEGORY_MASK_ISO_8BIT);
 	}
       else
 	/* C is a character of ISO2022 in graphic plane right,
@@ -4211,29 +4251,36 @@ detect_coding_mask (source, src_bytes, priorities, skip, multibytep)
 	   or the first byte of BIG5's 2-byte code,
 	   or the first byte of UTF-8/16.  */
 	try = (CODING_CATEGORY_MASK_ISO_8_ELSE
-		| CODING_CATEGORY_MASK_ISO_8BIT
-		| CODING_CATEGORY_MASK_SJIS
-		| CODING_CATEGORY_MASK_BIG5
-	        | CODING_CATEGORY_MASK_UTF_8
-	        | CODING_CATEGORY_MASK_UTF_16_BE
-	        | CODING_CATEGORY_MASK_UTF_16_LE);
+	       | CODING_CATEGORY_MASK_ISO_8BIT
+	       | CODING_CATEGORY_MASK_SJIS
+	       | CODING_CATEGORY_MASK_BIG5
+	       | CODING_CATEGORY_MASK_UTF_8
+	       | CODING_CATEGORY_MASK_UTF_16_BE
+	       | CODING_CATEGORY_MASK_UTF_16_LE);
 
       /* Or, we may have to consider the possibility of CCL.  */
-      if (coding_system_table[CODING_CATEGORY_IDX_CCL]
+      if (! null_byte_found
+	  && coding_system_table[CODING_CATEGORY_IDX_CCL]
 	  && (coding_system_table[CODING_CATEGORY_IDX_CCL]
 	      ->spec.ccl.valid_codes)[c])
 	try |= CODING_CATEGORY_MASK_CCL;
 
       mask = 0;
-      utf16_examined_p = iso2022_examined_p = 0;
       if (priorities)
 	{
+	  /* At first try detection with Latin extra codes not-allowed.
+	     If no proper coding system is found because of Latin extra
+	     codes, try detection with Latin extra codes allowed.  */
+	  latin_extra_code_state = 0;
+	label_retry:
+	  utf16_examined_p = iso2022_examined_p = 0;
 	  for (i = 0; i < CODING_CATEGORY_IDX_MAX; i++)
 	    {
 	      if (!iso2022_examined_p
 		  && (priorities[i] & try & CODING_CATEGORY_MASK_ISO))
 		{
-		  mask |= detect_coding_iso2022 (src, src_end, multibytep);
+		  mask |= detect_coding_iso2022 (src, src_end, multibytep,
+						 &latin_extra_code_state);
 		  iso2022_examined_p = 1;
 		}
 	      else if (priorities[i] & try & CODING_CATEGORY_MASK_SJIS)
@@ -4254,16 +4301,40 @@ detect_coding_mask (source, src_bytes, priorities, skip, multibytep)
 	      else if (priorities[i] & try & CODING_CATEGORY_MASK_CCL)
 		mask |= detect_coding_ccl (src, src_end, multibytep);
 	      else if (priorities[i] & CODING_CATEGORY_MASK_RAW_TEXT)
-		mask |= CODING_CATEGORY_MASK_RAW_TEXT;
+		{
+		  if (latin_extra_code_state == 1)
+		    {
+		      /* Detection of ISO-2022 based coding system
+			 failed because of Latin extra codes.  Before
+			 falling back to raw-text, try again with
+			 Latin extra codes allowed.  */
+		      latin_extra_code_state = 2;
+		      try = (mask | CODING_CATEGORY_MASK_ISO_8_ELSE
+			     | CODING_CATEGORY_MASK_ISO_8BIT);
+		      goto label_retry;
+		    }
+		  mask |= CODING_CATEGORY_MASK_RAW_TEXT;
+		}
 	      else if (priorities[i] & CODING_CATEGORY_MASK_BINARY)
-		mask |= CODING_CATEGORY_MASK_BINARY;
+		{
+		  if (latin_extra_code_state == 1)
+		    {
+		      /* See the above comment.  */
+		      latin_extra_code_state = 2;
+		      try = (mask | CODING_CATEGORY_MASK_ISO_8_ELSE
+			     | CODING_CATEGORY_MASK_ISO_8BIT);
+		      goto label_retry;
+		    }
+		  mask |= CODING_CATEGORY_MASK_BINARY;
+		}
 	      if (mask & priorities[i])
 		return priorities[i];
 	    }
 	  return CODING_CATEGORY_MASK_RAW_TEXT;
 	}
       if (try & CODING_CATEGORY_MASK_ISO)
-	mask |= detect_coding_iso2022 (src, src_end, multibytep);
+	mask |= detect_coding_iso2022 (src, src_end, multibytep,
+				       &latin_extra_code_state);
       if (try & CODING_CATEGORY_MASK_SJIS)
 	mask |= detect_coding_sjis (src, src_end, multibytep);
       if (try & CODING_CATEGORY_MASK_BIG5)
@@ -6558,16 +6629,22 @@ DEFUN ("read-non-nil-coding-system", Fread_non_nil_coding_system,
 
 DEFUN ("read-coding-system", Fread_coding_system, Sread_coding_system, 1, 2, 0,
        doc: /* Read a coding system from the minibuffer, prompting with string PROMPT.
-If the user enters null input, return second argument DEFAULT-CODING-SYSTEM.  */)
+If the user enters null input, return second argument DEFAULT-CODING-SYSTEM.
+Ignores case when completing coding systems (all Emacs coding systems
+are lower-case).  */)
      (prompt, default_coding_system)
      Lisp_Object prompt, default_coding_system;
 {
   Lisp_Object val;
+  int count = SPECPDL_INDEX ();
+
   if (SYMBOLP (default_coding_system))
     default_coding_system = SYMBOL_NAME (default_coding_system);
+  specbind (Qcompletion_ignore_case, Qt);
   val = Fcompleting_read (prompt, Vcoding_system_alist, Qnil,
 			  Qt, Qnil, Qcoding_system_history,
 			  default_coding_system, Qnil);
+  unbind_to (count, Qnil);
   return (SCHARS (val) == 0 ? Qnil : Fintern (val, Qnil));
 }
 
@@ -7472,7 +7549,7 @@ contents (not yet decoded).  If `file-coding-system-alist' specifies a
 function to call for FILENAME, that function should examine the
 contents of BUFFER instead of reading the file.
 
-usage: (find-operation-coding-system OPERATION ARGUMENTS ...)  */)
+usage: (find-operation-coding-system OPERATION ARGUMENTS...)  */)
      (nargs, args)
      int nargs;
      Lisp_Object *args;

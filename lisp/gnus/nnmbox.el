@@ -1,7 +1,7 @@
 ;;; nnmbox.el --- mail mbox access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
@@ -11,7 +11,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; You should have received a copy of the GNU General Public License
@@ -153,11 +153,11 @@
 	(re-search-backward (concat "^" message-unix-mail-delimiter) nil t)
 	(setq start (point))
 	(forward-line 1)
-	(or (and (re-search-forward
-		  (concat "^" message-unix-mail-delimiter) nil t)
-		 (forward-line -1))
-	    (goto-char (point-max)))
-	(setq stop (point))
+	(setq stop (if (re-search-forward (concat "^"
+						  message-unix-mail-delimiter)
+					  nil 'move)
+		       (match-beginning 0)
+		     (point)))
 	(let ((nntp-server-buffer (or buffer nntp-server-buffer)))
 	  (set-buffer nntp-server-buffer)
 	  (erase-buffer)
@@ -313,39 +313,45 @@
   (nnmbox-possibly-change-newsgroup group server)
   (nnmail-check-syntax)
   (let ((buf (current-buffer))
-	result)
-    (goto-char (point-min))
-    ;; The From line may have been quoted by movemail.
-    (when (looking-at (concat ">" message-unix-mail-delimiter))
-      (delete-char 1))
-    (if (looking-at "X-From-Line: ")
-	(replace-match "From ")
-      (insert "From nobody " (current-time-string) "\n"))
+	result cont)
     (and
      (nnmail-activate 'nnmbox)
-     (progn
-       (set-buffer buf)
+     (with-temp-buffer
+       (insert-buffer-substring buf)
        (goto-char (point-min))
-       (search-forward "\n\n" nil t)
-       (forward-line -1)
+       (cond (;; The From line may have been quoted by movemail.
+	      (looking-at (concat ">" message-unix-mail-delimiter))
+	      (delete-char 1)
+	      (forward-line 1))
+	     ((looking-at "X-From-Line: ")
+	      (replace-match "From ")
+	      (forward-line 1))
+	     (t
+	      (insert "From nobody " (current-time-string) "\n")))
+       (narrow-to-region (point)
+			 (if (search-forward "\n\n" nil 'move)
+			     (1- (point))
+			   (point)))
        (while (re-search-backward "^X-Gnus-Newsgroup: " nil t)
 	 (delete-region (point) (progn (forward-line 1) (point))))
        (when nnmail-cache-accepted-message-ids
-	 (nnmail-cache-insert (nnmail-fetch-field "message-id") 
+	 (nnmail-cache-insert (message-fetch-field "message-id")
 			      group
-			      (nnmail-fetch-field "subject")
-			      (nnmail-fetch-field "from")))
+			      (message-fetch-field "subject")
+			      (message-fetch-field "from")))
+       (widen)
        (setq result (if (stringp group)
 			(list (cons group (nnmbox-active-number group)))
 		      (nnmail-article-group 'nnmbox-active-number)))
-       (if (and (null result)
-		(yes-or-no-p "Moved to `junk' group; delete article? "))
-	   (setq result 'junk)
-	 (setq result (car (nnmbox-save-mail result)))))
-     (save-excursion
-       (set-buffer nnmbox-mbox-buffer)
+       (prog1
+	   (if (and (null result)
+		    (yes-or-no-p "Moved to `junk' group; delete article? "))
+	       (setq result 'junk)
+	     (setq result (car (nnmbox-save-mail result))))
+	 (setq cont (buffer-string))))
+     (with-current-buffer nnmbox-mbox-buffer
        (goto-char (point-max))
-       (insert-buffer-substring buf)
+       (insert cont)
        (when last
 	 (when nnmail-cache-accepted-message-ids
 	   (nnmail-cache-close))
@@ -360,7 +366,20 @@
     (if (not (nnmbox-find-article article))
 	nil
       (nnmbox-delete-mail t t)
-      (insert-buffer-substring buffer)
+      (insert
+       (with-temp-buffer
+	 (insert-buffer-substring buffer)
+	 (goto-char (point-min))
+	 (when (looking-at "X-From-Line:")
+	   (delete-region (point) (progn (forward-line 1) (point))))
+	 (while (re-search-forward (concat "^" message-unix-mail-delimiter)
+				   nil t)
+	   (goto-char (match-beginning 0))
+	   (insert ">"))
+	 (goto-char (point-max))
+	 (unless (bolp)
+	   (insert "\n"))
+	 (buffer-string)))
       (nnmbox-save-buffer)
       t)))
 
@@ -430,21 +449,20 @@
   (save-excursion
     (save-restriction
       (narrow-to-region
-       (save-excursion
-	 (re-search-backward (concat "^" message-unix-mail-delimiter) nil t)
-	 (if leave-delim (progn (forward-line 1) (point))
-	   (match-beginning 0)))
-       (progn
-	 (forward-line 1)
-	 (or (and (re-search-forward (concat "^" message-unix-mail-delimiter)
-				     nil t)
-		  (if (and (not (bobp)) leave-delim)
-		      (progn (forward-line -2) (point))
-		    (match-beginning 0)))
-	     (point-max))))
+       (prog2
+	   (re-search-backward (concat "^" message-unix-mail-delimiter) nil t)
+	   (if leave-delim (progn (forward-line 1) (point))
+	     (match-beginning 0))
+	 (forward-line 1))
+       (or (and (re-search-forward (concat "^" message-unix-mail-delimiter)
+				   nil t)
+		(match-beginning 0))
+	   (point-max)))
       (goto-char (point-min))
       ;; Only delete the article if no other group owns it as well.
-      (when (or force (not (re-search-forward "^X-Gnus-Newsgroup: " nil t)))
+      (when (or force
+		(not (re-search-forward "^X-Gnus-Newsgroup: " nil t))
+		(search-backward "\n\n" nil t))
 	(delete-region (point-min) (point-max))))))
 
 (defun nnmbox-possibly-change-newsgroup (newsgroup &optional server)
@@ -552,24 +570,26 @@
   (let ((delim (concat "^" message-unix-mail-delimiter)))
     (goto-char (point-min))
     ;; This might come from somewhere else.
-    (unless (looking-at delim)
-      (insert "From nobody " (current-time-string) "\n")
-      (goto-char (point-min)))
+    (if (looking-at delim)
+	(forward-line 1)
+      (insert "From nobody " (current-time-string) "\n"))
     ;; Quote all "From " lines in the article.
-    (forward-line 1)
     (while (re-search-forward delim nil t)
-      (beginning-of-line)
-      (insert "> "))
-    (nnmail-insert-lines)
-    (nnmail-insert-xref group-art)
-    (nnmbox-insert-newsgroup-line group-art)
-    (let ((alist group-art))
-      (while alist
-	(nnmbox-record-active-article (car alist))
-	(setq alist (cdr alist))))
-    (run-hooks 'nnmail-prepare-save-mail-hook)
-    (run-hooks 'nnmbox-prepare-save-mail-hook)
-    group-art))
+      (goto-char (match-beginning 0))
+      (insert ">")))
+  (goto-char (point-max))
+  (unless (bolp)
+    (insert "\n"))
+  (nnmail-insert-lines)
+  (nnmail-insert-xref group-art)
+  (nnmbox-insert-newsgroup-line group-art)
+  (let ((alist group-art))
+    (while alist
+      (nnmbox-record-active-article (car alist))
+      (setq alist (cdr alist))))
+  (run-hooks 'nnmail-prepare-save-mail-hook)
+  (run-hooks 'nnmbox-prepare-save-mail-hook)
+  group-art)
 
 (defun nnmbox-insert-newsgroup-line (group-art)
   (save-excursion

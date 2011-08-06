@@ -1,7 +1,7 @@
 ;;; gnus-srvr.el --- virtual server support for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -214,43 +214,12 @@ If nil, a faster, but more primitive, buffer is used instead."
 ;; backward-compatibility alias
 (put 'gnus-server-offline-face 'face-alias 'gnus-server-offline)
 
-(defcustom gnus-server-agent-face 'gnus-server-agent
-  "Face name to use on AGENTIZED servers."
-  :version "22.1"
-  :group 'gnus-server-visual
-  :type 'face)
-
-(defcustom gnus-server-opened-face 'gnus-server-opened
-  "Face name to use on OPENED servers."
-  :version "22.1"
-  :group 'gnus-server-visual
-  :type 'face)
-
-(defcustom gnus-server-closed-face 'gnus-server-closed
-  "Face name to use on CLOSED servers."
-  :version "22.1"
-  :group 'gnus-server-visual
-  :type 'face)
-
-(defcustom gnus-server-denied-face 'gnus-server-denied
-  "Face name to use on DENIED servers."
-  :version "22.1"
-  :group 'gnus-server-visual
-  :type 'face)
-
-(defcustom gnus-server-offline-face 'gnus-server-offline
-  "Face name to use on OFFLINE servers."
-  :version "22.1"
-  :group 'gnus-server-visual
-  :type 'face)
-
 (defvar gnus-server-font-lock-keywords
-  (list
-   '("(\\(agent\\))" 1 gnus-server-agent-face)
-   '("(\\(opened\\))" 1 gnus-server-opened-face)
-   '("(\\(closed\\))" 1 gnus-server-closed-face)
-   '("(\\(offline\\))" 1 gnus-server-offline-face)
-   '("(\\(denied\\))" 1 gnus-server-denied-face)))
+  '(("(\\(agent\\))" 1 'gnus-server-agent)
+    ("(\\(opened\\))" 1 'gnus-server-opened)
+    ("(\\(closed\\))" 1 'gnus-server-closed)
+    ("(\\(offline\\))" 1 'gnus-server-offline)
+    ("(\\(denied\\))" 1 'gnus-server-denied)))
 
 (defun gnus-server-mode ()
   "Major mode for listing and editing servers.

@@ -1,12 +1,13 @@
 /* Menu support for GNU Emacs on the Microsoft W32 API.
    Copyright (C) 1986, 1988, 1993, 1994, 1996, 1998, 1999, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
+                 2003, 2004, 2005, 2006, 2007, 2008
+                 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -23,6 +24,7 @@ Boston, MA 02110-1301, USA.  */
 #include <signal.h>
 
 #include <stdio.h>
+#include <mbstring.h>
 #include "lisp.h"
 #include "termhooks.h"
 #include "keyboard.h"
@@ -2261,8 +2263,9 @@ static int
 add_menu_item (HMENU menu, widget_value *wv, HMENU item)
 {
   UINT fuFlags;
-  char *out_string;
+  char *out_string, *p, *q;
   int return_value;
+  size_t nlen, orig_len;
 
   if (name_is_separator (wv->name))
     {
@@ -2285,6 +2288,57 @@ add_menu_item (HMENU menu, widget_value *wv, HMENU item)
 	}
       else
 	out_string = wv->name;
+
+      /* Quote any special characters within the menu item's text and
+	 key binding.  */
+      nlen = orig_len = strlen (out_string);
+      if (unicode_append_menu)
+        {
+          /* With UTF-8, & cannot be part of a multibyte character.  */
+          for (p = out_string; *p; p++)
+            {
+              if (*p == '&')
+                nlen++;
+            }
+        }
+      else
+        {
+          /* If encoded with the system codepage, use multibyte string
+             functions in case of multibyte characters that contain '&'.  */
+          for (p = out_string; *p; p = _mbsinc (p))
+            {
+              if (_mbsnextc (p) == '&')
+                nlen++;
+            }
+        }
+
+      if (nlen > orig_len)
+        {
+          p = out_string;
+          out_string = alloca (nlen + 1);
+          q = out_string;
+          while (*p)
+            {
+              if (unicode_append_menu)
+                {
+                  if (*p == '&')
+                    *q++ = *p;
+                  *q++ = *p++;
+                }
+              else
+                {
+                  if (_mbsnextc (p) == '&')
+                    {
+                      _mbsncpy (q, p, 1);
+                      q = _mbsinc (q);
+                    }
+                  _mbsncpy (q, p, 1);
+                  p = _mbsinc (p);
+                  q = _mbsinc (q);
+                }
+            }
+          *q = '\0';
+        }
 
       if (item != NULL)
 	fuFlags = MF_POPUP;

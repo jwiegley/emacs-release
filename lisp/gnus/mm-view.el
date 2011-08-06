@@ -1,14 +1,14 @@
 ;;; mm-view.el --- functions for viewing MIME objects
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -285,7 +285,7 @@
 	     (let ((coding-system-for-write 'iso-2022-jp)
 		   (coding-system-for-read 'iso-2022-jp)
 		   (str (mm-decode-coding-string "\
-\e$B#D#o#e#s!!#w#3#m!!#s#u#p#p#o#r#t#s!!#m#1#7#n!)\e(B" 'iso-2022-jp)))
+\e$B#D#o#e#s!!#w#3#m!!#s#u#p#p#o#r#t!!#m#1#7#n!)\e(B" 'iso-2022-jp)))
 	       (mm-with-multibyte-buffer
 		 (insert str)
 		 (call-process-region

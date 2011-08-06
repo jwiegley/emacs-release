@@ -1,8 +1,8 @@
 This is ../info/speedbar, produced by makeinfo version 4.8 from
 speedbar.texi.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
-Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1714,33 +1714,33 @@ Concept Index
 
 
 Tag Table:
-Node: Top1363
-Node: Introduction3205
-Node: Basic Navigation4727
-Node: Basic Key Bindings5167
-Node: Basic Visuals7303
-Node: Mouse Bindings11253
-Node: Displays Submenu12873
-Node: File Mode13548
-Node: Directory Display14150
-Node: Hidden Files17185
-Node: File Key Bindings18401
-Node: Buffer Mode19830
-Node: Minor Modes20940
-Node: RMAIL21794
-Node: Info22687
-Node: GDB23289
-Node: Customizing24082
-Node: Frames and Faces24888
-Node: Tag Hierarchy Methods26221
-Node: Version Control28442
-Node: Hooks29779
-Node: Extending31030
-Node: Minor Display Modes32096
-Node: Major Display Modes34082
-Node: Tagging Extensions38852
-Node: Creating a display40248
-Node: GNU Free Documentation License44786
-Node: Index67015
+Node: Top1370
+Node: Introduction3212
+Node: Basic Navigation4734
+Node: Basic Key Bindings5174
+Node: Basic Visuals7310
+Node: Mouse Bindings11260
+Node: Displays Submenu12880
+Node: File Mode13555
+Node: Directory Display14157
+Node: Hidden Files17192
+Node: File Key Bindings18408
+Node: Buffer Mode19837
+Node: Minor Modes20947
+Node: RMAIL21801
+Node: Info22694
+Node: GDB23296
+Node: Customizing24089
+Node: Frames and Faces24895
+Node: Tag Hierarchy Methods26228
+Node: Version Control28449
+Node: Hooks29786
+Node: Extending31037
+Node: Minor Display Modes32103
+Node: Major Display Modes34089
+Node: Tagging Extensions38859
+Node: Creating a display40255
+Node: GNU Free Documentation License44793
+Node: Index67022
 
 End Tag Table

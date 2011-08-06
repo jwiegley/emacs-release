@@ -1,7 +1,7 @@
 ;;; find-func.el --- find the definition of the Emacs Lisp function near point
 
 ;; Copyright (C) 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Author: Jens Petersen <petersen@kurims.kyoto-u.ac.jp>
 ;; Maintainer: petersen@kurims.kyoto-u.ac.jp
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -135,6 +135,7 @@ See `find-function' and `find-variable'."
   "Hook run after finding symbol definition.
 
 See the functions `find-function' and `find-variable'."
+  :type 'hook
   :group 'find-function
   :version "20.3")
 
@@ -194,11 +195,21 @@ TYPE should be nil to find a function, or `defvar' to find a variable."
 (defun find-library (library)
   "Find the elisp source of LIBRARY."
   (interactive
-   (list
-    (completing-read "Library name: "
-		     'locate-file-completion
-		     (cons (or find-function-source-path load-path)
-			   (find-library-suffixes)))))
+   (let* ((path (cons (or find-function-source-path load-path)
+		      (find-library-suffixes)))
+	  (def (if (eq (function-called-at-point) 'require)
+		   (save-excursion
+		     (backward-up-list)
+		     (forward-char)
+		     (backward-sexp -2)
+		     (thing-at-point 'symbol))
+		 (thing-at-point 'symbol))))
+     (when def
+       (setq def (and (locate-file-completion def path 'test) def)))
+     (list
+      (completing-read (if def (format "Library name (default %s): " def)
+			 "Library name: ")
+		       'locate-file-completion path nil nil nil def))))
   (let ((buf (find-file-noselect (find-library-name library))))
     (condition-case nil (switch-to-buffer buf) (error (pop-to-buffer buf)))))
 

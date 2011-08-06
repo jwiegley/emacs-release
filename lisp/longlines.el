@@ -1,6 +1,6 @@
 ;;; longlines.el --- automatically wrap long lines
 
-;; Copyright (C) 2000, 2001, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Authors:    Kai Grossjohann <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 ;;             Alex Schroeder <alex@gnu.org>
@@ -12,7 +12,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -55,7 +55,11 @@ when the file is saved to disk."
   "Non-nil means wrapping and filling happen at the edge of the window.
 Otherwise, `fill-column' is used, regardless of the window size.  This
 does not work well when the buffer is displayed in multiple windows
-with differing widths."
+with differing widths.
+
+If the value is an integer, that specifies the distance from the
+right edge of the window at which wrapping occurs.  For any other
+non-nil value, wrapping occurs 2 characters from the right edge."
   :group 'longlines
   :type 'boolean)
 
@@ -79,11 +83,13 @@ This is used when `longlines-show-hard-newlines' is on."
 (defvar longlines-wrap-end nil)
 (defvar longlines-wrap-point nil)
 (defvar longlines-showing nil)
+(defvar longlines-decoded nil)
 
 (make-variable-buffer-local 'longlines-wrap-beg)
 (make-variable-buffer-local 'longlines-wrap-end)
 (make-variable-buffer-local 'longlines-wrap-point)
 (make-variable-buffer-local 'longlines-showing)
+(make-variable-buffer-local 'longlines-decoded)
 
 ;; Mode
 
@@ -110,12 +116,19 @@ are indicated with a symbol."
         (add-hook 'change-major-mode-hook 'longlines-mode-off nil t)
 	(add-hook 'before-revert-hook 'longlines-before-revert-hook nil t)
         (make-local-variable 'buffer-substring-filters)
+        (make-local-variable 'longlines-auto-wrap)
 	(set (make-local-variable 'isearch-search-fun-function)
 	     'longlines-search-function)
         (add-to-list 'buffer-substring-filters 'longlines-encode-string)
         (when longlines-wrap-follows-window-size
-          (set (make-local-variable 'fill-column)
-               (- (window-width) window-min-width))
+	  (let ((dw (if (and (integerp longlines-wrap-follows-window-size)
+			     (>= longlines-wrap-follows-window-size 0)
+			     (< longlines-wrap-follows-window-size
+				(window-width)))
+			longlines-wrap-follows-window-size
+		      2)))
+	    (set (make-local-variable 'fill-column)
+		 (- (window-width) dw)))
           (add-hook 'window-configuration-change-hook
                     'longlines-window-change-function nil t))
         (let ((buffer-undo-list t)
@@ -127,7 +140,9 @@ are indicated with a symbol."
           ;; longlines-wrap-lines that we'll never encounter from here
 	  (save-restriction
 	    (widen)
-	    (longlines-decode-buffer)
+	    (unless longlines-decoded
+	      (longlines-decode-buffer)
+	      (setq longlines-decoded t))
 	    (longlines-wrap-region (point-min) (point-max)))
           (set-buffer-modified-p mod))
         (when (and longlines-show-hard-newlines
@@ -149,12 +164,10 @@ are indicated with a symbol."
 	       (add-to-list 'message-indent-citation-function
 			    'longlines-decode-region t)))
 
+	(add-hook 'after-change-functions 'longlines-after-change-function nil t)
+	(add-hook 'post-command-hook 'longlines-post-command-function nil t)
         (when longlines-auto-wrap
-          (auto-fill-mode 0)
-          (add-hook 'after-change-functions
-                    'longlines-after-change-function nil t)
-          (add-hook 'post-command-hook
-                    'longlines-post-command-function nil t)))
+          (auto-fill-mode 0)))
     ;; Turn off longlines mode
     (setq buffer-file-format (delete 'longlines buffer-file-format))
     (if longlines-showing
@@ -162,9 +175,11 @@ are indicated with a symbol."
     (let ((buffer-undo-list t)
 	  (after-change-functions nil)
           (inhibit-read-only t))
-      (save-restriction
-	(widen)
-	(longlines-encode-region (point-min) (point-max))))
+      (if longlines-decoded
+	  (save-restriction
+	    (widen)
+	    (longlines-encode-region (point-min) (point-max))
+	    (setq longlines-decoded nil))))
     (remove-hook 'change-major-mode-hook 'longlines-mode-off t)
     (remove-hook 'after-change-functions 'longlines-after-change-function t)
     (remove-hook 'post-command-hook 'longlines-post-command-function t)
@@ -224,16 +239,18 @@ With optional argument ARG, make the hard newlines invisible again."
   "Wrap each successive line, starting with the line before BEG.
 Stop when we reach lines after END that don't need wrapping, or the
 end of the buffer."
-  (setq longlines-wrap-point (point))
-  (goto-char beg)
-  (forward-line -1)
-  ;; Two successful longlines-wrap-line's in a row mean successive
-  ;; lines don't need wrapping.
-  (while (null (and (longlines-wrap-line)
-                    (or (eobp)
-                        (and (>= (point) end)
-                             (longlines-wrap-line))))))
-  (goto-char longlines-wrap-point))
+  (let ((mod (buffer-modified-p)))
+    (setq longlines-wrap-point (point))
+    (goto-char beg)
+    (forward-line -1)
+    ;; Two successful longlines-wrap-line's in a row mean successive
+    ;; lines don't need wrapping.
+    (while (null (and (longlines-wrap-line)
+		      (or (eobp)
+			  (and (>= (point) end)
+			       (longlines-wrap-line))))))
+    (goto-char longlines-wrap-point)
+    (set-buffer-modified-p mod)))
 
 (defun longlines-wrap-line ()
   "If the current line needs to be wrapped, wrap it and return nil.
@@ -365,29 +382,26 @@ Hard newlines are left intact."
 ;; Auto wrap
 
 (defun longlines-auto-wrap (&optional arg)
-  "Turn on automatic line wrapping, and wrap the entire buffer.
-With optional argument ARG, turn off line wrapping."
+  "Toggle automatic line wrapping.
+With optional argument ARG, turn on line wrapping if and only if ARG is positive.
+If automatic line wrapping is turned on, wrap the entire buffer."
   (interactive "P")
-  (remove-hook 'after-change-functions 'longlines-after-change-function t)
-  (remove-hook 'post-command-hook 'longlines-post-command-function t)
+  (setq arg (if arg
+		(> (prefix-numeric-value arg) 0)
+	      (not longlines-auto-wrap)))
   (if arg
-      (progn (setq longlines-auto-wrap nil)
-             (message "Auto wrap disabled."))
-    (setq longlines-auto-wrap t)
-    (add-hook 'after-change-functions
-              'longlines-after-change-function nil t)
-    (add-hook 'post-command-hook
-              'longlines-post-command-function nil t)
-    (let ((mod (buffer-modified-p)))
-      (longlines-wrap-region (point-min) (point-max))
-      (set-buffer-modified-p mod))
-    (message "Auto wrap enabled.")))
+      (progn
+	(setq longlines-auto-wrap t)
+	(longlines-wrap-region (point-min) (point-max))
+	(message "Auto wrap enabled."))
+    (setq longlines-auto-wrap nil)
+    (message "Auto wrap disabled.")))
 
 (defun longlines-after-change-function (beg end len)
   "Update `longlines-wrap-beg' and `longlines-wrap-end'.
 This is called by `after-change-functions' to keep track of the region
 that has changed."
-  (unless undo-in-progress
+  (when (and longlines-auto-wrap (not undo-in-progress))
     (setq longlines-wrap-beg
           (if longlines-wrap-beg (min longlines-wrap-beg beg) beg))
     (setq longlines-wrap-end
@@ -396,7 +410,7 @@ that has changed."
 (defun longlines-post-command-function ()
   "Perform line wrapping on the parts of the buffer that have changed.
 This is called by `post-command-hook' after each command."
-  (when longlines-wrap-beg
+  (when (and longlines-auto-wrap longlines-wrap-beg)
     (if (or (eq this-command 'yank)
 	    (eq this-command 'yank-pop))
 	(longlines-decode-region (point) (mark t)))
@@ -411,11 +425,14 @@ This is called by `post-command-hook' after each command."
 (defun longlines-window-change-function ()
   "Re-wrap the buffer if the window width has changed.
 This is called by `window-configuration-change-hook'."
-  (when (/= fill-column (- (window-width) window-min-width))
-    (setq fill-column (- (window-width) window-min-width))
-    (let ((mod (buffer-modified-p)))
-      (longlines-wrap-region (point-min) (point-max))
-      (set-buffer-modified-p mod))))
+  (let ((dw (if (and (integerp longlines-wrap-follows-window-size)
+		     (>= longlines-wrap-follows-window-size 0)
+		     (< longlines-wrap-follows-window-size (window-width)))
+		longlines-wrap-follows-window-size
+	      2)))
+    (when (/= fill-column (- (window-width) dw))
+      (setq fill-column (- (window-width) dw))
+      (longlines-wrap-region (point-min) (point-max)))))
 
 ;; Isearch
 

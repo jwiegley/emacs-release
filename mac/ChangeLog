@@ -1,3 +1,22 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-01-04  Glenn Morris  <rgm@gnu.org>
+
+	* Emacs.app/Contents/Resources/English.lproj/InfoPlist.strings:
+	* src/Emacs.r: Update copyright to 2008.
+
+2007-11-24  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* INSTALL: Also build and run on Mac OS X 10.5.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+	* COPYING: Switch to GPLv3.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
@@ -899,13 +918,13 @@
 ;; End:
 
     Copyright (C) 2001, 2002, 2003, 2004, 2005,
-	2006, 2007 Free Software Foundation, Inc.
+	2006, 2007, 2008 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

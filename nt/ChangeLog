@@ -1,3 +1,74 @@
+2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.2 released.
+
+2008-03-20  Juanma Barranquero  <lekktu@gmail.com>
+
+	* addpm.c: Include malloc.h.
+	(add_registry): Cast return value of alloca.
+
+2008-02-11  Jason Rumney  <jasonr@gnu.org>
+
+	* addpm.c (add_registry): Add an App Paths registry key.
+	Look for GTK and add it to the DLL search path for Emacs if found.
+
+2008-02-05  Juanma Barranquero  <lekktu@gmail.com>
+
+	* configure.bat: In help, use generic names for the image libraries.
+
+2008-01-20  Jason Rumney  <jasonr@gnu.org>
+
+	* gmake.defs (CYGWIN) [USING_SH]: Disable mapping of file
+	permissions to NTFS ACLs.
+
+2007-10-20  Eli Zaretskii  <eliz@gnu.org>
+
+	* configure.bat (docflags, doldflags): New variables.
+	(genmakefiles): Use them to work around problems with whitespace
+	in arguments of the `if' command.
+
+2007-10-18  Jason Rumney  <jasonr@gnu.org>
+
+	* makefile.w32-in (install): Install COPYING in top-level and bin dirs.
+
+2007-09-27  Jason Rumney  <jasonr@gnu.org>
+
+	* gmake.defs (COMCTL32): New system library.
+
+	* nmake.defs (COMCTL32): New system library.
+
+2007-08-14  Dhuvra Krishnamurthy <dhuvrakm@gmail.com> (tiny change)
+
+	* makefile.w32-in (bootstrap-nmake): Change directories once more.
+
+2007-07-25  Glenn Morris  <rgm@gnu.org>
+
+	* Relicense all FSF files to GPLv3 or later.
+
+	* COPYING: Switch to GPLv3.
+
+2007-07-20  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (bootstrap, bootstrap-nmake, bootstrap-gmake):
+	Depend on cmdproxy.
+	(cleanall): Don't delete *~.
+
+2007-07-11  Jason Rumney  <jasonr@gnu.org>
+
+	* gmake.defs (OLE32): New library to link.
+
+	* nmake.defs (OLE32): Likewise.
+
+2007-06-25  Jason Rumney  <jasonr@gnu.org>
+
+	* cmdproxy.c (main): Set console codepages to "ANSI".
+
+2007-06-15  Jason Rumney  <jasonr@gnu.org>
+
+	* emacs.manifest: New file.
+
+	* emacs.rc: Use it.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
@@ -1365,13 +1436,13 @@
 ;; End:
 
     Copyright (C) 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2003, 2004,
-       2005, 2006, 2007 Free Software Foundation, Inc.
+       2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
   GNU Emacs is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2, or (at your option)
+  the Free Software Foundation; either version 3, or (at your option)
   any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,

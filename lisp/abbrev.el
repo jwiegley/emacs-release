@@ -1,7 +1,7 @@
 ;;; abbrev.el --- abbrev mode commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: abbrev convenience
@@ -10,7 +10,7 @@
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -39,9 +39,9 @@ define global abbrevs instead."
 
 (defun abbrev-mode (&optional arg)
   "Toggle Abbrev mode in the current buffer.
-With argument ARG, turn abbrev mode on iff ARG is positive.
-In Abbrev mode, inserting an abbreviation causes it to expand
-and be replaced by its expansion."
+With optional argument ARG, turn abbrev mode on if ARG is
+positive, otherwise turn it off.  In Abbrev mode, inserting an
+abbreviation causes it to expand and be replaced by its expansion."
   (interactive "P")
   (setq abbrev-mode
 	(if (null arg) (not abbrev-mode)

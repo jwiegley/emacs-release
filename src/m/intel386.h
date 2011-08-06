@@ -1,12 +1,12 @@
 /* Machine description file for intel 386.
    Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007  Free Software Foundation, Inc.
+                 2006, 2007, 2008  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -50,7 +50,7 @@ Prime EXL (-machine=intel386 -opsystem=usg5-3)
   Minor changes merged in 19.1.
 NOTE-END */
 
-/* Define WORDS_BIG_ENDIAN iff lowest-numbered byte in a word
+/* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
    is the most significant byte.  */
 
 #undef WORDS_BIG_ENDIAN
@@ -212,6 +212,13 @@ NOTE-END */
 #define ULIMIT_BREAK_VALUE (32*1024*1024)
 
 #define SEGMENT_MASK ((SEGMENT_SIZE)-1)
+#endif
+
+#if defined (MAC_OSX) || defined (DARWIN)
+#ifdef _LP64
+/* For Intel Mac, with CC='gcc -arch x86_64'.  */
+#define NO_ARG_ARRAY
+#endif
 #endif
 
 /* arch-tag: 746338f0-cb7b-4f49-a98c-cb50817cf2ec

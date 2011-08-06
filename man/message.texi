@@ -9,7 +9,7 @@
 This file documents Message, the Emacs message composition mode.
 
 Copyright @copyright{} 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -821,11 +821,11 @@ doesn't have to do anything to make the @acronym{MIME} happen---Message will
 automatically add the @code{Content-Type} and
 @code{Content-Transfer-Encoding} headers.
 
-@findex mml-attach
+@findex mml-attach-file
 @kindex C-c C-a
 The most typical thing users want to use the multipart things in
 @acronym{MIME} for is to add ``attachments'' to mail they send out.
-This can be done with the @kbd{C-c C-a} command (@kbd{M-x mml-attach}),
+This can be done with the @kbd{C-c C-a} command (@kbd{M-x mml-attach-file}),
 which will prompt for a file name and a @acronym{MIME} type.
 
 @vindex mml-dnd-protocol-alist
@@ -1450,7 +1450,7 @@ responding to a message:
 @vindex message-subject-trailing-was-regexp
 Controls what to do with trailing @samp{(was: <old subject>)} in subject
 lines.  If @code{nil}, leave the subject unchanged.  If it is the symbol
-@code{ask}, query the user what do do.  In this case, the subject is
+@code{ask}, query the user what to do.  In this case, the subject is
 matched against @code{message-subject-trailing-was-ask-regexp}.  If
 @code{message-subject-trailing-was-query} is @code{t}, always strip the
 trailing old subject.  In this case,

@@ -1,13 +1,13 @@
 /* File IO for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1996,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
@@ -410,7 +410,7 @@ DEFUN ("file-name-directory", Ffile_name_directory, Sfile_name_directory,
        1, 1, 0,
        doc: /* Return the directory component in file name FILENAME.
 Return nil if FILENAME does not include a directory.
-Otherwise return a directory spec.
+Otherwise return a directory name.
 Given a Unix syntax file name, returns a string ending in slash;
 on VMS, perhaps instead a string ending in `:', `]' or `>'.  */)
      (filename)
@@ -1029,7 +1029,7 @@ probably use `make-temp-file' instead, except in three circumstances:
 DEFUN ("expand-file-name", Fexpand_file_name, Sexpand_file_name, 1, 2, 0,
        doc: /* Convert filename NAME to absolute, and canonicalize it.
 Second arg DEFAULT-DIRECTORY is directory to start with if NAME is relative
-\(does not start with slash); if DEFAULT-DIRECTORY is nil or missing,
+\(does not start with slash or tilde); if DEFAULT-DIRECTORY is nil or missing,
 the current buffer's value of `default-directory' is used.
 File name components that are `.' are removed, and
 so are file name components followed by `..', along with the `..' itself;
@@ -2226,8 +2226,8 @@ duplicates what `expand-file-name' does.  */)
 	/* Get variable value */
 	o = (unsigned char *) egetenv (target);
 	if (o)
-	  {
-	    total += strlen (o);
+	  { /* Eight-bit chars occupy upto 2 bytes in multibyte.  */
+	    total += strlen (o) * (STRING_MULTIBYTE (filename) ? 2 : 1);
 	    substituted = 1;
 	  }
 	else if (*p == '}')
@@ -4632,8 +4632,19 @@ actually used.  */)
     {
       if (CODING_MAY_REQUIRE_DECODING (&coding))
 	{
+	  if (coding.type == coding_type_ccl)
+	    coding.spec.ccl.decoder.quit_silently = 1;
 	  code_convert_region (PT, PT_BYTE, PT + inserted, PT_BYTE + inserted,
 			       &coding, 0, 0);
+	  if (coding.type == coding_type_ccl)
+	    coding.spec.ccl.decoder.quit_silently = 0;
+	  if (coding.result == CODING_FINISH_INTERRUPT)
+	    {
+	      /* Fixme: It is better that we report that the decoding
+		 was interruppted by the user, and the current buffer
+		 contents doesn't reflect the file correctly.  */
+	      Fsignal (Qquit, Qnil);
+	    }
 	  inserted = coding.produced_char;
 	}
       else
@@ -5191,7 +5202,7 @@ This does code conversion according to the value of
  * if we do writes that don't end with a carriage return. Furthermore
  * it cannot handle writes of more then 16K. The modified
  * version of "sys_write" in SYSDEP.C (see comment there) copes with
- * this EXCEPT for the last record (iff it doesn't end with a carriage
+ * this EXCEPT for the last record (if it doesn't end with a carriage
  * return). This implies that if your buffer doesn't end with a carriage
  * return, you get one free... tough. However it also means that if
  * we make two calls to sys_write (a la the following code) you can
@@ -5274,8 +5285,10 @@ This does code conversion according to the value of
      it, and that means the fsync here is not crucial for autosave files.  */
   if (!auto_saving && !write_region_inhibit_fsync && fsync (desc) < 0)
     {
-      /* If fsync fails with EINTR, don't treat that as serious.  */
-      if (errno != EINTR)
+      /* If fsync fails with EINTR, don't treat that as serious.  Also
+	 ignore EINVAL which happens when fsync is not supported on this
+	 file.  */
+      if (errno != EINTR && errno != EINVAL)
 	failure = 1, save_errno = errno;
     }
 #endif
@@ -5692,11 +5705,9 @@ file modification time, this function returns 0.
 See Info node `(elisp)Modification Time' for more details.  */)
      ()
 {
-  Lisp_Object tcons;
-  tcons = long_to_cons ((unsigned long) current_buffer->modtime);
-  if (CONSP (tcons))
-    return list2 (XCAR (tcons), XCDR (tcons));
-  return tcons;
+  if (! current_buffer->modtime)
+    return make_number (0);
+  return make_time ((time_t) current_buffer->modtime);
 }
 
 DEFUN ("set-visited-file-modtime", Fset_visited_file_modtime,
@@ -6078,6 +6089,7 @@ then any auto-save counts as "recent".  */)
 
 /* Reading and completing file names */
 extern Lisp_Object Ffile_name_completion (), Ffile_name_all_completions ();
+extern Lisp_Object Qcompletion_ignore_case;
 
 /* In the string VAL, change each $ to $$ and return the result.  */
 
@@ -6383,7 +6395,7 @@ and `read-file-name-function'.  */)
     }
 
   count = SPECPDL_INDEX ();
-  specbind (intern ("completion-ignore-case"),
+  specbind (Qcompletion_ignore_case,
 	    read_file_name_completion_ignore_case ? Qt : Qnil);
   specbind (intern ("minibuffer-completing-file-name"), Qt);
   specbind (intern ("read-file-name-predicate"),
@@ -6629,19 +6641,25 @@ of file names regardless of the current language environment.  */);
 
   DEFVAR_BOOL ("insert-default-directory", &insert_default_directory,
 	       doc: /* *Non-nil means when reading a filename start with default dir in minibuffer.
-If the initial minibuffer contents are non-empty, you can usually
-request a default filename by typing RETURN without editing.  For some
-commands, exiting with an empty minibuffer has a special meaning,
-such as making the current buffer visit no file in the case of
-`set-visited-file-name'.
+
+When the initial minibuffer contents show a name of a file or a directory,
+typing RETURN without editing the initial contents is equivalent to typing
+the default file name.
+
 If this variable is non-nil, the minibuffer contents are always
-initially non-empty and typing RETURN without editing will fetch the
+initially non-empty, and typing RETURN without editing will fetch the
 default name, if one is provided.  Note however that this default name
-is not necessarily the name originally inserted in the minibuffer, if
-that is just the default directory.
+is not necessarily the same as initial contents inserted in the minibuffer,
+if the initial contents is just the default directory.
+
 If this variable is nil, the minibuffer often starts out empty.  In
 that case you may have to explicitly fetch the next history element to
-request the default name.  */);
+request the default name; typing RETURN without editing will leave
+the minibuffer empty.
+
+For some commands, exiting with an empty minibuffer has a special meaning,
+such as making the current buffer visit no file in the case of
+`set-visited-file-name'.  */);
   insert_default_directory = 1;
 
   DEFVAR_BOOL ("vms-stmlf-recfm", &vms_stmlf_recfm,

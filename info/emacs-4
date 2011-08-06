@@ -1,11 +1,11 @@
 This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
 
    This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.1.
+updated for Emacs version 22.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
-Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -16,14 +16,103 @@ Foundation, Inc.
      Texts as in (a) below.  A copy of the license is included in the
      section entitled "GNU Free Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
+     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Fortran Comments,  Next: Fortran Autofill,  Prev: Fortran Indent,  Up: Fortran
+
+31.13.3 Fortran Comments
+------------------------
+
+The usual Emacs comment commands assume that a comment can follow a
+line of code.  In Fortran77, the standard comment syntax requires an
+entire line to be just a comment.  Therefore, Fortran mode replaces the
+standard Emacs comment commands and defines some new variables.
+
+   Fortran mode can also handle the Fortran90 comment syntax where
+comments start with `!' and can follow other text.  Because only some
+Fortran77 compilers accept this syntax, Fortran mode will not insert
+such comments unless you have said in advance to do so.  To do this,
+set the variable `fortran-comment-line-start' to `"!"'.
+
+`M-;'
+     Align comment or insert new comment (`fortran-indent-comment').
+
+`C-x ;'
+     Applies to nonstandard `!' comments only.
+
+`C-c ;'
+     Turn all lines of the region into comments, or (with argument)
+     turn them back into real code (`fortran-comment-region').
+
+   `M-;' in Fortran mode is redefined as the command
+`fortran-indent-comment'.  Like the usual `M-;' command, this
+recognizes any kind of existing comment and aligns its text
+appropriately; if there is no existing comment, a comment is inserted
+and aligned.  But inserting and aligning comments are not the same in
+Fortran mode as in other modes.
+
+   When a new comment must be inserted, if the current line is blank, a
+full-line comment is inserted.  On a non-blank line, a nonstandard `!'
+comment is inserted if you have said you want to use them.  Otherwise a
+full-line comment is inserted on a new line before the current line.
+
+   Nonstandard `!' comments are aligned like comments in other
+languages, but full-line comments are different.  In a standard
+full-line comment, the comment delimiter itself must always appear in
+column zero.  What can be aligned is the text within the comment.  You
+can choose from three styles of alignment by setting the variable
+`fortran-comment-indent-style' to one of these values:
+
+`fixed'
+     Align the text at a fixed column, which is the sum of
+     `fortran-comment-line-extra-indent' and the minimum statement
+     indentation.  This is the default.
+
+     The minimum statement indentation is
+     `fortran-minimum-statement-indent-fixed' for fixed format
+     continuation line style and `fortran-minimum-statement-indent-tab'
+     for tab format style.
+
+`relative'
+     Align the text as if it were a line of code, but with an additional
+     `fortran-comment-line-extra-indent' columns of indentation.
+
+`nil'
+     Don't move text in full-line comments automatically.
+
+   In addition, you can specify the character to be used to indent
+within full-line comments by setting the variable
+`fortran-comment-indent-char' to the single-character string you want
+to use.
+
+   Compiler directive lines, or preprocessor lines, have much the same
+appearance as comment lines.  It is important, though, that such lines
+never be indented at all, no matter what the value of
+`fortran-comment-indent-style'.  The variable `fortran-directive-re' is
+a regular expression that specifies which lines are directives.
+Matching lines are never indented, and receive distinctive font-locking.
+
+   The normal Emacs comment command `C-x ;' has not been redefined.  If
+you use `!' comments, this command can be used with them.  Otherwise it
+is useless in Fortran mode.
+
+   The command `C-c ;' (`fortran-comment-region') turns all the lines
+of the region into comments by inserting the string `C$$$' at the front
+of each one.  With a numeric argument, it turns the region back into
+live code by deleting `C$$$' from the front of each line in it.  The
+string used for these comments can be controlled by setting the
+variable `fortran-comment-region'.  Note that here we have an example
+of a command and a variable with the same name; these two uses of the
+name never conflict because in Lisp and in Emacs it is always clear
+from the context which one is meant.
 
 
 File: emacs,  Node: Fortran Autofill,  Next: Fortran Columns,  Prev: Fortran Comments,  Up: Fortran
@@ -848,13 +937,13 @@ frame in the stack buffer to select that frame.
 so it sets the height and width accordingly.  For correct operation you
 must not change these values during the GDB session.
 
-   You can also run GDB in text command mode, like other debuggers.  To
-do this, replace the GDB `"--annotate=3"' option with `"--fullname"'
-either in the minibuffer for the current Emacs session, or the custom
-variable `gud-gdb-command-name' for all future sessions.  You need to
-use text command mode to debug multiple programs within one Emacs
-session.  If you have customized `gud-gdb-command-name' in this way,
-you can use `M-x gdba' to invoke GDB in graphical mode.
+   You can also run GDB in text command mode, like the other debuggers
+in Emacs.  To do this, replace the GDB `"--annotate=3"' option with
+`"--fullname"' either in the minibuffer for the current Emacs session,
+or the custom variable `gud-gdb-command-name' for all future sessions.
+You need to use text command mode to debug multiple programs within one
+Emacs session.  You can also use `M-x gud-gdb' to invoke GDB in text
+command mode if you have problems before execution has started.
 
 * Menu:
 
@@ -925,7 +1014,7 @@ File: emacs,  Node: Source Buffers,  Next: Breakpoints Buffer,  Prev: GDB-UI Lay
 32.6.5.2 Source Buffers
 .......................
 
-Many GDB commands can be entered using keybindings or the tool bar but
+Many GDB commands can be entered using key bindings or the tool bar but
 sometimes it is quicker to use the fringe.  These commands either
 manipulate breakpoints or control program execution.  When there is no
 fringe, you can use the margin but this is only present when the source
@@ -1118,6 +1207,12 @@ default value), Emacs uses `font-lock-warning-face' to highlight values
 that have recently changed and `shadow' face to make variables which
 have gone out of scope less noticeable.  When a variable goes out of
 scope you can't edit its value.
+
+   If the variable `gdb-delete-out-of-scope' is non-`nil' (the default
+value), Emacs automatically deletes watch expressions which go out of
+scope.  Sometimes, when re-entering the same function, it may be useful
+to set this value to nil so that you don't need to recreate the watch
+expression.
 
    If the variable `gdb-use-colon-colon-notation' is non-`nil', Emacs
 uses the `FUNCTION::VARIABLE' format.  This allows the user to display
@@ -1564,19 +1659,19 @@ Here is how tag syntax is defined for the most popular languages:
      definitions of `struct', `union' and `enum'.  `#define' macro
      definitions, `#undef' and `enum' constants are also tags, unless
      you specify `--no-defines' when making the tags table.  Similarly,
-     global variables are tags, unless you specify `--no-globals', and
-     so are struct members, unless you specify `--no-members'.  Use of
-     `--no-globals', `--no-defines' and `--no-members' can make the
-     tags table file much smaller.
+     global variables are tags, unless you specify `--no-globals'.  Use
+     of `--no-globals' and `--no-defines' can make the tags table file
+     much smaller.
 
      You can tag function declarations and external variables in
      addition to function definitions by giving the `--declarations'
-     option to `etags'.
+     option to `etags'.  You can tag struct members with the `--members'
+     option.
 
    * In C++ code, in addition to all the tag constructs of C code,
-     member functions are also recognized; member variables are also
-     recognized, unless you use the `--no-members' option.  Tags for
-     variables and functions in classes are named `CLASS::VARIABLE' and
+     member functions are also recognized, and optionally member
+     variables if you use the `--members' option.  Tags for variables
+     and functions in classes are named `CLASS::VARIABLE' and
      `CLASS::FUNCTION'.  `operator' definitions have tag names like
      `operator+'.
 
@@ -1684,8 +1779,8 @@ Here is how tag syntax is defined for the most popular languages:
      subroutines are named `PACKAGE::SUB'.  The name for subroutines
      defined in the default package is `main::SUB'.
 
-   * In PHP code, tags are functions, classes and defines.  Vars are
-     tags too, unless you use the `--no-members' option.
+   * In PHP code, tags are functions, classes and defines.  When using
+     the `--members' option, vars are tags too.
 
    * In PostScript code, the tags are the functions.
 
@@ -1753,7 +1848,7 @@ files.  If the tags file is in `/dev', however, the file names are made
 relative to the current working directory.  This is useful, for
 example, when writing the tags to `/dev/stdout'.
 
-   When using a a relative file name, it should not be a symbolic link
+   When using a relative file name, it should not be a symbolic link
 pointing to a tags file in a different directory, because this would
 generally render the file names invalid.
 
@@ -2087,7 +2182,8 @@ single invocation of `M-x tags-query-replace'.  But often it is useful
 to exit temporarily, which you can do with any input event that has no
 special query replace meaning.  You can resume the query replace
 subsequently by typing `M-,'; this command resumes the last tags search
-or replace command that you did.
+or replace command that you did.  For instance, to skip the rest of the
+current file, you can type `M-> M-,'.
 
    The commands in this section carry out much broader searches than the
 `find-tag' family.  The `find-tag' commands search only for definitions
@@ -6583,11 +6679,14 @@ argument which specifies how many days, weeks, months or years to print
    If the variable `cal-tex-holidays' is non-`nil' (the default), then
 the printed calendars show the holidays in `calendar-holidays'.  If the
 variable `cal-tex-diary' is non-`nil' (the default is `nil'), diary
-entries are included also (in weekly and monthly calendars only).  If
-the variable `cal-tex-rules' is non-`nil' (the default is `nil'), the
-calendar displays ruled pages in styles that have sufficient room.  You
-can use the variable `cal-tex-preamble-extra' to insert extra LaTeX
-commands in the preamble of the generated document if you need to.
+entries are included also (in monthly, filofax, and iso-week calendars
+only).  If the variable `cal-tex-rules' is non-`nil' (the default is
+`nil'), the calendar displays ruled pages in styles that have
+sufficient room.  Consult the documentation of the individual cal-tex
+functions to see which calendars support which features.
+
+   You can use the variable `cal-tex-preamble-extra' to insert extra
+LaTeX commands in the preamble of the generated document if you need to.
 
 
 File: emacs,  Node: Holidays,  Next: Sunrise/Sunset,  Prev: Writing Calendar Files,  Up: Calendar/Diary
@@ -6933,74 +7032,4 @@ anything--the menu is used only for display.)
 appropriate command starting with `p' from the table above.  The prefix
 `p' is a mnemonic for "print," since Emacs "prints" the equivalent date
 in the echo area.
-
-
-File: emacs,  Node: From Other Calendar,  Next: Mayan Calendar,  Prev: To Other Calendar,  Up: Other Calendars
-
-39.9.3 Converting From Other Calendars
---------------------------------------
-
-You can use the other supported calendars to specify a date to move to.
-This section describes the commands for doing this using calendars
-other than Mayan; for the Mayan calendar, see the following section.
-
-`g c'
-     Move to a date specified in the ISO commercial calendar
-     (`calendar-goto-iso-date').
-
-`g w'
-     Move to a week specified in the ISO commercial calendar
-     (`calendar-goto-iso-week').
-
-`g j'
-     Move to a date specified in the Julian calendar
-     (`calendar-goto-julian-date').
-
-`g a'
-     Move to a date specified with an astronomical (Julian) day number
-     (`calendar-goto-astro-day-number').
-
-`g h'
-     Move to a date specified in the Hebrew calendar
-     (`calendar-goto-hebrew-date').
-
-`g i'
-     Move to a date specified in the Islamic calendar
-     (`calendar-goto-islamic-date').
-
-`g f'
-     Move to a date specified in the French Revolutionary calendar
-     (`calendar-goto-french-date').
-
-`g C'
-     Move to a date specified in the Chinese calendar
-     (`calendar-goto-chinese-date').
-
-`g p'
-     Move to a date specified in the Persian calendar
-     (`calendar-goto-persian-date').
-
-`g k'
-     Move to a date specified in the Coptic calendar
-     (`calendar-goto-coptic-date').
-
-`g e'
-     Move to a date specified in the Ethiopic calendar
-     (`calendar-goto-ethiopic-date').
-
-   These commands ask you for a date on the other calendar, move point
-to the Gregorian calendar date equivalent to that date, and display the
-other calendar's date in the echo area.  Emacs uses strict completion
-(*note Completion::) whenever it asks you to type a month name, so you
-don't have to worry about the spelling of Hebrew, Islamic, or French
-names.
-
-   One common question concerning the Hebrew calendar is the computation
-of the anniversary of a date of death, called a "yahrzeit."  The Emacs
-calendar includes a facility for such calculations.  If you are in the
-calendar, the command `M-x list-yahrzeit-dates' asks you for a range of
-years and then displays a list of the yahrzeit dates for those years
-for the date given by point.  If you are not in the calendar, this
-command first asks you for the date of death and the range of years,
-and then displays the list of yahrzeit dates.
 
