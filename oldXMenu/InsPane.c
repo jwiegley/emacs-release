@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: /cvsroot/emacs//emacs/oldXMenu/InsPane.c,v 1.1 1999/10/03 19:35:04 fx Exp $ */
+/* $Header: /cvsroot/emacs/emacs/oldXMenu/InsPane.c,v 1.1 1999/10/03 19:35:04 fx Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*

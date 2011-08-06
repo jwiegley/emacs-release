@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: /cvsroot/emacs//emacs/oldXMenu/DelSel.c,v 1.1 1999/10/03 19:34:58 fx Exp $ */
+/* $Header: /cvsroot/emacs/emacs/oldXMenu/DelSel.c,v 1.1 1999/10/03 19:34:58 fx Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*

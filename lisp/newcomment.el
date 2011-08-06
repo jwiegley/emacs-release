@@ -5,7 +5,7 @@
 ;; Author: code extracted from Emacs-20's simple.el
 ;; Maintainer: Stefan Monnier <monnier@cs.yale.edu>
 ;; Keywords: comment uncomment
-;; Revision: $Id: newcomment.el,v 1.35 2001/09/27 21:13:44 monnier Exp $
+;; Revision: $Id: newcomment.el,v 1.35.4.4 2002/03/04 01:17:11 monnier Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -179,7 +179,9 @@ Can also be an integer which will be automatically turned into a string
 of the corresponding number of spaces.
 
 Extra spacing between the comment characters and the comment text
-makes the comment easier to read.  Default is 1.  nil means 0.")
+makes the comment easier to read.  Default is \" \".  nil means 0."
+  :group 'comment
+  :type '(choice string integer (const nil)))
 
 ;;;###autoload
 (defcustom comment-multi-line nil
@@ -219,6 +221,7 @@ This is obsolete because you might as well use \\[newline-and-indent]."
 	       (goto-char (point-min))
 	       (and (forward-comment 1) (eobp))))))
     ;; comment-padding
+    (unless comment-padding (setq comment-padding 0))
     (when (integerp comment-padding)
       (setq comment-padding (make-string comment-padding ? )))
     ;; comment markers
@@ -384,11 +387,11 @@ and can use regexps instead of syntax."
   (if (< n 0) (error "No comment-backward")
     (if comment-use-syntax (forward-comment n)
       (while (> n 0)
-	(skip-syntax-forward " ")
 	(setq n
-	      (if (and (looking-at comment-start-skip)
-		       (goto-char (match-end 0))
-		       (re-search-forward comment-end-skip nil 'move))
+	      (if (or (forward-comment 1)
+		      (and (looking-at comment-start-skip)
+			   (goto-char (match-end 0))
+			   (re-search-forward comment-end-skip nil 'move)))
 		  (1- n) -1)))
       (= n 0))))
 
@@ -461,11 +464,12 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 	  ;; comment-indent-function refuses delegates to indent.
 	  (indent-according-to-mode)
 	;; Avoid moving comments past the fill-column.
-	(setq indent
-	      (min indent
-		   (+ (current-column)
-		      (- fill-column
-			 (save-excursion (end-of-line) (current-column))))))
+	(unless (save-excursion (skip-chars-backward " \t") (bolp))
+	  (setq indent
+		(min indent
+		     (+ (current-column)
+			(- fill-column
+			   (save-excursion (end-of-line) (current-column)))))))
 	(if (= (current-column) indent)
 	    (goto-char begpos)
 	  ;; If that's different from current, change it.

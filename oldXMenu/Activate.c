@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/emacs//emacs/oldXMenu/Activate.c,v 1.3 2000/07/21 14:36:24 gerd Exp $ */
+/* $Header: /cvsroot/emacs/emacs/oldXMenu/Activate.c,v 1.3 2000/07/21 14:36:24 gerd Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 #include "copyright.h"

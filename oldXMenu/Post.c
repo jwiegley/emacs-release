@@ -1,6 +1,6 @@
 #include "copyright.h"
 
-/* $Header: /cvsroot/emacs//emacs/oldXMenu/Post.c,v 1.2 2000/01/27 15:30:47 gerd Exp $ */
+/* $Header: /cvsroot/emacs/emacs/oldXMenu/Post.c,v 1.2 2000/01/27 15:30:47 gerd Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
